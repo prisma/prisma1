@@ -9,7 +9,7 @@ import com.prisma.shared.models.Relation
 import scala.concurrent.Future
 
 //Fixme: this should never be triggered since Mongo does not use RelationTables, but it is  used in testing Mode
-//once we switch over the tests to datamodel v2 this can go back to a NoOp
+//once we switch over the tests to datamodel v1.1 this can go back to a NoOp
 object CreateRelationInterpreter extends MongoMutactionInterpreter[CreateRelationTable] {
   override def execute(mutaction: CreateRelationTable)  = IndexhelperForTests.add(mutaction.relation)
   override def rollback(mutaction: CreateRelationTable) = IndexhelperForTests.remove(mutaction.relation)

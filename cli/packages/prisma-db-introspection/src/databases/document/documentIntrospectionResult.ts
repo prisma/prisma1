@@ -6,7 +6,6 @@ import { IntrospectionResult } from '../../common/introspectionResult'
  * compatibility with relational connectors.
  */
 export class DocumentIntrospectionResult extends IntrospectionResult {
-
   protected model: ISDL
 
   constructor(model: ISDL, databaseType: DatabaseType, renderer?: Renderer) {

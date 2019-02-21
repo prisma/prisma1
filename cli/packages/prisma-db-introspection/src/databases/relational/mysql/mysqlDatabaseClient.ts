@@ -1,5 +1,5 @@
 import IDatabaseClient from '../../IDatabaseClient'
-import { Connection } from 'mysql'
+import { Connection } from 'mysql2'
 
 export default class MySqlDatabaseClient implements IDatabaseClient {
   private client: Connection

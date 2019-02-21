@@ -1,6 +1,6 @@
 import { printSchema } from 'graphql/utilities'
 import { GraphQLSchema } from 'graphql/type'
-import { IGQLType, Parser, DatabaseType, ISDL } from 'prisma-datamodel'
+import { IGQLType, DefaultParser, DatabaseType, ISDL } from 'prisma-datamodel'
 import Generator from './generator'
 
 /**
@@ -18,7 +18,7 @@ export function parseInternalTypes(
   model: string,
   databaseType: DatabaseType,
 ): ISDL {
-  return Parser.create(databaseType).parseFromSchemaString(model)
+  return DefaultParser.create(databaseType).parseFromSchemaString(model)
 }
 
 /**
@@ -32,7 +32,10 @@ export function generateCRUDSchema(
   databaseType: DatabaseType,
 ): GraphQLSchema {
   const { types } = parseInternalTypes(model, databaseType)
-  return Generator.create(databaseType).schema.generate(types, {})
+  return Generator.create(databaseType).schema.generate(
+    types.sort(({ name: a }, { name: b }) => (a > b ? 1 : -1)),
+    {},
+  )
 }
 
 /**
@@ -43,7 +46,7 @@ export function generateCRUDSchema(
  */
 export function generateCRUDSchemaFromInternalISDL(
   model: ISDL,
-  databaseType: DatabaseType
+  databaseType: DatabaseType,
 ): GraphQLSchema {
   return Generator.create(databaseType).schema.generate(model.types, {})
 }

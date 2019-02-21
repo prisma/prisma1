@@ -1,5 +1,8 @@
 import { SdlExpect, TypeIdentifiers, DatabaseType } from 'prisma-datamodel'
-import { ModelMerger, ModelSampler } from '../../../databases/document/modelSampler'
+import {
+  ModelMerger,
+  ModelSampler,
+} from '../../../databases/document/modelSampler'
 import { Data } from '../../../databases/document/data'
 import { RelationResolver } from '../../../databases/document/relationResolver'
 import { collections, schemaString } from '../data/webshop'

@@ -1,23 +1,17 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import { EndpointDialog, DatabaseCredentials } from '../../utils/EndpointDialog'
-import {
-  PostgresConnector,
-  PrismaDBClient,
-  MongoConnector,
-  Connectors,
-} from 'prisma-db-introspection'
+import { PrismaDBClient, Connectors } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
 import { prettyTime } from '../../utils/util'
 import chalk from 'chalk'
-import { Client as PGClient } from 'pg'
-import { MongoClient } from 'mongodb'
-import { createConnection } from 'mysql'
-import { Parser, DatabaseType, Renderers, ISDL } from 'prisma-datamodel'
-import { IConnector } from 'prisma-db-introspection/dist/common/connector'
-import { omit } from 'lodash'
 import {
-  ConnectorAndDisconnect,
+  DefaultParser,
+  DatabaseType,
+  DefaultRenderer,
+  ISDL,
+} from 'prisma-datamodel'
+import {
   getConnectedConnectorFromCredentials,
   ConnectorData,
   getConnectorWithDatabase,
@@ -32,6 +26,16 @@ export default class IntrospectCommand extends Command {
       char: 'i',
       description: 'Interactive mode',
     }),
+
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
+
     /**
      * Postgres Params
      */
@@ -148,7 +152,7 @@ ${chalk.bold(
 
   getExistingDatamodel(databaseType: DatabaseType): ISDL | null {
     if (this.definition.typesString) {
-      const ParserInstance = Parser.create(databaseType!)
+      const ParserInstance = DefaultParser.create(databaseType!)
       return ParserInstance.parseFromSchemaString(this.definition.typesString!)
     }
 
@@ -172,7 +176,7 @@ ${chalk.bold(
       ? await introspection.getNormalizedDatamodel(existingDatamodel)
       : await introspection.getDatamodel()
 
-    const renderer = Renderers.create(
+    const renderer = DefaultRenderer.create(
       introspection.databaseType,
       this.flags.prototype,
     )
@@ -215,7 +219,7 @@ ${chalk.bold(
       const stage = this.definition.stage!
       const token = this.definition.getToken(service, stage)
       const workspace = this.definition.getWorkspace()
-      const cluster = this.definition.getCluster()
+      const cluster = await this.definition.getCluster()
       this.env.setActiveCluster(cluster!)
       await this.client.initClusterClient(cluster!, service!, stage, workspace!)
       const introspection = await this.client.introspect(

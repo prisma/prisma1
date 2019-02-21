@@ -211,6 +211,7 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
+    debug('introspecting', { serviceName, stageName, workspaceSlug })
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -425,7 +426,7 @@ export class Client {
       if (cloud.token) {
         token = cloud.token
       }
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 1000))
     }
     this.env.globalRC.cloudSessionKey = token
     this.out.action.stop()
@@ -436,7 +437,7 @@ export class Client {
     )
 
     this.env.saveGlobalRC()
-    await this.env.getClusters()
+    await this.env.fetchClusters()
   }
 
   logout(): void {
@@ -925,7 +926,7 @@ export class Client {
             errors
           }
         }
-        `,
+      `,
 
       {
         stage,

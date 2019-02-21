@@ -3,7 +3,7 @@ package com.prisma.native_jdbc
 import java.io.{InputStream, Reader}
 import java.sql.{Blob, Clob, Date, NClob, Ref, ResultSet, RowId, SQLXML, Time, Timestamp}
 import java.util.{Calendar, TimeZone}
-import java.{lang, sql}
+import java.{lang, sql, util}
 
 import com.prisma.native_jdbc.CustomPreparedStatement._
 import org.joda.time.DateTime
@@ -124,20 +124,43 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
     val column = rustResultSet.columns.lift(columnIndex - 1).getOrElse(sys.error(s"Column not found at $columnIndex"))
 
     column.discriminator match {
-      case "String"   => getString(columnIndex)
-      case "Int"      => new Integer(getInt(columnIndex))
-      case "Long"     => new java.lang.Long(getLong(columnIndex))
-      case "Double"   => new java.lang.Double(getDouble(columnIndex))
-      case "DateTime" => getTimestamp(columnIndex)
-      case "Boolean"  => new lang.Boolean(getBoolean(columnIndex))
-      case "Null"     => null
-      case "VOID"     => null
-      case "UUID"     => ??? //readColumnAs[UUID](columnIndex)
+      case "String"      => getString(columnIndex)
+      case "Int"         => new Integer(getInt(columnIndex))
+      case "Long"        => new java.lang.Long(getLong(columnIndex))
+      case "Double"      => new java.lang.Double(getDouble(columnIndex))
+      case "DateTime"    => getTimestamp(columnIndex)
+      case "Boolean"     => new lang.Boolean(getBoolean(columnIndex))
+      case "Null"        => null
+      case "VOID"        => null
+      case "UUID"        => ??? //readColumnAs[UUID](columnIndex)
+      case "StringArray" => getArray(columnIndex)
     }
   }
 
   override def getObject(columnLabel: String) = {
     ???
+  }
+
+  override def getArray(columnIndex: Int) = ???
+
+  override def getArray(columnLabel: String) = {
+    new sql.Array {
+      override def getBaseTypeName: String = ???
+      override def getBaseType: Int        = ???
+      override def getArray: AnyRef = {
+        // TODO: this only works for string arrays for now
+        val jsArray = readColumnAs[JsArray](columnLabel)
+        jsArray.value.map(_.toString()).toArray
+      }
+      override def getArray(map: util.Map[String, Class[_]]): AnyRef                                 = ???
+      override def getArray(index: Long, count: Int): AnyRef                                         = ???
+      override def getArray(index: Long, count: Int, map: util.Map[String, Class[_]]): AnyRef        = ???
+      override def getResultSet: ResultSet                                                           = ???
+      override def getResultSet(map: util.Map[String, Class[_]]): ResultSet                          = ???
+      override def getResultSet(index: Long, count: Int): ResultSet                                  = ???
+      override def getResultSet(index: Long, count: Int, map: util.Map[String, Class[_]]): ResultSet = ???
+      override def free(): Unit                                                                      = ???
+    }
   }
 
   private def readColumnAs[T](columnLabel: String)(implicit reads: Reads[T], default: DefaultValue[T]): T = {
@@ -218,10 +241,6 @@ case class JsonResultSet(rustResultSet: RustResultSet) extends ResultSet with De
   override def getUnicodeStream(columnIndex: Int) = ???
 
   override def getUnicodeStream(columnLabel: String) = ???
-
-  override def getArray(columnIndex: Int) = ???
-
-  override def getArray(columnLabel: String) = ???
 
   override def getBytes(columnIndex: Int) = ???
 

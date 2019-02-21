@@ -11,6 +11,7 @@ import { RC } from './index'
 import { ClusterNotSet } from './errors/ClusterNotSet'
 import { clusterEndpointMap } from './constants'
 import { getProxyAgent } from './utils/getProxyAgent'
+import * as jwt from 'jsonwebtoken'
 const debug = require('debug')('Environment')
 
 export class Environment {
@@ -23,19 +24,19 @@ export class Environment {
   out: IOutput
   home: string
   rcPath: string
-  constructor(home: string, out: IOutput = new Output()) {
+  clustersFetched: boolean = false
+  version?: string
+  constructor(home: string, out: IOutput = new Output(), version?: string) {
     this.out = out
     this.home = home
+    this.version = version
 
     this.rcPath = path.join(this.home, '.prisma/config.yml')
     fs.mkdirpSync(path.dirname(this.rcPath))
   }
 
-  async load(loadClusters: boolean = true) {
+  async load() {
     await this.loadGlobalRC()
-    if (loadClusters) {
-      await this.getClusters()
-    }
   }
 
   get cloudSessionKey(): string | undefined {
@@ -44,89 +45,68 @@ export class Environment {
 
   async renewToken() {
     if (this.cloudSessionKey) {
-      try {
-        const res = await fetch('https://api.cloud.prisma.sh', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.cloudSessionKey}`,
-          } as any,
-          body: JSON.stringify({
-            query: `
+      const data = jwt.decode(this.cloudSessionKey)
+      if (!data.exp) {
+        return
+      }
+      const timeLeft = data.exp * 1000 - Date.now()
+      if (timeLeft < 1000 * 60 * 60 * 24 && timeLeft > 0) {
+        try {
+          const res = await this.requestCloudApi(`
           mutation {
             renewToken
           }
-        `,
-          }),
-          proxy: getProxyAgent('https://api.cloud.prisma.sh'),
-        } as any)
-        const json = await res.json()
-
-        if (json && json.data && json.data.renewToken) {
-          this.globalRC.cloudSessionKey = json.data.renewToken
-          this.saveGlobalRC()
+        `)
+          if (res.renewToken) {
+            this.globalRC.cloudSessionKey = res.renewToken
+            this.saveGlobalRC()
+          }
+        } catch (e) {
+          debug(e)
         }
-      } catch (e) {
-        debug(e)
       }
     }
   }
 
-  async getClusters() {
-    if (this.cloudSessionKey) {
-      this.renewToken()
+  async fetchClusters() {
+    if (!this.clustersFetched && this.cloudSessionKey) {
+      const renewPromise = this.renewToken()
       try {
         const res = (await Promise.race([
-          fetch('https://api.cloud.prisma.sh', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${this.cloudSessionKey}`,
-            } as any,
-            body: JSON.stringify({
-              query: `
-          {
-            me {
-              memberships {
-                workspace {
-                  id
-                  slug
-                  clusters {
+          this.requestCloudApi(`
+            query prismaCliGetClusters {
+              me {
+                memberships {
+                  workspace {
                     id
-                    name
-                    connectInfo {
-                      endpoint
-                    }
-                    customConnectionInfo {
-                      endpoint
+                    slug
+                    clusters {
+                      id
+                      name
+                      connectInfo {
+                        endpoint
+                      }
+                      customConnectionInfo {
+                        endpoint
+                      }
                     }
                   }
                 }
               }
             }
-          }
-        `,
-            }),
-            agent: getProxyAgent('https://api.cloud.prisma.sh'),
-          } as any),
+          `),
           new Promise((_, r) => setTimeout(() => r(), 6000)),
         ])) as any
         if (!res) {
           return
         }
-        const json = await res.json()
-        if (
-          json &&
-          json.data &&
-          json.data.me &&
-          json.data.me.memberships &&
-          Array.isArray(json.data.me.memberships)
-        ) {
-          const euIndex = this.clusters.findIndex(c => c.name === 'prisma-eu1')
-          this.clusters.splice(euIndex, 1)
-          const usIndex = this.clusters.findIndex(c => c.name === 'prisma-us1')
-          this.clusters.splice(usIndex, 1)
-          json.data.me.memberships.forEach(m => {
+        if (res.me && res.me.memberships && Array.isArray(res.me.memberships)) {
+          // clean up all prisma-eu1 and prisma-us1 clusters if they already exist
+          this.clusters = this.clusters.filter(
+            c => c.name !== 'prisma-eu1' && c.name !== 'prisma-us1',
+          )
+
+          res.me.memberships.forEach(m => {
             m.workspace.clusters.forEach(cluster => {
               const endpoint = cluster.connectInfo
                 ? cluster.connectInfo.endpoint
@@ -151,10 +131,14 @@ export class Environment {
       } catch (e) {
         debug(e)
       }
+      await renewPromise
     }
   }
 
   clusterByName(name: string, throws: boolean = false): Cluster | undefined {
+    if (!this.clusters) {
+      return
+    }
     const cluster = this.clusters.find(c => c.name === name)
     if (!throws) {
       return cluster
@@ -282,6 +266,22 @@ export class Environment {
           },
         }
       }, {})
+  }
+  private async requestCloudApi(query: string) {
+    const res = await fetch('https://api.cloud.prisma.sh', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${this.cloudSessionKey}`,
+        'X-Cli-Version': this.version,
+      } as any,
+      body: JSON.stringify({
+        query,
+      }),
+      proxy: getProxyAgent('https://api.cloud.prisma.sh'),
+    } as any)
+    const json = await res.json()
+    return json.data
   }
 }
 

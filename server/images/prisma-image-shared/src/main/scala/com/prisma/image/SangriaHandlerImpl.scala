@@ -21,7 +21,7 @@ import play.api.libs.json.{JsValue, Json}
 import sangria.execution.{Executor, QueryAnalysisError}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
     implicit system: ActorSystem,
@@ -101,9 +101,12 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
       project <- apiDependencies.projectFetcher.fetch_!(projectId)
     } yield {
       if (project.secrets.nonEmpty) {
-        val token = apiDependencies.auth.extractToken(rawRequest.headers.get("authorization"))
-        apiDependencies.auth.verifyToken(token, project.secrets) match {
-          case Success(_) => project
+        Try { apiDependencies.auth.extractToken(rawRequest.headers.get("authorization")) } match {
+          case Success(token) =>
+            apiDependencies.auth.verifyToken(token, project.secrets) match {
+              case Success(_) => project
+              case Failure(_) => throw AuthFailure()
+            }
           case Failure(_) => throw AuthFailure()
         }
       } else {

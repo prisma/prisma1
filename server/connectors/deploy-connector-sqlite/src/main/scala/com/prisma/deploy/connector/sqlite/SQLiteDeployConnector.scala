@@ -2,7 +2,6 @@ package com.prisma.deploy.connector.sqlite
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
@@ -39,7 +38,7 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
-  override def databaseInspector: DatabaseInspector               = DatabaseInspectorImpl(internalDatabaseDefs.databases(root = true).primary)
+  override def databaseInspector: DatabaseInspector               = DatabaseInspector.empty
   override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.mysql //Fixme
 
   override def createProjectDatabase(id: String): Future[Unit] = {

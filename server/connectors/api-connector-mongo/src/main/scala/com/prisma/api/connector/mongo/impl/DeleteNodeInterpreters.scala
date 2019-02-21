@@ -29,7 +29,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
   }
 }
 
-case class DeleteNodesInterpreter(mutaction: DeleteNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+case class DeleteNodesInterpreter(mutaction: TopLevelDeleteNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
 
   def mongoAction(mutationBuilder: MongoActionsBuilder) =
     for {

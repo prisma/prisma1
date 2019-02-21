@@ -1,6 +1,9 @@
 import { SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
-import { ModelMerger, ModelSampler } from '../../../databases/document/modelSampler'
-import { MockDocumentDataSource } from '../../../test-helpers/mockDataSource';
+import {
+  ModelMerger,
+  ModelSampler,
+} from '../../../databases/document/modelSampler'
+import { MockDocumentDataSource } from '../../../test-helpers/mockDataSource'
 
 /**
  * Checks if model sampling and inferring module resolves fields an embedded types correctly.
@@ -11,10 +14,14 @@ describe('Basic document model inferring', () => {
       _id: 0,
       street: 'Test-Street',
       houseNumber: 3,
-      rating: 5.7, 
+      rating: 5.7,
     }
 
-    const merger = new ModelMerger('document', false, new MockDocumentDataSource({})) 
+    const merger = new ModelMerger(
+      'document',
+      false,
+      new MockDocumentDataSource({}),
+    )
 
     merger.analyze(document)
 
@@ -42,10 +49,14 @@ describe('Basic document model inferring', () => {
       floatArray: [0, 1.2, 5],
       stringArray: ['hello'],
       mixedArray: [0, 'hello', false],
-      nestedArray: [[0, 1], [2, 3]]
+      nestedArray: [[0, 1], [2, 3]],
     }
 
-    const merger = new ModelMerger('arrays', false, new MockDocumentDataSource({})) 
+    const merger = new ModelMerger(
+      'arrays',
+      false,
+      new MockDocumentDataSource({}),
+    )
 
     merger.analyze(arrays)
 
@@ -56,9 +67,21 @@ describe('Basic document model inferring', () => {
     SdlExpect.field(type, '_id', true, false, TypeIdentifiers.string, true)
     SdlExpect.field(type, 'stringArray', false, true, TypeIdentifiers.string)
     SdlExpect.field(type, 'floatArray', false, true, TypeIdentifiers.float)
-    const mixedField = SdlExpect.field(type, 'mixedArray', false, true, ModelSampler.ErrorType)
+    const mixedField = SdlExpect.field(
+      type,
+      'mixedArray',
+      false,
+      true,
+      ModelSampler.ErrorType,
+    )
     SdlExpect.error(mixedField)
-    const nestedField = SdlExpect.field(type, 'nestedArray', false, true, ModelSampler.ErrorType)
+    const nestedField = SdlExpect.field(
+      type,
+      'nestedArray',
+      false,
+      true,
+      ModelSampler.ErrorType,
+    )
     SdlExpect.error(nestedField)
   })
 
@@ -68,11 +91,15 @@ describe('Basic document model inferring', () => {
       customer: 'Hugo',
       shippingAddress: {
         street: 'Test-Street',
-        number: 3
-      }
+        number: 3,
+      },
     }
 
-    const merger = new ModelMerger('Customer', false, new MockDocumentDataSource({})) 
+    const merger = new ModelMerger(
+      'Customer',
+      false,
+      new MockDocumentDataSource({}),
+    )
 
     merger.analyze(customer)
 
@@ -80,8 +107,13 @@ describe('Basic document model inferring', () => {
 
     expect(embedded).toHaveLength(1)
 
-    const embeddedType = SdlExpect.type(embedded, 'CustomerShippingAddress', false, true)
-  
+    const embeddedType = SdlExpect.type(
+      embedded,
+      'CustomerShippingAddress',
+      false,
+      true,
+    )
+
     expect(type.name).toBe('Customer')
     expect(type.isEmbedded).toBe(false)
     expect(type.fields).toHaveLength(3)
@@ -92,24 +124,43 @@ describe('Basic document model inferring', () => {
 
     expect(embeddedType.fields).toHaveLength(2)
 
-    SdlExpect.field(embeddedType, 'street', false, false, TypeIdentifiers.string)
-    SdlExpect.field(embeddedType, 'number', false, false, TypeIdentifiers.integer)
+    SdlExpect.field(
+      embeddedType,
+      'street',
+      false,
+      false,
+      TypeIdentifiers.string,
+    )
+    SdlExpect.field(
+      embeddedType,
+      'number',
+      false,
+      false,
+      TypeIdentifiers.integer,
+    )
   })
 
   it('Should create embedded array types correctly', () => {
     const customer = {
       _id: 1,
       customer: 'Hugo',
-      orders: [{
-        item: 'Laptop',
-        count: 3
-      }, {
-        item: 'Wok',
-        count: 1
-      }]
+      orders: [
+        {
+          item: 'Laptop',
+          count: 3,
+        },
+        {
+          item: 'Wok',
+          count: 1,
+        },
+      ],
     }
 
-    const merger = new ModelMerger('Customer', false, new MockDocumentDataSource({})) 
+    const merger = new ModelMerger(
+      'Customer',
+      false,
+      new MockDocumentDataSource({}),
+    )
 
     merger.analyze(customer)
 
@@ -118,7 +169,7 @@ describe('Basic document model inferring', () => {
     expect(embedded).toHaveLength(1)
 
     const embeddedType = SdlExpect.type(embedded, 'CustomerOrders', false, true)
-  
+
     expect(type.name).toBe('Customer')
     expect(type.isEmbedded).toBe(false)
     expect(type.fields).toHaveLength(3)
@@ -130,6 +181,12 @@ describe('Basic document model inferring', () => {
     expect(embeddedType.fields).toHaveLength(2)
 
     SdlExpect.field(embeddedType, 'item', false, false, TypeIdentifiers.string)
-    SdlExpect.field(embeddedType, 'count', false, false, TypeIdentifiers.integer)
+    SdlExpect.field(
+      embeddedType,
+      'count',
+      false,
+      false,
+      TypeIdentifiers.integer,
+    )
   })
 })

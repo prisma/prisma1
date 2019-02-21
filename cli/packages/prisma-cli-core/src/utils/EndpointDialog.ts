@@ -14,7 +14,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { MongoClient } from 'mongodb'
 import * as yaml from 'js-yaml'
-import { DatabaseType, Renderers } from 'prisma-datamodel'
+import { DatabaseType, DefaultRenderer } from 'prisma-datamodel'
 import {
   getConnectedConnectorFromCredentials,
   getConnectorWithDatabase,
@@ -384,7 +384,7 @@ export class EndpointDialog {
           )
           const introspection = await connector.introspect(databaseName)
           const isdl = await introspection.getDatamodel()
-          const renderer = Renderers.create(databaseType)
+          const renderer = DefaultRenderer.create(databaseType)
           datamodel = renderer.render(isdl)
           const tableName =
             databaseType === DatabaseType.mongo ? 'Mongo collections' : 'tables'

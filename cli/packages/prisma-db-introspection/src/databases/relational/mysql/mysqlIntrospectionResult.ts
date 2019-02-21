@@ -1,4 +1,9 @@
-import { ITable, ITableRelation, IEnum } from '../relationalConnector'
+import {
+  ITable,
+  ITableRelation,
+  IEnum,
+  ISequenceInfo,
+} from '../relationalConnector'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import {
   IGQLField,
@@ -7,6 +12,7 @@ import {
   DatabaseType,
   Renderer,
   TypeIdentifiers,
+  IdStrategy,
 } from 'prisma-datamodel'
 
 export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
@@ -14,9 +20,10 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
     model: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
     renderer?: Renderer,
   ) {
-    super(model, relations, enums, DatabaseType.postgres, renderer)
+    super(model, relations, enums, sequences, DatabaseType.mysql, renderer)
   }
 
   protected isTypeReserved(type: IGQLType): boolean {
@@ -82,5 +89,9 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
     type: string,
   ): string | null {
     return defaultValueString
+  }
+
+  protected resolveSequences(types: IGQLType[], sequences: ISequenceInfo[]) {
+    return types // Mysql cannot do that.
   }
 }

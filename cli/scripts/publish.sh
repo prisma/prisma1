@@ -161,9 +161,9 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $da
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   sleep 20.0
   cd ..
@@ -182,9 +182,9 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ]; then
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -204,9 +204,9 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
 
   yarn install
@@ -233,9 +233,9 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   ../../scripts/doubleInstall.sh
   cd ..
@@ -256,9 +256,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -281,9 +281,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCL
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -297,15 +297,15 @@ export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '
 if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionChanged ]; then
   cd prisma-cli-core
   sleep 3.0
-  yarn add prisma-datamodel@$newVersion
+  yarn add prisma-datamodel@$newVersion || yarn add prisma-datamodel@$newVersion
   sleep 0.2
-  yarn add prisma-yml@$ymlVersion
+  yarn add prisma-yml@$newVersion
   sleep 0.2
-  yarn add prisma-db-introspection@$introspectionVersion
+  yarn add prisma-db-introspection@$newVersion
   sleep 0.5
-  yarn add prisma-generate-schema@$generateSchemaVersion
+  yarn add prisma-generate-schema@$newVersion
   sleep 0.2
-  yarn add prisma-client-lib@$clientVersion
+  yarn add prisma-client-lib@$newVersion
   sleep 0.3
   ../../scripts/doubleInstall.sh
 
@@ -318,9 +318,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   npm version $newVersion
 
   if [[ $CIRCLE_TAG ]]; then
-    npm publish
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -343,10 +343,10 @@ if [[ -n "$CIRCLE_TAG" ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
 
   echo "new version: $newVersion"
   npm version $newVersion
-  npm publish
+  npm publish || echo "Try catch"
 else
   npm version $newVersion
-  npm publish --tag $CIRCLE_BRANCH
+  npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
 fi
 
 ############################################

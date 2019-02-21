@@ -4,6 +4,7 @@ import {
   ITableRelation,
   IInternalEnumInfo,
   IEnum,
+  ISequenceInfo,
 } from '../relationalConnector'
 import { Client } from 'pg'
 import { DatabaseType } from 'prisma-datamodel'
@@ -31,8 +32,9 @@ export class PostgresConnector extends RelationalConnector {
     models: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
   ): RelationalIntrospectionResult {
-    return new PostgresIntrospectionResult(models, relations, enums)
+    return new PostgresIntrospectionResult(models, relations, enums, sequences)
   }
 
   public async listSchemas(): Promise<string[]> {
@@ -42,6 +44,10 @@ export class PostgresConnector extends RelationalConnector {
 
   protected getTypeColumnName() {
     return 'udt_name'
+  }
+
+  protected getAutoIncrementCondition() {
+    return 'false'
   }
 
   protected parameter(count: number, type: string) {
@@ -156,6 +162,24 @@ export class PostgresConnector extends RelationalConnector {
       return {
         name: row.enumName as string,
         values: this.parseJoinedArray(row.enumValues),
+      }
+    })
+  }
+
+  protected async listSequences(schemaName: string): Promise<ISequenceInfo[]> {
+    const sequenceQuery = `
+    SELECT
+      sequence_name, start_value
+      FROM 
+      information_schema.sequences
+      WHERE
+      sequence_schema =  $1::text`
+
+    return (await this.query(sequenceQuery, [schemaName])).map(row => {
+      return {
+        name: row.sequence_name as string,
+        initialValue: row.start_value as number,
+        allocationSize: 1,
       }
     })
   }

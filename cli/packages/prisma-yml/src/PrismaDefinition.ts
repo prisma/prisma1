@@ -11,11 +11,7 @@ import { Cluster } from './Cluster'
 import { FunctionInput, Header } from './types/rc'
 import chalk from 'chalk'
 import { replaceYamlValue } from './utils/yamlComment'
-import { parseEndpoint } from './utils/parseEndpoint'
-
-interface ErrorMessage {
-  message: string
-}
+import { parseEndpoint, ParseEndpointResult } from './utils/parseEndpoint'
 
 export interface EnvVars {
   [key: string]: string | undefined
@@ -51,11 +47,26 @@ export class PrismaDefinitionClass {
     this.envVars = envVars
   }
   async load(args: Args, envPath?: string, graceful?: boolean) {
+    if (args.project) {
+      const flagPath = path.resolve(args.project as string)
+      
+      if (!fs.pathExistsSync(flagPath)) {
+        throw new Error(`Prisma definition path specified by --project '${flagPath}' does not exist`)
+      }
+
+      this.definitionPath = flagPath
+      this.definitionDir = path.dirname(flagPath)
+      await this.loadDefinition(args, graceful)
+
+      this.validate()
+      return;
+    }
+    
     if (envPath) {
       if (!fs.pathExistsSync(envPath)) {
         envPath = path.join(process.cwd(), envPath)
       }
-
+      
       if (!fs.pathExistsSync(envPath)) {
         throw new Error(`--env-file path '${envPath}' does not exist`)
       }
@@ -206,41 +217,59 @@ and execute ${chalk.bold.green(
     return undefined
   }
 
-  getCluster(throws: boolean = false): Cluster | undefined {
+  async getCluster(throws: boolean = false): Promise<Cluster | undefined> {
     if (this.definition && this.endpoint) {
-      const {
-        clusterBaseUrl,
-        isPrivate,
-        local,
-        shared,
-        workspaceSlug,
-        clusterName,
-      } = parseEndpoint(this.endpoint)
-      if (clusterBaseUrl) {
-        const existingCluster = !process.env.PRISMA_MANAGEMENT_API_SECRET
-          ? this.env.clusters.find(
-              c => c.baseUrl.toLowerCase() === clusterBaseUrl,
-            )
-          : null
-        const cluster =
-          existingCluster ||
-          new Cluster(
-            this.out!,
-            clusterName,
-            clusterBaseUrl,
-            shared || isPrivate ? this.env.cloudSessionKey : undefined,
-            local,
-            shared,
-            isPrivate,
-            workspaceSlug,
-          )
-        this.env.removeCluster(clusterName)
-        this.env.addCluster(cluster)
+      const clusterData = parseEndpoint(this.endpoint)
+      const cluster = await this.getClusterByEndpoint(clusterData)
+      this.env.removeCluster(clusterData.clusterName)
+      this.env.addCluster(cluster)
+      return cluster
+    }
+
+    return undefined
+  }
+
+  findClusterByBaseUrl(baseUrl: string) {
+    return this.env.clusters.find(c => c.baseUrl.toLowerCase() === baseUrl)
+  }
+
+  async getClusterByEndpoint(data: ParseEndpointResult) {
+    if (data.clusterBaseUrl && !process.env.PRISMA_MANAGEMENT_API_SECRET) {
+      const cluster = this.findClusterByBaseUrl(data.clusterBaseUrl)
+      if (cluster) {
         return cluster
       }
     }
 
-    return undefined
+    const {
+      clusterName,
+      clusterBaseUrl,
+      shared,
+      isPrivate,
+      local,
+      workspaceSlug,
+    } = data
+
+    // if the cluster could potentially be served by the cloud api, fetch the available
+    // clusters from the cloud api
+    if (!local) {
+      await this.env.fetchClusters()
+      const cluster = this.findClusterByBaseUrl(data.clusterBaseUrl)
+      if (cluster) {
+        return cluster
+      }
+    }
+
+    return new Cluster(
+      this.out!,
+      clusterName,
+      clusterBaseUrl,
+      shared || isPrivate ? this.env.cloudSessionKey : undefined,
+      local,
+      shared,
+      isPrivate,
+      workspaceSlug,
+    )
   }
 
   getTypesString(definition: PrismaDefinition) {
@@ -250,7 +279,6 @@ and execute ${chalk.bold.green(
         : [definition.datamodel]
       : []
 
-    const errors: ErrorMessage[] = []
     let allTypes = ''
     typesPaths.forEach(unresolvedTypesPath => {
       const typesPath = path.join(this.definitionDir, unresolvedTypesPath!)
@@ -282,43 +310,43 @@ and execute ${chalk.bold.green(
     return null
   }
 
-  getDeployName() {
-    const cluster = this.getCluster()
+  async getDeployName() {
+    const cluster = await this.getCluster()
     return concatName(cluster!, this.service!, this.getWorkspace())
   }
 
   getSubscriptions(): FunctionInput[] {
     if (this.definition && this.definition.subscriptions) {
-      return Object.keys(this.definition!.subscriptions!).map(name => {
-        const subscription = this.definition!.subscriptions![name]
+      return Object.entries(this.definition!.subscriptions!).map(
+        ([name, subscription]) => {
+          const url =
+            typeof subscription.webhook === 'string'
+              ? subscription.webhook
+              : subscription.webhook.url
+          const headers =
+            typeof subscription.webhook === 'string'
+              ? []
+              : transformHeaders(subscription.webhook.headers)
 
-        const url =
-          typeof subscription.webhook === 'string'
-            ? subscription.webhook
-            : subscription.webhook.url
-        const headers =
-          typeof subscription.webhook === 'string'
-            ? []
-            : transformHeaders(subscription.webhook.headers)
-
-        let query = subscription.query
-        if (subscription.query.endsWith('.graphql')) {
-          const queryPath = path.join(this.definitionDir, subscription.query)
-          if (!fs.pathExistsSync(queryPath)) {
-            throw new Error(
-              `Subscription query ${queryPath} provided in subscription "${name}" in prisma.yml does not exist.`,
-            )
+          let query = subscription.query
+          if (subscription.query.endsWith('.graphql')) {
+            const queryPath = path.join(this.definitionDir, subscription.query)
+            if (!fs.pathExistsSync(queryPath)) {
+              throw new Error(
+                `Subscription query ${queryPath} provided in subscription "${name}" in prisma.yml does not exist.`,
+              )
+            }
+            query = fs.readFileSync(queryPath, 'utf-8')
           }
-          query = fs.readFileSync(queryPath, 'utf-8')
-        }
 
-        return {
-          name,
-          query,
-          headers,
-          url,
-        }
-      })
+          return {
+            name,
+            query,
+            headers,
+            url,
+          }
+        },
+      )
     }
     return []
   }
@@ -338,8 +366,8 @@ and execute ${chalk.bold.green(
     this.definition!.datamodel = datamodel
   }
 
-  getEndpoint(serviceInput?: string, stageInput?: string) {
-    const cluster = this.getCluster()
+  async getEndpoint(serviceInput?: string, stageInput?: string) {
+    const cluster = await this.getCluster()
     const service = serviceInput || this.service
     const stage = stageInput || this.stage
     const workspace = this.getWorkspace()
@@ -387,18 +415,5 @@ function transformHeaders(headers?: { [key: string]: string }): Header[] {
   if (!headers) {
     return []
   }
-  return Object.keys(headers).map(key => ({
-    name: key,
-    value: headers[key],
-  }))
-}
-
-export function getEndpointFromRawProps(
-  clusterWorkspace: string,
-  service: string,
-  stage: string,
-) {
-  const splitted = clusterWorkspace.split('/')
-  const cluster = splitted.length > 1 ? splitted[1] : splitted[0]
-  const workspace = splitted.length > 1 ? splitted[0] : undefined
+  return Object.entries(headers).map(([name, value]) => ({ name, value }))
 }

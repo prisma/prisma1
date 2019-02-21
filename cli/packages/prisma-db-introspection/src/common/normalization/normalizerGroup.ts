@@ -9,7 +9,7 @@ export default class NormalizerGroup implements INormalizer {
   }
 
   public normalize(model: ISDL) {
-    for(const normalizer of this.baseNormalizers) {
+    for (const normalizer of this.baseNormalizers) {
       normalizer.normalize(model)
     }
   }

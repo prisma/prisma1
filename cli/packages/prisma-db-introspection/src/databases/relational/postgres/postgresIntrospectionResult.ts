@@ -1,4 +1,9 @@
-import { ITable, ITableRelation, IEnum } from '../relationalConnector'
+import {
+  ITable,
+  ITableRelation,
+  IEnum,
+  ISequenceInfo,
+} from '../relationalConnector'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import {
   IGQLField,
@@ -6,6 +11,8 @@ import {
   DatabaseType,
   Renderer,
   TypeIdentifiers,
+  GQLAssert,
+  IdStrategy,
 } from 'prisma-datamodel'
 
 export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
@@ -13,9 +20,10 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
     model: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
     renderer?: Renderer,
   ) {
-    super(model, relations, enums, DatabaseType.postgres, renderer)
+    super(model, relations, enums, sequences, DatabaseType.postgres, renderer)
   }
 
   protected isTypeReserved(type: IGQLType): boolean {
@@ -65,17 +73,17 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
   ): string | null {
     let val = defaultValueString
 
-    // Detect string
-    if (val.startsWith("'")) {
-      // Strip quotes (are added again by renderer)
-      val = val.substring(1, val.length - 1)
-    }
-
     // Remove cast operator
     const i = val.indexOf('::')
 
     if (i >= 0) {
       val = val.substring(0, i)
+    }
+
+    // Detect string
+    if (val.startsWith("'")) {
+      // Strip quotes (are added again by renderer)
+      val = val.substring(1, val.length - 1)
     }
 
     // Check for null
@@ -98,5 +106,43 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
     // TODO: Sequences are simply ignored.
 
     return val
+  }
+
+  protected resolveSequences(types: IGQLType[], sequences: ISequenceInfo[]) {
+    for (const type of types) {
+      for (const field of type.fields) {
+        if (
+          typeof field.defaultValue === 'string' &&
+          field.defaultValue.startsWith('nextval')
+        ) {
+          // Regex also truncates the database schema name, if included in the regex. that's the first capture group.
+          const match = field.defaultValue.match(
+            /^nextval\('(?:.*\.)?(.*?)'::regclass\)$/i,
+          )
+
+          if (match === null) {
+            continue
+          }
+
+          const [dummy, seqName] = match
+
+          const seq = sequences.find(seq => seq.name === seqName)
+
+          if (seq === undefined) {
+            field.comments.push({
+              text: `Error resolving sequence ${seqName} for ${type.name}.${
+                field.name
+              }: The sequence was not found.`,
+              isError: true,
+            })
+          } else {
+            field.idStrategy = IdStrategy.Sequence
+            field.associatedSequence = seq!
+            field.defaultValue = null
+          }
+        }
+      }
+    }
+    return types
   }
 }

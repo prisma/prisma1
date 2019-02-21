@@ -68,11 +68,13 @@ trait MiscQueries extends BuilderBase with FilterConditionBuilder {
       case null                    => JsNull
       case v: String               => JsString(v)
       case v: java.lang.Boolean    => JsBoolean(v)
+      case v: java.lang.Short      => JsNumber(v.toInt)
       case v: java.lang.Integer    => JsNumber(v.toInt)
       case v: java.lang.Long       => JsNumber(v.toLong)
       case v: java.lang.Float      => JsNumber(v.toDouble)
       case v: java.lang.Double     => JsNumber(v.toDouble)
       case v: java.math.BigDecimal => JsNumber(v)
+      case v: java.math.BigInteger => JsString(v.toString) //https://github.com/graphql/graphql-js/issues/292
       case v: java.sql.Timestamp   => JsString(v.toString)
       case v: java.sql.Time        => JsString(v.toString)
       case v: java.sql.Date        => JsString(v.toString)

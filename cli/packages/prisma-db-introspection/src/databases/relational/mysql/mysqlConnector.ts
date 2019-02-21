@@ -4,8 +4,9 @@ import {
   ITableRelation,
   IInternalEnumInfo,
   IEnum,
+  ISequenceInfo,
 } from '../relationalConnector'
-import { Connection } from 'mysql'
+import { Connection } from 'mysql2'
 import { DatabaseType, camelCase } from 'prisma-datamodel'
 import { MysqlIntrospectionResult } from './mysqlIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
@@ -32,12 +33,16 @@ export class MysqlConnector extends RelationalConnector {
     models: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
   ): RelationalIntrospectionResult {
-    return new MysqlIntrospectionResult(models, relations, enums)
+    return new MysqlIntrospectionResult(models, relations, enums, sequences)
   }
 
   protected getTypeColumnName() {
     return 'COLUMN_TYPE'
+  }
+  protected getAutoIncrementCondition() {
+    return 'EXTRA like \'%auto_increment%\''
   }
 
   protected parameter(count: number, type: string) {
@@ -179,5 +184,9 @@ export class MysqlConnector extends RelationalConnector {
     })
 
     return result
+  }
+
+  protected async listSequences(schemaName: string): Promise<ISequenceInfo[]> {
+    return []
   }
 }

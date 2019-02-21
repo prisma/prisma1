@@ -35,7 +35,7 @@
     "aws-sdk": "^2.373.0",
     "axios": "^0.18.0",
     "dotenv-cli": "^1.4.0",
-    "git-commit-push-via-github-api": "^1.0.1",
+    "git-commit-push-via-github-api": "1.0.1",
     "husky": "^0.14.3",
     "lint-staged": "^4.0.3",
     "pkg": "^4.3.5",

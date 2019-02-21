@@ -4,17 +4,14 @@ import chalk from 'chalk'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
-import { fetchAndPrintSchema } from './printSchema'
 import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
 import { prettyTime, concatName, defaultDockerCompose } from '../../utils/util'
 import * as sillyname from 'sillyname'
-import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
-import { SchemaError } from 'prisma-cli-engine/dist/Client/types'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -25,13 +22,13 @@ export default class Deploy extends Command {
   ${chalk.green.bold('Examples:')}
       
 ${chalk.gray(
-    '-',
-  )} Deploy local changes from prisma.yml to the default service environment.
+  '-',
+)} Deploy local changes from prisma.yml to the default service environment.
   ${chalk.green('$ prisma deploy')}
     
 ${chalk.gray(
-    '-',
-  )} Deploy local changes from default service file accepting potential data loss caused by schema changes
+  '-',
+)} Deploy local changes from default service file accepting potential data loss caused by schema changes
   ${chalk.green('$ prisma deploy --force')}
   `
   static flags: Flags = {
@@ -60,6 +57,10 @@ ${chalk.gray(
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
+    }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
     }),
   }
   private deploying: boolean = false
@@ -123,7 +124,7 @@ ${chalk.gray(
         )}\` to prisma.yml\n`,
       )
     } else {
-      cluster = this.definition.getCluster(false)
+      cluster = await this.definition.getCluster(false)
     }
 
     if (cluster && cluster.local && !(await cluster.isOnline())) {
@@ -188,10 +189,6 @@ ${chalk.gray(
     return `${slugify(sillyname()).split('-')[0]}-${Math.round(
       Math.random() * 1000,
     )}`
-  }
-
-  private getPublicName() {
-    return `public-${this.getSillyName()}`
   }
 
   private async projectExists(
@@ -321,11 +318,11 @@ ${chalk.gray(
       const isPackaged = fs.existsSync('/snapshot')
       const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
       const child = spawnPath(splittedHook[0], splittedHook.slice(1))
-      const stderr = child.stderr && child.stderr.toString().trim()
+      const stderr = child.stderr && child.stderr.toString()
       if (stderr && stderr.length > 0) {
         this.out.log(chalk.red(stderr))
       }
-      const stdout = child.stdout && child.stdout.toString().trim()
+      const stdout = child.stdout && child.stdout.toString()
       if (stdout && stdout.length > 0) {
         this.out.log(stdout)
       }
@@ -410,64 +407,10 @@ ${chalk.gray(
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 
-  /**
-   * Returns true if there was a change
-   */
-  private async generateSchema(
-    cluster: Cluster,
-    serviceName: string,
-    stageName: string,
-  ): Promise<boolean> {
-    const schemaPath = getSchemaPathFromConfig()
-    if (schemaPath) {
-      this.printHooks()
-      const schemaDir = path.dirname(schemaPath)
-      fs.mkdirpSync(schemaDir)
-      const token = this.definition.getToken(serviceName, stageName)
-      const before = Date.now()
-      this.out.action.start(`Checking, if schema file changed`)
-      const schemaString = await fetchAndPrintSchema(
-        this.client,
-        concatName(cluster, serviceName, this.definition.getWorkspace()),
-        stageName,
-        token,
-      )
-      this.out.action.stop(prettyTime(Date.now() - before))
-      const oldSchemaString = fs.pathExistsSync(schemaPath)
-        ? fs.readFileSync(schemaPath, 'utf-8')
-        : null
-      if (schemaString !== oldSchemaString) {
-        const beforeWrite = Date.now()
-        this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
-        fs.writeFileSync(schemaPath, schemaString)
-        this.out.action.stop(prettyTime(Date.now() - beforeWrite))
-        return true
-      }
-    }
-
-    return false
-  }
-
-  private addCustomHelpMessage(errors: SchemaError[]) {
-    const hasIdError = errors.find(e =>
-      e.description.includes(
-        'must be marked as the id field with the `@id` directive.',
-      ),
-    )
-    if (hasIdError) {
-      this.out.log(
-        chalk.bold(
-          '\nNote: The Prisma server you are deploying against runs with the new datamodel v2, which requires the @id directive.',
-        ),
-      )
-    }
-  }
-
   private printResult(payload: DeployPayload, force: boolean, dryRun: boolean) {
     if (payload.errors && payload.errors.length > 0) {
-      this.out.log(chalk.bold.red('\nErrors:'))
+      this.out.log(`${chalk.bold.red('\nErrors:')}`)
       this.out.migration.printErrors(payload.errors)
-      this.addCustomHelpMessage(payload.errors)
       this.out.log(
         '\nDeployment canceled. Please fix the above errors to continue deploying.',
       )
@@ -476,32 +419,6 @@ ${chalk.gray(
       )
 
       this.out.exit(1)
-    }
-
-    const steps =
-      payload.steps || (payload.migration && payload.migration.steps) || []
-
-    if (
-      steps.length === 0 &&
-      (!payload.warnings || payload.warnings.length === 0)
-    ) {
-      if (dryRun) {
-        this.out.log('There are no changes.')
-      } else {
-        this.out.log('Service is already up to date.')
-      }
-      return
-    }
-
-    if (steps.length > 0) {
-      const areChangesPotential =
-        dryRun || (payload.warnings && payload.warnings.length > 0)
-      this.out.log(
-        '\n' +
-          chalk.bold(areChangesPotential ? 'Potential changes:' : 'Changes:'),
-      )
-      this.out.migration.printMessages(steps)
-      this.out.log('')
     }
 
     if (payload.warnings && payload.warnings.length > 0) {
@@ -521,6 +438,26 @@ ${chalk.gray(
         )
         this.out.exit(1)
       }
+    }
+
+    const steps =
+      payload.steps || (payload.migration && payload.migration.steps) || []
+
+    if (steps.length === 0) {
+      if (dryRun) {
+        this.out.log('There are no changes.')
+      } else {
+        this.out.log('Service is already up to date.')
+      }
+      return
+    }
+
+    if (steps.length > 0) {
+      this.out.log(
+        '\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'),
+      )
+      this.out.migration.printMessages(steps)
+      this.out.log('')
     }
   }
 
@@ -582,6 +519,7 @@ ${chalk.gray(
   }
 
   private async getLoggedInChoices(): Promise<any[]> {
+    await this.env.fetchClusters()
     const localChoices = this.getLocalClusterChoices()
     const combinations: string[][] = []
     const remoteClusters = this.env.clusters.filter(

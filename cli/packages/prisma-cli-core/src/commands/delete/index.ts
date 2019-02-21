@@ -15,6 +15,10 @@ export default class Delete extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
   }
   async run() {
     const { force } = this.flags
@@ -23,7 +27,7 @@ export default class Delete extends Command {
     await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     await this.client.initClusterClient(

@@ -1,6 +1,6 @@
 package com.prisma.deploy.validation
 
-import com.prisma.deploy.connector.{ClientDbQueries, DeployConnector}
+import com.prisma.deploy.connector.ClientDbQueries
 import com.prisma.deploy.migration.validation.{DeployError, DeployResult, DeployWarning, DeployWarnings}
 import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, UpdatedAtBehaviour}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
@@ -153,7 +153,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
 
     val dataLossError = if (field.isScalar) {
       clientDbQueries.existsByModel(model).map {
-        case true  => Vector(DeployWarnings.dataLossField(model.name, field.name))
+        case true  => Vector(DeployWarnings.dataLossField(x.model, x.name))
         case false => Vector.empty
       }
     } else {
@@ -263,10 +263,10 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
 
   private def createRelationValidation(x: CreateRelation) = {
 
-    val nextRelation = nextSchema.relations.find(_.name == x.name).get
+    val nextRelation = nextSchema.getRelationByName_!(x.name)
 
     def checkRelationSide(modelName: String) = {
-      val nextModelA      = nextSchema.models.find(_.name == modelName).get
+      val nextModelA      = nextSchema.getModelByName_!(modelName)
       val nextModelAField = nextModelA.relationFields.find(field => field.relation == nextRelation)
 
       val modelARequired = nextModelAField match {
@@ -274,7 +274,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
         case Some(field) => field.isRequired
       }
 
-      if (modelARequired) previousSchema.models.find(_.name == modelName) match {
+      if (modelARequired) previousSchema.getModelByName(modelName) match {
         case Some(model) =>
           clientDbQueries.existsByModel(model).map {
             case true =>

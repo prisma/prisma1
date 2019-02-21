@@ -10,6 +10,7 @@ import org.http4s._
 import org.http4s.circe._
 import org.http4s.dsl.io._
 import org.http4s.server.blaze._
+import org.http4s.server.middleware.{CORS, CORSConfig}
 import play.api.libs.json.{JsValue => PlayJsValue}
 import ujson.circe.CirceJson
 import ujson.play.PlayJson
@@ -46,30 +47,41 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
     Await.result(Future.never, Duration.Inf)
   }
 
-  val service = HttpService[IO] {
-    case request if request.method == GET && request.pathInfo == "/status" =>
-      Ok("\"OK\"")
+  val methodConfig = CORSConfig(
+    anyOrigin = true,
+    anyMethod = false,
+    allowedMethods = Some(Set("GET", "POST", "HEAD", "OPTIONS")),
+    allowCredentials = true,
+    maxAge = 1800
+  )
 
-    case request if request.method == GET =>
-      StaticFile.fromResource("/playground.html", Some(request)).getOrElseF(NotFound())
+  val service = CORS(
+    HttpService[IO] {
+      case request if request.method == GET && request.pathInfo == "/status" =>
+        Ok("\"OK\"")
 
-    case request if request.method == POST =>
-      val requestId       = createRequestId()
-      val requestIdHeader = Header("Request-Id", requestId)
+      case request if request.method == GET =>
+        StaticFile.fromResource("/playground.html", Some(request)).getOrElseF(NotFound())
 
-      val response: IO[http4s.Response[IO]] = for {
-        rawRequest <- http4sRequestToRawRequest(request, requestId)
-        result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest)))
-        json       = playJsonToCircleJson(result.json)
-        headers    = result.headers.map(h => Header(h._1, h._2)) ++ Vector(requestIdHeader)
-        response   <- Ok.apply(json, headers.toSeq: _*)
-      } yield response
+      case request if request.method == POST =>
+        val requestId       = createRequestId()
+        val requestIdHeader = Header("Request-Id", requestId)
 
-      response.handleErrorWith { exception =>
-        val playJson = JsonErrorHelper.errorJson(requestId, exception.getMessage)
-        InternalServerError(playJsonToCircleJson(playJson), requestIdHeader)
-      }
-  }
+        val response: IO[http4s.Response[IO]] = for {
+          rawRequest <- http4sRequestToRawRequest(request, requestId)
+          result     <- IO.fromFuture(IO(handler.handleRawRequest(rawRequest)))
+          json       = playJsonToCircleJson(result.json)
+          headers    = result.headers.map(h => Header(h._1, h._2)) ++ Vector(requestIdHeader)
+          response   <- Ok.apply(json, headers.toSeq: _*)
+        } yield response
+
+        response.handleErrorWith { exception =>
+          val playJson = JsonErrorHelper.errorJson(requestId, exception.getMessage)
+          InternalServerError(playJsonToCircleJson(playJson), requestIdHeader)
+        }
+    },
+    methodConfig
+  )
 
   def http4sRequestToRawRequest(request: Request[IO], requestId: String): IO[RawRequest] = {
     request.as[Json].map { json =>

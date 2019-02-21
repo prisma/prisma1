@@ -374,7 +374,10 @@ export class Client {
         node.selectionSet.selections.push(acc)
       }
 
-      if (node.selectionSet.selections.length === 0 && type instanceof GraphQLObjectType) {
+      if (
+        node.selectionSet.selections.length === 0 &&
+        type instanceof GraphQLObjectType
+      ) {
         node.selectionSet.selections = [
           {
             kind: 'Field',

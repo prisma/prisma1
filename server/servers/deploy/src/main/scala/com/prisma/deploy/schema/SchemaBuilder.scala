@@ -17,7 +17,7 @@ import sangria.schema._
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 case class SystemUserContext(authorizationHeader: Option[String])
 
@@ -305,11 +305,17 @@ case class SchemaBuilderImpl(
     }
   }
 
-  private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]) = {
-    val auth  = dependencies.managementAuth
-    val token = auth.extractToken(authHeader)
-    val grant = Some(JwtGrant(name, stage, "*"))
+  private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]): Unit = {
+    Try {
+      val auth  = dependencies.managementAuth
+      val token = auth.extractToken(authHeader)
+      val grant = Some(JwtGrant(name, stage, "*"))
 
-    auth.verifyToken(token, Vector(managementSecret), expectedGrant = grant).get
+      auth.verifyToken(token, Vector(managementSecret), expectedGrant = grant).get
+    } match {
+      case Success(_)                               =>
+      case Failure(com.prisma.jwt.AuthFailure(msg)) => throw AuthFailure(msg)
+      case Failure(e)                               => throw e
+    }
   }
 }
