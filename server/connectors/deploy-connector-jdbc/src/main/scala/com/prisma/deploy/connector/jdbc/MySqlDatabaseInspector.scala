@@ -68,7 +68,7 @@ case class MySqlDatabaseInspector(db: SlickDatabase)(implicit val ec: ExecutionC
          |FROM
          |    information_schema.key_column_usage kcu
          |WHERE
-         |    kcu.constraint_schema = $schema
+         |    kcu.table_schema  = $schema
          |    AND kcu.referenced_table_name IS NOT NULL;
             """.stripMargin.as[IntrospectedForeignKey]
   }
