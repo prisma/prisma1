@@ -6,6 +6,8 @@ import {
   IDirectiveInfo,
   IArguments,
   IIndexInfo,
+  IdStrategy,
+  ISequenceInfo,
 } from '../model'
 import { parse } from 'graphql'
 import { DirectiveKeys } from '../directives'
@@ -19,7 +21,7 @@ import GQLAssert from '../../util/gqlAssert'
  * to an internal representation, convenient for
  * working with.
  */
-export default abstract class Parser {
+export default abstract class DefaultParser {
   /**
    * Shorthand to parse the datamodel, given an SDL string.
    * @param schemaString The datamodel as SDL string.
@@ -36,10 +38,7 @@ export default abstract class Parser {
    * @returns A list of types found in the datamodel.
    */
   public parseFromSchema(schema: any): ISDL {
-    const types = [
-      ...this.parseObjectTypes(schema),
-      ...this.parseEnumTypes(schema),
-    ]
+    const types = [...this.parseTypes(schema)]
 
     this.resolveRelations(types)
 
@@ -72,6 +71,64 @@ export default abstract class Parser {
    * @param field
    */
   protected abstract isCreatedAtField(field: any): boolean
+
+  protected parseIdType(field: any) {
+    const idDirective = this.getDirectiveByName(field, DirectiveKeys.isId)
+    const idType = this.getDirectiveArgument(idDirective, 'strategy')
+
+    if (idType) {
+      switch (idType) {
+        case IdStrategy.Auto:
+          return IdStrategy.Auto
+        case IdStrategy.None:
+          return IdStrategy.None
+        case IdStrategy.Sequence:
+          return IdStrategy.Sequence
+        default:
+          GQLAssert.raise(`Found invalid ID strategy while parsing: ${idType}`)
+          return null
+      }
+    } else {
+      return null
+    }
+  }
+
+  protected parseSequence(field: any): ISequenceInfo | null {
+    const sequenceDirective = this.getDirectiveByName(
+      field,
+      DirectiveKeys.sequence,
+    )
+
+    if (sequenceDirective === null) {
+      return null
+    }
+
+    const name = this.getDirectiveArgument(sequenceDirective, 'name')
+    const initialValue = this.getDirectiveArgument(
+      sequenceDirective,
+      'initialValue',
+    )
+    const allocationSize = this.getDirectiveArgument(
+      sequenceDirective,
+      'allocationSize',
+    )
+
+    GQLAssert.raiseIf(name === null, 'Name is required in sequence directive.')
+    GQLAssert.raiseIf(
+      initialValue === null,
+      'initialValue is required in sequence directive.',
+    )
+    GQLAssert.raiseIf(
+      allocationSize === null,
+      'allocationSize is required in sequence directive.',
+    )
+
+    return {
+      name: name as string,
+      initialValue: parseInt(initialValue, 10),
+      allocationSize: parseInt(allocationSize, 10),
+    }
+  }
 
   /**
    * Checks if the given field is reserved and read-only.
@@ -265,6 +322,7 @@ export default abstract class Parser {
       DirectiveKeys.isId,
       DirectiveKeys.index,
       DirectiveKeys.relation,
+      DirectiveKeys.sequence,
     ]
   }
 
@@ -317,6 +375,8 @@ export default abstract class Parser {
     const relationName = this.getRelationName(field)
     const databaseName = this.getDatabaseFieldName(field)
     const directives = this.parseDirectives(field)
+    const associatedSequence = this.parseSequence(field)
+    const idStrategy = this.parseIdType(field)
 
     return {
       name,
@@ -328,6 +388,8 @@ export default abstract class Parser {
       isRequired: kind === 'NonNullType',
       relatedField: null,
       isId,
+      idStrategy,
+      associatedSequence,
       isUpdatedAt,
       isCreatedAt,
       isReadOnly,
@@ -344,6 +406,14 @@ export default abstract class Parser {
   protected abstract isEmbedded(type: any): boolean
 
   /**
+   * Checks if the given type is marked as link table.
+   * @param type
+   */
+  protected isLinkTable(type: any): boolean {
+    return this.hasDirective(type, DirectiveKeys.linkTable)
+  }
+
+  /**
    * Parases an object type.
    * @param type
    */
@@ -358,6 +428,7 @@ export default abstract class Parser {
 
     const databaseName = this.getDatabaseTypeName(type)
     const isEmbedded = this.isEmbedded(type)
+    const isLinkTable = this.isLinkTable(type)
     const directives = this.parseDirectives(type)
     const indices = this.parseIndices(type, fields)
 
@@ -365,6 +436,7 @@ export default abstract class Parser {
       name: type.name.value,
       fields,
       isEnum: false,
+      isLinkTable,
       isEmbedded,
       databaseName,
       directives,
@@ -374,55 +446,55 @@ export default abstract class Parser {
   }
 
   /**
-   * Parses all object types in the schema.
+   * Parses all types in the schema.
    * @param schema
    */
-  protected parseObjectTypes(schema: any): IGQLType[] {
-    const objectTypes: IGQLType[] = []
+  protected parseTypes(schema: any): IGQLType[] {
+    const types: IGQLType[] = []
 
     for (const type of schema.definitions) {
       if (type.kind === 'ObjectTypeDefinition') {
-        objectTypes.push(this.parseObjectType(type))
+        types.push(this.parseObjectType(type))
+      } else if (type.kind === 'EnumTypeDefinition') {
+        types.push(this.parseEnumType(type))
       }
     }
 
-    return objectTypes
+    return types
   }
 
   /**
-   * Parses all enum types in the schema.
+   * Parses an enum type.
    * @param schema
    */
-  protected parseEnumTypes(schema: any): IGQLType[] {
-    const enumTypes: IGQLType[] = []
-    for (const type of schema.definitions) {
-      if (type.kind === 'EnumTypeDefinition') {
-        const values: IGQLField[] = []
-        for (const value of type.values) {
-          if (value.kind === 'EnumValueDefinition') {
-            const name = value.name.value
+  protected parseEnumType(type: any): IGQLType {
+    if (type.kind === 'EnumTypeDefinition') {
+      const values: IGQLField[] = []
+      for (const value of type.values) {
+        if (value.kind === 'EnumValueDefinition') {
+          const name = value.name.value
 
-            // All props except name are ignored for enum defs.
-            values.push(new GQLScalarField(name, 'String', false))
-          }
+          // All props except name are ignored for enum defs.
+          values.push(new GQLScalarField(name, 'String', false))
         }
-
-        const directives = this.parseDirectives(type)
-
-        enumTypes.push({
-          name: type.name.value,
-          fields: values,
-          isEnum: true,
-          isEmbedded: false,
-          directives,
-          comments: [],
-          databaseName: null,
-          indices: [],
-        })
       }
-    }
 
-    return enumTypes
+      const directives = this.parseDirectives(type)
+
+      return {
+        name: type.name.value,
+        fields: values,
+        isEnum: true,
+        isLinkTable: false,
+        isEmbedded: false,
+        directives,
+        comments: [],
+        databaseName: null,
+        indices: [],
+      }
+    } else {
+      throw GQLAssert.raise('Expected an enum type.')
+    }
   }
 
   /**

@@ -1,6 +1,6 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import chalk from 'chalk'
-import { prettyTime } from '../../util'
+import { prettyTime } from '../../utils/util'
 
 export default class Delete extends Command {
   static topic = 'delete'

@@ -54,7 +54,6 @@ export class Client {
     stageName?: string,
     workspaceSlug?: string | undefined | null,
   ) {
-    debug('Initializing cluster client')
     try {
       const token = await cluster.getToken(
         serviceName,
@@ -236,7 +235,6 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('executing query', serviceName, stageName, query)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -893,7 +891,6 @@ export class Client {
     } as any)
     while (!valid) {
       try {
-        debug('requesting', endpoint)
         await client.request(
           `
             {

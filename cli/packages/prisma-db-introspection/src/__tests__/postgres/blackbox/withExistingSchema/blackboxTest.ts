@@ -1,15 +1,10 @@
 import * as path from 'path'
 import * as fs from 'fs'
-import {
-  RelationalParser,
-  RelationalRenderer,
-  RelationalRendererV2,
-} from 'prisma-datamodel'
-
 import { Client } from 'pg'
 import { connectionDetails } from '../connectionDetails'
 import { PostgresConnector } from '../../../../databases/relational/postgres/postgresConnector'
 import PostgresDatabaseClient from '../../../../databases/relational/postgres/postgresDatabaseClient'
+import { DefaultParser, DefaultRenderer, DatabaseType } from 'prisma-datamodel'
 
 // Tests are located in different module.
 const relativeTestCaseDir = path.join(
@@ -30,7 +25,7 @@ export default async function blackBoxTest(name: string) {
   const model = fs.readFileSync(modelPath, { encoding: 'UTF-8' })
   const sqlDump = fs.readFileSync(sqlDumpPath, { encoding: 'UTF-8' })
 
-  const parser = new RelationalParser()
+  const parser = DefaultParser.create(DatabaseType.postgres)
 
   const refModel = parser.parseFromSchemaString(model)
 
@@ -56,12 +51,18 @@ export default async function blackBoxTest(name: string) {
   )
 
   // Backwards compatible (v1) rendering
-  const renderer = new RelationalRenderer()
+  const legacyRenderer = DefaultRenderer.create(DatabaseType.postgres)
+  const legacyRenderedWithReference = legacyRenderer.render(
+    normalizedWithReference,
+  )
+
+  expect(legacyRenderedWithReference).toEqual(model)
+
+  // V2 rendering
+  const renderer = DefaultRenderer.create(DatabaseType.postgres, true)
   const renderedWithReference = renderer.render(normalizedWithReference)
 
-  expect(renderedWithReference).toEqual(model)
-  //expect(renderer.render(normalizedWithoutReference)).toMatchSnapshot()
-  //expect(renderer.render(unnormalized)).toMatchSnapshot()
+  expect(renderedWithReference).toMatchSnapshot()
 
   await client.end()
 
@@ -93,6 +94,5 @@ const testNames = fs.readdirSync(relativeTestCaseDir)
 for (const testName of testNames) {
   test(`Introspects ${testName}/relational correctly`, async () => {
     await blackBoxTest(testName)
-  })
-  break
+  }, 20000)
 }

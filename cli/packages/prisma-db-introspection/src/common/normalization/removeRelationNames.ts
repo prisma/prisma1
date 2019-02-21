@@ -1,4 +1,4 @@
-import { RelationalParser, ISDL, IGQLField, IGQLType } from 'prisma-datamodel'
+import { ISDL, IGQLField, IGQLType } from 'prisma-datamodel'
 import { INormalizer } from './normalizer'
 
 /**

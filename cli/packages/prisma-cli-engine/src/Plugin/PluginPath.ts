@@ -6,8 +6,6 @@ import { CachedCommand, CachedPlugin, CachedTopic, Group } from './Cache'
 import { Arg, Flag } from '../Flags/index'
 import * as path from 'path'
 
-const debug = require('debug')('cli-engine:plugins:manager')
-
 export interface PluginPathOptions {
   output: Output
   type: PluginType
@@ -147,9 +145,7 @@ export class PluginPath {
   async require(): Promise<ParsedPlugin> {
     let required
     try {
-      debug('requiring', this.path)
       required = require(this.path)
-      debug('required')
     } catch (err) {
       if (await this.repair(err)) {
         return this.require()
@@ -215,7 +211,6 @@ export class PluginPath {
   }
 
   async repair(err: Error): Promise<boolean> {
-    debug(err)
     return false
   }
 }

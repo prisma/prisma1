@@ -2,6 +2,7 @@ import { IConnector } from '../../common/connector'
 import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
 import { RelationalIntrospectionResult } from './relationalIntrospectionResult'
 import IDatabaseClient from '../IDatabaseClient'
+import GQLAssert from '../../../../prisma-datamodel/dist/util/gqlAssert'
 
 export interface IInternalIndexInfo {
   tableName: string
@@ -28,6 +29,7 @@ export abstract class RelationalConnector implements IConnector {
     models: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
   ): RelationalIntrospectionResult
 
   protected async query(query: string, params: any[] = []): Promise<any[]> {
@@ -53,6 +55,10 @@ export abstract class RelationalConnector implements IConnector {
 
   protected abstract async queryEnums(schemaName: string): Promise<IEnum[]>
 
+  protected abstract async listSequences(
+    schemaName: string,
+  ): Promise<ISequenceInfo[]>
+
   public async introspect(
     schema: string,
   ): Promise<RelationalIntrospectionResult> {
@@ -60,6 +66,7 @@ export abstract class RelationalConnector implements IConnector {
       await this.listModels(schema),
       await this.listRelations(schema),
       await this.listEnums(schema),
+      await this.listSequences(schema),
     )
   }
 
@@ -75,7 +82,7 @@ export abstract class RelationalConnector implements IConnector {
       `SELECT 
          schema_name
        FROM 
-         information_schema.schemata 
+         information_schema.schemata
        WHERE schema_name NOT LIKE 'information_schema';`,
     )
 
@@ -115,7 +122,7 @@ export abstract class RelationalConnector implements IConnector {
   protected async queryTables(schemaName: string) {
     const allTablesQuery = `
       SELECT 
-        table_name
+        table_name as table_name
       FROM 
         information_schema.tables
       WHERE 
@@ -123,9 +130,13 @@ export abstract class RelationalConnector implements IConnector {
         -- Views are not supported yet
         AND table_type = 'BASE TABLE'`
 
-    return (await this.query(allTablesQuery, [schemaName])).map(
-      row => row.table_name as string,
-    )
+    return (await this.query(allTablesQuery, [schemaName])).map(row => {
+      GQLAssert.raiseIf(
+        row.table_name === undefined,
+        'Received `undefined` as table name.',
+      )
+      return row.table_name as string
+    })
   }
 
   /**
@@ -136,6 +147,15 @@ export abstract class RelationalConnector implements IConnector {
   protected abstract getTypeColumnName()
 
   /**
+   * A condition on information_schema.columns, which shall
+   * return true if the column has auto_increment set,
+   * false otherwise.
+   *
+   * If the database supports sequences, this should simply return false.
+   */
+  protected abstract getAutoIncrementCondition()
+
+  /**
    * Generates a parameter expression for the given SQL dialect.
    */
   protected abstract parameter(count: number, type: string)
@@ -143,31 +163,43 @@ export abstract class RelationalConnector implements IConnector {
   protected async queryColumns(schemaName: string, tableName: string) {
     const allColumnsQuery = `
       SELECT
-        cols.ordinal_position,
-        cols.column_name,
-        cols.${this.getTypeColumnName()} as udt_name,
-        cols.column_default,
-        cols.is_nullable = 'YES' as is_nullable
+        ordinal_position as ordinal_postition,
+        column_name as column_name,
+        ${this.getTypeColumnName()} as udt_name,
+        column_default as column_default,
+        is_nullable = 'YES' as is_nullable,
+        ${this.getAutoIncrementCondition()} as is_auto_increment
       FROM
-        information_schema.columns AS cols
+        information_schema.columns
       WHERE
-        cols.table_schema = ${this.parameter(1, 'text')}
-        AND cols.table_name  = ${this.parameter(2, 'text')}`
+        table_schema = '${schemaName}'
+        AND table_name  = '${tableName}'`
 
-    return (await this.query(allColumnsQuery, [schemaName, tableName])).map(
-      row => {
-        return {
-          name: row.column_name as string,
-          type: row.udt_name as string,
-          isList: false,
-          readOnly: false, // Thread nothing as read only for now.
-          isUnique: false, // Will resolve via unique indexes later.
-          defaultValue: row.column_default as string,
-          isNullable: row.is_nullable as boolean,
-          comment: null as string | null,
-        }
-      },
-    )
+    /**
+     * Note, that ordinal_position comes back as a string because it's a bigint!
+     */
+
+    return (await this.query(allColumnsQuery)).map(row => {
+      GQLAssert.raiseIf(
+        row.column_name === undefined,
+        'Received `undefined` as column name.',
+      )
+      GQLAssert.raiseIf(
+        row.udt_name === undefined,
+        'Received `undefined` as data type.',
+      )
+      return {
+        name: row.column_name as string,
+        type: row.udt_name as string,
+        isList: false,
+        readOnly: false, // Thread nothing as read only for now.
+        isUnique: false, // Will resolve via unique indexes later.
+        isAutoIncrement: row.is_auto_increment,
+        defaultValue: row.column_default as string,
+        isNullable: row.is_nullable as boolean,
+        comment: null as string | null,
+      }
+    })
   }
 
   protected async listRelations(schemaName: string): Promise<ITableRelation[]> {
@@ -195,7 +227,7 @@ export abstract class RelationalConnector implements IConnector {
       WHERE
         refConstraints.constraint_schema = ${this.parameter(1, 'text')}`
 
-    return (await this.query(fkQuery, [schemaName])).map(row => {
+    const result = (await this.query(fkQuery, [schemaName])).map(row => {
       return {
         sourceColumn: row.fkColumnName as string,
         sourceTable: row.fkTableName as string,
@@ -203,6 +235,8 @@ export abstract class RelationalConnector implements IConnector {
         targetTable: row.referencedTableName as string,
       }
     })
+
+    return result
   }
 }
 
@@ -226,6 +260,17 @@ export interface IColumn {
   comment: string | null
   isNullable: boolean
   isList: boolean
+  /**
+   * Indicates an auto_increment column. Only use this if the
+   * database DOES NOT support sequences.
+   */
+  isAutoIncrement: boolean
+}
+
+export interface ISequenceInfo {
+  name: string
+  initialValue: number
+  allocationSize: number
 }
 
 export interface ITableRelation {

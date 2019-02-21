@@ -47,6 +47,18 @@ export interface IIndexInfo {
   unique: boolean
 }
 
+export enum IdStrategy {
+  Auto = 'AUTO',
+  None = 'NONE',
+  Sequence = 'SEQUENCE',
+}
+
+export interface ISequenceInfo {
+  name: string
+  initialValue: number
+  allocationSize: number
+}
+
 /**
  * Represents a field in the datamodel.
  */
@@ -95,6 +107,17 @@ export interface IGQLField {
   isId: boolean
 
   /**
+   * Indicates the id strategy to use. Null defaults to Auto.
+   */
+  idStrategy: IdStrategy | null
+
+  /**
+   * Indicates if a sequence is associated with this field.
+   * Only valid if the field is an ID field with idType set to Sequence.
+   */
+  associatedSequence: ISequenceInfo | null
+
+  /**
    * Indicates if this field is the created at timestamp.
    */
   isCreatedAt: boolean
@@ -140,6 +163,15 @@ export interface IGQLType {
    * Indicates if this is an enum type.
    */
   isEnum: boolean
+
+  /**
+   * Indicates if this type is a link table.
+   * This implies a compound primary key over
+   * the two foreign key fields. The indices are hidden
+   * when introspecting.
+   */
+  isLinkTable: boolean
+
   /**
    * The name of this type.
    */
@@ -207,6 +239,8 @@ export class GQLFieldBase implements IGQLField {
   public isCreatedAt: boolean
   public isUpdatedAt: boolean
   public isId: boolean
+  public idStrategy: IdStrategy | null
+  public associatedSequence: ISequenceInfo | null
   public isReadOnly: boolean
   public databaseName: string | null
   public directives: IDirectiveInfo[]
@@ -224,6 +258,8 @@ export class GQLFieldBase implements IGQLField {
     this.isCreatedAt = false
     this.isUpdatedAt = false
     this.isId = false
+    this.idStrategy = null
+    this.associatedSequence = null
     this.isReadOnly = false
     this.databaseName = null
     this.directives = []
@@ -262,6 +298,12 @@ function cloneComments(
   }
 }
 
+function cloneSequence(copy: IGQLField, obj: IGQLField) {
+  if (obj.associatedSequence !== null) {
+    copy.associatedSequence = { ...obj.associatedSequence }
+  }
+}
+
 function cloneCommentsAndDirectives(
   copy: IGQLField | IGQLType,
   obj: IGQLField | IGQLType,
@@ -283,6 +325,7 @@ export function cloneField(field: IGQLField): IGQLField {
   }
 
   cloneCommentsAndDirectives(copy, field)
+  cloneSequence(copy, field)
 
   return copy
 }

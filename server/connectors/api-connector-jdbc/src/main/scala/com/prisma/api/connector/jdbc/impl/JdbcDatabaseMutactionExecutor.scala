@@ -122,16 +122,16 @@ case class JdbcDatabaseMutactionExecutor(
   }
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
-    case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m, includeRelayRow = manageRelayIds)
-    case m: TopLevelUpdateNode => UpdateNodeInterpreter(m)
-    case m: TopLevelUpsertNode => UpsertNodeInterpreter(m)
-    case m: TopLevelDeleteNode => DeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
-    case m: UpdateNodes        => UpdateNodesInterpreter(m)
-    case m: DeleteNodes        => DeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
-    case m: ResetData          => ResetDataInterpreter(m)
-    case m: ImportNodes        => ImportNodesInterpreter(m)
-    case m: ImportRelations    => ImportRelationsInterpreter(m)
-    case m: ImportScalarLists  => ImportScalarListsInterpreter(m)
+    case m: TopLevelCreateNode  => CreateNodeInterpreter(mutaction = m, includeRelayRow = manageRelayIds)
+    case m: TopLevelUpdateNode  => UpdateNodeInterpreter(m)
+    case m: TopLevelUpsertNode  => UpsertNodeInterpreter(m)
+    case m: TopLevelDeleteNode  => DeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+    case m: TopLevelUpdateNodes => UpdateNodesInterpreter(m)
+    case m: TopLevelDeleteNodes => DeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+    case m: ResetData           => ResetDataInterpreter(m)
+    case m: ImportNodes         => ImportNodesInterpreter(m)
+    case m: ImportRelations     => ImportRelationsInterpreter(m)
+    case m: ImportScalarLists   => ImportScalarListsInterpreter(m)
   }
 
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {

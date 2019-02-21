@@ -97,6 +97,7 @@
     "lodash.differenceby": "^4.8.0",
     "mongodb": "^3.1.10",
     "multimatch": "^2.1.0",
+    "mysql2": "^1.6.5",
     "node-forge": "^0.7.1",
     "npm-run": "4.1.2",
     "opn": "^5.1.0",

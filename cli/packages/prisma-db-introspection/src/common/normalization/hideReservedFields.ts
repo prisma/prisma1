@@ -1,13 +1,18 @@
-import { RelationalParser, ISDL, IGQLField, IGQLType } from 'prisma-datamodel'
+import {
+  LegacyRelationalReservedFields,
+  ISDL,
+  IGQLField,
+  IGQLType,
+} from 'prisma-datamodel'
 import { INormalizer } from './normalizer'
 
 export class HideReservedFields implements INormalizer {
   protected baseModel: ISDL
 
   static reservedFields = [
-    RelationalParser.createdAtFieldName,
-    RelationalParser.updatedAtFieldName,
-    RelationalParser.idFieldName,
+    LegacyRelationalReservedFields.createdAtFieldName,
+    LegacyRelationalReservedFields.updatedAtFieldName,
+    LegacyRelationalReservedFields.idFieldName,
   ]
 
   constructor(baseModel: ISDL) {

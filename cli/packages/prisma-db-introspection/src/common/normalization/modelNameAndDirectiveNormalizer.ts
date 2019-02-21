@@ -1,6 +1,7 @@
 import { IGQLType, IGQLField, ISDL, TypeIdentifiers } from 'prisma-datamodel'
 
 import ModelNameNormalizer from './modelNameNormalizer'
+import { IdStrategy } from '../../../../prisma-datamodel/dist/datamodel/model'
 
 export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer {
   private baseModel: ISDL | null
@@ -43,7 +44,10 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
       return (
         typeof base.type !== 'string' &&
         base.type.name === fieldType.name &&
-        base.relationName === obj.relationName
+        // Only check the relation name if is it set on base. It might have been omitted.
+        (base.relationName === null ||
+          obj.relationName === null ||
+          base.relationName === obj.relationName)
       )
     })
 
@@ -84,13 +88,32 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
     obj.isCreatedAt = obj.isCreatedAt || baseObj.isCreatedAt
     obj.isUpdatedAt = obj.isUpdatedAt || baseObj.isUpdatedAt
     obj.defaultValue = obj.defaultValue || baseObj.defaultValue
+    obj.associatedSequence =
+      obj.associatedSequence || baseObj.associatedSequence
 
-    // We found an enum type field shadowed by prisma.
+    // Overwrite strategy, if database has none, prisma might have some.
+    if (obj.idStrategy === IdStrategy.None) {
+      obj.idStrategy = baseObj.idStrategy
+    }
+
+    if (baseObj.associatedSequence) {
+      obj.associatedSequence = { ...baseObj.associatedSequence }
+    }
+
+    // Override JSON mapped to string.
+    if (
+      obj.type === TypeIdentifiers.string &&
+      baseObj.type === TypeIdentifiers.json
+    ) {
+      obj.type = TypeIdentifiers.json
+    }
+
     if (
       obj.type === TypeIdentifiers.string &&
       typeof baseObj.type !== 'string' &&
       baseObj.type.isEnum
     ) {
+      // We found an enum type field shadowed by prisma.
       const baseEnumType = baseObj.type
       // Attempt to find the enum type
       const candidateEnum = parentModel.types.find(
@@ -135,9 +158,30 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
           // Fallback to relation.
           baseField = this.findBaseByRelation(this.baseType.fields, field)
           if (baseField !== null) {
-            // Hard-override name.
+            // Hard-override name. Relation names are usually auto-generated.
             field.name = baseField.name
             field.databaseName = baseField.databaseName
+            if (
+              baseField.relationName === null ||
+              field.relationName === null
+            ) {
+              // Remove relation name if it is unset in ref model,
+              // Set relation name if set on ref model but not for us.
+              field.relationName = baseField.relationName
+            }
+
+            // If this is a self-referencing field with a back connection on the same type, we copy
+            // the name of the related field as well. Otherwise, we always
+            // end up overwriting or name with the first ocurrence in the reference.
+            if (
+              field.type == parentType &&
+              baseField.relatedField !== null &&
+              field.relatedField !== null
+            ) {
+              field.relatedField.name = baseField.relatedField.name
+              field.relatedField.relationName =
+                baseField.relatedField.relationName
+            }
             this.assignFieldProperties(baseField, field, parentModel)
           }
         }

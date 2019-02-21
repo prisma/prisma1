@@ -33,7 +33,9 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
   override val errorMapper = errorHandler(mutaction.nonListArgs)
 }
 
-case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter with SharedUpdateLogic {
+case class UpdateNodesInterpreter(mutaction: TopLevelUpdateNodes)(implicit ec: ExecutionContext)
+    extends TopLevelDatabaseMutactionInterpreter
+    with SharedUpdateLogic {
   val project     = mutaction.project
   val model       = mutaction.model
   val nonListArgs = mutaction.nonListArgs

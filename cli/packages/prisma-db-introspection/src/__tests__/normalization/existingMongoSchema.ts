@@ -1,8 +1,13 @@
-import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
+import {
+  DatabaseType,
+  DefaultParser,
+  DefaultRenderer,
+  dedent,
+} from 'prisma-datamodel'
 import DefaultNormalizer from '../../common/normalization/defaultNormalizer'
 
 function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
-  const parser = Parser.create(DatabaseType.mongo)
+  const parser = DefaultParser.create(DatabaseType.mongo)
 
   const fromDb = parser.parseFromSchemaString(schemaFromDb)
   const existing = parser.parseFromSchemaString(existingSchema)
@@ -244,8 +249,8 @@ describe('Schema normalization from existing mongo schema', () => {
 
     const expectedResultSchema = dedent(`
       type User {
-        posts: [Post] @relation(name: "PostToUser")
         email: String! @id
+        posts: [Post] @relation(name: "PostToUser")
       }
       
       type Post {
@@ -281,8 +286,8 @@ describe('Schema normalization from existing mongo schema', () => {
 
     const expectedResultSchema = dedent(`
       type User {
-        posts: [Post]
         email: String! @id
+        posts: [Post]
       }
       
       type Post {

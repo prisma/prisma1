@@ -6,7 +6,7 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
-import { prettyTime, concatName, defaultDockerCompose } from '../../util'
+import { prettyTime, concatName, defaultDockerCompose } from '../../utils/util'
 import * as sillyname from 'sillyname'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'

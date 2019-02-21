@@ -1,20 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Introspector large example database 1`] = `
+exports[`Introspector chinook example database 1`] = `
 "type Album {
-  ArtistId: Artist!
   id: Int! @pgColumn(name: \\"AlbumId\\") @unique
+  ArtistId: Artist!
   Title: String!
-  track: Track
+  track: [Track]
 }
 
 type Artist {
-  album: Album!
   id: Int! @pgColumn(name: \\"ArtistId\\") @unique
+  album: [Album]
   Name: String
 }
 
 type Customer {
+  id: Int! @pgColumn(name: \\"CustomerId\\") @unique
   Address: String
   City: String
   Company: String
@@ -22,8 +23,7 @@ type Customer {
   Email: String!
   Fax: String
   FirstName: String!
-  id: Int! @pgColumn(name: \\"CustomerId\\") @unique
-  invoice: Invoice!
+  invoice: [Invoice]
   LastName: String!
   Phone: String
   PostalCode: String
@@ -32,17 +32,17 @@ type Customer {
 }
 
 type Employee {
+  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
   Address: String
   BirthDate: DateTime
   City: String
   Country: String
-  customer: Customer
+  customer: [Customer]
   Email: String
-  employee: Employee
+  employee: [Employee]
   Fax: String
   FirstName: String!
   HireDate: DateTime
-  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
   LastName: String!
   Phone: String
   PostalCode: String
@@ -54,19 +54,19 @@ type Employee {
 type Genre {
   id: Int! @pgColumn(name: \\"GenreId\\") @unique
   Name: String
-  track: Track
+  track: [Track]
 }
 
 type Invoice {
+  id: Int! @pgColumn(name: \\"InvoiceId\\") @unique
   BillingAddress: String
   BillingCity: String
   BillingCountry: String
   BillingPostalCode: String
   BillingState: String
   CustomerId: Customer!
-  id: Int! @pgColumn(name: \\"InvoiceId\\") @unique
   InvoiceDate: DateTime!
-  invoiceLine: InvoiceLine!
+  invoiceLine: [InvoiceLine]
   Total: Float!
 }
 
@@ -81,26 +81,141 @@ type InvoiceLine {
 type MediaType {
   id: Int! @pgColumn(name: \\"MediaTypeId\\") @unique
   Name: String
-  track: Track!
+  track: [Track]
 }
 
 type Playlist {
   id: Int! @pgColumn(name: \\"PlaylistId\\") @unique
   Name: String
-  Track: [Track]
+  playlistTrack: [PlaylistTrack]
+}
+
+type PlaylistTrack @linkTable {
+  PlaylistId: Playlist!
+  TrackId: Track!
 }
 
 type Track {
+  id: Int! @pgColumn(name: \\"TrackId\\") @unique
   AlbumId: Album
   Bytes: Int
   Composer: String
   GenreId: Genre
-  id: Int! @pgColumn(name: \\"TrackId\\") @unique
-  invoiceLine: InvoiceLine!
+  invoiceLine: [InvoiceLine]
   MediaTypeId: MediaType!
   Milliseconds: Int!
   Name: String!
-  Playlist: [Playlist]
+  playlistTrack: [PlaylistTrack]
+  UnitPrice: Float!
+}"
+`;
+
+exports[`Introspector chinook example database 2`] = `
+"type Album {
+  AlbumId: Int! @id(strategy: NONE)
+  ArtistId: Artist!
+  Title: String!
+  track: [Track]
+}
+
+type Artist {
+  ArtistId: Int! @id(strategy: NONE)
+  album: [Album]
+  Name: String
+}
+
+type Customer {
+  CustomerId: Int! @id(strategy: NONE)
+  Address: String
+  City: String
+  Company: String
+  Country: String
+  Email: String!
+  Fax: String
+  FirstName: String!
+  invoice: [Invoice]
+  LastName: String!
+  Phone: String
+  PostalCode: String
+  State: String
+  SupportRepId: Employee
+}
+
+type Employee {
+  EmployeeId: Int! @id(strategy: NONE)
+  Address: String
+  BirthDate: DateTime
+  City: String
+  Country: String
+  customer: [Customer]
+  Email: String
+  employee: [Employee]
+  Fax: String
+  FirstName: String!
+  HireDate: DateTime
+  LastName: String!
+  Phone: String
+  PostalCode: String
+  ReportsTo: Employee
+  State: String
+  Title: String
+}
+
+type Genre {
+  GenreId: Int! @id(strategy: NONE)
+  Name: String
+  track: [Track]
+}
+
+type Invoice {
+  InvoiceId: Int! @id(strategy: NONE)
+  BillingAddress: String
+  BillingCity: String
+  BillingCountry: String
+  BillingPostalCode: String
+  BillingState: String
+  CustomerId: Customer!
+  InvoiceDate: DateTime!
+  invoiceLine: [InvoiceLine]
+  Total: Float!
+}
+
+type InvoiceLine {
+  InvoiceLineId: Int! @id(strategy: NONE)
+  InvoiceId: Invoice!
+  Quantity: Int!
+  TrackId: Track!
+  UnitPrice: Float!
+}
+
+type MediaType {
+  MediaTypeId: Int! @id(strategy: NONE)
+  Name: String
+  track: [Track]
+}
+
+type Playlist {
+  PlaylistId: Int! @id(strategy: NONE)
+  Name: String
+  playlistTrack: [PlaylistTrack]
+}
+
+type PlaylistTrack @linkTable {
+  PlaylistId: Playlist!
+  TrackId: Track!
+}
+
+type Track {
+  TrackId: Int! @id(strategy: NONE)
+  AlbumId: Album
+  Bytes: Int
+  Composer: String
+  GenreId: Genre
+  invoiceLine: [InvoiceLine]
+  MediaTypeId: MediaType!
+  Milliseconds: Int!
+  Name: String!
+  playlistTrack: [PlaylistTrack]
   UnitPrice: Float!
 }"
 `;
