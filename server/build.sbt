@@ -439,6 +439,7 @@ lazy val cache = libProject("cache")
 lazy val sangriaServer = libProject("sangria-server")
   .dependsOn(sangriaUtils)
   .dependsOn(scalaUtils)
+  .dependsOn(akkaUtils)
   .settings(libraryDependencies ++= Seq(
     akkaHttpPlayJson,
     cuid,
