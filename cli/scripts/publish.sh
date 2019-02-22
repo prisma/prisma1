@@ -160,7 +160,7 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $da
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
     npm publish || echo "Try catch"
   else
     npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
@@ -181,7 +181,7 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ]; then
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
     npm publish || echo "Try catch"
   else
     npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
@@ -203,7 +203,7 @@ if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
     npm publish || echo "Try catch"
   else
     npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
@@ -232,7 +232,7 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
     npm publish || echo "Try catch"
   else
     npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
@@ -255,7 +255,7 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
     npm publish || echo "Try catch"
   else
     npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
@@ -280,7 +280,7 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCL
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
     npm publish || echo "Try catch"
   else
     npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
@@ -317,7 +317,7 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
     npm publish || echo "Try catch"
   else
     npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
@@ -372,7 +372,7 @@ if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
     for example in */; do
       cd $example
 
-      yarn add prisma-client-lib@$CIRCLE_BRANCH 
+      yarn add prisma-client-lib@$CIRCLE_BRANCH -s
 
       cd ..
     done 
