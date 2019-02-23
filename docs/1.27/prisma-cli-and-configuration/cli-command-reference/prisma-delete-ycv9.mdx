@@ -1,0 +1,37 @@
+export const meta = {
+  title: "prisma delete",
+  position: 180,
+}
+
+## `$ prisma delete`
+
+Delete an existing service from the Prisma server its running on. 
+
+This command needs to be executed inside the root directory of the Prisma service you want to delete (as the CLI needs access to the service's prisma.yml).
+
+### Usage
+
+```sh
+prisma delete [flags]
+```
+
+### Flags
+
+```
+ -e, --env-file ENV-FILE    Path to .env file to inject env vars
+ -f, --force                Force delete, without confirmation
+```
+
+### Examples
+
+**Delete an existing service (with confirmation prompt)**
+
+```sh
+prisma delete
+```
+
+**Delete an existing service (without confirmation prompt)**
+
+```sh
+prisma delete --force
+```
