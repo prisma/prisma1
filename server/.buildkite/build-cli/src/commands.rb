@@ -3,7 +3,6 @@ require_relative './command'
 require_relative './docker'
 
 def upload_pipeline(context)
-
   yml = PipelineRenderer.new(context).render!
   res = Command.new("buildkite-agent", "pipeline", "upload").with_stdin([yml]).run!.raise!
 
@@ -27,7 +26,12 @@ def build_images(context, tag)
   DockerCommands.build(context, tag)
   DockerCommands.tag_and_push(context, tags_to_build.flatten.compact)
 
-  trigger_dependent_pipeline(context.branch, tags_to_build)
+  # Because buildkite doesn't give us the underlying branch on a tagged build, we need to infer it.
+  if context.tag.nil? || !context.tag.stable?
+    trigger_dependent_pipeline(context.branch, tags_to_build)
+  elsif context.tag.stable?
+    trigger_dependent_pipeline("master", tags_to_build)
+  end
 end
 
 def native_image(context, target, version_str)
