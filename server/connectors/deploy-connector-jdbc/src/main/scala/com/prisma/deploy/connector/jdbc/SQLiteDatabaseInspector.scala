@@ -115,9 +115,9 @@ case class SQLiteDatabaseInspector(db: SlickDatabase)(implicit val ec: Execution
       case "boolean"                                                     => Some(TypeIdentifier.Boolean)
       case "bool"                                                        => Some(TypeIdentifier.Boolean)
       case _ if typeName.contains("char")                                => Some(TypeIdentifier.String)
+      case _ if typeName.contains("CHAR")                                => Some(TypeIdentifier.String)
       case _ if typeName.contains("text")                                => Some(TypeIdentifier.String)
-      case _ if typeName.contains("int")                                 => Some(TypeIdentifier.Int)
-      case _ if typeName.contains("INTEGER")                             => Some(TypeIdentifier.Int)
+      case "int" | "INT" | "INT(4)" | "INTEGER"                          => Some(TypeIdentifier.Int)
       case _ if typeName.contains("datetime")                            => Some(TypeIdentifier.DateTime)
       case "decimal" | "numeric" | "float" | "double" | "Decimal(65,30)" => Some(TypeIdentifier.Float)
       case _                                                             => None
