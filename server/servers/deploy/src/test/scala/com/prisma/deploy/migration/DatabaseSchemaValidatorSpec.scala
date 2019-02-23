@@ -68,7 +68,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.blog (
-         |   id INTEGER PRIMARY KEY
+         |   id INTEGER PRIMARY KEY NOT NULL
          | );
        """.stripMargin
 
@@ -110,7 +110,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id),
+         |   id int PRIMARY KEY NOT NULL,
          |   title mediumtext
          | );
        """.stripMargin
@@ -154,7 +154,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id),
+         |   id int PRIMARY KEY NOT NULL,
          |   title mediumtext NOT NULL
          | );
        """.stripMargin
@@ -198,7 +198,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id),
+         |   id int PRIMARY KEY NOT NULL,
          |   title mediumtext
          | );
        """.stripMargin
@@ -240,7 +240,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.blog (
-         |   id char(25), PRIMARY KEY(id)
+         |   id char(25) PRIMARY KEY NOT NULL
          | );
        """.stripMargin
 
@@ -283,12 +283,13 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id),
-         |   author int, FOREIGN KEY (author) REFERENCES author(id)
+         |   id int PRIMARY KEY NOT NULL,
+         |   author int,
+         |   FOREIGN KEY (author) REFERENCES author(id)
          | );
        """.stripMargin
 
@@ -336,12 +337,12 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id),
-         |   author int, FOREIGN KEY (author) REFERENCES author(id)
+         |   id int PRIMARY KEY NOT NULL,
+         |   author int,
+         |   FOREIGN KEY (author) REFERENCES author(id)
          | );
        """.stripMargin
 
@@ -395,12 +396,13 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id),
-         |   author int NOT NULL, FOREIGN KEY (author) REFERENCES author(id)
+         |   id int PRIMARY KEY NOT NULL,
+         |   author int NOT NULL,
+         |   FOREIGN KEY (author) REFERENCES author(id)
          | );
        """.stripMargin
 
@@ -512,13 +514,13 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
          | CREATE TABLE $projectId.wrong_table (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id),
+         |   id int PRIMARY KEY NOT NULL,
          |   author int, FOREIGN KEY (author) REFERENCES wrong_table(id)
          | );
        """.stripMargin
@@ -574,11 +576,11 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author(
-         |   id int NOT NULL,
-         |   nick int, UNIQUE KEY(nick)
+         |   id int PRIMARY KEY NOT NULL,
+         |   nick int UNIQUE
          | );
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id),
+         |   id int PRIMARY KEY NOT NULL,
          |   author int, FOREIGN KEY (author) REFERENCES author(nick)
          | );
        """.stripMargin
@@ -697,14 +699,18 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.blog_to_author(
-         |   author int, FOREIGN KEY (author) REFERENCES author(id),
-         |   blog int, FOREIGN KEY (blog) REFERENCES blog(id)
+         |   author int,
+         |   blog int,
+         |   FOREIGN KEY (blog) REFERENCES blog(id),
+         |   FOREIGN KEY (author) REFERENCES author(id)
          | );
        """.stripMargin
 
@@ -768,14 +774,18 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author(
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.blog_to_author(
-         |   author int, FOREIGN KEY (author) REFERENCES author(id),
-         |   blog int, FOREIGN KEY (blog) REFERENCES blog(id)
+         |   author int,
+         |   blog int,
+         |   FOREIGN KEY (author) REFERENCES author(id),
+         |   FOREIGN KEY (blog) REFERENCES blog(id)
          | );
        """.stripMargin
 
@@ -833,10 +843,10 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author(
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
          | CREATE TABLE $projectId.blog_to_author(
          |   author int,
@@ -912,17 +922,22 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.author (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.wrong_table(
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
+         |
          | CREATE TABLE $projectId.blog_to_author(
-         |   blog int, FOREIGN KEY (blog) REFERENCES wrong_table(id),
-         |   author int, FOREIGN KEY (author) REFERENCES wrong_table(id)
+         |   blog int,
+         |   author int,
+         |   FOREIGN KEY (blog) REFERENCES wrong_table(id),
+         |   FOREIGN KEY (author) REFERENCES wrong_table(id)
          | )
        """.stripMargin
 
@@ -988,7 +1003,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
          | CREATE TABLE $projectId.blog_tags (
          |   `nodeId` char(25) NOT NULL,
@@ -1029,7 +1044,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
        """.stripMargin
 
@@ -1081,7 +1096,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     val sqlite =
       s"""
          | CREATE TABLE $projectId.blog (
-         |   id int NOT NULL, PRIMARY KEY(id)
+         |   id int PRIMARY KEY NOT NULL
          | );
          | CREATE TABLE $projectId.blog_tags (
          |   `nodeId` bool NOT NULL,
