@@ -1,9 +1,9 @@
 package com.prisma.deploy.connector.jdbc
 
-import com.prisma.connector.shared.jdbc.{MySqlDialect, PostgresDialect, SlickDatabase, SqliteDialect}
+import com.prisma.connector.shared.jdbc.{MySqlDialect, PostgresDialect, SlickDatabase}
 import com.prisma.deploy.connector._
-import com.prisma.shared.models.TypeIdentifier
-import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
+import com.prisma.deploy.connector.jdbc.DatabaseInspectorBase.{IntrospectedColumn, IntrospectedForeignKey, IntrospectedSequence}
+import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
 import slick.dbio.DBIO
 import slick.jdbc.GetResult
 
@@ -12,13 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait DatabaseInspectorBase extends DatabaseInspector {
   val db: SlickDatabase
   implicit def ec: ExecutionContext
-
   import db.profile.api.actionBasedSQLInterpolation
-
-  // intermediate helper classes
-  case class IntrospectedColumn(name: String, udtName: String, default: String, isNullable: Boolean)
-  case class IntrospectedForeignKey(name: String, table: String, column: String, referencedTable: String, referencedColumn: String)
-  case class IntrospectedSequence(column: String, name: String, current: Int)
 
   override def inspect(schema: String): Future[DatabaseSchema] = db.database.run(action(schema))
 
@@ -111,6 +105,23 @@ trait DatabaseInspectorBase extends DatabaseInspector {
     )
   }
 
+  /**
+    * Other Helpers
+    */
+  private val dataTypeColumn: String = db.prismaDialect match {
+    case PostgresDialect => "udt_name"
+    case MySqlDialect    => "DATA_TYPE"
+    case x               => sys.error(s"$x is not implemented yet.")
+  }
+}
+
+object DatabaseInspectorBase {
+
+  // intermediate helper classes
+  case class IntrospectedColumn(name: String, udtName: String, default: String, isNullable: Boolean)
+  case class IntrospectedForeignKey(name: String, table: String, column: String, referencedTable: String, referencedColumn: String)
+  case class IntrospectedSequence(column: String, name: String, current: Int)
+
   implicit val introspectedForeignKeyGetResult: GetResult[IntrospectedForeignKey] = GetResult { pr =>
     IntrospectedForeignKey(
       name = pr.rs.getString("fkConstraintName"),
@@ -130,12 +141,4 @@ trait DatabaseInspectorBase extends DatabaseInspector {
     )
   }
 
-  /**
-    * Other Helpers
-    */
-  private val dataTypeColumn = db.prismaDialect match {
-    case PostgresDialect => "udt_name"
-    case MySqlDialect    => "DATA_TYPE"
-    case x               => sys.error(s"$x is not implemented yet.")
-  }
 }

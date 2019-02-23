@@ -7,6 +7,7 @@ import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface}
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
+import com.prisma.deploy.connector.sqlite.SQLiteDeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.validation.DeployError
@@ -85,7 +86,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
   override def doNotRunForCapabilities = Set(MigrationsCapability)
   lazy val slickDatabase               = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
 
-  case class SQLs(postgres: String, mysql: String)
+  case class SQLs(postgres: String, mysql: String, sqlite: String)
 
   def addProject() = {
     deployConnector.deleteProjectDatabase(projectId).await()
@@ -93,72 +94,67 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
   }
 
   def setup(sqls: SQLs): DatabaseSchema = {
-    deployConnector.deleteProjectDatabase(projectId).await()
-    if (slickDatabase.isMySql) {
-      setupWithRawSQL(sqls.mysql)
-    } else if (slickDatabase.isPostgres) {
-      setupWithRawSQL(sqls.postgres)
-    } else {
-      sys.error("This is neither Postgres nor MySQL")
+    slickDatabase match {
+      case db if db.isMySql    => setupWithRawSQL(sqls.mysql)
+      case db if db.isPostgres => setupWithRawSQL(sqls.postgres)
+      case db if db.isSQLite   => setupWithRawSQL(sqls.sqlite)
+      case _                   => sys.error("This is neither Postgres nor MySQL nor SQLite")
     }
     inspect
   }
 
-  def setupWithRawSQL(sql: String)(implicit suite: Suite): Unit = {
-    setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
-  }
+  def setupWithRawSQL(sql: String)(implicit suite: Suite): Unit = setupProjectDatabaseForProject(projectId, projectName, projectStage, sql)
 
   private def setupProjectDatabaseForProject(schemaName: String, name: String, stage: String, sql: String): Unit = {
-    val (session, isPostgres) = deployConnector match {
-      case c: PostgresDeployConnector => (c.managementDatabase.createSession(), true)
-      case c: MySqlDeployConnector    => (c.managementDatabase.database.createSession(), false)
-      case x                          => sys.error(s"$x is not supported here")
+    val (session, defaultSchema) = deployConnector match {
+      case c: PostgresDeployConnector =>
+        val session = c.managementDatabase.createSession()
+        val default = s"""SET search_path TO "$schemaName";"""
+        (session, default)
+
+      case c: MySqlDeployConnector =>
+        val session = c.managementDatabase.database.createSession()
+        val default = s"USE `$schemaName`;"
+        (session, default)
+
+      case c: SQLiteDeployConnector =>
+        val session = c.managementDatabase.database.createSession()
+        val path    = s"""'db/$projectId'"""
+        (session, s"ATTACH DATABASE $path AS $projectId;")
+
+      case x => sys.error(s"$x is not supported here")
     }
+
     val statement = session.createStatement()
-
-    val dropSchema = if (isPostgres) {
-      s"""drop schema if exists "$schemaName" cascade;"""
-    } else {
-      s"""drop database if exists `$schemaName`;"""
-    }
-
-    statement.execute(dropSchema)
     addProject()
-
-    val createSchema = if (isPostgres) s"""create schema if not exists "$schemaName";""" else s"create database if not exists `$schemaName`;"
-    statement.execute(createSchema)
-
-    val setDefaultSchema = if (isPostgres) s"""SET search_path TO "$schemaName";""" else s"USE `$schemaName`;"
-    statement.execute(setDefaultSchema)
+    statement.execute(defaultSchema)
     sql.split(';').foreach { sql =>
       val isNotOnlyWhiteSpace = sql.exists(c => c != '\n' && c != ' ')
-      if (isNotOnlyWhiteSpace) {
-        statement.execute(sql)
-      }
+      if (isNotOnlyWhiteSpace) statement.execute(sql)
     }
     session.close()
   }
 
   def executeSql(sqls: SQLs): DatabaseSchema = {
-    if (slickDatabase.isMySql) {
-      executeSql(sqls.mysql)
-    } else if (slickDatabase.isPostgres) {
-      executeSql(sqls.postgres)
-    } else {
-      sys.error("This is neither Postgres nor MySQL")
+    slickDatabase match {
+      case db if db.isMySql    => executeSql(sqls.mysql)
+      case db if db.isPostgres => executeSql(sqls.postgres)
+      case db if db.isSQLite   => executeSql(sqls.sqlite)
+      case _                   => sys.error("This is neither Postgres nor MySQL nor SQLite")
     }
+
     inspect
   }
 
   private def executeSql(sql: String*): Unit = {
-    val session = deployConnector match {
-      case c: PostgresDeployConnector => c.managementDatabase.createSession()
-      case c: MySqlDeployConnector    => c.managementDatabase.database.createSession()
+    val (session, defaultSchema) = deployConnector match {
+      case c: PostgresDeployConnector => (c.managementDatabase.createSession(), s"""SET search_path TO "$projectId";""")
+      case c: MySqlDeployConnector    => (c.managementDatabase.database.createSession(), s"USE `$projectId`;")
+      case c: SQLiteDeployConnector   => (c.managementDatabase.database.createSession(), s"USE `$projectId`;")
       case x                          => sys.error(s"$x is not supported here")
     }
-    val statement        = session.createStatement()
-    val setDefaultSchema = if (slickDatabase.isPostgres) s"""SET search_path TO "$projectId";""" else s"USE `$projectId`;"
-    statement.execute(setDefaultSchema)
+    val statement = session.createStatement()
+    statement.execute(defaultSchema)
     sql.foreach(statement.execute)
     session.close()
   }
@@ -233,10 +229,8 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
 
     val result = mutation.execute.await
     result match {
-      case MutationSuccess(result) =>
-        result
-      case MutationError =>
-        sys.error("Deploy returned an unexpected error")
+      case MutationSuccess(result) => result
+      case MutationError           => sys.error("Deploy returned an unexpected error")
     }
   }
 

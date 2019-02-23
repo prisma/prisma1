@@ -1,51 +1,33 @@
 package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.deploy.connector._
-import slick.jdbc.PostgresProfile.api._
+import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
+import com.prisma.shared.models.{Project, ScalarField}
 import com.prisma.utils.boolean.BooleanUtils._
+import slick.jdbc.PostgresProfile.api._
 
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
-  // todo: that does not consider unique constraints yet
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
       case None =>
-        builder.createColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName,
-          isRequired = mutaction.field.isRequired,
-          isUnique = mutaction.field.isUnique,
-          isList = mutaction.field.isList,
-          typeIdentifier = mutaction.field.typeIdentifier
-        )
-
+        CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
       // This can only happen if an inline relation field has been converted into a scalar field. The foreign key indicates it is a relation column.
       // Our step order ensures that this relation column already has been deleted. So we just create the scalar column.
       case Some(c) if c.foreignKey.isDefined =>
-        builder.createColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName,
-          isRequired = mutaction.field.isRequired,
-          isUnique = mutaction.field.isUnique,
-          isList = mutaction.field.isList,
-          typeIdentifier = mutaction.field.typeIdentifier
-        )
+        CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
 
       case Some(c) =>
         val updateColumn = mustUpdateColumn(c, mutaction).toOption {
           builder.updateColumn(
             mutaction.project,
-            model = mutaction.model,
+            mutaction.field,
+            oldTableName = c.table.name,
             oldColumnName = mutaction.field.dbName,
-            newColumnName = mutaction.field.dbName,
-            newIsRequired = mutaction.field.isRequired,
-            newIsList = mutaction.field.isList,
-            newTypeIdentifier = mutaction.field.typeIdentifier
+            oldTypeIdentifier = c.typeIdentifier.asInstanceOf[ScalarTypeIdentifier]
           )
         }
         val addUniqueConstraint = mustAddUniqueConstraint(c, mutaction).toOption {
-          builder.addUniqueConstraint(mutaction.project, mutaction.model.dbName, mutaction.field.dbName, mutaction.field.typeIdentifier)
+          builder.addUniqueConstraint(mutaction.project, mutaction.field)
         }
         val removeUniqueConstraint = mustRemoveUniqueConstraint(c, mutaction).toOption {
           val index = c.table.indexByColumns_!(c.name)
@@ -59,7 +41,7 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
   private def mustUpdateColumn(column: Column, mutaction: CreateColumn) = {
     column.typeIdentifier != mutaction.field.typeIdentifier ||
-    column.isRequired == mutaction.field.isRequired
+    column.isRequired != mutaction.field.isRequired
   }
 
   private def mustAddUniqueConstraint(column: Column, mutaction: CreateColumn) = {
@@ -74,46 +56,24 @@ case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
 
   override def rollback(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case None =>
-        builder.deleteColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName
-        )
-      case Some(_) =>
-        DBIO.successful(())
+      case None    => builder.deleteColumn(mutaction.project, mutaction.model.dbName, mutaction.field.dbName, Some(mutaction.model)) //Fixme
+      case Some(_) => DBIO.successful(())
     }
   }
 }
 
 case class DeleteColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteColumn] {
   override def execute(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
-    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case Some(_) =>
-        builder.deleteColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName
-        )
-      case None =>
-        DBIO.successful(())
+    schemaBeforeMigration.table(mutaction.oldModel.dbName).flatMap(_.column(mutaction.field.dbName)) match {
+      case Some(_) => builder.deleteColumn(mutaction.project, mutaction.oldModel.dbName, mutaction.field.dbName, Some(mutaction.oldModel))
+      case None    => DBIO.successful(())
     }
   }
 
   override def rollback(mutaction: DeleteColumn, schemaBeforeMigration: DatabaseSchema) = {
-    schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
-      case Some(_) =>
-        builder.createColumn(
-          mutaction.project,
-          tableName = mutaction.model.dbName,
-          columnName = mutaction.field.dbName,
-          isRequired = mutaction.field.isRequired,
-          isUnique = mutaction.field.isUnique,
-          isList = mutaction.field.isList,
-          typeIdentifier = mutaction.field.typeIdentifier
-        )
-      case None =>
-        DBIO.successful(())
+    schemaBeforeMigration.table(mutaction.oldModel.dbName).flatMap(_.column(mutaction.field.dbName)) match {
+      case Some(_) => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.field)
+      case None    => DBIO.successful(())
     }
   }
 }
@@ -150,29 +110,17 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
   }
 
   private def updateFromBeforeStateToAfterState(mutaction: UpdateColumn, schemaBeforeMigration: DatabaseSchema): DBIO[_] = {
-    val before               = mutaction.oldField
-    val after                = mutaction.newField
-    val indexMustBeRecreated = before.isRequired != after.isRequired || before.dbName != after.dbName || before.typeIdentifier != after.typeIdentifier
+    val before          = mutaction.oldField
+    val after           = mutaction.newField
+    val typeChanges     = before.typeIdentifier != after.typeIdentifier
+    val requiredChanges = before.isRequired != after.isRequired
 
-    def updateColumn = builder.updateColumn(
-      mutaction.project,
-      model = mutaction.model,
-      oldColumnName = before.dbName,
-      newColumnName = after.dbName,
-      newIsRequired = after.isRequired,
-      newIsList = after.isList,
-      newTypeIdentifier = after.typeIdentifier
-    )
-
-    def createColumn = builder.createColumn(
-      mutaction.project,
-      tableName = mutaction.model.dbName,
-      columnName = after.dbName,
-      isRequired = after.isRequired,
-      isUnique = after.isUnique,
-      isList = after.isList,
-      typeIdentifier = after.typeIdentifier
-    )
+    def updateColumn =
+      builder.updateColumn(mutaction.project,
+                           after,
+                           oldTableName = before.model.dbName,
+                           oldColumnName = before.dbName,
+                           oldTypeIdentifier = before.typeIdentifier)
 
     def removeUniqueConstraint = builder.removeIndex(
       mutaction.project,
@@ -180,24 +128,33 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       indexName = schemaBeforeMigration.table_!(mutaction.model.dbName).indexByColumns_!(before.dbName).name
     )
 
-    def addUniqueConstraint = builder.addUniqueConstraint(
-      mutaction.project,
-      tableName = mutaction.model.dbName,
-      columnName = after.dbName,
-      typeIdentifier = after.typeIdentifier
-    )
+    def addUniqueConstraint = builder.addUniqueConstraint(mutaction.project, after)
 
-    def updateColumnActions = (before.isUnique, indexMustBeRecreated, after.isUnique) match {
-      case (true, true, true)  => Vector(removeUniqueConstraint, updateColumn, addUniqueConstraint)
-      case (true, _, false)    => Vector(removeUniqueConstraint, updateColumn)
-      case (true, false, true) => Vector(updateColumn)
-      case (false, _, false)   => Vector(updateColumn)
-      case (false, _, true)    => Vector(updateColumn, addUniqueConstraint)
+    def updateColumnActions = (before.isUnique, typeChanges, requiredChanges, after.isUnique) match {
+      // type changes, after unique
+      case (_, true, _, true) => Vector(updateColumn, addUniqueConstraint)
+      //type changes, after not unique
+      case (_, true, _, false) => Vector(updateColumn)
+      // type does not change, after is unique
+      case (true, false, true, true)  => Vector(removeUniqueConstraint, updateColumn, addUniqueConstraint)
+      case (false, false, _, true)    => Vector(updateColumn, addUniqueConstraint)
+      case (true, false, false, true) => Vector(updateColumn)
+      // type does not change, after is not unique
+      case (true, false, _, false)  => Vector(removeUniqueConstraint, updateColumn)
+      case (false, false, _, false) => Vector(updateColumn)
     }
 
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(before.dbName)) match {
       case Some(_) => DBIO.seq(updateColumnActions: _*)
-      case None    => createColumn
+      case None    => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.newField)
     }
+  }
+
+}
+object CreateColumnHelper {
+  def withIndexIfNecessary(builder: JdbcDeployDatabaseMutationBuilder, project: Project, field: ScalarField) = {
+    val createColumn        = builder.createColumn(project, field)
+    val addUniqueConstraint = if (field.isUnique) builder.addUniqueConstraint(project, field) else DBIO.successful(())
+    DBIO.seq(createColumn, addUniqueConstraint)
   }
 }

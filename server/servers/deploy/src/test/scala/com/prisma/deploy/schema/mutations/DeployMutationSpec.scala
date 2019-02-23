@@ -495,7 +495,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     migrations should have(size(3))
     migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations.head.revision shouldEqual 3 // order is DESC
-    migrations.head.steps.head should be(UpdateSecrets(Vector("secret")))
+    migrations.head.steps should be(Vector(UpdateSecrets(Vector("secret"))))
 
     server.query(
       s"""
@@ -518,7 +518,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     migrations2 should have(size(4))
     migrations2.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations2.head.revision shouldEqual 4 // order is DESC
-    migrations2.head.steps.head should be(UpdateSecrets(Vector.empty))
+    migrations2.head.steps should be(Vector(UpdateSecrets(Vector())))
   }
 
   "DeployMutation" should "not change secrets if there are errors in the deploy (invalid functions)" in {

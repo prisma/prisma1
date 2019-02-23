@@ -1,2 +1,0 @@
-# Transient db - will lose it's data once restarted
-version: "3"
