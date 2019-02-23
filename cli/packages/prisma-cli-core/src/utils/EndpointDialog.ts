@@ -383,7 +383,7 @@ export class EndpointDialog {
             `Introspecting database ${chalk.bold(databaseName)}`,
           )
           const introspection = await connector.introspect(databaseName)
-          const isdl = await introspection.getDatamodel()
+          const isdl = await introspection.getNormalizedDatamodel()
           const renderer = DefaultRenderer.create(databaseType)
           datamodel = renderer.render(isdl)
           const tableName =
