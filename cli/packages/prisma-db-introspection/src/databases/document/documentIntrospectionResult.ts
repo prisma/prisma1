@@ -14,6 +14,9 @@ export class DocumentIntrospectionResult extends IntrospectionResult {
     this.model = model
   }
 
+  /**
+   * @deprecated This returns an unnormalized datamodel and might get removed in the near future.
+   */
   public getDatamodel(): ISDL {
     // Return a copy - object is muteable.
     return cloneSchema(this.model)

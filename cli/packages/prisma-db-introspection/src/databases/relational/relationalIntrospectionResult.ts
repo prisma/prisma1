@@ -45,6 +45,9 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     this.sequences = sequences
   }
 
+  /**
+   * @deprecated This returns an unnormalized datamodel and might get removed in the near future.
+   */
   public getDatamodel(): ISDL {
     return this.infer(this.model, this.enums, this.relations, this.sequences)
   }
