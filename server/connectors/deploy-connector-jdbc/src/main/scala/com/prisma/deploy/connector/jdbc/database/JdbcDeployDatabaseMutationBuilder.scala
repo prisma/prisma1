@@ -23,6 +23,9 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   def createSchema(projectId: String): DBIO[_]
   def truncateProjectTables(project: Project): DBIO[_]
   def deleteProjectDatabase(projectId: String): DBIO[_]
+  //UpdateModelTable  -> for PostGres and MySQL this is just rename
+  //                  -> for SQLite this does everything???
+
   def renameTable(project: Project, currentName: String, newName: String): DBIO[_]
   def addUniqueConstraint(project: Project, field: Field): DBIO[_]
   def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_]

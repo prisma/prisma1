@@ -199,7 +199,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
     //    Transfer content from X into new_X using a statement like: INSERT INTO new_X SELECT ... FROM X.
     //    Fixme -> field could have been renamed
-    val columnNames = model.scalarNonListFields.map(_.dbName).mkString(",")
+    val columnNames = model.scalarNonListFields.map(_.dbName).mkString(",") // needs to be intersection of old and new scalarfields of model
 
     val transferContent =
       sqlu"""INSERT INTO #${qualify(project.dbName, tempTableName)} (#$columnNames)
