@@ -20,14 +20,18 @@ case class Project(
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
 
   val dbName: String = manifestation match {
-    case ProjectManifestation(Some(_), Some(schema)) => schema // Postgres Passive
-    case ProjectManifestation(Some(database), None)  => database // Mongo + MySQL Passive
-    case ProjectManifestation(None, Some(_))         => sys.error("The configloader should have rejected this.") // Invalid
-    case ProjectManifestation(None, None)            => id // All active
+    case ProjectManifestation(Some(_), Some(schema), "postgres")                  => schema
+    case ProjectManifestation(Some(_), Some(schema), _)                           => sys.error("The configloader should have rejected this.")
+    case ProjectManifestation(Some(_), None, "postgres")                          => id
+    case ProjectManifestation(Some(database), None, "mongo" | "mysql" | "sqlite") => database
+    case ProjectManifestation(Some(database), None, _)                            => sys.error("The configloader should have rejected this.")
+    case ProjectManifestation(None, Some(_), _)                                   => sys.error("The configloader should have rejected this.")
+    case ProjectManifestation(None, None, _)                                      => id // All active
   }
 }
 
 object ProjectManifestation {
-  val empty = ProjectManifestation(None, None)
+  val empty = ProjectManifestation(None, None, "")
 }
-case class ProjectManifestation(database: Option[String], schema: Option[String])
+
+case class ProjectManifestation(database: Option[String], schema: Option[String], connector: String)

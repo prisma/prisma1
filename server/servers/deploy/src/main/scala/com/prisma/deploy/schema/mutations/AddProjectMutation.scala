@@ -55,14 +55,15 @@ case class AddProjectMutation(
 
     for {
       _ <- projectPersistence.create(newProject)
-//      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
-      _ <- if (connectorCapabilities.isDataModelV2) {
-            deployConnector.createProjectDatabase(newProject.id)
-          } else {
-            if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
-          }
       _ <- migrationPersistence.create(migration)
-    } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
+//      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+      loadedProject <- projectPersistence.load(newProject.id)
+      _ <- if (connectorCapabilities.isDataModelV2) {
+            deployConnector.createProjectDatabase(loadedProject.get.dbName)
+          } else {
+            if (deployConnector.isActive) deployConnector.createProjectDatabase(loadedProject.get.dbName) else Future.unit
+          }
+    } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, loadedProject.get))
   }
 
   private def validate(): Unit = {

@@ -1,5 +1,6 @@
 package com.prisma.shared.schema_dsl
 
+import com.prisma.config.ConfigLoader
 import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.{DataModelValidator, DataModelValidatorImpl, LegacyDataModelValidator}
@@ -77,7 +78,7 @@ object SchemaDsl extends AwaitUtils {
 
     val schema                 = SchemaInferrer(deployConnector.capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
-    val manifestation          = ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"))
+    val manifestation          = ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"), ConfigLoader.load().databases.head.connector)
     TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }
 
