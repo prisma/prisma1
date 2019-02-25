@@ -6,7 +6,7 @@ use crate::{
     PrismaResult,
 };
 
-use sql::prelude::*;
+use prisma_query::ast::*;
 use std::collections::BTreeSet;
 
 impl IntoSelectQuery for GetNodeByWhereInput {
@@ -31,7 +31,7 @@ impl IntoSelectQuery for GetNodeByWhereInput {
             Error::InvalidInputError(String::from("Search value cannot be empty."))
         })?;
 
-        let condition = ConditionTree::single(column(&self.field_name).equals(value));
+        let condition = ConditionTree::single(self.field_name.equals(value));
 
         let query = SelectQuery {
             project: project,

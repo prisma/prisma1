@@ -1,5 +1,5 @@
 use crate::models::prelude::*;
-use sql::{grammar::definition::Column, language::full_column};
+use prisma_query::ast::*;
 use std::sync::Arc;
 
 static ID_FIELD: &str = "id";
@@ -228,9 +228,8 @@ impl ScalarField {
 
     pub fn model_column(&self) -> Column {
         self.with_model(|model| {
-            model.with_project(|project| {
-                full_column(project.db_name(), model.db_name(), self.db_name())
-            })
+            model
+                .with_project(|project| (project.db_name(), model.db_name(), self.db_name()).into())
         })
     }
 }

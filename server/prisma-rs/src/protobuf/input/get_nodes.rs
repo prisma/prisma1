@@ -7,7 +7,7 @@ use crate::{
     PrismaResult,
 };
 
-use sql::prelude::*;
+use prisma_query::ast::*;
 use std::collections::BTreeSet;
 
 impl IntoSelectQuery for GetNodesInput {

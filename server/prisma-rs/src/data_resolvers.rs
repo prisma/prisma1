@@ -5,7 +5,7 @@ pub type PrismaDataResolver = Box<dyn DataResolver + Send + Sync + 'static>;
 
 use crate::{models::prelude::*, ordering::OrderVec, protobuf::prelude::*, PrismaResult};
 
-use sql::prelude::*;
+use prisma_query::ast::*;
 use std::collections::BTreeSet;
 
 #[derive(Debug)]

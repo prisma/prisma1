@@ -1,5 +1,5 @@
 use crate::{models::prelude::*, protobuf::prelude::*};
-use sql::{grammar::clause::ConditionTree, prelude::*};
+use prisma_query::ast::*;
 
 #[derive(Clone, Copy)]
 enum CursorType {
@@ -28,23 +28,23 @@ impl CursorCondition {
 
                 let sort_order: Order = order_by
                     .map(|order| order.sort_order().into())
-                    .unwrap_or(Order::Ascending);
+                    .unwrap_or(Order::Asc);
 
                 let cursor_for = |cursor_type: CursorType, id: IdValue| {
                     let row = Row::from((field.model_column(), model.fields().id().model_column()));
+                    let id_column = model.fields().id().model_column();
+                    let where_condition = id_column.clone().equals(id.clone());
 
-                    let where_condition = model.fields().id().model_column().equals(id.clone());
-
-                    let select_query = select_from(&model.table())
+                    let select_query = Select::from(model.table())
                         .column(field.model_column())
-                        .column(id.clone())
+                        .column(id_column)
                         .so_that(ConditionTree::single(where_condition));
 
                     let compare = match (cursor_type, sort_order) {
-                        (CursorType::Before, Order::Ascending) => row.less_than(select_query),
-                        (CursorType::Before, Order::Descending) => row.greater_than(select_query),
-                        (CursorType::After, Order::Ascending) => row.greater_than(select_query),
-                        (CursorType::After, Order::Descending) => row.less_than(select_query),
+                        (CursorType::Before, Order::Asc) => row.less_than(select_query),
+                        (CursorType::Before, Order::Desc) => row.greater_than(select_query),
+                        (CursorType::After, Order::Asc) => row.greater_than(select_query),
+                        (CursorType::After, Order::Desc) => row.less_than(select_query),
                     };
 
                     ConditionTree::single(compare)

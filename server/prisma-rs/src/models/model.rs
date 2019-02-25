@@ -1,4 +1,5 @@
 use crate::models::prelude::*;
+use prisma_query::ast::Table;
 
 use once_cell::unsync::OnceCell;
 use std::sync::{Arc, Weak};
@@ -59,8 +60,8 @@ impl ModelTemplate {
 }
 
 impl Model {
-    pub fn table(&self) -> String {
-        self.with_project(|project| format!("{}.{}", project.db_name(), self.db_name()))
+    pub fn table(&self) -> Table {
+        self.with_project(|project| (project.db_name(), self.db_name()).into())
     }
 
     pub fn fields(&self) -> &Fields {

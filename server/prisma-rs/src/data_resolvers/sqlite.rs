@@ -3,14 +3,13 @@ mod service;
 
 use chrono::{DateTime, Utc};
 use r2d2_sqlite::SqliteConnectionManager;
-use sql::prelude::*;
 use std::collections::HashSet;
 
 use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult, PrismaValue, SERVER_ROOT};
 
 use rusqlite::{
-    types::{FromSql, FromSqlResult, Null, ToSqlOutput, ValueRef},
-    Error as RusqlError, Row, NO_PARAMS,
+    types::{FromSql, FromSqlResult, ValueRef},
+    Row, NO_PARAMS,
 };
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
@@ -98,19 +97,6 @@ impl Sqlite {
                 PrismaValue::Float(v as f32)
             }
         }
-    }
-
-    fn to_sql_value(v: DatabaseValue) -> Result<ToSqlOutput<'static>, RusqlError> {
-        let value = match v {
-            DatabaseValue::Null => ToSqlOutput::from(Null),
-            DatabaseValue::Integer(integer) => ToSqlOutput::from(integer),
-            DatabaseValue::Real(float) => ToSqlOutput::from(float),
-            DatabaseValue::Boolean(boolean) => ToSqlOutput::from(boolean),
-            DatabaseValue::Text(s) => ToSqlOutput::from(s),
-            v => panic!("Cannot get a database value for {:#?}", v),
-        };
-
-        Ok(value)
     }
 }
 

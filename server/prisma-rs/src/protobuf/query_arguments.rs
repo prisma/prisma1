@@ -1,10 +1,4 @@
-use sql::{
-    grammar::{
-        clause::ConditionTree,
-        database_value::{DatabaseValue, ToDatabaseValue},
-    },
-    prelude::*,
-};
+use prisma_query::ast::*;
 use std::fmt;
 
 use crate::protobuf::prelude::*;
@@ -12,8 +6,8 @@ use crate::protobuf::prelude::*;
 impl Into<Order> for SortOrder {
     fn into(self) -> Order {
         match self {
-            SortOrder::Asc => Order::Ascending,
-            SortOrder::Desc => Order::Descending,
+            SortOrder::Asc => Order::Asc,
+            SortOrder::Desc => Order::Desc,
         }
     }
 }
@@ -41,7 +35,7 @@ impl fmt::Display for PrismaValue {
 
 impl Into<ConditionTree> for ScalarFilter {
     fn into(self) -> ConditionTree {
-        let field = column(&self.field);
+        let field = self.field;
 
         match self.condition.unwrap() {
             scalar_filter::Condition::Equals(value) => match value.prisma_value.unwrap() {
@@ -53,34 +47,44 @@ impl Into<ConditionTree> for ScalarFilter {
                 val => ConditionTree::single(field.not_equals(val)),
             },
             scalar_filter::Condition::Contains(value) => {
-                ConditionTree::single(field.like(value.prisma_value.unwrap()))
+                let val = format!("{}", value.prisma_value.unwrap());
+                ConditionTree::single(field.like(val))
             }
             scalar_filter::Condition::NotContains(value) => {
-                ConditionTree::single(field.not_like(value.prisma_value.unwrap()))
+                let val = format!("{}", value.prisma_value.unwrap());
+                ConditionTree::single(field.not_like(val))
             }
             scalar_filter::Condition::StartsWith(value) => {
-                ConditionTree::single(field.begins_with(value.prisma_value.unwrap()))
+                let val = format!("{}", value.prisma_value.unwrap());
+                ConditionTree::single(field.begins_with(val))
             }
             scalar_filter::Condition::NotStartsWith(value) => {
-                ConditionTree::single(field.not_begins_with(value.prisma_value.unwrap()))
+                let val = format!("{}", value.prisma_value.unwrap());
+                ConditionTree::single(field.not_begins_with(val))
             }
             scalar_filter::Condition::EndsWith(value) => {
-                ConditionTree::single(field.ends_into(value.prisma_value.unwrap()))
+                let val = format!("{}", value.prisma_value.unwrap());
+                ConditionTree::single(field.ends_into(val))
             }
             scalar_filter::Condition::NotEndsWith(value) => {
-                ConditionTree::single(field.not_ends_into(value.prisma_value.unwrap()))
+                let val = format!("{}", value.prisma_value.unwrap());
+                ConditionTree::single(field.not_ends_into(val))
             }
             scalar_filter::Condition::LessThan(value) => {
-                ConditionTree::single(field.less_than(value.prisma_value.unwrap()))
+                let val: DatabaseValue = value.prisma_value.unwrap().into();
+                ConditionTree::single(field.less_than(val))
             }
             scalar_filter::Condition::LessThanOrEquals(value) => {
-                ConditionTree::single(field.less_than_or_equals(value.prisma_value.unwrap()))
+                let val: DatabaseValue = value.prisma_value.unwrap().into();
+                ConditionTree::single(field.less_than_or_equals(val))
             }
             scalar_filter::Condition::GreaterThan(value) => {
-                ConditionTree::single(field.greater_than(value.prisma_value.unwrap()))
+                let val: DatabaseValue = value.prisma_value.unwrap().into();
+                ConditionTree::single(field.greater_than(val))
             }
             scalar_filter::Condition::GreaterThanOrEquals(value) => {
-                ConditionTree::single(field.greater_than_or_equals(value.prisma_value.unwrap()))
+                let val: DatabaseValue = value.prisma_value.unwrap().into();
+                ConditionTree::single(field.greater_than_or_equals(val))
             }
             scalar_filter::Condition::In(mc) => match mc.values.split_first() {
                 Some((head, tail)) if tail.is_empty() && head.is_null_value() => {
@@ -177,517 +181,29 @@ impl Into<ConditionTree> for Filter {
     }
 }
 
-impl ToDatabaseValue for IdValue {
-    fn to_database_value(self) -> DatabaseValue {
+impl Into<DatabaseValue> for IdValue {
+    fn into(self) -> DatabaseValue {
         match self {
-            graphql_id::IdValue::String(s) => s.to_database_value(),
-            graphql_id::IdValue::Int(i) => i.to_database_value(),
+            graphql_id::IdValue::String(s) => s.into(),
+            graphql_id::IdValue::Int(i) => i.into(),
         }
     }
 }
 
-impl ToDatabaseValue for PrismaValue {
-    fn to_database_value(self) -> DatabaseValue {
+impl Into<DatabaseValue> for PrismaValue {
+    fn into(self) -> DatabaseValue {
         match self {
-            PrismaValue::String(s) => s.to_database_value(),
-            PrismaValue::Float(f) => (f as f64).to_database_value(),
-            PrismaValue::Boolean(b) => b.to_database_value(),
-            PrismaValue::DateTime(d) => d.to_database_value(),
-            PrismaValue::Enum(e) => e.to_database_value(),
-            PrismaValue::Json(j) => j.to_database_value(),
-            PrismaValue::Int(i) => (i as i64).to_database_value(),
-            PrismaValue::Relation(i) => i.to_database_value(),
-            PrismaValue::Null(_) => DatabaseValue::Null,
-            PrismaValue::Uuid(u) => u.to_database_value(),
-            PrismaValue::GraphqlId(id) => id.id_value.unwrap().to_database_value(),
+            PrismaValue::String(s) => s.into(),
+            PrismaValue::Float(f) => (f as f64).into(),
+            PrismaValue::Boolean(b) => b.into(),
+            PrismaValue::DateTime(d) => d.into(),
+            PrismaValue::Enum(e) => e.into(),
+            PrismaValue::Json(j) => j.into(),
+            PrismaValue::Int(i) => (i as i64).into(),
+            PrismaValue::Relation(i) => i.into(),
+            PrismaValue::Null(_) => DatabaseValue::Parameterized(ParameterizedValue::Null),
+            PrismaValue::Uuid(u) => u.into(),
+            PrismaValue::GraphqlId(id) => id.id_value.unwrap().into(),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::protobuf::prelude::*;
-    use sql::grammar::{clause::ConditionTree, database_value::DatabaseValue, Expression};
-
-    impl Filter {
-        fn bool_filter(condition: bool) -> Filter {
-            Filter {
-                type_: Some(filter::Type::BoolFilter(condition)),
-            }
-        }
-
-        fn scalar(field: &str, condition: scalar_filter::Condition) -> Filter {
-            Filter {
-                type_: Some(filter::Type::Scalar(ScalarFilter {
-                    field: field.to_string(),
-                    condition: Some(condition),
-                })),
-            }
-        }
-
-        fn equals(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::Equals(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn not_equals(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::NotEquals(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn less_than(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::LessThan(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn less_than_or_equals(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::LessThanOrEquals(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn greater_than(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::GreaterThan(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn greater_than_or_equals(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::GreaterThanOrEquals(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn in_selection(field: &str, selection: Vec<PrismaValue>) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::In(MultiContainer {
-                    values: selection
-                        .into_iter()
-                        .map(|pv| ValueContainer {
-                            prisma_value: Some(pv),
-                        })
-                        .collect(),
-                }),
-            )
-        }
-
-        fn not_in_selection(field: &str, selection: Vec<PrismaValue>) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::NotIn(MultiContainer {
-                    values: selection
-                        .into_iter()
-                        .map(|pv| ValueContainer {
-                            prisma_value: Some(pv),
-                        })
-                        .collect(),
-                }),
-            )
-        }
-
-        fn contains(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::Contains(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn not_contains(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::NotContains(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn starts_with(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::StartsWith(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn not_starts_with(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::NotStartsWith(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn ends_with(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::EndsWith(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn not_ends_with(field: &str, equals: PrismaValue) -> Filter {
-            Self::scalar(
-                field,
-                scalar_filter::Condition::NotEndsWith(ValueContainer {
-                    prisma_value: Some(equals),
-                }),
-            )
-        }
-
-        fn and(filters: Vec<Filter>) -> Filter {
-            Filter {
-                type_: Some(filter::Type::And(AndFilter { filters })),
-            }
-        }
-
-        fn or(filters: Vec<Filter>) -> Filter {
-            Filter {
-                type_: Some(filter::Type::Or(OrFilter { filters })),
-            }
-        }
-
-        fn not(filters: Vec<Filter>) -> Filter {
-            Filter {
-                type_: Some(filter::Type::Not(NotFilter { filters })),
-            }
-        }
-    }
-
-    #[test]
-    fn test_true() {
-        let condition: ConditionTree = Filter::bool_filter(true).into();
-
-        let sql = condition.compile(&mut Vec::new()).unwrap();
-
-        assert_eq!("1=1", sql);
-    }
-
-    #[test]
-    fn test_false() {
-        let condition: ConditionTree = Filter::bool_filter(false).into();
-
-        let sql = condition.compile(&mut Vec::new()).unwrap();
-
-        assert_eq!("1=0", sql);
-    }
-
-    #[test]
-    fn test_equals() {
-        let condition: ConditionTree = Filter::equals("foo", PrismaValue::Int(1)).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` = ?", sql);
-        assert_eq!(vec![DatabaseValue::Integer(1)], params);
-    }
-
-    #[test]
-    fn test_not_equals() {
-        let condition: ConditionTree = Filter::not_equals("foo", PrismaValue::Int(1)).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` <> ?", sql);
-        assert_eq!(vec![DatabaseValue::Integer(1)], params);
-    }
-
-    #[test]
-    fn test_less_than() {
-        let condition: ConditionTree = Filter::less_than("foo", PrismaValue::Int(1)).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` < ?", sql);
-        assert_eq!(vec![DatabaseValue::Integer(1)], params);
-    }
-
-    #[test]
-    fn test_less_than_or_equals() {
-        let condition: ConditionTree =
-            Filter::less_than_or_equals("foo", PrismaValue::Int(1)).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` <= ?", sql);
-        assert_eq!(vec![DatabaseValue::Integer(1)], params);
-    }
-
-    #[test]
-    fn test_greater_than() {
-        let condition: ConditionTree = Filter::greater_than("foo", PrismaValue::Int(1)).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` > ?", sql);
-        assert_eq!(vec![DatabaseValue::Integer(1)], params);
-    }
-
-    #[test]
-    fn test_greater_than_or_equals() {
-        let condition: ConditionTree =
-            Filter::greater_than_or_equals("foo", PrismaValue::Int(1)).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` >= ?", sql);
-        assert_eq!(vec![DatabaseValue::Integer(1)], params);
-    }
-
-    #[test]
-    fn test_contains() {
-        let condition: ConditionTree =
-            Filter::contains("foo", PrismaValue::String("bar".to_string())).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` LIKE ?", sql);
-        assert_eq!(vec![DatabaseValue::Text(String::from("%bar%"))], params);
-    }
-
-    #[test]
-    fn test_not_contains() {
-        let condition: ConditionTree =
-            Filter::not_contains("foo", PrismaValue::String("bar".to_string())).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` NOT LIKE ?", sql);
-        assert_eq!(vec![DatabaseValue::Text(String::from("%bar%"))], params);
-    }
-
-    #[test]
-    fn test_in() {
-        let condition: ConditionTree =
-            Filter::in_selection("foo", vec![PrismaValue::Int(1), PrismaValue::Int(2)]).into();
-        let mut params = Vec::new();
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` IN (?, ?)", sql);
-        assert_eq!(
-            vec![DatabaseValue::Integer(1), DatabaseValue::Integer(2)],
-            params
-        );
-    }
-
-    #[test]
-    fn test_not_in() {
-        let condition: ConditionTree = Filter::not_in_selection(
-            "foo",
-            vec![
-                PrismaValue::String(String::from("foo")),
-                PrismaValue::String(String::from("bar")),
-            ],
-        )
-        .into();
-        let mut params = Vec::new();
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` NOT IN (?, ?)", sql);
-        assert_eq!(
-            vec![
-                DatabaseValue::Text(String::from("foo")),
-                DatabaseValue::Text(String::from("bar"))
-            ],
-            params
-        );
-    }
-
-    #[test]
-    fn test_starts_with() {
-        let condition: ConditionTree =
-            Filter::starts_with("foo", PrismaValue::String("bar".to_string())).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` LIKE ?", sql);
-        assert_eq!(vec![DatabaseValue::Text(String::from("bar%"))], params);
-    }
-
-    #[test]
-    fn test_not_starts_with() {
-        let condition: ConditionTree =
-            Filter::not_starts_with("foo", PrismaValue::String("bar".to_string())).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` NOT LIKE ?", sql);
-        assert_eq!(vec![DatabaseValue::Text(String::from("bar%"))], params);
-    }
-
-    #[test]
-    fn test_ends_with() {
-        let condition: ConditionTree =
-            Filter::ends_with("foo", PrismaValue::String("bar".to_string())).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` LIKE ?", sql);
-        assert_eq!(vec![DatabaseValue::Text(String::from("%bar"))], params);
-    }
-
-    #[test]
-    fn test_not_ends_with() {
-        let condition: ConditionTree =
-            Filter::not_ends_with("foo", PrismaValue::String("bar".to_string())).into();
-        let mut params = Vec::new();
-
-        let sql = condition.compile(&mut params).unwrap();
-
-        assert_eq!("`foo` NOT LIKE ?", sql);
-        assert_eq!(vec![DatabaseValue::Text(String::from("%bar"))], params);
-    }
-
-    #[test]
-    fn test_empty_and() {
-        let filter = Filter::and(Vec::new());
-        let condition: ConditionTree = filter.into();
-
-        assert_eq!("1=1", condition.compile(&mut Vec::new()).unwrap());
-    }
-
-    #[test]
-    fn test_and_with_one_filter() {
-        let filter = Filter::and(vec![Filter::equals("foo", PrismaValue::Boolean(false))]);
-
-        let condition: ConditionTree = filter.into();
-
-        assert_eq!("`foo` = ?", condition.compile(&mut Vec::new()).unwrap());
-    }
-
-    #[test]
-    fn test_and_with_two_filters() {
-        let filter = Filter::and(vec![
-            Filter::equals("foo", PrismaValue::Boolean(false)),
-            Filter::equals("bar", PrismaValue::Int(2)),
-        ]);
-
-        let condition: ConditionTree = filter.into();
-        let mut params = Vec::new();
-
-        assert_eq!(
-            "(`foo` = ? AND `bar` = ?)",
-            condition.compile(&mut params).unwrap()
-        );
-        assert_eq!(
-            vec![DatabaseValue::Boolean(false), DatabaseValue::Integer(2)],
-            params
-        );
-    }
-
-    #[test]
-    fn test_not_two_filters() {
-        let filter = Filter::not(vec![
-            Filter::equals("foo", PrismaValue::Boolean(false)),
-            Filter::equals("bar", PrismaValue::Int(2)),
-        ]);
-
-        let condition: ConditionTree = filter.into();
-        let mut params = Vec::new();
-
-        assert_eq!(
-            "(NOT (`foo` = ? AND `bar` = ?))",
-            condition.compile(&mut params).unwrap()
-        );
-
-        assert_eq!(
-            vec![DatabaseValue::Boolean(false), DatabaseValue::Integer(2)],
-            params
-        );
-    }
-
-    #[test]
-    fn test_and_with_three_filters() {
-        let filter = Filter::and(vec![
-            Filter::equals("foo", PrismaValue::Boolean(false)),
-            Filter::equals("bar", PrismaValue::Int(2)),
-            Filter::equals("lol", PrismaValue::String(String::from("wtf"))),
-        ]);
-
-        let condition: ConditionTree = filter.into();
-        let mut params = Vec::new();
-
-        assert_eq!(
-            "(`foo` = ? AND (`bar` = ? AND `lol` = ?))",
-            condition.compile(&mut params).unwrap()
-        );
-
-        assert_eq!(
-            vec![
-                DatabaseValue::Boolean(false),
-                DatabaseValue::Integer(2),
-                DatabaseValue::Text(String::from("wtf"))
-            ],
-            params
-        );
-    }
-
-    #[test]
-    fn test_nested_and_or() {
-        let and_1 = Filter::and(vec![
-            Filter::equals("foo", PrismaValue::Boolean(false)),
-            Filter::equals("bar", PrismaValue::Int(2)),
-        ]);
-
-        let and_2 = Filter::and(vec![
-            Filter::equals("musti", PrismaValue::String(String::from("cat"))),
-            Filter::equals("naukio", PrismaValue::String(String::from("meow"))),
-        ]);
-
-        let filter = Filter::or(vec![and_1, and_2]);
-        let condition: ConditionTree = filter.into();
-        let mut params = Vec::new();
-
-        assert_eq!(
-            "((`foo` = ? AND `bar` = ?) OR (`musti` = ? AND `naukio` = ?))",
-            condition.compile(&mut params).unwrap(),
-        );
-
-        assert_eq!(
-            vec![
-                DatabaseValue::Boolean(false),
-                DatabaseValue::Integer(2),
-                DatabaseValue::Text(String::from("cat")),
-                DatabaseValue::Text(String::from("meow"))
-            ],
-            params
-        );
     }
 }

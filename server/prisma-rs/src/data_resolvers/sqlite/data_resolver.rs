@@ -3,8 +3,10 @@ use crate::{
     protobuf::prelude::*,
     PrismaResult,
 };
-use rusqlite::types::ToSqlOutput;
-use sql::prelude::*;
+use prisma_query::{
+    ast::*,
+    visitor::{self, *},
+};
 
 impl DataResolver for Sqlite {
     fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)> {
@@ -23,37 +25,31 @@ impl DataResolver for Sqlite {
                 .collect();
 
             // BASE QUERY
-            let query_base = select_from(&query.model.table()).so_that(query.conditions);
-
-            // SELECT FIELDS
-            let query_sql = field_names
-                .iter()
-                .fold(query_base, |query, field| query.column(column(field)))
+            let ast = Select::from(query.model.table())
+                .so_that(query.conditions)
                 .offset(query.skip);
 
+            // SELECT FIELDS
+            let ast = field_names
+                .iter()
+                .map(AsRef::as_ref)
+                .fold(ast, |query, field| query.column(field));
+
             // ORDER BY
-            let query_sql = query
-                .ordering
-                .into_iter()
-                .fold(query_sql, |query_sql, ordering| {
-                    ordering.into_iter().fold(query_sql, |query_sql, order_by| {
-                        query_sql.order_by(order_by)
-                    })
-                });
+            let ast = query.ordering.into_iter().fold(ast, |ast, ordering| {
+                ordering
+                    .into_iter()
+                    .fold(ast, |ast, order_by| ast.order_by(order_by))
+            });
 
             // LIMIT
-            let query_sql = query
+            let ast = query
                 .limit
                 .into_iter()
-                .fold(query_sql, |query_sql, limit| query_sql.limit(limit));
+                .fold(ast, |query_sql, limit| query_sql.limit(limit));
 
-            let (query_sql, params) = dbg!(query_sql.compile().unwrap());
+            let (query_sql, params) = dbg!(visitor::Sqlite::build(ast));
             let mut stmt = conn.prepare(&query_sql)?;
-
-            let params: Vec<ToSqlOutput<'static>> = params
-                .into_iter()
-                .map(|v| Self::to_sql_value(v).unwrap())
-                .collect();
 
             let nodes_iter = stmt.query_map(&params, |row| {
                 let mut values = Vec::new();
