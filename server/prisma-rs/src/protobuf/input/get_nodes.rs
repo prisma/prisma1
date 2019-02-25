@@ -44,13 +44,10 @@ impl IntoSelectQuery for GetNodesInput {
         let ordered = Self::order_by(with_columns, ordering);
         let select_ast = Self::limit(ordered, limit.map(|limit| limit as usize));
 
-        let query = SelectQuery {
-            project: project,
-            model: model,
+        dbg!(Ok(SelectQuery {
+            db_name: project.db_name().to_string(),
+            query_ast: select_ast,
             selected_fields: selected_fields,
-            ast: select_ast,
-        };
-
-        dbg!(Ok(query))
+        }))
     }
 }

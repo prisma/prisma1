@@ -8,18 +8,17 @@ use crate::{models::prelude::*, ordering::OrderVec, protobuf::prelude::*, Prisma
 use prisma_query::ast::*;
 use std::{collections::BTreeSet, sync::Arc};
 
-#[derive(Debug)]
-pub struct SelectQuery {
-    pub project: ProjectRef,
-    pub model: ModelRef,
-    pub selected_fields: SelectedFields,
-    pub ast: Select,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SelectedFields {
     pub fields: Vec<Arc<ScalarField>>,
     pub names: Vec<String>,
+}
+
+#[derive(Debug)]
+pub struct SelectQuery {
+    pub db_name: String,
+    pub query_ast: Select,
+    pub selected_fields: SelectedFields,
 }
 
 pub trait IntoSelectQuery {
