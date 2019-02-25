@@ -25,30 +25,33 @@ impl DataResolver for Sqlite {
                 .collect();
 
             // BASE QUERY
-            let ast = Select::from(query.model.table())
+            let base_query = Select::from(query.model.table())
                 .so_that(query.conditions)
                 .offset(query.skip);
 
             // SELECT FIELDS
-            let ast = field_names
+            let with_names = field_names
                 .iter()
                 .map(AsRef::as_ref)
-                .fold(ast, |query, field| query.column(field));
+                .fold(base_query, |ast, field| ast.column(field));
 
             // ORDER BY
-            let ast = query.ordering.into_iter().fold(ast, |ast, ordering| {
-                ordering
-                    .into_iter()
-                    .fold(ast, |ast, order_by| ast.order_by(order_by))
-            });
+            let ordered = query
+                .ordering
+                .into_iter()
+                .fold(with_names, |ast, ordering| {
+                    ordering
+                        .into_iter()
+                        .fold(ast, |ast, order_by| ast.order_by(order_by))
+                });
 
             // LIMIT
-            let ast = query
+            let query_ast = query
                 .limit
                 .into_iter()
-                .fold(ast, |query_sql, limit| query_sql.limit(limit));
+                .fold(ordered, |ast, limit| ast.limit(limit));
 
-            let (query_sql, params) = dbg!(visitor::Sqlite::build(ast));
+            let (query_sql, params) = dbg!(visitor::Sqlite::build(query_ast));
             let mut stmt = conn.prepare(&query_sql)?;
 
             let nodes_iter = stmt.query_map(&params, |row| {
