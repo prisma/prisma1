@@ -80,7 +80,7 @@ object SchemaDsl extends AwaitUtils {
     val withBackRelationsAdded = MissingBackRelations.add(schema)
     val manifestation = ConfigLoader.load().databases.head.connector match {
       case x if x == "postgres" => ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"), x)
-      case y                    => ProjectManifestation(database = Some(id + "_S"), schema = None, y)
+      case y                    => ProjectManifestation(database = Some(id + "_DB"), schema = None, y)
     }
     TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }

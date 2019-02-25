@@ -21,12 +21,12 @@ case class Project(
 
   val dbName: String = manifestation match {
     case ProjectManifestation(Some(_), Some(schema), "postgres")                  => schema
-    case ProjectManifestation(Some(_), Some(schema), _)                           => sys.error("The configloader should have rejected this.")
+    case ProjectManifestation(Some(_), Some(schema), _)                           => sys.error("Only Postgres allows schema + database.")
     case ProjectManifestation(Some(_), None, "postgres")                          => id
     case ProjectManifestation(Some(database), None, "mongo" | "mysql" | "sqlite") => database
-    case ProjectManifestation(Some(database), None, _)                            => sys.error("The configloader should have rejected this.")
-    case ProjectManifestation(None, Some(_), _)                                   => sys.error("The configloader should have rejected this.")
-    case ProjectManifestation(None, None, _)                                      => id // All active
+    case ProjectManifestation(Some(database), None, _)                            => sys.error("We only have four connectors atm.")
+    case ProjectManifestation(None, Some(_), _)                                   => sys.error("You cannot provide a schema only.")
+    case ProjectManifestation(None, None, _)                                      => id
   }
 }
 
