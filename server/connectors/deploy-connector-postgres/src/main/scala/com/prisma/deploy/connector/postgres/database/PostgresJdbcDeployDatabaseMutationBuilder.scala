@@ -23,7 +23,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   import slickDatabase.profile.api._
 
   override def createSchema(projectId: String): DBIO[_] = {
-    sqlu"CREATE SCHEMA #${qualify(projectId)}"
+    sqlu"CREATE SCHEMA IF NOT EXISTS #${qualify(projectId)}"
   }
 
   override def truncateProjectTables(project: Project): DBIO[_] = {

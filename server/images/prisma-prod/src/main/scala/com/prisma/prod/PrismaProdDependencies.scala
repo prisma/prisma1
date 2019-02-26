@@ -109,6 +109,7 @@ case class PrismaProdDependencies()(implicit val system: ActorSystem, val materi
     initializeDeployDependencies()
     initializeApiDependencies()
     initializeSubscriptionDependencies()
+    telemetryActor
   }
 
   override val metricsRegistry: MetricsRegistry = MicrometerMetricsRegistry.initialize(deployConnector.cloudSecretPersistence)
