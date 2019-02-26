@@ -13,6 +13,7 @@ object NativeBinding {
     System.setProperty("jna.debug_load.jna", "true")
     System.setProperty("jna.debug_load", "true")
     System.setProperty("jna.library.path", s"${sys.env.getOrElse("SERVER_ROOT", sys.error("SERVER_ROOT env var required but not found"))}/prisma-rs/build")
+
     Native.loadLibrary("prisma", classOf[JnaRustBridge])
   }
 
@@ -28,6 +29,14 @@ object NativeBinding {
     val (pointer, length) = writeBuffer(getNodes)
 
     handleProtoResult(library.get_nodes(pointer, length)) { nodesAndFields: (Vector[Node], Vector[String]) =>
+      nodesAndFields
+    }
+  }
+
+  def get_related_nodes(getRelatedNodesInput: GetRelatedNodesInput): (Vector[Node], Vector[String]) = {
+    val (pointer, length) = writeBuffer(getRelatedNodesInput)
+
+    handleProtoResult(library.get_related_nodes(pointer, length)) { nodesAndFields: (Vector[Node], Vector[String]) =>
       nodesAndFields
     }
   }
