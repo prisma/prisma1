@@ -17,7 +17,6 @@ To ensure only entitled users are able to perform actions through the Management
 
 The Management API secret is set in the Docker Compose file you're using to configure your Prisma server. It is part of the `PRISMA_CONFIG` environment variable and specified via the `managementApiSecret` key:
 
-
 <Code lines="10">
 
 ```
@@ -152,3 +151,25 @@ The Prisma CLI has a hidden helper command for generating Management API tokens:
 There already is a [pending feature request](https://github.com/prisma/prisma/issues/2772) for a similar command.
 
 </Warning>
+
+## Troubleshooting
+
+### FAQ
+
+#### Where do I find my Management API secret?
+
+The Management API secret is specified in your Docker Compose file (via the `managementApiSecret` key) at the time when your Prisma server is being deployed. If you don't know the secret or don't have access to the Docker Compose file, you need to ask the administrator of your Prisma server who was responsible for the deployment.
+
+If you have used the Prisma Cloud Heroku integration to deploy your Prisma server, you can find out how to reveal the Management API secret [here](fq03).
+
+### Common errors
+
+#### "Server at __URL__ requires the Management API secret. Please set the the PRISMA_MANAGEMENT_API_SECRET environment variable."
+
+This error means that your server is protected with the [Management API secret](#management-api-secret). Whenever you access the server and need to [authenticate against the Management API](#authenticating-against-the-management-api), you must provide a JWT that was generated based on the secret. When using the Prisma CLI, you don't need to generate the JWT manually, instead this will be done by the Prisma CLI itself. To do so, it needs to be aware of the Management API secret which it can only read from the `PRISMA_MANAGEMENT_API_SECRET` environment variable.
+
+If your Management API secret is `mysecret42`, you can set the it in your terminal with the following command:
+
+```bash
+export PRISMA_MANAGEMENT_API_SECRET="mysecret42"
+```

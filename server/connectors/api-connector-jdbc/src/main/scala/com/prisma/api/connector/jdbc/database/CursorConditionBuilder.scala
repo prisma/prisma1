@@ -25,7 +25,7 @@ trait CursorConditionBuilder extends BuilderBase {
     // We need that since before/after are dependent on the order.
     val (orderByField: jooq.Field[AnyRef], orderByFieldWithAlias: jooq.Field[AnyRef], sortOrder: SortOrder) = orderBy match {
       case Some(order) => (modelColumn(order.field), aliasColumn(order.field.dbName), order.sortOrder)
-      case None        => (idField, idFieldWithAlias, "asc")
+      case None        => (idField, idFieldWithAlias, SortOrder.Asc)
     }
 
     val value: IdGCValue = before match {

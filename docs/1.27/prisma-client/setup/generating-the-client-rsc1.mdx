@@ -31,7 +31,22 @@ generate:
 
 Running `prisma generate` in the directory where that prisma.yml is located generates a Prisma client in TypeScript and stores it in a file called `prisma.ts`.
 
-> The `generator` also accepts `graphql-schema` as a value. This downloads the GraphQL schema for your Prisma API via an [introspection](https://graphql.org/learn/introspection/) query.`
+> The `generator` also accepts `graphql-schema` as a value. This downloads the GraphQL schema for your Prisma API via an [introspection](https://graphql.org/learn/introspection/) query.
+
+Note that you can also reference environment variables in `prisma.yml` by using the `env:`-prefix and enclosing them with `${}`. For example, if you have an environment variable set that's called `MY_SECRET`:
+
+```yml
+datamodel: datamodel.prisma
+endpoint: http://localhost:4000
+
+generate:
+  - generator: typescript-client
+    output: ./prisma-client/
+
+secret: ${env:MY_SECRET}
+```
+
+You can find more info [here](5cy7#using-variables).
 
 ### More examples
 
