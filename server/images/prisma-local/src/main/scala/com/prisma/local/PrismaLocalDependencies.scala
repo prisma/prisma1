@@ -95,5 +95,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     initializeDeployDependencies()
     initializeApiDependencies()
     initializeSubscriptionDependencies()
+    telemetryActor
   }
 }
