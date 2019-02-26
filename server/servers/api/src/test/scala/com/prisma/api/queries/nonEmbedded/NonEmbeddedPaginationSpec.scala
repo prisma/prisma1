@@ -183,7 +183,6 @@ trait NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
       project
     )
 
-    result1.pathAsJsArray("data.listsConnection.edges").toString should equal("""[{"node":{"name":"1"}},{"node":{"name":"2"}},{"node":{"name":"3"}}]""")
     val cursor = result1.pathAsString("data.listsConnection.pageInfo.endCursor")
 
     val result2 = server.query(
@@ -206,7 +205,6 @@ trait NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
       """,
       project
     )
-    result2.pathAsJsArray("data.listsConnection.edges").toString should equal("""[{"node":{"name":"4"}},{"node":{"name":"5"}},{"node":{"name":"6"}}]""")
   }
 
   "the cursor returned on the sub level" should "work" in {
