@@ -2,6 +2,9 @@ use crate::{error::Error, models::prelude::*, PrismaResult};
 use once_cell::unsync::OnceCell;
 use std::sync::{Arc, Weak};
 
+pub type RelationRef = Arc<Relation>;
+pub type RelationWeakRef = Weak<Relation>;
+
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OnDelete {
@@ -54,7 +57,7 @@ pub struct Relation {
     model_a: OnceCell<RelationAttributes>,
     model_b: OnceCell<RelationAttributes>,
 
-    manifestation: Option<RelationLinkManifestation>,
+    pub manifestation: Option<RelationLinkManifestation>,
 
     #[debug_stub = "#SchemaWeakRef#"]
     pub schema: SchemaWeakRef,
@@ -87,7 +90,7 @@ impl RelationAttributes {
 }
 
 impl RelationTemplate {
-    pub fn build(self, schema: SchemaWeakRef) -> Relation {
+    pub fn build(self, schema: SchemaWeakRef) -> RelationRef {
         let model_a_name = self.model_a_name;
         let model_b_name = self.model_b_name;
 
@@ -124,7 +127,7 @@ impl RelationTemplate {
         relation.model_a.set(model_a).unwrap();
         relation.model_b.set(model_b).unwrap();
 
-        relation
+        Arc::new(relation)
     }
 }
 
@@ -160,6 +163,15 @@ impl Relation {
 
     pub fn is_self_relation(&self) -> bool {
         self.model_a().name == self.model_b().name
+    }
+
+    pub fn inline_manifestation(&self) -> Option<&InlineRelation> {
+        use RelationLinkManifestation::*;
+
+        match self.manifestation {
+            Some(Inline(ref m)) => Some(m),
+            _ => None,
+        }
     }
 
     pub fn both_sides_cascade(&self) -> bool {

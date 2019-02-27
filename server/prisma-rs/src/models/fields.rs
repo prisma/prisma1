@@ -60,7 +60,7 @@ impl Fields {
     pub fn find_many_from_all(&self, names: &BTreeSet<String>) -> Vec<&Field> {
         self.all
             .iter()
-            .filter(|field| names.contains(field.db_name()))
+            .filter(|field| names.contains(field.db_name().as_ref()))
             .collect()
     }
 
@@ -76,7 +76,7 @@ impl Fields {
         self.relation
             .iter()
             .map(|field| field.upgrade().unwrap())
-            .filter(|field| names.contains(field.db_name()))
+            .filter(|field| names.contains(&field.db_name()))
             .collect()
     }
 

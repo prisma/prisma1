@@ -30,11 +30,11 @@ pub struct RelationField {
     pub is_hidden: bool,
     pub is_readonly: bool,
     pub is_auto_generated: bool,
-    pub manifestation: Option<FieldManifestation>,
     pub relation_name: String,
     pub relation_side: RelationSide,
     #[debug_stub = "#ModelWeakRef#"]
     pub model: ModelWeakRef,
+    pub relation: RelationWeakRef,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
@@ -53,16 +53,21 @@ impl RelationSide {
 }
 
 impl RelationField {
-    pub fn db_name(&self) -> &str {
-        self.manifestation
-            .as_ref()
-            .map(|mf| mf.db_name.as_ref())
-            .unwrap_or_else(|| self.name.as_ref())
+    fn with_relation<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(RelationRef) -> T,
+    {
+        match self.relation.upgrade() {
+            Some(relation) => f(relation),
+            None => panic!(
+                "Relation does not exist anymore. Parent relation is deleted without deleting the child fields."
+            )
+        }
     }
 
-    pub fn with_model<F, T>(&self, f: F) -> T
+    fn with_model<F, T>(&self, f: F) -> T
     where
-        F: FnOnce(Arc<Model>) -> T,
+        F: FnOnce(ModelRef) -> T,
     {
         match self.model.upgrade() {
             Some(model) => f(model),
@@ -70,6 +75,31 @@ impl RelationField {
                 "Model does not exist anymore. Parent model is deleted without deleting the child fields."
             )
         }
+    }
+
+    pub fn db_name(&self) -> String {
+        use RelationLinkManifestation::*;
+
+        self.with_model(|model| {
+            self.with_relation(|relation| match relation.manifestation {
+                Some(Inline(ref m)) => {
+                    let is_self_rel = relation.is_self_relation();
+
+                    if is_self_rel
+                        && (self.relation_side == RelationSide::B || self.related_field().is_hidden)
+                    {
+                        m.referencing_column.clone()
+                    } else if is_self_rel && self.relation_side == RelationSide::A {
+                        self.name.clone()
+                    } else if m.in_table_of_model_name == model.name {
+                        m.referencing_column.clone()
+                    } else {
+                        self.name.clone()
+                    }
+                }
+                _ => self.name.clone(),
+            })
+        })
     }
 
     pub fn model_id_column(&self) -> Column {
@@ -83,5 +113,23 @@ impl RelationField {
                 (db_name, table_name, id_name).into()
             })
         })
+    }
+
+    pub fn related_model(&self) -> ModelRef {
+        self.with_relation(|relation| match self.relation_side {
+            RelationSide::A => relation.model_b(),
+            RelationSide::B => relation.model_a(),
+        })
+    }
+
+    pub fn related_field(&self) -> Arc<RelationField> {
+        self.with_relation(|relation| match self.relation_side {
+            RelationSide::A => relation.field_b(),
+            RelationSide::B => relation.field_a(),
+        })
+    }
+
+    pub fn is_relation_with_name_and_side(&self, relation_name: &str, side: RelationSide) -> bool {
+        self.with_relation(|relation| relation.name == relation_name && self.relation_side == side)
     }
 }

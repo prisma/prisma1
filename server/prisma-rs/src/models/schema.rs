@@ -19,7 +19,7 @@ pub struct SchemaTemplate {
 #[derive(DebugStub)]
 pub struct Schema {
     pub models: OnceCell<Vec<ModelRef>>,
-    pub relations: OnceCell<Vec<Relation>>,
+    pub relations: OnceCell<Vec<RelationRef>>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
     #[debug_stub = "#ProjectWeakRef#"]
@@ -68,6 +68,14 @@ impl Schema {
             .get()
             .and_then(|models| models.iter().find(|model| model.db_name() == name))
             .cloned()
+            .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name)))
+    }
+
+    pub fn find_relation(&self, name: &str) -> PrismaResult<RelationWeakRef> {
+        self.relations
+            .get()
+            .and_then(|relations| relations.iter().find(|relation| relation.name == name))
+            .map(|relation| Arc::downgrade(&relation))
             .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name)))
     }
 

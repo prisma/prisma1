@@ -5,7 +5,7 @@ pub use relation::*;
 pub use scalar::*;
 
 use crate::models::prelude::*;
-use std::sync::Arc;
+use std::{borrow::Cow, sync::Arc};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", untagged)]
@@ -41,10 +41,10 @@ pub enum TypeIdentifier {
 }
 
 impl Field {
-    pub fn db_name(&self) -> &str {
+    pub fn db_name(&self) -> Cow<str> {
         match self {
-            Field::Scalar(sf) => sf.db_name(),
-            Field::Relation(rf) => rf.db_name(),
+            Field::Scalar(ref sf) => Cow::from(sf.db_name()),
+            Field::Relation(ref rf) => Cow::from(rf.db_name()),
         }
     }
 }
@@ -70,6 +70,11 @@ impl FieldTemplate {
                 Field::Scalar(Arc::new(scalar))
             }
             FieldTemplate::Relation(rt) => {
+                let relation = model
+                    .upgrade()
+                    .unwrap()
+                    .with_schema(|schema| schema.find_relation(&rt.relation_name).unwrap());
+
                 let relation = RelationField {
                     name: rt.name,
                     type_identifier: rt.type_identifier,
@@ -79,10 +84,10 @@ impl FieldTemplate {
                     is_hidden: rt.is_hidden,
                     is_readonly: rt.is_readonly,
                     is_auto_generated: rt.is_auto_generated,
-                    manifestation: rt.manifestation,
                     relation_name: rt.relation_name,
                     relation_side: rt.relation_side,
                     model,
+                    relation,
                 };
 
                 Field::Relation(Arc::new(relation))
