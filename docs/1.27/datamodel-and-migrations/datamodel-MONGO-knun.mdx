@@ -780,6 +780,12 @@ The relation is named `StoriesByUser` and the deletion behaviour is as follows:
 - When a `User` node gets deleted, all its related `Story` nodes will be deleted as well.
 - When a `Story` node gets deleted, it will simply be removed from the `stories` list on the related `User` node.
 
+<Warning>
+
+It is currently not possible to rename relations that are specified via the `@relation` directive.
+
+</Warning>
+
 #### Using the `name` argument of the `@relation` directive
 
 In certain cases, your datamodel may contain ambiguous relations. For example, consider you not only want a relation to express the "author-relationship" between `User` and `Story`, but you also want a relation to express which `Story` nodes have been _liked_ by a `User`.

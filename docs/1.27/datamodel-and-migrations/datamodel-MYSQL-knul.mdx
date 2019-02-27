@@ -711,6 +711,12 @@ The relation is named `StoriesByUser` and the deletion behaviour is as follows:
 - When a `User` node gets deleted, all its related `Story` nodes will be deleted as well.
 - When a `Story` node gets deleted, it will simply be removed from the `stories` list on the related `User` node.
 
+<Warning>
+
+It is currently not possible to rename relations that are specified via the `@relation` directive.
+
+</Warning>
+
 #### Omitting the `@relation` directive
 
 In the simplest case, where a relation between two types is unambiguous and the default deletion behaviour (`SET_NULL`) should be applied, the corresponding relation fields do not have to be annotated with the `@relation` directive.
