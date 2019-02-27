@@ -631,6 +631,34 @@ While this approach enables querying for `Post` documents directly in the Prisma
 
 Operations that go from a `Post` to a `User` via the `author` field will be more expensive. This is because the underlying `Post` objects don't know who their `author`s are and Prisma needs to filter all `User`s to find who the `author` of `Post` is.
 
+Here is an example for a **many-to-many** relation:
+
+```graphql
+type Article {
+  id: ID! @unique
+  categories: [Category!]! @relation(link: INLINE)
+}
+
+type Category {
+  id: ID! @unique
+  articles: [Article!]!
+}
+```
+
+Here is an example for a **one-to-one** relation:
+
+```graphql
+type Human {
+  id: ID! @id
+  brain: Brain! @relation(link: INLINE)
+}
+
+type Brain {
+  id: ID! @id
+  human: Human!
+}
+```
+
 ### Self-relations
 
 A relation can also connect a type with itself. It is then referred to as a _self-relation_. 
@@ -658,7 +686,7 @@ Note that in this case the relation needs to be annotated with the [`@relation` 
 
 ### Required relations
 
-For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The `!` type modifier acts as a contract in GraphQL that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
+For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The `!` type modifier means that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
 
 Nodes for a type that contains a required _to-one_ relation field can only be created using a [nested mutation](qwe2#nested-mutations) to ensure the respective field will not be `null`.
 

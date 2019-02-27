@@ -588,11 +588,39 @@ type User {
 }
 ```
 
-Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive) and the `name` argument has to be provided..
+Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive) and the `name` argument has to be provided.
+
+Here is an example for a **many-to-many** relation:
+
+```graphql
+type Article {
+  id: ID! @unique
+  cateogries: [Category!]!
+}
+
+type Category {
+  id: ID! @unique
+  articles: [Article!]!
+}
+```
+
+Here is an example for a **one-to-one** relation:
+
+```graphql
+type Human {
+  id: ID! @unique
+  brain: Brain!
+}
+
+type Brain {
+  id: ID! @unique
+  human: Human!
+}
+```
 
 ### Required relations
 
-For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The `!` type modifier acts as a contract in GraphQL that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
+For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The `!` type modifier means that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
 
 Nodes for a type that contains a required _to-one_ relation field can only be created using a [nested mutation](qwe2#nested-mutations) to ensure the respective field will not be `null`.
 
