@@ -22,8 +22,10 @@ pub struct Model {
     pub name: String,
     pub stable_identifier: String,
     pub is_embedded: bool,
-    fields: OnceCell<Fields>,
     pub manifestation: Option<ModelManifestation>,
+
+    fields: OnceCell<Fields>,
+
     #[debug_stub = "#SchemaWeakRef#"]
     pub schema: SchemaWeakRef,
 }

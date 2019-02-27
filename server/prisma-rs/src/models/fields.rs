@@ -1,6 +1,6 @@
 use crate::{
     error::Error,
-    models::{Field, RelationField, ScalarField},
+    models::{Field, RelationField, RelationSide, ScalarField},
     PrismaResult,
 };
 use std::{
@@ -95,10 +95,14 @@ impl Fields {
             .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
     }
 
-    pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
+    pub fn find_from_relation(
+        &self,
+        name: &str,
+        side: RelationSide,
+    ) -> PrismaResult<Arc<RelationField>> {
         self.relation()
             .iter()
-            .find(|field| field.db_name() == name)
+            .find(|field| field.db_name() == name && field.relation_side == side)
             .cloned()
             .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
     }

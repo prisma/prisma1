@@ -241,6 +241,31 @@ impl RelationField {
             .map(|mf| mf.db_name.as_ref())
             .unwrap_or_else(|| self.name.as_ref())
     }
+
+    pub fn with_model<F, T>(&self, f: F) -> T
+    where
+        F: FnOnce(Arc<Model>) -> T,
+    {
+        match self.model.upgrade() {
+            Some(model) => f(model),
+            None => panic!(
+                "Model does not exist anymore. Parent model is deleted without deleting the child fields."
+            )
+        }
+    }
+
+    pub fn model_id_column(&self) -> Column {
+        self.with_model(|model| {
+            model.with_project(|project| {
+                let db_name = project.db_name();
+                let table_name = model.db_name();
+                let id_field = model.fields().id();
+                let id_name = id_field.db_name();
+
+                (db_name, table_name, id_name).into()
+            })
+        })
+    }
 }
 
 impl Field {

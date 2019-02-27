@@ -11,35 +11,19 @@ pub type SchemaWeakRef = Weak<Schema>;
 #[serde(rename_all = "camelCase")]
 pub struct SchemaTemplate {
     pub models: Vec<ModelTemplate>,
-    pub relations: Vec<Relation>,
+    pub relations: Vec<RelationTemplate>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(DebugStub)]
 pub struct Schema {
     pub models: OnceCell<Vec<ModelRef>>,
-    pub relations: Vec<Relation>,
+    pub relations: OnceCell<Vec<Relation>>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
+    #[debug_stub = "#ProjectWeakRef#"]
     pub project: ProjectWeakRef,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum OnDelete {
-    SetNull,
-    Cascade,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Relation {
-    pub name: String,
-    pub model_a_id: String,
-    pub model_b_id: String,
-    pub model_a_on_delete: OnDelete,
-    pub model_b_on_delete: OnDelete,
 }
 
 #[derive(Debug, Deserialize)]
@@ -54,7 +38,7 @@ impl SchemaTemplate {
         let schema = Arc::new(Schema {
             models: OnceCell::new(),
             project: project,
-            relations: self.relations,
+            relations: OnceCell::new(),
             enums: self.enums,
             version: self.version,
         });
@@ -65,8 +49,14 @@ impl SchemaTemplate {
             .map(|mt| mt.build(Arc::downgrade(&schema)))
             .collect();
 
-        // Models will not be set before this, look above! No panic.
+        let relations = self
+            .relations
+            .into_iter()
+            .map(|rt| rt.build(Arc::downgrade(&schema)))
+            .collect();
+
         schema.models.set(models).unwrap();
+        schema.relations.set(relations).unwrap();
 
         schema
     }
@@ -87,10 +77,10 @@ impl Schema {
 
     pub fn with_project<F, T>(&self, f: F) -> T
     where
-        F: FnOnce(Arc<Project>) -> T,
+        F: FnOnce(ProjectRef) -> T,
     {
         match self.project.upgrade(){
-            Some(model) => f(model),
+            Some(project) => f(project),
             None => panic!(
                 "Project does not exist anymore. Parent project is deleted without deleting the child schema."
             )
