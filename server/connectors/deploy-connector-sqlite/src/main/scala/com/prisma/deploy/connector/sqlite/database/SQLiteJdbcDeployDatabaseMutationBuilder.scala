@@ -128,7 +128,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def deleteRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
-    //Fixme see below
+    sys.error("DEPLOY CHANGES NOT IMPLEMENTED FOR SQLITE")
     for {
       namesOfForeignKey <- getNamesOfForeignKeyConstraints(project.dbName, model, column)
       _                 <- sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)} DROP FOREIGN KEY `#${namesOfForeignKey.head}`;"""
@@ -137,7 +137,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   private def getNamesOfForeignKeyConstraints(projectId: String, model: Model, column: String): DatabaseAction[Vector[String], NoStream, Effect] = {
-    //Fixme this probably does not work
+    sys.error("DEPLOY CHANGES NOT IMPLEMENTED FOR SQLITE")
 
     for {
       result <- sql"""
@@ -168,10 +168,14 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             oldTableName: String,
                             oldColumnName: String,
                             oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
+    sys.error("DEPLOY CHANGES NOT IMPLEMENTED FOR SQLITE")
+
     alterTable(project, field.model)
   }
 
   private def alterTable(project: Project, model: Model) = {
+    sys.error("DEPLOY CHANGES NOT IMPLEMENTED FOR SQLITE")
+
     val tableName     = model.dbName
     val tempTableName = s"${model.dbName}_TEMP_TABLE"
 
@@ -245,6 +249,8 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]): DBIO[_] = {
+    sys.error("DEPLOY CHANGES NOT IMPLEMENTED FOR SQLITE")
+
     //if no model is provided, this concerns the relation table
     model match {
       case Some(m) => alterTable(project, m)
