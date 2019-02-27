@@ -40,3 +40,8 @@ prisma login --key KEY
 ```
 
 > In the above command, the `KEY` placeholder needs to be replaced with the value of your valid cloud session key. You can find the `cloudSessionKey` in `~/.prisma/config.yml`.
+
+## Workaround for Windows subsystem on Linux
+
+1. Go to the [Prisma Console])(https://app.prisma.io) and create an account. Log in. Leave that window open.
+1. In the WSL bash window, run `prisma login`, and grant the CLI permissions as requested in the browser window that Windows shows you.
