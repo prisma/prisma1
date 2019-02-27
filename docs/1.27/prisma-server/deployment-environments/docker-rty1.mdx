@@ -73,6 +73,12 @@ These are the root properties of `PRISMA_CONFIG`:
 | `port` | `number` | The port on which the Prisma server is running. Example:  `4466` | 
 | `databases` | `object` | Specifies to which databases the Prisma server should connect to. | 
 
+<Warning>
+
+Prisma does not yet support connecting multiple databases to a Prisma server. You can track the progress of this feature [here](https://github.com/prisma/prisma/issues/2873).
+
+</Warning>
+
 #### Database properties
 
 Each _database object_ in the `databases` object needs to include the following properties:
