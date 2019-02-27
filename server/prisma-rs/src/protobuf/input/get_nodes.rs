@@ -24,9 +24,9 @@ impl IntoSelectQuery for GetNodesInput {
             self.query_arguments.last.is_some(),
         )?;
 
-        let cursor = CursorCondition::build(&self.query_arguments, &model);
+        let cursor: ConditionTree = CursorCondition::build(&self.query_arguments, &model);
 
-        let filter = self
+        let filter: ConditionTree = self
             .query_arguments
             .filter
             .map(|filter| filter.into())
@@ -40,7 +40,7 @@ impl IntoSelectQuery for GetNodesInput {
         };
 
         let base_query = Self::base_query(model.db_name(), conditions, skip as usize);
-        let with_columns = Self::select_fields(base_query, &selected_fields.names);
+        let with_columns = Self::select_fields(base_query, &selected_fields);
         let ordered = Self::order_by(with_columns, ordering);
         let select_ast = Self::limit(ordered, limit.map(|limit| limit as usize));
 

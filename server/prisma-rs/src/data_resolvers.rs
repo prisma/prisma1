@@ -42,9 +42,10 @@ pub trait IntoSelectQuery {
         Select::from(table).so_that(conditions).offset(offset)
     }
 
-    fn select_fields(select: Select, field_names: &Vec<String>) -> Select {
-        field_names
-            .into_iter()
+    fn select_fields(select: Select, fields: &SelectedFields) -> Select {
+        fields
+            .names
+            .iter()
             .fold(select, |acc, field| acc.column(field.as_ref()))
     }
 

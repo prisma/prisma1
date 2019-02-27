@@ -33,11 +33,11 @@ impl fmt::Display for PrismaValue {
     }
 }
 
-impl Into<ConditionTree> for ScalarFilter {
-    fn into(self) -> ConditionTree {
-        let field = self.field;
+impl From<ScalarFilter> for ConditionTree {
+    fn from(sf: ScalarFilter) -> ConditionTree {
+        let field = sf.field;
 
-        match self.condition.unwrap() {
+        match sf.condition.unwrap() {
             scalar_filter::Condition::Equals(value) => match value.prisma_value.unwrap() {
                 PrismaValue::Null(_) => ConditionTree::single(field.is_null()),
                 val => ConditionTree::single(field.equals(val)),
@@ -116,14 +116,14 @@ impl Into<ConditionTree> for ScalarFilter {
     }
 }
 
-impl Into<ConditionTree> for AndFilter {
-    fn into(mut self) -> ConditionTree {
-        match self.filters.pop() {
+impl From<AndFilter> for ConditionTree {
+    fn from(mut and: AndFilter) -> ConditionTree {
+        match and.filters.pop() {
             None => ConditionTree::NoCondition,
             Some(filter) => {
                 let right: ConditionTree = filter.into();
 
-                self.filters.into_iter().rev().fold(right, |acc, filter| {
+                and.filters.into_iter().rev().fold(right, |acc, filter| {
                     let left: ConditionTree = filter.into();
                     ConditionTree::and(left, acc)
                 })
@@ -132,14 +132,14 @@ impl Into<ConditionTree> for AndFilter {
     }
 }
 
-impl Into<ConditionTree> for OrFilter {
-    fn into(mut self) -> ConditionTree {
-        match self.filters.pop() {
+impl From<OrFilter> for ConditionTree {
+    fn from(mut or: OrFilter) -> ConditionTree {
+        match or.filters.pop() {
             None => ConditionTree::NoCondition,
             Some(filter) => {
                 let right: ConditionTree = filter.into();
 
-                self.filters.into_iter().rev().fold(right, |acc, filter| {
+                or.filters.into_iter().rev().fold(right, |acc, filter| {
                     let left: ConditionTree = filter.into();
                     ConditionTree::or(left, acc)
                 })
@@ -148,10 +148,10 @@ impl Into<ConditionTree> for OrFilter {
     }
 }
 
-impl Into<ConditionTree> for NotFilter {
-    fn into(self) -> ConditionTree {
+impl From<NotFilter> for ConditionTree {
+    fn from(not: NotFilter) -> ConditionTree {
         let cond: ConditionTree = AndFilter {
-            filters: self.filters,
+            filters: not.filters,
         }
         .into();
 
@@ -159,9 +159,15 @@ impl Into<ConditionTree> for NotFilter {
     }
 }
 
-impl Into<ConditionTree> for Filter {
-    fn into(self) -> ConditionTree {
-        match self.type_.unwrap() {
+impl From<RelationFilter> for ConditionTree {
+    fn from(_rf: RelationFilter) -> ConditionTree {
+        unimplemented!()
+    }
+}
+
+impl From<Filter> for ConditionTree {
+    fn from(f: Filter) -> ConditionTree {
+        match f.type_.unwrap() {
             filter::Type::And(and_filter) => and_filter.into(),
             filter::Type::Or(or_filter) => or_filter.into(),
             filter::Type::Not(not_filter) => not_filter.into(),
@@ -173,6 +179,7 @@ impl Into<ConditionTree> for Filter {
                     ConditionTree::NegativeCondition
                 }
             }
+            filter::Type::Relation(relation_filter) => (*relation_filter).into(),
             e => panic!(
                 "And, Or and Scalar are supported at this point (got {:?})",
                 e
