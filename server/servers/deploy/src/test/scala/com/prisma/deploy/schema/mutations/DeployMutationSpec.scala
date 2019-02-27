@@ -1,6 +1,6 @@
 package com.prisma.deploy.schema.mutations
 
-import com.prisma.IgnoreMongo
+import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
@@ -667,7 +667,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     )
   }
 
-  "DeployMutation" should "be able to change a field from scalar non-list to scalar list" in {
+  "DeployMutation" should "be able to change a field from scalar non-list to scalar list" taggedAs (IgnoreSQLite) in {
     val (project, _) = setupProject(basicTypesGql)
     val schema =
       """

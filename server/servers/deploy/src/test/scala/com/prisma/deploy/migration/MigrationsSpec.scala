@@ -14,6 +14,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
   override def runOnlyForCapabilities = Set(MigrationsCapability)
 
+  override def doNotRunForPrototypes: Boolean = true
+
   val name      = this.getClass.getSimpleName
   val stage     = "default"
   val serviceId = testDependencies.projectIdEncoder.toEncodedString(name, stage)

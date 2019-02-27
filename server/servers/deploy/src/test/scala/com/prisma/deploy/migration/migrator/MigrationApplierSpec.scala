@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.migrator
 
+import com.prisma.IgnoreSQLite
 import com.prisma.deploy.connector._
 import com.prisma.deploy.specutils.{ActiveDeploySpecBase, TestProject}
 import com.prisma.shared.models._
@@ -44,7 +45,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     testDependencies.projectPersistence.create(Project(projectId, 1, emptySchema)).await
   }
 
-  "the applier" should "succeed when all steps succeed" in {
+  "the applier" should "succeed when all steps succeed" taggedAs (IgnoreSQLite) in {
     persistence.create(migration).await
     val executor = mutactionExecutor(
       execute = {
@@ -66,7 +67,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     persisted.finishedAt.isDefined shouldEqual true
   }
 
-  "the applier" should "mark a migration as ROLLBACK_SUCCESS if all steps can be rolled back successfully" in {
+  "the applier" should "mark a migration as ROLLBACK_SUCCESS if all steps can be rolled back successfully" taggedAs (IgnoreSQLite) in {
     persistence.create(migration).await
 
     val executor = mutactionExecutor(
@@ -91,7 +92,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     persisted.rolledBack should be(1) // 1 step was rolled back
   }
 
-  "the applier" should "mark a migration as ROLLBACK_FAILURE if the rollback fails" in {
+  "the applier" should "mark a migration as ROLLBACK_FAILURE if the rollback fails" taggedAs (IgnoreSQLite) in {
     persistence.create(migration).await
 
     val executor = mutactionExecutor(

@@ -1,5 +1,6 @@
 package com.prisma.integration.deploychecks
 
+import com.prisma.{ConnectorAwareTest, IgnoreSQLite}
 import com.prisma.integration.IntegrationBaseSpec
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -27,7 +28,7 @@ class DeleteFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
       """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Deleting a field" should "throw a warning if nodes are present but proceed with -force flag" in {
+  "Deleting a field" should "throw a warning if nodes are present but proceed with -force flag" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -49,7 +50,7 @@ class DeleteFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
       """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Deleting a field" should "succeed if no nodes are present" in {
+  "Deleting a field" should "succeed if no nodes are present" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
