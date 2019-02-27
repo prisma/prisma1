@@ -156,7 +156,7 @@ There already is a [pending feature request](https://github.com/prisma/prisma/is
 
 ### FAQ
 
-#### Where do I find my Management API secret?
+**Where do I find my Management API secret?**
 
 The Management API secret is specified in your Docker Compose file (via the `managementApiSecret` key) at the time when your Prisma server is being deployed. If you don't know the secret or don't have access to the Docker Compose file, you need to ask the administrator of your Prisma server who was responsible for the deployment.
 
@@ -164,7 +164,7 @@ If you have used the Prisma Cloud Heroku integration to deploy your Prisma serve
 
 ### Common errors
 
-#### "Server at __URL__ requires the Management API secret. Please set the the PRISMA_MANAGEMENT_API_SECRET environment variable."
+**Error: "Server at \_\_URL\_\_ requires the Management API secret. Please set the the PRISMA_MANAGEMENT_API_SECRET environment variable."**
 
 This error means that your server is protected with the [Management API secret](#management-api-secret). Whenever you access the server and need to [authenticate against the Management API](#authenticating-against-the-management-api), you must provide a JWT that was generated based on the secret. When using the Prisma CLI, you don't need to generate the JWT manually, instead this will be done by the Prisma CLI itself. To do so, it needs to be aware of the Management API secret which it can only read from the `PRISMA_MANAGEMENT_API_SECRET` environment variable.
 
