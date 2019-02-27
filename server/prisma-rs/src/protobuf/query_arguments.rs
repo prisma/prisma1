@@ -180,10 +180,7 @@ impl From<Filter> for ConditionTree {
                 }
             }
             filter::Type::Relation(relation_filter) => (*relation_filter).into(),
-            e => panic!(
-                "And, Or and Scalar are supported at this point (got {:?})",
-                e
-            ),
+            e => panic!("Unsupported filter: {:?}", e),
         }
     }
 }
