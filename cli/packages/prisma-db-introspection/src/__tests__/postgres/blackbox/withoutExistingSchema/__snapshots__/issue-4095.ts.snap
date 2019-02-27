@@ -1,0 +1,257 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector issue4095 relations 1`] = `
+"type BillingAccount {
+  id: Int! @unique
+  createdAt: DateTime!
+  customerId: Customer!
+  invoice: [Invoice]
+  item_BillingAccount: [Item_BillingAccount]
+  name: String!
+  updatedAt: DateTime!
+}
+
+type Condition {
+  id: Int! @unique
+  createdAt: DateTime!
+  endDate: DateTime!
+  productId: Product!
+  startDate: DateTime!
+  updatedAt: DateTime!
+}
+
+type Contract {
+  id: Int! @unique
+  activationDateTime: DateTime
+  code: String!
+  cost: [Cost]
+  createdAt: DateTime!
+  customerId: Customer!
+  enabled: Boolean @default(value: false)
+  globalCondition: [GlobalCondition]
+  item: [Item]
+  lookToBook: Float!
+  minimumFee: Float!
+  updatedAt: DateTime!
+}
+
+type Cost {
+  id: Int! @unique
+  amount: Float
+  contractId: Contract
+  createdAt: DateTime!
+  itemId: Item
+  max: Int
+  min: Int
+  type: String!
+  updatedAt: DateTime!
+}
+
+type Customer {
+  id: Int! @unique
+  billingAccount: [BillingAccount]
+  code: String!
+  contract: [Contract]
+  createdAt: DateTime!
+  name: String!
+  updatedAt: DateTime!
+}
+
+type GlobalCondition {
+  id: Int! @unique
+  amount: Float
+  contractId: Contract!
+  createdAt: DateTime!
+  defaultFreeTrialDaysForItem: Int
+  globalEndFreeTrialPeriod: DateTime
+  globalStartFreeTrialPeriod: DateTime
+  millionSearches: Int
+  numConnections: Int
+  type: String!
+  updatedAt: DateTime!
+}
+
+type Invoice {
+  id: Int! @unique
+  amount: Float!
+  amountPaid: Float!
+  billingAccountId: BillingAccount!
+  createdAt: DateTime!
+  endDate: DateTime!
+  invoiceBreakdown: [InvoiceBreakdown]
+  paymentMethod: String!
+  paymentStatus: String!
+  startDate: DateTime!
+  updatedAt: DateTime!
+}
+
+type InvoiceBreakdown {
+  id: Int! @unique
+  amount: Float!
+  createdAt: DateTime!
+  endDate: DateTime!
+  invoiceId: Invoice!
+  itemBillingAccountId: Item_BillingAccount!
+  startDate: DateTime!
+  updatedAt: DateTime!
+}
+
+type Item {
+  id: Int! @unique
+  contractId: Contract!
+  cost: [Cost]
+  createdAt: DateTime!
+  enabled: Boolean @default(value: false)
+  item_BillingAccount: [Item_BillingAccount]
+  product: [Product]
+  specificFreeTrialDays: Int
+  updatedAt: DateTime!
+}
+
+type Item_BillingAccount {
+  id: Int! @unique
+  billingAccountId: BillingAccount!
+  createdAt: DateTime!
+  invoiceBreakdown: [InvoiceBreakdown]
+  itemId: Item!
+  updatedAt: DateTime!
+}
+
+type Product {
+  id: Int! @unique
+  condition: [Condition]
+  createdAt: DateTime!
+  itemId: Item!
+  system: String!
+  type: String!
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspector issue4095 relations 2`] = `
+"type BillingAccount {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"BillingAccount_id_seq\\", initialValue: 1, allocationSize: 1)
+  createdAt: DateTime! @createdAt
+  customerId: Customer!
+  invoice: [Invoice]
+  item_BillingAccount: [Item_BillingAccount]
+  name: String!
+  updatedAt: DateTime! @updatedAt
+}
+
+type Condition {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"Condition_id_seq\\", initialValue: 1, allocationSize: 1)
+  createdAt: DateTime! @createdAt
+  endDate: DateTime!
+  productId: Product!
+  startDate: DateTime!
+  updatedAt: DateTime! @updatedAt
+}
+
+type Contract {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"Contract_id_seq\\", initialValue: 1, allocationSize: 1)
+  activationDateTime: DateTime
+  code: String!
+  cost: [Cost]
+  createdAt: DateTime! @createdAt
+  customerId: Customer!
+  enabled: Boolean @default(value: false)
+  globalCondition: [GlobalCondition]
+  item: [Item]
+  lookToBook: Float!
+  minimumFee: Float!
+  updatedAt: DateTime! @updatedAt
+}
+
+type Cost {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"Cost_id_seq\\", initialValue: 1, allocationSize: 1)
+  amount: Float
+  contractId: Contract
+  createdAt: DateTime! @createdAt
+  itemId: Item
+  max: Int
+  min: Int
+  type: String!
+  updatedAt: DateTime! @updatedAt
+}
+
+type Customer {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"Customer_id_seq\\", initialValue: 1, allocationSize: 1)
+  billingAccount: [BillingAccount]
+  code: String!
+  contract: [Contract]
+  createdAt: DateTime! @createdAt
+  name: String!
+  updatedAt: DateTime! @updatedAt
+}
+
+type GlobalCondition {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"GlobalCondition_id_seq\\", initialValue: 1, allocationSize: 1)
+  amount: Float
+  contractId: Contract!
+  createdAt: DateTime! @createdAt
+  defaultFreeTrialDaysForItem: Int
+  globalEndFreeTrialPeriod: DateTime
+  globalStartFreeTrialPeriod: DateTime
+  millionSearches: Int
+  numConnections: Int
+  type: String!
+  updatedAt: DateTime! @updatedAt
+}
+
+type Invoice {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"Invoice_id_seq\\", initialValue: 1, allocationSize: 1)
+  amount: Float!
+  amountPaid: Float!
+  billingAccountId: BillingAccount!
+  createdAt: DateTime! @createdAt
+  endDate: DateTime!
+  invoiceBreakdown: [InvoiceBreakdown]
+  paymentMethod: String!
+  paymentStatus: String!
+  startDate: DateTime!
+  updatedAt: DateTime! @updatedAt
+}
+
+type InvoiceBreakdown {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"InvoiceBreakdown_id_seq\\", initialValue: 1, allocationSize: 1)
+  amount: Float!
+  createdAt: DateTime! @createdAt
+  endDate: DateTime!
+  invoiceId: Invoice!
+  itemBillingAccountId: Item_BillingAccount!
+  startDate: DateTime!
+  updatedAt: DateTime! @updatedAt
+}
+
+type Item {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"Item_id_seq\\", initialValue: 1, allocationSize: 1)
+  contractId: Contract!
+  cost: [Cost]
+  createdAt: DateTime! @createdAt
+  enabled: Boolean @default(value: false)
+  item_BillingAccount: [Item_BillingAccount]
+  product: [Product]
+  specificFreeTrialDays: Int
+  updatedAt: DateTime! @updatedAt
+}
+
+type Item_BillingAccount {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"Item_BillingAccount_id_seq\\", initialValue: 1, allocationSize: 1)
+  billingAccountId: BillingAccount!
+  createdAt: DateTime! @createdAt
+  invoiceBreakdown: [InvoiceBreakdown]
+  itemId: Item!
+  updatedAt: DateTime! @updatedAt
+}
+
+type Product {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"Product_id_seq\\", initialValue: 1, allocationSize: 1)
+  condition: [Condition]
+  createdAt: DateTime! @createdAt
+  itemId: Item!
+  system: String!
+  type: String!
+  updatedAt: DateTime! @updatedAt
+}"
+`;
