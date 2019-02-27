@@ -9,6 +9,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
 
   override def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
   override def runOnlyForCapabilities                            = Set(MigrationsCapability)
+  override def doNotRunForPrototypes: Boolean                    = true
 
   "adding a type for an existing table should work" in {
     val postgres =
@@ -26,15 +27,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          | );
        """.stripMargin
 
-    val sqlite =
-      s"""
-         | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   PRIMARY KEY(id)
-         | );
-       """.stripMargin
-
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
 
     val dataModel =
       s"""
@@ -62,14 +55,8 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   PRIMARY KEY(id)
          | );
        """.stripMargin
-    val sqlite =
-      s"""
-         | CREATE TABLE blog (
-         |   id bigint NOT NULL,
-         |   PRIMARY KEY(id)
-         | );
-       """.stripMargin
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
 
     val dataModel =
       s"""
@@ -135,16 +122,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          | );
        """.stripMargin
 
-    val sqlite =
-      s"""
-         | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   title mediumtext,
-         |   PRIMARY KEY(id)
-         | );
-       """.stripMargin
-
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
 
     val dataModel =
       s"""
@@ -176,16 +154,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          | );
        """.stripMargin
 
-    val sqlite =
-      s"""
-         | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   title int,
-         |   PRIMARY KEY(id)
-         | );
-       """.stripMargin
-
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
     val tableBefore   = initialResult.table_!("blog")
     val columnBefore  = tableBefore.column_!("title")
     columnBefore.typeIdentifier should be(TI.Int)
@@ -226,16 +195,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          | );
        """.stripMargin
 
-    val sqlite =
-      s"""
-         | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   title int,
-         |   PRIMARY KEY(id)
-         | );
-       """.stripMargin
-
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
     val tableBefore   = initialResult.table_!("blog")
     tableBefore.indexByColumns("title") should be(empty)
 
@@ -270,16 +230,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          | );
        """.stripMargin
 
-    val sqlite =
-      s"""
-         | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   title int,
-         |   PRIMARY KEY(id)
-         | );
-       """.stripMargin
-
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
     val tableBefore   = initialResult.table_!("blog")
     tableBefore.column_!("title").isRequired should be(false)
 
@@ -316,17 +267,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          | );
        """.stripMargin
 
-    val sqlite =
-      s"""
-         | CREATE TABLE blog (
-         |   id int NOT NULL,
-         |   title int,
-         |   PRIMARY KEY(id),
-         |   UNIQUE INDEX (title ASC)
-         | );
-       """.stripMargin
-
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = sqlite))
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
     val tableBefore   = initialResult.table_!("blog")
     tableBefore.indexByColumns_!("title").unique should be(true)
 

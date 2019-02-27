@@ -1,11 +1,12 @@
 package com.prisma.deploy.schema.mutations
 
+import com.prisma.IgnoreSQLite
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import org.scalatest.{FlatSpec, Matchers}
 
 class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
-  "DeployMutation" should "be able to name a relation that previously had no name" in {
+  "DeployMutation" should "be able to name a relation that previously had no name" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -115,7 +116,7 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
     updatedProject2.schema.relations(2).name should be("""AB2""")
   }
 
-  "DeployMutation" should "be able to handle renaming relations" in {
+  "DeployMutation" should "be able to handle renaming relations" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {

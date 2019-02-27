@@ -1,10 +1,11 @@
 package com.prisma.integration
 
+import com.prisma.IgnoreSQLite
 import org.scalatest.{FlatSpec, Matchers}
 
 class RenamingWithExistingDataSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Renaming a model" should "work" in {
+  "Renaming a model" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -26,7 +27,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"bs":[{"a":"A"}]}}""")
   }
 
-  "Renaming a model with a scalar list " should "work" in {
+  "Renaming a model with a scalar list " should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -50,7 +51,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"bs":[{"a":"A"}]}}""")
   }
 
-  "Renaming a field" should "work" in {
+  "Renaming a field" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -72,7 +73,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"as":[{"b":"A"}]}}""")
   }
 
-  "Renaming a relation with oldName on both sides" should "work" in {
+  "Renaming a relation with oldName on both sides" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -106,7 +107,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     as.toString should be("""{"data":{"as":[{"b":{"b":"B1"}}]}}""")
   }
 
-  "Renaming a model and field" should "work" in {
+  "Renaming a model and field" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -128,7 +129,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"bs":[{"b":"A"}]}}""")
   }
 
-  "Renaming a model and a relation with oldName on both sides" should "work" in {
+  "Renaming a model and a relation with oldName on both sides" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -162,7 +163,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     as.toString should be("""{"data":{"cs":[{"b":{"b":"B1"}}]}}""")
   }
 
-  "Renaming a field and a relation with oldName on both sides" should "work" in {
+  "Renaming a field and a relation with oldName on both sides" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {

@@ -1,5 +1,6 @@
 package com.prisma.integration
 
+import com.prisma.IgnoreSQLite
 import org.scalatest.{FlatSpec, Matchers}
 
 class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
@@ -81,7 +82,7 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
     as.toString should be("""{"data":{"as":[{"a":"A","b":null}]}}""")
   }
 
-  "Renaming a model with @rename but keeping its relation" should "work" in {
+  "Renaming a model with @rename but keeping its relation" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {

@@ -1,11 +1,12 @@
 package com.prisma.integration.deploychecks
 
+import com.prisma.IgnoreSQLite
 import com.prisma.integration.IntegrationBaseSpec
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Deleting an Enum" should "not throw a warning if there is no data yet" in {
+  "Deleting an Enum" should "not throw a warning if there is no data yet" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
@@ -54,7 +55,7 @@ class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
       """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Deleting an Enum" should "throw a warning if there is already data but proceed with -force" in {
+  "Deleting an Enum" should "throw a warning if there is already data but proceed with -force" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
