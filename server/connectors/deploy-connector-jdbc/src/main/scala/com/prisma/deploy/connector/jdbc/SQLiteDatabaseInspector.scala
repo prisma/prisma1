@@ -2,7 +2,7 @@ package com.prisma.deploy.connector.jdbc
 
 import com.prisma.connector.shared.jdbc.{MySqlDialect, PostgresDialect, SlickDatabase, SqliteDialect}
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.DatabaseInspectorBase.IntrospectedColumn
+import com.prisma.deploy.connector.jdbc.DatabaseInspectorBase.{IntrospectedColumn, IntrospectedForeignKey}
 import com.prisma.shared.models.TypeIdentifier
 import slick.dbio.DBIO
 import slick.jdbc.GetResult
@@ -52,8 +52,8 @@ case class SQLiteDatabaseInspector(db: SlickDatabase)(implicit val ec: Execution
 
   private def getTable(schema: String, table: String): DBIO[Table] = {
     for {
-      introspectedColumns <- getColumns(schema, table)
-//      introspectedForeignKeys <- foreignKeyConstraints(schema, table)
+      introspectedColumns     <- getColumns(schema, table)
+      introspectedForeignKeys <- foreignKeyConstraints(schema, table)
 //      introspectedIndexes     <- indexes(schema, table)
 //      sequences               <- getSequences(schema, table)
     } yield {
@@ -62,10 +62,9 @@ case class SQLiteDatabaseInspector(db: SlickDatabase)(implicit val ec: Execution
         val typeIdentifier = typeIdentifierForTypeName(col.udtName).getOrElse {
           sys.error(s"Encountered unknown SQL type ${col.udtName} with column ${col.name}. $col")
         }
-        val fk: Option[ForeignKey] = None
-//        introspectedForeignKeys.find(fk => fk.column == col.name).map { fk =>
-//          ForeignKey(fk.referencedTable, fk.referencedColumn)
-//        }
+        val fk: Option[ForeignKey] = introspectedForeignKeys.find(fk => fk.column == col.name).map { fk =>
+          ForeignKey(fk.referencedTable, fk.referencedColumn)
+        }
         val sequence: Option[Sequence] = None
 
 //sequences.find(_.column == col.name).map { mseq =>
@@ -114,9 +113,11 @@ case class SQLiteDatabaseInspector(db: SlickDatabase)(implicit val ec: Execution
   private def typeIdentifierForTypeName(typeName: String): Option[TypeIdentifier.ScalarTypeIdentifier] = {
     typeName match {
       case "boolean"                                                     => Some(TypeIdentifier.Boolean)
+      case "bool"                                                        => Some(TypeIdentifier.Boolean)
       case _ if typeName.contains("char")                                => Some(TypeIdentifier.String)
+      case _ if typeName.contains("CHAR")                                => Some(TypeIdentifier.String)
       case _ if typeName.contains("text")                                => Some(TypeIdentifier.String)
-      case _ if typeName.contains("int")                                 => Some(TypeIdentifier.Int)
+      case "int" | "INT" | "INT(4)" | "INTEGER"                          => Some(TypeIdentifier.Int)
       case _ if typeName.contains("datetime")                            => Some(TypeIdentifier.DateTime)
       case "decimal" | "numeric" | "float" | "double" | "Decimal(65,30)" => Some(TypeIdentifier.Float)
       case _                                                             => None
@@ -159,21 +160,19 @@ case class SQLiteDatabaseInspector(db: SlickDatabase)(implicit val ec: Execution
 //    }
 //  }
 //
-//  private def foreignKeyConstraints(schema: String, table: String): DBIO[Vector[IntrospectedForeignKey]] = {
-//    sql"""
-//         |SELECT
-//         |    kcu.constraint_name AS fkConstraintName,
-//         |    kcu.table_name AS fkTablename,
-//         |    kcu.column_name AS fkColumnName,
-//         |    kcu.referenced_table_name AS referencedTableName,
-//         |    kcu.referenced_column_name AS referencedColumnName
-//         |FROM
-//         |    information_schema.key_column_usage kcu
-//         |WHERE
-//         |    kcu.constraint_schema = $schema
-//         |    AND kcu.referenced_table_name IS NOT NULL;
-//            """.stripMargin.as[IntrospectedForeignKey]
-//  }
+  private def foreignKeyConstraints(schema: String, table: String): DBIO[Vector[IntrospectedForeignKey]] = {
+    implicit val introspectedForeignKeyGetResult: GetResult[IntrospectedForeignKey] = GetResult { pr =>
+      IntrospectedForeignKey(
+        name = table ++ "_" ++ pr.rs.getString("from") ++ "_fk",
+        table = table,
+        column = pr.rs.getString("from"),
+        referencedTable = pr.rs.getString("table"),
+        referencedColumn = pr.rs.getString("to")
+      )
+    }
+
+    sql"""Pragma "#$schema".foreign_key_list("#$table");""".stripMargin.as[IntrospectedForeignKey]
+  }
 //
 //  private def indexes(schema: String, table: String): DBIO[Vector[Index]] = {
 //    sql"""
