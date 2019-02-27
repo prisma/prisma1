@@ -18,7 +18,7 @@ The datamodel of your service configuration has two major roles:
 - **Define the underlying database schema** (the defined models are mapped to database tables).
 - It is the foundation for the **auto-generated CRUD and realtime operations** of your Prisma API. [Learn more](#data-model-vs-prisma-graphql-schema).
 
-The datamodel is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.prisma`-files](#files). These `.prisma`-files need to be referenced in your [prisma.yml](5cy7) under the `datamodel` property. For example:
+The datamodel is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.prisma`-files](#files). These `.prisma`-files need to be referenced in your [`prisma.yml`](5cy7) under the `datamodel` property. For example:
 
 <Code lines="2">
 
@@ -158,7 +158,7 @@ The datamodel only serves as _foundation_ for the generation of the actual Graph
 
 ### The Prisma GraphQL schema
 
-The Prisma GraphQL schema can be dowloaded from a Prisma service using the `graphql-schema` generator in your Prisma.yml:
+The Prisma GraphQL schema can be dowloaded from a Prisma service using the `graphql-schema` generator in your `prisma.yml`:
 
 ```yml
 generate:
@@ -180,7 +180,7 @@ The application layer uses Prisma as a _data access layer_ and delegates incomin
 
 You can write your datamodel in a single `.prisma`-file or split it accross multiple ones.
 
-The `.prisma`-files containing the datamodel need to be specified in your prisma.yml under the `datamodel` property. For example:
+The `.prisma`-files containing the datamodel need to be specified in your `prisma.yml` under the `datamodel` property. For example:
 
 ```yml
 datamodel:

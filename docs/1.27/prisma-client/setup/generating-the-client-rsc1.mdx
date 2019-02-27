@@ -7,9 +7,9 @@ export const meta = {
 
 The Prisma client is auto-generated using the `prisma generate` command of the [Prisma CLI](alx4). One Prisma client connects to exactly one Prisma service.
 
-`prisma generate` reads the information that's specified under the `generate` root property in your service's prisma.yml. 
+`prisma generate` reads the information that's specified under the `generate` root property in your service's `prisma.yml`. 
 
-## Configuring `generate` in prisma.yml
+## Configuring `generate` in `prisma.yml`
 
 The `generate` root property accepts a list of objects. Each object has two fields:
 
@@ -18,7 +18,7 @@ The `generate` root property accepts a list of objects. Each object has two fiel
   - Coming soon: `reason`.
 - `output`: The path and name of the file in which the Prisma client should be stored.
 
-As an example, consider the following prisma.yml:
+As an example, consider the following `prisma.yml`:
 
 ```yml
 datamodel: datamodel.prisma
@@ -29,7 +29,7 @@ generate:
     output: ./prisma-client/
 ```
 
-Running `prisma generate` in the directory where that prisma.yml is located generates a Prisma client in TypeScript and stores it in a file called `prisma.ts`.
+Running `prisma generate` in the directory where that `prisma.yml` is located generates a Prisma client in TypeScript and stores it in a file called `prisma.ts`.
 
 > The `generator` also accepts `graphql-schema` as a value. This downloads the GraphQL schema for your Prisma API via an [introspection](https://graphql.org/learn/introspection/) query.
 
@@ -102,4 +102,4 @@ You can view what the generated files look like here:
 - [Prisma client for TypeScript](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.ts)
 - [GraphQL schema of Prisma API](https://github.com/nikolasburk/prisma-client-examples/blob/master/generated/prisma.graphql)
 
-The generated Prisma client is already aware of the `endpoint` and `secret` that were specified in prisma.yml at the time when the client was generated.
+The generated Prisma client is already aware of the `endpoint` and `secret` that were specified in `prisma.yml` at the time when the client was generated.

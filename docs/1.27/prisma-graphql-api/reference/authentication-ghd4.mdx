@@ -8,7 +8,7 @@ export const meta = {
 
 ## Overview
 
-A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your prisma.yml:
+A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your `prisma.yml`:
 
 ```yml
 secret: my-secret-42
@@ -18,7 +18,7 @@ As the developer of a Prisma service, you can choose your own service secret. Wh
 
 ![](https://i.imgur.com/cCmp8JI.png)
 
-The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your prisma.yml is located:
+The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your `prisma.yml` is located:
 
 ```bash
 $ prisma token
@@ -176,7 +176,7 @@ type User {
 }
 ```
 
-**prisma.yml**
+**`prisma.yml`**
 
 ```yml
 endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo server 
@@ -197,7 +197,7 @@ When using a GraphQL Playground, no HTTP headers need to be set in order to talk
 
 ### Protecting the Prisma API
 
-The only thing you need to do in order for your Prisma API to require authentication is setting the service secret in prisma.yml:
+The only thing you need to do in order for your Prisma API to require authentication is setting the service secret in `prisma.yml`:
 
 ```yml
 endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo server 
