@@ -15,24 +15,24 @@ export const meta = {
 The `Prisma` constructor is used to create new instances of the Prisma client.
 
 ```js
-constructor(options: BasePrismaOptions)
+constructor(options: BaseClientOptions)
 ```
 
 `BaseClientOptions` has the following properties (all are optional):
 
-- `endpoint: string`: The endpoint of your Prisma service. If not provided, the Client will default to the `endpoint` that was specified in `prisma.yml` when the Client was generated. 
-- `secret: string`: The secret protecting the API of your Prisma service. If not provided, the Client will default to the `secret` that was specified in `prisma.yml` when the Client was generated. 
+- `endpoint: string`: The endpoint of your Prisma service. If not provided, the client will default to the `endpoint` that was specified in `prisma.yml` when the client was generated. 
+- `secret: string`: The [secret](5cy7#secret-optional) protecting the API of your Prisma service. If not provided, the client will default to the `secret` that was specified in `prisma.yml` when the client was generated. 
 - `debug: boolean`: If set to `true`, each invokation of a method on the Prisma client will print the GraphQL query that is sent to the Prisma API to the console. **Default: `false`**.
 
 ### Examples
 
-_Use default values for `endpoint` and `secret` that were specified in `prisma.yml` when the Client was generated_:
+_Use default values for `endpoint` and `secret` that were specified in `prisma.yml` when the client was generated_:
 
 ```js
 const prisma = new Prisma({})
 ```
 
-_Override default values for `endpoint` and `secret` that had been specified in `prisma.yml` when the Client was generated_:
+_Override default values for `endpoint` and `secret` that had been specified in `prisma.yml` when the client was generated_:
 
 ```js
 const prisma = new Prisma({ 
