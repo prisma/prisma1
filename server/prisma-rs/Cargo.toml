@@ -7,9 +7,6 @@ edition = "2018"
 [lib]
 crate-type = ["dylib", "staticlib"]
 
-[workspace]
-members = ["./", "prisma-common", "prisma-models"]
-
 [dependencies]
 prost = "0.4"
 prost-derive = "0.4"
