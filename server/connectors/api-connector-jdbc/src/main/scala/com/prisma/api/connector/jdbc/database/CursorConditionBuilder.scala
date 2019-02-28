@@ -33,19 +33,25 @@ trait CursorConditionBuilder extends BuilderBase {
       case Some(id) => id
     }
 
+    val cursor = `val`(value.value.asInstanceOf[AnyRef])
+
     val selectQuery = sql
-      .select(orderByField, `val`(value.value.asInstanceOf[AnyRef]))
+      .select(orderByField)
       .from(modelTable(model))
       .where(idField.equal(stringDummy))
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
     def cursorFor(cursorType: String): Condition = (cursorType, sortOrder) match {
-      case ("before", SortOrder.Asc)  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery)
-      case ("before", SortOrder.Desc) => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery)
-      case ("after", SortOrder.Asc)   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery)
-      case ("after", SortOrder.Desc)  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery)
-      case _                          => throw new IllegalArgumentException
+      case ("before", SortOrder.Asc) =>
+        or(and(orderByFieldWithAlias.eq(selectQuery), idFieldWithAlias.lessThan(cursor)), orderByFieldWithAlias.lessThan(selectQuery))
+      case ("before", SortOrder.Desc) =>
+        or(and(orderByFieldWithAlias.eq(selectQuery), idFieldWithAlias.lessThan(cursor)), orderByFieldWithAlias.greaterThan(selectQuery))
+      case ("after", SortOrder.Asc) =>
+        or(and(orderByFieldWithAlias.eq(selectQuery), idFieldWithAlias.greaterThan(cursor)), orderByFieldWithAlias.greaterThan(selectQuery))
+      case ("after", SortOrder.Desc) =>
+        or(and(orderByFieldWithAlias.eq(selectQuery), idFieldWithAlias.greaterThan(cursor)), orderByFieldWithAlias.lessThan(selectQuery))
+      case _ => throw new IllegalArgumentException
     }
 
     val afterCursorFilter: Condition  = after.map(_ => cursorFor("after")).getOrElse(noCondition())
