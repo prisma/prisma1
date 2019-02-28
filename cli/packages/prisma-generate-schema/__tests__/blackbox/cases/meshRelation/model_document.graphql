@@ -1,42 +1,42 @@
 type A {
     field: Int!
-    id: Int! @id
-    a: A! @relation(strategy: EMBED)
-    b: [B!]! @relation(strategy: EMBED)
-    c: C @relation(strategy: EMBED)
-    e: [E!]! @relation(strategy: EMBED)
+    id: ID! @id
+    a: A! @relation(link: INLINE)
+    b: [B] @relation(link: INLINE)
+    c: C @relation(link: INLINE)
+    e: [E] @relation(link: INLINE)
 }
 
 type B {
-    id: Int! @id
-    field: [String!]!
-    c: C @relation(name: "BToC", strategy: EMBED)
-    b: [B!]!@relation(strategy: EMBED)
+    id: ID! @id
+    field: [String]
+    c: C @relation(name: "BToC", link: INLINE)
+    b: [B]@relation(link: INLINE)
     a: A!
-    c2: C @relation(name: "BToC2", strategy: EMBED)
+    c2: C @relation(name: "BToC2", link: INLINE)
 }
 
 type C {
-    id: Int! @id
+    id: ID! @id
     expirationDate: DateTime
-    c: C! @relation(strategy: EMBED)
-    b: [B!]! @relation(name: "BToC")
+    c: C! @relation(link: INLINE)
+    b: [B] @relation(name: "BToC")
     a: A
     b2: B @relation(name: "BToC2")
 }
 
 type D {
-    id: Int! @id
+    id: ID! @id
     field: Json
-    c: C! @relation(strategy: EMBED)
-    b: B! @relation(strategy: EMBED)
-    a: A! @relation(strategy: EMBED)
-    d: [D!]! @relation(strategy: EMBED)
+    c: C! @relation(link: INLINE)
+    b: B! @relation(link: INLINE)
+    a: A! @relation(link: INLINE)
+    d: [D] @relation(link: INLINE)
 }
 
 
 type E {
-    id: Int! @id
+    id: ID! @id
     field: Json
     a: A!
 }

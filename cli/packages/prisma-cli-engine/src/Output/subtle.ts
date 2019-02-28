@@ -24,11 +24,11 @@ module.exports = {
       var nextToken = info.tokens[info.tokenIndex + 1]
 
       return nextToken &&
-      nextToken.type === 'Punctuator' &&
-      nextToken.value === '(' &&
-      prevToken &&
-      prevToken.type === 'Keyword' &&
-      prevToken.value === 'function'
+        nextToken.type === 'Punctuator' &&
+        nextToken.value === '(' &&
+        prevToken &&
+        prevToken.type === 'Keyword' &&
+        prevToken.value === 'function'
         ? colors.blue(s)
         : colors.white(s)
     },

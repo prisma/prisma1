@@ -1,8 +1,8 @@
-type A {
+type A implements Node {
   toB: B!
   toB2: B!
   toC: C
-  id: Int!
+  id: ID!
 }
 
 """
@@ -88,7 +88,7 @@ enum AOrderByInput {
 }
 
 type APreviousValues {
-  id: Int!
+  id: ID!
 }
 
 input AScalarWhereInput {
@@ -104,35 +104,59 @@ input AScalarWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [AScalarWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
 }
 
 type ASubscriptionPayload {
@@ -147,14 +171,6 @@ input ASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [ASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -183,6 +199,7 @@ input AUpdateInput {
 input AUpdateManyWithoutToCInput {
   create: [ACreateWithoutToCInput!]
   connect: [AWhereUniqueInput!]
+  set: [AWhereUniqueInput!]
   disconnect: [AWhereUniqueInput!]
   delete: [AWhereUniqueInput!]
   update: [AUpdateWithWhereUniqueWithoutToCInput!]
@@ -245,54 +262,73 @@ input AWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  toB: BWhereInput
+  toB2: BWhereInput
+  toC: CWhereInput
 }
 
 input AWhereUniqueInput {
-  id: Int
+  id: ID
 }
 
-type B {
+type B implements Node {
   toA: A!
   toA2: A!
   toC: C!
-  id: Int!
+  id: ID!
 }
 
 type BatchPayload {
@@ -373,7 +409,7 @@ enum BOrderByInput {
 }
 
 type BPreviousValues {
-  id: Int!
+  id: ID!
 }
 
 input BScalarWhereInput {
@@ -389,35 +425,59 @@ input BScalarWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [BScalarWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
 }
 
 type BSubscriptionPayload {
@@ -432,14 +492,6 @@ input BSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -468,6 +520,7 @@ input BUpdateInput {
 input BUpdateManyWithoutToCInput {
   create: [BCreateWithoutToCInput!]
   connect: [BWhereUniqueInput!]
+  set: [BWhereUniqueInput!]
   disconnect: [BWhereUniqueInput!]
   delete: [BWhereUniqueInput!]
   update: [BUpdateWithWhereUniqueWithoutToCInput!]
@@ -530,53 +583,72 @@ input BWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  toA: AWhereInput
+  toA2: AWhereInput
+  toC: CWhereInput
 }
 
 input BWhereUniqueInput {
-  id: Int
+  id: ID
 }
 
-type C {
+type C implements Node {
   toB(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
   toA(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
-  id: Int!
+  id: ID!
 }
 
 """
@@ -637,7 +709,7 @@ enum COrderByInput {
 }
 
 type CPreviousValues {
-  id: Int!
+  id: ID!
 }
 
 type CSubscriptionPayload {
@@ -652,14 +724,6 @@ input CSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -723,53 +787,66 @@ input CWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWhereInput!]
-  id: Int
+  id: ID
   """
   All values that are not equal to given value.
   """
-  id_not: Int
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  id_in: [Int!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  id_not_in: [Int!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  id_lt: Int
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  id_lte: Int
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  id_gt: Int
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  id_gte: Int
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  toB_some: BWhereInput
+  toA_some: AWhereInput
 }
 
 input CWhereUniqueInput {
-  id: Int
+  id: ID
 }
-
-"""
-Raw JSON value
-"""
-scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.

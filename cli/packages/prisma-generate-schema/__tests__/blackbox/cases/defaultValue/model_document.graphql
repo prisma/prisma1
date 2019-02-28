@@ -3,7 +3,7 @@ type A {
     #a: Int @default(value: 10) @unique
     #b: Int! @default(value: 10)
     c: String! @unique 
-    removeThisIdd: Int! @id
+    removeThisIdd: ID! @id
     d: String @default(value: "Hello")
 }
 
@@ -14,11 +14,11 @@ type AWithId {
     c: String! @unique
     d: String @default(value: "Hello")
     
-    b2: B! @relation(strategy: EMBED)
+    b2: B! @relation(link: INLINE)
 }
 
 type B {
-    a: [A!]! @relation(strategy: EMBED) 
+    a: [A] @relation(link: INLINE) 
     id: ID! @id
     a2: AWithId
 }

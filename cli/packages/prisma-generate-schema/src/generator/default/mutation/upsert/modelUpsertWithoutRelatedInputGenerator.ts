@@ -1,6 +1,6 @@
 import { GraphQLInputFieldConfigMap, GraphQLNonNull } from 'graphql/type'
-import { IGQLField, IGQLType } from '../../../../datamodel/model'
-import { capitalize } from '../../../../util/util'
+import { IGQLField, IGQLType, capitalize } from 'prisma-datamodel'
+
 import {
   RelatedGeneratorArgs,
   RelatedModelInputObjectTypeGenerator,
@@ -25,18 +25,30 @@ export default class ModelUpsertWithoutRelatedInputGenerator extends RelatedMode
 
     this.generateWhereUnique(model, args, fields)
 
-    fields.update = {
-      type: new GraphQLNonNull(
-        this.generators.modelUpdateWithoutRelatedDataInput.generate(
-          model,
-          args,
+    if (
+      !this.generators.modelUpdateWithoutRelatedDataInput.wouldBeEmpty(
+        model,
+        args,
+      )
+    ) {
+      fields.update = {
+        type: new GraphQLNonNull(
+          this.generators.modelUpdateWithoutRelatedDataInput.generate(
+            model,
+            args,
+          ),
         ),
-      ),
+      }
     }
-    fields.create = {
-      type: new GraphQLNonNull(
-        this.generators.modelCreateWithoutRelatedInput.generate(model, args),
-      ),
+
+    if (
+      !this.generators.modelCreateWithoutRelatedInput.wouldBeEmpty(model, args)
+    ) {
+      fields.create = {
+        type: new GraphQLNonNull(
+          this.generators.modelCreateWithoutRelatedInput.generate(model, args),
+        ),
+      }
     }
 
     return fields

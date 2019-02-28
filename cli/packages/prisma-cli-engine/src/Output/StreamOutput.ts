@@ -1,5 +1,4 @@
 import * as util from 'util'
-import chalk from 'chalk'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { Output } from './'

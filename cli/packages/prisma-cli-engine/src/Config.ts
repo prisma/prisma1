@@ -58,8 +58,8 @@ export class Config {
   /**
    * Urls
    */
-  cloudApiEndpoint = process.env.CLOUD_API_ENDPOINT ||
-    'https://api.cloud.prisma.sh'
+  cloudApiEndpoint =
+    process.env.CLOUD_API_ENDPOINT || 'https://api2.cloud.prisma.sh'
   consoleEndpoint = isDevConsole
     ? 'http://localhost:3000'
     : 'https://app.prisma.io'
@@ -115,9 +115,12 @@ export class Config {
     return path.join(this.cacheDir, '/.requests.json')
   }
   findConfigDir(): null | string {
-    const configPath = findUp.sync(['.graphqlconfig', '.graphqlconfig.yml', '.graphqlconfig.yaml'], {
-      cwd: this.cwd,
-    })
+    const configPath = findUp.sync(
+      ['.graphqlconfig', '.graphqlconfig.yml', '.graphqlconfig.yaml'],
+      {
+        cwd: this.cwd,
+      },
+    )
 
     if (configPath) {
       return path.dirname(configPath)
@@ -164,7 +167,7 @@ export class Config {
       this.definitionDir = this.cwd
       this.definitionPath = definitionPath
     } else if (fs.pathExistsSync(definitionPathWithPrisma)) {
-      this.definitionDir = path.join(this.cwd, 'prisma') 
+      this.definitionDir = path.join(this.cwd, 'prisma')
       this.definitionPath = definitionPathWithPrisma
     } else {
       this.definitionPath = this.getDefinitionPathByGraphQLConfig()

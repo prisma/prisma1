@@ -55,25 +55,27 @@ trait SchemaBase {
   val schemaPMToC1req = """type Parent{
                             id: ID! @unique
                             p: String! @unique
-                            childrenOpt: [Child!]!
+                            childrenOpt: [Child]
                         }
                         
                         type Child{
                             id: ID! @unique
                             c: String! @unique
                             parentReq: Parent!
+                            test: String
                         }"""
 
   val schemaPMToC1opt = """type Parent{
                             id: ID! @unique
                             p: String! @unique
-                            childrenOpt: [Child!]!
+                            childrenOpt: [Child]
                         }
                         
                         type Child{
                             id: ID! @unique
                             c: String! @unique
                             parentOpt: Parent
+                            test: String
                         }"""
 
   val schemaP1reqToCM = """type Parent{
@@ -85,7 +87,7 @@ trait SchemaBase {
                         type Child{
                             id: ID! @unique
                             c: String! @unique
-                            parentsOpt: [Parent!]!
+                            parentsOpt: [Parent]
                         }"""
 
   val schemaP1optToCM = """type Parent{
@@ -97,19 +99,20 @@ trait SchemaBase {
                         type Child{
                             id: ID! @unique
                             c: String! @unique
-                            parentsOpt: [Parent!]!
+                            parentsOpt: [Parent]
                         }"""
 
   val schemaPMToCM = """type Parent{
                             id: ID! @unique
                             p: String! @unique
-                            childrenOpt: [Child!]!
+                            childrenOpt: [Child]
                         }
 
                         type Child{
                             id: ID! @unique
                             c: String! @unique
-                            parentsOpt: [Parent!]!
+                            parentsOpt: [Parent]
+                            test: String
                         }"""
 
   //EMBEDDED
@@ -137,16 +140,18 @@ trait SchemaBase {
   val embeddedPM = """type Parent{
                             id: ID! @unique
                             p: String! @unique
-                            childrenOpt: [Child!]!
+                            childrenOpt: [Child]
                         }
                         
                         type Child @embedded{
                             c: String! @unique
+                            test: String
                         }"""
+
   //EMBEDDED TO NON-EMBEDDED
   val embedddedToJoinFriendReq = """type Parent{
                             |    p: String @unique
-                            |    children: [Child!]!
+                            |    children: [Child]
                             |}
                             |
                             |type Child @embedded {
@@ -160,7 +165,7 @@ trait SchemaBase {
 
   val embedddedToJoinFriendOpt = """type Parent{
                                |    p: String @unique
-                               |    children: [Child!]!
+                               |    children: [Child]
                                |}
                                |
                                |type Child @embedded {
@@ -172,18 +177,21 @@ trait SchemaBase {
                                |    f: String @unique
                                |}"""
 
-  val embedddedToJoinFriendsOpt = """type Parent{
+  val embedddedToJoinFriendsOpt = """
+                        |type Parent{
+                        |    id: ID! @unique
                         |    p: String @unique
-                        |    children: [Child!]!
+                        |    children: [Child]
                         |}
                         |
                         |type Child @embedded {
                         |    c: String @unique
-                        |    friendsOpt: [Friend!]! @mongoRelation(field: "friends")
+                        |    friendsOpt: [Friend] @mongoRelation(field: "friends")
                         |}
                         |
                         |type Friend{
                         |    f: String @unique
+                        |    test: String
                         |}"""
 
 }

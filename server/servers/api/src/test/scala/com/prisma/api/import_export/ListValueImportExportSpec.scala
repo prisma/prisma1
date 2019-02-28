@@ -4,7 +4,7 @@ import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
-import com.prisma.shared.models.ApiConnectorCapability.ImportExportCapability
+import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
@@ -80,16 +80,20 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase 
         |{"_typeName": "Model0", "id": "0", "stringList": ["Just", "a" , "bunch", "of" ,"strings"]},
         |{"_typeName": "Model0", "id": "0", "intList": [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199]},
         |{"_typeName": "Model0", "id": "1", "floatList": [1.423423, 3.1234324234, 4.23432424, 4.234234324234]},
-        |{"_typeName": "Model0", "id": "1", "booleanList": [true, true, false, false, true, true]},
+        |{"_typeName": "Model0", "id": "1", "booleanList": [true, true, false, false, true, true]} 
+        |]}""".stripMargin.parseJson
+
+    val lists2 =
+      """{"valueType": "lists", "values": [
         |{"_typeName": "Model0", "id": "1", "booleanList": [false, false, false, false, false, false]},
         |{"_typeName": "Model0", "id": "0", "intList": [100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,197,198,199]},
         |{"_typeName": "Model0", "id": "0", "stringList": ["Just", "a" , "bunch", "of" ,"strings"]},
         |{"_typeName": "Model0", "id": "1", "floatList": [1.423423, 3.1234324234, 4.23432424, 4.234234324234]},
         |{"_typeName": "Model0", "id": "1", "booleanList": [true, true, false, false, true, true]}
-        |]}
-        |""".stripMargin.parseJson
+        |]}""".stripMargin.parseJson
 
     importer.executeImport(lists).await().toString should be("[]")
+    importer.executeImport(lists2).await().toString should be("[]")
 
     val cursor     = Cursor(0, 0)
     val request    = ExportRequest("lists", cursor)

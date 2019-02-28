@@ -56,6 +56,9 @@ export class Cluster {
     if (this.name === 'shared-public-demo') {
       return ''
     }
+    if (this.isPrivate && process.env.PRISMA_MANAGEMENT_API_SECRET) {
+      return this.getLocalToken()
+    }
     if (this.shared || this.isPrivate) {
       return this.generateClusterToken(serviceName, workspaceSlug, stageName)
     } else {
@@ -182,7 +185,7 @@ Original error: ${e.message}`,
 
   async isOnline(): Promise<boolean> {
     const version = await this.getVersion()
-    return Boolean(version)
+    return typeof version === 'string'
   }
 
   async getVersion(): Promise<string | null> {

@@ -1,5 +1,9 @@
-import { GraphQLEnumType, GraphQLEnumValueConfigMap, GraphQLID } from 'graphql/type'
-import { IGQLType } from '../../../datamodel/model'
+import {
+  GraphQLEnumType,
+  GraphQLEnumValueConfigMap,
+  GraphQLID,
+} from 'graphql/type'
+import { IGQLType } from 'prisma-datamodel'
 import { ModelEnumTypeGeneratorBase } from '../../generator'
 
 export default class ModelOrderByInputGenerator extends ModelEnumTypeGeneratorBase {
@@ -21,11 +25,6 @@ export default class ModelOrderByInputGenerator extends ModelEnumTypeGeneratorBa
       values[`${field.name}_ASC`] = {}
       values[`${field.name}_DESC`] = {}
     }
-
-    // TODO: Remove this as soon
-    // as it's fixed in prisma server
-    values[`id_ASC`] = {}
-    values[`id_DESC`] = {}
 
     return new GraphQLEnumType({
       name: this.getTypeName(input, args),

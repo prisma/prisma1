@@ -1,8 +1,10 @@
-import { ModelInputObjectTypeGeneratorBase } from "../../../generator"
-import { IGQLType, IGQLField } from "../../../../datamodel/model"
+import { ModelInputObjectTypeGeneratorBase } from '../../../generator'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 import { GraphQLInputObjectType } from 'graphql/type'
 
-export default class ScalarListCreateInput extends ModelInputObjectTypeGeneratorBase<IGQLField> {
+export default class ScalarListCreateInput extends ModelInputObjectTypeGeneratorBase<
+  IGQLField
+> {
   public getTypeName(input: IGQLType, args: IGQLField) {
     return `${input.name}Create${args.name}Input`
   }
@@ -12,10 +14,10 @@ export default class ScalarListCreateInput extends ModelInputObjectTypeGenerator
       fields: {
         set: {
           type: this.generators.scalarTypeGenerator.wrapList(
-            this.generators.scalarTypeGenerator.generate(args.type, {})
-          )
-        }
-      }
+            this.generators.scalarTypeGenerator.generate(args.type, {}),
+          ),
+        },
+      },
     })
   }
 }

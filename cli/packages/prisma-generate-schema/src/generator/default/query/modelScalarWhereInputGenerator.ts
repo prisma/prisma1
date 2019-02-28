@@ -1,7 +1,7 @@
-import { IGQLField, IGQLType } from '../../../datamodel/model'
-import { GraphQLInputFieldConfigMap } from "graphql/type"
+import { IGQLField, IGQLType } from 'prisma-datamodel'
+import { GraphQLInputFieldConfigMap } from 'graphql/type'
 import ModelWhereInputGenerator from './modelWhereInputGenerator'
-import { TypeFromModelGenerator } from '../../generator';
+import { TypeFromModelGenerator } from '../../generator'
 
 export default class ModelScalarWhereInputGenerator extends ModelWhereInputGenerator {
   public getTypeName(input: IGQLType, args: {}) {
@@ -12,7 +12,10 @@ export default class ModelScalarWhereInputGenerator extends ModelWhereInputGener
     return !this.hasScalarFields(input.fields)
   }
 
-  public generateRelationFilterFields(model: IGQLType, field: IGQLField): GraphQLInputFieldConfigMap | null {
-    return null;
+  public generateRelationFilterFields(
+    model: IGQLType,
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap | null {
+    return null
   }
 }

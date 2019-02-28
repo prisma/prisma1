@@ -2,49 +2,22 @@ package com.prisma.prod
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.prisma.akkautil.http.{Server, ServerExecutor}
-import com.prisma.api.server.ApiServer
-import com.prisma.deploy.server.ManagementServer
-import com.prisma.utils.boolean.BooleanUtils._
-import com.prisma.websocket.WebsocketServer
-import com.prisma.workers.WorkerServer
+import com.prisma.image.{SangriaHandlerImpl, Version}
+import com.prisma.sangria_server.AkkaHttpSangriaServer
 
 object PrismaProdMain extends App {
+  System.setProperty("org.jooq.no-logo", "true")
+
   implicit val system       = ActorSystem("single-server")
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = PrismaProdDependencies()
 
-  dependencies.initialize()(system.dispatcher)
+  dependencies.initialize()
+  Version.check()
 
-  val port              = dependencies.config.port.getOrElse(4466)
-  val includeMgmtServer = dependencies.config.managmentApiEnabled
+  val sangriaHandler = SangriaHandlerImpl(managementApiEnabled = dependencies.config.managmentApiEnabled.getOrElse(false))
+  val executor       = AkkaHttpSangriaServer
+  val server         = executor.create(handler = sangriaHandler, port = dependencies.config.port.getOrElse(4466), requestPrefix = sys.env.getOrElse("ENV", "local"))
 
-  def managementServers: List[Server] = {
-    dependencies.migrator.initialize
-    includeMgmtServer
-      .flatMap(
-        _.toOption(
-          List(
-            ManagementServer("management"),
-            ManagementServer("cluster") // Deprecated, will be removed soon
-          )))
-      .toList
-      .flatten
-  }
-
-  val mgmtServer = includeMgmtServer
-    .flatMap(_.toOption(managementServers))
-    .toList
-    .flatten
-
-  val servers = mgmtServer ++ List(
-    WebsocketServer(dependencies),
-    ApiServer(dependencies.apiSchemaBuilder),
-    WorkerServer(dependencies)
-  )
-
-  ServerExecutor(
-    port = port,
-    servers = servers: _*
-  ).startBlocking()
+  server.startBlocking()
 }

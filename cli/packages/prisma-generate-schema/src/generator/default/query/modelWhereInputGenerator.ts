@@ -1,17 +1,33 @@
-import { ModelInputObjectTypeGenerator, RelatedGeneratorArgs, IGenerators, FieldConfigUtils } from '../../generator'
-import { IGQLType, IGQLField } from '../../../datamodel/model'
+import {
+  ModelInputObjectTypeGenerator,
+  RelatedGeneratorArgs,
+  IGenerators,
+  FieldConfigUtils,
+} from '../../generator'
+import { IGQLType, IGQLField, TypeIdentifiers } from 'prisma-datamodel'
 import GQLAssert from '../../../util/gqlAssert'
-import { GraphQLObjectType, GraphQLInputFieldConfigMap, GraphQLFieldConfig, GraphQLType, GraphQLList, GraphQLString } from "graphql/type"
-import { TypeIdentifiers } from '../scalar/scalarTypeGenerator'
-import { GraphQLInputType } from 'graphql';
+import {
+  GraphQLObjectType,
+  GraphQLInputFieldConfigMap,
+  GraphQLFieldConfig,
+  GraphQLType,
+  GraphQLList,
+  GraphQLString,
+} from 'graphql/type'
+import { GraphQLInputType } from 'graphql'
 
 export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenerator {
-
-  public static generateFiltersForSuffix(suffixes: string[], modelField: IGQLField | null, gqlType: GraphQLInputType) {
+  public static generateFiltersForSuffix(
+    suffixes: string[],
+    modelField: IGQLField | null,
+    gqlType: GraphQLInputType,
+  ) {
     const fields = {} as GraphQLInputFieldConfigMap
 
     for (const suffix of suffixes) {
-      fields[`${modelField !== null ? modelField.name : ''}${suffix}`] = { type: gqlType }
+      fields[`${modelField !== null ? modelField.name : ''}${suffix}`] = {
+        type: gqlType,
+      }
     }
 
     return fields
@@ -22,14 +38,17 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
   }
 
   //#region Scalar filter generator
-  public generateScalarFilterFields(model: IGQLType, field: IGQLField) : GraphQLInputFieldConfigMap  {
+  public generateScalarFilterFields(
+    model: IGQLType,
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap {
     GQLAssert.isScalar(field, this.generators.scalarTypeGenerator)
 
     if (field.isList) {
       return {} as GraphQLInputFieldConfigMap
     }
 
-    if (typeof (field.type) === 'string') {
+    if (typeof field.type === 'string') {
       switch (field.type as string) {
         case TypeIdentifiers.string:
         case TypeIdentifiers.id:
@@ -38,7 +57,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
             this.generateBaseFilters(field),
             this.generateInclusionFilters(field),
             this.generateAlphanumericFilters(field),
-            this.generateStringFilters(field)
+            this.generateStringFilters(field),
           )
         case TypeIdentifiers.integer:
         case TypeIdentifiers.float:
@@ -46,45 +65,67 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
           return FieldConfigUtils.merge(
             this.generateBaseFilters(field),
             this.generateInclusionFilters(field),
-            this.generateAlphanumericFilters(field)
+            this.generateAlphanumericFilters(field),
           )
         case TypeIdentifiers.boolean:
-          return FieldConfigUtils.merge(
-            this.generateBaseFilters(field),
-          )
+          return FieldConfigUtils.merge(this.generateBaseFilters(field))
         case TypeIdentifiers.json:
           return FieldConfigUtils.merge()
         default:
-          GQLAssert.raise(`Type ${field.type} is not implemented by ModelWhereInputGenerator.generateScalarFilterFields.`)
+          GQLAssert.raise(
+            `Type ${
+              field.type
+            } is not implemented by ModelWhereInputGenerator.generateScalarFilterFields.`,
+          )
           return {} as GraphQLInputFieldConfigMap
       }
     } else if ((field.type as IGQLType).isEnum) {
       return FieldConfigUtils.merge(
         this.generateBaseFilters(field),
-        this.generateInclusionFilters(field)
+        this.generateInclusionFilters(field),
       )
     } else {
-      GQLAssert.raise(`Type for filter generation was neither enum nor scalar type.`)
+      GQLAssert.raise(
+        `Type for filter generation was neither enum nor scalar type.`,
+      )
       return {} as GraphQLInputFieldConfigMap
     }
   }
 
-  public generateBaseFilters(field: IGQLField): GraphQLInputFieldConfigMap{
+  public generateBaseFilters(field: IGQLField): GraphQLInputFieldConfigMap {
     const type = this.generators.scalarTypeGenerator.generate(field.type, {})
-    return ModelWhereInputGenerator.generateFiltersForSuffix(['', '_not'], field, type)
+    return ModelWhereInputGenerator.generateFiltersForSuffix(
+      ['', '_not'],
+      field,
+      type,
+    )
   }
 
-  public generateInclusionFilters(field: IGQLField): GraphQLInputFieldConfigMap {
-    const type = this.generators.scalarTypeGenerator.wrapList(this.generators.scalarTypeGenerator.generate(field.type, {}))
-    return ModelWhereInputGenerator.generateFiltersForSuffix(['_in', '_not_in'], field, type)
+  public generateInclusionFilters(
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap {
+    const type = this.generators.scalarTypeGenerator.wrapList(
+      this.generators.scalarTypeGenerator.generate(field.type, {}),
+    )
+    return ModelWhereInputGenerator.generateFiltersForSuffix(
+      ['_in', '_not_in'],
+      field,
+      type,
+    )
   }
 
-  public generateAlphanumericFilters(field: IGQLField): GraphQLInputFieldConfigMap { 
+  public generateAlphanumericFilters(
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap {
     const type = this.generators.scalarTypeGenerator.generate(field.type, {})
-    return ModelWhereInputGenerator.generateFiltersForSuffix(['_lt', '_lte', '_gt', '_gte'], field, type)
+    return ModelWhereInputGenerator.generateFiltersForSuffix(
+      ['_lt', '_lte', '_gt', '_gte'],
+      field,
+      type,
+    )
   }
 
-  public generateStringFilters(field: IGQLField): GraphQLInputFieldConfigMap { 
+  public generateStringFilters(field: IGQLField): GraphQLInputFieldConfigMap {
     const type = this.generators.scalarTypeGenerator.generate(field.type, {})
     const filters = [
       '_contains',
@@ -92,15 +133,22 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
       '_starts_with',
       '_not_starts_with',
       '_ends_with',
-      '_not_ends_with'
+      '_not_ends_with',
     ]
-    return ModelWhereInputGenerator.generateFiltersForSuffix(filters, field, type)
+    return ModelWhereInputGenerator.generateFiltersForSuffix(
+      filters,
+      field,
+      type,
+    )
   }
   //#endregion
 
   //#region Relation filter generator
 
-  public generateRelationFilterFields(model: IGQLType, field: IGQLField): GraphQLInputFieldConfigMap | null {
+  public generateRelationFilterFields(
+    model: IGQLType,
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap | null {
     GQLAssert.isRelation(field, this.generators.scalarTypeGenerator)
     if (field.isList) {
       return this.generateManyRelationFilterFields(field)
@@ -109,27 +157,46 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
     }
   }
 
-  public generateOneRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap {
+  public generateOneRelationFilterFields(
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap {
     const type = this.generate(field.type as IGQLType, {})
     return ModelWhereInputGenerator.generateFiltersForSuffix([''], field, type)
   }
 
-  public generateManyRelationFilterFields(field: IGQLField): GraphQLInputFieldConfigMap {
+  public generateManyRelationFilterFields(
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap {
     const type = this.generate(field.type as IGQLType, {})
-    return ModelWhereInputGenerator.generateFiltersForSuffix(['_every', '_some', '_none'], field, type)
+    return ModelWhereInputGenerator.generateFiltersForSuffix(
+      this.getRelationaManyFilters(field.type as IGQLType),
+      field,
+      type,
+    )
   }
 
   //#endregion
 
-  protected generateFields(model: IGQLType, args: {}): GraphQLInputFieldConfigMap {
+  protected getRelationaManyFilters(type: IGQLType): string[] {
+    return ['_every', '_some', '_none']
+  }
+
+  protected getLogicalOperators(): string[] {
+    return ['AND', 'OR', 'NOT']
+  }
+
+  protected generateFields(
+    model: IGQLType,
+    args: {},
+  ): GraphQLInputFieldConfigMap {
     let fields = {} as GraphQLInputFieldConfigMap
 
     for (const field of model.fields) {
-
-      const fieldsToAdd =
-        this.generators.scalarTypeGenerator.isScalarField(field) ?
-          this.generateScalarFilterFields(model, field) :
-          this.generateRelationFilterFields(model, field)
+      const fieldsToAdd = this.generators.scalarTypeGenerator.isScalarField(
+        field,
+      )
+        ? this.generateScalarFilterFields(model, field)
+        : this.generateRelationFilterFields(model, field)
 
       if (fieldsToAdd !== null) {
         fields = FieldConfigUtils.merge(fields, fieldsToAdd)
@@ -137,9 +204,9 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
     }
 
     const recursiveFilter = ModelWhereInputGenerator.generateFiltersForSuffix(
-      ['AND', 'OR', 'NOT'],
+      this.getLogicalOperators(),
       null,
-      this.generators.scalarTypeGenerator.wrapList(this.generate(model, {}))
+      this.generators.scalarTypeGenerator.wrapList(this.generate(model, {})),
     )
 
     fields = FieldConfigUtils.merge(fields, recursiveFilter)

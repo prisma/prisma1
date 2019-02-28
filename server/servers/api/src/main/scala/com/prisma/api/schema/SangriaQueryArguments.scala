@@ -2,7 +2,8 @@ package com.prisma.api.schema
 
 import com.prisma.api.connector.{OrderBy, SortOrder}
 import com.prisma.shared.models
-import com.prisma.shared.models.Model
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationsFilterCapability, MongoJoinRelationLinksCapability}
+import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Model}
 import sangria.schema.{EnumType, EnumValue, _}
 
 object SangriaQueryArguments {
@@ -18,21 +19,33 @@ object SangriaQueryArguments {
     Argument(name, OptionInputType(EnumType(s"${model.name}OrderByInput", None, values)))
   }
 
-  def whereArgument(model: models.Model, project: models.Project, name: String = "where"): Argument[Option[Any]] = {
-    val utils                              = FilterObjectTypeBuilder(model, project)
-    val filterObject: InputObjectType[Any] = utils.filterObjectType
+  def whereArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: ConnectorCapabilities): Argument[Option[Any]] = {
+    val utils = FilterObjectTypeBuilder(model, project)
+    val filterObject = capabilities.has(MongoJoinRelationLinksCapability) match {
+      case false => utils.filterObjectType
+      case true  => utils.filterObjectTypeForMongo
+    }
+
+    val inputType = OptionInputType(filterObject)
+    Argument(name, inputType, description = "")
+  }
+
+  def whereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: ConnectorCapabilities) = {
+    val utils = FilterObjectTypeBuilder(model, project)
+    val filterObject: InputObjectType[Any] = capabilities.has(MongoJoinRelationLinksCapability) match {
+      case false => utils.subscriptionFilterObjectType
+      case true  => utils.subscriptionFilterObjectTypeForMongo
+    }
     Argument(name, OptionInputType(filterObject), description = "")
   }
 
-  def whereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
-    val utils                              = FilterObjectTypeBuilder(model, project)
-    val filterObject: InputObjectType[Any] = utils.subscriptionFilterObjectType
-    Argument(name, OptionInputType(filterObject), description = "")
-  }
+  def internalWhereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where", capabilities: ConnectorCapabilities) = {
+    val utils = FilterObjectTypeBuilder(model, project)
+    val filterObject = capabilities.has(MongoJoinRelationLinksCapability) match {
+      case false => utils.internalSubscriptionFilterObjectType
+      case true  => utils.internalSubscriptionFilterObjectTypeForMongo
+    }
 
-  def internalWhereSubscriptionArgument(model: models.Model, project: models.Project, name: String = "where") = {
-    val utils                              = FilterObjectTypeBuilder(model, project)
-    val filterObject: InputObjectType[Any] = utils.internalSubscriptionFilterObjectType
     Argument(name, OptionInputType(filterObject), description = "")
   }
 }

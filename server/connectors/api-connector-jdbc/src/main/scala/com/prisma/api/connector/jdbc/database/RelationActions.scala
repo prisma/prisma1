@@ -33,23 +33,7 @@ trait RelationActions extends BuilderBase {
         }
       )
 
-    } else if (relation.hasManifestation) {
-      val query = sql
-        .insertInto(relationTable(relation))
-        .columns(
-          relationColumn(relation, relationField.relationSide),
-          relationColumn(relation, relationField.oppositeRelationSide)
-        )
-        .values(placeHolder, placeHolder)
-
-      insertToDBIO(query)(
-        setParams = { pp =>
-          pp.setGcValue(parentId)
-          pp.setGcValue(childId)
-        }
-      )
-
-    } else {
+    } else if (relation.relationTableHas3Columns) {
       val query = sql
         .insertInto(relationTable(relation))
         .columns(
@@ -67,10 +51,26 @@ trait RelationActions extends BuilderBase {
           pp.setGcValue(childId)
         }
       )
+    } else {
+      val query = sql
+        .insertInto(relationTable(relation))
+        .columns(
+          relationColumn(relation, relationField.relationSide),
+          relationColumn(relation, relationField.oppositeRelationSide)
+        )
+        .values(placeHolder, placeHolder)
+        .onConflictDoNothing()
+
+      insertToDBIO(query)(
+        setParams = { pp =>
+          pp.setGcValue(parentId)
+          pp.setGcValue(childId)
+        }
+      )
     }
   }
 
-  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[Unit] = {
+  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[_] = {
     assert(!relationField.relatedField.isList)
     val relation  = relationField.relation
     val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
@@ -98,7 +98,7 @@ trait RelationActions extends BuilderBase {
     }
   }
 
-  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[Unit] = {
+  def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[_] = {
     val relation = relationField.relation
     val condition = relationColumn(relation, relationField.oppositeRelationSide)
       .equal(placeHolder)
@@ -131,8 +131,7 @@ trait RelationActions extends BuilderBase {
     }
   }
 
-  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[Unit] = {
-    assert(!relationField.isList)
+  def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[_] = {
     val relation  = relationField.relation
     val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
     relation.inlineManifestation match {

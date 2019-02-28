@@ -1,13 +1,13 @@
 type User {
   id: ID! @id
   name: String!
-  posts: [Post!]! @relation(name: "PostsByUser", strategy: EMBED)
-  postsWithoutConnection: [PostWithoutConnection!]! @relation(strategy: EMBED)
-  billingInfo: BillingInfo! @relation(strategy: EMBED)
-  billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(strategy: EMBED)
-  likes: [Post!]! @relation(name: "LikesByUser", strategy: EMBED)
-  optionalDetails: OptionalDetails @relation(strategy: EMBED)
-  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection @relation(strategy: EMBED)
+  posts: [Post] @relation(name: "PostsByUser", link: INLINE)
+  postsWithoutConnection: [PostWithoutConnection] @relation(link: INLINE)
+  billingInfo: BillingInfo! @relation(link: INLINE)
+  billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(link: INLINE)
+  likes: [Post] @relation(name: "LikesByUser", link: INLINE)
+  optionalDetails: OptionalDetails @relation(link: INLINE)
+  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection @relation(link: INLINE)
 }
 
 type Post {
@@ -15,7 +15,7 @@ type Post {
   text: String!
   count: Int!
   user: User! @relation(name: "PostsByUser")
-  likes: [User!]! @relation(name: "LikesByUser")
+  likes: [User] @relation(name: "LikesByUser")
 }
 
 type PostWithoutConnection {

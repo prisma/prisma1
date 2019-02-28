@@ -3,7 +3,7 @@ import {
   TypeFromModelGenerator,
   ModelInputObjectTypeGenerator,
 } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
+import { IGQLType, IGQLField } from 'prisma-datamodel'
 import ModelUpdateInputGenerator from './modelUpdateInputGenerator'
 
 export default class ModelUpdateManyMutationInputGenerator extends ModelInputObjectTypeGenerator {

@@ -1,13 +1,14 @@
 package com.prisma.api.schema
 
-import com.prisma.api.schema.SangriaQueryArguments.whereArgument
+import com.prisma.api.ApiDependencies
+import com.prisma.api.schema.SangriaQueryArguments._
 import com.prisma.shared.models.{Model, Project}
 import com.prisma.util.coolSangria.FromInputImplicit
 import sangria.schema._
 
-case class ArgumentsBuilder(project: Project) {
+case class ArgumentsBuilder(project: Project)(implicit apiDependencies: ApiDependencies) {
 
-  val inputTypesBuilder: InputTypesBuilder = CachedInputTypesBuilder(project)
+  val inputTypesBuilder: InputTypesBuilder = CachedInputTypesBuilder(project, apiDependencies.cacheFactory)
 
   implicit val anyFromInput = FromInputImplicit.CoercedResultMarshaller
 
@@ -49,12 +50,12 @@ case class ArgumentsBuilder(project: Project) {
 
   def getSangriaArgumentsForUpdateMany(model: Model): Option[List[Argument[Any]]] = {
     inputTypesBuilder.inputObjectTypeForUpdateMany(model).map { updateArg: InputObjectType[Any] =>
-      List(Argument[Any]("data", updateArg), whereArgument(model, project).asInstanceOf[Argument[Any]]) //todo this is ugly
+      List(Argument[Any]("data", updateArg), whereArgument(model, project, capabilities = apiDependencies.capabilities).asInstanceOf[Argument[Any]]) //todo this is ugly
     }
   }
 
   def getSangriaArgumentsForDeleteMany(model: Model): List[Argument[Option[Any]]] = {
-    List(whereArgument(model, project))
+    List(whereArgument(model, project, capabilities = apiDependencies.capabilities))
   }
 
   def whereUniqueArgument(model: Model): Option[Argument[Any]] = {

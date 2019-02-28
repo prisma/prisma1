@@ -5,19 +5,23 @@ daysUntilClose: 10
 # Issues with these labels will never be considered stale
 exemptLabels:
   - kind/feature
-  - proposal/needs-spec
-  - proposal/accepted
-  - proposal/needs-review
-  - status/repro-available
-  - status/help-wanted
+  - kind/discussion
+  - kind/feedback
+  - kind/question
+  - rfc/0-proposal
+  - rfc/1-draft
+  - rfc/2-accepted
+  - bug/1-repro-available
+  - bug/2-confirmed
   - status/on-hold
+  - status/candidate
 # Label to use when marking an issue as stale
 staleLabel: status/stale
 # Comment to post when marking an issue as stale. Set to `false` to disable
 markComment: >
   This issue has been automatically marked as stale because it has not had
-  recent activity. It will be closed if no further activity occurs. Thank you
-  for your contributions.
+  recent activity. It will be closed in 10 days if no further activity occurs. 
+  Thank you for your contributions.
 # Comment to post when closing a stale issue. Set to `false` to disable
 closeComment: false
 # Limit to only `issues`

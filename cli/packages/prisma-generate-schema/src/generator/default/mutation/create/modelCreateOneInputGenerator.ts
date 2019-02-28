@@ -1,7 +1,7 @@
-import { GraphQLInputObjectType } from "graphql/type";
-import { IGQLType } from '../../../../datamodel/model';
-import { RelatedGeneratorArgs } from '../../../generator';
-import { ModelCreateOneOrManyInputGenerator } from './modelCreateManyInputGenerator';
+import { GraphQLInputObjectType } from 'graphql/type'
+import { IGQLType } from 'prisma-datamodel'
+import { RelatedGeneratorArgs } from '../../../generator'
+import { ModelCreateOneOrManyInputGenerator } from './modelCreateManyInputGenerator'
 
 export default class ModelCreateOneInputGenerator extends ModelCreateOneOrManyInputGenerator {
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {

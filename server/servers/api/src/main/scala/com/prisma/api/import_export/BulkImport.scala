@@ -54,7 +54,6 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val id       = parseIdGCValue(jsObject, model)
     val idStr    = id.value.toString
 
-    println(jsObject)
     val newJsObject = JsObject(jsObject.fields.filter(_._1 != "_typeName"))
 
     Try {

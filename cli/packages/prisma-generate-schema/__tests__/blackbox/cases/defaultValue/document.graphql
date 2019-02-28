@@ -1,6 +1,6 @@
 type A {
   c: String!
-  removeThisIdd: Int!
+  removeThisIdd: ID!
   d: String
 }
 
@@ -62,13 +62,11 @@ enum AOrderByInput {
   removeThisIdd_DESC
   d_ASC
   d_DESC
-  id_ASC
-  id_DESC
 }
 
 type APreviousValues {
   c: String!
-  removeThisIdd: Int!
+  removeThisIdd: ID!
   d: String
 }
 
@@ -138,35 +136,59 @@ input AScalarWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
-  removeThisIdd: Int
+  removeThisIdd: ID
   """
   All values that are not equal to given value.
   """
-  removeThisIdd_not: Int
+  removeThisIdd_not: ID
   """
   All values that are contained in given list.
   """
-  removeThisIdd_in: [Int!]
+  removeThisIdd_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  removeThisIdd_not_in: [Int!]
+  removeThisIdd_not_in: [ID!]
   """
   All values less than the given value.
   """
-  removeThisIdd_lt: Int
+  removeThisIdd_lt: ID
   """
   All values less than or equal the given value.
   """
-  removeThisIdd_lte: Int
+  removeThisIdd_lte: ID
   """
   All values greater than the given value.
   """
-  removeThisIdd_gt: Int
+  removeThisIdd_gt: ID
   """
   All values greater than or equal the given value.
   """
-  removeThisIdd_gte: Int
+  removeThisIdd_gte: ID
+  """
+  All values containing the given string.
+  """
+  removeThisIdd_contains: ID
+  """
+  All values not containing the given string.
+  """
+  removeThisIdd_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  removeThisIdd_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  removeThisIdd_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  removeThisIdd_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  removeThisIdd_not_ends_with: ID
   d: String
   """
   All values that are not equal to given value.
@@ -235,14 +257,6 @@ input ASubscriptionWhereInput {
   """
   AND: [ASubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [ASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ASubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -279,6 +293,7 @@ input AUpdateManyDataInput {
 input AUpdateManyInput {
   create: [ACreateInput!]
   connect: [AWhereUniqueInput!]
+  set: [AWhereUniqueInput!]
   disconnect: [AWhereUniqueInput!]
   delete: [AWhereUniqueInput!]
   update: [AUpdateWithWhereUniqueNestedInput!]
@@ -313,14 +328,6 @@ input AWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWhereInput!]
   c: String
   """
   All values that are not equal to given value.
@@ -374,35 +381,59 @@ input AWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
-  removeThisIdd: Int
+  removeThisIdd: ID
   """
   All values that are not equal to given value.
   """
-  removeThisIdd_not: Int
+  removeThisIdd_not: ID
   """
   All values that are contained in given list.
   """
-  removeThisIdd_in: [Int!]
+  removeThisIdd_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  removeThisIdd_not_in: [Int!]
+  removeThisIdd_not_in: [ID!]
   """
   All values less than the given value.
   """
-  removeThisIdd_lt: Int
+  removeThisIdd_lt: ID
   """
   All values less than or equal the given value.
   """
-  removeThisIdd_lte: Int
+  removeThisIdd_lte: ID
   """
   All values greater than the given value.
   """
-  removeThisIdd_gt: Int
+  removeThisIdd_gt: ID
   """
   All values greater than or equal the given value.
   """
-  removeThisIdd_gte: Int
+  removeThisIdd_gte: ID
+  """
+  All values containing the given string.
+  """
+  removeThisIdd_contains: ID
+  """
+  All values not containing the given string.
+  """
+  removeThisIdd_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  removeThisIdd_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  removeThisIdd_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  removeThisIdd_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  removeThisIdd_not_ends_with: ID
   d: String
   """
   All values that are not equal to given value.
@@ -460,7 +491,7 @@ input AWhereInput {
 
 input AWhereUniqueInput {
   c: String
-  removeThisIdd: Int
+  removeThisIdd: ID
 }
 
 type AWithId implements Node {
@@ -543,14 +574,6 @@ input AWithIdSubscriptionWhereInput {
   """
   AND: [AWithIdSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [AWithIdSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithIdSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -604,14 +627,6 @@ input AWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithIdWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -771,6 +786,7 @@ input AWithIdWhereInput {
   All values not ending with the given string.
   """
   d_not_ends_with: String
+  b2: BWhereInput
 }
 
 input AWithIdWhereUniqueInput {
@@ -856,14 +872,6 @@ input BSubscriptionWhereInput {
   """
   AND: [BSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [BSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -908,14 +916,6 @@ input BWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -969,16 +969,13 @@ input BWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  a_some: AWhereInput
+  a2: AWithIdWhereInput
 }
 
 input BWhereUniqueInput {
   id: ID
 }
-
-"""
-Raw JSON value
-"""
-scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.

@@ -4,51 +4,26 @@ import com.prisma.deploy.connector.{CreateColumn, DeleteColumn, UpdateColumn}
 import com.prisma.deploy.connector.mongo.database.{MongoDeployDatabaseMutationBuilder, NoAction}
 
 object CreateColumnInterpreter extends MongoMutactionInterpreter[CreateColumn] {
-  override def execute(mutaction: CreateColumn) = {
-    if (mutaction.field.isUnique && !mutaction.model.isEmbedded) {
-      MongoDeployDatabaseMutationBuilder.createField(
-        collectionName = mutaction.model.dbName,
-        fieldName = mutaction.field.name
-      )
-    } else {
-      NoAction.unit
-    }
+  override def execute(mutaction: CreateColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
+    case true  => MongoDeployDatabaseMutationBuilder.createField(mutaction.model, mutaction.field.dbName)
+    case false => NoAction.unit
   }
 
-  override def rollback(mutaction: CreateColumn) = {
-    if (mutaction.field.isUnique && !mutaction.model.isEmbedded) {
-
-      MongoDeployDatabaseMutationBuilder.deleteField(
-        collectionName = mutaction.model.dbName,
-        fieldName = mutaction.field.name
-      )
-    } else {
-      NoAction.unit
-    }
+  override def rollback(mutaction: CreateColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
+    case true  => MongoDeployDatabaseMutationBuilder.deleteField(mutaction.model, mutaction.field.dbName)
+    case false => NoAction.unit
   }
 }
 
 object DeleteColumnInterpreter extends MongoMutactionInterpreter[DeleteColumn] {
-  override def execute(mutaction: DeleteColumn) = {
-    if (mutaction.field.isUnique && !mutaction.model.isEmbedded) {
-      MongoDeployDatabaseMutationBuilder.deleteField(
-        collectionName = mutaction.model.dbName,
-        fieldName = mutaction.field.name
-      )
-    } else {
-      NoAction.unit
-    }
+  override def execute(mutaction: DeleteColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
+    case true  => MongoDeployDatabaseMutationBuilder.deleteField(mutaction.model, mutaction.field.dbName)
+    case false => NoAction.unit
   }
 
-  override def rollback(mutaction: DeleteColumn) = {
-    if (mutaction.field.isUnique && !mutaction.model.isEmbedded) {
-      MongoDeployDatabaseMutationBuilder.createField(
-        collectionName = mutaction.model.dbName,
-        fieldName = mutaction.field.name
-      )
-    } else {
-      NoAction.unit
-    }
+  override def rollback(mutaction: DeleteColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
+    case true  => MongoDeployDatabaseMutationBuilder.createField(mutaction.model, mutaction.field.dbName)
+    case false => NoAction.unit
   }
 }
 

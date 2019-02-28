@@ -3,27 +3,27 @@ package com.prisma.deploy.connector
 import com.prisma.shared.models._
 
 sealed trait DeployMutaction {
-  def projectId: String
+  def project: Project
 }
 
-case class CreateProject(projectId: String)  extends DeployMutaction
 case class TruncateProject(project: Project) extends DeployMutaction { val projectId = project.id }
-case class DeleteProject(projectId: String)  extends DeployMutaction
 
-case class CreateColumn(projectId: String, model: Model, field: ScalarField)                           extends DeployMutaction
-case class DeleteColumn(projectId: String, model: Model, field: ScalarField)                           extends DeployMutaction
-case class UpdateColumn(projectId: String, model: Model, oldField: ScalarField, newField: ScalarField) extends DeployMutaction
+case class CreateColumn(project: Project, model: Model, field: ScalarField)                           extends DeployMutaction
+case class DeleteColumn(project: Project, model: Model, field: ScalarField)                           extends DeployMutaction
+case class UpdateColumn(project: Project, model: Model, oldField: ScalarField, newField: ScalarField) extends DeployMutaction
 
-case class CreateScalarListTable(projectId: String, model: Model, field: ScalarField)                                               extends DeployMutaction
-case class DeleteScalarListTable(projectId: String, model: Model, field: ScalarField)                                               extends DeployMutaction
-case class UpdateScalarListTable(projectId: String, oldModel: Model, newModel: Model, oldField: ScalarField, newField: ScalarField) extends DeployMutaction
+case class CreateScalarListTable(project: Project, model: Model, field: ScalarField)                                               extends DeployMutaction
+case class DeleteScalarListTable(project: Project, model: Model, field: ScalarField)                                               extends DeployMutaction
+case class UpdateScalarListTable(project: Project, oldModel: Model, newModel: Model, oldField: ScalarField, newField: ScalarField) extends DeployMutaction
 
-case class CreateModelTable(projectId: String, model: Model)                                                             extends DeployMutaction
-case class DeleteModelTable(projectId: String, model: Model, nameOfIdField: String, scalarListFields: Vector[String])    extends DeployMutaction // delete/truncate collection based on migrations setting in server config
-case class RenameTable(projectId: String, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends DeployMutaction // rename based on migration setting
-case class RenameRelationTable(projectId: String, previousName: String, nextName: String)                                extends DeployMutaction // rename based on migration setting
+case class CreateModelTable(project: Project, model: Model)                                                             extends DeployMutaction
+case class DeleteModelTable(project: Project, model: Model, nameOfIdField: String, scalarListFields: Vector[String])    extends DeployMutaction // delete/truncate collection based on migrations setting in server config
+case class RenameTable(project: Project, previousName: String, nextName: String, scalarListFieldsNames: Vector[String]) extends DeployMutaction // rename based on migration setting
 
-case class CreateRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction
-case class DeleteRelationTable(projectId: String, schema: Schema, relation: Relation) extends DeployMutaction // based on migration settings;  set relation fields to null in document
+case class CreateRelationTable(project: Project, relation: Relation)                                 extends DeployMutaction
+case class DeleteRelationTable(project: Project, relation: Relation)                                 extends DeployMutaction // based on migration settings;  set relation fields to null in document
+case class UpdateRelationTable(project: Project, previousRelation: Relation, nextRelation: Relation) extends DeployMutaction
 
-case class CreateInlineRelationForTests(projectId: String, model: Model, field: RelationField, references: Model, column: String) extends DeployMutaction
+case class CreateInlineRelation(project: Project, relation: Relation, model: Model, references: Model, column: String) extends DeployMutaction
+case class DeleteInlineRelation(project: Project, relation: Relation, model: Model, references: Model, column: String) extends DeployMutaction
+case class UpdateInlineRelation(project: Project, previous: Relation, next: Relation)                                  extends DeployMutaction

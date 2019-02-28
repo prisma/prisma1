@@ -1,5 +1,8 @@
 package com.prisma.api.connector.jdbc.database
 
+import com.prisma.connector.shared.jdbc.SlickDatabase
+import com.prisma.shared.models.Project
+
 // format: off
 trait AllActions
   extends NodeActions
@@ -19,7 +22,7 @@ trait AllQueries
 // format: on
 
 case class JdbcActionsBuilder(
-    schemaName: String,
+    project: Project,
     slickDatabase: SlickDatabase
 ) extends AllActions
     with AllQueries

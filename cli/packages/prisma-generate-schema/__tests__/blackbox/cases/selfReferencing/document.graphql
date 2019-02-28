@@ -30,11 +30,6 @@ type BatchPayload {
 }
 
 """
-Raw JSON value
-"""
-scalar Json
-
-"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
@@ -147,14 +142,10 @@ type Query {
   ): Node
 }
 
-type SelfReferencingA implements Node {
+type SelfReferencingA {
   removeThisId: ID!
   a: SelfReferencingAWithId!
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -196,8 +187,6 @@ enum SelfReferencingAOrderByInput {
   removeThisId_DESC
   field_ASC
   field_DESC
-  id_ASC
-  id_DESC
 }
 
 type SelfReferencingAPreviousValues {
@@ -217,14 +206,6 @@ input SelfReferencingASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -258,14 +239,6 @@ input SelfReferencingAWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingAWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -348,6 +321,7 @@ input SelfReferencingAWhereInput {
   All values greater than or equal the given value.
   """
   field_gte: Int
+  a: SelfReferencingAWithIdWhereInput
 }
 
 input SelfReferencingAWhereUniqueInput {
@@ -424,14 +398,6 @@ input SelfReferencingAWithIdSubscriptionWhereInput {
   """
   AND: [SelfReferencingAWithIdSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingAWithIdSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingAWithIdSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -481,14 +447,6 @@ input SelfReferencingAWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingAWithIdWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingAWithIdWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingAWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -571,20 +529,17 @@ input SelfReferencingAWithIdWhereInput {
   All values greater than or equal the given value.
   """
   field_gte: Int
+  a: SelfReferencingAWithIdWhereInput
 }
 
 input SelfReferencingAWithIdWhereUniqueInput {
   id: ID
 }
 
-type SelfReferencingB implements Node {
+type SelfReferencingB {
   removeThisId: ID!
   a: SelfReferencingB
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -631,8 +586,6 @@ enum SelfReferencingBOrderByInput {
   removeThisId_DESC
   field_ASC
   field_DESC
-  id_ASC
-  id_DESC
 }
 
 type SelfReferencingBPreviousValues {
@@ -652,14 +605,6 @@ input SelfReferencingBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -712,14 +657,6 @@ input SelfReferencingBWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingBWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -802,6 +739,7 @@ input SelfReferencingBWhereInput {
   All values greater than or equal the given value.
   """
   field_gte: Int
+  a: SelfReferencingBWhereInput
 }
 
 input SelfReferencingBWhereUniqueInput {
@@ -980,14 +918,6 @@ input SelfReferencingBWithIdSubscriptionWhereInput {
   """
   AND: [SelfReferencingBWithIdSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingBWithIdSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingBWithIdSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1023,6 +953,7 @@ input SelfReferencingBWithIdUpdateManyDataInput {
 input SelfReferencingBWithIdUpdateManyInput {
   create: [SelfReferencingBWithIdCreateInput!]
   connect: [SelfReferencingBWithIdWhereUniqueInput!]
+  set: [SelfReferencingBWithIdWhereUniqueInput!]
   disconnect: [SelfReferencingBWithIdWhereUniqueInput!]
   delete: [SelfReferencingBWithIdWhereUniqueInput!]
   update: [SelfReferencingBWithIdUpdateWithWhereUniqueNestedInput!]
@@ -1070,14 +1001,6 @@ input SelfReferencingBWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingBWithIdWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingBWithIdWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingBWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1160,20 +1083,17 @@ input SelfReferencingBWithIdWhereInput {
   All values greater than or equal the given value.
   """
   field_gte: Int
+  a: SelfReferencingBWithIdWhereInput
 }
 
 input SelfReferencingBWithIdWhereUniqueInput {
   id: ID
 }
 
-type SelfReferencingC implements Node {
+type SelfReferencingC {
   removeThisId: ID!
   a(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC!]
   field: Int!
-  """
-  The id of the object.
-  """
-  id: ID!
 }
 
 """
@@ -1220,8 +1140,6 @@ enum SelfReferencingCOrderByInput {
   removeThisId_DESC
   field_ASC
   field_DESC
-  id_ASC
-  id_DESC
 }
 
 type SelfReferencingCPreviousValues {
@@ -1339,14 +1257,6 @@ input SelfReferencingCSubscriptionWhereInput {
   """
   AND: [SelfReferencingCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1382,6 +1292,7 @@ input SelfReferencingCUpdateManyDataInput {
 input SelfReferencingCUpdateManyInput {
   create: [SelfReferencingCCreateInput!]
   connect: [SelfReferencingCWhereUniqueInput!]
+  set: [SelfReferencingCWhereUniqueInput!]
   disconnect: [SelfReferencingCWhereUniqueInput!]
   delete: [SelfReferencingCWhereUniqueInput!]
   update: [SelfReferencingCUpdateWithWhereUniqueNestedInput!]
@@ -1415,14 +1326,6 @@ input SelfReferencingCWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingCWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -1505,6 +1408,7 @@ input SelfReferencingCWhereInput {
   All values greater than or equal the given value.
   """
   field_gte: Int
+  a_some: SelfReferencingCWhereInput
 }
 
 input SelfReferencingCWhereUniqueInput {
@@ -1576,14 +1480,6 @@ input SelfReferencingCWithIdSubscriptionWhereInput {
   """
   AND: [SelfReferencingCWithIdSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingCWithIdSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingCWithIdSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1616,14 +1512,6 @@ input SelfReferencingCWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingCWithIdWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [SelfReferencingCWithIdWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [SelfReferencingCWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1706,6 +1594,7 @@ input SelfReferencingCWithIdWhereInput {
   All values greater than or equal the given value.
   """
   field_gte: Int
+  a_some: SelfReferencingBWithIdWhereInput
 }
 
 input SelfReferencingCWithIdWhereUniqueInput {

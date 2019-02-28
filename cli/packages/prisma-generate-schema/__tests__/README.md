@@ -1,13 +1,5 @@
 # Test
 
-## Inflector
-
-Unit tests ported from evo-inflector.
-
-## Parser
-
-Unit tests for the internal model parsing component.
-
 ## Blackbox Tests
 
 These tests load a datamodel, compute the CRUD schema, and then compare it with a ground-truth CRUD schema. 

@@ -7,42 +7,42 @@ type TypeWithId {
 }
 
 type TypeWithoutId {
-  id: Int! @id
+  id: ID! @id
   field: String!
 }
 
 type A {
-  id: Int! @id
-  x: TypeWithId! @relation(strategy: EMBED)
-  y: TypeWithoutId! @relation(strategy: EMBED)
+  id: ID! @id
+  x: TypeWithId! @relation(link: INLINE)
+  y: TypeWithoutId! @relation(link: INLINE)
 }
 
 type B {
-  id: Int! @id
-  x: TypeWithId @relation(strategy: EMBED)
-  y: TypeWithoutId @relation(strategy: EMBED)
+  id: ID! @id
+  x: TypeWithId @relation(link: INLINE)
+  y: TypeWithoutId @relation(link: INLINE)
 }
 
 type C {
-  id: Int! @id
-  x: [TypeWithId!]! @relation(strategy: EMBED)
-  y: [TypeWithoutId!]! @relation(strategy: EMBED)
+  id: ID! @id
+  x: [TypeWithId] @relation(link: INLINE)
+  y: [TypeWithoutId] @relation(link: INLINE)
 }
 
 type D {
   id: ID! @id
-  x: TypeWithId! @relation(strategy: EMBED)
-  y: TypeWithoutId! @relation(strategy: EMBED)
+  x: TypeWithId! @relation(link: INLINE)
+  y: TypeWithoutId! @relation(link: INLINE)
 }
 
 type E {
   id: ID! @id
-  x: TypeWithId @relation(strategy: EMBED)
-  y: TypeWithoutId @relation(strategy: EMBED)
+  x: TypeWithId @relation(link: INLINE)
+  y: TypeWithoutId @relation(link: INLINE)
 }
 
 type F {
   id: ID! @id
-  x: [TypeWithId!]! @relation(strategy: EMBED)
-  y: [TypeWithoutId!]! @relation(strategy: EMBED)
+  x: [TypeWithId] @relation(link: INLINE)
+  y: [TypeWithoutId] @relation(link: INLINE)
 }

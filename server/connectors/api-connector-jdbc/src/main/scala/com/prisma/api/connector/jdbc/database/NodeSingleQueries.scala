@@ -28,7 +28,7 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     )
   }
 
-  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
+  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.allScalarAndFlatRelationFields(where.model))
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = {
     val model      = where.model
@@ -80,7 +80,8 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
   def getNodeIdsByFilter(model: Model, filter: Option[Filter]): DBIO[Vector[IdGCValue]] = {
     val aliasedTable    = modelTable(model).as(topLevelAlias)
     val filterCondition = buildConditionForFilter(filter)
-    val query           = sql.select(field(name(topLevelAlias, model.dbNameOfIdField_!))).from(aliasedTable).where(filterCondition)
+    val idField         = field(name(topLevelAlias, model.dbNameOfIdField_!))
+    val query           = sql.select(idField).from(aliasedTable).where(filterCondition)
 
     queryToDBIO(query)(
       setParams = pp => SetParams.setFilter(pp, filter),
@@ -105,17 +106,44 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
     )
   }
 
-  private def parentIdCondition(parentField: RelationField): Condition = parentIdCondition(parentField, Vector(1))
+  def getNodesIdsByParentIdAndWhereFilter(parentField: RelationField, parentId: IdGCValue, whereFilter: Option[Filter]): DBIO[Vector[IdGCValue]] = {
+    val model        = parentField.relatedModel_!
+    val aliasedTable = modelTable(model).as(topLevelAlias)
+    val idField      = field(name(topLevelAlias, model.dbNameOfIdField_!))
 
+    val filterCondition = buildConditionForFilter(whereFilter)
+    val q: SelectConditionStep[Record1[AnyRef]] = sql
+      .select(idField)
+      .from(aliasedTable)
+      .where(parentIdConditionWithAlias(parentField), filterCondition)
+
+    queryToDBIO(q)(
+      setParams = { pp =>
+        pp.setGcValue(parentId)
+        SetParams.setFilter(pp, whereFilter)
+      },
+      readResult = rs => rs.readWith(readNodeId(model))
+    )
+  }
+
+  private def parentIdCondition(parentField: RelationField): Condition = parentIdCondition(parentField, Vector(1))
   private def parentIdCondition(parentField: RelationField, parentIds: Vector[Any]): Condition = {
+    idField(parentField.relatedModel_!).in(parentIdConditionSubselect(parentField, parentIds))
+  }
+
+  private def parentIdConditionWithAlias(parentField: RelationField): Condition = parentIdConditionWithAlias(parentField, Vector(1))
+  private def parentIdConditionWithAlias(parentField: RelationField, parentIds: Vector[Any]): Condition = {
+    field(name(topLevelAlias, parentField.relatedModel_!.dbNameOfIdField_!)).in(parentIdConditionSubselect(parentField, parentIds))
+  }
+
+  private def parentIdConditionSubselect(parentField: RelationField, parentIds: Vector[Any]) = {
     val relation      = parentField.relation
     val childIdField  = relationColumn(relation, parentField.oppositeRelationSide)
     val parentIdField = relationColumn(relation, parentField.relationSide)
-    val subSelect = sql
+
+    sql
       .select(childIdField)
       .from(relationTable(relation))
       .where(parentIdField.in(placeHolders(parentIds)))
-
-    idField(parentField.relatedModel_!).in(subSelect)
   }
 }

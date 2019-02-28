@@ -30,7 +30,7 @@ export default class Seed extends Command {
     await this.definition.load(this.flags, envFile)
     const serviceName = this.definition.service!
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     await this.client.initClusterClient(
@@ -61,7 +61,7 @@ export default class Seed extends Command {
     if (!seedSource) {
       // Await on error to wait for it to set the exit code to 1
       await this.out.error(
-        'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional'
+        'Invalid seed property in `prisma.yml`. Please use `import` or `run` under the `seed` property. Follow the docs for more info: http://bit.ly/prisma-seed-optional',
       )
     }
 

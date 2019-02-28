@@ -15,7 +15,7 @@ abstract class AbstractDeployApiError(val message: String, val code: Int) extend
 //case class InvalidName(name: String, entityType: String) extends AbstractDeployApiError(InvalidNames.default(name, entityType), 2008)
 
 // 30xx
-case class InvalidToken(reason: String) extends AbstractDeployApiError(s"Authentication token is invalid: $reason", 3015)
+case class AuthFailure(reason: String) extends AbstractDeployApiError(reason, 3015)
 
 object TokenExpired extends AbstractDeployApiError(s"Authentication token is expired", 3016)
 
@@ -35,8 +35,15 @@ case class InvalidServiceStage(stage: String) extends AbstractDeployApiError(Inv
 
 //case class InvalidDeployment(deployErrorMessage: String) extends AbstractDeployApiError(deployErrorMessage, 4003)
 
-case class InvalidRelationName(relationName: String) extends AbstractDeployApiError(InvalidNames.forRelation(relationName, "relation"), 4004)
-
+case class RelationNameNeeded(relationName: String, firstA: String, firstB: String, secondA: String, secondB: String)
+    extends AbstractDeployApiError(
+      "There was an error during the autogeneration of relation names.\n" +
+        s"Prisma generated the name $relationName twice since it had to be shortened, once for:\n" +
+        s"A relation between $firstA and $firstB\n" +
+        s"A relation between $secondA and $secondB\n" +
+        s"Please name at least one of the relations.",
+      4004
+    )
 case class ProjectAlreadyExists(name: String, stage: String)
     extends AbstractDeployApiError(s"Service with name '$name' and stage '$stage' already exists", 4005)
 

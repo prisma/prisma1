@@ -1,16 +1,15 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.JoinRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  override def doNotRun = true // we don't run this suite as it takes ages. We rather run it manually.
-
-  override def runOnlyForCapabilities = Set(JoinRelationsCapability)
+  override def doNotRun               = true // we don't run this suite as it takes ages. We rather run it manually.
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   //Postgres has a limit of 32678 parameters to a query
 
@@ -20,7 +19,7 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Top {
       |   id: ID! @unique
       |   int: Int!
-      |   middles:[Middle!]!
+      |   middles:[Middle]
       |}
       |
       |type Middle {
@@ -34,50 +33,50 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
     def createTop(int: Int): Unit = {
       val query =
         s"""mutation a {createTop(data: {
-         |  int: $int
-         |  middles: {create: [
-         |  {int: ${int}1},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: ${int}20},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: $int},
-         |  {int: ${int}40}
-         |  ]}
-         |}) {int}}"""
+           |  int: $int
+           |  middles: {create: [
+           |  {int: ${int}1},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: ${int}20},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: $int},
+           |  {int: ${int}40}
+           |  ]}
+           |}) {int}}"""
 
       server.query(query, project)
     }
@@ -100,14 +99,14 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Top {
         |   id: ID! @unique
         |   int: Int @unique
-        |   middles:[Middle!]!   @relation(name: "TopToMiddle", onDelete: CASCADE)
+        |   middles:[Middle]   @relation(name: "TopToMiddle", onDelete: CASCADE)
         |}
         |
         |type Middle {
         |   id: ID! @unique
         |   int: Int! @unique
         |   top: Top @relation(name: "TopToMiddle")
-        |   bottom: [Bottom!]! @relation(name: "MiddleToBottom", onDelete: CASCADE)
+        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE)
         |}
         |
         |type Bottom {
@@ -170,25 +169,25 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Top{
         |   id: ID! @unique
         |   int: Int @unique
-        |   as: [A!]! @relation(name: "Top" onDelete: CASCADE)
+        |   as: [A] @relation(name: "Top" onDelete: CASCADE)
         |}
         |
         |type A {
         |   id: ID! @unique
         |   int: Int @unique
-        |   bs:[B!]!  @relation(name: "A" onDelete: CASCADE)
+        |   bs:[B]  @relation(name: "A" onDelete: CASCADE)
         |}
         |
         |type B {
         |   id: ID! @unique
         |   int: Int
-        |   cs: [C!]! @relation(name: "B" onDelete: CASCADE)
+        |   cs: [C] @relation(name: "B" onDelete: CASCADE)
         |}
         |
         |type C {
         |   id: ID! @unique
         |   int: Int
-        |   ds: [D!]! @relation(name: "C" onDelete: CASCADE)
+        |   ds: [D] @relation(name: "C" onDelete: CASCADE)
         |}
         |
         |type D {
@@ -206,10 +205,10 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
       val b = s"{int: 1, cs: {create:[$c,$c,$c,$c,$c,$c,$c,$c,$c,$c]}}"
 
       val as = s"""
-                        |mutation {createA(data:{
-                        |   int: $int
-                        |   bs: {create:[$b,$b,$b,$b,$b,$b,$b,$b,$b,$b]}
-                        |}){int}}"""
+                  |mutation {createA(data:{
+                  |   int: $int
+                  |   bs: {create:[$b,$b,$b,$b,$b,$b,$b,$b,$b,$b]}
+                  |}){int}}"""
 
       server.query(as.stripMargin, project)
     }

@@ -2,13 +2,14 @@ package com.prisma.api.connector.jdbc.database
 
 import com.prisma.api.connector._
 import com.prisma.api.helpers.LimitClauseHelper
+import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models._
 import org.jooq.impl.DSL._
 
 case class RelatedModelsQueryBuilder(
     slickDatabase: SlickDatabase,
-    schemaName: String,
+    project: Project,
     fromField: RelationField,
     queryArguments: QueryArguments,
     relatedNodeIds: Vector[IdGCValue],

@@ -1,7 +1,6 @@
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
-import ModelUpdateInputGenerator from './modelUpdateInputGenerator';
-import { TypeFromModelGenerator } from '../../../generator';
-
+import { IGQLType, IGQLField } from 'prisma-datamodel'
+import ModelUpdateInputGenerator from './modelUpdateInputGenerator'
+import { TypeFromModelGenerator } from '../../../generator'
 
 export default class ModelUpdateManyDataInputGenerator extends ModelUpdateInputGenerator {
   public getTypeName(input: IGQLType, args: {}) {
@@ -13,6 +12,6 @@ export default class ModelUpdateManyDataInputGenerator extends ModelUpdateInputG
   }
 
   protected generateRelationField(model: IGQLType, args: {}, field: IGQLField) {
-    return null;
+    return null
   }
 }

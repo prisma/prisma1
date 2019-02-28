@@ -16,6 +16,6 @@ type AWithId {
 }
 
 type B {
-    a: [A!]!
+    a: [A]
     a2: AWithId
 }

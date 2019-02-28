@@ -1,6 +1,6 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as fs from 'fs-extra'
-import * as ncp from 'copy-paste'
+import * as clipboardy from 'clipboardy'
 
 export default class ClusterToken extends Command {
   static topic = 'cluster-token'
@@ -16,7 +16,7 @@ export default class ClusterToken extends Command {
     await this.definition.load(this.flags)
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
 
     if (!cluster) {
       throw new Error(`Please provide a cluster in your prisma.yml`)
@@ -28,9 +28,14 @@ export default class ClusterToken extends Command {
       stage,
     )
 
+    if (!token) {
+      throw new Error(`Couldn't generate token`)
+    }
+
     if (copy) {
       await new Promise(r => {
-        ncp.copy(token, () => r())
+        clipboardy.writeSync(token)
+        r()
       })
       this.out.log(`Token copied to clipboard`)
     } else {

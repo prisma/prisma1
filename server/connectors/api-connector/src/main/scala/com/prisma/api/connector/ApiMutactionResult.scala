@@ -5,6 +5,8 @@ import com.prisma.gc_values.IdGCValue
 sealed trait ApiMutactionResult
 sealed trait DatabaseMutactionResult {
   def mutaction: DatabaseMutaction
+  def merge(otherResults: MutactionResults): MutactionResults         = MutactionResults(Vector(this)).merge(otherResults)
+  def merge(otherResults: Vector[MutactionResults]): MutactionResults = MutactionResults(Vector(this)).merge(otherResults)
 }
 
 sealed trait FurtherNestedMutactionResult extends DatabaseMutactionResult {
@@ -18,7 +20,7 @@ object CreateNodeResult {
 }
 
 case class CreateNodeResult(nodeAddress: NodeAddress, mutaction: CreateNode) extends FurtherNestedMutactionResult {
-  val id: IdGCValue = nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue]
+  val id: IdGCValue = nodeAddress.where.fieldGCValue.asInstanceOf[IdGCValue] //This always returns the toplevel id, even for embedded types
 }
 
 object UpdateNodeResult {

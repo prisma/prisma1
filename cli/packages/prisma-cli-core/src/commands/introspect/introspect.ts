@@ -1,15 +1,19 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
-import { EndpointDialog } from '../../utils/EndpointDialog'
+import { EndpointDialog, DatabaseCredentials } from '../../utils/EndpointDialog'
 import {
-  Introspector,
   PostgresConnector,
   PrismaDBClient,
+  MongoConnector,
 } from 'prisma-db-introspection'
 import * as path from 'path'
 import * as fs from 'fs'
 import { prettyTime } from '../../util'
 import chalk from 'chalk'
-import { Client } from 'pg'
+import { Client as PGClient } from 'pg'
+import { MongoClient } from 'mongodb'
+import { Parser, DatabaseType, Renderers } from 'prisma-datamodel'
+import { IConnector } from 'prisma-db-introspection/dist/common/connector'
+import { TmpRelationalRendererV2 } from './TmpRelationalRendererV2'
 
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
@@ -19,15 +23,64 @@ export default class IntrospectCommand extends Command {
       char: 'i',
       description: 'Interactive mode',
     }),
-    ['pg-schema-name']: flags.string({
+    /**
+     * Postgres Params
+     */
+    ['pg-host']: flags.string({
+      description: 'Name of the Postgres host',
+    }),
+    ['pg-port']: flags.string({
+      description: 'The Postgres port. Default: 5432',
+      defaultValue: '5432',
+    }),
+    ['pg-user']: flags.string({
+      description: 'The Postgres user',
+    }),
+    ['pg-password']: flags.string({
+      description: 'The Postgres password',
+    }),
+    ['pg-db']: flags.string({
+      description: 'The Postgres database',
+    }),
+    ['pg-ssl']: flags.boolean({
+      description: 'Enable ssl for postgres',
+    }),
+    ['pg-schema']: flags.string({
       description: 'Name of the Postgres schema',
-      char: 'p',
+    }),
+
+    /**
+     * Mongo Params
+     */
+    ['mongo-uri']: flags.string({
+      description: 'Mongo connection string',
+    }),
+    ['mongo-db']: flags.string({
+      description: 'Mongo database',
+    }),
+
+    /**
+     * Temporary flag needed to test Datamodel v2
+     */
+    ['prototype']: flags.boolean({
+      description:
+        'Output Datamodel v2. Note: This is a temporary flag for debugging',
     }),
   }
   static hidden = false
   async run() {
-    const { interactive } = this.flags
-    const pgSchemaName = this.flags['pg-schema-name']
+    const { interactive, prototype } = this.flags
+    const pgHost = this.flags['pg-host']
+    const pgPort = this.flags['pg-port']
+    const pgUser = this.flags['pg-user']
+    const pgPassword = this.flags['pg-password']
+    const pgDb = this.flags['pg-db']
+    const pgSsl = this.flags['pg-ssl']
+    // we need to be able to override it later with the interactive flow
+    let pgSchema = this.flags['pg-schema']
+
+    const mongoUri = this.flags['mongo-uri']
+    let mongoDb = this.flags['mongo-db']
 
     const endpointDialog = new EndpointDialog({
       out: this.out,
@@ -39,38 +92,153 @@ export default class IntrospectCommand extends Command {
     })
 
     let client
+    let connector: IConnector
+    let databaseType: DatabaseType
 
-    if (interactive) {
-      const credentials = await endpointDialog.getDatabase(true)
-      client = new Client(credentials)
-    } else {
-      await this.definition.load(this.flags)
-      client = new PrismaDBClient(this.definition)
+    /**
+     * Handle MongoDB CLI args
+     */
+
+    if (mongoUri && !mongoDb) {
+      throw new Error(
+        `You provided mongo-uri, but not the required option mongo-db`,
+      )
     }
 
-    const connector = new PostgresConnector(client)
-    const introspector = new Introspector(connector)
+    if (mongoDb && !mongoUri) {
+      throw new Error(
+        `You provided mongo-db, but not the required option mongo-uri`,
+      )
+    }
+
+    if (mongoDb && mongoUri) {
+      client = await this.connectToMongo({
+        type: 'mongo',
+        uri: mongoUri!,
+        database: mongoDb!,
+      })
+      connector = new MongoConnector(client)
+      databaseType = DatabaseType.mongo
+    }
+
+    /**
+     * Handle Postgres CLI args
+     */
+
+    const requiredPostgresArgs = {
+      'pg-host': pgHost,
+      'pg-user': pgUser,
+      'pg-password': pgPassword,
+      'pg-db': pgDb,
+      'pg-schema': pgSchema,
+    }
+
+    // CONTINUE: Check if either none or all args are present
+    const pgArgsEntries = Object.entries(requiredPostgresArgs)
+    const notProvidedArgs = pgArgsEntries.filter(([_, value]) => !value)
+    if (
+      notProvidedArgs.length > 0 &&
+      notProvidedArgs.length < pgArgsEntries.length
+    ) {
+      throw new Error(
+        `If you provide one of the pg- arguments, you need to provide all of them. The arguments ${notProvidedArgs
+          .map(([k]) => k)
+          .join(', ')} are missing.`,
+      )
+    }
+
+    if (notProvidedArgs.length === 0) {
+      client = new PGClient({
+        host: pgHost,
+        port: parseInt(pgPort, 10),
+        user: pgUser,
+        password: pgPassword,
+        database: pgDb,
+        ssl: pgSsl,
+      })
+      await client.connect()
+      connector = new PostgresConnector(client)
+      databaseType = DatabaseType.postgres
+    }
+
+    try {
+      if (!interactive) {
+        await this.definition.load(this.flags)
+        const service = this.definition.service!
+        const stage = this.definition.stage!
+        const cluster = await this.definition.getCluster()
+        const workspace = this.definition.getWorkspace()
+        this.env.setActiveCluster(cluster!)
+        await this.client.initClusterClient(
+          cluster!,
+          service!,
+          stage,
+          workspace!,
+        )
+
+        if (await this.hasExecuteRaw()) {
+          client = new PrismaDBClient(this.definition)
+          await client.connect()
+          connector = new PostgresConnector(client)
+          databaseType = DatabaseType.postgres
+        }
+      }
+    } catch (e) {
+      //
+    }
+
+    if (!client || !connector!) {
+      const credentials = await endpointDialog.getDatabase(true)
+      if (credentials.type === 'postgres') {
+        client = new PGClient(credentials)
+        connector = new PostgresConnector(client)
+        databaseType = DatabaseType.postgres
+        await client.connect()
+        pgSchema = credentials.schema
+      } else if (credentials.type === 'mongo') {
+        client = await this.connectToMongo(credentials)
+        connector = new MongoConnector(client)
+        mongoDb = credentials.database
+        databaseType = DatabaseType.mongo
+        await client.connect()
+      }
+    }
+
     let schemas
     const before = Date.now()
     try {
-      schemas = await introspector.listSchemas()
+      schemas = await connector!.listSchemas()
     } catch (e) {
       throw new Error(`Could not connect to database. ${e.message}`)
     }
+    /**
+     * Check, if the provided schema exists in the database.
+     * This functionality is the same for Mongo and Postgres
+     */
     if (schemas && schemas.length > 0) {
       let schema
       if (schemas.length === 1) {
         schema = schemas[0]
-      } else if (pgSchemaName) {
-        const exists = schemas.includes(pgSchemaName)
+      } else if (pgSchema) {
+        const exists = schemas.includes(pgSchema)
         if (!exists) {
           throw new Error(
-            `The provided Postgres Schema ${pgSchemaName} does not exist. Choose one of ${schemas.join(
+            `The provided Postgres Schema ${pgSchema} does not exist. Choose one of ${schemas.join(
               ', ',
             )}`,
           )
         }
-        schema = pgSchemaName
+        schema = pgSchema
+      } else if (mongoDb) {
+        if (!schemas.includes(mongoDb)) {
+          throw new Error(
+            `The provided Mongo Database ${mongoDb} does not exist. Choose one of ${schemas.join(
+              ', ',
+            )}`,
+          )
+        }
+
+        schema = mongoDb
       } else {
         const schemaName = `${this.definition.service}$${this.definition.stage}`
         const exists = schemas.includes(schemaName)
@@ -83,9 +251,32 @@ export default class IntrospectCommand extends Command {
             )
       }
 
+      let datamodel
+      if (this.definition.typesString) {
+        const ParserInstance = Parser.create(databaseType!)
+        datamodel = ParserInstance.parseFromSchemaString(
+          this.definition.typesString!,
+        )
+      }
+
       this.out.action.start(`Introspecting schema ${chalk.bold(schema)}`)
-      const { sdl, numTables } = await introspector.introspect(schema)
-      await client.end()
+
+      const introspection = await connector!.introspect(schema)
+      const sdl = datamodel
+        ? await introspection.getNormalizedDatamodel(datamodel)
+        : await introspection.getDatamodel()
+      const numTables = sdl.types.length
+
+      const renderedSdl = prototype
+        ? await new TmpRelationalRendererV2().render(sdl) // TODO: Move tmp renderer back to datamodel
+        : await introspection.renderer.render(sdl)
+
+      // Mongo has .close, Postgres .end
+      if (typeof client.close === 'function') {
+        await client.close()
+      } else {
+        await client.end()
+      }
       if (numTables === 0) {
         this.out.log(
           chalk.red(
@@ -96,9 +287,10 @@ export default class IntrospectCommand extends Command {
         )
         this.out.exit(1)
       }
-      const fileName = `datamodel-${new Date().getTime()}.prisma`
+      const prototypeFileName = prototype ? '-prototype' : ''
+      const fileName = `datamodel${prototypeFileName}-${new Date().getTime()}.prisma`
       const fullFileName = path.join(this.config.definitionDir, fileName)
-      fs.writeFileSync(fullFileName, sdl)
+      fs.writeFileSync(fullFileName, renderedSdl)
       this.out.action.stop(prettyTime(Date.now() - before))
       this.out.log(
         `Created datamodel definition based on ${numTables} database tables.`,
@@ -110,7 +302,12 @@ ${chalk.bold(
 
   ${chalk.cyan(fileName)}
 `)
-      if (!this.definition.definition!.datamodel) {
+
+      if (
+        this.definition.definition &&
+        !this.definition.definition!.datamodel
+      ) {
+        await this.definition.load(this.flags)
         this.definition.addDatamodel(fileName)
         this.out.log(
           `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
@@ -119,5 +316,45 @@ ${chalk.bold(
     } else {
       throw new Error(`Could not find schema in provided database.`)
     }
+  }
+  async hasExecuteRaw() {
+    try {
+      const service = this.definition.service!
+      const stage = this.definition.stage!
+      const token = this.definition.getToken(service, stage)
+      const workspace = this.definition.getWorkspace()
+      const introspection = await this.client.introspect(
+        service,
+        stage,
+        token,
+        workspace!,
+      )
+      const introspectionString = JSON.stringify(introspection)
+      return introspectionString.includes('executeRaw')
+    } catch (e) {
+      return false
+    }
+  }
+  connectToMongo(credentials: DatabaseCredentials): Promise<MongoClient> {
+    return new Promise((resolve, reject) => {
+      if (!credentials.uri) {
+        throw new Error(`Please provide the MongoDB connection string`)
+      }
+
+      MongoClient.connect(
+        credentials.uri,
+        { useNewUrlParser: true },
+        (err, client) => {
+          if (err) {
+            reject(err)
+          } else {
+            if (credentials.database) {
+              client.db(credentials.database)
+            }
+            resolve(client)
+          }
+        },
+      )
+    })
   }
 }

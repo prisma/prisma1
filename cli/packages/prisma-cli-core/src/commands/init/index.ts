@@ -5,6 +5,7 @@ import chalk from 'chalk'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
 import { spawnSync } from 'npm-run'
+import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 
 export default class Init extends Command {
@@ -43,7 +44,6 @@ export default class Init extends Command {
   async runInit({ endpoint }) {
     const files = fs.readdirSync(this.config.definitionDir)
     // the .prismarc must be allowed for the docker version to be functioning
-    // CONTINUE: special env handling for dockaa. can't just override the host/dinges
     if (
       files.length > 0 &&
       (files.includes('prisma.yml') || files.includes('datamodel.prisma'))
@@ -60,27 +60,32 @@ Either try using a new directory name, or remove the files listed above.
       this.out.exit(1)
     }
 
+    /**
+     * If there is a predefined endpoint provided as a cli arg
+     */
+
     if (endpoint) {
+      const datamodelBoilerplatePath =
+        this.definition.definition &&
+        this.definition.definition.databaseType === 'document'
+          ? path.join(__dirname, 'boilerplate', 'datamodel-mongo.prisma')
+          : path.join(__dirname, 'boilerplate', 'datamodel.prisma')
       fs.writeFileSync(
-        path.join(this.config.definitionDir, 'datamodel.prisma'), 
-        fs.readFileSync(path.join(__dirname, 'boilerplate', 'datamodel.prisma'))
-      )
-      fs.writeFileSync(
-        path.join(this.config.definitionDir, 'prisma.yml'), 
-        fs.readFileSync(path.join(__dirname, 'boilerplate', 'prisma.yml'))
+        path.join(this.config.definitionDir, 'datamodel.prisma'),
+        fs.readFileSync(datamodelBoilerplatePath),
       )
 
-      const endpointDefinitionPath = path.join(
-        this.config.definitionDir,
-        'prisma.yml',
+      /**
+       * Write prisma.yml
+       */
+      const prismaYml = `\
+endpoint: ${endpoint}
+datamodel: datamodel.prisma
+`
+      fs.writeFileSync(
+        path.join(this.config.definitionDir, 'prisma.yml'),
+        prismaYml,
       )
-      const endpointPrismaYml = fs.readFileSync(endpointDefinitionPath, 'utf-8')
-
-      const newEndpointPrismaYml = endpointPrismaYml.replace(
-        'ENDPOINT',
-        endpoint,
-      )
-      fs.writeFileSync(endpointDefinitionPath, newEndpointPrismaYml)
 
       const endpointSteps: string[] = []
 
@@ -102,10 +107,10 @@ Either try using a new directory name, or remove the files listed above.
 
       this.out.log(`
 ${chalk.bold(
-        `Created ${
-          endpointCreatedFiles.length
-        } new files:                                                                          `,
-      )}
+  `Created ${
+    endpointCreatedFiles.length
+  } new files:                                                                          `,
+)}
 
 ${endpointCreatedFiles.join('\n')}
 
@@ -127,8 +132,12 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
 
     const results = await endpointDialog.getEndpoint()
 
-    let prismaYmlString = `endpoint: ENDPOINT
-datamodel: datamodel.prisma`
+    const databaseTypeString =
+      results.database && results.database.type === 'mongo'
+        ? '\ndatabaseType: document'
+        : ''
+    let prismaYmlString = `endpoint: ${results.endpoint}
+datamodel: datamodel.prisma${databaseTypeString}`
 
     if (results.generator && results.generator !== 'no-generation') {
       prismaYmlString += this.getGeneratorConfig(results.generator)
@@ -139,7 +148,7 @@ datamodel: datamodel.prisma`
       prismaYmlString,
     )
     fs.writeFileSync(
-      path.join(this.config.definitionDir, 'datamodel.prisma'),
+      path.join(this.config.definitionDir, `datamodel.prisma`),
       results.datamodel,
     )
     if (results.cluster!.local && results.writeDockerComposeYml) {
@@ -155,14 +164,8 @@ datamodel: datamodel.prisma`
       )
     }
 
-    const definitionPath = path.join(this.config.definitionDir, 'prisma.yml')
-    const prismaYml = fs.readFileSync(definitionPath, 'utf-8')
-
-    const newPrismaYml = prismaYml.replace('ENDPOINT', results.endpoint)
-    fs.writeFileSync(definitionPath, newPrismaYml)
-
     const dir = this.args!.dirName
-    
+
     const isLocal = results.cluster!.local && results.writeDockerComposeYml
 
     const steps: string[] = []
@@ -219,10 +222,10 @@ datamodel: datamodel.prisma`
 
     this.out.log(`
 ${chalk.bold(
-      `Created ${
-        createdFiles.length
-      } new files:                                                                          `,
-    )}
+  `Created ${
+    createdFiles.length
+  } new files:                                                                          `,
+)}
 
 ${createdFiles.join('\n')}
 
@@ -236,7 +239,9 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       } catch (err) {
         this.out.log(chalk.red(err))
       }
-      const child = spawnSync('prisma', ['generate'])
+      const isPackaged = fs.existsSync('/snapshot')
+      const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
+      const child = spawnPath('prisma', ['generate'])
       const stderr = child.stderr && child.stderr.toString()
       if (stderr && stderr.length > 0) {
         this.out.log(chalk.red(stderr))

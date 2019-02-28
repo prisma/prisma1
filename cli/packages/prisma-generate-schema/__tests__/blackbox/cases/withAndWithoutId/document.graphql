@@ -14,11 +14,6 @@ type BatchPayload {
 }
 
 """
-Raw JSON value
-"""
-scalar Json
-
-"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
@@ -163,14 +158,6 @@ input TypeWithIdSubscriptionWhereInput {
   """
   AND: [TypeWithIdSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [TypeWithIdSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [TypeWithIdSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -202,14 +189,6 @@ input TypeWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [TypeWithIdWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [TypeWithIdWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [TypeWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -323,7 +302,7 @@ input TypeWithIdWhereUniqueInput {
 }
 
 type TypeWithoutId {
-  removeThisIdd: Int!
+  removeThisIdd: ID!
   field: String!
 }
 
@@ -365,12 +344,10 @@ enum TypeWithoutIdOrderByInput {
   removeThisIdd_DESC
   field_ASC
   field_DESC
-  id_ASC
-  id_DESC
 }
 
 type TypeWithoutIdPreviousValues {
-  removeThisIdd: Int!
+  removeThisIdd: ID!
   field: String!
 }
 
@@ -386,14 +363,6 @@ input TypeWithoutIdSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [TypeWithoutIdSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [TypeWithoutIdSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [TypeWithoutIdSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -426,43 +395,59 @@ input TypeWithoutIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [TypeWithoutIdWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [TypeWithoutIdWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [TypeWithoutIdWhereInput!]
-  removeThisIdd: Int
+  removeThisIdd: ID
   """
   All values that are not equal to given value.
   """
-  removeThisIdd_not: Int
+  removeThisIdd_not: ID
   """
   All values that are contained in given list.
   """
-  removeThisIdd_in: [Int!]
+  removeThisIdd_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  removeThisIdd_not_in: [Int!]
+  removeThisIdd_not_in: [ID!]
   """
   All values less than the given value.
   """
-  removeThisIdd_lt: Int
+  removeThisIdd_lt: ID
   """
   All values less than or equal the given value.
   """
-  removeThisIdd_lte: Int
+  removeThisIdd_lte: ID
   """
   All values greater than the given value.
   """
-  removeThisIdd_gt: Int
+  removeThisIdd_gt: ID
   """
   All values greater than or equal the given value.
   """
-  removeThisIdd_gte: Int
+  removeThisIdd_gte: ID
+  """
+  All values containing the given string.
+  """
+  removeThisIdd_contains: ID
+  """
+  All values not containing the given string.
+  """
+  removeThisIdd_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  removeThisIdd_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  removeThisIdd_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  removeThisIdd_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  removeThisIdd_not_ends_with: ID
   field: String
   """
   All values that are not equal to given value.
@@ -519,6 +504,6 @@ input TypeWithoutIdWhereInput {
 }
 
 input TypeWithoutIdWhereUniqueInput {
-  removeThisIdd: Int
+  removeThisIdd: ID
 }
 

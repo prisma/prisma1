@@ -82,6 +82,185 @@ type APreviousValues {
   d: String
 }
 
+input AScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AScalarWhereInput!]
+  a: Int
+  """
+  All values that are not equal to given value.
+  """
+  a_not: Int
+  """
+  All values that are contained in given list.
+  """
+  a_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  a_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  a_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  a_lte: Int
+  """
+  All values greater than the given value.
+  """
+  a_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  a_gte: Int
+  b: Int
+  """
+  All values that are not equal to given value.
+  """
+  b_not: Int
+  """
+  All values that are contained in given list.
+  """
+  b_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  b_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  b_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  b_lte: Int
+  """
+  All values greater than the given value.
+  """
+  b_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  b_gte: Int
+  c: String
+  """
+  All values that are not equal to given value.
+  """
+  c_not: String
+  """
+  All values that are contained in given list.
+  """
+  c_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  c_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  c_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  c_lte: String
+  """
+  All values greater than the given value.
+  """
+  c_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  c_gte: String
+  """
+  All values containing the given string.
+  """
+  c_contains: String
+  """
+  All values not containing the given string.
+  """
+  c_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  c_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  c_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  c_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  c_not_ends_with: String
+  d: String
+  """
+  All values that are not equal to given value.
+  """
+  d_not: String
+  """
+  All values that are contained in given list.
+  """
+  d_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  d_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  d_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  d_lte: String
+  """
+  All values greater than the given value.
+  """
+  d_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  d_gte: String
+  """
+  All values containing the given string.
+  """
+  d_contains: String
+  """
+  All values not containing the given string.
+  """
+  d_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  d_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  d_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  d_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  d_not_ends_with: String
+}
+
 type ASubscriptionPayload {
   mutation: MutationType!
   node: A
@@ -135,12 +314,22 @@ input AUpdateInput {
   d: String
 }
 
+input AUpdateManyDataInput {
+  a: Int
+  b: Int
+  c: String
+  d: String
+}
+
 input AUpdateManyInput {
   create: [ACreateInput!]
   connect: [AWhereUniqueInput!]
+  set: [AWhereUniqueInput!]
   disconnect: [AWhereUniqueInput!]
   delete: [AWhereUniqueInput!]
   update: [AUpdateWithWhereUniqueNestedInput!]
+  updateMany: [AUpdateManyWithWhereNestedInput!]
+  deleteMany: [AScalarWhereInput!]
   upsert: [AUpsertWithWhereUniqueNestedInput!]
 }
 
@@ -149,6 +338,11 @@ input AUpdateManyMutationInput {
   b: Int
   c: String
   d: String
+}
+
+input AUpdateManyWithWhereNestedInput {
+  where: AScalarWhereInput!
+  data: AUpdateManyDataInput!
 }
 
 input AUpdateWithWhereUniqueNestedInput {

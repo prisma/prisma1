@@ -30,7 +30,7 @@ export default class Reset extends Command {
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     if (!force) {

@@ -1,5 +1,5 @@
 export class RequiredFlagError extends Error {
-  constructor (name: string) {
+  constructor(name: string) {
     super(`Missing required flag --${name}`)
   }
 }

@@ -1,10 +1,9 @@
 package com.prisma.deploy.specutils
 
-import akka.http.scaladsl.model.HttpRequest
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.schema.{DeployApiError, SchemaBuilder, SystemUserContext}
 import com.prisma.sangria.utils.ErrorHandler
-import com.prisma.shared.models.{Migration, MigrationId, Project, ProjectId}
+import com.prisma.shared.models.{Migration, MigrationId, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json.{JsArray, JsString, _}
@@ -21,10 +20,9 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
   import com.prisma.deploy.server.JsonMarshalling._
 
   def writeSchemaIntoFile(schema: String): Unit = File("schema").writeAll(schema)
-
-  def printSchema: Boolean = false
-  def writeSchemaToFile    = false
-  def logSimple: Boolean   = false
+  def printSchema: Boolean                      = false
+  def writeSchemaToFile: Boolean                = false
+  def logSimple: Boolean                        = false
 
   /**
     * Execute a Query that must succeed.
@@ -87,11 +85,11 @@ case class DeployTestServer()(implicit dependencies: DeployDependencies) extends
                                      requestId: String = "CombinedTestDatabase.requestId",
                                      prismaHeader: Option[String] = None): JsValue = {
 
-    val schemaBuilder  = SchemaBuilder()(dependencies.system, dependencies)
+    val schemaBuilder  = SchemaBuilder()(dependencies)
     val userContext    = SystemUserContext(None)
     val schema         = schemaBuilder(userContext)
     val renderedSchema = SchemaRenderer.renderSchema(schema)
-    val errorHandler   = ErrorHandler(requestId, HttpRequest(), query.stripMargin, variables, dependencies.reporter, errorCodeExtractor = errorExtractor)
+    val errorHandler   = ErrorHandler(requestId, "", "", Vector.empty, query.stripMargin, variables, dependencies.reporter, errorCodeExtractor = errorExtractor)
 
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)

@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.embedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.{EmbeddedTypesCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, ScalarListsCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -15,13 +15,13 @@ class EmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecB
       """type Top {
         | id: ID! @unique
         | name: String! @unique
-        | topList: [Int!]!
+        | topList: [Int]
         | bottom: Bottom
         |}
         |
         |type Bottom @embedded{
         | name: String! @unique
-        | bottomList: [Int!]!
+        | bottomList: [Int]
         |}"""
     }
 

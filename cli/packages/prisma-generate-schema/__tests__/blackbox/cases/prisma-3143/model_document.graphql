@@ -4,5 +4,5 @@ type Story {
 
 type UserSpace {
   id: ID! @id
-  stories: [Story!]! @relation(name: "StoriesByUserSpace", onDelete: SET_NULL, strategy: EMBED)
+  stories: [Story] @relation(name: "StoriesByUserSpace", onDelete: SET_NULL, link: INLINE)
 }

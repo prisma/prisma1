@@ -92,3 +92,8 @@ git pull upstream master
 ```sh
 git push
 ```
+
+
+# Labels
+
+Read more about our labels [here](https://github.com/prisma/prisma/blob/master/.github/LABELS.md)

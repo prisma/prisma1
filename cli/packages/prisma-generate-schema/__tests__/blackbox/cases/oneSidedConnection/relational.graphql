@@ -1056,6 +1056,127 @@ type TypeWithIdPreviousValues {
   field: String!
 }
 
+input TypeWithIdScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [TypeWithIdScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [TypeWithIdScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TypeWithIdScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  field: String
+  """
+  All values that are not equal to given value.
+  """
+  field_not: String
+  """
+  All values that are contained in given list.
+  """
+  field_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  field_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: String
+  """
+  All values greater than the given value.
+  """
+  field_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: String
+  """
+  All values containing the given string.
+  """
+  field_contains: String
+  """
+  All values not containing the given string.
+  """
+  field_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  field_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  field_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  field_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  field_not_ends_with: String
+}
+
 type TypeWithIdSubscriptionPayload {
   mutation: MutationType!
   node: TypeWithId
@@ -1103,17 +1224,29 @@ input TypeWithIdUpdateInput {
   field: String
 }
 
+input TypeWithIdUpdateManyDataInput {
+  field: String
+}
+
 input TypeWithIdUpdateManyInput {
   create: [TypeWithIdCreateInput!]
   connect: [TypeWithIdWhereUniqueInput!]
+  set: [TypeWithIdWhereUniqueInput!]
   disconnect: [TypeWithIdWhereUniqueInput!]
   delete: [TypeWithIdWhereUniqueInput!]
   update: [TypeWithIdUpdateWithWhereUniqueNestedInput!]
+  updateMany: [TypeWithIdUpdateManyWithWhereNestedInput!]
+  deleteMany: [TypeWithIdScalarWhereInput!]
   upsert: [TypeWithIdUpsertWithWhereUniqueNestedInput!]
 }
 
 input TypeWithIdUpdateManyMutationInput {
   field: String
+}
+
+input TypeWithIdUpdateManyWithWhereNestedInput {
+  where: TypeWithIdScalarWhereInput!
+  data: TypeWithIdUpdateManyDataInput!
 }
 
 input TypeWithIdUpdateOneInput {
@@ -1333,6 +1466,74 @@ type TypeWithoutIdPreviousValues {
   field: String!
 }
 
+input TypeWithoutIdScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [TypeWithoutIdScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [TypeWithoutIdScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TypeWithoutIdScalarWhereInput!]
+  field: String
+  """
+  All values that are not equal to given value.
+  """
+  field_not: String
+  """
+  All values that are contained in given list.
+  """
+  field_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  field_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: String
+  """
+  All values greater than the given value.
+  """
+  field_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: String
+  """
+  All values containing the given string.
+  """
+  field_contains: String
+  """
+  All values not containing the given string.
+  """
+  field_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  field_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  field_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  field_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  field_not_ends_with: String
+}
+
 type TypeWithoutIdSubscriptionPayload {
   mutation: MutationType!
   node: TypeWithoutId
@@ -1376,12 +1577,23 @@ input TypeWithoutIdUpdateDataInput {
   field: String
 }
 
+input TypeWithoutIdUpdateManyDataInput {
+  field: String
+}
+
 input TypeWithoutIdUpdateManyInput {
   create: [TypeWithoutIdCreateInput!]
+  updateMany: [TypeWithoutIdUpdateManyWithWhereNestedInput!]
+  deleteMany: [TypeWithoutIdScalarWhereInput!]
 }
 
 input TypeWithoutIdUpdateManyMutationInput {
   field: String
+}
+
+input TypeWithoutIdUpdateManyWithWhereNestedInput {
+  where: TypeWithoutIdScalarWhereInput!
+  data: TypeWithoutIdUpdateManyDataInput!
 }
 
 input TypeWithoutIdUpdateOneInput {

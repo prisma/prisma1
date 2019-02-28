@@ -5,8 +5,7 @@ import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.ListGCValue
-import com.prisma.shared.models.Manifestations.InlineRelationManifestation
-import com.prisma.shared.models.Model
+import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.MongoWriteException
 
 import scala.concurrent.ExecutionContext
@@ -24,9 +23,18 @@ case class CreateNodeInterpreter(mutaction: CreateNode)(implicit ec: ExecutionCo
 
 object MongoErrorMessageHelper {
 
+  def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
+    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
+
+    unique match {
+      case false => shortenedName + "_R"
+      case true  => shortenedName + "_U"
+    }
+  }
+
   def getFieldOption(model: Model, e: MongoWriteException): Option[String] = {
     model.scalarFields.filter { field =>
-      val constraintName = field.name + "_U"
+      val constraintName = indexNameHelper(model.dbName, field.dbName, true)
       e.getMessage.contains(constraintName)
     } match {
       case x +: _ => Some("Field name = " + x.name)
@@ -46,18 +54,19 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
 
     for {
       _       <- SequenceAction(Vector(requiredCheck(parent), removalAction(parent)))
-      results <- createNodeAndConnectToParent(mutationBuilder, parent)
+      results <- createNodeAndConnectToParent(mutaction.relationField, mutationBuilder, parent)
     } yield results
   }
 
   private def createNodeAndConnectToParent(
+      relationField: RelationField,
       mutationBuilder: MongoActionsBuilder,
       parent: NodeAddress
-  )(implicit ec: ExecutionContext): MongoAction[MutactionResults] = relation.manifestation match {
-    case Some(m: InlineRelationManifestation) if m.inTableOfModelId == model.name => // ID is stored on this Node
+  )(implicit ec: ExecutionContext): MongoAction[MutactionResults] = relationField.relatedField.relationIsInlinedInParent match {
+    case true => // ID is stored on this Node
       val inlineRelation = c.isList match {
-        case true  => List((m.referencingColumn, ListGCValue(Vector(parent.idValue))))
-        case false => List((m.referencingColumn, parent.idValue))
+        case true  => List((relationField.relatedField.dbName, ListGCValue(Vector(parent.idValue))))
+        case false => List((relationField.relatedField.dbName, parent.idValue))
       }
 
       for {
@@ -65,11 +74,11 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
         id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
       } yield mutactionResult
 
-    case _ => // ID is stored on other node, we need to update the parent with the inline relation id after creating the child.
+    case false => // ID is stored on other node, we need to update the parent with the inline relation id after creating the child.
       for {
         mutactionResult <- mutationBuilder.createNode(mutaction, List.empty)
         id              = mutactionResult.results.find(_.mutaction == mutaction).get.asInstanceOf[CreateNodeResult].id
-        _               <- mutationBuilder.createRelation(mutaction.relationField, parent, id)
+        _               <- mutationBuilder.createRelation(relationField, parent, id)
       } yield mutactionResult
   }
 

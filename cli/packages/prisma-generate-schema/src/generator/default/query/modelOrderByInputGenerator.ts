@@ -1,5 +1,9 @@
-import { GraphQLEnumType, GraphQLEnumValueConfigMap, GraphQLID } from 'graphql/type'
-import { IGQLType } from '../../../datamodel/model'
+import {
+  GraphQLEnumType,
+  GraphQLEnumValueConfigMap,
+  GraphQLID,
+} from 'graphql/type'
+import { IGQLType } from 'prisma-datamodel'
 import { ModelEnumTypeGeneratorBase } from '../../generator'
 
 export default class ModelOrderByInputGenerator extends ModelEnumTypeGeneratorBase {
@@ -23,13 +27,12 @@ export default class ModelOrderByInputGenerator extends ModelEnumTypeGeneratorBa
     }
 
     // These fields are always present on relational moels.
-    values.id_ASC = { }
-    values.id_DESC = { }
-    values.createdAt_ASC = { }
-    values.createdAt_DESC = { }
-    values.updatedAt_ASC = { }
-    values.updatedAt_DESC = { }
-
+    values.id_ASC = {}
+    values.id_DESC = {}
+    values.createdAt_ASC = {}
+    values.createdAt_DESC = {}
+    values.updatedAt_ASC = {}
+    values.updatedAt_DESC = {}
 
     return new GraphQLEnumType({
       name: this.getTypeName(input, args),

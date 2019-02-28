@@ -1,6 +1,6 @@
 type User {
   id: ID! @id
-  person: Person! @relation(strategy: EMBED)
+  person: Person! @relation(link: INLINE)
 }
 
 type Person {
@@ -8,9 +8,9 @@ type Person {
   email: String
   firstName: String
   lastName: String
-  phoneNumbers: [PhoneNumber!]! @relation(strategy: EMBED)
-  scheduledTransactions: [FinancialScheduledTransaction!]! @relation(strategy: EMBED)
-  transactions: [FinancialTransaction!]! @relation(strategy: EMBED)
+  phoneNumbers: [PhoneNumber] @relation(link: INLINE)
+  scheduledTransactions: [FinancialScheduledTransaction] @relation(link: INLINE)
+  transactions: [FinancialTransaction] @relation(link: INLINE)
   user: User
 }
 
@@ -22,7 +22,7 @@ type PhoneNumber {
 type FinancialAccount {
   id: ID! @id
   key: String @unique
-  campuses: [Campus!]! @relation(strategy: EMBED)
+  campuses: [Campus] @relation(link: INLINE)
   description: String!
   isActive: Boolean!
   name: String
@@ -48,7 +48,7 @@ enum ACH_TYPE {
 type FinancialPaymentDetail {
   id: ID! @id
   accountNumberMasked: String!
-  billingLocation: Location @relation(strategy: EMBED)
+  billingLocation: Location @relation(link: INLINE)
   creditCardType: CREDIT_CARD
   achType: ACH_TYPE
   currencyType: CURRENCY_TYPE
@@ -67,12 +67,12 @@ type FinancialScheduledTransaction {
   id: ID! @id
   person: Person
   endDate: DateTime
-  payment: FinancialPaymentDetail @relation(strategy: EMBED)
+  payment: FinancialPaymentDetail @relation(link: INLINE)
   isActive: Boolean!
   startDate: DateTime
   frequency: TRANSACTION_FREQUENCY
-  transactions: [FinancialTransaction!]!
-  account: FinancialAccount @relation(strategy: EMBED)
+  transactions: [FinancialTransaction]
+  account: FinancialAccount @relation(link: INLINE)
   amount: Float!
 }
 
@@ -84,15 +84,15 @@ enum TRANSACTION_STATUS {
 
 type FinancialTransaction {
   id: ID! @id
-  payment: FinancialPaymentDetail @relation(strategy: EMBED)
+  payment: FinancialPaymentDetail @relation(link: INLINE)
   person: Person
   processedDate: DateTime
-  scheduledTransaction: FinancialScheduledTransaction @relation(strategy: EMBED)
+  scheduledTransaction: FinancialScheduledTransaction @relation(link: INLINE)
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
   amount: Float!
-  account: FinancialAccount @relation(strategy: EMBED)
-  organization: Group! @relation(strategy: EMBED)
+  account: FinancialAccount @relation(link: INLINE)
+  organization: Group! @relation(link: INLINE)
 }
 
 enum GROUP_INVITE_STATUS {
@@ -109,16 +109,16 @@ enum GROUP_ROLE_TYPE {
 type GroupInvite {
   id: ID! @id
   email: String!
-  group: Group! @relation(strategy: EMBED)
-  groupRole: GroupRole @relation(strategy: EMBED)
+  group: Group! @relation(link: INLINE)
+  groupRole: GroupRole @relation(link: INLINE)
   status: GROUP_INVITE_STATUS!
 }
 
 type GroupMember {
   id: ID! @id
   group: Group
-  role: GroupRole @relation(strategy: EMBED)
-  person: Person @relation(strategy: EMBED)
+  role: GroupRole @relation(link: INLINE)
+  person: Person @relation(link: INLINE)
 }
 
 type GroupRole {
@@ -126,7 +126,7 @@ type GroupRole {
   canEdit: Boolean!
   canView: Boolean!
   description: String!
-  groupType: GroupType @relation(strategy: EMBED)
+  groupType: GroupType @relation(link: INLINE)
   isLeader: Boolean
   name: String! @unique
   type: GROUP_ROLE_TYPE
@@ -135,32 +135,32 @@ type GroupRole {
 type GroupType {
   id: ID! @id
   description: String
-  groups: [Group!]!
+  groups: [Group]
   name: String! @unique
-  roles: [GroupRole!]!
+  roles: [GroupRole]
 }
 
 type Group {
   id: ID! @id
   key: String @unique
   description: String
-  type: GroupType! @relation(strategy: EMBED)
-  invites: [GroupInvite!]!
+  type: GroupType! @relation(link: INLINE)
+  invites: [GroupInvite]
   isActive: Boolean!
-  members: [GroupMember!]! @relation(strategy: EMBED)
+  members: [GroupMember] @relation(link: INLINE)
   name: String!
-  organization: Group @relation(strategy: EMBED)
+  organization: Group @relation(link: INLINE)
 }
 
 type Campus {
   id: ID! @id
-  accounts: [FinancialAccount!]!
+  accounts: [FinancialAccount]
   description: String
   isActive: Boolean
-  organization: Group @relation(strategy: EMBED)
-  location: Location @relation(strategy: EMBED)
+  organization: Group @relation(link: INLINE)
+  location: Location @relation(link: INLINE)
   name: String!
-  phoneNumbers: [PhoneNumber!]! @relation(strategy: EMBED)
+  phoneNumbers: [PhoneNumber] @relation(link: INLINE)
 }
 
 enum LOCATION_TYPE {

@@ -594,6 +594,74 @@ type MultiSelfReferencingCWithIdPreviousValues {
   id: ID!
 }
 
+input MultiSelfReferencingCWithIdScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+}
+
 type MultiSelfReferencingCWithIdSubscriptionPayload {
   mutation: MutationType!
   node: MultiSelfReferencingCWithId
@@ -641,18 +709,22 @@ input MultiSelfReferencingCWithIdUpdateInput {
 input MultiSelfReferencingCWithIdUpdateManyWithoutAInput {
   create: [MultiSelfReferencingCWithIdCreateWithoutAInput!]
   connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  set: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   disconnect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   delete: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   update: [MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutAInput!]
+  deleteMany: [MultiSelfReferencingCWithIdScalarWhereInput!]
   upsert: [MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutAInput!]
 }
 
 input MultiSelfReferencingCWithIdUpdateManyWithoutBInput {
   create: [MultiSelfReferencingCWithIdCreateWithoutBInput!]
   connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  set: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   disconnect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   delete: [MultiSelfReferencingCWithIdWhereUniqueInput!]
   update: [MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutBInput!]
+  deleteMany: [MultiSelfReferencingCWithIdScalarWhereInput!]
   upsert: [MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutBInput!]
 }
 
@@ -1625,6 +1697,103 @@ type SelfReferencingBWithIdPreviousValues {
   field: Int!
 }
 
+input SelfReferencingBWithIdScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [SelfReferencingBWithIdScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingBWithIdScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingBWithIdScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  field: Int
+  """
+  All values that are not equal to given value.
+  """
+  field_not: Int
+  """
+  All values that are contained in given list.
+  """
+  field_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  field_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: Int
+  """
+  All values greater than the given value.
+  """
+  field_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: Int
+}
+
 type SelfReferencingBWithIdSubscriptionPayload {
   mutation: MutationType!
   node: SelfReferencingBWithId
@@ -1674,17 +1843,29 @@ input SelfReferencingBWithIdUpdateInput {
   a: SelfReferencingBWithIdUpdateOneInput
 }
 
+input SelfReferencingBWithIdUpdateManyDataInput {
+  field: Int
+}
+
 input SelfReferencingBWithIdUpdateManyInput {
   create: [SelfReferencingBWithIdCreateInput!]
   connect: [SelfReferencingBWithIdWhereUniqueInput!]
+  set: [SelfReferencingBWithIdWhereUniqueInput!]
   disconnect: [SelfReferencingBWithIdWhereUniqueInput!]
   delete: [SelfReferencingBWithIdWhereUniqueInput!]
   update: [SelfReferencingBWithIdUpdateWithWhereUniqueNestedInput!]
+  updateMany: [SelfReferencingBWithIdUpdateManyWithWhereNestedInput!]
+  deleteMany: [SelfReferencingBWithIdScalarWhereInput!]
   upsert: [SelfReferencingBWithIdUpsertWithWhereUniqueNestedInput!]
 }
 
 input SelfReferencingBWithIdUpdateManyMutationInput {
   field: Int
+}
+
+input SelfReferencingBWithIdUpdateManyWithWhereNestedInput {
+  where: SelfReferencingBWithIdScalarWhereInput!
+  data: SelfReferencingBWithIdUpdateManyDataInput!
 }
 
 input SelfReferencingBWithIdUpdateOneInput {
@@ -1875,6 +2056,103 @@ type SelfReferencingCPreviousValues {
   field: Int!
 }
 
+input SelfReferencingCScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [SelfReferencingCScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingCScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingCScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  field: Int
+  """
+  All values that are not equal to given value.
+  """
+  field_not: Int
+  """
+  All values that are contained in given list.
+  """
+  field_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  field_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: Int
+  """
+  All values greater than the given value.
+  """
+  field_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: Int
+}
+
 type SelfReferencingCSubscriptionPayload {
   mutation: MutationType!
   node: SelfReferencingC
@@ -1924,17 +2202,29 @@ input SelfReferencingCUpdateInput {
   a: SelfReferencingCUpdateManyInput
 }
 
+input SelfReferencingCUpdateManyDataInput {
+  field: Int
+}
+
 input SelfReferencingCUpdateManyInput {
   create: [SelfReferencingCCreateInput!]
   connect: [SelfReferencingCWhereUniqueInput!]
+  set: [SelfReferencingCWhereUniqueInput!]
   disconnect: [SelfReferencingCWhereUniqueInput!]
   delete: [SelfReferencingCWhereUniqueInput!]
   update: [SelfReferencingCUpdateWithWhereUniqueNestedInput!]
+  updateMany: [SelfReferencingCUpdateManyWithWhereNestedInput!]
+  deleteMany: [SelfReferencingCScalarWhereInput!]
   upsert: [SelfReferencingCUpsertWithWhereUniqueNestedInput!]
 }
 
 input SelfReferencingCUpdateManyMutationInput {
   field: Int
+}
+
+input SelfReferencingCUpdateManyWithWhereNestedInput {
+  where: SelfReferencingCScalarWhereInput!
+  data: SelfReferencingCUpdateManyDataInput!
 }
 
 input SelfReferencingCUpdateWithWhereUniqueNestedInput {

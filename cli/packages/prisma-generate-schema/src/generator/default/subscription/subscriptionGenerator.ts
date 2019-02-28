@@ -1,15 +1,19 @@
 import { GraphQLFieldConfigMap, GraphQLObjectType } from 'graphql/type'
-import { IGQLType } from '../../../datamodel/model'
-import { camelCase } from '../../../util/util'
+import { IGQLType, camelCase } from 'prisma-datamodel'
 import { FieldConfigUtils, RootGenerator } from '../../generator'
 
 export default class SubscriptionGenerator extends RootGenerator {
   public getTypeName(input: IGQLType[], args: {}) {
     return 'Subscription'
   }
+
+  protected shouldGenerateSubscription(type: IGQLType) {
+    return !type.isEnum
+  }
+
   protected generateInternal(input: IGQLType[], args: {}) {
     const fieldMaps = input
-      .filter(type => !type.isEnum)
+      .filter(type => this.shouldGenerateSubscription(type))
       .map(type => this.generateSubscriptionField(type))
 
     return new GraphQLObjectType({

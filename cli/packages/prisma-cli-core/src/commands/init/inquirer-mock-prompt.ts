@@ -18,7 +18,7 @@ async function promptHandler(prompt, answers, input) {
   if (prompt.when === false) {
     return
   }
-  if (isFunction(prompt.when) && !await prompt.when(answers)) {
+  if (isFunction(prompt.when) && !(await prompt.when(answers))) {
     return
   }
   if (isFunction(prompt.message)) {

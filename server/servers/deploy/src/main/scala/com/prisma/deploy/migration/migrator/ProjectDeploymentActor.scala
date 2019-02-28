@@ -1,16 +1,19 @@
 package com.prisma.deploy.migration.migrator
 
 import akka.actor.{Actor, Stash}
-import com.prisma.deploy.connector.{DeployConnector, MigrationPersistence, MigrationStepMapperImpl}
+import com.prisma.deploy.connector.persistence.MigrationPersistence
+import com.prisma.deploy.connector.{DeployConnector, MigrationStepMapperImpl}
 import com.prisma.deploy.schema.DeploymentInProgress
-import com.prisma.shared.models.{Function, Migration, MigrationStep, Schema}
+import com.prisma.messagebus.PubSubPublisher
+import com.prisma.messagebus.pubsub.Only
+import com.prisma.shared.models.{Function, Migration, MigrationStep, Project, Schema}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 object DeploymentProtocol {
   object Initialize
-  case class Schedule(projectId: String, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function])
+  case class Schedule(project: Project, nextSchema: Schema, steps: Vector[MigrationStep], functions: Vector[Function], rawDataModel: String)
   object ResumeMessageProcessing
   object Ready
   object Deploy
@@ -29,15 +32,22 @@ object DeploymentProtocol {
   * scheduling and deployment until the async processing restored the ready state.
   */
 case class ProjectDeploymentActor(
-    projectId: String,
+    project: Project,
     migrationPersistence: MigrationPersistence,
-    deployConnector: DeployConnector
+    deployConnector: DeployConnector,
+    invalidationPublisher: PubSubPublisher[String]
 ) extends Actor
     with Stash {
   import DeploymentProtocol._
 
-  implicit val ec          = context.system.dispatcher
-  val applier              = MigrationApplierImpl(migrationPersistence, MigrationStepMapperImpl(projectId), deployConnector.deployMutactionExecutor)
+  implicit val ec = context.system.dispatcher
+  val applier = MigrationApplierImpl(
+    migrationPersistence,
+    deployConnector.projectPersistence,
+    MigrationStepMapperImpl(project),
+    deployConnector.deployMutactionExecutor,
+    deployConnector.databaseInspector
+  )
   var activeSchema: Schema = _
 
   // Possible enhancement: Periodically scan the DB for migrations if signal was lost -> Wait and see if this is an issue at all
@@ -46,15 +56,15 @@ case class ProjectDeploymentActor(
   initialize()
 
   def initialize() = {
-    println(s"[Debug] Initializing deployment worker for $projectId")
-    migrationPersistence.getLastMigration(projectId).map {
+    println(s"[Debug] Initializing deployment worker for ${project.id}")
+    migrationPersistence.getLastMigration(project.id).map {
       case Some(migration) =>
         activeSchema = migration.schema
-        migrationPersistence.getNextMigration(projectId).onComplete {
+        migrationPersistence.getNextMigration(project.id).onComplete {
           case Success(migrationOpt) =>
             migrationOpt match {
               case Some(_) =>
-                println(s"[Debug] Found unapplied migration for $projectId during init.")
+                println(s"[Debug] Found unapplied migration for ${project.id} during init.")
                 self ! Ready
                 self ! Deploy
 
@@ -63,12 +73,12 @@ case class ProjectDeploymentActor(
             }
 
           case Failure(err) =>
-            println(s"Deployment worker initialization for project $projectId failed with $err")
+            println(s"Deployment worker initialization for project ${project.id} failed with $err")
             context.stop(self)
         }
 
       case None =>
-        println(s"Deployment worker initialization for project $projectId failed: No current migration found for project.")
+        println(s"Deployment worker initialization for project ${project.id} failed: No current migration found for project.")
         context.stop(self)
     }
   }
@@ -84,7 +94,7 @@ case class ProjectDeploymentActor(
 
   def ready: Receive = {
     case msg: Schedule =>
-      println(s"[Debug] Scheduling deployment for project $projectId")
+      println(s"[Debug] Scheduling deployment for project ${project.id}")
       val caller = sender()
       context.become(busy) // Block subsequent scheduling and deployments
       handleScheduling(msg).onComplete {
@@ -102,11 +112,11 @@ case class ProjectDeploymentActor(
       context.become(busy)
       handleDeployment().onComplete {
         case Success(_) =>
-          println(s"[Debug] Applied migration for project $projectId")
+          println(s"[Debug] Applied migration for project ${project.id}")
           self ! ResumeMessageProcessing
 
         case Failure(err) =>
-          println(s"[Debug] Error during deployment for project $projectId: $err")
+          println(s"[Debug] Error during deployment for project ${project.id}: $err")
           self ! ResumeMessageProcessing // todo Mark migration as failed
       }
   }
@@ -126,7 +136,7 @@ case class ProjectDeploymentActor(
   def handleScheduling(msg: Schedule): Future[Migration] = {
     // Check if scheduling is possible (no pending migration), then create and return the migration
     migrationPersistence
-      .getNextMigration(projectId)
+      .getNextMigration(project.id)
       .transformWith {
         case Success(pendingMigrationOpt) =>
           pendingMigrationOpt match {
@@ -138,17 +148,18 @@ case class ProjectDeploymentActor(
           Future.failed(err)
       }
       .flatMap { _ =>
-        migrationPersistence.create(Migration(projectId, msg.nextSchema, msg.steps, msg.functions))
+        migrationPersistence.create(Migration(project.id, msg.nextSchema, msg.steps, msg.functions, msg.rawDataModel))
       }
   }
 
   def handleDeployment(): Future[Unit] = {
-    migrationPersistence.getNextMigration(projectId).transformWith {
+    migrationPersistence.getNextMigration(project.id).transformWith {
       case Success(Some(nextMigration)) =>
-        applier.apply(previousSchema = activeSchema, migration = nextMigration).map { result =>
+        applier.apply(project, previousSchema = activeSchema, migration = nextMigration).map { result =>
           if (result.succeeded) {
             activeSchema = nextMigration.schema
           }
+          invalidationPublisher.publish(Only(project.id), project.id)
         }
 
       case Failure(err) =>

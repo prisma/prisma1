@@ -1,14 +1,14 @@
 import QueryChooser from 'components/Markdown/QueryChooser'
 
 export const meta = {
-  title: 'Build an App with Prisma',
+  title: 'Build an App',
   position: 3,
   gettingStartedOrder: 2,
   gettingStartedTitle: 'REST API',
   nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a REST API.',
   technology: 'typescript',
   technologyOrder: 1,
-  articleGroup: 'Build an App with Prisma',
+  articleGroup: 'Build an App',
 }
 
 ## Goals
@@ -41,12 +41,12 @@ There will be six routes that provide the API for a simple blogging application:
 - `PUT`
   - `/post/publish`: _Publish_ a post
 
-Replace the current contents of `index.js` with the following code:
+Replace the current contents of `index.ts` with the following code:
 
 ```js lineNumbers,copy
 import { prisma } from './generated/prisma-client'
-import express from 'express'
-import bodyParser from 'body-parser'
+import * as express from 'express'
+import * as bodyParser from 'body-parser'
 
 const app = express()
 

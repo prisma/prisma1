@@ -48,7 +48,7 @@ export default class InfoCommand extends Command {
     const stage = this.definition.stage!
     const workspace = this.definition.getWorkspace()
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     if (!cluster) {
       throw new Error(
         `No cluster set. Please set the "cluster" property in your prisma.yml`,

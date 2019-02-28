@@ -1,7 +1,6 @@
 package com.prisma.api
 
 import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
-import com.prisma.api.server.{GraphQlQuery, GraphQlRequest}
 import com.prisma.shared.models.Project
 import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json._
@@ -9,8 +8,8 @@ import sangria.parser.QueryParser
 import sangria.renderer.SchemaRenderer
 import sangria.schema.Schema
 
-import scala.concurrent.{Await, Awaitable, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Awaitable, Future}
 import scala.reflect.io.File
 
 case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJsonExtensions {
@@ -42,7 +41,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId"
   ): Future[JsValue] = {
-    val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
+    val schemaBuilder = SchemaBuilder()(dependencies)
     val result = querySchemaAsync(
       query = query.stripMargin,
       project = project,
@@ -70,7 +69,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
       variables: JsValue = JsObject.empty,
       requestId: String = "CombinedTestDatabase.requestId"
   ): JsValue = {
-    val schemaBuilder = SchemaBuilder()(dependencies.system, dependencies)
+    val schemaBuilder = SchemaBuilder()(dependencies)
     val result = awaitInfinitely {
       querySchemaAsync(
         query = query,
@@ -85,7 +84,7 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
   }
 
   def queryPrivateSchema(query: String, project: Project, variables: JsObject = JsObject.empty): JsValue = {
-    val schemaBuilder = PrivateSchemaBuilder(project)(dependencies, dependencies.system)
+    val schemaBuilder = PrivateSchemaBuilder(project)(dependencies)
     awaitInfinitely {
       querySchemaAsync(
         query = query,
@@ -110,18 +109,15 @@ case class ApiTestServer()(implicit dependencies: ApiDependencies) extends PlayJ
     if (printSchema) println(renderedSchema)
     if (writeSchemaToFile) writeSchemaIntoFile(renderedSchema)
 
-    val graphqlQuery = GraphQlQuery(query = queryAst, operationName = None, variables = variables, queryString = query)
-    val graphQlRequest = GraphQlRequest(
-      id = requestId,
-      ip = "test.ip",
-      json = JsObject.empty,
+    val result = dependencies.queryExecutor.execute(
+      requestId = requestId,
+      queryString = query,
+      queryAst = queryAst,
+      variables = variables,
+      operationName = None,
       project = project,
-      schema = schema,
-      queries = Vector(graphqlQuery),
-      isBatch = false
+      schema = schema
     )
-
-    val result = dependencies.graphQlRequestHandler.handle(graphQlRequest).map(_._2)
 
     result.foreach(x => println(s"""Request Result:
         |$x

@@ -1,30 +1,30 @@
 type SelfReferencingAWithId {
     id: ID! @id
-    a: SelfReferencingAWithId! @relation(strategy: EMBED)
+    a: SelfReferencingAWithId! @relation(link: INLINE)
     field: Int!
 }
 
 type SelfReferencingBWithId {
     id: ID! @id
-    a: SelfReferencingBWithId @relation(strategy: EMBED)
+    a: SelfReferencingBWithId @relation(link: INLINE)
     field: Int!
 }
 
 type SelfReferencingCWithId {
     id: ID! @id
-    a: [SelfReferencingBWithId!]! @relation(strategy: EMBED)
+    a: [SelfReferencingBWithId] @relation(link: INLINE)
     field: Int!
 }
 
 type SelfReferencingA {
     removeThisId: ID! @id
-    a: SelfReferencingAWithId! @relation(strategy: EMBED)
+    a: SelfReferencingAWithId! @relation(link: INLINE)
     field: Int!
 }
 
 type SelfReferencingB {
     removeThisId: ID! @id
-    a: SelfReferencingB @relation(strategy: EMBED)
+    a: SelfReferencingB @relation(link: INLINE)
     field: Int!
 }
 
@@ -32,7 +32,7 @@ type SelfReferencingB {
 
 type SelfReferencingC {
     removeThisId: ID! @id
-    a: [SelfReferencingC!]! @relation(strategy: EMBED)
+    a: [SelfReferencingC] @relation(link: INLINE)
     field: Int!
 }
 
@@ -40,37 +40,37 @@ type SelfReferencingC {
 
 #type MultiSelfReferencingCWithId {
 #    id: ID! @id
-#    a: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA", strategy: EMBED)
-#    b: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA", strategy: EMBED)
+#    a: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA", link: INLINE)
+#    b: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA", link: INLINE)
 #}
 
 #type MultiSelfReferencingBWithId {
 #    id: ID! @id
-#    a: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2", strategy: EMBED)
-#    b: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2", strategy: EMBED)
+#    a: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2", link: INLINE)
+#    b: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2", link: INLINE)
 #}
 
 # Prisma does not allow this
 #type MultiSelfReferencingCWithId {
 #    id: ID! @id
-#    a: MultiSelfReferencingCWithId! @relation(name: "WithIdAToA3", strategy: EMBED)
-#    b: MultiSelfReferencingCWithId! @relation(name: "WithIdAToA3", strategy: EMBED)
+#    a: MultiSelfReferencingCWithId! @relation(name: "WithIdAToA3", link: INLINE)
+#    b: MultiSelfReferencingCWithId! @relation(name: "WithIdAToA3", link: INLINE)
 #}
 
 #type MultiSelfReferencingC {
 #    removeThisId: ID! @id
-#    a: [MultiSelfReferencingC!]! @relation(name: "AToA", strategy: EMBED)
-#    b: [MultiSelfReferencingC!]! @relation(name: "AToA", strategy: EMBED)
+#    a: [MultiSelfReferencingC] @relation(name: "AToA", link: INLINE)
+#    b: [MultiSelfReferencingC] @relation(name: "AToA", link: INLINE)
 #}
 
 #type MultiSelfReferencingB {
 #    removeThisId: ID! @id
-#    a: MultiSelfReferencingB @relation(name: "AToA2", strategy: EMBED)
-#    b: MultiSelfReferencingB @relation(name: "AToA2", strategy: EMBED)
+#    a: MultiSelfReferencingB @relation(name: "AToA2", link: INLINE)
+#    b: MultiSelfReferencingB @relation(name: "AToA2", link: INLINE)
 #}
 
 # Prisma does not allow this
 #type MultiSelfReferencingC {
-#    a: MultiSelfReferencingC! @relation(name: "AToA3", strategy: EMBED)
-#    b: MultiSelfReferencingC! @relation(name: "AToA3", strategy: EMBED)
+#    a: MultiSelfReferencingC! @relation(name: "AToA3", link: INLINE)
+#    b: MultiSelfReferencingC! @relation(name: "AToA3", link: INLINE)
 #}

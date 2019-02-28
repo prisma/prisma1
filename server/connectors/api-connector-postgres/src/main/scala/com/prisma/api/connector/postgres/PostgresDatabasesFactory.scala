@@ -1,37 +1,72 @@
 package com.prisma.api.connector.postgres
 
-import com.prisma.api.connector.jdbc.database.{Databases, SlickDatabase}
+import java.sql.Driver
+
+import com.typesafe.config.ConfigFactory
 import com.prisma.config.DatabaseConfig
-import com.typesafe.config.{Config, ConfigFactory}
-import slick.jdbc.PostgresProfile
+import com.prisma.connector.shared.jdbc.{Databases, SlickDatabase}
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import slick.jdbc.{DataSourceJdbcDataSource, DriverDataSource, PostgresProfile}
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.hikaricp.HikariCPJdbcDataSource
 
 object PostgresDatabasesFactory {
-  private lazy val dbDriver = new org.postgresql.Driver
-
   // PostgreSQL db used for all Prisma schemas (must be in sync with the deploy connector)
   val defaultDatabase = "prisma"
 
   // Schema to use in the database
   val schema = "public" // default schema
 
-  def initialize(dbConfig: DatabaseConfig): Databases = {
-    val config                       = typeSafeConfigFromDatabaseConfig(dbConfig)
-    val masterDb                     = Database.forConfig("database", config, driver = dbDriver)
+  def initialize(dbConfig: DatabaseConfig, driver: Driver): Databases = {
+    val masterDb                     = databaseForConfig(dbConfig, driver)
     val slickDatabase: SlickDatabase = SlickDatabase(PostgresProfile, masterDb)
+
     Databases(primary = slickDatabase, replica = slickDatabase)
   }
 
-  def typeSafeConfigFromDatabaseConfig(dbConfig: DatabaseConfig): Config = {
+  private def isPooled(dbConfig: DatabaseConfig) = {
+    dbConfig.pooled
+  }
+
+  def databaseForConfig(dbConfig: DatabaseConfig, driver: Driver) = {
+    if (isPooled(dbConfig))
+      pooledDataSource(dbConfig, driver)
+    else
+      simpleDataSource(dbConfig, driver)
+  }
+
+  def simpleDataSource(dbConfig: DatabaseConfig, driver: Driver) = {
+    val database = dbConfig.database.getOrElse(defaultDatabase)
+
+    val source = new DataSourceJdbcDataSource(
+      new DriverDataSource(
+        url =
+          s"jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory",
+        user = dbConfig.user,
+        password = dbConfig.password.getOrElse(""),
+        driverObject = driver
+      ),
+      keepAliveConnection = true,
+      maxConnections = None
+    )
+
+    val poolName       = "database"
+    val numThreads     = dbConfig.connectionLimit.getOrElse(10) - 1
+    val maxConnections = numThreads
+    val executor       = AsyncExecutor(poolName, numThreads, numThreads, 1000, maxConnections, registerMbeans = false)
+
+    Database.forSource(source, executor)
+  }
+
+  def pooledDataSource(dbConfig: DatabaseConfig, driver: Driver) = {
     val pooled   = if (dbConfig.pooled) "" else "connectionPool = disabled"
     val database = dbConfig.database.getOrElse(defaultDatabase)
 
-    ConfigFactory
+    val config = ConfigFactory
       .parseString(s"""
                       |database {
-                      |  dataSourceClass = "slick.jdbc.DriverDataSource"
+                      |  url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory"
                       |  properties {
-                      |    url = "jdbc:postgresql://${dbConfig.host}:${dbConfig.port}/$database?currentSchema=$schema&ssl=${dbConfig.ssl}&sslfactory=org.postgresql.ssl.NonValidatingFactory"
                       |    user = "${dbConfig.user}"
                       |    password = "${dbConfig.password.getOrElse("")}"
                       |  }
@@ -41,5 +76,7 @@ object PostgresDatabasesFactory {
                       |}
       """.stripMargin)
       .resolve
+
+    Database.forConfig("database", config, driver)
   }
 }

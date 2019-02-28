@@ -21,7 +21,7 @@ case class FunctionValidatorImpl()(implicit ec: ExecutionContext, dependencies: 
   }
 
   private def validateFunctionInput(schema: Schema, fn: FunctionInput): ServerSideSubscriptionFunction Or Vector[DeployError] = {
-    val project                                        = Project("id", "id", schema = schema)
+    val project                                        = Project("id", schema = schema)
     val validator                                      = SubscriptionQueryValidator(project)
     val result: Or[Model, Seq[SubscriptionQueryError]] = validator.validate(fn.query)
     result match {

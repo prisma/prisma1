@@ -13,7 +13,10 @@ case class DatabaseMutactions(project: Project) {
       nestedUpserts: Vector[NestedUpsertNode],
       nestedDeletes: Vector[NestedDeleteNode],
       nestedConnects: Vector[NestedConnect],
-      nestedDisconnects: Vector[NestedDisconnect]
+      nestedSets: Vector[NestedSet],
+      nestedDisconnects: Vector[NestedDisconnect],
+      nestedUpdateManys: Vector[NestedUpdateNodes],
+      nestedDeleteManys: Vector[NestedDeleteNodes]
   ) {
     def ++(other: NestedMutactions) = NestedMutactions(
       nestedCreates = nestedCreates ++ other.nestedCreates,
@@ -21,15 +24,18 @@ case class DatabaseMutactions(project: Project) {
       nestedUpserts = nestedUpserts ++ other.nestedUpserts,
       nestedDeletes = nestedDeletes ++ other.nestedDeletes,
       nestedConnects = nestedConnects ++ other.nestedConnects,
-      nestedDisconnects = nestedDisconnects ++ other.nestedDisconnects
+      nestedSets = nestedSets ++ other.nestedSets,
+      nestedDisconnects = nestedDisconnects ++ other.nestedDisconnects,
+      nestedUpdateManys = nestedUpdateManys ++ other.nestedUpdateManys,
+      nestedDeleteManys = nestedDeleteManys ++ other.nestedDeleteManys
     )
 
-    val isEmpty    = nestedCreates.isEmpty && nestedUpdates.isEmpty && nestedUpserts.isEmpty && nestedDeletes.isEmpty && nestedConnects.isEmpty && nestedDisconnects.isEmpty
+    val isEmpty    = nestedCreates.isEmpty && nestedUpdates.isEmpty && nestedUpserts.isEmpty && nestedDeletes.isEmpty && nestedConnects.isEmpty && nestedDisconnects.isEmpty && nestedUpdateManys.isEmpty && nestedDeleteManys.isEmpty
     val isNonEmpty = !isEmpty
   }
 
   object NestedMutactions {
-    val empty = NestedMutactions(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
+    val empty = NestedMutactions(Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty, Vector.empty)
   }
 
 //  def report[T](mutactions: Vector[T]): Vector[T] = {
@@ -58,7 +64,10 @@ case class DatabaseMutactions(project: Project) {
       nestedUpserts = nested.nestedUpserts,
       nestedDeletes = nested.nestedDeletes,
       nestedConnects = nested.nestedConnects,
-      nestedDisconnects = nested.nestedDisconnects
+      nestedSets = nested.nestedSets,
+      nestedDisconnects = nested.nestedDisconnects,
+      nestedUpdateManys = nested.nestedUpdateManys,
+      nestedDeleteManys = nested.nestedDeleteManys
     )
   }
 
@@ -109,7 +118,10 @@ case class DatabaseMutactions(project: Project) {
       val nestedUpserts     = getMutactionsForNestedUpsertMutation(nestedMutation, parentField)
       val nestedDeletes     = getMutactionsForNestedDeleteMutation(nestedMutation, parentField)
       val nestedConnects    = getMutactionsForNestedConnectMutation(nestedMutation, parentField, triggeredFromCreate)
+      val nestedSets        = getMutactionsForNestedSetMutation(nestedMutation, parentField)
       val nestedDisconnects = getMutactionsForNestedDisconnectMutation(nestedMutation, parentField)
+      val nestedUpdateManys = getMutactionsForNestedUpdateManyMutation(subModel, nestedMutation, parentField)
+      val nestedDeleteManys = getMutactionsForNestedDeleteManyMutation(subModel, nestedMutation, parentField)
 
       val mutactionsThatACreateCanTrigger = nestedCreates ++ nestedConnects
 
@@ -121,7 +133,10 @@ case class DatabaseMutactions(project: Project) {
         nestedUpserts = nestedUpserts,
         nestedDeletes = nestedDeletes,
         nestedConnects = nestedConnects,
-        nestedDisconnects = nestedDisconnects
+        nestedSets = nestedSets,
+        nestedDisconnects = nestedDisconnects,
+        nestedUpdateManys = nestedUpdateManys,
+        nestedDeleteManys = nestedDeleteManys
       )
     }
     x.foldLeft(NestedMutactions.empty)(_ ++ _)
@@ -183,15 +198,23 @@ case class DatabaseMutactions(project: Project) {
       listArgs = listArgs,
       nestedCreates = nestedMutactions.nestedCreates,
       nestedConnects = nestedMutactions.nestedConnects,
+      nestedSets = nestedMutactions.nestedSets,
       nestedUpdates = nestedMutactions.nestedUpdates,
       nestedUpserts = nestedMutactions.nestedUpserts,
       nestedDeletes = nestedMutactions.nestedDeletes,
-      nestedDisconnects = nestedMutactions.nestedDisconnects
+      nestedDisconnects = nestedMutactions.nestedDisconnects,
+      nestedUpdateManys = nestedMutactions.nestedUpdateManys,
+      nestedDeleteManys = nestedMutactions.nestedDeleteManys
     )
   }
 
   def getMutactionsForNestedConnectMutation(nestedMutation: NestedMutations, field: RelationField, topIsCreate: Boolean): Vector[NestedConnect] = {
     nestedMutation.connects.map(connect => NestedConnect(project, field, connect.where, topIsCreate))
+  }
+
+  def getMutactionsForNestedSetMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedSet] = nestedMutation.sets match {
+    case None       => Vector.empty
+    case Some(sets) => Vector(NestedSet(project, field, sets.map(_.where)))
   }
 
   def getMutactionsForNestedDisconnectMutation(nestedMutation: NestedMutations, field: RelationField): Vector[NestedDisconnect] = {
@@ -206,6 +229,10 @@ case class DatabaseMutactions(project: Project) {
       case _: DeleteByRelation  => NestedDeleteNode(project, field, where = None)
       case DeleteByWhere(where) => NestedDeleteNode(project, field, where = Some(where))
     }
+  }
+
+  def getMutactionsForNestedDeleteManyMutation(model: Model, nestedMutation: NestedMutations, field: RelationField): Vector[NestedDeleteNodes] = {
+    nestedMutation.deleteManys.map(x => NestedDeleteNodes(project, model, field, x.whereFilter))
   }
 
   def getMutactionsForNestedUpdateMutation(model: Model, nestedMutation: NestedMutations, parentField: RelationField): Vector[NestedUpdateNode] = {
@@ -229,8 +256,19 @@ case class DatabaseMutactions(project: Project) {
         nestedUpserts = nested.nestedUpserts,
         nestedDeletes = nested.nestedDeletes,
         nestedConnects = nested.nestedConnects,
-        nestedDisconnects = nested.nestedDisconnects
+        nestedSets = nested.nestedSets,
+        nestedDisconnects = nested.nestedDisconnects,
+        nestedUpdateManys = nested.nestedUpdateManys,
+        nestedDeleteManys = nested.nestedDeleteManys
       )
+    }
+  }
+
+  def getMutactionsForNestedUpdateManyMutation(model: Model, nestedMutation: NestedMutations, parentField: RelationField): Vector[NestedUpdateNodes] = {
+    nestedMutation.updateManys.map { updateMany =>
+      val (nonListArgs, listArgs) = updateMany.data.getUpdateArgs(model)
+
+      NestedUpdateNodes(project, model, parentField, updateMany.whereFilter, nonListArgs, listArgs)
     }
   }
 

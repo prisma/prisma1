@@ -2,10 +2,12 @@ package com.prisma.deploy.connector.postgres.database
 
 import slick.jdbc.PostgresProfile.api._
 
+import scala.concurrent.ExecutionContext
+
 object InternalDatabaseSchema {
   def createDatabaseAction(db: String) = sql"""CREATE DATABASE "#$db";""".as[Option[String]]
 
-  def createSchemaActions(internalSchema: String, recreate: Boolean): DBIOAction[Unit, NoStream, Effect] = {
+  def createSchemaActions(internalSchema: String, recreate: Boolean)(implicit ec: ExecutionContext): DBIO[Unit] = {
     if (recreate) {
       DBIO.seq(dropAction(internalSchema), setupActions(internalSchema))
     } else {
@@ -15,24 +17,23 @@ object InternalDatabaseSchema {
 
   def dropAction(internalSchema: String) = DBIO.seq(sqlu"""DROP SCHEMA IF EXISTS "#$internalSchema" CASCADE;""")
 
-  def setupActions(internalSchema: String) = DBIO.seq(
-    sqlu"""CREATE SCHEMA IF NOT EXISTS "#$internalSchema";""",
-    sqlu"""SET SCHEMA '#$internalSchema';""",
-    // Project
-    sqlu"""
+  def setupActions(internalSchema: String)(implicit ec: ExecutionContext) =
+    DBIO
+      .seq(
+        sqlu"""CREATE SCHEMA IF NOT EXISTS "#$internalSchema";""",
+        sqlu"""SET SCHEMA '#$internalSchema';""",
+        // Project
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "Project" (
         "id" varchar(200) NOT NULL DEFAULT '',
-        "ownerId" varchar(25) DEFAULT NULL,
-        "webhookUrl" varchar(255)  DEFAULT NULL,
         "secrets" text DEFAULT NULL,
-        "seats" text DEFAULT NULL,
         "allowQueries" boolean NOT NULL DEFAULT TRUE,
         "allowMutations" boolean NOT NULL DEFAULT TRUE,
         "functions" text DEFAULT NULL,
         PRIMARY KEY ("id")
       );""",
-    // Migration
-    sqlu"""
+        // Migration
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "Migration" (
         "projectId" varchar(200)  NOT NULL DEFAULT '',
         "revision" int NOT NULL DEFAULT '1',
@@ -48,25 +49,42 @@ object InternalDatabaseSchema {
         PRIMARY KEY ("projectId", "revision"),
         CONSTRAINT "migrations_projectid_foreign" FOREIGN KEY ("projectId") REFERENCES "Project" ("id") ON DELETE CASCADE ON UPDATE CASCADE
       );""",
-    // Internal migrations
-    sqlu"""
+        addDataModelColumnToMigrationTable(internalSchema),
+        // Internal migrations
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "InternalMigration" (
         "id" varchar(255)  NOT NULL,
         "appliedAt" timestamp NOT NULL,
         PRIMARY KEY ("id")
       );""",
-    // Telemetry
-    sqlu"""
+        // Telemetry
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "TelemetryInfo" (
         "id" varchar(255)  NOT NULL,
-        "lastPinged" timestamp NOT NULL,
+        "lastPinged" timestamp,
         PRIMARY KEY ("id")
       );""",
-    // CloudSecret
-    sqlu"""
+        // CloudSecret
+        sqlu"""
       CREATE TABLE IF NOT EXISTS "CloudSecret" (
         "secret" varchar(255) NOT NULL,
         PRIMARY KEY ("secret")
       );"""
-  )
+      )
+      .withPinnedSession // used pinned connection so that the SET SCHEMA statement is valid throughout all statements
+
+  def addDataModelColumnToMigrationTable(internalSchema: String)(implicit ec: ExecutionContext) =
+    for {
+      doesExist <- doesColumnExist(internalSchema, "Migration", "datamodel")
+      _         <- if (doesExist) DBIO.successful(()) else sqlu"""ALTER TABLE "Migration" ADD COLUMN "datamodel" text DEFAULT NULL;"""
+    } yield ()
+
+  def doesColumnExist(schema: String, table: String, column: String)(implicit ec: ExecutionContext): DBIO[Boolean] = {
+    sql"""
+         select column_name from information_schema.columns
+         where table_schema = '#$schema'
+         and table_name = '#$table'
+         and column_name = '#$column'
+      """.as[String].map(_.nonEmpty)
+  }
 }

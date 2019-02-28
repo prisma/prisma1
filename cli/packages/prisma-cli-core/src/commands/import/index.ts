@@ -23,8 +23,15 @@ export default class Import extends Command {
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
+
+    if (
+      this.definition.definition!.databaseType &&
+      this.definition.definition!.databaseType === 'document'
+    ) {
+      throw new Error('Import is not yet supported for document stores.')
+    }
 
     if (!fs.pathExistsSync(data)) {
       throw new Error(`Path ${data} does not exist`)

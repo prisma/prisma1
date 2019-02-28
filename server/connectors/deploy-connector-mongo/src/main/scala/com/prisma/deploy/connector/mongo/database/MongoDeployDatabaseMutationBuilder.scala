@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mongo.database
 
 import com.prisma.deploy.connector.mongo.impl.DeployMongoAction
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Model, Project}
 import org.mongodb.scala.model.IndexOptions
 import org.mongodb.scala.model.Sorts.ascending
 import org.mongodb.scala.{MongoNamespace, _}
@@ -24,7 +24,7 @@ object MongoDeployDatabaseMutationBuilder {
     database.listCollectionNames().toFuture().map(_ => ())
   }
 
-  //needs to add relation indexes as well
+  //Fixme Should this be allowed to delete collections? probably not, should just drop contents
   def truncateProjectTables(project: Project) = DeployMongoAction { database =>
     val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
 
@@ -42,8 +42,8 @@ object MongoDeployDatabaseMutationBuilder {
       Future.sequence(project.relations.collect {
         case relation if relation.isInlineRelation =>
           relation.modelAField.relationIsInlinedInParent match {
-            case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-            case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+            case true if !relation.modelB.isEmbedded  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+            case false if !relation.modelA.isEmbedded => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
           }
       })
 
@@ -55,33 +55,95 @@ object MongoDeployDatabaseMutationBuilder {
     } yield ()
   }
 
+  def nonDestructiveTruncateProjectTables(project: Project) = DeployMongoAction { database =>
+    val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
+
+    for {
+      _ <- Future.sequence(nonEmbeddedModels.map(model => database.getCollection(model.dbName).deleteMany(Document().toBsonDocument).toFuture()))
+    } yield ()
+  }
+
   def deleteProjectDatabase = DeployMongoAction { database =>
-    database.drop().toFuture().map(_ -> Unit)
+    Future.successful(())
+//    database.drop().toFuture().map(_ -> Unit)
   }
 
   //Collection
   def createCollection(collectionName: String) = DeployMongoAction { database =>
-    database.createCollection(collectionName).toFuture().map(_ -> Unit)
+    database.listCollectionNames().toFuture().map { names =>
+      if (names.contains(collectionName)) {
+        Future.successful(())
+      } else {
+        database.createCollection(collectionName).toFuture().map(_ -> Unit)
+      }
+    }
   }
 
   def dropCollection(collectionName: String) = DeployMongoAction { database =>
-    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
+    Future.successful(())
+//    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
   }
 
-  def renameCollection(projectId: String, collectionName: String, newName: String) = DeployMongoAction { database =>
-    database.getCollection(collectionName).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
+  def renameCollection(project: Project, collectionName: String, newName: String) = DeployMongoAction { database =>
+    Future.successful(())
+
+//    database.getCollection(collectionName).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
   }
 
   //Fields
-  def createField(collectionName: String, fieldName: String) = DeployMongoAction { database =>
-    addUniqueConstraint(database, collectionName, fieldName)
+  def createField(model: Model, fieldName: String) = DeployMongoAction { database =>
+    model.isEmbedded match {
+      case false => addUniqueConstraint(database, model.dbName, fieldName)
+      case true  => Future.successful(())
+    }
   }
 
-  def deleteField(collectionName: String, fieldName: String) = DeployMongoAction { database =>
-    removeUniqueConstraint(database, collectionName, fieldName)
+  def deleteField(model: Model, fieldName: String) = DeployMongoAction { database =>
+    model.isEmbedded match {
+      case false => removeUniqueConstraint(database, model.dbName, fieldName)
+      case true  => Future.successful(())
+    }
   }
 
   def updateField(name: String, newName: String) = NoAction.unit
+
+  //Fixme once Mongo fixes this bug we can implement nested Unique Constraints properly https://jira.mongodb.org/browse/SERVER-1068
+//  def addNestedUniqueConstraint(database: MongoDatabase, model: Model, fieldName: String) = {
+//
+//    val fieldToParent = model.relationFields.find(rf => rf.isHidden && rf.relatedField.isVisible).get
+//    val topModel      = topLevelModel(fieldToParent)
+//    val fieldNames    = (fieldName +: recurse(fieldToParent)).reverse
+//
+//    println(fieldNames)
+//    addEmbeddedUniqueConstraint(database, topModel.dbName, recurse2(fieldNames).reverse)
+//  }
+//
+//  def topLevelModel(relationField: RelationField): Model = relationField.model.isEmbedded match {
+//    case true  => topLevelModel(relationField.relatedField)
+//    case false => relationField.model
+//  }
+//
+//  def recurse2(strings: Vector[String]): Vector[String] = strings match {
+//    case one if one.length == 1  => one
+//    case many if many.length > 1 => Vector(many.mkString(".")) ++ recurse2(strings.dropRight(1))
+//  }
+//
+//  def recurse(relationField: RelationField): Vector[String] = relationField.model.isEmbedded match {
+//    case true  => relationField.relatedField.name +: recurse(relationField.relatedField)
+//    case false => Vector.empty
+//  }
+//
+//  def addEmbeddedUniqueConstraint(database: MongoDatabase, collectionName: String, fieldNames: Vector[String]) = {
+////    val shortenedName = indexNameHelper(collectionName, fieldName, true)
+//    val shortenedName = "compoundindex"
+//    val doc           = Document(fieldNames.map(x => x -> 1))
+//
+//    database
+//      .getCollection(collectionName)
+//      .createIndex(doc, IndexOptions().unique(true).sparse(true).name(shortenedName))
+//      .toFuture()
+//      .map(_ => ())
+//  }
 
   def addUniqueConstraint(database: MongoDatabase, collectionName: String, fieldName: String) = {
     val shortenedName = indexNameHelper(collectionName, fieldName, true)
@@ -124,7 +186,8 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
-    val shortenedName = fieldName.substring(0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
+    // TODO: explain this magic calculation
+    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 13).min(fieldName.length))
 
     unique match {
       case false => shortenedName + "_R"

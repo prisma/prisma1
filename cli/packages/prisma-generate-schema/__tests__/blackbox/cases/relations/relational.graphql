@@ -1015,6 +1015,156 @@ type PostPreviousValues {
   count: Int!
 }
 
+input PostScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PostScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PostScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PostScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  text: String
+  """
+  All values that are not equal to given value.
+  """
+  text_not: String
+  """
+  All values that are contained in given list.
+  """
+  text_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  text_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  text_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  text_lte: String
+  """
+  All values greater than the given value.
+  """
+  text_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  text_gte: String
+  """
+  All values containing the given string.
+  """
+  text_contains: String
+  """
+  All values not containing the given string.
+  """
+  text_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  text_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  text_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  text_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  text_not_ends_with: String
+  count: Int
+  """
+  All values that are not equal to given value.
+  """
+  count_not: Int
+  """
+  All values that are contained in given list.
+  """
+  count_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  count_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  count_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  count_lte: Int
+  """
+  All values greater than the given value.
+  """
+  count_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  count_gte: Int
+}
+
 type PostSubscriptionPayload {
   mutation: MutationType!
   node: Post
@@ -1061,6 +1211,11 @@ input PostUpdateInput {
   likes: UserUpdateManyWithoutLikesInput
 }
 
+input PostUpdateManyDataInput {
+  text: String
+  count: Int
+}
+
 input PostUpdateManyMutationInput {
   text: String
   count: Int
@@ -1069,19 +1224,30 @@ input PostUpdateManyMutationInput {
 input PostUpdateManyWithoutLikesInput {
   create: [PostCreateWithoutLikesInput!]
   connect: [PostWhereUniqueInput!]
+  set: [PostWhereUniqueInput!]
   disconnect: [PostWhereUniqueInput!]
   delete: [PostWhereUniqueInput!]
   update: [PostUpdateWithWhereUniqueWithoutLikesInput!]
+  updateMany: [PostUpdateManyWithWhereNestedInput!]
+  deleteMany: [PostScalarWhereInput!]
   upsert: [PostUpsertWithWhereUniqueWithoutLikesInput!]
 }
 
 input PostUpdateManyWithoutUserInput {
   create: [PostCreateWithoutUserInput!]
   connect: [PostWhereUniqueInput!]
+  set: [PostWhereUniqueInput!]
   disconnect: [PostWhereUniqueInput!]
   delete: [PostWhereUniqueInput!]
   update: [PostUpdateWithWhereUniqueWithoutUserInput!]
+  updateMany: [PostUpdateManyWithWhereNestedInput!]
+  deleteMany: [PostScalarWhereInput!]
   upsert: [PostUpsertWithWhereUniqueWithoutUserInput!]
+}
+
+input PostUpdateManyWithWhereNestedInput {
+  where: PostScalarWhereInput!
+  data: PostUpdateManyDataInput!
 }
 
 input PostUpdateWithoutLikesDataInput {
@@ -1340,6 +1506,156 @@ type PostWithoutConnectionPreviousValues {
   count: Int!
 }
 
+input PostWithoutConnectionScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PostWithoutConnectionScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PostWithoutConnectionScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PostWithoutConnectionScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  text: String
+  """
+  All values that are not equal to given value.
+  """
+  text_not: String
+  """
+  All values that are contained in given list.
+  """
+  text_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  text_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  text_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  text_lte: String
+  """
+  All values greater than the given value.
+  """
+  text_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  text_gte: String
+  """
+  All values containing the given string.
+  """
+  text_contains: String
+  """
+  All values not containing the given string.
+  """
+  text_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  text_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  text_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  text_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  text_not_ends_with: String
+  count: Int
+  """
+  All values that are not equal to given value.
+  """
+  count_not: Int
+  """
+  All values that are contained in given list.
+  """
+  count_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  count_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  count_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  count_lte: Int
+  """
+  All values greater than the given value.
+  """
+  count_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  count_gte: Int
+}
+
 type PostWithoutConnectionSubscriptionPayload {
   mutation: MutationType!
   node: PostWithoutConnection
@@ -1389,18 +1705,31 @@ input PostWithoutConnectionUpdateInput {
   count: Int
 }
 
+input PostWithoutConnectionUpdateManyDataInput {
+  text: String
+  count: Int
+}
+
 input PostWithoutConnectionUpdateManyInput {
   create: [PostWithoutConnectionCreateInput!]
   connect: [PostWithoutConnectionWhereUniqueInput!]
+  set: [PostWithoutConnectionWhereUniqueInput!]
   disconnect: [PostWithoutConnectionWhereUniqueInput!]
   delete: [PostWithoutConnectionWhereUniqueInput!]
   update: [PostWithoutConnectionUpdateWithWhereUniqueNestedInput!]
+  updateMany: [PostWithoutConnectionUpdateManyWithWhereNestedInput!]
+  deleteMany: [PostWithoutConnectionScalarWhereInput!]
   upsert: [PostWithoutConnectionUpsertWithWhereUniqueNestedInput!]
 }
 
 input PostWithoutConnectionUpdateManyMutationInput {
   text: String
   count: Int
+}
+
+input PostWithoutConnectionUpdateManyWithWhereNestedInput {
+  where: PostWithoutConnectionScalarWhereInput!
+  data: PostWithoutConnectionUpdateManyDataInput!
 }
 
 input PostWithoutConnectionUpdateWithWhereUniqueNestedInput {
@@ -1736,6 +2065,127 @@ type UserPreviousValues {
   name: String!
 }
 
+input UserScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [UserScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  name: String
+  """
+  All values that are not equal to given value.
+  """
+  name_not: String
+  """
+  All values that are contained in given list.
+  """
+  name_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  name_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  name_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  name_lte: String
+  """
+  All values greater than the given value.
+  """
+  name_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  name_gte: String
+  """
+  All values containing the given string.
+  """
+  name_contains: String
+  """
+  All values not containing the given string.
+  """
+  name_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  name_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  name_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  name_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  name_not_ends_with: String
+}
+
 type UserSubscriptionPayload {
   mutation: MutationType!
   node: User
@@ -1786,6 +2236,10 @@ input UserUpdateInput {
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
 }
 
+input UserUpdateManyDataInput {
+  name: String
+}
+
 input UserUpdateManyMutationInput {
   name: String
 }
@@ -1793,10 +2247,18 @@ input UserUpdateManyMutationInput {
 input UserUpdateManyWithoutLikesInput {
   create: [UserCreateWithoutLikesInput!]
   connect: [UserWhereUniqueInput!]
+  set: [UserWhereUniqueInput!]
   disconnect: [UserWhereUniqueInput!]
   delete: [UserWhereUniqueInput!]
   update: [UserUpdateWithWhereUniqueWithoutLikesInput!]
+  updateMany: [UserUpdateManyWithWhereNestedInput!]
+  deleteMany: [UserScalarWhereInput!]
   upsert: [UserUpsertWithWhereUniqueWithoutLikesInput!]
+}
+
+input UserUpdateManyWithWhereNestedInput {
+  where: UserScalarWhereInput!
+  data: UserUpdateManyDataInput!
 }
 
 input UserUpdateOneRequiredWithoutBillingInfoInput {

@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.schema.UpdatedRelationAmbiguous
+import com.prisma.shared.models.FieldBehaviour._
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
@@ -18,6 +19,8 @@ object MigrationStepsInferrer {
 
 case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
   import com.prisma.util.Diff._
+
+  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
 
   /**
     * The following evaluation order considers all interdependencies:
@@ -45,15 +48,15 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       fieldsToDelete ++
       modelsToDelete ++
       enumsToDelete ++
-      enumsToCreate ++
-      modelsToCreate ++
-      fieldsToCreate ++
-      relationsToCreate ++
       enumsToUpdate ++
       fieldsToUpdate ++
       modelsToUpdateFirstStep ++
       modelsToUpdateSecondStep ++
-      relationsToUpdate
+      relationsToUpdate ++
+      enumsToCreate ++
+      modelsToCreate ++
+      fieldsToCreate ++
+      relationsToCreate
   }
 
   lazy val modelsToCreate: Vector[CreateModel] = {
@@ -70,7 +73,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     <- previousSchema.getModelByName(previousModelName)
       if nextModel.name != previousModel.name || nextModel.isEmbedded != previousModel.isEmbedded
-    } yield UpdateModel(name = previousModelName, newName = nextModel.name, isEmbedded = diff(previousModel.isEmbedded, nextModel.isEmbedded))
+    } yield UpdateModel(name = previousModelName, newName = nextModel.name)
   }
 
   lazy val modelsToUpdateFirstStep: Vector[UpdateModel]  = modelsToUpdate.map(update => update.copy(newName = "__" + update.newName))
@@ -97,18 +100,9 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       fieldOfNextModel  <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
       if previousModel.getFieldByName(previousFieldName).isEmpty
+      if !fieldOfNextModel.isMagicalBackRelation
     } yield {
-      CreateField(
-        model = nextModel.name,
-        name = fieldOfNextModel.name,
-        typeName = fieldOfNextModel.typeIdentifier.code,
-        isRequired = fieldOfNextModel.isRequired,
-        isList = fieldOfNextModel.isList,
-        isUnique = fieldOfNextModel.isUnique,
-        defaultValue = fieldOfNextModel.defaultValue.map(_.toString),
-        relation = fieldOfNextModel.relationOpt.map(_.name),
-        enum = fieldOfNextModel.enum.map(_.name)
-      )
+      CreateField(model = nextModel.name, name = fieldOfNextModel.name)
     }
   }
 
@@ -117,27 +111,47 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     = previousSchema.getModelByName(previousModelName).getOrElse(Model.empty)
-      fieldOfNextModel  <- nextModel.fields.toVector
-      previousFieldName = renames.getPreviousFieldName(nextModel.name, fieldOfNextModel.name)
+      nextField         <- nextModel.fields.toVector
+      previousFieldName = renames.getPreviousFieldName(nextModel.name, nextField.name)
       previousField     <- previousModel.getFieldByName(previousFieldName)
+      didSomethingChangeInTheField = didSomethingChange(previousField.template, nextField.template)(
+        _.name,
+        _.typeIdentifier,
+        _.isUnique,
+        _.isRequired,
+        _.isList,
+        _.manifestation
+      )
+      didBehaviourChange = if (isMigrationFromV1ToV2) {
+        // this block just exists to ignore phantom changes that are only inferred during migration from v1 to v2
+        // TODO: remove this special casing once we remove the suppport for migrating from v1 to v2. Then we can just do the same things as with the checks above.
+        import ReservedFields._
+        () match {
+          case _ if previousField.name == createdAtFieldName && nextField.behaviour.contains(CreatedAtBehaviour) =>
+            false
+          case _ if previousField.name == updatedAtFieldName && nextField.behaviour.contains(UpdatedAtBehaviour) =>
+            false
+          case _ if previousField.name == idFieldName && nextField.behaviour.contains(IdBehaviour(IdStrategy.Auto)) =>
+            false
+          case _ if previousField.isScalarList && nextField.behaviour.contains(ScalarListBehaviour(ScalarListStrategy.Relation)) =>
+            false
+          case _ =>
+            previousField.behaviour != nextField.behaviour
+        }
+      } else {
+        previousField.behaviour != nextField.behaviour
+      }
+      if didSomethingChangeInTheField || didBehaviourChange
     } yield {
       UpdateField(
         model = previousModelName,
         newModel = nextModel.name,
         name = previousFieldName,
-        newName = diff(previousField.name, fieldOfNextModel.name),
-        typeName = diff(previousField.typeIdentifier.code, fieldOfNextModel.typeIdentifier.code),
-        isRequired = diff(previousField.isRequired, fieldOfNextModel.isRequired),
-        isList = diff(previousField.isList, fieldOfNextModel.isList),
-        isUnique = diff(previousField.isUnique, fieldOfNextModel.isUnique),
-        isHidden = diff(previousField.isHidden, fieldOfNextModel.isHidden),
-        relation = diff(previousField.relationOpt.map(_.relationTableName), fieldOfNextModel.relationOpt.map(_.relationTableName)),
-        defaultValue = diff(previousField.defaultValue, fieldOfNextModel.defaultValue).map(_.map(_.toString)),
-        enum = diff(previousField.enum.map(_.name), fieldOfNextModel.enum.map(_.name))
+        newName = diff(previousField.name, nextField.name)
       )
     }
 
-    updates.filter(isAnyOptionSet)
+    updates
   }
 
   lazy val fieldsToDelete: Vector[DeleteField] = {
@@ -147,8 +161,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModelName = renames.getNextModelName(previousModel.name)
       nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
       nextModel     <- nextSchema.getModelByName(nextModelName)
-      if nextSchema.getFieldByName(nextModelName, nextFieldName).isEmpty
-    } yield DeleteField(model = nextModel.name, name = previousField.name)
+      if nextModel.getFieldByName(nextFieldName).isEmpty
+    } yield DeleteField(model = previousModel.name, name = previousField.name)
   }
 
   lazy val relationsToCreate: Vector[CreateRelation] = {
@@ -156,13 +170,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextRelation <- nextSchema.relations.toVector
       if relationNotInPreviousSchema(previousSchema, nextSchema = nextSchema, nextRelation, renames.getPreviousModelName, renames.getPreviousRelationName)
     } yield {
-      CreateRelation(
-        name = nextRelation.name,
-        modelAName = nextRelation.modelAName,
-        modelBName = nextRelation.modelBName,
-        modelAOnDelete = nextRelation.modelAOnDelete,
-        modelBOnDelete = nextRelation.modelBOnDelete
-      )
+      CreateRelation(name = nextRelation.name)
     }
   }
 
@@ -193,19 +201,13 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
                            case (false, false) => nextSchema.getRelationsThatConnectModels(nextModelAName, nextModelBName).headOption
                          }
                        }
+      if didSomethingChange(previousRelation, nextRelation)(_.name, _.modelAName, _.modelBName, _.manifestation)
     } yield {
-      UpdateRelation(
-        name = previousRelation.name,
-        newName = diff(previousRelation.name, nextRelation.name),
-        modelAId = diff(previousRelation.modelAName, nextRelation.modelAName),
-        modelBId = diff(previousRelation.modelBName, nextRelation.modelBName),
-        modelAOnDelete = diff(previousRelation.modelAOnDelete, nextRelation.modelAOnDelete),
-        modelBOnDelete = diff(previousRelation.modelBOnDelete, nextRelation.modelBOnDelete)
-      )
+      UpdateRelation(name = previousRelation.name, newName = diff(previousRelation.name, nextRelation.name))
     }
     def isContainedInDeletes(update: UpdateRelation) = relationsToDelete.map(_.name).contains(update.name)
 
-    updates.filter(isAnyOptionSet).filterNot(isContainedInDeletes)
+    updates.filterNot(isContainedInDeletes)
   }
 
   lazy val enumsToCreate: Vector[CreateEnum] = {
@@ -213,7 +215,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextEnum         <- nextSchema.enums.toVector
       previousEnumName = renames.getPreviousEnumName(nextEnum.name)
       if !containsEnum(previousSchema, previousEnumName)
-    } yield CreateEnum(nextEnum.name, nextEnum.values)
+    } yield CreateEnum(nextEnum.name)
   }
 
   lazy val enumsToDelete: Vector[DeleteEnum] = {
@@ -229,14 +231,14 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       previousEnum <- previousSchema.enums.toVector
       nextEnumName = renames.getNextEnumName(previousEnum.name)
       nextEnum     <- nextSchema.getEnumByName(nextEnumName)
+      if previousEnum != nextEnum
     } yield {
       UpdateEnum(
         name = previousEnum.name,
-        newName = diff(previousEnum.name, nextEnum.name),
-        values = diff(previousEnum.values, nextEnum.values)
+        newName = diff(previousEnum.name, nextEnum.name)
       )
     }
-    updates.filter(isAnyOptionSet)
+    updates
   }
 
   def relationNotInPreviousSchema(previousSchema: Schema,
@@ -314,14 +316,11 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
 
   def containsEnum(schema: Schema, enumName: String): Boolean = schema.enums.exists(_.name == enumName)
 
-  def isAnyOptionSet(product: Product): Boolean = {
-    import shapeless._
-    import syntax.typeable._
-    product.productIterator.exists { value =>
-      value.cast[Option[Any]] match {
-        case Some(x) => x.isDefined
-        case None    => false
-      }
+  def didSomethingChange[T](previous: T, next: T)(fns: (T => Any)*): Boolean = {
+    fns.exists { fn =>
+      val previousValue = fn(previous)
+      val nextValue     = fn(next)
+      previousValue != nextValue
     }
   }
 }

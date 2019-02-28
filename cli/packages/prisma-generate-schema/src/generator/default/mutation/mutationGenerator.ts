@@ -1,5 +1,5 @@
 import { RootGenerator, FieldConfigUtils } from '../../generator'
-import { IGQLType } from '../../../datamodel/model'
+import { IGQLType, plural, capitalize } from 'prisma-datamodel'
 import {
   GraphQLObjectType,
   GraphQLID,
@@ -10,7 +10,6 @@ import {
   GraphQLInputObjectType,
   GraphQLString,
 } from 'graphql/type'
-import { plural, camelCase } from '../../../util/util'
 
 export default class MutationGenerator extends RootGenerator {
   public getTypeName(input: IGQLType[], args: {}) {
@@ -40,20 +39,22 @@ export default class MutationGenerator extends RootGenerator {
     const fields = {} as GraphQLFieldConfigMap<null, null>
 
     // TODO: model.fields.length === 0 should be encapuslated in the respective "wouldBeEmpty" or another helper function
-    const wouldBeEmpty = this.generators.modelCreateInput.wouldBeEmpty(model, {})
+    const wouldBeEmpty = this.generators.modelCreateInput.wouldBeEmpty(
+      model,
+      {},
+    )
 
     fields[`create${model.name}`] = {
       type: new GraphQLNonNull(this.generators.model.generate(model, {})),
-      args:
-        wouldBeEmpty
-          ? {}
-          : {
-              data: {
-                type: new GraphQLNonNull(
-                  this.generators.modelCreateInput.generate(model, {}),
-                ),
-              },
+      args: wouldBeEmpty
+        ? {}
+        : {
+            data: {
+              type: new GraphQLNonNull(
+                this.generators.modelCreateInput.generate(model, {}),
+              ),
             },
+          },
     }
 
     return fields

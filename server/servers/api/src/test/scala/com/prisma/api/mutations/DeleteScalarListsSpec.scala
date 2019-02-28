@@ -1,7 +1,7 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.ScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -15,7 +15,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type TestModel {
         | id: ID! @unique
         | name: String! @unique
-        | list: [Int!]!
+        | list: [Int]
         |}"""
     }
 
@@ -45,7 +45,7 @@ class DeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
       """type Top {
         | id: ID! @unique
         | name: String! @unique
-        | list: [Int!]!
+        | list: [Int]
         |}"""
     }
 

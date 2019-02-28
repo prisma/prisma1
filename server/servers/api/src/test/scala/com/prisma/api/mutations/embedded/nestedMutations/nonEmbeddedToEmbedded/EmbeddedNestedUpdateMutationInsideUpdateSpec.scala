@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -13,7 +13,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() {
       """type Todo {
         | id: ID! @unique
-        | comments: [Comment!]!
+        | comments: [Comment]
         |}
         |
         |type Comment @embedded {
@@ -73,7 +73,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
       """type List {
         | id: ID! @unique
         | listUnique: String! @unique
-        | todoes: [Todo!]!
+        | todoes: [Todo]
         |}
         |
         |type Todo @embedded{
@@ -189,7 +189,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |type Note {
         | id: ID! @unique
         | text: String
-        | todoes: [Todo!]!
+        | todoes: [Todo]
         |}
       """
     }
@@ -247,7 +247,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
       """type Note {
         | id: ID! @unique
         | text: String @unique
-        | todos: [Todo!]!
+        | todos: [Todo]
         |}
         |
         |type Todo @embedded{
@@ -310,12 +310,12 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom @embedded{
@@ -389,12 +389,12 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom!]!
+                                             |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom @embedded{
@@ -468,7 +468,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() { """type Top {
                                              |  id: ID! @unique
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle!]!
+                                             |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
@@ -551,7 +551,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below @embedded{
@@ -638,7 +638,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
                                              |
                                              |type Bottom @embedded{
                                              |  nameBottom: String! @unique
-                                             |  below: [Below!]!
+                                             |  below: [Below]
                                              |}
                                              |
                                              |type Below @embedded{
@@ -946,5 +946,67 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
       errorCode = 3041,
       errorContains = """The relation BottomToMiddle has no node for the model Middle connected to a Node for the model Bottom on your mutation path."""
     )
+  }
+
+  "Updating toOne relations" should "work" in {
+
+    val project = SchemaDsl.fromString() {
+      """type Top {
+        |   id: ID! @unique
+        |   unique: Int! @unique
+        |   name: String!
+        |   middle: Middle
+        |}
+        |
+        |type Middle @embedded{
+        |   unique: Int! @unique
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |   createTop(data: {
+         |   unique: 1,
+         |   name: "Top",
+         |   middle: {create:{
+         |      unique: 11,
+         |      name: "Middle"
+         |   }
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11}}}}""")
+
+    val res2 = server.query(
+      s"""mutation {
+         |   updateTop(
+         |   where:{unique: 1}
+         |   data: {
+         |      name: "Top2",
+         |      middle: {update:{
+         |          name: "MiddleNew"
+         |      }
+         |   }
+         |}){
+         |  unique,
+         |  middle{
+         |    unique
+         |    name
+         |  }
+         |}}""".stripMargin,
+      project
+    )
+
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":{"unique":11,"name":"MiddleNew"}}}}""")
   }
 }

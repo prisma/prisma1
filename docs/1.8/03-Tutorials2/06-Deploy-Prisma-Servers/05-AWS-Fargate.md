@@ -57,7 +57,7 @@ Navigate to [https://console.aws.amazon.com/cloudformation/](https://console.aws
 
 <Instruction>
 
-Once you have a fargate-supporting region selected, click the **Create Stack **button. On the next screen, you then need to provide your CloudFormation template.
+Once you have a fargate-supported region selected, click the **Create Stack **button. On the next screen, you then need to provide your CloudFormation template.
 
 ![](https://cdn-images-1.medium.com/max/2724/1*5YhGCnRB5d9PLoBnKsRXNw.png)
 

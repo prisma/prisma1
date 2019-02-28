@@ -1,5 +1,5 @@
 import { GraphQLEnumType, GraphQLEnumValueConfigMap } from 'graphql/type'
-import { IGQLType } from '../../../datamodel/model'
+import { IGQLType } from 'prisma-datamodel'
 import { ModelEnumTypeGeneratorBase } from '../../generator'
 import GQLAssert from '../../../util/gqlAssert'
 
@@ -12,7 +12,8 @@ export default class ModelEnumTypeGenerator extends ModelEnumTypeGeneratorBase {
     const enumValues = {} as GraphQLEnumValueConfigMap
 
     for (const field of input.fields) {
-      enumValues[`${field.name}`] = field.defaultValue !== null ? { value: field.defaultValue } : {}
+      enumValues[`${field.name}`] =
+        field.defaultValue !== null ? { value: field.defaultValue } : {}
     }
 
     return new GraphQLEnumType({

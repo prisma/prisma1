@@ -1,5 +1,5 @@
 import { GraphQLInputFieldConfigMap, GraphQLNonNull } from 'graphql/type'
-import { IGQLType } from '../../../../datamodel/model'
+import { IGQLType } from 'prisma-datamodel'
 import { ModelInputObjectTypeGenerator } from '../../../generator'
 
 export default class ModelUpsertNestedInputGenerator extends ModelInputObjectTypeGenerator {

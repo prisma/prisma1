@@ -11,9 +11,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec: ExecutionContext) extends DataResolver with FilterConditionBuilder {
 
-  val queryBuilder = MongoActionsBuilder(project.id, client)
+  val queryBuilder = MongoActionsBuilder(project.dbName, client)
 
-  val database = client.getDatabase(project.id)
+  val database = client.getDatabase(project.dbName)
 
   override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = {
     val query = queryBuilder.getModelForGlobalId(project, globalId)

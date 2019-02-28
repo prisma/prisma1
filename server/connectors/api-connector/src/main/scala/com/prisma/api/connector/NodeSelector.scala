@@ -21,8 +21,10 @@ object NodeAddress {
 }
 
 case class NodeAddress(where: NodeSelector, path: Path = Path.empty) {
-  def idValue: IdGCValue                                 = where.fieldGCValue.asInstanceOf[IdGCValue]
-  def newPath(newPath: Path): NodeAddress                = this.copy(path = newPath)
-  def appendPath(rf: RelationField)                      = newPath(this.path.append(rf))
-  def appendPath(rf: RelationField, where: NodeSelector) = newPath(this.path.append(rf, where))
+  def idValue: IdGCValue                                                   = where.fieldGCValue.asInstanceOf[IdGCValue]
+  def newPath(newPath: Path): NodeAddress                                  = this.copy(path = newPath)
+  def appendPath(rf: RelationField)                                        = newPath(this.path.append(rf))
+  def appendPath(rf: RelationField, where: NodeSelector)                   = newPath(this.path.append(rf, where))
+  def appendPath(rf: RelationField, where: NodeSelector, node: PrismaNode) = newPath(this.path.append(rf, NodeSelector.forId(where.model, node.id)))
+  def appendPath(rf: RelationField, whereFilter: Option[Filter])           = newPath(this.path.append(rf, whereFilter))
 }

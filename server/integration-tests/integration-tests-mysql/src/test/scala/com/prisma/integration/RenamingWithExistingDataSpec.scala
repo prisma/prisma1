@@ -26,6 +26,30 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"bs":[{"a":"A"}]}}""")
   }
 
+  "Renaming a model with a scalar list " should "work" in {
+
+    val schema =
+      """type A {
+        |  a: String! @unique
+        |  ints: [Int!]!
+        |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{a:"A"}){a}}""", project)
+
+    val schema1 =
+      """type B @rename(oldName: "A"){
+        |  a: String! @unique
+        |  ints: [Int!]!
+        |}"""
+
+    val updatedProject = deployServer.deploySchema(project, schema1)
+
+    val bs = apiServer.query("""{bs{a}}""", updatedProject)
+    bs.toString should be("""{"data":{"bs":[{"a":"A"}]}}""")
+  }
+
   "Renaming a field" should "work" in {
 
     val schema =

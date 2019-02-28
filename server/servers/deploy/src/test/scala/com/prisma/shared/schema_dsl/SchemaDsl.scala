@@ -1,12 +1,13 @@
 package com.prisma.shared.schema_dsl
 
+import com.prisma.config.ConfigLoader
 import com.prisma.deploy.connector.{DeployConnector, InferredTables, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
-import com.prisma.deploy.migration.validation.SchemaSyntaxValidator
+import com.prisma.deploy.migration.validation.{DataModelValidator, DataModelValidatorImpl, LegacyDataModelValidator}
 import com.prisma.gc_values.GCValue
-import com.prisma.shared.models.ApiConnectorCapability.MongoRelationsCapability
+import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, RelationLinkListCapability}
 import com.prisma.shared.models.IdType.Id
-import com.prisma.shared.models.Manifestations.{FieldManifestation, InlineRelationManifestation, ModelManifestation}
+import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, FieldManifestation, ModelManifestation}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
@@ -17,24 +18,22 @@ object SchemaDsl extends AwaitUtils {
 
   import scala.collection.mutable.Buffer
 
-  def apply() = SchemaBuilder()
-
   def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
     val schemaBuilder = SchemaBuilder()
     fn(schemaBuilder)
     val project = schemaBuilder.build(id = projectId(suite))
 
     if (!deployConnector.isActive) {
-      addIdFields(addManifestations(project, deployConnector), cuidField)
+      addIdFields(addManifestations(project, deployConnector))
     } else {
-      addIdFields(project, cuidField)
+      addIdFields(project)
     }
   }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector)(sdlString.stripMargin)
+    val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector, LegacyDataModelValidator)(sdlString.stripMargin)
 
-    if (!deployConnector.isActive || deployConnector.hasCapability(MongoRelationsCapability)) {
+    if (!deployConnector.isActive || deployConnector.capabilities.has(RelationLinkListCapability)) {
       addManifestations(project, deployConnector)
     } else {
       project
@@ -53,21 +52,22 @@ object SchemaDsl extends AwaitUtils {
       id: String = TestIds.testProjectId
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    fromString(id, inferredTables, deployConnector)(sdlString)
+    val project        = fromString(id, inferredTables, deployConnector, DataModelValidatorImpl)(sdlString)
+    project.copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
   }
 
   private def fromString(
       id: String,
       inferredTables: InferredTables,
-      deployConnector: DeployConnector
+      deployConnector: DeployConnector,
+      dataModelValidator: DataModelValidator
   )(sdlString: String): Project = {
     val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
-    val validator          = SchemaSyntaxValidator(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities)
 
-    val prismaSdl = validator.validateSyntax match {
-      case Good(prismaSdl) =>
-        prismaSdl
+    val prismaSdl = dataModelValidator.validate(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities) match {
+      case Good(result) =>
+        result.dataModel
       case Bad(errors) =>
         sys.error(
           s"""Encountered the following errors during schema validation. Please fix:
@@ -78,13 +78,17 @@ object SchemaDsl extends AwaitUtils {
 
     val schema                 = SchemaInferrer(deployConnector.capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
-    TestProject().copy(id = id, schema = withBackRelationsAdded)
+    val manifestation = ConfigLoader.load().databases.head.connector match {
+      case x if x == "postgres" => ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"), x)
+      case y                    => ProjectManifestation(database = Some(id + "_DB"), schema = None, y)
+    }
+    TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }
 
   private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {
     val schema = project.schema
     val newRelations = project.relations.map { relation =>
-      if ((relation.isManyToMany && !deployConnector.hasCapability(MongoRelationsCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
+      if ((relation.isManyToMany && deployConnector.capabilities.hasNot(RelationLinkListCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
         relation.template
       } else {
         val relationFields = Vector(relation.modelAField, relation.modelBField)
@@ -94,8 +98,8 @@ object SchemaDsl extends AwaitUtils {
         }
         val modelToLinkTo          = fieldToRepresentAsInlineRelation.model
         val modelToPutRelationInto = fieldToRepresentAsInlineRelation.relatedModel_!
-        val manifestation = InlineRelationManifestation(
-          inTableOfModelId = modelToPutRelationInto.name,
+        val manifestation = EmbeddedRelationLink(
+          inTableOfModelName = modelToPutRelationInto.name,
           referencingColumn = s"${relation.name}_${modelToLinkTo.name.toLowerCase}_id"
         )
         relation.template.copy(manifestation = Some(manifestation))
@@ -112,13 +116,13 @@ object SchemaDsl extends AwaitUtils {
     project.copy(schema = schema.copy(relationTemplates = newRelations, modelTemplates = newModels))
   }
 
-  private def addIdFields(project: Project, idField: FieldTemplate): Project = {
+  private def addIdFields(project: Project): Project = {
     val newModels = project.models.map { model =>
       val modelContainsAlreadyAnIdField = model.idField.isDefined
       if (modelContainsAlreadyAnIdField) {
         model.copy()
       } else {
-        val newFields = model.fields.map(_.template) :+ idField
+        val newFields = model.fields.map(_.template) :+ cuidField
         model.copy(fieldTemplates = newFields)
       }
     }
@@ -429,7 +433,8 @@ object SchemaDsl extends AwaitUtils {
       isHidden = isHidden,
       relationName = None,
       relationSide = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
@@ -454,7 +459,8 @@ object SchemaDsl extends AwaitUtils {
       isReadonly = false,
       defaultValue = None,
       enum = None,
-      manifestation = None
+      manifestation = None,
+      behaviour = None
     )
   }
 
@@ -471,7 +477,8 @@ object SchemaDsl extends AwaitUtils {
     defaultValue = None,
     relationName = None,
     relationSide = None,
-    manifestation = None
+    manifestation = None,
+    behaviour = None
   )
 
   private val intIdField = FieldTemplate(
@@ -481,12 +488,13 @@ object SchemaDsl extends AwaitUtils {
     isList = false,
     isUnique = true,
     isReadonly = true,
-    isAutoGenerated = true,
+    isAutoGeneratedByDb = true,
     enum = None,
     defaultValue = None,
     relationName = None,
     relationSide = None,
-    manifestation = None
+    manifestation = None,
+    behaviour = None
   )
 
   private val updatedAtField = FieldTemplate(
@@ -500,7 +508,8 @@ object SchemaDsl extends AwaitUtils {
     defaultValue = None,
     relationName = None,
     relationSide = None,
-    manifestation = None
+    manifestation = None,
+    behaviour = None
   )
 
   private val createdAtField = FieldTemplate(
@@ -514,6 +523,7 @@ object SchemaDsl extends AwaitUtils {
     defaultValue = None,
     relationName = None,
     relationSide = None,
-    manifestation = None
+    manifestation = None,
+    behaviour = None
   )
 }

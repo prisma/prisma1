@@ -17,7 +17,7 @@ import {
 
 function randomString(len = 32) {
   return crypto
-    .randomBytes(Math.ceil(len * 3 / 4))
+    .randomBytes(Math.ceil((len * 3) / 4))
     .toString('base64')
     .slice(0, len)
     .replace(/\+/g, '0')
@@ -43,20 +43,29 @@ export default class Playground extends Command {
     }),
     port: flags.number({
       char: 'p',
-      defaultValue: 3000,
-      description: 'Port to serve the Playground web version on. Assumes --web.',
+      description:
+        'Port to serve the Playground web version on. Assumes --web.',
     }),
   }
   async run() {
-    const port = this.flags.port
-    const web = !!(this.flags.web || port)
+    let { web, port } = this.flags
+
+    // port assumes web. using default value of flags will break this!
+    if (port) {
+      web = true
+    }
+
+    // set default value, don't overwrite
+    if (!port) {
+      port = 3000
+    }
 
     const envFile = this.flags['env-file']
     const serverOnly = this.flags['server-only']
     await this.definition.load(this.flags, envFile)
 
     const stage = this.definition.stage!
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
 
@@ -69,15 +78,17 @@ export default class Playground extends Command {
     const config = await this.getConfig()
 
     if (shouldStartServer) {
-      const endpoint = this.definition.definition!.endpoint || cluster!.getApiEndpoint(
-        this.definition.service!,
-        stage,
-        this.definition.getWorkspace() || undefined,
-      )
+      const endpoint =
+        this.definition.definition!.endpoint ||
+        cluster!.getApiEndpoint(
+          this.definition.service!,
+          stage,
+          this.definition.getWorkspace() || undefined,
+        )
       const link = await this.startServer({ config, endpoint, port })
 
       if (shouldOpenBrowser) {
-        opn(link).catch(() => {}); // Prevent `unhandledRejection` error.
+        opn(link).catch(() => {}) // Prevent `unhandledRejection` error.
       }
     } else {
       const envPath = path.join(os.tmpdir(), `${randomString()}.json`)
@@ -105,7 +116,7 @@ export default class Playground extends Command {
   }: {
     config
     endpoint: string
-    port: string
+    port: any
   }) =>
     new Promise<string>(async (resolve, reject) => {
       const app = express()

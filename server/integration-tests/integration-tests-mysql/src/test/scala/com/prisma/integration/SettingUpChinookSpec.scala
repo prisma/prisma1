@@ -15,7 +15,7 @@ class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSp
         |  id: ID! @unique
         |  ArtistId: Int! @unique
         |  Name: String!
-        |  Albums: [Album!]!
+        |  Albums: [Album]
         |}
         |
         |type Album {
@@ -23,21 +23,21 @@ class SettingUpChinookSpec extends FlatSpec with Matchers with IntegrationBaseSp
         |  AlbumId: Int! @unique
         |  Title: String!
         |  Artist: Artist!
-        |  Tracks: [Track!]!
+        |  Tracks: [Track]
         |}
         |
         |type Genre {
         |  id: ID! @unique
         |  GenreId: Int! @unique
         |  Name: String!
-        |  Tracks: [Track!]!
+        |  Tracks: [Track]
         |}
         |
         |type MediaType {
         |  id: ID! @unique
         |  MediaTypeId: Int! @unique
         |  Name: String!
-        |  Tracks: [Track!]!
+        |  Tracks: [Track]
         |}
         |
         |type Track {

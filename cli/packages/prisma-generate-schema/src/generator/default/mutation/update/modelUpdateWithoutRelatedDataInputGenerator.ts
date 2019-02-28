@@ -1,8 +1,9 @@
-import { RelatedModelInputObjectTypeGenerator, RelatedGeneratorArgs } from '../../../generator'
-import { IGQLType, IGQLField } from '../../../../datamodel/model'
-import { capitalize } from '../../../../util/util';
-import ModelUpdateInputGenerator from './modelUpdateInputGenerator';
-
+import {
+  RelatedModelInputObjectTypeGenerator,
+  RelatedGeneratorArgs,
+} from '../../../generator'
+import { IGQLType, IGQLField, capitalize } from 'prisma-datamodel'
+import ModelUpdateInputGenerator from './modelUpdateInputGenerator'
 
 export default class ModelUpdateWithoutRelatedInputGenerator extends RelatedModelInputObjectTypeGenerator {
   public getTypeName(input: IGQLType, args: RelatedGeneratorArgs) {
@@ -10,14 +11,37 @@ export default class ModelUpdateWithoutRelatedInputGenerator extends RelatedMode
     return `${input.name}UpdateWithout${capitalize(field.name)}DataInput`
   }
 
-  protected generateScalarFieldType(model: IGQLType, args: {}, field: IGQLField) {
-    return ModelUpdateInputGenerator.generateScalarFieldTypeForInputType(model, field, this.generators)
+  public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
+    return !this.hasFieldsExcept(
+      this.getWriteableFields(model.fields),
+      (args.relatedField.relatedField as IGQLField).name,
+    )
   }
 
-  protected generateRelationFieldType(model: IGQLType, args: RelatedGeneratorArgs, field: IGQLField) {
+  protected generateScalarFieldType(
+    model: IGQLType,
+    args: {},
+    field: IGQLField,
+  ) {
+    return ModelUpdateInputGenerator.generateScalarFieldTypeForInputType(
+      model,
+      field,
+      this.generators,
+    )
+  }
+
+  protected generateRelationFieldType(
+    model: IGQLType,
+    args: RelatedGeneratorArgs,
+    field: IGQLField,
+  ) {
     if (field.relatedField === args.relatedField) {
       return null
     }
-    return ModelUpdateInputGenerator.generateRelationFieldForInputType(model, field, this.generators)
+    return ModelUpdateInputGenerator.generateRelationFieldForInputType(
+      model,
+      field,
+      this.generators,
+    )
   }
 }

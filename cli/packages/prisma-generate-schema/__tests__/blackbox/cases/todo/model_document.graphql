@@ -3,7 +3,7 @@ type Todo {
   id: ID! @id
   text: String!
   done: Boolean!
-  user: User! @relation(strategy: EMBED)
+  user: User! @relation(link: INLINE)
 }
 
 type User {

@@ -90,7 +90,9 @@ object SubscriptionExecutor {
 
     val sangriaHandler = ErrorHandler(
       requestId,
-      HttpRequest(),
+      method = "",
+      uri = "",
+      headers = Vector.empty,
       query.renderPretty,
       variables,
       dependencies.reporter,

@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ApiConnectorCapability.SupportsExistingDatabasesCapability
+import com.prisma.shared.models.ConnectorCapability.SupportsExistingDatabasesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -399,7 +399,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val project = SchemaDsl.fromString() {
       """type Parent{
         |   name: String! @unique
-        |   child: [Child!]!
+        |   child: [Child]
         |}
         |
         |type Child{
@@ -432,9 +432,12 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |input ChildUpdateManyWithoutParentInput {
                        |  create: [ChildCreateWithoutParentInput!]
                        |  connect: [ChildWhereUniqueInput!]
+                       |  set: [ChildWhereUniqueInput!]
                        |  disconnect: [ChildWhereUniqueInput!]
                        |  delete: [ChildWhereUniqueInput!]
                        |  update: [ChildUpdateWithWhereUniqueWithoutParentInput!]
+                       |  updateMany: [ChildUpdateManyWithWhereNestedInput!]
+                       |  deleteMany: [ChildScalarWhereInput!]
                        |  upsert: [ChildUpsertWithWhereUniqueWithoutParentInput!]
                        |}
                        |
