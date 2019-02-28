@@ -1,14 +1,14 @@
 # Roadmap
 
-This documents contains a rough outline for future features and changes in Prisma. Its primary purpose is to provide visibility in the current efforts of the Prisma engineering team and make Prisma users aware of upcoming changes. 
+This document contains a rough outline for future features and changes in Prisma. Its primary purpose is to provide visibility into the current efforts of the Prisma engineering team and make Prisma users aware of upcoming changes.
 
-The roadmap is updated every two weeks (i.e. with every Prisma release). If you want to see the changes that have happened in the last releases, check out the [changelog](https://github.com/prisma/prisma/releases).
+The roadmap is updated every two weeks (i.e. with every Prisma release). If you want to see the changes that have happened in the latest releases, check out the [changelog](https://github.com/prisma/prisma/releases).
 
 ## Q1/Q2 2019
 
 ### Short term fixes & improvements
 
-The following lists represents a number of smaller-scope issues and improvements we are currently working on. While we're trying to be as foreseeing as possible, our priorities might shift and the list might be adjusted in a release cycle.
+The following lists represent a number of smaller-scope issues and improvements that we are currently working on. While we're trying to be as accurate as possible, our priorities might shift and the list may be adjusted in a future release cycle.
 
 #### Improvements
 
@@ -32,7 +32,7 @@ The following lists represents a number of smaller-scope issues and improvements
 
 ### Specification phase
 
-The "specification phase" reflects the spec work we do before starting to actually implement a feature. All important features are being specified and discussed on GitHub, please join the discussions and share your opinions with us. 
+The "specification phase" reflects the spec work we do before starting to actually implement a feature. All important features are being specced out and discussed on GitHub. Please join the discussions and share your opinions with us.
 
 Here are the big features that are currently being specced out:
 
@@ -43,7 +43,7 @@ Here are the big features that are currently being specced out:
 
 ### Implementation phase
 
-The "implementation phase" reflexcts the larger features we are currently working on. These features typically require multiple weeks/months to be implemented:
+The "implementation phase" reflects the larger features that we are currently working on. These features typically require multiple weeks/months to be implemented:
 
 - [Prisma Admin](https://github.com/prisma/prisma-admin-feedback)
 - [Datamodel v1.1](https://github.com/prisma/prisma/issues/3408)
@@ -52,7 +52,7 @@ The "implementation phase" reflexcts the larger features we are currently workin
 
 ## Upcoming
 
-While the following features are currently not listed in the `Q1/Q2 2019`-section, they might still get added to it:
+While the following features are currently not listed in the `Q1/Q2 2019`-section, they may still get added to it:
 
 - Datamodel v2
 - Prisma SDK
