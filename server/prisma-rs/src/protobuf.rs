@@ -126,7 +126,7 @@ impl RelationFilter {
         sub_select: Select,
     ) -> Expression {
         match condition {
-            relation_filter::Condition::EveryRelatedNode => true,
+            relation_filter::Condition::EveryRelatedNode => column.in_selection(sub_select),
             relation_filter::Condition::NoRelatedNode => true,
             relation_filter::Condition::AtLeastOneRelatedNode => true,
             relation_filter::Condition::ToOneRelatedNode => true,
