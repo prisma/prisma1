@@ -1,4 +1,4 @@
-use crate::{Field, RelationField, RelationSide, ScalarField};
+use crate::{Field, RelationField, ScalarField};
 use prisma_common::{error::Error, PrismaResult};
 use std::{
     collections::BTreeSet,
@@ -81,7 +81,7 @@ impl Fields {
         self.all
             .iter()
             .find(|field| field.db_name() == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("1 Field not found: {}", name)))
     }
 
     pub fn find_from_scalar(&self, name: &str) -> PrismaResult<Arc<ScalarField>> {
@@ -89,15 +89,15 @@ impl Fields {
             .iter()
             .find(|field| field.db_name() == name)
             .cloned()
-            .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("2 Field not found: {}", name)))
     }
 
     pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
         self.relation()
             .iter()
-            .find(|field| field.db_name() == name)
+            .find(|field| field.with_relation(|relation| relation.name == name))
             .cloned()
-            .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("3 Field not found: {}", name)))
     }
 
     fn scalar_filter(mut acc: Vec<Weak<ScalarField>>, field: &Field) -> Vec<Weak<ScalarField>> {

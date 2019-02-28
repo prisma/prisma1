@@ -117,7 +117,7 @@ impl RelationFilter {
             .find_from_relation(&self.field.field)
             .expect("Relation not found");
 
-        let relation = relation_field.relation.upgrade().unwrap();
+        let relation = relation_field.with_relation(|relation| relation);
         let invert_condition_of_subselect = match self.condition() {
             relation_filter::Condition::EveryRelatedNode => true,
             _ => false,

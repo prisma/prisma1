@@ -1,6 +1,6 @@
 use super::FieldManifestation;
 use crate::prelude::*;
-use prisma_query::ast::*;
+use once_cell::unsync::OnceCell;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -33,7 +33,7 @@ pub struct RelationField {
     pub relation_side: RelationSide,
     #[debug_stub = "#ModelWeakRef#"]
     pub model: ModelWeakRef,
-    pub relation: RelationWeakRef,
+    pub relation: OnceCell<RelationWeakRef>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
@@ -52,11 +52,21 @@ impl RelationSide {
 }
 
 impl RelationField {
-    fn with_relation<F, T>(&self, f: F) -> T
+    fn relation(&self) -> Option<RelationRef> {
+        self.relation
+            .get_or_init(|| {
+                self.with_model(|model| {
+                    model.with_schema(|schema| schema.find_relation(&self.relation_name).unwrap())
+                })
+            })
+            .upgrade()
+    }
+
+    pub fn with_relation<F, T>(&self, f: F) -> T
     where
         F: FnOnce(RelationRef) -> T,
     {
-        match self.relation.upgrade() {
+        match self.relation() {
             Some(relation) => f(relation),
             None => panic!(
                 "Relation does not exist anymore. Parent relation is deleted without deleting the child fields."

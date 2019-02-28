@@ -5,19 +5,20 @@ pub use relation::*;
 pub use scalar::*;
 
 use crate::prelude::*;
+use once_cell::unsync::OnceCell;
 use std::{borrow::Cow, sync::Arc};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum FieldTemplate {
-    Scalar(ScalarFieldTemplate),
     Relation(RelationFieldTemplate),
+    Scalar(ScalarFieldTemplate),
 }
 
 #[derive(Debug)]
 pub enum Field {
-    Scalar(Arc<ScalarField>),
     Relation(Arc<RelationField>),
+    Scalar(Arc<ScalarField>),
 }
 
 #[derive(Debug, Deserialize)]
@@ -70,11 +71,6 @@ impl FieldTemplate {
                 Field::Scalar(Arc::new(scalar))
             }
             FieldTemplate::Relation(rt) => {
-                let relation = model
-                    .upgrade()
-                    .unwrap()
-                    .with_schema(|schema| schema.find_relation(&rt.relation_name).unwrap());
-
                 let relation = RelationField {
                     name: rt.name,
                     type_identifier: rt.type_identifier,
@@ -87,7 +83,7 @@ impl FieldTemplate {
                     relation_name: rt.relation_name,
                     relation_side: rt.relation_side,
                     model,
-                    relation,
+                    relation: OnceCell::new(),
                 };
 
                 Field::Relation(Arc::new(relation))

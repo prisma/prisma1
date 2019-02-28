@@ -105,7 +105,6 @@ impl RelationTemplate {
 
         let model_a = {
             let model = relation.with_schema(|schema| schema.find_model(&model_a_name).unwrap());
-
             let field = model.fields().find_from_relation(&relation.name).unwrap();
 
             RelationAttributes::new(model_a_name, model, field, self.model_a_on_delete)
@@ -113,7 +112,6 @@ impl RelationTemplate {
 
         let model_b = {
             let model = relation.with_schema(|schema| schema.find_model(&model_b_name).unwrap());
-
             let field = model.fields().find_from_relation(&relation.name).unwrap();
 
             RelationAttributes::new(model_b_name, model, field, self.model_b_on_delete)
