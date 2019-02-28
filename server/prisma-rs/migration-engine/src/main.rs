@@ -1,12 +1,12 @@
-mod steps;
-mod rpc_api;
 mod commands;
 mod migration;
+mod rpc_api;
+mod steps;
 
 use rpc_api::RpcApi;
-use steps::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use steps::*;
 
 #[macro_use]
 extern crate serde_derive;

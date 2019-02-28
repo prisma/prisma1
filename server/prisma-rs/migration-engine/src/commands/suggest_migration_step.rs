@@ -1,10 +1,8 @@
 use super::DataModelWarningOrError;
 use crate::commands::command::MigrationCommand;
-use crate::migration::migration_steps_inferrer::{
-    MigrationStepsInferrer, MigrationStepsInferrerImpl,
-};
-use nullable::Nullable::*;
+use crate::migration::migration_steps_inferrer::{MigrationStepsInferrer, MigrationStepsInferrerImpl};
 use crate::steps::*;
+use nullable::Nullable::*;
 
 pub struct SuggestMigrationStepsCommand {
     input: SuggestMigrationStepsInput,

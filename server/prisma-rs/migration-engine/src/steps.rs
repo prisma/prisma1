@@ -37,9 +37,9 @@ pub struct UpdateModel {
     pub new_name: Option<String>,
 
     #[serde(
-    default,
-    skip_serializing_if = "Option::is_none",
-    deserialize_with = "nullable::optional_nullable_deserialize"
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "nullable::optional_nullable_deserialize"
     )]
     pub db_name: Option<Nullable<String>>,
 
@@ -236,8 +236,8 @@ pub enum OnDelete {
 
 #[cfg(test)]
 mod tests {
-    use nullable::Nullable::*;
     use crate::steps::*;
+    use nullable::Nullable::*;
     use serde_json::Value;
 
     #[test]
@@ -385,8 +385,7 @@ mod tests {
 
     #[test]
     fn CreateEnum_must_work() {
-        let json =
-            r#"{"stepType":"CreateEnum","name":"BlogCategory","values":["Politics","Tech"]}"#;
+        let json = r#"{"stepType":"CreateEnum","name":"BlogCategory","values":["Politics","Tech"]}"#;
         let expected_struct = MigrationStep::CreateEnum(CreateEnum {
             name: "BlogCategory".to_string(),
             values: vec!["Politics".to_string(), "Tech".to_string()],
@@ -536,8 +535,7 @@ mod tests {
     }
 
     fn assert_symmetric_serde(json: &str, expected: MigrationStep) {
-        let serde_value =
-            serde_json::from_str::<Value>(&json).expect("The provided input was invalid json.");
+        let serde_value: Value = serde_json::from_str(&json).expect("The provided input was invalid json.");
         let deserialized: MigrationStep = serde_json::from_str(&json).expect("Deserialization failed.");
         let serialized_again = serde_json::to_value(&deserialized).expect("Serialization failed");
         assert_eq!(
