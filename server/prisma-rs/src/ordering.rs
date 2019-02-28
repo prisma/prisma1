@@ -1,4 +1,6 @@
-use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult};
+use crate::protobuf::prelude::*;
+use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
 use prisma_query::ast::*;
 use std::sync::Arc;
 

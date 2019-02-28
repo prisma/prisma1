@@ -1,4 +1,4 @@
-use crate::models::prelude::*;
+use crate::prelude::*;
 use prisma_query::ast::Table;
 
 use once_cell::unsync::OnceCell;

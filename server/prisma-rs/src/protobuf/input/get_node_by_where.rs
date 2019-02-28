@@ -1,11 +1,9 @@
 use crate::{
     data_resolvers::{IntoSelectQuery, SelectQuery},
-    error::Error,
-    models::prelude::*,
     protobuf::prelude::*,
-    PrismaResult,
 };
-
+use prisma_common::{error::Error, PrismaResult};
+use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
 impl IntoSelectQuery for GetNodeByWhereInput {

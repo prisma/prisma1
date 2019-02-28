@@ -1,4 +1,3 @@
-use crate::protobuf::prisma;
 use std::error::Error as StdError;
 
 type Cause = Box<dyn StdError>;
@@ -54,32 +53,6 @@ impl StdError for Error {
             Error::ProtobufDecodeError(_, cause) => Self::fetch_cause(&cause),
             Error::JsonDecodeError(_, cause) => Self::fetch_cause(&cause),
             _ => None,
-        }
-    }
-}
-
-impl Into<prisma::error::Value> for Error {
-    fn into(self) -> prisma::error::Value {
-        match self {
-            Error::ConnectionError(message, _) => {
-                prisma::error::Value::ConnectionError(message.to_string())
-            }
-            Error::QueryError(message, _) => prisma::error::Value::QueryError(message.to_string()),
-            Error::ProtobufDecodeError(message, _) => {
-                prisma::error::Value::ProtobufDecodeError(message.to_string())
-            }
-            Error::JsonDecodeError(message, _) => {
-                prisma::error::Value::JsonDecodeError(message.to_string())
-            }
-            Error::InvalidInputError(message) => {
-                prisma::error::Value::InvalidInputError(message.to_string())
-            }
-            Error::InvalidConnectionArguments(message) => {
-                prisma::error::Value::InvalidConnectionArguments(message.to_string())
-            }
-            e @ Error::NoResultError => {
-                prisma::error::Value::NoResultsError(e.description().to_string())
-            }
         }
     }
 }

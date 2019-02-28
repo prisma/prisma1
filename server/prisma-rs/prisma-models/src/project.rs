@@ -1,4 +1,4 @@
-pub use crate::models::prelude::*;
+pub use crate::prelude::*;
 use once_cell::unsync::OnceCell;
 use std::sync::{Arc, Weak};
 

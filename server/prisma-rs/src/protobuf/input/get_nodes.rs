@@ -1,12 +1,12 @@
 use crate::{
     cursor_condition::CursorCondition,
     data_resolvers::{IntoSelectQuery, SelectQuery},
-    models::prelude::*,
     ordering::Ordering,
     protobuf::prelude::*,
-    PrismaResult,
 };
 
+use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
 impl IntoSelectQuery for GetNodesInput {

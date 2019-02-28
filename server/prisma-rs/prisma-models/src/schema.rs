@@ -1,8 +1,7 @@
-use std::sync::{Arc, Weak};
-
-use crate::{error::Error, models::prelude::*, PrismaResult};
-
+use crate::prelude::*;
 use once_cell::unsync::OnceCell;
+use prisma_common::{error::Error, PrismaResult};
+use std::sync::{Arc, Weak};
 
 pub type SchemaRef = Arc<Schema>;
 pub type SchemaWeakRef = Weak<Schema>;

@@ -1,4 +1,5 @@
-use crate::{models::prelude::*, protobuf::prelude::*};
+use crate::protobuf::prelude::*;
+use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
 #[derive(Clone, Copy)]

@@ -1,8 +1,5 @@
-use crate::{
-    error::Error,
-    models::{Field, RelationField, RelationSide, ScalarField},
-    PrismaResult,
-};
+use crate::{Field, RelationField, RelationSide, ScalarField};
+use prisma_common::{error::Error, PrismaResult};
 use std::{
     collections::BTreeSet,
     sync::{Arc, Weak},

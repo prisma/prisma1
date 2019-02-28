@@ -1,9 +1,9 @@
 use crate::{
     data_resolvers::{DataResolver, SelectQuery, Sqlite},
     protobuf::prelude::*,
-    PrismaResult,
 };
 
+use prisma_common::PrismaResult;
 use prisma_query::visitor::{self, Visitor};
 
 impl DataResolver for Sqlite {

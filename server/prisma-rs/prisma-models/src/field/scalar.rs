@@ -1,7 +1,7 @@
 use prisma_query::ast::*;
 
 use super::FieldManifestation;
-use crate::models::prelude::*;
+use crate::prelude::*;
 use std::sync::Arc;
 
 static ID_FIELD: &str = "id";

@@ -2,10 +2,12 @@ mod data_resolver;
 mod service;
 
 use chrono::{DateTime, Utc};
+use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
 use r2d2_sqlite::SqliteConnectionManager;
 use std::collections::HashSet;
 
-use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult, PrismaValue, SERVER_ROOT};
+use crate::{protobuf::prelude::*, PrismaValue, SERVER_ROOT};
 
 use rusqlite::{
     types::{FromSql, FromSqlResult, ValueRef},

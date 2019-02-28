@@ -4,7 +4,7 @@ mod scalar;
 pub use relation::*;
 pub use scalar::*;
 
-use crate::models::prelude::*;
+use crate::prelude::*;
 use std::{borrow::Cow, sync::Arc};
 
 #[derive(Debug, Deserialize)]

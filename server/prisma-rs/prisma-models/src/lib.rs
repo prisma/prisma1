@@ -1,3 +1,8 @@
+#[macro_use]
+extern crate serde_derive;
+#[macro_use]
+extern crate debug_stub_derive;
+
 mod field;
 mod fields;
 mod model;

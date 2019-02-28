@@ -3,8 +3,9 @@ mod sqlite;
 pub use sqlite::Sqlite;
 pub type PrismaDataResolver = Box<dyn DataResolver + Send + Sync + 'static>;
 
-use crate::{models::prelude::*, ordering::OrderVec, protobuf::prelude::*, PrismaResult};
-
+use crate::{ordering::OrderVec, protobuf::prelude::*};
+use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
 use prisma_query::ast::*;
 use std::{collections::BTreeSet, sync::Arc};
 
