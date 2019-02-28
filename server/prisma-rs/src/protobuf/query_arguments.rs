@@ -95,7 +95,7 @@ impl From<ScalarFilter> for ConditionTree {
                         mc.values
                             .into_iter()
                             .map(|v| v.prisma_value.unwrap())
-                            .collect(),
+                            .collect::<Vec<PrismaValue>>(),
                     ),
                 ),
             },
@@ -108,7 +108,7 @@ impl From<ScalarFilter> for ConditionTree {
                         mc.values
                             .into_iter()
                             .map(|v| v.prisma_value.unwrap())
-                            .collect(),
+                            .collect::<Vec<PrismaValue>>(),
                     ),
                 ),
             },
