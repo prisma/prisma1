@@ -3,7 +3,7 @@ package com.prisma.api.connector.mongo.database
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.MongoResultReader
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.{IdGCValue, StringIdGCValue}
+import com.prisma.gc_values.{GCValue, IdGCValue, StringIdGCValue}
 import com.prisma.shared.models.{Model, RelationField}
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, FindObservable, MongoDatabase}
@@ -43,37 +43,44 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
                       idOnly: Boolean = false,
                       selectedFields: SelectedFields): Future[Seq[Document]] = {
 
-    val updatedQueryArgs = extraFilter match {
-      case Some(inFilter) => queryArguments.copy(filter = Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
-      case None           => queryArguments
-    }
+    // run the subquery first for cursor if necessary
 
-    if (needsAggregation(updatedQueryArgs.filter)) {
-      aggregationQuery(database, model, updatedQueryArgs, selectedFields)
-    } else {
+    CursorConditionBuilder
+      .fetchCursorRowValueById(database, model, queryArguments)
+      .map { rowValueOpt =>
+        val updatedQueryArgs = extraFilter match {
+          case Some(inFilter) => queryArguments.copy(filter = Some(AndFilter(Vector(inFilter) ++ queryArguments.filter)))
+          case None           => queryArguments
+        }
 
-      val skipAndLimit = LimitClauseHelper.skipAndLimitValues(updatedQueryArgs)
-      val mongoFilter  = buildConditionForFilter(updatedQueryArgs.filter)
+        if (needsAggregation(updatedQueryArgs.filter)) {
+          aggregationQuery(database, model, updatedQueryArgs, selectedFields, rowValueOpt)
+        } else {
 
-      val combinedFilter = CursorConditionBuilder.buildCursorCondition(updatedQueryArgs) match {
-        case None         => mongoFilter
-        case Some(filter) => Filters.and(mongoFilter, filter)
+          val skipAndLimit = LimitClauseHelper.skipAndLimitValues(updatedQueryArgs)
+          val mongoFilter  = buildConditionForFilter(updatedQueryArgs.filter)
+
+          val combinedFilter = rowValueOpt match {
+            case Some(rowValue) => Filters.and(mongoFilter, CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue).get)
+            case None           => mongoFilter
+          }
+
+          val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
+          val queryWithOrder: FindObservable[Document] = baseQuery.sort(OrderByClauseBuilder.sortBson(queryArguments))
+          val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
+
+          val queryWithLimit = skipAndLimit.limit match {
+            case Some(limit) => queryWithSkip.limit(limit)
+            case None        => queryWithSkip
+          }
+
+          idOnly match {
+            case true  => queryWithLimit.projection(idProjection).collect().toFuture
+            case false => queryWithLimit.projection(projectSelected(selectedFields)).collect().toFuture
+          }
+        }
       }
-
-      val baseQuery: FindObservable[Document]      = database.getCollection(model.dbName).find(combinedFilter)
-      val queryWithOrder: FindObservable[Document] = baseQuery.sort(OrderByClauseBuilder.sortBson(queryArguments))
-      val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
-
-      val queryWithLimit = skipAndLimit.limit match {
-        case Some(limit) => queryWithSkip.limit(limit)
-        case None        => queryWithSkip
-      }
-
-      idOnly match {
-        case true  => queryWithLimit.projection(idProjection).collect().toFuture
-        case false => queryWithLimit.projection(projectSelected(selectedFields)).collect().toFuture
-      }
-    }
+      .flatten
   }
 
   def getRelatedNodes(fromField: RelationField, fromNodeIds: Vector[IdGCValue], queryArguments: QueryArguments, selectedFields: SelectedFields) =

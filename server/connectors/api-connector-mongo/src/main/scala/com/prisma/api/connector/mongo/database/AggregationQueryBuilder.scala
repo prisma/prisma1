@@ -6,7 +6,7 @@ import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
 import com.prisma.api.connector.mongo.extensions.MongoResultReader
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.{IdGCValue, NullGCValue}
+import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue}
 import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.conversions
@@ -20,20 +20,27 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def aggregationQuery(database: MongoDatabase, model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[Seq[Document]] = {
-    aggregationQueryForId(database, model, queryArguments).flatMap { ids =>
+  def aggregationQuery(database: MongoDatabase,
+                       model: Model,
+                       queryArguments: QueryArguments,
+                       selectedFields: SelectedFields,
+                       rowValueOpt: Option[GCValue]): Future[Seq[Document]] = {
+    aggregationQueryForId(database, model, queryArguments, rowValueOpt).flatMap { ids =>
       val inFilter = in("_id", ids.map(GCToBson(_)): _*)
       database.getCollection(model.dbName).find(inFilter).projection(projectSelected(selectedFields)).toFuture
     }
   }
 
-  def aggregationQueryForId(database: MongoDatabase, model: Model, queryArguments: QueryArguments): Future[Seq[IdGCValue]] = {
+  def aggregationQueryForId(database: MongoDatabase,
+                            model: Model,
+                            queryArguments: QueryArguments,
+                            rowValueOpt: Option[GCValue] = None): Future[Seq[IdGCValue]] = {
 
     //--------------------------- Assemble Pipeline -----------------------------------------------------
     //-------------------------------- Match on Cursor Condition ----------------------------------------
-    val cursorMatch: Option[Bson] = CursorConditionBuilder.buildCursorCondition(queryArguments) match {
-      case None         => None
-      case Some(filter) => Some(filter)
+    val cursorMatch: Option[Bson] = rowValueOpt match {
+      case None           => None
+      case Some(rowValue) => CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue)
     }
 
     //-------------------------------- QueryArg Filter --------------------------------------------------
