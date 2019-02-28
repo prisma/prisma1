@@ -8,7 +8,7 @@ edition = "2018"
 crate-type = ["dylib", "staticlib"]
 
 [workspace]
-members = ["./", "prisma-common", "prisma-models"]
+members = ["./", "prisma-common", "prisma-models", "migration-engine", "libs/nullable", "libs/database-inspector"]
 
 [dependencies]
 prost = "0.4"
