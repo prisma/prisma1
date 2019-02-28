@@ -3,13 +3,13 @@ use database_inspector::DatabaseSchema;
 use prisma_models::Schema;
 
 pub trait MigrationStepsInferrer {
-    fn infer(&self, next: Schema, database_schema: DatabaseSchema) -> Vec<MigrationStep>;
+    fn infer(next: &Schema, database_schema: &DatabaseSchema) -> Vec<MigrationStep>;
 }
 
 pub struct MigrationStepsInferrerImpl;
 
 impl MigrationStepsInferrer for MigrationStepsInferrerImpl {
-    fn infer(&self, next: Schema, database_schema: DatabaseSchema) -> Vec<MigrationStep> {
+    fn infer(next: &Schema, database_schema: &DatabaseSchema) -> Vec<MigrationStep> {
         let default = vec![];
         let next_models = next.models.get().unwrap_or(&default);
         next_models

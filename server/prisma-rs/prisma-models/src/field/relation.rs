@@ -3,7 +3,7 @@ use crate::prelude::*;
 use prisma_query::ast::*;
 use std::sync::Arc;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationFieldTemplate {
     pub name: String,
@@ -36,7 +36,7 @@ pub struct RelationField {
     pub relation: RelationWeakRef,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub enum RelationSide {
     A,
     B,

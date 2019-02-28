@@ -6,14 +6,14 @@ use std::sync::{Arc, Weak};
 pub type RelationRef = Arc<Relation>;
 pub type RelationWeakRef = Weak<Relation>;
 
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OnDelete {
     SetNull,
     Cascade,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InlineRelation {
     #[serde(rename = "inTableOfModelId")]
@@ -21,7 +21,7 @@ pub struct InlineRelation {
     pub referencing_column: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTable {
     pub table: String,
@@ -30,14 +30,14 @@ pub struct RelationTable {
     pub id_column: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", tag = "relation_manifestation_type")]
 pub enum RelationLinkManifestation {
     Inline(InlineRelation),
     RelationTable(RelationTable),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTemplate {
     pub name: String,

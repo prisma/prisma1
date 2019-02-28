@@ -7,7 +7,7 @@ pub use scalar::*;
 use crate::prelude::*;
 use std::{borrow::Cow, sync::Arc};
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", untagged)]
 pub enum FieldTemplate {
     Scalar(ScalarFieldTemplate),
@@ -20,13 +20,13 @@ pub enum Field {
     Relation(Arc<RelationField>),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldManifestation {
     pub db_name: String,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub enum TypeIdentifier {
     String,
     Float,

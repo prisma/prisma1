@@ -2,14 +2,9 @@ use crate::commands::apply_next_migration_step::ApplyNextMigrationStepCommand;
 use crate::commands::command::MigrationCommand;
 use crate::commands::start_migration::StartMigrationCommand;
 use crate::commands::suggest_migration_step::SuggestMigrationStepsCommand;
-use crate::steps::*;
-use chrono::prelude::*;
 use jsonrpc_core;
 use jsonrpc_core::IoHandler;
 use jsonrpc_core::*;
-use nullable::Nullable::*;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
 use std::io;
 
 pub struct RpcApi {

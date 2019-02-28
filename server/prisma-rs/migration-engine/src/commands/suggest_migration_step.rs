@@ -1,7 +1,9 @@
 use super::DataModelWarningOrError;
 use crate::commands::command::MigrationCommand;
 use crate::migration::migration_steps_inferrer::{MigrationStepsInferrer, MigrationStepsInferrerImpl};
+use crate::migration::schema_inferer::*;
 use crate::steps::*;
+use database_inspector::{DatabaseInspector, EmptyDatabaseInspectorImpl};
 use nullable::Nullable::*;
 
 pub struct SuggestMigrationStepsCommand {
@@ -17,29 +19,31 @@ impl MigrationCommand for SuggestMigrationStepsCommand {
     }
 
     fn execute(&self) -> Self::Output {
-        let inferrer = MigrationStepsInferrerImpl;
+        let database_schema = EmptyDatabaseInspectorImpl::inspect("foo".to_string());
+        let schema = LegacySchemaInferer::infer(self.input.data_model.clone());
+        let steps = MigrationStepsInferrerImpl::infer(&schema, &database_schema);
         //        inferrer.infer("sjka0");
         let warning = DataModelWarningOrError {
             tpe: "Blog".to_owned(),
             field: Some("title".to_owned()),
             message: "This is danger".to_owned(),
         };
-        let steps = vec![
-            MigrationStep::CreateModel(CreateModel {
-                name: "Blog".to_owned(),
-                db_name: None,
-                embedded: None,
-            }),
-            MigrationStep::UpdateModel(UpdateModel {
-                name: "Blog".to_owned(),
-                new_name: None,
-                db_name: Some(Null),
-                embedded: Some(true),
-            }),
-            MigrationStep::DeleteModel(DeleteModel {
-                name: "Post".to_owned(),
-            }),
-        ];
+        //        let steps = vec![
+        //            MigrationStep::CreateModel(CreateModel {
+        //                name: "Blog".to_owned(),
+        //                db_name: None,
+        //                embedded: None,
+        //            }),
+        //            MigrationStep::UpdateModel(UpdateModel {
+        //                name: "Blog".to_owned(),
+        //                new_name: None,
+        //                db_name: Some(Null),
+        //                embedded: Some(true),
+        //            }),
+        //            MigrationStep::DeleteModel(DeleteModel {
+        //                name: "Post".to_owned(),
+        //            }),
+        //        ];
 
         SuggestMigrationStepsOutput {
             steps: steps,

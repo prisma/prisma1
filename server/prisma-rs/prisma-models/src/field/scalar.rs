@@ -9,7 +9,7 @@ static EMBEDDED_ID_FIELD: &str = "_id";
 static UPDATED_AT_FIELD: &str = "updatedAt";
 static CREATED_AT_FIELD: &str = "createdAt";
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ScalarFieldTemplate {
     pub name: String,
@@ -40,7 +40,7 @@ pub struct ScalarField {
     pub model: ModelWeakRef,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum FieldBehaviour {
     CreatedAt,
@@ -54,20 +54,20 @@ pub enum FieldBehaviour {
     },
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub enum IdStrategy {
     Auto,
     None,
     Sequence,
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub enum ScalarListStrategy {
     Embedded,
     Relation,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Sequence {
     pub name: String,

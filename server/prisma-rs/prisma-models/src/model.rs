@@ -7,7 +7,7 @@ use std::sync::{Arc, Weak};
 pub type ModelRef = Arc<Model>;
 pub type ModelWeakRef = Weak<Model>;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelTemplate {
     pub name: String,
@@ -30,7 +30,7 @@ pub struct Model {
     pub schema: SchemaWeakRef,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ModelManifestation {
     pub db_name: String,
