@@ -2,6 +2,7 @@ use crate::prelude::*;
 use prisma_query::ast::Table;
 
 use once_cell::unsync::OnceCell;
+use prisma_query::ast::*;
 use std::sync::{Arc, Weak};
 
 pub type ModelRef = Arc<Model>;
@@ -82,6 +83,14 @@ impl Model {
             .as_ref()
             .map(|mf| mf.db_name.as_ref())
             .unwrap_or_else(|| self.name.as_ref())
+    }
+
+    pub fn id_column(&self) -> Column {
+        let table_name = self.db_name();
+        let id_field = self.fields().id();
+        let id_name = id_field.db_name();
+
+        (self.db_name(), table_name, id_name).into()
     }
 
     pub fn with_schema<F, T>(&self, f: F) -> T

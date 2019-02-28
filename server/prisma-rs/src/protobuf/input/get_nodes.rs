@@ -29,7 +29,7 @@ impl IntoSelectQuery for GetNodesInput {
         let filter: ConditionTree = self
             .query_arguments
             .filter
-            .map(|filter| filter.into())
+            .map(|filter| filter.into_condition_tree(model.clone()))
             .unwrap_or(ConditionTree::NoCondition);
 
         let conditions = ConditionTree::and(filter, cursor);

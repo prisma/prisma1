@@ -1,7 +1,11 @@
+use crate::protobuf::prelude::*;
+use prisma_models::prelude::*;
 use prisma_query::ast::*;
 use std::fmt;
 
-use crate::protobuf::prelude::*;
+pub trait IntoConditionTree {
+    fn into_condition_tree(self, model: ModelRef) -> ConditionTree;
+}
 
 impl Into<Order> for SortOrder {
     fn into(self) -> Order {
@@ -95,7 +99,7 @@ impl From<ScalarFilter> for ConditionTree {
                         mc.values
                             .into_iter()
                             .map(|v| v.prisma_value.unwrap())
-                            .collect(),
+                            .collect::<Vec<PrismaValue>>(),
                     ),
                 ),
             },
@@ -108,7 +112,7 @@ impl From<ScalarFilter> for ConditionTree {
                         mc.values
                             .into_iter()
                             .map(|v| v.prisma_value.unwrap())
-                            .collect(),
+                            .collect::<Vec<PrismaValue>>(),
                     ),
                 ),
             },
@@ -116,15 +120,15 @@ impl From<ScalarFilter> for ConditionTree {
     }
 }
 
-impl From<AndFilter> for ConditionTree {
-    fn from(mut and: AndFilter) -> ConditionTree {
-        match and.filters.pop() {
+impl IntoConditionTree for AndFilter {
+    fn into_condition_tree(mut self, model: ModelRef) -> ConditionTree {
+        match self.filters.pop() {
             None => ConditionTree::NoCondition,
             Some(filter) => {
-                let right: ConditionTree = filter.into();
+                let right: ConditionTree = filter.into_condition_tree(model.clone());
 
-                and.filters.into_iter().rev().fold(right, |acc, filter| {
-                    let left: ConditionTree = filter.into();
+                self.filters.into_iter().rev().fold(right, |acc, filter| {
+                    let left: ConditionTree = filter.into_condition_tree(model.clone());
                     ConditionTree::and(left, acc)
                 })
             }
@@ -132,15 +136,15 @@ impl From<AndFilter> for ConditionTree {
     }
 }
 
-impl From<OrFilter> for ConditionTree {
-    fn from(mut or: OrFilter) -> ConditionTree {
-        match or.filters.pop() {
+impl IntoConditionTree for OrFilter {
+    fn into_condition_tree(mut self, model: ModelRef) -> ConditionTree {
+        match self.filters.pop() {
             None => ConditionTree::NoCondition,
             Some(filter) => {
-                let right: ConditionTree = filter.into();
+                let right: ConditionTree = filter.into_condition_tree(model.clone());
 
-                or.filters.into_iter().rev().fold(right, |acc, filter| {
-                    let left: ConditionTree = filter.into();
+                self.filters.into_iter().rev().fold(right, |acc, filter| {
+                    let left: ConditionTree = filter.into_condition_tree(model.clone());
                     ConditionTree::or(left, acc)
                 })
             }
@@ -148,29 +152,29 @@ impl From<OrFilter> for ConditionTree {
     }
 }
 
-impl From<NotFilter> for ConditionTree {
-    fn from(not: NotFilter) -> ConditionTree {
+impl IntoConditionTree for NotFilter {
+    fn into_condition_tree(self, model: ModelRef) -> ConditionTree {
         let cond: ConditionTree = AndFilter {
-            filters: not.filters,
+            filters: self.filters,
         }
-        .into();
+        .into_condition_tree(model);
 
         ConditionTree::not(cond)
     }
 }
 
-impl From<RelationFilter> for ConditionTree {
-    fn from(_rf: RelationFilter) -> ConditionTree {
-        unimplemented!()
+impl IntoConditionTree for RelationFilter {
+    fn into_condition_tree(self, model: ModelRef) -> ConditionTree {
+        self.as_sub_select(model)
     }
 }
 
-impl From<Filter> for ConditionTree {
-    fn from(f: Filter) -> ConditionTree {
-        match f.type_.unwrap() {
-            filter::Type::And(and_filter) => and_filter.into(),
-            filter::Type::Or(or_filter) => or_filter.into(),
-            filter::Type::Not(not_filter) => not_filter.into(),
+impl IntoConditionTree for Filter {
+    fn into_condition_tree(self, model: ModelRef) -> ConditionTree {
+        match self.type_.unwrap() {
+            filter::Type::And(and_filter) => and_filter.into_condition_tree(model),
+            filter::Type::Or(or_filter) => or_filter.into_condition_tree(model),
+            filter::Type::Not(not_filter) => not_filter.into_condition_tree(model),
             filter::Type::Scalar(scalar_filter) => scalar_filter.into(),
             filter::Type::BoolFilter(b) => {
                 if b {
@@ -179,7 +183,9 @@ impl From<Filter> for ConditionTree {
                     ConditionTree::NegativeCondition
                 }
             }
-            filter::Type::Relation(relation_filter) => (*relation_filter).into(),
+            filter::Type::Relation(relation_filter) => {
+                (*relation_filter).into_condition_tree(model)
+            }
             e => panic!("Unsupported filter: {:?}", e),
         }
     }

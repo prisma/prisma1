@@ -101,19 +101,6 @@ impl RelationField {
         })
     }
 
-    pub fn model_id_column(&self) -> Column {
-        self.with_model(|model| {
-            model.with_project(|project| {
-                let db_name = project.db_name();
-                let table_name = model.db_name();
-                let id_field = model.fields().id();
-                let id_name = id_field.db_name();
-
-                (db_name, table_name, id_name).into()
-            })
-        })
-    }
-
     pub fn related_model(&self) -> ModelRef {
         self.with_relation(|relation| match self.relation_side {
             RelationSide::A => relation.model_b(),

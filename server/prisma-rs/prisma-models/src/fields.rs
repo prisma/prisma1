@@ -92,14 +92,10 @@ impl Fields {
             .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
     }
 
-    pub fn find_from_relation(
-        &self,
-        name: &str,
-        side: RelationSide,
-    ) -> PrismaResult<Arc<RelationField>> {
+    pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
         self.relation()
             .iter()
-            .find(|field| field.db_name() == name && field.relation_side == side)
+            .find(|field| field.db_name() == name)
             .cloned()
             .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
     }
