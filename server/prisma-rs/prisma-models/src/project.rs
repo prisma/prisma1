@@ -10,34 +10,21 @@ pub type ProjectWeakRef = Weak<Project>;
 pub struct ProjectTemplate {
     pub id: String,
     pub schema: SchemaTemplate,
-    pub functions: Vec<Function>,
 
     #[serde(default)]
     pub manifestation: ProjectManifestation,
 
+    // todo: what is this?
     #[serde(default)]
     pub revision: Revision,
-
-    #[serde(default)]
-    pub secrets: Vec<String>,
-
-    #[serde(default)]
-    pub allow_queries: DefaultTrue,
-
-    #[serde(default)]
-    pub allow_mutations: DefaultTrue,
 }
 
 #[derive(Debug)]
 pub struct Project {
     pub id: String,
     pub schema: OnceCell<SchemaRef>,
-    pub functions: Vec<Function>,
     pub manifestation: ProjectManifestation,
     pub revision: Revision,
-    pub secrets: Vec<String>,
-    pub allow_queries: DefaultTrue,
-    pub allow_mutations: DefaultTrue,
 }
 
 impl Into<ProjectRef> for ProjectTemplate {
@@ -45,12 +32,8 @@ impl Into<ProjectRef> for ProjectTemplate {
         let project = Arc::new(Project {
             id: self.id,
             schema: OnceCell::new(),
-            functions: self.functions,
             manifestation: self.manifestation,
             revision: self.revision,
-            secrets: self.secrets,
-            allow_queries: self.allow_queries,
-            allow_mutations: self.allow_mutations,
         });
 
         project
