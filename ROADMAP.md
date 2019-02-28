@@ -8,7 +8,7 @@ The roadmap is updated every two weeks (i.e. with every Prisma release). If you 
 
 ### Short term fixes & improvements
 
-The following lists represents a number of smaller-scope issues and improvements we are currently working on. While we're trying to be as foreseeing as possible, our priorities might shift and the list might be adjusted within a release cycle.
+The following lists represents a number of smaller-scope issues and improvements we are currently working on. While we're trying to be as foreseeing as possible, our priorities might shift and the list might be adjusted in a release cycle.
 
 #### Improvements
 
