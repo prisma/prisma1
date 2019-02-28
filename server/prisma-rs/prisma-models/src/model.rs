@@ -78,10 +78,13 @@ impl Model {
     }
 
     pub fn db_name(&self) -> &str {
+        self.db_name_opt().unwrap_or_else(|| self.name.as_ref())
+    }
+
+    pub fn db_name_opt(&self) -> Option<&str> {
         self.manifestation
             .as_ref()
             .map(|mf| mf.db_name.as_ref())
-            .unwrap_or_else(|| self.name.as_ref())
     }
 
     pub fn with_schema<F, T>(&self, f: F) -> T

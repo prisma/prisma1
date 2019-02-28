@@ -13,6 +13,13 @@ impl DatabaseInspector for EmptyDatabaseInspectorImpl {
 pub struct DatabaseSchema {
     pub tables: Vec<Table>,
 }
+
+impl DatabaseSchema {
+    pub fn table(&self, name: &str) -> Option<&Table> {
+        self.tables.iter().find(|t| t.name == name)
+    }
+}
+
 pub struct Table {
     pub name: String,
     pub columns: Vec<Column>,
