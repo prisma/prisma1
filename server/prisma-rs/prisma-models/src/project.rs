@@ -23,43 +23,44 @@ pub struct ProjectTemplate {
 pub struct Project {
     pub id: String,
     pub schema: OnceCell<SchemaRef>,
-    pub manifestation: ProjectManifestation,
     pub revision: Revision,
 }
 
 impl Into<ProjectRef> for ProjectTemplate {
     fn into(self) -> ProjectRef {
+        let db_name = self.db_name();
         let project = Arc::new(Project {
             id: self.id,
             schema: OnceCell::new(),
-            manifestation: self.manifestation,
             revision: self.revision,
         });
 
         project
             .schema
-            .set(self.schema.build(Arc::downgrade(&project)))
+            .set(self.schema.build(db_name))
             .unwrap();
 
         project
     }
 }
 
-impl Project {
-    pub fn db_name(&self) -> &str {
+impl ProjectTemplate {
+    pub fn db_name (&self) -> String {
         match self.manifestation {
             ProjectManifestation {
                 schema: Some(ref schema),
                 ..
-            } => schema,
+            } => schema.clone(),
             ProjectManifestation {
                 database: Some(ref database),
                 ..
-            } => database,
-            _ => self.id.as_ref(),
+            } => database.clone(),
+            _ => self.id.clone(),
         }
     }
+}
 
+impl Project {
     pub fn schema(&self) -> &Schema {
         self.schema.get().expect("Project has no schema set!")
     }
@@ -109,6 +110,6 @@ pub enum FunctionType {
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectManifestation {
-    database: Option<String>,
-    schema: Option<String>,
+    pub database: Option<String>,
+    pub schema: Option<String>,
 }

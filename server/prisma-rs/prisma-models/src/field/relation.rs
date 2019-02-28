@@ -103,8 +103,8 @@ impl RelationField {
 
     pub fn model_id_column(&self) -> Column {
         self.with_model(|model| {
-            model.with_project(|project| {
-                let db_name = project.db_name();
+            model.with_schema(|schema| {
+                let db_name = schema.db_name.as_str();
                 let table_name = model.db_name();
                 let id_field = model.fields().id();
                 let id_name = id_field.db_name();

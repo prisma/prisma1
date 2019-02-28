@@ -63,7 +63,7 @@ impl ModelTemplate {
 
 impl Model {
     pub fn table(&self) -> Table {
-        self.with_project(|project| (project.db_name(), self.db_name()).into())
+        self.with_schema(|schema| (schema.db_name.as_str(), self.db_name()).into())
     }
 
     pub fn fields(&self) -> &Fields {
@@ -94,12 +94,5 @@ impl Model {
                 "Schema does not exist anymore. Parent schema is deleted without deleting the child models."
             )
         }
-    }
-
-    pub fn with_project<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Project>) -> T,
-    {
-        self.with_schema(|s| s.with_project(|p| f(p)))
     }
 }

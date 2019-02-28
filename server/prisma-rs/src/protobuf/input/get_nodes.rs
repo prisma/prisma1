@@ -45,7 +45,7 @@ impl IntoSelectQuery for GetNodesInput {
         let select_ast = Self::limit(ordered, limit.map(|limit| limit as usize));
 
         dbg!(Ok(SelectQuery {
-            db_name: project.db_name().to_string(),
+            db_name: project.schema().db_name.to_string(),
             query_ast: select_ast,
             selected_fields: selected_fields,
         }))

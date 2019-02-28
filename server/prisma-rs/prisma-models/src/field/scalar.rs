@@ -88,13 +88,6 @@ impl ScalarField {
         }
     }
 
-    pub fn with_project<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Project>) -> T,
-    {
-        self.with_model(|m| m.with_project(|p| f(p)))
-    }
-
     /// A field is an ID field if the name is `id` or `_id` in legacy schemas,
     /// or if the field has Id behaviour defined.
     pub fn is_id(&self) -> bool {
@@ -150,7 +143,7 @@ impl ScalarField {
     pub fn model_column(&self) -> Column {
         self.with_model(|model| {
             model
-                .with_project(|project| (project.db_name(), model.db_name(), self.db_name()).into())
+                .with_schema(|schema| (schema.db_name.as_str(), model.db_name(), self.db_name()).into())
         })
     }
 }
