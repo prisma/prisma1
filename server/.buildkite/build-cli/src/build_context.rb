@@ -79,7 +79,7 @@ class BuildContext
   end
 
   def should_build?
-    (server_changed? || !tag != nil) && buildkite_build?
+    (server_changed? || tag != nil) && buildkite_build?
   end
 
   def server_changed?
@@ -87,8 +87,8 @@ class BuildContext
       false
     else
       res = Command.new("git", "diff", "--exit-code", "--name-only", "#{commit}", "#{commit}~1").pipe_stdout_to(
-        Command.new("grep", '"server"')
-      ).run!
+        Command.new("grep", '"server"').puts!
+      ).puts!.run!
       res.status == 0
     end
   end
