@@ -104,7 +104,7 @@ impl RelationTemplate {
         };
 
         let model_a = {
-            let model = relation.with_schema(|schema| schema.find_model(&model_a_name).unwrap());
+            let model = relation.schema().find_model(&model_a_name).unwrap();
 
             let field = model
                 .fields()
@@ -146,6 +146,12 @@ impl Relation {
                 "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
             )
         }
+    }
+
+    fn schema(&self) -> SchemaRef {
+        self.schema.upgrade().unwrap_or(
+            panic!("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
+        )
     }
 
     pub fn is_inline_relation(&self) -> bool {
