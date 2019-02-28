@@ -5,10 +5,10 @@ mod query_arguments;
 
 pub mod prelude;
 
-use crate::models::{ModelRef, ProjectRef};
 pub use envelope::ProtoBufEnvelope;
 pub use input::*;
 pub use interface::{ExternalInterface, ProtoBufInterface};
+use prisma_models::ModelRef;
 use prisma_query::ast::*;
 
 pub mod prisma {
@@ -89,95 +89,88 @@ impl ValueContainer {
 }
 
 impl RelationFilter {
-    pub fn as_condition_tree(self, project: &ProjectRef, model: ModelRef) -> ConditionTree {
-        let alias = "Alias"; // todo define constants somewhere
-        let model_id_col = Column::from((alias, model.db_name()));
-        let condition = relation_filter::Condition::from_i32(self.condition).unwrap();
+    pub fn as_sub_select(self, model: ModelRef) -> ConditionTree {
+        let condition = self.condition();
+        let column_name = model.db_name().to_string();
+        let sub_select = self.relation_filter_sub_select(model);
 
-        // inStatementForRelationCondition(
-        //   jooqField = modelIdColumn(alias, relationFilter.field.model),
-        //   condition = relationFilter.condition,
-        //   subSelect = relationFilterSubSelect(alias, relationFilter)
-        // )
+        Self::in_statement_for_relation_condition(Column::from(column_name), condition, sub_select)
+    }
 
-        let relation_field = self.field.field;
-        let relation_field = model.fields().find_from_relation(&relation_field);
-        // let relation = project.schema.relation.... todo
-        let alias = format!("{}_{}", "todo", alias); // todo need related model logic, see RelationField relatedModel_!
-        let invert_condition_of_subselect = match condition {
+    fn in_statement_for_relation_condition(
+        column: Column,
+        condition: relation_filter::Condition,
+        sub_select: Select,
+    ) -> ConditionTree {
+        match condition {
+            relation_filter::Condition::EveryRelatedNode => column.not_in_selection(sub_select),
+            relation_filter::Condition::NoRelatedNode => column.not_in_selection(sub_select),
+            relation_filter::Condition::AtLeastOneRelatedNode => column.in_selection(sub_select),
+            relation_filter::Condition::ToOneRelatedNode => column.in_selection(sub_select),
+        }
+        .into()
+    }
+
+    fn relation_filter_sub_select(self, model: ModelRef) -> Select {
+        let relation_field = model
+            .fields()
+            .find_from_relation(&self.field.field)
+            .expect("Relation not found");
+
+        let relation = relation_field.relation.upgrade().unwrap();
+        let invert_condition_of_subselect = match self.condition() {
             relation_filter::Condition::EveryRelatedNode => true,
             _ => false,
         };
 
+        let this_relation_column = relation.column_for_relation_side(relation_field.relation_side);
+        let other_relation_column =
+            relation.column_for_relation_side(relation_field.related_field().relation_side);
+        let relation_table_name = relation.relation_table_name();
+
         match self.nested_filter.type_ {
             Some(filter::Type::Relation(nested)) => {
-                // let nested_condition =
-                unimplemented!()
+                let condition = nested.condition();
+                let nested_select = nested.relation_filter_sub_select(model.clone());
+
+                model.with_project(|project| {
+                    let condition_tree = Self::in_statement_for_relation_condition(
+                        Column::from((
+                            project.db_name(),
+                            relation_table_name.as_ref(),
+                            other_relation_column.as_ref(),
+                        )),
+                        condition,
+                        nested_select,
+                    );
+
+                    Select::from((project.db_name(), relation_table_name.as_ref()))
+                        .column(Column::from((
+                            project.db_name(),
+                            relation_table_name.as_ref(),
+                            this_relation_column.as_ref(),
+                        )))
+                        .so_that(condition_tree.invert_if(invert_condition_of_subselect))
+                })
             }
-            _ => unimplemented!(),
+            _ => {
+                let filter: ConditionTree =
+                    (*self.nested_filter).into_condition_tree(model.clone());
+                model.with_project(|project| {
+                    let join =
+                        model.table().on(relation_field
+                            .related_model()
+                            .id_column()
+                            .equals(relation.column_for_relation_side(
+                                relation_field.relation_side.opposite(),
+                            )));
+
+                    Select::from((project.db_name(), relation_table_name.as_ref()))
+                        .column(this_relation_column)
+                        .inner_join(join)
+                        .so_that(filter.invert_if(invert_condition_of_subselect))
+                })
+            }
         }
-
-        unimplemented!()
     }
-
-    fn inStatementForRelationCondition(
-        column: Column,
-        condition: relation_filter::Condition,
-        sub_select: Select,
-    ) -> Expression {
-        match condition {
-            relation_filter::Condition::EveryRelatedNode => column.in_selection(sub_select),
-            relation_filter::Condition::NoRelatedNode => true,
-            relation_filter::Condition::AtLeastOneRelatedNode => true,
-            relation_filter::Condition::ToOneRelatedNode => true,
-        };
-
-        unimplemented!()
-    }
-
-    // private def inStatementForRelationCondition(jooqField: Field[AnyRef], condition: RelationCondition, subSelect: SelectConditionStep[_]) = {
-    //     condition match {
-    //     case EveryRelatedNode      => jooqField.notIn(subSelect)
-    //     case NoRelatedNode         => jooqField.notIn(subSelect)
-    //     case AtLeastOneRelatedNode => jooqField.in(subSelect)
-    //     case ToOneRelatedNode      => jooqField.in(subSelect)
-    //     }
-    // }
 }
-
-//   private def relationFilterSubSelect(alias: String, relationFilter: RelationFilter): SelectConditionStep[Record1[AnyRef]] = {
-//     // this skips intermediate tables when there is no condition on them. so the following will not join with the album table but join the artist-album relation with the album-track relation
-//     // artists(where:{albums_some:{tracks_some:{condition}}})
-//     //
-//     // the following query contains an implicit andFilter around the two nested ones and will not be improved at the moment
-//     // albums(where: {Tracks_some:{ MediaType:{Name_starts_with:""}, Genre:{Name_starts_with:""}}})
-//     // the same is true for explicit AND, OR, NOT with more than one nested relationfilter. they do not profit from skipping intermediate tables at the moment
-//     // these cases could be improved as well at the price of higher code complexity
-
-//     val relationField              = relationFilter.field
-//     val relation                   = relationField.relation
-//     val newAlias                   = relationField.relatedModel_!.dbName + "_" + alias
-//     val invertConditionOfSubSelect = relationFilter.condition == EveryRelatedNode
-
-//     relationFilter.nestedFilter match {
-//       case nested: RelationFilter =>
-//         val condition = inStatementForRelationCondition(
-//           jooqField = relationColumn(relation, relationField.oppositeRelationSide),
-//           condition = nested.condition,
-//           subSelect = relationFilterSubSelect(newAlias, nested)
-//         )
-//         sql
-//           .select(relationColumn(relation, relationField.relationSide))
-//           .from(relationTable(relation))
-//           .where(condition.invert(invertConditionOfSubSelect))
-
-//       case nested =>
-//         val condition = buildConditionForFilter(nested, newAlias)
-//         sql
-//           .select(relationColumn(relation, relationField.relationSide))
-//           .from(relationTable(relation))
-//           .innerJoin(modelTable(relationField.relatedModel_!).as(newAlias))
-//           .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
-//           .where(condition.invert(invertConditionOfSubSelect))
-//     }
-//   }

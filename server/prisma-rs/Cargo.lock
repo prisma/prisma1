@@ -567,7 +567,7 @@ dependencies = [
 [[package]]
 name = "prisma-query"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-query.git#cdeee9d6d932471b5d851cf9bea22cfaf1d3e739"
+source = "git+https://github.com/prisma/prisma-query.git#45308b1baa598fc2b67ca31b9b7c9facb95b85d9"
 dependencies = [
  "rusqlite 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
