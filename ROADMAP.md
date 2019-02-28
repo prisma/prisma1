@@ -8,7 +8,7 @@ The roadmap is updated every two weeks (i.e. with every Prisma release). If you 
 
 ### Short term fixes & improvements
 
-The following list represents a number of smaller issues and improvements we are currently working on. While we're trying to be as foreseeing as possible, our priorities might shift and other issues can enter this list within a release cycle:
+The following lists represents a number of smaller-scope issues and improvements we are currently working on. While we're trying to be as foreseeing as possible, our priorities might shift and the list might be adjusted within a release cycle.
 
 #### Improvements
 
@@ -42,6 +42,8 @@ Here are the big features that are currently being specced out:
 - [A new generator API for the Prisma client](https://github.com/prisma/rfcs/blob/client-generators/text/0000-client-generators.md)
 
 ### Implementation phase
+
+The "implementation phase" reflexcts the larger features we are currently working on. These features typically require multiple weeks/months to be implemented:
 
 - [Prisma Admin](https://github.com/prisma/prisma-admin-feedback)
 - [Datamodel v1.1](https://github.com/prisma/prisma/issues/3408)
