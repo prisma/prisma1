@@ -35,17 +35,14 @@ impl Into<ProjectRef> for ProjectTemplate {
             revision: self.revision,
         });
 
-        project
-            .schema
-            .set(self.schema.build(db_name))
-            .unwrap();
+        project.schema.set(self.schema.build(db_name)).unwrap();
 
         project
     }
 }
 
 impl ProjectTemplate {
-    pub fn db_name (&self) -> String {
+    pub fn db_name(&self) -> String {
         match self.manifestation {
             ProjectManifestation {
                 schema: Some(ref schema),

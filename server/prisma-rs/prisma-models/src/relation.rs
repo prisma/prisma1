@@ -217,12 +217,12 @@ impl Relation {
 
         match self.manifestation {
             Some(RelationTable(ref m)) => m.table.clone(),
-            Some(Inline(ref m)) =>
-                self.schema()
-                    .find_model(&m.in_table_of_model_name)
-                    .unwrap()
-                    .db_name()
-                    .to_string(),
+            Some(Inline(ref m)) => self
+                .schema()
+                .find_model(&m.in_table_of_model_name)
+                .unwrap()
+                .db_name()
+                .to_string(),
             None => format!("_{}", self.name),
         }
     }

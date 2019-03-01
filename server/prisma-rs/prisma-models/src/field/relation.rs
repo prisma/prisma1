@@ -52,11 +52,10 @@ impl RelationSide {
 }
 
 impl RelationField {
-
     fn model(&self) -> ModelRef {
-        self.model.upgrade().unwrap_or(
-            panic!("Model does not exist anymore. Parent model got deleted without deleting the child.")
-        )
+        self.model.upgrade().unwrap_or(panic!(
+            "Model does not exist anymore. Parent model got deleted without deleting the child."
+        ))
     }
 
     fn relation(&self) -> RelationRef {

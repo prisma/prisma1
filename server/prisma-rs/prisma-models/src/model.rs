@@ -84,7 +84,6 @@ impl Model {
             .unwrap_or_else(|| self.name.as_ref())
     }
 
-
     pub fn schema(&self) -> SchemaRef {
         self.schema.upgrade().unwrap_or(
             panic!("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")

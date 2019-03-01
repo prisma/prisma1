@@ -77,15 +77,15 @@ pub struct Sequence {
 
 impl ScalarField {
     fn model(&self) -> ModelRef {
-        self.model.upgrade().unwrap_or(
-            panic!("Model does not exist anymore. Parent model got deleted without deleting the child.")
-        )
+        self.model.upgrade().unwrap_or(panic!(
+            "Model does not exist anymore. Parent model got deleted without deleting the child."
+        ))
     }
 
     fn schema(&self) -> SchemaRef {
         self.model().schema()
     }
-    
+
     /// A field is an ID field if the name is `id` or `_id` in legacy schemas,
     /// or if the field has Id behaviour defined.
     pub fn is_id(&self) -> bool {

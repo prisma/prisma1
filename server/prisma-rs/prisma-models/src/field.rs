@@ -73,7 +73,9 @@ impl FieldTemplate {
                 let relation = model
                     .upgrade()
                     .unwrap()
-                    .schema().find_relation(&rt.relation_name).unwrap();
+                    .schema()
+                    .find_relation(&rt.relation_name)
+                    .unwrap();
 
                 let relation = RelationField {
                     name: rt.name,
