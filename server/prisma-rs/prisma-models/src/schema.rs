@@ -47,15 +47,15 @@ impl SchemaTemplate {
             .map(|mt| mt.build(Arc::downgrade(&schema)))
             .collect();
 
+        schema.models.set(models).unwrap();
+
         let relations = self
             .relations
             .into_iter()
             .map(|rt| rt.build(Arc::downgrade(&schema)))
             .collect();
 
-        schema.models.set(models).unwrap();
         schema.relations.set(relations).unwrap();
-
         schema
     }
 }
@@ -74,7 +74,7 @@ impl Schema {
             .get()
             .and_then(|relations| relations.iter().find(|relation| relation.name == name))
             .map(|relation| Arc::downgrade(&relation))
-            .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("Relation not found: {}", name)))
     }
 
     pub fn is_legacy(&self) -> bool {

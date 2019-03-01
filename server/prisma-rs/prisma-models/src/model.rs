@@ -2,6 +2,7 @@ use crate::prelude::*;
 use prisma_query::ast::Table;
 
 use once_cell::unsync::OnceCell;
+use prisma_query::ast::*;
 use std::sync::{Arc, Weak};
 
 pub type ModelRef = Arc<Model>;
@@ -88,5 +89,13 @@ impl Model {
         self.schema.upgrade().expect(
             "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
         )
+    }
+
+    pub fn id_column(&self) -> Column {
+        let table_name = self.db_name();
+        let id_field = self.fields().id();
+        let id_name = id_field.db_name();
+
+        (self.db_name(), table_name, id_name).into()
     }
 }

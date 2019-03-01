@@ -110,3 +110,18 @@ pub struct ProjectManifestation {
     pub database: Option<String>,
     pub schema: Option<String>,
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+    use serde_json;
+    use std::fs::File;
+
+    #[test]
+    fn test_relation_schema() {
+        let file = File::open("./relation_schema.json").unwrap();
+        let project_template: ProjectTemplate = serde_json::from_reader(file).unwrap();
+        let _project: ProjectRef = project_template.into();
+        assert!(true)
+    }
+}
