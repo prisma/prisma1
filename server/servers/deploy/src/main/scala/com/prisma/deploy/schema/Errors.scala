@@ -38,7 +38,7 @@ case class InvalidServiceStage(stage: String) extends AbstractDeployApiError(Inv
 case class RelationNameNeeded(relationName: String, firstA: String, firstB: String, secondA: String, secondB: String)
     extends AbstractDeployApiError(
       "There was an error during the autogeneration of relation names.\n" +
-        s"Prisma generated the name $relationName twice since it had to be shortened, once for:\n" +
+        s"Prisma generated the name $relationName twice, once for:\n" +
         s"A relation between $firstA and $firstB\n" +
         s"A relation between $secondA and $secondB\n" +
         s"Please name at least one of the relations.",

@@ -8,17 +8,17 @@ export const meta = {
 
 ## Overview
 
-A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your prisma.yml:
+A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your `prisma.yml`:
 
 ```yml
 secret: my-secret-42
 ```
 
-As the developer of a Prisma service, you can choose your own service secret. When a service gets deployed with a prisma.yml that contains the `secret` property, the Prisma API of that service will require authentication via a _service token_ (JWT):
+As the developer of a Prisma service, you can choose your own service secret. When a service gets deployed with a `prisma.yml` that contains the `secret` property, the Prisma API of that service will require authentication via a _service token_ (JWT):
 
 ![](https://i.imgur.com/cCmp8JI.png)
 
-The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your prisma.yml is located:
+The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your `prisma.yml` is located:
 
 ```bash
 $ prisma token
@@ -42,11 +42,21 @@ The service secret and service tokens are not to be confused with the Prisma Man
 
 ## Service secret
 
-The service secret is an alphanumeric random string specified by the developer of a Prisma service. It set as the `secret` property in your service's prisma.yml:
+The service secret is an alphanumeric random string specified by the developer of a Prisma service. It set as the `secret` property in your service's `prisma.yml`:
 
 ```yml
 secret: my-secret-42
 ```
+
+You can also specify it via an environment variable. For example, if you have an environment variable called `MY_SECRET`, you can set it in your `prisma.yml` like so:
+
+```yml
+secret: ${env:MY_SECRET}
+```
+
+When running `prisma generate` or `prisma deploy`, the Prisma CLI will read the `MY_SECRET` environment variable. Learn more about using environment variables in `prisma.yml` [here](5cy7#environment-variable).
+
+Also note that `prisma generate` automatically injects the `secret` into the generated Prisma client. So there's no need to generate a service token explicitly. Learn more generating the Prisma client [here](rsc1).
 
 ## Service token
 
@@ -149,7 +159,6 @@ Clients SHOULD make authenticated requests with a bearer token using the `Author
 
 </Collapse>
 
-
 ## Example: Protecting your Prisma API
 
 Here is an example how you can protect your Prisma API and make authenticated requests against it.
@@ -167,7 +176,7 @@ type User {
 }
 ```
 
-**prisma.yml**
+**`prisma.yml`**
 
 ```yml
 endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo server 
@@ -188,7 +197,7 @@ When using a GraphQL Playground, no HTTP headers need to be set in order to talk
 
 ### Protecting the Prisma API
 
-The only thing you need to do in order for your Prisma API to require authentication is setting the service secret in prisma.yml:
+The only thing you need to do in order for your Prisma API to require authentication is setting the service secret in `prisma.yml`:
 
 ```yml
 endpoint: https://eu1.prisma.sh/john-doe/demo/dev # deployed to a Prisma Demo server 

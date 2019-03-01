@@ -73,6 +73,32 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
     assertThrows[RelationNameNeeded](inferSchema(schema))
   }
 
+  "they" should "should error if Prisma would generate a relation name that is already taken" in {
+    val schema =
+      """
+        |type A {
+        |    id: ID! @unique
+        |    field: Int
+        |    b: B
+        |}
+        |
+        |type B {
+        |    id: ID! @unique
+        |    field: Int
+        |    a: A
+        |    c: C @relation(name: "AToB")
+        |}
+        |
+        |type C {
+        |    id: ID! @unique
+        |    field: Int
+        |    b: B @relation(name: "AToB")
+        |}
+      """.stripMargin
+
+    assertThrows[RelationNameNeeded](inferSchema(schema))
+  }
+
   "they" should "only propose an UpdateRelation step when relation directives get removed" in {
     val previousSchema =
       """

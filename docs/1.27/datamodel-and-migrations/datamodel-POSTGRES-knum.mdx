@@ -18,7 +18,7 @@ The datamodel of your service configuration has two major roles:
 - **Define the underlying database schema** (the defined models are mapped to database tables).
 - It is the foundation for the **auto-generated CRUD and realtime operations** of your Prisma API. [Learn more](#data-model-vs-prisma-graphql-schema).
 
-The datamodel is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.prisma`-files](#files). These `.prisma`-files need to be referenced in your [prisma.yml](5cy7) under the `datamodel` property. For example:
+The datamodel is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.prisma`-files](#files). These `.prisma`-files need to be referenced in your [`prisma.yml`](5cy7) under the `datamodel` property. For example:
 
 <Code lines="2">
 
@@ -158,7 +158,7 @@ The datamodel only serves as _foundation_ for the generation of the actual Graph
 
 ### The Prisma GraphQL schema
 
-The Prisma GraphQL schema can be dowloaded from a Prisma service using the `graphql-schema` generator in your Prisma.yml:
+The Prisma GraphQL schema can be dowloaded from a Prisma service using the `graphql-schema` generator in your `prisma.yml`:
 
 ```yml
 generate:
@@ -166,7 +166,7 @@ generate:
     output: ./prisma-schema
 ```
 
-Now you can run `prisma generate` and the Prisma CLI will stored the Prisma GraphQLS schema in `./prisma-schema/prisma.graphql`.
+Now you can run `prisma generate` and the Prisma CLI will store the Prisma GraphQL schema in `./prisma-schema/prisma.graphql`.
 
 ### A note on the application schema
 
@@ -180,7 +180,7 @@ The application layer uses Prisma as a _data access layer_ and delegates incomin
 
 You can write your datamodel in a single `.prisma`-file or split it accross multiple ones.
 
-The `.prisma`-files containing the datamodel need to be specified in your prisma.yml under the `datamodel` property. For example:
+The `.prisma`-files containing the datamodel need to be specified in your `prisma.yml` under the `datamodel` property. For example:
 
 ```yml
 datamodel:
@@ -588,11 +588,39 @@ type User {
 }
 ```
 
-Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive) and the `name` argument has to be provided..
+Note that in this case the relation needs to be annotated with the [`@relation` directive](the-relation-directive) and the `name` argument has to be provided.
+
+Here is an example for a **many-to-many** relation:
+
+```graphql
+type Article {
+  id: ID! @unique
+  cateogries: [Category!]!
+}
+
+type Category {
+  id: ID! @unique
+  articles: [Article!]!
+}
+```
+
+Here is an example for a **one-to-one** relation:
+
+```graphql
+type Human {
+  id: ID! @unique
+  brain: Brain!
+}
+
+type Brain {
+  id: ID! @unique
+  human: Human!
+}
+```
 
 ### Required relations
 
-For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The `!` type modifier acts as a contract in GraphQL that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
+For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The `!` type modifier means that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
 
 Nodes for a type that contains a required _to-one_ relation field can only be created using a [nested mutation](qwe2#nested-mutations) to ensure the respective field will not be `null`.
 
@@ -712,6 +740,12 @@ The relation is named `StoriesByUser` and the deletion behaviour is as follows:
 
 - When a `User` node gets deleted, all its related `Story` nodes will be deleted as well.
 - When a `Story` node gets deleted, it will simply be removed from the `stories` list on the related `User` node.
+
+<Warning>
+
+It is currently not possible to rename relations that are specified via the `@relation` directive.
+
+</Warning>
 
 #### Omitting the `@relation` directive
 
