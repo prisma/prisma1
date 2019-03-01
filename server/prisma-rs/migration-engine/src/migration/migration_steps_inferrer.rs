@@ -50,7 +50,7 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
                 let step = CreateField {
                     model: model.name.clone(),
                     name: field.name.clone(),
-                    tpe: field.type_identifier.userFriendlyTypeName(),
+                    tpe: field.type_identifier.user_friendly_type_name(),
                     db_name: field.db_name_opt().map(|f| f.to_string()),
                     default: None,
                     id: field.id_behaviour_clone(),
@@ -74,8 +74,8 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
         }
 
         let mut create_relations = vec!();
-        let emptyRelations = vec!();
-        let relations = self.schema.relations.get().unwrap_or(&emptyRelations);
+        let empty_relations = vec!();
+        let relations = self.schema.relations.get().unwrap_or(&empty_relations);
         for relation in relations {
             let model_a = relation.model_a();
             let model_b = relation.model_b();

@@ -42,7 +42,7 @@ pub enum TypeIdentifier {
 }
 
 impl TypeIdentifier {
-    pub fn userFriendlyTypeName(&self) -> String {
+    pub fn user_friendly_type_name(&self) -> String {
         match self {
             TypeIdentifier::GraphQLID => "ID".to_string(),
             _ => format!("{:?}", self),
