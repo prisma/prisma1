@@ -4,6 +4,6 @@
   "method": "suggestMigrationSteps",
   "params": {
     "project": "the-project-id",
-    "dataModel": "type Blog { id: ID! @id }"
+    "dataModel": "type Blog { id: ID! @id \n title: String }"
   }
 }
