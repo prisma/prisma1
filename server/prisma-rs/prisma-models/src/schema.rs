@@ -38,8 +38,8 @@ pub struct Schema {
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PrismaEnum {
-    name: String,
-    values: Vec<String>,
+    pub name: String,
+    pub values: Vec<String>,
 }
 
 impl SchemaTemplate {

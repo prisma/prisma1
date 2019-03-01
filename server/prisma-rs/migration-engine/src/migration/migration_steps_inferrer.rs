@@ -62,8 +62,18 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
             }
         }
 
+        let mut create_enum_steps = vec!();
+        for prisma_enum in &self.schema.enums {
+            let step = CreateEnum {
+                name: prisma_enum.name.clone(),
+                values: prisma_enum.values.clone(),
+            };
+            create_enum_steps.push(MigrationStep::CreateEnum(step));
+        }
+
         result.append(&mut create_model_steps);
         result.append(&mut create_field_steps);
+        result.append(&mut create_enum_steps);
         result
     }
 }
