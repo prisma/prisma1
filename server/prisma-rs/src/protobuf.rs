@@ -114,7 +114,7 @@ impl RelationFilter {
     fn relation_filter_sub_select(self, model: ModelRef) -> Select {
         let relation_field = model
             .fields()
-            .find_from_relation(&self.field.field)
+            .find_from_relation_fields(&self.field.field)
             .expect("Relation not found");
 
         let relation = relation_field.relation();
