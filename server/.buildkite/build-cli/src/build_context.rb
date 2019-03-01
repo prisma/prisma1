@@ -86,10 +86,8 @@ class BuildContext
     if commit.nil?
       false
     else
-      res = Command.new("git", "diff", "--exit-code", "--name-only", "#{commit}", "#{commit}~1").pipe_stdout_to(
-        Command.new("grep", '"server"').puts!
-      ).puts!.run!
-      res.status == 0
+      res = Command.new("git", "diff", "--exit-code", "--name-only", "#{commit}", "#{commit}~1", "--", "../../").puts!.run!
+      !res.success?
     end
   end
 
