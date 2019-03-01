@@ -104,14 +104,14 @@ impl RelationTemplate {
         };
 
         let model_a = {
-            let model = relation.with_schema(|schema| schema.find_model(&model_a_name).unwrap());
+            let model = relation.schema().find_model(&model_a_name).unwrap();
             let field = model.fields().find_from_relation(&relation.name).unwrap();
 
             RelationAttributes::new(model_a_name, model, field, self.model_a_on_delete)
         };
 
         let model_b = {
-            let model = relation.with_schema(|schema| schema.find_model(&model_b_name).unwrap());
+            let model = relation.schema().find_model(&model_b_name).unwrap();
             let field = model.fields().find_from_relation(&relation.name).unwrap();
 
             RelationAttributes::new(model_b_name, model, field, self.model_b_on_delete)
@@ -128,16 +128,10 @@ impl Relation {
     const MODEL_A_DEFAULT_COLUMN: &'static str = "A";
     const MODEL_B_DEFAULT_COLUMN: &'static str = "B";
 
-    fn with_schema<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(SchemaRef) -> T,
-    {
-        match self.schema.upgrade(){
-            Some(schema) => f(schema),
-            None => panic!(
-                "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
-            )
-        }
+    fn schema(&self) -> SchemaRef {
+        self.schema.upgrade().expect(
+            "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
+        )
     }
 
     pub fn is_inline_relation(&self) -> bool {
@@ -215,13 +209,12 @@ impl Relation {
 
         match self.manifestation {
             Some(RelationTable(ref m)) => m.table.clone(),
-            Some(Inline(ref m)) => self.with_schema(|schema| {
-                schema
-                    .find_model(&m.in_table_of_model_name)
-                    .unwrap()
-                    .db_name()
-                    .to_string()
-            }),
+            Some(Inline(ref m)) => self
+                .schema()
+                .find_model(&m.in_table_of_model_name)
+                .unwrap()
+                .db_name()
+                .to_string(),
             None => format!("_{}", self.name),
         }
     }

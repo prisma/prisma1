@@ -117,7 +117,7 @@ impl RelationFilter {
             .find_from_relation(&self.field.field)
             .expect("Relation not found");
 
-        let relation = relation_field.with_relation(|relation| relation);
+        let relation = relation_field.relation();
         let invert_condition_of_subselect = match self.condition() {
             relation_filter::Condition::EveryRelatedNode => true,
             _ => false,
@@ -127,49 +127,45 @@ impl RelationFilter {
         let other_relation_column =
             relation.column_for_relation_side(relation_field.related_field().relation_side);
         let relation_table_name = relation.relation_table_name();
+        let schema = model.schema();
 
         match self.nested_filter.type_ {
             Some(filter::Type::Relation(nested)) => {
                 let condition = nested.condition();
                 let nested_select = nested.relation_filter_sub_select(model.clone());
 
-                model.with_project(|project| {
-                    let condition_tree = Self::in_statement_for_relation_condition(
-                        Column::from((
-                            project.db_name(),
-                            relation_table_name.as_ref(),
-                            other_relation_column.as_ref(),
-                        )),
-                        condition,
-                        nested_select,
-                    );
+                let condition_tree = Self::in_statement_for_relation_condition(
+                    Column::from((
+                        schema.db_name.as_ref(),
+                        relation_table_name.as_ref(),
+                        other_relation_column.as_ref(),
+                    )),
+                    condition,
+                    nested_select,
+                );
 
-                    Select::from((project.db_name(), relation_table_name.as_ref()))
-                        .column(Column::from((
-                            project.db_name(),
-                            relation_table_name.as_ref(),
-                            this_relation_column.as_ref(),
-                        )))
-                        .so_that(condition_tree.invert_if(invert_condition_of_subselect))
-                })
+                Select::from((schema.db_name.as_ref(), relation_table_name.as_ref()))
+                    .column(Column::from((
+                        schema.db_name.as_ref(),
+                        relation_table_name.as_ref(),
+                        this_relation_column.as_ref(),
+                    )))
+                    .so_that(condition_tree.invert_if(invert_condition_of_subselect))
             }
             _ => {
                 let filter: ConditionTree =
                     (*self.nested_filter).into_condition_tree(model.clone());
-                model.with_project(|project| {
-                    let join =
-                        model.table().on(relation_field
-                            .related_model()
-                            .id_column()
-                            .equals(relation.column_for_relation_side(
-                                relation_field.relation_side.opposite(),
-                            )));
 
-                    Select::from((project.db_name(), relation_table_name.as_ref()))
-                        .column(this_relation_column)
-                        .inner_join(join)
-                        .so_that(filter.invert_if(invert_condition_of_subselect))
-                })
+                let join = model
+                    .table()
+                    .on(relation_field.related_model().id_column().equals(
+                        relation.column_for_relation_side(relation_field.relation_side.opposite()),
+                    ));
+
+                Select::from((schema.db_name.as_ref(), relation_table_name.as_ref()))
+                    .column(this_relation_column)
+                    .inner_join(join)
+                    .so_that(filter.invert_if(invert_condition_of_subselect))
             }
         }
     }

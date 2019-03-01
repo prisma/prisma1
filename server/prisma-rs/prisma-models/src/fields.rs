@@ -95,7 +95,7 @@ impl Fields {
     pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
         self.relation()
             .iter()
-            .find(|field| field.with_relation(|relation| relation.name == name))
+            .find(|field| field.relation().name == name)
             .cloned()
             .ok_or_else(|| Error::InvalidInputError(format!("3 Field not found: {}", name)))
     }
