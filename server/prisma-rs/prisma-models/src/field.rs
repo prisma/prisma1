@@ -40,6 +40,15 @@ pub enum TypeIdentifier {
     Relation,
 }
 
+impl TypeIdentifier {
+    pub fn userFriendlyTypeName(&self) -> String {
+        match self {
+            TypeIdentifier::GraphQLID => "ID".to_string(),
+            _ => format!("{:?}", self),
+        }
+    }
+}
+
 impl Field {
     pub fn db_name(&self) -> Cow<str> {
         match self {

@@ -39,7 +39,7 @@ pub struct ScalarField {
     pub model: ModelWeakRef,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, Eq, PartialEq)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum FieldBehaviour {
     CreatedAt,
@@ -53,20 +53,20 @@ pub enum FieldBehaviour {
     },
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, Eq, PartialEq)]
 pub enum IdStrategy {
     Auto,
     None,
     Sequence,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, Eq, PartialEq)]
 pub enum ScalarListStrategy {
     Embedded,
     Relation,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, Eq, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct Sequence {
     pub name: String,
@@ -131,7 +131,33 @@ impl ScalarField {
             .unwrap_or_else(|| self.name.as_ref())
     }
 
+    pub fn db_name_opt(&self) -> Option<&str> {
+        self.manifestation
+            .as_ref()
+            .map(|mf| mf.db_name.as_ref())
+    }
+
     pub fn model_column(&self) -> Column {
         (self.schema().db_name.as_str(), self.model().db_name(), self.db_name()).into()
+    }
+
+    pub fn id_behaviour_clone(&self) -> Option<FieldBehaviour> {
+        if self.is_id() {
+            self.behaviour.clone()
+        } else {
+            None
+        }
+    }
+
+    pub fn scalar_list_behaviour_clone(&self) -> Option<FieldBehaviour> {
+        match self.behaviour {
+            Some(ref b) => {
+                match b {
+                    FieldBehaviour::ScalarList{strategy}  => Some(FieldBehaviour::ScalarList{ strategy: *strategy}),
+                    _ => None,
+                }
+            },
+            _ => None,
+        }
     }
 }

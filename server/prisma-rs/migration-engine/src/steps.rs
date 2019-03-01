@@ -1,4 +1,6 @@
 use nullable::Nullable;
+use prisma_models::prelude::*;
+use prisma_models::FieldBehaviour;
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(tag = "stepType")]
@@ -79,13 +81,13 @@ pub struct CreateField {
     pub is_updated_at: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>, // fixme: change to behaviour
+    pub id: Option<FieldBehaviour>, // fixme: how could we scope this to IdBehaviour?
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<String>, // fixme: change to PrismaValue
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalar_list: Option<String>, // fixme: change to behaviour
+    pub scalar_list: Option<FieldBehaviour>, // fixme: change to behaviour
 }
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
