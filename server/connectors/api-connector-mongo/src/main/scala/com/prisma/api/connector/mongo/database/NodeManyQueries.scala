@@ -61,7 +61,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
           val mongoFilter  = buildConditionForFilter(updatedQueryArgs.filter)
 
           val combinedFilter = rowValueOpt match {
-            case Some(rowValue) => Filters.and(mongoFilter, CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue).get)
+            case Some(rowValue) => Filters.and(mongoFilter, CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue))
             case None           => mongoFilter
           }
 

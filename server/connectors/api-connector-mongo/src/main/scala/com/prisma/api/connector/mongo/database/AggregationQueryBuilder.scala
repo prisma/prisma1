@@ -37,11 +37,6 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
                             rowValueOpt: Option[GCValue] = None): Future[Seq[IdGCValue]] = {
 
     //--------------------------- Assemble Pipeline -----------------------------------------------------
-    //-------------------------------- Match on Cursor Condition ----------------------------------------
-    val cursorMatch: Option[Bson] = rowValueOpt match {
-      case None           => None
-      case Some(rowValue) => CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue)
-    }
 
     //-------------------------------- QueryArg Filter --------------------------------------------------
     val joinAndFilter = buildJoinStagesForFilter(queryArguments.filter)
@@ -58,9 +53,15 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
     val projectStage = Seq(idProjectionStage)
 
     //--------------------------- Setup Query -----------------------------------------------------------
-    val pipeline = cursorMatch ++ joinAndFilter ++ sort ++ skipStage ++ limitStage ++ projectStage
+    val common = joinAndFilter ++ sort ++ skipStage ++ limitStage ++ projectStage
 
-    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture.map(_.map(readsId))
+    //-------------------------------- Match on Cursor Condition ----------------------------------------
+    val pipeline = rowValueOpt match {
+      case None           => common
+      case Some(rowValue) => CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue) +: common
+    }
+
+    database.getCollection(model.dbName).aggregate(pipeline).toFuture.map(_.map(readsId))
   }
 
   //-------------------------------------- Join And Filter ---------------------------------------------------
