@@ -1,9 +1,9 @@
 use crate::{
     data_resolvers::{DataResolver, SelectQuery, Sqlite},
-    error::Error,
     protobuf::prelude::*,
 };
 use futures::{future, Async, Future, Poll};
+use prisma_common::error::Error;
 use tower_service::Service;
 
 impl Service<SelectQuery> for Sqlite {

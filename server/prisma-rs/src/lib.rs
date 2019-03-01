@@ -1,31 +1,21 @@
 #![recursion_limit = "128"]
 
 #[macro_use]
-extern crate serde_derive;
-#[macro_use]
 extern crate prost_derive;
-#[macro_use]
-extern crate debug_stub_derive;
 
-pub mod config;
 pub mod cursor_condition;
 pub mod data_resolvers;
-pub mod error;
-pub mod models;
 pub mod ordering;
 pub mod protobuf;
 
-use config::PrismaConfig;
-use error::Error;
 use lazy_static::lazy_static;
+use prisma_common::{config::PrismaConfig, error::Error};
 use protobuf::{ExternalInterface, ProtoBufEnvelope, ProtoBufInterface};
 use serde_yaml;
 
 pub use protobuf::prelude::*;
 
 use std::{env, fs::File, slice};
-
-type PrismaResult<T> = Result<T, Error>;
 
 lazy_static! {
     pub static ref PBI: ProtoBufInterface = ProtoBufInterface::new(&CONFIG);

@@ -1,8 +1,10 @@
-use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult};
-use sql::prelude::*;
+use crate::protobuf::prelude::*;
+use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
+use prisma_query::ast::*;
 use std::sync::Arc;
 
-pub type OrderVec = Vec<(Column, Option<Order>)>;
+pub type OrderVec = Vec<(DatabaseValue, Option<Order>)>;
 
 pub struct Ordering;
 

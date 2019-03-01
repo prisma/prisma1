@@ -1,13 +1,10 @@
 use crate::{
     data_resolvers::{IntoSelectQuery, SelectQuery},
-    error::Error,
-    models::prelude::*,
     protobuf::prelude::*,
-    PrismaResult,
 };
-
-use sql::prelude::*;
-use std::collections::BTreeSet;
+use prisma_common::{error::Error, PrismaResult};
+use prisma_models::prelude::*;
+use prisma_query::ast::*;
 
 impl IntoSelectQuery for GetNodeByWhereInput {
     fn into_select_query(self) -> PrismaResult<SelectQuery> {
@@ -16,33 +13,20 @@ impl IntoSelectQuery for GetNodeByWhereInput {
 
         let project: ProjectRef = project_template.into();
         let model = project.schema().find_model(&self.model_name)?;
-
-        let fields = self
-            .selected_fields
-            .into_iter()
-            .fold(BTreeSet::new(), |mut acc, field| {
-                if let Some(selected_field::Field::Scalar(s)) = field.field {
-                    acc.insert(s);
-                };
-                acc
-            });
+        let selected_fields = Self::selected_fields(&model, self.selected_fields);
 
         let value = self.value.prisma_value.ok_or_else(|| {
             Error::InvalidInputError(String::from("Search value cannot be empty."))
         })?;
 
-        let condition = ConditionTree::single(column(&self.field_name).equals(value));
+        let condition = ConditionTree::single(self.field_name.equals(value));
+        let base_query = Self::base_query(model.db_name(), condition, 0);
+        let select_ast = Self::select_fields(base_query, &selected_fields);
 
-        let query = SelectQuery {
-            project: project,
-            model: model,
-            selected_fields: fields,
-            conditions: condition,
-            ordering: None,
-            skip: 0,
-            limit: None,
-        };
-
-        Ok(query)
+        dbg!(Ok(SelectQuery {
+            db_name: project.schema().db_name.to_string(),
+            query_ast: select_ast,
+            selected_fields: selected_fields,
+        }))
     }
 }

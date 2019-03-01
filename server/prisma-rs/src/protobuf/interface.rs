@@ -1,12 +1,10 @@
 use crate::{
-    config::{ConnectionLimit, PrismaConfig, PrismaDatabase},
     data_resolvers::{IntoSelectQuery, PrismaDataResolver, Sqlite},
-    error::Error,
     protobuf::prelude::*,
-    PrismaResult,
 };
-
+use prisma_common::{config::*, error::Error, PrismaResult};
 use prost::Message;
+use std::error::Error as StdError;
 
 macro_rules! input_to_query {
     ( $x:tt, $y:ident ) => {
@@ -89,4 +87,32 @@ impl ExternalInterface for ProtoBufInterface {
     input_to_query!(GetNodeByWhereInput, get_node_by_where);
     input_to_query!(GetNodesInput, get_nodes);
     input_to_query!(GetRelatedNodesInput, get_related_nodes);
+}
+
+impl From<Error> for super::prisma::error::Value {
+    fn from(error: Error) -> super::prisma::error::Value {
+        match error {
+            Error::ConnectionError(message, _) => {
+                super::prisma::error::Value::ConnectionError(message.to_string())
+            }
+            Error::QueryError(message, _) => {
+                super::prisma::error::Value::QueryError(message.to_string())
+            }
+            Error::ProtobufDecodeError(message, _) => {
+                super::prisma::error::Value::ProtobufDecodeError(message.to_string())
+            }
+            Error::JsonDecodeError(message, _) => {
+                super::prisma::error::Value::JsonDecodeError(message.to_string())
+            }
+            Error::InvalidInputError(message) => {
+                super::prisma::error::Value::InvalidInputError(message.to_string())
+            }
+            Error::InvalidConnectionArguments(message) => {
+                super::prisma::error::Value::InvalidConnectionArguments(message.to_string())
+            }
+            e @ Error::NoResultError => {
+                super::prisma::error::Value::NoResultsError(e.description().to_string())
+            }
+        }
+    }
 }

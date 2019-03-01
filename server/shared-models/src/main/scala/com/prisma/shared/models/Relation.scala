@@ -45,7 +45,7 @@ class Relation(
   lazy val isRelationTable: Boolean                          = !isInlineRelation
   lazy val inlineManifestation: Option[EmbeddedRelationLink] = manifestation.collect { case x: EmbeddedRelationLink => x }
 
-  lazy val relationTableName = manifestation match {
+  lazy val relationTableName: String = manifestation match {
     case Some(m: RelationTable)        => m.table
     case Some(m: EmbeddedRelationLink) => schema.getModelByName_!(m.inTableOfModelName).dbName
     case None                          => "_" + name
@@ -69,7 +69,7 @@ class Relation(
     modelAFieldIsList && modelBFieldIsList
   }
 
-  lazy val relationTableHas3Columns = idColumn.isDefined
+  lazy val relationTableHas3Columns: Boolean = idColumn.isDefined
 
   lazy val idColumn_! : String = idColumn.get
 

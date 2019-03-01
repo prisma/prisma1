@@ -1,6 +1,6 @@
-use crate::models::prelude::*;
-
+use crate::prelude::*;
 use once_cell::unsync::OnceCell;
+use prisma_query::ast::{Column, Table};
 use std::sync::{Arc, Weak};
 
 pub type ModelRef = Arc<Model>;
@@ -21,8 +21,10 @@ pub struct Model {
     pub name: String,
     pub stable_identifier: String,
     pub is_embedded: bool,
-    fields: OnceCell<Fields>,
     pub manifestation: Option<ModelManifestation>,
+
+    fields: OnceCell<Fields>,
+
     #[debug_stub = "#SchemaWeakRef#"]
     pub schema: SchemaWeakRef,
 }
@@ -59,8 +61,8 @@ impl ModelTemplate {
 }
 
 impl Model {
-    pub fn table(&self) -> String {
-        self.with_project(|project| format!("{}.{}", project.db_name(), self.db_name()))
+    pub fn table(&self) -> Table {
+        (self.schema().db_name.as_str(), self.db_name()).into()
     }
 
     pub fn fields(&self) -> &Fields {
@@ -71,7 +73,15 @@ impl Model {
     }
 
     pub fn is_legacy(&self) -> bool {
-        self.with_schema(|schema| schema.is_legacy())
+        self.schema().is_legacy()
+    }
+
+    pub fn id_column(&self) -> Column {
+        let table_name = self.db_name();
+        let id_field = self.fields().id();
+        let id_name = id_field.db_name();
+
+        (self.db_name(), table_name, id_name).into()
     }
 
     pub fn db_name(&self) -> &str {
@@ -81,22 +91,9 @@ impl Model {
             .unwrap_or_else(|| self.name.as_ref())
     }
 
-    pub fn with_schema<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Schema>) -> T,
-    {
-        match self.schema.upgrade(){
-            Some(model) => f(model),
-            None => panic!(
-                "Schema does not exist anymore. Parent schema is deleted without deleting the child models."
-            )
-        }
-    }
-
-    pub fn with_project<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Project>) -> T,
-    {
-        self.with_schema(|s| s.with_project(|p| f(p)))
+    pub fn schema(&self) -> SchemaRef {
+        self.schema.upgrade().expect(
+            "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
+        )
     }
 }

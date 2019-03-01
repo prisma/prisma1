@@ -1,4 +1,4 @@
-pub use crate::models::prelude::*;
+pub use crate::prelude::*;
 use once_cell::unsync::OnceCell;
 use std::sync::{Arc, Weak};
 
@@ -10,73 +10,54 @@ pub type ProjectWeakRef = Weak<Project>;
 pub struct ProjectTemplate {
     pub id: String,
     pub schema: SchemaTemplate,
-    pub functions: Vec<Function>,
 
     #[serde(default)]
     pub manifestation: ProjectManifestation,
 
+    // todo: what is this?
     #[serde(default)]
     pub revision: Revision,
-
-    #[serde(default)]
-    pub secrets: Vec<String>,
-
-    #[serde(default)]
-    pub allow_queries: DefaultTrue,
-
-    #[serde(default)]
-    pub allow_mutations: DefaultTrue,
 }
 
 #[derive(Debug)]
 pub struct Project {
     pub id: String,
     pub schema: OnceCell<SchemaRef>,
-    pub functions: Vec<Function>,
-    pub manifestation: ProjectManifestation,
     pub revision: Revision,
-    pub secrets: Vec<String>,
-    pub allow_queries: DefaultTrue,
-    pub allow_mutations: DefaultTrue,
 }
 
 impl Into<ProjectRef> for ProjectTemplate {
     fn into(self) -> ProjectRef {
+        let db_name = self.db_name();
         let project = Arc::new(Project {
             id: self.id,
             schema: OnceCell::new(),
-            functions: self.functions,
-            manifestation: self.manifestation,
             revision: self.revision,
-            secrets: self.secrets,
-            allow_queries: self.allow_queries,
-            allow_mutations: self.allow_mutations,
         });
 
-        project
-            .schema
-            .set(self.schema.build(Arc::downgrade(&project)))
-            .unwrap();
+        project.schema.set(self.schema.build(db_name)).unwrap();
 
         project
     }
 }
 
-impl Project {
-    pub fn db_name(&self) -> &str {
+impl ProjectTemplate {
+    pub fn db_name(&self) -> String {
         match self.manifestation {
             ProjectManifestation {
                 schema: Some(ref schema),
                 ..
-            } => schema,
+            } => schema.clone(),
             ProjectManifestation {
                 database: Some(ref database),
                 ..
-            } => database,
-            _ => self.id.as_ref(),
+            } => database.clone(),
+            _ => self.id.clone(),
         }
     }
+}
 
+impl Project {
     pub fn schema(&self) -> &Schema {
         self.schema.get().expect("Project has no schema set!")
     }
@@ -126,6 +107,21 @@ pub enum FunctionType {
 #[derive(Default, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ProjectManifestation {
-    database: Option<String>,
-    schema: Option<String>,
+    pub database: Option<String>,
+    pub schema: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::prelude::*;
+    use serde_json;
+    use std::fs::File;
+
+    #[test]
+    fn test_relation_schema() {
+        let file = File::open("./relation_schema.json").unwrap();
+        let project_template: ProjectTemplate = serde_json::from_reader(file).unwrap();
+        let _project: ProjectRef = project_template.into();
+        assert!(true)
+    }
 }

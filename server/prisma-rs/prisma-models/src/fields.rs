@@ -1,8 +1,5 @@
-use crate::{
-    error::Error,
-    models::{Field, RelationField, ScalarField},
-    PrismaResult,
-};
+use crate::{Field, RelationField, ScalarField};
+use prisma_common::{error::Error, PrismaResult};
 use std::{
     collections::BTreeSet,
     sync::{Arc, Weak},
@@ -60,7 +57,7 @@ impl Fields {
     pub fn find_many_from_all(&self, names: &BTreeSet<String>) -> Vec<&Field> {
         self.all
             .iter()
-            .filter(|field| names.contains(field.db_name()))
+            .filter(|field| names.contains(field.db_name().as_ref()))
             .collect()
     }
 
@@ -76,7 +73,7 @@ impl Fields {
         self.relation
             .iter()
             .map(|field| field.upgrade().unwrap())
-            .filter(|field| names.contains(field.db_name()))
+            .filter(|field| names.contains(&field.db_name()))
             .collect()
     }
 
@@ -84,7 +81,7 @@ impl Fields {
         self.all
             .iter()
             .find(|field| field.db_name() == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("1 Field not found: {}", name)))
     }
 
     pub fn find_from_scalar(&self, name: &str) -> PrismaResult<Arc<ScalarField>> {
@@ -92,15 +89,15 @@ impl Fields {
             .iter()
             .find(|field| field.db_name() == name)
             .cloned()
-            .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("2 Field not found: {}", name)))
     }
 
     pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
         self.relation()
             .iter()
-            .find(|field| field.db_name() == name)
+            .find(|field| field.relation().name == name)
             .cloned()
-            .ok_or_else(|| Error::InvalidInputError(format!("Field not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("3 Field not found: {}", name)))
     }
 
     fn scalar_filter(mut acc: Vec<Weak<ScalarField>>, field: &Field) -> Vec<Weak<ScalarField>> {

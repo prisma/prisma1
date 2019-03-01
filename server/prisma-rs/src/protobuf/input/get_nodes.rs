@@ -1,33 +1,22 @@
 use crate::{
     cursor_condition::CursorCondition,
     data_resolvers::{IntoSelectQuery, SelectQuery},
-    models::prelude::*,
     ordering::Ordering,
     protobuf::prelude::*,
-    PrismaResult,
 };
 
-use sql::prelude::*;
-use std::collections::BTreeSet;
+use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
+use prisma_query::ast::*;
 
 impl IntoSelectQuery for GetNodesInput {
     fn into_select_query(self) -> PrismaResult<SelectQuery> {
         let project_template: ProjectTemplate =
             serde_json::from_reader(self.project_json.as_slice())?;
 
-        let fields = self
-            .selected_fields
-            .into_iter()
-            .fold(BTreeSet::new(), |mut acc, field| {
-                if let Some(selected_field::Field::Scalar(s)) = field.field {
-                    acc.insert(s);
-                };
-                acc
-            });
-
         let project: ProjectRef = project_template.into();
         let model = project.schema().find_model(&self.model_name)?;
-        let cursor = CursorCondition::build(&self.query_arguments, &model);
+        let selected_fields = Self::selected_fields(&model, self.selected_fields);
 
         let ordering = Ordering::for_model(
             &model,
@@ -35,10 +24,12 @@ impl IntoSelectQuery for GetNodesInput {
             self.query_arguments.last.is_some(),
         )?;
 
-        let filter = self
+        let cursor: ConditionTree = CursorCondition::build(&self.query_arguments, &model);
+
+        let filter: ConditionTree = self
             .query_arguments
             .filter
-            .map(|filter| filter.into())
+            .map(|filter| filter.into_condition_tree(model.clone()))
             .unwrap_or(ConditionTree::NoCondition);
 
         let conditions = ConditionTree::and(filter, cursor);
@@ -48,16 +39,15 @@ impl IntoSelectQuery for GetNodesInput {
             None => (self.query_arguments.skip.unwrap_or(0), None),
         };
 
-        let query = SelectQuery {
-            project: project,
-            model: model,
-            selected_fields: fields,
-            conditions: conditions,
-            ordering: Some(ordering),
-            skip: skip as usize,
-            limit: limit.map(|l| l as usize),
-        };
+        let base_query = Self::base_query(model.db_name(), conditions, skip as usize);
+        let with_columns = Self::select_fields(base_query, &selected_fields);
+        let ordered = Self::order_by(with_columns, ordering);
+        let select_ast = Self::limit(ordered, limit.map(|limit| limit as usize));
 
-        dbg!(Ok(query))
+        dbg!(Ok(SelectQuery {
+            db_name: project.schema().db_name.to_string(),
+            query_ast: select_ast,
+            selected_fields: selected_fields,
+        }))
     }
 }

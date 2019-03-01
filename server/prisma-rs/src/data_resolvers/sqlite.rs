@@ -2,14 +2,16 @@ mod data_resolver;
 mod service;
 
 use chrono::{DateTime, Utc};
+use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
 use r2d2_sqlite::SqliteConnectionManager;
 use std::collections::HashSet;
 
-use crate::{models::prelude::*, protobuf::prelude::*, PrismaResult, PrismaValue, SERVER_ROOT};
+use crate::{protobuf::prelude::*, PrismaValue, SERVER_ROOT};
 
 use rusqlite::{
-    types::{FromSql, FromSqlResult, Null, ToSql, ToSqlOutput, ValueRef},
-    Error as RusqlError, Row, NO_PARAMS,
+    types::{FromSql, FromSqlResult, ValueRef},
+    Row, NO_PARAMS,
 };
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
@@ -97,34 +99,6 @@ impl Sqlite {
                 PrismaValue::Float(v as f32)
             }
         }
-    }
-}
-
-impl ToSql for PrismaValue {
-    fn to_sql(&self) -> Result<ToSqlOutput, RusqlError> {
-        let value = match self {
-            PrismaValue::String(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Enum(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Json(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Uuid(value) => ToSqlOutput::from(value.as_ref() as &str),
-            PrismaValue::Float(value) => ToSqlOutput::from(f64::from(*value)),
-            PrismaValue::Int(value) => ToSqlOutput::from(*value),
-            PrismaValue::Boolean(value) => ToSqlOutput::from(*value),
-            PrismaValue::DateTime(value) => value.to_sql().unwrap(),
-            PrismaValue::Null(_) => ToSqlOutput::from(Null),
-
-            PrismaValue::GraphqlId(value) => match value.id_value {
-                Some(graphql_id::IdValue::String(ref value)) => {
-                    ToSqlOutput::from(value.as_ref() as &str)
-                }
-                Some(graphql_id::IdValue::Int(value)) => ToSqlOutput::from(value),
-                None => panic!("We got an empty ID value here. Tsk tsk."),
-            },
-
-            PrismaValue::Relation(_) => panic!("We should not have a Relation value here."),
-        };
-
-        Ok(value)
     }
 }
 

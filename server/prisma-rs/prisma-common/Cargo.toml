@@ -1,0 +1,15 @@
+[package]
+name = "prisma-common"
+version = "0.0.0"
+authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>", "Marcus Böhm <boehm@prisma.io>" ]
+edition = "2018"
+
+[dependencies]
+serde_derive = "1.0"
+serde_json = "1.0"
+serde = "1.0"
+url = "1.7"
+r2d2 = "0.8"
+prost = "0.4"
+rusqlite = { version = "0.16", features = ["chrono"] }
+url_serde = "0.2"
