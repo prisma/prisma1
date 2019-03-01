@@ -69,8 +69,8 @@ impl ExternalInterface for ProtoBufInterface {
         Self::protobuf_result(|| {
             let input = GetNodeByWhereInput::decode(payload)?;
             let query = input.into_select_query()?;
-            let (nodes, fields) = self.data_resolver.select_nodes(query)?;
-
+            let (rows, fields) = self.data_resolver.select_nodes(query)?;
+            let nodes: Vec<Node> = rows.into_iter().map(Node::from).collect();
             let response = RpcResponse::ok(NodesResult { nodes, fields });
 
             let mut response_payload = Vec::new();
@@ -86,8 +86,8 @@ impl ExternalInterface for ProtoBufInterface {
             Self::validate(&input.query_arguments)?;
 
             let query = input.into_select_query()?;
-            let (nodes, fields) = self.data_resolver.select_nodes(query)?;
-
+            let (rows, fields) = self.data_resolver.select_nodes(query)?;
+            let nodes: Vec<Node> = rows.into_iter().map(Node::from).collect();
             let response = RpcResponse::ok(NodesResult { nodes, fields });
 
             let mut response_payload = Vec::new();

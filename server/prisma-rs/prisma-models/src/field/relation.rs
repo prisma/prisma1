@@ -1,6 +1,7 @@
 use super::FieldManifestation;
 use crate::prelude::*;
 use once_cell::unsync::OnceCell;
+use prisma_query::ast::Column;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
@@ -90,6 +91,16 @@ impl RelationField {
             }
             _ => self.name.clone(),
         }
+    }
+
+    pub fn as_column(&self) -> Column {
+        let model = self.model();
+        let schema = model.schema();
+        let db_name = self.db_name();
+
+        let parts = (schema.db_name.as_ref(), model.db_name(), db_name.as_ref());
+
+        parts.into()
     }
 
     pub fn related_model(&self) -> ModelRef {

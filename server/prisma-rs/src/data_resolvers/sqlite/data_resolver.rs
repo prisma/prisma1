@@ -1,13 +1,14 @@
-use crate::{
-    data_resolvers::{DataResolver, SelectQuery, Sqlite},
-    protobuf::prelude::*,
-};
+use crate::data_resolvers::{DataResolver, SelectQuery, Sqlite};
 
 use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
 use prisma_query::visitor::{self, Visitor};
 
 impl DataResolver for Sqlite {
-    fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Node>, Vec<String>)> {
+    fn select_nodes(
+        &self,
+        query: SelectQuery,
+    ) -> PrismaResult<(Vec<Vec<PrismaValue>>, Vec<String>)> {
         let db_name = query.db_name;
         let query_ast = query.query_ast;
         let fields = query.selected_fields.fields;
@@ -18,14 +19,11 @@ impl DataResolver for Sqlite {
             let mut stmt = conn.prepare(&query_sql)?;
 
             let nodes_iter = stmt.query_map(&params, |row| {
-                let mut values = Vec::new();
-
-                for (i, field) in fields.iter().enumerate() {
-                    let prisma_value = Some(Self::fetch_value(field.type_identifier, &row, i));
-                    values.push(ValueContainer { prisma_value });
-                }
-
-                Node { values }
+                fields
+                    .iter()
+                    .enumerate()
+                    .map(|(i, field)| Self::fetch_value(field.type_identifier, &row, i))
+                    .collect()
             })?;
 
             let mut nodes = Vec::new();

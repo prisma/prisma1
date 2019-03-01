@@ -2,6 +2,7 @@ use crate::{
     cursor_condition::CursorCondition,
     data_resolvers::{IntoSelectQuery, SelectQuery},
     ordering::Ordering,
+    protobuf::filter::IntoFilter,
     protobuf::prelude::*,
 };
 
@@ -29,7 +30,8 @@ impl IntoSelectQuery for GetNodesInput {
         let filter: ConditionTree = self
             .query_arguments
             .filter
-            .map(|filter| filter.into_condition_tree(model.clone()))
+            .map(|filter| filter.into_filter(model.clone()))
+            .map(|filter| filter.into())
             .unwrap_or(ConditionTree::NoCondition);
 
         let conditions = ConditionTree::and(filter, cursor);
