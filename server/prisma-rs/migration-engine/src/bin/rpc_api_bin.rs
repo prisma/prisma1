@@ -1,15 +1,7 @@
-mod commands;
-mod migration;
-mod rpc_api;
-mod steps;
-
-use rpc_api::RpcApi;
+use migration_engine::rpc_api::RpcApi;
+use migration_engine::steps::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use steps::*;
-
-#[macro_use]
-extern crate serde_derive;
 
 fn main() {
 //    test_json_serialization::<MigrationStep>(r#"{"name":"Blog","stepType":"CreateModel"}"#);

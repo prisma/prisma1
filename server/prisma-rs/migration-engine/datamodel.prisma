@@ -1,0 +1,9 @@
+type Blog {
+    id: ID! @id
+    name: String!
+}
+
+type Post {
+    id: ID! @id
+    title: String
+}

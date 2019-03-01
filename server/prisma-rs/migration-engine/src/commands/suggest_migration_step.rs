@@ -23,11 +23,11 @@ impl MigrationCommand for SuggestMigrationStepsCommand {
         let schema = LegacySchemaInferer::infer(self.input.data_model.clone());
         let steps = MigrationStepsInferrerImpl::infer(&schema, &database_schema);
         //        inferrer.infer("sjka0");
-        let warning = DataModelWarningOrError {
-            tpe: "Blog".to_owned(),
-            field: Some("title".to_owned()),
-            message: "This is danger".to_owned(),
-        };
+//        let warning = DataModelWarningOrError {
+//            tpe: "Blog".to_owned(),
+//            field: Some("title".to_owned()),
+//            message: "This is danger".to_owned(),
+//        };
         //        let steps = vec![
         //            MigrationStep::CreateModel(CreateModel {
         //                name: "Blog".to_owned(),
@@ -48,7 +48,7 @@ impl MigrationCommand for SuggestMigrationStepsCommand {
         SuggestMigrationStepsOutput {
             steps: steps,
             errors: vec![],
-            warnings: vec![warning],
+            warnings: vec![],
         }
     }
 }
