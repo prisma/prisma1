@@ -63,7 +63,7 @@ impl ModelTemplate {
 
 impl Model {
     pub fn table(&self) -> Table {
-        self.with_project(|project| (project.db_name(), self.db_name()).into())
+        (self.schema().db_name.as_str(), self.db_name()).into()
     }
 
     pub fn fields(&self) -> &Fields {
@@ -74,7 +74,7 @@ impl Model {
     }
 
     pub fn is_legacy(&self) -> bool {
-        self.with_schema(|schema| schema.is_legacy())
+        self.schema().is_legacy()
     }
 
     pub fn db_name(&self) -> &str {
@@ -87,22 +87,9 @@ impl Model {
             .map(|mf| mf.db_name.as_ref())
     }
 
-    pub fn with_schema<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Schema>) -> T,
-    {
-        match self.schema.upgrade(){
-            Some(model) => f(model),
-            None => panic!(
-                "Schema does not exist anymore. Parent schema is deleted without deleting the child models."
-            )
-        }
-    }
-
-    pub fn with_project<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Project>) -> T,
-    {
-        self.with_schema(|s| s.with_project(|p| f(p)))
+    pub fn schema(&self) -> SchemaRef {
+        self.schema.upgrade().expect(
+            "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
+        )
     }
 }

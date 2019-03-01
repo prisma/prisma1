@@ -24,7 +24,7 @@ impl IntoSelectQuery for GetNodeByWhereInput {
         let select_ast = Self::select_fields(base_query, &selected_fields);
 
         dbg!(Ok(SelectQuery {
-            db_name: project.db_name().to_string(),
+            db_name: project.schema().db_name.to_string(),
             query_ast: select_ast,
             selected_fields: selected_fields,
         }))

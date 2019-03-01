@@ -2,7 +2,6 @@ use prisma_query::ast::*;
 
 use super::FieldManifestation;
 use crate::prelude::*;
-use std::sync::Arc;
 
 static ID_FIELD: &str = "id";
 static EMBEDDED_ID_FIELD: &str = "_id";
@@ -76,64 +75,49 @@ pub struct Sequence {
 }
 
 impl ScalarField {
-    pub fn with_model<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Model>) -> T,
-    {
-        match self.model.upgrade() {
-            Some(model) => f(model),
-            None => panic!(
-                "Model does not exist anymore. Parent model is deleted without deleting the child fields."
-            )
-        }
+    fn model(&self) -> ModelRef {
+        self.model.upgrade().expect(
+            "Model does not exist anymore. Parent model got deleted without deleting the child."
+        )
     }
 
-    pub fn with_project<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(Arc<Project>) -> T,
-    {
-        self.with_model(|m| m.with_project(|p| f(p)))
+    fn schema(&self) -> SchemaRef {
+        self.model().schema()
     }
 
     /// A field is an ID field if the name is `id` or `_id` in legacy schemas,
     /// or if the field has Id behaviour defined.
     pub fn is_id(&self) -> bool {
-        self.with_model(|model| {
-            if model.is_legacy() {
-                self.name == ID_FIELD || self.name == EMBEDDED_ID_FIELD
-            } else {
-                match self.behaviour {
-                    Some(FieldBehaviour::Id { .. }) => true,
-                    _ => false,
-                }
+        if self.model().is_legacy() {
+            self.name == ID_FIELD || self.name == EMBEDDED_ID_FIELD
+        } else {
+            match self.behaviour {
+                Some(FieldBehaviour::Id { .. }) => true,
+                _ => false,
             }
-        })
+        }
     }
 
     pub fn is_created_at(&self) -> bool {
-        self.with_model(|model| {
-            if model.is_legacy() {
-                self.name == CREATED_AT_FIELD
-            } else {
-                match self.behaviour {
-                    Some(FieldBehaviour::CreatedAt) => true,
-                    _ => false,
-                }
+        if self.model().is_legacy() {
+            self.name == CREATED_AT_FIELD
+        } else {
+            match self.behaviour {
+                Some(FieldBehaviour::CreatedAt) => true,
+                _ => false,
             }
-        })
+        }
     }
 
     pub fn is_updated_at(&self) -> bool {
-        self.with_model(|model| {
-            if model.is_legacy() {
-                self.name == UPDATED_AT_FIELD
-            } else {
-                match self.behaviour {
-                    Some(FieldBehaviour::UpdatedAt) => true,
-                    _ => false,
-                }
+        if self.model().is_legacy() {
+            self.name == UPDATED_AT_FIELD
+        } else {
+            match self.behaviour {
+                Some(FieldBehaviour::UpdatedAt) => true,
+                _ => false,
             }
-        })
+        }
     }
 
     pub fn is_writable(&self) -> bool {
@@ -148,9 +132,6 @@ impl ScalarField {
     }
 
     pub fn model_column(&self) -> Column {
-        self.with_model(|model| {
-            model
-                .with_project(|project| (project.db_name(), model.db_name(), self.db_name()).into())
-        })
+        (self.schema().db_name.as_str(), self.model().db_name(), self.db_name()).into()
     }
 }
