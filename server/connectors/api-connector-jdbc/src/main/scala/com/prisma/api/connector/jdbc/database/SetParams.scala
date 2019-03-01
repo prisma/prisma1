@@ -26,8 +26,10 @@ object SetParams extends SlickExtensions with LimitClauseBuilder {
     queryArguments.after.foreach { value =>
       pp.setGcValue(value)
       pp.setGcValue(value)
+      pp.setGcValue(value)
     }
     queryArguments.before.foreach { value =>
+      pp.setGcValue(value)
       pp.setGcValue(value)
       pp.setGcValue(value)
     }
