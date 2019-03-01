@@ -49,8 +49,6 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     )
 
     val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_nodes(input)
-
-    // TODO: Do we need to handle the pagination stuff here?
     ResolverResult(queryArguments, nodeResult._1.map(x => transformNode((x, nodeResult._2), model)))
   }
 

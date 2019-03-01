@@ -1,6 +1,6 @@
 use super::FieldManifestation;
 use crate::prelude::*;
-use prisma_query::ast::*;
+use once_cell::unsync::OnceCell;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -33,7 +33,7 @@ pub struct RelationField {
     pub relation_side: RelationSide,
     #[debug_stub = "#ModelWeakRef#"]
     pub model: ModelWeakRef,
-    pub relation: RelationWeakRef,
+    pub relation: OnceCell<RelationWeakRef>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
@@ -52,16 +52,22 @@ impl RelationSide {
 }
 
 impl RelationField {
-    fn model(&self) -> ModelRef {
+    pub fn model(&self) -> ModelRef {
         self.model.upgrade().expect(
-            "Model does not exist anymore. Parent model got deleted without deleting the child."
+            "Model does not exist anymore. Parent model got deleted without deleting the child.",
         )
     }
 
-    fn relation(&self) -> RelationRef {
-        self.relation.upgrade().expect(
-            "Relation does not exist anymore. Parent relation is deleted without deleting the child fields."
-        )
+    pub fn relation(&self) -> RelationRef {
+        self.relation
+            .get_or_init(|| {
+                self.model()
+                    .schema()
+                    .find_relation(&self.relation_name)
+                    .unwrap()
+            })
+            .upgrade()
+            .unwrap()
     }
 
     pub fn db_name(&self) -> String {
@@ -84,17 +90,6 @@ impl RelationField {
             }
             _ => self.name.clone(),
         }
-    }
-
-    pub fn model_id_column(&self) -> Column {
-        let model = self.model();
-        let schema = model.schema();
-        let db_name = schema.db_name.as_str();
-        let table_name = model.db_name();
-        let id_field = model.fields().id();
-        let id_name = id_field.db_name();
-
-        (db_name, table_name, id_name).into()
     }
 
     pub fn related_model(&self) -> ModelRef {

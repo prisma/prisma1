@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use once_cell::unsync::OnceCell;
 use prisma_common::{error::Error, PrismaResult};
+use prisma_query::ast::Column;
 use std::sync::{Arc, Weak};
 
 pub type RelationRef = Arc<Relation>;
@@ -55,8 +56,17 @@ pub struct RelationTemplate {
 pub struct Relation {
     pub name: String,
 
-    model_a: OnceCell<RelationAttributes>,
-    model_b: OnceCell<RelationAttributes>,
+    model_a_name: String,
+    model_b_name: String,
+
+    model_a_on_delete: OnDelete,
+    model_b_on_delete: OnDelete,
+
+    model_a: OnceCell<ModelWeakRef>,
+    model_b: OnceCell<ModelWeakRef>,
+
+    field_a: OnceCell<Weak<RelationField>>,
+    field_b: OnceCell<Weak<RelationField>>,
 
     pub manifestation: Option<RelationLinkManifestation>,
 
@@ -64,69 +74,21 @@ pub struct Relation {
     pub schema: SchemaWeakRef,
 }
 
-#[derive(DebugStub)]
-struct RelationAttributes {
-    pub name: String,
-    #[debug_stub = "#ModelWeakRef#"]
-    pub model: ModelWeakRef,
-    #[debug_stub = "#FieldWeakRef#"]
-    pub field: Weak<RelationField>,
-    pub on_delete: OnDelete,
-}
-
-impl RelationAttributes {
-    pub fn new(
-        name: String,
-        model: ModelRef,
-        field: Arc<RelationField>,
-        on_delete: OnDelete,
-    ) -> Self {
-        RelationAttributes {
-            name: name,
-            model: Arc::downgrade(&model),
-            field: Arc::downgrade(&field),
-            on_delete: on_delete,
-        }
-    }
-}
-
 impl RelationTemplate {
     pub fn build(self, schema: SchemaWeakRef) -> RelationRef {
-        let model_a_name = self.model_a_name;
-        let model_b_name = self.model_b_name;
-
         let relation = Relation {
             name: self.name,
             manifestation: self.manifestation,
+            model_a_name: self.model_a_name,
+            model_b_name: self.model_b_name,
+            model_a_on_delete: self.model_a_on_delete,
+            model_b_on_delete: self.model_b_on_delete,
             model_a: OnceCell::new(),
             model_b: OnceCell::new(),
+            field_a: OnceCell::new(),
+            field_b: OnceCell::new(),
             schema: schema,
         };
-
-        let model_a = {
-            let model = relation.schema().find_model(&model_a_name).unwrap();
-
-            let field = model
-                .fields()
-                .find_from_relation(&relation.name, RelationSide::A)
-                .unwrap();
-
-            RelationAttributes::new(model_a_name, model, field, self.model_a_on_delete)
-        };
-
-        let model_b = {
-            let model = relation.schema().find_model(&model_b_name).unwrap();
-
-            let field = model
-                .fields()
-                .find_from_relation(&relation.name, RelationSide::B)
-                .unwrap();
-
-            RelationAttributes::new(model_b_name, model, field, self.model_b_on_delete)
-        };
-
-        relation.model_a.set(model_a).unwrap();
-        relation.model_b.set(model_b).unwrap();
 
         Arc::new(relation)
     }
@@ -170,46 +132,57 @@ impl Relation {
     }
 
     pub fn both_sides_cascade(&self) -> bool {
-        let a = self.model_a.get().unwrap();
-        let b = self.model_b.get().unwrap();
-
-        a.on_delete == OnDelete::Cascade && b.on_delete == OnDelete::Cascade
+        self.model_a_on_delete == OnDelete::Cascade && self.model_b_on_delete == OnDelete::Cascade
     }
 
     pub fn model_a(&self) -> ModelRef {
         self.model_a
-            .get()
-            .unwrap()
-            .model
+            .get_or_init(|| {
+                let model = self.schema().find_model(&self.model_a_name).unwrap();
+                Arc::downgrade(&model)
+            })
             .upgrade()
-            .expect("Model A deleted without deleting the relations in schama.")
+            .expect("Model A deleted without deleting the relations in schema.")
     }
 
     pub fn field_a(&self) -> Arc<RelationField> {
-        self.model_a
-            .get()
-            .unwrap()
-            .field
+        self.field_a
+            .get_or_init(|| {
+                let field = self
+                    .model_a()
+                    .fields()
+                    .find_from_relation(&self.name)
+                    .unwrap();
+
+                Arc::downgrade(&field)
+            })
             .upgrade()
-            .expect("Field A deleted without deleting the relations in schama.")
+            .expect("Field A deleted without deleting the relations in schema.")
     }
 
     pub fn model_b(&self) -> ModelRef {
         self.model_b
-            .get()
-            .unwrap()
-            .model
+            .get_or_init(|| {
+                let model = self.schema().find_model(&self.model_b_name).unwrap();
+                Arc::downgrade(&model)
+            })
             .upgrade()
-            .expect("Model B deleted without deleting the relations in schama.")
+            .expect("Model B deleted without deleting the relations in schema.")
     }
 
     pub fn field_b(&self) -> Arc<RelationField> {
-        self.model_b
-            .get()
-            .unwrap()
-            .field
+        self.field_b
+            .get_or_init(|| {
+                let field = self
+                    .model_b()
+                    .fields()
+                    .find_from_relation(&self.name)
+                    .unwrap();
+
+                Arc::downgrade(&field)
+            })
             .upgrade()
-            .expect("Field A deleted without deleting the relations in schama.")
+            .expect("Field B deleted without deleting the relations in schema.")
     }
 
     pub fn relation_table_name(&self) -> String {
@@ -227,39 +200,45 @@ impl Relation {
         }
     }
 
-    pub fn model_a_column(&self) -> String {
+    pub fn model_a_column(&self) -> Column {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
-            Some(RelationTable(ref m)) => m.model_a_column.clone(),
+            Some(RelationTable(ref m)) => m.model_a_column.clone().into(),
             Some(Inline(ref m)) => {
                 let model = self.model_a();
+                let id = model.fields().id();
 
-                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    model.fields().id().db_name().to_string()
+                let column = if m.in_table_of_model_name == model.name && !self.is_self_relation() {
+                    id.db_name()
                 } else {
-                    m.referencing_column.to_string()
-                }
+                    m.referencing_column.as_ref()
+                };
+
+                (model.schema().db_name.as_ref(), model.db_name(), column).into()
             }
-            None => Self::MODEL_A_DEFAULT_COLUMN.to_string(),
+            None => Self::MODEL_A_DEFAULT_COLUMN.into(),
         }
     }
 
-    pub fn model_b_column(&self) -> String {
+    pub fn model_b_column(&self) -> Column {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
-            Some(RelationTable(ref m)) => m.model_b_column.clone(),
+            Some(RelationTable(ref m)) => m.model_b_column.clone().into(),
             Some(Inline(ref m)) => {
                 let model = self.model_b();
+                let id = model.fields().id();
 
-                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    model.fields().id().db_name().to_string()
+                let column = if m.in_table_of_model_name == model.name && !self.is_self_relation() {
+                    id.db_name()
                 } else {
-                    m.referencing_column.to_string()
-                }
+                    m.referencing_column.as_ref()
+                };
+
+                (model.schema().db_name.as_ref(), model.db_name(), column).into()
             }
-            None => Self::MODEL_B_DEFAULT_COLUMN.to_string(),
+            None => Self::MODEL_B_DEFAULT_COLUMN.into(),
         }
     }
 
@@ -281,7 +260,7 @@ impl Relation {
         self.id_column().is_some()
     }
 
-    pub fn column_for_relation_side(&self, side: RelationSide) -> String {
+    pub fn column_for_relation_side(&self, side: RelationSide) -> Column {
         match side {
             RelationSide::A => self.model_a_column(),
             RelationSide::B => self.model_b_column(),
