@@ -3,7 +3,7 @@ use prisma_models::prelude::*;
 use serde_json;
 use std::io::{Read, Write};
 use std::process::Command;
-use std::sync::{Arc, Weak};
+use std::sync::{Arc};
 use std::process::Stdio;
 
 pub trait SchemaInferer {
@@ -23,15 +23,15 @@ impl SchemaInferer for LegacySchemaInferer {
             data_model: data_model,
             previous_schema: SchemaTemplate::empty(),
         };
-        write!(cmd.stdin.unwrap(), "{}", serde_json::to_string(&input).unwrap());
+        write!(cmd.stdin.unwrap(), "{}", serde_json::to_string(&input).unwrap()).unwrap();
         let mut buffer = String::new();
-        let mut stdout = &mut cmd.stdout.unwrap();
-        stdout.read_to_string(&mut buffer);
+        let stdout = &mut cmd.stdout.unwrap();
+        stdout.read_to_string(&mut buffer).unwrap();
 
         println!("received from the schema-inferrer-bin: {}", &buffer);
 
         let schema: SchemaTemplate = serde_json::from_str(buffer.as_str()).unwrap();
-        schema.build2()
+        schema.build("".to_string())
     }
 }
 
