@@ -1,4 +1,5 @@
 import Warning from 'components/Markdown/Warning'
+import Code from 'components/Markdown/Code'
 
 export const meta = {
   title: 'prisma.yml',
@@ -70,7 +71,7 @@ Here's an example where all properties of prisma.yml are being used:
 
 ```yml
 # This service is based on the type definitions in the two files
-# databasetypes.graphql` and `database/enums.graphql`
+# databasetypes.prisma` and `database/enums.prisma`
 datamodel:
   - database/types.prisma
   - database/enums.prisma
@@ -109,31 +110,30 @@ hooks:
   post-deploy:
     - prisma generate
 
-# Points to a `.graphql` file containing GraphQL
-# operations that will be executed when initially
-# deploying a service.
+# Executes a Node.js script to seed the database with
+# initial data.
 seed:
-  import: database/seed.graphql
+  run: node data/seed.js
 ```
 
 > In this example, the `databaseType` is inferred and defaults to `relational`.
 
-This prisma.yml expects the following file structure:
+This `prisma.yml` expects the following file structure:
 
 ```
 .
 ├── prisma.yml
 └── database
-    ├── types.graphql
-    └── enums.graphql
+    ├── types.prisma
+    └── enums.prisma
 ```
 
 
 ## Using variables
 
-Variables allow you to dynamically replace configuration values in your prisma.yml. They are especially useful when providing _secrets_ for your service and when you have a multi-staging developer workflows.
+Variables allow you to dynamically replace configuration values in your `prisma.yml`. They are especially useful when providing _secrets_ for your service and when you have a multi-staging developer workflows.
 
-To use variables inside prisma.yml, you need to reference the values enclosed in `${}` brackets:
+To use variables inside `prisma.yml`, you need to reference the values enclosed in `${}` brackets:
 
 ```yml
 yamlKeyXYZ: ${variableSource}
@@ -148,7 +148,7 @@ A _variable source_ can be either of the following two options:
 
 ### Recursive self-reference
 
-You can recursively reference other property values that live inside the same prisma.yml file.
+You can recursively reference other property values that live inside the same `prisma.yml` file.
 
 When using a recursive self-reference as a variable, the value that you put into the bracket is composed of:
 
@@ -162,7 +162,7 @@ custom:
   datamodelPath: myDatamodel
 ```
 
-> This works for any property inside prisma.yml, not just `custom`.
+> This works for any property inside `prisma.yml`, not just `custom`.
 
 ### Environment variable
 
@@ -183,7 +183,7 @@ secret: ${env:PRISMA_SECRET}
 
 ### Root properties
 
-The service definition file prisma.yml has the following root properties:
+The service definition file `prisma.yml` has the following root properties:
 
 - `datamodel` (required): Type definitions for database models, relations, enums and other types.
 - `endpoint`: HTTP endpoint for the Prisma API. Can be omitted to prompt CLI deployment wizard.
@@ -192,13 +192,13 @@ The service definition file prisma.yml has the following root properties:
 - `databaseType`: Specifies whether the Prisma service uses a document ro relational database.
 - `hooks`: Define CLI commands to be executed before/after specific actions of the Prisma CLI.
 - `seed`: Points to a file containing mutations for data seeding.
-- `custom`: Used to provide variables which can be referenced elsewhere in prisma.yml.
+- `custom`: Used to provide variables which can be referenced elsewhere in `prisma.yml`.
 
-The exact structure of prisma.yml is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/prisma/prisma-json-schema/blob/master/src/schema.json). The JSON schem definition also allows to elevate your tooling and let your code editors and IDEs help you with the right structure of prisma.yml.
+The exact structure of `prisma.yml` is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/prisma/prisma-json-schema/blob/master/src/schema.json). The JSON schem definition also allows to elevate your tooling and let your code editors and IDEs help you with the right structure of `prisma.yml`.
 
 ### datamodel (required)
 
-The `datamodel` points to one or more `.graphql`-files containing model definitions written in GraphQL SDL. If multiple files are provided, the CLI simply concatenates their contents at deployment time.
+The `datamodel` points to one or more `.prisma`-files containing model definitions written in GraphQL SDL. If multiple files are provided, the CLI simply concatenates their contents at deployment time.
 
 #### Type
 
@@ -206,18 +206,18 @@ The `datamodel` property expects a **string** or a **list of strings**.
 
 #### Examples
 
-The datamodel is defined in a file called `types.graphql`.
+The datamodel is defined in a file called `types.prisma`.
 
 ```yml
-datamodel: types.graphql
+datamodel: types.prisma
 ```
 
-The datamodel is defined in two files called `types.graphql` and `enums.graphl`. When the service gets deployed, the contents of both files will be concatenated by the CLI.
+The datamodel is defined in two files called `types.prisma` and `enums.prisma`. When the service gets deployed, the contents of both files will be concatenated by the CLI.
 
 ```yml
 datamodel:
-  - types.graphql
-  - enums.graphql
+  - types.prisma
+  - enums.prisma
 ```
 
 ### endpoint (optional)
@@ -229,7 +229,7 @@ The HTTP endpoint for your Prisma API is composed of the following components:
 - **Service name**: A descriptive name for your Prisma servic e.
 - **Service stage**: The development stage of your cluster (e.g. `dev`, `staging`, `prod`).
 
-Note that the `endpoint` is actually required to deploy your Prisma service. However, if you don't specify it in prisma.yml before running `prisma deploy`, the CLI prompts you with a wizard to help you figure out a Prisma server as deployment target and subsequently writes the `endpoint` into prisma.yml for you.
+Note that the `endpoint` is actually required to deploy your Prisma service. However, if you don't specify it in `prisma.yml` before running `prisma deploy`, the CLI prompts you with a wizard to help you figure out a Prisma server as deployment target and subsequently writes the `endpoint` into `prisma.yml` for you.
 
 #### Type
 
@@ -395,21 +395,12 @@ Database seeding is a standardised way to populate a service with test data.
 
 The `seed` property expects an **object**, with either one of two sub-properties:
 
-- `import`: Instructions to import data when seeding a service. You can refer to either of two kinds of files:
-  - A path to a `.graphql` file with GraphQL operations.
-  - A path to a `.zip` file that contains a data set in Normalized Data Format (NDF)
 - `run`: Shell command that will be executed when seeding a service. This is meant for more complex seed setups that are not covered by `import`.
+- `import`: Instructions to import data when seeding a service. You can refer to a `.zip` file that contains a data set in [Normalized Data Format](jsw9#normalized-data-format) (NDF)
 
-Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag on `prisma deploy`). Track [this feature request for additional seeding workflows](https://github.com/prisma/prisma/issues/1536).
+Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag on `prisma deploy`).
 
 #### Examples
-
-Refer to a `.graphql` file containing seeding mutations:
-
-```yml
-seed:
-  import: database/seed.graphql
-```
 
 Refer to a `.zip` file with a data set in NDF:
 
@@ -418,16 +409,31 @@ seed:
   import: database/backup.zip
 ```
 
-Run a Node script when seeding:
+Run a script when seeding:
+
+<Code languages={["JavaScript", "TypeScript", "Go"]}>
 
 ```yml
 seed:
-  run: node script.js
+  run: node ./data/seed.js
 ```
+
+```yml
+seed:
+  run: ts-node ./data/seed.ts
+```
+
+```yml
+seed:
+  run: go run ./data/seed.go
+```
+
+</Code>
+
 
 ### custom (optional)
 
-The `custom` property lets you specify any sorts of values you want to reuse elsewhere in your prisma.yml. It thus doesn't have a predefined structure. You can reference the values using variables with the [`self` variable source](#self-reference), e.g.: `${self:custom.myVariable}`.
+The `custom` property lets you specify any sorts of values you want to reuse elsewhere in your `prisma.yml`. It thus doesn't have a predefined structure. You can reference the values using variables with the [`self` variable source](#self-reference), e.g.: `${self:custom.myVariable}`.
 
 #### Type
 

@@ -9,9 +9,9 @@ Deploys a service configuration to a Prisma service.
 
 Every time you're changing a file from your service configuration, you need to synchronize these changes with the running Prisma service.
 
-Upon the very first deploy of a service, the command will perform initial data seeding if the `seed` property in prisma.yml is provided. You can prevent this by passing the `--no-seed` option.
+Upon the very first deploy of a service, the command will perform initial data seeding if the `seed` property in `prisma.yml` is provided. You can prevent this by passing the `--no-seed` option.
 
-If no [`endpoint`](5cy7#endpoint-optional) property is specifed in prisma.yml, the command will prompt you to interactively select a Prisma server as a deployment target for the service. After you selected a Prisma server, the CLI writes the `endpoint` into prisma.yml as the default for future deploys. To bring up the interactive prompt again, simply remove the `endpoint` property from prisma.yml manually or pass the `--new` option.
+If no [`endpoint`](5cy7#endpoint-optional) property is specifed in `prisma.yml`, the command will prompt you to interactively select a Prisma server as a deployment target for the service. After you selected a Prisma server, the CLI writes the `endpoint` into `prisma.yml` as the default for future deploys. To bring up the interactive prompt again, simply remove the `endpoint` property from `prisma.yml` manually or pass the `--new` option.
 
 ### Usage
 
