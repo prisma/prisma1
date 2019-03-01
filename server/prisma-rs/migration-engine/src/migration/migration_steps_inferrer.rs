@@ -52,10 +52,10 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
                     db_name: field.db_name_opt().map(|f| f.to_string()),
                     default: None,
                     id: field.id_behaviour_clone(),
-                    is_created_at: if field.is_created_at() { Some(field.is_created_at()) } else { None },
-                    is_updated_at: if field.is_updated_at() { Some(field.is_updated_at()) } else { None },
-                    is_list: if field.is_list { Some(field.is_list) } else { None },
-                    is_optional: if field.is_required { None } else { Some(true) },
+                    is_created_at: field.is_created_at().as_some_if_true(),
+                    is_updated_at: field.is_updated_at().as_some_if_true(),
+                    is_list: field.is_list.as_some_if_true(),
+                    is_optional: field.is_required.as_some_if_true(),
                     scalar_list: field.scalar_list_behaviour_clone(),
                 };
                 create_field_steps.push(MigrationStep::CreateField(step))
@@ -65,5 +65,15 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
         result.append(&mut create_model_steps);
         result.append(&mut create_field_steps);
         result
+    }
+}
+
+trait ToOption {
+    fn as_some_if_true(self) -> Option<bool>;
+}
+
+impl ToOption for bool {
+    fn as_some_if_true(self) -> Option<bool> {
+        if self { Some(true) } else { None }
     }
 }
