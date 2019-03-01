@@ -90,11 +90,11 @@ impl ValueContainer {
 
 impl RelationFilter {
     pub fn as_sub_select(self, model: ModelRef) -> ConditionTree {
-        let condition = self.condition();
-        let column_name = model.db_name().to_string();
-        let sub_select = self.relation_filter_sub_select(model);
-
-        Self::in_statement_for_relation_condition(Column::from(column_name), condition, sub_select)
+        Self::in_statement_for_relation_condition(
+            Column::from((model.db_name(), self.field.field.as_ref())),
+            self.condition(),
+            self.relation_filter_sub_select(model),
+        )
     }
 
     fn in_statement_for_relation_condition(
@@ -115,9 +115,10 @@ impl RelationFilter {
         let relation_field = model
             .fields()
             .find_from_relation_fields(&self.field.field)
-            .expect("Relation not found");
+            .unwrap();
 
         let relation = relation_field.relation();
+
         let invert_condition_of_subselect = match self.condition() {
             relation_filter::Condition::EveryRelatedNode => true,
             _ => false,
@@ -126,6 +127,7 @@ impl RelationFilter {
         let this_relation_column = relation.column_for_relation_side(relation_field.relation_side);
         let other_relation_column =
             relation.column_for_relation_side(relation_field.related_field().relation_side);
+
         let relation_table_name = relation.relation_table_name();
         let schema = model.schema();
 
@@ -135,28 +137,22 @@ impl RelationFilter {
                 let nested_select = nested.relation_filter_sub_select(model.clone());
 
                 let condition_tree = Self::in_statement_for_relation_condition(
-                    Column::from((
-                        schema.db_name.as_ref(),
-                        relation_table_name.as_ref(),
-                        other_relation_column.as_ref(),
-                    )),
+                    other_relation_column,
                     condition,
                     nested_select,
                 );
 
                 Select::from((schema.db_name.as_ref(), relation_table_name.as_ref()))
-                    .column(Column::from((
-                        schema.db_name.as_ref(),
-                        relation_table_name.as_ref(),
-                        this_relation_column.as_ref(),
-                    )))
+                    .column(this_relation_column)
                     .so_that(condition_tree.invert_if(invert_condition_of_subselect))
             }
             _ => {
                 let filter: ConditionTree =
                     (*self.nested_filter).into_condition_tree(model.clone());
 
-                let join_conditions = relation_field.related_model().id_column().equals(
+                let left_column = relation_field.related_model().id_column();
+
+                let join_conditions = left_column.equals(
                     relation.column_for_relation_side(relation_field.relation_side.opposite()),
                 );
 

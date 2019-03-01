@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use once_cell::unsync::OnceCell;
 use prisma_common::{error::Error, PrismaResult};
+use prisma_query::ast::Column;
 use std::sync::{Arc, Weak};
 
 pub type RelationRef = Arc<Relation>;
@@ -199,39 +200,45 @@ impl Relation {
         }
     }
 
-    pub fn model_a_column(&self) -> String {
+    pub fn model_a_column(&self) -> Column {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
-            Some(RelationTable(ref m)) => m.model_a_column.clone(),
+            Some(RelationTable(ref m)) => m.model_a_column.clone().into(),
             Some(Inline(ref m)) => {
                 let model = self.model_a();
+                let id = model.fields().id();
 
-                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    model.fields().id().db_name().to_string()
+                let column = if m.in_table_of_model_name == model.name && !self.is_self_relation() {
+                    id.db_name()
                 } else {
-                    m.referencing_column.to_string()
-                }
+                    m.referencing_column.as_ref()
+                };
+
+                (model.schema().db_name.as_ref(), model.db_name(), column).into()
             }
-            None => Self::MODEL_A_DEFAULT_COLUMN.to_string(),
+            None => Self::MODEL_A_DEFAULT_COLUMN.into(),
         }
     }
 
-    pub fn model_b_column(&self) -> String {
+    pub fn model_b_column(&self) -> Column {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
-            Some(RelationTable(ref m)) => m.model_b_column.clone(),
+            Some(RelationTable(ref m)) => m.model_b_column.clone().into(),
             Some(Inline(ref m)) => {
                 let model = self.model_b();
+                let id = model.fields().id();
 
-                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    model.fields().id().db_name().to_string()
+                let column = if m.in_table_of_model_name == model.name && !self.is_self_relation() {
+                    id.db_name()
                 } else {
-                    m.referencing_column.to_string()
-                }
+                    m.referencing_column.as_ref()
+                };
+
+                (model.schema().db_name.as_ref(), model.db_name(), column).into()
             }
-            None => Self::MODEL_B_DEFAULT_COLUMN.to_string(),
+            None => Self::MODEL_B_DEFAULT_COLUMN.into(),
         }
     }
 
@@ -253,7 +260,7 @@ impl Relation {
         self.id_column().is_some()
     }
 
-    pub fn column_for_relation_side(&self, side: RelationSide) -> String {
+    pub fn column_for_relation_side(&self, side: RelationSide) -> Column {
         match side {
             RelationSide::A => self.model_a_column(),
             RelationSide::B => self.model_b_column(),

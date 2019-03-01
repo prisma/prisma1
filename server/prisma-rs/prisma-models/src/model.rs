@@ -92,7 +92,8 @@ impl Model {
     }
 
     pub fn id_column(&self) -> Column {
-        let table_name = self.db_name();
+        let schema = self.schema();
+        let table_name = schema.db_name.as_ref();
         let id_field = self.fields().id();
         let id_name = id_field.db_name();
 
