@@ -52,6 +52,10 @@ impl RelationSide {
 }
 
 impl RelationField {
+    pub fn is_optional(&self) -> bool {
+        !self.is_required
+    }
+
     pub fn model(&self) -> ModelRef {
         self.model.upgrade().expect(
             "Model does not exist anymore. Parent model got deleted without deleting the child.",

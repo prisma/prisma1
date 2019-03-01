@@ -72,6 +72,7 @@ impl SchemaTemplate {
 }
 
 impl Schema {
+
     pub fn find_model(&self, name: &str) -> PrismaResult<ModelRef> {
         self.models
             .get()

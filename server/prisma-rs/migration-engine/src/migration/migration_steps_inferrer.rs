@@ -2,6 +2,8 @@ use crate::steps::*;
 use database_inspector::DatabaseSchema;
 use prisma_models::Schema;
 use std::sync::Arc;
+use prisma_models::RelationRef;
+use prisma_models::prelude::*;
 
 pub trait MigrationStepsInferrer {
     fn infer(next: &Schema, database_schema: &DatabaseSchema) -> Vec<MigrationStep>;
@@ -71,10 +73,60 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
             create_enum_steps.push(MigrationStep::CreateEnum(step));
         }
 
+        let mut create_relations = vec!();
+        let emptyRelations = vec!();
+        let relations = self.schema.relations.get().unwrap_or(&emptyRelations);
+        for relation in relations {
+            let model_a = relation.model_a();
+            let model_b = relation.model_b();
+            let field_a = relation.field_a();
+            let field_b = relation.field_b();
+
+            let step = CreateRelation {
+                name: relation.name.clone(),
+                model_a: RelationFieldSpec {
+                    name: model_a.name.clone(),
+                    field: Some(field_a.name.clone()),
+                    is_list: field_a.is_list.as_some_if_true(),
+                    is_optional: field_a.is_optional().as_some_if_true(),
+                    on_delete: Some(relation.model_a_on_delete),
+                    inline_link: self.is_inlined_in_model(relation, &model_a).as_some_if_true(),
+                },
+                model_b: RelationFieldSpec {
+                    name: model_b.name.clone(),
+                    field: Some(field_b.name.clone()),
+                    is_list: field_b.is_list.as_some_if_true(),
+                    is_optional: field_b.is_optional().as_some_if_true(),
+                    on_delete: Some(relation.model_a_on_delete),
+                    inline_link: self.is_inlined_in_model(relation, &model_b).as_some_if_true(),
+                },
+                table: match relation.manifestation {
+                    Some(RelationLinkManifestation::RelationTable(ref mani)) => {
+                        Some(LinkTableSpec {
+                            model_a_column: Some(mani.model_a_column.clone()),
+                            model_b_column: Some(mani.model_b_column.clone()),
+                        })
+                    },
+                    _ => None,
+                }
+            };
+            create_relations.push(MigrationStep::CreateRelation(step));
+        }
+
         result.append(&mut create_model_steps);
         result.append(&mut create_field_steps);
         result.append(&mut create_enum_steps);
+        result.append(&mut create_relations);
         result
+    }
+
+    fn is_inlined_in_model(&self, relation: &RelationRef, model: &ModelRef) -> bool {
+        match relation.manifestation {
+            Some(RelationLinkManifestation::Inline(ref mani)) => {
+              mani.in_table_of_model_name == model.name
+            },
+            _ => false,
+        }
     }
 }
 

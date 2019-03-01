@@ -229,13 +229,6 @@ pub struct LinkTableSpec {
     pub model_b_column: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
-pub enum OnDelete {
-    SetNull,
-    Cascade,
-}
-
 #[cfg(test)]
 mod tests {
     use crate::steps::*;
