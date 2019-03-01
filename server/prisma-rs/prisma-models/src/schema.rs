@@ -21,8 +21,7 @@ pub struct Schema {
     pub relations: OnceCell<Vec<RelationRef>>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
-    #[debug_stub = "#ProjectWeakRef#"]
-    pub project: ProjectWeakRef,
+    pub db_name: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -33,13 +32,13 @@ pub struct PrismaEnum {
 }
 
 impl SchemaTemplate {
-    pub fn build(self, project: ProjectWeakRef) -> SchemaRef {
+    pub fn build(self, db_name: String) -> SchemaRef {
         let schema = Arc::new(Schema {
             models: OnceCell::new(),
-            project: project,
             relations: OnceCell::new(),
             enums: self.enums,
             version: self.version,
+            db_name: db_name,
         });
 
         let models = self
@@ -80,17 +79,5 @@ impl Schema {
 
     pub fn is_legacy(&self) -> bool {
         self.version.is_none()
-    }
-
-    pub fn with_project<F, T>(&self, f: F) -> T
-    where
-        F: FnOnce(ProjectRef) -> T,
-    {
-        match self.project.upgrade(){
-            Some(project) => f(project),
-            None => panic!(
-                "Project does not exist anymore. Parent project is deleted without deleting the child schema."
-            )
-        }
     }
 }
