@@ -137,8 +137,8 @@ impl Relation {
     const MODEL_B_DEFAULT_COLUMN: &'static str = "B";
 
     fn schema(&self) -> SchemaRef {
-        self.schema.upgrade().unwrap_or(
-            panic!("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
+        self.schema.upgrade().expect(
+            "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
         )
     }
 

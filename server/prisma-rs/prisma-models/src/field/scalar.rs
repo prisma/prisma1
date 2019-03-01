@@ -2,7 +2,6 @@ use prisma_query::ast::*;
 
 use super::FieldManifestation;
 use crate::prelude::*;
-use std::sync::Arc;
 
 static ID_FIELD: &str = "id";
 static EMBEDDED_ID_FIELD: &str = "_id";
@@ -77,9 +76,9 @@ pub struct Sequence {
 
 impl ScalarField {
     fn model(&self) -> ModelRef {
-        self.model.upgrade().unwrap_or(panic!(
+        self.model.upgrade().expect(
             "Model does not exist anymore. Parent model got deleted without deleting the child."
-        ))
+        )
     }
 
     fn schema(&self) -> SchemaRef {

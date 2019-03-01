@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use crate::project::ProjectManifestation;
 use once_cell::unsync::OnceCell;
 use prisma_common::{error::Error, PrismaResult};
 use std::sync::{Arc, Weak};
