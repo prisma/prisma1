@@ -18,14 +18,14 @@ trait CursorConditionBuilder extends BuilderBase {
     // If both params are empty, don't generate any query.
     if (before.isEmpty && after.isEmpty) return noCondition()
 
-    val idFieldWithAlias: jooq.Field[AnyRef] = aliasColumn(model.dbNameOfIdField_!)
-    val idField: jooq.Field[AnyRef]          = modelIdColumn(model)
+    val idWithAlias: jooq.Field[AnyRef] = aliasColumn(model.dbNameOfIdField_!)
+    val idField: jooq.Field[AnyRef]     = modelIdColumn(model)
 
     // First, we fetch the ordering for the query. If none is passed, we order by id, ascending.
     // We need that since before/after are dependent on the order.
-    val (orderByField: jooq.Field[AnyRef], orderByFieldWithAlias: jooq.Field[AnyRef], sortOrder: SortOrder) = orderBy match {
+    val (orderByField: jooq.Field[AnyRef], orderByWithAlias: jooq.Field[AnyRef], sortOrder: SortOrder) = orderBy match {
       case Some(order) => (modelColumn(order.field), aliasColumn(order.field.dbName), order.sortOrder)
-      case None        => (idField, idFieldWithAlias, SortOrder.Asc)
+      case None        => (idField, idWithAlias, SortOrder.Asc)
     }
 
     val value: IdGCValue = before match {
@@ -33,18 +33,20 @@ trait CursorConditionBuilder extends BuilderBase {
       case Some(id) => id
     }
 
+    val cursor = `val`(value.value.asInstanceOf[AnyRef])
+
     val selectQuery = sql
-      .select(orderByField, `val`(value.value.asInstanceOf[AnyRef]))
+      .select(orderByField)
       .from(modelTable(model))
       .where(idField.equal(stringDummy))
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
     def cursorFor(cursorType: String): Condition = (cursorType, sortOrder) match {
-      case ("before", SortOrder.Asc)  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery)
-      case ("before", SortOrder.Desc) => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery)
-      case ("after", SortOrder.Asc)   => row(orderByFieldWithAlias, idFieldWithAlias).greaterThan(selectQuery)
-      case ("after", SortOrder.Desc)  => row(orderByFieldWithAlias, idFieldWithAlias).lessThan(selectQuery)
+      case ("before", SortOrder.Asc)  => or(and(orderByWithAlias.eq(selectQuery), idWithAlias.lessThan(cursor)), orderByWithAlias.lessThan(selectQuery))
+      case ("before", SortOrder.Desc) => or(and(orderByWithAlias.eq(selectQuery), idWithAlias.lessThan(cursor)), orderByWithAlias.greaterThan(selectQuery))
+      case ("after", SortOrder.Asc)   => or(and(orderByWithAlias.eq(selectQuery), idWithAlias.greaterThan(cursor)), orderByWithAlias.greaterThan(selectQuery))
+      case ("after", SortOrder.Desc)  => or(and(orderByWithAlias.eq(selectQuery), idWithAlias.greaterThan(cursor)), orderByWithAlias.lessThan(selectQuery))
       case _                          => throw new IllegalArgumentException
     }
 
