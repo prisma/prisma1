@@ -39,13 +39,21 @@ impl Fields {
             .unwrap()
     }
 
-    pub fn scalar(&self) -> &[Weak<ScalarField>] {
+    pub fn scalar(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar_weak().iter().map(|f|f.upgrade().unwrap()).collect()
+    }
+
+    fn scalar_weak(&self) -> &[Weak<ScalarField>] {
         self.scalar
             .get_or_init(|| self.all.iter().fold(Vec::new(), Self::scalar_filter))
             .as_slice()
     }
 
-    pub fn relation(&self) -> &[Weak<RelationField>] {
+    fn relation(&self) -> Vec<Arc<RelationField>> {
+        self.relation_weak().iter().map(|f|f.upgrade().unwrap()).collect()
+    }
+
+    fn relation_weak(&self) -> &[Weak<RelationField>] {
         self.relation
             .get_or_init(|| self.all.iter().fold(Vec::new(), Self::relation_filter))
             .as_slice()
@@ -59,7 +67,7 @@ impl Fields {
     }
 
     pub fn find_many_from_scalar(&self, names: &BTreeSet<String>) -> Vec<Arc<ScalarField>> {
-        self.scalar()
+        self.scalar_weak()
             .iter()
             .filter(|field| names.contains(field.upgrade().unwrap().db_name()))
             .map(|field| field.upgrade().unwrap())
@@ -67,7 +75,7 @@ impl Fields {
     }
 
     pub fn find_many_from_relation(&self, names: &BTreeSet<String>) -> Vec<Arc<RelationField>> {
-        self.relation()
+        self.relation_weak()
             .iter()
             .filter(|field| names.contains(&field.upgrade().unwrap().db_name()))
             .map(|field| field.upgrade().unwrap())
@@ -82,7 +90,7 @@ impl Fields {
     }
 
     pub fn find_from_scalar(&self, name: &str) -> PrismaResult<Arc<ScalarField>> {
-        self.scalar()
+        self.scalar_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.db_name() == name)
@@ -90,7 +98,7 @@ impl Fields {
     }
 
     pub fn find_from_relation_fields(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
-        self.relation()
+        self.relation_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.db_name() == name)
@@ -98,7 +106,7 @@ impl Fields {
     }
 
     pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
-        self.relation()
+        self.relation_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.relation().name == name)

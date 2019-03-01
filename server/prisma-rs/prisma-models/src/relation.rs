@@ -7,14 +7,14 @@ use std::sync::{Arc, Weak};
 pub type RelationRef = Arc<Relation>;
 pub type RelationWeakRef = Weak<Relation>;
 
-#[derive(Debug, Deserialize, Clone, Copy, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum OnDelete {
     SetNull,
     Cascade,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InlineRelation {
     #[serde(rename = "inTableOfModelId")]
@@ -22,23 +22,23 @@ pub struct InlineRelation {
     pub referencing_column: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTable {
     pub table: String,
     pub model_a_column: String,
     pub model_b_column: String,
-    pub id_column: String,
+    pub id_column: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", tag = "relation_manifestation_type")]
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case", tag = "relationManifestationType")]
 pub enum RelationLinkManifestation {
     Inline(InlineRelation),
     RelationTable(RelationTable),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTemplate {
     pub name: String,
@@ -59,8 +59,8 @@ pub struct Relation {
     model_a_name: String,
     model_b_name: String,
 
-    model_a_on_delete: OnDelete,
-    model_b_on_delete: OnDelete,
+    pub model_a_on_delete: OnDelete,
+    pub model_b_on_delete: OnDelete,
 
     model_a: OnceCell<ModelWeakRef>,
     model_b: OnceCell<ModelWeakRef>,
@@ -251,7 +251,9 @@ impl Relation {
 
         match self.manifestation {
             None => Some("id"),
-            Some(RelationTable(ref m)) => Some(m.id_column.as_ref()),
+            Some(RelationTable(ref m)) => {
+                m.id_column.as_ref().map(|s|s.as_ref())
+            },
             _ => None,
         }
     }

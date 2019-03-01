@@ -1,0 +1,8 @@
+{
+    "id": 1,
+    "jsonrpc": "2.0",
+    "method": "applyNextMigrationStep",
+    "params": {
+        "project": "the-project-id"
+    }
+}

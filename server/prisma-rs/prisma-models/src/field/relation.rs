@@ -3,7 +3,7 @@ use crate::prelude::*;
 use once_cell::unsync::OnceCell;
 use std::sync::Arc;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationFieldTemplate {
     pub name: String,
@@ -36,7 +36,7 @@ pub struct RelationField {
     pub relation: OnceCell<RelationWeakRef>,
 }
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq)]
+#[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
 pub enum RelationSide {
     A,
     B,
@@ -52,6 +52,10 @@ impl RelationSide {
 }
 
 impl RelationField {
+    pub fn is_optional(&self) -> bool {
+        !self.is_required
+    }
+
     pub fn model(&self) -> ModelRef {
         self.model.upgrade().expect(
             "Model does not exist anymore. Parent model got deleted without deleting the child.",

@@ -3,4 +3,5 @@ pub use super::{
     ProjectRef, ProjectTemplate, ProjectWeakRef, Relation, RelationField,
     RelationLinkManifestation, RelationRef, RelationSide, RelationTemplate, RelationWeakRef,
     ScalarField, Schema, SchemaRef, SchemaTemplate, SchemaWeakRef, TypeIdentifier,
+    IdStrategy, ScalarListStrategy, FieldBehaviour
 };

@@ -6,13 +6,24 @@ use std::sync::{Arc, Weak};
 pub type SchemaRef = Arc<Schema>;
 pub type SchemaWeakRef = Weak<Schema>;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchemaTemplate {
     pub models: Vec<ModelTemplate>,
     pub relations: Vec<RelationTemplate>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
+}
+
+impl SchemaTemplate {
+    pub fn empty() -> SchemaTemplate {
+        SchemaTemplate {
+            models: vec!(),
+            relations: vec!(),
+            enums: vec!(),
+            version: None,
+        }
+    }
 }
 
 #[derive(DebugStub)]
@@ -24,11 +35,11 @@ pub struct Schema {
     pub db_name: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PrismaEnum {
-    name: String,
-    values: Vec<String>,
+    pub name: String,
+    pub values: Vec<String>,
 }
 
 impl SchemaTemplate {
@@ -61,6 +72,7 @@ impl SchemaTemplate {
 }
 
 impl Schema {
+
     pub fn find_model(&self, name: &str) -> PrismaResult<ModelRef> {
         self.models
             .get()
