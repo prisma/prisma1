@@ -64,10 +64,10 @@ impl RelationField {
                 self.model()
                     .schema()
                     .find_relation(&self.relation_name)
-                    .expect("Relation not found")
+                    .unwrap()
             })
             .upgrade()
-            .expect("Relation does not exist anymore. Parent relation got deleted without deleting the child.")
+            .unwrap()
     }
 
     pub fn db_name(&self) -> String {

@@ -55,8 +55,17 @@ pub struct RelationTemplate {
 pub struct Relation {
     pub name: String,
 
-    model_a: OnceCell<RelationAttributes>,
-    model_b: OnceCell<RelationAttributes>,
+    model_a_name: String,
+    model_b_name: String,
+
+    model_a_on_delete: OnDelete,
+    model_b_on_delete: OnDelete,
+
+    model_a: OnceCell<ModelWeakRef>,
+    model_b: OnceCell<ModelWeakRef>,
+
+    field_a: OnceCell<Weak<RelationField>>,
+    field_b: OnceCell<Weak<RelationField>>,
 
     pub manifestation: Option<RelationLinkManifestation>,
 
@@ -64,61 +73,21 @@ pub struct Relation {
     pub schema: SchemaWeakRef,
 }
 
-#[derive(DebugStub)]
-struct RelationAttributes {
-    pub name: String,
-    #[debug_stub = "#ModelWeakRef#"]
-    pub model: ModelWeakRef,
-    #[debug_stub = "#FieldWeakRef#"]
-    pub field: Weak<RelationField>,
-    pub on_delete: OnDelete,
-}
-
-impl RelationAttributes {
-    pub fn new(
-        name: String,
-        model: ModelRef,
-        field: Arc<RelationField>,
-        on_delete: OnDelete,
-    ) -> Self {
-        RelationAttributes {
-            name: name,
-            model: Arc::downgrade(&model),
-            field: Arc::downgrade(&field),
-            on_delete: on_delete,
-        }
-    }
-}
-
 impl RelationTemplate {
     pub fn build(self, schema: SchemaWeakRef) -> RelationRef {
-        let model_a_name = self.model_a_name;
-        let model_b_name = self.model_b_name;
-
         let relation = Relation {
             name: self.name,
             manifestation: self.manifestation,
+            model_a_name: self.model_a_name,
+            model_b_name: self.model_b_name,
+            model_a_on_delete: self.model_a_on_delete,
+            model_b_on_delete: self.model_b_on_delete,
             model_a: OnceCell::new(),
             model_b: OnceCell::new(),
+            field_a: OnceCell::new(),
+            field_b: OnceCell::new(),
             schema: schema,
         };
-
-        let model_a = {
-            let model = relation.schema().find_model(&model_a_name).unwrap();
-            let field = model.fields().find_from_relation(&relation.name).unwrap();
-
-            RelationAttributes::new(model_a_name, model, field, self.model_a_on_delete)
-        };
-
-        let model_b = {
-            let model = relation.schema().find_model(&model_b_name).unwrap();
-            let field = model.fields().find_from_relation(&relation.name).unwrap();
-
-            RelationAttributes::new(model_b_name, model, field, self.model_b_on_delete)
-        };
-
-        relation.model_a.set(model_a).unwrap();
-        relation.model_b.set(model_b).unwrap();
 
         Arc::new(relation)
     }
@@ -162,46 +131,57 @@ impl Relation {
     }
 
     pub fn both_sides_cascade(&self) -> bool {
-        let a = self.model_a.get().unwrap();
-        let b = self.model_b.get().unwrap();
-
-        a.on_delete == OnDelete::Cascade && b.on_delete == OnDelete::Cascade
+        self.model_a_on_delete == OnDelete::Cascade && self.model_b_on_delete == OnDelete::Cascade
     }
 
     pub fn model_a(&self) -> ModelRef {
         self.model_a
-            .get()
-            .unwrap()
-            .model
+            .get_or_init(|| {
+                let model = self.schema().find_model(&self.model_a_name).unwrap();
+                Arc::downgrade(&model)
+            })
             .upgrade()
             .expect("Model A deleted without deleting the relations in schama.")
     }
 
     pub fn field_a(&self) -> Arc<RelationField> {
-        self.model_a
-            .get()
-            .unwrap()
-            .field
+        self.field_a
+            .get_or_init(|| {
+                let field = self
+                    .model_a()
+                    .fields()
+                    .find_from_relation(&self.name)
+                    .unwrap();
+
+                Arc::downgrade(&field)
+            })
             .upgrade()
             .expect("Field A deleted without deleting the relations in schama.")
     }
 
     pub fn model_b(&self) -> ModelRef {
         self.model_b
-            .get()
-            .unwrap()
-            .model
+            .get_or_init(|| {
+                let model = self.schema().find_model(&self.model_b_name).unwrap();
+                Arc::downgrade(&model)
+            })
             .upgrade()
             .expect("Model B deleted without deleting the relations in schama.")
     }
 
     pub fn field_b(&self) -> Arc<RelationField> {
-        self.model_b
-            .get()
-            .unwrap()
-            .field
+        self.field_b
+            .get_or_init(|| {
+                let field = self
+                    .model_b()
+                    .fields()
+                    .find_from_relation(&self.name)
+                    .unwrap();
+
+                Arc::downgrade(&field)
+            })
             .upgrade()
-            .expect("Field A deleted without deleting the relations in schama.")
+            .expect("Field B deleted without deleting the relations in schama.")
     }
 
     pub fn relation_table_name(&self) -> String {
