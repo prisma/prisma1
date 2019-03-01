@@ -1,6 +1,5 @@
 use nullable::Nullable;
 use prisma_models::prelude::*;
-use prisma_models::FieldBehaviour;
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(tag = "stepType")]
@@ -234,6 +233,12 @@ mod tests {
     use crate::steps::*;
     use nullable::Nullable::*;
     use serde_json::Value;
+    use prisma_models::OnDelete;
+    use prisma_models::FieldBehaviour;
+    use prisma_models::Field;
+    use prisma_models::prelude::ScalarListStrategy;
+    use prisma_models::prelude::IdStrategy;
+    use prisma_models::Sequence;
 
     #[test]
     fn minimal_CreateModel_must_work() {
@@ -311,7 +316,36 @@ mod tests {
 
     #[test]
     fn full_CreateField_must_work() {
-        let json = r#"{"stepType":"CreateField","model":"Blog","name":"title","type":"String","dbName":"blog","isOptional":true,"isList":true,"isCreatedAt":true,"isUpdatedAt":true,"id":"id","default":"default","scalarList":"scalarList"}"#;
+        let json = r#"{
+            "stepType":"CreateField",
+            "model":"Blog",
+            "name":"title",
+            "type":"String",
+            "dbName":"blog",
+            "isOptional":true,
+            "isList":true,
+            "isCreatedAt":true,
+            "isUpdatedAt":true,
+            "id": {
+                "type": "id",
+                "strategy":"Sequence",
+                "sequence": {
+                    "name": "My_Sequence",
+                    "allocationSize": 5,
+                    "initialValue": 100
+                }
+            },
+            "default":"default",
+            "scalarList": {
+                "type":"scalarList",
+                "strategy": "Embedded"
+            }
+        }"#;
+        let sequence = Sequence {
+            name: "My_Sequence".to_string(),
+            allocation_size: 5,
+            initial_value: 100,
+        };
         let expected_struct = MigrationStep::CreateField(CreateField {
             model: "Blog".to_string(),
             name: "title".to_string(),
@@ -321,9 +355,9 @@ mod tests {
             is_list: Some(true),
             is_created_at: Some(true),
             is_updated_at: Some(true),
-            id: Some("id".to_string()),
+            id: Some(FieldBehaviour::Id { strategy: IdStrategy::Sequence, sequence: Some(sequence) }),
             default: Some("default".to_string()),
-            scalar_list: Some("scalarList".to_string()),
+            scalar_list: Some(FieldBehaviour::ScalarList { strategy: ScalarListStrategy::Embedded }),
         });
         assert_symmetric_serde(json, expected_struct);
     }
