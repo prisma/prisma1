@@ -7,12 +7,9 @@ use prisma_models::prelude::*;
 use r2d2_sqlite::SqliteConnectionManager;
 use std::collections::HashSet;
 
-use crate::{protobuf::prelude::*, PrismaValue, SERVER_ROOT};
+use crate::SERVER_ROOT;
 
-use rusqlite::{
-    types::{FromSql, FromSqlResult, ValueRef},
-    Row, NO_PARAMS,
-};
+use rusqlite::{Row, NO_PARAMS};
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
@@ -99,20 +96,5 @@ impl Sqlite {
                 PrismaValue::Float(v as f32)
             }
         }
-    }
-}
-
-impl FromSql for GraphqlId {
-    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        value
-            .as_str()
-            .map(|strval| GraphqlId {
-                id_value: Some(graphql_id::IdValue::String(strval.to_string())),
-            })
-            .or_else(|_| {
-                value.as_i64().map(|intval| GraphqlId {
-                    id_value: Some(graphql_id::IdValue::Int(intval)),
-                })
-            })
     }
 }

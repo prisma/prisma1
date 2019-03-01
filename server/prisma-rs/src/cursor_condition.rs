@@ -10,6 +10,15 @@ enum CursorType {
 
 pub struct CursorCondition;
 
+impl From<IdValue> for DatabaseValue {
+    fn from(id: IdValue) -> DatabaseValue {
+        match id {
+            IdValue::String(s) => s.into(),
+            IdValue::Int(i) => i.into(),
+        }
+    }
+}
+
 impl CursorCondition {
     pub fn build(query_arguments: &QueryArguments, model: &Model) -> ConditionTree {
         match (
@@ -32,12 +41,12 @@ impl CursorCondition {
                     .unwrap_or(Order::Asc);
 
                 let cursor_for = |cursor_type: CursorType, id: IdValue| {
-                    let row = Row::from((field.model_column(), model.fields().id().model_column()));
-                    let id_column = model.fields().id().model_column();
+                    let row = Row::from((field.as_column(), model.fields().id().as_column()));
+                    let id_column = model.fields().id().as_column();
                     let where_condition = id_column.clone().equals(id.clone());
 
                     let select_query = Select::from(model.table())
-                        .column(field.model_column())
+                        .column(field.as_column())
                         .column(id_column)
                         .so_that(ConditionTree::single(where_condition));
 

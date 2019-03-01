@@ -12,3 +12,4 @@ serde = "1.0"
 debug_stub_derive = "0.3"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git", branch = "master"}
 prisma-common = { path = "../prisma-common" }
+rusqlite = { version = "0.16", features = ["chrono"] }

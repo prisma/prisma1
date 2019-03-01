@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use once_cell::unsync::OnceCell;
 use prisma_common::{error::Error, PrismaResult};
-use prisma_query::ast::Column;
+use prisma_query::ast::{Column, Table};
 use std::sync::{Arc, Weak};
 
 pub type RelationRef = Arc<Relation>;
@@ -185,18 +185,18 @@ impl Relation {
             .expect("Field B deleted without deleting the relations in schema.")
     }
 
-    pub fn relation_table_name(&self) -> String {
+    pub fn relation_table(&self) -> Table {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
-            Some(RelationTable(ref m)) => m.table.clone(),
+            Some(RelationTable(ref m)) => m.table.clone().into(),
             Some(Inline(ref m)) => self
                 .schema()
                 .find_model(&m.in_table_of_model_name)
                 .unwrap()
                 .db_name()
-                .to_string(),
-            None => format!("_{}", self.name),
+                .into(),
+            None => format!("_{}", self.name).into(),
         }
     }
 
@@ -207,15 +207,13 @@ impl Relation {
             Some(RelationTable(ref m)) => m.model_a_column.clone().into(),
             Some(Inline(ref m)) => {
                 let model = self.model_a();
-                let id = model.fields().id();
 
-                let column = if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    id.db_name()
+                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
+                    model.fields().id().as_column()
                 } else {
-                    m.referencing_column.as_ref()
-                };
-
-                (model.schema().db_name.as_ref(), model.db_name(), column).into()
+                    let column: &str = m.referencing_column.as_ref();
+                    column.into()
+                }
             }
             None => Self::MODEL_A_DEFAULT_COLUMN.into(),
         }
@@ -230,13 +228,12 @@ impl Relation {
                 let model = self.model_b();
                 let id = model.fields().id();
 
-                let column = if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    id.db_name()
+                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
+                    id.as_column()
                 } else {
-                    m.referencing_column.as_ref()
-                };
-
-                (model.schema().db_name.as_ref(), model.db_name(), column).into()
+                    let column: &str = m.referencing_column.as_ref();
+                    column.into()
+                }
             }
             None => Self::MODEL_B_DEFAULT_COLUMN.into(),
         }

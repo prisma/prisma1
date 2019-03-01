@@ -38,28 +38,28 @@ impl Ordering {
             Some(ref first) if first.db_name() != second_field.db_name() => {
                 match (default_order, reverse) {
                     (SortOrder::Asc, true) => vec![
-                        first.model_column().descend(),
-                        second_field.model_column().descend(),
+                        first.as_column().descend(),
+                        second_field.as_column().descend(),
                     ],
                     (SortOrder::Desc, true) => vec![
-                        first.model_column().ascend(),
-                        second_field.model_column().descend(),
+                        first.as_column().ascend(),
+                        second_field.as_column().descend(),
                     ],
                     (SortOrder::Asc, false) => vec![
-                        first.model_column().ascend(),
-                        second_field.model_column().ascend(),
+                        first.as_column().ascend(),
+                        second_field.as_column().ascend(),
                     ],
                     (SortOrder::Desc, false) => vec![
-                        first.model_column().descend(),
-                        second_field.model_column().ascend(),
+                        first.as_column().descend(),
+                        second_field.as_column().ascend(),
                     ],
                 }
             }
             _ => match (default_order, reverse) {
-                (SortOrder::Asc, true) => vec![second_field.model_column().descend()],
-                (SortOrder::Desc, true) => vec![second_field.model_column().ascend()],
-                (SortOrder::Asc, false) => vec![second_field.model_column().ascend()],
-                (SortOrder::Desc, false) => vec![second_field.model_column().descend()],
+                (SortOrder::Asc, true) => vec![second_field.as_column().descend()],
+                (SortOrder::Desc, true) => vec![second_field.as_column().ascend()],
+                (SortOrder::Asc, false) => vec![second_field.as_column().ascend()],
+                (SortOrder::Desc, false) => vec![second_field.as_column().descend()],
             },
         };
 

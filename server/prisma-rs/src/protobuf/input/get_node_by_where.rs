@@ -2,7 +2,7 @@ use crate::{
     data_resolvers::{IntoSelectQuery, SelectQuery},
     protobuf::prelude::*,
 };
-use prisma_common::{error::Error, PrismaResult};
+use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
@@ -15,11 +15,9 @@ impl IntoSelectQuery for GetNodeByWhereInput {
         let model = project.schema().find_model(&self.model_name)?;
         let selected_fields = Self::selected_fields(&model, self.selected_fields);
 
-        let value = self.value.prisma_value.ok_or_else(|| {
-            Error::InvalidInputError(String::from("Search value cannot be empty."))
-        })?;
-
-        let condition = ConditionTree::single(self.field_name.equals(value));
+        let value: PrismaValue = self.value.into();
+        let field = model.fields().find_from_scalar(&self.field_name)?;
+        let condition = ConditionTree::single(field.as_column().equals(value));
         let base_query = Self::base_query(model.db_name(), condition, 0);
         let select_ast = Self::select_fields(base_query, &selected_fields);
 

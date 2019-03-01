@@ -77,7 +77,7 @@ pub struct Sequence {
 impl ScalarField {
     fn model(&self) -> ModelRef {
         self.model.upgrade().expect(
-            "Model does not exist anymore. Parent model got deleted without deleting the child."
+            "Model does not exist anymore. Parent model got deleted without deleting the child.",
         )
     }
 
@@ -131,7 +131,12 @@ impl ScalarField {
             .unwrap_or_else(|| self.name.as_ref())
     }
 
-    pub fn model_column(&self) -> Column {
-        (self.schema().db_name.as_str(), self.model().db_name(), self.db_name()).into()
+    pub fn as_column(&self) -> Column {
+        (
+            self.schema().db_name.as_str(),
+            self.model().db_name(),
+            self.db_name(),
+        )
+            .into()
     }
 }
