@@ -141,7 +141,7 @@ impl Relation {
                 Arc::downgrade(&model)
             })
             .upgrade()
-            .expect("Model A deleted without deleting the relations in schama.")
+            .expect("Model A deleted without deleting the relations in schema.")
     }
 
     pub fn field_a(&self) -> Arc<RelationField> {
@@ -156,7 +156,7 @@ impl Relation {
                 Arc::downgrade(&field)
             })
             .upgrade()
-            .expect("Field A deleted without deleting the relations in schama.")
+            .expect("Field A deleted without deleting the relations in schema.")
     }
 
     pub fn model_b(&self) -> ModelRef {
@@ -166,7 +166,7 @@ impl Relation {
                 Arc::downgrade(&model)
             })
             .upgrade()
-            .expect("Model B deleted without deleting the relations in schama.")
+            .expect("Model B deleted without deleting the relations in schema.")
     }
 
     pub fn field_b(&self) -> Arc<RelationField> {
@@ -181,7 +181,7 @@ impl Relation {
                 Arc::downgrade(&field)
             })
             .upgrade()
-            .expect("Field B deleted without deleting the relations in schama.")
+            .expect("Field B deleted without deleting the relations in schema.")
     }
 
     pub fn relation_table_name(&self) -> String {
