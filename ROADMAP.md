@@ -12,7 +12,7 @@ The following lists represent a number of smaller-scope issues and improvements 
 
 #### Improvements
 
-- [Unstable tie breaking for cursor based pagination #3258](https://github.com/prisma/prisma/issues/3258)
+- [Unstable tie breaking for cursor based pagination #3258](https://github.com/prisma/prisma/issues/3258) ✅
 - [Nested upsert in create mutations (correct: nested connectOrCreate) #2194](https://github.com/prisma/prisma/issues/2194)
 - [Use sensible migration values for existing nodes when adding required fields #2323](https://github.com/prisma/prisma/issues/2323)
 - [Allow for custom IDs to be submitted in a create-mutation #3839](https://github.com/prisma/prisma/issues/3839)
