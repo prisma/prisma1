@@ -113,17 +113,17 @@ export class MysqlConnector extends RelationalConnector {
     if (arrayAsString === null || arrayAsString === undefined) {
       return []
     }
-    return arrayAsString.split(',').map(x => x.trim())
+    return arrayAsString.split(',').map(x => x.trim().replace(/'/g, ''))
   }
 
   protected async queryEnums(schemaName: string): Promise<IInternalEnumInfo[]> {
     const enumQuery = `
-      SELECT DISTINCT 
+      SELECT DISTINCT
         column_type, table_name, column_name
       FROM
-        information_schema.columns 
+        information_schema.columns
       WHERE 
-        column_type like 'enum(%'      
+        column_type like 'enum(%'
         AND table_schema = ?`
 
     return (await this.query(enumQuery, [schemaName])).map(row => {
