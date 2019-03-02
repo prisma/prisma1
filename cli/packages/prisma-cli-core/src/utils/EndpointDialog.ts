@@ -18,6 +18,9 @@ import { DatabaseType, DefaultRenderer } from 'prisma-datamodel'
 import {
   getConnectedConnectorFromCredentials,
   getConnectorWithDatabase,
+  sanitizeMongoUri,
+  hasAuthSource,
+  populateMongoDatabase,
 } from '../commands/introspect/util'
 
 export interface GetEndpointParams {
@@ -349,6 +352,7 @@ export class EndpointDialog {
           {
             ...intermediateConnectorData,
             databaseType: credentials.type,
+            interactive: true,
           },
           this,
         )
@@ -589,13 +593,11 @@ export class EndpointDialog {
         message: 'Enter MongoDB connection string',
         key: 'uri',
       })
-      const alreadyData =
-        introspection || (await this.askForExistingDataMongo())
-      if (alreadyData) {
-        credentials.database = await this.ask({
-          message: `Enter name of existing database`,
-          key: 'database',
-        })
+      credentials.uri = sanitizeMongoUri(credentials.uri)
+
+      if (hasAuthSource(credentials.uri)) {
+        const { database } = populateMongoDatabase({ uri: credentials.uri })
+        credentials.schema = database
       }
     }
 
