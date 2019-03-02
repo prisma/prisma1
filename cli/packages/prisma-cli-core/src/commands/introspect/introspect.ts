@@ -345,7 +345,7 @@ ${chalk.bold(
         host: flags['pg-host'],
         user: flags['pg-user'],
         password: flags['pg-password'],
-        database: flags['pg-database'],
+        database: flags['pg-db'],
         port: parseInt(flags['pg-port'], 10),
         schema: flags['pg-schema'], // this is optional and can be undefined
         type: DatabaseType.postgres,
