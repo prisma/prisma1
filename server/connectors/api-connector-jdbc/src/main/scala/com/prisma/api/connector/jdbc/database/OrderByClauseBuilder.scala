@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.database
 
-import com.prisma.api.connector.{OrderBy, QueryArguments}
+import com.prisma.api.connector.{OrderBy, QueryArguments, SortOrder}
 import com.prisma.api.schema.APIErrors
 import com.prisma.shared.models.{Model, Relation, RelationSide}
 import org.jooq.{Field, SortField}
@@ -61,20 +61,20 @@ trait OrderByClauseBuilder extends QueryBuilderConstants {
     val isReverseOrder         = last.isDefined
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
     // The limit instruction only works from up to down. Therefore, we have to invert order when we use before.
-    val defaultOrder = orderBy.map(_.sortOrder.toString).getOrElse("asc")
+    val defaultOrder = orderBy.map(_.sortOrder).getOrElse(SortOrder.Asc)
 
     //the secondary field is always ascending no matter what the primary field says. If we need to revert due to last being defined it is always descending.
 
     (orderBy, defaultOrder, isReverseOrder) match {
-      case (Some(order), "asc", true) if order.field.dbName != secondField.getName   => Vector(firstField(order).desc(), secondField.desc())
-      case (Some(order), "desc", true) if order.field.dbName != secondField.getName  => Vector(firstField(order).asc(), secondField.desc())
-      case (Some(order), "asc", false) if order.field.dbName != secondField.getName  => Vector(firstField(order).asc(), secondField.asc())
-      case (Some(order), "desc", false) if order.field.dbName != secondField.getName => Vector(firstField(order).desc(), secondField.asc())
-      case (_, "asc", true)                                                          => Vector(secondField.desc())
-      case (_, "desc", true)                                                         => Vector(secondField.asc())
-      case (_, "asc", false)                                                         => Vector(secondField.asc())
-      case (_, "desc", false)                                                        => Vector(secondField.desc())
-      case x                                                                         => sys.error(s"$x is unhandled in this pattern match")
+      case (Some(order), SortOrder.Asc, true) if order.field.dbName != secondField.getName   => Vector(firstField(order).desc(), secondField.desc())
+      case (Some(order), SortOrder.Desc, true) if order.field.dbName != secondField.getName  => Vector(firstField(order).asc(), secondField.desc())
+      case (Some(order), SortOrder.Asc, false) if order.field.dbName != secondField.getName  => Vector(firstField(order).asc(), secondField.asc())
+      case (Some(order), SortOrder.Desc, false) if order.field.dbName != secondField.getName => Vector(firstField(order).desc(), secondField.asc())
+      case (_, SortOrder.Asc, true)                                                          => Vector(secondField.desc())
+      case (_, SortOrder.Desc, true)                                                         => Vector(secondField.asc())
+      case (_, SortOrder.Asc, false)                                                         => Vector(secondField.asc())
+      case (_, SortOrder.Desc, false)                                                        => Vector(secondField.desc())
+      case x                                                                                 => sys.error(s"$x is unhandled in this pattern match")
     }
   }
 }

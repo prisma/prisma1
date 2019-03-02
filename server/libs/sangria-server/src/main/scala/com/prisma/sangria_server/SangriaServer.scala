@@ -1,6 +1,8 @@
 package com.prisma.sangria_server
 
 import akka.NotUsed
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import cool.graph.cuid.Cuid.createCuid
 import play.api.libs.json._
@@ -10,8 +12,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait SangriaServerExecutor {
-  def create(handler: SangriaHandler, port: Int, requestPrefix: String): SangriaServer
-
+  def create(handler: SangriaHandler, port: Int, requestPrefix: String)(implicit system: ActorSystem, materializer: ActorMaterializer): SangriaServer
   def supportsWebsockets: Boolean
 }
 
@@ -30,21 +31,23 @@ trait SangriaHandler extends SangriaWebSocketHandler {
 
   def onStart(): Future[Unit]
 
-  def handleRawRequest(request: RawRequest)(implicit ec: ExecutionContext): Future[JsValue] = {
+  def handleRawRequest(request: RawRequest)(implicit ec: ExecutionContext): Future[Response] = {
     request.json match {
       case JsArray(requests) =>
         for {
           graphQlQueries <- Future.sequence(requests.map(parseAsGraphqlQuery(_).toFuture))
           results        <- Future.sequence(graphQlQueries.map(query => handleGraphQlQuery(request, query)))
-        } yield JsArray(results)
+        } yield {
+          Response(JsArray(results))
+        }
 
       case jsonObject: JsObject =>
         for {
           graphQlQuery <- parseAsGraphqlQuery(jsonObject).toFuture
           result       <- handleGraphQlQuery(request, graphQlQuery)
-        } yield result
+        } yield Response(result)
 
-      case malformed =>
+      case _ =>
 //        Vector(Failure(InputCompletelyMalformed(malformed.toString)))
         sys.error("request malformed")
     }
@@ -119,4 +122,9 @@ case class GraphQlQuery(
     operationName: Option[String],
     variables: JsValue,
     queryString: String
+)
+
+case class Response(
+    json: JsValue,
+    headers: Map[String, String] = Map.empty
 )

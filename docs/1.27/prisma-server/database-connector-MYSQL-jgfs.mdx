@@ -1,0 +1,127 @@
+import Code from 'components/Markdown/Code'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "Database Connector (MySQL)",
+  position: 50,
+  technology: "mysql",
+  technologyOrder: 1,
+  articleGroup: "Database Connector",
+}
+
+## Overview
+
+A database connector is the bridge between Prisma and the underlying database. The MySQL connector is used to connect a Prisma server to a [MySQL](https://www.mysql.com/) database.
+
+The core responsibilities of a database connector are:
+
+- Translate incoming GraphQL queries into SQL
+- Send the generated SQL query to the database
+- Create GraphQL responses based on database result
+- Perform database migrations (optional)
+
+When configuring your Prisma server with Docker, you need to specify which connector you'd like to use in order to connect to a certain database. You provide this info via the `connector` property:
+
+<Code lines="6">
+
+```yml
+PRISMA_CONFIG: |
+  managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+  port: 4466
+  databases:
+    default:
+      connector: mysql
+      migrations: __ENABLE_DB_MIGRATIONS__
+      host: __YOUR_DATABASE_HOST__
+      port: __YOUR_DATABASE_PORT__
+      user: __YOUR_DATABASE_USER__
+      password: __YOUR_DATABASE_PASSWORD__
+      connectionLimit: __YOUR_CONNECTION_LIMIT__
+```
+
+</Code>
+
+## Migrations
+
+The `migrations` property in the `PRISMA_CONFIG` environment variable specifies whether the database connector is able to make changes to the underlying _database schema_.
+
+For existing databases (that might already be powering production applications), it is useful to configure the Prisma server to not migrate the connected database. This ensures you're not accidentally introducing unwanted schema changes or lose data.
+
+<Code lines="7">
+
+```yml
+PRISMA_CONFIG: |
+  managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+  port: 4466
+  databases:
+    default:
+      connector: postgres
+      migrations: __ENABLE_DB_MIGRATIONS__
+      host: __YOUR_DATABASE_HOST__
+      port: __YOUR_DATABASE_PORT__
+      user: __YOUR_DATABASE_USER__
+      password: __YOUR_DATABASE_PASSWORD__
+```
+
+</Code>
+
+
+### Database migrations
+
+#### Enabling migrations through Prisma
+
+If `migrations` is set to `true`, deploying a Prisma service migrates the structure of the connected database. In these cases, the Prisma CLI will be the main interface to govern the structure of the database based on the datamodel of your services:
+
+<Code lines="7">
+
+```yml
+PRISMA_CONFIG: |
+  managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+  port: 4466
+  databases:
+    default:
+      connector: postgres
+      migrations: true
+      host: __YOUR_DATABASE_HOST__
+      port: __YOUR_DATABASE_PORT__
+      user: __YOUR_DATABASE_USER__
+      password: __YOUR_DATABASE_PASSWORD__
+```
+
+</Code>
+
+#### Disabling migrations through Prisma
+
+If `migrations` is set to `false`, the database schema is "locked" and Prisma won't perform any changes on it:
+
+<Code lines="7">
+
+```yml
+PRISMA_CONFIG: |
+  managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+  port: 4466
+  databases:
+    default:
+      connector: postgres
+      migrations: false
+      host: __YOUR_DATABASE_HOST__
+      port: __YOUR_DATABASE_PORT__
+      user: __YOUR_DATABASE_USER__
+      password: __YOUR_DATABASE_PASSWORD__
+```
+
+</Code>
+
+## Managing database connections
+
+The `connectionLimit` property in `PRISMA_CONFIG` determines the number of database connections a Prisma service is going to use.
+
+<Warning>
+
+The `connectionLimit` needs to be set to at least **2**. One connection is always reserved for the [Management API](foe1), all other connections are used for the Prisma service.
+
+</Warning>
+
+## Database schema
+
+Prisma currently maintains a table called `_RelayId`. This table is there for historic reasons and will be removed [soon](https://github.com/prisma/prisma/issues/4101).

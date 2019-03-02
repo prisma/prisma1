@@ -1,11 +1,11 @@
 type User {
   id: ID! @id
   name: String!
-  posts: [Post!]! @relation(name: "PostsByUser", link: INLINE)
-  postsWithoutConnection: [PostWithoutConnection!]! @relation(link: INLINE)
+  posts: [Post] @relation(name: "PostsByUser", link: INLINE)
+  postsWithoutConnection: [PostWithoutConnection] @relation(link: INLINE)
   billingInfo: BillingInfo! @relation(link: INLINE)
   billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(link: INLINE)
-  likes: [Post!]! @relation(name: "LikesByUser", link: INLINE)
+  likes: [Post] @relation(name: "LikesByUser", link: INLINE)
   optionalDetails: OptionalDetails @relation(link: INLINE)
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection @relation(link: INLINE)
 }
@@ -15,7 +15,7 @@ type Post {
   text: String!
   count: Int!
   user: User! @relation(name: "PostsByUser")
-  likes: [User!]! @relation(name: "LikesByUser")
+  likes: [User] @relation(name: "LikesByUser")
 }
 
 type PostWithoutConnection {
@@ -24,13 +24,13 @@ type PostWithoutConnection {
   count: Int!
 }
 
-type BillingInfo{
+type BillingInfo {
   id: ID! @id
   account: String!
   user: User!
 }
 
-type BillingInfoWithoutConnection{
+type BillingInfoWithoutConnection {
   removeThisId: ID! @id
   account: String!
 }
@@ -41,7 +41,7 @@ type OptionalDetails {
   user: User!
 }
 
-type OptionalDetailsWithoutConnection{
+type OptionalDetailsWithoutConnection {
   removeThisId: ID! @id
   text: String!
 }

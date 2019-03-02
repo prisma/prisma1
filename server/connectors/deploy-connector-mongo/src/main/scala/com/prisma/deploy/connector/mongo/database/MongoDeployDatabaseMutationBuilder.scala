@@ -42,8 +42,8 @@ object MongoDeployDatabaseMutationBuilder {
       Future.sequence(project.relations.collect {
         case relation if relation.isInlineRelation =>
           relation.modelAField.relationIsInlinedInParent match {
-            case true  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
-            case false => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
+            case true if !relation.modelB.isEmbedded  => addRelationIndex(database, relation.modelAField.model.dbName, relation.modelAField.dbName)
+            case false if !relation.modelA.isEmbedded => addRelationIndex(database, relation.modelBField.model.dbName, relation.modelBField.dbName)
           }
       })
 
@@ -84,7 +84,7 @@ object MongoDeployDatabaseMutationBuilder {
 //    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
   }
 
-  def renameCollection(projectId: String, collectionName: String, newName: String) = DeployMongoAction { database =>
+  def renameCollection(project: Project, collectionName: String, newName: String) = DeployMongoAction { database =>
     Future.successful(())
 
 //    database.getCollection(collectionName).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
@@ -186,7 +186,8 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
-    val shortenedName = fieldName.substring(0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
+    // TODO: explain this magic calculation
+    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 13).min(fieldName.length))
 
     unique match {
       case false => shortenedName + "_R"

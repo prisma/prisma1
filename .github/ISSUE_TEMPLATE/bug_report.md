@@ -21,10 +21,11 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **Versions (please complete the following information):**
+ - Connector: [e.g. `Postgres`, `MySQL`, `MongoDB`]
+ - Prisma Server: [e.g. `1.24.0`]
+ - `prisma` CLI: [e.g. `prisma/1.24.0 (darwin-x64) node-v10.4.0`]
  - OS: [e.g. `Windows 10`, `OS X High Sierra`, `Ubuntu 16.04`] 
- - `prisma` CLI: [e.g. `prisma/1.9.0 (darwin-x64) node-v10.4.0`]
- - Prisma Server: [e.g. `1.9.0`]
- - `graphql-cli`, `prisma-binding`, `graphql-yoga`, etc. if applicable
+ - other dependencies: `prisma-client`, `prisma-binding`, etc. if applicable
 
 **Additional context**
 Add any other context about the problem here.

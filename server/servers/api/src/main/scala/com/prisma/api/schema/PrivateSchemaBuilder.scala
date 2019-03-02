@@ -1,6 +1,5 @@
 package com.prisma.api.schema
 
-import akka.actor.ActorSystem
 import com.prisma.api.ApiDependencies
 import com.prisma.api.mutations.{ClientMutationRunner, Reset}
 import com.prisma.shared.models.{Model, Project}
@@ -10,15 +9,14 @@ import sangria.schema.{Argument, BooleanType, Context, Field, ListType, ObjectTy
 
 case class PrivateSchemaBuilder(
     project: Project
-)(implicit apiDependencies: ApiDependencies, system: ActorSystem) {
+)(implicit apiDependencies: ApiDependencies) {
+  import apiDependencies.executionContext
 
   val dataResolver                = apiDependencies.dataResolver(project)
   val masterDataResolver          = apiDependencies.masterDataResolver(project)
   val databaseMutactionExecutor   = apiDependencies.databaseMutactionExecutor
   val sideEffectMutactionExecutor = apiDependencies.sideEffectMutactionExecutor
   val mutactionVerifier           = apiDependencies.mutactionVerifier
-
-  import system.dispatcher
 
   def build(): Schema[ApiUserContext, Unit] = {
     Schema(

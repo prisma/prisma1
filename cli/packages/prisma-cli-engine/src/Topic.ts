@@ -2,7 +2,6 @@ import { Command } from './Command'
 import { Output } from './Output/index'
 
 export class Topic {
-
   static topic: string
   static description?: string
   static hidden = false

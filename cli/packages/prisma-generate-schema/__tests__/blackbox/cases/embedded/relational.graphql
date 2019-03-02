@@ -208,6 +208,7 @@ input ChildUpdateManyDataInput {
 input ChildUpdateManyInput {
   create: [ChildCreateInput!]
   connect: [ChildWhereUniqueInput!]
+  set: [ChildWhereUniqueInput!]
   disconnect: [ChildWhereUniqueInput!]
   delete: [ChildWhereUniqueInput!]
   update: [ChildUpdateWithWhereUniqueNestedInput!]
@@ -552,6 +553,7 @@ input FriendUpdateManyDataInput {
 input FriendUpdateManyInput {
   create: [FriendCreateInput!]
   connect: [FriendWhereUniqueInput!]
+  set: [FriendWhereUniqueInput!]
   disconnect: [FriendWhereUniqueInput!]
   delete: [FriendWhereUniqueInput!]
   update: [FriendUpdateWithWhereUniqueNestedInput!]
@@ -945,6 +947,7 @@ input JointUpdateManyDataInput {
 input JointUpdateManyInput {
   create: [JointCreateInput!]
   connect: [JointWhereUniqueInput!]
+  set: [JointWhereUniqueInput!]
   disconnect: [JointWhereUniqueInput!]
   delete: [JointWhereUniqueInput!]
   update: [JointUpdateWithWhereUniqueNestedInput!]

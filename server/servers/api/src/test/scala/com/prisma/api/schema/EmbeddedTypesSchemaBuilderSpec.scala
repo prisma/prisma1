@@ -2,7 +2,7 @@ package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapabilities
-import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, MongoJoinRelationLinksCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -11,9 +11,10 @@ import sangria.renderer.SchemaRenderer
 class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
 
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
-  val schemaBuilder                   = testDependencies.apiSchemaBuilder
 
-  "An embedded relation" should "have relational filters, a join relation should not" in {
+  val schemaBuilder = testDependencies.apiSchemaBuilder
+
+  "Embedded relations and join Relations" should "have relational filters" in {
     val project = SchemaDsl.fromString() {
 
       """
@@ -33,19 +34,14 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
-    val build         = schemaBuilder.build()
-    val schema        = SchemaRenderer.renderSchema(build)
+    val schemaBuilder =
+      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies)
+    val build  = schemaBuilder.build()
+    val schema = SchemaRenderer.renderSchema(build)
 
     schema should include("""input TopWhereInput {
                             |  "Logical AND on all given filters."
                             |  AND: [TopWhereInput!]
-                            |
-                            |  "Logical OR on all given filters."
-                            |  OR: [TopWhereInput!]
-                            |
-                            |  "Logical NOT on all given filters combined by AND."
-                            |  NOT: [TopWhereInput!]
                             |  id: ID
                             |
                             |  "All values that are not equal to given value."
@@ -92,12 +88,6 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
     schema should include("""input Top2WhereInput {
                             |  "Logical AND on all given filters."
                             |  AND: [Top2WhereInput!]
-                            |
-                            |  "Logical OR on all given filters."
-                            |  OR: [Top2WhereInput!]
-                            |
-                            |  "Logical NOT on all given filters combined by AND."
-                            |  NOT: [Top2WhereInput!]
                             |  id: ID
                             |
                             |  "All values that are not equal to given value."
@@ -138,10 +128,11 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
                             |
                             |  "All values not ending with the given string."
                             |  id_not_ends_with: ID
+                            |  top: TopWhereInput
                             |}""".stripMargin)
   }
 
-  "An embedded relation" should "have relational filters, a join relation should not 2 " in {
+  "An embedded relation" should "have relational filters" in {
     val project = SchemaDsl.fromString() {
 
       """type Top{
@@ -155,9 +146,10 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
-    val build         = schemaBuilder.build()
-    val schema        = SchemaRenderer.renderSchema(build)
+    val schemaBuilder =
+      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies)
+    val build  = schemaBuilder.build()
+    val schema = SchemaRenderer.renderSchema(build)
 
     schema should include("""type Top implements Node {
                             |  id: ID!
@@ -165,7 +157,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
                             |}""".stripMargin)
   }
 
-  "An embedded type" should "not have relational filters towards another top level type " in {
+  "An embedded type" should "have relational filters towards another top level type " in {
     val project = SchemaDsl.fromString() {
 
       """type User {
@@ -186,19 +178,14 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
-    val build         = schemaBuilder.build()
-    val schema        = SchemaRenderer.renderSchema(build)
+    val schemaBuilder =
+      SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability, MongoJoinRelationLinksCapability))(testDependencies)
+    val build  = schemaBuilder.build()
+    val schema = SchemaRenderer.renderSchema(build)
 
     schema should include("""input UserWhereInput {
                             |  "Logical AND on all given filters."
                             |  AND: [UserWhereInput!]
-                            |
-                            |  "Logical OR on all given filters."
-                            |  OR: [UserWhereInput!]
-                            |
-                            |  "Logical NOT on all given filters combined by AND."
-                            |  NOT: [UserWhereInput!]
                             |  id: ID
                             |
                             |  "All values that are not equal to given value."
@@ -285,12 +272,6 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
     schema should include("""input EmbeWhereInput {
                             |  "Logical AND on all given filters."
                             |  AND: [EmbeWhereInput!]
-                            |
-                            |  "Logical OR on all given filters."
-                            |  OR: [EmbeWhereInput!]
-                            |
-                            |  "Logical NOT on all given filters combined by AND."
-                            |  NOT: [EmbeWhereInput!]
                             |  s: String
                             |
                             |  "All values that are not equal to given value."
@@ -331,9 +312,9 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
                             |
                             |  "All values not ending with the given string."
                             |  s_not_ends_with: String
+                            |  a: AWhereInput
                             |}
                             |""".stripMargin)
-
   }
 
 }

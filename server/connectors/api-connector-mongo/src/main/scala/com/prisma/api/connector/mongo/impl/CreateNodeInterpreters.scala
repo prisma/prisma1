@@ -23,9 +23,18 @@ case class CreateNodeInterpreter(mutaction: CreateNode)(implicit ec: ExecutionCo
 
 object MongoErrorMessageHelper {
 
+  def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
+    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
+
+    unique match {
+      case false => shortenedName + "_R"
+      case true  => shortenedName + "_U"
+    }
+  }
+
   def getFieldOption(model: Model, e: MongoWriteException): Option[String] = {
     model.scalarFields.filter { field =>
-      val constraintName = field.dbName + "_U"
+      val constraintName = indexNameHelper(model.dbName, field.dbName, true)
       e.getMessage.contains(constraintName)
     } match {
       case x +: _ => Some("Field name = " + x.name)

@@ -27,3 +27,13 @@ object DeployError {
     DeployError("Global", description, None)
   }
 }
+
+object DeployWarning {
+  def global(description: String): DeployWarning = {
+    DeployWarning("Global", description, None)
+  }
+
+  def apply(`type`: String, field: String, description: String): DeployWarning = {
+    DeployWarning(`type`, description, Some(field))
+  }
+}

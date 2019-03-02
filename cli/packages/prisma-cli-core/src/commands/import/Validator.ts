@@ -250,8 +250,8 @@ export class Validator {
     requiredOnly: boolean = false,
     listsOnly: boolean = false,
   ) {
-    return definition.fields!
-      .filter(field => {
+    return definition
+      .fields!.filter(field => {
         const nonNull = field.type.kind === 'NonNullType'
         const isRelation = field.directives
           ? field.directives.find(d => d.name.value === 'relation')

@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.cache.Cache
+import com.prisma.cache.factory.CacheFactory
 import com.prisma.shared.models._
 import sangria.schema.{Field => _, _}
 
@@ -14,10 +15,10 @@ trait InputTypesBuilder {
   def inputObjectTypeForWhereUnique(model: Model): Option[InputObjectType[Any]]
 }
 
-case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesBuilder(project) {
+case class CachedInputTypesBuilder(project: Project, cacheFactory: CacheFactory) extends UncachedInputTypesBuilder(project) {
   import java.lang.{StringBuilder => JStringBuilder}
 
-  val cache: Cache[String, Option[InputObjectType[Any]]] = Cache.unbounded[String, Option[InputObjectType[Any]]]()
+  val cache: Cache[String, Option[InputObjectType[Any]]] = cacheFactory.unbounded[String, Option[InputObjectType[Any]]]()
 
   override def inputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
     cache.getOrUpdate(cacheKey("cachedInputObjectTypeForCreate", model, parentField), { () =>
@@ -48,7 +49,6 @@ case class CachedInputTypesBuilder(project: Project) extends UncachedInputTypesB
 }
 
 abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBuilder {
-  import com.prisma.utils.boolean.BooleanUtils._
 
   override def inputObjectTypeForCreate(model: Model, parentField: Option[RelationField]): Option[InputObjectType[Any]] = {
     computeInputObjectTypeForCreate(model, parentField)
@@ -331,6 +331,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
           fieldsFn = () =>
             nestedCreateInputField(field).toList ++
               nestedConnectInputField(field) ++
+              nestedSetInputField(field) ++
               nestedDisconnectInputField(field) ++
               nestedDeleteInputField(field) ++
               nestedUpdateInputField(field) ++
@@ -391,9 +392,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   def nestedCreateInputField(field: RelationField): Option[InputField[Any]] = {
-    val subModel        = field.relatedModel_!
-    val inputObjectType = inputObjectTypeForCreate(subModel, Some(field))
-
+    val inputObjectType = inputObjectTypeForCreate(field.relatedModel_!, Some(field))
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any]("create", x))
   }
 
@@ -405,6 +404,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   def nestedConnectInputField(field: RelationField): Option[InputField[Any]] = field.relatedModel_!.isEmbedded match {
     case true  => None
     case false => whereInputField(field, name = "connect")
+  }
+
+  def nestedSetInputField(field: RelationField): Option[InputField[Any]] = (field.relatedModel_!.isEmbedded, field.isList) match {
+    case (true, _)      => None
+    case (false, true)  => whereInputField(field, name = "set")
+    case (false, false) => None
   }
 
   def nestedDisconnectInputField(field: RelationField): Option[InputField[Any]] = (field.relatedModel_!.isEmbedded, field.isList, field.isRequired) match {
@@ -421,16 +426,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   def trueInputFlag(field: RelationField, name: String): Option[InputField[Any]] = {
-    val subModel        = field.relatedModel_!
-    val inputObjectType = inputObjectTypeForWhereUnique(subModel)
-
+    val inputObjectType = inputObjectTypeForWhereUnique(field.relatedModel_!)
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any](name, x))
   }
 
   def whereInputField(field: RelationField, name: String): Option[InputField[Any]] = {
-    val subModel        = field.relatedModel_!
-    val inputObjectType = inputObjectTypeForWhereUnique(subModel)
-
+    val inputObjectType = inputObjectTypeForWhereUnique(field.relatedModel_!)
     generateInputType(inputObjectType, field.isList).map(x => InputField[Any](name, x))
   }
 

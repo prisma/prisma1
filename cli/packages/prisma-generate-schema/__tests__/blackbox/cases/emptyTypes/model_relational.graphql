@@ -1,31 +1,29 @@
-
-
 type OnlyId {
-    id: ID! @unique
+  id: ID! @unique
 }
 
 type OnlyIdAndARelation {
-    id: ID! @unique
-    ref: OnlyId!
+  id: ID! @unique
+  ref: OnlyId!
 }
 
 type OnlyIdAndARelation2 {
-    id: ID! @unique
-    ref: OnlyId
+  id: ID! @unique
+  ref: OnlyId
 }
 
 type OnlyDate {
-    createdAt: DateTime!
+  createdAt: DateTime!
 }
 
 type OnlyRelation {
-    ref: [OnlyDate!]!
+  ref: [OnlyDate]
 }
 
 type OnlyRelationA {
-    ref: OnlyRelationA!
+  ref: OnlyRelationA!
 }
 
 type OnlyRelationB {
-    ref: OnlyRelationB
+  ref: OnlyRelationB
 }

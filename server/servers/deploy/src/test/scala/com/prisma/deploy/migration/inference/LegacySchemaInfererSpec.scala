@@ -367,7 +367,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
     relation.modelBName should equal("Todo")
 
     val expectedManifestation = RelationTable(table = "list_to_todo", modelAColumn = "list_id", modelBColumn = "todo_id")
-    relation.manifestation should equal(Some(expectedManifestation))
+    relation.manifestation should equal(expectedManifestation)
   }
 
   "handle pg inline relation manifestations" ignore {
@@ -387,7 +387,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
     val expectedManifestation = EmbeddedRelationLink(inTableOfModelName = "Todo", referencingColumn = "list_id")
-    relation.manifestation should equal(Some(expectedManifestation))
+    relation.manifestation should equal(expectedManifestation)
   }
 
   "handle mongo inline relation manifestations" ignore {
@@ -407,7 +407,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
     val relation = schema.getModelByName_!("List").getRelationFieldByName_!("todos").relation
 
     val expectedManifestation = EmbeddedRelationLink(inTableOfModelName = "Todo", referencingColumn = "list_id")
-    relation.manifestation should equal(Some(expectedManifestation))
+    relation.manifestation should equal(expectedManifestation)
   }
 
   "add hidden reserved fields if isActive is true" in {
@@ -446,7 +446,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
          |""".stripMargin
     val schema        = infer(emptyProject.schema, types, capabilities = Set.empty)
     val relationField = schema.getModelByName_!("Todo").getRelationFieldByName_!("comments")
-    relationField.relation.manifestation should be(None)
+    relationField.relation.template.manifestation should be(None)
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: Set[ConnectorCapability]): Schema = {

@@ -1,15 +1,27 @@
-import { IGQLType, IGQLField, GQLScalarField, ISDL } from '../model'
+import {
+  IGQLType,
+  IGQLField,
+  GQLScalarField,
+  ISDL,
+  IDirectiveInfo,
+  IArguments,
+  IIndexInfo,
+  IdStrategy,
+  ISequenceInfo,
+} from '../model'
 import { parse } from 'graphql'
-import { DirectiveKeys } from '../directives';
+import { DirectiveKeys } from '../directives'
+import GQLAssert from '../../util/gqlAssert'
 
 // TODO(ejoebstl): It would be good to have this Parser fill the directive field for types and models as well.
+// TODO(ejoebstl): Directive parsing should be cleaned up: Parse all directives first and then extract build-in directives.
 
 /**
  * Parses a datamodel given as DSL
  * to an internal representation, convenient for
  * working with.
  */
-export default abstract class Parser {
+export default abstract class DefaultParser {
   /**
    * Shorthand to parse the datamodel, given an SDL string.
    * @param schemaString The datamodel as SDL string.
@@ -26,15 +38,9 @@ export default abstract class Parser {
    * @returns A list of types found in the datamodel.
    */
   public parseFromSchema(schema: any): ISDL {
-    const types = [
-      ...this.parseObjectTypes(schema),
-      ...this.parseEnumTypes(schema),
-    ]
+    const types = [...this.parseTypes(schema)]
 
     this.resolveRelations(types)
-
-    // Sort types alphabetically
-    types.sort(({ name: a }, { name: b }) => (a > b ? 1 : -1))
 
     // That's it.
     // We could check our model here, if we wanted to.
@@ -44,7 +50,7 @@ export default abstract class Parser {
     // * Check for duplicate type names
     // * Check for conflicting relations
     return {
-      types
+      types,
     }
   }
 
@@ -55,22 +61,104 @@ export default abstract class Parser {
   protected abstract isIdField(field: any): boolean
 
   /**
-   * Checks if the given field is read-only.
-   * If the field is an ID field, this method is not called and
-   * read-only is assumed.
+   * Checks if the given field is an updatedAt field
    * @param field
    */
-  protected abstract isReadOnly(field: any): boolean
+  protected abstract isUpdatedAtField(field: any): boolean
 
   /**
-   * Finds a directive on a field or type by name.
+   * Checks if the given field is a createdAt field
+   * @param field
+   */
+  protected abstract isCreatedAtField(field: any): boolean
+
+  protected parseIdType(field: any) {
+    const idDirective = this.getDirectiveByName(field, DirectiveKeys.isId)
+    const idType = this.getDirectiveArgument(idDirective, 'strategy')
+
+    if (idType) {
+      switch (idType) {
+        case IdStrategy.Auto:
+          return IdStrategy.Auto
+        case IdStrategy.None:
+          return IdStrategy.None
+        case IdStrategy.Sequence:
+          return IdStrategy.Sequence
+        default:
+          GQLAssert.raise(`Found invalid ID strategy while parsing: ${idType}`)
+          return null
+      }
+    } else {
+      return null
+    }
+  }
+
+  protected parseSequence(field: any): ISequenceInfo | null {
+    const sequenceDirective = this.getDirectiveByName(
+      field,
+      DirectiveKeys.sequence,
+    )
+
+    if (sequenceDirective === null) {
+      return null
+    }
+
+    const name = this.getDirectiveArgument(sequenceDirective, 'name')
+    const initialValue = this.getDirectiveArgument(
+      sequenceDirective,
+      'initialValue',
+    )
+    const allocationSize = this.getDirectiveArgument(
+      sequenceDirective,
+      'allocationSize',
+    )
+
+    GQLAssert.raiseIf(name === null, 'Name is required in sequence directive.')
+    GQLAssert.raiseIf(
+      initialValue === null,
+      'initialValue is required in sequence directive.',
+    )
+    GQLAssert.raiseIf(
+      allocationSize === null,
+      'allocationSize is required in sequence directive.',
+    )
+
+    return {
+      name: name as string,
+      initialValue: parseInt(initialValue, 10),
+      allocationSize: parseInt(allocationSize, 10),
+    }
+  }
+
+  /**
+   * Checks if the given field is reserved and read-only.
+   * @param field
+   */
+  protected isReservedReadOnlyField(field: any) {
+    return (
+      this.isIdField(field) ||
+      this.isUpdatedAtField(field) ||
+      this.isCreatedAtField(field)
+    )
+  }
+
+  /**
+   * Finds a directives on a field or type by name.
+   * @param fieldOrType
+   * @param name
+   */
+  protected getDirectivesByName(fieldOrType: any, name: string): any[] {
+    return fieldOrType.directives.filter(x => x.name.value === name)
+  }
+
+  /**
+   * Finds a directive on a field or type by name and returns the first occurance.
    * @param fieldOrType
    * @param name
    */
   protected getDirectiveByName(fieldOrType: any, name: string): any {
-    const directive = fieldOrType.directives.filter(x => x.name.value === name)
-
-    return directive.length > 0 ? directive[0] : null
+    const directives = this.getDirectivesByName(fieldOrType, name)
+    return directives.length > 0 ? directives[0] : null
   }
 
   /**
@@ -97,7 +185,10 @@ export default abstract class Parser {
    */
   protected getDefaultValue(field: any): any {
     const directive = this.getDirectiveByName(field, DirectiveKeys.default)
-    const args = directive === null ? [] : directive.arguments.filter(x => x.name.value === 'value')
+    const args =
+      directive === null
+        ? []
+        : directive.arguments.filter(x => x.name.value === 'value')
     return args.length !== 0 ? args[0].value.value : null
   }
 
@@ -108,14 +199,161 @@ export default abstract class Parser {
    */
   protected getRelationName(field: any): string | null {
     const directive = this.getDirectiveByName(field, DirectiveKeys.relation)
+    return this.getDirectiveArgument(directive, 'name')
+  }
+
+  /**
+   * Gets a fields or types relation name. If no directive
+   * exists, returns null.
+   * @param field
+   */
+  protected getDatabaseName(fieldOrType: any): string | null {
+    const directive = this.getDirectiveByName(fieldOrType, DirectiveKeys.db)
+    return this.getDirectiveArgument(directive, 'name')
+  }
+
+  /**
+   * Gets a fields relation name. If no directive
+   * exists, returns null.
+   * @param field
+   */
+  protected getDatabaseFieldName(field: IGQLField): string | null {
+    return this.getDatabaseName(field)
+  }
+
+  /**
+   * Gets a types relation name. If no directive
+   * exists, returns null.
+   * @param field
+   */
+
+  protected getDatabaseTypeName(type: IGQLType): string | null {
+    return this.getDatabaseName(type)
+  }
+
+  /**
+   * Returns the value of a directive argument.
+   */
+  protected getDirectiveArgument(directive: any, name: string) {
     if (directive && directive.arguments) {
-      const nameArgument = directive.arguments.find(
-        a => a.name.value === 'name',
-      )
-      return nameArgument ? nameArgument.value.value : null
+      const nameArgument = directive.arguments.find(a => a.name.value === name)
+      if (nameArgument) {
+        // Fallback from single value to list value.
+        return nameArgument.value.value !== undefined
+          ? nameArgument.value.value
+          : nameArgument.value.values
+      }
     }
 
     return null
+  }
+
+  /**
+   * Returns the value of an object field.
+   */
+  protected getObjectFieldValue(obj: any, name: string) {
+    if (obj && obj.fields) {
+      const nameArgument = obj.fields.find(a => a.name.value === name)
+      if (nameArgument) {
+        // Fallback from single value to list value.
+        return nameArgument.value.value !== undefined
+          ? nameArgument.value.value
+          : nameArgument.value.values
+      }
+    }
+
+    return null
+  }
+
+  /**
+   * Parses a single index directive input object, resolves all field references.
+   */
+  protected parseIndex(indexObject: any, fields: IGQLField[]): IIndexInfo {
+    const fieldsArgument = this.getObjectFieldValue(indexObject, 'fields')
+    const nameArgument = this.getObjectFieldValue(indexObject, 'name')
+    const uniqueArgument = this.getObjectFieldValue(indexObject, 'unique')
+
+    const indexFields = fieldsArgument.map(fieldArgument => {
+      const [field] = fields.filter(f => f.name === fieldArgument.value)
+
+      if (field === undefined) {
+        GQLAssert.raise(
+          `Error during index association. Field ${
+            fieldArgument.value
+          } is missing on index ${nameArgument}.`,
+        )
+      }
+
+      return field
+    })
+
+    return {
+      fields: indexFields,
+      name: nameArgument,
+      // Unique default is true.
+      unique: uniqueArgument === null ? true : uniqueArgument,
+    }
+  }
+
+  /**
+   * Parses all index directives on the given type.
+   */
+  protected parseIndices(type: any, fields: IGQLField[]): IIndexInfo[] {
+    const indexDirective = this.getDirectiveByName(type, DirectiveKeys.indexes)
+    if (indexDirective === null) {
+      return []
+    }
+    const subIndexes = this.getDirectiveArgument(indexDirective, 'value')
+
+    return subIndexes.map(directive => this.parseIndex(directive, fields))
+  }
+
+  /**
+   * Gets all reserved directive keys.
+   */
+  protected getReservedDirectiveNames() {
+    return [
+      DirectiveKeys.default,
+      DirectiveKeys.isEmbedded,
+      DirectiveKeys.db,
+      DirectiveKeys.isCreatedAt,
+      DirectiveKeys.isUpdatedAt,
+      DirectiveKeys.isUnique,
+      DirectiveKeys.isId,
+      DirectiveKeys.index,
+      DirectiveKeys.relation,
+      DirectiveKeys.sequence,
+    ]
+  }
+
+  /**
+   * Parses all directives that are not reserved (build-in)
+   * from a field or type
+   */
+  protected parseDirectives(fieldOrType: any) {
+    const res: IDirectiveInfo[] = []
+    const reservedDirectiveNames = this.getReservedDirectiveNames()
+
+    for (const directive of fieldOrType.directives) {
+      if (reservedDirectiveNames.includes(directive.name.value)) {
+        continue
+      }
+
+      const resArgs = {}
+      for (const args of directive.arguments) {
+        resArgs[args.name.value] = args.value.value
+      }
+      res.push({
+        name: directive.name.value,
+        arguments: resArgs,
+      })
+    }
+
+    if (res.length === 0) {
+      return []
+    } else {
+      return res
+    }
   }
 
   /**
@@ -130,9 +368,15 @@ export default abstract class Parser {
     const fieldType = this.parseType(field.type)
     const isId = this.isIdField(field)
     const isUnique = isId || this.isUniqe(field)
-    const isReadOnly = isId || this.isReadOnly(field)
+    const isReadOnly = this.isReservedReadOnlyField(field)
+    const isUpdatedAt = this.isUpdatedAtField(field)
+    const isCreatedAt = this.isCreatedAtField(field)
     const defaultValue = this.getDefaultValue(field)
     const relationName = this.getRelationName(field)
+    const databaseName = this.getDatabaseFieldName(field)
+    const directives = this.parseDirectives(field)
+    const associatedSequence = this.parseSequence(field)
+    const idStrategy = this.parseIdType(field)
 
     return {
       name,
@@ -144,7 +388,14 @@ export default abstract class Parser {
       isRequired: kind === 'NonNullType',
       relatedField: null,
       isId,
+      idStrategy,
+      associatedSequence,
+      isUpdatedAt,
+      isCreatedAt,
       isReadOnly,
+      databaseName,
+      directives,
+      comments: [],
     }
   }
 
@@ -153,11 +404,14 @@ export default abstract class Parser {
    * @param type
    */
   protected abstract isEmbedded(type: any): boolean
-  //  public isEmbedded(type: any): boolean {
-  //    return type.directives &&
-  //      type.directives.length > 0 &&
-  //      type.directives.some(d => d.name.value === 'embedded')
-  //  }
+
+  /**
+   * Checks if the given type is marked as link table.
+   * @param type
+   */
+  protected isLinkTable(type: any): boolean {
+    return this.hasDirective(type, DirectiveKeys.linkTable)
+  }
 
   /**
    * Parases an object type.
@@ -172,60 +426,75 @@ export default abstract class Parser {
       }
     }
 
+    const databaseName = this.getDatabaseTypeName(type)
     const isEmbedded = this.isEmbedded(type)
+    const isLinkTable = this.isLinkTable(type)
+    const directives = this.parseDirectives(type)
+    const indices = this.parseIndices(type, fields)
 
     return {
       name: type.name.value,
       fields,
       isEnum: false,
+      isLinkTable,
       isEmbedded,
+      databaseName,
+      directives,
+      indices,
+      comments: [],
     }
   }
 
   /**
-   * Parses all object types in the schema.
+   * Parses all types in the schema.
    * @param schema
    */
-  protected parseObjectTypes(schema: any): IGQLType[] {
-    const objectTypes: IGQLType[] = []
+  protected parseTypes(schema: any): IGQLType[] {
+    const types: IGQLType[] = []
 
     for (const type of schema.definitions) {
       if (type.kind === 'ObjectTypeDefinition') {
-        objectTypes.push(this.parseObjectType(type))
+        types.push(this.parseObjectType(type))
+      } else if (type.kind === 'EnumTypeDefinition') {
+        types.push(this.parseEnumType(type))
       }
     }
 
-    return objectTypes
+    return types
   }
 
   /**
-   * Parses all enum types in the schema.
+   * Parses an enum type.
    * @param schema
    */
-  protected parseEnumTypes(schema: any): IGQLType[] {
-    const enumTypes: IGQLType[] = []
-    for (const type of schema.definitions) {
-      if (type.kind === 'EnumTypeDefinition') {
-        const values: IGQLField[] = []
-        for (const value of type.values) {
-          if (value.kind === 'EnumValueDefinition') {
-            const name = value.name.value
+  protected parseEnumType(type: any): IGQLType {
+    if (type.kind === 'EnumTypeDefinition') {
+      const values: IGQLField[] = []
+      for (const value of type.values) {
+        if (value.kind === 'EnumValueDefinition') {
+          const name = value.name.value
 
-            // All props except name are ignored for enum defs.
-            values.push(new GQLScalarField(name, 'String', false))
-          }
+          // All props except name are ignored for enum defs.
+          values.push(new GQLScalarField(name, 'String', false))
         }
-
-        enumTypes.push({
-          name: type.name.value,
-          fields: values,
-          isEnum: true,
-          isEmbedded: false,
-        })
       }
-    }
 
-    return enumTypes
+      const directives = this.parseDirectives(type)
+
+      return {
+        name: type.name.value,
+        fields: values,
+        isEnum: true,
+        isLinkTable: false,
+        isEmbedded: false,
+        directives,
+        comments: [],
+        databaseName: null,
+        indices: [],
+      }
+    } else {
+      throw GQLAssert.raise('Expected an enum type.')
+    }
   }
 
   /**
@@ -259,7 +528,7 @@ export default abstract class Parser {
           for (const fieldB of fieldA.type.fields) {
             if (fieldB.relationName === fieldA.relationName) {
               if (fieldB.type !== typeA) {
-                throw new Error(
+                GQLAssert.raise(
                   `Relation type mismatch for relation ${fieldA.relationName}`,
                 )
               }

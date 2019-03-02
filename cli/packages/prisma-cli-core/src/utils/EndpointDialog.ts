@@ -8,20 +8,21 @@ import {
   defaultMongoDataModel,
   defaultDockerCompose,
   prettyTime,
-} from '../util'
+} from './util'
 import * as sillyname from 'sillyname'
 import * as path from 'path'
 import * as fs from 'fs'
-import { PostgresConnector } from 'prisma-db-introspection'
 import { MongoClient } from 'mongodb'
 import * as yaml from 'js-yaml'
-import { Client as PGClient } from 'pg'
+import { DatabaseType, DefaultRenderer } from 'prisma-datamodel'
+import {
+  getConnectedConnectorFromCredentials,
+  getConnectorWithDatabase,
+} from '../commands/introspect/util'
 
 export interface GetEndpointParams {
   folderName: string
 }
-
-export type DatabaseType = 'postgres' | 'mysql' | 'mongo'
 
 export interface DatabaseCredentials {
   type: DatabaseType
@@ -34,6 +35,7 @@ export interface DatabaseCredentials {
   schema?: string
   ssl?: boolean
   uri?: string
+  executeRaw?: boolean
 }
 
 export interface GetEndpointResult {
@@ -151,15 +153,27 @@ export class EndpointDialog {
     const localClusterRunning = await this.isClusterOnline(
       'http://localhost:4466',
     )
-    const folderName = path.basename(this.config.definitionDir)
-    const loggedIn = await this.client.isAuthenticated()
+    let folderName = path.basename(this.config.definitionDir)
+    folderName =
+      folderName === 'prisma'
+        ? path.basename(path.join(this.config.definitionDir, '../'))
+        : folderName
+
+    if (/^\d+/.test(folderName)) {
+      folderName = `service-${folderName}`
+    }
+
+    const authenticationPayload = await this.client.isAuthenticated()
+    const loggedIn = authenticationPayload.isAuthenticated
     const clusters = this.getCloudClusters()
     const files = this.listFiles()
     const hasDockerComposeYml = files.includes('docker-compose.yml')
+
     const question = this.getClusterQuestion(
       !loggedIn && !localClusterRunning,
       hasDockerComposeYml,
       clusters,
+      loggedIn,
     )
 
     const { choice } = await this.out.prompt(question)
@@ -203,7 +217,7 @@ export class EndpointDialog {
       password: credentials.password,
       uri: credentials.uri,
     }
-    if (credentials.type !== 'mongo') {
+    if (credentials.type !== DatabaseType.mongo) {
       data = {
         ...data,
         rawAccess: true,
@@ -248,7 +262,7 @@ export class EndpointDialog {
     let writeDockerComposeYml = true
 
     switch (choice) {
-      case 'Use other server':
+      case 'Use other server': {
         clusterEndpoint = await this.customEndpointSelector()
         cluster = new Cluster(this.out, 'custom', clusterEndpoint)
         const needsAuth = await cluster.needsAuth()
@@ -275,8 +289,9 @@ export class EndpointDialog {
         writeDockerComposeYml = false
 
         break
+      }
       case 'local':
-      case 'Create new database':
+      case 'Create new database': {
         cluster =
           (this.env.clusters || []).find(c => c.name === 'local') ||
           new Cluster(this.out, 'local', 'http://localhost:4466')
@@ -284,20 +299,23 @@ export class EndpointDialog {
         const type =
           choice === 'Create new database'
             ? await this.askForDatabaseType()
-            : 'mysql'
+            : DatabaseType.postgres
+        if (type === DatabaseType.mongo) {
+          datamodel = defaultMongoDataModel
+        }
         const defaultHosts = {
           mysql: 'mysql',
           mongo: 'mongo',
           postgres: 'postgres',
         }
         credentials = {
-          user: type === 'mysql' ? 'root' : 'prisma',
+          user: type === DatabaseType.mysql ? 'root' : 'prisma',
           password: 'prisma',
           type,
           host: defaultHosts[type],
           port: defaultPorts[type],
         }
-        if (type === 'mongo') {
+        if (type === DatabaseType.mongo) {
           credentials = {
             type,
             uri: 'mongodb://prisma:prisma@mongo',
@@ -307,70 +325,111 @@ export class EndpointDialog {
         dockerComposeYml += this.printDatabaseService(type)
         newDatabase = true
         break
-      case 'Use existing database':
+      }
+      case 'Use existing database': {
+        /**
+         * Get database credentials
+         */
         credentials = await this.getDatabase()
-        if (credentials.type === 'mongo') {
-          const before = Date.now()
-          this.out.action.start(`Connecting to database`)
-          await this.connectToMongo(credentials)
-          credentials.uri = this.replaceMongoHost(credentials.uri!)
-          this.out.action.stop(prettyTime(Date.now() - before))
+
+        /**
+         * Get connector
+         */
+        const intermediateConnectorData = await getConnectedConnectorFromCredentials(
+          credentials,
+        )
+
+        const connectorData = await getConnectorWithDatabase(
+          {
+            ...intermediateConnectorData,
+            databaseType: credentials.type,
+          },
+          this,
+        )
+
+        const {
+          connector,
+          databaseName,
+          databaseType,
+          disconnect,
+        } = connectorData
+        let schemas: string[]
+
+        /**
+         * Use listSchemas to try connection
+         */
+        try {
+          schemas = await connector.listSchemas()
+        } catch (e) {
+          throw new Error(`Could not connect to database: ${e.message}`)
         }
-        if (credentials.type !== 'mongo') {
-          this.out.log('')
+
+        if (databaseName && !schemas.includes(databaseName)) {
+          const schemaWord =
+            databaseType === DatabaseType.postgres ? 'schema' : 'database'
+          throw new Error(
+            `The provided ${schemaWord} "${databaseName}" does not exist. The following are available: ${schemas.join(
+              ', ',
+            )}`,
+          )
+        }
+
+        /**
+         * Either introspect, if alreadyData is true
+         */
+        if (credentials.alreadyData) {
           const before = Date.now()
           this.out.action.start(
-            credentials!.alreadyData
-              ? `Introspecting database`
-              : `Connecting to database`,
+            `Introspecting database ${chalk.bold(databaseName)}`,
           )
-          const client = new PGClient(this.replaceLocalDockerHost(credentials))
-          const connector = new PostgresConnector(client)
-          let schemas
-          try {
-            schemas = await connector.listSchemas()
-          } catch (e) {
-            throw new Error(`Could not connect to database. ${e.message}`)
-          }
-
-          if (
-            credentials &&
-            credentials.alreadyData &&
-            schemas &&
-            schemas.length > 0
-          ) {
-            const schema = credentials.schema || schemas[0]
-
-            const introspection = await connector.introspect(schema)
-            const sdl = await introspection.getDatamodel()
-            const numTables = sdl.types.length
-            const renderedSdl = introspection.renderer.render(sdl)
-
-            await client.end()
-            if (numTables === 0) {
-              this.out.log(
-                chalk.red(
-                  `\n${chalk.bold(
-                    'Error: ',
-                  )}The provided database doesn't contain any tables. Please either provide another database or choose "No" for "Does your database contain existing data?"`,
-                ),
-              )
-              this.out.exit(1)
+          const introspection = await connector.introspect(databaseName)
+          const isdl = await introspection.getNormalizedDatamodel()
+          const renderer = DefaultRenderer.create(databaseType)
+          datamodel = renderer.render(isdl)
+          const tableName =
+            databaseType === DatabaseType.mongo ? 'Mongo collections' : 'tables'
+          await disconnect()
+          this.out.action.stop(prettyTime(Date.now() - before))
+          this.out.log(
+            `Created datamodel definition based on ${
+              isdl.types.length
+            } ${tableName}.`,
+          )
+          /**
+           * Or just use the default datamodel
+           */
+        } else {
+          switch (credentials.type) {
+            case DatabaseType.mongo: {
+              datamodel = defaultMongoDataModel
+              break
             }
-
-            this.out.action.stop(prettyTime(Date.now() - before))
-            this.out.log(
-              `Created datamodel definition based on ${numTables} database tables.`,
-            )
-            datamodel = renderedSdl
-          } else {
-            this.out.action.stop(prettyTime(Date.now() - before))
+            case DatabaseType.mysql:
+            case DatabaseType.postgres: {
+              datamodel = defaultDataModel
+            }
           }
         }
+
+        /**
+         * Sanitize mongo host for docker usage
+         */
+        if (credentials.type === DatabaseType.mongo && credentials.uri) {
+          credentials.uri = this.replaceMongoHost(credentials.uri!)
+        }
+
+        /**
+         * Add the database credentials to the docker compose file
+         */
         dockerComposeYml += this.printDatabaseConfig(credentials)
+
+        /**
+         * The cluster instance is later used by the init command
+         */
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
-      case 'Demo server':
+      }
+      case 'Demo server': {
         writeDockerComposeYml = false
 
         const demoCluster = await this.getDemoCluster()
@@ -380,7 +439,8 @@ export class EndpointDialog {
           cluster = demoCluster
         }
         break
-      default:
+      }
+      default: {
         const result = this.getClusterAndWorkspaceFromChoice(choice)
         if (!result.workspace) {
           cluster = clusters.find(c => c.name === result.cluster)
@@ -394,6 +454,7 @@ export class EndpointDialog {
           )
           workspace = result.workspace
         }
+      }
     }
 
     if (!cluster) {
@@ -423,10 +484,6 @@ export class EndpointDialog {
 
     workspace = workspace || cluster.workspaceSlug
 
-    if (credentials && credentials.type === 'mongo') {
-      datamodel = defaultMongoDataModel
-    }
-
     return {
       endpoint: cluster.getApiEndpoint(service, stage, workspace),
       cluster,
@@ -444,7 +501,7 @@ export class EndpointDialog {
     }
   }
 
-  connectToMongo(credentials: DatabaseCredentials) {
+  connectToMongo(credentials: DatabaseCredentials): Promise<MongoClient> {
     return new Promise((resolve, reject) => {
       if (!credentials.uri) {
         throw new Error(`Please provide the MongoDB connection string`)
@@ -460,26 +517,11 @@ export class EndpointDialog {
             if (credentials.database) {
               client.db(credentials.database)
             }
-            client.close()
-            resolve()
+            resolve(client)
           }
         },
       )
     })
-  }
-
-  replaceLocalDockerHost(credentials: DatabaseCredentials) {
-    if (credentials.host) {
-      const replaceMap = {
-        'host.docker.internal': 'localhost',
-        'docker.for.mac.localhost': 'localhost',
-      }
-      return {
-        ...credentials,
-        host: replaceMap[credentials.host] || credentials.host,
-      }
-    }
-    return credentials
   }
 
   replaceMongoHost(connectionString: string) {
@@ -493,14 +535,10 @@ export class EndpointDialog {
     const credentials: any = {
       type,
     }
-    if (type === 'mysql' || type === 'postgres') {
+    if (type === DatabaseType.mysql || type === DatabaseType.postgres) {
       const alreadyData = introspection || (await this.askForExistingData())
       const askForSchema = introspection ? true : alreadyData ? true : false
-      if (type === 'mysql' && alreadyData) {
-        throw new Error(
-          `Existing MySQL databases with data are not yet supported.`,
-        )
-      }
+      credentials.alreadyData = alreadyData
       credentials.host = await this.ask({
         message: 'Enter database host',
         key: 'host',
@@ -520,34 +558,38 @@ export class EndpointDialog {
         key: 'password',
       })
       credentials.database =
-        type === 'postgres'
+        type === DatabaseType.postgres
           ? await this.ask({
-              message: alreadyData
-                ? `Enter name of existing database`
-                : `Enter database name`,
+              message: `Enter database name (the database includes the schema)`,
               key: 'database',
             })
           : null
       credentials.ssl =
-        type === 'postgres'
+        type === DatabaseType.postgres
           ? await this.ask({
               message: 'Use SSL?',
               inputType: 'confirm',
               key: 'ssl',
+              defaultValue: !credentials.host.includes('localhost'),
             })
           : undefined
-      credentials.schema = askForSchema
-        ? await this.ask({
-            message: `Enter name of existing schema`,
-            key: 'schema',
-          })
-        : undefined
-    } else if (type === 'mongo') {
+      // In the workflows that we already have data, we just ask for the concrete schema later
+      if (!alreadyData) {
+        // list all schemas at this point
+        credentials.schema = askForSchema
+          ? await this.ask({
+              message: `Enter name of existing schema (e.g. default$default)`,
+              key: 'schema',
+            })
+          : undefined
+      }
+    } else if (type === DatabaseType.mongo) {
       credentials.uri = await this.ask({
         message: 'Enter MongoDB connection string',
         key: 'uri',
       })
-      const alreadyData = await this.askForExistingDataMongo()
+      const alreadyData =
+        introspection || (await this.askForExistingDataMongo())
       if (alreadyData) {
         credentials.database = await this.ask({
           message: `Enter name of existing database`,
@@ -560,13 +602,34 @@ export class EndpointDialog {
   }
 
   public async selectSchema(schemas: string[]): Promise<string> {
-    const choices = schemas.map(s => ({
+    const filteredSchemas = schemas.filter(
+      s =>
+        !s.startsWith('prisma-temporary-service') &&
+        !['performance_schema', 'sys', 'mysql', 'prisma'].includes(s),
+    )
+
+    if (filteredSchemas.length === 0) {
+      const metaSchemasText =
+        schemas.length > 0
+          ? ` The schemas ${schemas.join(
+              ', ',
+            )} are system schemas that can't be introspected.`
+          : ''
+      throw new Error(
+        `There is no schema in the database to be selected for introspection.${metaSchemasText}`,
+      )
+    }
+
+    if (filteredSchemas.length === 1) {
+      return filteredSchemas[0]
+    }
+    const choices = filteredSchemas.map(s => ({
       value: s,
       name: s,
     }))
 
     const { choice } = await this.out.prompt({
-      message: 'Please select the Postgres schema you want to introspect',
+      message: 'Please select the schema you want to introspect',
       name: 'choice',
       type: 'list',
       choices,
@@ -624,6 +687,7 @@ export class EndpointDialog {
     fromScratch: boolean,
     hasDockerComposeYml: boolean,
     clusters: Cluster[],
+    isAuthenticated: boolean,
   ) {
     const sandboxChoices = [
       [
@@ -669,13 +733,16 @@ export class EndpointDialog {
         clusters.length > 0
           ? clusters.filter(c => !c.shared).map(this.getClusterChoice)
           : sandboxChoices
+
       const rawChoices = [
         ['Use existing database', 'Connect to existing database'],
         ['Create new database', 'Set up a local database using Docker'],
         ...clusterChoices,
         [
           'Demo server',
-          'Hosted demo environment incl. database (requires login)',
+          `Hosted demo environment incl. database${
+            !isAuthenticated ? ` (requires login)` : ``
+          }`,
         ],
         [
           'Use other server',
@@ -723,7 +790,8 @@ export class EndpointDialog {
   }
 
   private async getDemoCluster(): Promise<Cluster | null> {
-    const isAuthenticated = await this.client.isAuthenticated()
+    const authenticationPayload = await this.client.isAuthenticated()
+    const isAuthenticated = authenticationPayload.isAuthenticated
     if (!isAuthenticated) {
       await this.client.login()
     }
@@ -769,17 +837,16 @@ export class EndpointDialog {
     return `Production Prisma cluster`
   }
 
-  private async askForDatabaseType(introspect: boolean = false) {
+  private async askForDatabaseType(
+    introspect: boolean = false,
+  ): Promise<DatabaseType> {
     const choices: any[] = []
 
-    if (!introspect) {
-      choices.push({
-        value: 'mysql',
-        name:
-          'MySQL             MySQL compliant databases like MySQL or MariaDB',
-        short: 'MySQL',
-      })
-    }
+    choices.push({
+      value: 'mysql',
+      name: 'MySQL             MySQL compliant databases like MySQL or MariaDB',
+      short: 'MySQL',
+    })
 
     choices.push({
       value: 'postgres',
@@ -800,10 +867,16 @@ export class EndpointDialog {
         introspect ? 'introspect' : 'deploy to'
       }?`,
       choices,
-      // pageSize: 9,
     })
 
-    return dbType
+    const databaseTypeMap = {
+      mongo: DatabaseType.mongo,
+      mysql: DatabaseType.mysql,
+      postgres: DatabaseType.postgres,
+      sqlite: DatabaseType.sqlite,
+    }
+
+    return databaseTypeMap[dbType]
   }
 
   private convertChoices(
@@ -926,14 +999,9 @@ export class EndpointDialog {
         },
         {
           value: 'yes',
-          name: 'Yes (experimental - Prisma migrations not yet supported)',
+          name: 'Yes',
           short: 'Yes',
         },
-        new inquirer.Separator(
-          `\n\n${chalk.yellow(
-            'Warning: Introspecting databases with existing data is currently an experimental feature. If you find any issues, please report them here: https://github.com/prisma/prisma/issues\n',
-          )}`,
-        ),
       ],
       pageSize: 10,
     }
@@ -952,7 +1020,7 @@ export class EndpointDialog {
   }: {
     message: string
     key: string
-    defaultValue?: string
+    defaultValue?: string | boolean
     validate?: (value: string) => boolean | string
     required?: boolean
     inputType?: string

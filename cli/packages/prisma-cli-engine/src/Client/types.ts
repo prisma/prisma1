@@ -21,6 +21,12 @@ export interface DeployPayload {
   errors: SchemaError[]
   warnings: SchemaError[]
   migration: Migration
+  steps?: MigrationStep[]
+}
+
+export interface AuthenticationPayload {
+  isAuthenticated: boolean
+  account: User | null
 }
 
 export interface SchemaError {
@@ -33,6 +39,22 @@ export interface Migration {
   revision: number
   hasBeenApplied: boolean
   steps: MigrationStep[]
+}
+
+export type RelationManifestation = LinkTableManifestation | InlineManifestation
+
+export interface LinkTableManifestation {
+  type: 'LinkTable'
+  table: string
+  modelAColumn: string
+  modelBColumn: string
+  idColumn?: string
+}
+
+export interface InlineManifestation {
+  type: 'Inline'
+  model: string
+  column: string
 }
 
 export interface MigrationStep {
@@ -52,6 +74,12 @@ export interface MigrationStep {
   // createRelation
   leftModel?: string | null
   rightModel?: string | null
+  after?: RelationManifestation
+  // updateRelation
+  before?: RelationManifestation
+  ur_after?: RelationManifestation
+  ur_name?: string
+  ur_newName?: string
   // deleteField
   model?: string | null
   // updateEnum

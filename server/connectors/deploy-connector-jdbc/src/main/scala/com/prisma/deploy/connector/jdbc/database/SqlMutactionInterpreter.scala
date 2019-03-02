@@ -1,9 +1,9 @@
 package com.prisma.deploy.connector.jdbc.database
 
-import com.prisma.deploy.connector.DeployMutaction
-import slick.dbio.{DBIOAction, Effect, NoStream}
+import com.prisma.deploy.connector.{DeployMutaction, DatabaseSchema}
+import slick.dbio.DBIO
 
 trait SqlMutactionInterpreter[T <: DeployMutaction] {
-  def execute(mutaction: T): DBIOAction[Any, NoStream, Effect.All]
-  def rollback(mutaction: T): DBIOAction[Any, NoStream, Effect.All]
+  def execute(mutaction: T, schemaBeforeMigration: DatabaseSchema): DBIO[Any]
+  def rollback(mutaction: T, schemaBeforeMigration: DatabaseSchema): DBIO[Any]
 }

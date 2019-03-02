@@ -34,7 +34,7 @@ export class BuiltinCommandManager extends CommandManagerBase {
 
     let p = builtins[id]
     if (p) {
-      p = path.join(__dirname, 'commands', p)
+      p = path.join(__dirname, '../commands', p)
       return this.require(p)
     }
   }
@@ -64,7 +64,9 @@ class PluginCommandManager extends CommandManagerBase {
     let out = new Output(this.config)
     let plugins = new Plugins(out)
     await plugins.load()
-    const foundCommand = plugins.findCommand(id || this.config.defaultCommand || 'help')
+    const foundCommand = plugins.findCommand(
+      id || this.config.defaultCommand || 'help',
+    )
     return foundCommand
   }
   async findTopic(id: string) {
@@ -104,7 +106,7 @@ export class Dispatcher {
 
   async findTopic(id: string) {
     if (!id) return {}
-    // TODO: Fix this hack for "cluster". 
+    // TODO: Fix this hack for "cluster".
     // Find why cache does not invalidate for cluster command
     if (id.trim() === 'cluster') return null
     for (let manager of this.managers) {

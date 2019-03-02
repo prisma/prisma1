@@ -128,7 +128,7 @@ export default class DefaultGenerator implements IGenerators {
     this.typeRegistry,
     this,
   )
-  modelUpdateManyWithWhereNestedInput =new ModelUpdateManyWithWhereNestedInput(
+  modelUpdateManyWithWhereNestedInput = new ModelUpdateManyWithWhereNestedInput(
     this.typeRegistry,
     this,
   )
@@ -155,8 +155,16 @@ export default class DefaultGenerator implements IGenerators {
     this.typeRegistry,
     this,
   )
+
+  modelRestrictedWhereInput = new ModelWhereInputGenerator(
+    this.typeRegistry,
+    this,
+  ) // Dummy
   modelWhereInput = new ModelWhereInputGenerator(this.typeRegistry, this)
-  modelScalarWhereInput = new ModelScalarWhereInputGenerator(this.typeRegistry, this)
+  modelScalarWhereInput = new ModelScalarWhereInputGenerator(
+    this.typeRegistry,
+    this,
+  )
   modelOrderByInput = new ModelOrderByInputGenerator(this.typeRegistry, this)
   modelConnection = new ModelConnectionGenerator(this.typeRegistry, this)
   modelEdge = new ModelEdgeGenerator(this.typeRegistry, this)

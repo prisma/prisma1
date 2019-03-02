@@ -2,12 +2,13 @@ package com.prisma.deploy.connector.jdbc.persistence
 
 import java.sql.ResultSet
 
+import com.prisma.config.DatabaseConfig
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.MissingBackRelations
 import com.prisma.deploy.connector.jdbc.JdbcBase
 import com.prisma.deploy.connector.persistence.ProjectPersistence
 import com.prisma.shared.models
-import com.prisma.shared.models.{MigrationStatus, Project, Schema}
+import com.prisma.shared.models.{MigrationStatus, Project, ProjectManifestation, Schema}
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL._
 import play.api.libs.json.{JsValue, Json}
@@ -25,11 +26,12 @@ object ProjectTable {
   val functions        = field(name(projectTableName, "functions"))
 }
 
-case class JdbcProjectPersistence(slickDatabase: SlickDatabase) extends JdbcBase with ProjectPersistence {
+case class JdbcProjectPersistence(slickDatabase: SlickDatabase, dbConfig: DatabaseConfig) extends JdbcBase with ProjectPersistence {
   import com.prisma.shared.models.ProjectJsonFormatter._
 
-  val pt = ProjectTable
-  val mt = MigrationTable
+  val projectManifestation: ProjectManifestation = ProjectManifestation(dbConfig.database, dbConfig.schema, dbConfig.connector)
+  val pt                                         = ProjectTable
+  val mt                                         = MigrationTable
 
   override def load(id: String): Future[Option[Project]] = {
     val query = sql
@@ -161,7 +163,8 @@ case class JdbcProjectPersistence(slickDatabase: SlickDatabase) extends JdbcBase
       secrets = secrets,
       allowQueries = rs.getBoolean(pt.allowQueries.getName),
       allowMutations = rs.getBoolean(pt.allowMutations.getName),
-      functions = functions
+      functions = functions,
+      manifestation = projectManifestation
     )
   }
 }

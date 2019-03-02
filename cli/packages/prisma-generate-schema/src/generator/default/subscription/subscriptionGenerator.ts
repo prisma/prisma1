@@ -6,9 +6,14 @@ export default class SubscriptionGenerator extends RootGenerator {
   public getTypeName(input: IGQLType[], args: {}) {
     return 'Subscription'
   }
+
+  protected shouldGenerateSubscription(type: IGQLType) {
+    return !type.isEnum
+  }
+
   protected generateInternal(input: IGQLType[], args: {}) {
     const fieldMaps = input
-      .filter(type => !type.isEnum)
+      .filter(type => this.shouldGenerateSubscription(type))
       .map(type => this.generateSubscriptionField(type))
 
     return new GraphQLObjectType({

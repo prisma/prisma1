@@ -17,7 +17,7 @@ trait MiscQueries extends BuilderBase with FilterConditionBuilder {
   def countAllFromTable(tableName: String, whereFilter: Option[Filter]): DBIO[Int] = {
 
     lazy val query = {
-      val aliasedTable = table(name(schemaName, tableName)).as(topLevelAlias)
+      val aliasedTable = table(name(project.dbName, tableName)).as(topLevelAlias)
       val condition    = buildConditionForFilter(whereFilter)
 
       sql
@@ -46,7 +46,7 @@ trait MiscQueries extends BuilderBase with FilterConditionBuilder {
 
         while (resultSet.next) {
           val keyValues = (1 to metaData.getColumnCount).map { i =>
-            val columnName   = metaData.getColumnName(i)
+            val columnName   = metaData.getColumnLabel(i)
             val untypedValue = resultSet.getObject(i)
             val value        = untypedValueToJson(untypedValue)
             columnName -> value
@@ -68,20 +68,24 @@ trait MiscQueries extends BuilderBase with FilterConditionBuilder {
       case null                    => JsNull
       case v: String               => JsString(v)
       case v: java.lang.Boolean    => JsBoolean(v)
+      case v: java.lang.Short      => JsNumber(v.toInt)
       case v: java.lang.Integer    => JsNumber(v.toInt)
       case v: java.lang.Long       => JsNumber(v.toLong)
       case v: java.lang.Float      => JsNumber(v.toDouble)
       case v: java.lang.Double     => JsNumber(v.toDouble)
       case v: java.math.BigDecimal => JsNumber(v)
+      case v: java.math.BigInteger => JsString(v.toString) //https://github.com/graphql/graphql-js/issues/292
       case v: java.sql.Timestamp   => JsString(v.toString)
       case v: java.sql.Time        => JsString(v.toString)
       case v: java.sql.Date        => JsString(v.toString)
-      case v: java.sql.Array       => ??? //JsArray(v.getArray.map(untypedValueToJson))
       case v: java.sql.Blob        => ???
       case v: java.sql.NClob       => ???
       case v: java.sql.Clob        => ???
       case v: java.sql.RowId       => ???
       case v: java.sql.SQLXML      => JsString(v.getString)
+      case v: java.sql.Array =>
+        val array = v.getArray.asInstanceOf[Array[AnyRef]]
+        JsArray(array.map(untypedValueToJson))
     }
   }
 

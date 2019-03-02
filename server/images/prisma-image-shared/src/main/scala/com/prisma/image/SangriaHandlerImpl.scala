@@ -3,7 +3,7 @@ package com.prisma.image
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.api.import_export.{BulkExport, BulkImport}
-import com.prisma.api.schema.APIErrors.InvalidToken
+import com.prisma.api.schema.APIErrors.AuthFailure
 import com.prisma.api.schema.{PrivateSchemaBuilder, UserFacingError}
 import com.prisma.api.{ApiDependencies, ApiMetrics}
 import com.prisma.deploy.DeployDependencies
@@ -21,10 +21,9 @@ import play.api.libs.json.{JsValue, Json}
 import sangria.execution.{Executor, QueryAnalysisError}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
-case class SangriaHandlerImpl(
-    managementApiEnabled: Boolean
-)(
+case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
     implicit system: ActorSystem,
     materializer: ActorMaterializer,
     deployDependencies: DeployDependencies,
@@ -48,7 +47,7 @@ case class SangriaHandlerImpl(
     workerServer.onStart.map(_ => ())
   }
 
-  override def handleRawRequest(rawRequest: RawRequest)(implicit ec: ExecutionContext): Future[JsValue] = {
+  override def handleRawRequest(rawRequest: RawRequest)(implicit ec: ExecutionContext): Future[Response] = {
     val (projectSegments, reservedSegment) = splitReservedSegment(rawRequest.path.toList)
     val projectId                          = projectIdEncoder.fromSegments(projectSegments)
     val projectIdAsString                  = projectIdEncoder.toEncodedString(projectId)
@@ -58,7 +57,7 @@ case class SangriaHandlerImpl(
           if (apiDependencies.apiConnector.capabilities.has(ImportExportCapability)) {
             val result = new BulkImport(project).executeImport(rawRequest.json)
             result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-            result
+            result.map(Response(_))
           } else {
             sys.error(s"The connector is missing the import / export capability.")
           }
@@ -70,36 +69,50 @@ case class SangriaHandlerImpl(
             val resolver = apiDependencies.dataResolver(project)
             val result   = new BulkExport(project).executeExport(resolver, rawRequest.json)
             result.onComplete(_ => logRequestEnd(rawRequest, projectIdAsString))
-            result
+            result.map(Response(_))
           } else {
             sys.error(s"The connector is missing the import / export capability.")
           }
         }
 
       case _ =>
-        super.handleRawRequest(rawRequest)
-
+        requestThrottler.throttleCallIfNeeded(projectIdAsString, isManagementApiRequest = isManagementApiRequest(rawRequest)) {
+          super.handleRawRequest(rawRequest)
+        }
     }
 
     result.recover {
-      case e: UserFacingError => JsonErrorHelper.errorJson(rawRequest.id, e.getMessage, e.code)
+      case e: UserFacingError => Response(JsonErrorHelper.errorJson(rawRequest.id, e.getMessage, e.code))
     }
   }
 
   override def handleGraphQlQuery(request: RawRequest, query: GraphQlQuery)(implicit ec: ExecutionContext): Future[JsValue] = {
-    if (request.path == Vector("management") && managementApiEnabled) {
+    if (isManagementApiRequest(request) && managementApiEnabled) {
       handleQueryForManagementApi(request, query)
     } else {
       handleQueryForServiceApi(request, query)
     }
   }
 
+  def isManagementApiRequest(request: RawRequest): Boolean = request.path == Vector("management")
+
   private def verifyAuth[T](projectId: String, rawRequest: RawRequest)(fn: Project => Future[T]): Future[T] = {
-    for {
-      project    <- apiDependencies.projectFetcher.fetch_!(projectId)
-      authResult = apiDependencies.auth.verify(project.secrets, rawRequest.headers.get("Authorization"))
-      result     <- if (authResult.isSuccess) fn(project) else Future.failed(InvalidToken())
-    } yield result
+    (for {
+      project <- apiDependencies.projectFetcher.fetch_!(projectId)
+    } yield {
+      if (project.secrets.nonEmpty) {
+        Try { apiDependencies.auth.extractToken(rawRequest.headers.get("authorization")) } match {
+          case Success(token) =>
+            apiDependencies.auth.verifyToken(token, project.secrets) match {
+              case Success(_) => project
+              case Failure(_) => throw AuthFailure()
+            }
+          case Failure(_) => throw AuthFailure()
+        }
+      } else {
+        project
+      }
+    }).flatMap(fn)
   }
 
   override def supportedWebsocketProtocols                       = websocketHandler.supportedProtocols
@@ -111,7 +124,7 @@ case class SangriaHandlerImpl(
       case e: DeployApiError => Some(e.code)
       case _                 => None
     }
-    val userContext = SystemUserContext(authorizationHeader = request.headers.get("Authorization"))
+    val userContext = SystemUserContext(authorizationHeader = request.headers.get("authorization"))
     val errorHandler =
       ErrorHandler(
         request.id,
@@ -148,9 +161,7 @@ case class SangriaHandlerImpl(
     verifyAuth(projectIdAsString, rawRequest) { project =>
       reservedSegment match {
         case None =>
-          requestThrottler.throttleCallIfNeeded(project) {
-            handleRequestForPublicApi(project, rawRequest, query)
-          }
+          handleRequestForPublicApi(project, rawRequest, query)
 
         case Some("private") =>
           val result = handleRequestForPrivateApi(project, rawRequest, query)
@@ -223,6 +234,7 @@ case class SangriaHandlerImpl(
     actualDuration
   }
 
-  private def metricKeyFor(projectId: String): String =
+  private def metricKeyFor(projectId: String): String = {
     projectId.replace(projectIdEncoder.stageSeparator, '-').replace(projectIdEncoder.workspaceSeparator, '-')
+  }
 }

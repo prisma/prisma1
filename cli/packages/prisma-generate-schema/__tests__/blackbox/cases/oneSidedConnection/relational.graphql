@@ -1231,6 +1231,7 @@ input TypeWithIdUpdateManyDataInput {
 input TypeWithIdUpdateManyInput {
   create: [TypeWithIdCreateInput!]
   connect: [TypeWithIdWhereUniqueInput!]
+  set: [TypeWithIdWhereUniqueInput!]
   disconnect: [TypeWithIdWhereUniqueInput!]
   delete: [TypeWithIdWhereUniqueInput!]
   update: [TypeWithIdUpdateWithWhereUniqueNestedInput!]

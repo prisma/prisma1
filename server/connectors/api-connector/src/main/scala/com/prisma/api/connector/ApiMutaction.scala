@@ -3,10 +3,11 @@ package com.prisma.api.connector
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.shared.models.ModelMutationType.ModelMutationType
 import com.prisma.shared.models._
+import cool.graph.cuid.Cuid
 
-import scala.collection.immutable
-
-sealed trait ApiMutaction
+sealed trait ApiMutaction {
+  val id: String = Cuid.createCuid()
+}
 
 // DATABASE MUTACTIONS
 sealed trait DatabaseMutaction extends ApiMutaction {
@@ -26,12 +27,13 @@ sealed trait FurtherNestedMutaction extends DatabaseMutaction {
   def nestedUpserts: Vector[NestedUpsertNode]
   def nestedDeletes: Vector[NestedDeleteNode]
   def nestedConnects: Vector[NestedConnect]
+  def nestedSets: Vector[NestedSet]
   def nestedDisconnects: Vector[NestedDisconnect]
   def nestedUpdateManys: Vector[NestedUpdateNodes]
   def nestedDeleteManys: Vector[NestedDeleteNodes]
 
   override def allNestedMutactions: Vector[NestedDatabaseMutaction] = {
-    nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects ++ nestedUpdateManys ++ nestedDeleteManys
+    nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedSets ++ nestedDisconnects ++ nestedUpdateManys ++ nestedDeleteManys
   }
 }
 
@@ -49,6 +51,7 @@ sealed trait CreateNode extends FurtherNestedMutaction {
   override def nestedDisconnects = Vector.empty
   override def nestedUpdateManys = Vector.empty
   override def nestedDeleteManys = Vector.empty
+  override def nestedSets        = Vector.empty
 }
 case class TopLevelCreateNode(
     project: Project,
@@ -97,6 +100,7 @@ case class TopLevelUpdateNode(
     nestedUpserts: Vector[NestedUpsertNode],
     nestedDeletes: Vector[NestedDeleteNode],
     nestedConnects: Vector[NestedConnect],
+    nestedSets: Vector[NestedSet],
     nestedDisconnects: Vector[NestedDisconnect],
     nestedUpdateManys: Vector[NestedUpdateNodes],
     nestedDeleteManys: Vector[NestedDeleteNodes]
@@ -116,6 +120,7 @@ case class NestedUpdateNode(
     nestedUpserts: Vector[NestedUpsertNode],
     nestedDeletes: Vector[NestedDeleteNode],
     nestedConnects: Vector[NestedConnect],
+    nestedSets: Vector[NestedSet],
     nestedDisconnects: Vector[NestedDisconnect],
     nestedUpdateManys: Vector[NestedUpdateNodes],
     nestedDeleteManys: Vector[NestedDeleteNodes]
@@ -156,9 +161,9 @@ case class NestedUpsertNode(
     with NestedDatabaseMutaction
 
 // TOP LEVEL - MANY
-case class ResetData(project: Project)                                              extends TopLevelDatabaseMutaction with FinalMutaction
-case class DeleteNodes(project: Project, model: Model, whereFilter: Option[Filter]) extends TopLevelDatabaseMutaction with FinalMutaction
-case class UpdateNodes(
+case class ResetData(project: Project)                                                      extends TopLevelDatabaseMutaction with FinalMutaction
+case class TopLevelDeleteNodes(project: Project, model: Model, whereFilter: Option[Filter]) extends TopLevelDatabaseMutaction with FinalMutaction
+case class TopLevelUpdateNodes(
     project: Project,
     model: Model,
     whereFilter: Option[Filter],
@@ -189,6 +194,9 @@ case class NestedUpdateNodes(
 case class NestedConnect(project: Project, relationField: RelationField, where: NodeSelector, topIsCreate: Boolean)
     extends NestedDatabaseMutaction
     with FinalMutaction
+
+case class NestedSet(project: Project, relationField: RelationField, wheres: Vector[NodeSelector]) extends NestedDatabaseMutaction with FinalMutaction
+
 case class NestedDisconnect(project: Project, relationField: RelationField, where: Option[NodeSelector]) extends NestedDatabaseMutaction with FinalMutaction
 
 // IMPORT

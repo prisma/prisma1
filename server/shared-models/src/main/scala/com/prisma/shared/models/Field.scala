@@ -1,7 +1,7 @@
 package com.prisma.shared.models
 
 import com.prisma.gc_values.GCValue
-import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, IdBehaviour, IdStrategy, UpdatedAtBehaviour}
+import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, IdBehaviour, UpdatedAtBehaviour}
 import com.prisma.shared.models.Manifestations._
 
 import scala.language.implicitConversions
@@ -17,6 +17,7 @@ object RelationSide extends Enumeration {
 object TypeIdentifier {
   sealed trait TypeIdentifier {
     def code: String
+    def userFriendlyTypeName: String = code
   }
 
   object Relation extends TypeIdentifier { def code = "Relation" }
@@ -30,7 +31,7 @@ object TypeIdentifier {
   object DateTime                   extends ScalarTypeIdentifier { def code = "DateTime" }
 
   sealed trait IdTypeIdentifier extends ScalarTypeIdentifier
-  object Cuid                   extends IdTypeIdentifier { def code = "GraphQLID" }
+  object Cuid                   extends IdTypeIdentifier { def code = "GraphQLID"; override def userFriendlyTypeName = "ID" }
   object UUID                   extends IdTypeIdentifier { def code = "UUID" }
   object Int                    extends IdTypeIdentifier { def code = "Int" }
 
@@ -123,6 +124,7 @@ sealed trait Field {
   def isRelation: Boolean
   def isScalar: Boolean
   def dbName: String
+  def behaviour: Option[FieldBehaviour] = template.behaviour
 
   lazy val isScalarList: Boolean      = isScalar && isList
   lazy val isScalarNonList: Boolean   = isScalar && !isList
@@ -131,6 +133,11 @@ sealed trait Field {
   lazy val isVisible: Boolean         = !isHidden
 
   val isMagicalBackRelation = name.startsWith(Field.magicalBackRelationPrefix)
+
+  def asScalarField_! : ScalarField     = this.asInstanceOf[ScalarField]
+  def asRelationField_! : RelationField = this.asInstanceOf[RelationField]
+
+  def userFriendlyTypeName: String
 }
 
 case class RelationField(
@@ -143,29 +150,30 @@ case class RelationField(
     template: FieldTemplate,
     model: Model
 ) extends Field {
-  override def typeIdentifier = TypeIdentifier.Relation
-  override def isRelation     = true
-  override def isScalar       = false
-  override def isUnique       = false
-  override def isReadonly     = false
-  override def enum           = None
-  override def defaultValue   = None
-  override def schema         = model.schema
+  override def typeIdentifier       = TypeIdentifier.Relation
+  override def isRelation           = true
+  override def isScalar             = false
+  override def isUnique             = false
+  override def isReadonly           = false
+  override def enum                 = None
+  override def defaultValue         = None
+  override def schema               = model.schema
+  override def userFriendlyTypeName = relatedModel_!.name
 
   lazy val dbName: String = relation.manifestation match {
-    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => m.referencingColumn
-    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && relationSide == RelationSide.A                            => this.name
-    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name                                                   => m.referencingColumn
-    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == relatedModel_!.name                                          => this.name
-    case _                                                                                                                     => this.name
+    case m: EmbeddedRelationLink if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => m.referencingColumn
+    case m: EmbeddedRelationLink if relation.isSelfRelation && relationSide == RelationSide.A                            => this.name
+    case m: EmbeddedRelationLink if m.inTableOfModelName == model.name                                                   => m.referencingColumn
+    case m: EmbeddedRelationLink if m.inTableOfModelName == relatedModel_!.name                                          => this.name
+    case _                                                                                                               => this.name
   }
 
   lazy val relationIsInlinedInParent = relation.manifestation match {
-    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => true
-    case Some(m: EmbeddedRelationLink) if relation.isSelfRelation && relationSide == RelationSide.A                            => false
-    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == model.name                                                   => true
-    case Some(m: EmbeddedRelationLink) if m.inTableOfModelName == relatedModel_!.name                                          => false
-    case _                                                                                                                     => false
+    case m: EmbeddedRelationLink if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => true
+    case m: EmbeddedRelationLink if relation.isSelfRelation && relationSide == RelationSide.A                            => false
+    case m: EmbeddedRelationLink if m.inTableOfModelName == model.name                                                   => true
+    case m: EmbeddedRelationLink if m.inTableOfModelName == relatedModel_!.name                                          => false
+    case _                                                                                                               => false
   }
 
   lazy val relation: Relation            = schema.getRelationByName_!(relationName)
@@ -202,7 +210,7 @@ case class RelationField(
 
   def isRelationWithNameAndSide(relationName: String, side: RelationSide.Value): Boolean = relation.name == relationName && this.relationSide == side
 
-  def asScalarField: ScalarField = {
+  def scalarCopy: ScalarField = {
     model.idField_!.copy(
       name = this.name,
       typeIdentifier = this.relatedModel_!.idField_!.typeIdentifier,
@@ -226,19 +234,19 @@ case class ScalarField(
     template: FieldTemplate,
     model: Model
 ) extends Field {
-  import template._
   import ReservedFields._
 
-  override def isRelation      = false
-  override def isScalar        = true
-  override def relationOpt     = None
-  override val dbName: String  = manifestation.map(_.dbName).getOrElse(name)
-  override def isUnique        = template.isUnique || behaviour.exists(_.isInstanceOf[IdBehaviour])
-  lazy val isWritable: Boolean = !isReadonly && !isId && !isCreatedAt && !isUpdatedAt
-
-  override def schema = model.schema
+  override def isRelation           = false
+  override def isScalar             = true
+  override def relationOpt          = None
+  override val dbName: String       = manifestation.map(_.dbName).getOrElse(name)
+  override def isUnique             = template.isUnique || behaviour.exists(_.isInstanceOf[IdBehaviour])
+  lazy val isWritable: Boolean      = !isReadonly && !isId && !isCreatedAt && !isUpdatedAt
+  override def schema               = model.schema
+  override def userFriendlyTypeName = typeIdentifier.userFriendlyTypeName
 
   val isId: Boolean        = if (model.isLegacy) name == idFieldName || name == embeddedIdFieldName else behaviour.exists(_.isInstanceOf[IdBehaviour])
   val isCreatedAt: Boolean = if (model.isLegacy) name == ReservedFields.createdAtFieldName else behaviour.contains(CreatedAtBehaviour)
   val isUpdatedAt: Boolean = if (model.isLegacy) name == ReservedFields.updatedAtFieldName else behaviour.contains(UpdatedAtBehaviour)
+
 }

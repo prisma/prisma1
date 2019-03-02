@@ -4,25 +4,25 @@ import com.prisma.deploy.connector.{CreateColumn, DeleteColumn, UpdateColumn}
 import com.prisma.deploy.connector.mongo.database.{MongoDeployDatabaseMutationBuilder, NoAction}
 
 object CreateColumnInterpreter extends MongoMutactionInterpreter[CreateColumn] {
-  override def execute(mutaction: CreateColumn) = mutaction.field.isUnique match {
+  override def execute(mutaction: CreateColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
     case true  => MongoDeployDatabaseMutationBuilder.createField(mutaction.model, mutaction.field.dbName)
     case false => NoAction.unit
   }
 
-  override def rollback(mutaction: CreateColumn) = mutaction.field.isUnique match {
+  override def rollback(mutaction: CreateColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
     case true  => MongoDeployDatabaseMutationBuilder.deleteField(mutaction.model, mutaction.field.dbName)
     case false => NoAction.unit
   }
 }
 
 object DeleteColumnInterpreter extends MongoMutactionInterpreter[DeleteColumn] {
-  override def execute(mutaction: DeleteColumn) = mutaction.field.isUnique match {
-    case true  => MongoDeployDatabaseMutationBuilder.deleteField(mutaction.model, mutaction.field.dbName)
+  override def execute(mutaction: DeleteColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
+    case true  => MongoDeployDatabaseMutationBuilder.deleteField(mutaction.oldModel, mutaction.field.dbName)
     case false => NoAction.unit
   }
 
-  override def rollback(mutaction: DeleteColumn) = mutaction.field.isUnique match {
-    case true  => MongoDeployDatabaseMutationBuilder.createField(mutaction.model, mutaction.field.dbName)
+  override def rollback(mutaction: DeleteColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
+    case true  => MongoDeployDatabaseMutationBuilder.createField(mutaction.oldModel, mutaction.field.dbName)
     case false => NoAction.unit
   }
 }

@@ -49,7 +49,6 @@ class ObjectTypeBuilder(
       name = model.name,
       nodeType = modelObjectTypes(model.name),
       connectionFields = {
-
         List(
           SangriaField(
             "aggregate",
@@ -68,7 +67,7 @@ class ObjectTypeBuilder(
         SangriaField(
           "count",
           IntType,
-          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountManyModelDeferred(model, ctx.value)
+          resolve = (ctx: Context[ApiUserContext, QueryArguments]) => CountNodesDeferred(model, ctx.value)
         )
       )
     )
@@ -173,77 +172,6 @@ class ObjectTypeBuilder(
       .map(field => Argument(field.name, SchemaBuilderUtils.mapToOptionalInputType(field)))
   }
 
-  def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
-    val filterArguments = new FilterArguments(model, isSubscriptionFilter)
-
-    val filters = input.map {
-      case (key, value) =>
-        val FieldFilterTuple(field, filter)                                    = filterArguments.lookup(key)
-        lazy val asRelationField                                               = field.get.asInstanceOf[RelationField]
-        lazy val asScalarField                                                 = field.get.asInstanceOf[ScalarField]
-        def isScalarNonListFilter(filterName: String): Boolean                 = field.isDefined && field.get.isScalar && !field.get.isList && filter.name == filterName
-        def isScalarListFilter(filterName: String): Boolean                    = field.isDefined && field.get.isScalar && field.get.isList && filter.name == filterName
-        def isRelationFilter(filterName: String): Boolean                      = field.isDefined && field.get.isRelation && filter.name == filterName
-        def isOneRelationFilter(filterName: String): Boolean                   = isRelationFilter(filterName) && !field.get.isList
-        def isManyRelationFilter(filterName: String): Boolean                  = isRelationFilter(filterName) && field.get.isList
-        def isFilterList(value: Seq[Any], filterName: String): Boolean         = value.nonEmpty && value.head.isInstanceOf[Map[_, _]] && filter.name == filterName
-        def getGCValue(value: Any): GCValue                                    = GCAnyConverter(field.get.typeIdentifier, isList = false).toGCValue(unwrapSome(value)).get
-        def scalarFilter(condition: ScalarCondition): ScalarFilter             = ScalarFilter(asScalarField, condition)
-        def scalarListFilter(condition: ScalarListCondition): ScalarListFilter = ScalarListFilter(asScalarField, condition)
-        def generateSubFilter(value: Map[_, _], model: Model): Filter          = generateFilterElement(value.asInstanceOf[Map[String, Any]], model, isSubscriptionFilter)
-        def generateSubFilters(values: Seq[Any]): Vector[Filter]               = values.map(x => generateSubFilter(x.asInstanceOf[Map[String, Any]], model)).toVector
-        def relationFilter(value: Map[_, _], condition: RelationCondition): RelationFilter =
-          RelationFilter(asRelationField, generateSubFilter(value, asRelationField.relatedModel_!), condition)
-
-        value match {
-          //-------------------------RECURSION-----------------------------
-          case value: Map[_, _] if isLogicFilter(key) || (isSubscriptionFilter && key == "node") => generateSubFilter(value, model)
-          case value: Map[_, _] if isManyRelationFilter(filterName = "_every")                   => relationFilter(value, EveryRelatedNode)
-          case value: Map[_, _] if isManyRelationFilter(filterName = "_some")                    => relationFilter(value, AtLeastOneRelatedNode)
-          case value: Map[_, _] if isManyRelationFilter(filterName = "_none")                    => relationFilter(value, NoRelatedNode)
-          case value: Map[_, _] if isRelationFilter(filterName = "")                             => relationFilter(value, ToOneRelatedNode)
-          case Seq() if filter.name == "AND"                                                     => TrueFilter
-          case value: Seq[Any] if isFilterList(value, filterName = "AND")                        => AndFilter(generateSubFilters(value))
-          case Seq() if filter.name == "OR"                                                      => FalseFilter
-          case value: Seq[Any] if isFilterList(value, filterName = "OR")                         => OrFilter(generateSubFilters(value))
-          case Seq() if filter.name == "NOT"                                                     => TrueFilter
-          case value: Seq[Any] if isFilterList(value, filterName = "NOT")                        => NotFilter(generateSubFilters(value))
-          case value: Seq[Any] if isFilterList(value, filterName = "node")                       => NodeFilter(generateSubFilters(value))
-          //--------------------------ANCHORS------------------------------
-          case values: Seq[Any] if isScalarListFilter(filterName = "_contains_every") => scalarListFilter(ListContainsEvery(values.map(getGCValue).toVector))
-          case values: Seq[Any] if isScalarListFilter(filterName = "_contains_some")  => scalarListFilter(ListContainsSome(values.map(getGCValue).toVector))
-          case value if isScalarListFilter(filterName = "_contains")                  => scalarListFilter(ListContains(getGCValue(value)))
-          case values: Seq[Any] if isScalarNonListFilter(filterName = "_in")          => scalarFilter(In(values.map(getGCValue).toVector))
-          case null if isScalarNonListFilter(filterName = "_in")                      => scalarFilter(In(Vector(NullGCValue)))
-          case values: Seq[Any] if isScalarNonListFilter(filterName = "_not_in")      => scalarFilter(NotIn(values.map(getGCValue).toVector))
-          case null if isScalarNonListFilter(filterName = "_not_in")                  => scalarFilter(NotIn(Vector(NullGCValue)))
-          case value if isScalarNonListFilter(filterName = "")                        => scalarFilter(Equals(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_not")                    => scalarFilter(NotEquals(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_contains")               => scalarFilter(Contains(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_not_contains")           => scalarFilter(NotContains(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_starts_with")            => scalarFilter(StartsWith(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_not_starts_with")        => scalarFilter(NotStartsWith(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_ends_with")              => scalarFilter(EndsWith(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_not_ends_with")          => scalarFilter(NotEndsWith(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_lt")                     => scalarFilter(LessThan(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_lte")                    => scalarFilter(LessThanOrEquals(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_gt")                     => scalarFilter(GreaterThan(getGCValue(value)))
-          case value if isScalarNonListFilter(filterName = "_gte")                    => scalarFilter(GreaterThanOrEquals(getGCValue(value)))
-          case _ if isOneRelationFilter(filterName = "")                              => OneRelationIsNullFilter(asRelationField)
-          case value: Boolean if field.isEmpty && filter.name == "boolean"            => if (value) TrueFilter else FalseFilter
-          case None if field.isDefined                                                => NodeSubscriptionFilter
-          case null if field.isDefined && field.get.isList && field.get.isRelation    => throw APIErrors.FilterCannotBeNullOnToManyField(field.get.name)
-          case x                                                                      => sys.error("Missing case " + x)
-        }
-    }
-    AndFilter(filters.toVector)
-  }
-
-  def unwrapSome(value: Any): Any = value match {
-    case Some(x) => x
-    case x       => x
-  }
-
   def extractQueryArgumentsFromContext(model: Model, ctx: Context[ApiUserContext, Unit]): QueryArguments = {
     extractQueryArgumentsFromContext(model, ctx, isSubscriptionFilter = false)
   }
@@ -262,7 +190,7 @@ class ObjectTypeBuilder(
       }
     }
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    val filterOpt                              = rawFilterOpt.map(generateFilterElement(_, model, isSubscriptionFilter))
+    val filterOpt                              = rawFilterOpt.map(FilterHelper.generateFilterElement(_, model, isSubscriptionFilter))
     val skipOpt                                = ctx.argOpt[Int]("skip")
     val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
     val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name).map(convertCursorToGcValue)
@@ -295,12 +223,12 @@ class ObjectTypeBuilder(
                 val existingFilter: Filter = arguments.filter.getOrElse(Filter.empty)
                 val newFilter              = AndFilter(Vector(ScalarFilter(f.relatedModel_!.idField_!, In(list.values)), existingFilter))
                 val newQueryArguments      = arguments.copy(filter = Some(newFilter))
-                DeferredValue(ManyModelDeferred(f.relatedModel_!, newQueryArguments, SelectedFields.all(f.relatedModel_!))).map(_.toNodes)
+                DeferredValue(GetNodesDeferred(f.relatedModel_!, newQueryArguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
 
               case _ => Vector.empty[PrismaNode]
             }
           case false =>
-            DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+            DeferredValue(GetNodesByParentDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
         }
 
       case f: RelationField if f.isList && f.relatedModel_!.isEmbedded =>
@@ -314,12 +242,13 @@ class ObjectTypeBuilder(
         f.relationIsInlinedInParent match {
           case true =>
             item.data.map.get(f.name) match {
-              case Some(id: IdGCValue) => ToOneDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id))
-              case _                   => None
+              case Some(id: IdGCValue) =>
+                GetNodeDeferred(f.relatedModel_!, NodeSelector.forId(f.relatedModel_!, id), ctx.getSelectedFields(f.relatedModel_!))
+              case _ => None
             }
 
           case false =>
-            FromOneDeferred(f, item.id, QueryArguments.empty, ctx.getSelectedFields(f.relatedModel_!))
+            GetNodeByParentDeferred(f, item.id, QueryArguments.empty, ctx.getSelectedFields(f.relatedModel_!))
         }
 
       case f: RelationField if !f.isList && f.relatedModel_!.isEmbedded =>
@@ -330,11 +259,11 @@ class ObjectTypeBuilder(
 
       case f: RelationField if f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        DeferredValue(ToManyDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
+        DeferredValue(GetNodesByParentDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))).map(_.toNodes)
 
       case f: RelationField if !f.isList =>
         val arguments = extractQueryArgumentsFromContext(f.relatedModel_!, ctx.asInstanceOf[Context[ApiUserContext, Unit]])
-        FromOneDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
+        GetNodeByParentDeferred(f, item.id, arguments, ctx.getSelectedFields(f.relatedModel_!))
     }
   }
 
@@ -373,7 +302,7 @@ object FilterHelper {
         def relationFilter(value: Map[_, _], condition: RelationCondition): RelationFilter =
           RelationFilter(asRelationField, generateSubFilter(value, asRelationField.relatedModel_!), condition)
 
-        value match {
+        unwrapSome(value) match {
           //-------------------------RECURSION-----------------------------
           case value: Map[_, _] if isLogicFilter(key) || (isSubscriptionFilter && key == "node") => generateSubFilter(value, model)
           case value: Map[_, _] if isManyRelationFilter(filterName = "_every")                   => relationFilter(value, EveryRelatedNode)
@@ -386,7 +315,7 @@ object FilterHelper {
           case value: Seq[Any] if isFilterList(value, filterName = "OR")                         => OrFilter(generateSubFilters(value))
           case Seq() if filter.name == "NOT"                                                     => TrueFilter
           case value: Seq[Any] if isFilterList(value, filterName = "NOT")                        => NotFilter(generateSubFilters(value))
-          case value: Seq[Any] if isFilterList(value, filterName = "node")                       => NodeFilter(generateSubFilters(value))
+
           //--------------------------ANCHORS------------------------------
           case values: Seq[Any] if isScalarListFilter(filterName = "_contains_every") => scalarListFilter(ListContainsEvery(values.map(getGCValue).toVector))
           case values: Seq[Any] if isScalarListFilter(filterName = "_contains_some")  => scalarListFilter(ListContainsSome(values.map(getGCValue).toVector))

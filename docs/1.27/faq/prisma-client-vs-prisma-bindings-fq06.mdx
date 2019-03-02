@@ -1,0 +1,49 @@
+import Info from 'components/Markdown/Info'
+
+export const meta = {
+  title: 'What is the difference between Prisma client and Prisma bindings?',
+  position: 4,
+  articleGroup: 'Client vs Bindings',
+}
+
+## FAQ
+
+The [Prisma client](/prisma-client) and [Prisma bindings]((https://github.com/prisma/prisma-binding)) both provide ways to interact with the Prisma server that sits on top of your database and therefore allow you to read and write data in your database. **It is generally recommended to use the Prisma client.** Prisma bindings can be used for advanced use cases when building GraphQL servers.
+
+## Prisma bindings
+
+Prisma bindings have one clear use case, they're used for implementing GraphQL resolvers based on [schema delegation](https://www.prisma.io/blog/graphql-schema-stitching-explained-schema-delegation-4c6caf468405). This means the [`info`](https://www.prisma.io/blog/graphql-server-basics-demystifying-the-info-argument-in-graphql-resolvers-6f26249f613a) object that's received by your GraphQL resolvers is passed down to the Prisma API using Prisma bindings. You can learn more about building GraphQL server with Prisma bindings [here](prb1).
+
+Prisma bindings are installed into your application using the `prisma-binding` package from NPM. Its API _mirrors_ the [Prisma GraphQL API](/prisma-graphql-api).
+
+## Prisma client
+
+The Prisma client is used as a replacement for traditional ORMs and enables you to read and write data in your database. A few of its core advantages compared to Prisma bindings are:
+
+- Auto-generated based on datamodel
+- Full type-safety
+- Simpler and more intuitive API (e.g. the [fluent API for relations](rsc2#relations))
+- Fleixble use cases
+- Available in various programming languages
+
+The Prisma client is auto-generated using the [`prisma generate`](xcv2) command of the Prisma CLI. The Prisma CLI reads the information from your `prisma.yml` and generates the according Prisma client.
+
+For example, consider this configuration of the `generate` property in your `prisma.yml`:
+
+```yml
+generate:
+  - generator: javascript-client
+    output: ./generated/js
+  - generator: typescript-client
+    output: ./generated/ts
+  - generator: go-client
+    output: ./generated/go
+```
+
+Running `prisma generate` with this configuration generates three versions of the Prisma client, one in JavaScript, one in TypeScript and one in Go. Note that you typically only generate the Prisma client in one language.
+
+<Info>
+
+If you've implemented GraphQL servers using Prisma bindings before, implementing resolvers for the relations in your GraphQL schema can be a bit difficult at first. See [this](https://www.prisma.io/tutorials/a-guide-to-common-resolver-patterns-ct08/#scenario:-implementing-relations-with-prisma-client) tutorial to learn more about implemeting relations with the Prisma client.
+
+</Info>

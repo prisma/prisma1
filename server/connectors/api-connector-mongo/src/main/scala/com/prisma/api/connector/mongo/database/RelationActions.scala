@@ -42,11 +42,8 @@ trait RelationActions extends FilterConditionBuilder {
     assert(!relationField.relatedField.isList)
     relationField.relationIsInlinedInParent match {
       case true =>
-        val filter      = ScalarFilter(relationField.model.dummyField(relationField), Equals(childId))
-        val mongoFilter = buildConditionForFilter(Some(filter))
-        val update      = unset(relationField.dbName)
-
-        database.getCollection(relationField.model.dbName).updateMany(mongoFilter, update).collect().toFuture()
+        val mongoFilter = buildConditionForFilter(Some(ScalarFilter(relationField.model.dummyField(relationField), Equals(childId))))
+        database.getCollection(relationField.model.dbName).updateMany(mongoFilter, unset(relationField.dbName)).collect().toFuture()
 
       case false =>
         Future.successful(())
@@ -92,7 +89,7 @@ trait RelationActions extends FilterConditionBuilder {
           val field         = parent.path.stringForField(relationField.dbName)
           val af            = ArrayFilter.arrayFilter(parent.path)
           val updateOptions = UpdateOptions().arrayFilters(af.toList.asJava)
-          val update: Bson  = if (relationField.isList) pull(field, GCToBson(parent.idValue)) else unset(field)
+          val update: Bson  = unset(field)
 
           database.getCollection(parent.where.model.dbName).updateOne(parent.where, update, updateOptions).collect().toFuture
 
@@ -100,8 +97,7 @@ trait RelationActions extends FilterConditionBuilder {
           relatedField.isList match {
             case false =>
               val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.dummyField(relatedField), Equals(parent.idValue))))
-              val update      = unset(relatedField.dbName)
-              database.getCollection(childModel.dbName).updateOne(mongoFilter, update).collect().toFuture
+              database.getCollection(childModel.dbName).updateOne(mongoFilter, unset(relatedField.dbName)).collect().toFuture
 
             case true =>
               val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.dummyField(relatedField), Contains(parent.idValue))))

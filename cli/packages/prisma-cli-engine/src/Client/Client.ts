@@ -1,110 +1,35 @@
 import {
-  AccountInfo,
   AuthenticateCustomerPayload,
-  FunctionInfo,
-  FunctionLog,
-  PAT,
   Project,
-  ProjectDefinition,
-  ProjectInfo,
-  RemoteProject,
   SimpleProjectInfo,
   CloudTokenRequestPayload,
 } from '../types/common'
 
 import { GraphQLClient } from 'graphql-request'
-import { omit, flatMap, flatten } from 'lodash'
+import { flatten } from 'lodash'
 import { Config } from '../Config'
-import { getFastestRegion } from './ping'
 import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import { User, Migration, DeployPayload, Workspace, Service } from './types'
-import boolean from '../Flags/boolean'
+import {
+  User,
+  Migration,
+  DeployPayload,
+  Workspace,
+  Service,
+  AuthenticationPayload,
+} from './types'
 import * as opn from 'opn'
-import { concatName } from '../../../prisma-yml/dist/PrismaDefinition'
+import { concatName } from 'prisma-yml/dist/PrismaDefinition'
+import { IntrospectionQuery } from 'graphql'
+import { hasTypeWithField } from '../utils/graphql-schema'
+import {
+  renderMigrationFragment,
+  renderStepFragment,
+} from './migrationFragment'
 
 const debug = require('debug')('client')
-
-const REMOTE_PROJECT_FRAGMENT = `
-  fragment RemoteProject on Project {
-    id
-    name
-    schema
-    alias
-    region
-    isEjected
-    projectDefinitionWithFileContent
-  }
-`
-
-const MIGRATION_FRAGMENT = `
-fragment MigrationFragment on Migration {
-  revision
-  steps {
-    type
-    __typename
-    ... on CreateEnum {
-      name
-      ce_values: values
-    }
-    ... on CreateField {
-      model
-      name
-      cf_typeName: typeName
-      cf_isRequired: isRequired
-      cf_isList: isList
-      cf_isUnique: unique
-      cf_relation: relation
-      cf_defaultValue: default
-      cf_enum: enum
-    }
-    ... on CreateModel {
-      name
-    }
-    ... on CreateRelation {
-      name
-      leftModel
-      rightModel
-    }
-    ... on DeleteEnum {
-      name
-    }
-    ... on DeleteField {
-      model
-      name
-    }
-    ... on DeleteModel {
-      name
-    }
-    ... on DeleteRelation {
-      name
-    }
-    ... on UpdateEnum {
-      name
-      newName
-      values
-    }
-    ... on UpdateField {
-      model
-      name
-      newName
-      typeName
-      isRequired
-      isList
-      isUnique: unique
-      relation
-      default
-      enum
-    }
-    ... on UpdateModel {
-      name
-      um_newName: newName
-    }
-  }
-}
-`
 
 export class Client {
   config: Config
@@ -129,7 +54,6 @@ export class Client {
     stageName?: string,
     workspaceSlug?: string | undefined | null,
   ) {
-    debug('Initializing cluster client')
     try {
       const token = await cluster.getToken(
         serviceName,
@@ -311,7 +235,6 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('executing query', serviceName, stageName, query)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -437,9 +360,9 @@ export class Client {
       }
     }
 
-    const { requestCloudToken: { secret } } = await this.cloudClient.request<
-      RequestCloudTokenPayload
-    >(mutation)
+    const {
+      requestCloudToken: { secret },
+    } = await this.cloudClient.request<RequestCloudTokenPayload>(mutation)
 
     return secret
   }
@@ -460,9 +383,9 @@ export class Client {
   }
 
   async ensureAuth(): Promise<void> {
-    const authenticated = await this.isAuthenticated()
+    const authenticationPayload = await this.isAuthenticated()
 
-    if (!authenticated) {
+    if (!authenticationPayload.isAuthenticated) {
       await this.login()
     }
   }
@@ -473,9 +396,13 @@ export class Client {
     if (key) {
       this.env.globalRC.cloudSessionKey = key
     }
-    const authenticated = await this.isAuthenticated()
+    let authenticationPayload = await this.isAuthenticated()
+    const authenticated = authenticationPayload.isAuthenticated
     if (authenticated) {
       this.out.action.stop()
+      this.out.log(
+        `Authenticated with ${authenticationPayload.account!.login[0].email}`,
+      )
       this.out.log(key ? 'Successfully signed in' : 'Already signed in')
       if (key) {
         this.env.saveGlobalRC()
@@ -488,27 +415,29 @@ export class Client {
 
     this.out.log(`Opening ${url} in the browser\n`)
 
-    try {
-      opn(url).catch(e => {
-        throw e
-      })
-    } catch (e) {
-      this.out.log(`Could not open url. Please open ${url} manually`)
-    }
+    opn(url).catch(e => {
+      console.error(
+        `Could not open the authentication link, maybe this is an environment without a browser. Please open this url in your browser to authenticate: ${url}`,
+      )
+    })
 
     while (!token) {
       const cloud = await this.cloudTokenRequest(secret)
       if (cloud.token) {
         token = cloud.token
       }
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 1000))
     }
     this.env.globalRC.cloudSessionKey = token
-
     this.out.action.stop()
 
+    authenticationPayload = await this.isAuthenticated()
+    await this.out.log(
+      `Authenticated with ${authenticationPayload.account!.login[0].email}`,
+    )
+
     this.env.saveGlobalRC()
-    await this.env.getClusters()
+    await this.env.fetchClusters()
   }
 
   logout(): void {
@@ -599,10 +528,11 @@ export class Client {
     return clusterToken
   }
 
-  async isAuthenticated(): Promise<boolean> {
+  async isAuthenticated(): Promise<AuthenticationPayload> {
     let authenticated = false
+    let account: User | null = null
     try {
-      const account = await this.getAccount()
+      account = await this.getAccount()
       if (account) {
         authenticated = Boolean(account)
       }
@@ -610,7 +540,10 @@ export class Client {
       //
     }
 
-    return authenticated
+    return {
+      isAuthenticated: authenticated,
+      account,
+    }
   }
 
   async getWorkspaces(): Promise<Workspace[]> {
@@ -633,7 +566,9 @@ export class Client {
       }
     }`
 
-    const { me: { memberships } } = await this.cloudClient.request<{
+    const {
+      me: { memberships },
+    } = await this.cloudClient.request<{
       me: {
         memberships: Array<{ workspace: Workspace }>
       }
@@ -673,7 +608,9 @@ export class Client {
       throw new Error(`Could not create service ${name}`)
     }
 
-    const { addProject: { project } } = result
+    const {
+      addProject: { project },
+    } = result
 
     // TODO set project definition, should be possibility in the addProject mutation
 
@@ -697,7 +634,7 @@ export class Client {
 
       await this.client.request(mutation, {
         input: {
-          name: concatName(cluster, name, workspaceSlug),
+          name: concatName(cluster as any, name, workspaceSlug),
           stage,
         },
       })
@@ -721,6 +658,14 @@ export class Client {
     }
   }
 
+  async hasStepsApi() {
+    const result: IntrospectionQuery = await this.client.request<
+      IntrospectionQuery
+    >(introspectionQuery)
+
+    return hasTypeWithField(result, 'DeployPayload', 'steps')
+  }
+
   async deploy(
     name: string,
     stage: string,
@@ -729,7 +674,8 @@ export class Client {
     subscriptions: FunctionInput[],
     secrets: string[] | null,
     force?: boolean,
-  ): Promise<any> {
+    noMigration?: boolean,
+  ): Promise<DeployPayload> {
     const oldMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
         deploy(input: {
@@ -750,8 +696,37 @@ export class Client {
           }
         }
       }
-      ${MIGRATION_FRAGMENT}
+      ${renderMigrationFragment(false)}
     `
+
+    const introspectionResult: IntrospectionQuery = await this.client.request<
+      IntrospectionQuery
+    >(introspectionQuery)
+    const hasStepsApi = hasTypeWithField(
+      introspectionResult,
+      'DeployPayload',
+      'steps',
+    )
+
+    const hasRelationManifestationApi = hasTypeWithField(
+      introspectionResult,
+      'CreateRelation',
+      'after',
+    )
+
+    const steps = hasStepsApi
+      ? `steps { ${renderStepFragment(hasRelationManifestationApi)} }`
+      : ''
+
+    if (
+      noMigration &&
+      !hasTypeWithField(introspectionResult, 'DeployInput', 'noMigration')
+    ) {
+      throw new Error(
+        `You provided the --no-migrate option, but the Prisma server doesn't support it yet. It's supported in Prisma 1.26 and above.`,
+      )
+    }
+    const noMigrationInput = noMigration ? 'noMigration: true' : ''
 
     const newMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!], $force: Boolean) {
@@ -763,6 +738,7 @@ export class Client {
           secrets: $secrets
           subscriptions: $subscriptions
           force: $force
+          ${noMigrationInput}
         }) {
           errors {
             type
@@ -777,9 +753,11 @@ export class Client {
           migration {
             ...MigrationFragment
           }
+          
+          ${steps}
         }
       }
-      ${MIGRATION_FRAGMENT}
+      ${renderMigrationFragment(hasRelationManifestationApi)}
     `
 
     try {
@@ -913,7 +891,6 @@ export class Client {
     } as any)
     while (!valid) {
       try {
-        debug('requesting', endpoint)
         await client.request(
           `
             {
@@ -949,7 +926,7 @@ export class Client {
             errors
           }
         }
-        `,
+      `,
 
       {
         stage,

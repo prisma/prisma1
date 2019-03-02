@@ -367,8 +367,8 @@ All a resolver needs to do is invoke the correct binding function and pass on th
 #### 2.3. Configure and start the GraphQL server
 
 ```js
-const GraphQLSever = require('graphql-yoga')
-const Prisma = require('prisma-binding')
+const { GraphQLServer } = require('graphql-yoga')
+const { Prisma } = require('prisma-binding')
 const resolvers = require('./resolvers')
 
 const server = new GraphQLServer({
@@ -381,7 +381,7 @@ const server = new GraphQLServer({
     })
   }
 })
-server.start(() => console.log(`Sever is running on http://localhost:4000`))
+server.start(() => console.log(`Server is running on http://localhost:4000`))
 ```
 
 In this configuration, we assume that the schema definition from **2.1.** and the resolver implementation from **2.2.** are available in files called `schema.graphql` and `resolvers.js`. They're both passed to the constructor of the `GraphQLServer`. 

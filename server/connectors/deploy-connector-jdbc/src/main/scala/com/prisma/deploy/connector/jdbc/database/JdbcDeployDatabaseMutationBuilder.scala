@@ -1,13 +1,13 @@
 package com.prisma.deploy.connector.jdbc.database
 
 import com.prisma.connector.shared.jdbc.SlickDatabase
+import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.JdbcBase
-import com.prisma.gc_values.GCValue
-import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
-import com.prisma.shared.models.{Model, Project, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
+import com.prisma.shared.models._
 import org.jooq.impl.DSL._
 import org.jooq.impl.SQLDataType
-import slick.dbio.{DBIO, DBIOAction, Effect, NoStream}
+import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
@@ -20,76 +20,89 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   /*
    * Connector-specific functions
    */
-  def truncateProjectTables(project: Project): DBIOAction[Any, NoStream, Effect.All]
-  def deleteProjectDatabase(projectId: String): DBIOAction[Any, NoStream, Effect.All]
-  def renameTable(projectId: String, currentName: String, newName: String): DBIOAction[Any, NoStream, Effect.All]
-  def addUniqueConstraint(projectId: String, tableName: String, columnName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
-  def removeUniqueConstraint(projectId: String, tableName: String, columnName: String): DBIOAction[Any, NoStream, Effect.All]
+  def createSchema(projectId: String): DBIO[_]
+  def truncateProjectTables(project: Project): DBIO[_]
+  def deleteProjectDatabase(projectId: String): DBIO[_]
+  //UpdateModelTable  -> for PostGres and MySQL this is just rename
+  //                  -> for SQLite this does everything???
 
-  def createModelTable(projectId: String, model: Model): DBIOAction[Any, NoStream, Effect.All]
-  def createScalarListTable(projectId: String, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
-  def createRelationTable(projectId: String, relationTableName: String, modelA: Model, modelB: Model): DBIOAction[Any, NoStream, Effect.All]
-  def createRelationColumn(projectId: String, model: Model, references: Model, column: String): DBIOAction[Any, NoStream, Effect.All]
-  def createColumn(
-      projectId: String,
-      tableName: String,
-      columnName: String,
-      isRequired: Boolean,
-      isUnique: Boolean,
-      isList: Boolean,
-      typeIdentifier: TypeIdentifier.ScalarTypeIdentifier,
-      defaultValue: Option[GCValue]
-  ): DBIOAction[Any, NoStream, Effect.All]
-
-  def updateScalarListType(projectId: String, modelName: String, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIOAction[Any, NoStream, Effect.All]
-  def updateColumn(
-      projectId: String,
-      tableName: String,
-      oldColumnName: String,
-      newColumnName: String,
-      newIsRequired: Boolean,
-      newIsList: Boolean,
-      newTypeIdentifier: ScalarTypeIdentifier,
-      defaultValue: Option[GCValue]
-  ): DBIOAction[Any, NoStream, Effect.All]
+  def renameTable(project: Project, currentName: String, newName: String): DBIO[_]
+  def addUniqueConstraint(project: Project, field: Field): DBIO[_]
+  def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_]
+  def createModelTable(project: Project, model: Model): DBIO[_]
+  def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def createRelationTable(project: Project, relation: Relation): DBIO[_]
+  def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_]
+  def createColumn(project: Project, field: ScalarField): DBIO[_]
+  def updateColumn(project: Project, field: ScalarField, oldTableName: String, oldColumnName: String, oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_]
+  def deleteRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_]
+  def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model] = None): DBIO[_]
+  def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier): DBIO[_]
 
   /*
    * Connector-agnostic functions
    */
-  def createClientDatabaseForProject(projectId: String) = {
-    val schema = changeDatabaseQueryToDBIO(sql.createSchema(projectId))()
+
+  def updateRelationTable(project: Project, previousRelation: Relation, nextRelation: Relation) = {
+    val modelAIdType         = nextRelation.modelA.idField_!.typeIdentifier
+    val modelBIdType         = nextRelation.modelB.idField_!.typeIdentifier
+    val addOrRemoveId        = addOrRemoveIdColumn(project, previousRelation, nextRelation)
+    val renameModelAColumn   = renameColumn(project, previousRelation.relationTableName, previousRelation.modelAColumn, nextRelation.modelAColumn, modelAIdType)
+    val renameModelBColumn   = renameColumn(project, previousRelation.relationTableName, previousRelation.modelBColumn, nextRelation.modelBColumn, modelBIdType)
+    val renameTableStatement = renameTable(project, previousRelation.relationTableName, nextRelation.relationTableName)
+
+    val all = Vector(addOrRemoveId, renameModelAColumn, renameModelBColumn, renameTableStatement)
+    DBIO.sequence(all)
+  }
+
+  def createDatabaseForProject(id: String) = {
+    val schema = createSchema(id)
     val table = changeDatabaseQueryToDBIO(
       sql
-        .createTable(name(projectId, "_RelayId"))
+        .createTableIfNotExists(name(id, "_RelayId"))
         .column("id", SQLDataType.VARCHAR(36).nullable(false))
         .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
-        .constraint(constraint("pk_RelayId").primaryKey(name(projectId, "_RelayId", "id"))))()
+        .constraint(constraint("pk_RelayId").primaryKey(name(id, "_RelayId", "id"))))()
 
-    DBIO.seq(schema, table)
+    DBIO.seq(schema, table).withPinnedSession
   }
 
-  def dropTable(projectId: String, tableName: String) = {
-    val query = sql.dropTable(name(projectId, tableName))
+  def dropTable(project: Project, tableName: String) = {
+    val query = sql.dropTable(name(project.dbName, tableName))
     changeDatabaseQueryToDBIO(query)()
   }
 
-  def dropScalarListTable(projectId: String, modelName: String, fieldName: String) = {
-    val query = sql.dropTable(name(projectId, s"${modelName}_$fieldName"))
-    changeDatabaseQueryToDBIO(query)()
+  def dropScalarListTable(project: Project, modelName: String, fieldName: String, dbSchema: DatabaseSchema) = {
+    val tableName = s"${modelName}_$fieldName"
+    dbSchema.table(tableName) match {
+      case Some(_) => dropTable(project, tableName)
+      case None    => DBIO.successful(())
+    }
   }
 
-  def renameScalarListTable(projectId: String, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
-    val query = sql.alterTable(name(projectId, s"${modelName}_$fieldName")).renameTo(name(projectId, s"${newModelName}_$newFieldName"))
-    changeDatabaseQueryToDBIO(query)()
+  def renameScalarListTable(project: Project, modelName: String, fieldName: String, newModelName: String, newFieldName: String) = {
+    renameTable(project, s"${modelName}_$fieldName", s"${newModelName}_$newFieldName")
   }
 
+  //There is a bug in jOOQ currently that does not render this correctly for all connectors, until it is fixed this is connector specific
+  //Scheduled to be fixed in 3.11.10 https://github.com/jOOQ/jOOQ/issues/8042
 //  def renameTable(projectId: String, currentName: String, newName: String) = {
+
+//  def renameTable(project: Project, currentName: String, newName: String) = {
 //    val query = sql.alterTable(table(name(projectId, currentName))).renameTo(name(projectId, newName))
 //    changeDatabaseQueryToDBIO(query)()
 //  }
 
-  def deleteColumn(projectId: String, tableName: String, columnName: String) = {
-    val query = sql.alterTable(name(projectId, tableName)).dropColumn(name(columnName))
-    changeDatabaseQueryToDBIO(query)()
+  def addOrRemoveIdColumn(project: Project, previousRelation: Relation, nextRelation: Relation): DBIO[_] = {
+    (previousRelation.idColumn, nextRelation.idColumn) match {
+      case (Some(idColumn), None) => deleteColumn(project, previousRelation.relationTableName, idColumn)
+      case (None, Some(idColumn)) =>
+        // We are not adding a primary key column because we don't need it actually.
+        // Because of the default this column will also work if the insert does not contain the id column.
+        val query = sql.alterTable(name(project.dbName, previousRelation.relationTableName)).addColumn(field(s""""#$idColumn" varchar(40) default null"""))
+
+        changeDatabaseQueryToDBIO(query)()
+      case _ => DBIO.successful(())
+    }
   }
 }

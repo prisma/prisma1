@@ -1,4 +1,3 @@
-
 import { Command } from '../Command'
 
 export default class Version extends Command {
@@ -6,7 +5,7 @@ export default class Version extends Command {
   static description = 'show CLI version'
   static aliases = ['-v', 'v', '--version']
 
-  async run () {
+  async run() {
     this.out.log(this.config.userAgent)
   }
 }

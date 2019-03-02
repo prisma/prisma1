@@ -9,12 +9,13 @@ object InferredTablesValidator {
   def checkRelationsAgainstInferredTables(schema: Schema, inferredTables: InferredTables): Seq[DeployError] = {
     schema.relations.flatMap { relation =>
       relation.manifestation match {
-        case None =>
-          val modelA = relation.modelA
-          val modelB = relation.modelB
-          Some(DeployError.global(s"Could not find the relation between the models ${modelA.name} and ${modelB.name} in the database"))
+        // FIXME: do we need that actually?
+//        case None =>
+//          val modelA = relation.modelA
+//          val modelB = relation.modelB
+//          Some(DeployError.global(s"Could not find the relation between the models ${modelA.name} and ${modelB.name} in the database"))
 
-        case Some(m: EmbeddedRelationLink) =>
+        case m: EmbeddedRelationLink =>
           val model = schema.getModelByName_!(m.inTableOfModelName)
           inferredTables.modelTables.find(_.name == model.dbName) match {
             case None =>
@@ -27,7 +28,7 @@ object InferredTablesValidator {
               }
           }
 
-        case Some(m: RelationTable) =>
+        case m: RelationTable =>
           inferredTables.relationTables.find(_.name == m.table) match {
             case None =>
               Some(DeployError.global(s"Could not find the relation table ${m.table}"))

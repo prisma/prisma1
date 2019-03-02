@@ -1,5 +1,6 @@
 package com.prisma.integration
 
+import com.prisma.IgnoreSQLite
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
@@ -27,7 +28,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
       """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field unique, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
   }
 
-  "Adding a unique constraint without violating data" should "work" in {
+  "Adding a unique constraint without violating data" should "work" taggedAs (IgnoreSQLite) in {
     val schema =
       """type Team {
         |  name: String! @unique
@@ -48,7 +49,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
   }
 
-  "Adding a unique constraint without violating data" should "work even with multiple nulls" in {
+  "Adding a unique constraint without violating data" should "work even with multiple nulls" taggedAs (IgnoreSQLite) in {
     val schema =
       """type Team {
         |  name: String! @unique
@@ -137,7 +138,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
   }
 
-  "Removing a unique constraint" should "work" in {
+  "Removing a unique constraint" should "work" taggedAs (IgnoreSQLite) in {
     val schema =
       """type Team {
         |  name: String! @unique

@@ -14,7 +14,8 @@ case class AddProjectMutation(
     args: AddProjectInput,
     projectPersistence: ProjectPersistence,
     migrationPersistence: MigrationPersistence,
-    deployConnector: DeployConnector
+    deployConnector: DeployConnector,
+    connectorCapabilities: ConnectorCapabilities
 )(
     implicit ec: ExecutionContext,
     dependencies: DeployDependencies
@@ -26,10 +27,16 @@ case class AddProjectMutation(
   override def execute: Future[MutationResult[AddProjectMutationPayload]] = {
     validate()
 
+    val schema = if (connectorCapabilities.isDataModelV2) {
+      Schema.empty.copy(version = Some(Schema.version.v2))
+    } else {
+      Schema.empty
+    }
+
     val newProject = Project(
       id = projectId,
       secrets = args.secrets,
-      schema = Schema()
+      schema = schema
     )
 
     val migration = Migration(
@@ -40,15 +47,23 @@ case class AddProjectMutation(
       status = MigrationStatus.Success,
       steps = Vector.empty,
       errors = Vector.empty,
-      schema = Schema(),
-      functions = Vector.empty
+      schema = schema,
+      functions = Vector.empty,
+      previousSchema = schema,
+      rawDataModel = ""
     )
 
     for {
       _ <- projectPersistence.create(newProject)
-      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
       _ <- migrationPersistence.create(migration)
-    } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, newProject))
+//      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+      loadedProject <- projectPersistence.load(newProject.id)
+      _ <- if (connectorCapabilities.isDataModelV2) {
+            deployConnector.createProjectDatabase(loadedProject.get.dbName)
+          } else {
+            if (deployConnector.isActive) deployConnector.createProjectDatabase(loadedProject.get.dbName) else Future.unit
+          }
+    } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, loadedProject.get))
   }
 
   private def validate(): Unit = {

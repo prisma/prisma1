@@ -31,13 +31,13 @@ type BWithoutIdWithA {
 type CWithIdWithA {
   id: ID! @id
   field: String!
-  x: [AWithC!]! @relation(link: INLINE)
+  x: [AWithC] @relation(link: INLINE)
 }
 
 type CWithoutIdWithA {
   removeThisId: ID! @id
   field: String!
-  x: [AWithC!]! @relation(link: INLINE)
+  x: [AWithC] @relation(link: INLINE)
 }
 
 type AWithIdWithB {
@@ -67,13 +67,13 @@ type BWithoutIdWithB {
 type CWithIdWithB {
   id: ID! @id
   field: String!
-  x: [BWithC!]! @relation(link: INLINE)
+  x: [BWithC] @relation(link: INLINE)
 }
 
 type CWithoutIdWithB {
   removeThisId: ID! @id
   field: String!
-  x: [BWithC!]! @relation(link: INLINE)
+  x: [BWithC] @relation(link: INLINE)
 }
 
 type AWithIdWithC {
@@ -103,13 +103,13 @@ type BWithoutIdWithC {
 type CWithIdWithC {
   id: ID! @id
   field: String!
-  x: [CWithC!]! @relation(link: INLINE)
+  x: [CWithC] @relation(link: INLINE)
 }
 
 type CWithoutIdWithC {
   removeThisId: ID! @id
   field: String!
-  x: [CWithC!]! @relation(link: INLINE)
+  x: [CWithC] @relation(link: INLINE)
 }
 
 type AWithA {
@@ -150,18 +150,18 @@ type BWithC {
 
 type CWithA {
   removeThisId: ID! @id
-  x: [AWithIdWithC!]!
-  y: [AWithoutIdWithC!]!
+  x: [AWithIdWithC]
+  y: [AWithoutIdWithC]
 }
 
 type CWithB {
   removeThisId: ID! @id
-  x: [BWithIdWithC!]!
-  y: [BWithoutIdWithC!]!
+  x: [BWithIdWithC]
+  y: [BWithoutIdWithC]
 }
 
 type CWithC {
   removeThisId: ID! @id
-  x: [CWithIdWithC!]!
-  y: [CWithoutIdWithC!]!
+  x: [CWithIdWithC]
+  y: [CWithoutIdWithC]
 }

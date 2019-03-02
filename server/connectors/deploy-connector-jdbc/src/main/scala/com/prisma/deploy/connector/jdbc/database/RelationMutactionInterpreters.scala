@@ -1,51 +1,79 @@
 package com.prisma.deploy.connector.jdbc.database
 
-import com.prisma.deploy.connector.{CreateInlineRelationForTests, CreateRelationTable, DeleteRelationTable, RenameRelationTable}
+import com.prisma.deploy.connector._
 
 case class CreateRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateRelationTable] {
-  override def execute(mutaction: CreateRelationTable) = {
-    val modelA = mutaction.relation.modelA
-    val modelB = mutaction.relation.modelB
-
-    builder.createRelationTable(
-      projectId = mutaction.projectId,
-      relationTableName = mutaction.relation.relationTableName,
-      modelA = modelA,
-      modelB = modelB
-    )
+  override def execute(mutaction: CreateRelationTable, schemaBeforeMigration: DatabaseSchema) = {
+    builder.createRelationTable(mutaction.project, mutaction.relation)
   }
 
-  override def rollback(mutaction: CreateRelationTable) = {
-    builder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.relationTableName)
+  override def rollback(mutaction: CreateRelationTable, schemaBeforeMigration: DatabaseSchema) = {
+    builder.dropTable(mutaction.project, tableName = mutaction.relation.relationTableName)
   }
 }
 
 case class DeleteRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteRelationTable] {
-  override def execute(mutaction: DeleteRelationTable) = {
-    builder.dropTable(projectId = mutaction.projectId, tableName = mutaction.relation.relationTableName)
+  override def execute(mutaction: DeleteRelationTable, schemaBeforeMigration: DatabaseSchema) = {
+    builder.dropTable(mutaction.project, tableName = mutaction.relation.relationTableName)
   }
 
-  override def rollback(mutaction: DeleteRelationTable) = {
-    val createRelation = CreateRelationTable(mutaction.projectId, mutaction.schema, mutaction.relation)
-    CreateRelationInterpreter(builder).execute(createRelation)
-  }
-}
-
-case class RenameRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[RenameRelationTable] {
-  override def execute(mutaction: RenameRelationTable) = {
-    builder.renameTable(projectId = mutaction.projectId, currentName = mutaction.previousName, newName = mutaction.nextName)
-  }
-
-  override def rollback(mutaction: RenameRelationTable) = {
-    builder.renameTable(projectId = mutaction.projectId, currentName = mutaction.nextName, newName = mutaction.previousName)
-
+  override def rollback(mutaction: DeleteRelationTable, schemaBeforeMigration: DatabaseSchema) = {
+    val createRelation = CreateRelationTable(mutaction.project, mutaction.relation)
+    CreateRelationInterpreter(builder).execute(createRelation, schemaBeforeMigration)
   }
 }
 
-case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateInlineRelationForTests] {
-  override def execute(mutaction: CreateInlineRelationForTests) = {
-    builder.createRelationColumn(mutaction.projectId, mutaction.model, mutaction.references, mutaction.column)
+case class UpdateRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[UpdateRelationTable] {
+  override def execute(mutaction: UpdateRelationTable, schemaBeforeMigration: DatabaseSchema) = {
+    builder.updateRelationTable(mutaction.project, previousRelation = mutaction.previousRelation, nextRelation = mutaction.nextRelation)
   }
 
-  override def rollback(mutaction: CreateInlineRelationForTests) = ???
+  override def rollback(mutaction: UpdateRelationTable, schemaBeforeMigration: DatabaseSchema) = {
+    builder.updateRelationTable(mutaction.project, previousRelation = mutaction.nextRelation, nextRelation = mutaction.previousRelation)
+  }
+}
+
+case class CreateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateInlineRelation] {
+  override def execute(mutaction: CreateInlineRelation, schemaBeforeMigration: DatabaseSchema) = {
+    builder.createRelationColumn(mutaction.project, mutaction.model, mutaction.references, mutaction.column)
+  }
+
+  override def rollback(mutaction: CreateInlineRelation, schemaBeforeMigration: DatabaseSchema) = {
+    DeleteInlineRelationInterpreter(builder).execute(
+      DeleteInlineRelation(mutaction.project, mutaction.relation, mutaction.model, mutaction.references, mutaction.column),
+      schemaBeforeMigration
+    )
+  }
+}
+
+case class DeleteInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[DeleteInlineRelation] {
+  override def execute(mutaction: DeleteInlineRelation, schemaBeforeMigration: DatabaseSchema) = {
+    builder.deleteRelationColumn(mutaction.project, mutaction.model, mutaction.references, mutaction.column)
+  }
+
+  override def rollback(mutaction: DeleteInlineRelation, schemaBeforeMigration: DatabaseSchema) = {
+    CreateInlineRelationInterpreter(builder).execute(
+      CreateInlineRelation(mutaction.project, mutaction.relation, mutaction.model, mutaction.references, mutaction.column),
+      schemaBeforeMigration
+    )
+  }
+}
+
+case class UpdateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[UpdateInlineRelation] {
+  override def execute(mutaction: UpdateInlineRelation, schemaBeforeMigration: DatabaseSchema) = {
+    builder.renameColumn(
+      project = mutaction.project,
+      tableName = mutaction.previous.relationTableName,
+      oldColumnName = mutaction.previous.inlineManifestation.get.referencingColumn,
+      newColumnName = mutaction.next.inlineManifestation.get.referencingColumn,
+      typeIdentifier = mutaction.next.schema.getModelByName_!(mutaction.next.inlineManifestation.get.inTableOfModelName).idField_!.typeIdentifier
+    )
+  }
+
+  override def rollback(mutaction: UpdateInlineRelation, schemaBeforeMigration: DatabaseSchema) = {
+    execute(
+      UpdateInlineRelation(project = mutaction.project, previous = mutaction.next, next = mutaction.previous),
+      schemaBeforeMigration
+    )
+  }
 }

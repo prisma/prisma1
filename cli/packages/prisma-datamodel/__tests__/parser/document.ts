@@ -1,6 +1,6 @@
 import DocumentParser from '../../src/datamodel/parser/documentParser'
 import { IGQLType } from '../../src/datamodel/model'
-import { expectField, expectType } from './helpers' 
+import { SdlExpect } from '../../src/test-helpers'
 
 describe(`Document parser specific tests`, () => {
   test('Mark an ID field correctly.', () => {
@@ -13,11 +13,10 @@ describe(`Document parser specific tests`, () => {
 
     const { types } = new DocumentParser().parseFromSchemaString(model)
 
-    const userType = expectType(types, 'User')
+    const userType = SdlExpect.type(types, 'User')
 
-    expectField(userType, 'id', true, false, 'ID', true, true, null)
+    SdlExpect.field(userType, 'id', true, false, 'ID', true, true, null)
   })
-
 
   test('Mark an read only fields correctly.', () => {
     const model = `
@@ -31,11 +30,29 @@ describe(`Document parser specific tests`, () => {
 
     const { types } = new DocumentParser().parseFromSchemaString(model)
 
-    const userType = expectType(types, 'User')
+    const userType = SdlExpect.type(types, 'User')
 
-    expectField(userType, 'id', true, false, 'ID', true, true, null)
-    expectField(userType, 'wasCreatedAt', true, false, 'Date', false, true, null)
-    expectField(userType, 'wasUpdatedAt', true, false, 'Date', false, true, null)
+    SdlExpect.field(userType, 'id', true, false, 'ID', true, true, null)
+    SdlExpect.field(
+      userType,
+      'wasCreatedAt',
+      true,
+      false,
+      'Date',
+      false,
+      true,
+      null,
+    )
+    SdlExpect.field(
+      userType,
+      'wasUpdatedAt',
+      true,
+      false,
+      'Date',
+      false,
+      true,
+      null,
+    )
   })
 
   test('Mark an embedded types correctly.', () => {
@@ -47,6 +64,6 @@ describe(`Document parser specific tests`, () => {
 
     const { types } = new DocumentParser().parseFromSchemaString(model)
 
-    const userType = expectType(types, 'User', false, true)
+    const userType = SdlExpect.type(types, 'User', false, true)
   })
 })

@@ -1,6 +1,5 @@
 package com.prisma.deploy.schema
 
-import akka.actor.ActorSystem
 import com.prisma.deploy.DeployDependencies
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
 import com.prisma.deploy.connector.DeployConnector
@@ -10,12 +9,15 @@ import com.prisma.deploy.migration.migrator.Migrator
 import com.prisma.deploy.schema.fields._
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.schema.types._
+import com.prisma.jwt.JwtGrant
 import com.prisma.shared.models.{Project, ProjectIdEncoder}
 import com.prisma.utils.future.FutureUtils.FutureOpt
 import sangria.relay.Mutation
 import sangria.schema._
 
+import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 case class SystemUserContext(authorizationHeader: Option[String])
 
@@ -24,15 +26,15 @@ trait SchemaBuilder {
 }
 
 object SchemaBuilder {
-  def apply()(implicit system: ActorSystem, dependencies: DeployDependencies): SchemaBuilder =
+  def apply()(implicit dependencies: DeployDependencies): SchemaBuilder =
     (userContext: SystemUserContext) => { SchemaBuilderImpl(userContext).build() }
 }
 
 case class SchemaBuilderImpl(
     userContext: SystemUserContext
-)(implicit system: ActorSystem, dependencies: DeployDependencies) {
+)(implicit dependencies: DeployDependencies) {
   import ManualMarshallerHelpers._
-  import system.dispatcher
+  import dependencies.executionContext
 
   val projectPersistence: ProjectPersistence         = dependencies.projectPersistence
   val migrationPersistence: MigrationPersistence     = dependencies.migrationPersistence
@@ -42,6 +44,8 @@ case class SchemaBuilderImpl(
   val migrationStepsInferrer: MigrationStepsInferrer = MigrationStepsInferrer()
   val schemaMapper: SchemaMapper                     = SchemaMapper
   val projectIdEncoder: ProjectIdEncoder             = dependencies.projectIdEncoder
+  val projectTokenExpiration                         = 1.day.toSeconds
+  val managementSecret                               = dependencies.managementSecret
 
   def build(): Schema[SystemUserContext, Unit] = {
     val Query = ObjectType[SystemUserContext, Unit](
@@ -97,7 +101,7 @@ case class SchemaBuilderImpl(
 
   val listProjectsField: Field[SystemUserContext, Unit] = Field(
     "listProjects",
-    ListType(ProjectType.Type(projectIdEncoder)),
+    ListType(ProjectType.Type(projectIdEncoder, migrationPersistence)),
     description = Some("Shows all projects the caller has access to."),
     resolve = (ctx) => {
       // Only accessible via */* token, like the one the Cloud API uses
@@ -124,7 +128,7 @@ case class SchemaBuilderImpl(
 
   val projectField: Field[SystemUserContext, Unit] = Field(
     "project",
-    ProjectType.Type(projectIdEncoder),
+    ProjectType.Type(projectIdEncoder, migrationPersistence),
     arguments = projectIdArguments,
     description = Some("Gets a project by name and stage."),
     resolve = (ctx) => {
@@ -164,7 +168,15 @@ case class SchemaBuilderImpl(
         projectOpt <- projectPersistence.load(projectId)
         project    = projectOpt.getOrElse(throw InvalidProjectId(projectIdEncoder.fromEncodedString(projectId)))
       } yield {
-        dependencies.apiAuth.createToken(project.secrets)
+        project.secrets.headOption match {
+          case Some(secret) =>
+            dependencies.auth.createToken(secret, Some(projectTokenExpiration)) match {
+              case Success(token) => token
+              case Failure(err)   => throw AuthFailure(err.getMessage)
+            }
+
+          case None => ""
+        }
       }
     }
   )
@@ -178,7 +190,8 @@ case class SchemaBuilderImpl(
       outputFields = sangria.schema.fields[SystemUserContext, DeployMutationPayload](
         Field("errors", ListType(DeployErrorType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.errors),
         Field("migration", OptionType(MigrationType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.migration),
-        Field("warnings", ListType(DeployWarningType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.warnings)
+        Field("warnings", ListType(DeployWarningType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.warnings),
+        Field("steps", ListType(MigrationStepType.Type), resolve = (ctx: Context[SystemUserContext, DeployMutationPayload]) => ctx.value.steps),
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
@@ -201,7 +214,8 @@ case class SchemaBuilderImpl(
                        clientDbQueries = deployConnector.clientDBQueries(project),
                        databaseIntrospectionInferrer = deployConnector.databaseIntrospectionInferrer(project.id),
                        fieldRequirements = deployConnector.fieldRequirements,
-                       isActive = deployConnector.isActive
+                       isActive = deployConnector.isActive,
+                       deployConnector = deployConnector
                      ).execute
           } yield result
       }
@@ -215,9 +229,11 @@ case class SchemaBuilderImpl(
       typeName = "AddProject",
       inputFields = AddProjectField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, AddProjectMutationPayload](
-        Field("project",
-              OptionType(ProjectType.Type(projectIdEncoder)),
-              resolve = (ctx: Context[SystemUserContext, AddProjectMutationPayload]) => ctx.value.project)
+        Field(
+          "project",
+          OptionType(ProjectType.Type(projectIdEncoder, migrationPersistence)),
+          resolve = (ctx: Context[SystemUserContext, AddProjectMutationPayload]) => ctx.value.project
+        )
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
@@ -227,7 +243,8 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             migrationPersistence = migrationPersistence,
-            deployConnector = dependencies.deployConnector
+            deployConnector = dependencies.deployConnector,
+            connectorCapabilities = dependencies.deployConnector.capabilities
           ).execute
       }
     )
@@ -240,9 +257,11 @@ case class SchemaBuilderImpl(
       typeName = "DeleteProject",
       inputFields = DeleteProjectField.inputFields,
       outputFields = sangria.schema.fields[SystemUserContext, DeleteProjectMutationPayload](
-        Field("project",
-              OptionType(ProjectType.Type(projectIdEncoder)),
-              resolve = (ctx: Context[SystemUserContext, DeleteProjectMutationPayload]) => ctx.value.project)
+        Field(
+          "project",
+          OptionType(ProjectType.Type(projectIdEncoder, migrationPersistence)),
+          resolve = (ctx: Context[SystemUserContext, DeleteProjectMutationPayload]) => ctx.value.project
+        )
       ),
       mutateAndGetPayload = (args, ctx) =>
         handleMutationResult {
@@ -251,7 +270,8 @@ case class SchemaBuilderImpl(
             args = args,
             projectPersistence = projectPersistence,
             invalidationPubSub = dependencies.invalidationPublisher,
-            deployConnector = dependencies.deployConnector
+            deployConnector = dependencies.deployConnector,
+            connectorCapabilities = dependencies.deployConnector.capabilities
           ).execute
       }
     )
@@ -285,7 +305,17 @@ case class SchemaBuilderImpl(
     }
   }
 
-  private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]) = {
-    dependencies.managementAuth.verify(name, stage, authHeader).get
+  private def verifyAuthOrThrow(name: String, stage: String, authHeader: Option[String]): Unit = {
+    Try {
+      val auth  = dependencies.managementAuth
+      val token = auth.extractToken(authHeader)
+      val grant = Some(JwtGrant(name, stage, "*"))
+
+      auth.verifyToken(token, Vector(managementSecret), expectedGrant = grant).get
+    } match {
+      case Success(_)                               =>
+      case Failure(com.prisma.jwt.AuthFailure(msg)) => throw AuthFailure(msg)
+      case Failure(e)                               => throw e
+    }
   }
 }

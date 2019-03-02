@@ -2,6 +2,7 @@ package com.prisma.api.connector.jdbc.database
 
 import com.prisma.gc_values.{IdGCValue, UuidGCValue}
 import com.prisma.shared.models.Model
+import com.prisma.shared.models.TypeIdentifier.Cuid
 
 trait RelayIdActions extends BuilderBase {
   import slickDatabase.profile.api._
@@ -14,7 +15,11 @@ trait RelayIdActions extends BuilderBase {
 
     insertToDBIO(query)(
       setParams = pp => {
-        pp.setGcValue(id)
+        id match {
+          case UuidGCValue(uid) => pp.setString(uid.toString)
+          case x                => pp.setGcValue(x)
+        }
+
         pp.setString(model.stableIdentifier)
       }
     )

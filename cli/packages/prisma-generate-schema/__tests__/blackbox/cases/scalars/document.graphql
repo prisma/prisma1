@@ -130,14 +130,6 @@ input LotsOfRequiredScalarsSubscriptionWhereInput {
   """
   AND: [LotsOfRequiredScalarsSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfRequiredScalarsSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfRequiredScalarsSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -179,14 +171,6 @@ input LotsOfRequiredScalarsWhereInput {
   Logical AND on all given filters.
   """
   AND: [LotsOfRequiredScalarsWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfRequiredScalarsWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfRequiredScalarsWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -479,14 +463,6 @@ input LotsOfRequiredScalarsWithIDSubscriptionWhereInput {
   """
   AND: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -528,14 +504,6 @@ input LotsOfRequiredScalarsWithIDWhereInput {
   Logical AND on all given filters.
   """
   AND: [LotsOfRequiredScalarsWithIDWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfRequiredScalarsWithIDWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfRequiredScalarsWithIDWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -840,14 +808,6 @@ input LotsOfScalarListsSubscriptionWhereInput {
   """
   AND: [LotsOfScalarListsSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfScalarListsSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfScalarListsSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -913,14 +873,6 @@ input LotsOfScalarListsWhereInput {
   Logical AND on all given filters.
   """
   AND: [LotsOfScalarListsWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfScalarListsWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfScalarListsWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1080,14 +1032,6 @@ input LotsOfScalarListsWithIDSubscriptionWhereInput {
   """
   AND: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1153,14 +1097,6 @@ input LotsOfScalarListsWithIDWhereInput {
   Logical AND on all given filters.
   """
   AND: [LotsOfScalarListsWithIDWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfScalarListsWithIDWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfScalarListsWithIDWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1308,14 +1244,6 @@ input LotsOfScalarsSubscriptionWhereInput {
   """
   AND: [LotsOfScalarsSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfScalarsSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfScalarsSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1357,14 +1285,6 @@ input LotsOfScalarsWhereInput {
   Logical AND on all given filters.
   """
   AND: [LotsOfScalarsWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfScalarsWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfScalarsWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1657,14 +1577,6 @@ input LotsOfScalarsWithIDSubscriptionWhereInput {
   """
   AND: [LotsOfScalarsWithIDSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfScalarsWithIDSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfScalarsWithIDSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1706,14 +1618,6 @@ input LotsOfScalarsWithIDWhereInput {
   Logical AND on all given filters.
   """
   AND: [LotsOfScalarsWithIDWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LotsOfScalarsWithIDWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LotsOfScalarsWithIDWhereInput!]
   id: ID
   """
   All values that are not equal to given value.

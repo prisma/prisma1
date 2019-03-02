@@ -1,0 +1,16 @@
+type User {
+  id: ID! @id
+  email: String! @unique
+  name: String
+  posts: [Post!]! @relation(link: INLINE)
+}
+
+type Post {
+  id: ID! @id
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  published: Boolean! @default(value: false)
+  title: String!
+  content: String
+  author: User!
+}

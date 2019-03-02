@@ -13,7 +13,7 @@ export const meta = {
 
 When working with Prisma, you're primarily dealing with **three concepts**:
 
-- **Datamodel**: Defines the models of your application and is foundation for the Prisma client API. (Optional: Can be used to perform migrations against your database.)
+- **Datamodel**: Defines the models of your application and is the foundation for the Prisma client API. (Optional: Can be used to perform migrations against your database.)
 - **Prisma server**: A standalone infrastructure component sitting on top of your database.
 - **Prisma client**: An auto-generated library that connects to the Prisma server and lets you read, write and stream data in your database. It is used for data access in your applications.
 
@@ -173,21 +173,21 @@ All the typings are auto-generated, so you don't need to deal with writing any b
 
 ### Realtime updates
 
-Adding a realtime event system to your database is an extremely complicated task. Prisma client lets you subsribe to any database event without having to deal with the underlying infrastructure. You can do so via generated methods on the `$subscribe` property.
+Adding a realtime event system to your database is an extremely complicated task. Prisma client lets you subscribe to any database event without having to deal with the underlying infrastructure. You can do so via generated methods on the `$subscribe` property.
 
 Here is an example that subscribes to events where new `User` records are created that have `gmail` in their email address:
 
 <Code languages={["JavsScript", "TypeScript", "Go"]}>
 
 ```js
-prisma.$subsribe.user({
+prisma.$subscribe.user({
   mutation_in: ["CREATED"],
   email_contains: "gmail"
 }).node()
 ```
 
 ```ts
-prisma.$subsribe.user({
+prisma.$subscribe.user({
   mutation_in: ["CREATED"],
   email_contains: "gmail"
 }).node()

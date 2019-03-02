@@ -1,7 +1,10 @@
 package com.prisma.deploy.connector.mysql
 
+import java.sql.Driver
+
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.jdbc.MySqlDatabaseInspector
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MySqlJdbcDeployDatabaseMutationBuilder, MySqlTypeMapper}
@@ -16,11 +19,11 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
+case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = MySqlFieldRequirement(isActive)
 
-  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config, driver)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases
   lazy val managementDatabase   = databases.primary
@@ -28,16 +31,17 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   lazy val mySqlTypeMapper      = MySqlTypeMapper()
   lazy val mutationBuilder      = MySqlJdbcDeployDatabaseMutationBuilder(managementDatabase, mySqlTypeMapper)
 
-  override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase)
+  override val projectPersistence: ProjectPersistence             = JdbcProjectPersistence(managementDatabase, config)
   override val migrationPersistence: MigrationPersistence         = JdbcMigrationPersistence(managementDatabase)
   override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
+  override def databaseInspector: DatabaseInspector               = MySqlDatabaseInspector(managementDatabase)
 
-  override def capabilities = ConnectorCapabilities.mysql
+  override def capabilities = if (isPrototype) ConnectorCapabilities.mysqlPrototype else ConnectorCapabilities.mysql
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createClientDatabaseForProject(projectId = id)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 
@@ -72,9 +76,7 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
 
   override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
 
-  override def shutdown() = {
-    databases.shutdown
-  }
+  override def shutdown() = databases.shutdown
 
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
 
@@ -99,12 +101,6 @@ case class MySqlDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionCo
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(
-      List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-        tableNames.map(name => sqlu"TRUNCATE TABLE `#$name`") ++
-        List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
-    )
+    DBIO.seq(List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++ tableNames.map(name => sqlu"TRUNCATE TABLE #$name") ++ List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*)
   }
-
-  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }

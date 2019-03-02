@@ -1,157 +1,103 @@
-<a href="https://www.prismagraphql.com"><img src="https://imgur.com/HUu10rH.png" width="248" /></a>
+# prisma-db-introspection
 
-[Website](https://www.prismagraphql.com) • [Docs](https://www.prismagraphql.com/docs/) • [Blog](https://blog.graph.cool/) • [Forum](https://www.graph.cool/forum) • [Slack](https://slack.graph.cool/) • [Twitter](https://twitter.com/graphcool)
+This module is capable of generating a prisma datamodel for a relational or document databases. Please refer to the `prisma-datamodel` doc for more information on the `ISDL` datamodel structure.
 
-[![CircleCI](https://circleci.com/gh/graphcool/prisma.svg?style=shield)](https://circleci.com/gh/graphcool/prisma) [![Slack Status](https://slack.graph.cool/badge.svg)](https://slack.graph.cool) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
+## Convenient Shorthand usage 
 
-**Prisma - turn your database into a GraphQL API**. Prisma lets you design your data model and have a production ready [GraphQL](https://www.howtographql.com/) API online in minutes.
+Iintrospection and rendering in one step):
 
-The Prisma GraphQL API provides powerful abstractions and building blocks to develop flexible, scalable GraphQL backends:
-
-1. **Type-safe API** that can be used from frontend and backend, including filters, aggregations and transactions.
-2. **Data modeling** with declarative SDL. Prisma migrates your underlying database automatically.
-3. **Realtime API** using GraphQL Subscriptions.
-4. **Advanced API composition** using GraphQL Bindings and schema stitching.
-5. **Works with all frontend frameworks** like React, Vue.js, Angular ([Quickstart Examples](https://www.prismagraphql.com/docs/quickstart/)).
-
-## Contents
-
-<!--
-<img align="right" width="400" src="https://imgur.com/EsopgE3.gif" />
--->
-
-- [Quickstart](#quickstart)
-- [Examples](#examples)
-- [Architecture](#architecture)
-- [Supported Databases](#supported-databases)
-- [GraphQL API](#graphql-api)
-- [Community](#community)
-- [Contributing](#contributing)
-
-## Quickstart
-
-[Watch this 4 min tutorial](https://www.youtube.com/watch?v=20zGexpEitc) or follow the steps below to get started with Prisma:
-
-1. **Install the CLI via NPM:**
-
-```console
-npm install -g prisma
+```typescript
+const renderedSdl = await connector.introspect(schema).renderToNormalizdDatamodelString()
 ```
 
-2. **Create a new service:**
+Creating a connector: 
 
-The following command creates all files you need for a new [service](https://www.prismagraphql.com/docs/reference/service-configuration/overview-ieshoo5ohm).
-
-```console
-prisma init
+```typescript
+const connector = Connectors.create(DatabaseType.mysql, client)
+const connector = Connectors.create(DatabaseType.postgres, client)
+const connector = Connectors.create(DatabaseType.mongo, client)
 ```
 
-3. **Define your data model:**
+The database client has to be connected and disconnected by the caller. Please refer to the connector implementation to see the required client library.
 
-Edit `datamodel.prisma` to define your data model using the [GraphQL SDL notation](<https://www.prismagraphql.com/docs/reference/service-configuration/data-modelling-(sdl)-eiroozae8u>).
+## Detailed Usage 
 
-```graphql
-type Tweet {
-  id: ID! @unique
-  createdAt: DateTime!
-  text: String!
-  owner: User!
-  location: Location!
-}
-
-type User {
-  id: ID! @unique
-  createdAt: DateTime!
-  updatedAt: DateTime!
-  handle: String! @unique
-  name: String
-  tweets: [Tweet!]!
-}
-
-type Location {
-  latitude: Float!
-  longitude: Float!
-}
+Introspect the database:
+```typescript
+const introspection = await connector.introspect(schema)
 ```
 
-5. **Deploy your service:**
+The introspection result caches all database related information and is database specific.
 
-To deploy your service simply run the following command and select one of the hosted development clusters or setup a local Docker-based development environment:
+Create an `ISDL` structure from the introspection:
 
-```console
-prisma deploy
+```typescript
+const sdl: ISDL = await introspection.getNormalizedDatamodel()
 ```
 
-6. **Connect to your GraphQL endpoint:**
+or with an existing reference model:
+```typescript
+const sdl: ISDL = await introspection.getNormalizedDatamodel(referenceModel)
+```
 
-Use the endpoint from the previous step in your frontend (or backend) applications to connect to your GraphQL API.
+it is also possible to get an unnormalized datamodel, basically a raw introspection result from the database. The unnormalized model is most likely not a valid datamodel.
 
-7. **Read more in the dedicated quickstarts for your favorite technology**
+```typescript
+const sdl: ISDL = await introspection.getDatamodel() // Don't use unless you know what you're doing
+```
 
-[![](https://imgur.com/T5nakij.png)](https://www.prismagraphql.com/docs/quickstart/)
+Rendering can be done using `prisma-datamodel`.
 
-## Examples
+With prototype features enabled (V1.1):
 
-- [demo-application](https://github.com/graphcool/graphql-server-example)
-- [auth](examples/auth)
-- [file-handling-s3](examples/file-handling-s3)
-- [github-auth](examples/github-auth)
-- [permissions](examples/permissions)
-- [resolver-forwarding](examples/resolver-forwarding)
-- [subscriptions](examples/subscriptions)
+```typescript
+const renderer = Renderers.create(introspection.databaseType, true)
+const renderedSdl = renderer.render(sdl)
+```
 
-## Architecture
+Without prototype features, simply use the shorthand:
+```typescript
+const renderer = Renderers.create(introspection.databaseType)
+const renderedSdl = renderer.render(sdl)
+```
+Which is equivalent to, given the database type for rendering and introspection are the same:
 
-Prisma is a secure API layer that sits in front of your database. Acting as a proxy, Prisma exposes a powerful GraphQL API and manages Rate-Limiting, Authentication, Logging and a host of other features. Because Prisma is a standalone process, it can be scaled independently from your application layer and provide scalable subscriptions infrastructure.
+```typescript
+const renderedSdl = introspection.renderToDatamodelString()
+```
 
-![](https://imgur.com/SdssPgT.png)
+Or with an existing reference model:
 
-## Supported Databases
+```typescript
+const renderedSdl = introspection.renderToNormalizedDatamodelString(referenceModel)
+```
 
-Prisma can be used for MySQL Databases out of the box. More database connectors will follow
+### Document Database Introspection Internals
 
-- [PostgreSQL Connector](https://github.com/graphcool/prisma/issues/1641)
-- [MS SQL Connector](https://github.com/graphcool/prisma/issues/1642)
-- [MongoDB Connector](https://github.com/graphcool/prisma/issues/1643)
-- [Oracle Connector](https://github.com/graphcool/prisma/issues/1644)
-- [ArangoDB Connector](https://github.com/graphcool/prisma/issues/1645)
-- [Neo4j Connector](https://github.com/graphcool/prisma/issues/1646)
-- [Druid Connector](https://github.com/graphcool/prisma/issues/1647)
-- [Dgraph Connector](https://github.com/graphcool/prisma/issues/1648)
-- [DynamoDB Connector](https://github.com/graphcool/prisma/issues/1655)
-- [Elastic Search Connector](https://github.com/graphcool/prisma/issues/1665)
-- [Cloud Firestore Connector](https://github.com/graphcool/prisma/issues/1660)
-- [CockroachDB Connector](https://github.com/graphcool/prisma/issues/1705)
-- [Cassandra Connector](https://github.com/graphcool/prisma/issues/1750)
-- [Redis Connector](https://github.com/graphcool/prisma/issues/1722)
-- [AWS Neptune Connector](https://github.com/graphcool/prisma/issues/1752)
-- [CosmosDB Connector](https://github.com/graphcool/prisma/issues/1663)
-- [Influx Connector](https://github.com/graphcool/prisma/issues/1857)
+Document database introspection works by randomly sampling objects from each collection, inferring a schema for each object and merging these object schemas together. This is done in the class `ModelSampler`.
 
-Join the discussion or contribute to influence which we'll work on next!
+For each field which might be a reference to another collection, we attempt to look up objects in other collections by their primary key. If we find enough referred objects, we mark the field as relation. This is done in `RelationResolver`, and can be a somewhat expensive operation.
 
-## GraphQL API
+This approach should work for all forms of document DBs. The `MongoConnector` class can be used as a reference implementation.
 
-The most important component in Prisma is the GraphQL API:
+### Relational Database Introspection Internals
 
-- Query, mutate & stream data via GraphQL CRUD API
-- Define and evolve your data model using GraphQL SDL
+Relational introspection works by querying the database schema using SQL, and then bringing everything together. 
 
-Try the online demo: [open GraphQL Playground](https://www.prismagraphql.com/features)
+Relations are resolved via their corresponding FK constraints, IDs are resolved via their corresponding PK constraints. 
 
-## Community
+Here, `MysqlConnector` , `MySqlIntrospectionResult` , `PostgresConnector` and `PostgresIntrospectionResult` can serve as a reference. 
 
-Prisma has a community of thousands of amazing developers and contributors.
-Welcome, please join us! 👋
+There is a common base class, `RelationalConnector` which attempts to unify certain queries using the `information_schema` table, which should be standardized. This approach had limited success in practice. 
 
-- [Forum](https://www.graph.cool/forum)
-- [Slack](https://slack.graph.cool/)
-- [Twitter](https://twitter.com/graphcool)
-- [Facebook](https://www.facebook.com/GraphcoolHQ)
-- [Meetup](https://www.meetup.com/graphql-berlin)
-- [Email](hello@graph.cool)
+### Normalization Pipeline
 
-## Contributing
+The exact normalization pipeline can be found in the `DefaultNormalizer` factory class. In the most complex case, introspecting a relational database with an existing base model, the following steps are applied:
 
-Contributions are **welcome and extremely helpful**
-Please refer [to the contribution guide](https://github.com/graphcool/prisma/blob/master/CONTRIBUTING.md) for more information.
+1. Copy Enum definitions from the existing base model.
+2. Remove all relation names which are not needed, unless they are explicitly given by the base model.
+3. Normalize all type and field names. If the type or field is present in the base model, copy the name and directives, as they might be known to prisma, but not to the database.
+4. Re-order all models according to the base model. For new types and enums, order alphabetically.
+5. Hide all reserved fields, like `updatedAt`, `createdAt`, `id`, unless they are present in the base model.
+6. Adjust the cardinality of relations which use a join table according to the base model, since we cannot guess them from the database.
+7. Remove all back relations for inine relations, except they are given in the datamodel. This is especially important for self-relations, which would otherwise generate duplicated fields.

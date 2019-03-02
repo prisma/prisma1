@@ -3,14 +3,14 @@ import Collapse from 'components/Markdown/Collapse'
 import Warning from 'components/Markdown/Warning'
 
 export const meta = {
-  title: 'Build an App with Prisma',
+  title: 'Build an App',
   gettingStartedTitle: 'GraphQL API',
   position: 3,
   gettingStartedOrder: 1,
   nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a GraphQL server.',
   technology: 'node',
   technologyOrder: 2,
-  articleGroup: 'Build an App with Prisma',
+  articleGroup: 'Build an App',
 }
 
 ## Goals
@@ -149,7 +149,7 @@ Add the following code snippet to the bottom of `index.js`:
 const server = new GraphQLServer({
   typeDefs: './schema.graphql',
   resolvers,
-  context: { 
+  context: {
     prisma
   },
 })
@@ -166,7 +166,7 @@ node index.js
 
 ## Explore the GraphQL API of the application layer in a Playground
 
-The GraphQL API of your application layer now exposes the six operations defined in `schema.graphql`. 
+The GraphQL API of your application layer now exposes the six operations defined in `schema.graphql`.
 
 To test these operations, navigate your browser to `http://localhost:4000` where a [GraphQL Playground](https://github.com/prisma/graphql-playground) is running.
 

@@ -60,7 +60,6 @@ object ConfigLoader {
     Try {
       val port           = sys.env.getOrElse("PORT", "4466").toInt
       val secret         = sys.env.getOrElse("PRISMA_MANAGEMENT_API_JWT_SECRET", "")
-      val legacySecret   = sys.env.getOrElse("CLUSTER_PUBLIC_KEY", "")
       val clusterAddress = sys.env.getOrElse("CLUSTER_ADDRESS", "")
       val rabbitUri      = sys.env.getOrElse("RABBITMQ_URI", "")
       val dbHost         = sys.env.getOrElse("SQL_CLIENT_HOST", sys.error("Env var SQL_CLIENT_HOST required but not found"))
@@ -77,7 +76,6 @@ object ConfigLoader {
       s"""
         |port: $port
         |managementApiSecret: $secret
-        |legacySecret: $legacySecret
         |clusterAddress: $clusterAddress
         |rabbitUri: $rabbitUri
         |enableManagementApi: $mgmtApiEnabled
@@ -97,7 +95,7 @@ object ConfigLoader {
   def convertToConfig(map: Map[String, Any]): PrismaConfig = {
     val port           = extractIntOpt("port", map)
     val secret         = extractStringOpt("managementApiSecret", map)
-    val legacySecret   = extractStringOpt("legacySecret", map)
+    val prototype      = extractBooleanOpt("prototype", map)
     val clusterAddress = extractStringOpt("clusterAddress", map)
     val rabbitUri      = extractStringOpt("rabbitUri", map)
     val mgmtApiEnabled = extractBooleanOpt("enableManagementApi", map)
@@ -114,10 +112,10 @@ object ConfigLoader {
     PrismaConfig(
       port = port,
       managementApiSecret = secret,
-      legacySecret = legacySecret,
       clusterAddress = clusterAddress,
       rabbitUri = rabbitUri,
       managmentApiEnabled = mgmtApiEnabled,
+      prototype = prototype,
       databases = databases
     )
   }
@@ -129,6 +127,7 @@ object ConfigLoader {
     if (dbConnector == "mongo") {
       val uri      = extractString("uri", db)
       val database = extractStringOpt("database", db)
+      extractStringOpt("schema", db).map(x => throw InvalidConfiguration("Mongo should not define a schema, but only a database."))
 
       databaseConfig(
         name = dbName,
@@ -164,6 +163,13 @@ object ConfigLoader {
       val database   = uri.path.toAbsolute.parts.headOption
       val ssl        = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
       val rawAccess  = extractBooleanOpt("rawAccess", db)
+
+      if (schema.isDefined && database.isDefined && dbConnector != "postgres")
+        throw InvalidConfiguration("Only Postgres connectors are allowed to configure schema and database. For others please use database.")
+
+      if (schema.isDefined && database.isEmpty)
+        throw InvalidConfiguration(
+          "Only Postgres connectors specify a schema. If they do they also need to specify a database. Other connectors only specify a database.")
 
       databaseConfig(
         name = dbName,
@@ -219,6 +225,13 @@ object ConfigLoader {
       case "mongo" => 0
       case _       => extractInt("port", db)
     }
+
+    if (schema.isDefined && database.isDefined && dbConnector != "postgres")
+      throw InvalidConfiguration("Only Postgres connectors are allowed to configure schema and database. For others please use database.")
+
+    if (schema.isDefined && database.isEmpty)
+      throw InvalidConfiguration(
+        "Only Postgres connectors specify a schema. If they do they also need to specify a database. Other connectors only specify a database.")
 
     databaseConfig(
       name = dbName,
@@ -344,12 +357,14 @@ object ConfigLoader {
 case class PrismaConfig(
     port: Option[Int],
     managementApiSecret: Option[String],
-    legacySecret: Option[String],
     clusterAddress: Option[String],
     rabbitUri: Option[String],
     managmentApiEnabled: Option[Boolean],
+    prototype: Option[Boolean],
     databases: Seq[DatabaseConfig]
-)
+) {
+  def isPrototype = prototype.getOrElse(false)
+}
 
 case class DatabaseConfig(
     name: String,

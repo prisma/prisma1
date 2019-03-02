@@ -6,15 +6,12 @@ import { ProjectDefinition, RunOptions } from './types/common'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
-// import { Auth } from './Auth'
 import { Environment, PrismaDefinitionClass } from 'prisma-yml'
 import packagejson = require('../package.json')
 import * as mock from './mock'
-import * as fs from 'fs-extra'
-import * as path from 'path'
 import { RC } from './types/rc'
-import { PrismaDefinition } from 'prisma-json-schema'
 import { initStatusChecker } from './StatusChecker'
+import { filterObject } from './util'
 const debug = require('debug')('command')
 
 const pjson = packagejson as any
@@ -106,7 +103,7 @@ export class Command {
     this.out = new Output(this.config)
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
-    this.env = new Environment(this.config.home, this.out)
+    this.env = new Environment(this.config.home, this.out, this.config.version)
     this.definition = new PrismaDefinitionClass(
       this.env,
       this.config.definitionPath,
@@ -123,15 +120,6 @@ export class Command {
   }
 
   async init(options?: RunOptions) {
-    // parse stuff here
-    const mockDefinition = options && options.mockDefinition
-    const mockRC = options && options.mockRC
-    // if (mockDefinition) {
-    //   this.definition.set(mockDefinition)
-    // }
-    // if (mockRC) {
-    //   this.env.localRC = mockRC
-    // }
     const parser = new Parser({
       flags: (this.constructor as any).flags || {},
       args: (this.constructor as any).args || [],
@@ -145,8 +133,7 @@ export class Command {
     this.flags = flags!
     this.argv = argv!
     this.args = args
-    const loadClusters = !['help'].includes((this.constructor as any).topic)
-    await this.env.load(loadClusters)
+    await this.env.load()
     initStatusChecker(this.config, this.env)
   }
 
@@ -156,5 +143,15 @@ export class Command {
 
   get stderr(): string {
     return this.out.stderr.output
+  }
+
+  getSanitizedFlags(): OutputFlags {
+    return filterObject(this.flags, (_, value) => {
+      if (value === undefined) {
+        return false
+      }
+
+      return true
+    })
   }
 }
