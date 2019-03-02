@@ -6,7 +6,7 @@ import {
   IEnum,
   ISequenceInfo,
 } from '../relationalConnector'
-import { Connection } from 'mysql2'
+import { Connection } from 'mysql'
 import { DatabaseType, camelCase } from 'prisma-datamodel'
 import { MysqlIntrospectionResult } from './mysqlIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
@@ -127,7 +127,7 @@ export class MysqlConnector extends RelationalConnector {
         AND table_schema = ?`
 
     return (await this.query(enumQuery, [schemaName])).map(row => {
-      const enumValues = row.enumValues as string
+      const enumValues = row.column_type as string
       // Strip 'enum(' from beginning and ')' from end.
       const strippedEnumValues = enumValues.substring(5, enumValues.length - 1)
 

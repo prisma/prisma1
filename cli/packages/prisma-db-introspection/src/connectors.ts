@@ -5,7 +5,7 @@ import { MongoConnector } from './databases/document/mongo/mongoConnector'
 import IDatabaseClient from './databases/IDatabaseClient'
 import { MongoClient } from 'mongodb'
 import { MysqlConnector } from './databases/relational/mysql/mysqlConnector'
-import { Connection } from 'mysql2'
+import { Connection } from 'mysql'
 import { Client } from 'pg'
 
 export default abstract class Connectors {

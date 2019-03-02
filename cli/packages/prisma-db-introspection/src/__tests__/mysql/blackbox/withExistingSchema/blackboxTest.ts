@@ -2,7 +2,7 @@ import * as path from 'path'
 import * as fs from 'fs'
 import { DefaultParser, DefaultRenderer, DatabaseType } from 'prisma-datamodel'
 
-import * as mysql from 'mysql2'
+import * as mysql from 'mysql'
 import { connectionDetails } from '../connectionDetails'
 import { MysqlConnector } from '../../../../databases/relational/mysql/mysqlConnector'
 import MysqlClient from '../../../../databases/relational/mysql/mysqlDatabaseClient'
@@ -80,7 +80,11 @@ export default async function blackBoxTest(name: string) {
 const testNames = fs.readdirSync(relativeTestCaseDir)
 
 for (const testName of testNames) {
-  test(`Introspects ${testName}/mysql correctly`, async () => {
-    await blackBoxTest(testName)
-  }, 20000)
+  test(
+    `Introspects ${testName}/mysql correctly`,
+    async () => {
+      await blackBoxTest(testName)
+    },
+    20000,
+  )
 }

@@ -1,6 +1,6 @@
 import { Client as PGClient } from 'pg'
 import { MongoClient } from 'mongodb'
-import { createConnection, Connection } from 'mysql2'
+import { createConnection, Connection } from 'mysql'
 
 import { DatabaseCredentials, EndpointDialog } from '../../utils/EndpointDialog'
 import { omit } from 'lodash'
