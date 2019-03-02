@@ -204,7 +204,9 @@ export class EndpointDialog {
   printDatabaseConfig(credentials: DatabaseCredentials) {
     let data: any = {
       connector: credentials.type,
-      host: credentials.host,
+      host: credentials.host
+        ? this.replaceLocalhost(credentials.host)
+        : undefined,
       database:
         credentials.database && credentials.database.length > 0
           ? credentials.database
@@ -215,7 +217,7 @@ export class EndpointDialog {
           : undefined,
       user: credentials.user,
       password: credentials.password,
-      uri: credentials.uri,
+      uri: credentials.uri ? this.replaceLocalhost(credentials.uri) : undefined,
     }
     if (credentials.type !== DatabaseType.mongo) {
       data = {
@@ -412,13 +414,6 @@ export class EndpointDialog {
         }
 
         /**
-         * Sanitize mongo host for docker usage
-         */
-        if (credentials.type === DatabaseType.mongo && credentials.uri) {
-          credentials.uri = this.replaceMongoHost(credentials.uri!)
-        }
-
-        /**
          * Add the database credentials to the docker compose file
          */
         dockerComposeYml += this.printDatabaseConfig(credentials)
@@ -524,8 +519,8 @@ export class EndpointDialog {
     })
   }
 
-  replaceMongoHost(connectionString: string) {
-    return connectionString.replace('localhost', 'host.docker.internal')
+  replaceLocalhost(host: string) {
+    return host.replace('localhost', 'host.docker.internal')
   }
 
   async getDatabase(
