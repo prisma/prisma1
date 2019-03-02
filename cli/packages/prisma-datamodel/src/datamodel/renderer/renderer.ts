@@ -58,12 +58,19 @@ export default abstract class Renderer {
     }
   }
 
+  protected getValidIndices(type: IGQLType) {
+    return type.indices.filter(
+      index => !index.fields.some(f => f.comments.some(c => c.isError)),
+    )
+  }
+
   // TODO: Cleanup index rendering.
   protected createIndexDirectives(
     type: IGQLType,
     typeDirectives: IDirectiveInfo[],
   ) {
-    if (type.indices.length > 0) {
+    const validIndices = this.getValidIndices(type)
+    if (validIndices.length > 0) {
       const indexDescriptions: string[] = []
       for (const index of type.indices) {
         indexDescriptions.push(this.createIndexDirective(index))
