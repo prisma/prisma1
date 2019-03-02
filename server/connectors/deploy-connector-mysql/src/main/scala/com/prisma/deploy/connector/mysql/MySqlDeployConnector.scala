@@ -38,13 +38,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
   override def databaseInspector: DatabaseInspector               = MySqlDatabaseInspector(managementDatabase)
 
-  override def capabilities = {
-    if (isPrototype) {
-      ConnectorCapabilities.mysqlPrototype
-    } else {
-      ConnectorCapabilities.mysql
-    }
-  }
+  override def capabilities = if (isPrototype) ConnectorCapabilities.mysqlPrototype else ConnectorCapabilities.mysql
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createDatabaseForProject(id = id)
@@ -82,9 +76,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
 
   override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
 
-  override def shutdown() = {
-    databases.shutdown
-  }
+  override def shutdown() = databases.shutdown
 
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
 
@@ -109,10 +101,6 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
   }
 
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
-    DBIO.seq(
-      List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++
-        tableNames.map(name => sqlu"TRUNCATE TABLE #$name") ++
-        List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*
-    )
+    DBIO.seq(List(sqlu"""SET FOREIGN_KEY_CHECKS=0""") ++ tableNames.map(name => sqlu"TRUNCATE TABLE #$name") ++ List(sqlu"""SET FOREIGN_KEY_CHECKS=1"""): _*)
   }
 }

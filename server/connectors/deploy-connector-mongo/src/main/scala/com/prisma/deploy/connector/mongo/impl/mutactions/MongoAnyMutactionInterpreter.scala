@@ -14,7 +14,7 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: UpdateScalarListTable => NoAction.unit
       case x: DeleteScalarListTable => NoAction.unit
       case x: CreateModelTable      => CreateModelInterpreter.execute(x)
-      case x: RenameTable           => RenameModelInterpreter.execute(x)
+      case x: UpdateModelTable      => UpdateModelInterpreter.execute(x)
       case x: DeleteModelTable      => DeleteModelInterpreter.execute(x)
       case x: CreateRelationTable   => CreateRelationInterpreter.execute(x)
       case x: UpdateRelationTable   => NoAction.unit
@@ -35,7 +35,7 @@ object MongoAnyMutactionInterpreter extends MongoMutactionInterpreter[DeployMuta
       case x: UpdateScalarListTable => NoAction.unit
       case x: DeleteScalarListTable => NoAction.unit
       case x: CreateModelTable      => CreateModelInterpreter.rollback(x)
-      case x: RenameTable           => RenameModelInterpreter.rollback(x)
+      case x: UpdateModelTable      => UpdateModelInterpreter.rollback(x)
       case x: DeleteModelTable      => DeleteModelInterpreter.rollback(x)
       case x: CreateRelationTable   => CreateRelationInterpreter.execute(x)
       case x: UpdateRelationTable   => NoAction.unit

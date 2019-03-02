@@ -1,19 +1,19 @@
 package com.prisma.connectors.utils
 
 import java.sql.Driver
-import com.prisma.connectors.utils.SupportedDrivers.DBFamiliy
+import com.prisma.connectors.utils.SupportedDrivers.DBFamily
 
 object SupportedDrivers extends Enumeration {
-  type DBFamiliy = Value
-  val MYSQL, POSTGRES, MONGO = Value
+  type DBFamily = Value
+  val MYSQL, POSTGRES, MONGO, SQLITE = Value
 
-  def apply(mapping: (DBFamiliy, Driver)*): SupportedDrivers = new SupportedDrivers(mapping.toMap)
+  def apply(mapping: (DBFamily, Driver)*): SupportedDrivers = new SupportedDrivers(mapping.toMap)
 }
 
-case class DBFamiliyNotSupported(familiy: DBFamiliy)
-    extends Exception(s"DB family ${familiy.toString.toLowerCase().capitalize} is not supported by this Prisma instance.")
+case class DBFamilyNotSupported(family: DBFamily)
+    extends Exception(s"DB family ${family.toString.toLowerCase().capitalize} is not supported by this Prisma instance.")
 
-case class SupportedDrivers(mapping: Map[DBFamiliy, Driver]) {
-  def apply(familiy: DBFamiliy): Driver       = mapping.getOrElse(familiy, throw DBFamiliyNotSupported(familiy))
-  def get(familiy: DBFamiliy): Option[Driver] = mapping.get(familiy)
+case class SupportedDrivers(mapping: Map[DBFamily, Driver]) {
+  def apply(family: DBFamily): Driver       = mapping.getOrElse(family, throw DBFamilyNotSupported(family))
+  def get(family: DBFamily): Option[Driver] = mapping.get(family)
 }

@@ -1,12 +1,14 @@
 package com.prisma.deploy.schema.mutations
 
+import com.prisma.IgnoreSQLite
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
-import com.prisma.shared.models.{MigrationId, MigrationStatus, ProjectId}
+import com.prisma.shared.models.ConnectorCapability.LegacyDataModelCapability
+import com.prisma.shared.models.{ConnectorCapability, MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
-  override def doNotRunForPrototypes: Boolean = true
+  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(LegacyDataModelCapability)
 
   val projectPersistence   = testDependencies.projectPersistence
   val migrationPersistence = testDependencies.migrationPersistence
@@ -111,7 +113,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
     migration.status shouldEqual MigrationStatus.Success
   }
 
-  "DeployMutation" should "succeed for regression #1436" in {
+  "DeployMutation" should "succeed for regression #1436" taggedAs (IgnoreSQLite) in {
     val (project, initialMigration) = setupProject("""
                                                      |type Post {
                                                      |  id: ID! @unique

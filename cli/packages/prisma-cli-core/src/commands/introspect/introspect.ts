@@ -174,7 +174,7 @@ ${chalk.bold(
     const introspection = await connector.introspect(databaseName)
     const sdl = existingDatamodel
       ? await introspection.getNormalizedDatamodel(existingDatamodel)
-      : await introspection.getDatamodel()
+      : await introspection.getNormalizedDatamodel()
 
     const renderer = DefaultRenderer.create(
       introspection.databaseType,

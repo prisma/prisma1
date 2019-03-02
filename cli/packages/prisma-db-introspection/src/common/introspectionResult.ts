@@ -10,6 +10,9 @@ export abstract class IntrospectionResult {
     this.databaseType = databaseType
   }
 
+  /**
+   * @deprecated This returns an unnormalized datamodel and might get removed in the near future.
+   */
   public abstract getDatamodel(): ISDL
 
   public renderToDatamodelString(): string {

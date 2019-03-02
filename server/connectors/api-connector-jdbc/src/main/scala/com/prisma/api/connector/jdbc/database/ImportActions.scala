@@ -59,7 +59,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             .toVector
 
         case e: Exception =>
-          Vector(e.getCause.toString)
+          Vector(s"Failure inserting ${model.dbName}. Cause: ${e.getCause.toString}")
       }
 
       val relayResult: Vector[String] = try {
@@ -89,7 +89,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             .toVector
 
         case e: Exception =>
-          Vector(e.getMessage)
+          Vector(s"Failure inserting RelayRow. Cause: ${e.getMessage}")
       }
 
       val res = nodeResult ++ relayResult
@@ -165,7 +165,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             .toVector
 
         case e: Exception =>
-          Vector(e.getMessage)
+          Vector(s"Failure inserting into relationtable ${relation.relationTableName}. Cause: ${e.getMessage}")
       }
 
       if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
@@ -250,7 +250,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           .toVector
 
       case e: Exception =>
-        Vector(e.getMessage)
+        Vector(s"Failure inserting into listTable ${field.model.dbName}_${field.dbName}: Cause:${e.getMessage}")
     }
 
     if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
