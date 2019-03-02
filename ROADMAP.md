@@ -26,8 +26,6 @@ The following lists represent a number of smaller-scope issues and improvements 
 - [Unstable tie breaking for cursor based pagination #3258](https://github.com/prisma/prisma/issues/3258) ✅
 - [Export import fails #3183](https://github.com/prisma/prisma/issues/3183)
 - [Introspect postgres: "Could not connect to database. Prisma Config doesn't have any database connection" #3136](https://github.com/prisma/prisma/issues/3136)
-- [SDL declare order with relation. #3698](https://github.com/prisma/prisma/issues/3698)
-- [Multiple pgRelation on connect mutation #3041](https://github.com/prisma/prisma/issues/3041)
 
 ### Specification phase
 
