@@ -23,7 +23,7 @@ Here is the structure of an HTTP POST request that carries a `createUser` mutati
 
 All examples on this page are based on a Prisma service with the following service configuration:
 
-**prisma.yml**
+**`prisma.yml`**
 
 ```yml
 datamodel: datamodel.prisma
@@ -203,13 +203,13 @@ client.request(query, variables)
 
 A GraphQL Playground is a GraphQL IDE that lets you send queries, mutations and subscriptions to GraphQL APIs.
 
-You can open a Playground for your Prisma API by navigating your terminal into the same directory where your service's prisma.yml is located and run the following command:
+You can open a Playground for your Prisma API by navigating your terminal into the same directory where your service's `prisma.yml` is located and run the following command:
 
 ```bash
 prisma playground
 ```
 
-If your prisma.yml contains a `secret`, the opening Playground will already be configured with a _service token_. You can verify this in the **HTTP HEADERS** pane in the bottom-left corner:
+If your `prisma.yml` contains a `secret`, the opening Playground will already be configured with a _service token_. You can verify this in the **HTTP HEADERS** pane in the bottom-left corner:
 
 ![](https://i.imgur.com/4Yvj4tD.png)
 

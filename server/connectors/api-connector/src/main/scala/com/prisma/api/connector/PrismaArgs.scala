@@ -27,8 +27,8 @@ case class PrismaArgs(raw: GCValue) {
       }
     }
 
-  def updateDateTimesIfNecessary(model: Model) =
-    if (isEmpty) {
+  def updateDateTimesIfNecessary(model: Model, listCausesUpdate: Boolean) =
+    if (isEmpty && !listCausesUpdate) {
       this
     } else {
       lazy val now = DateTimeGCValue(DateTime.now(DateTimeZone.UTC))

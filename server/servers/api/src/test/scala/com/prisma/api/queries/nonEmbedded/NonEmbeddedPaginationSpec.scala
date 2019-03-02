@@ -161,6 +161,52 @@ trait NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
     result2.pathAsJsArray("data.listsConnection.edges").toString should equal("""[{"node":{"name":"4"}},{"node":{"name":"5"}},{"node":{"name":"6"}}]""")
   }
 
+  "the cursor returned on the top level" should "work with default order" in {
+    val result1 = server.query(
+      """
+        |{
+        |  listsConnection(first: 3) {
+        |    pageInfo {
+        |      hasNextPage
+        |      hasPreviousPage
+        |      startCursor
+        |      endCursor
+        |    }
+        |    edges {
+        |      node {
+        |        name
+        |      }
+        |    }
+        |  }
+        |}
+      """,
+      project
+    )
+
+    val cursor = result1.pathAsString("data.listsConnection.pageInfo.endCursor")
+
+    val result2 = server.query(
+      s"""
+         |{
+         |  listsConnection(after: "$cursor", first: 3) {
+         |    pageInfo {
+         |      hasNextPage
+         |      hasPreviousPage
+         |      startCursor
+         |      endCursor
+         |    }
+         |    edges {
+         |      node {
+         |        name
+         |      }
+         |    }
+         |  }
+         |}
+      """,
+      project
+    )
+  }
+
   "the cursor returned on the sub level" should "work" in {
     val result1 = server.query(
       """

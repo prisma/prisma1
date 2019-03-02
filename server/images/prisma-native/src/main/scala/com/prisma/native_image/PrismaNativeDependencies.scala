@@ -107,5 +107,6 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
     initializeDeployDependencies()
     initializeApiDependencies()
     initializeSubscriptionDependencies()
+    telemetryActor
   }
 }

@@ -337,17 +337,17 @@ Note that no [subscription](qwe3) events are triggered for cascading deletes!
 
 ## Authentication
 
-A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your prisma.yml:
+A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your `prisma.yml`:
 
 ```yml
 secret: my-secret-42
 ```
 
-As the developer of a Prisma service, you can choose your own service secret. When a service gets deployed with a prisma.yml that contains the `secret` property, the Prisma API of that service will require authentication via a _service token_ (JWT):
+As the developer of a Prisma service, you can choose your own service secret. When a service gets deployed with a `prisma.yml` that contains the `secret` property, the Prisma API of that service will require authentication via a _service token_ (JWT):
 
 ![](https://i.imgur.com/cCmp8JI.png)
 
-The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your prisma.yml is located:
+The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your `prisma.yml` is located:
 
 ```bash
 $ prisma token

@@ -121,3 +121,7 @@ The `connectionLimit` property in `PRISMA_CONFIG` determines the number of datab
 The `connectionLimit` needs to be set to at least **2**. One connection is always reserved for the [Management API](foe1), all other connections are used for the Prisma service.
 
 </Warning>
+
+## Database schema
+
+Prisma currently maintains a table called `_RelayId`. This table is there for historic reasons and will be removed [soon](https://github.com/prisma/prisma/issues/4101).
