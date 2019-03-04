@@ -1,0 +1,14 @@
+[package]
+name = "database-inspector"
+version = "0.1.0"
+authors = ["Marcus Böhm <boehm@prisma.io>"]
+edition = "2018"
+
+[dependencies]
+prisma-query = { git = "https://github.com/prisma/prisma-query" }
+barrel = { git = "https://github.com/spackeookie/barrel", features = "sqlite3", optional = true }
+rusqlite = { version = 0.16, optional = true }
+
+[[read_table]]
+name = "read_table"
+required-features = [ "barrel", "rusqlite" ]
