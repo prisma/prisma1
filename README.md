@@ -12,6 +12,8 @@
 - **Realtime event systems for your database** to get notified about database events.
 - **Declarative data modeling & migrations (optional)** with simple SDL syntax.
 
+![](https://i.imgur.com/4fwMITw.png)
+
 Try a Prisma example online with CodeSandbox:
 
 [![Prisma Client Demo](https://svgshare.com/i/AVY.svg)](https://codesandbox.io/s/github/prisma-csb/prisma-client-demo-ts) [![GraphQL API](https://svgshare.com/i/AVX.svg)](https://codesandbox.io/s/github/prisma-csb/graphql-example-ts) [![REST API](https://svgshare.com/i/AY0.svg)](https://codesandbox.io/s/github/prisma-csb/rest-example-ts?initialpath=/feed)
