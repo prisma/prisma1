@@ -40,7 +40,7 @@ impl Fields {
     }
 
     pub fn scalar(&self) -> Vec<Arc<ScalarField>> {
-        self.scalar_weak().iter().map(|f|f.upgrade().unwrap()).collect()
+        self.scalar_weak().iter().map(|f| f.upgrade().unwrap()).collect()
     }
 
     fn scalar_weak(&self) -> &[Weak<ScalarField>] {
@@ -49,8 +49,8 @@ impl Fields {
             .as_slice()
     }
 
-    fn relation(&self) -> Vec<Arc<RelationField>> {
-        self.relation_weak().iter().map(|f|f.upgrade().unwrap()).collect()
+    pub fn relation(&self) -> Vec<Arc<RelationField>> {
+        self.relation_weak().iter().map(|f| f.upgrade().unwrap()).collect()
     }
 
     fn relation_weak(&self) -> &[Weak<RelationField>] {
@@ -121,10 +121,7 @@ impl Fields {
         acc
     }
 
-    fn relation_filter<'a>(
-        mut acc: Vec<Weak<RelationField>>,
-        field: &'a Field,
-    ) -> Vec<Weak<RelationField>> {
+    fn relation_filter<'a>(mut acc: Vec<Weak<RelationField>>, field: &'a Field) -> Vec<Weak<RelationField>> {
         if let Field::Relation(relation_field) = field {
             acc.push(Arc::downgrade(relation_field));
         };

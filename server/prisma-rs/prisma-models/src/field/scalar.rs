@@ -125,10 +125,7 @@ impl ScalarField {
     }
 
     pub fn db_name(&self) -> &str {
-        self.manifestation
-            .as_ref()
-            .map(|mf| mf.db_name.as_ref())
-            .unwrap_or_else(|| self.name.as_ref())
+        self.db_name_opt().unwrap_or_else(|| self.name.as_ref())
     }
 
     pub fn db_name_opt(&self) -> Option<&str> {
