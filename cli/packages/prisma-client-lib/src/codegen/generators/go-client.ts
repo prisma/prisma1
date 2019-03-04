@@ -49,7 +49,7 @@ export class GoGenerator extends Generator {
   printedTypes: { [key: string]: boolean } = {}
 
   scalarMapping = {
-    Int: 'int32',
+    Int: 'int',
     String: 'string',
     ID: 'string',
     Float: 'float64',
