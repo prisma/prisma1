@@ -1,6 +1,8 @@
 package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.schema.UpdatedRelationAmbiguous
+import com.prisma.shared.models.FieldBehaviour._
+import com.prisma.shared.models.Manifestations.ModelManifestation
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
@@ -18,6 +20,8 @@ object MigrationStepsInferrer {
 
 case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
   import com.prisma.util.Diff._
+
+  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
 
   /**
     * The following evaluation order considers all interdependencies:
@@ -47,8 +51,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       enumsToDelete ++
       enumsToUpdate ++
       fieldsToUpdate ++
-      modelsToUpdateFirstStep ++
-      modelsToUpdateSecondStep ++
+      modelsToUpdate ++
       relationsToUpdate ++
       enumsToCreate ++
       modelsToCreate ++
@@ -69,12 +72,9 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     <- previousSchema.getModelByName(previousModelName)
-      if nextModel.name != previousModel.name || nextModel.isEmbedded != previousModel.isEmbedded
-    } yield UpdateModel(name = previousModelName, newName = nextModel.name)
+      if nextModel.template != previousModel.template
+    } yield UpdateModel(name = previousModel.name, newName = nextModel.name)
   }
-
-  lazy val modelsToUpdateFirstStep: Vector[UpdateModel]  = modelsToUpdate.map(update => update.copy(newName = "__" + update.newName))
-  lazy val modelsToUpdateSecondStep: Vector[UpdateModel] = modelsToUpdate.map(update => update.copy(name = "__" + update.newName))
 
   /*
    * Check all previous models if they are present on on the new one, ignore renames (== updated models).
@@ -111,13 +111,34 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextField         <- nextModel.fields.toVector
       previousFieldName = renames.getPreviousFieldName(nextModel.name, nextField.name)
       previousField     <- previousModel.getFieldByName(previousFieldName)
-      if didSomethingChange(previousField.template, nextField.template)(_.name,
-                                                                        _.typeIdentifier,
-                                                                        _.isUnique,
-                                                                        _.isRequired,
-                                                                        _.isList,
-                                                                        _.manifestation,
-                                                                        _.behaviour)
+      didSomethingChangeInTheField = didSomethingChange(previousField.template, nextField.template)(
+        _.name,
+        _.typeIdentifier,
+        _.isUnique,
+        _.isRequired,
+        _.isList,
+        _.manifestation
+      )
+      didBehaviourChange = if (isMigrationFromV1ToV2) {
+        // this block just exists to ignore phantom changes that are only inferred during migration from v1 to v2
+        // TODO: remove this special casing once we remove the suppport for migrating from v1 to v2. Then we can just do the same things as with the checks above.
+        import ReservedFields._
+        () match {
+          case _ if previousField.name == createdAtFieldName && nextField.behaviour.contains(CreatedAtBehaviour) =>
+            false
+          case _ if previousField.name == updatedAtFieldName && nextField.behaviour.contains(UpdatedAtBehaviour) =>
+            false
+          case _ if previousField.name == idFieldName && nextField.behaviour.contains(IdBehaviour(IdStrategy.Auto)) =>
+            false
+          case _ if previousField.isScalarList && nextField.behaviour.contains(ScalarListBehaviour(ScalarListStrategy.Relation)) =>
+            false
+          case _ =>
+            previousField.behaviour != nextField.behaviour
+        }
+      } else {
+        previousField.behaviour != nextField.behaviour
+      }
+      if didSomethingChangeInTheField || didBehaviourChange
     } yield {
       UpdateField(
         model = previousModelName,
@@ -137,8 +158,8 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModelName = renames.getNextModelName(previousModel.name)
       nextFieldName = renames.getNextFieldName(previousModel.name, previousField.name)
       nextModel     <- nextSchema.getModelByName(nextModelName)
-      if nextSchema.getFieldByName(nextModelName, nextFieldName).isEmpty
-    } yield DeleteField(model = nextModel.name, name = previousField.name)
+      if nextModel.getFieldByName(nextFieldName).isEmpty
+    } yield DeleteField(model = previousModel.name, name = previousField.name)
   }
 
   lazy val relationsToCreate: Vector[CreateRelation] = {

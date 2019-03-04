@@ -29,7 +29,7 @@ object ProjectTable {
 case class JdbcProjectPersistence(slickDatabase: SlickDatabase, dbConfig: DatabaseConfig) extends JdbcBase with ProjectPersistence {
   import com.prisma.shared.models.ProjectJsonFormatter._
 
-  val projectManifestation: ProjectManifestation = ProjectManifestation(dbConfig.database, dbConfig.schema)
+  val projectManifestation: ProjectManifestation = ProjectManifestation(dbConfig.database, dbConfig.schema, dbConfig.connector)
   val pt                                         = ProjectTable
   val mt                                         = MigrationTable
 

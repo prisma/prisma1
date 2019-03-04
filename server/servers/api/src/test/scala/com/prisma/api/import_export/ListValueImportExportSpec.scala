@@ -60,7 +60,12 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase 
 
     val model = project.schema.getModelByName_!("Model0")
     val field = model.getFieldByName_!("stringList")
-    importer.executeImport(lists).await().toString should include(s"Failure inserting into listTable ${model.name}_${field.name} for the id 3 for value ")
+    val res   = importer.executeImport(lists).await().toString
+
+    ifConnectorIsNotSQLite(res should include(s"Failure inserting into listTable ${model.name}_${field.name} for the id 3 for value "))
+    ifConnectorIsSQLite(res should include(
+      s"Failure inserting into listTable ${model.name}_${field.name}: Cause:[SQLITE_CONSTRAINT_FOREIGNKEY]  A foreign key constraint failed (FOREIGN KEY constraint failed)"))
+
   }
 
   "Exporting nodes" should "work (with filesize limit set to 1000 for test) and preserve the order of items" in {

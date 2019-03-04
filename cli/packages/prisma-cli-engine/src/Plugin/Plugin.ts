@@ -4,8 +4,6 @@ import { Config } from '../Config'
 import { Topic } from '../Topic'
 import { PluginPath } from './PluginPath'
 
-const debug = require('debug')('plugin')
-
 export default class Plugin {
   pluginPath: PluginPath
   cachedPlugin: CachedPlugin
@@ -55,16 +53,17 @@ export default class Plugin {
     if (!id) {
       return
     }
-    const foundCommand = this.commands.find(c => c.id === id || (c.aliases || []).includes(id))
+    const foundCommand = this.commands.find(
+      c => c.id === id || (c.aliases || []).includes(id),
+    )
     if (!foundCommand) {
       return
     }
-    const {topic, command} = foundCommand
-    debug('requiring command')
+    const { topic, command } = foundCommand
     const p = await this.pluginPath.require()
-    debug('required command')
-    const Command = (p.commands || [])
-      .find(d => topic === d.topic && command === d.command)
+    const Command = (p.commands || []).find(
+      d => topic === d.topic && command === d.command,
+    )
     return Command
   }
 
@@ -74,12 +73,13 @@ export default class Plugin {
       return
     }
     const plugin = await this.pluginPath.require()
-    const foundTopic = (plugin.topics || [])
-      .find(t => [t.id].includes(id))
+    const foundTopic = (plugin.topics || []).find(t => [t.id].includes(id))
     if (!foundTopic) {
       return
     }
-    return typeof foundTopic === 'function' ? foundTopic : this.buildTopic(topic)
+    return typeof foundTopic === 'function'
+      ? foundTopic
+      : this.buildTopic(topic)
   }
 
   buildTopic(t: CachedTopic): any {

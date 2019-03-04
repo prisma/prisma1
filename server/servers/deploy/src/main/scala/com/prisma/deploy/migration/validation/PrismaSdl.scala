@@ -126,7 +126,7 @@ case class RelationalPrismaField(
   def hasOneToManyRelation: Boolean  = (isList && relatedField.forall(_.isOne)) || (isOne && relatedField.forall(_.isList))
   def hasOneToOneRelation: Boolean   = isOne && relatedField.exists(_.isOne)
   def isOne: Boolean                 = !isList
-  def oneRelationField               = if (isOne) Some(this) else relatedField
+  def oneRelationField               = if (isOne) Some(this) else relatedField.filter(_.isOne)
 }
 
 case class PrismaEnum(name: String, values: Vector[String])(sdl: PrismaSdl)

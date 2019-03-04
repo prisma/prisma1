@@ -12,7 +12,7 @@ type SelfReferencingBWithId {
 
 type SelfReferencingCWithId {
     id: ID! @id
-    a: [SelfReferencingBWithId!]! @relation(link: INLINE)
+    a: [SelfReferencingBWithId] @relation(link: INLINE)
     field: Int!
 }
 
@@ -32,7 +32,7 @@ type SelfReferencingB {
 
 type SelfReferencingC {
     removeThisId: ID! @id
-    a: [SelfReferencingC!]! @relation(link: INLINE)
+    a: [SelfReferencingC] @relation(link: INLINE)
     field: Int!
 }
 
@@ -40,8 +40,8 @@ type SelfReferencingC {
 
 #type MultiSelfReferencingCWithId {
 #    id: ID! @id
-#    a: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA", link: INLINE)
-#    b: [MultiSelfReferencingCWithId!]! @relation(name: "WithIdAToA", link: INLINE)
+#    a: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA", link: INLINE)
+#    b: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA", link: INLINE)
 #}
 
 #type MultiSelfReferencingBWithId {
@@ -59,8 +59,8 @@ type SelfReferencingC {
 
 #type MultiSelfReferencingC {
 #    removeThisId: ID! @id
-#    a: [MultiSelfReferencingC!]! @relation(name: "AToA", link: INLINE)
-#    b: [MultiSelfReferencingC!]! @relation(name: "AToA", link: INLINE)
+#    a: [MultiSelfReferencingC] @relation(name: "AToA", link: INLINE)
+#    b: [MultiSelfReferencingC] @relation(name: "AToA", link: INLINE)
 #}
 
 #type MultiSelfReferencingB {

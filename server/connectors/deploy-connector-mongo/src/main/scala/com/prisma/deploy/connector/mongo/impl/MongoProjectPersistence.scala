@@ -19,7 +19,7 @@ case class MongoProjectPersistence(
 
   import DbMapper._
 
-  val projectManifestation: ProjectManifestation = ProjectManifestation(dbConfig.database, dbConfig.schema)
+  val projectManifestation: ProjectManifestation = ProjectManifestation(dbConfig.database, dbConfig.schema, dbConfig.connector)
   val projects: MongoCollection[Document]        = internalDatabase.getCollection("Project")
 
   override def load(id: String): Future[Option[Project]] = {

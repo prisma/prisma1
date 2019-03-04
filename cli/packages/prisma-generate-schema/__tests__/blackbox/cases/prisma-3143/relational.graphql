@@ -250,6 +250,7 @@ input StorySubscriptionWhereInput {
 
 input StoryUpdateManyInput {
   connect: [StoryWhereUniqueInput!]
+  set: [StoryWhereUniqueInput!]
   disconnect: [StoryWhereUniqueInput!]
   delete: [StoryWhereUniqueInput!]
   deleteMany: [StoryScalarWhereInput!]

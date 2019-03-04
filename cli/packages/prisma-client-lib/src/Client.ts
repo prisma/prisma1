@@ -10,6 +10,7 @@ import {
   buildSchema,
   GraphQLEnumType,
 } from 'graphql'
+import { connectionNodeHasScalars } from './utils/connectionNodeHasScalars'
 import mapAsyncIterator from './utils/mapAsyncIterator'
 import { mapValues } from './utils/mapValues'
 import gql from 'graphql-tag'
@@ -192,6 +193,7 @@ export class Client {
 
     if (
       !selectionFromFragment &&
+      Boolean(pointer) &&
       Array.isArray(pointer) &&
       pointer.length > 0
     ) {
@@ -209,7 +211,7 @@ export class Client {
       }
     }
 
-    if (!selectionFromFragment && !Array.isArray(pointer)) {
+    if (Boolean(pointer) && !selectionFromFragment && !Array.isArray(pointer)) {
       if (
         Object.keys(pointer).length === 1 &&
         Object.keys(pointer)[0] === '__typename'
@@ -237,12 +239,12 @@ export class Client {
     let result
     try {
       result = await this.processInstructionsOnce(id)
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       if (typeof resolve === 'function') {
         return resolve(result)
       }
     } catch (e) {
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       if (typeof reject === 'function') {
         return reject(e)
       }
@@ -254,9 +256,14 @@ export class Client {
     try {
       return await this.processInstructionsOnce(id)
     } catch (e) {
-      this._currentInstructions[id] = []
+      this._releaseMemory(id)
       return reject(e)
     }
+  }
+
+  _releaseMemory(id) {
+    this._currentInstructions[id] = []
+    delete this._promises[id]
   }
 
   generateSelections(instructions) {
@@ -266,7 +273,6 @@ export class Client {
 
     const ast = instructions.reduceRight((acc, instruction, index) => {
       let args: any[] = []
-
       if (instruction.args && Object.keys(instruction.args).length > 0) {
         Object.entries(instruction.args).forEach(([name, value]) => {
           let variableName
@@ -368,7 +374,10 @@ export class Client {
         node.selectionSet.selections.push(acc)
       }
 
-      if (node.selectionSet.selections.length === 0) {
+      if (
+        node.selectionSet.selections.length === 0 &&
+        type instanceof GraphQLObjectType
+      ) {
         node.selectionSet.selections = [
           {
             kind: 'Field',
@@ -427,6 +436,13 @@ export class Client {
     }
 
     const type = this.getDeepType(field.type)
+
+    if (isRelayConnection) {
+      const relayConnectionHasScalars = connectionNodeHasScalars({ type })
+      if (this.isConnectionTypeName(fieldName) && !relayConnectionHasScalars) {
+        return node
+      }
+    }
 
     node.selectionSet.selections = Object.entries(type.getFields())
       .filter(([, subField]: any) => {
@@ -531,17 +547,23 @@ export class Client {
                       if (this._currentInstructions[id].length === 0) {
                         if (name === 'Mutation') {
                           if (fieldName.startsWith('create')) {
-                            realArgs = { data: realArgs }
+                            if (Boolean(realArgs)) {
+                              realArgs = { data: realArgs }
+                            }
                           }
                           if (fieldName.startsWith('delete')) {
-                            realArgs = { where: realArgs }
+                            if (Boolean(realArgs)) {
+                              realArgs = { where: realArgs }
+                            }
                           }
                         } else if (
                           name === 'Query' ||
                           name === 'Subscription'
                         ) {
                           if (field.args.length === 1) {
-                            realArgs = { where: realArgs }
+                            if (Boolean(realArgs)) {
+                              realArgs = { where: realArgs }
+                            }
                           }
                         }
                       }

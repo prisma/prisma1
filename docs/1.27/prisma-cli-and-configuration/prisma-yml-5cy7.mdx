@@ -1,0 +1,456 @@
+import Warning from 'components/Markdown/Warning'
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'prisma.yml',
+  position: 30,
+}
+
+## Overview
+
+prisma.yml is the _root configuration file_ for a  Prisma service. Every Prisma service is defined by exactly one prisma.yml. You can think of prisma.yml as a _template_ for one Prisma service.
+
+prisma.yml specifies a number of properties about the Prisma service, e.g.:
+
+- the service's _endpoint_ (includes _name_ and _stage_ of the service)
+- the _database type_ (relational or document database)
+- how and where the Prisma client should be generated
+- the _service secret_ used to authenticate requests made to the service's API
+- the location of the _data model_ file(s)
+- _hooks_ that specify shell commands to be executed at some point in the _deployment process_
+
+## Examples
+
+### Minimal example
+
+The most minimal version of a valid prisma.yml needs to contains at least two properties:
+
+- `datamodel`
+- `endpoint`
+
+To be able to specify an `endpoint`, you need to have access to a Prisma server. If you don't have access to a Prisma server, you can omit the `endpoint` from prisma.yml and run `prisma deploy` only with the `datamodel` property. In that case, a CLI wizard guides you through the process of creating a local Prisma server or lets you deploy to a [Demo server](jfr3) in Prisma Cloud. It then writes the `endpoint` into prisma.yml for you before the service gets deployed:
+
+```yml
+datamodel: datamodel.prisma
+```
+
+> In this example, the `databaseType` is inferred and defaults to `relational`.
+
+### Standard example
+
+The most commonly used properties in prisma.yml are:
+
+- `datamodel`
+- `endpoint`
+- `secret`
+- `hooks`
+- `generate`
+
+
+Here's what a standard prisma.yml with these properties might look like:
+
+```yml
+datamodel: datamodel.prisma
+endpoint: http://localhost:4466/myservice/dev
+secret: mysecret42
+
+generate:
+    - generator: javascript-client
+      output: ./generated/prisma
+
+hooks:
+  post-deploy:
+    - prisma generate
+```
+
+> In this example, the `databaseType` is inferred and defaults to `relational`.
+
+### Exhaustive example
+
+Here's an example where all properties of prisma.yml are being used:
+
+```yml
+# This service is based on the type definitions in the two files
+# databasetypes.prisma` and `database/enums.prisma`
+datamodel:
+  - database/types.prisma
+  - database/enums.prisma
+
+# The endpoint represents the HTTP endpoint for your Prisma API.
+# It encodes several pieces of information:
+# * Prisma server (`localhost:4466` in this example)
+# * Service name (`myservice` in this example)
+# * Stage (`dev` in this example)
+# NOTE: When service name and stage are set to `default`, they
+# can be omitted.
+# Meaning http://myserver.com/default/default can be written
+# as http://myserver.com.
+endpoint: http://localhost:4466/myservice/dev
+
+# The secret is used to create JSON web tokens (JWTs). These
+# tokens need to be attached in the `Authorization` header
+# of HTTP requests made against the Prisma endpoint.
+# WARNING: If the secret is not provided, the Prisma API can
+# be accessed without authentication!
+secret: mysecret123
+
+# Generate a Prisma client in JavaScript and store in
+# a folder called `generated/prisma-client`.
+# It also downloads the Prisma GraphQL schema and stores it
+# in `generated/prisma.graphql`.
+generate:
+    - generator: javascript-client
+      output: ./generated/prisma-client
+    - generator: graphql-schema
+      output: ./generated/
+
+# A "post-deployment" hook that regenerates
+# the Prisma client.
+hooks:
+  post-deploy:
+    - prisma generate
+
+# Executes a Node.js script to seed the database with
+# initial data.
+seed:
+  run: node data/seed.js
+```
+
+> In this example, the `databaseType` is inferred and defaults to `relational`.
+
+This `prisma.yml` expects the following file structure:
+
+```
+.
+├── prisma.yml
+└── database
+    ├── types.prisma
+    └── enums.prisma
+```
+
+
+## Using variables
+
+Variables allow you to dynamically replace configuration values in your `prisma.yml`. They are especially useful when providing _secrets_ for your service and when you have a multi-staging developer workflows.
+
+To use variables inside `prisma.yml`, you need to reference the values enclosed in `${}` brackets:
+
+```yml
+yamlKeyXYZ: ${variableSource}
+```
+
+A _variable source_ can be either of the following two options:
+
+- A _recursive self-reference_ to another value inside the same service (often used in combination with the `custom` property)
+- An _environment variable_
+
+> You can only use variables in property **values** - not in property keys. So you can't use variables to e.g. generate dynamic logical IDs in the custom resources section for example.
+
+### Recursive self-reference
+
+You can recursively reference other property values that live inside the same `prisma.yml` file.
+
+When using a recursive self-reference as a variable, the value that you put into the bracket is composed of:
+
+- the _prefix_ `self:`
+- (optional) the _path_ to the referenced property; if no path is specified, the value of the variable will be the entire YAML file.
+
+```yml
+datamodel: ${self:custom.datamodelPath}.prisma
+
+custom:
+  datamodelPath: myDatamodel
+```
+
+> This works for any property inside `prisma.yml`, not just `custom`.
+
+### Environment variable
+
+You can reference [environment variables](https://en.wikipedia.org/wiki/Environment_variable) inside the service definition file.
+
+When using an environment variable, the value that you put into the bracket is composed of:
+
+- the _prefix_ `env:`
+- the _name_ of the environment variable
+
+In the following example, an environment variable is referenced to determine the Prisma service secret:
+
+```yml
+secret: ${env:PRISMA_SECRET}
+```
+
+## Reference
+
+### Root properties
+
+The service definition file `prisma.yml` has the following root properties:
+
+- `datamodel` (required): Type definitions for database models, relations, enums and other types.
+- `endpoint`: HTTP endpoint for the Prisma API. Can be omitted to prompt CLI deployment wizard.
+- `secret`: Service secret for securing the API endpoint.
+- `generate`: The list of files (Prisma client and/or Prisma GraphQL schema) to be generated.
+- `databaseType`: Specifies whether the Prisma service uses a document ro relational database.
+- `hooks`: Define CLI commands to be executed before/after specific actions of the Prisma CLI.
+- `seed`: Points to a file containing mutations for data seeding.
+- `custom`: Used to provide variables which can be referenced elsewhere in `prisma.yml`.
+
+The exact structure of `prisma.yml` is defined with [JSON schema](http://json-schema.org/). You can find the corresponding schema definition [here](https://github.com/prisma/prisma-json-schema/blob/master/src/schema.json). The JSON schem definition also allows to elevate your tooling and let your code editors and IDEs help you with the right structure of `prisma.yml`.
+
+### datamodel (required)
+
+The `datamodel` points to one or more `.prisma`-files containing model definitions written in GraphQL SDL. If multiple files are provided, the CLI simply concatenates their contents at deployment time.
+
+#### Type
+
+The `datamodel` property expects a **string** or a **list of strings**.
+
+#### Examples
+
+The datamodel is defined in a file called `types.prisma`.
+
+```yml
+datamodel: types.prisma
+```
+
+The datamodel is defined in two files called `types.prisma` and `enums.prisma`. When the service gets deployed, the contents of both files will be concatenated by the CLI.
+
+```yml
+datamodel:
+  - types.prisma
+  - enums.prisma
+```
+
+### endpoint (optional)
+
+The HTTP endpoint for your Prisma API is composed of the following components:
+
+- **Prisma server**: The server that will host your Prisma service.
+- **Workspace** (only for [Demo servers](jfr3) in Prisma Cloud): The name of the Workspace you configured through Prisma Cloud.
+- **Service name**: A descriptive name for your Prisma servic e.
+- **Service stage**: The development stage of your cluster (e.g. `dev`, `staging`, `prod`).
+
+Note that the `endpoint` is actually required to deploy your Prisma service. However, if you don't specify it in `prisma.yml` before running `prisma deploy`, the CLI prompts you with a wizard to help you figure out a Prisma server as deployment target and subsequently writes the `endpoint` into `prisma.yml` for you.
+
+#### Type
+
+The `endpoint` property expects a **string**.
+
+#### Examples
+
+The following example endpoint encodes the following information:
+
+- **Prisma server**: `http://localhost:4466` means you're running a Prisma server locally on your machine (e.g. using Docker).
+- **Service name**: `default`
+- **Stage**: `default`
+
+> When service name and stage are both set to `default`, they can be omitted and will be inferred by Prisma. This means this example endpoint is equivalent to writing: `http://localhost:4466/`
+
+```yml
+endpoint: http://localhost:4466/default/default
+```
+
+The following example endpoint encodes the following information:
+
+- **Prisma server**: `https://eu1.prisma.sh` means you're using a Prisma Demo server as a deployment target for your Prisma service.
+- **Workspace**: `jane-doe` is the name of your Prisma Cloud workspace.
+- **Service name**: `myservice`
+- **Stage**: `dev`
+
+```yml
+endpoint: https://eu1.prisma.sh/jane-doe/myservice/dev
+```
+
+The following example endpoint encodes the following information:
+
+- **Prisma server**: `http://my-pr-Publi-1GXX8QUZU3T89-413349553.us-east-1.elb.amazonaws.com` means you're using a Prisma server hosted on AWS to deploy your Prisma service.
+- **Service name**: `cat-pictures`
+- **Stage**: `prod`
+
+```yml
+endpoint: http://my-pr-Publi-1GXX8QUZU3T89-413349553.us-east-1.elb.amazonaws.com/cat-pictures/prod
+```
+
+### secret (optional)
+
+The service secret is used to generate (or _sign_) authentication tokens ([JWT](https://jwt.io)). One of these authentication tokens needs to be attached to the HTTP requests made against the Prisma API exposes by the service (in the `Authorization` header field).
+
+A secret must follow these requirements:
+
+- must be [utf8](https://en.wikipedia.org/wiki/UTF-8) encoded
+- must not contain spaces
+- must be at most 256 characters long
+
+Note that it's possible to encode multiple secrets in this string, which allows for smooth secret rotations.
+
+<Warning>
+
+If the Prisma service is deployed without a `secret`, its API does not require authentication. This means everyone with access to the `endpoint` is able to send queries and mutations to the API and can therefore arbitrarily read and write to the database!
+
+</Warning>
+
+#### Type
+
+The `secret` property expects a **string** (not a list of strings). If you want to specify multiple secrets, you need to provide them as a comma-separated list (spaces are ignored), but still as a single string value.
+
+#### Examples
+
+Define one secret with value `moo4ahn3ahb4phein1eingaep`.
+
+```yml
+secret: moo4ahn3ahb4phein1eingaep
+```
+
+Define three secrets with values `myFirstSecret`, `SECRET_NUMBER_2` and `3rd-secret`. Note that the spaces before the second secret are ignored.
+
+```yml
+secret: myFirstSecret,    SECRET_NUMBER_2,3rd-secret
+```
+
+Use the value of the `MY_SECRET` environment variable as the secret(s).
+
+```yml
+secret: ${env:MY_SECRET}
+```
+
+### generate (optional)
+
+The `generate` property is used to specify how and where a Prisma client (or other files) should be generated.
+
+The following generators are built-into the Prisma CLI:
+
+- Prisma client in JavaScript: `javascript-client`
+- Prisma client in TypeScript: `typescript-client`
+- Prisma client in Flow: `flow-client`
+- Prisma client in Go: `go-client`
+- GraphQL schema of the Prisma API: `graphql-schema`
+
+#### Type
+
+The `generate` property expects a **list of objects**. There are two properties on these objects:
+
+- `generator`: One of the available generators from the list above.
+- `output`: Specifies where the generated files should be located.
+
+#### Examples
+
+```yml
+generate:
+    - generator: javascript-client
+      output: ./generated/prisma-client
+    - generator: graphql-schema
+      output: ./generated/prisma
+```
+
+### databaseType (optional)
+
+#### Type
+
+The `databaseType` property expects a **string**. The value of the string can either be `relational` or `document`. If the `databaseType` property is omitted, its value defaults to `relational`.
+
+#### Examples
+
+Use a document database.
+
+```yml
+databaseType: document
+```
+
+Use a document database.
+
+```yml
+databaseType: relational
+```
+
+### hooks (optional)
+
+The `hooks` property is used to define terminal commands which will be executed by the Prisma CLI before or after certain commands.
+
+The following hooks are currently available:
+
+- `post-deploy`: Will be invoked _after_ the `prisma deploy` command
+
+#### Type
+
+The `hooks` property expects an **object**. The properties of that object match the names of the currently available hooks.
+
+#### Examples
+
+Here is an example that performs two tasks after `prisma deploy` was executed:
+
+1. Print "Deployment finished"
+1. Invoke code generation with `prisma generate`
+
+```yml
+hooks:
+  post-deploy:
+    - echo "Deployment finished"
+    - prisma generate
+```
+
+### seed (optional)
+
+Database seeding is a standardised way to populate a service with test data.
+
+#### Type
+
+The `seed` property expects an **object**, with either one of two sub-properties:
+
+- `run`: Shell command that will be executed when seeding a service. This is meant for more complex seed setups that are not covered by `import`.
+- `import`: Instructions to import data when seeding a service. You can refer to a `.zip` file that contains a data set in [Normalized Data Format](jsw9#normalized-data-format) (NDF)
+
+Seeds are implicitly executed when deploying a service for the first time (unless explicitly disabled using the `--no-seed` flag on `prisma deploy`).
+
+#### Examples
+
+Refer to a `.zip` file with a data set in NDF:
+
+```yml
+seed:
+  import: database/backup.zip
+```
+
+Run a script when seeding:
+
+<Code languages={["JavaScript", "TypeScript", "Go"]}>
+
+```yml
+seed:
+  run: node ./data/seed.js
+```
+
+```yml
+seed:
+  run: ts-node ./data/seed.ts
+```
+
+```yml
+seed:
+  run: go run ./data/seed.go
+```
+
+</Code>
+
+
+### custom (optional)
+
+The `custom` property lets you specify any sorts of values you want to reuse elsewhere in your `prisma.yml`. It thus doesn't have a predefined structure. You can reference the values using variables with the [`self` variable source](#self-reference), e.g.: `${self:custom.myVariable}`.
+
+#### Type
+
+The `custom` property expects an **object**. There are no assumptions about the shape of the object.
+
+#### Examples
+
+Define two custom values and reuse them in the definition of the datamodel and Prisma client generators.
+
+```yml
+custom:
+  language: typescript
+  datamodel: myDatamodel
+
+datamodel: ${self:custom.datamodel}.prisma
+
+generate:
+  - generator: ${self:custom.language}-client
+    output: ./generated/prisma-client
+```

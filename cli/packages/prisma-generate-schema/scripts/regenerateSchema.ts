@@ -6,8 +6,6 @@ const testNames = fs.readdirSync(
   path.join(__dirname, '../__tests__/blackbox/cases'),
 )
 
-console.log({ testNames })
-
 async function deployModel(service, stage, datamodel) {
   await fetch(`http://localhost:4466/management`, {
     method: 'POST',

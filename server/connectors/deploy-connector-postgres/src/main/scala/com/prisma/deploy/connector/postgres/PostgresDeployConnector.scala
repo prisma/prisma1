@@ -4,7 +4,7 @@ import java.sql.Driver
 
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
-import com.prisma.deploy.connector.jdbc.DatabaseInspectorImpl
+import com.prisma.deploy.connector.jdbc.PostgresDatabaseInspector
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
@@ -51,6 +51,7 @@ case class PostgresDeployConnector(
   override lazy val cloudSecretPersistence: CloudSecretPersistence   = JdbcCloudSecretPersistence(managementDatabases.primary)
   override lazy val telemetryPersistence: TelemetryPersistence       = JdbcTelemetryPersistence(managementDatabases.primary)
   override lazy val deployMutactionExecutor: DeployMutactionExecutor = JdbcDeployMutactionExecutor(mutationBuilder)
+  override lazy val databaseInspector: DatabaseInspector             = PostgresDatabaseInspector(projectDatabases.primary)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createDatabaseForProject(id = id)
@@ -132,6 +133,4 @@ case class PostgresDeployConnector(
   private def dangerouslyTruncateTables(tableNames: Vector[String]): DBIOAction[Unit, NoStream, Effect] = {
     DBIO.seq(tableNames.map(name => sqlu"""TRUNCATE TABLE "#$name" cascade"""): _*)
   }
-
-  override def testFacilities() = DeployTestFacilites(DatabaseInspectorImpl(projectDatabases.primary))
 }

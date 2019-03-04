@@ -39,7 +39,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
     case "postgres" => PostgresConnectorTag
     case "sqlite"   => SQLiteConnectorTag
   }
-  private lazy val isPrototype: Boolean = connectorTag == MongoConnectorTag
+  private lazy val isPrototype: Boolean = prismaConfig.prototype.getOrElse(false) // connectorTag == MongoConnectorTag
 
   def capabilities: ConnectorCapabilities
   def runOnlyForConnectors: Set[ConnectorTag]           = ConnectorTag.values.toSet
@@ -97,23 +97,11 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
     }
   }
 
-  def ifConnectorIsNotMongo[T](assertion: => T): Unit = {
-    if (connectorTag != MongoConnectorTag) {
-      assertion
-    }
-  }
-
-  def ifConnectorIsActive[T](assertion: => T): Unit = {
-    if (connector.active && connectorTag != MongoConnectorTag) {
-      assertion
-    }
-  }
-
-  def ifConnectorIsPassive[T](assertion: => T): Unit = {
-    if (!connector.active) {
-      assertion
-    }
-  }
+  def ifConnectorIsNotSQLite[T](assertion: => T): Unit = if (connectorTag != SQLiteConnectorTag) assertion
+  def ifConnectorIsSQLite[T](assertion: => T): Unit    = if (connectorTag == SQLiteConnectorTag) assertion
+  def ifConnectorIsNotMongo[T](assertion: => T): Unit  = if (connectorTag != MongoConnectorTag) assertion
+  def ifConnectorIsActive[T](assertion: => T): Unit    = if (connector.active && connectorTag != MongoConnectorTag) assertion
+  def ifConnectorIsPassive[T](assertion: => T): Unit   = if (!connector.active) assertion
 
   private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig) = {
     val ignoreConnectorTypes = ignoreConnectorTags.filter(_.name.endsWith(connector.connector))

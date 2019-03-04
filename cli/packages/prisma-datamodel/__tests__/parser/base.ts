@@ -1,11 +1,14 @@
 import RelationalParser from '../../src/datamodel/parser/relationalParser'
 import DocumentParser from '../../src/datamodel/parser/documentParser'
 import { IGQLType } from '../../src/datamodel/model'
-import { SdlExpect } from '../../src/test-helpers' 
+import { SdlExpect } from '../../src/test-helpers'
 
-const parsersToTest = [{ name: 'relational', instance: new RelationalParser()}, { name: 'document', instance: new DocumentParser()}]
+const parsersToTest = [
+  { name: 'relational', instance: new RelationalParser() },
+  { name: 'document', instance: new DocumentParser() },
+]
 
-for(const parser of parsersToTest) {
+for (const parser of parsersToTest) {
   describe(`${parser.name} parser basic tests`, () => {
     test('Parse a type with scalars correctly.', () => {
       const model = `
@@ -24,7 +27,16 @@ for(const parser of parsersToTest) {
       SdlExpect.field(userType, 'requiredInt', true, false, 'Int')
       SdlExpect.field(userType, 'stringList', false, true, 'String')
       SdlExpect.field(userType, 'optionalDateTime', false, false, 'DateTime')
-      SdlExpect.field(userType, 'anotherInt', true, false, 'Int', false, false,  '10')
+      SdlExpect.field(
+        userType,
+        'anotherInt',
+        true,
+        false,
+        'Int',
+        false,
+        false,
+        '10',
+      )
     })
 
     test('Parse a type with an enum correctly.', () => {

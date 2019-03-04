@@ -1,0 +1,135 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector relation with inline relation column 1`] = `
+"type Bill @pgTable(name: \\"bill\\") {
+  id: Int! @unique
+  bill: String!
+  product_id: Product
+}
+
+type Product @pgTable(name: \\"product\\") {
+  id: Int! @unique
+  bill: [Bill]
+  description: String!
+}"
+`;
+
+exports[`Introspector relation with inline relation column 2`] = `
+"type Bill @db(name: \\"bill\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bill_id_seq\\", initialValue: 1, allocationSize: 1)
+  bill: String!
+  product_id: Product
+}
+
+type Product @db(name: \\"product\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"product_id_seq\\", initialValue: 1, allocationSize: 1)
+  bill: [Bill]
+  description: String!
+}"
+`;
+
+exports[`Introspector relation with inline relation column NOT NULL 1`] = `
+"type Bill @pgTable(name: \\"bill\\") {
+  id: Int! @unique
+  bill: String!
+  product_id: Product!
+}
+
+type Product @pgTable(name: \\"product\\") {
+  id: Int! @unique
+  bill: [Bill]
+  description: String!
+}"
+`;
+
+exports[`Introspector relation with inline relation column NOT NULL 2`] = `
+"type Bill @db(name: \\"bill\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bill_id_seq\\", initialValue: 1, allocationSize: 1)
+  bill: String!
+  product_id: Product!
+}
+
+type Product @db(name: \\"product\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"product_id_seq\\", initialValue: 1, allocationSize: 1)
+  bill: [Bill]
+  description: String!
+}"
+`;
+
+exports[`Introspector relation with relation table 1`] = `
+"type Bill @pgTable(name: \\"bill\\") {
+  id: Int! @unique
+  bill: String!
+  bill_product: [BillProduct]
+}
+
+type BillProduct @linkTable @pgTable(name: \\"bill_product\\") {
+  bill_id: Bill
+  product_id: Product
+}
+
+type Product @pgTable(name: \\"product\\") {
+  id: Int! @unique
+  bill_product: [BillProduct]
+  product: String!
+}"
+`;
+
+exports[`Introspector relation with relation table 2`] = `
+"type Bill @db(name: \\"bill\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bill_id_seq\\", initialValue: 1, allocationSize: 1)
+  bill: String!
+  bill_product: [BillProduct]
+}
+
+type BillProduct @db(name: \\"bill_product\\") @linkTable {
+  bill_id: Bill
+  product_id: Product
+}
+
+type Product @db(name: \\"product\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"product_id_seq\\", initialValue: 1, allocationSize: 1)
+  bill_product: [BillProduct]
+  product: String!
+}"
+`;
+
+exports[`Introspector relation with relation table with extra column 1`] = `
+"type Bill @pgTable(name: \\"bill\\") {
+  id: Int! @unique
+  bill: String!
+  bill_product: [BillProduct]
+}
+
+type BillProduct @pgTable(name: \\"bill_product\\") {
+  bill_id: Bill
+  product_id: Product
+  some_other_column: String!
+}
+
+type Product @pgTable(name: \\"product\\") {
+  id: Int! @unique
+  bill_product: [BillProduct]
+  product: String!
+}"
+`;
+
+exports[`Introspector relation with relation table with extra column 2`] = `
+"type Bill @db(name: \\"bill\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bill_id_seq\\", initialValue: 1, allocationSize: 1)
+  bill: String!
+  bill_product: [BillProduct]
+}
+
+type BillProduct @db(name: \\"bill_product\\") {
+  bill_id: Bill
+  product_id: Product
+  some_other_column: String!
+}
+
+type Product @db(name: \\"product\\") {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"product_id_seq\\", initialValue: 1, allocationSize: 1)
+  bill_product: [BillProduct]
+  product: String!
+}"
+`;

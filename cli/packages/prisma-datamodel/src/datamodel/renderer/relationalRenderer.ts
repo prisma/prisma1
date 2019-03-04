@@ -1,48 +1,17 @@
 import Renderer from './renderer'
-import { idFieldName, createdAtFieldName, updatedAtFieldName } from "../parser/relationalParser"
 import { ISDL, IGQLType, IDirectiveInfo, IGQLField } from '../model'
 import GQLAssert from '../../util/gqlAssert'
 /**
- * Renderer implementation for relational models. 
+ * Renderer implementation for relational models, model version 2
+ * https://www.notion.so/Migrate-current-datamodel-to-v2-485aad4b77814af2831411a8d5f5abc1
  */
-export default class RelationalRenderer extends Renderer {
-
-  // Special case for postgres. We never render id, createdAt, isCreatedAt directive.
-  protected shouldCreateIsIdFieldDirective(field: IGQLField) {
-    return false
-  }
-
-  protected shouldCreateCreatedAtFieldDirective(field: IGQLField) {
-    return false
-  }
-
-  protected shouldCreateUpdatedAtFieldDirective(field: IGQLField) {
-    return false
-  }
-
-  protected shouldCreateIsUniqueFieldDirective(field: IGQLField) {
-    return field.isUnique
-  }
-
+export default class RelationalRendererV2 extends Renderer {
+  // The default behavior already equals to v2 for all directives.
   protected renderType(type: IGQLType): string {
-    if(type.isEmbedded) {
+    if (type.isEmbedded) {
       GQLAssert.raise('Embedded types are not supported in relational models.')
     }
 
     return super.renderType(type)
-  }
-
-  protected renderField(field: IGQLField): string {
-    if(field.isId && field.name !== idFieldName) {
-      GQLAssert.raise(`ID field must be called "${idFieldName}" in relational models.`)
-    }
-    if(field.isCreatedAt && field.name !== createdAtFieldName) {
-      GQLAssert.raise(`CreatedAt field must be called "${createdAtFieldName}" in relational models.`)
-    }
-    if(field.isUpdatedAt && field.name !== updatedAtFieldName) {
-      GQLAssert.raise(`UpdatedAt field must be called "${updatedAtFieldName}" in relational models.`)
-    }
-
-    return super.renderField(field)
   }
 }

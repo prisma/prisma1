@@ -18,7 +18,7 @@ export class NotFound {
 
   allCommands(): string[] {
     return this.plugins.commands.reduce((commands, c) => {
-      return commands.concat([c.id] as any).concat(c.aliases || [] as any)
+      return commands.concat([c.id] as any).concat(c.aliases || ([] as any))
     }, [])
   }
 
@@ -55,8 +55,17 @@ export class NotFound {
       closest = this.closest(id)
     }
 
-    const perhaps = closest ? `Perhaps you meant ${this.out.color.yellow(closest.split(':').join(' '))}\n` : ''
-    this.out.error(`${this.out.color.yellow(idSplit.join(' '))} is not a ${this.config.bin} command.
-${perhaps}Run ${this.out.color.cmd(binHelp)} for a list of available commands.`, 127)
+    const perhaps = closest
+      ? `Perhaps you meant ${this.out.color.yellow(
+          closest.split(':').join(' '),
+        )}\n`
+      : ''
+    this.out.error(
+      `${this.out.color.yellow(idSplit.join(' '))} is not a ${
+        this.config.bin
+      } command.
+${perhaps}Run ${this.out.color.cmd(binHelp)} for a list of available commands.`,
+      127,
+    )
   }
 }

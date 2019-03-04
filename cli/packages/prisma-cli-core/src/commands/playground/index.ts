@@ -37,6 +37,10 @@ export default class Playground extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
     'server-only': flags.boolean({
       char: 's',
       description: 'Run only the server',
@@ -65,7 +69,7 @@ export default class Playground extends Command {
     await this.definition.load(this.flags, envFile)
 
     const stage = this.definition.stage!
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
 
     const localPlaygroundPath = `/Applications/GraphQL\ Playground.app/Contents/MacOS/GraphQL\ Playground`
 

@@ -1,0 +1,23 @@
+export const meta = {
+  title: "prisma import",
+  position: 210,
+}
+
+## `$ prisma import`
+
+Imports data into the database of your Prisma service. 
+
+The data needs to be formatted according to the [Normalized Data Format](jsw9#normalized-data-format). For more info, read the [Data Import & Export](jsw9) page.
+
+### Usage
+
+```sh
+prisma import [flags]
+```
+
+### Flags
+
+```
+-d, --data PATH            (required) Path to zip or directory with import data (NDF)
+-e, --env-file ENV-FILE    Path to .env file to inject env vars
+```

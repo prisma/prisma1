@@ -324,6 +324,7 @@ input AUpdateManyDataInput {
 input AUpdateManyInput {
   create: [ACreateInput!]
   connect: [AWhereUniqueInput!]
+  set: [AWhereUniqueInput!]
   disconnect: [AWhereUniqueInput!]
   delete: [AWhereUniqueInput!]
   update: [AUpdateWithWhereUniqueNestedInput!]

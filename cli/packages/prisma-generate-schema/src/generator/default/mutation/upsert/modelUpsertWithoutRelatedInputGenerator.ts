@@ -25,7 +25,12 @@ export default class ModelUpsertWithoutRelatedInputGenerator extends RelatedMode
 
     this.generateWhereUnique(model, args, fields)
 
-    if(!this.generators.modelUpdateWithoutRelatedDataInput.wouldBeEmpty(model, args)) {
+    if (
+      !this.generators.modelUpdateWithoutRelatedDataInput.wouldBeEmpty(
+        model,
+        args,
+      )
+    ) {
       fields.update = {
         type: new GraphQLNonNull(
           this.generators.modelUpdateWithoutRelatedDataInput.generate(
@@ -36,7 +41,9 @@ export default class ModelUpsertWithoutRelatedInputGenerator extends RelatedMode
       }
     }
 
-    if(!this.generators.modelCreateWithoutRelatedInput.wouldBeEmpty(model, args)) {
+    if (
+      !this.generators.modelCreateWithoutRelatedInput.wouldBeEmpty(model, args)
+    ) {
       fields.create = {
         type: new GraphQLNonNull(
           this.generators.modelCreateWithoutRelatedInput.generate(model, args),

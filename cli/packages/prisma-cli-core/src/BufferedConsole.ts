@@ -16,11 +16,9 @@ export default class BufferedConsole extends Console {
 
   constructor() {
     const buffer = []
-    super(
-      {
-        write: message => BufferedConsole.write(buffer, 'log', message),
-      } as any,
-    )
+    super({
+      write: message => BufferedConsole.write(buffer, 'log', message),
+    } as any)
     this._buffer = buffer
   }
 

@@ -1,6 +1,5 @@
 package com.prisma.subscriptions
 
-import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models._
@@ -100,16 +99,6 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
     )
   )
 
-  val nestedSSSFunctionForCreate = ServerSideSubscriptionFunction(
-    name = "Test Function Nested CREATED",
-    isActive = true,
-    query = nestedSubscriptionQueryFor("CREATED"),
-    delivery = WebhookDelivery(
-      url = webhookUrl,
-      headers = webhookHeaders
-    )
-  )
-
   val sssFunctionForUpdate = ServerSideSubscriptionFunction(
     name = "Test Function UPDATED",
     isActive = true,
@@ -130,8 +119,7 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
     )
   )
 
-  lazy val actualProject: Project =
-    project.copy(functions = List(sssFunctionForCreate, sssFunctionForUpdate, sssFunctionForDeleted, nestedSSSFunctionForCreate))
+  lazy val actualProject: Project = project.copy(functions = List(sssFunctionForCreate, sssFunctionForUpdate, sssFunctionForDeleted))
 
   val newTodoTitle     = "The title of the new todo"
   val newTodoStatus    = "ACTIVE"
@@ -286,12 +274,12 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
     webhook.headers shouldEqual Map("header" -> "value")
   }
 
-  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create inside a Create mutation" taggedAs (IgnoreMongo) in {
+  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create inside a Create mutation" in {
     val theText = "test"
     val createCommentWithNestedTodo =
       s"""mutation {
          |  createTodo(data: {
-         |    title:"some title",
+         |    title:"$newTodoTitle",
          |    status: $newTodoStatus
          |    comments: {
          |      create: {
@@ -322,76 +310,12 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
                                     |      "node": {
                                     |        "title": "$newTodoTitle",
                                     |        "status": "$newTodoStatus",
-                                    |        "comments": [{"text":"some text"}]
+                                    |        "comments": [{"text":"$theText"}]
                                     |      },
                                     |      "previousValues": null
                                     |    }
                                     |  }
                                     |}""".stripMargin.parseJson.compactPrint
-
-    webhook.headers shouldEqual Map("header" -> "value")
-  }
-
-  "ServerSideSubscription" should "send a message to our Webhook Queue if the SSS Query matches a nested Create in an Update mutation" taggedAs (IgnoreMongo) in {
-    val newTodoTitle = "The title of the new todo"
-    val createComment =
-      s"""
-         |mutation {
-         |  createComment(data:{
-         |    text:"some text"
-         |  }){
-         |    id
-         |  }
-         |}
-      """.stripMargin
-    val commentId = server.query(createComment, actualProject).pathAsString("data.createComment.id")
-
-    webhookTestKit.expectNoPublishedMsg()
-
-    val updateCommentWithNestedTodo =
-      s"""
-         |mutation {
-         |  updateComment(
-         |    where: { id: "$commentId"}
-         |    data: {
-         |      text:"some updated text"
-         |      todo: {
-         |        create: {
-         |          title:"$newTodoTitle"
-         |          status: $newTodoStatus
-         |        }
-         |      }
-         |    }
-         |  ){
-         |    id
-         |  }
-         |}
-       """.stripMargin
-
-    server.query(updateCommentWithNestedTodo, actualProject).pathAsString("data.updateComment.id")
-
-    webhookTestKit.expectPublishCount(1)
-
-    val webhook = webhookTestKit.messagesPublished.head
-
-    webhook.functionName shouldEqual sssFunctionForCreate.name
-    webhook.projectId shouldEqual project.id
-//    webhook.requestId shouldNot be(empty)
-//    webhook.id shouldNot be(empty)
-    webhook.url shouldEqual webhookUrl
-    webhook.payload shouldEqual s"""
-                                  |{
-                                  |  "data": {
-                                  |    "todo": {
-                                  |      "node": {
-                                  |        "title": "$newTodoTitle",
-                                  |        "status": "$newTodoStatus",
-                                  |        "comments": [{"text":"some updated text"}]
-                                  |      },
-                                  |      "previousValues": null
-                                  |    }
-                                  |  }
-                                  |}""".stripMargin.parseJson.compactPrint
 
     webhook.headers shouldEqual Map("header" -> "value")
   }

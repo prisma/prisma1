@@ -1,4 +1,8 @@
-import { GraphQLEnumType, GraphQLEnumValueConfigMap, GraphQLID } from 'graphql/type'
+import {
+  GraphQLEnumType,
+  GraphQLEnumValueConfigMap,
+  GraphQLID,
+} from 'graphql/type'
 import { IGQLType } from 'prisma-datamodel'
 import { ModelEnumTypeGeneratorBase } from '../../generator'
 

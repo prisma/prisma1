@@ -99,6 +99,16 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     server.query(query = """{blogs(where:{posts_some:{popularity_gte: 50}}){name}}""", project = project).toString should be(
       """{"data":{"blogs":[{"name":"blog 2"}]}}""")
+
+    server.query(query = """{blogs(where:{posts_some:{AND:[{title: "post 1"}, {title: "post 2"}]}}){name}}""", project = project).toString should be(
+      """{"data":{"blogs":[]}}""")
+
+    server
+      .query(query = """{blogs(where:{AND:[{posts_some:{title: "post 1"}}, {posts_some:{title: "post 2"}}]}){name}}""", project = project)
+      .toString should be("""{"data":{"blogs":[{"name":"blog 1"}]}}""")
+
+    server.query(query = """{blogs(where:{posts_some:{AND:[{title: "post 1"}, {popularity_gte: 2}]}}){name}}""", project = project).toString should be(
+      """{"data":{"blogs":[{"name":"blog 1"}]}}""")
   }
 
   "1 level m-relation filter" should "work for _every " taggedAs (IgnoreMongo) in {

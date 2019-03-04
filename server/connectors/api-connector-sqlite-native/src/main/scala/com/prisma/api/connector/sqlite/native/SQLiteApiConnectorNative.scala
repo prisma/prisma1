@@ -8,7 +8,7 @@ import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncode
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SQLiteApiConnectorNative(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val base = SQLiteApiConnector(config, isPrototype)
+  lazy val base = SQLiteApiConnector(config, new org.sqlite.JDBC, isPrototype)
 
   override def initialize() = Future.unit
   override def shutdown()   = Future.unit

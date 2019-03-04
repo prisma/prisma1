@@ -1,15 +1,22 @@
 import * as util from 'util'
 import { parse } from 'graphql'
 import { printSchema, buildSchema } from 'graphql/utilities'
-import { AstTools, DatabaseType, Parser } from 'prisma-datamodel'
+import { AstTools, DatabaseType, DefaultParser } from 'prisma-datamodel'
 import Generator from '../../src/generator'
 import * as fs from 'fs'
 import * as path from 'path'
 
-export default function blackBoxTest(name: string, databaseType: DatabaseType, filePrefix: string) {
+export default function blackBoxTest(
+  name: string,
+  databaseType: DatabaseType,
+  filePrefix: string,
+) {
   const generator = Generator.create(databaseType)
 
-  const modelPath = path.join(__dirname, `cases/${name}/model_${filePrefix}.graphql`)
+  const modelPath = path.join(
+    __dirname,
+    `cases/${name}/model_${filePrefix}.graphql`,
+  )
   const prismaPath = path.join(__dirname, `cases/${name}/${filePrefix}.graphql`)
 
   expect(fs.existsSync(modelPath))
@@ -18,7 +25,9 @@ export default function blackBoxTest(name: string, databaseType: DatabaseType, f
   const model = fs.readFileSync(modelPath, { encoding: 'UTF-8' })
   const prisma = fs.readFileSync(prismaPath, { encoding: 'UTF-8' })
 
-  const { types } = Parser.create(databaseType).parseFromSchemaString(model)
+  const { types } = DefaultParser.create(databaseType).parseFromSchemaString(
+    model,
+  )
   const ourSchema = generator.schema.generate(types, {})
 
   const ourPrintedSchema = printSchema(ourSchema)
@@ -27,7 +36,9 @@ export default function blackBoxTest(name: string, databaseType: DatabaseType, f
   fs.writeFileSync(
     path.join(__dirname, `cases/${name}/generated_${databaseType}.graphql`),
     ourPrintedSchema,
-    { encoding: 'UTF-8' },
+    {
+      encoding: 'UTF-8',
+    },
   )
 
   // Check if our schema equals the prisma schema.

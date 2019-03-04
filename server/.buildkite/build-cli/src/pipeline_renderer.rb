@@ -123,7 +123,7 @@ class PipelineRenderer
       :after_wait => []
     }
 
-    if @context.tag != nil && @context.tag.stable? && @context.branch == "master"
+    if @context.tag != nil && @context.tag.stable? && @context.branch == @context.tag.stringify
       steps[:before_wait] = build_steps_for(@context.tag.stringify)
       steps[:after_wait].push PipelineStep.new
         .label(":docker: Release stable #{@context.tag.stringify}")

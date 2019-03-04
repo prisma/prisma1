@@ -17,15 +17,14 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   lazy val mongoClient: MongoClient = internalDatabaseDefs.client
   lazy val internalDatabase         = mongoClient.getDatabase("prisma")
 
-  override val migrationPersistence: MigrationPersistence     = MongoMigrationPersistence(internalDatabase)
-  override val projectPersistence: ProjectPersistence         = MongoProjectPersistence(internalDatabase, migrationPersistence, config)
-  override val telemetryPersistence: TelemetryPersistence     = MongoTelemetryPersistence()
-  override val cloudSecretPersistence: CloudSecretPersistence = MongoCloudSecretPersistence(internalDatabase)
-
+  override val migrationPersistence: MigrationPersistence       = MongoMigrationPersistence(internalDatabase)
+  override val projectPersistence: ProjectPersistence           = MongoProjectPersistence(internalDatabase, migrationPersistence, config)
+  override val telemetryPersistence: TelemetryPersistence       = MongoTelemetryPersistence()
+  override val cloudSecretPersistence: CloudSecretPersistence   = MongoCloudSecretPersistence(internalDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
-
-  override def capabilities: ConnectorCapabilities = ConnectorCapabilities.mongo(isTest = isTest)
+  override val databaseInspector: DatabaseInspector             = DatabaseInspector.empty
+  override def capabilities: ConnectorCapabilities              = ConnectorCapabilities.mongo(isTest = isTest)
 
   override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient)
   override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
@@ -59,6 +58,4 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
 
   override def managementLock(): Future[Unit] = Future.successful(())
-
-  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }

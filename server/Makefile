@@ -28,7 +28,6 @@ dev-down:
 	docker-compose -f docker-compose/mysql/dev-mysql.yml down -v --remove-orphans
 	docker-compose -f docker-compose/postgres/dev-postgres.yml down -v --remove-orphans
 	docker-compose -f docker-compose/mongo/dev-mongo.yml down -v --remove-orphans
-	docker-compose -f docker-compose/sqlite/dev-sqlite.yml down -v --remove-orphans
 
 local-image:
 	docker run -e "BRANCH=local" -e "COMMIT_SHA=local" -e "CLUSTER_VERSION=local" -v $(shell pwd):/root/build -w /root/build -v ~/.ivy2:/root/.ivy2 -v ~/.coursier:/root/.coursier -v /var/run/docker.sock:/var/run/docker.sock prismagraphql/build-image:debian sbt "project prisma-local" docker

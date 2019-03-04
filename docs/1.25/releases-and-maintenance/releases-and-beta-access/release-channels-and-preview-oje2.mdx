@@ -1,0 +1,76 @@
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'Release Channels & Preview',
+  position: 105
+}
+
+## Release channels
+
+Prisma has three different _release channels_:
+
+- **Alpha**: The `alpha` channel is ideal for contributors and developers who want to try new features as early as possible. Features on the `alpha` channel are not fully tested and might see significant changes before they are included in a `stable` release.
+- **Beta**: Features on the `beta` channel are tested and unlikely to change before the final release. The `beta` channel is a great way to try new features and provide feedback before they are available in a `stable` release.
+- **Stable**: We recommend that you run the `stable` channel on your production servers. Releases on the `stable` channel follow a bi-weekly cadence and only include very minor changes compared to the `beta` channel. This ensures that the combination of features in a release has been thoroughly tested on the `beta` channel.
+
+![](https://imgur.com/TvlsOeC.png)
+
+> You can learn more about Prisma's release process in [this](https://www.prisma.io/blog/improving-prismas-release-process-yaey8deiwaex/) blog post.
+
+## Preview vs Final
+
+Some Prisma features are released in a **Preview**. The Preview stage is orthogonal to the release channels, meaning a feature that's released in Preview still goes through the "normal" release channels: `alpha`, `beta` and `stable`.
+
+Preview means that the API of the feature is considered stable, but there might be significant internal improvements as long as the feature is in the Preview stage. If a feature is not in Preview, it's considered **Final**. All features that are not explicitly released in Preview are Final by default.
+
+Prisma 1.25 has the following features in the preview stage:
+
+- [Prisma client](b6q6)
+- [MongoDB database connector](b605)
+- [Datamodel v1.1](b6a7)
+
+## Beta access
+
+### Prisma CLI
+
+You can get access to the latest beta release of the Prisma CLI by appending the `@beta`-tag when installing it via NPM:
+
+```
+npm install -g prisma@beta
+```
+
+### Prisma server (Docker)
+
+You can find the latest beta Prisma Docker image on [Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/tags/). To use the latest version of a Prisma server, you need to configure the `image` property in your Docker Compose file accordingly by appending `-beta` to the the version number, e.g.:
+
+<Code lines="4">
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.26-beta
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+        port: __YOUR_PRISMA_SERVER_PORT__
+        databases:
+          default:
+            connector: __YOUR_DATABASE_CONNECTOR__
+            migrations: __ENABLE_DB_MIGRATIONS__
+            host: __YOUR_DATABASE_HOST__
+            port: __YOUR_DATABASE_PORT__
+            user: __YOUR_DATABASE_USER__
+            password: __YOUR_DATABASE_PASSWORD__
+```
+
+</Code>
+
+You can also pull the latest beta version directly using the Docker CLI:
+
+```bash
+docker pull prismagraphql/prisma:1.26-beta
+```

@@ -66,15 +66,14 @@ object DataSchemaAstExtensions {
   implicit class CoolObjectType(val objectType: ObjectTypeDefinition) extends AnyVal {
     def hasNoIdField: Boolean = field("id").isEmpty
 
-    def previousName: String = {
-      val nameBeforeRename = for {
+    def oldName: Option[String] = {
+      for {
         directive <- objectType.directive("rename")
         argument  <- directive.arguments.headOption
       } yield argument.value.asInstanceOf[StringValue].value
-
-      nameBeforeRename.getOrElse(objectType.name)
     }
 
+    def previousName: String                         = oldName.getOrElse(objectType.name)
     def isEmbedded: Boolean                          = objectType.directives.exists(_.name == "embedded")
     def field_!(name: String): FieldDefinition       = field(name).getOrElse(sys.error(s"Could not find the field $name on the type ${objectType.name}"))
     def field(name: String): Option[FieldDefinition] = objectType.fields.find(_.name == name)
@@ -124,6 +123,8 @@ object DataSchemaAstExtensions {
       case NotNullType(ListType(__, _), _) => true
       case _                               => false
     }
+
+    def isScalarList(document: Document): Boolean = isList && (hasScalarType || isEnumField(document))
 
     def isValidScalarType: Boolean = isList || isValidScalarNonListType
 

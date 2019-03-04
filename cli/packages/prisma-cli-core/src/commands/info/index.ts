@@ -39,6 +39,10 @@ export default class InfoCommand extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
   }
   async run() {
     const { json, secret } = this.flags
@@ -48,7 +52,7 @@ export default class InfoCommand extends Command {
     const stage = this.definition.stage!
     const workspace = this.definition.getWorkspace()
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     if (!cluster) {
       throw new Error(
         `No cluster set. Please set the "cluster" property in your prisma.yml`,

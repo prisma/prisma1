@@ -51,7 +51,7 @@ def commonDockerImageSettings(imageName: String, baseImage: String, tag: String)
     }
 
     new Dockerfile {
-      from(baseImage)
+      from(s"${baseImage}:${tag}")
       copy(appDir, targetDir)
       libraries.foreach(f => copy(f._1, systemLibs))
       copy(prerunHookFile , s"$targetDir/prerun_hook.sh")
@@ -90,7 +90,7 @@ lazy val prismaLocal = imageProject("prisma-local", imageName = "prisma")
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
-lazy val prismaLocalGraalVM = imageProject("prisma-local-graalvm", imageName = "prisma", baseImage = "prismagraphql/runtime-base", tag = "graalvm")
+lazy val prismaLocalGraalVM = imageProject("prisma-local-graalvm", imageName = "prisma", baseImage = "prismagraphql/runtime-image", tag = "graal")
   .dependsOn(prismaLocal)
 
 
@@ -102,7 +102,7 @@ lazy val prismaProd = imageProject("prisma-prod", imageName = "prisma-prod")
   .dependsOn(prismaConfig)
   .dependsOn(allConnectorProjects)
 
-lazy val prismaProdGraalVM = imageProject("prisma-prod-graalvm", imageName = "prisma-prod", baseImage = "prismagraphql/runtime-base", tag = "graalvm")
+lazy val prismaProdGraalVM = imageProject("prisma-prod-graalvm", imageName = "prisma-prod", baseImage = "prismagraphql/runtime-image", tag = "graal")
   .dependsOn(prismaProd)
 
 lazy val prismaNative = imageProject("prisma-native", "prisma-native")
@@ -473,6 +473,7 @@ lazy val prismaRsBinding = libProject("prisma-rs-binding")
 lazy val sangriaServer = libProject("sangria-server")
   .dependsOn(sangriaUtils)
   .dependsOn(scalaUtils)
+  .dependsOn(akkaUtils)
   .settings(libraryDependencies ++= Seq(
     akkaHttpPlayJson,
     cuid,
