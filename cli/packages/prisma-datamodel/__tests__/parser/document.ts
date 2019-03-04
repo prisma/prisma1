@@ -1,6 +1,6 @@
 import DocumentParser from '../../src/datamodel/parser/documentParser'
 import { IGQLType } from '../../src/datamodel/model'
-import { SdlExpect } from '../../src/test-helpers' 
+import { SdlExpect } from '../../src/test-helpers'
 
 describe(`Document parser specific tests`, () => {
   test('Mark an ID field correctly.', () => {
@@ -18,7 +18,6 @@ describe(`Document parser specific tests`, () => {
     SdlExpect.field(userType, 'id', true, false, 'ID', true, true, null)
   })
 
-
   test('Mark an read only fields correctly.', () => {
     const model = `
       type User {
@@ -34,8 +33,26 @@ describe(`Document parser specific tests`, () => {
     const userType = SdlExpect.type(types, 'User')
 
     SdlExpect.field(userType, 'id', true, false, 'ID', true, true, null)
-    SdlExpect.field(userType, 'wasCreatedAt', true, false, 'Date', false, true, null)
-    SdlExpect.field(userType, 'wasUpdatedAt', true, false, 'Date', false, true, null)
+    SdlExpect.field(
+      userType,
+      'wasCreatedAt',
+      true,
+      false,
+      'Date',
+      false,
+      true,
+      null,
+    )
+    SdlExpect.field(
+      userType,
+      'wasUpdatedAt',
+      true,
+      false,
+      'Date',
+      false,
+      true,
+      null,
+    )
   })
 
   test('Mark an embedded types correctly.', () => {

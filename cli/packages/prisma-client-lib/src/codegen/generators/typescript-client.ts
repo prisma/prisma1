@@ -27,6 +27,7 @@ import { getExistsTypes } from '../../utils'
 import * as flatten from 'lodash.flatten'
 import * as prettier from 'prettier'
 import { codeComment } from '../../utils/codeComment'
+import { connectionNodeHasScalars } from '../../utils/connectionNodeHasScalars'
 
 export interface RenderOptions {
   endpoint?: string
@@ -290,7 +291,9 @@ import { typeDefs } from './prisma-schema'`
 export const prisma = new Prisma()`
   }
   renderTypedefsFirstLine() {
-    return ''
+    return `${codeComment}
+
+`
   }
   renderTypedefs() {
     return (
@@ -397,7 +400,9 @@ export const prisma = new Prisma()`
   ) {
     const { args } = field
     const hasArgs = args.length > 0
-
+    if (!hasArgs) {
+      return ``
+    }
     const allOptional = args.reduce((acc, curr) => {
       if (!acc) {
         return false
@@ -608,10 +613,6 @@ export const prisma = new Prisma()`
     isSubscription?: boolean
     operation: boolean
     embedded: boolean
-    // node: boolean = true,
-    // input: boolean = false,
-    // partial: boolean = false,
-    // renderFunction: boolean = true,
   }) {
     const { type } = field
     const deepType = this.getDeepType(type)
@@ -619,7 +620,6 @@ export const prisma = new Prisma()`
     const isOptional = !(isNonNullType(type) || isNonNullType(type.ofType))
     const isScalar = isScalarType(deepType) || isEnumType(deepType)
     const isInput = field.astNode.kind === 'InputValueDefinition'
-    // const isObject = isObjectType(deepType)
 
     let typeString = this.getInternalTypeName(type)
 
@@ -836,17 +836,21 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
     }
 
     if (type.name.endsWith('Connection')) {
-      fieldDefinition = Object.keys(fields)
-        .filter(f => f !== 'aggregate')
-        .map(f => {
-          const field = fields[f]
-          const deepType = this.getDeepType(fields[f].type)
+      if (!connectionNodeHasScalars({ type })) {
+        fieldDefinition = []
+      } else {
+        fieldDefinition = Object.keys(fields)
+          .filter(f => f !== 'aggregate')
+          .map(f => {
+            const field = fields[f]
+            const deepType = this.getDeepType(fields[f].type)
 
-          return `  ${this.renderFieldName(
-            field,
-            false,
-          )}: ${connectionFieldsType[field.name](deepType.name)}`
-        })
+            return `  ${this.renderFieldName(
+              field,
+              false,
+            )}: ${connectionFieldsType[field.name](deepType.name)}`
+          })
+      }
     } else {
       // else if type.name is typeEdge
       fieldDefinition = Object.keys(fields).map(f => {

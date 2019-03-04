@@ -1,5 +1,6 @@
 package com.prisma.integration
 
+import com.prisma.IgnoreSQLite
 import org.scalatest.{FlatSpec, Matchers}
 
 class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
@@ -117,7 +118,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     updatedProject.schema.relations.head.name should be("""NewName""")
   }
 
-  "DeployMutation" should "be able to handle renaming relations that don't have a name yet" in {
+  "DeployMutation" should "be able to handle renaming relations that don't have a name yet" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -162,7 +163,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b1":{"title":"B1"}}]}}""")
   }
 
-  "DeployMutation" should "be able to handle renaming relations that are already named" in {
+  "DeployMutation" should "be able to handle renaming relations that are already named" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -290,7 +291,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b":{"title":"B1"}}]}}""")
   }
 
-  "Going from two named relations between the same models to one named one without a backrelation" should "work even when there is a rename" in {
+  "Going from two named relations between the same models to one named one without a backrelation" should "work even when there is a rename" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {

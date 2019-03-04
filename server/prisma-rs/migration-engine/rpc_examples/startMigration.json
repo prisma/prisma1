@@ -1,0 +1,25 @@
+{
+    "id": 1,
+    "jsonrpc": "2.0",
+    "method": "startMigration",
+    "params": {
+        "project": "the-project-id",
+        "dataModel": "type Blog { id: ID! @id }",
+        "steps": [
+            {
+                "name": "Blog",
+                "stepType": "CreateModel"
+            },
+            {
+                "dbName": null,
+                "embedded": true,
+                "name": "Blog",
+                "stepType": "UpdateModel"
+            },
+            {
+                "name": "Post",
+                "stepType": "DeleteModel"
+            }
+        ]
+    }
+}

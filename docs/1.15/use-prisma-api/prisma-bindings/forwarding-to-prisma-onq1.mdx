@@ -15,7 +15,7 @@ In these cases, you can use `forwardTo` from the `prisma-binding` library. It ha
 forwardTo(bindingName: string)
 ```
 
-`forwardTo` depends on the resolver aruments `context` and `info`. Therefore, it can only be used inside a resolver function, not in Node scripts or other applications where Prisma bindings are used outside the context of a resolver function.
+`forwardTo` depends on the resolver arguments `context` and `info`. Therefore, it can only be used inside a resolver function, not in Node scripts or other applications where Prisma bindings are used outside the context of a resolver function.
 
 The `bindingName` argument refers to the key which holds the `Prisma` binding object on `context`. For example, assume you instantiate your `GraphQLServer` as follows:
 

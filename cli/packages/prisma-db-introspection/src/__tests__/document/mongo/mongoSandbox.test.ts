@@ -1,6 +1,5 @@
-
-describe("Mongo sandbox", () => {
-  it("Should sandbox the mongo", async () => {
+describe('Mongo sandbox', () => {
+  it('Should sandbox the mongo', async () => {
     // TODO
   })
 })

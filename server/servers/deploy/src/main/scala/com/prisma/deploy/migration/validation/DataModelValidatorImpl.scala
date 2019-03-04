@@ -157,13 +157,15 @@ case class DataModelValidatorImpl(
     val fieldDirectiveValidations = tryValidation(validateFieldDirectives())
     val typeDirectiveValidations  = tryValidation(validateTypeDirectives())
     val enumValidations           = tryValidation(EnumValidator(doc).validate())
+    val validateRenames           = tryValidation(validateCrossRenames(doc.objectTypes))
 
     val allValidations = Vector(
       globalValidations,
       reservedFieldsValidations,
       fieldDirectiveValidations,
       enumValidations,
-      typeDirectiveValidations
+      typeDirectiveValidations,
+      validateRenames
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -239,6 +241,20 @@ case class DataModelValidatorImpl(
     requiredArgErrors ++ optionalArgErrors
   }
 
+  def validateCrossRenames(objectTypes: Seq[ObjectTypeDefinition]): Seq[DeployError] = {
+    for {
+      renamedType1                     <- objectTypes
+      oldName                          <- renamedType1.oldName
+      allObjectTypesExceptThisOne      = objectTypes.filterNot(_ == renamedType1)
+      renamedTypeThatHadTheNameOfType1 <- allObjectTypesExceptThisOne.find(_.oldName.contains(renamedType1.name))
+    } yield {
+      DeployError(
+        renamedType1.name,
+        s"You renamed type `$oldName` to `${renamedType1.name}`. But that is the old name of type `${renamedTypeThatHadTheNameOfType1.name}`. Please do this in two steps."
+      )
+    }
+  }
+
   def validateDirectiveUniqueness(fieldAndType: FieldAndType): Option[DeployError] = {
     val directives       = fieldAndType.fieldDef.directives
     val uniqueDirectives = directives.map(_.name).toSet
@@ -259,14 +275,9 @@ case class DataModelValidatorImpl(
     }
   }
 
-  private def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
-  private def isRelationField(fieldAndType: FieldAndType): Boolean = isRelationField(fieldAndType.fieldDef)
-  private def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
-
-  private def isScalarField(fieldAndType: FieldAndType): Boolean = isScalarField(fieldAndType.fieldDef)
-  private def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType
-
-  private def isEnumField(fieldDef: FieldDefinition): Boolean = doc.isEnumType(fieldDef.typeName)
+  private def isRelationField(fieldDef: FieldDefinition): Boolean = !isScalarField(fieldDef) && !isEnumField(fieldDef)
+  private def isScalarField(fieldDef: FieldDefinition): Boolean   = fieldDef.hasScalarType
+  private def isEnumField(fieldDef: FieldDefinition): Boolean     = doc.isEnumType(fieldDef.typeName)
 }
 
 case class GlobalValidations(doc: Document) {
@@ -403,6 +414,13 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
         None
     }
 
+    val allowOnlyValidNamesInRelationDirectives = relationFieldsWithRelationDirective.flatMap {
+      case thisType if thisType.fieldDef.relationName.isDefined && !NameConstraints.isValidRelationName(thisType.fieldDef.relationName.get) =>
+        Some(DeployErrors.relationDirectiveHasInvalidName(thisType))
+      case _ =>
+        None
+    }
+
     /**
       * The validation below must be only applied to fields that specify the relation directive.
       * And it can only occur for relation that specify both sides of a relation.
@@ -428,7 +446,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
           Iterable.empty
       }
 
-    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous
+    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous ++ allowOnlyValidNamesInRelationDirectives
   }
 
   def partition[A, B, C](seq: Seq[A])(partitionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {

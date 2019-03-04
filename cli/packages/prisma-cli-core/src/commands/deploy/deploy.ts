@@ -4,12 +4,10 @@ import chalk from 'chalk'
 import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
-import { fetchAndPrintSchema } from './printSchema'
 import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
-import { prettyTime, concatName, defaultDockerCompose } from '../../util'
+import { prettyTime, concatName, defaultDockerCompose } from '../../utils/util'
 import * as sillyname from 'sillyname'
-import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
@@ -24,13 +22,13 @@ export default class Deploy extends Command {
   ${chalk.green.bold('Examples:')}
       
 ${chalk.gray(
-    '-',
-  )} Deploy local changes from prisma.yml to the default service environment.
+  '-',
+)} Deploy local changes from prisma.yml to the default service environment.
   ${chalk.green('$ prisma deploy')}
     
 ${chalk.gray(
-    '-',
-  )} Deploy local changes from default service file accepting potential data loss caused by schema changes
+  '-',
+)} Deploy local changes from default service file accepting potential data loss caused by schema changes
   ${chalk.green('$ prisma deploy --force')}
   `
   static flags: Flags = {
@@ -59,6 +57,10 @@ ${chalk.gray(
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
+    }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
     }),
   }
   private deploying: boolean = false
@@ -122,7 +124,7 @@ ${chalk.gray(
         )}\` to prisma.yml\n`,
       )
     } else {
-      cluster = this.definition.getCluster(false)
+      cluster = await this.definition.getCluster(false)
     }
 
     if (cluster && cluster.local && !(await cluster.isOnline())) {
@@ -152,6 +154,7 @@ ${chalk.gray(
       if (
         workspace &&
         !workspace.startsWith('public-') &&
+        !process.env.PRISMA_MANAGEMENT_API_SECRET &&
         (!this.env.cloudSessionKey || this.env.cloudSessionKey === '')
       ) {
         await this.client.login()
@@ -186,10 +189,6 @@ ${chalk.gray(
     return `${slugify(sillyname()).split('-')[0]}-${Math.round(
       Math.random() * 1000,
     )}`
-  }
-
-  private getPublicName() {
-    return `public-${this.getSillyName()}`
   }
 
   private async projectExists(
@@ -408,44 +407,6 @@ ${chalk.gray(
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 
-  /**
-   * Returns true if there was a change
-   */
-  private async generateSchema(
-    cluster: Cluster,
-    serviceName: string,
-    stageName: string,
-  ): Promise<boolean> {
-    const schemaPath = getSchemaPathFromConfig()
-    if (schemaPath) {
-      this.printHooks()
-      const schemaDir = path.dirname(schemaPath)
-      fs.mkdirpSync(schemaDir)
-      const token = this.definition.getToken(serviceName, stageName)
-      const before = Date.now()
-      this.out.action.start(`Checking, if schema file changed`)
-      const schemaString = await fetchAndPrintSchema(
-        this.client,
-        concatName(cluster, serviceName, this.definition.getWorkspace()),
-        stageName,
-        token,
-      )
-      this.out.action.stop(prettyTime(Date.now() - before))
-      const oldSchemaString = fs.pathExistsSync(schemaPath)
-        ? fs.readFileSync(schemaPath, 'utf-8')
-        : null
-      if (schemaString !== oldSchemaString) {
-        const beforeWrite = Date.now()
-        this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
-        fs.writeFileSync(schemaPath, schemaString)
-        this.out.action.stop(prettyTime(Date.now() - beforeWrite))
-        return true
-      }
-    }
-
-    return false
-  }
-
   private printResult(payload: DeployPayload, force: boolean, dryRun: boolean) {
     if (payload.errors && payload.errors.length > 0) {
       this.out.log(`${chalk.bold.red('\nErrors:')}`)
@@ -492,7 +453,6 @@ ${chalk.gray(
     }
 
     if (steps.length > 0) {
-      // this.out.migrati
       this.out.log(
         '\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'),
       )
@@ -555,29 +515,12 @@ ${chalk.gray(
   }
 
   private getLocalClusterChoices(): string[][] {
-    // const clusters = this.env.clusters.filter(c => !c.shared && !c.isPrivate)
-
-    // const clusterNames: string[][] = clusters.map(c => {
-    //   const note =
-    //     c.baseUrl.includes('localhost') || c.baseUrl.includes('127.0.0.1')
-    //       ? 'Local cluster (requires Docker)'
-    //       : 'Self-hosted'
-    //   return [c.name, note]
-    // })
-
-    // if (clusterNames.length === 0) {
-    //   clusterNames.push(['local', 'Local cluster (requires Docker)'])
-    // }
-    // return clusterNames
     return [['local', 'Local cluster (requires Docker)']]
   }
 
   private async getLoggedInChoices(): Promise<any[]> {
+    await this.env.fetchClusters()
     const localChoices = this.getLocalClusterChoices()
-    // const workspaces = await this.client.getWorkspaces()
-    // const clusters = this.env.clusters.filter(
-    //   c => c.shared && c.name !== 'shared-public-demo',
-    // )
     const combinations: string[][] = []
     const remoteClusters = this.env.clusters.filter(
       c => c.shared || c.isPrivate,

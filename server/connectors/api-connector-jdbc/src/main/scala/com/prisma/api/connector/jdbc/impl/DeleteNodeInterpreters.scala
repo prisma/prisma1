@@ -34,7 +34,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode, shouldDeleteRela
   }
 }
 
-case class DeleteNodesInterpreter(mutaction: DeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext)
+case class DeleteNodesInterpreter(mutaction: TopLevelDeleteNodes, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter {
 
   def dbioAction(mutationBuilder: JdbcActionsBuilder) =

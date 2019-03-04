@@ -52,7 +52,7 @@ export class GoGenerator extends Generator {
     Int: 'int32',
     String: 'string',
     ID: 'string',
-    Float: 'float32',
+    Float: 'float64',
     Boolean: 'bool',
     DateTime: 'string',
     Json: 'map[string]interface{}',
@@ -64,7 +64,7 @@ export class GoGenerator extends Generator {
     if (fieldType.isEnum) {
       typ = goCase(fieldType.typeName)
     } else {
-      typ = this.scalarMapping[fieldType.typeName] || fieldType.typeName
+      typ = this.scalarMapping[fieldType.typeName] || goCase(fieldType.typeName)
     }
 
     if (fieldType.isList) {
@@ -113,7 +113,9 @@ export class GoGenerator extends Generator {
             const field = fieldMap![key]
             return (
               this.getDeepType(field.type).constructor.name ===
-              'GraphQLScalarType'
+                'GraphQLScalarType' ||
+              this.getDeepType(field.type).constructor.name ===
+                'GraphQLEnumType'
             )
           })
           .map(key => `"${fieldMap![key].name}"`)
@@ -152,7 +154,7 @@ export class GoGenerator extends Generator {
       }
 
       return `
-        type ${type.name}Exec struct {
+        type ${goCase(type.name)}Exec struct {
           exec *prisma.Exec
         }
 
@@ -215,7 +217,7 @@ export class GoGenerator extends Generator {
               return (
                 sTyp +
                 `
-                func (instance *${type.name}Exec) ${goCase(
+                func (instance *${goCase(type.name)}Exec) ${goCase(
                   field.name,
                 )}(params *${goCase(field.name)}ParamsExec) *${goCase(
                   typeName,
@@ -253,7 +255,7 @@ export class GoGenerator extends Generator {
                 return (
                   sTyp +
                   `
-                  func (instance *${type.name}Exec) ${goCase(
+                  func (instance *${goCase(type.name)}Exec) ${goCase(
                     field.name,
                   )}(ctx context.Context) (Aggregate, error) {
                     ret := instance.exec.Client.GetOne(
@@ -272,7 +274,7 @@ export class GoGenerator extends Generator {
               return (
                 sTyp +
                 `
-                func (instance *${type.name}Exec) ${goCase(
+                func (instance *${goCase(type.name)}Exec) ${goCase(
                   field.name,
                 )}() *${goCase(typeName)}Exec {
                   ret := instance.exec.Client.GetOne(
@@ -289,10 +291,10 @@ export class GoGenerator extends Generator {
           })
           .join('\n')}
 
-          func (instance ${type.name}Exec) Exec(ctx context.Context) (*${
-        type.name
-      }, error) {
-            var v ${type.name}
+          func (instance ${goCase(
+            type.name,
+          )}Exec) Exec(ctx context.Context) (*${goCase(type.name)}, error) {
+            var v ${goCase(type.name)}
             ok, err := instance.exec.Exec(ctx, &v)
             if err != nil {
               return nil, err
@@ -303,32 +305,34 @@ export class GoGenerator extends Generator {
             return &v, nil
           }
 
-          func (instance ${
-            type.name
-          }Exec) Exists(ctx context.Context) (bool, error) {
+          func (instance ${goCase(
+            type.name,
+          )}Exec) Exists(ctx context.Context) (bool, error) {
             return instance.exec.Exists(ctx)
           }
 
-          type ${type.name}ExecArray struct {
+          type ${goCase(type.name)}ExecArray struct {
             exec *prisma.Exec
           }
 
-          func (instance ${type.name}ExecArray) Exec(ctx context.Context) ([]${
-        type.name
-      }, error) {
-            var v []${type.name}
+          func (instance ${goCase(
+            type.name,
+          )}ExecArray) Exec(ctx context.Context) ([]${goCase(
+        type.name,
+      )}, error) {
+            var v []${goCase(type.name)}
             err := instance.exec.ExecArray(ctx, &v)
             return v, err
           }
 
-        type ${type.name} struct {
+        type ${goCase(type.name)} struct {
           ${Object.keys(fieldMap)
             .filter(key => {
               const field = fieldMap[key]
-              const { isScalar } = this.extractFieldLikeType(
+              const { isScalar, isEnum } = this.extractFieldLikeType(
                 field as GraphQLField<any, any>,
               )
-              return isScalar
+              return isScalar || isEnum
             })
             .map(key => {
               const field = fieldMap[key]
@@ -382,7 +386,7 @@ export class GoGenerator extends Generator {
     ): string => {
       const fieldMap = type.getFields()
       return `
-      type ${type.name} struct {
+      type ${goCase(type.name)} struct {
         ${Object.keys(fieldMap)
           .map(key => {
             const field = fieldMap[key]
@@ -505,8 +509,8 @@ export class GoGenerator extends Generator {
 
   opDeleteMany(field) {
     return `
-      func (client *Client) ${goCase(field.name)} (params *${this.getDeepType(
-      field.args[0].type,
+      func (client *Client) ${goCase(field.name)} (params *${goCase(
+      this.getDeepType(field.args[0].type).toString(),
     )}) *BatchPayloadExec {
         exec := client.Client.DeleteMany(params, "${field.args[0].type}", "${
       field.name
@@ -518,8 +522,8 @@ export class GoGenerator extends Generator {
   opDelete(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(
-      field.args[0].type,
+      func (client *Client) ${goCase(field.name)} (params ${goCase(
+      this.getDeepType(field.args[0].type).toString(),
     )}) *${goCase(typeName)}Exec {
         ret := client.Client.Delete(
           params,
@@ -534,8 +538,8 @@ export class GoGenerator extends Generator {
   opGetOne(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(
-      field.args[0].type,
+      func (client *Client) ${goCase(field.name)} (params ${goCase(
+      this.getDeepType(field.args[0].type).toString(),
     )}) *${goCase(typeName)}Exec {
         ret := client.Client.GetOne(
           nil,
@@ -602,8 +606,8 @@ export class GoGenerator extends Generator {
   opCreate(field) {
     const { typeFields, typeName } = this.extractFieldLikeType(field)
     return `
-      func (client *Client) ${goCase(field.name)} (params ${this.getDeepType(
-      field.args[0].type,
+      func (client *Client) ${goCase(field.name)} (params ${goCase(
+      this.getDeepType(field.args[0].type).toString(),
     )}) *${goCase(typeName)}Exec {
         ret := client.Client.Create(
           params,
@@ -658,7 +662,7 @@ export class GoGenerator extends Generator {
       if (match === null) {
         throw new Error("couldn't determine type name")
       }
-      type = match[1] + goCase(verb) + 'Params'
+      type = goCase(match[1]) + goCase(verb) + 'Params'
     }
     let code = `
       type ${type} struct {
@@ -733,38 +737,6 @@ export class GoGenerator extends Generator {
       .join('\n')
   }
 
-  printEndpoint(options: RenderOptions) {
-    if (options.endpoint.startsWith('process.env')) {
-      // Find a better way to generate Go env construct
-      const envVariable = `${options.endpoint
-        .replace('process.env[', '')
-        .replace(']', '')}`
-        .replace("'", '')
-        .replace("'", '')
-      return `os.Getenv("${envVariable}")`
-    } else {
-      return `\"${options.endpoint.replace("'", '').replace("'", '')}\"`
-    }
-  }
-
-  printSecret(options: RenderOptions): string | null {
-    if (!options.secret) {
-      return `""`
-    } else {
-      if (options.secret!.startsWith('${process.env')) {
-        // Find a better way to generate Go env construct
-        const envVariable = `${options
-          .secret!.replace('${process.env[', '')
-          .replace(']}', '')}`
-          .replace("'", '')
-          .replace("'", '')
-        return `os.Getenv("${envVariable}")`
-      } else {
-        return `\"${options.secret.replace("'", '').replace("'", '')}\"`
-      }
-    }
-  }
-
   render(options: RenderOptions) {
     const typeNames = getTypeNames(this.schema)
     const typeMap = this.schema.getTypeMap()
@@ -786,6 +758,8 @@ package prisma
 import (
 	"context"
   "errors"
+
+  ${printOSImport(options)}
 
 	"github.com/prisma/prisma-client-lib-go"
 
@@ -844,29 +818,32 @@ func (client *Client) GraphQL(ctx context.Context, query string, variables map[s
     // Dynamic contains the parts of the generated code that are dynamically generated.
     const dynamic = `
 
-var DefaultEndpoint = ${this.printEndpoint(options)}
-var Secret          = ${this.printSecret(options)}
+var DefaultEndpoint = ${options.endpoint}
+var Secret          = ${options.secret || `""`}
 
 ${this.printOperation(queryFields, 'query', options)}
 
 ${this.printOperation(mutationFields, 'mutation', options)}
 
 ${typeNames
-      .map(key => {
-        let type = typeMap[key]
-        return this.graphqlRenderers[type.constructor.name]
-          ? this.graphqlRenderers[type.constructor.name](type)
-          : `// No GraphQL Renderer for Type ${type.name} of type ${
-              type.constructor.name
-            }`
-      })
-      .join('\n')}
+  .map(key => {
+    let type = typeMap[key]
+    return this.graphqlRenderers[type.constructor.name]
+      ? this.graphqlRenderers[type.constructor.name](type)
+      : `// No GraphQL Renderer for Type ${type.name} of type ${
+          type.constructor.name
+        }`
+  })
+  .join('\n')}
         `
 
     return fixed + dynamic
   }
 
   static replaceEnv(str: string): string {
+    if (!str) {
+      return `""`
+    }
     const regex = /\${env:(.*?)}/
     const match = regex.exec(str)
     // tslint:disable-next-line:prefer-conditional-expression
@@ -879,7 +856,12 @@ ${typeNames
         `${before}os.Getenv("${match[1]}")${after}`.replace(/`/g, ''),
       )
     } else {
-      return `\`${str}\``
+      const interpolatedString = `\`${str}\``
+      if (interpolatedString.includes('os.Getenv')) {
+        return `${interpolatedString.replace('`', '').replace('`', '')}`
+      } else {
+        return `"${interpolatedString.replace('`', '').replace('`', '')}"`
+      }
     }
   }
 }
@@ -895,4 +877,14 @@ function trimQuotes(str) {
   }
 
   return copy
+}
+
+function printOSImport(options) {
+  if (
+    (options.endpoint && options.endpoint.includes('os.Getenv')) ||
+    (options.secret && options.secret.includes('os.Getenv'))
+  ) {
+    return `"os"`
+  }
+  return ''
 }

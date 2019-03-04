@@ -9,17 +9,16 @@ type User {
   phone: String!
   responseRate: Float
   responseTime: Int
-
-  isSuperHost: Boolean! @default(value: "false")
-  ownedPlaces: [Place!]!
+  isSuperHost: Boolean! @default(value: false)
+  ownedPlaces: [Place]
   location: Location
-  bookings: [Booking!]!
-  paymentAccount: [PaymentAccount!]!
-  sentMessages: [Message!]! @relation(name: "SentMessages")
-  receivedMessages: [Message!]! @relation(name: "ReceivedMessages")
-  notifications: [Notification!]!
+  bookings: [Booking]
+  paymentAccount: [PaymentAccount]
+  sentMessages: [Message] @relation(name: "SentMessages")
+  receivedMessages: [Message] @relation(name: "ReceivedMessages")
+  notifications: [Notification]
   profilePicture: Picture
-  hostingExperiences: [Experience!]!
+  hostingExperiences: [Experience]
 }
 
 type Place {
@@ -33,7 +32,7 @@ type Place {
   numBedrooms: Int!
   numBeds: Int!
   numBaths: Int!
-  reviews: [Review!]!
+  reviews: [Review]
   amenities: Amenities!
   host: User!
   pricing: Pricing!
@@ -42,8 +41,8 @@ type Place {
   guestRequirements: GuestRequirements
   policies: Policies
   houseRules: HouseRules
-  bookings: [Booking!]!
-  pictures: [Picture!]!
+  bookings: [Booking]
+  pictures: [Picture]
   popularity: Int!
 }
 
@@ -53,7 +52,7 @@ type Pricing {
   monthlyDiscount: Int
   weeklyDiscount: Int
   perNight: Int!
-  smartPricing: Boolean! @default(value: "false")
+  smartPricing: Boolean! @default(value: false)
   basePrice: Int!
   averageWeekly: Int!
   averageMonthly: Int!
@@ -66,9 +65,9 @@ type Pricing {
 
 type GuestRequirements {
   id: ID! @unique
-  govIssuedId: Boolean! @default(value: "false")
-  recommendationsFromOtherHosts: Boolean! @default(value: "false")
-  guestTripInformation: Boolean! @default(value: "false")
+  govIssuedId: Boolean! @default(value: false)
+  recommendationsFromOtherHosts: Boolean! @default(value: false)
+  guestTripInformation: Boolean! @default(value: false)
   place: Place!
 }
 
@@ -115,7 +114,7 @@ type Location {
 
 type Neighbourhood {
   id: ID! @unique
-  locations: [Location!]!
+  locations: [Location]
   name: String!
   slug: String!
   homePreview: Picture
@@ -127,7 +126,7 @@ type Neighbourhood {
 type City {
   id: ID! @unique
   name: String!
-  neighbourhoods: [Neighbourhood!]!
+  neighbourhoods: [Neighbourhood]
 }
 
 type Picture {
@@ -141,7 +140,7 @@ type Experience {
   host: User!
   location: Location!
   pricePerPerson: Int!
-  reviews: [Review!]!
+  reviews: [Review]
   preview: Picture!
   popularity: Int!
 }
@@ -156,46 +155,46 @@ type ExperienceCategory {
 type Amenities {
   id: ID! @unique
   place: Place!
-  elevator: Boolean! @default(value: "false")
-  petsAllowed: Boolean! @default(value: "false")
-  internet: Boolean! @default(value: "false")
-  kitchen: Boolean! @default(value: "false")
-  wirelessInternet: Boolean! @default(value: "false")
-  familyKidFriendly: Boolean! @default(value: "false")
-  freeParkingOnPremises: Boolean! @default(value: "false")
-  hotTub: Boolean! @default(value: "false")
-  pool: Boolean! @default(value: "false")
-  smokingAllowed: Boolean! @default(value: "false")
-  wheelchairAccessible: Boolean! @default(value: "false")
-  breakfast: Boolean! @default(value: "false")
-  cableTv: Boolean! @default(value: "false")
-  suitableForEvents: Boolean! @default(value: "false")
-  dryer: Boolean! @default(value: "false")
-  washer: Boolean! @default(value: "false")
-  indoorFireplace: Boolean! @default(value: "false")
-  tv: Boolean! @default(value: "false")
-  heating: Boolean! @default(value: "false")
-  hangers: Boolean! @default(value: "false")
-  iron: Boolean! @default(value: "false")
-  hairDryer: Boolean! @default(value: "false")
-  doorman: Boolean! @default(value: "false")
-  paidParkingOffPremises: Boolean! @default(value: "false")
-  freeParkingOnStreet: Boolean! @default(value: "false")
-  gym: Boolean! @default(value: "false")
-  airConditioning: Boolean! @default(value: "false")
-  shampoo: Boolean! @default(value: "false")
-  essentials: Boolean! @default(value: "false")
-  laptopFriendlyWorkspace: Boolean! @default(value: "false")
-  privateEntrance: Boolean! @default(value: "false")
-  buzzerWirelessIntercom: Boolean! @default(value: "false")
-  babyBath: Boolean! @default(value: "false")
-  babyMonitor: Boolean! @default(value: "false")
-  babysitterRecommendations: Boolean! @default(value: "false")
-  bathtub: Boolean! @default(value: "false")
-  changingTable: Boolean! @default(value: "false")
-  childrensBooksAndToys: Boolean! @default(value: "false")
-  childrensDinnerware: Boolean! @default(value: "false")
-  crib: Boolean! @default(value: "false")
+  elevator: Boolean! @default(value: false)
+  petsAllowed: Boolean! @default(value: false)
+  internet: Boolean! @default(value: false)
+  kitchen: Boolean! @default(value: false)
+  wirelessInternet: Boolean! @default(value: false)
+  familyKidFriendly: Boolean! @default(value: false)
+  freeParkingOnPremises: Boolean! @default(value: false)
+  hotTub: Boolean! @default(value: false)
+  pool: Boolean! @default(value: false)
+  smokingAllowed: Boolean! @default(value: false)
+  wheelchairAccessible: Boolean! @default(value: false)
+  breakfast: Boolean! @default(value: false)
+  cableTv: Boolean! @default(value: false)
+  suitableForEvents: Boolean! @default(value: false)
+  dryer: Boolean! @default(value: false)
+  washer: Boolean! @default(value: false)
+  indoorFireplace: Boolean! @default(value: false)
+  tv: Boolean! @default(value: false)
+  heating: Boolean! @default(value: false)
+  hangers: Boolean! @default(value: false)
+  iron: Boolean! @default(value: false)
+  hairDryer: Boolean! @default(value: false)
+  doorman: Boolean! @default(value: false)
+  paidParkingOffPremises: Boolean! @default(value: false)
+  freeParkingOnStreet: Boolean! @default(value: false)
+  gym: Boolean! @default(value: false)
+  airConditioning: Boolean! @default(value: false)
+  shampoo: Boolean! @default(value: false)
+  essentials: Boolean! @default(value: false)
+  laptopFriendlyWorkspace: Boolean! @default(value: false)
+  privateEntrance: Boolean! @default(value: false)
+  buzzerWirelessIntercom: Boolean! @default(value: false)
+  babyBath: Boolean! @default(value: false)
+  babyMonitor: Boolean! @default(value: false)
+  babysitterRecommendations: Boolean! @default(value: false)
+  bathtub: Boolean! @default(value: false)
+  changingTable: Boolean! @default(value: false)
+  childrensBooksAndToys: Boolean! @default(value: false)
+  childrensDinnerware: Boolean! @default(value: false)
+  crib: Boolean! @default(value: false)
 }
 
 type Review {
@@ -238,7 +237,7 @@ type PaymentAccount {
   createdAt: DateTime!
   type: PAYMENT_PROVIDER
   user: User!
-  payments: [Payment!]!
+  payments: [Payment]
   paypal: PaypalInformation
   creditcard: CreditCardInformation
 }
@@ -287,9 +286,9 @@ type Restaurant {
   createdAt: DateTime!
   title: String!
   avgPricePerPerson: Int!
-  pictures: [Picture!]!
+  pictures: [Picture]
   location: Location!
-  isCurated: Boolean! @default(value: "true")
+  isCurated: Boolean! @default(value: true)
   slug: String!
   popularity: Int!
 }

@@ -1,18 +1,15 @@
 package com.prisma.deploy.migration
-import com.prisma.deploy.connector.DatabaseSchema
-import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
-import com.prisma.deploy.specutils.{DataModelV2Base, PassiveDeploySpecBase}
+import com.prisma.deploy.specutils.PassiveDeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}
 
-class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeploySpecBase with DataModelV2Base {
+class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeploySpecBase {
   val TI = TypeIdentifier
-  case class SQLs(postgres: String, mysql: String)
 
   override def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
   override def runOnlyForCapabilities                            = Set(MigrationsCapability)
-  lazy val slickDatabase                                         = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
+  override def doNotRunForPrototypes: Boolean                    = true
 
   "adding a type for an existing table should work" in {
     val postgres =
@@ -21,6 +18,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   id SERIAL PRIMARY KEY  -- implicit primary key constraint
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -28,7 +26,37 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   PRIMARY KEY(id)
          | );
        """.stripMargin
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |}
+       """.stripMargin
+
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+
+    result should equal(initialResult)
+  }
+
+  "bigint columns should work" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id bigint  -- implicit primary key constraint
+         |);
+       """.stripMargin
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id bigint NOT NULL,
+         |   PRIMARY KEY(id)
+         | );
+       """.stripMargin
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
 
     val dataModel =
       s"""
@@ -61,7 +89,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
 
     //
     val dropPostTable = "DROP TABLE post;"
-    val result        = executeSql(SQLs(postgres = dropPostTable, mysql = dropPostTable))
+    val result        = executeSql(SQLs(postgres = dropPostTable, mysql = dropPostTable, sqlite = dropPostTable))
     result.table("post").isDefined should be(false)
 
     val dataModel =
@@ -84,6 +112,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   title text
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -92,13 +121,14 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   PRIMARY KEY(id)
          | );
        """.stripMargin
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
 
     val dataModel =
       s"""
          |type Blog @db(name: "blog"){
          |  id: Int! @id
-         |  title: String!
+         |  title: String
          |}
        """.stripMargin
 
@@ -114,6 +144,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   title int
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -122,7 +153,8 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   PRIMARY KEY(id)
          | );
        """.stripMargin
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
     val tableBefore   = initialResult.table_!("blog")
     val columnBefore  = tableBefore.column_!("title")
     columnBefore.typeIdentifier should be(TI.Int)
@@ -153,6 +185,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   title int
          |);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -161,7 +194,8 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   PRIMARY KEY(id)
          | );
        """.stripMargin
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
     val tableBefore   = initialResult.table_!("blog")
     tableBefore.indexByColumns("title") should be(empty)
 
@@ -178,6 +212,41 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     tableAfter.indexByColumns_!("title").unique should be(true)
   }
 
+  "creating a field for an existing column and simultaneously making it required should work" in {
+    val postgres =
+      s"""
+         | CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   title int
+         |);
+       """.stripMargin
+
+    val mysql =
+      s"""
+         | CREATE TABLE blog (
+         |   id int NOT NULL,
+         |   title int,
+         |   PRIMARY KEY(id)
+         | );
+       """.stripMargin
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
+    val tableBefore   = initialResult.table_!("blog")
+    tableBefore.column_!("title").isRequired should be(false)
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: Int!
+         |}
+       """.stripMargin
+
+    val result     = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
+    val tableAfter = result.table_!("blog")
+    tableAfter.column_!("title").isRequired should be(true)
+  }
+
   "creating a field for an existing column and simultaneously removing the unique constraint should work" in {
     val postgres =
       s"""
@@ -187,6 +256,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |);
          |CREATE UNIQUE INDEX title_index ON blog(title ASC);
        """.stripMargin
+
     val mysql =
       s"""
          | CREATE TABLE blog (
@@ -196,7 +266,8 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
          |   UNIQUE INDEX (title ASC)
          | );
        """.stripMargin
-    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql))
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
     val tableBefore   = initialResult.table_!("blog")
     tableBefore.indexByColumns_!("title").unique should be(true)
 
@@ -227,8 +298,8 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     val initialResult = deploy(initialDataModel, ConnectorCapabilities(IntIdCapability))
     initialResult.table_!("blog").column("title").isDefined should be(true)
 
-    val dropPostTable = "ALTER TABLE blog DROP COLUMN title;"
-    val result        = executeSql(SQLs(postgres = dropPostTable, mysql = dropPostTable))
+    val dropTitleColumn = "ALTER TABLE blog DROP COLUMN title;"
+    val result          = executeSql(SQLs(postgres = dropTitleColumn, mysql = dropTitleColumn, sqlite = dropTitleColumn))
     result.table_!("blog").column("title").isDefined should be(false)
 
     val dataModel =
@@ -256,8 +327,8 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
 
     deploy(initialDataModel, ConnectorCapabilities(IntIdCapability))
 
-    val dropPostTable = "ALTER TABLE blog DROP COLUMN title;"
-    executeSql(SQLs(postgres = dropPostTable, mysql = dropPostTable))
+    val dropTitleColumn = "ALTER TABLE blog DROP COLUMN title;"
+    executeSql(SQLs(postgres = dropTitleColumn, mysql = dropTitleColumn, sqlite = dropTitleColumn))
 
     val dataModel =
       s"""
@@ -290,8 +361,8 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
 
     deploy(initialDataModel, ConnectorCapabilities(IntIdCapability))
 
-    val dropPostTable = "ALTER TABLE blog RENAME COLUMN title TO new_title;"
-    val result        = executeSql(SQLs(postgres = dropPostTable, mysql = dropPostTable))
+    val renameTitleColumn = "ALTER TABLE blog RENAME COLUMN title TO new_title;"
+    val result            = executeSql(SQLs(postgres = renameTitleColumn, mysql = renameTitleColumn, sqlite = renameTitleColumn))
     result.table_!("blog").column("title") should be(empty)
 
     val dataModel =
@@ -306,28 +377,5 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     val column      = finalResult.table_!("blog").column_!("new_title")
     column.typeIdentifier should be(TI.Float)
     column.isRequired should be(false)
-  }
-
-  def setup(sqls: SQLs): DatabaseSchema = {
-    deployConnector.deleteProjectDatabase(projectId).await()
-    if (slickDatabase.isMySql) {
-      setupProjectDatabaseForProject(sqls.mysql)
-    } else if (slickDatabase.isPostgres) {
-      setupProjectDatabaseForProject(sqls.postgres)
-    } else {
-      sys.error("This is neither Postgres nor MySQL")
-    }
-    inspect
-  }
-
-  def executeSql(sqls: SQLs): DatabaseSchema = {
-    if (slickDatabase.isMySql) {
-      executeSql(sqls.mysql)
-    } else if (slickDatabase.isPostgres) {
-      executeSql(sqls.postgres)
-    } else {
-      sys.error("This is neither Postgres nor MySQL")
-    }
-    inspect
   }
 }

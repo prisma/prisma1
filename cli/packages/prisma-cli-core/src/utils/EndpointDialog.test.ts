@@ -2,7 +2,7 @@ import { EndpointDialog } from './EndpointDialog'
 import { Output, Config, Client } from 'prisma-cli-engine'
 import { Environment, PrismaDefinitionClass } from 'prisma-yml'
 import { getTmpDir } from '../test/getTmpDir'
-import { normalizeDockerCompose } from '../commands/init/index.test'
+import { normalizeDockerCompose } from '../commands/init/init.test'
 
 function makeDialog() {
   const config = new Config()

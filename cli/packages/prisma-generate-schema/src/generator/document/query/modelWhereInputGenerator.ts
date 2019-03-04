@@ -3,12 +3,45 @@ import RelationalModelWhereInputGenerator from '../../default/query/modelWhereIn
 import { GraphQLInputFieldConfigMap } from 'graphql'
 
 export default class ModelWhereInputGenerator extends RelationalModelWhereInputGenerator {
-  public generateRelationFilterFields(model: IGQLType, field: IGQLField): GraphQLInputFieldConfigMap | null {
-    // Can only filter for embedded types, or on embedded types. 
-    if((field.type as IGQLType).isEmbedded) {
-      return super.generateRelationFilterFields(model, field)
+  public generateManyRelationFilterFields(
+    field: IGQLField,
+  ): GraphQLInputFieldConfigMap {
+    const fieldType = field.type as IGQLType
+
+    const whereType = this.generate(fieldType, {})
+    const restrictedWhereType = this.generators.modelRestrictedWhereInput.generate(
+      fieldType,
+      {},
+    )
+
+    if (fieldType.isEmbedded) {
+      return {
+        ...RelationalModelWhereInputGenerator.generateFiltersForSuffix(
+          ['_some'],
+          field,
+          whereType,
+        ),
+        // In this special case, we switch to the restricted where type.
+        ...RelationalModelWhereInputGenerator.generateFiltersForSuffix(
+          ['_every', '_none'],
+          field,
+          restrictedWhereType,
+        ),
+      }
     } else {
-      return null
+      return RelationalModelWhereInputGenerator.generateFiltersForSuffix(
+        ['_some'],
+        field,
+        whereType,
+      )
     }
+  }
+
+  protected getLogicalOperators(): string[] {
+    return ['AND']
+  }
+
+  protected getRelationaManyFilters(type: IGQLType): string[] {
+    throw new Error('Not implemented, not needed.')
   }
 }

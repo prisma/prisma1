@@ -1,8 +1,13 @@
-import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
-import ModelNameAndDirectiveNormalizer from '../../common/modelNameAndDirectiveNormalizer'
+import {
+  DatabaseType,
+  DefaultParser,
+  DefaultRenderer,
+  dedent,
+} from 'prisma-datamodel'
+import ModelNameAndDirectiveNormalizer from '../../common/normalization/modelNameAndDirectiveNormalizer'
 
 function testNormalization(schemaFromDb, expectedResultSchema) {
-  const parser = Parser.create(DatabaseType.mongo)
+  const parser = DefaultParser.create(DatabaseType.mongo)
 
   const fromDb = parser.parseFromSchemaString(schemaFromDb)
 
@@ -11,19 +16,18 @@ function testNormalization(schemaFromDb, expectedResultSchema) {
   normalizer.normalize(fromDb)
 
   const renderer = DefaultRenderer.create(DatabaseType.mongo)
-  const resultSchema = renderer.render(fromDb)
+  const resultSchema = renderer.render(fromDb, true)
 
   expect(resultSchema).toEqual(expectedResultSchema)
 }
 
 describe('Schema normalization from database schema', () => {
   it('Should normalize type names.', () => {
-
     const schemaFromDb = `type user {
         age: Int!
         name: String!
         birthday: Date!
-        posts: [post!]!
+        posts: [post]
         signedUp: Date!
       }
 
@@ -38,7 +42,7 @@ describe('Schema normalization from database schema', () => {
         age: Int!
         birthday: Date!
         name: String!
-        posts: [UserPost!]!
+        posts: [UserPost]
         signedUp: Date!
       }
 
@@ -50,12 +54,11 @@ describe('Schema normalization from database schema', () => {
     testNormalization(schemaFromDb, expectedResultSchema)
   })
 
-
   it('Should correctly name nested embedded types.', () => {
     const schemaFromDb = `  
       type post @embedded {
         text: String!
-        comments: [comment!]!
+        comments: [comment]
       }
       
       type comment @embedded {
@@ -64,17 +67,17 @@ describe('Schema normalization from database schema', () => {
 
       type user {
         name: String!
-        posts: [post!]!
+        posts: [post]
       }`
 
     const expectedResultSchema = dedent(`
       type User @db(name: "user") {
         name: String!
-        posts: [UserPost!]!
+        posts: [UserPost]
       }
 
       type UserPost @embedded {
-        comments: [UserPostComment!]!
+        comments: [UserPostComment]
         text: String!
       }
       

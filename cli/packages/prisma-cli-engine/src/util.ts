@@ -77,3 +77,14 @@ export function getRoot() {
     }),
   )
 }
+
+export function filterObject(obj, cb: Function): any {
+  const newObj = {}
+  for (const key in obj) {
+    const value = obj[key]
+    if (obj.hasOwnProperty(key) && cb(key, value)) {
+      newObj[key] = value
+    }
+  }
+  return newObj
+}

@@ -45,13 +45,14 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
       case x: UpdateScalarListTable => UpdateScalarListInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: DeleteScalarListTable => DeleteScalarListInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: CreateModelTable      => CreateModelInterpreter(builder).execute(x, schemaBeforeMigration)
-      case x: RenameTable           => RenameModelInterpreter(builder).execute(x, schemaBeforeMigration)
+      case x: UpdateModelTable      => UpdateModelInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: DeleteModelTable      => DeleteModelInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: CreateRelationTable   => CreateRelationInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: UpdateRelationTable   => UpdateRelationInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: DeleteRelationTable   => DeleteRelationInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: CreateInlineRelation  => CreateInlineRelationInterpreter(builder).execute(x, schemaBeforeMigration)
       case x: DeleteInlineRelation  => DeleteInlineRelationInterpreter(builder).execute(x, schemaBeforeMigration)
+      case x: UpdateInlineRelation  => UpdateInlineRelationInterpreter(builder).execute(x, schemaBeforeMigration)
     }
 
     runAttached(mutaction.project, action)
@@ -67,13 +68,14 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
       case x: UpdateScalarListTable => UpdateScalarListInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: DeleteScalarListTable => DeleteScalarListInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: CreateModelTable      => CreateModelInterpreter(builder).rollback(x, schemaBeforeMigration)
-      case x: RenameTable           => RenameModelInterpreter(builder).rollback(x, schemaBeforeMigration)
+      case x: UpdateModelTable      => UpdateModelInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: DeleteModelTable      => DeleteModelInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: CreateRelationTable   => CreateRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: UpdateRelationTable   => UpdateRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: DeleteRelationTable   => DeleteRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: CreateInlineRelation  => CreateInlineRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
       case x: DeleteInlineRelation  => DeleteInlineRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
+      case x: UpdateInlineRelation  => UpdateInlineRelationInterpreter(builder).rollback(x, schemaBeforeMigration)
     }
 
     runAttached(mutaction.project, action)

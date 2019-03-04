@@ -130,6 +130,24 @@ class LegacyDataModelValidatorSpec extends WordSpecLike with Matchers with Deplo
     result.forall(_.description.contains("A relation directive cannot appear more than twice.")) should be(true)
   }
 
+  "fail if a relationName is invalid" in {
+    val dataModelString =
+      """
+        |type Todo {
+        |  title: String
+        |  comments: [Comment] @relation(name: "invalidTodoToComments")
+        |}
+        |
+        |type Comment {
+        |  todo: Todo! @relation(name: "invalidTodoToComments")
+        |  text: String
+        |}
+      """.stripMargin
+    val result = validate(dataModelString, isActive = true, capabilities = Set(MigrationsCapability))
+    result should have(size(2))
+    result.forall(_.description.contains("It can only have up to 54 characters and must have the shape [A-Z][a-zA-Z0-9]*")) should be(true)
+  }
+
   // TODO: the backwards field should not be required here.
   "succeed if ambiguous relation fields specify the relation directive" in {
     val dataModelString =

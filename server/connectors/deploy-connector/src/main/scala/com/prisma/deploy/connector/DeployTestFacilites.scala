@@ -4,8 +4,6 @@ import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 
 import scala.concurrent.Future
 
-case class DeployTestFacilites(inspector: DatabaseInspector)
-
 trait DatabaseInspector {
   def inspect(schema: String): Future[DatabaseSchema]
 }
@@ -26,7 +24,9 @@ object DatabaseSchema {
 
 case class Table(name: String, columnFns: Vector[Table => Column], indexes: Vector[Index]) {
   val columns: Vector[Column]                         = columnFns.map(_.apply(this))
-  def column_!(name: String): Column                  = column(name).getOrElse(sys.error(s"Column $name was not found in table $name."))
+  def hasColumn(name: String): Boolean                = column(name).isDefined
+  def hasNotColumn(name: String): Boolean             = !hasColumn(name)
+  def column_!(name: String): Column                  = column(name).getOrElse(sys.error(s"Column $name was not found in table ${this.name}."))
   def column(name: String): Option[Column]            = columns.find(_.name == name)
   def indexByColumns_!(columns: String*): Index       = indexByColumns(columns: _*).getOrElse(sys.error(s"No index in table $name for the columns: $columns"))
   def indexByColumns(columns: String*): Option[Index] = indexes.find(_.columns == columns.toVector)
@@ -40,6 +40,7 @@ case class Table(name: String, columnFns: Vector[Table => Column], indexes: Vect
 }
 
 case class Index(name: String, columns: Vector[String], unique: Boolean)
+
 case class Column(
     name: String,
     tpe: String,
@@ -48,5 +49,11 @@ case class Column(
     foreignKey: Option[ForeignKey],
     sequence: Option[Sequence]
 )(val table: Table)
+object Column {
+  object withForeignKey {
+    def unapply(arg: Column): Option[ForeignKey] = arg.foreignKey
+  }
+}
+
 case class ForeignKey(table: String, column: String)
 case class Sequence(name: String, current: Int)

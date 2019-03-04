@@ -23,9 +23,7 @@ const getWorkspaceFromPrivateOrigin = (origin: string) =>
 const isLocal = origin =>
   origin.includes('localhost') || origin.includes('127.0.0.1')
 
-export function parseEndpoint(
-  endpoint: string,
-): {
+export interface ParseEndpointResult {
   service: string
   clusterBaseUrl: string
   stage: string
@@ -34,7 +32,9 @@ export function parseEndpoint(
   shared: boolean
   workspaceSlug: string | undefined
   clusterName: string
-} {
+}
+
+export function parseEndpoint(endpoint: string): ParseEndpointResult {
   const url = new URL(endpoint)
   const splittedPath = url.pathname.split('/')
   const shared = ['eu1.prisma.sh', 'us2.prisma.sh'].includes(url.host)

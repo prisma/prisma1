@@ -13,12 +13,11 @@
  */
 
 export interface Rule {
-  getPlural(singular: string) : string | null
+  getPlural(singular: string): string | null
 }
 
 // tslint:disable:max-classes-per-file
 export class RegExpRule implements Rule {
-  
   private singular: RegExp
   private plural: string
 
@@ -27,9 +26,9 @@ export class RegExpRule implements Rule {
     this.plural = plural
   }
 
-  public getPlural(singular: string) : string | null {
+  public getPlural(singular: string): string | null {
     // Important: Do not use g flag, we dont want to replace globally, only the first one
-    if(this.singular.test(singular)) {
+    if (this.singular.test(singular)) {
       const plural = singular.replace(this.singular, this.plural)
       return plural
     } else {
@@ -39,7 +38,6 @@ export class RegExpRule implements Rule {
 }
 
 export class CategoryRule implements Rule {
-  
   private list: string[]
   private singular: string
   private plural: string
@@ -50,20 +48,21 @@ export class CategoryRule implements Rule {
     this.plural = plural
   }
 
-  public getPlural(word: string) : string | null {
+  public getPlural(word: string): string | null {
     const lowerWord = word.toLowerCase()
-    for(const suffix of this.list) {
-      if(lowerWord.endsWith(suffix)) {
-        if(!lowerWord.endsWith(this.singular)) {
-          throw new Error("Internal Error")
+    for (const suffix of this.list) {
+      if (lowerWord.endsWith(suffix)) {
+        if (!lowerWord.endsWith(this.singular)) {
+          throw new Error('Internal Error')
         }
-        return word.substring(0, word.length - this.singular.length) + this.plural
+        return (
+          word.substring(0, word.length - this.singular.length) + this.plural
+        )
       }
     }
     return null
   }
 }
-
 
 export abstract class TwoFormInflector {
   private rules: Rule[]
@@ -73,40 +72,50 @@ export abstract class TwoFormInflector {
   }
 
   protected getPlural(word: string) {
-		for (const rule of this.rules) {
-			const result = rule.getPlural(word)
-			if (result != null) {
-				return result
-			}
-		}
-		return null
+    for (const rule of this.rules) {
+      const result = rule.getPlural(word)
+      if (result != null) {
+        return result
+      }
+    }
+    return null
   }
-  
+
   protected uncountable(list: string[]) {
-    this.rules.push(new CategoryRule(list, "", ""))
+    this.rules.push(new CategoryRule(list, '', ''))
   }
 
   protected irregular(singular: string, plural: string) {
-    this.rules.push(new RegExpRule(new RegExp(`${singular.toUpperCase()[0]}${singular.substring(1)}$`), plural.toUpperCase()[0] + plural.substring(1)))
-    this.rules.push(new RegExpRule(new RegExp(`${singular.toLowerCase()[0]}${singular.substring(1)}$`), plural.toLowerCase()[0] + plural.substring(1)))
+    this.rules.push(
+      new RegExpRule(
+        new RegExp(`${singular.toUpperCase()[0]}${singular.substring(1)}$`),
+        plural.toUpperCase()[0] + plural.substring(1),
+      ),
+    )
+    this.rules.push(
+      new RegExpRule(
+        new RegExp(`${singular.toLowerCase()[0]}${singular.substring(1)}$`),
+        plural.toLowerCase()[0] + plural.substring(1),
+      ),
+    )
   }
 
   protected irregularFromList(list: Array<[string, string]>) {
-    for(const [a, b] of list) {
+    for (const [a, b] of list) {
       this.irregular(a, b)
     }
   }
 
   protected rule(singular: string, plural: string) {
-    this.rules.push(new RegExpRule(new RegExp(singular, "i"), plural))
+    this.rules.push(new RegExpRule(new RegExp(singular, 'i'), plural))
   }
 
   protected ruleFromList(list: Array<[string, string]>) {
-    for(const [a, b] of list) {
+    for (const [a, b] of list) {
       this.rule(a, b)
     }
   }
-  
+
   protected categoryRule(list: string[], singular: string, plural: string) {
     this.rules.push(new CategoryRule(list, singular, plural))
   }

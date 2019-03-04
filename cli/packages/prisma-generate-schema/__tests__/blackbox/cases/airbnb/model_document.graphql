@@ -11,15 +11,15 @@ type User {
   responseTime: Int
 
   isSuperHost: Boolean! @default(value: false)
-  ownedPlaces: [Place!]! @relation(link: INLINE)
+  ownedPlaces: [Place] @relation(link: INLINE)
   location: Location @relation(link: INLINE)
-  bookings: [Booking!]! @relation(link: INLINE)
-  paymentAccount: [PaymentAccount!]! @relation(link: INLINE)
-  sentMessages: [Message!]! @relation(name: "SentMessages", link: INLINE)
-  receivedMessages: [Message!]! @relation(name: "ReceivedMessages", link: INLINE)
-  notifications: [Notification!]! @relation(link: INLINE)
+  bookings: [Booking] @relation(link: INLINE)
+  paymentAccount: [PaymentAccount] @relation(link: INLINE)
+  sentMessages: [Message] @relation(name: "SentMessages", link: INLINE)
+  receivedMessages: [Message] @relation(name: "ReceivedMessages", link: INLINE)
+  notifications: [Notification] @relation(link: INLINE)
   profilePicture: Picture @relation(link: INLINE)
-  hostingExperiences: [Experience!]! @relation(link: INLINE)
+  hostingExperiences: [Experience] @relation(link: INLINE)
 }
 
 type Place {
@@ -34,7 +34,7 @@ type Place {
   numBeds: Int!
   numBaths: Int!
 
-  reviews: [Review!]! @relation(link: INLINE)
+  reviews: [Review] @relation(link: INLINE)
   amenities: Amenities! @relation(link: INLINE)
   host: User!
   pricing: Pricing! @relation(link: INLINE)
@@ -43,8 +43,8 @@ type Place {
   guestRequirements: GuestRequirements @relation(link: INLINE)
   policies: Policies @relation(link: INLINE)
   houseRules: HouseRules @relation(link: INLINE)
-  bookings: [Booking!]! @relation(link: INLINE)
-  pictures: [Picture!]! @relation(link: INLINE)
+  bookings: [Booking] @relation(link: INLINE)
+  pictures: [Picture] @relation(link: INLINE)
   popularity: Int!
 }
 
@@ -116,7 +116,7 @@ type Location {
 
 type Neighbourhood {
   id: ID! @id
-  locations: [Location!]!
+  locations: [Location]
   name: String!
   slug: String!
   homePreview: Picture @relation(link: INLINE)
@@ -128,7 +128,7 @@ type Neighbourhood {
 type City {
   id: ID! @id
   name: String!
-  neighbourhoods: [Neighbourhood!]!
+  neighbourhoods: [Neighbourhood]
 }
 
 type Picture {
@@ -143,7 +143,7 @@ type Experience {
   host: User!
   location: Location!
   pricePerPerson: Int!
-  reviews: [Review!]! @relation(link: INLINE)
+  reviews: [Review] @relation(link: INLINE)
   preview: Picture! @relation(link: INLINE)
   popularity: Int!
 }
@@ -240,7 +240,7 @@ type PaymentAccount {
   createdAt: DateTime!
   type: PAYMENT_PROVIDER
   user: User!
-  payments: [Payment!]! @relation(link: INLINE)
+  payments: [Payment] @relation(link: INLINE)
   paypal: PaypalInformation @relation(link: INLINE)
   creditcard: CreditCardInformation @relation(link: INLINE)
 }
@@ -289,7 +289,7 @@ type Restaurant {
   createdAt: DateTime!
   title: String!
   avgPricePerPerson: Int!
-  pictures: [Picture!]! @relation(link: INLINE)
+  pictures: [Picture] @relation(link: INLINE)
   location: Location!
   isCurated: Boolean! @default(value: true)
   slug: String!

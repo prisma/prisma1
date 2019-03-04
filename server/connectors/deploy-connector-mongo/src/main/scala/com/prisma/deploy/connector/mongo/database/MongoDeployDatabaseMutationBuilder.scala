@@ -187,7 +187,7 @@ object MongoDeployDatabaseMutationBuilder {
 
   def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
     // TODO: explain this magic calculation
-    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
+    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 13).min(fieldName.length))
 
     unique match {
       case false => shortenedName + "_R"

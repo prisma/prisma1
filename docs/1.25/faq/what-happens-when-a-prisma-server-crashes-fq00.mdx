@@ -1,0 +1,11 @@
+export const meta = {
+  title: 'What happens when a Prisma server crashes?',
+  position: 2,
+  articleGroup: 'Crashing Prisma server',
+}
+
+## FAQ
+
+A [Prisma server](/prisma-server) is mostly _stateless_, therefore it can simply be restarted and it will work in the same way as before.
+
+The only times when a Prisma server maintains some state is when it stores [subscription](qwe3) connections of a client.

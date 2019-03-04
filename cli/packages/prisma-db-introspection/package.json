@@ -16,16 +16,18 @@
     "@types/node": "^8.0.57",
     "@types/pg": "^7.4.6",
     "jest": "23.6.0",
-    "prettier": "^1.10.2",
+    "prettier": "1.14.3",
     "ts-jest": "^23.10.5",
     "tslint": "^5.6.0",
     "typescript": "^3.2.2"
   },
   "dependencies": {
     "@types/mongodb": "^3.1.14",
+    "@types/mysql": "^2.15.5",
     "graphql-request": "^1.5.0",
     "lodash": "^4.17.4",
     "mongodb": "^3.1.10",
+    "mysql": "^2.16.0",
     "pg": "^7.4.1",
     "pluralize": "^7.0.0",
     "prisma-datamodel": "1.23.0-alpha.1",
@@ -38,7 +40,7 @@
     "build": "tsc -d",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
-    "prepublishOnly": "yarn lint && yarn test && yarn build"
+    "prepublishOnly": "yarn build"
   },
   "jest": {
     "transform": {
@@ -49,7 +51,7 @@
       "/node_modules/",
       "helpers.ts",
       "connectionDetails.ts",
-      "/postgres/",
+      "common.ts",
       "/data/",
       "dist"
     ],

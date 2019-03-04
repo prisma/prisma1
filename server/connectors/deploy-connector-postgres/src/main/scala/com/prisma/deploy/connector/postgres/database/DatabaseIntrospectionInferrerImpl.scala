@@ -17,7 +17,7 @@ case class DatabaseIntrospectionInferrerImpl(db: JdbcProfile#Backend#Database, s
     for {
       // the line below does not work perfectly on postgres. E.g. it will return tables for schemas "passive_test" and "passive$test" when param is "passive_test"
       // we therefore have one additional filter step
-      potentialTables <- MTable.getTables(cat = None, schemaPattern = Some(schema), namePattern = None, types = None)
+      potentialTables <- MTable.getTables(cat = Some(schema), schemaPattern = Some(schema), namePattern = None, types = None)
       tables          = potentialTables.filter(table => table.name.schema.contains(schema))
       inferredTables  <- DBIO.sequence(tables.map(mTableToInferredTables))
     } yield {

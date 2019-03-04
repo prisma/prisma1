@@ -18,7 +18,7 @@ type AWithId {
 }
 
 type B {
-    a: [A!]! @relation(link: INLINE) 
+    a: [A] @relation(link: INLINE) 
     id: ID! @id
     a2: AWithId
 }

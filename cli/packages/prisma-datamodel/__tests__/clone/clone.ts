@@ -201,7 +201,7 @@ type Amenities {
   crib: Boolean! @default(value: "false")
 }
 
-type Review {
+type Review @index(name: "RatingIndex", fields: ["stars", "checkIn", "value"], unique: false) {
   id: ID! @unique
   createdAt: DateTime!
   text: String!
@@ -336,7 +336,7 @@ describe(`Schema clone functionality`, () => {
 
     let clone = cloneSchema(schema)
 
-    // Deep equality check. 
+    // Deep equality check.
     expect(clone).toEqual(schema)
 
     // Now we check for inequality after a few mutations
@@ -346,18 +346,26 @@ describe(`Schema clone functionality`, () => {
     expect(clone).not.toEqual(schema)
 
     clone = cloneSchema(schema)
-    clone.types.filter(x => x.name === 'Message')[0].fields.filter(x => x.name === 'from')[0].name = 'frum'
+    clone.types
+      .filter(x => x.name === 'Message')[0]
+      .fields.filter(x => x.name === 'from')[0].name = 'frum'
     expect(clone).not.toEqual(schema)
 
     clone = cloneSchema(schema)
-    clone.types.filter(x => x.name === 'Amenities')[0].fields.filter(x => x.name === 'babyMonitor')[0].defaultValue = "true"
+    clone.types
+      .filter(x => x.name === 'Amenities')[0]
+      .fields.filter(x => x.name === 'babyMonitor')[0].defaultValue = 'true'
     expect(clone).not.toEqual(schema)
 
     clone = cloneSchema(schema)
-    const directives = clone.types.filter(x => x.name === 'Payment')[0].fields.filter(x => x.name === 'serviceFee')[0].directives
+    const directives = clone.types
+      .filter(x => x.name === 'Payment')[0]
+      .fields.filter(x => x.name === 'serviceFee')[0].directives
     expect(directives).not.toBeUndefined()
-    if(directives !== undefined) {
-      directives.filter(x => x.name === 'thisIsADirective')[0].arguments = { value: '\"xmlFile\"' }
+    if (directives !== undefined) {
+      directives.filter(x => x.name === 'thisIsADirective')[0].arguments = {
+        value: '"xmlFile"',
+      }
     }
     expect(clone).not.toEqual(schema)
   })

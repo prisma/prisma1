@@ -1,10 +1,11 @@
 package com.prisma.integration
 
+import com.prisma.IgnoreSQLite
 import org.scalatest.{FlatSpec, Matchers}
 
 class RenamingWithExistingDataSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Renaming a model" should "work" in {
+  "Renaming a model" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -26,7 +27,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"bs":[{"a":"A"}]}}""")
   }
 
-  "Renaming a model with a scalar list " should "work" in {
+  "Renaming a model with a scalar list " should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -50,7 +51,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"bs":[{"a":"A"}]}}""")
   }
 
-  "Renaming a field" should "work" in {
+  "Renaming a field" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -72,7 +73,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"as":[{"b":"A"}]}}""")
   }
 
-  "Renaming a relation with oldName on both sides" should "work" in {
+  "Renaming a relation with oldName on both sides" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -106,7 +107,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     as.toString should be("""{"data":{"as":[{"b":{"b":"B1"}}]}}""")
   }
 
-  "Renaming a model and field" should "work" in {
+  "Renaming a model and field" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -128,7 +129,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     bs.toString should be("""{"data":{"bs":[{"b":"A"}]}}""")
   }
 
-  "Renaming a model and a relation with oldName on both sides" should "work" in {
+  "Renaming a model and a relation with oldName on both sides" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -162,7 +163,7 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     as.toString should be("""{"data":{"cs":[{"b":{"b":"B1"}}]}}""")
   }
 
-  "Renaming a field and a relation with oldName on both sides" should "work" in {
+  "Renaming a field and a relation with oldName on both sides" should "work" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
@@ -196,14 +197,16 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
     as.toString should be("""{"data":{"as":[{"bNew":{"b":"B1"}}]}}""")
   }
 
-  "Renaming models by switching the names of two existing models" should "work even when there is existing data" in {
+  "Renaming models by switching the names of two existing models" should "error and ask to be split in two parts" in {
 
     val schema =
       """type A {
+        |  id: ID! @unique
         |  a: String! @unique
         |}
         |
         |type B {
+        |  id: ID! @unique
         |  b: String @unique
         |}"""
 
@@ -214,19 +217,19 @@ class RenamingWithExistingDataSpec extends FlatSpec with Matchers with Integrati
 
     val schema1 =
       """type B @rename(oldName: "A"){
+        |  id: ID! @unique
         |  a: String! @unique
         |}
         |
         |type A @rename(oldName: "B"){
+        |  id: ID! @unique
         |  b: String @unique
         |}"""
 
-    val updatedProject = deployServer.deploySchema(project, schema1)
+    val updatedProject = deployServer.deploySchemaThatMustError(project, schema1)
 
-    val as = apiServer.query("""{as{b}}""", updatedProject)
-    as.toString should be("""{"data":{"as":[{"b":"B"}]}}""")
-    val bs = apiServer.query("""{bs{a}}""", updatedProject)
-    bs.toString should be("""{"data":{"bs":[{"a":"A"}]}}""")
+    updatedProject.toString() should be(
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You renamed type `A` to `B`. But that is the old name of type `A`. Please do this in two steps."},{"description":"You renamed type `B` to `A`. But that is the old name of type `B`. Please do this in two steps."}],"warnings":[]}}}""")
   }
 
   // these will be fixed when we implement a migration workflow

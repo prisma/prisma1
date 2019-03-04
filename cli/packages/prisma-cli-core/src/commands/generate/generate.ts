@@ -1,5 +1,5 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
-import { prettyTime } from '../../util'
+import { prettyTime } from '../../utils/util'
 import chalk from 'chalk'
 import * as fs from 'fs-extra'
 import * as path from 'path'
@@ -27,6 +27,10 @@ export default class GenereateCommand extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
     ['endpoint']: flags.boolean({
       description:
         'Use a specific endpoint for schema generation or pick endpoint from prisma.yml',
@@ -51,7 +55,7 @@ export default class GenereateCommand extends Command {
         const serviceName = this.definition.service!
         const stageName = this.definition.stage!
         const token = this.definition.getToken(serviceName, stageName)
-        const cluster = this.definition.getCluster()
+        const cluster = await this.definition.getCluster()
         const workspace = this.definition.getWorkspace()
         this.env.setActiveCluster(cluster!)
         await this.client.initClusterClient(
@@ -99,11 +103,16 @@ export default class GenereateCommand extends Command {
         const resolvedOutput = output.startsWith('/')
           ? output
           : path.join(this.config.definitionDir, output)
-
-        fs.mkdirpSync(resolvedOutput)
-
+          
         if (generator === 'graphql-schema') {
+          if (!resolvedOutput.endsWith('.graphql')) {
+            throw new Error(`Error: ${chalk.bold('output')} for generator ${chalk.bold('graphql-schema')} should be a ${chalk.green(chalk.bold('.graphql'))}-file. Please change the ${chalk.bold('output')} property for this generator in ${chalk.green(chalk.bold('prisma.yml'))}`)
+          }
+
+          fs.mkdirpSync(path.resolve(resolvedOutput, '../'))
           await this.generateSchema(resolvedOutput, schemaString)
+        } else {
+          fs.mkdirpSync(resolvedOutput)
         }
 
         const isMongo =
@@ -158,7 +167,9 @@ export default class GenereateCommand extends Command {
   }
 
   async generateSchema(output: string, schemaString: string) {
-    fs.writeFileSync(path.join(output, 'prisma.graphql'), schemaString)
+    fs.writeFileSync(output, schemaString)
+
+    this.out.log(`Saving Prisma GraphQL schema (SDL) at ${output}`)
   }
 
   async generateTypescript(
@@ -241,7 +252,6 @@ export default class GenereateCommand extends Command {
 
     const generator = new GoGenerator({ schema, internalTypes })
 
-    // TODO: Hotfix to make Go endpoint work partially till this is resolved https://github.com/prisma/prisma/issues/3277
     const endpoint = GoGenerator.replaceEnv(this.definition.rawJson!.endpoint)
     const secret = this.definition.rawJson.secret
       ? GoGenerator.replaceEnv(this.definition.rawJson!.secret)

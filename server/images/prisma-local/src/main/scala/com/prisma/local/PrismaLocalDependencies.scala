@@ -39,6 +39,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
   implicit val supportedDrivers: SupportedDrivers = SupportedDrivers(
     SupportedDrivers.MYSQL    -> new org.mariadb.jdbc.Driver,
     SupportedDrivers.POSTGRES -> new org.postgresql.Driver,
+    SupportedDrivers.SQLITE   -> new org.sqlite.JDBC
   )
 
   override implicit def self                                    = this
@@ -54,7 +55,7 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     CachedProjectFetcherImpl(fetcher, invalidationPubSub, cacheFactory)(system.dispatcher)
   }
 
-  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector)
+  override lazy val migrator: Migrator = AsyncMigrator(migrationPersistence, projectPersistence, deployConnector, invalidationPublisher)
   override lazy val managementAuth = {
     config.managementApiSecret match {
       case Some(jwtSecret) if jwtSecret.nonEmpty => JnaAuth(Algorithm.HS256)
@@ -95,5 +96,6 @@ case class PrismaLocalDependencies()(implicit val system: ActorSystem, val mater
     initializeDeployDependencies()
     initializeApiDependencies()
     initializeSubscriptionDependencies()
+    telemetryActor
   }
 }

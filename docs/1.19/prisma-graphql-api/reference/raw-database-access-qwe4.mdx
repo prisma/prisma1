@@ -17,14 +17,45 @@ type User {
   createdAt: DateTime!
   updatedAt: DateTime!
 }
-
 ```
 
 ### Docker configuration
 
 To enable raw database access, add `rawAccess` to your `docker-compose.yml` file.
 
-```yml
+<Code languages={["MySQL", "PostgreSQL"]}>
+
+```yml copy
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.19
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mysql
+            host: mysql
+            port: 3306
+            user: root
+            password: prisma
+            migrations: true
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  mysql:
+```
+
+```yml copy
 version: '3'
 services:
   prisma:
@@ -58,6 +89,8 @@ services:
 volumes:
   postgres:
 ```
+
+</Code>
 
 ## Examples
 

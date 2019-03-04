@@ -3,15 +3,11 @@ package com.prisma.deploy.migration.validation
 import com.prisma.deploy.connector.{FieldRequirement, FieldRequirementsInterface}
 import com.prisma.deploy.gc_value.GCStringConverter
 import com.prisma.deploy.validation._
-import com.prisma.shared.models.ConnectorCapability.{MigrationsCapability, ScalarListsCapability}
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, RelationStrategy, TypeIdentifier}
-import com.prisma.utils.or.OrExtensions
+import com.prisma.shared.models.{ConnectorCapabilities, TypeIdentifier}
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
 
 import scala.collection.immutable.Seq
-import scala.util.{Failure, Success}
-import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 case class DirectiveRequirement(directiveName: String, requiredArguments: Seq[RequiredArg], optionalArguments: Seq[Argument])
@@ -190,6 +186,7 @@ case class LegacyDataModelValidator(
     val scalarFieldValidations    = tryValidation(validateScalarFields(allFieldAndTypes))
     val fieldDirectiveValidations = tryValidation(allFieldAndTypes.flatMap(validateFieldDirectives))
     val enumValidations           = tryValidation(validateEnumTypes)
+    val crossRenameValidations    = tryValidation(validateCrossRenames(doc.objectTypes))
 
     val allValidations = Vector(
       reservedFieldsValidations,
@@ -200,7 +197,8 @@ case class LegacyDataModelValidator(
       relationFieldValidations,
       scalarFieldValidations,
       fieldDirectiveValidations,
-      enumValidations
+      enumValidations,
+      crossRenameValidations
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -247,6 +245,20 @@ case class LegacyDataModelValidator(
       objectType        <- objectTypes.find(_.name.equalsIgnoreCase(duplicateTypeName))
     } yield {
       DeployErrors.duplicateTypeName(objectType)
+    }
+  }
+
+  def validateCrossRenames(objectTypes: Seq[ObjectTypeDefinition]): Seq[DeployError] = {
+    for {
+      renamedType1                     <- objectTypes
+      oldName                          <- renamedType1.oldName
+      allObjectTypesExceptThisOne      = objectTypes.filterNot(_ == renamedType1)
+      renamedTypeThatHadTheNameOfType1 <- allObjectTypesExceptThisOne.find(_.oldName.contains(renamedType1.name))
+    } yield {
+      DeployError(
+        renamedType1.name,
+        s"You renamed type `$oldName` to `${renamedType1.name}`. But that is the old name of type `${renamedTypeThatHadTheNameOfType1.name}`. Please do this in two steps."
+      )
     }
   }
 
@@ -300,7 +312,7 @@ case class LegacyDataModelValidator(
 
     /**
       * Check that if a relation is not a self-relation and a relation-directive occurs only once that there is no
-      * opposing field without a relationdirective on the other side.
+      * opposing field without a relation directive on the other side.
       */
     val allowOnlyOneDirectiveOnlyWhenUnambigous = relationFieldsWithRelationDirective.flatMap {
       case thisType if !isSelfRelation(thisType) && relationCount(thisType) == 1 =>
@@ -399,6 +411,15 @@ case class LegacyDataModelValidator(
       }
     }
 
+    def ensureRelationDirectivesHaveValidNames(fieldAndType: FieldAndType): Option[DeployError] = {
+      if (fieldAndType.fieldDef.hasRelationDirectiveWithNameArg && fieldAndType.fieldDef.relationName.isDefined && !NameConstraints.isValidRelationName(
+            fieldAndType.fieldDef.relationName.get)) {
+        Some(DeployErrors.relationDirectiveHasInvalidName(fieldAndType))
+      } else {
+        None
+      }
+    }
+
     def ensureNoOldDefaultValueDirectives(fieldAndTypes: FieldAndType): Option[DeployError] = {
       if (fieldAndType.fieldDef.hasOldDefaultValueDirective) {
         Some(DeployErrors.invalidSyntaxForDefaultValue(fieldAndType))
@@ -448,6 +469,7 @@ case class LegacyDataModelValidator(
       ensureDirectivesAreUnique(fieldAndType) ++
       ensureNoOldDefaultValueDirectives(fieldAndType) ++
       ensureRelationDirectivesArePlacedCorrectly(fieldAndType) ++
+      ensureRelationDirectivesHaveValidNames(fieldAndType) ++
       ensureNoDefaultValuesOnListFields(fieldAndType) ++
       ensureNoInvalidEnumValuesInDefaultValues(fieldAndType) ++
       ensureDefaultValuesHaveCorrectType(fieldAndType)
@@ -492,9 +514,8 @@ case class LegacyDataModelValidator(
     }
   }
 
-  def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
-  def isRelationField(fieldAndType: FieldAndType): Boolean = isRelationField(fieldAndType.fieldDef)
-  def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
+  def isSelfRelation(fieldAndType: FieldAndType): Boolean = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
+  def isRelationField(fieldDef: FieldDefinition): Boolean = !isScalarField(fieldDef) && !isEnumField(fieldDef)
 
   def isScalarField(fieldAndType: FieldAndType): Boolean = isScalarField(fieldAndType.fieldDef)
   def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType

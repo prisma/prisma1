@@ -1,6 +1,5 @@
 package com.prisma.api.mutations.embedded
 
-import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -11,6 +10,8 @@ import org.scalatest.{FlatSpec, Matchers, Retries}
 import scala.concurrent.Future
 
 class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
+  override def doNotRunForPrototypes: Boolean = true
+
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   import testDependencies.system.dispatcher

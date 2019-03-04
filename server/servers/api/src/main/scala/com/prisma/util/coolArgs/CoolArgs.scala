@@ -206,8 +206,9 @@ case class CoolArgs(raw: Map[String, Any]) {
   }
 
   def getUpdateArgs(model: Model) = {
-    val nonListArgs = generateNonListUpdateGCValues(model).updateDateTimesIfNecessary(model)
-    val listArgs    = getScalarListArgs(model)
+    val listArgs         = getScalarListArgs(model)
+    val listCausesUpdate = listArgs.nonEmpty
+    val nonListArgs      = generateNonListUpdateGCValues(model).updateDateTimesIfNecessary(model, listCausesUpdate)
 
     (nonListArgs, listArgs)
   }

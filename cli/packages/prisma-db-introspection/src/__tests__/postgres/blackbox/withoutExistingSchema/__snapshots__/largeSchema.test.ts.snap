@@ -1,0 +1,355 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector large example database 1`] = `
+"type Actor @indexes(value: [
+  {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
+]) @pgTable(name: \\"actor\\") {
+  id: Int! @pgColumn(name: \\"actor_id\\") @unique
+  film_actor: [FilmActor]
+  first_name: String!
+  last_name: String!
+  last_update: DateTime!
+}
+
+type Address @pgTable(name: \\"address\\") {
+  id: Int! @pgColumn(name: \\"address_id\\") @unique
+  address: String!
+  address2: String
+  city_id: City!
+  customer: [Customer]
+  district: String!
+  last_update: DateTime!
+  phone: String!
+  postal_code: String
+  staff: [Staff]
+  store: [Store]
+}
+
+type Category @pgTable(name: \\"category\\") {
+  id: Int! @pgColumn(name: \\"category_id\\") @unique
+  film_category: [FilmCategory]
+  last_update: DateTime!
+  name: String!
+}
+
+type City @pgTable(name: \\"city\\") {
+  id: Int! @pgColumn(name: \\"city_id\\") @unique
+  address: [Address]
+  city: String!
+  country_id: Country!
+  last_update: DateTime!
+}
+
+type Country @pgTable(name: \\"country\\") {
+  id: Int! @pgColumn(name: \\"country_id\\") @unique
+  city: [City]
+  country: String!
+  last_update: DateTime!
+}
+
+type Customer @indexes(value: [
+  {name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"]},
+  {name: \\"idx_last_name\\", fields: [\\"last_name\\"]}
+]) @pgTable(name: \\"customer\\") {
+  id: Int! @pgColumn(name: \\"customer_id\\") @unique
+  active: Int
+  activebool: Boolean! @default(value: true)
+  address_id: Address!
+  create_date: DateTime!
+  email: String
+  first_name: String!
+  last_name: String!
+  last_update: DateTime
+  payment: [Payment]
+  rental: [Rental]
+  store_id: Int!
+}
+
+type Film @indexes(value: [
+  {name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"]},
+  {name: \\"idx_title\\", fields: [\\"title\\"]}
+]) @pgTable(name: \\"film\\") {
+  id: Int! @pgColumn(name: \\"film_id\\") @unique
+  description: String
+  film_actor: [FilmActor]
+  film_category: [FilmCategory]
+  # Type tsvector is not supported
+  # fulltext: tsvector!
+  inventory: [Inventory]
+  language_id: Language!
+  last_update: DateTime!
+  length: Int
+  rating: MpaaRating
+  release_year: Int
+  rental_duration: Int! @default(value: 3)
+  rental_rate: Float! @default(value: 4.99)
+  replacement_cost: Float! @default(value: 19.99)
+  special_features: String
+  title: String!
+}
+
+type FilmActor @pgTable(name: \\"film_actor\\") {
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Actor! @pgColumn(name: \\"actor_id\\") @unique
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Film! @pgColumn(name: \\"film_id\\") @unique
+  last_update: DateTime!
+}
+
+type FilmCategory @pgTable(name: \\"film_category\\") {
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Film! @pgColumn(name: \\"film_id\\") @unique
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Category! @pgColumn(name: \\"category_id\\") @unique
+  last_update: DateTime!
+}
+
+type Inventory @indexes(value: [
+  {name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"]}
+]) @pgTable(name: \\"inventory\\") {
+  id: Int! @pgColumn(name: \\"inventory_id\\") @unique
+  film_id: Film!
+  last_update: DateTime!
+  rental: [Rental]
+  store_id: Int!
+}
+
+type Language @pgTable(name: \\"language\\") {
+  id: Int! @pgColumn(name: \\"language_id\\") @unique
+  film: [Film]
+  last_update: DateTime!
+  name: String!
+}
+
+enum MpaaRating {
+  G
+  NC-17
+  PG
+  PG-13
+  R
+}
+
+type Payment @pgTable(name: \\"payment\\") {
+  id: Int! @pgColumn(name: \\"payment_id\\") @unique
+  amount: Float!
+  customer_id: Customer!
+  payment_date: DateTime!
+  rental_id: Rental!
+  staff_id: Staff!
+}
+
+type Rental @indexes(value: [
+  {name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"], unique: true}
+]) @pgTable(name: \\"rental\\") {
+  id: Int! @pgColumn(name: \\"rental_id\\") @unique
+  customer_id: Customer!
+  inventory_id: Inventory!
+  last_update: DateTime!
+  payment: [Payment]
+  rental_date: DateTime!
+  return_date: DateTime
+  staff_id: Staff!
+}
+
+type Staff @pgTable(name: \\"staff\\") {
+  id: Int! @pgColumn(name: \\"staff_id\\") @unique
+  active: Boolean! @default(value: true)
+  address_id: Address!
+  email: String
+  first_name: String!
+  last_name: String!
+  last_update: DateTime!
+  password: String
+  payment: [Payment]
+  # Type bytea is not supported
+  # picture: bytea
+  rental: [Rental]
+  store: Store!
+  store_id: Int!
+  username: String!
+}
+
+type Store @pgTable(name: \\"store\\") {
+  id: Int! @pgColumn(name: \\"store_id\\") @unique
+  address_id: Address!
+  last_update: DateTime!
+  manager_staff_id: Staff! @unique
+}"
+`;
+
+exports[`Introspector large example database 2`] = `
+"type Actor @db(name: \\"actor\\") @indexes(value: [
+  {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
+]) {
+  actor_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"actor_actor_id_seq\\", initialValue: 1, allocationSize: 1)
+  film_actor: [FilmActor]
+  first_name: String!
+  last_name: String!
+  last_update: DateTime!
+}
+
+type Address @db(name: \\"address\\") {
+  address_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"address_address_id_seq\\", initialValue: 1, allocationSize: 1)
+  address: String!
+  address2: String
+  city_id: City!
+  customer: [Customer]
+  district: String!
+  last_update: DateTime!
+  phone: String!
+  postal_code: String
+  staff: [Staff]
+  store: [Store]
+}
+
+type Category @db(name: \\"category\\") {
+  category_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"category_category_id_seq\\", initialValue: 1, allocationSize: 1)
+  film_category: [FilmCategory]
+  last_update: DateTime!
+  name: String!
+}
+
+type City @db(name: \\"city\\") {
+  city_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"city_city_id_seq\\", initialValue: 1, allocationSize: 1)
+  address: [Address]
+  city: String!
+  country_id: Country!
+  last_update: DateTime!
+}
+
+type Country @db(name: \\"country\\") {
+  country_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"country_country_id_seq\\", initialValue: 1, allocationSize: 1)
+  city: [City]
+  country: String!
+  last_update: DateTime!
+}
+
+type Customer @db(name: \\"customer\\") @indexes(value: [
+  {name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"]},
+  {name: \\"idx_last_name\\", fields: [\\"last_name\\"]}
+]) {
+  customer_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"customer_customer_id_seq\\", initialValue: 1, allocationSize: 1)
+  active: Int
+  activebool: Boolean! @default(value: true)
+  address_id: Address!
+  create_date: DateTime!
+  email: String
+  first_name: String!
+  last_name: String!
+  last_update: DateTime
+  payment: [Payment]
+  rental: [Rental]
+  store_id: Int!
+}
+
+type Film @db(name: \\"film\\") @indexes(value: [
+  {name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"]},
+  {name: \\"idx_title\\", fields: [\\"title\\"]}
+]) {
+  film_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"film_film_id_seq\\", initialValue: 1, allocationSize: 1)
+  description: String
+  film_actor: [FilmActor]
+  film_category: [FilmCategory]
+  # Type tsvector is not supported
+  # fulltext: tsvector!
+  inventory: [Inventory]
+  language_id: Language!
+  last_update: DateTime!
+  length: Int
+  rating: MpaaRating
+  release_year: Int
+  rental_duration: Int! @default(value: 3)
+  rental_rate: Float! @default(value: 4.99)
+  replacement_cost: Float! @default(value: 19.99)
+  special_features: String
+  title: String!
+}
+
+type FilmActor @db(name: \\"film_actor\\") {
+  # Multiple ID fields (compound indexes) are not supported
+  # actor_id: Actor! @id(strategy: NONE)
+  # Multiple ID fields (compound indexes) are not supported
+  # film_id: Film! @id(strategy: NONE)
+  last_update: DateTime!
+}
+
+type FilmCategory @db(name: \\"film_category\\") {
+  # Multiple ID fields (compound indexes) are not supported
+  # film_id: Film! @id(strategy: NONE)
+  # Multiple ID fields (compound indexes) are not supported
+  # category_id: Category! @id(strategy: NONE)
+  last_update: DateTime!
+}
+
+type Inventory @db(name: \\"inventory\\") @indexes(value: [
+  {name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"]}
+]) {
+  inventory_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"inventory_inventory_id_seq\\", initialValue: 1, allocationSize: 1)
+  film_id: Film!
+  last_update: DateTime!
+  rental: [Rental]
+  store_id: Int!
+}
+
+type Language @db(name: \\"language\\") {
+  language_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"language_language_id_seq\\", initialValue: 1, allocationSize: 1)
+  film: [Film]
+  last_update: DateTime!
+  name: String!
+}
+
+enum MpaaRating {
+  G
+  NC-17
+  PG
+  PG-13
+  R
+}
+
+type Payment @db(name: \\"payment\\") {
+  payment_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"payment_payment_id_seq\\", initialValue: 1, allocationSize: 1)
+  amount: Float!
+  customer_id: Customer!
+  payment_date: DateTime!
+  rental_id: Rental!
+  staff_id: Staff!
+}
+
+type Rental @db(name: \\"rental\\") @indexes(value: [
+  {name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"], unique: true}
+]) {
+  rental_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"rental_rental_id_seq\\", initialValue: 1, allocationSize: 1)
+  customer_id: Customer!
+  inventory_id: Inventory!
+  last_update: DateTime!
+  payment: [Payment]
+  rental_date: DateTime!
+  return_date: DateTime
+  staff_id: Staff!
+}
+
+type Staff @db(name: \\"staff\\") {
+  staff_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"staff_staff_id_seq\\", initialValue: 1, allocationSize: 1)
+  active: Boolean! @default(value: true)
+  address_id: Address!
+  email: String
+  first_name: String!
+  last_name: String!
+  last_update: DateTime!
+  password: String
+  payment: [Payment]
+  # Type bytea is not supported
+  # picture: bytea
+  rental: [Rental]
+  store: Store!
+  store_id: Int!
+  username: String!
+}
+
+type Store @db(name: \\"store\\") {
+  store_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"store_store_id_seq\\", initialValue: 1, allocationSize: 1)
+  address_id: Address!
+  last_update: DateTime!
+  manager_staff_id: Staff! @unique
+}"
+`;

@@ -3,7 +3,6 @@ require_relative './command'
 require_relative './docker'
 
 def upload_pipeline(context)
-
   yml = PipelineRenderer.new(context).render!
   res = Command.new("buildkite-agent", "pipeline", "upload").with_stdin([yml]).run!.raise!
 
@@ -22,17 +21,22 @@ def build_images(context, tag)
   raise "Invalid version to build images from." if tag.nil?
 
   tags_to_build = [tag.stringify]
-  tags_to_build.push(infer_additional_tags(context, tag)).flatten.compact
+  tags_to_build.push(infer_additional_tags(context, tag))
 
   DockerCommands.build(context, tag)
-  DockerCommands.tag_and_push(context, tags_to_build)
+  DockerCommands.tag_and_push(context, tags_to_build.flatten.compact)
 
-  trigger_dependent_pipeline(context.branch, tags_to_build)
+  # Because buildkite doesn't give us the underlying branch on a tagged build, we need to infer it.
+  if context.tag.nil? || !context.tag.stable?
+    trigger_dependent_pipeline(context.branch, tags_to_build)
+  elsif context.tag.stable?
+    trigger_dependent_pipeline("master", tags_to_build)
+  end
 end
 
 def native_image(context, target, version_str)
   parsed_version = Tag.new(version_str)
-  artifact_s3_paths = ["s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/#{context.commit}/"]
+  artifact_s3_paths = ["s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/#{context.commit}"]
 
   if parsed_version.stable?
     version_to_build = [version_str, infer_additional_tags(context, parsed_version)].flatten.compact.find do |version|
@@ -51,7 +55,7 @@ def native_image(context, target, version_str)
 
   # Produces a binary in the target folder
   DockerCommands.native_image(context, version_to_build, "build-image:#{target}")
-  Dir.chdir("#{context.server_root_path}/images/prisma-native/target/prisma-native-image/") # Necessary to keep the buildkite agent from prefixing the binary when uploading
+  Dir.chdir("#{context.server_root_path}/images/prisma-native/target/prisma-native-image") # Necessary to keep the buildkite agent from prefixing the binary when uploading
 
   artifact_s3_paths.each do |path|
     Command.new("buildkite-agent", "artifact", "upload", "prisma-native").with_env({

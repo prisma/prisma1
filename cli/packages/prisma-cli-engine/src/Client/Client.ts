@@ -24,79 +24,12 @@ import * as opn from 'opn'
 import { concatName } from 'prisma-yml/dist/PrismaDefinition'
 import { IntrospectionQuery } from 'graphql'
 import { hasTypeWithField } from '../utils/graphql-schema'
+import {
+  renderMigrationFragment,
+  renderStepFragment,
+} from './migrationFragment'
 
 const debug = require('debug')('client')
-
-const STEP_FRAGMENT = `
-    type
-    __typename
-    ... on CreateEnum {
-      name
-      ce_values: values
-    }
-    ... on CreateField {
-      model
-      name
-      cf_typeName: typeName
-      cf_isRequired: isRequired
-      cf_isList: isList
-      cf_isUnique: unique
-      cf_relation: relation
-      cf_defaultValue: default
-      cf_enum: enum
-    }
-    ... on CreateModel {
-      name
-    }
-    ... on CreateRelation {
-      name
-      leftModel
-      rightModel
-    }
-    ... on DeleteEnum {
-      name
-    }
-    ... on DeleteField {
-      model
-      name
-    }
-    ... on DeleteModel {
-      name
-    }
-    ... on DeleteRelation {
-      name
-    }
-    ... on UpdateEnum {
-      name
-      newName
-      values
-    }
-    ... on UpdateField {
-      model
-      name
-      newName
-      typeName
-      isRequired
-      isList
-      isUnique: unique
-      relation
-      default
-      enum
-    }
-    ... on UpdateModel {
-      name
-      um_newName: newName
-    }
-`
-
-const MIGRATION_FRAGMENT = `
-fragment MigrationFragment on Migration {
-  revision
-  steps {
-    ${STEP_FRAGMENT}
-  }
-}
-`
 
 export class Client {
   config: Config
@@ -121,7 +54,6 @@ export class Client {
     stageName?: string,
     workspaceSlug?: string | undefined | null,
   ) {
-    debug('Initializing cluster client')
     try {
       const token = await cluster.getToken(
         serviceName,
@@ -303,7 +235,6 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('executing query', serviceName, stageName, query)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -495,7 +426,7 @@ export class Client {
       if (cloud.token) {
         token = cloud.token
       }
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 1000))
     }
     this.env.globalRC.cloudSessionKey = token
     this.out.action.stop()
@@ -506,7 +437,7 @@ export class Client {
     )
 
     this.env.saveGlobalRC()
-    await this.env.getClusters()
+    await this.env.fetchClusters()
   }
 
   logout(): void {
@@ -728,9 +659,9 @@ export class Client {
   }
 
   async hasStepsApi() {
-    const result: IntrospectionQuery = await this.client.request(
-      introspectionQuery,
-    )
+    const result: IntrospectionQuery = await this.client.request<
+      IntrospectionQuery
+    >(introspectionQuery)
 
     return hasTypeWithField(result, 'DeployPayload', 'steps')
   }
@@ -765,18 +696,27 @@ export class Client {
           }
         }
       }
-      ${MIGRATION_FRAGMENT}
+      ${renderMigrationFragment(false)}
     `
 
-    const introspectionResult: IntrospectionQuery = await this.client.request(
-      introspectionQuery,
-    )
+    const introspectionResult: IntrospectionQuery = await this.client.request<
+      IntrospectionQuery
+    >(introspectionQuery)
     const hasStepsApi = hasTypeWithField(
       introspectionResult,
       'DeployPayload',
       'steps',
     )
-    const steps = hasStepsApi ? `steps { ${STEP_FRAGMENT} }` : ''
+
+    const hasRelationManifestationApi = hasTypeWithField(
+      introspectionResult,
+      'CreateRelation',
+      'after',
+    )
+
+    const steps = hasStepsApi
+      ? `steps { ${renderStepFragment(hasRelationManifestationApi)} }`
+      : ''
 
     if (
       noMigration &&
@@ -817,7 +757,7 @@ export class Client {
           ${steps}
         }
       }
-      ${MIGRATION_FRAGMENT}
+      ${renderMigrationFragment(hasRelationManifestationApi)}
     `
 
     try {
@@ -951,7 +891,6 @@ export class Client {
     } as any)
     while (!valid) {
       try {
-        debug('requesting', endpoint)
         await client.request(
           `
             {
@@ -987,7 +926,7 @@ export class Client {
             errors
           }
         }
-        `,
+      `,
 
       {
         stage,

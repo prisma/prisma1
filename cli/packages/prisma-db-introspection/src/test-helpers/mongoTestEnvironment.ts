@@ -1,16 +1,15 @@
-import { MongoClient } from "mongodb";
-import { Data } from "../databases/document/data";
-import { IConnector } from "../common/connector";
-import { IDocumentConnector } from "../databases/document/documentConnector";
-
+import { MongoClient } from 'mongodb'
+import { Data } from '../databases/document/data'
+import { IConnector } from '../common/connector'
+import { IDocumentConnector } from '../databases/document/documentConnector'
 
 export interface IDocumentTestEnvironment {
   schemaName: string
   connect(): Promise<void>
   disconnect(): Promise<void>
   clear(): Promise<void>
-  createCollection(name: string, document: Data[]) : Promise<void>
-  createCollections(collections: { [name: string]: Data[] }) : Promise<void>
+  createCollection(name: string, document: Data[]): Promise<void>
+  createCollections(collections: { [name: string]: Data[] }): Promise<void>
 }
 
 export class MongoTestEnvironment implements IDocumentTestEnvironment {
@@ -50,12 +49,12 @@ export class MongoTestEnvironment implements IDocumentTestEnvironment {
   }
 
   public async createCollections(collections: { [name: string]: Data[] }) {
-    for(const name of Object.keys(collections)) {
-      await this.createCollection(name, collections[name]);
+    for (const name of Object.keys(collections)) {
+      await this.createCollection(name, collections[name])
     }
   }
 
   public async disconnect() {
-    await this.client.close()
+    await this.client.close(true)
   }
 }

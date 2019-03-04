@@ -8,7 +8,7 @@ export default class CorePlugins extends Manager {
    * list core plugins
    * @returns {PluginPath[]}
    */
-  async list (): Promise<PluginPath[]> {
+  async list(): Promise<PluginPath[]> {
     try {
       const cli = this.config.pjson['cli-engine']
       let plugins: any[] = []
@@ -21,13 +21,24 @@ export default class CorePlugins extends Manager {
         return plugins
       }
       if (cli.plugins) {
-        plugins = plugins.concat((cli.plugins || []).map(name => {
-          let pluginPath = path.join(this.config.root, 'node_modules', name)
-          if (!fs.pathExistsSync(pluginPath)) {
-            pluginPath = path.join(this.config.root, '../../', 'node_modules', name)
-          }
-          return new PluginPath({output: this.out, type: 'core', path: pluginPath})
-        }))
+        plugins = plugins.concat(
+          (cli.plugins || []).map(name => {
+            let pluginPath = path.join(this.config.root, 'node_modules', name)
+            if (!fs.pathExistsSync(pluginPath)) {
+              pluginPath = path.join(
+                this.config.root,
+                '../../',
+                'node_modules',
+                name,
+              )
+            }
+            return new PluginPath({
+              output: this.out,
+              type: 'core',
+              path: pluginPath,
+            })
+          }),
+        )
       }
       return plugins
     } catch (err) {

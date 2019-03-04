@@ -1,5 +1,5 @@
 import Deploy from './commands/deploy/deploy'
-import Init from './commands/init'
+import Init from './commands/init/init'
 // import Auth from './commands/auth/index'
 import Info from './commands/info/index'
 import Playground from './commands/playground/index'
@@ -155,5 +155,4 @@ export {
   InitPrisma,
   IntrospectCommand,
   Generate,
-  }
-
+}

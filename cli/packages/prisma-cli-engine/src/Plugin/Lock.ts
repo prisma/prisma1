@@ -8,29 +8,31 @@ export default class Lock {
   config: Config
   out: Output
 
-  constructor (output: Output) {
+  constructor(output: Output) {
     this.out = output
     this.config = output.config as any
   }
 
-  get updatelockfile (): string { return path.join(this.config.cacheDir, 'update.lock') }
+  get updatelockfile(): string {
+    return path.join(this.config.cacheDir, 'update.lock')
+  }
 
   // get read lock
-  async read () {
+  async read() {
     return lock.read(this.updatelockfile)
   }
 
-  async unread () {
+  async unread() {
     await lock.unread(this.updatelockfile)
   }
 
-  async canRead () {
+  async canRead() {
     const hasWriter = await lock.hasWriter(this.updatelockfile)
     return !hasWriter
   }
 
   // upgrade to writer
-  async upgrade () {
+  async upgrade() {
     // take off reader
     await this.unread()
 

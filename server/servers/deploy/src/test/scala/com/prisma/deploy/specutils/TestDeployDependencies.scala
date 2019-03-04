@@ -31,7 +31,8 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
                                     CustomJdbcDriver.jna
                                   } else {
                                     new org.postgresql.Driver
-                                  })
+                                  }),
+    SupportedDrivers.SQLITE -> new org.sqlite.JDBC
   )
 
   implicit val reporter: ErrorReporter = DummyErrorReporter
@@ -39,7 +40,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
     migrationPersistence,
     projectPersistence,
     deployConnector.deployMutactionExecutor,
-    deployConnector.testFacilities.inspector
+    deployConnector.databaseInspector
   )
   override lazy val managementAuth        = NoAuth
   override lazy val invalidationPublisher = InMemoryAkkaPubSub[String]()

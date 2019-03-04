@@ -21,7 +21,7 @@ The `$subscribe` API is based on [WebSockets](https://developer.mozilla.org/en-U
 _Subscribe to "create" and "update" events for the `User` mode_:
 
 ```js
-const createdAndUpdatedUserIterator = await db.$subscribe.user({
+const createdAndUpdatedUserIterator = await prisma.$subscribe.user({
   mutation_in: ['CREATED', 'UPDATED']
 }).node()
 ```
@@ -29,7 +29,7 @@ const createdAndUpdatedUserIterator = await db.$subscribe.user({
  _Subscribe to any write event for `User` models where the user has a an email-address that contains the string `gmail`_:
 
  ```js
-const userIterator = await db.$subscribe.user({
+const userIterator = await prisma.$subscribe.user({
   email_contains: `gmail` 
 }).node()
 ```
