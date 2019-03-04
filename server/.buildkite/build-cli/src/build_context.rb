@@ -123,7 +123,6 @@ class BuildContext
     )
   end
 
-
   def find_server_root
     Pathname.new(Dir.pwd).parent.dirname
   end

@@ -33,7 +33,7 @@ class DockerCommands
 
   def self.build(context, prisma_version)
     Command.new("docker", "run",
-      "-e", "SERVER_ROOT=#{context.server_root_path}",
+      "-e", "SERVER_ROOT=/root/build",
       "-e", "BRANCH=#{context.branch}",
       "-e", "COMMIT_SHA=#{context.commit}",
       "-e", "CLUSTER_VERSION=#{prisma_version.stringify}",
@@ -61,7 +61,7 @@ class DockerCommands
 
   def self.native_image(context, prisma_version, build_image)
     Command.new("docker", "run",
-      "-e", "SERVER_ROOT=#{context.server_root_path}",
+      "-e", "SERVER_ROOT=/root/build",
       "-e", "BRANCH=#{context.branch}",
       "-e", "COMMIT_SHA=#{context.commit}",
       "-e", "CLUSTER_VERSION=#{prisma_version}",

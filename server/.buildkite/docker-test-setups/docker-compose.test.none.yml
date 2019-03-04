@@ -5,7 +5,7 @@ services:
   app:
     image: prismagraphql/build-image:debian
     environment:
-      SERVER_ROOT: "$SERVER_ROOT"
+      SERVER_ROOT: /root/build
       CLUSTER_VERSION: "latest"
       COMMIT_SHA: "123abcd"
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
