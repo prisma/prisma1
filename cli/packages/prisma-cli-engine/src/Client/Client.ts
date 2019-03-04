@@ -114,15 +114,18 @@ export class Client {
             ) {
               if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
                 throw new Error(
-                  `Server at ${
-                    this.env.activeCluster.baseUrl
-                  } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET`,
+                  `Server at ${chalk.bold(
+                    this.env.activeCluster.name
+                  )
+                  } requires the Management API secret. Please set the the ${chalk.bold('PRISMA_MANAGEMENT_API_SECRET')} environment variable.
+
+                  Learn more about this error in the docs: https://bit.ly/authentication-and-security-docs`,
                 )
               } else {
                 throw new Error(
-                  `Cluster secret in env var PRISMA_MANAGEMENT_API_SECRET does not match for cluster ${
-                    this.env.activeCluster.name
-                  }`,
+                  `Can not authenticate against Prisma server. It seems that your ${chalk.bold('PRISMA_MANAGEMENT_API_SECRET')} environment variable is set incorrectly. Please make sure that it matches the value that was used when the Prisma server was deployed.
+
+                  For more info visit: https://bit.ly/authentication-and-security-docs`,
                 )
               }
             }
