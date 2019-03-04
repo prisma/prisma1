@@ -50,7 +50,7 @@ When `prisma init` terminates, the CLI has created the following files for you w
 
 - `datamodel.prisma`: Contains the datamodel (in SDL) that was generated based on your existing database.
 - `docker-compose.yml`: The Docker Compose file containing the configuration of your Prisma server, including details about how to connect to your database
-- prisma.yml: The root configuration file for your service
+- `prisma.yml`: The root configuration file for your service
 
 To be able to query your PostgreSQL database using GraphQL you now need to _deploy_ the service and open a GraphQL Playground:
 
@@ -84,7 +84,7 @@ PRISMA_CONFIG: |
       schema: public
 ```
 
-Setting `migrations` to `false` ensures that Prisma only updates the GraphQL API of the server based on the datamodel, but it does _not_ perform migrations of your underlying PostgreSQL database.
+Setting `migrations` to `false` ensures that Prisma only updates the Prisma datamodel and Prisma client API, but it does _not_ perform migrations of your underlying PostgreSQL database.
 
 ## Relations in the generated datamodel
 

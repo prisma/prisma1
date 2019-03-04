@@ -56,12 +56,12 @@ class Command
 
         thread.join
         exit_status = thread.value
-        result = ExecResult.new(self,exit_status, outputs[:stdout], outputs[:stderr])
+        result = ExecResult.new(self, exit_status, outputs[:stdout], outputs[:stderr])
 
         if pipe_to != nil && result.success?
           pipe_to.with_stdin(result.stdout).run!
         else
-          ExecResult.new(self,exit_status, outputs[:stdout], outputs[:stderr])
+          ExecResult.new(self, exit_status, outputs[:stdout], outputs[:stderr])
         end
       end
     rescue => e

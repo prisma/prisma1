@@ -73,6 +73,12 @@ These are the root properties of `PRISMA_CONFIG`:
 | `port` | `number` | The port on which the Prisma server is running. Example:  `4466` | 
 | `databases` | `object` | Specifies to which databases the Prisma server should connect to. | 
 
+<Warning>
+
+Prisma does not yet support connecting multiple databases to a Prisma server. You can track the progress of this feature [here](https://github.com/prisma/prisma/issues/2873).
+
+</Warning>
+
 #### Database properties
 
 Each _database object_ in the `databases` object needs to include the following properties:
@@ -120,6 +126,50 @@ CONTAINER ID        IMAGE                               COMMAND                 
 ```
 
 This is helpful when you're getting an error message saying `Error response from daemon: No such container`.
+
+### Logging slow queries
+
+To monitor and log slow queries, you can set the following environment variables in your Docker Compose file:
+
+- `SLOW_QUERIES_LOGGING`: Enable slow query logging with `true` or `false` 
+- `SLOW_QUERIES_LOGGING_THRESHOLD`: The treshold (in miliseconds) for queries for queries to be logged. To log _all_ queries, simply provide the value `"0"`.
+
+Here is an example:
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:__LATEST_PRISMA_VERSION__
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      SLOW_QUERIES_LOGGING: "true"
+      SLOW_QUERIES_LOGGING_THRESHOLD: "0"
+      PRISMA_CONFIG: |
+        managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+        port: __YOUR_PRISMA_SERVER_PORT__
+        databases:
+          default:
+            connector: __YOUR_DATABASE_CONNECTOR__
+            migrations: __ENABLE_DB_MIGRATIONS__
+            host: __YOUR_DATABASE_HOST__
+            port: __YOUR_DATABASE_PORT__
+            user: __YOUR_DATABASE_USER__
+            password: __YOUR_DATABASE_PASSWORD__
+            connectionLimit: __YOUR_CONNECTION_LIMIT__
+```
+
+In the logs of your Docker container (which you can access with `docker logs __CONTAINER_ID__`), you can then see the the execution time for queries above specified threshold, for example:
+
+```
+SLOW QUERY - DURATION: 17
+QUERY: [{"query":"{\n  users {\n    id\n    email\n    name\n  }\n}\n","variables":{}},{"query":"{\n  users {\n    id\n    email\n
+   name\n  }\n}\n","variables":{}}]
+```
+
+You can find more info in [this](https://github.com/prisma/prisma/issues/3210) GitHub issue.
 
 ### Hard resetting the Docker environment
 

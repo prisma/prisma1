@@ -226,7 +226,7 @@ query {
 
 ## Transactions & Nested mutations
 
-For the [MySQL](jgfs) and [PostgreSQL](jgfr) database connectors, single mutations in the Prisma API that are not batch operations are always executed _transactionally_ ([ACID](https://en.wikipedia.org/wiki/ACID_(computer_science)) compliant), even if they consist of many actions that potentially spread across multiple related nodes. This is also true for [nested mutations](qwe2#nested-mutations) that perform several database writes on multiple types.
+For the [MySQL](jgfs) and [PostgreSQL](jgfr) database connectors, single mutations in the Prisma API that are not batch operations are always executed _transactionally_ ([ACID](https://en.wikipedia.org/wiki/ACID_(computer_science)) compliant), even if they consist of many actions that potentially spread across multiple related nodes. This is also true for [nested mutations](rsc6#nested-object-writes) that perform several database writes on multiple types.
 
 Nested mutations can be recognized by the following keywords inside of a `createX`- or `updateX`-mutation:
 
@@ -337,17 +337,17 @@ Note that no [subscription](qwe3) events are triggered for cascading deletes!
 
 ## Authentication
 
-A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your prisma.yml:
+A Prisma API can be protected with the _service secret_ (specified as the `secret` property) in your `prisma.yml`:
 
 ```yml
 secret: my-secret-42
 ```
 
-As the developer of a Prisma service, you can choose your own service secret. When a service gets deployed with a prisma.yml that contains the `secret` property, the Prisma API of that service will require authentication via a _service token_ (JWT):
+As the developer of a Prisma service, you can choose your own service secret. When a service gets deployed with a `prisma.yml` that contains the `secret` property, the Prisma API of that service will require authentication via a _service token_ (JWT):
 
 ![](https://i.imgur.com/cCmp8JI.png)
 
-The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your prisma.yml is located:
+The easiest way to obtain a service token is by running the `prisma token` command inside the same directory where your `prisma.yml` is located:
 
 ```bash
 $ prisma token
