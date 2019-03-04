@@ -620,7 +620,7 @@ type Brain {
 
 For a _to-one_ relation field, you can configure whether it is _required_ or _optional_. The `!` type modifier means that this field can never be `null`. A field for the address of a user would therefore be of type `Address` or `Address!`.
 
-Nodes for a type that contains a required _to-one_ relation field can only be created using a [nested mutation](qwe2#nested-mutations) to ensure the respective field will not be `null`.
+Nodes for a type that contains a required _to-one_ relation field can only be created using a [nested mutation](rsc6#nested-object-writes) to ensure the respective field will not be `null`.
 
 Consider again the following relation:
 
