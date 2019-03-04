@@ -10,18 +10,36 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
   // changing type of a (newly) required field   -> set column to default/migValue for all  rows                  -> createColumn
 
   //Necessary changes
-  // Keep validations, create message that MV was used
-  // Downgrade errors to warnings
+  // Keep validations, create message that MV was used      -> Done
+  // Downgrade errors to warnings                           -> Done
   // Create shared MigvalueMatcher                          -> Done
-  // Change queries to insert default/migration value
   // Add tests                                              -> Done
+  // Change queries to insert default/migration value
   // Fix broken tests
   // find locations for MigrationValueGenerator and SetParameter
 
-  //Mongo
   //Postgres
   //MySql
   //Sqlite
+  //Mongo
+
+  "Creating a required Field" should "not error when there is no defaultValue but there are no nodes yet" in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | value: Int!
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
+  }
 
   "Adding a required field without default value" should "set the internal migration value" in {
 

@@ -81,13 +81,20 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     def newRequiredScalarField(model: Model) = field.isScalar && field.isRequired match {
       case true =>
         clientDbQueries.existsByModel(model).map {
-          case true =>
+          case true if !field.isUnique =>
             Vector(
               DeployWarning(
                 `type` = model.name,
                 field = field.name,
                 description = s"You are creating a required field but there are already nodes present that would violate that constraint." +
                   s" The fields will be pre-filled with the value `${migrationValueForField(field.asScalarField_!).value}`."
+              ))
+          case true if field.isUnique =>
+            Vector(
+              DeployError(
+                `type` = model.name,
+                field = field.name,
+                description = s"You are creating a required field but there are already nodes present that would violate that constraint."
               ))
           case false => Vector.empty
         }
@@ -196,13 +203,21 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     def resultsForNull: Future[Vector[DeployResult]] = becomesRequired match {
       case true =>
         clientDbQueries.existsNullByModelAndField(model, oldField).map {
-          case true if !newField.isUnique =>
+          case true if !newField.isUnique && newField.isScalar =>
             Vector(
               DeployWarning(
                 `type` = model.name,
                 field = oldField.name,
                 s"You are making a field required, but there are already nodes with null values that would violate that constraint. " +
                   s"These fields will be pre-filled with the value `${migrationValueForField(newField.asScalarField_!).value}`"
+              ))
+
+          case true if !newField.isUnique && !newField.isScalar =>
+            Vector(
+              DeployError(
+                `type` = model.name,
+                field = oldField.name,
+                s"You are making a field required, but there are already nodes with null values that would violate that constraint."
               ))
 
           case true if newField.isUnique =>
@@ -217,7 +232,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
           case false =>
             Vector.empty
         }
-      case false =>
+      case _ =>
         validationSuccessful
     }
 
