@@ -12,7 +12,7 @@
 - **Realtime event systems for your database** to get notified about database events.
 - **Declarative data modeling & migrations (optional)** with simple SDL syntax.
 
-![](https://imgur.com/QWhxj0e.png.png)
+![](https://i.imgur.com/4fwMITw.png)
 
 Try a Prisma example online with CodeSandbox:
 
