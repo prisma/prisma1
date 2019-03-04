@@ -1,7 +1,6 @@
 package com.prisma.connector.shared.jdbc
 
 import java.sql.Timestamp
-import java.time.ZoneOffset
 
 import org.joda.time.{DateTime, DateTimeZone}
 
@@ -16,4 +15,5 @@ trait SharedJdbcExtensions {
   def sqlTimestampToDateTime(ts: Timestamp): DateTime = {
     new DateTime(ts, DateTimeZone.UTC)
   }
+
 }

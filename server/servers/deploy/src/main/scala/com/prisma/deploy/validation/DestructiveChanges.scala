@@ -1,6 +1,6 @@
 package com.prisma.deploy.validation
 
-import com.prisma.deploy.connector.ClientDbQueries
+import com.prisma.deploy.connector.{ClientDbQueries, MigrationValueGenerator}
 import com.prisma.deploy.migration.validation.{DeployError, DeployResult, DeployWarning, DeployWarnings}
 import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, UpdatedAtBehaviour}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
@@ -10,7 +10,8 @@ import org.scalactic.{Bad, Good, Or}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project, nextSchema: Schema, steps: Vector[MigrationStep]) {
+case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project, nextSchema: Schema, steps: Vector[MigrationStep])
+    extends MigrationValueGenerator {
   val previousSchema        = project.schema
   val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
 
@@ -82,10 +83,11 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
         clientDbQueries.existsByModel(model).map {
           case true =>
             Vector(
-              DeployError(
+              DeployWarning(
                 `type` = model.name,
                 field = field.name,
-                description = s"You are creating a required field but there are already nodes present that would violate that constraint."
+                description = s"You are creating a required field but there are already nodes present that would violate that constraint." +
+                  s" The fields will be pre-filled with the value `${migrationValueForField(field.asScalarField_!).value}`."
               ))
           case false => Vector.empty
         }
@@ -93,6 +95,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       case false =>
         validationSuccessful
     }
+
     def newToOneBackRelationField(model: Model) = {
       field match {
         case rf: RelationField if !rf.isList && previousSchema.relations.exists(rel => rel.name == rf.relation.name) =>
@@ -174,42 +177,48 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     val becomesRequired          = !oldField.isRequired && newField.isRequired
     val becomesUnique            = !oldField.isUnique && newField.isUnique
 
-    def warnings: Future[Vector[DeployWarning]] = cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation match {
-      case true =>
+    def warnings: Future[Vector[DeployWarning]] = () match {
+      case _ if cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation =>
         clientDbQueries.existsByModel(model).map {
-          case true  => Vector(DeployWarnings.dataLossField(x.name, x.name))
-          case false => Vector.empty
+          case true if newField.isRequired && newField.isScalar =>
+            Vector(DeployWarnings.dataLossField(x.name, x.name),
+                   DeployWarnings.migValueUsedOnField(x.name, x.name, migrationValueForField(newField.asScalarField_!).value))
+
+          case true =>
+            Vector(DeployWarnings.dataLossField(x.name, x.name))
+
+          case false =>
+            Vector.empty
+        }
+      case _ => Future.successful(Vector.empty)
+    }
+
+    def resultsForNull: Future[Vector[DeployResult]] = becomesRequired match {
+      case true =>
+        clientDbQueries.existsNullByModelAndField(model, oldField).map {
+          case true if !newField.isUnique =>
+            Vector(
+              DeployWarning(
+                `type` = model.name,
+                field = oldField.name,
+                s"You are making a field required, but there are already nodes with null values that would violate that constraint. " +
+                  s"These fields will be pre-filled with the value `${migrationValueForField(newField.asScalarField_!).value}`"
+              ))
+
+          case true if newField.isUnique =>
+            Vector(
+              DeployError(
+                `type` = model.name,
+                field = oldField.name,
+                s"You are making a field required, but there are already nodes with null values that would violate that constraint. " +
+                  s"Prefilling these fields with a default value is not possible because it is unique."
+              ))
+
+          case false =>
+            Vector.empty
         }
       case false =>
         validationSuccessful
-    }
-
-    def requiredErrors: Future[Vector[DeployError]] = {
-      if (becomesRequired) {
-        clientDbQueries.existsNullByModelAndField(model, oldField).map {
-          case true =>
-            Vector(
-              DeployError(
-                `type` = model.name,
-                field = oldField.name,
-                "You are making a field required, but there are already nodes that would violate that constraint."
-              ))
-          case false => Vector.empty
-        }
-      } else if (newField.isRequired && typeChanges) {
-        clientDbQueries.existsByModel(model).map {
-          case true =>
-            Vector(
-              DeployError(
-                `type` = model.name,
-                field = oldField.name,
-                "You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."
-              ))
-          case false => Vector.empty
-        }
-      } else {
-        validationSuccessful
-      }
     }
 
     def uniqueErrors: Future[Vector[DeployError]] = becomesUnique match {
@@ -228,11 +237,11 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     }
 
     for {
-      warnings: Vector[DeployWarning]    <- warnings
-      requiredError: Vector[DeployError] <- requiredErrors
-      uniqueError: Vector[DeployError]   <- uniqueErrors
+      warnings: Vector[DeployWarning]      <- warnings
+      resultsForNull: Vector[DeployResult] <- resultsForNull
+      uniqueError: Vector[DeployError]     <- uniqueErrors
     } yield {
-      warnings ++ requiredError ++ uniqueError
+      warnings ++ resultsForNull ++ uniqueError
     }
   }
 

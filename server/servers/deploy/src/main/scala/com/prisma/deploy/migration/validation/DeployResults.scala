@@ -15,6 +15,10 @@ object DeployWarnings {
   def dataLossField(`type`: String, field: String): DeployWarning = {
     DeployWarning(`type`, "You already have nodes for this model. This change may result in data loss.", Some(field))
   }
+
+  def migValueUsedOnField(`type`: String, field: String, value: Any): DeployWarning = {
+    DeployWarning(`type`, s"You are changing the type of a required field. The fields will be pre-filled with the value: `$value`.", Some(field))
+  }
 }
 
 object DeployErrors {
