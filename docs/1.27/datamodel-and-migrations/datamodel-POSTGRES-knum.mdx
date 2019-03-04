@@ -18,7 +18,7 @@ The datamodel of your service configuration has two major roles:
 - **Define the underlying database schema** (the defined models are mapped to database tables).
 - It is the foundation for the **auto-generated CRUD and realtime operations** of your Prisma API. [Learn more](#data-model-vs-prisma-graphql-schema).
 
-The datamodel is written in the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.prisma`-files](#files). These `.prisma`-files need to be referenced in your [`prisma.yml`](5cy7) under the `datamodel` property. For example:
+The datamodel is written using a subset of the GraphQL [Schema Definition Language](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) (SDL) and stored in one or more [`.prisma`-files](#files). These `.prisma`-files need to be referenced in your [`prisma.yml`](5cy7) under the `datamodel` property. For example:
 
 <Code lines="2">
 
@@ -33,20 +33,9 @@ datamodel: datamodel.prisma
 
 There are several available building blocks to shape your datamodel.
 
-- [**Types**](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each type in your datamodel is mapped to a database table and CRUD operations are added to the GraphQL schema.
+- [**Types**](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each type in your datamodel is mapped to a database table and CRUD operations are exposed in the generated Prisam client API.
 - [**Relations**](#relations) describe _relationships_ between types.
 - [**Directives**](#graphql-directives) covering different use cases such as type constraints or cascading delete behaviour.
-
-### Why SDL?
-
-The main reason why SDL is used for data modeling is twofold:
-
-- SDL is an **intuitive, simple and concise** way to express type definitions and therefore contributes to a **great developer experience**.
-- Using GraphQL SDL to define models that are used as foundation for a GraphQL API is an **idiomatic** approach.
-
-There is no hard technical requirement that would dictate the use of SDL and Prisma might allow for other approaches to provide model definitions in the future.
-
-> To learn more about the SDL, you can check out the official [GraphQL documentation](http://graphql.org/learn/schema/#type-language) or read the actual [specification](http://facebook.github.io/graphql/draft/#sec-Type-System).
 
 ## Example
 
@@ -128,59 +117,11 @@ Applying changes... (22/22)
 Applying changes... 0.4s
 ```
 
-## Datamodel vs Prisma GraphQL schema
-
-When starting out with GraphQL and Prisma, the amount of SDL-files you're working with can be confusing. Yet, it's crucial to understand what the role of each of them is.
-
-Looking only at Prisma, there are two SDL-files that are relevant:
-
-The Prisma database database schema is generated based on the datamodel:
-
-![](https://i.imgur.com/jHkNjKU.png)
-
-The illustration shows a simplified version of the generated Prisma GraphQL schema, you can find the full schema [here](https://gist.github.com/gc-codesnippets/f302c104f2806f9e13f41d909e07d82d).
-
-<Collapse title="Learn more about GraphQL schemas">
-
-A [GraphQL schema](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/) defines the operations of a GraphQL API. It effectively is a collection of _types_ written in SDL (SDL also supports primitives like interfaces, enums, union types and more, you can learn everything about GraphQL's type system [here](http://graphql.org/learn/schema/#type-system)).
-
-A GraphQL schema has three special _root types_: `Query`, `Mutation` and `Subscription`. These types define the _entry points_ for the API and define what operations the API will accept. To learn more about GraphQL schema, check out this [article](https://www.prisma.io/blog/graphql-server-basics-the-schema-ac5e2950214e/).
-
-</Collapse>
-
-### The datamodel
-
-The datamodel is written manually by the developers of the Prisma service. It defines the models and structures the developer wants to use in their API.
-
-Strictly speaking, the **datamodel is not a valid GraphQL schema** because it does not contain any of GraphQL's root types (`Query`, `Mutation`, `Subscription`) and therefore does not define any API operations.
-
-The datamodel only serves as _foundation_ for the generation of the actual GraphQL schema that defines the GraphQL API of your Prisma service.
-
-### The Prisma GraphQL schema
-
-The Prisma GraphQL schema can be dowloaded from a Prisma service using the `graphql-schema` generator in your `prisma.yml`:
-
-```yml
-generate:
-  - generator: `graphql-schema`
-    output: ./prisma-schema
-```
-
-Now you can run `prisma generate` and the Prisma CLI will store the Prisma GraphQL schema in `./prisma-schema/prisma.graphql`.
-
-### A note on the application schema
-
-If you've already looked into building your own GraphQL server based on Prisma, you might have come across another `.graphql`-file which is referred to as your **application schema** (typically called `schema.graphql` or `app.graphql`).
-
-This is a valid GraphQL schema (meaning it contains the `Query`, `Mutation` and `Subscription` root types) that defines the API of your _application layer_. In contrast to Prisma's _generic_ CRUD API, the application layer's API should expose _domain-specific_ operations that are tailored to the needs of your client applications.
-
-The application layer uses Prisma as a _data access layer_ and delegates incoming requests to the service's Prisma API where they're actually resolved against the database.
-
 ## Files
 
 You can write your datamodel in a single `.prisma`-file or split it accross multiple ones.
 
-The `.prisma`-files containing the datamodel need to be specified in your `prisma.yml` under the `datamodel` property. For example:
+The `.prisma`-files containing the datamodel need to be referenced in your `prisma.yml` under the `datamodel` property. For example:
 
 ```yml
 datamodel:
@@ -206,8 +147,6 @@ Each object type is mapped to the database. For relational databases, one _table
 A type has a _name_ and one or multiple [_fields_](#fields). Type names can only contain **alphanumeric characters** and need to start with an uppercase letter. They can contain **at most 64 characters**.
 
 An instantiation of a type is called a _node_. This term refers to a node inside your _data graph_.
-
-Every type you define in your datamodel will be available as an analogous type in the generated _Prisma GraphQL schema_.
 
 ### Defining an object type
 
@@ -366,7 +305,7 @@ type User {
 
 ### Type modifiers
 
-In a field definition, a type can be annotated with a _type modifier_. GraphQL supports two type modifiers:
+In a field definition, a type can be annotated with a _type modifier_. SDL supports two type modifiers:
 
 - **Lists**: Annotate the type with a pair of enclosing `[]`, e.g. `friends: [User]`
 - **Required fields**: Annotate the type with a `!`, e.g. `name: String!`
@@ -385,7 +324,7 @@ type Article {
 
 Notice the two `!` type modifiers, here is what they express:
 
-- The first `!` type modifier (right after `String`) means that no item in the list can be `null`, e.g. this value for `tags` would not be valid: `["Software", null, "GraphQL"]`
+- The first `!` type modifier (right after `String`) means that no item in the list can be `null`, e.g. this value for `tags` would not be valid: `["Software", null, "Prisma"]`
 - The second `!` type modifier (after the closing square bracket) means that the list itself can never be `null`, it might be _empty_ though. Consequently, `null` is not a valid value for the `tags` field but `[]` is.
 
 #### Required
@@ -439,7 +378,7 @@ For every field that's annotated with `@unique`, you're able to query the corres
 
 For example, considering the above datamodel, you can now retrieve a particular `User` node by its `email` address:
 
-<Code languages={["TypeScript", "JavaScript", "Flow", "Go", "GraphQL"]}>
+<Code languages={["TypeScript", "JavaScript", "Flow", "Go"]}>
 
 ```ts
 const user = await prisma.user({
@@ -466,18 +405,7 @@ userByEmail, err := client.User(prisma.UserWhereUniqueInput{
 }).Exec(ctx)
 ```
 
-```graphql
-query {
-  user(where: {
-    email: "alice@prisma.io"
-  }) {
-    name
-  }
-}
-```
-
 </Code>
-
 
 #### More constraints
 
@@ -518,21 +446,13 @@ All system fields need to be marked as [required](#required) and the `id` field 
 
 A node will automatically get assigned a globally unique identifier when it's created, this identifier is stored in the `id` field.
 
-Whenever you add the `id` field to a type definition to expose it in the GraphQL API, you must annotate it with the `@unique` directive.
+Whenever you add the `id` field to a model, you must annotate it with the `@unique` directive.
 
 The `id` has the following properties:
 
 * Consists of 25 alphanumeric characters (letters are always lowercase)
 * Always starts with a (lowercase) letter, e.g. `c`
 * Follows [cuid](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
-
-Notice that all model types in the Prisma GraphQL schema will implement the `Node` interface. This is what the `Node` interface looks like:
-
-```graphql
-interface Node {
-  id: ID! @unique
-}
-```
 
 #### System fields: `createdAt` and `updatedAt`
 
@@ -641,7 +561,7 @@ type Car {
 
 A `Car` can never be created without a `User` and the other way around because that would violate the required constraint. You therefore need to create both at the same time using a declarative nested write:
 
-<Code languages={["TypeScript", "JavaScript", "Flow", "Go", "GraphQL"]}>
+<Code languages={["TypeScript", "JavaScript", "Flow", "Go"]}>
 
 ```ts
 const newUser = await prisma
@@ -687,23 +607,6 @@ newUser, err := client.CreateUser(prisma.UserCreateInput{
 		},
 	},
 }).Exec(ctx)
-```
-
-```graphql
-mutation {
-  createUser(data: {
-    car: {
-      create: {
-        color: "Yellow"
-      }
-    }
-  }) {
-    id
-    car {
-      id
-    }
-  }
-}
 ```
 
 </Code>
@@ -838,7 +741,7 @@ Directives are used to provide additional information in your datamodel. They lo
 
 ### Datamodel directives
 
-Datamodel directives describe additional information about types or fields in the GraphQL schema.
+Datamodel directives describe additional information about models or fields.
 
 #### Unique scalar fields
 
@@ -961,12 +864,12 @@ In this section, we describe further SDL features that are not yet supported for
 
 ### Interfaces
 
-"Like many type systems, GraphQL supports interfaces. An interface is an abstract type that includes a certain set of fields that a type must include to implement the interface." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#interfaces)
+"Like many type systems, [SDL] supports interfaces. An interface is an abstract type that includes a certain set of fields that a type must include to implement the interface." From the official [Documentation](http://graphql.org/learn/schema/#interfaces)
 
 To learn more about when and how interfaces are coming to Prisma, check out this [feature request](https://github.com/prisma/prisma/issues/83).
 
 ### Union types
 
-"Union types are very similar to interfaces, but they don't get to specify any common fields between the types." From the official [GraphQL Documentation](http://graphql.org/learn/schema/#union-types)
+"Union types are very similar to interfaces, but they don't get to specify any common fields between the types." From the official [Documentation](http://graphql.org/learn/schema/#union-types)
 
 To learn more about when and how union types are coming to Prisma, check out this [feature request](https://github.com/prisma/prisma/issues/165).
