@@ -118,7 +118,8 @@ object ConnectorCapabilities extends BooleanUtils {
       SupportsExistingDatabasesCapability,
       IntIdCapability,
       NonEmbeddedScalarListCapability,
-      RawAccessCapability
+      RawAccessCapability,
+      IdSequenceCapability
     )
   }
 
