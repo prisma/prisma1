@@ -58,19 +58,14 @@ impl RelationField {
     }
 
     pub fn model(&self) -> ModelRef {
-        self.model.upgrade().expect(
-            "Model does not exist anymore. Parent model got deleted without deleting the child.",
-        )
+        self.model
+            .upgrade()
+            .expect("Model does not exist anymore. Parent model got deleted without deleting the child.")
     }
 
     pub fn relation(&self) -> RelationRef {
         self.relation
-            .get_or_init(|| {
-                self.model()
-                    .schema()
-                    .find_relation(&self.relation_name)
-                    .unwrap()
-            })
+            .get_or_init(|| self.model().schema().find_relation(&self.relation_name).unwrap())
             .upgrade()
             .unwrap()
     }
@@ -82,9 +77,7 @@ impl RelationField {
             Some(RelationLinkManifestation::Inline(ref m)) => {
                 let is_self_rel = relation.is_self_relation();
 
-                if is_self_rel
-                    && (self.relation_side == RelationSide::B || self.related_field().is_hidden)
-                {
+                if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
                     m.referencing_column.clone()
                 } else if is_self_rel && self.relation_side == RelationSide::A {
                     self.name.clone()
@@ -95,6 +88,27 @@ impl RelationField {
                 }
             }
             _ => self.name.clone(),
+        }
+    }
+
+    pub fn relation_is_inlined_in_parent(&self) -> bool {
+        let relation = self.relation();
+
+        match relation.manifestation {
+            Some(RelationLinkManifestation::Inline(ref m)) => {
+                let is_self_rel = relation.is_self_relation();
+
+                if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
+                    true
+                } else if is_self_rel && self.relation_side == RelationSide::A {
+                    false
+                } else if m.in_table_of_model_name == self.model().name {
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => false,
         }
     }
 

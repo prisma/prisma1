@@ -99,7 +99,17 @@ impl From<Filter> for ConditionTree {
                     })
                 }
             },
-            Filter::Not(filters) => ConditionTree::not(ConditionTree::from(Filter::And(filters))),
+            Filter::Not(mut filters) => match filters.pop() {
+                None => ConditionTree::NoCondition,
+                Some(filter) => {
+                    let right = ConditionTree::from(*filter).not();
+
+                    filters.into_iter().rev().fold(right, |acc, filter| {
+                        let left = ConditionTree::from(*filter).not();
+                        ConditionTree::and(left, acc)
+                    })
+                }
+            },
             Filter::Scalar(filter) => ConditionTree::from(filter),
             Filter::OneRelationIsNull(filter) => ConditionTree::from(filter),
             Filter::Relation(filter) => filter.into(),
@@ -149,11 +159,7 @@ impl From<ScalarFilter> for ConditionTree {
 }
 
 impl RelationFilter {
-    pub fn conditions(
-        column: Column,
-        condition: RelationCondition,
-        sub_select: Select,
-    ) -> ConditionTree {
+    pub fn conditions(column: Column, condition: RelationCondition, sub_select: Select) -> ConditionTree {
         match condition {
             RelationCondition::EveryRelatedNode => column.not_in_selection(sub_select),
             RelationCondition::AtLeastOneRelatedNode => column.not_in_selection(sub_select),
@@ -212,7 +218,17 @@ impl From<RelationFilter> for Select {
 }
 
 impl From<OneRelationIsNullFilter> for ConditionTree {
-    fn from(_filter: OneRelationIsNullFilter) -> ConditionTree {
-        unimplemented!()
+    fn from(filter: OneRelationIsNullFilter) -> ConditionTree {
+        let condition = if filter.field.relation_is_inlined_in_parent() {
+            filter.field.as_column().is_null()
+        } else {
+            let relation = filter.field.relation();
+            let column = relation.column_for_relation_side(filter.field.relation_side);
+            let select = Select::from(relation.relation_table()).column(column);
+
+            filter.field.related_model().id_column().not_in_selection(select)
+        };
+
+        ConditionTree::single(condition)
     }
 }
