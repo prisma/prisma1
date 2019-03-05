@@ -1,7 +1,11 @@
 package com.prisma.deploy.connector.mysql.database
 
+import java.util.{Calendar, TimeZone}
+
 import com.prisma.connector.shared.jdbc.SlickDatabase
+import com.prisma.deploy.connector.MigrationValueGenerator
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
+import com.prisma.gc_values._
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
@@ -9,6 +13,7 @@ import com.prisma.shared.models._
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
+import slick.jdbc.SetParameter
 
 import scala.concurrent.ExecutionContext
 
@@ -17,7 +22,8 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     typeMapper: TypeMapper
 )(implicit val ec: ExecutionContext)
     extends JdbcDeployDatabaseMutationBuilder
-    with BooleanUtils {
+    with BooleanUtils
+    with MigrationValueGenerator {
 
   import slickDatabase.profile.api._
 
@@ -144,9 +150,37 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     } yield result
   }
 
+  val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+  implicit val gcValueSetter = SetParameter[GCValue] {
+    case (StringGCValue(string), params)     => params.setString(string)
+    case (BooleanGCValue(boolean), params)   => params.setBoolean(boolean)
+    case (IntGCValue(int), params)           => params.setInt(int)
+    case (FloatGCValue(float), params)       => params.setDouble(float)
+    case (StringIdGCValue(id), params)       => params.setString(id)
+    case (DateTimeGCValue(dateTime), params) => params.setTimestamp(jodaDateTimeToSqlTimestampUTC(dateTime))
+    case (EnumGCValue(enum), params)         => params.setString(enum)
+    case (JsonGCValue(json), params)         => params.setString(json.toString())
+    case (UuidGCValue(uuid), params)         => sys.error("")
+    case _                                   => sys.error("")
+  }
+
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
     val newColSql = typeMapper.rawSQLForField(field)
-    sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql, ALGORITHM = INPLACE"""
+
+    field.isRequired match {
+      case true =>
+        val optionalFieldSQL = typeMapper.rawSQLForFieldWithoutRequired(field)
+        val defaultValue     = migrationValueForField(field)
+
+        DBIO.seq(
+          sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$optionalFieldSQL, ALGORITHM = INPLACE""",
+          sqlu"""UPDATE #${qualify(project.dbName, field.model.dbName)} SET #${qualify(field.dbName)} = ${defaultValue}""",
+          sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} CHANGE COLUMN #${qualify(field.dbName)} #$newColSql"""
+        )
+
+      case false =>
+        sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$newColSql, ALGORITHM = INPLACE"""
+    }
   }
 
   override def deleteColumn(project: Project, tableName: String, columnName: String, model: Option[Model]) = {
@@ -158,13 +192,25 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
                             oldTableName: String,
                             oldColumnName: String,
                             oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val typeChange = if (oldTypeIdentifier != field.typeIdentifier) {
-      sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(oldColumnName)} = null"
-    } else { DBIO.successful(()) }
+    if (oldTypeIdentifier != field.typeIdentifier) {
+      DatabaseAction.seq(deleteColumn(project, field.model.dbName, oldColumnName), createColumn(project, field))
+    } else {
+      val newColSql   = typeMapper.rawSQLForField(field)
+      val alterColumn = sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql;"
 
-    val newColSql = typeMapper.rawSQLForField(field)
-
-    DBIO.seq(typeChange, sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql")
+      field.isRequired match {
+        case true =>
+          val defaultValue             = migrationValueForField(field)
+          val newColSqlWithoutRequired = typeMapper.rawSQLForFieldWithoutRequired(field)
+          DatabaseAction.seq(
+            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSqlWithoutRequired;""",
+            sqlu"""UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(oldColumnName)} = ${defaultValue} WHERE #${qualify(oldColumnName)} is null;""",
+            alterColumn
+          )
+        case false =>
+          DatabaseAction.seq(alterColumn)
+      }
+    }
   }
 
   def indexSizeForSQLType(sql: String): String = sql match {

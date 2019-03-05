@@ -187,21 +187,22 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     } else {
       val renameIfNecessary = renameColumn(project, oldTableName, oldColumnName, field.dbName, field.typeIdentifier)
       val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
-      val addColumn         = sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType"""
+      val alterColumn       = sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType"""
 
-      val nullStatements = field.isRequired match {
+      field.isRequired match {
         case true =>
           val defaultValue = migrationValueForField(field)
           DatabaseAction.seq(
+            alterColumn,
             sqlu"""UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(oldColumnName)} = ${defaultValue} WHERE #${qualify(oldColumnName)} is null;""",
-            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} SET NOT NULL"""
+            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} SET NOT NULL""",
+            renameIfNecessary
           )
         case false =>
-          DatabaseAction.seq(
-            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} Drop NOT NULL"""
-          )
+          DatabaseAction.seq(alterColumn,
+                             sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} Drop NOT NULL""",
+                             renameIfNecessary)
       }
-      DBIO.seq(addColumn, nullStatements, renameIfNecessary)
     }
   }
 

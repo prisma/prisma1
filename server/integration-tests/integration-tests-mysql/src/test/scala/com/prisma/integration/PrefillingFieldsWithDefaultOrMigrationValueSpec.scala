@@ -18,8 +18,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
   // Fix broken tests
   // find locations for MigrationValueGenerator and SetParameter
 
-  //Postgres
-  //MySql
+  //Postgres                                                -> Done
+  //MySql                                                   -> Done
   //Sqlite
   //Mongo
 
