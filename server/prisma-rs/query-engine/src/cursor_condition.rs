@@ -15,6 +15,7 @@ impl From<IdValue> for DatabaseValue {
         match id {
             IdValue::String(s) => s.into(),
             IdValue::Int(i) => i.into(),
+            IdValue::Uuid(s) => s.into(), // todo: this is probably not the correct handling for UUIDs
         }
     }
 }

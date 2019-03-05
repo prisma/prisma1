@@ -37,7 +37,8 @@ message NodesResult {
 }
 
 message Node {
-    repeated ValueContainer values = 1;
+    repeated ValueContainer values    = 1;
+    optional GraphqlId      parent_id = 2;
 }
 
 message ValueContainer {
@@ -60,6 +61,7 @@ message GraphqlId {
     oneof id_value {
         string string = 1;
         int64  int    = 2;
+        string uuid   = 3;
     }
 }
 

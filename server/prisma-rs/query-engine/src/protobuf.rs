@@ -105,6 +105,7 @@ impl From<prisma::GraphqlId> for GraphqlId {
         match id.id_value.unwrap() {
             id::IdValue::String(s) => GraphqlId::String(s),
             id::IdValue::Int(i) => GraphqlId::Int(i as usize),
+            id::IdValue::Uuid(s) => GraphqlId::String(s),
         }
     }
 }
@@ -140,6 +141,7 @@ impl From<GraphqlId> for prisma::GraphqlId {
         let id_value = match id {
             GraphqlId::String(s) => id::IdValue::String(s),
             GraphqlId::Int(i) => id::IdValue::Int(i as i64),
+            GraphqlId::UUID(s) => id::IdValue::Uuid(s),
         };
 
         prisma::GraphqlId {
@@ -152,6 +154,7 @@ impl From<Vec<PrismaValue>> for Node {
     fn from(values: Vec<PrismaValue>) -> Node {
         Node {
             values: values.into_iter().map(ValueContainer::from).collect(),
+            parent_id: None, // todo, this needs to mirror the logic for parent id detection (parent Alias?)
         }
     }
 }

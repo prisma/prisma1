@@ -7,6 +7,7 @@ use std::fmt;
 pub enum GraphqlId {
     String(String),
     Int(usize),
+    UUID(String),
 }
 
 #[derive(Debug, PartialEq)]
@@ -40,6 +41,7 @@ impl fmt::Display for PrismaValue {
             PrismaValue::GraphqlId(x) => match x {
                 GraphqlId::String(x) => x.fmt(f),
                 GraphqlId::Int(x) => x.fmt(f),
+                GraphqlId::UUID(x) => x.fmt(f),
             },
         }
     }
@@ -60,6 +62,7 @@ impl Into<DatabaseValue> for PrismaValue {
             PrismaValue::Uuid(u) => u.into(),
             PrismaValue::GraphqlId(GraphqlId::String(s)) => s.into(),
             PrismaValue::GraphqlId(GraphqlId::Int(i)) => (i as i64).into(),
+            PrismaValue::GraphqlId(GraphqlId::UUID(s)) => s.into(),
         }
     }
 }

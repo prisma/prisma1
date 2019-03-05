@@ -235,5 +235,4 @@ object NativeUtils {
   def toRelationalField(field: RelationField): protocol.RelationalField = {
     protocol.RelationalField(field.dbName, Seq())
   }
-
 }
