@@ -11,7 +11,6 @@ export const meta = {
   articleGroup: "Reading Data",
 }
 
-
 ## Overview
 
 The Prisma client is generated from your [datamodel](knul). Its API exposes CRUD and other operations for the models defined in the datamodel.
@@ -58,7 +57,7 @@ The syntax of this datamodel is based on the datamodel v1. If you're using the [
 
 </Warning>
 
-Whenever a database record is queried using the Prisma client, _all scalar fields_ of that record are fetched. This is true no matter if a single record or a list of records is queried.
+Whenever a database record is queried using the Prisma client, all _scalar_ fields of that record are fetched. This is true no matter if a single record or a list of records is queried.
 
 For example, the following query returns all scalar fields of a single `User`:
 
@@ -79,7 +78,7 @@ const user: User = await prisma.user({ email: "bob@prisma.io" })
 
 </Code>
 
-In this case, the returned `user` record will have four properties (that correspond to the scalar fields of the `User` model): `id`, `name`, `email` and `role`. The `posts` and `comments` fields are both _relation fields_ and are therefore not included in the response.
+In this case, the returned `user` record will have four properties (that correspond to the scalar fields of the `User` model): `id`, `name`, `email` and `role`. The `posts` and `comments` fields are both _relation_ fields and are therefore not included in the response.
 
 Here is an example of fetching a _list_ of `User` records:
 
@@ -118,9 +117,13 @@ Similar to the previous request, each object inside the `users` array only has t
 
 For each model in your [datamodel](knul), there is a method generated in the Prisma client API that allows to fetch single records of that model. 
 
-The method is named after the model but starts with a _lowercase_ character. For the sample datamodel from above, the three methods for fetching single `User`, `Post` and `Comment` records are called `user`, `post` and `comment`.
+The method is named after the model but starts with a _lowercase_ character. For the sample datamodel from above, the three generated methods for fetching single records are:
 
-The input for these functions is an object that has as properties any [unique](knul#unique-scalar-fields) field of the model. This means, for all three methods, the `id` field is accepted (as the corresponding models each have an `id` field annotated as `@unique`). The input object for the `user` method additionaly has an `email` field.
+- `user(where: UserWhereUniqueUniqueInput): UserPromise` for `User`
+- `post(where: PostWhereUniqueUniqueInput): PostPromise` for `Post`
+- `comment(where: CommentWhereUniqueUniqueInput): CommentPromise` for `Comment`
+
+The `where` input argument for these methods is an object that has as properties all [unique](knul#unique-scalar-fields) fields of the model. This means, for all three methods, the `id` field is accepted (as the corresponding models each have an `id` field annotated as `@unique`). The input object for the `user` method additionaly has an `email` field.
 
 <Collapse title="View the types of the input object for `User`, `Post` and `Comment`">
 
@@ -171,13 +174,58 @@ const user: User = await prisma.user({ email: "ada@prisma.io" })
 
 ## Fetching lists
 
-For each model in your datamodel, there is a method generated in the Prisma client API that allows to fetch a list of the respective records. The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample datamodel from above, the three methods for fetching lists of `User`, `Post` and `Comment` models are called `users`, `posts` and `comments`.
+For each model in your datamodel, there is a method generated in the Prisma client API that allows to fetch a list of the respective records. 
+
+The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample datamodel from above, the three generated methods for fetching single records are:
+
+- `users` for `User`:
+  ```ts
+  users: (
+    args?: {
+      where?: UserWhereInput;
+      orderBy?: UserOrderByInput;
+      skip?: Int;
+      after?: String;
+      before?: String;
+      first?: Int;
+      last?: Int;
+    }
+  ) => FragmentableArray<User>;
+  ```
+- `posts` for `Post`:
+  ```ts
+  posts: (
+    args?: {
+      where?: PostWhereInput;
+      orderBy?: PostOrderByInput;
+      skip?: Int;
+      after?: String;
+      before?: String;
+      first?: Int;
+      last?: Int;
+    }
+  ) => FragmentableArray<Post>;
+  ```
+- `comments` for `Comment`:
+  ```ts
+  comments: (
+    args?: {
+      where?: CommentWhereInput;
+      orderBy?: CommentOrderByInput;
+      skip?: Int;
+      after?: String;
+      before?: String;
+      first?: Int;
+      last?: Int;
+    }
+  ) => FragmentableArray<Comment>;
+  ```
 
 The input arugment for these functions is an object that has properties for:
 
-- [Filtering](#basic-filters-for-lists): `where`
-- [Ordering](#ordering): `orderBy`
-- [Pagination](#pagination): `before`, `after`, `first`, `last`, `skip`
+- [filtering](#basic-filters-for-lists): `where`
+- [ordering](#ordering): `orderBy`
+- [pagination](#pagination): `before`, `after`, `first`, `last`, `skip`
 
 ### Examples
 
@@ -259,9 +307,11 @@ In this example, `users()` already returns a list, so it's not possible to query
 
 </Warning>
 
+If you're implementing 
+
 ### Examples
 
-_Query all the posts of a single user_:
+_Fetch all the posts of a single user_:
 
 <Code languages={["TypeScript", "Response"]}>
 
@@ -304,7 +354,7 @@ const postsByUser: Post[] = await prisma
 
 </Code>
 
- _Query all the comments for a certain post_:
+ _Fetch all the comments for a certain post_:
 
 <Code languages={["TypeScript", "Response"]}>
 
@@ -438,9 +488,7 @@ _Fetch users that have an `A` in their names_:
 
 ```ts
 const usersWithAInName: User[] = await prisma
-  .users({
-    where: { name_contains: "A" }
-  })
+  .users({ where: { name_contains: "A" } })
 ```
 
 ```js
@@ -690,7 +738,7 @@ _Sort comments by their creation date (ascending)_:
 <Code languages={["TypeScript", "Response"]}>
 
 ```ts
-const sortedComments: Post[] = await prisma
+const sortedComments: Comment[] = await prisma
   .comments({ orderBy: "createdAt_ASC" })
 ```
 
@@ -865,7 +913,7 @@ const posts: Post[] = await prisma
 
 </Code>
 
-_Query the last 5 records before the record with `cixnen24p33lo0143bexvr52n` as `id`_:
+_Fetch the last 5 records before the record with `cixnen24p33lo0143bexvr52n` as `id`_:
 
 ![](https://i.imgur.com/306eghw.png)
 
