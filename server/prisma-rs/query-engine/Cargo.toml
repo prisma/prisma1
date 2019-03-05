@@ -27,8 +27,8 @@ tower-service = "0.2"
 futures = "0.1"
 tokio = "0.1"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git", branch = "master"}
-prisma-common = { path = "prisma-common" }
-prisma-models = { path = "prisma-models" }
+prisma-common = { path = "../libs/prisma-common" }
+prisma-models = { path = "../prisma-models" }
 
 [build-dependencies]
 prost-build = "0.4"
