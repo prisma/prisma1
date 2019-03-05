@@ -39,7 +39,7 @@
     "husky": "^0.14.3",
     "lint-staged": "^4.0.3",
     "pkg": "^4.3.5",
-    "prettier": "^1.16.4",
+    "prettier": "1.14.3",
     "progress-estimator": "^0.2.2",
     "rimraf": "^2.6.1",
     "ts-node": "^8.0.2",
