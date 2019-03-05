@@ -8,6 +8,6 @@ edition = "2018"
 prisma-query = { git = "https://github.com/prisma/prisma-query" }
 barrel = { git = "https://github.com/spacekookie/barrel", features = ["sqlite3"] }
 rusqlite = { version = "0.16" }
-prisma = { path = ".." }
-prisma-models = { path = "../prisma-models" }
+prisma = { path = "../.." }
+prisma-models = { path = "../../prisma-models" }
 time = "*"
