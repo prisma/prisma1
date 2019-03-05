@@ -11,6 +11,7 @@ services:
       PRISMA_CONFIG: |
         port: 4466
         rabbitUri: amqp://rabbit
+        prototype: true
         databases:
           default:
             connector: sqlite
