@@ -45,7 +45,7 @@ impl Sqlite {
             .collect();
 
         if !databases.contains(db_name) {
-            let path = format!("{}/db/{}", *SERVER_ROOT, db_name);
+            let path = format!("{}/db/{}.db", *SERVER_ROOT, db_name);
             dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
         }
 
