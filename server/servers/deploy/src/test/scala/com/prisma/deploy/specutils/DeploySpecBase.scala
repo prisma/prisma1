@@ -119,7 +119,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
 
       case c: SQLiteDeployConnector =>
         val session = c.managementDatabase.database.createSession()
-        val path    = s"""'db/$projectId'"""
+        val path    = s"""'db/$projectId.db'"""
         (session, s"ATTACH DATABASE $path AS $projectId;")
 
       case x => sys.error(s"$x is not supported here")
