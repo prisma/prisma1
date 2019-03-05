@@ -1,8 +1,6 @@
 use crate::prelude::*;
-use prisma_query::ast::Table;
-
 use once_cell::unsync::OnceCell;
-use prisma_query::ast::*;
+use prisma_query::ast::{Column, Table};
 use std::sync::{Arc, Weak};
 
 pub type ModelRef = Arc<Model>;

@@ -9,6 +9,7 @@ pub use envelope::ProtoBufEnvelope;
 pub use filter::*;
 pub use input::*;
 pub use interface::{ExternalInterface, ProtoBufInterface};
+use prisma_common::{error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
@@ -152,5 +153,19 @@ impl From<Vec<PrismaValue>> for Node {
         Node {
             values: values.into_iter().map(ValueContainer::from).collect(),
         }
+    }
+}
+
+trait InputValidation {
+    fn validate(&self) -> PrismaResult<()>;
+
+    fn validate_args(query_arguments: &crate::protobuf::QueryArguments) -> PrismaResult<()> {
+        if let (Some(_), Some(_)) = (query_arguments.first, query_arguments.last) {
+            return Err(Error::InvalidConnectionArguments(
+                "Cannot have first and last set in the same query",
+            ));
+        };
+
+        Ok(())
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
     data_resolvers::{IntoSelectQuery, PrismaDataResolver, Sqlite},
-    protobuf::prelude::*,
+    protobuf::{prelude::*, InputValidation},
 };
 use prisma_common::{config::*, error::Error, PrismaResult};
 use prost::Message;
@@ -9,6 +9,7 @@ use std::error::Error as StdError;
 pub trait ExternalInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
+    fn get_related_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
 }
 
 pub struct ProtoBufInterface {
@@ -52,76 +53,47 @@ impl ProtoBufInterface {
             }
         })
     }
+}
 
-    fn validate(query_arguments: &QueryArguments) -> PrismaResult<()> {
-        if let (Some(_), Some(_)) = (query_arguments.first, query_arguments.last) {
-            return Err(Error::InvalidConnectionArguments(
-                "Cannot have first and last set in the same query",
-            ));
-        };
+macro_rules! input_to_query {
+    ( $x:tt, $y:ident ) => {
+        fn $y(&self, payload: &mut [u8]) -> Vec<u8> {
+            Self::protobuf_result(|| {
+                let input = $x::decode(payload)?;
+                input.validate()?;
+                let query = input.into_select_query()?;
+                let (rows, fields) = self.data_resolver.select_nodes(query)?;
+                let nodes: Vec<Node> = rows.into_iter().map(Node::from).collect();
+                let response = RpcResponse::ok(NodesResult { nodes, fields });
+                let mut response_payload = Vec::new();
 
-        Ok(())
+                response.encode(&mut response_payload).unwrap();
+                Ok(response_payload)
+            })
+        }
     }
 }
 
 impl ExternalInterface for ProtoBufInterface {
-    fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8> {
-        Self::protobuf_result(|| {
-            let input = GetNodeByWhereInput::decode(payload)?;
-            let query = input.into_select_query()?;
-            let (rows, fields) = self.data_resolver.select_nodes(query)?;
-            let nodes: Vec<Node> = rows.into_iter().map(Node::from).collect();
-            let response = RpcResponse::ok(NodesResult { nodes, fields });
-
-            let mut response_payload = Vec::new();
-            response.encode(&mut response_payload).unwrap();
-
-            Ok(response_payload)
-        })
-    }
-
-    fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8> {
-        Self::protobuf_result(|| {
-            let input = GetNodesInput::decode(payload)?;
-            Self::validate(&input.query_arguments)?;
-
-            let query = input.into_select_query()?;
-            let (rows, fields) = self.data_resolver.select_nodes(query)?;
-            let nodes: Vec<Node> = rows.into_iter().map(Node::from).collect();
-            let response = RpcResponse::ok(NodesResult { nodes, fields });
-
-            let mut response_payload = Vec::new();
-            response.encode(&mut response_payload).unwrap();
-
-            Ok(response_payload)
-        })
-    }
+    input_to_query!(GetNodeByWhereInput, get_node_by_where);
+    input_to_query!(GetNodesInput, get_nodes);
+    input_to_query!(GetRelatedNodesInput, get_related_nodes);
 }
 
 impl From<Error> for super::prisma::error::Value {
     fn from(error: Error) -> super::prisma::error::Value {
         match error {
-            Error::ConnectionError(message, _) => {
-                super::prisma::error::Value::ConnectionError(message.to_string())
-            }
-            Error::QueryError(message, _) => {
-                super::prisma::error::Value::QueryError(message.to_string())
-            }
+            Error::ConnectionError(message, _) => super::prisma::error::Value::ConnectionError(message.to_string()),
+            Error::QueryError(message, _) => super::prisma::error::Value::QueryError(message.to_string()),
             Error::ProtobufDecodeError(message, _) => {
                 super::prisma::error::Value::ProtobufDecodeError(message.to_string())
             }
-            Error::JsonDecodeError(message, _) => {
-                super::prisma::error::Value::JsonDecodeError(message.to_string())
-            }
-            Error::InvalidInputError(message) => {
-                super::prisma::error::Value::InvalidInputError(message.to_string())
-            }
+            Error::JsonDecodeError(message, _) => super::prisma::error::Value::JsonDecodeError(message.to_string()),
+            Error::InvalidInputError(message) => super::prisma::error::Value::InvalidInputError(message.to_string()),
             Error::InvalidConnectionArguments(message) => {
                 super::prisma::error::Value::InvalidConnectionArguments(message.to_string())
             }
-            e @ Error::NoResultError => {
-                super::prisma::error::Value::NoResultsError(e.description().to_string())
-            }
+            e @ Error::NoResultError => super::prisma::error::Value::NoResultsError(e.description().to_string()),
         }
     }
 }
