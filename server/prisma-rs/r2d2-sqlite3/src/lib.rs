@@ -14,6 +14,16 @@ pub struct SqliteConnectionManager {
     path: String,
 }
 
+impl SqliteConnectionManager {
+    pub fn file(path: String) -> Self {
+        Self { path }
+    }
+
+    pub fn memory() -> Self {
+        Self { path: ":memory:".into() }
+    }
+}
+
 impl fmt::Debug for SqliteConnectionManager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "SqliteConnectionManager")
