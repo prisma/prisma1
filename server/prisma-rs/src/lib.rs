@@ -19,8 +19,7 @@ use std::{env, fs::File, slice};
 
 lazy_static! {
     pub static ref PBI: ProtoBufInterface = ProtoBufInterface::new(&CONFIG);
-    pub static ref SERVER_ROOT: String =
-        env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
+    pub static ref SERVER_ROOT: String = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
     pub static ref CONFIG: PrismaConfig = {
         let path = format!("{}/prisma-rs/config/prisma.yml", *SERVER_ROOT);
         serde_yaml::from_reader(File::open(path).unwrap()).unwrap()

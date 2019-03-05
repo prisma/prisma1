@@ -66,8 +66,5 @@ pub trait IntoSelectQuery {
 }
 
 pub trait DataResolver {
-    fn select_nodes(
-        &self,
-        query: SelectQuery,
-    ) -> PrismaResult<(Vec<Vec<PrismaValue>>, Vec<String>)>;
+    fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Vec<PrismaValue>>, Vec<String>)>;
 }

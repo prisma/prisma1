@@ -5,10 +5,7 @@ use prisma_models::prelude::*;
 use prisma_query::visitor::{self, Visitor};
 
 impl DataResolver for Sqlite {
-    fn select_nodes(
-        &self,
-        query: SelectQuery,
-    ) -> PrismaResult<(Vec<Vec<PrismaValue>>, Vec<String>)> {
+    fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Vec<PrismaValue>>, Vec<String>)> {
         let db_name = query.db_name;
         let query_ast = query.query_ast;
         let fields = query.selected_fields.fields;

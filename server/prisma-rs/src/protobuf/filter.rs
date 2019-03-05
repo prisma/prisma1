@@ -47,9 +47,7 @@ impl IntoFilter for pb::ScalarFilter {
     fn into_filter(self, model: ModelRef) -> Filter {
         use pb::scalar_filter::Condition::*;
 
-        let field = dbg!(model.fields())
-            .find_from_scalar(self.field.as_ref())
-            .unwrap();
+        let field = dbg!(model.fields()).find_from_scalar(self.field.as_ref()).unwrap();
 
         let condition = match self.condition.unwrap() {
             Equals(value) => ScalarCondition::Equals(value.into()),
@@ -64,12 +62,8 @@ impl IntoFilter for pb::ScalarFilter {
             LessThanOrEquals(value) => ScalarCondition::LessThanOrEquals(value.into()),
             GreaterThan(value) => ScalarCondition::GreaterThan(value.into()),
             GreaterThanOrEquals(value) => ScalarCondition::GreaterThanOrEquals(value.into()),
-            In(mc) => {
-                ScalarCondition::In(mc.values.into_iter().map(|value| value.into()).collect())
-            }
-            NotIn(mc) => {
-                ScalarCondition::NotIn(mc.values.into_iter().map(|value| value.into()).collect())
-            }
+            In(mc) => ScalarCondition::In(mc.values.into_iter().map(|value| value.into()).collect()),
+            NotIn(mc) => ScalarCondition::NotIn(mc.values.into_iter().map(|value| value.into()).collect()),
         };
 
         Filter::Scalar(ScalarFilter { field, condition })
@@ -80,27 +74,16 @@ impl IntoFilter for pb::ScalarListFilter {
     fn into_filter(self, model: ModelRef) -> Filter {
         use pb::scalar_list_condition::Condition::*;
 
-        let field = model
-            .fields()
-            .find_from_scalar(self.field.as_ref())
-            .unwrap();
+        let field = model.fields().find_from_scalar(self.field.as_ref()).unwrap();
 
         let condition = match self.condition.condition.unwrap() {
             Contains(value) => ScalarListCondition::Contains(value.into()),
-            ContainsEvery(values) => ScalarListCondition::ContainsEvery(
-                values
-                    .values
-                    .into_iter()
-                    .map(|value| value.into())
-                    .collect(),
-            ),
-            ContainsSome(values) => ScalarListCondition::ContainsSome(
-                values
-                    .values
-                    .into_iter()
-                    .map(|value| value.into())
-                    .collect(),
-            ),
+            ContainsEvery(values) => {
+                ScalarListCondition::ContainsEvery(values.values.into_iter().map(|value| value.into()).collect())
+            }
+            ContainsSome(values) => {
+                ScalarListCondition::ContainsSome(values.values.into_iter().map(|value| value.into()).collect())
+            }
         };
 
         Filter::ScalarList(ScalarListFilter { field, condition })
@@ -116,14 +99,11 @@ impl IntoFilter for pb::RelationFilter {
             .find_from_relation_fields(self.field.field.as_ref())
             .unwrap();
 
-        let nested_filter: Box<Filter> =
-            Box::new((*self.nested_filter).into_filter(field.related_model()));
+        let nested_filter: Box<Filter> = Box::new((*self.nested_filter).into_filter(field.related_model()));
 
         let condition = match condition {
             pb::relation_filter::Condition::EveryRelatedNode => RelationCondition::EveryRelatedNode,
-            pb::relation_filter::Condition::AtLeastOneRelatedNode => {
-                RelationCondition::AtLeastOneRelatedNode
-            }
+            pb::relation_filter::Condition::AtLeastOneRelatedNode => RelationCondition::AtLeastOneRelatedNode,
             pb::relation_filter::Condition::NoRelatedNode => RelationCondition::NoRelatedNode,
             pb::relation_filter::Condition::ToOneRelatedNode => RelationCondition::ToOneRelatedNode,
         };

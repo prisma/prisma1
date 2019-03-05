@@ -10,8 +10,8 @@ services:
       RABBITMQ_URI: amqp://rabbit
       PRISMA_CONFIG: |
         port: 4466
-        prototype: true
         rabbitUri: amqp://rabbit
+        prototype: true
         databases:
           default:
             connector: sqlite
