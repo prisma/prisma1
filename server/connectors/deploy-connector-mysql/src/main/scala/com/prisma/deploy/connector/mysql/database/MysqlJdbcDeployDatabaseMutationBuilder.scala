@@ -192,24 +192,24 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
                             oldTableName: String,
                             oldColumnName: String,
                             oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    if (oldTypeIdentifier != field.typeIdentifier) {
-      DatabaseAction.seq(deleteColumn(project, field.model.dbName, oldColumnName), createColumn(project, field))
-    } else {
-      val newColSql   = typeMapper.rawSQLForField(field)
-      val alterColumn = sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql;"
+    val wipeOldData = if (oldTypeIdentifier != field.typeIdentifier) {
+      sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${oldColumnName} = null"
+    } else { DBIO.successful(()) }
 
-      field.isRequired match {
-        case true =>
-          val defaultValue             = migrationValueForField(field)
-          val newColSqlWithoutRequired = typeMapper.rawSQLForFieldWithoutRequired(field)
-          DatabaseAction.seq(
-            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSqlWithoutRequired;""",
-            sqlu"""UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(oldColumnName)} = ${defaultValue} WHERE #${qualify(oldColumnName)} is null;""",
-            alterColumn
-          )
-        case false =>
-          DatabaseAction.seq(alterColumn)
-      }
+    val newColSql = typeMapper.rawSQLForField(field)
+
+    field.isRequired match {
+      case true =>
+        val defaultValue = migrationValueForField(field)
+        DatabaseAction.seq(
+          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} DISABLE KEYS;""",
+          wipeOldData,
+          sqlu"""UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(field.dbName)} = ${defaultValue} WHERE #${qualify(field.dbName)} is null;""",
+          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(field.dbName)} #$newColSql;""",
+          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ENABLE KEYS;"""
+        )
+      case false =>
+        DBIO.seq(sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql;", wipeOldData)
     }
   }
 
