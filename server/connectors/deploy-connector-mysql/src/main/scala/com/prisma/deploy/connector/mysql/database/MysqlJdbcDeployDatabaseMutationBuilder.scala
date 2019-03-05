@@ -198,30 +198,31 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
     field.isRequired match {
       case true if !field.isId =>
-        val optionalNewColSql = typeMapper.rawSQLForFieldWithoutRequired(field)
+        val optionalOldColumnSQL = typeMapper.rawSQLToMakeOldFieldOptional(oldColumnName, oldTypeIdentifier)
+        val optionalNewColumnSQL = typeMapper.rawSQLForFieldWithoutRequired(field)
         val wipeOldData = if (oldTypeIdentifier != field.typeIdentifier) {
           sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${oldColumnName} = null;"
         } else { DBIO.successful(()) }
 
-        //This fails when changing the primary key column
-        //special case this to not do the optional and null part because a type change for a primary should only reach this code when there are no nodes
+        val res = DBIO
+          .seq(
+            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$optionalOldColumnSQL;""",
+            wipeOldData,
+            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$optionalNewColumnSQL;""",
+            sqlu"""UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(field.dbName)} = ${defaultValue} WHERE #${qualify(field.dbName)} is null;""",
+            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(field.dbName)} #$newColSql;"""
+          )
+          .transactionally
+        res
 
-        DatabaseAction.seq(
-          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} DISABLE KEYS;""",
-          wipeOldData,
-          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$optionalNewColSql;""",
-          sqlu"""UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(field.dbName)} = ${defaultValue} WHERE #${qualify(field.dbName)} is null;""",
-          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(field.dbName)} #$newColSql;""",
-          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ENABLE KEYS;"""
-        )
-      case true if field.isId => // then it is also unique, so we only came here because there are no nodes
-        DatabaseAction.seq(sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(field.dbName)} #$newColSql;""")
+      case true if field.isId => // then it is also unique, so we only came here because there are no nodes, so we can change the column right away
+        sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(field.dbName)} #$newColSql;"""
 
       case false =>
         val wipeOldData = if (oldTypeIdentifier != field.typeIdentifier) {
           sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${oldColumnName} = null"
         } else { DBIO.successful(()) }
-        DBIO.seq(sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql;", wipeOldData)
+        DBIO.seq(wipeOldData, sqlu"ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql;")
     }
   }
 
