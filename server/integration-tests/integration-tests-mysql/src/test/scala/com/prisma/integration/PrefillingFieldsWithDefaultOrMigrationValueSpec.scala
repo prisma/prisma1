@@ -3,6 +3,7 @@ package com.prisma.integration
 import org.scalatest.{FlatSpec, Matchers}
 
 class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  override def doNotRunForPrototypes: Boolean = true
 
   //Affected Deploy Actions
   // creating new required field                 -> set column to default/migValue for all  rows                  -> createColumn
@@ -62,9 +63,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
     res.toString should include("""The fields will be pre-filled with the value `0`.""")
 
     val updatedProject = deployServer.deploySchema(project, schema1)
-
     apiServer.query("query{persons{age, new}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"new":0}]}}""")
-
   }
 
   "Adding a required field with default value" should "set the default value" in {

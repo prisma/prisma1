@@ -5,6 +5,7 @@ import com.prisma.integration.IntegrationBaseSpec
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  override def doNotRunForPrototypes: Boolean = true
 
   "Updating a field from scalar non-list to scalar list" should "throw a warning if there is already data" in {
 

@@ -1,7 +1,7 @@
 package com.prisma.deploy.validation
 
-import com.prisma.deploy.connector.{ClientDbQueries, MigrationValueGenerator}
-import com.prisma.deploy.migration.validation.{DeployError, DeployResult, DeployWarning, DeployWarnings}
+import com.prisma.deploy.connector.{ClientDbQueries, DeployConnector, MigrationValueGenerator}
+import com.prisma.deploy.migration.validation._
 import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, UpdatedAtBehaviour}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models._
@@ -10,10 +10,15 @@ import org.scalactic.{Bad, Good, Or}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project, nextSchema: Schema, steps: Vector[MigrationStep])
+case class DestructiveChanges(clientDbQueries: ClientDbQueries,
+                              project: Project,
+                              nextSchema: Schema,
+                              steps: Vector[MigrationStep],
+                              deployConnector: DeployConnector)
     extends MigrationValueGenerator {
   val previousSchema        = project.schema
   val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
+  val isMongo               = deployConnector.capabilities.isMongo
 
   def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
     checkAgainstExistingData.map { results =>
@@ -75,28 +80,20 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     }
   }
 
-  private def createFieldValidation(x: CreateField) = {
+  private def createFieldValidation(x: CreateField): Future[Vector[DeployResult]] = {
     val field = nextSchema.getFieldByName_!(x.model, x.name)
 
     def newRequiredScalarField(model: Model) = field.isScalar && field.isRequired match {
       case true =>
         clientDbQueries.existsByModel(model).map {
-          case true if !field.isUnique =>
-            Vector(
-              DeployWarning(
-                `type` = model.name,
-                field = field.name,
-                description = s"You are creating a required field but there are already nodes present that would violate that constraint." +
-                  s" The fields will be pre-filled with the value `${migrationValueForField(field.asScalarField_!).value}`."
-              ))
-          case true if field.isUnique =>
-            Vector(
-              DeployError(
-                `type` = model.name,
-                field = field.name,
-                description = s"You are creating a required field but there are already nodes present that would violate that constraint."
-              ))
-          case false => Vector.empty
+          case true if !field.isUnique && !isMongo =>
+            Vector(DeployWarnings.migValueUsedOnNewField(model.name, field.name, migrationValueForField(field.asScalarField_!)))
+
+          case true if field.isUnique || isMongo =>
+            Vector(DeployErrors.creatingUniqueRequiredFieldWithExistingNulls(`type` = model.name, field = field.name))
+
+          case false =>
+            Vector.empty
         }
 
       case false =>
@@ -187,10 +184,17 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     def warnings: Future[Vector[DeployWarning]] = () match {
       case _ if cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation =>
         clientDbQueries.existsByModel(model).map {
-          case true if newField.isRequired && newField.isScalar =>
-            Vector(DeployWarnings.dataLossField(x.name, x.name),
-                   DeployWarnings.migValueUsedOnField(x.name, x.name, migrationValueForField(newField.asScalarField_!).value))
+          case true if newField.isRequired && newField.isScalar && !isMongo =>
+            Vector(
+              DeployWarnings.dataLossField(x.name, x.name),
+              DeployWarnings.migValueUsedOnExistingField(x.name, x.name, migrationValueForField(newField.asScalarField_!))
+            )
 
+          case true if newField.isRequired && newField.isScalar && isMongo =>
+            Vector(
+              DeployWarnings.dataLossField(x.name, x.name),
+              DeployWarnings.migValueUsedOnExistingField(x.name, x.name, migrationValueForField(newField.asScalarField_!)) //Fixme error for Mongo
+            )
           case true =>
             Vector(DeployWarnings.dataLossField(x.name, x.name))
 
@@ -204,30 +208,13 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
       case true =>
         clientDbQueries.existsNullByModelAndField(model, oldField).map {
           case true if !newField.isUnique && newField.isScalar =>
-            Vector(
-              DeployWarning(
-                `type` = model.name,
-                field = oldField.name,
-                s"You are making a field required, but there are already nodes with null values that would violate that constraint. " +
-                  s"These fields will be pre-filled with the value `${migrationValueForField(newField.asScalarField_!).value}`"
-              ))
+            Vector(DeployWarnings.migValueUsedOnExistingField(`type` = model.name, field = oldField.name, migrationValueForField(newField.asScalarField_!)))
 
           case true if !newField.isUnique && !newField.isScalar =>
-            Vector(
-              DeployError(
-                `type` = model.name,
-                field = oldField.name,
-                s"You are making a field required, but there are already nodes with null values that would violate that constraint."
-              ))
+            Vector(DeployErrors.makingFieldRequired(`type` = model.name, field = oldField.name))
 
           case true if newField.isUnique =>
-            Vector(
-              DeployError(
-                `type` = model.name,
-                field = oldField.name,
-                s"You are making a field required, but there are already nodes with null values that would violate that constraint. " +
-                  s"Prefilling these fields with a default value is not possible because it is unique."
-              ))
+            Vector(DeployErrors.updatingUniqueRequiredFieldWithExistingNulls(`type` = model.name, field = oldField.name))
 
           case false =>
             Vector.empty
@@ -239,11 +226,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries, project: Project
     def uniqueErrors: Future[Vector[DeployError]] = becomesUnique match {
       case true =>
         clientDbQueries.existsDuplicateValueByModelAndField(model, oldField.asInstanceOf[ScalarField]).map {
-          case true =>
-            Vector(
-              DeployError(`type` = model.name,
-                          field = oldField.name,
-                          "You are making a field unique, but there are already nodes that would violate that constraint."))
+          case true  => Vector(DeployErrors.makingFieldUnique(`type` = model.name, field = oldField.name))
           case false => Vector.empty
         }
 
