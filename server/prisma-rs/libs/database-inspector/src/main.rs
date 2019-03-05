@@ -1,5 +1,4 @@
 use barrel::{backend::Sqlite as Squirrel, types, Migration};
-use prisma::data_resolvers::Sqlite;
 use prisma_models::prelude::*;
 use rusqlite::{types::ToSql, Connection, Result, NO_PARAMS};
 
