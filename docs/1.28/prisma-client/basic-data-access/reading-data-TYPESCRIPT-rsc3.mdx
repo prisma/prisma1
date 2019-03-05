@@ -16,7 +16,7 @@ export const meta = {
 
 The Prisma client is generated from your [datamodel](knul). Its API exposes CRUD and other operations for the models defined in the datamodel.
 
-For this page, we'll assume your Prisma project is based on the following [datamodel](knul):
+For this page, we'll assume your Prisma project is based on the following datamodel:
 
 ```graphql
 type Post {
@@ -114,7 +114,7 @@ const users: User[] = await prisma.users()
 
 Similar to the previous request, each object inside the `users` array only has the scalar and no relation fields.
 
-## Fetching single objects
+## Fetching single records
 
 For each model in your [datamodel](knul), there is a method generated in the Prisma client API that allows to fetch single records of that model. 
 
@@ -122,7 +122,7 @@ The method is named after the model but starts with a _lowercase_ character. For
 
 The input for these functions is an object that has as properties any [unique](knul#unique-scalar-fields) field of the model. This means, for all three methods, the `id` field is accepted (as the corresponding models each have an `id` field annotated as `@unique`). The input object for the `user` method additionaly has an `email` field.
 
-<Collapse title="View the types of the input object for `Link`, `User` and `Vote`">
+<Collapse title="View the types of the input object for `User`, `Post` and `Comment`">
 
 > TODO
 
@@ -255,7 +255,7 @@ const result = await prisma
   .posts()
 ```
 
-In this example, `users()` already returns a list, so it's not possible to query the `posts` relation of each user object inside the list.
+In this example, `users()` already returns a list, so it's not possible to query the `posts` relation of each user record inside the list.
 
 </Warning>
 
@@ -625,7 +625,7 @@ _Fetch posts by a certain user that were created before christmas_:
 <Code languages={["TypeScript", "Response"]}>
 
 ```ts
-const postsByUserBeforeChristmas: LinkNode[] = await prisma
+const postsByUserBeforeChristmas: Post[] = await prisma
   .user({ email: "ada@prisma.io" })
   .posts({
     where: {
@@ -746,7 +746,6 @@ const sortedUsers: User[] = await prisma
 
 </Code>
 
-
 ## Pagination
 
 When querying a list of records, you can fetch certain parts (i.e. _pages_) of that list by supplying pagination arguments.
@@ -755,8 +754,8 @@ When querying a list of records, you can fetch certain parts (i.e. _pages_) of t
 
 You can seek forwards or backwards through the list and supply an optional starting point:
 
-- To seek **forward**, use `first`; specify a starting object with `after`.
-- To seek **backward**, use `last`; specify a starting object with `before`.
+- To seek **forward**, use `first`; specify the `id` of a starting record with `after`.
+- To seek **backward**, use `last`; specify the `id` of a starting record with `before`.
 
 You **cannot** combine `first` with `before` or `last` with `after`. If you do so in a query, `before`/`after` will simply be ignored and only `first` or `last` is actually applied (at the very beginning or end of the list, depending on which you're using).
 
@@ -766,8 +765,8 @@ Note that you can query for more records than actually exist in the database wit
 
 You can also skip an arbitrary amount of records in whichever direction you are seeking by supplying the `skip` argument:
 
-- When using `first`, `skip` skips objects at the beginning of the list.
-- When using `last`, `skip` skips objects from the end of the list.
+- When using `first`, `skip` skips records at the beginning of the list.
+- When using `last`, `skip` skips records from the end of the list.
 
 ### Examples
 
@@ -775,7 +774,7 @@ For the following examples, we're assuming a list of exactly 30 records:
 
 ![](https://i.imgur.com/Xh6Qjts.png)
 
-_Query the first 3 records (seeking forward)_:
+_Fetch the first 3 records (seeking forward)_:
 
 ![](https://i.imgur.com/O1Jj3Z2.png)
 
@@ -788,7 +787,7 @@ const posts: Post[] = await prisma
 
 </Code>
 
-_Query the records from position 6 to position 10 (seeking forward)_:
+_Fetch the records from position 6 to position 10 (seeking forward)_:
 
 ![](https://i.imgur.com/PpI5X0X.png)
 
@@ -804,7 +803,7 @@ const posts: Post[] = await prisma
 
 </Code>
 
-_Query the last 3 records (seeking backward)_:
+_Fetch the last 3 records (seeking backward)_:
 
 ![](https://i.imgur.com/pkuYCrV.png)
 
@@ -817,7 +816,7 @@ const posts: Post[] = await prisma
 
 </Code>
 
-_Query the records from position 21 to position 27 (seeking backward)_:
+_Fetch the records from position 21 to position 27 (seeking backward)_:
 
 ![](https://i.imgur.com/iSl9Y07.png)
 
@@ -833,7 +832,7 @@ const posts: Post[] = await prisma
 
 </Code>
 
-_Query the first 3 records after the record with `cixnen24p33lo0143bexvr52n` as `id`_:
+_Fetch the first 3 records after the record with `cixnen24p33lo0143bexvr52n` as `id`_:
 
 ![](https://i.imgur.com/InYSSkQ.png)
 
@@ -849,7 +848,7 @@ const posts: Post[] = await prisma
 
 </Code>
 
-_Query the first 5 recrods after the object with `cixnen24p33lo0143bexvr52n` as `id` and skipping 3 records_:
+_Fetch the first 5 records after the record with `cixnen24p33lo0143bexvr52n` as `id` and skipping 3 records_:
 
 ![](https://i.imgur.com/u4WEAJv.png)
 
@@ -882,7 +881,7 @@ const posts: Post[] = await prisma
 
 </Code>
 
-_Query the last 3 records before the record with `cixnen24p33lo0143bexvr52n` as `id` and skipping 5 records_:
+_Fetch the last 3 records before the record with `cixnen24p33lo0143bexvr52n` as `id` and skipping 5 records_:
 
 ![](https://i.imgur.com/iZGUiHJ.png)
 
@@ -901,9 +900,9 @@ const post: Post[] = await prisma
 
 ## Aggregations
 
-You can submit aggregation queries via [connection queries](vw4d#connection-relay-pagination--aggregations). The following aggregation functions are supported:
+You can submit aggregation queries via _connection queries_. The following aggregation functions are supported:
 
-- `count`: Counts the number of objects in a list
+- `count`: Counts the number of records in a list
 - `avg` (_coming soon_): Computes the average of a list of numbers.
 - `median` (_coming soon_): Computes the median of a list of numbers. 
 - `max` (_coming soon_): Returns the greatest element of a list of numbers.
