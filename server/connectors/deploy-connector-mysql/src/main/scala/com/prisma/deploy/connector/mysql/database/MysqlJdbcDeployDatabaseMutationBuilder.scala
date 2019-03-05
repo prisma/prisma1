@@ -193,12 +193,12 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
                             oldColumnName: String,
                             oldTypeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
 
-    val newColSql         = typeMapper.rawSQLForField(field)
-    val optionalNewColSql = typeMapper.rawSQLForFieldWithoutRequired(field)
+    val newColSql    = typeMapper.rawSQLForField(field)
+    val defaultValue = migrationValueForField(field)
 
     field.isRequired match {
-      case true =>
-        val defaultValue = migrationValueForField(field)
+      case true if !field.isId =>
+        val optionalNewColSql = typeMapper.rawSQLForFieldWithoutRequired(field)
         val wipeOldData = if (oldTypeIdentifier != field.typeIdentifier) {
           sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${oldColumnName} = null;"
         } else { DBIO.successful(()) }
@@ -209,10 +209,14 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
         DatabaseAction.seq(
           sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} DISABLE KEYS;""",
           wipeOldData,
-          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$newColSql;""",
+          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(oldColumnName)} #$optionalNewColSql;""",
           sqlu"""UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(field.dbName)} = ${defaultValue} WHERE #${qualify(field.dbName)} is null;""",
+          sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(field.dbName)} #$newColSql;""",
           sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ENABLE KEYS;"""
         )
+      case true if field.isId => // then it is also unique, so we only came here because there are no nodes
+        DatabaseAction.seq(sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} CHANGE COLUMN #${qualify(field.dbName)} #$newColSql;""")
+
       case false =>
         val wipeOldData = if (oldTypeIdentifier != field.typeIdentifier) {
           sqlu"UPDATE #${qualify(project.dbName, oldTableName)} SET #${oldColumnName} = null"
