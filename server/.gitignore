@@ -46,6 +46,5 @@ out
 
 # sqlite
 *.db
-/db/*
 
 prisma-rs/build/

@@ -43,6 +43,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
 
   def capabilities: ConnectorCapabilities
   def runOnlyForConnectors: Set[ConnectorTag]           = ConnectorTag.values.toSet
+  def doNotRunForConnectors: Set[ConnectorTag]          = Set.empty
   def runOnlyForCapabilities: Set[ConnectorCapability]  = Set.empty
   def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
   def doNotRunForPrototypes: Boolean                    = false
@@ -59,20 +60,21 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   private lazy val shouldSuiteBeIgnored: Boolean = { // this must be a val. Otherwise printing would happen many times.
     val connectorHasTheRightCapabilities = runOnlyForCapabilities.forall(capabilities.has) || runOnlyForCapabilities.isEmpty
     val connectorHasAWrongCapability     = doNotRunForCapabilities.exists(capabilities.has)
-    val isNotTheRightConnector           = !runOnlyForConnectors.contains(connectorTag)
+    val isTheRightConnector              = runOnlyForConnectors.contains(connectorTag) && !doNotRunForConnectors.contains(connectorTag)
 
-    if (isNotTheRightConnector) {
+    if (!isTheRightConnector) {
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because the current connector is not right
            | allowed connectors: ${runOnlyForConnectors.mkString(",")}
-           | current connector: ${connectorTag}
+           | disallowed connectors: ${doNotRunForConnectors.mkString(",")}
+           | current connector: $connectorTag
          """.stripMargin
       )
       true
     } else if (isPrototype && doNotRunForPrototypes) {
       println(
         s"""the suite ${self.getClass.getSimpleName} will be ignored because it should not run for prototypes and the current connector is a prototype
-           | current connector: ${connectorTag}
+           | current connector: $connectorTag
          """.stripMargin
       )
       true
