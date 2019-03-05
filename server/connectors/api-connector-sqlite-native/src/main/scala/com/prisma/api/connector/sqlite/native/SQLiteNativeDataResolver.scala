@@ -57,19 +57,20 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
                                fromNodeIds: Vector[IdGCValue],
                                queryArguments: QueryArguments,
                                selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-    val projectJson = Json.toJson(project)
-    val input = prisma.protocol.GetRelatedNodesInput(
-      protocol.Header("GetRelatedNodesInput"),
-      ByteString.copyFromUtf8(projectJson.toString()),
-      fromField.model.dbName,
-      toRelationalField(fromField),
-      fromNodeIds.map(f => toPrismaValue(f).asInstanceOf[GraphqlId]),
-      toPrismaArguments(queryArguments),
-      toPrismaSelectedFields(selectedFields)
-    )
-
-    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
-    ResolverResult(queryArguments, nodeResult._1.map(x => transformRelatedNode((x, nodeResult._2), model)))
+//    val projectJson = Json.toJson(project)
+//    val input = prisma.protocol.GetRelatedNodesInput(
+//      protocol.Header("GetRelatedNodesInput"),
+//      ByteString.copyFromUtf8(projectJson.toString()),
+//      fromField.model.dbName,
+//      toRelationalField(fromField),
+//      fromNodeIds.map(f => toPrismaValue(f).asInstanceOf[GraphqlId]),
+//      toPrismaArguments(queryArguments),
+//      toPrismaSelectedFields(selectedFields)
+//    )
+//
+//    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
+//    ResolverResult(queryArguments, nodeResult._1.map(x => transformRelatedNode((x, nodeResult._2), model)))
+    forwarder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
   }
 
   override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] =
@@ -84,4 +85,5 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
   override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = forwarder.countByTable(table, whereFilter)
 
   override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = forwarder.countByModel(model, queryArguments)
+
 }

@@ -236,5 +236,4 @@ object NativeUtils {
     protocol.RelationalField(field.dbName, Seq())
   }
 
-  def transformRelatedNode()
 }
