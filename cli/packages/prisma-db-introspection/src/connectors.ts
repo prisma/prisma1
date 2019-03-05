@@ -16,13 +16,13 @@ export default abstract class Connectors {
   ): IConnector {
     switch (databaseType) {
       case DatabaseType.mongo:
-        throw new MongoConnector(databaseClient as MongoClient)
+        return new MongoConnector(databaseClient as MongoClient)
       case DatabaseType.postgres:
         return new PostgresConnector(databaseClient as IDatabaseClient)
       case DatabaseType.mysql:
         return new MysqlConnector(databaseClient as IDatabaseClient)
       default:
-        throw new Error('Not implemented.')
+        throw new Error(`${databaseType} is not implemented.`)
     }
   }
 }

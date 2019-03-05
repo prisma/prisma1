@@ -1,15 +1,15 @@
 import * as path from 'path'
 import * as fs from 'fs'
-import {
-  RelationalParser,
-  RelationalRenderer,
-  RelationalRendererV2,
-} from 'prisma-datamodel'
+import { DefaultParser, DefaultRenderer, DatabaseType } from 'prisma-datamodel'
 
 import * as mysql from 'mysql'
 import { connectionDetails } from '../connectionDetails'
 import { MysqlConnector } from '../../../../databases/relational/mysql/mysqlConnector'
 import MysqlClient from '../../../../databases/relational/mysql/mysqlDatabaseClient'
+
+// If you have trouble signing in to mysql 8, run
+// ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'prisma';
+// FLUSH PRIVILEGES;
 
 // Tests are located in different module.
 const relativeTestCaseDir = path.join(
@@ -30,7 +30,7 @@ export default async function blackBoxTest(name: string) {
   const model = fs.readFileSync(modelPath, { encoding: 'UTF-8' })
   const sqlDump = fs.readFileSync(sqlDumpPath, { encoding: 'UTF-8' })
 
-  const parser = new RelationalParser()
+  const parser = DefaultParser.create(DatabaseType.postgres)
 
   const refModel = parser.parseFromSchemaString(model)
 
@@ -61,12 +61,18 @@ export default async function blackBoxTest(name: string) {
   )
 
   // Backwards compatible (v1) rendering
-  const renderer = new RelationalRenderer()
+  const legacyRenderer = DefaultRenderer.create(DatabaseType.postgres)
+  const legacyRenderedWithReference = legacyRenderer.render(
+    normalizedWithReference,
+  )
+
+  expect(legacyRenderedWithReference).toEqual(model)
+
+  // V2 rendering
+  const renderer = DefaultRenderer.create(DatabaseType.postgres, true)
   const renderedWithReference = renderer.render(normalizedWithReference)
 
-  expect(renderedWithReference).toEqual(model)
-  //expect(renderer.render(normalizedWithoutReference)).toMatchSnapshot()
-  //expect(renderer.render(unnormalized)).toMatchSnapshot()
+  expect(renderedWithReference).toMatchSnapshot()
 
   await dbClient.end()
 }
@@ -74,8 +80,11 @@ export default async function blackBoxTest(name: string) {
 const testNames = fs.readdirSync(relativeTestCaseDir)
 
 for (const testName of testNames) {
-  test(`Introspects ${testName}/mysql correctly`, async () => {
-    await blackBoxTest(testName)
-  })
-  break
+  test(
+    `Introspects ${testName}/mysql correctly`,
+    async () => {
+      await blackBoxTest(testName)
+    },
+    20000,
+  )
 }

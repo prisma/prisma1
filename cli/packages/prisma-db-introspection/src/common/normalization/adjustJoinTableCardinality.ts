@@ -1,6 +1,5 @@
 import {
   IDirectiveInfo,
-  RelationalParser,
   ISDL,
   IGQLField,
   IGQLType,

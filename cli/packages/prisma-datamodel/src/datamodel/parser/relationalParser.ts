@@ -1,22 +1,23 @@
 import Parser from './parser'
 import { IGQLField, IGQLType } from '../model'
+import { LegacyRelationalReservedFields } from '../legacyFields'
 
 /**
  * Parser implementation for related models.
  */
 export default class RelationalParser extends Parser {
-  public static idFieldName = 'id'
-  public static createdAtFieldName = 'createdAt'
-  public static updatedAtFieldName = 'updatedAt'
-
   protected isIdField(field: any): boolean {
-    return field.name.value === RelationalParser.idFieldName
+    return field.name.value === LegacyRelationalReservedFields.idFieldName
   }
   protected isCreatedAtField(field: any): boolean {
-    return field.name.value === RelationalParser.createdAtFieldName
+    return (
+      field.name.value === LegacyRelationalReservedFields.createdAtFieldName
+    )
   }
   protected isUpdatedAtField(field: any): boolean {
-    return field.name.value === RelationalParser.updatedAtFieldName
+    return (
+      field.name.value === LegacyRelationalReservedFields.updatedAtFieldName
+    )
   }
   protected isEmbedded(type: any): boolean {
     // Related models are never embedded

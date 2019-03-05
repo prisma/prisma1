@@ -113,7 +113,6 @@ export class Environment {
                 : cluster.customConnectionInfo
                 ? cluster.customConnectionInfo.endpoint
                 : this.clusterEndpointMap[cluster.name]
-
               this.addCluster(
                 new Cluster(
                   this.out,
@@ -187,7 +186,6 @@ export class Environment {
       clusters: this.getLocalClusterConfig(),
     }
     // parse & stringify to rm undefined for yaml parser
-    debug('saving global rc')
     const rcString = yaml.safeDump(JSON.parse(JSON.stringify(rc)))
     fs.writeFileSync(this.rcPath, rcString)
   }

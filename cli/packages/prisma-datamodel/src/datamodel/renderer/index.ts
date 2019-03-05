@@ -1,36 +1,36 @@
 import Renderer from './renderer'
 import DocumentRenderer from './documentRenderer'
+import LegacyRelationalRenderer from './legacyRelationalRenderer'
 import RelationalRenderer from './relationalRenderer'
-import RelationalRendererV2 from './relationalRendererV2'
 import { DatabaseType } from '../../databaseType'
 import GQLAssert from '../../util/gqlAssert'
 
-export default abstract class Renderers {
+export default abstract class DefaultRenderer {
   public static create(
     databaseType: DatabaseType,
-    enableBeta: boolean = false,
+    enableV2: boolean = false,
   ): Renderer {
-    if (enableBeta) {
+    if (enableV2) {
       switch (databaseType) {
         case DatabaseType.mongo:
           return new DocumentRenderer()
         case DatabaseType.mysql:
-          return new RelationalRendererV2()
+          return new RelationalRenderer()
         case DatabaseType.postgres:
-          return new RelationalRendererV2()
+          return new RelationalRenderer()
         case DatabaseType.sqlite:
-          return new RelationalRendererV2()
+          return new RelationalRenderer()
       }
     } else {
       switch (databaseType) {
         case DatabaseType.mongo:
           return new DocumentRenderer()
         case DatabaseType.mysql:
-          return new RelationalRenderer()
+          return new LegacyRelationalRenderer()
         case DatabaseType.postgres:
-          return new RelationalRenderer()
+          return new LegacyRelationalRenderer()
         case DatabaseType.sqlite:
-          return new RelationalRenderer()
+          return new LegacyRelationalRenderer()
       }
     }
 

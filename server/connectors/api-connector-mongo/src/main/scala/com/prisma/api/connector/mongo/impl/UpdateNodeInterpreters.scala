@@ -18,7 +18,7 @@ case class UpdateNodeInterpreter(mutaction: TopLevelUpdateNode)(implicit ec: Exe
   override val errorMapper = UpdateShared.errorHandler(mutaction.model)
 }
 
-case class UpdateNodesInterpreter(mutaction: UpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+case class UpdateNodesInterpreter(mutaction: TopLevelUpdateNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
   def mongoAction(mutationBuilder: MongoActionsBuilder) =
     for {
       ids <- mutationBuilder.getNodeIdsByFilter(mutaction.model, mutaction.whereFilter)

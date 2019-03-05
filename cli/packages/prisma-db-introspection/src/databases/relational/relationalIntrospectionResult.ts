@@ -5,6 +5,7 @@ import {
   IIndex,
   ITableRelation,
   IEnum,
+  ISequenceInfo,
 } from './relationalConnector'
 import {
   ISDL,
@@ -18,39 +19,21 @@ import {
   IComment,
   camelCase,
   TypeIdentifiers,
+  IdStrategy,
+  LegacyRelationalReservedFields,
 } from 'prisma-datamodel'
-
-/*
-Relational Introspector changes
- [x] Inline relations 1:1 vs 1:n (via unique constraint)
- [ ] Inline relations 1:1 vs 1:n (via data inspection)
- [x] Always add back relations for inline relations
- [x] Correctly handle scalar list tables
- [ ] Add unit test for scalar list table handling 
-Postgres introspector changes
- [x] Turn string field with isId into ID field
-Renderer changes
- [ ] Remove `@relation` if only one relation from A to B
- [ ] Make sorting in renderer optional by parameter
-Normalizer changes
- [ ] db/pgColumn directive not picked up correctly
- [x] preserve order of fields and types in respect to ref datamodel
- [ ] Add unit tests for postgres introspection with existing ref datamodel
- [ ] hide createdAt/updatedAt if also hidden in the reference datamodel
- [ ] hide back relations if also hidden in the reference datamodel
- [ ] in v1: handle join tables for 1:n or 1:1 relations correclty, e.g. do not generate a n:n relation in this case
- [ ] migrating v1 to v2: In the case above, add a @relation(link: TABLE) directive.
-*/
 
 export abstract class RelationalIntrospectionResult extends IntrospectionResult {
   protected model: ITable[]
   protected relations: ITableRelation[]
   protected enums: IEnum[]
+  protected sequences: ISequenceInfo[]
 
   constructor(
     model: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
     databaseType: DatabaseType,
     renderer?: Renderer,
   ) {
@@ -59,10 +42,11 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     this.model = model
     this.relations = relations
     this.enums = enums
+    this.sequences = sequences
   }
 
   public getDatamodel(): ISDL {
-    return this.infer(this.model, this.enums, this.relations)
+    return this.infer(this.model, this.enums, this.relations, this.sequences)
   }
 
   protected resolveRelations(types: IGQLType[], relations: ITableRelation[]) {
@@ -110,6 +94,11 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     return types
   }
 
+  protected abstract resolveSequences(
+    types: IGQLType[],
+    sequences: ISequenceInfo[],
+  ): IGQLType[]
+
   protected resolveRelation(types: IGQLType[], relation: ITableRelation) {
     // Correctly sets field types according to given FK constraints.
     for (const typeA of types) {
@@ -123,18 +112,20 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
               relation.targetTable === this.getDatabaseName(typeB)
             ) {
               if (!fieldB.isId) {
-                GQLAssert.raise(
-                  `Relation ${typeA.name}.${fieldA.name} -> ${typeB.name}.${
-                    fieldB.name
-                  } does not target the PK column of ${typeB.name}`,
-                )
+                fieldA.comments.push({
+                  text: `Relation ${typeA.name}.${fieldA.name} -> ${
+                    typeB.name
+                  }.${fieldB.name} does not target the id field of ${
+                    typeB.name
+                  }`,
+                  isError: true,
+                })
               }
 
               fieldA.type = typeB
 
+              // Add back connecting
               // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint. Tell Tim.
-
-              // Add back connecting field
               const connectorFieldAtB: IGQLField = {
                 // TODO - how do we name that field?
                 // Problems:
@@ -143,10 +134,12 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
                 name: camelCase(typeA.name),
                 databaseName: null,
                 defaultValue: null,
-                isList: fieldA.isUnique,
+                isList: !fieldA.isUnique,
                 isCreatedAt: false,
                 isUpdatedAt: false,
                 isId: false,
+                idStrategy: null,
+                associatedSequence: null,
                 isReadOnly: false,
                 isRequired: fieldA.isRequired, // TODO: Not sure if that makes sense
                 isUnique: false,
@@ -170,8 +163,84 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     GQLAssert.raise(
       `Failed to resolve FK constraint ${relation.sourceTable}.${
         relation.sourceColumn
-      } -> ${relation.targetTable}.${relation.targetColumn}.`,
+      } -> ${relation.targetTable}.${relation.targetColumn}`,
     )
+  }
+  protected markNonIdFieldsWithSequencesAsErrored(
+    types: IGQLType[],
+  ): IGQLType[] {
+    for (const type of types) {
+      for (const field of type.fields) {
+        if (field.idStrategy === IdStrategy.Sequence && !field.isId) {
+          field.comments.push({
+            text: 'Only id fields can have sequences',
+            isError: true,
+          })
+        }
+      }
+    }
+    return types
+  }
+
+  protected markMultiIdFieldsForJoinTabesAsErrors(
+    types: IGQLType[],
+  ): IGQLType[] {
+    for (const type of types) {
+      if (!type.isLinkTable) {
+        const pkFields = type.fields.filter(field => field.isId)
+        if (pkFields.length > 1) {
+          for (const field of pkFields) {
+            field.comments.push({
+              text: `Multiple ID fields (compound indexes) are not supported`,
+              isError: true,
+            })
+          }
+        }
+      }
+    }
+    return types
+  }
+  protected resolveFallbackIdField(types: IGQLType[]): IGQLType[] {
+    for (const type of types) {
+      const idField = type.fields.find(x => x.isId)
+
+      if (idField === undefined) {
+        // Okay, we find alternate indices.
+
+        // First, is there a single field with a sequence or auto increment?
+        const fieldsWithSequences = type.fields.filter(
+          field =>
+            field.idStrategy === IdStrategy.Auto ||
+            field.idStrategy === IdStrategy.Sequence,
+        )
+
+        if (fieldsWithSequences.length === 1) {
+          fieldsWithSequences[0].isId = true
+          continue
+        }
+
+        // If not, is there something called id?
+        const idFields = type.fields.filter(
+          field =>
+            field.name === LegacyRelationalReservedFields.idFieldName &&
+            field.isUnique,
+        )
+
+        if (idFields.length === 1) {
+          idFields[0].isId = true
+          continue
+        }
+
+        // If not, is there a single unique field?
+        const uniqueField = type.fields.filter(field => field.isUnique)
+
+        if (uniqueField.length === 1) {
+          uniqueField[0].isId = true
+          continue
+        }
+      }
+    }
+    return types
   }
 
   protected hideScalarListTypes(types: IGQLType[]): IGQLType[] {
@@ -273,48 +342,91 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         const typeA = relA.type as IGQLType
         const typeB = relB.type as IGQLType
 
-        const relatedFieldForA: IGQLField = {
-          name: typeB.name,
-          type: typeB,
-          isList: true,
-          isUnique: false,
-          isId: false,
-          isCreatedAt: false,
-          isUpdatedAt: false,
-          isRequired: true,
-          isReadOnly: false,
-          comments: [],
-          directives: [],
-          defaultValue: null,
-          relatedField: null,
-          databaseName: null,
-          relationName: this.normalizeRelatioName(type.name),
+        if (
+          (relA.name === 'A' && relB.name === 'B') ||
+          (relB.name === 'A' && relA.name === 'B')
+        ) {
+          // In this case, this is a prisma link table. Hide it.
+          if (true || typeA !== typeB) {
+            // Regular case. Two different types via join type.
+            const relatedFieldForA: IGQLField = {
+              name: typeB.name,
+              type: typeB,
+              isList: true,
+              isUnique: false,
+              isId: false,
+              idStrategy: null,
+              associatedSequence: null,
+              isCreatedAt: false,
+              isUpdatedAt: false,
+              isRequired: true,
+              isReadOnly: false,
+              comments: [],
+              directives: [],
+              defaultValue: null,
+              relatedField: null,
+              databaseName: null,
+              relationName: this.normalizeRelatioName(type.name),
+            }
+
+            const relatedFieldForB: IGQLField = {
+              name: typeA.name,
+              type: typeA,
+              isList: true,
+              isUnique: false,
+              isId: false,
+              idStrategy: null,
+              associatedSequence: null,
+              isCreatedAt: false,
+              isUpdatedAt: false,
+              isRequired: true,
+              isReadOnly: false,
+              comments: [],
+              directives: [],
+              defaultValue: null,
+              relatedField: relatedFieldForA,
+              databaseName: null,
+              relationName: this.normalizeRelatioName(type.name),
+            }
+
+            relatedFieldForA.relatedField = relatedFieldForB
+
+            typeA.fields.push(relatedFieldForA)
+            typeB.fields.push(relatedFieldForB)
+          } else {
+            // Self join to same field via join type.
+            const relatedField: IGQLField = {
+              name: typeA.name,
+              type: typeA,
+              isList: true,
+              isUnique: false,
+              isId: false,
+              idStrategy: null,
+              associatedSequence: null,
+              isCreatedAt: false,
+              isUpdatedAt: false,
+              isRequired: true,
+              isReadOnly: false,
+              comments: [],
+              directives: [],
+              defaultValue: null,
+              relatedField: null,
+              databaseName: null,
+              relationName: this.normalizeRelatioName(type.name),
+            }
+
+            typeA.fields.push(relatedField)
+          }
+          typeA.fields = typeA.fields.filter(x => x.type !== type)
+          typeB.fields = typeB.fields.filter(x => x.type !== type)
+        } else {
+          // Not a prisma link type. Mark as link table.
+          type.isLinkTable = true
+          // Drop ids. Compound PK indices are not supported yet.
+          relA.isId = false
+          relB.isId = false
+          nonJoinTypes.push(type)
         }
-
-        const relatedFieldForB: IGQLField = {
-          name: typeA.name,
-          type: typeA,
-          isList: true,
-          isUnique: false,
-          isId: false,
-          isCreatedAt: false,
-          isUpdatedAt: false,
-          isRequired: true,
-          isReadOnly: false,
-          comments: [],
-          directives: [],
-          defaultValue: null,
-          relatedField: relatedFieldForA,
-          databaseName: null,
-          relationName: this.normalizeRelatioName(type.name),
-        }
-
-        relatedFieldForA.relatedField = relatedFieldForB
-
-        typeA.fields.push(relatedFieldForA)
-        typeA.fields = typeA.fields.filter(x => x.type !== type)
-        typeB.fields = typeB.fields.filter(x => x.type !== type)
-        typeB.fields.push(relatedFieldForB)
       } else {
         nonJoinTypes.push(type)
       }
@@ -368,6 +480,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     model: ITable[],
     enums: IEnum[],
     relations: ITableRelation[],
+    sequences: ISequenceInfo[],
   ): ISDL {
     // TODO: Maybe we want to have a concept of hidden, which just skips rendering?
     // Ask tim, this is an important descision for the SDK
@@ -375,14 +488,19 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       ...model.map(x => this.inferObjectType(x)),
       ...enums.map(x => this.inferEnumType(x)),
     ]
+    types = this.hideUniqueIndices(types)
+    types = this.resolveSequences(types, sequences)
+    types = this.resolveFallbackIdField(types) // unique flags and index types are required for this step.
+    types = this.inferDefaultValues(types)
     types = this.resolveRelations(types, relations)
     types = this.resolveEnumTypes(types)
     types = this.hideJoinTypes(types)
     types = this.hideReservedTypes(types)
     types = this.hideScalarListTypes(types)
-    types = this.hideUniqueIndices(types)
     types = this.hideIndicesOnRelatedFields(types)
     types = this.hideJoinTypes(types)
+    types = this.markNonIdFieldsWithSequencesAsErrored(types)
+    types = this.markMultiIdFieldsForJoinTabesAsErrors(types)
 
     return {
       comments: [],
@@ -403,12 +521,25 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     }
   }
 
+  // We need info about indices for resolving the exact type, as String is mapped to ID.
+  // Also, we need info about the actual type before we resolve default values.
+  protected inferDefaultValues(types: IGQLType[]) {
+    for (const type of types) {
+      for (const field of type.fields) {
+        this.inferFieldTypeAndDefaultValue(field, type.name)
+      }
+    }
+    return types
+  }
+
   protected inferEnumType(model: IEnum): IGQLType {
     const values = model.values.map(
       (x: string): IGQLField => ({
         name: x,
         isCreatedAt: false,
         isId: false,
+        idStrategy: null,
+        associatedSequence: null,
         isList: false,
         isReadOnly: false,
         isRequired: false,
@@ -429,6 +560,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       fields: values,
       isEnum: true,
       isEmbedded: false,
+      isLinkTable: false,
       databaseName: null,
       comments: [],
       directives: [],
@@ -453,16 +585,12 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
             } used in index, but does not exist on table ${model.name}`,
           )
         }
-        // Hard rename ID field to match old datamodel standard
-        if (pkField.name !== 'id') {
-          pkField.databaseName = pkField.name
-          pkField.name = 'id'
-        }
         pkField.isId = true
       } else {
-        // Compound PK - that's not supported
+        // Compound PK - that's not supported, except for join tables
+        // We will mark it as error later.
         for (const pkFieldName of pk.fields) {
-          const [pkField] = fields.filter(field => field.name === pk.fields[0])
+          const [pkField] = fields.filter(field => field.name === pkFieldName)
           if (!pkField) {
             GQLAssert.raise(
               `Index/Schema missmatch during introspection. Field ${
@@ -471,24 +599,15 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
             )
           }
           pkField.isId = true
-          pkField.comments.push({
-            text: `Multiple ID fields (compound indexes) are not supported`,
-            isError: true,
-          })
         }
       }
-    }
-
-    // We need info about indices for resolving the exact type, as String is mapped to ID.
-    // Also, we need info about the actual type before we resolve default values.
-    for (const field of fields) {
-      this.inferFieldTypeAndDefaultValue(field, model.name)
     }
 
     return {
       name: model.name,
       isEmbedded: false, // Never
       isEnum: false, // Never
+      isLinkTable: false, // Resolved Later
       fields,
       indices,
       directives: [],
@@ -515,10 +634,14 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       isList: field.isList,
       type: field.type,
       isId: false, // Will resolve later, from indices
+      idStrategy: field.isAutoIncrement ? IdStrategy.Auto : IdStrategy.None,
+      associatedSequence: null,
       relatedField: null,
       relationName: null,
-      isCreatedAt: false, // No longer depends on the DB
-      isUpdatedAt: false, // No longer depends on the DB
+      isCreatedAt:
+        LegacyRelationalReservedFields.createdAtFieldName === field.name, // Heuristic, can be overriden by normalization
+      isUpdatedAt:
+        LegacyRelationalReservedFields.updatedAtFieldName === field.name, // Heuristic, can be overriden by normalization
       isReadOnly: false, // Never
       comments,
       directives: [],

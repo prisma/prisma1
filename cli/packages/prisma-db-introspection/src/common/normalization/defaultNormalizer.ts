@@ -23,12 +23,14 @@ export default abstract class DefaultNormalizer {
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null),
+        new ModelOrderNormalizer(null),
       ])
     } else {
       // Relational normalization
       return new NormalizerGroup([
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null),
+        new ModelOrderNormalizer(null),
       ])
     }
   }

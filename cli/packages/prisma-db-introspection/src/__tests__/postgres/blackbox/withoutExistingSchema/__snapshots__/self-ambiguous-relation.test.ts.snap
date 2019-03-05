@@ -2,16 +2,37 @@
 
 exports[`Introspector test schema - 2504 1`] = `
 "type Employee {
+  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
   Address: String
   BirthDate: DateTime
   City: String
   Country: String
   Email: String
-  employee: Employee
+  employee: [Employee]
   Fax: String
   FirstName: String!
   HireDate: DateTime
-  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
+  LastName: String!
+  Phone: String
+  PostalCode: String
+  ReportsTo: Employee
+  State: String
+  Title: String
+}"
+`;
+
+exports[`Introspector test schema - 2504 2`] = `
+"type Employee {
+  EmployeeId: Int! @id(strategy: NONE)
+  Address: String
+  BirthDate: DateTime
+  City: String
+  Country: String
+  Email: String
+  employee: [Employee]
+  Fax: String
+  FirstName: String!
+  HireDate: DateTime
   LastName: String!
   Phone: String
   PostalCode: String

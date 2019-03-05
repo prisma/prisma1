@@ -38,16 +38,16 @@ class CustomPreparedStatement(query: String, val bindingAndConnection: BindingAn
   val splitStatements                = true
   val isBatchedReWriteConfigured     = false
   val regx                           = Pattern.compile("\\?") // Extreme simplification and unlikely to work as expected forever. todo
-  val rawSqlString                   = transform(query)
+  val rawSqlString                   = transform(query).trim
   val stmt                           = binding.prepareStatement(connection, rawSqlString)
   var currentParams                  = new Params
   val paramList                      = mutable.ArrayBuffer.empty[Params]
   var lastCallResult: RustCallResult = null
   var closed                         = false
 
-  val returnsRows = rawSqlString.toLowerCase().startsWith("with ") || rawSqlString.toLowerCase().startsWith("select ") || rawSqlString
-    .toLowerCase()
-    .contains("returning ")
+  val returnsRows = rawSqlString.toLowerCase().startsWith("with ") ||
+    rawSqlString.toLowerCase().startsWith("select") ||
+    rawSqlString.toLowerCase().contains("returning ")
 
   @tailrec
   private def transform(q: String, index: Int = 1, continue: Boolean = true): String = {

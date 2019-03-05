@@ -70,16 +70,3 @@ services:
         # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
         # managementApiSecret: my-secret
 `
-
-// legacySecret: old public key
-// managementApiSecret: somesecret
-
-//
-//     databases:
-//       default:
-//         connector: mysql
-//         active: true
-//         host: your-mysql-host
-//         port: 3306
-//         user: someuser
-//         password: existingpw

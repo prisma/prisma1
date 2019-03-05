@@ -1,4 +1,11 @@
-import { ISDL, IGQLType, IDirectiveInfo, IGQLField, IIndexInfo } from '../model'
+import {
+  ISDL,
+  IGQLType,
+  IDirectiveInfo,
+  IGQLField,
+  IIndexInfo,
+  IdStrategy,
+} from '../model'
 import { GraphQLSchema } from 'graphql/type/schema'
 import {
   GraphQLObjectType,
@@ -38,6 +45,10 @@ export default abstract class Renderer {
     return { name: DirectiveKeys.isEmbedded, arguments: {} }
   }
 
+  protected createIsLinkTableTypeDirective(type: IGQLType) {
+    return { name: DirectiveKeys.linkTable, arguments: {} }
+  }
+
   protected createDatabaseNameTypeDirective(type: IGQLType) {
     return {
       name: DirectiveKeys.db,
@@ -47,6 +58,7 @@ export default abstract class Renderer {
     }
   }
 
+  // TODO: Cleanup index rendering.
   protected createIndexDirectives(
     type: IGQLType,
     typeDirectives: IDirectiveInfo[],
@@ -59,7 +71,7 @@ export default abstract class Renderer {
       typeDirectives.push({
         name: DirectiveKeys.indexes,
         arguments: {
-          value: `[${indexDescriptions.join(', ')}]`,
+          value: `[\n${indexDescriptions.join(',\n')}\n]`,
         },
       })
     }
@@ -77,7 +89,7 @@ export default abstract class Renderer {
       },
     }
 
-    if (!index.unique) {
+    if (index.unique) {
       directive.arguments = {
         ...directive.arguments,
         unique: this.renderValue(TypeIdentifiers.boolean, index.unique),
@@ -85,13 +97,17 @@ export default abstract class Renderer {
     }
 
     // If we switch back to single index declarations later, simply return the directive here.
-    return `{${Object.keys(directive.arguments)
+    return `${indent}{${Object.keys(directive.arguments)
       .map(x => `${x}: ${directive.arguments[x]}`)
       .join(', ')}}`
   }
 
   protected shouldCreateIsEmbeddedTypeDirective(type: IGQLType) {
     return type.isEmbedded
+  }
+
+  protected shouldCreateIsLinkTableTypeDirective(type: IGQLType) {
+    return type.isLinkTable
   }
 
   protected shouldCreateDatabaseNameTypeDirective(type: IGQLType) {
@@ -112,13 +128,16 @@ export default abstract class Renderer {
     if (this.shouldCreateDatabaseNameTypeDirective(type)) {
       typeDirectives.push(this.createDatabaseNameTypeDirective(type))
     }
+    if (this.shouldCreateIsLinkTableTypeDirective(type)) {
+      typeDirectives.push(this.createIsLinkTableTypeDirective(type))
+    }
     if (this.shouldRenderIndexDirectives(type)) {
       this.createIndexDirectives(type, typeDirectives)
     }
   }
 
   protected renderType(type: IGQLType): string {
-    const typeDirectives: IDirectiveInfo[] = type.directives || []
+    const typeDirectives: IDirectiveInfo[] = [...type.directives]
 
     this.createReservedTypeDirectives(type, typeDirectives)
 
@@ -178,10 +197,33 @@ export default abstract class Renderer {
     }
   }
 
-  protected createIsIdfFieldDirective(field: IGQLField) {
-    return { name: DirectiveKeys.isId, arguments: {} }
+  protected createIsIdFieldDirective(field: IGQLField) {
+    const args = {} as any
+
+    if (field.idStrategy !== null && field.idStrategy !== IdStrategy.Auto) {
+      args.strategy = field.idStrategy
+    }
+
+    return { name: DirectiveKeys.isId, arguments: args }
   }
 
+  protected createSequenceFieldDirective(field: IGQLField): IDirectiveInfo {
+    const sequence = field.associatedSequence!
+    return {
+      name: DirectiveKeys.sequence,
+      arguments: {
+        name: this.renderValue(TypeIdentifiers.string, sequence.name),
+        initialValue: this.renderValue(
+          TypeIdentifiers.integer,
+          sequence.initialValue,
+        ),
+        allocationSize: this.renderValue(
+          TypeIdentifiers.integer,
+          sequence.allocationSize,
+        ),
+      },
+    }
+  }
   protected createIsCreatedAtFieldDirective(field: IGQLField) {
     return { name: DirectiveKeys.isCreatedAt, arguments: {} }
   }
@@ -215,6 +257,10 @@ export default abstract class Renderer {
     return field.isId
   }
 
+  protected shouldCreateSequenceFieldDirective(field: IGQLField) {
+    return field.associatedSequence !== null
+  }
+
   protected shouldCreateCreatedAtFieldDirective(field: IGQLField) {
     return field.isCreatedAt
   }
@@ -241,7 +287,10 @@ export default abstract class Renderer {
       fieldDirectives.push(this.createRelationNameFieldDirective(field))
     }
     if (this.shouldCreateIsIdFieldDirective(field)) {
-      fieldDirectives.push(this.createIsIdfFieldDirective(field))
+      fieldDirectives.push(this.createIsIdFieldDirective(field))
+    }
+    if (this.shouldCreateSequenceFieldDirective(field)) {
+      fieldDirectives.push(this.createSequenceFieldDirective(field))
     }
     if (this.shouldCreateCreatedAtFieldDirective(field)) {
       fieldDirectives.push(this.createIsCreatedAtFieldDirective(field))
@@ -255,7 +304,7 @@ export default abstract class Renderer {
   }
 
   protected renderField(field: IGQLField): string {
-    const fieldDirectives: IDirectiveInfo[] = field.directives || []
+    const fieldDirectives: IDirectiveInfo[] = [...field.directives]
 
     this.createReservedFieldDirectives(field, fieldDirectives)
 
@@ -377,8 +426,8 @@ export default abstract class Renderer {
     if (
       strType === TypeIdentifiers.string ||
       strType === TypeIdentifiers.json ||
-      strType === TypeIdentifiers.dateTime ||
-      strType === TypeIdentifiers.boolean
+      strType === TypeIdentifiers.id ||
+      strType === TypeIdentifiers.dateTime
     ) {
       return `"${value}"`
     } else {

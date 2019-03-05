@@ -16,6 +16,7 @@ import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.{JsObject, JsValue, Json}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import com.prisma.akkautil.throttler.Throttler.ThrottlerException
 
 import scala.concurrent.{Await, Future}
 
@@ -79,6 +80,8 @@ case class AkkaHttpSangriaServer(
   }
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
+    case e: ThrottlerException =>
+      complete(InternalServerError -> JsonErrorHelper.errorJson(requestId, e.getMessage))
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()

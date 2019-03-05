@@ -1,7 +1,7 @@
 // import * as nock from 'nock'
 import { mocki } from './inquirer-mock-prompt'
 import { Config } from 'prisma-cli-engine'
-import Init from './'
+import Init from './init'
 import { writeToStdIn, DOWN, ENTER } from '../../test/writeToStdin'
 import { getTmpDir } from '../../test/getTmpDir'
 import * as fs from 'fs-extra'

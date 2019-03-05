@@ -25,6 +25,14 @@ export default class Init extends Command {
       description: 'Initial service endpoint (optional)',
       required: false,
     }),
+
+    /**
+     * Temporary flag needed to test Datamodel v2
+     */
+    ['prototype']: flags.boolean({
+      description:
+        'Output Datamodel v2. Note: This is a temporary flag for debugging',
+    }),
   }
 
   async run() {
@@ -107,10 +115,10 @@ datamodel: datamodel.prisma
 
       this.out.log(`
 ${chalk.bold(
-  `Created ${
-    endpointCreatedFiles.length
-  } new files:                                                                          `,
-)}
+        `Created ${
+          endpointCreatedFiles.length
+        } new files:                                                                          `,
+      )}
 
 ${endpointCreatedFiles.join('\n')}
 
@@ -128,6 +136,7 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       config: this.config,
       definition: this.definition,
       shouldAskForGenerator: true,
+      prototype: this.flags.prototype,
     })
 
     const results = await endpointDialog.getEndpoint()
@@ -222,10 +231,10 @@ datamodel: datamodel.prisma${databaseTypeString}`
 
     this.out.log(`
 ${chalk.bold(
-  `Created ${
-    createdFiles.length
-  } new files:                                                                          `,
-)}
+      `Created ${
+        createdFiles.length
+      } new files:                                                                          `,
+    )}
 
 ${createdFiles.join('\n')}
 

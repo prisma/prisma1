@@ -161,9 +161,9 @@ case class NestedUpsertNode(
     with NestedDatabaseMutaction
 
 // TOP LEVEL - MANY
-case class ResetData(project: Project)                                              extends TopLevelDatabaseMutaction with FinalMutaction
-case class DeleteNodes(project: Project, model: Model, whereFilter: Option[Filter]) extends TopLevelDatabaseMutaction with FinalMutaction
-case class UpdateNodes(
+case class ResetData(project: Project)                                                      extends TopLevelDatabaseMutaction with FinalMutaction
+case class TopLevelDeleteNodes(project: Project, model: Model, whereFilter: Option[Filter]) extends TopLevelDatabaseMutaction with FinalMutaction
+case class TopLevelUpdateNodes(
     project: Project,
     model: Model,
     whereFilter: Option[Filter],
