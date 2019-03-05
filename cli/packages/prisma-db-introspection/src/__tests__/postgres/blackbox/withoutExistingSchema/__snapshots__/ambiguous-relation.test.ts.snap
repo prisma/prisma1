@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector test schema - 2504 1`] = `
-"type Direct_message @pgTable(name: \\"direct_messages\\") {
+"type DirectMessage @pgTable(name: \\"direct_messages\\") {
   id: Int! @unique
   receiver_id: User
   sender_id: User
@@ -10,14 +10,14 @@ exports[`Introspector test schema - 2504 1`] = `
 
 type User @pgTable(name: \\"users\\") {
   id: Int! @unique
-  direct_messages: [Direct_message]
-  direct_messages: [Direct_message]
+  direct_messages: [DirectMessage]
+  direct_messages: [DirectMessage]
   name: String!
 }"
 `;
 
 exports[`Introspector test schema - 2504 2`] = `
-"type Direct_message @db(name: \\"direct_messages\\") {
+"type DirectMessage @db(name: \\"direct_messages\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"direct_messages_id_seq\\", initialValue: 1, allocationSize: 1)
   receiver_id: User
   sender_id: User
@@ -26,8 +26,8 @@ exports[`Introspector test schema - 2504 2`] = `
 
 type User @db(name: \\"users\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_id_seq\\", initialValue: 1, allocationSize: 1)
-  direct_messages: [Direct_message]
-  direct_messages: [Direct_message]
+  direct_messages: [DirectMessage]
+  direct_messages: [DirectMessage]
   name: String!
 }"
 `;

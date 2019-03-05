@@ -1,10 +1,11 @@
 package com.prisma.integration.deploychecks
 
+import com.prisma.IgnoreSQLite
 import com.prisma.integration.IntegrationBaseSpec
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
-  "Updating a model by changing its name" should "succeed even when there are nodes" in {
+  "Updating a model by changing its name" should "succeed even when there are nodes" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {

@@ -2,6 +2,7 @@ package com.prisma.deploy.migration.inference
 
 import com.prisma.deploy.schema.UpdatedRelationAmbiguous
 import com.prisma.shared.models.FieldBehaviour._
+import com.prisma.shared.models.Manifestations.ModelManifestation
 import com.prisma.shared.models._
 
 trait MigrationStepsInferrer {
@@ -50,8 +51,7 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       enumsToDelete ++
       enumsToUpdate ++
       fieldsToUpdate ++
-      modelsToUpdateFirstStep ++
-      modelsToUpdateSecondStep ++
+      modelsToUpdate ++
       relationsToUpdate ++
       enumsToCreate ++
       modelsToCreate ++
@@ -72,12 +72,9 @@ case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema
       nextModel         <- nextSchema.models.toVector
       previousModelName = renames.getPreviousModelName(nextModel.name)
       previousModel     <- previousSchema.getModelByName(previousModelName)
-      if nextModel.name != previousModel.name || nextModel.isEmbedded != previousModel.isEmbedded
-    } yield UpdateModel(name = previousModelName, newName = nextModel.name)
+      if nextModel.template != previousModel.template
+    } yield UpdateModel(name = previousModel.name, newName = nextModel.name)
   }
-
-  lazy val modelsToUpdateFirstStep: Vector[UpdateModel]  = modelsToUpdate.map(update => update.copy(newName = "__" + update.newName))
-  lazy val modelsToUpdateSecondStep: Vector[UpdateModel] = modelsToUpdate.map(update => update.copy(name = "__" + update.newName))
 
   /*
    * Check all previous models if they are present on on the new one, ignore renames (== updated models).

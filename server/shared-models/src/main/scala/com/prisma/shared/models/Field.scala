@@ -1,7 +1,7 @@
 package com.prisma.shared.models
 
 import com.prisma.gc_values.GCValue
-import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, IdBehaviour, IdStrategy, UpdatedAtBehaviour}
+import com.prisma.shared.models.FieldBehaviour.{CreatedAtBehaviour, IdBehaviour, UpdatedAtBehaviour}
 import com.prisma.shared.models.Manifestations._
 
 import scala.language.implicitConversions
@@ -234,7 +234,6 @@ case class ScalarField(
     template: FieldTemplate,
     model: Model
 ) extends Field {
-  import template._
   import ReservedFields._
 
   override def isRelation           = false

@@ -15,15 +15,15 @@ exports[`Introspector CMS/sequences 1`] = `
   address_street_02: String
   address_zip_code: String
   entity_type: String
-  provider_performance: [Provider_performance]
+  provider_performance: [ProviderPerformance]
   provider_type: String
-  providers_individuals: [Providers_individual]
-  providers_organizations: [Providers_organization]
-  service_provider_performance: [Service_provider_performance]
-  service_provider_performance_summary: [Service_provider_performance_summary]
+  providers_individuals: [ProvidersIndividual]
+  providers_organizations: [ProvidersOrganization]
+  service_provider_performance: [ServiceProviderPerformance]
+  service_provider_performance_summary: [ServiceProviderPerformanceSummary]
 }
 
-type Provider_performance @indexes(value: [
+type ProviderPerformance @indexes(value: [
   {name: \\"provider_performance_avg_mcare_allowed_amt_index\\", fields: [\\"avg_mcare_allowed_amt\\"]},
   {name: \\"provider_performance_avg_mcare_pay_amt_index\\", fields: [\\"avg_mcare_pay_amt\\"]},
   {name: \\"provider_performance_avg_mcare_standardized_amt_index\\", fields: [\\"avg_mcare_standardized_amt\\"]},
@@ -49,7 +49,7 @@ type Provider_performance @indexes(value: [
   place_of_service: String!
 }
 
-type Providers_individual @indexes(value: [
+type ProvidersIndividual @indexes(value: [
   {name: \\"providers_individuals_gender_index\\", fields: [\\"gender\\"]}
 ]) @pgTable(name: \\"providers_individuals\\") {
   id: Provider! @pgColumn(name: \\"npi\\") @unique
@@ -60,7 +60,7 @@ type Providers_individual @indexes(value: [
   name_middle: String
 }
 
-type Providers_organization @pgTable(name: \\"providers_organizations\\") {
+type ProvidersOrganization @pgTable(name: \\"providers_organizations\\") {
   id: Provider! @pgColumn(name: \\"npi\\") @unique
   name: String
 }
@@ -71,12 +71,12 @@ type Service @indexes(value: [
   id: ID! @pgColumn(name: \\"hcpcs_code\\") @unique
   hcpcs_description: String
   hcpcs_drug_indicator: String
-  provider_performance: [Provider_performance]
-  service_performance: [Service_performance]
-  service_provider_performance: [Service_provider_performance]
+  provider_performance: [ProviderPerformance]
+  service_performance: [ServicePerformance]
+  service_provider_performance: [ServiceProviderPerformance]
 }
 
-type Service_performance @indexes(value: [
+type ServicePerformance @indexes(value: [
   {name: \\"service_performance_entity_type_index\\", fields: [\\"entity_type\\"]},
   {name: \\"service_performance_hcpcs_code_entity_type_pk\\", fields: [\\"hcpcs_code\\", \\"entity_type\\"], unique: true},
   {name: \\"service_performance_rank_avg_avg_mcare_allowed_amt_in\\", fields: [\\"rank_avg_avg_mcare_allowed_amt\\"]},
@@ -160,7 +160,7 @@ type Service_performance @indexes(value: [
   var_avg_submitted_charge_amt: Float
 }
 
-type Service_provider_performance @indexes(value: [
+type ServiceProviderPerformance @indexes(value: [
   {name: \\"service_provider_performance_entity_type_index\\", fields: [\\"entity_type\\"]},
   {name: \\"service_provider_performance_hcpcs_code_npi_place_of_service_pk\\", fields: [\\"hcpcs_code\\", \\"npi\\", \\"place_of_service\\"], unique: true},
   {name: \\"service_provider_performance_rank_avg_mcare_allowed_amou\\", fields: [\\"rank_avg_mcare_allowed_amt\\"]},
@@ -202,7 +202,7 @@ type Service_provider_performance @indexes(value: [
   var_avg_mcare_submitted_charge_pay_amt: Float
 }
 
-type Service_provider_performance_summary @indexes(value: [
+type ServiceProviderPerformanceSummary @indexes(value: [
   {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_by_ttl_hcpc\\", fields: [\\"rank_est_ttl_mcare_pay_amt_by_ttl_hcpcs_code\\"]},
   {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_by_ttl_numb\\", fields: [\\"rank_est_ttl_mcare_pay_amt_by_ttl_n_of_servi\\"]},
   {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_index\\", fields: [\\"rank_est_ttl_mcare_pay_amt\\"]},
@@ -227,17 +227,17 @@ type Service_provider_performance_summary @indexes(value: [
   rank_ttl_hcpcs_code: Int
   rank_ttl_n_of_svcs: Int
   rank_var_est_ttl_mcare_submitted_charge_pay_amoun: Int
-  summary_type: Service_provider_performance_summary_type!
+  summary_type: ServiceProviderPerformanceSummaryType!
   ttl_hcpcs_code: String
   ttl_n_of_svcs: Int
   var_est_ttl_mcare_submitted_charge_pay_amt: Float
 }
 
-type Service_provider_performance_summary_type @pgTable(name: \\"service_provider_performance_summary_type\\") {
+type ServiceProviderPerformanceSummaryType @pgTable(name: \\"service_provider_performance_summary_type\\") {
   id: Int! @unique
   description: String!
   group_membership: Boolean! @default(value: true)
-  service_provider_performance_summary: [Service_provider_performance_summary]
+  service_provider_performance_summary: [ServiceProviderPerformanceSummary]
   slug: String @unique
 }"
 `;
@@ -257,15 +257,15 @@ exports[`Introspector CMS/sequences 2`] = `
   address_street_02: String
   address_zip_code: String
   entity_type: String
-  provider_performance: [Provider_performance]
+  provider_performance: [ProviderPerformance]
   provider_type: String
-  providers_individuals: [Providers_individual]
-  providers_organizations: [Providers_organization]
-  service_provider_performance: [Service_provider_performance]
-  service_provider_performance_summary: [Service_provider_performance_summary]
+  providers_individuals: [ProvidersIndividual]
+  providers_organizations: [ProvidersOrganization]
+  service_provider_performance: [ServiceProviderPerformance]
+  service_provider_performance_summary: [ServiceProviderPerformanceSummary]
 }
 
-type Provider_performance @db(name: \\"provider_performance\\") @indexes(value: [
+type ProviderPerformance @db(name: \\"provider_performance\\") @indexes(value: [
   {name: \\"provider_performance_avg_mcare_allowed_amt_index\\", fields: [\\"avg_mcare_allowed_amt\\"]},
   {name: \\"provider_performance_avg_mcare_pay_amt_index\\", fields: [\\"avg_mcare_pay_amt\\"]},
   {name: \\"provider_performance_avg_mcare_standardized_amt_index\\", fields: [\\"avg_mcare_standardized_amt\\"]},
@@ -291,7 +291,7 @@ type Provider_performance @db(name: \\"provider_performance\\") @indexes(value: 
   place_of_service: String!
 }
 
-type Providers_individual @db(name: \\"providers_individuals\\") @indexes(value: [
+type ProvidersIndividual @db(name: \\"providers_individuals\\") @indexes(value: [
   {name: \\"providers_individuals_gender_index\\", fields: [\\"gender\\"]}
 ]) {
   npi: Provider! @id(strategy: NONE)
@@ -302,7 +302,7 @@ type Providers_individual @db(name: \\"providers_individuals\\") @indexes(value:
   name_middle: String
 }
 
-type Providers_organization @db(name: \\"providers_organizations\\") {
+type ProvidersOrganization @db(name: \\"providers_organizations\\") {
   npi: Provider! @id(strategy: NONE)
   name: String
 }
@@ -313,12 +313,12 @@ type Service @db(name: \\"services\\") @indexes(value: [
   hcpcs_code: ID! @id(strategy: NONE)
   hcpcs_description: String
   hcpcs_drug_indicator: String
-  provider_performance: [Provider_performance]
-  service_performance: [Service_performance]
-  service_provider_performance: [Service_provider_performance]
+  provider_performance: [ProviderPerformance]
+  service_performance: [ServicePerformance]
+  service_provider_performance: [ServiceProviderPerformance]
 }
 
-type Service_performance @db(name: \\"service_performance\\") @indexes(value: [
+type ServicePerformance @db(name: \\"service_performance\\") @indexes(value: [
   {name: \\"service_performance_entity_type_index\\", fields: [\\"entity_type\\"]},
   {name: \\"service_performance_hcpcs_code_entity_type_pk\\", fields: [\\"hcpcs_code\\", \\"entity_type\\"], unique: true},
   {name: \\"service_performance_rank_avg_avg_mcare_allowed_amt_in\\", fields: [\\"rank_avg_avg_mcare_allowed_amt\\"]},
@@ -402,7 +402,7 @@ type Service_performance @db(name: \\"service_performance\\") @indexes(value: [
   var_avg_submitted_charge_amt: Float
 }
 
-type Service_provider_performance @db(name: \\"service_provider_performance\\") @indexes(value: [
+type ServiceProviderPerformance @db(name: \\"service_provider_performance\\") @indexes(value: [
   {name: \\"service_provider_performance_entity_type_index\\", fields: [\\"entity_type\\"]},
   {name: \\"service_provider_performance_hcpcs_code_npi_place_of_service_pk\\", fields: [\\"hcpcs_code\\", \\"npi\\", \\"place_of_service\\"], unique: true},
   {name: \\"service_provider_performance_rank_avg_mcare_allowed_amou\\", fields: [\\"rank_avg_mcare_allowed_amt\\"]},
@@ -444,7 +444,7 @@ type Service_provider_performance @db(name: \\"service_provider_performance\\") 
   var_avg_mcare_submitted_charge_pay_amt: Float
 }
 
-type Service_provider_performance_summary @db(name: \\"service_provider_performance_summary\\") @indexes(value: [
+type ServiceProviderPerformanceSummary @db(name: \\"service_provider_performance_summary\\") @indexes(value: [
   {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_by_ttl_hcpc\\", fields: [\\"rank_est_ttl_mcare_pay_amt_by_ttl_hcpcs_code\\"]},
   {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_by_ttl_numb\\", fields: [\\"rank_est_ttl_mcare_pay_amt_by_ttl_n_of_servi\\"]},
   {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_index\\", fields: [\\"rank_est_ttl_mcare_pay_amt\\"]},
@@ -469,17 +469,17 @@ type Service_provider_performance_summary @db(name: \\"service_provider_performa
   rank_ttl_hcpcs_code: Int
   rank_ttl_n_of_svcs: Int
   rank_var_est_ttl_mcare_submitted_charge_pay_amoun: Int
-  summary_type: Service_provider_performance_summary_type!
+  summary_type: ServiceProviderPerformanceSummaryType!
   ttl_hcpcs_code: String
   ttl_n_of_svcs: Int
   var_est_ttl_mcare_submitted_charge_pay_amt: Float
 }
 
-type Service_provider_performance_summary_type @db(name: \\"service_provider_performance_summary_type\\") {
+type ServiceProviderPerformanceSummaryType @db(name: \\"service_provider_performance_summary_type\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"service_provider_performance_summary_type_id_seq1\\", initialValue: 1, allocationSize: 1)
   description: String!
   group_membership: Boolean! @default(value: true)
-  service_provider_performance_summary: [Service_provider_performance_summary]
+  service_provider_performance_summary: [ServiceProviderPerformanceSummary]
   slug: String @unique
 }"
 `;

@@ -20,3 +20,19 @@ export abstract class TypeIdentifiers {
   public static uuid: TypeIdentifier = 'UUID'
   public static json: TypeIdentifier = 'Json'
 }
+
+export const TypeIdentifierTable = {
+  String: true,
+  Int: true,
+  Float: true,
+  Boolean: true,
+  Long: true,
+  DateTime: true,
+  ID: true,
+  UUID: true,
+  Json: true,
+}
+
+export function isTypeIdentifier(str: string) {
+  return TypeIdentifierTable[str] || false
+}

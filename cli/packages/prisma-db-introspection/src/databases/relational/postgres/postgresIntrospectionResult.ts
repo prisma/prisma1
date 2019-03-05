@@ -123,10 +123,14 @@ export class PostgresIntrospectionResult extends RelationalIntrospectionResult {
           if (match === null) {
             continue
           }
+          let [dummy, seqName] = match
 
-          const [dummy, seqName] = match
+          // Trim quotes.
+          if(seqName.startsWith('"')) {
+            seqName = seqName.substring(1, seqName.length - 1)
+          }
 
-          const seq = sequences.find(seq => seq.name === seqName)
+          const seq = sequences.find(x => x.name === seqName)
 
           if (seq === undefined) {
             field.comments.push({
