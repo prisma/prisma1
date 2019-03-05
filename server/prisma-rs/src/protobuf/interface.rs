@@ -9,7 +9,6 @@ use std::error::Error as StdError;
 pub trait ExternalInterface {
     fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
-    fn get_related_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
 }
 
 pub struct ProtoBufInterface {
