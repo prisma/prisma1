@@ -100,6 +100,14 @@ docker-compose up -d
 
 Prisma is now connected to your database and runs on `http://localhost:4466`.
 
+<Collapse title="Securing your Prisma server">
+
+The Prisma server is currently _unprotected_, meaning everyone with access to its endpoint can send arbitrary requests to it. To secure the Prisma server, you need to set the `managementApiSecret` property in your Docker Compose file when deploying the server. 
+
+When using the Prisma CLI, you then need to set the `PRISMA_MANAGEMENT_API_SECRET` to the same value so that the CLI can authenticate against the secured server. Learn more [here](kke4).
+
+</Collapse>
+
 ## Deploy the Prisma datamodel
 
 You now have the _minimal_ setup ready to deploy your Prisma datamodel. Run the following command (this does **not** change anything in your database):
