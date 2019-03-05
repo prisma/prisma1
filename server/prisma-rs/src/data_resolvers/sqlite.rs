@@ -73,28 +73,29 @@ impl Sqlite {
     /// Converter function to wrap the limited set of types in SQLite to a
     /// richer PrismaValue.
     fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaValue {
-        match typ {
-            TypeIdentifier::String => PrismaValue::String(row.get(i)),
-            TypeIdentifier::GraphQLID => PrismaValue::GraphqlId(row.get(i)),
-            TypeIdentifier::UUID => PrismaValue::Uuid(row.get(i)),
-            TypeIdentifier::Int => PrismaValue::Int(row.get(i)),
-            TypeIdentifier::Boolean => PrismaValue::Boolean(row.get(i)),
-            TypeIdentifier::Enum => PrismaValue::Enum(row.get(i)),
-            TypeIdentifier::Json => PrismaValue::Json(row.get(i)),
-            TypeIdentifier::DateTime => {
-                let ts: i64 = row.get(i);
+        let result = match typ {
+            TypeIdentifier::String => row.get_checked(i).map(|val| PrismaValue::String(val)),
+            TypeIdentifier::GraphQLID => row.get_checked(i).map(|val| PrismaValue::GraphqlId(val)),
+            TypeIdentifier::UUID => row.get_checked(i).map(|val| PrismaValue::Uuid(val)),
+            TypeIdentifier::Int => row.get_checked(i).map(|val| PrismaValue::Int(val)),
+            TypeIdentifier::Boolean => row.get_checked(i).map(|val| PrismaValue::Boolean(val)),
+            TypeIdentifier::Enum => row.get_checked(i).map(|val| PrismaValue::Enum(val)),
+            TypeIdentifier::Json => row.get_checked(i).map(|val| PrismaValue::Json(val)),
+            TypeIdentifier::DateTime => row.get_checked(i).map(|ts: i64| {
                 let nsecs = ((ts % 1000) * 1_000_000) as u32;
                 let secs = (ts / 1000) as i64;
                 let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
                 let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
 
                 PrismaValue::DateTime(datetime.to_rfc3339())
-            }
+            }),
             TypeIdentifier::Relation => panic!("We should not have a Relation here!"),
-            TypeIdentifier::Float => {
-                let v: f64 = row.get(i);
-                PrismaValue::Float(v as f32)
-            }
-        }
+            TypeIdentifier::Float => row.get_checked(i).map(|val: f64| PrismaValue::Float(val as f32)),
+        };
+
+        result.unwrap_or_else(|e| match e {
+            rusqlite::Error::InvalidColumnType(_, rusqlite::types::Type::Null) => PrismaValue::Null,
+            _ => panic!(e),
+        })
     }
 }

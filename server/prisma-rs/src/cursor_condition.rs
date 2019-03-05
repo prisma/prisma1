@@ -29,16 +29,11 @@ impl CursorCondition {
             (None, None, _) => ConditionTree::NoCondition,
             (before, after, order_by) => {
                 let field = match order_by {
-                    Some(order) => model
-                        .fields()
-                        .find_from_scalar(&order.scalar_field)
-                        .unwrap(),
+                    Some(order) => model.fields().find_from_scalar(&order.scalar_field).unwrap(),
                     None => model.fields().id(),
                 };
 
-                let sort_order: Order = order_by
-                    .map(|order| order.sort_order().into())
-                    .unwrap_or(Order::Asc);
+                let sort_order: Order = order_by.map(|order| order.sort_order().into()).unwrap_or(Order::Asc);
 
                 let cursor_for = |cursor_type: CursorType, id: IdValue| {
                     let row = Row::from((field.as_column(), model.fields().id().as_column()));
