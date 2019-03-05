@@ -29,6 +29,20 @@ services:
     networks:
       - tests
 
+  test-db:
+    image: mysql:5.7
+    command: mysqld
+    restart: always
+    environment:
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: prisma
+      MYSQL_DATABASE: prisma
+    ports:
+      - "3306"
+    networks:
+      - tests
+    tmpfs: /var/lib/mysql
+
   rabbit:
     image: rabbitmq:3.7.2-management
     restart: always
