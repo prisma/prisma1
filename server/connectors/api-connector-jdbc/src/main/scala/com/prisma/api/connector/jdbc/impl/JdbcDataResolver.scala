@@ -26,7 +26,7 @@ case class JdbcDataResolver(
       import slickDatabase.profile.api._
 
       val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/${project.dbName}'"""
+      val path               = s"""'db/${project.dbName}.db'"""
       val attach             = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
       val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
 

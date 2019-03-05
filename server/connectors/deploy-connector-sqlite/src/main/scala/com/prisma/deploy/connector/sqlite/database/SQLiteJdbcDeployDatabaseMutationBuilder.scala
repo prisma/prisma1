@@ -24,7 +24,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
   override def createSchema(projectId: String): DBIO[_] = {
     val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
-    val path = s"""'db/$projectId'"""
+    val path = s"""'db/$projectId.db'"""
     val att  = sqlu"ATTACH DATABASE #${path} AS #$projectId;"
 
     for {

@@ -16,7 +16,7 @@ case class JdbcClientDbQueries(project: Project, slickDatabase: SlickDatabase)(i
       import slickDatabase.profile.api._
       val projectId          = project.id
       val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/$projectId'"""
+      val path               = s"""'db/$projectId.db'"""
       val attach             = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
       val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
 
