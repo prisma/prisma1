@@ -58,19 +58,11 @@ export default abstract class Renderer {
     }
   }
 
-  protected getValidIndices(type: IGQLType) {
-    return type.indices.filter(
-      index => !index.fields.some(f => f.comments.some(c => c.isError)),
-    )
-  }
-
-  // TODO: Cleanup index rendering.
   protected createIndexDirectives(
     type: IGQLType,
     typeDirectives: IDirectiveInfo[],
   ) {
-    const validIndices = this.getValidIndices(type)
-    if (validIndices.length > 0) {
+    if (type.indices.length > 0) {
       const indexDescriptions: string[] = []
       for (const index of type.indices) {
         indexDescriptions.push(this.createIndexDirective(index))
@@ -103,10 +95,18 @@ export default abstract class Renderer {
       }
     }
 
-    // If we switch back to single index declarations later, simply return the directive here.
-    return `${indent}{${Object.keys(directive.arguments)
-      .map(x => `${x}: ${directive.arguments[x]}`)
-      .join(', ')}}`
+    const { renderedComments, hasError } = this.renderComments(index, indent)
+    const commentPrefix = hasError ? `${comment} ` : ''
+
+    if(renderedComments.length > 0) {
+      return `${renderedComments}\n${indent}${commentPrefix}{${Object.keys(directive.arguments)
+        .map(x => `${x}: ${directive.arguments[x]}`)
+        .join(', ')}}`
+    } else {
+      return `${indent}{${Object.keys(directive.arguments)
+        .map(x => `${x}: ${directive.arguments[x]}`)
+        .join(', ')}}`
+    }
   }
 
   protected shouldCreateIsEmbeddedTypeDirective(type: IGQLType) {
@@ -175,7 +175,7 @@ export default abstract class Renderer {
     }
   }
 
-  protected renderComments(type: IGQLType | IGQLField, spacing: string) {
+  protected renderComments(type: IGQLType | IGQLField | IIndexInfo, spacing: string) {
     const renderedComments = type.comments
       .map(x => `${spacing}${comment} ${x.text}`)
       .join('\n')
