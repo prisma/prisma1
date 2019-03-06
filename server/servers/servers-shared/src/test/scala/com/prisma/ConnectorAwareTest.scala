@@ -6,13 +6,27 @@ import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability}
 import enumeratum.{Enum, EnumEntry}
 import org.scalatest.{Suite, SuiteMixin, Tag}
 
-object IgnorePostgres extends Tag("ignore.postgres")
-object IgnoreMySql    extends Tag("ignore.mysql")
-object IgnoreMongo    extends Tag("ignore.mongo")
-object IgnoreSQLite   extends Tag("ignore.sqlite")
+sealed trait AssociatedWithConnectorTags {
+  def tag: ConnectorTag
+}
+
+object IgnorePostgres extends Tag("ignore.postgres") with AssociatedWithConnectorTags {
+  override def tag = PostgresConnectorTag
+}
+object IgnoreMySql extends Tag("ignore.mysql") with AssociatedWithConnectorTags {
+  override def tag = MySqlConnectorTag
+}
+object IgnoreMongo extends Tag("ignore.mongo") with AssociatedWithConnectorTags {
+  override def tag = MongoConnectorTag
+}
+object IgnoreSQLite extends Tag("ignore.sqlite") with AssociatedWithConnectorTags {
+  override def tag = SQLiteConnectorTag
+}
 
 object IgnoreSet {
   val ignoreConnectorTags = Set(IgnorePostgres, IgnoreMySql, IgnoreMongo, IgnoreSQLite)
+
+  def byName(name: String): Option[AssociatedWithConnectorTags] = ignoreConnectorTags.find(_.name == name)
 }
 
 sealed trait ConnectorTag extends EnumEntry
@@ -106,14 +120,17 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   def ifConnectorIsPassive[T](assertion: => T): Unit   = if (!connector.active) assertion
 
   private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig) = {
-    val ignoreConnectorTypes = ignoreConnectorTags.filter(_.name.endsWith(connector.connector))
-    val tagNamesToIgnore     = ignoreConnectorTypes.map(_.name)
-    super.tags.mapValues { value =>
-      val isIgnored = value.exists(tagNamesToIgnore.contains)
+    super.tags.mapValues { tagNames =>
+      val connectorTagsToIgnore: Set[ConnectorTag] = for {
+        tagName   <- tagNames
+        ignoreTag <- IgnoreSet.byName(tagName)
+      } yield ignoreTag.tag
+
+      val isIgnored = connectorTagsToIgnore.contains(connectorTag)
       if (isIgnored) {
-        value ++ Set("org.scalatest.Ignore")
+        tagNames ++ Set("org.scalatest.Ignore")
       } else {
-        value
+        tagNames
       }
     }
   }
