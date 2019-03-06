@@ -355,7 +355,7 @@ export function cloneIndices(copy: IGQLType, obj: IGQLType) {
         name: index.name,
         unique: index.unique,
         fields: [...index.fields],
-        comments: []
+        comments: [],
       }
       cloneComments(copyIndex, index)
       copy.indices.push(copyIndex)

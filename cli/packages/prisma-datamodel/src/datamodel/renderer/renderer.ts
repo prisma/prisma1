@@ -97,15 +97,14 @@ export default abstract class Renderer {
 
     const { renderedComments, hasError } = this.renderComments(index, indent)
     const commentPrefix = hasError ? `${comment} ` : ''
+    const renderedArguments = Object.keys(directive.arguments)
+      .map(x => `${x}: ${directive.arguments[x]}`)
+      .join(', ')
 
-    if(renderedComments.length > 0) {
-      return `${renderedComments}\n${indent}${commentPrefix}{${Object.keys(directive.arguments)
-        .map(x => `${x}: ${directive.arguments[x]}`)
-        .join(', ')}}`
+    if (renderedComments.length > 0) {
+      return `${renderedComments}\n${indent}${commentPrefix}{${renderedArguments}}`
     } else {
-      return `${indent}{${Object.keys(directive.arguments)
-        .map(x => `${x}: ${directive.arguments[x]}`)
-        .join(', ')}}`
+      return `${indent}{${renderedArguments}}`
     }
   }
 
@@ -175,7 +174,10 @@ export default abstract class Renderer {
     }
   }
 
-  protected renderComments(type: IGQLType | IGQLField | IIndexInfo, spacing: string) {
+  protected renderComments(
+    type: IGQLType | IGQLField | IIndexInfo,
+    spacing: string,
+  ) {
     const renderedComments = type.comments
       .map(x => `${spacing}${comment} ${x.text}`)
       .join('\n')
