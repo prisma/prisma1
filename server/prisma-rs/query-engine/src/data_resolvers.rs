@@ -12,7 +12,20 @@ use std::{collections::BTreeSet, sync::Arc};
 #[derive(Debug, Default)]
 pub struct SelectedFields {
     pub fields: Vec<Arc<ScalarField>>,
-    pub names: Vec<String>,
+}
+
+impl SelectedFields {
+    fn names(&self) -> Vec<String> {
+        self.fields.iter().map(|f| f.db_name().to_string()).collect()
+    }
+
+    fn names_of_scalar_non_list_fields(&self) -> Vec<String> {
+        self.fields
+            .iter()
+            .filter(|f| !f.is_list)
+            .map(|f| f.db_name().to_string())
+            .collect()
+    }
 }
 
 #[derive(Debug)]
@@ -34,9 +47,8 @@ pub trait IntoSelectQuery {
         });
 
         let fields = model.fields().find_many_from_scalar(&fields);
-        let names: Vec<String> = fields.iter().map(|f| f.db_name().to_string()).collect();
 
-        SelectedFields { fields, names }
+        SelectedFields { fields }
     }
 
     fn base_query(table: &str, conditions: ConditionTree, offset: usize) -> Select {
@@ -44,8 +56,9 @@ pub trait IntoSelectQuery {
     }
 
     fn select_fields(select: Select, fields: &SelectedFields) -> Select {
+        println!("names!: {:?}", fields.names_of_scalar_non_list_fields());
         fields
-            .names
+            .names_of_scalar_non_list_fields()
             .iter()
             .fold(select, |acc, field| acc.column(field.as_ref()))
     }
