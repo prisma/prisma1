@@ -37,18 +37,22 @@ object NativeUtils {
       case PrismaValue.DateTime(dt: String) => DateTimeGCValue(DateTime.parse(dt))
       case PrismaValue.Enum(e: String)      => EnumGCValue(e)
       case PrismaValue.Float(f: Float)      => FloatGCValue(f)
-      case PrismaValue.GraphqlId(id: protocol.GraphqlId) =>
-        id.idValue match {
-          case IdValue.String(s) => StringIdGCValue(s)
-          case IdValue.Int(i)    => IntGCValue(i.toInt)
-          case _                 => sys.error("empty protobuf")
-        }
-      case PrismaValue.Int(i: Int)        => IntGCValue(i)
-      case PrismaValue.Json(j: String)    => JsonGCValue(Json.parse(j))
-      case PrismaValue.Null(_)            => NullGCValue
-      case PrismaValue.Relation(r: Long)  => ??? // What are we supposed to do here?
-      case PrismaValue.String(s: String)  => StringGCValue(s)
-      case PrismaValue.Uuid(uuid: String) => UuidGCValue.parse(uuid).get
+      case PrismaValue.GraphqlId(id)        => toIdGcValue(id)
+      case PrismaValue.Int(i: Int)          => IntGCValue(i)
+      case PrismaValue.Json(j: String)      => JsonGCValue(Json.parse(j))
+      case PrismaValue.Null(_)              => NullGCValue
+      case PrismaValue.Relation(r: Long)    => ??? // What are we supposed to do here?
+      case PrismaValue.String(s: String)    => StringGCValue(s)
+      case PrismaValue.Uuid(uuid: String)   => UuidGCValue.parse(uuid).get
+    }
+  }
+
+  def toIdGcValue(id: protocol.GraphqlId): IdGCValue = {
+    id.idValue match {
+      case IdValue.String(s) => StringIdGCValue(s)
+      case IdValue.Uuid(s)   => UuidGCValue.parse_!(s)
+      case IdValue.Int(i)    => IntGCValue(i.toInt)
+      case _                 => sys.error("empty protobuf")
     }
   }
 

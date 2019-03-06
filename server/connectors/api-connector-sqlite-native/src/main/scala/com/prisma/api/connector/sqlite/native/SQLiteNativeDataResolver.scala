@@ -68,16 +68,20 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
       toPrismaSelectedFields(selectedFields)
     )
 
-    fromField.relatedModel_!.idField_!
-
     val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
     val nodes                                      = nodeResult._1
     val columnNames                                = nodeResult._2
+    val mappedNodes: Vector[PrismaNodeWithParent] = nodes.map { pbNode =>
+      PrismaNodeWithParent(
+        toIdGcValue(pbNode.parentId.getOrElse(sys.error("Expected get_related_nodes to return parent IDs alongside nodes."))),
+        transformNode((pbNode, columnNames), fromField.relatedModel_!)
+      )
+    }
 
-    val itemGroupsByModelId = nodes.groupBy(_.parentId.getOrElse(sys.error("Expected get_related_nodes to return parent IDs alongside nodes.")))
-    val wat: Vector[ResolverResult[PrismaNodeWithParent]] = fromNodeIds.map { id =>
+    val itemGroupsByModelId = mappedNodes.groupBy(_.parentId)
+    fromNodeIds.map { id =>
       itemGroupsByModelId.find(_._1 == id) match {
-        case Some((_, itemsForId)) => ResolverResult(queryArguments, itemsForId.map(), parentModelId = Some(id))
+        case Some((_, itemsForId)) => ResolverResult(queryArguments, itemsForId, parentModelId = Some(id))
         case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
       }
     }
