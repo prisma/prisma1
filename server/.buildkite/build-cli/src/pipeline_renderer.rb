@@ -117,7 +117,7 @@ class PipelineRenderer
     [
       PipelineStep.new
         .label(":rust: prisma-rs")
-        .command("cd server/prisma-rs && ./test.sh")
+        .command("./server/.buildkite/pipeline.sh test-rust")
     ]
   end
 
