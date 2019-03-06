@@ -1,4 +1,5 @@
 port: 4466
+prototype: true
 databases:
   default:
     connector: sqlite-native
