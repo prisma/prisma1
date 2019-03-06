@@ -21,10 +21,9 @@ A database connector is the bridge between Prisma and the underlying database. T
 
 The core responsibilities of a database connector are:
 
-- Translate incoming GraphQL queries into SQL
-- Send the generated SQL query to the database
-- Create GraphQL responses based on database result
-- Perform database migrations (optional)
+- Translate requests from the Prisma client into MongoDB API calls
+- Execute the generated API call against the database
+- Return the result from the database back to the Prisma client 
 
 When configuring your Prisma server with Docker, you need to specify which connector you'd like to use in order to connect to a certain database. You provide this info via the `connector` property:
 

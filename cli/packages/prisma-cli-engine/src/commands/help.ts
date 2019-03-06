@@ -97,7 +97,7 @@ export default class Help extends Command {
     offset: number = 1,
   ) {
     const color = this.out.color
-    this.out.log(`\nGraphQL Database Gateway (${chalk.underline(
+    this.out.log(`\nPrisma replaces traditional ORMs (${chalk.underline(
       'https://www.prisma.io',
     )})
     

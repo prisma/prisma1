@@ -12,23 +12,18 @@ The following lists represent a number of smaller-scope issues and improvements 
 
 #### Improvements
 
-- [Unstable tie breaking for cursor based pagination #3258](https://github.com/prisma/prisma/issues/3258)
-- [Nested upsert in create mutations (correct: nested connectOrCreate) #2194](https://github.com/prisma/prisma/issues/2194)
-- [Use sensible migration values for existing nodes when adding required fields #2323](https://github.com/prisma/prisma/issues/2323)
-- [Allow for custom IDs to be submitted in a create-mutation #3839](https://github.com/prisma/prisma/issues/3839)
-- [Support cascading delete with deleteMany #1936](https://github.com/prisma/prisma/issues/1936)
-- [[Mongo] improve relational link design to enhance performance #3754](https://github.com/prisma/prisma/issues/3754)
-- [Add inner connection fields #1780](https://github.com/prisma/prisma/issues/1780)
-- [Order by multiple fields #62](https://github.com/prisma/prisma/issues/62)
+- [ ] [Nested upsert in create mutations (correct: nested connectOrCreate) #2194](https://github.com/prisma/prisma/issues/2194)
+- [ ] [Use sensible migration values for existing nodes when adding required fields #2323](https://github.com/prisma/prisma/issues/2323)
+- [ ] [Allow for custom IDs to be submitted in a create-mutation #3839](https://github.com/prisma/prisma/issues/3839)
+- [ ] [Support cascading delete with deleteMany #1936](https://github.com/prisma/prisma/issues/1936)
+- [ ] [[Mongo] improve relational link design to enhance performance #3754](https://github.com/prisma/prisma/issues/3754)
+- [ ] [Add inner connection fields #1780](https://github.com/prisma/prisma/issues/1780)
+- [ ] [Order by multiple fields #62](https://github.com/prisma/prisma/issues/62)
 
 #### Bug fixes
 
-- [Updating Scalar List Values of a Node does not trigger a change of the updatedAt value of a Node #2053](https://github.com/prisma/prisma/issues/2053)
-- [Export import fails #3183](https://github.com/prisma/prisma/issues/3183)
-- [Introspect postgres: "Could not connect to database. Prisma Config doesn't have any database connection" #3136](https://github.com/prisma/prisma/issues/3136)
-- [SDL declare order with relation. #3698](https://github.com/prisma/prisma/issues/3698)
-- [Unstable tie breaking for cursor based pagination #3258](https://github.com/prisma/prisma/issues/3258)
-- [Multiple pgRelation on connect mutation #3041](https://github.com/prisma/prisma/issues/3041)
+- [ ] [Export import fails #3183](https://github.com/prisma/prisma/issues/3183)
+- [ ] [Introspect postgres: "Could not connect to database. Prisma Config doesn't have any database connection" #3136](https://github.com/prisma/prisma/issues/3136)
 
 ### Specification phase
 

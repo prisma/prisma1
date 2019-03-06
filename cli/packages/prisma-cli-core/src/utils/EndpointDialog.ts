@@ -18,6 +18,9 @@ import { DatabaseType, DefaultRenderer } from 'prisma-datamodel'
 import {
   getConnectedConnectorFromCredentials,
   getConnectorWithDatabase,
+  sanitizeMongoUri,
+  hasAuthSource,
+  populateMongoDatabase,
 } from '../commands/introspect/util'
 
 export interface GetEndpointParams {
@@ -124,6 +127,7 @@ export interface ConstructorArgs {
   config: Config
   definition: PrismaDefinitionClass
   shouldAskForGenerator: boolean
+  prototype?: boolean
 }
 
 export class EndpointDialog {
@@ -133,6 +137,7 @@ export class EndpointDialog {
   config: Config
   definition: PrismaDefinitionClass
   shouldAskForGenerator: boolean
+  prototype: boolean
   constructor({
     out,
     client,
@@ -140,6 +145,7 @@ export class EndpointDialog {
     config,
     definition,
     shouldAskForGenerator,
+    prototype = false,
   }: ConstructorArgs) {
     this.out = out
     this.client = client
@@ -147,6 +153,7 @@ export class EndpointDialog {
     this.config = config
     this.definition = definition
     this.shouldAskForGenerator = shouldAskForGenerator
+    this.prototype = prototype
   }
 
   async getEndpoint(): Promise<GetEndpointResult> {
@@ -204,7 +211,9 @@ export class EndpointDialog {
   printDatabaseConfig(credentials: DatabaseCredentials) {
     let data: any = {
       connector: credentials.type,
-      host: credentials.host,
+      host: credentials.host
+        ? this.replaceLocalhost(credentials.host)
+        : undefined,
       database:
         credentials.database && credentials.database.length > 0
           ? credentials.database
@@ -215,7 +224,7 @@ export class EndpointDialog {
           : undefined,
       user: credentials.user,
       password: credentials.password,
-      uri: credentials.uri,
+      uri: credentials.uri ? this.replaceLocalhost(credentials.uri) : undefined,
     }
     if (credentials.type !== DatabaseType.mongo) {
       data = {
@@ -343,6 +352,7 @@ export class EndpointDialog {
           {
             ...intermediateConnectorData,
             databaseType: credentials.type,
+            interactive: true,
           },
           this,
         )
@@ -383,8 +393,10 @@ export class EndpointDialog {
             `Introspecting database ${chalk.bold(databaseName)}`,
           )
           const introspection = await connector.introspect(databaseName)
+
           const isdl = await introspection.getNormalizedDatamodel()
-          const renderer = DefaultRenderer.create(databaseType)
+          const renderer = DefaultRenderer.create(databaseType, this.prototype)
+
           datamodel = renderer.render(isdl)
           const tableName =
             databaseType === DatabaseType.mongo ? 'Mongo collections' : 'tables'
@@ -409,13 +421,6 @@ export class EndpointDialog {
               datamodel = defaultDataModel
             }
           }
-        }
-
-        /**
-         * Sanitize mongo host for docker usage
-         */
-        if (credentials.type === DatabaseType.mongo && credentials.uri) {
-          credentials.uri = this.replaceMongoHost(credentials.uri!)
         }
 
         /**
@@ -524,8 +529,8 @@ export class EndpointDialog {
     })
   }
 
-  replaceMongoHost(connectionString: string) {
-    return connectionString.replace('localhost', 'host.docker.internal')
+  replaceLocalhost(host: string) {
+    return host.replace('localhost', 'host.docker.internal')
   }
 
   async getDatabase(
@@ -588,13 +593,11 @@ export class EndpointDialog {
         message: 'Enter MongoDB connection string',
         key: 'uri',
       })
-      const alreadyData =
-        introspection || (await this.askForExistingDataMongo())
-      if (alreadyData) {
-        credentials.database = await this.ask({
-          message: `Enter name of existing database`,
-          key: 'database',
-        })
+      credentials.uri = sanitizeMongoUri(credentials.uri)
+
+      if (hasAuthSource(credentials.uri)) {
+        const { database } = populateMongoDatabase({ uri: credentials.uri })
+        credentials.schema = database
       }
     }
 
