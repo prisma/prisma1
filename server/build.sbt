@@ -21,7 +21,7 @@ lazy val commonSettings = Seq(
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings", "-language:implicitConversions"),
   resolvers ++= Seq(
     "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
-    "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+    "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
   ),
   libraryDependencies := common
 )
