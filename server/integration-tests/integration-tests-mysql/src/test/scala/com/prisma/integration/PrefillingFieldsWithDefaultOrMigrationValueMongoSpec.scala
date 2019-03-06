@@ -1,30 +1,11 @@
 package com.prisma.integration
 
 import com.prisma.ConnectorTag
-import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag}
+import com.prisma.ConnectorTag.MongoConnectorTag
 import org.scalatest.{FlatSpec, Matchers}
 
-class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
-  override def runOnlyForConnectors: Set[ConnectorTag] = Set(MySqlConnectorTag, PostgresConnectorTag)
-
-  //Affected Deploy Actions
-  // creating new required field                 -> set column to default/migValue for all  rows                  -> createColumn
-  // making field required                       -> set column to default/migValue for all rows where it is null  -> updateColumn
-  // changing type of a (newly) required field   -> set column to default/migValue for all  rows                  -> createColumn
-
-  //Necessary changes
-  // Keep validations, create message that MV was used      -> Done
-  // Downgrade errors to warnings                           -> Done
-  // Create shared MigvalueMatcher                          -> Done
-  // Add tests                                              -> Done
-  // Change queries to insert default/migration value
-  // Fix broken tests
-  // find locations for MigrationValueGenerator and SetParameter
-
-  //Postgres                                                -> Done
-  //MySql                                                   -> Done
-  //Sqlite                                                  -> No Changes
-  //Mongo                                                   -> Keep Errors
+class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  override def runOnlyForConnectors: Set[ConnectorTag] = Set(MongoConnectorTag)
 
   "Creating a required Field" should "not error when there is no defaultValue but there are no nodes yet" in {
 
@@ -61,11 +42,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |  new: Int!
         |}"""
 
-    val res = deployServer.deploySchemaThatMustWarn(project, schema1, true)
-    res.toString should include("""The fields will be pre-filled with the value `0`.""")
-
-    val updatedProject = deployServer.deploySchema(project, schema1)
-    apiServer.query("query{persons{age, new}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"new":0}]}}""")
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
+    res.toString should include("""There are already nodes for the model `Person` that would violate that constraint.""")
   }
 
   "Adding a required field with default value" should "set the default value" in {
@@ -85,11 +63,9 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |  new: Int! @default(value: 1)
         |}"""
 
-    val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
-    res.toString should include("""The fields will be pre-filled with the value `1`.""")
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
+    res.toString should include("""There are already nodes for the model `Person` that would violate that constraint.""")
 
-    val updatedProject = deployServer.deploySchema(project, schema1)
-    apiServer.query("query{persons{age, new}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"new":1}]}}""")
   }
 
   "Making a field required without default value" should "set the internal migration value for null values" in {
@@ -111,11 +87,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |  test: Int!
         |}"""
 
-    val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should include("""The fields will be pre-filled with the value: `0`.""")
-
-    val updatedProject = deployServer.deploySchema(project, schema1)
-    apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":3},{"age":2,"test":0}]}}""")
   }
 
   "Making an optional field required with default value" should "set the default value on null fields" in {
@@ -137,11 +110,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |  test: Int! @default(value: 1)
         |}"""
 
-    val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should include("""The fields will be pre-filled with the value: `1`.""")
-
-    val updatedProject = deployServer.deploySchema(project, schema1)
-    apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":1},{"age":2,"test":3}]}}""")
   }
 
   "Changing the typeIdentifier of a required field without default value" should "set the internal migration value for all values" in {
@@ -162,11 +132,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |  test: String!
         |}"""
 
-    val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should include(""" The fields will be pre-filled with the value: ``.""")
-
-    val updatedProject = deployServer.deploySchema(project, schema1)
-    apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":""}]}}""")
   }
 
   "Changing the typeIdentifier for a required field with default value" should "set the default value on all fields" in {
@@ -187,12 +154,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |  test: String! @default(value: "default")
         |}"""
 
-    val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should include("""The fields will be pre-filled with the value: `default`.""")
-
-    val updatedProject = deployServer.deploySchema(project, schema1)
-    apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":"default"}]}}""")
-
   }
 
   "Changing the typeIdentifier of a optional field without default value" should "set all existing values to null" in {
@@ -267,11 +230,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |  test: String!
         |}"""
 
-    val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should include("""The fields will be pre-filled with the value: ``.""")
-
-    val updatedProject = deployServer.deploySchema(project, schema1)
-    apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":""},{"age":2,"test":""}]}}""")
   }
 
   "Changing the typeIdentifier of a optional field AND making it required with default value" should "set all fields to the default value" in {
@@ -293,12 +253,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |  test: String! @default(value: "default")
         |}"""
 
-    val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
+    val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should include("""The fields will be pre-filled with the value: `default`.""")
-
-    val updatedProject = deployServer.deploySchema(project, schema1)
-    apiServer.query("query{persons{age, test}}", updatedProject).toString should be(
-      """{"data":{"persons":[{"age":1,"test":"default"},{"age":2,"test":"default"}]}}""")
   }
 
   "Making a unique field required without default value" should "should error" in {

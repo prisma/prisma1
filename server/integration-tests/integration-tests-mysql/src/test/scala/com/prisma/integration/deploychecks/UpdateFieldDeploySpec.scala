@@ -296,7 +296,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         | value: String!
         |}"""
 
-    deployServer.deploySchemaThatMustWarn(project, schema2).toString should include("""These fields will be pre-filled with the value ``""")
+    deployServer.deploySchemaThatMustWarn(project, schema2).toString should include("""The fields will be pre-filled with the value: ``.""")
   }
 
   "Updating the type of a required scalar field" should "warn if there are nodes for that type" in {
@@ -408,8 +408,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
          | a: A!
          |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes with null values that would violate that constraint."}],"warnings":[]}}}""")
+    deployServer.deploySchemaThatMustError(project, schema2).toString should include(
+      """You are updating the field `a` to be required. But there are already nodes for the model `B` that would violate that constraint.""")
   }
-
 }

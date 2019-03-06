@@ -5,7 +5,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Updating a relation to make it required" should "should suceed if there is no data yet " in {
+  "Updating a relation to make it required" should "should succeed if there is no data yet " in {
 
     val schema =
       """|type A {
@@ -95,8 +95,7 @@ class UpdateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
          | a: A
          |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes with null values that would violate that constraint."}],"warnings":[]}}}""")
+    deployServer.deploySchemaThatMustError(project, schema2).toString should include(
+      """You are updating the field `b` to be required. But there are already nodes for the model `A` that would violate that constraint.""")
   }
-
 }
