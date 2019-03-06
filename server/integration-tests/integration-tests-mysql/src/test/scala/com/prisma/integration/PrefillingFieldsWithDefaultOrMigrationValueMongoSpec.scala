@@ -5,6 +5,8 @@ import com.prisma.ConnectorTag.MongoConnectorTag
 import org.scalatest.{FlatSpec, Matchers}
 
 class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  //Mongo ClientDBQueries are for the most part not yet implemented and just return false
+  //Therefore all tests relying on these are ignored
   override def runOnlyForConnectors: Set[ConnectorTag] = Set(MongoConnectorTag)
 
   "Creating a required Field" should "not error when there is no defaultValue but there are no nodes yet" in {
@@ -68,7 +70,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
 
   }
 
-  "Making a field required without default value" should "set the internal migration value for null values" in {
+  "Making a field required without default value" should "set the internal migration value for null values" ignore {
 
     val schema =
       """type Person {
@@ -91,7 +93,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     res.toString should include("""The fields will be pre-filled with the value: `0`.""")
   }
 
-  "Making an optional field required with default value" should "set the default value on null fields" in {
+  "Making an optional field required with default value" should "set the default value on null fields" ignore {
 
     val schema =
       """type Person {
@@ -114,7 +116,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     res.toString should include("""The fields will be pre-filled with the value: `1`.""")
   }
 
-  "Changing the typeIdentifier of a required field without default value" should "set the internal migration value for all values" in {
+  "Changing the typeIdentifier of a required field without default value" should "set the internal migration value for all values" ignore {
 
     val schema =
       """type Person {
@@ -136,7 +138,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     res.toString should include(""" The fields will be pre-filled with the value: ``.""")
   }
 
-  "Changing the typeIdentifier for a required field with default value" should "set the default value on all fields" in {
+  "Changing the typeIdentifier for a required field with default value" should "set the default value on all fields" ignore {
 
     val schema =
       """type Person {
@@ -158,7 +160,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     res.toString should include("""The fields will be pre-filled with the value: `default`.""")
   }
 
-  "Changing the typeIdentifier of a optional field without default value" should "set all existing values to null" in {
+  "Changing the typeIdentifier of a optional field without default value" should "set all existing values to null" ignore {
 
     val schema =
       """type Person {
@@ -184,7 +186,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":null},{"age":2,"test":null}]}}""")
   }
 
-  "Changing the typeIdentifier for a optional field with default value" should "set all fields to null" in {
+  "Changing the typeIdentifier for a optional field with default value" should "set all fields to null" ignore {
 
     val schema =
       """type Person {
@@ -211,7 +213,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":null},{"age":2,"test":null}]}}""")
   }
 
-  "Changing the typeIdentifier of a optional field AND making it required without default value" should "set all values to the default migration value" in {
+  "Changing the typeIdentifier of a optional field AND making it required without default value" should "set all values to the default migration value" ignore {
 
     val schema =
       """type Person {
@@ -234,7 +236,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     res.toString should include("""The fields will be pre-filled with the value: ``.""")
   }
 
-  "Changing the typeIdentifier of a optional field AND making it required with default value" should "set all fields to the default value" in {
+  "Changing the typeIdentifier of a optional field AND making it required with default value" should "set all fields to the default value" ignore {
 
     val schema =
       """type Person {
@@ -257,7 +259,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     res.toString should include("""The fields will be pre-filled with the value: `default`.""")
   }
 
-  "Making a unique field required without default value" should "should error" in {
+  "Making a unique field required without default value" should "should error" ignore {
 
     val schema =
       """type Person {
@@ -281,7 +283,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
       """You are updating the field `test` to be required and unique. But there are already nodes for the model `Person` that would violate that constraint.""")
   }
 
-  "Making a unique field required with default value" should "should error" in {
+  "Making a unique field required with default value" should "should error" ignore {
 
     val schema =
       """type Person {
