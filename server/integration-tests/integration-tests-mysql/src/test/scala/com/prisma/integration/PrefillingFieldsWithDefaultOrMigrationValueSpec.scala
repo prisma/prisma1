@@ -21,8 +21,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
 
   //Postgres                                                -> Done
   //MySql                                                   -> Done
-  //Sqlite
-  //Mongo
+  //Sqlite                                                  -> No Changes
+  //Mongo                                                   -> Keep Errors
 
   "Creating a required Field" should "not error when there is no defaultValue but there are no nodes yet" in {
 
@@ -110,7 +110,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |}"""
 
     val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
-    res.toString should include("""These fields will be pre-filled with the value `0`""")
+    res.toString should include("""The fields will be pre-filled with the value: `0`.""")
 
     val updatedProject = deployServer.deploySchema(project, schema1)
     apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":3},{"age":2,"test":0}]}}""")
@@ -136,7 +136,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |}"""
 
     val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
-    res.toString should include("""These fields will be pre-filled with the value `1`""")
+    res.toString should include("""The fields will be pre-filled with the value: `1`.""")
 
     val updatedProject = deployServer.deploySchema(project, schema1)
     apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":1},{"age":2,"test":3}]}}""")
@@ -266,7 +266,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |}"""
 
     val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
-    res.toString should include("""These fields will be pre-filled with the value ``""")
+    res.toString should include("""The fields will be pre-filled with the value: ``.""")
 
     val updatedProject = deployServer.deploySchema(project, schema1)
     apiServer.query("query{persons{age, test}}", updatedProject).toString should be("""{"data":{"persons":[{"age":1,"test":""},{"age":2,"test":""}]}}""")
@@ -292,7 +292,7 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |}"""
 
     val res = deployServer.deploySchemaThatMustWarn(project, schema1, force = true)
-    res.toString should include("""These fields will be pre-filled with the value `default`""")
+    res.toString should include("""The fields will be pre-filled with the value: `default`.""")
 
     val updatedProject = deployServer.deploySchema(project, schema1)
     apiServer.query("query{persons{age, test}}", updatedProject).toString should be(
@@ -319,8 +319,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |}"""
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)
-    res.toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes with null values that would violate that constraint. Prefilling these fields with a default value is not possible because it is unique."}],"warnings":[]}}}""")
+    res.toString should include(
+      """You are updating the field `test` to be required and unique. But there are already nodes for the model `Person` that would violate that constraint.""")
   }
 
   "Making a unique field required with default value" should "should error" in {
@@ -343,8 +343,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
         |}"""
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)
-    res.toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes with null values that would violate that constraint. Prefilling these fields with a default value is not possible because it is unique."}],"warnings":[]}}}""")
+    res.toString should include(
+      """You are updating the field `test` to be required and unique. But there are already nodes for the model `Person` that would violate that constraint.""")
   }
 
 }
