@@ -7676,10 +7676,10 @@ pretty-ms@^3.0.0:
   dependencies:
     parse-ms "^1.0.0"
 
-prisma-admin-html@^0.0.2:
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/prisma-admin-html/-/prisma-admin-html-0.0.2.tgz#5422d884c5f0d392b7ff7d734058fff0dfdd4ebc"
-  integrity sha512-bLyd6eVUj743a8o/aDI4Kk+tXTrgKHCeuFqW/aPMSrkAMSeEa9QhqnzmRuLDuv56AHl84wnGtTJFF4iMUIR9qQ==
+prisma-admin-html@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/prisma-admin-html/-/prisma-admin-html-0.0.3.tgz#ce1d7f65862f45e0b998d00143c85e2bd92c2095"
+  integrity sha512-nrFc4mBajrfCfRm3pZiZIOZYBUBBJXS1gw4J0GZyCE/LScXjbGjX9Eq8IZwD0I/JLTDDR9BfUxXuE7nnNFWH1g==
 
 prisma-json-schema@0.1.3:
   version "0.1.3"
