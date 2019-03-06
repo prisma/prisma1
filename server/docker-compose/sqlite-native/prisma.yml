@@ -1,8 +1,7 @@
 port: 4466
-prototype: true
 databases:
   default:
-    connector: sqlite
+    connector: sqlite-native
     migrations: true
     host: 127.0.0.1
     port: 3306

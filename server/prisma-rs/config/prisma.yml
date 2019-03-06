@@ -1,5 +1,5 @@
 port: 4466
 databases:
   default:
-    connector: sqlite
+    connector: sqlite-native
     testMode: true
