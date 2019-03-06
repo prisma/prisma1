@@ -125,12 +125,6 @@ The method is named after the model but starts with a _lowercase_ character. For
 
 The `where` input argument for these methods is an object that has as properties all [unique](knul#unique-scalar-fields) fields of the model. This means, for all three methods, the `id` field is accepted (as the corresponding models each have an `id` field annotated as `@unique`). The input object for the `user` method additionaly has an `email` field.
 
-<Collapse title="View the types of the input object for `User`, `Post` and `Comment`">
-
-> TODO
-
-</Collapse>
-
 ### Examples
 
 _Fetch a single post by its id_:
@@ -472,12 +466,6 @@ _Basic_ filters let you specify certain criteria to constrain which records shou
 
 The type of the `where` object depends on the model for which it was generated.
 
-<Collapse title="View the types of `where` for `User`, `Post` and `Comment`">
-
-> TODO
-
-</Collapse>
-
 It is also possible to _combine_ multiple filters using the `AND` and `OR` fields.
 
 ### Examples
@@ -724,12 +712,6 @@ When querying a list of records, you can order (sort) the list by any scalar fie
 The type of the `orderBy` field depends on the scalar fields of the model for which it was generated.
 
 Note that you can always order by `createdAt` and `updatedAt`, even when the fields have not been added to your models.
-
-<Collapse title="View the types of `orderBy` for `User`, `Post` and `Comment`">
-
-> TODO
-
-</Collapse>
 
 ### Examples
 
