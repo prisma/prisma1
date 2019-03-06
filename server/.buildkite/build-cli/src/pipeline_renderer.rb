@@ -83,6 +83,7 @@ class PipelineRenderer
     release_steps = release_artifacts_steps
     [ test_steps,
       release_steps[:before_wait],
+      rust_steps,
       @@wait_step,
       release_steps[:after_wait]].flatten
   end
@@ -110,6 +111,14 @@ class PipelineRenderer
         end
       end
     end.flatten
+  end
+
+  def rust_steps
+    [
+      PipelineStep.new
+        .label(":rust: prisma-rs")
+        .command("cd server/prisma-rs && ./test.sh")
+    ]
   end
 
   def release_artifacts_steps
