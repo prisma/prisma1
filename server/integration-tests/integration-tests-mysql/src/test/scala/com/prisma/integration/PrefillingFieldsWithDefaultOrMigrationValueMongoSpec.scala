@@ -304,5 +304,4 @@ class PrefillingFieldsWithDefaultOrMigrationValueMongoSpec extends FlatSpec with
     res.toString should include(
       """You are updating the field `test` to be required and unique. But there are already nodes for the model `Person` that would violate that constraint.""")
   }
-
 }
