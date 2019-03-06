@@ -14,35 +14,49 @@ export const meta = {
 
 The Prisma client is generated from your [datamodel](knul). Its API exposes CRUD and other operations for the models defined in the datamodel.
 
-For this page, we'll assume your Prisma API is based on the following [datamodel](knul):
+For this page, we'll assume your Prisma project is based on the following datamodel:
 
 ```graphql
-type Link {
+type Post {
   id: ID! @unique
   createdAt: DateTime!
-  description: String!
-  url: String!
-  postedBy: User
-  votes: [Vote!]!
+  updatedAt: DateTime!
+  title: String!
+  published: Boolean! @default(value: "false")
+  author: User
+  comments: [Comment!]!
 }
 
 type User {
   id: ID! @unique
-  name: String!
+  name: String
   email: String! @unique
-  password: String!
-  links: [Link!]!
-  votes: [Vote!]!
+  role: Role! @default(value: "USER")
+  posts: [Post!]!
+  comments: [Comment!]!
 }
 
-type Vote {
+type Comment {
   id: ID! @unique
-  link: Link!
-  user: User!
+  createdAt: DateTime!
+  text: String!
+  post: Post!
+  writtenBy: User!
+}
+
+enum Role {
+  USER
+  ADMIN
 }
 ```
 
-For each model type in your datamodel, six methods for writing data are generated. These are named after the mutations in the GraphQL schema, e.g. for the `User` model:
+<Warning>
+
+The syntax of this datamodel is based on the datamodel v1. If you're using the [MongoDB connector](jgfm), you're already using the next version of the [datamodel v1.1](b6a7) which looks a bit different (learn more [here](knun)). The generated API operations will be the same with a few exceptions that are highlighted on this page.
+
+</Warning>
+
+For each model type in your datamodel, six methods for writing data are generated. For example, for the `User` model:
 
 - `createUser`: Creates a new `User` record in the database 
 - `updateUser`: Updates an existing `User` record in the database
