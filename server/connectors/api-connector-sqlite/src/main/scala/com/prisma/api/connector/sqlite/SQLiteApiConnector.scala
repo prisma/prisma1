@@ -30,5 +30,5 @@ case class SQLiteApiConnector(config: DatabaseConfig, driver: Driver, isPrototyp
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 
-  override val capabilities = ConnectorCapabilities.mysql
+  override val capabilities = ConnectorCapabilities.sqlite
 }

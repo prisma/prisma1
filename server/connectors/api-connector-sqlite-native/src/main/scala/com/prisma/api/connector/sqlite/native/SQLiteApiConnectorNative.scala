@@ -18,5 +18,5 @@ case class SQLiteApiConnectorNative(config: DatabaseConfig, isPrototype: Boolean
   override def masterDataResolver(project: Project): DataResolver   = SQLiteNativeDataResolver(base.dataResolver(project))
   override def projectIdEncoder: ProjectIdEncoder                   = ProjectIdEncoder('_')
 
-  override val capabilities = ConnectorCapabilities.mysql
+  override val capabilities = ConnectorCapabilities.sqlite
 }
