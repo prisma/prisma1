@@ -37,7 +37,7 @@ object ConnectorLoader {
       case ("mysql", false)       => sys.error("There is not passive mysql deploy connector yet!")
       case ("postgres", isActive) => PostgresDeployConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES), isActive, config.isPrototype)
       case ("mongo", isActive)    => MongoDeployConnector(databaseConfig, isActive = true, isTest = isTest)
-      case ("sqlite-native", _)   => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = config.isPrototype)
+      case ("sqlite-native", _)   => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = true)
       case ("sqlite", true)       => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = config.isPrototype)
       case ("sqlite", false)      => sys.error("There is no passive sqlite deploy connector yet!")
       case (conn, _)              => sys.error(s"Unknown connector $conn")
