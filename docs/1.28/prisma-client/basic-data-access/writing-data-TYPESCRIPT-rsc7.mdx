@@ -75,7 +75,7 @@ Each method call returns a Promise for an object that contains all the scalar fi
 
 _Create a new user_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const newUser: User = await prisma
@@ -100,7 +100,7 @@ _Create a new post and set `alice@prisma.io` as the author_:
 
 > When using the **MySQL** or **Postgres** databases connectors, the following call is executed as a single database transaction. The **MongoDB** connector [doesn't support transactions yet](https://github.com/prisma/prisma/issues/3785). Learn more in the [Declarative nest writes](#declarative-nested-writes) section.
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const post: Post = prisma.createPost({
@@ -127,10 +127,10 @@ _Create a new user with two new posts_:
 
 > When using the **MySQL** or **Postgres** databases connectors, the following call is executed as a single database transaction. The **MongoDB** connector [doesn't support transactions yet](https://github.com/prisma/prisma/issues/3785).
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
-const newUserWithPosts: User = await prisma
+const newUser: User = await prisma
   .createUser({
     name: "Alice",
     email: "alice@prisma.io",
@@ -168,7 +168,7 @@ Each method call returns a Promise for an object that contains all the scalar fi
 
 _Update the role of an existing user_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const updatedUser: User = await prisma
@@ -195,7 +195,7 @@ const updatedUser: User = await prisma
 
 _Update the author of a post_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const updatedPost: Post = await prisma
@@ -230,12 +230,12 @@ Each method call returns a Promise for object that contains all the scalar field
 
 ### Examples
 
-_Delete a link by its id_:
+_Delete a post by its id_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
-const deletedLink: Post = await prisma
+const deletedPost: Post = await prisma
   .deletePost({
     id: "cjli47wr3005b0a23m9crhh0e"
   })
@@ -255,7 +255,7 @@ const deletedLink: Post = await prisma
 
 _Delete a user by their email_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const deletedUser: User = await prisma
@@ -287,7 +287,7 @@ Upsert operations allow you to _try_ to update an existing record. If that recor
 
 _Update the role of a user. If the user doesn't exist yet, create a new one_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const updatedOrCreatedUser: User = await prisma
@@ -325,7 +325,7 @@ The Prisma client API offers special methods to update or delete many records at
 
 _Unpublish three posts by their IDs_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const updatedPostCount: number = await prisma
@@ -351,7 +351,7 @@ If one of more of the provided IDs does not actually exist in the database, the 
 
 _Update all posts where the description contains the string `prisma` and publish them_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const updatedPostsCount: number = await prisma
@@ -367,13 +367,13 @@ const updatedPostsCount: number = await prisma
 
 </Code>
 
-_Delete all links that were created before 2018_:
+_Delete all posts that were created before 2018_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
-const deleteLinksCount: number = await prisma
-  .deleteManyLinks({
+const deletePostsCount = await prisma
+  .deleteManyPosts({
     createdAt_lte: "2018"
   }).count()
 ```
@@ -408,10 +408,10 @@ Because the model `User` has a relation to `Post` via the `author` field, you ca
 
 _Create a new user with two new posts and connect one existing post_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
-const newUserWithLinks: User = await prisma
+const newUser: User = await prisma
   .createUser({
     name: "Bob",
     email: "bob@prisma.io",
@@ -439,7 +439,7 @@ const newUserWithLinks: User = await prisma
 
 _Delete a comment of a user_:
 
-<Code languages={["TypeScript", "Response"]}>
+<Code languages={["TypeScript", "Result"]}>
 
 ```js
 const updatedUser: User = await prisma

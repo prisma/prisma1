@@ -61,7 +61,7 @@ Whenever a database record is queried using the Prisma client, all _scalar_ fiel
 
 For example, the following query returns all scalar fields of a single `User`:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const user = await prisma.user({ email: "bob@prisma.io" })
@@ -82,7 +82,7 @@ In this case, the returned `user` record will have four properties (that corresp
 
 Here is an example of fetching a _list_ of `User` records:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const users = await prisma.users()
@@ -129,7 +129,7 @@ The `where` input argument for these methods is an object that has as properties
 
 _Fetch a single post by its id_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const post = await prisma.post({ id: "cjlgpyueg001o0a239d3i07ao" })
@@ -149,7 +149,7 @@ const post = await prisma.post({ id: "cjlgpyueg001o0a239d3i07ao" })
 
 _Fetch a single user by their email_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const user = await prisma.user({ email: "ada@prisma.io" })
@@ -225,7 +225,7 @@ The input arugment for these functions is an object that has properties for:
 
 _Fetch all comments_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const comments = await prisma.comments()
@@ -253,7 +253,7 @@ const comments = await prisma.comments()
 
 _Fetch a list of users_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const users = await prisma.users()
@@ -307,7 +307,7 @@ If you're building a GraphQL server and are not sure how to implement your resol
 
 _Fetch all the posts of a single user_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const postsByUser = await prisma
@@ -350,7 +350,7 @@ const postsByUser = await prisma
 
  _Fetch all the comments for a certain post_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const commentsForPost = await prisma
@@ -378,7 +378,7 @@ Instead of querying all scalar fields of a record (which is the default behavior
 
 _Fetch the `id`, `name` and `email` of the users as well the the `id` and `title` of their related post_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const fragment = `
@@ -472,7 +472,7 @@ It is also possible to _combine_ multiple filters using the `AND` and `OR` field
 
 _Fetch users that have an `A` in their names_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const usersWithAInName = await prisma
@@ -504,7 +504,7 @@ const usersWithAInName = await prisma
 
 _Fetch users called `Ada` or `Grace`_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const usersCalledAdaOrGrace = await prisma
@@ -534,7 +534,7 @@ const usersCalledAdaOrGrace = await prisma
 
 _Fetch comments created before December 24, 2019_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const commentsBeforeChristmas = await prisma
@@ -567,7 +567,7 @@ const commentsBeforeChristmas = await prisma
 
 _Fetch posts that have `prisma` **or** `graphql` in their title **and** were created in 2019_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const filteredPosts = await prisma
@@ -614,7 +614,7 @@ const filteredPosts = await prisma
 
 The `AND` filter can actually be omitted since multiple filter criteria are by default combined using a _logical and_. This means the above filter can also be expressed as follows:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const filteredPosts = await prisma
@@ -658,7 +658,7 @@ Relational filters can be used to constrain the returned records on a relation l
 
 _Fetch posts by a certain user that were created before christmas_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const postsByUserBeforeChristmas = await prisma
@@ -717,7 +717,7 @@ Note that you can always order by `createdAt` and `updatedAt`, even when the fie
 
 _Sort comments by their creation date (ascending)_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const sortedComments = await prisma
@@ -746,7 +746,7 @@ const sortedComments = await prisma
 
 _Sort users alphabetically by their names (descending)_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const sortedUsers = await prisma
@@ -945,7 +945,7 @@ You can submit aggregation queries via _connection queries_. The following aggre
 
 _Count the number of post records_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const postCount = await prisma
@@ -974,7 +974,7 @@ As the GraphQL operation is passed untyped (as a regular string), the type of th
 
 _Fetching a single user record_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const query = `
@@ -996,7 +996,7 @@ const result = await prisma.$graphql(query)
 
 _Fetching a single user using variables_:
 
-<Code languages={["JavaScript", "Response"]}>
+<Code languages={["JavaScript", "Result"]}>
 
 ```ts
 const query = `
