@@ -8,7 +8,7 @@ impl DataResolver for Sqlite {
     fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Vec<PrismaValue>>, Vec<String>)> {
         let db_name = query.db_name;
         let query_ast = query.query_ast;
-        let names = query.selected_fields.names();
+        let names = query.selected_fields.names_of_scalar_non_list_fields();
         let fields = query.selected_fields.fields;
 
         self.with_connection(&db_name, |conn| {
