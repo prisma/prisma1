@@ -31,7 +31,7 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector, LegacyDataModelValidator)(sdlString.stripMargin)
+    val project = fromString(id = projectId(suite), InferredTables.empty, deployConnector, LegacyDataModelValidator, Schema.empty)(sdlString.stripMargin)
 
     if (!deployConnector.isActive || deployConnector.capabilities.has(RelationLinkListCapability)) {
       addManifestations(project, deployConnector)
@@ -40,6 +40,9 @@ object SchemaDsl extends AwaitUtils {
     }
   }
 
+  def fromStringv11(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
+    fromString(id = projectId(suite), InferredTables.empty, deployConnector, DataModelValidatorImpl, Schema.emptyV2)(sdlString.stripMargin)
+  }
   private def projectId(suite: Suite): String = {
     // GetFieldFromSQLUniqueException blows up if we generate longer names, since we then exceed the postgres limits for constraint names
     // todo: actually fix GetFieldFromSQLUniqueException instead
@@ -52,7 +55,7 @@ object SchemaDsl extends AwaitUtils {
       id: String = TestIds.testProjectId
   )(sdlString: String): Project = {
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    val project        = fromString(id, inferredTables, deployConnector, DataModelValidatorImpl)(sdlString)
+    val project        = fromString(id, inferredTables, deployConnector, DataModelValidatorImpl, Schema.empty)(sdlString)
     project.copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
   }
 
@@ -60,9 +63,9 @@ object SchemaDsl extends AwaitUtils {
       id: String,
       inferredTables: InferredTables,
       deployConnector: DeployConnector,
-      dataModelValidator: DataModelValidator
+      dataModelValidator: DataModelValidator,
+      emptyBaseSchema: Schema
   )(sdlString: String): Project = {
-    val emptyBaseSchema    = Schema()
     val emptySchemaMapping = SchemaMapping.empty
 
     val prismaSdl = dataModelValidator.validate(sdlString, deployConnector.fieldRequirements, deployConnector.capabilities) match {

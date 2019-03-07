@@ -3,7 +3,8 @@ package com.prisma.shared.models
 import com.prisma.shared.errors.SharedErrors
 
 object Schema {
-  val empty = Schema()
+  val empty   = Schema()
+  val emptyV2 = Schema(version = Some("v2"))
 
   object version {
     val v2 = "v2"
