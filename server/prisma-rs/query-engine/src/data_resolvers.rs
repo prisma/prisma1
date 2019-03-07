@@ -56,7 +56,6 @@ pub trait IntoSelectQuery {
     }
 
     fn select_fields(select: Select, fields: &SelectedFields) -> Select {
-        println!("names!: {:?}", fields.names_of_scalar_non_list_fields());
         fields
             .names_of_scalar_non_list_fields()
             .iter()
