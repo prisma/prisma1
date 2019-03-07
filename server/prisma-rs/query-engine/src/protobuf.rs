@@ -5,6 +5,7 @@ mod interface;
 
 pub mod prelude;
 
+use chrono::prelude::*;
 pub use envelope::ProtoBufEnvelope;
 pub use filter::*;
 pub use input::*;
@@ -86,7 +87,7 @@ impl From<ValueContainer> for PrismaValue {
             vc::PrismaValue::String(v) => PrismaValue::String(v),
             vc::PrismaValue::Float(v) => PrismaValue::Float(v),
             vc::PrismaValue::Boolean(v) => PrismaValue::Boolean(v),
-            vc::PrismaValue::DateTime(v) => PrismaValue::DateTime(v),
+            vc::PrismaValue::DateTime(v) => PrismaValue::DateTime(v.parse::<DateTime<Utc>>().unwrap()),
             vc::PrismaValue::Enum(v) => PrismaValue::Enum(v),
             vc::PrismaValue::Json(v) => PrismaValue::Json(v),
             vc::PrismaValue::Int(v) => PrismaValue::Int(v),
@@ -118,7 +119,7 @@ impl From<PrismaValue> for ValueContainer {
             PrismaValue::String(v) => vc::PrismaValue::String(v),
             PrismaValue::Float(v) => vc::PrismaValue::Float(v),
             PrismaValue::Boolean(v) => vc::PrismaValue::Boolean(v),
-            PrismaValue::DateTime(v) => vc::PrismaValue::DateTime(v),
+            PrismaValue::DateTime(v) => vc::PrismaValue::DateTime(v.to_rfc3339()),
             PrismaValue::Enum(v) => vc::PrismaValue::Enum(v),
             PrismaValue::Json(v) => vc::PrismaValue::Json(v),
             PrismaValue::Int(v) => vc::PrismaValue::Int(v),

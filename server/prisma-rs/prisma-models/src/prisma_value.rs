@@ -1,5 +1,6 @@
 use prisma_query::ast::*;
 
+use chrono::{DateTime, Utc};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use std::fmt;
 
@@ -15,7 +16,7 @@ pub enum PrismaValue {
     String(String),
     Float(f64),
     Boolean(bool),
-    DateTime(String),
+    DateTime(DateTime<Utc>),
     Enum(String),
     Json(String),
     Int(i32),
@@ -53,7 +54,7 @@ impl Into<DatabaseValue> for PrismaValue {
             PrismaValue::String(s) => s.into(),
             PrismaValue::Float(f) => (f as f64).into(),
             PrismaValue::Boolean(b) => b.into(),
-            PrismaValue::DateTime(d) => d.into(),
+            PrismaValue::DateTime(d) => (d.timestamp() * 1000).into(),
             PrismaValue::Enum(e) => e.into(),
             PrismaValue::Json(j) => j.into(),
             PrismaValue::Int(i) => (i as i64).into(),

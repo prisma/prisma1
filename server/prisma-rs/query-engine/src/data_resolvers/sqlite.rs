@@ -87,7 +87,7 @@ impl Sqlite {
                 let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
                 let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
 
-                PrismaValue::DateTime(datetime.to_rfc3339())
+                PrismaValue::DateTime(datetime)
             }),
             TypeIdentifier::Relation => panic!("We should not have a Relation here!"),
             TypeIdentifier::Float => row.get_checked(i).map(|val: f64| PrismaValue::Float(val)),
