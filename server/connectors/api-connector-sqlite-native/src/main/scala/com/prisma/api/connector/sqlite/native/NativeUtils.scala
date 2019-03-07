@@ -62,7 +62,7 @@ object NativeUtils {
       case BooleanGCValue(b)   => PrismaValue.Boolean(b)
       case DateTimeGCValue(dt) => PrismaValue.DateTime(isoFormatter.print(dt.withZone(DateTimeZone.UTC)))
       case EnumGCValue(e)      => PrismaValue.Enum(e)
-      case FloatGCValue(f)     => PrismaValue.Float(f.floatValue())
+      case FloatGCValue(f)     => PrismaValue.Float(f)
       case StringIdGCValue(s)  => PrismaValue.GraphqlId(prisma.protocol.GraphqlId(IdValue.String(s)))
       case UuidGCValue(uuid)   => PrismaValue.Uuid(uuid.toString)
       case IntGCValue(i)       => PrismaValue.GraphqlId(prisma.protocol.GraphqlId(IdValue.Int(i)))
