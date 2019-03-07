@@ -33,7 +33,6 @@ object SubscriptionEvents {
 
   private def fromUpdateResult(project: Project, mutationId: Id, result: UpdateNodeResult): PublishSubscriptionEvent = {
     val previousValues: Map[String, Any] = result.previousValues.data
-      .filterKeys(k => result.namesOfUpdatedFields.contains(k))
       .filterValues(v => v != NullGCValue && !v.isInstanceOf[RootGCValue])
       .toMapStringAny + ("id" -> result.previousValues.id.value)
 
