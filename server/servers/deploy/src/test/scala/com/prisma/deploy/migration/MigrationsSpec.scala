@@ -23,7 +23,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       |  id: ID! @id
       |}
     """.stripMargin
-  var project: Project   = Project(id = serviceId, schema = Schema.empty)
+  var project: Project   = Project(id = serviceId, schema = Schema.emptyV11)
   lazy val slickDatabase = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
   def isMySql            = slickDatabase.isMySql
   def isPostgres         = slickDatabase.isPostgres

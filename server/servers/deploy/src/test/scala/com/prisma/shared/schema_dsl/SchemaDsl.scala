@@ -41,7 +41,7 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromStringv11(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    fromString(id = projectId(suite), InferredTables.empty, deployConnector, DataModelValidatorImpl, Schema.emptyV2)(sdlString.stripMargin)
+    fromString(id = projectId(suite), InferredTables.empty, deployConnector, DataModelValidatorImpl, Schema.emptyV11)(sdlString.stripMargin)
   }
   private def projectId(suite: Suite): String = {
     // GetFieldFromSQLUniqueException blows up if we generate longer names, since we then exceed the postgres limits for constraint names
