@@ -90,7 +90,7 @@ impl Sqlite {
                 PrismaValue::DateTime(datetime.to_rfc3339())
             }),
             TypeIdentifier::Relation => panic!("We should not have a Relation here!"),
-            TypeIdentifier::Float => row.get_checked(i).map(|val: f64| PrismaValue::Float(val as f32)),
+            TypeIdentifier::Float => row.get_checked(i).map(|val: f64| PrismaValue::Float(val)),
         };
 
         result.unwrap_or_else(|e| match e {

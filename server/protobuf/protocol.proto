@@ -44,7 +44,7 @@ message Node {
 message ValueContainer {
     oneof prisma_value {
         string    string     = 1;
-        float     float      = 2;
+        double    float      = 2;
         bool      boolean    = 3;
         string    date_time  = 4;
         string    enum       = 5;

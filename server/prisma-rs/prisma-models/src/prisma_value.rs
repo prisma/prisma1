@@ -13,7 +13,7 @@ pub enum GraphqlId {
 #[derive(Debug, PartialEq)]
 pub enum PrismaValue {
     String(String),
-    Float(f32),
+    Float(f64),
     Boolean(bool),
     DateTime(String),
     Enum(String),

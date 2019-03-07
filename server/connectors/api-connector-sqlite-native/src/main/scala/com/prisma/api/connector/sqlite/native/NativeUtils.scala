@@ -36,7 +36,7 @@ object NativeUtils {
       case PrismaValue.Boolean(b: Boolean)  => BooleanGCValue(b)
       case PrismaValue.DateTime(dt: String) => DateTimeGCValue(DateTime.parse(dt))
       case PrismaValue.Enum(e: String)      => EnumGCValue(e)
-      case PrismaValue.Float(f: Float)      => FloatGCValue(f)
+      case PrismaValue.Float(f)             => FloatGCValue(f)
       case PrismaValue.GraphqlId(id)        => toIdGcValue(id)
       case PrismaValue.Int(i: Int)          => IntGCValue(i)
       case PrismaValue.Json(j: String)      => JsonGCValue(Json.parse(j))
