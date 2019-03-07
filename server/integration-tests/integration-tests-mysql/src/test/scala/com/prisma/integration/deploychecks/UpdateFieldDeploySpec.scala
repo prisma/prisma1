@@ -1,6 +1,6 @@
 package com.prisma.integration.deploychecks
 
-import com.prisma.{ConnectorAwareTest, IgnoreMongo}
+import com.prisma.IgnoreMongo
 import com.prisma.integration.IntegrationBaseSpec
 import org.scalatest.{FlatSpec, Matchers}
 

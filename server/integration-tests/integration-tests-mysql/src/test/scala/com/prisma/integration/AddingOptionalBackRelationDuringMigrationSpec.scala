@@ -1,8 +1,11 @@
 package com.prisma.integration
 
+import com.prisma.ConnectorTag
+import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag}
 import org.scalatest.{FlatSpec, Matchers}
 
 class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  override def runOnlyForConnectors: Set[ConnectorTag] = Set(PostgresConnectorTag, SQLiteConnectorTag, MySqlConnectorTag)
 
   "Adding a missing back-relation of non-list type" should "work when there are no violating occurences of Team" in {
 

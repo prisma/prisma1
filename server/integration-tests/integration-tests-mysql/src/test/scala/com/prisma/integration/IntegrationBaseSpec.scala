@@ -11,7 +11,6 @@ import com.prisma.deploy.specutils.{DeployTestServer, TestDeployDependencies}
 import com.prisma.shared.models.{ConnectorCapabilities, Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
-import cool.graph.cuid.Cuid
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.JsString
 
