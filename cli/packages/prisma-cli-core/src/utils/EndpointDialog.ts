@@ -678,7 +678,15 @@ export class EndpointDialog {
   }
 
   private listFiles() {
-    return fs.readdirSync(this.config.definitionDir)
+    try {
+      return fs.readdirSync(this.config.definitionDir)
+    } catch(e) {
+      if (this.config.debug) {
+        this.out.log(`EndpointDialog workflow called without existing directory.`)
+        this.out.log(e)
+      }
+      return []
+    }
   }
 
   private async isClusterOnline(endpoint: string): Promise<boolean> {
