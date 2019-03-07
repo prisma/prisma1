@@ -2,11 +2,13 @@ package com.prisma.integration
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.prisma.ConnectorAwareTest
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.api.{ApiTestServer, TestApiDependenciesImpl}
-import com.prisma.deploy.specutils.{TestDeployDependencies, DeployTestServer}
-import com.prisma.shared.models.{Migration, Project}
+import com.prisma.config.PrismaConfig
+import com.prisma.deploy.specutils.{DeployTestServer, TestDeployDependencies}
+import com.prisma.shared.models.{ConnectorCapabilities, Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import cool.graph.cuid.Cuid
@@ -15,7 +17,13 @@ import play.api.libs.json.JsString
 
 import scala.collection.mutable.ArrayBuffer
 
-trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with PlayJsonExtensions with AwaitUtils with StringMatchers { self: Suite =>
+trait IntegrationBaseSpec
+    extends BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with PlayJsonExtensions
+    with AwaitUtils
+    with StringMatchers
+    with ConnectorAwareTest { self: Suite =>
 
   implicit lazy val system        = ActorSystem()
   implicit lazy val materializer  = ActorMaterializer()
@@ -34,6 +42,9 @@ trait IntegrationBaseSpec extends BeforeAndAfterEach with BeforeAndAfterAll with
 
   def dataResolver(project: Project): DataResolver = apiTestDependencies.dataResolver(project)
 
+  override def capabilities: ConnectorCapabilities = apiTestDependencies.apiConnector.capabilities
+
+  override def prismaConfig: PrismaConfig = apiTestDependencies.config
   // DEPLOY
 
   implicit lazy val deployTestDependencies: TestDeployDependencies = TestDeployDependencies()
