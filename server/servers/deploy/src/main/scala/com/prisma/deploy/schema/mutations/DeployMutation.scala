@@ -162,7 +162,7 @@ case class DeployMutation(
   }
 
   private def checkForDestructiveChanges(nextSchema: Schema, steps: Vector[MigrationStep]): Future[Vector[DeployWarning] Or Vector[DeployError]] = {
-    DestructiveChanges(clientDbQueries, project, nextSchema, steps).check
+    DestructiveChanges(clientDbQueries, project, nextSchema, steps, deployConnector).check
   }
 
   private def getFunctionModels(nextSchema: Schema, fns: Vector[FunctionInput]): Future[Vector[Function] Or Vector[DeployError]] = Future.successful {

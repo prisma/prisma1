@@ -17,7 +17,8 @@ case class MongoDeployMutactionExecutor(client: MongoClient)(implicit ec: Execut
     run(client.getDatabase(mutaction.project.dbName), action).map(_ => ())
   }
 
-  def run(database: MongoDatabase, action: DeployMongoAction): Future[Unit] = action.fn(database)
+  private def run(database: MongoDatabase, action: DeployMongoAction): Future[Unit] = action.fn(database)
 
 }
+
 case class DeployMongoAction(fn: MongoDatabase => Future[Unit])

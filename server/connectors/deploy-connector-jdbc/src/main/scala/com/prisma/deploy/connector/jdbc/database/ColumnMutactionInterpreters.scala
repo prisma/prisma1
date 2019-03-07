@@ -7,6 +7,7 @@ import com.prisma.utils.boolean.BooleanUtils._
 import slick.jdbc.PostgresProfile.api._
 
 case class CreateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateColumn] {
+
   override def execute(mutaction: CreateColumn, schemaBeforeMigration: DatabaseSchema) = {
     schemaBeforeMigration.table(mutaction.model.dbName).flatMap(_.column(mutaction.field.dbName)) match {
       case None =>
@@ -121,7 +122,6 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
                            oldTableName = before.model.dbName,
                            oldColumnName = before.dbName,
                            oldTypeIdentifier = before.typeIdentifier)
-
     def removeUniqueConstraint = builder.removeIndex(
       mutaction.project,
       tableName = mutaction.model.dbName,
@@ -149,8 +149,8 @@ case class UpdateColumnInterpreter(builder: JdbcDeployDatabaseMutationBuilder) e
       case None    => CreateColumnHelper.withIndexIfNecessary(builder, mutaction.project, mutaction.newField)
     }
   }
-
 }
+
 object CreateColumnHelper {
   def withIndexIfNecessary(builder: JdbcDeployDatabaseMutationBuilder, project: Project, field: ScalarField) = {
     val createColumn        = builder.createColumn(project, field)
