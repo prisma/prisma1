@@ -22,7 +22,6 @@ Raven.config(
   'https://1e57780fb0bb4b52938cbb3456268121:fc6a6c6fd8cd4bbf81e2cd5c7c814a49@sentry.io/271168',
 ).install()
 
-const debug = require('debug')('cli')
 const handleEPIPE = err => {
   Raven.captureException(err)
   if (err.code !== 'EPIPE') {
@@ -97,7 +96,6 @@ export class CLI {
     this.config.setOutput(out)
 
     if (this.cmdAskingForHelp) {
-      debug('command asking for help')
       this.cmd = await this.Help.run(this.config)
 
       const checker = getStatusChecker()!
@@ -109,7 +107,6 @@ export class CLI {
       )
     } else {
       const id = getCommandId(this.config.argv.slice(1))
-      debug('command id', id)
       // if there is a subcommand, cut the first away so the Parser still works correctly
       if (
         this.config.argv[1] &&
@@ -135,7 +132,6 @@ export class CLI {
         await lock.unread()
         // TODO remove this
         if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
-          debug('RECORDING')
           require('nock').recorder.rec({
             dont_print: true,
           })
@@ -161,7 +157,6 @@ export class CLI {
         if (process.env.NOCK_WRITE_RESPONSE_CLI === 'true') {
           const requests = require('nock').recorder.play()
           const requestsPath = path.join(process.cwd(), 'requests.js')
-          debug('WRITING', requestsPath)
           fs.writeFileSync(requestsPath, requests.join('\n'))
         }
       } else {
@@ -237,8 +232,6 @@ export class CLI {
       await timeout(this.flush(), 1000)
 
       out.exit(0)
-    } else {
-      debug('not flushing')
     }
   }
 
@@ -254,7 +247,6 @@ export class CLI {
         argv: process.argv.slice(1),
       },
     })
-    debug({ isGlobal: getIsGlobal() })
   }
 
   setRavenUserContext() {

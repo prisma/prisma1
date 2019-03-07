@@ -33,4 +33,3 @@ A [`Generator`](src/generator/generator.ts) is usually responsible for a single 
 All default generators, i.e. generators for a **relational model**, one for each type that can occur in an OpenCRUD schema, can ge found in the [`DefaultGenerators`](src/generator/default/index.ts) class.
 
 All special document generators, i.e. generators for a **document model**, can ge found in the [`DocumentGenerators`](src/generator/document/index.ts) class.
-

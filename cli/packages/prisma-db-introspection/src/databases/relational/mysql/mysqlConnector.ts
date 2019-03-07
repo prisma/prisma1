@@ -1,15 +1,13 @@
 import {
   RelationalConnector,
   ITable,
-  IColumn,
   ITableRelation,
-  IIndex,
   IInternalEnumInfo,
   IEnum,
+  ISequenceInfo,
 } from '../relationalConnector'
-import * as _ from 'lodash'
 import { Connection } from 'mysql'
-import { TypeIdentifier, DatabaseType, camelCase } from 'prisma-datamodel'
+import { DatabaseType, camelCase } from 'prisma-datamodel'
 import { MysqlIntrospectionResult } from './mysqlIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import IDatabaseClient from '../../IDatabaseClient'
@@ -35,12 +33,16 @@ export class MysqlConnector extends RelationalConnector {
     models: ITable[],
     relations: ITableRelation[],
     enums: IEnum[],
+    sequences: ISequenceInfo[],
   ): RelationalIntrospectionResult {
-    return new MysqlIntrospectionResult(models, relations, enums)
+    return new MysqlIntrospectionResult(models, relations, enums, sequences)
   }
 
   protected getTypeColumnName() {
     return 'COLUMN_TYPE'
+  }
+  protected getAutoIncrementCondition() {
+    return 'EXTRA like \'%auto_increment%\''
   }
 
   protected parameter(count: number, type: string) {
@@ -91,12 +93,12 @@ export class MysqlConnector extends RelationalConnector {
       FROM 
         information_schema.statistics
       WHERE
-        table_schema = ?
-        AND table_name = ?
+        table_schema = '${schemaName}'
+        AND table_name = '${tableName}'
       GROUP BY
         table_name, index_name, non_unique
     `
-    return (await this.query(indexQuery, [schemaName, tableName])).map(row => {
+    return (await this.query(indexQuery)).map(row => {
       return {
         tableName: row.table_name as string,
         name: row.index_name as string,
@@ -111,21 +113,21 @@ export class MysqlConnector extends RelationalConnector {
     if (arrayAsString === null || arrayAsString === undefined) {
       return []
     }
-    return arrayAsString.split(',').map(x => x.trim())
+    return arrayAsString.split(',').map(x => x.trim().replace(/'/g, ''))
   }
 
   protected async queryEnums(schemaName: string): Promise<IInternalEnumInfo[]> {
     const enumQuery = `
-      SELECT DISTINCT 
+      SELECT DISTINCT
         column_type, table_name, column_name
       FROM
-        information_schema.columns 
+        information_schema.columns
       WHERE 
-        column_type like 'enum(%'      
+        column_type like 'enum(%'
         AND table_schema = ?`
 
     return (await this.query(enumQuery, [schemaName])).map(row => {
-      const enumValues = row.enumValues as string
+      const enumValues = row.column_type as string
       // Strip 'enum(' from beginning and ')' from end.
       const strippedEnumValues = enumValues.substring(5, enumValues.length - 1)
 
@@ -172,7 +174,7 @@ export class MysqlConnector extends RelationalConnector {
       WHERE
         refConstraints.constraint_schema = ?`
 
-    return (await this.query(fkQuery, [schemaName])).map(row => {
+    const result = (await this.query(fkQuery, [schemaName])).map(row => {
       return {
         sourceColumn: row.fkColumnName as string,
         sourceTable: row.fkTableName as string,
@@ -180,5 +182,11 @@ export class MysqlConnector extends RelationalConnector {
         targetTable: row.referencedTableName as string,
       }
     })
+
+    return result
+  }
+
+  protected async listSequences(schemaName: string): Promise<ISequenceInfo[]> {
+    return []
   }
 }

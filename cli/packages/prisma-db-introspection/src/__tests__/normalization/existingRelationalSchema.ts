@@ -1,8 +1,13 @@
-import { DatabaseType, Parser, DefaultRenderer, dedent } from 'prisma-datamodel'
+import {
+  DatabaseType,
+  DefaultParser,
+  DefaultRenderer,
+  dedent,
+} from 'prisma-datamodel'
 import DefaultNormalizer from '../../common/normalization/defaultNormalizer'
 
 function testWithExisting(schemaFromDb, existingSchema, expectedResultSchema) {
-  const parser = Parser.create(DatabaseType.postgres)
+  const parser = DefaultParser.create(DatabaseType.postgres)
 
   const fromDb = parser.parseFromSchemaString(schemaFromDb)
   const existing = parser.parseFromSchemaString(existingSchema)

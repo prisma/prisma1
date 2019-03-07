@@ -4,8 +4,6 @@ import { Config } from '../Config'
 import { Topic } from '../Topic'
 import { PluginPath } from './PluginPath'
 
-const debug = require('debug')('plugin')
-
 export default class Plugin {
   pluginPath: PluginPath
   cachedPlugin: CachedPlugin
@@ -62,9 +60,7 @@ export default class Plugin {
       return
     }
     const { topic, command } = foundCommand
-    debug('requiring command')
     const p = await this.pluginPath.require()
-    debug('required command')
     const Command = (p.commands || []).find(
       d => topic === d.topic && command === d.command,
     )

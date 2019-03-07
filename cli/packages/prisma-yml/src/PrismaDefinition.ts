@@ -12,11 +12,6 @@ import { FunctionInput, Header } from './types/rc'
 import chalk from 'chalk'
 import { replaceYamlValue } from './utils/yamlComment'
 import { parseEndpoint, ParseEndpointResult } from './utils/parseEndpoint'
-const debug = require('debug')('prisma definition')
-
-interface ErrorMessage {
-  message: string
-}
 
 export interface EnvVars {
   [key: string]: string | undefined

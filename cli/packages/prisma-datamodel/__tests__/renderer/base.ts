@@ -13,10 +13,23 @@ const parser = Parser.create(DatabaseType.postgres)
 
 const simpleModel = `type User {
   age: int
-  isAdmin: Boolean @default(value: "false")
+  isAdmin: Boolean @default(value: false)
   name: String
   nationality: String @default(value: "DE")
   roles: [Int]
+}`
+
+const complicatedModel = `type User @indexes(value: [
+  {name: "NameIndex", fields: ["firstName", "lastName"]},
+  {name: "PrimaryIndex", fields: ["id"], unique: true}
+]) {
+  id: Int! @id(strategy: SEQUENCE) @sequence(name: "test_seq", initialValue: 8, allocationSize: 100)
+  age: int
+  isAdmin: Boolean @default(value: false)
+  nationality: String @default(value: "DE")
+  roles: [Int]
+  firstName: String!
+  lastName: String!
 }`
 
 const modelWithDirectives = `type Test @dummyDirective(isDummy: true) {
@@ -48,6 +61,7 @@ describe(`Renderer test`, () => {
       ],
       name: 'User',
       isEmbedded: false,
+      isLinkTable: false,
       isEnum: false,
       indices: [],
       directives: [],
@@ -104,6 +118,7 @@ describe(`Renderer test`, () => {
     const type: IGQLType = {
       name: 'Test',
       isEmbedded: false,
+      isLinkTable: false,
       directives: typeDirectives,
       isEnum: false,
       fields: [scalarField, arrayField],
@@ -123,6 +138,13 @@ describe(`Renderer test`, () => {
   })
 
   test('Render a single type consistently with the parser', () => {
+    const parsed = parser.parseFromSchemaString(simpleModel)
+    const rendered = renderer.render(parsed, true)
+
+    expect(rendered).toEqual(simpleModel)
+  })
+
+  test('Render a more complicated schema consistently with the parser', () => {
     const parsed = parser.parseFromSchemaString(simpleModel)
     const rendered = renderer.render(parsed, true)
 

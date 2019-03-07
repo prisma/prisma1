@@ -2,7 +2,7 @@ import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as fs from 'fs-extra'
 import { Importer } from '../import/Importer'
 import { Seeder } from './Seeder'
-import { prettyTime } from '../../util'
+import { prettyTime } from '../../utils/util'
 import chalk from 'chalk'
 import * as path from 'path'
 

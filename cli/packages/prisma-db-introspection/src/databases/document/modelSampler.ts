@@ -140,6 +140,7 @@ export class ModelMerger {
     return {
       fields: fields,
       isEmbedded: this.isEmbedded,
+      isLinkTable: false, // No link table in mongo
       name: this.name,
       isEnum: false, // No enum in mongo
       comments: [],
@@ -267,6 +268,8 @@ export class ModelMerger {
       name: info.name,
       type: type,
       isId: isId,
+      idStrategy: null,
+      associatedSequence: null,
       isList: isArray,
       isReadOnly: false,
       // ID fields are always required

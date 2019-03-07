@@ -8,6 +8,8 @@ export default abstract class Parsers {
     switch (databaseType) {
       case DatabaseType.mongo:
         return new DocumentParser()
+      case DatabaseType.mysql:
+        return new RelationalParser()
       case DatabaseType.postgres:
         return new RelationalParser()
       default:

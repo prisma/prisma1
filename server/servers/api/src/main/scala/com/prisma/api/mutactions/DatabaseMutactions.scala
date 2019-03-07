@@ -48,7 +48,7 @@ case class DatabaseMutactions(project: Project) {
   }
 
   //todo this does not support cascading delete behavior at the moment
-  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[Filter]): DeleteNodes = DeleteNodes(project, model, whereFilter)
+  def getMutactionsForDeleteMany(model: Model, whereFilter: Option[Filter]): TopLevelDeleteNodes = TopLevelDeleteNodes(project, model, whereFilter)
 
   def getMutactionsForUpdate(model: Model, where: NodeSelector, args: CoolArgs): TopLevelUpdateNode = {
     val (nonListArgs, listArgs)  = args.getUpdateArgs(model)
@@ -71,9 +71,9 @@ case class DatabaseMutactions(project: Project) {
     )
   }
 
-  def getMutactionsForUpdateMany(model: Model, whereFilter: Option[Filter], args: CoolArgs): UpdateNodes = {
+  def getMutactionsForUpdateMany(model: Model, whereFilter: Option[Filter], args: CoolArgs): TopLevelUpdateNodes = {
     val (nonListArgs, listArgs) = args.getUpdateArgs(model)
-    UpdateNodes(project, model, whereFilter, nonListArgs, listArgs)
+    TopLevelUpdateNodes(project, model, whereFilter, nonListArgs, listArgs)
   }
 
   def getMutactionsForCreate(model: Model, args: CoolArgs): TopLevelCreateNode = {

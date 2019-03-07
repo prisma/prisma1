@@ -1,7 +1,7 @@
 import * as util from 'util'
 import { parse } from 'graphql'
 import { printSchema, buildSchema } from 'graphql/utilities'
-import { AstTools, DatabaseType, Parser } from 'prisma-datamodel'
+import { AstTools, DatabaseType, DefaultParser } from 'prisma-datamodel'
 import Generator from '../../src/generator'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -25,7 +25,9 @@ export default function blackBoxTest(
   const model = fs.readFileSync(modelPath, { encoding: 'UTF-8' })
   const prisma = fs.readFileSync(prismaPath, { encoding: 'UTF-8' })
 
-  const { types } = Parser.create(databaseType).parseFromSchemaString(model)
+  const { types } = DefaultParser.create(databaseType).parseFromSchemaString(
+    model,
+  )
   const ourSchema = generator.schema.generate(types, {})
 
   const ourPrintedSchema = printSchema(ourSchema)
@@ -34,7 +36,9 @@ export default function blackBoxTest(
   fs.writeFileSync(
     path.join(__dirname, `cases/${name}/generated_${databaseType}.graphql`),
     ourPrintedSchema,
-    { encoding: 'UTF-8' },
+    {
+      encoding: 'UTF-8',
+    },
   )
 
   // Check if our schema equals the prisma schema.

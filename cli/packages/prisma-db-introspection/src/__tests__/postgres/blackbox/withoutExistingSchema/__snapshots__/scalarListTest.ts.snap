@@ -2,29 +2,58 @@
 
 exports[`Introspector Type with scalar lists 1`] = `
 "type Car {
-  createdAt: DateTime!
   id: ID! @unique
+  createdAt: DateTime!
   name: String!
   updatedAt: DateTime!
   User: [User]
 }
 
 type House {
-  createdAt: DateTime!
   id: ID! @unique
+  createdAt: DateTime!
   updatedAt: DateTime!
   User: [User]
   windows: Int!
 }
 
 type User {
+  id: ID! @unique
   Car: [Car]
   createdAt: DateTime!
   House: [House]
-  id: ID! @unique
   name355: String!
   scalarIntList: [Int]
   scalarStringList: [String]
   updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspector Type with scalar lists 2`] = `
+"type Car {
+  id: ID! @id(strategy: NONE)
+  createdAt: DateTime! @createdAt
+  name: String!
+  updatedAt: DateTime! @updatedAt
+  User: [User]
+}
+
+type House {
+  id: ID! @id(strategy: NONE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  User: [User]
+  windows: Int!
+}
+
+type User {
+  id: ID! @id(strategy: NONE)
+  Car: [Car]
+  createdAt: DateTime! @createdAt
+  House: [House]
+  name355: String!
+  scalarIntList: [Int]
+  scalarStringList: [String]
+  updatedAt: DateTime! @updatedAt
 }"
 `;

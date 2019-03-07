@@ -310,9 +310,9 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionC
   ../../scripts/doubleInstall.sh
 
   # new docker tag
-  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
+  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/utils/util.ts
 
-  cat src/util.ts
+  cat src/utils/util.ts
 
   yarn build
   npm version $newVersion

@@ -9,8 +9,6 @@ import Cache, { CachedCommand, CachedTopic, Group } from './Cache'
 import { Command } from '../Command'
 import { Topic } from '../Topic'
 
-const debug = require('debug')('plugins')
-
 export default class Plugins {
   builtin: BuiltinPlugins
   // linked: LinkedPlugins
@@ -79,7 +77,6 @@ export default class Plugins {
 
   async findCommand(id: string): Promise<typeof Command | undefined> {
     for (const plugin of this.plugins) {
-      debug('findCommand', plugin.name)
       const c = await plugin.findCommand(id)
       if (c) {
         return c
