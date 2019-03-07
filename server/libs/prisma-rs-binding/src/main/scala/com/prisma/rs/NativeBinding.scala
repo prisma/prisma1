@@ -12,7 +12,7 @@ object NativeBinding {
   val library: JnaRustBridge = {
     System.setProperty("jna.debug_load.jna", "true")
     System.setProperty("jna.debug_load", "true")
-    System.setProperty("jna.library.path", sys.env.get("SERVER_ROOT").map(path => s"$path/prisma-rs/query-engine/build").getOrElse("/lib"))
+    System.setProperty("jna.library.path", sys.env.get("SERVER_ROOT").map(path => s"$path/prisma-rs/build").getOrElse("/lib"))
 
     Native.loadLibrary("prisma", classOf[JnaRustBridge])
   }

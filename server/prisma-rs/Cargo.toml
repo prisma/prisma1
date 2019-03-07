@@ -1,0 +1,2 @@
+[workspace]
+members = [ "query-engine", "prisma-models", "libs/prisma-common", "migration-engine" ]

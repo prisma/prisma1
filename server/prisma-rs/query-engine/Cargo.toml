@@ -5,7 +5,7 @@ authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@pris
 edition = "2018"
 
 [lib]
-crate-type = ["dylib", "staticlib"]
+crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 prost = "0.4"

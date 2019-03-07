@@ -6,7 +6,7 @@ buildNativeLib := {
   println("Building Prisma native lib.")
 
   val logger = ProcessLogger(println, println)
-  val nativePath = new java.io.File("prisma-rs/query-engine")
+  val nativePath = new java.io.File("prisma-rs")
   val cargoFlags = sys.env.get("RUST_BACKTRACE").map(_ => "").getOrElse("--release")
 
 
@@ -16,11 +16,6 @@ buildNativeLib := {
 }
 
 (Compile / compile) := ((Compile / compile) dependsOn buildNativeLib).value
-
-//compile in Compile := {
-//  buildNativeLib.value
-//  (compile in Compile).value
-//}
 
 val nativeClasspath = taskKey[String]("The classpath.")
 nativeClasspath := {
