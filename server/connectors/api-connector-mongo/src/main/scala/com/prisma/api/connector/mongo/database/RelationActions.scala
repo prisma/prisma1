@@ -100,7 +100,7 @@ trait RelationActions extends FilterConditionBuilder {
               database.getCollection(childModel.dbName).updateOne(mongoFilter, unset(relatedField.dbName)).collect().toFuture
 
             case true =>
-              val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.dummyField(relatedField), Contains(parent.idValue))))
+              val mongoFilter = buildConditionForFilter(Some(ScalarListFilter(childModel.dummyField(relatedField), ListContains(parent.idValue))))
               val update      = pull(relatedField.dbName, GCToBson(parent.idValue))
               database.getCollection(childModel.dbName).updateMany(mongoFilter, update).collect().toFuture
           }
