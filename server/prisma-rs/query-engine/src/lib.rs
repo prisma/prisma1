@@ -3,10 +3,11 @@
 #[macro_use]
 extern crate prost_derive;
 
-pub mod cursor_condition;
-pub mod data_resolvers;
-pub mod ordering;
-pub mod protobuf;
+mod cursor_condition;
+mod data_resolvers;
+mod ordering;
+mod protobuf;
+mod related_nodes_query_builder;
 
 use lazy_static::lazy_static;
 use prisma_common::{config::PrismaConfig, error::Error};
@@ -38,6 +39,14 @@ pub unsafe extern "C" fn get_node_by_where(data: *mut u8, len: usize) -> *mut Pr
 pub unsafe extern "C" fn get_nodes(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
     let payload = slice::from_raw_parts_mut(data, len);
     let response_payload = PBI.get_nodes(payload);
+
+    ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn get_related_nodes(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
+    let payload = slice::from_raw_parts_mut(data, len);
+    let response_payload = PBI.get_related_nodes(payload);
 
     ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
 }

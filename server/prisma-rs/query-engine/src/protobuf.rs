@@ -10,16 +10,17 @@ pub use envelope::ProtoBufEnvelope;
 pub use filter::*;
 pub use input::*;
 pub use interface::{ExternalInterface, ProtoBufInterface};
+
+use crate::Error as CrateError;
+use prelude::*;
 use prisma_common::{error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
+use std::sync::Arc;
 
 pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
 }
-
-use crate::Error as CrateError;
-use prelude::*;
 
 impl RpcResponse {
     pub fn header() -> Header {
@@ -35,7 +36,7 @@ impl RpcResponse {
         }
     }
 
-    pub fn ok(result: NodesResult) -> RpcResponse {
+    pub fn ok(result: prisma::NodesResult) -> RpcResponse {
         RpcResponse {
             header: Self::header(),
             response: Some(rpc::Response::Result(prisma::Result {
@@ -54,27 +55,11 @@ impl RpcResponse {
     }
 }
 
-impl SelectedField {
-    pub fn is_scalar(&self) -> bool {
-        match self.field {
-            Some(selected_field::Field::Scalar(_)) => true,
-            _ => false,
-        }
-    }
-
-    pub fn is_relational(&self) -> bool {
-        match self.field {
-            Some(selected_field::Field::Relational { .. }) => true,
-            _ => false,
-        }
-    }
-}
-
-impl From<SortOrder> for Order {
-    fn from(so: SortOrder) -> Order {
+impl From<prisma::order_by::SortOrder> for Order {
+    fn from(so: prisma::order_by::SortOrder) -> Order {
         match so {
-            SortOrder::Asc => Order::Asc,
-            SortOrder::Desc => Order::Desc,
+            prisma::order_by::SortOrder::Asc => Order::Asc,
+            prisma::order_by::SortOrder::Desc => Order::Desc,
         }
     }
 }
@@ -151,12 +136,70 @@ impl From<GraphqlId> for prisma::GraphqlId {
     }
 }
 
-impl From<Vec<PrismaValue>> for Node {
-    fn from(values: Vec<PrismaValue>) -> Node {
-        Node {
-            values: values.into_iter().map(ValueContainer::from).collect(),
-            parent_id: None, // todo, this needs to mirror the logic for parent id detection (parent Alias?)
+impl From<Node> for prisma::Node {
+    fn from(node: Node) -> prisma::Node {
+        prisma::Node {
+            values: node.values.into_iter().map(ValueContainer::from).collect(),
+            parent_id: node.parent_id.map(prisma::GraphqlId::from),
         }
+    }
+}
+
+impl IntoSelectedFields for prisma::SelectedFields {
+    fn into_selected_fields(self, model: ModelRef, from_field: Option<Arc<RelationField>>) -> SelectedFields {
+        let fields = self.fields.into_iter().fold(Vec::new(), |mut acc, sf| {
+            match sf.field.unwrap() {
+                prisma::selected_field::Field::Scalar(field_name) => {
+                    let field = model.fields().find_from_scalar(&field_name).unwrap();
+
+                    acc.push(SelectedField::Scalar(SelectedScalarField { field }));
+                }
+                prisma::selected_field::Field::Relational(rf) => {
+                    let field = model.fields().find_from_relation_fields(&rf.field).unwrap();
+
+                    let selected_fields = rf
+                        .selected_fields
+                        .into_selected_fields(model.clone(), from_field.clone());
+
+                    acc.push(SelectedField::Relation(SelectedRelationField {
+                        field,
+                        selected_fields,
+                    }));
+                }
+            }
+
+            acc
+        });
+
+        SelectedFields::new(fields, from_field)
+    }
+}
+
+impl crate::protobuf::QueryArguments {
+    pub fn is_with_pagination(&self) -> bool {
+        self.last.or(self.first).or(self.skip).is_some()
+    }
+
+    pub fn window_limits(&self) -> (u32, u32) {
+        let skip = self.skip.unwrap_or(0) + 1;
+
+        match self.last.or(self.first) {
+            Some(limited_count) => (skip, limited_count + skip),
+            None => (skip, 100000000),
+        }
+    }
+}
+
+impl IntoOrderBy for prisma::OrderBy {
+    fn into_order_by(self, model: ModelRef) -> OrderBy {
+        let field = model.fields().find_from_scalar(&self.scalar_field).unwrap();
+
+        let sort_order = match self.sort_order() {
+            prisma::order_by::SortOrder::Asc => SortOrder::Ascending,
+            prisma::order_by::SortOrder::Desc => SortOrder::Descending,
+        };
+
+        OrderBy { field, sort_order }
     }
 }
 

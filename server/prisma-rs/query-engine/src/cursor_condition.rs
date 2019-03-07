@@ -62,6 +62,7 @@ impl CursorCondition {
                         cursor_for(CursorType::After, id_val)
                     })
                     .unwrap_or(ConditionTree::NoCondition);
+
                 let before_cursor = before
                     .map(|id| {
                         let id_val = id.id_value.clone().unwrap();

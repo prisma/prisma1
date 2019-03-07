@@ -70,7 +70,7 @@ object SelectedRelationField {
 }
 
 case class SelectedFields(fields: Set[SelectedField]) {
-  val scalarFields          = fields.collect { case selected: SelectedScalarField                             => selected.field }.toList
+  val scalarFields: List[ScalarField] = fields.collect { case selected: SelectedScalarField                             => selected.field }.toList
   val scalarListFields      = fields.collect { case selected: SelectedScalarField if selected.field.isList    => selected.field }.toList
   val scalarNonListFields   = fields.collect { case selected: SelectedScalarField if !selected.field.isList   => selected.field }.toList
   val relationFields        = fields.collect { case selected: SelectedRelationField                           => selected.field }.toList

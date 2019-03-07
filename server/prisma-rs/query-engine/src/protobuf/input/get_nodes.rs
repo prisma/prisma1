@@ -16,17 +16,19 @@ impl IntoSelectQuery for GetNodesInput {
 
         let project: ProjectRef = project_template.into();
         let model = project.schema().find_model(&self.model_name)?;
-        let selected_fields = Self::selected_fields(&model, self.selected_fields);
-
-        let ordering = Ordering::for_model(
-            &model,
-            &self.query_arguments.order_by,
-            self.query_arguments.last.is_some(),
-        )?;
-
+        let selected_fields = self.selected_fields.into_selected_fields(model.clone(), None);
         let cursor: ConditionTree = CursorCondition::build(&self.query_arguments, &model);
 
-        let filter: ConditionTree = dbg!(self.query_arguments.filter)
+        let order_by = self
+            .query_arguments
+            .order_by
+            .map(|oby| oby.into_order_by(model.clone()));
+
+        let ordering = Ordering::for_model(&model, order_by.as_ref(), self.query_arguments.last.is_some());
+
+        let filter: ConditionTree = self
+            .query_arguments
+            .filter
             .map(|filter| filter.into_filter(model.clone()))
             .map(|filter| filter.into())
             .unwrap_or(ConditionTree::NoCondition);
@@ -38,16 +40,24 @@ impl IntoSelectQuery for GetNodesInput {
             None => (self.query_arguments.skip.unwrap_or(0), None),
         };
 
-        let base_query = Self::base_query(model.db_name(), conditions, skip as usize);
-        let with_columns = Self::select_fields(base_query, &selected_fields);
-        let ordered = Self::order_by(with_columns, ordering);
-        let select_ast = Self::limit(ordered, limit.map(|limit| limit as usize));
+        let select_ast = Select::from(model.table()).so_that(conditions).offset(skip as usize);
+        let select_ast = ordering.into_iter().fold(select_ast, |acc, ord| acc.order_by(ord));
 
-        dbg!(Ok(SelectQuery {
+        let select_ast = selected_fields
+            .columns()
+            .into_iter()
+            .fold(select_ast, |acc, col| acc.column(col.clone()));
+
+        let select_ast = match limit {
+            Some(limit) => select_ast.limit(limit as usize),
+            None => select_ast,
+        };
+
+        Ok(SelectQuery {
             db_name: project.schema().db_name.to_string(),
             query_ast: select_ast,
             selected_fields: selected_fields,
-        }))
+        })
     }
 }
 
