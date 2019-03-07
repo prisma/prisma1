@@ -13,7 +13,7 @@ use prisma_common::{config::PrismaConfig, error::Error};
 use protobuf::{ExternalInterface, ProtoBufEnvelope, ProtoBufInterface};
 use serde_yaml;
 
-pub use protobuf::prelude::*;
+// pub use protobuf::prelude::*;
 
 use std::{env, fs::File, slice};
 

@@ -79,4 +79,20 @@ pub trait IntoSelectQuery {
 
 pub trait DataResolver {
     fn select_nodes(&self, query: SelectQuery) -> PrismaResult<(Vec<Vec<PrismaValue>>, Vec<String>)>;
+
+    fn get_node_by_where(
+        &self,
+        vhere: NodeSelector,
+        selected_fields: SelectedFields,
+    ) -> PrismaResult<Option<PrismaNode>>;
+}
+
+pub struct PrismaNode {
+    id: GraphqlId,
+    values: Vec<PrismaValue>,
+}
+
+pub struct NodeSelector<'a> {
+    field: &'a ScalarField,
+    value: PrismaValue,
 }

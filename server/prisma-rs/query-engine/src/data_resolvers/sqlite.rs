@@ -1,9 +1,11 @@
 mod data_resolver;
 mod service;
 
+use crate::data_resolvers::SelectedFields;
 use chrono::{DateTime, Utc};
 use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
+use prisma_query::ast::*;
 use r2d2_sqlite::SqliteConnectionManager;
 use std::collections::HashSet;
 
@@ -97,5 +99,16 @@ impl Sqlite {
             rusqlite::Error::InvalidColumnType(_, rusqlite::types::Type::Null) => PrismaValue::Null,
             _ => panic!(e),
         })
+    }
+
+    fn base_query(table: &str, conditions: ConditionTree, offset: usize) -> Select {
+        Select::from(table).so_that(conditions).offset(offset)
+    }
+
+    fn select_fields(select: Select, fields: &SelectedFields) -> Select {
+        fields
+            .names_of_scalar_non_list_fields()
+            .iter()
+            .fold(select, |acc, field| acc.column(field.as_ref()))
     }
 }
