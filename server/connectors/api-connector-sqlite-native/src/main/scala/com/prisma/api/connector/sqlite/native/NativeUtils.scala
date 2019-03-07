@@ -27,7 +27,7 @@ object NativeUtils {
         acc += (node._2(index) -> toGcValue(value.prismaValue))
     }
 
-    PrismaNode(idValue.asInstanceOf[IdGCValue], RootGCValue(rootMap.toMap))
+    PrismaNode(idValue.asInstanceOf[IdGCValue], RootGCValue(rootMap.toMap), typeName = Some(model.name))
   }
 
   def toGcValue(value: protocol.ValueContainer.PrismaValue): GCValue = {
