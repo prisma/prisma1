@@ -10,8 +10,9 @@ import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 import prisma.protocol
 import prisma.protocol.GraphqlId.IdValue
-import prisma.protocol.{GraphqlId, Node}
+import prisma.protocol.Node
 import prisma.protocol.ValueContainer.PrismaValue
+import prisma.protocol.ValueContainer.PrismaValue.GraphqlId
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,35 +57,37 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
                                queryArguments: QueryArguments,
-                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = Future {
-    val projectJson = Json.toJson(project)
-    val input = prisma.protocol.GetRelatedNodesInput(
-      protocol.Header("GetRelatedNodesInput"),
-      ByteString.copyFromUtf8(projectJson.toString()),
-      fromField.model.dbName,
-      toRelationalField(fromField),
-      fromNodeIds.map(f => toPrismaValue(f).asInstanceOf[GraphqlId]),
-      toPrismaArguments(queryArguments),
-      toPrismaSelectedFields(selectedFields)
-    )
+                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
+//    val projectJson = Json.toJson(project)
+//    val input = prisma.protocol.GetRelatedNodesInput(
+//      protocol.Header("GetRelatedNodesInput"),
+//      ByteString.copyFromUtf8(projectJson.toString()),
+//      fromField.model.dbName,
+//      toRelationalField(fromField),
+//      fromNodeIds.map(f => toPrismaValue(f).asInstanceOf[GraphqlId].value),
+//      toPrismaArguments(queryArguments),
+//      toPrismaSelectedFields(selectedFields)
+//    )
+//
+//    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
+//    val nodes                                      = nodeResult._1
+//    val columnNames                                = nodeResult._2
+//    val mappedNodes: Vector[PrismaNodeWithParent] = nodes.map { pbNode =>
+//      PrismaNodeWithParent(
+//        toIdGcValue(pbNode.parentId.getOrElse(sys.error("Expected get_related_nodes to return parent IDs alongside nodes."))),
+//        transformNode((pbNode, columnNames), fromField.relatedModel_!)
+//      )
+//    }
+//
+//    val itemGroupsByModelId = mappedNodes.groupBy(_.parentId)
+//    fromNodeIds.map { id =>
+//      itemGroupsByModelId.find(_._1 == id) match {
+//        case Some((_, itemsForId)) => ResolverResult(queryArguments, itemsForId, parentModelId = Some(id))
+//        case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+//      }
+//    }
 
-    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
-    val nodes                                      = nodeResult._1
-    val columnNames                                = nodeResult._2
-    val mappedNodes: Vector[PrismaNodeWithParent] = nodes.map { pbNode =>
-      PrismaNodeWithParent(
-        toIdGcValue(pbNode.parentId.getOrElse(sys.error("Expected get_related_nodes to return parent IDs alongside nodes."))),
-        transformNode((pbNode, columnNames), fromField.relatedModel_!)
-      )
-    }
-
-    val itemGroupsByModelId = mappedNodes.groupBy(_.parentId)
-    fromNodeIds.map { id =>
-      itemGroupsByModelId.find(_._1 == id) match {
-        case Some((_, itemsForId)) => ResolverResult(queryArguments, itemsForId, parentModelId = Some(id))
-        case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
-      }
-    }
+    forwarder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
   }
 
   override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] =
