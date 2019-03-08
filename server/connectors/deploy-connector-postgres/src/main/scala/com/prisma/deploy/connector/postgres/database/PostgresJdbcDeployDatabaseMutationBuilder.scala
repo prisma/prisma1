@@ -219,14 +219,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     sqlu"""DROP INDEX #${qualify(project.dbName, indexName)}"""
   }
 
-  override def renameTable(project: Project, oldTableName: String, newTableName: String) = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(newTableName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
-  }
-
   override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier) = {
     if (oldColumnName != newColumnName) {
       sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)}"""
