@@ -50,4 +50,5 @@ services:
     networks:
       - tests
 
-networks: tests:
+networks:
+  tests:
