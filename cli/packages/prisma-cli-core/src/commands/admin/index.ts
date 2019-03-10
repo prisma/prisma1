@@ -48,7 +48,7 @@ export default class Admin extends Command {
       const app = express()
 
       app.use('/admin', (req, res) => {
-        res.send(renderAdminPage({ endpoint, token }))
+        res.send(renderAdminPage({ endpoint, token, singleProject: true }))
       })
 
       const listener = app.listen(port, () => {

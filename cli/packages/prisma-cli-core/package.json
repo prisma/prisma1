@@ -102,7 +102,7 @@
     "node-forge": "^0.7.1",
     "npm-run": "4.1.2",
     "opn": "^5.1.0",
-    "prisma-admin-html": "^0.0.3",
+    "prisma-admin-html": "^0.0.4",
     "prisma-client-lib": "1.23.0-test.3",
     "prisma-datamodel": "1.23.0-alpha.1",
     "prisma-db-introspection": "0.0.7",
