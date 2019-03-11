@@ -68,8 +68,10 @@ case class AkkaHttpSangriaServer(
                       case _ =>
                         reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
                     }
-                  } ~
+                  } ~ (get & pathSuffix("_playground")) {
                     getFromResource("playground.html", ContentTypes.`text/html(UTF-8)`)
+                  } ~
+                    getFromResource("admin.html", ContentTypes.`text/html(UTF-8)`)
                 }
               }
             }

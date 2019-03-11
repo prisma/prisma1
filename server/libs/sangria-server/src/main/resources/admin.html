@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta name="theme-color" content="#000000" />
+    <link
+            href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700"
+            rel="stylesheet"
+    />
+    <link
+            href="https://fonts.googleapis.com/css?family=Open+Sans"
+            rel="stylesheet"
+    />
+    <link
+            rel="icon"
+            type="image/png"
+            sizes="32x32"
+            href="https://cdn.jsdelivr.net/npm/@prisma/prisma-admin/dist/favicon-32x32.png"
+    />
+    <script
+            src="https://browser.sentry-cdn.com/4.6.3/bundle.min.js"
+            crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/@prisma/prisma-admin/dist/app.js"></script>
+    <title>Prisma Admin</title>
+</head>
+<body>
+<noscript> You need to enable JavaScript to run this app. </noscript>
+<div id="root"></div>
+</body>
+<script>
+      window.addEventListener('load', function (event) {
+        PrismaAdmin.init(root, {})
+      })
+    </script>
+</html>

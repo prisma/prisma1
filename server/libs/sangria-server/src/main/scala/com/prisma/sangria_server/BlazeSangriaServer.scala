@@ -60,8 +60,11 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
       case request if request.method == GET && request.pathInfo == "/status" =>
         Ok("\"OK\"")
 
-      case request if request.method == GET =>
+      case request if request.method == GET && requestPath(request).last.startsWith("_playground") =>
         StaticFile.fromResource("/playground.html", Some(request)).getOrElseF(NotFound())
+
+      case request if request.method == GET =>
+        StaticFile.fromResource("/admin.html", Some(request)).getOrElseF(NotFound())
 
       case request if request.method == POST =>
         val requestId       = createRequestId()
@@ -88,7 +91,7 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
       RawRequest(
         id = requestId,
         method = HttpMethod.Post,
-        path = request.uri.path.split('/').filter(_.nonEmpty).toVector,
+        path = requestPath(request),
         headers = request.headers.map(h => h.name.value.toLowerCase() -> h.value).toMap,
         json = circeJsonToPlayJson(json),
         ip = "0.0.0.0"
@@ -96,6 +99,7 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
     }
   }
 
-  def circeJsonToPlayJson(json: Json): PlayJsValue  = CirceJson.transform(json, PlayJson)
-  def playJsonToCircleJson(json: PlayJsValue): Json = PlayJson.transform(json, CirceJson)
+  def circeJsonToPlayJson(json: Json): PlayJsValue      = CirceJson.transform(json, PlayJson)
+  def playJsonToCircleJson(json: PlayJsValue): Json     = PlayJson.transform(json, CirceJson)
+  def requestPath(request: Request[IO]): Vector[String] = request.uri.path.split('/').filter(_.nonEmpty).toVector
 }
