@@ -242,14 +242,6 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} DROP INDEX #${qualify(indexName)}"
   }
 
-  override def renameTable(project: Project, oldTableName: String, newTableName: String): DBIO[_] = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(project.dbName, newTableName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
-  }
-
   //Here this is only used for relationtables
   override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier): DBIO[_] = {
     val newColSql = typeMapper.rawSQLFromParts(newColumnName, isRequired = true, typeIdentifier)
