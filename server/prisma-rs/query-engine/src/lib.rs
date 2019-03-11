@@ -7,6 +7,7 @@ pub mod cursor_condition;
 pub mod data_resolvers;
 pub mod ordering;
 pub mod protobuf;
+pub mod req_handlers;
 
 use lazy_static::lazy_static;
 use prisma_common::{config::PrismaConfig, error::Error};

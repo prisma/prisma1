@@ -1,12 +1,24 @@
-use actix_web::{http, server, App, Path, Responder};
+use actix::System;
+use actix_web::{http::Method, server, App, HttpRequest, HttpResponse, Responder};
 
-fn index(info: Path<(u32, String)>) -> impl Responder {
-    format!("Hello {}! id:{}", info.1, info.0)
+mod req_handlers;
+
+struct GraphQl {
+    
+}
+
+fn handle_stuff(req: &HttpRequest) -> impl Responder {
+    unimplemented!()
 }
 
 fn main() {
-    server::new(|| App::new().route("/{id}/{name}/index.html", http::Method::GET, index))
-        .bind("127.0.0.1:8080")
+    let sys = System::new("prisma");
+
+    server::new(|| App::new().resource("/", |r| r.method(Method::GET).f(handle_stuff)))
+        .bind("127.0.0.1:8000")
         .unwrap()
-        .run();
+        .start();
+
+    println!("Started http server: 127.0.0.1:8000");
+    let _ = sys.run();
 }
