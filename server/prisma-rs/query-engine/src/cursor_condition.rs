@@ -42,7 +42,6 @@ impl CursorCondition {
 
                     let select_query = Select::from(model.table())
                         .column(field.as_column())
-                        .column(model_id.as_column())
                         .so_that(ConditionTree::single(where_condition));
 
                     let compare = match (cursor_type, sort_order) {
