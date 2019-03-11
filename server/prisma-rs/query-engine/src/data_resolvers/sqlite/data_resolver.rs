@@ -11,8 +11,8 @@ impl DataResolver for Sqlite {
         let selected_fields = query.selected_fields;
         let needs_relation_fields = selected_fields.needs_relation_fields();
 
-        let scalar_fields = selected_fields.scalar;
-        let field_names = scalar_fields.iter().map(|sf| sf.field.name.clone()).collect();
+        let scalar_fields = selected_fields.scalar_non_list();
+        let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
 
         self.with_connection(&db_name, |conn| {
             let (query_sql, params) = dbg!(visitor::Sqlite::build(query_ast));
@@ -21,9 +21,8 @@ impl DataResolver for Sqlite {
             let nodes_iter = stmt.query_map(&params, |row| {
                 let values = scalar_fields
                     .iter()
-                    .filter(|sf| !sf.field.is_list)
                     .enumerate()
-                    .map(|(i, sf)| Self::fetch_value(sf.field.type_identifier, &row, i))
+                    .map(|(i, sf)| Self::fetch_value(sf.type_identifier, &row, i))
                     .collect();
 
                 let mut node = Node::new(values);
@@ -44,7 +43,7 @@ impl DataResolver for Sqlite {
                 nodes.push(node?);
             }
 
-            Ok(SelectResult { nodes, field_names })
+            Ok(dbg!(SelectResult { nodes, field_names }))
         })
     }
 }

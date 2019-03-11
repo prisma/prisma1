@@ -9,7 +9,7 @@ pub trait IntoSelectedFields {
 
 #[derive(Debug, Default)]
 pub struct SelectedFields {
-    pub scalar: Vec<SelectedScalarField>,
+    scalar: Vec<SelectedScalarField>,
     pub relation: Vec<SelectedRelationField>,
     pub from_field: Option<Arc<RelationField>>,
     columns: OnceCell<Vec<Column>>,
@@ -59,7 +59,7 @@ impl SelectedFields {
     pub fn columns(&self) -> &[Column] {
         self.columns
             .get_or_init(|| {
-                let mut result: Vec<Column> = self.scalar.iter().map(|sf| sf.field.as_column()).collect();
+                let mut result: Vec<Column> = self.scalar_non_list().iter().map(|f| f.as_column()).collect();
 
                 if let Some(ref from_field) = self.from_field {
                     let relation = from_field.relation();
@@ -84,5 +84,13 @@ impl SelectedFields {
 
     pub fn needs_relation_fields(&self) -> bool {
         self.from_field.is_some()
+    }
+
+    pub fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar
+            .iter()
+            .filter(|sf| !sf.field.is_list)
+            .map(|sf| sf.field.clone())
+            .collect()
     }
 }
