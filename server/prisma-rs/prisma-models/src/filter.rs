@@ -231,7 +231,7 @@ impl From<OneRelationIsNullFilter> for ConditionTree {
             let column = relation.column_for_relation_side(filter.field.relation_side);
             let select = Select::from(relation.relation_table()).column(column);
 
-            filter.field.related_model().id_column().not_in_selection(select)
+            filter.field.model().id_column().not_in_selection(select)
         };
 
         ConditionTree::single(condition)
