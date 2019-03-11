@@ -23,7 +23,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       |  id: ID! @id
       |}
     """.stripMargin
-  var project: Project   = Project(id = serviceId, schema = Schema.empty)
+  var project: Project   = Project(id = serviceId, schema = Schema.emptyV11)
   lazy val slickDatabase = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
   def isMySql            = slickDatabase.isMySql
   def isPostgres         = slickDatabase.isPostgres
@@ -967,10 +967,14 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       functions = Vector.empty,
       noMigration = None
     )
-    val refreshedProject = testDependencies.projectPersistence.load(project.id).await.get
+    val refreshedProject: Project = testDependencies.projectPersistence.load(project.id).await.get
+    val temp                      = testDependencies.projectPersistence.load(serviceId).await.get
+    val schema                    = temp.schema
+    val refreshedProjectV2        = temp.copy(schema = schema.copy(version = Some("v2")))
+
     val mutation = DeployMutation(
       args = input,
-      project = refreshedProject,
+      project = refreshedProjectV2,
       schemaInferrer = SchemaInferrer(capabilities),
       migrationStepsInferrer = MigrationStepsInferrer(),
       schemaMapper = SchemaMapper,
@@ -980,7 +984,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       functionValidator = testDependencies.functionValidator,
       invalidationPublisher = testDependencies.invalidationPublisher,
       capabilities = capabilities,
-      clientDbQueries = deployConnector.clientDBQueries(project),
+      clientDbQueries = deployConnector.clientDBQueries(refreshedProjectV2),
       databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
       fieldRequirements = FieldRequirementsInterface.empty,
       isActive = true,
