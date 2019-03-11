@@ -3,6 +3,7 @@ import * as express from 'express'
 import chalk from 'chalk'
 import * as opn from 'opn'
 import { renderAdminPage } from 'prisma-admin-html'
+import * as semver from 'semver'
 
 export default class Admin extends Command {
   static topic = 'admin'
@@ -33,14 +34,28 @@ export default class Admin extends Command {
     const stage = this.definition.stage!
 
     const token = this.definition.getToken(serviceName, stage)
+    const cluster = await this.definition.getCluster(false)
+    const clusterVersion = await cluster!.getVersion()
 
-    const link = await this.startServer({
-      endpoint: this.definition.endpoint,
-      token,
-      port,
-    })
+    if (semver.satisfies(`${clusterVersion}`, `>= 1.25.0`)) {
+      const link = await this.startServer({
+        endpoint: this.definition.endpoint,
+        token,
+        port,
+      })
 
-    opn(link).catch(() => {})
+      opn(link).catch(() => {})
+    } else {
+      this.out.log(`Your Prisma server at ${chalk.bold(
+        `${this.definition.endpoint}`,
+      )} doesn't support Prisma Admin yet. Prisma Admin is supported from Prisma ${chalk.green(
+        `v1.25`,
+      )} and higher. Your Prisma server currently uses Prisma ${chalk.red(
+        `v${clusterVersion}`,
+      )}.\n\n
+Please upgrade your Prisma server to use Prisma Admin.`)
+      this.out.exit(1)
+    }
   }
 
   startServer = async ({ endpoint, token, port = 3000 }) =>
