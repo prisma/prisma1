@@ -18,9 +18,9 @@ pub struct SchemaTemplate {
 impl SchemaTemplate {
     pub fn empty() -> SchemaTemplate {
         SchemaTemplate {
-            models: vec!(),
-            relations: vec!(),
-            enums: vec!(),
+            models: vec![],
+            relations: vec![],
+            enums: vec![],
             version: None,
         }
     }
@@ -72,11 +72,10 @@ impl SchemaTemplate {
 }
 
 impl Schema {
-
     pub fn find_model(&self, name: &str) -> PrismaResult<ModelRef> {
         self.models
             .get()
-            .and_then(|models| models.iter().find(|model| model.db_name() == name))
+            .and_then(|models| models.iter().find(|model| model.name == name))
             .cloned()
             .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name)))
     }
