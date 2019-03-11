@@ -2,6 +2,7 @@ use crate::{PrismaValue, RelationField, ScalarField};
 use prisma_query::ast::*;
 use std::sync::Arc;
 
+#[derive(Debug)]
 pub enum Filter {
     And(Vec<Box<Filter>>),
     Or(Vec<Box<Filter>>),
@@ -14,6 +15,7 @@ pub enum Filter {
     BoolFilter(bool),
 }
 
+#[derive(Debug)]
 pub enum ScalarCondition {
     Equals(PrismaValue),
     NotEquals(PrismaValue),
@@ -31,26 +33,29 @@ pub enum ScalarCondition {
     NotIn(Vec<PrismaValue>),
 }
 
+#[derive(Debug)]
 pub enum ScalarListCondition {
     Contains(PrismaValue),
     ContainsEvery(Vec<PrismaValue>),
     ContainsSome(Vec<PrismaValue>),
 }
 
+#[derive(Debug)]
 pub struct OneRelationIsNullFilter {
     pub field: Arc<RelationField>,
 }
-
+#[derive(Debug)]
 pub struct ScalarListFilter {
     pub field: Arc<ScalarField>,
     pub condition: ScalarListCondition,
 }
 
+#[derive(Debug)]
 pub struct ScalarFilter {
     pub field: Arc<ScalarField>,
     pub condition: ScalarCondition,
 }
-
+#[derive(Debug)]
 pub struct RelationFilter {
     pub field: Arc<RelationField>,
     pub nested_filter: Box<Filter>,
@@ -162,8 +167,8 @@ impl RelationFilter {
     pub fn conditions(column: Column, condition: RelationCondition, sub_select: Select) -> ConditionTree {
         match condition {
             RelationCondition::EveryRelatedNode => column.not_in_selection(sub_select),
-            RelationCondition::AtLeastOneRelatedNode => column.not_in_selection(sub_select),
-            RelationCondition::NoRelatedNode => column.in_selection(sub_select),
+            RelationCondition::NoRelatedNode => column.not_in_selection(sub_select),
+            RelationCondition::AtLeastOneRelatedNode => column.in_selection(sub_select),
             RelationCondition::ToOneRelatedNode => column.in_selection(sub_select),
         }
         .into()
