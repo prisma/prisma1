@@ -17,7 +17,10 @@ impl IntoSelectQuery for GetRelatedNodesInput {
         let from_field = model.fields().find_from_relation_fields(&self.from_field)?;
         let from_node_ids: Vec<GraphqlId> = self.from_node_ids.into_iter().map(GraphqlId::from).collect();
         let is_with_pagination = self.query_arguments.is_with_pagination();
-        let selected_fields = self.selected_fields.into_selected_fields(model.clone(), None);
+
+        let selected_fields = self
+            .selected_fields
+            .into_selected_fields(from_field.related_model(), Some(from_field.clone()));
 
         let builder = RelatedNodesQueryBuilder::new(from_field, from_node_ids, self.query_arguments, &selected_fields);
 

@@ -113,8 +113,10 @@ impl Fields {
         self.relation_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
-            .find(|field| field.db_name() == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("3 Field not found: {}", name)))
+            .find(|field| field.name == name)
+            .ok_or_else(|| {
+                Error::InvalidInputError(format!("Field {} on model {} not found.", name, self.model().name))
+            })
     }
 
     pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
@@ -122,7 +124,13 @@ impl Fields {
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.relation().name == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("3 Field not found: {}", name)))
+            .ok_or_else(|| {
+                Error::InvalidInputError(format!(
+                    "Field for relation {} on model {} not found.",
+                    name,
+                    self.model().name
+                ))
+            })
     }
 
     fn scalar_filter(mut acc: Vec<Weak<ScalarField>>, field: &Field) -> Vec<Weak<ScalarField>> {

@@ -95,6 +95,7 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
 
     pub fn without_pagination(self) -> Select {
         let relation_side_column = self.relation_side_column();
+        let opposite_relation_side_column = self.opposite_relation_side_column();
         let base_query = self.base_query();
         let cursor_condition = self.cursor_condition;
 
@@ -104,7 +105,7 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             .and(cursor_condition)
             .and(self.conditions);
 
-        Ordering::internal(relation_side_column, self.order_by.as_ref())
+        Ordering::internal(opposite_relation_side_column, self.order_by.as_ref())
             .into_iter()
             .fold(base_query.so_that(conditions), |acc, ord| acc.order_by(ord))
     }
@@ -113,10 +114,12 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
         self.selected_fields
             .columns()
             .into_iter()
-            .fold(Select::from(self.relation_table()), |acc, col| acc.column(col.clone()))
+            .fold(Select::from(self.from_field.related_model().table()), |acc, col| {
+                acc.column(col.clone())
+            })
             .inner_join(
                 self.relation_table()
-                    .on(self.id_column().equals(self.relation_side_column())),
+                    .on(self.id_column().equals(self.opposite_relation_side_column())),
             )
     }
 
@@ -125,6 +128,10 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
     }
 
     fn relation_side_column(&self) -> Column {
+        self.relation.column_for_relation_side(self.from_field.relation_side)
+    }
+
+    fn opposite_relation_side_column(&self) -> Column {
         self.relation
             .column_for_relation_side(self.from_field.relation_side.opposite())
     }
