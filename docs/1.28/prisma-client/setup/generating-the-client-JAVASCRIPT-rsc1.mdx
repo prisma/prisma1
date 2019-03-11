@@ -1,0 +1,68 @@
+import Code from "components/Markdown/Code"
+
+export const meta = {
+  title: 'Generating the Client (JavaScript)',
+  position: 20,
+  technology: 'node',
+  technologyOrder: 1,
+  articleGroup: 'Generating the Client',
+}
+
+## Overview
+
+The Prisma client is auto-generated using the `prisma generate` command of the [Prisma CLI](alx4). One Prisma client connects to exactly one Prisma service.
+
+`prisma generate` reads the information that's specified under the [`generate`](5cy7#generate-optional) root property in your service's `prisma.yml`. 
+
+## Configuring `generate` in `prisma.yml`
+
+The `generate` root property accepts a list of _objects_. Each object has two fields:
+
+- `generator`: The programming language in which the Prisma client should be generated. Here are the accepted values:
+  -  `typescript-client`
+  -  `javascript-client`
+  -  `flow-client`
+  -  `go-client`
+- `output`: The path and name of the file in which the Prisma client should be stored.
+
+### Example
+
+As an example, consider the following `prisma.yml`:
+
+```yml
+datamodel: datamodel.prisma
+endpoint: http://localhost:4466
+secret: mysecret42
+
+generate:
+  - generator: javascript-client
+    output: ./prisma-client/
+```
+
+Running [`prisma generate`](xcv2) in the directory where that `prisma.yml` is located generates a Prisma client in JavaScript and stores the generated files in a directory called `prisma-client`.
+
+The generated Prisma client is configured to target the `endpoint` specified in `prisma.yml`. It also knows the `secret` so that it can authenticate against your Prisma service when you're using it in your application.
+
+### Using environment variables in `prisma.yml`
+
+Note that you can also reference environment variables in `prisma.yml` by using the `env:`-prefix and enclosing them with `${}`. For example, if you have an environment variable set that's called `MY_SECRET`:
+
+```yml
+datamodel: datamodel.prisma
+endpoint: http://localhost:4466
+secret: ${env:MY_SECRET}
+
+generate:
+  - generator: javascript-client
+    output: ./prisma-client/
+```
+
+You can find more info about using environment variables [here](5cy7#using-variables).
+
+## Generated files
+
+Here is an overview of the files that are generated for the JavaScript client:
+
+- `index.d.ts`: Type definitions for the Prisma client (in TypeScript). The type definitions include representations of your models (from the [datamodel](knul)) as well as the function signatures for the generated API operations of the Prisma client. Even though it's TypeScript, this file is included in the JavaScript Prisma client to enable auto-completion and other features in your code editor.
+- `index.js`: The Prisma client.
+- `prisma-schema.js`: This file is used by the Prisma client under the hood.

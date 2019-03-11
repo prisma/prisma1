@@ -82,6 +82,7 @@ case class GCCreatePrismaArgsConverter(model: Model) {
   def toPrismaArgsFromJson(json: JsValue): PrismaArgs = {
 
     def fromSingleJsValue(jsValue: JsValue, field: ScalarField): GCValue = jsValue match {
+      case JsString(x) if field.typeIdentifier == TypeIdentifier.DateTime => DateTimeGCValue(new DateTime(x))
       case JsString(x)                                                    => StringGCValue(x)
       case JsNumber(x) if field.typeIdentifier == TypeIdentifier.Int      => IntGCValue(x.toInt)
       case JsNumber(x) if field.typeIdentifier == TypeIdentifier.Float    => FloatGCValue(x.toDouble)
@@ -93,15 +94,16 @@ case class GCCreatePrismaArgsConverter(model: Model) {
       val gCValue: JsLookupResult = json \ field.name
       val asOption                = gCValue.toOption
       val converted = asOption match {
-        case None                                                              => NullGCValue
-        case Some(JsNull)                                                      => NullGCValue
-        case Some(JsString(x))                                                 => StringGCValue(x)
-        case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Int   => IntGCValue(x.toInt)
-        case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Float => FloatGCValue(x.toDouble)
-        case Some(JsBoolean(x))                                                => BooleanGCValue(x)
-        case Some(JsArray(x)) if field.isList                                  => ListGCValue(x.map(v => fromSingleJsValue(v, field)).toVector)
-        case Some(x: JsValue) if field.typeIdentifier == TypeIdentifier.Json   => JsonGCValue(x)
-        case x                                                                 => sys.error("Not implemented yet: " + x)
+        case None                                                                 => NullGCValue
+        case Some(JsNull)                                                         => NullGCValue
+        case Some(JsString(x)) if field.typeIdentifier == TypeIdentifier.DateTime => DateTimeGCValue(new DateTime(x))
+        case Some(JsString(x))                                                    => StringGCValue(x)
+        case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Int      => IntGCValue(x.toInt)
+        case Some(JsNumber(x)) if field.typeIdentifier == TypeIdentifier.Float    => FloatGCValue(x.toDouble)
+        case Some(JsBoolean(x))                                                   => BooleanGCValue(x)
+        case Some(JsArray(x)) if field.isList                                     => ListGCValue(x.map(v => fromSingleJsValue(v, field)).toVector)
+        case Some(x: JsValue) if field.typeIdentifier == TypeIdentifier.Json      => JsonGCValue(x)
+        case x                                                                    => sys.error("Not implemented yet: " + x)
 
       }
       field.name -> converted

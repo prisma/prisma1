@@ -241,7 +241,7 @@ lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
   .dependsOn(mongoUtils)
   .settings(
-    libraryDependencies ++= Seq(mongoClient)
+    libraryDependencies ++= Seq(mongoClient) ++ netty
   )
 
 lazy val apiConnector = connectorProject("api-connector")
@@ -271,7 +271,7 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
 
 lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
   .dependsOn(apiConnector)
-  .settings(libraryDependencies ++= Seq(mongoClient),
+  .settings(libraryDependencies ++= Seq(mongoClient) ++netty,
     scalacOptions := {
       val oldOptions = scalacOptions.value
       oldOptions.filterNot(_ == "-Xfatal-warnings")

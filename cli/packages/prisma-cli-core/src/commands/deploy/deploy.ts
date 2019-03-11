@@ -22,13 +22,13 @@ export default class Deploy extends Command {
   ${chalk.green.bold('Examples:')}
       
 ${chalk.gray(
-  '-',
-)} Deploy local changes from prisma.yml to the default service environment.
+    '-',
+  )} Deploy local changes from prisma.yml to the default service environment.
   ${chalk.green('$ prisma deploy')}
     
 ${chalk.gray(
-  '-',
-)} Deploy local changes from default service file accepting potential data loss caused by schema changes
+    '-',
+  )} Deploy local changes from default service file accepting potential data loss caused by schema changes
   ${chalk.green('$ prisma deploy --force')}
   `
   static flags: Flags = {
@@ -101,6 +101,7 @@ ${chalk.gray(
     let cluster
     let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
+      await this.env.fetchClusters()
       const endpointDialog = new EndpointDialog({
         out: this.out,
         client: this.client,
