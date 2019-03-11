@@ -232,13 +232,13 @@ pub struct LinkTableSpec {
 mod tests {
     use crate::steps::*;
     use nullable::Nullable::*;
-    use serde_json::Value;
-    use prisma_models::OnDelete;
-    use prisma_models::FieldBehaviour;
-    use prisma_models::Field;
-    use prisma_models::prelude::ScalarListStrategy;
     use prisma_models::prelude::IdStrategy;
+    use prisma_models::prelude::ScalarListStrategy;
+    use prisma_models::Field;
+    use prisma_models::FieldBehaviour;
+    use prisma_models::OnDelete;
     use prisma_models::Sequence;
+    use serde_json::Value;
 
     #[test]
     fn minimal_CreateModel_must_work() {
@@ -355,9 +355,14 @@ mod tests {
             is_list: Some(true),
             is_created_at: Some(true),
             is_updated_at: Some(true),
-            id: Some(FieldBehaviour::Id { strategy: IdStrategy::Sequence, sequence: Some(sequence) }),
+            id: Some(FieldBehaviour::Id {
+                strategy: IdStrategy::Sequence,
+                sequence: Some(sequence),
+            }),
             default: Some("default".to_string()),
-            scalar_list: Some(FieldBehaviour::ScalarList { strategy: ScalarListStrategy::Embedded }),
+            scalar_list: Some(FieldBehaviour::ScalarList {
+                strategy: ScalarListStrategy::Embedded,
+            }),
         });
         assert_symmetric_serde(json, expected_struct);
     }

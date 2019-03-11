@@ -5,26 +5,38 @@ use rusqlite::{types::ToSql, Connection, Result, NO_PARAMS};
 /// Create an in-memory database and run migrations on it
 fn create_database() -> Connection {
     Connection::open_in_memory()
-        .and_then(|c| c.execute(&{
-            let mut m = Migration::new();
-            m.create_table("prisma", |t| {
-                t.add_column("name", types::varchar(255));
-                t.add_column("location", types::foreign("cities"));
-                t.add_column("founded", types::date());
-            });
+        .and_then(|c| {
+            c.execute(
+                &{
+                    let mut m = Migration::new();
+                    m.create_table("prisma", |t| {
+                        t.add_column("name", types::varchar(255));
+                        t.add_column("location", types::foreign("cities"));
+                        t.add_column("founded", types::date());
+                    });
 
-            m.make::<Squirrel>()
-        }, NO_PARAMS).map(|_| c))
-        .and_then(|c| c.execute(&{
-            let mut m = Migration::new();
-            m.create_table("cities", |t| {
-                t.add_column("long", types::float());
-                t.add_column("name", types::varchar(255));
-                t.add_column("lat", types::float());
-            });
+                    m.make::<Squirrel>()
+                },
+                NO_PARAMS,
+            )
+            .map(|_| c)
+        })
+        .and_then(|c| {
+            c.execute(
+                &{
+                    let mut m = Migration::new();
+                    m.create_table("cities", |t| {
+                        t.add_column("long", types::float());
+                        t.add_column("name", types::varchar(255));
+                        t.add_column("lat", types::float());
+                    });
 
-            m.make::<Squirrel>()
-        }, NO_PARAMS).map(|_| c))
+                    m.make::<Squirrel>()
+                },
+                NO_PARAMS,
+            )
+            .map(|_| c)
+        })
         .map_err(|e| panic!(e))
         .unwrap()
 }
@@ -35,7 +47,6 @@ fn query_tables(c: &mut Connection) -> Vec<String> {
 
     (|| -> Result<()> {
         let mut stmt = c.prepare(sql)?;
-
 
         let name_iter = stmt.query_map(NO_PARAMS, |row| NameCol { name: row.get(0) })?;
 
@@ -64,7 +75,6 @@ struct NameCol {
 //     time_created: Timespec,
 //     data: Option<Vec<u8>>,
 // }
-
 
 fn main() {
     let mut c = create_database();
@@ -108,5 +118,4 @@ fn main() {
     // for person in person_iter {
     //     println!("Found person {:?}", person.unwrap());
     // }
-
 }

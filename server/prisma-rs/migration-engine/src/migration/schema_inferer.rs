@@ -3,8 +3,8 @@ use prisma_models::prelude::*;
 use serde_json;
 use std::io::{Read, Write};
 use std::process::Command;
-use std::sync::{Arc};
 use std::process::Stdio;
+use std::sync::Arc;
 
 pub trait SchemaInferer {
     fn infer(data_model: String) -> Arc<Schema>;
@@ -15,11 +15,13 @@ pub struct LegacySchemaInferer;
 impl SchemaInferer for LegacySchemaInferer {
     fn infer(data_model: String) -> Arc<Schema> {
         let bin_path = "/Users/marcusboehm/R/github.com/prisma/prisma/server/images/schema-inferrer-bin/target/prisma-native-image/schema-inferrer-bin";
-        let cmd = Command::new(bin_path).stdin(Stdio::null())
+        let cmd = Command::new(bin_path)
+            .stdin(Stdio::null())
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .spawn().unwrap();
-        let input = SchemaInfererBinInput{
+            .spawn()
+            .unwrap();
+        let input = SchemaInfererBinInput {
             data_model: data_model,
             previous_schema: SchemaTemplate::empty(),
         };

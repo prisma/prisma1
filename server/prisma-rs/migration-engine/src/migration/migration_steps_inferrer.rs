@@ -1,9 +1,9 @@
 use crate::steps::*;
 use database_inspector::DatabaseSchema;
+use prisma_models::prelude::*;
+use prisma_models::RelationRef;
 use prisma_models::Schema;
 use std::sync::Arc;
-use prisma_models::RelationRef;
-use prisma_models::prelude::*;
 
 pub trait MigrationStepsInferrer {
     fn infer(next: &Schema, database_schema: &DatabaseSchema) -> Vec<MigrationStep>;
@@ -14,20 +14,19 @@ pub struct MigrationStepsInferrerImpl<'a> {
     database_schema: &'a DatabaseSchema,
 }
 
-impl <'a> MigrationStepsInferrer for MigrationStepsInferrerImpl<'a> {
+impl<'a> MigrationStepsInferrer for MigrationStepsInferrerImpl<'a> {
     fn infer(next: &Schema, database_schema: &DatabaseSchema) -> Vec<MigrationStep> {
-        let inferer = MigrationStepsInferrerImpl{
+        let inferer = MigrationStepsInferrerImpl {
             schema: next,
             database_schema: database_schema,
         };
         inferer.infer()
     }
-
 }
 
-impl <'a> MigrationStepsInferrerImpl<'a> {
+impl<'a> MigrationStepsInferrerImpl<'a> {
     fn infer(&self) -> Vec<MigrationStep> {
-        let mut result: Vec<MigrationStep> = vec!();
+        let mut result: Vec<MigrationStep> = vec![];
         let default = vec![];
         let next_models = self.schema.models.get().unwrap_or(&default);
         let mut create_model_steps: Vec<MigrationStep> = next_models
@@ -37,14 +36,17 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
                 let step = CreateModel {
                     name: model.name.clone(),
                     db_name: model.db_name_opt().map(|x| x.to_string()),
-                    embedded: if model.is_embedded { Some(model.is_embedded) } else { None },
+                    embedded: if model.is_embedded {
+                        Some(model.is_embedded)
+                    } else {
+                        None
+                    },
                 };
                 MigrationStep::CreateModel(step)
             })
             .collect();
 
-
-        let mut create_field_steps: Vec<MigrationStep> = vec!();
+        let mut create_field_steps: Vec<MigrationStep> = vec![];
         for model in next_models {
             for field in model.fields().scalar() {
                 let step = CreateField {
@@ -64,7 +66,7 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
             }
         }
 
-        let mut create_enum_steps = vec!();
+        let mut create_enum_steps = vec![];
         for prisma_enum in &self.schema.enums {
             let step = CreateEnum {
                 name: prisma_enum.name.clone(),
@@ -73,8 +75,8 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
             create_enum_steps.push(MigrationStep::CreateEnum(step));
         }
 
-        let mut create_relations = vec!();
-        let empty_relations = vec!();
+        let mut create_relations = vec![];
+        let empty_relations = vec![];
         let relations = self.schema.relations.get().unwrap_or(&empty_relations);
         for relation in relations {
             let model_a = relation.model_a();
@@ -101,14 +103,12 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
                     inline_link: self.is_inlined_in_model(relation, &model_b).as_some_if_true(),
                 },
                 table: match relation.manifestation {
-                    Some(RelationLinkManifestation::RelationTable(ref mani)) => {
-                        Some(LinkTableSpec {
-                            model_a_column: Some(mani.model_a_column.clone()),
-                            model_b_column: Some(mani.model_b_column.clone()),
-                        })
-                    },
+                    Some(RelationLinkManifestation::RelationTable(ref mani)) => Some(LinkTableSpec {
+                        model_a_column: Some(mani.model_a_column.clone()),
+                        model_b_column: Some(mani.model_b_column.clone()),
+                    }),
                     _ => None,
-                }
+                },
             };
             create_relations.push(MigrationStep::CreateRelation(step));
         }
@@ -122,9 +122,7 @@ impl <'a> MigrationStepsInferrerImpl<'a> {
 
     fn is_inlined_in_model(&self, relation: &RelationRef, model: &ModelRef) -> bool {
         match relation.manifestation {
-            Some(RelationLinkManifestation::Inline(ref mani)) => {
-              mani.in_table_of_model_name == model.name
-            },
+            Some(RelationLinkManifestation::Inline(ref mani)) => mani.in_table_of_model_name == model.name,
             _ => false,
         }
     }
@@ -136,6 +134,10 @@ trait ToOption {
 
 impl ToOption for bool {
     fn as_some_if_true(self) -> Option<bool> {
-        if self { Some(true) } else { None }
+        if self {
+            Some(true)
+        } else {
+            None
+        }
     }
 }
