@@ -7,7 +7,7 @@
 Prisma replaces traditional ORMs and simplifies database workflows: 
 
 - _Access_: **Type-safe database access with the auto-generated Prisma client** (in [JavaScript](https://www.prisma.io/client/client-javscript/), [TypeScript](https://www.prisma.io/client/client-typescript/), [Go](https://www.prisma.io/client/client-go/))
-- _Migrate_: **Declarative data modelling and (optional) migrations**
+- _Migrate_: **Declarative data modelling and migrations** (optional)
 - _Manage_: **Visual data management with Prisma Admin**
 
 It is used to build **GraphQL, REST, gRPC APIs** and a lot more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
