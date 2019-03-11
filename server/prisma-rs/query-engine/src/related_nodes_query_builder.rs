@@ -128,12 +128,15 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
     }
 
     fn relation_side_column(&self) -> Column {
-        self.relation.column_for_relation_side(self.from_field.relation_side)
+        self.relation
+            .column_for_relation_side(self.from_field.relation_side)
+            .table(Relation::TABLE_ALIAS.into())
     }
 
     fn opposite_relation_side_column(&self) -> Column {
         self.relation
             .column_for_relation_side(self.from_field.relation_side.opposite())
+            .table(Relation::TABLE_ALIAS.into())
     }
 
     fn relation_table(&self) -> Table {

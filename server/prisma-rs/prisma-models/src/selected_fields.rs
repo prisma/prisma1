@@ -1,4 +1,4 @@
-use crate::{ModelRef, RelationField, ScalarField};
+use crate::{ModelRef, Relation, RelationField, ScalarField};
 use once_cell::unsync::OnceCell;
 use prisma_query::ast::Column;
 use std::sync::Arc;
@@ -67,13 +67,15 @@ impl SelectedFields {
                     result.push(
                         relation
                             .column_for_relation_side(from_field.relation_side.opposite())
-                            .alias(Self::RELATED_MODEL_ALIAS),
+                            .alias(Self::RELATED_MODEL_ALIAS)
+                            .table(Relation::TABLE_ALIAS.into()),
                     );
 
                     result.push(
                         relation
                             .column_for_relation_side(from_field.relation_side)
-                            .alias(Self::PARENT_MODEL_ALIAS),
+                            .alias(Self::PARENT_MODEL_ALIAS)
+                            .table(Relation::TABLE_ALIAS.into()),
                     );
                 };
 
