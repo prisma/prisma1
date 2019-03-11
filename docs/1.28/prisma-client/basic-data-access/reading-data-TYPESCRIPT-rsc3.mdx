@@ -64,10 +64,10 @@ For example, the following query returns all scalar fields of a single `User`:
 <Code languages={["TypeScript", "Result"]}>
 
 ```ts
-const user: User = await prisma.user({ email: "bob@prisma.io" })
+const user: User = await prisma.user({ email: "ada@prisma.io" })
 ```
 
-```json
+```js
 {
   id: 'cjsviilie0g880b43twzd93li',
   name: 'Ada',
@@ -170,7 +170,7 @@ const user: User = await prisma.user({ email: "ada@prisma.io" })
 
 For each model in your datamodel, there is a method generated in the Prisma client API that allows to fetch a list of the respective records. 
 
-The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample datamodel from above, the three generated methods for fetching single records are:
+The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample datamodel from above, the three generated methods for fetching lists are:
 
 - `users` for `User`:
   ```ts
@@ -703,15 +703,13 @@ const postsByUserBeforeChristmas: Post[] = await prisma
 
 </Code>
 
-_Fetch the comments of a Post that contains the letter `A`_:
-
 ## Ordering
 
 When querying a list of records, you can order (sort) the list by any scalar field of that model. Each generated method to query a list of records therefore accepts the `orderBy` field on its input object.
 
 The type of the `orderBy` field depends on the scalar fields of the model for which it was generated.
 
-Note that you can always order by `createdAt` and `updatedAt`, even when the fields have not been added to your models.
+Note that you can _always_ order by `createdAt` and `updatedAt`, even when the fields have not been added to your models.
 
 ### Examples
 
@@ -787,7 +785,7 @@ You can seek forwards or backwards through the list and supply an optional start
 - To seek **forward**, use `first`; specify the `id` of a starting record with `after`.
 - To seek **backward**, use `last`; specify the `id` of a starting record with `before`.
 
-You **cannot** combine `first` with `before` or `last` with `after`. If you do so in a query, `before`/`after` will simply be ignored and only `first` or `last` is actually applied (at the very beginning or end of the list, depending on which you're using).
+You **cannot** combine `first` with `before` or `last` with `after`. If you do so, `before`/`after` will simply be ignored and only `first` or `last` is actually applied (at the very beginning or end of the list, depending on which you're using).
 
 Note that you can query for more records than actually exist in the database without an error message.
 

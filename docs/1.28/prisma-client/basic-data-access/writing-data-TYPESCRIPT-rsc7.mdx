@@ -136,7 +136,7 @@ const newUser: User = await prisma
     email: "alice@prisma.io",
     posts: {
       create: [{
-        title: "Follow Prisma on Twitter",
+        title: "Follow @prisma on Twitter",
       }, {
         title: "Join us for GraphQL Conf in 2019",
       }]
@@ -226,7 +226,7 @@ When deleting records from the database, the `delete`-method receives one input 
 
 The properties of that object correspond to those fields of the model that are marked as [unique](knul#unique-scalar-fields). For the example datamodel above, this means that for `User`, `Post` and `Comment` it has an `id` property. For `User` it additionally accepts the `email` field.
 
-Each method call returns a Promise for object that contains all the scalar fields of the model that was just deleted.
+Each method call returns a Promise for an object that contains all the scalar fields of the model that was just deleted.
 
 ### Examples
 
@@ -281,7 +281,7 @@ Upsert operations allow you to _try_ to update an existing record. If that recor
 
 - `where`: Identical to the `where` field provided in `update`-methods
 - `update`: Identical to the `data` field provided in `update`-methods
-- `create`: Identical to the input object provide in `create`-methods
+- `create`: Identical to the input object provided in `create`-methods
 
 ### Examples
 
@@ -361,7 +361,7 @@ const updatedPostsCount: number = await prisma
   }).count()
 ```
 
-```graphql
+```js
 1
 ```
 
@@ -417,7 +417,7 @@ const newUser: User = await prisma
     email: "bob@prisma.io",
     posts: {
       create: [{
-        title: "Follow Prisma on Twitter",
+        title: "Follow @prisma on Twitter",
       }, {
         title: "Join us for GraphQL Conf in 2019",
       }],
