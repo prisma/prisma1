@@ -78,8 +78,8 @@ object NativeUtils {
     case UuidGCValue(u)     => protocol.GraphqlId(IdValue.String(u.toString))
   }
 
-  def toPrismaSelectedFields(selectedFields: SelectedFields): Vector[prisma.protocol.SelectedField] = {
-    selectedFields.fields.foldLeft(Vector[prisma.protocol.SelectedField]()) { (acc, selectedField) =>
+  def toPrismaSelectedFields(selectedFields: SelectedFields): prisma.protocol.SelectedFields = {
+    val fields = selectedFields.fields.foldLeft(Vector[prisma.protocol.SelectedField]()) { (acc, selectedField) =>
       selectedField match {
         case SelectedScalarField(f) => {
           val field = prisma.protocol.SelectedField(
@@ -101,6 +101,7 @@ object NativeUtils {
         }
       }
     }
+    prisma.protocol.SelectedFields(fields)
   }
 
   def toPrismaCondition(scalarCondition: ScalarCondition): protocol.ScalarFilter.Condition = {
@@ -190,13 +191,13 @@ object NativeUtils {
         )
       case OneRelationIsNullFilter(field) =>
         protocol.Filter(
-          protocol.Filter.Type.OneRelationIsNull(protocol.RelationalField(field.dbName, Seq()))
+          protocol.Filter.Type.OneRelationIsNull(protocol.RelationalField(field.dbName, protocol.SelectedFields(Vector.empty)))
         )
       case RelationFilter(field, nestedFilter, condition) =>
         protocol.Filter(
           protocol.Filter.Type.Relation(
             protocol.RelationFilter(
-              protocol.RelationalField(field.dbName, Seq()),
+              protocol.RelationalField(field.dbName, protocol.SelectedFields(Vector.empty)),
               toPrismaFilter(nestedFilter),
               toRelationFilterCondition(condition)
             )
@@ -237,6 +238,6 @@ object NativeUtils {
   }
 
   def toRelationalField(field: RelationField): protocol.RelationalField = {
-    protocol.RelationalField(field.dbName, Seq())
+    protocol.RelationalField(field.dbName, protocol.SelectedFields(Vector.empty))
   }
 }

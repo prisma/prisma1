@@ -159,7 +159,7 @@ impl IntoSelectedFields for prisma::SelectedFields {
 
                     let selected_fields = rf
                         .selected_fields
-                        .into_selected_fields(model.clone(), from_field.clone());
+                        .into_selected_fields(field.related_model(), from_field.clone());
 
                     acc.push(SelectedField::Relation(SelectedRelationField {
                         field,

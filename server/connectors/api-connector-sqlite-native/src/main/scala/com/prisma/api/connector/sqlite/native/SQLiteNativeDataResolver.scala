@@ -30,7 +30,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     val input = prisma.protocol.GetNodeByWhereInput(
       protocol.Header("GetNodeByWhereInput"),
       ByteString.copyFromUtf8(projectJson.toString()),
-      where.model.dbName,
+      where.model.name,
       where.fieldName,
       protocol.ValueContainer(toPrismaValue(where.fieldGCValue)),
       toPrismaSelectedFields(selectedFields)
@@ -45,7 +45,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     val input = prisma.protocol.GetNodesInput(
       protocol.Header("GetNodesInput"),
       ByteString.copyFromUtf8(projectJson.toString()),
-      model.dbName,
+      model.name,
       toPrismaArguments(queryArguments),
       toPrismaSelectedFields(selectedFields)
     )

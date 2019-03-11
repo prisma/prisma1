@@ -51,6 +51,7 @@ impl ModelTemplate {
                 .into_iter()
                 .map(|fi| fi.build(Arc::downgrade(&model)))
                 .collect(),
+            Arc::downgrade(&model),
         );
 
         // The model is created here and fields WILL BE UNSET before now!
@@ -81,15 +82,13 @@ impl Model {
     }
 
     pub fn db_name_opt(&self) -> Option<&str> {
-        self.manifestation
-            .as_ref()
-            .map(|mf| mf.db_name.as_ref())
+        self.manifestation.as_ref().map(|mf| mf.db_name.as_ref())
     }
 
     pub fn schema(&self) -> SchemaRef {
-        self.schema.upgrade().expect(
-            "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
-        )
+        self.schema
+            .upgrade()
+            .expect("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
     }
 
     pub fn id_column(&self) -> Column {
