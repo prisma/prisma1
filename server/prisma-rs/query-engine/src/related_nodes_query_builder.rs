@@ -1,8 +1,7 @@
 use crate::{cursor_condition::CursorCondition, ordering::Ordering, protobuf::prelude::*, protobuf::IntoFilter};
 use prisma_models::prelude::*;
 use prisma_query::ast::{
-    row_number, Aliasable, Column, Comparable, ConditionTree, Conjuctive, DatabaseValue, Function, Joinable, Select,
-    Table,
+    row_number, Aliasable, Column, Comparable, ConditionTree, Conjuctive, Function, Joinable, Select, Table,
 };
 use std::sync::Arc;
 
@@ -86,11 +85,9 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             .value(row_number_part.clone().alias(Self::ROW_NUMBER_ALIAS))
             .value(Table::from(Self::BASE_TABLE_ALIAS).asterisk());
 
-        let row_number_value: DatabaseValue = row_number_part.into();
-
         Select::from(Table::from(with_row_numbers).alias(Self::ROW_NUMBER_TABLE_ALIAS))
             .value(Table::from(Self::ROW_NUMBER_TABLE_ALIAS).asterisk())
-            .so_that(row_number_value.between(self.window_limits.0 as i64, self.window_limits.1 as i64))
+            .so_that(Self::ROW_NUMBER_ALIAS.between(self.window_limits.0 as i64, self.window_limits.1 as i64))
     }
 
     pub fn without_pagination(self) -> Select {
