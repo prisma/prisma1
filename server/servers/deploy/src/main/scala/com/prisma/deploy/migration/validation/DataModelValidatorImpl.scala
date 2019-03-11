@@ -223,10 +223,8 @@ case class DataModelValidatorImpl(
     val requiredArgErrors = for {
       argumentRequirement <- validator.requiredArgs(capabilities)
       schemaError <- directive.argument(argumentRequirement.name) match {
-                      case None =>
-                        Some(DeployErrors.directiveMissesRequiredArgument(fieldAndType, validator.name, argumentRequirement.name))
-                      case Some(arg) =>
-                        argumentRequirement.validate(arg.value).map(error => DeployError(fieldAndType, error))
+                      case None      => Some(DeployErrors.directiveMissesRequiredArgument(fieldAndType, validator.name, argumentRequirement.name))
+                      case Some(arg) => argumentRequirement.validate(arg.value).map(error => DeployError(fieldAndType, error))
                     }
     } yield schemaError
 

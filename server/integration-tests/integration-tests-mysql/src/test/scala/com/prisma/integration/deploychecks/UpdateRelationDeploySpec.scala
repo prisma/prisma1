@@ -1,5 +1,6 @@
 package com.prisma.integration.deploychecks
 
+import com.prisma.IgnoreMongo
 import com.prisma.integration.IntegrationBaseSpec
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -66,7 +67,7 @@ class UpdateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Updating a relation to make it required" should "should error if there is data but the required relation is violated " in {
+  "Updating a relation to make it required" should "should error if there is data but the required relation is violated " taggedAs (IgnoreMongo) in {
 
     val schema =
       """|type A {
