@@ -64,7 +64,7 @@ impl From<PrismaValue> for DatabaseValue {
             PrismaValue::String(s) => s.into(),
             PrismaValue::Float(f) => (f as f64).into(),
             PrismaValue::Boolean(b) => b.into(),
-            PrismaValue::DateTime(d) => (d.timestamp() * 1000).into(),
+            PrismaValue::DateTime(d) => d.timestamp_millis().into(),
             PrismaValue::Enum(e) => e.into(),
             PrismaValue::Json(j) => j.into(),
             PrismaValue::Int(i) => (i as i64).into(),
