@@ -1,9 +1,11 @@
 package com.prisma.integration
 
 import com.prisma.IgnoreSQLite
+import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag}
 import org.scalatest.{FlatSpec, Matchers}
 
 class RenamingWithExistingDataSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  override def runOnlyForConnectors = Set(PostgresConnectorTag, MySqlConnectorTag, SQLiteConnectorTag)
 
   "Renaming a model" should "work" taggedAs (IgnoreSQLite) in {
 

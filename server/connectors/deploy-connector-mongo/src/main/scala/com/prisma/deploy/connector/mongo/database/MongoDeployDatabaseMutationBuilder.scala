@@ -91,14 +91,14 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   //Fields
-  def createField(model: Model, fieldName: String) = DeployMongoAction { database =>
+  def createIndex(model: Model, fieldName: String) = DeployMongoAction { database =>
     model.isEmbedded match {
       case false => addUniqueConstraint(database, model.dbName, fieldName)
       case true  => Future.successful(())
     }
   }
 
-  def deleteField(model: Model, fieldName: String) = DeployMongoAction { database =>
+  def deleteIndex(model: Model, fieldName: String) = DeployMongoAction { database =>
     model.isEmbedded match {
       case false => removeUniqueConstraint(database, model.dbName, fieldName)
       case true  => Future.successful(())

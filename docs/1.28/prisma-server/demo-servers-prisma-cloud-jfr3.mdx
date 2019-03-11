@@ -1,0 +1,88 @@
+import Warning from "components/Markdown/Warning"
+
+export const meta = {
+  title: 'Demo Servers (Prisma Cloud)',
+  position: 50
+}
+
+## Overview
+
+Prisma Demo servers are Prisma servers running in [Prisma Cloud](https://www.prisma.io/cloud/). **Usage of Demo servers is free of any charge!**
+
+All Demo servers are already connected to a hosted instance of an [AWS Aurora](https://aws.amazon.com/rds/aurora/) database.
+
+<Warning>
+
+Demo servers are not to be used in production as they are rate-limited and have constraints in terms of storage.
+
+Since Demo servers provide a free and shared environment for all Prisma Cloud users, they can not be protected using the [`managementApiSecret`](kke4#management-api-secret). To procect the data stored in our Prisma services that are deployed to a Demo server, you can set the [service secret](kke4#service-secret) in your `prisma.yml`.
+
+</Warning>
+
+Prisma Demo servers are available in two _regions_:
+
+- EU (Ireland)
+- US West (Oregon)
+
+In order to use a Prisma Demo server, you need to register with Prisma Cloud.
+
+## Service endpoints
+
+The endpoints of Prisma services deployed to Prisma Demo servers have a slightly different structure than the ones for services running on "regular" Prisma servers. 
+
+A service deployed to Prisma Demo server has an additional path component in its URL (prefixing the _name_ and the _stage_ of a service), namely the _name of the Prisma Cloud workspace_.
+
+Consider the following endpoint as an example: `https://eu1.prisma.sh/jane-doe/myservice/dev`
+
+This endpoint encodes the following information about the service:
+
+- `eu1.prisma.sh`: The service is deployed to the _EU_ region. (The _US_ region uses `us1.prisma.sh`).
+- `jane-doe`: The name of the Prisma Cloud workspace.
+- `myservice`: The name of the service.
+- `dev`: The service stage.
+
+## Use cases
+
+Potential use cases for Prisma servers are:
+
+- Prototyping
+- Learning
+- Personal projects without a notable user base
+
+## Limitations
+
+### Rate limiting
+
+Prisma Demo servers are rate limited to **10 requests per 10 seconds** (on average).
+
+If this rate is exceeded, requests are being queued in memory. If the queue exceeds 25 requests, an error is returned immediately. 
+
+The header field `throttled-by` is included in HTTP responses. It indicates how long the request was delayed due to throttling (in milli seconds).
+
+### Storage
+
+The upper bound in storage capacity for a Prisma service running on a Demo server is **100 MB**.
+
+## Authentication
+
+### Login
+
+Before deploying Prisma services to a Demo server, the Prisma CLI needs to be authenticated with Prisma Cloud.
+
+To log into Prisma CLoud from the CLI, use the following command:
+
+```bash
+prisma login
+```
+
+This command opens a browser window where you need to provide your Prisma Cloud credentials. If the credentials are valid, the CLI generates a Prisma Cloud token (sometimes called _cloud session key_) and stores it in `~/.prisma/config.yml` as `cloudSessionKey`.
+
+This token is used in subsequent requests to authenticate against the Demo server.
+
+### Logout
+
+To logout from the Prisma CLI use `prisma logout` command. It simply removes the `cloudSessionKey` from `~/.prisma/config.yml`.
+
+## Pricing
+
+There is no cost for using Prisma Demo servers.

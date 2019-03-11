@@ -129,6 +129,8 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       this.out.exit(0)
     }
 
+    await this.env.fetchClusters()
+
     const endpointDialog = new EndpointDialog({
       out: this.out,
       client: this.client,

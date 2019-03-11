@@ -1,10 +1,13 @@
 package com.prisma.deploy.connector.mongo.impl
 
 import com.prisma.deploy.connector.ClientDbQueries
-import com.prisma.deploy.connector.mongo.database.MongoDeployDatabaseQueryBuilder
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models._
-import org.mongodb.scala.MongoClient
+import org.mongodb.scala.{Document, MongoClient}
+import org.mongodb.scala.model.Aggregates.{project => mongoProjection, `match`, limit, group}
+import org.mongodb.scala.model.Accumulators._
+import org.mongodb.scala.model.Filters._
+import org.mongodb.scala.model.Projections._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -34,8 +37,20 @@ case class MongoClientDbQueries(project: Project, clientDatabase: MongoClient)(i
   }
 
   def existsDuplicateValueByModelAndField(model: Model, field: ScalarField): Future[Boolean] = {
-//    val query = MongoDeployDatabaseQueryBuilder.existsDuplicateValueByModelAndField(project.id, model.name, field.name)
-    Future.successful(false)
+    clientDatabase
+      .getDatabase(database)
+      .getCollection(model.dbName)
+      .aggregate(
+        Seq(
+          `match`(notEqual(field.dbName, null)),
+          group(s"$$${field.dbName}", sum("count", 1)),
+          `match`(gt("count", 1)),
+          mongoProjection(include("_id")),
+          limit(1)
+        )
+      )
+      .toFuture()
+      .map(_.nonEmpty)
   }
 
   override def enumValueIsInUse(models: Vector[Model], enumName: String, value: String): Future[Boolean] = {
