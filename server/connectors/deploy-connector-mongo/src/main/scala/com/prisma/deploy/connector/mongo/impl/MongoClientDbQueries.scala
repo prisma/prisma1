@@ -11,9 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MongoClientDbQueries(project: Project, clientDatabase: MongoClient)(implicit ec: ExecutionContext) extends ClientDbQueries {
   val database = project.dbName
 
-  def existsByModel(model: Model): Future[Boolean] = {
-    clientDatabase.getDatabase(database).getCollection(model.dbName).countDocuments().toFuture().map(count => if (count > 0) true else false)
-  }
+  def existsByModel(model: Model): Future[Boolean] = MongoDeployDatabaseQueryBuilder.existsByModel(clientDatabase, database, model)
 
   def existsByRelation(relation: Relation): Future[Boolean] = {
 //    val query = MongoDeployDatabaseQueryBuilder.existsByRelation(project.id, relationId)
