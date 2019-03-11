@@ -73,7 +73,10 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             .and(self.conditions)
             .and(cursor_condition);
 
-        let base_with_conditions = base_query.so_that(conditions);
+        let base_with_conditions = match self.order_by {
+            Some(order_by) => base_query.column(order_by.field.as_column()).so_that(conditions),
+            None => base_query.so_that(conditions),
+        };
 
         let row_number_part: Function = ordering
             .into_iter()
@@ -83,7 +86,7 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
 
         let with_row_numbers = Select::from(Table::from(base_with_conditions).alias(Self::BASE_TABLE_ALIAS))
             .value(Table::from(Self::BASE_TABLE_ALIAS).asterisk())
-            .value(row_number_part.clone().alias(Self::ROW_NUMBER_ALIAS));
+            .value(row_number_part.alias(Self::ROW_NUMBER_ALIAS));
 
         Select::from(Table::from(with_row_numbers).alias(Self::ROW_NUMBER_TABLE_ALIAS))
             .value(Table::from(Self::ROW_NUMBER_TABLE_ALIAS).asterisk())
