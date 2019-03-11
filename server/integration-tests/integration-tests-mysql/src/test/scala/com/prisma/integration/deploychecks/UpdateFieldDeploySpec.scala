@@ -1,6 +1,7 @@
 package com.prisma.integration.deploychecks
 
 import com.prisma.IgnoreSQLite
+import com.prisma.IgnoreMongo
 import com.prisma.integration.IntegrationBaseSpec
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -278,7 +279,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Updating a scalar field to required" should "warn if a newly required field is null" in {
+  "Updating a scalar field to required" should "warn if a newly required field is null" taggedAs (IgnoreMongo) in {
 
     val schema =
       """|type A {
@@ -380,7 +381,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Updating a relation field to required" should "throw an error if a newly required field is null" in {
+  "Updating a relation field to required" should "throw an error if a newly required field is null" taggedAs (IgnoreMongo) in {
 
     val schema =
       """|type A {

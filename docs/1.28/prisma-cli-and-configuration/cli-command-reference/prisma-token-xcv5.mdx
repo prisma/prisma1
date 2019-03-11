@@ -1,0 +1,35 @@
+export const meta = {
+  title: "prisma token",
+  position: 160,
+}
+
+## `$ prisma token`
+
+Generate a new [service token](kke4#service-token). The service token is a [JWT](https://jwt.io) that is _signed_ with the [service secret](kke4#service-secret).
+
+### Usage
+
+```bash
+prisma token [flags]
+```
+
+### Flags
+
+```
+-c, --copy                 Copy token to clipboard
+-e, --env-file ENV-FILE    Path to .env file to inject env vars
+```
+
+### Examples
+
+**Print service token**
+
+```bash
+prisma token
+```
+
+**Copy service token to clipboard**
+
+```bash
+prisma token --copy
+```

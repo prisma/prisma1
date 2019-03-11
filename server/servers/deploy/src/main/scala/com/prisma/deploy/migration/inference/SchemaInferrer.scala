@@ -38,7 +38,7 @@ case class SchemaInferrerImpl(
     inferredTables: InferredTables
 ) extends AwaitUtils {
 
-  val isLegacy      = capabilities.has(LegacyDataModelCapability)
+  val isLegacy      = baseSchema.isLegacy
   val hasMigrations = capabilities.has(MigrationsCapability)
   val isMongo       = capabilities.has(RelationLinkListCapability)
   val isSql         = !isMongo
