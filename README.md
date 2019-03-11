@@ -6,7 +6,7 @@
 
 Prisma replaces traditional ORMs and simplifies database workflows: 
 
-- _Access_: **Type-safe database access with the auto-generated Prisma client** (in [JavaScript](), [TypeScript](), [Go]())
+- _Access_: **Type-safe database access with the auto-generated Prisma client** (in [JavaScript](https://www.prisma.io/client/client-javscript/), [TypeScript](https://www.prisma.io/client/client-typescript/), [Go](https://www.prisma.io/client/client-go/))
 - _Migrate_: **Declarative data modelling and (optional) migrations**
 - _Manage_: **Visual data management with Prisma Admin**
 
@@ -20,7 +20,6 @@ Try a Prisma example online with CodeSandbox:
 
 - [Quickstart](#quickstart)
 - [Examples](#examples)
-- [Architecture](#architecture)
 - [Database Connectors](#database-connectors)
 - [Community](#community)
 - [Contributing](#contributing)
@@ -291,6 +290,7 @@ Prisma has a [community](https://www.prisma.io/community) of thousands of amazin
 ### Channels
 
 - [Forum](https://www.prisma.io/forum)
+- [Spectrum](https://spectrum.chat/prisma)
 - [Slack](https://slack.prisma.io/)
 - [Twitter](https://twitter.com/prisma)
 - [Facebook](https://www.facebook.com/prisma.io)
