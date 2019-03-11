@@ -42,6 +42,10 @@ object Dependencies {
   val playJson    = "com.typesafe.play" %% "play-json"    % v.play
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play
 
+  val nettyTransport = "io.netty" % "netty-transport" % "4.1.17.Final"
+  val nettyHandler   = "io.netty" % "netty-handler" % "4.1.17.Final"
+  val netty          = Seq(nettyTransport, nettyHandler)
+
   val akka            = "com.typesafe.akka" %% "akka-actor"        % v.akka
   val akkaStream      = "com.typesafe.akka" %% "akka-stream"       % v.akka
   val akkaTestKit     = "com.typesafe.akka" %% "akka-testkit"      % v.akka
