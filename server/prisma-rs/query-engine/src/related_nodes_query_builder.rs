@@ -82,8 +82,8 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             .into();
 
         let with_row_numbers = Select::from(Table::from(base_with_conditions).alias(Self::BASE_TABLE_ALIAS))
-            .value(row_number_part.clone().alias(Self::ROW_NUMBER_ALIAS))
-            .value(Table::from(Self::BASE_TABLE_ALIAS).asterisk());
+            .value(Table::from(Self::BASE_TABLE_ALIAS).asterisk())
+            .value(row_number_part.clone().alias(Self::ROW_NUMBER_ALIAS));
 
         Select::from(Table::from(with_row_numbers).alias(Self::ROW_NUMBER_TABLE_ALIAS))
             .value(Table::from(Self::ROW_NUMBER_TABLE_ALIAS).asterisk())
