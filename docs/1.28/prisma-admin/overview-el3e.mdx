@@ -1,0 +1,49 @@
+import Warning from "components/Markdown/Warning"
+
+export const meta = {
+  title: "Overview",
+  position: 10,
+}
+
+## Areas
+
+The Prisma Admin interface is composed of 4 main areas:
+
+- Left: The Sidebar
+- Center: The Query & Result areas
+- Right: The Detail area
+
+![](https://prisma-tutorial-images.ams3.cdn.digitaloceanspaces.com/adminareas.png)
+
+### Detail Area
+
+The Detail area on within the right hand sidebar gives you a more in-depth view of your data. You can explore your data with:
+
+- A **Form** component: This is default view for the Detail area. Similar to the functionality of the Result area, you can edit any of the data and save it by confirming your changes.
+- A **JSON** component: See your results as JSON by clicking on the eye icon at the top right of the Detail area
+  ![](https://lh5.googleusercontent.com/1H8aPpeGNtFMzRHi-UPn0X2SSn96BY6P8kXQdELsiWtcQCSAV5v5PlW8ppxkBSSD1j5LkaxVobIy4ffFBE65rAbJQ--dcksT5m6a0-0qHKJKfiEjnFCVqhqMES33WzAYz9tK9Ng6)
+- **Custom** UI components (experimental)
+
+### Query area
+
+The Query area lets you write GraphQL to read and write data in your database. The of your queries/mutations will show up in the Result area. 
+
+### Result area
+
+The Result area displays the query/mutation results from the Query area. Results can be filtered, sorted and paginated by adding respective parameters to the GraphQL query in the Query area. You can also control which columns should be part of the table by modifying the selection set of the query/mutation.
+
+## Writing data
+
+### Creating and Modifying Data in Prisma Admin
+
+Prisma makes adding new data entries and modifying existing data simple. Users can make the changes they need in the Result and Detail areas of the Admin interface. Unlike the Prisma Playground, this cannot be done through the Query area — which is used exclusively for queries (not mutations).
+
+Data can be added in the Result Area. Clicking on the little plus sign beside the three dots creates a new (unconfirmed change in the database). To save the change and the new data, you need to click the save unconfirmed changes button at the bottom of the page.
+
+![](https://lh4.googleusercontent.com/ZnPMbokXRBhtfQU78pf3kjPq55aWIecRl7rjHmA_h2TmuxbqJ8zr07WAV8F4alvguoeMs2d_rcTUIunRxxu-xAYfyKrW3Uezp2jZPWiRgZC2UY8lFSa-i8xRfTIcG6gOTeS3Haun)
+
+> _You need to fill in all of the required fields in order to successfully save the information. If you added multiple records, you should double check that all of the required fields are filled in, not just those on the entry that you are currently editing._
+
+Editing data can similarly be done in two ways: in the Result area or in the right hand bar, in the Detail Area. The same two steps that apply to adding data are relevant for editing data. Once again, you need to just edit the data and save the changes afterwards.
+
+![](https://lh3.googleusercontent.com/UVpU9X7xVGkKoYw2TVAV4fD5ZzjJLRwaN4WqU3Fph8lpnVt2O4XrALBnujEiUgPPKXKQO02lkzeikQ1-6HxQJ6DkgoC8oL54RBKj_A8DgmeDlbHFN_xnAYh8o48exoFdbNDBCVTV)
