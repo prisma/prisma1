@@ -60,11 +60,11 @@ case class BlazeSangriaServer(handler: SangriaHandler, port: Int, requestPrefix:
       case request if request.method == GET && request.pathInfo == "/status" =>
         Ok("\"OK\"")
 
-      case request if request.method == GET && requestPath(request).last.startsWith("_playground") =>
-        StaticFile.fromResource("/playground.html", Some(request)).getOrElseF(NotFound())
+      case request if request.method == GET && requestPath(request).last.startsWith("_admin") =>
+        StaticFile.fromResource("/admin.html", Some(request)).getOrElseF(NotFound())
 
       case request if request.method == GET =>
-        StaticFile.fromResource("/admin.html", Some(request)).getOrElseF(NotFound())
+        StaticFile.fromResource("/playground.html", Some(request)).getOrElseF(NotFound())
 
       case request if request.method == POST =>
         val requestId       = createRequestId()
