@@ -1,12 +1,13 @@
 mod graphql;
-pub use graphql::GraphQlBody;
+pub use graphql::{GraphQlBody, GraphQlRequestHandler};
 
 use actix_web::HttpRequest;
 use std::collections::HashMap;
 
+pub trait RequestHandler {
+    type Body;
 
-trait RequestHandler<T> {
-    fn handle<S: Into<PrismaRequest<T>>>(req: S);
+    fn handle<S: Into<PrismaRequest<Self::Body>>>(&self, req: S);
 }
 
 pub struct PrismaRequest<T> {

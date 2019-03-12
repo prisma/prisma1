@@ -6,16 +6,16 @@ pub use connection_string::ConnectionStringConfig;
 pub use explicit::ExplicitConfig;
 pub use file::FileConfig;
 
-use std::collections::BTreeMap;
+use crate::{error::Error, PrismaResult};
+use serde_yaml;
+use std::{collections::BTreeMap, env, fs::File, path::PathBuf};
 
 trait WithMigrations {
     fn migrations(&self) -> Option<bool>;
     fn is_active(&self) -> Option<bool>;
 
     fn with_migrations(&self) -> bool {
-        self.migrations()
-            .or_else(|| self.is_active())
-            .unwrap_or(false)
+        self.migrations().or_else(|| self.is_active()).unwrap_or(false)
     }
 }
 
@@ -48,4 +48,35 @@ pub struct PrismaConfig {
     pub rabbit_uri: Option<String>,
     pub enable_management_api: Option<bool>,
     pub databases: BTreeMap<String, PrismaDatabase>,
+}
+
+/// Loads the config
+pub fn load() -> PrismaResult<PrismaConfig> {
+    let config_path: PathBuf = match env::var("PRISMA_CONFIG") {
+        Ok(ref p) => {
+            let path = PathBuf::from(p);
+            if path.exists() {
+                Err(Error::ConfigurationError(format!("File {} doesn't exist", p)))
+            } else {
+                Ok(path)
+            }
+        }
+        Err(_) => match find_config_path() {
+            Some(path) => Ok(path),
+            None => Err(Error::ConfigurationError("Unable to find Prisma config.".into())),
+        },
+    }
+    .unwrap();
+
+    Ok(config_path.into())
+}
+
+pub fn find_config_path() -> Option<PathBuf> {
+    unimplemented!()
+}
+
+impl From<PathBuf> for PrismaConfig {
+    fn from(pb: PathBuf) -> PrismaConfig {
+        serde_yaml::from_reader(File::open(pb).unwrap()).unwrap()
+    }
 }

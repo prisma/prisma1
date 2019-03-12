@@ -19,6 +19,8 @@ pub enum Error {
     InvalidConnectionArguments(&'static str),
     /// No result returned from query
     NoResultError,
+    /// Configuration error
+    ConfigurationError(String),
 }
 
 impl std::fmt::Display for Error {
@@ -43,6 +45,7 @@ impl StdError for Error {
             Error::InvalidInputError(message) => message,
             Error::InvalidConnectionArguments(message) => message,
             Error::NoResultError => "Query returned no results",
+            Error::ConfigurationError(message) => message,
         }
     }
 
