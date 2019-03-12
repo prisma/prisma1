@@ -8,6 +8,7 @@ mod data_resolvers;
 mod ordering;
 mod protobuf;
 mod related_nodes_query_builder;
+pub mod req_handlers;
 
 use lazy_static::lazy_static;
 use prisma_common::{config::PrismaConfig, error::Error};

@@ -24,9 +24,11 @@ arc-swap = "0.3"
 log = "0.4"
 env_logger = "0.6"
 tower-service = "0.2"
+actix-web = "0.7.18"
+actix = "0.7"
 futures = "0.1"
-tokio = "0.1"
-prisma-query = { git = "https://github.com/prisma/prisma-query.git", branch = "master"}
+graphql-parser = "0.2.2"
+prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 prisma-common = { path = "../libs/prisma-common" }
 prisma-models = { path = "../prisma-models" }
 
