@@ -10,7 +10,8 @@ import org.scalatest.{FlatSpec, Matchers, Retries}
 import scala.concurrent.Future
 
 class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
-  override def runOnlyForCapabilities = Set(ScalarListsCapability)
+  override def doNotRunForPrototypes: Boolean = true
+  override def runOnlyForCapabilities         = Set(ScalarListsCapability)
 
   import testDependencies.system.dispatcher
 

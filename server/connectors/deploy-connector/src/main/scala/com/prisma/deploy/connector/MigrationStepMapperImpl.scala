@@ -15,9 +15,9 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       Vector(DeleteModelTable(project, model, model.dbNameOfIdField_!, scalarListFieldNames))
 
     case x: UpdateModel =>
-      val model                = nextSchema.getModelByName(x.newName).getOrElse(nextSchema.getModelByName_!(x.newName.substring(2)))
-      val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
-      Vector(RenameTable(project = project, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
+      val oldModel = previousSchema.getModelByName_!(x.name)
+      val newModel = nextSchema.getModelByName_!(x.newName)
+      Vector(UpdateModelTable(project = project, oldModel = oldModel, newModel = newModel))
 
     case x: CreateField =>
       val model = nextSchema.getModelByName_!(x.model)
@@ -41,36 +41,32 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       }
 
     case x: UpdateField =>
-      val oldModel           = previousSchema.getModelByName_!(x.model)
-      val newModel           = nextSchema.getModelByName_!(x.newModel)
-      val next               = nextSchema.getFieldByName_!(x.newModel, x.finalName)
-      val previous           = previousSchema.getFieldByName_!(x.model, x.name)
-      lazy val temporaryNext = next.asScalarField_!.copy(name = next.name + "_prisma_tmp", manifestation = None)
-
+      val oldModel                   = previousSchema.getModelByName_!(x.model)
+      val newModel                   = nextSchema.getModelByName_!(x.newModel)
+      val next                       = nextSchema.getFieldByName_!(x.newModel, x.finalName)
+      val previous                   = previousSchema.getFieldByName_!(x.model, x.name)
       lazy val createColumn          = CreateColumn(project, oldModel, next.asScalarField_!)
       lazy val updateColumn          = UpdateColumn(project, oldModel, previous.asScalarField_!, next.asScalarField_!)
       lazy val deleteColumn          = DeleteColumn(project, oldModel, previous.asScalarField_!)
       lazy val createScalarListTable = CreateScalarListTable(project, oldModel, next.asScalarField_!)
       lazy val deleteScalarListTable = DeleteScalarListTable(project, oldModel, previous.asScalarField_!)
       lazy val updateScalarListTable = UpdateScalarListTable(project, oldModel, newModel, previous.asScalarField_!, next.asScalarField_!)
-      lazy val createTemporaryColumn = createColumn.copy(field = temporaryNext)
-      lazy val renameTemporaryColumn = UpdateColumn(project, oldModel, temporaryNext, next.asScalarField_!)
 
       // TODO: replace that with a pattern match based on the subtypes of `models.Field`
       () match {
-        case _ if previous.isRelation && next.isRelation                                                             => Vector.empty
-        case _ if previous.isRelation && next.isScalarNonList                                                        => Vector(createColumn)
-        case _ if previous.isRelation && next.isScalarList                                                           => Vector(createScalarListTable)
-        case _ if previous.isScalarList && next.isScalarNonList                                                      => Vector(createColumn, deleteScalarListTable)
-        case _ if previous.isScalarList && next.isRelation                                                           => Vector(deleteScalarListTable)
-        case _ if previous.isScalarNonList && next.isScalarList                                                      => Vector(createScalarListTable, deleteColumn)
-        case _ if previous.isScalarNonList && next.isRelation                                                        => Vector(deleteColumn)
-        case _ if previous.isScalarNonList && next.isScalarNonList && previous.typeIdentifier == next.typeIdentifier => Vector(updateColumn)
-        case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier       => Vector(updateScalarListTable)
-        case _ if previous.isScalarList && next.isScalarList                                                         => Vector(deleteScalarListTable, createScalarListTable)
+        case _ if previous.isRelation && next.isRelation                                                       => Vector.empty
+        case _ if previous.isRelation && next.isScalarNonList                                                  => Vector(createColumn)
+        case _ if previous.isRelation && next.isScalarList                                                     => Vector(createScalarListTable)
+        case _ if previous.isScalarList && next.isScalarNonList                                                => Vector(createColumn, deleteScalarListTable)
+        case _ if previous.isScalarList && next.isRelation                                                     => Vector(deleteScalarListTable)
+        case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier => Vector(updateScalarListTable)
+        case _ if previous.isScalarList && next.isScalarList                                                   => Vector(deleteScalarListTable, createScalarListTable)
+        case _ if previous.isScalarNonList && next.isRelation                                                  => Vector(deleteColumn)
+        case _ if previous.isScalarNonList && next.isScalarList                                                => Vector(createScalarListTable, deleteColumn)
         case _ if previous.isScalarNonList && next.isScalarNonList =>
+          val common         = Vector(updateColumn)
           val isIdTypeChange = previous.asScalarField_!.isId && next.asScalarField_!.isId && previous.asScalarField_!.typeIdentifier != next.asScalarField_!.typeIdentifier
-          val common         = Vector(createTemporaryColumn, deleteColumn, renameTemporaryColumn) // a table might have temporary no columns. MySQL does not allow this.
+
           if (isIdTypeChange) {
             val deleteRelations = previousSchema.relations.filter(_.containsTheModel(previous.model)).map(deleteRelation).toVector
             val recreateRelations = nextSchema.relations

@@ -42,7 +42,8 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
                                     CustomJdbcDriver.jna
                                   } else {
                                     new org.postgresql.Driver
-                                  })
+                                  }),
+    SupportedDrivers.SQLITE -> new org.sqlite.JDBC
   )
 
   override val cacheFactory: CacheFactory = new CaffeineCacheFactory()

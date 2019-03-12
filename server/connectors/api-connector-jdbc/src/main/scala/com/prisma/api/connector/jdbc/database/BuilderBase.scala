@@ -19,6 +19,7 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
 
   val isMySql    = slickDatabase.isMySql
   val isPostgres = slickDatabase.isPostgres
+  val isSQLite   = slickDatabase.isSQLite
   val sql        = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
 
   private val relayIdTableName                                               = "_RelayId"

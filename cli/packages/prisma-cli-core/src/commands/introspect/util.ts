@@ -7,6 +7,7 @@ import { omit } from 'lodash'
 import { Connectors } from 'prisma-db-introspection'
 import { DatabaseType } from 'prisma-datamodel'
 import { IConnector } from 'prisma-db-introspection/dist/common/connector'
+import { URL } from 'url'
 
 function replaceLocalDockerHost(credentials: DatabaseCredentials) {
   if (credentials.host) {
@@ -53,6 +54,7 @@ export interface ConnectorData extends ConnectorAndDisconnect {
 export interface IntermediateConnectorData extends ConnectorAndDisconnect {
   databaseType: DatabaseType
   databaseName?: string
+  interactive: boolean
 }
 
 export async function getConnectedConnectorFromCredentials(
@@ -88,7 +90,13 @@ export async function getConnectorWithDatabase(
   connectorData: IntermediateConnectorData,
   endpointDialog: EndpointDialog,
 ): Promise<ConnectorData> {
-  const { connector, disconnect, databaseType, ...result } = connectorData
+  const {
+    connector,
+    disconnect,
+    databaseType,
+    interactive,
+    ...result
+  } = connectorData
   let { databaseName } = result
 
   let schemas: string[]
@@ -98,9 +106,14 @@ export async function getConnectorWithDatabase(
     throw new Error(`Could not connect to database. ${e.message}`)
   }
 
+  if (!databaseName && !interactive) {
+    throw new Error(`Please provide a database name`)
+  }
+
   if (databaseName && !schemas.includes(databaseName)) {
     const schemaWord =
       databaseType === DatabaseType.postgres ? 'schema' : 'database'
+
     throw new Error(
       `The provided ${schemaWord} "${databaseName}" does not exist. The following are available: ${schemas.join(
         ', ',
@@ -170,4 +183,41 @@ function getConnectedMongoClient(
       },
     )
   })
+}
+
+export function sanitizeMongoUri(mongoUri: string) {
+  const url = new URL(mongoUri)
+  if (url.pathname === '/' || url.pathname.length === 0) {
+    url.pathname = 'admin'
+  }
+
+  return url.toString()
+}
+
+export function populateMongoDatabase({
+  uri,
+  database,
+}: {
+  uri: string
+  database?: string
+}): { uri: string; database: string } {
+  const url = new URL(uri)
+  if ((url.pathname === '/' || url.pathname.length === 0) && !database) {
+    throw new Error(
+      `Please provide a Mongo database in your connection string.\nRead more here https://docs.mongodb.com/manual/reference/connection-string/`,
+    )
+  }
+
+  if (!database) {
+    database = url.pathname.slice(1)
+  }
+
+  return {
+    uri,
+    database,
+  }
+}
+
+export function hasAuthSource(uri: string): boolean {
+  return new URL(uri).searchParams.has('authSource')
 }

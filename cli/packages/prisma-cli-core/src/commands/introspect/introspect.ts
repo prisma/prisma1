@@ -16,6 +16,8 @@ import {
   ConnectorData,
   getConnectorWithDatabase,
   IntermediateConnectorData,
+  populateMongoDatabase,
+  sanitizeMongoUri,
 } from './util'
 
 export default class IntrospectCommand extends Command {
@@ -26,6 +28,16 @@ export default class IntrospectCommand extends Command {
       char: 'i',
       description: 'Interactive mode',
     }),
+
+    ['env-file']: flags.string({
+      description: 'Path to .env file to inject env vars',
+      char: 'e',
+    }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
+
     /**
      * Postgres Params
      */
@@ -164,7 +176,7 @@ ${chalk.bold(
     const introspection = await connector.introspect(databaseName)
     const sdl = existingDatamodel
       ? await introspection.getNormalizedDatamodel(existingDatamodel)
-      : await introspection.getDatamodel()
+      : await introspection.getNormalizedDatamodel()
 
     const renderer = DefaultRenderer.create(
       introspection.databaseType,
@@ -244,7 +256,12 @@ ${chalk.bold(
 
   async getConnector(): Promise<IntermediateConnectorData> {
     const hasExecuteRaw = await this.hasExecuteRaw()
-    const credentials = await this.getCredentials(hasExecuteRaw)
+    let credentials = this.getCredentialsByFlags()
+    let interactive = false
+    if (!credentials) {
+      credentials = await this.getCredentialsInteractively(hasExecuteRaw)
+      interactive = true
+    }
     if (credentials) {
       const {
         connector,
@@ -255,6 +272,7 @@ ${chalk.bold(
         disconnect,
         databaseType: credentials.type,
         databaseName: credentials.schema,
+        interactive,
       }
     }
 
@@ -282,12 +300,11 @@ ${chalk.bold(
       disconnect,
       databaseType: client.databaseType,
       databaseName,
+      interactive: false,
     }
   }
 
-  async getCredentials(
-    hasExecuteRaw: boolean,
-  ): Promise<DatabaseCredentials | null> {
+  getCredentialsByFlags(): DatabaseCredentials | null {
     const requiredPostgresFlags = ['pg-host', 'pg-user', 'pg-password', 'pg-db']
     const requiredMysqlFlags = ['mysql-host', 'mysql-user', 'mysql-password']
 
@@ -321,7 +338,7 @@ ${chalk.bold(
 
     if (mysqlFlags.length >= requiredMysqlFlags.length) {
       return {
-        host: flags['myqsl-host'],
+        host: flags['mysql-host'],
         port: parseInt(flags['mysql-port'], 10),
         user: flags['mysql-user'],
         password: flags['mysql-password'],
@@ -335,7 +352,7 @@ ${chalk.bold(
         host: flags['pg-host'],
         user: flags['pg-user'],
         password: flags['pg-password'],
-        database: flags['pg-database'],
+        database: flags['pg-db'],
         port: parseInt(flags['pg-port'], 10),
         schema: flags['pg-schema'], // this is optional and can be undefined
         type: DatabaseType.postgres,
@@ -343,14 +360,23 @@ ${chalk.bold(
     }
 
     if (flags['mongo-uri']) {
+      const uri = flags['mongo-uri']
+      const database = flags['mongo-db'] // this is optional and can be undefined
+      const credentials = populateMongoDatabase({ uri, database })
       return {
-        uri: flags['mongo-uri'],
-        schema: flags['mongo-db'], // this is optional and can be undefined
+        uri: sanitizeMongoUri(credentials.uri),
+        schema: credentials.database,
         type: DatabaseType.mongo,
       }
     }
 
-    if (flags.interactive || !hasExecuteRaw) {
+    return null
+  }
+
+  async getCredentialsInteractively(
+    hasExecuteRaw: boolean,
+  ): Promise<DatabaseCredentials | null> {
+    if (this.flags.interactive || !hasExecuteRaw) {
       const endpointDialog = new EndpointDialog({
         out: this.out,
         client: this.client,
@@ -359,11 +385,12 @@ ${chalk.bold(
         definition: this.definition,
         shouldAskForGenerator: false,
       })
-      return await endpointDialog.getDatabase(true)
+      return endpointDialog.getDatabase(true)
     }
 
     return null
   }
+
   handleMissingArgs(
     requiredArgs: string[],
     providedArgs: string[],
