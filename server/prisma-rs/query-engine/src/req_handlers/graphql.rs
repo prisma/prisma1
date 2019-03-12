@@ -1,8 +1,9 @@
 use super::{PrismaRequest, RequestHandler};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use graphql_parser as gql;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GraphQlBody {
     query: String,
     operation: String,
@@ -15,6 +16,7 @@ impl RequestHandler for GraphQlRequestHandler {
     type Body = GraphQlBody;
 
     fn handle<S: Into<PrismaRequest<Self::Body>>>(&self, req: S) {
-        unimplemented!()
+        let ast = gql::parse_query(&req.into().body.query).unwrap();
+        dbg!(ast);
     }
 }

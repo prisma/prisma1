@@ -72,7 +72,9 @@ pub fn load() -> PrismaResult<PrismaConfig> {
 }
 
 pub fn find_config_path() -> Option<PathBuf> {
-    unimplemented!()
+    let mut bp = PathBuf::new();
+    bp.push(std::env::var("PRISMA_CONFIG_PATH").expect("Did you forget to load your env vars? :)"));
+    Some(bp)
 }
 
 impl From<PathBuf> for PrismaConfig {
