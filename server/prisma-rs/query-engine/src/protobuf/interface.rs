@@ -61,12 +61,17 @@ macro_rules! input_to_query {
             Self::protobuf_result(|| {
                 let input = $x::decode(payload)?;
                 input.validate()?;
-                let query = input.into_select_query()?;
-                let (rows, fields) = self.data_resolver.select_nodes(query)?;
-                let nodes: Vec<Node> = rows.into_iter().map(Node::from).collect();
-                let response = RpcResponse::ok(NodesResult { nodes, fields });
-                let mut response_payload = Vec::new();
 
+                let query = input.into_select_query()?;
+                let result = self.data_resolver.select_nodes(query)?;
+                let nodes: Vec<prisma::Node> = result.nodes.into_iter().map(prisma::Node::from).collect();
+
+                let response = RpcResponse::ok(prisma::NodesResult {
+                    nodes: nodes,
+                    fields: result.field_names,
+                });
+
+                let mut response_payload = Vec::new();
                 response.encode(&mut response_payload).unwrap();
                 Ok(response_payload)
             })

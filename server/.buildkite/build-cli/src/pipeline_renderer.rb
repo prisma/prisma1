@@ -76,6 +76,7 @@ class PipelineRenderer
       #{steps.compact.map { |step| step.render!(2) }.join "\n\n"}
     EOS
 
+    puts rendered
     rendered
   end
 
@@ -123,8 +124,9 @@ class PipelineRenderer
 
   def release_artifacts_steps
     # Option 1: It's a tag on master -> check branches match and build stable images for next tag.
-    # Option 2: It's a tag, but on beta -> check branches match and add step to build beta image. todo: Useful?
-    # Option 3: It's a normal build on either alpha or beta. Release images with incremented revision of the last tag on the channel.
+    # Option 2: It's a tag on beta -> check branches match and build beta image.
+    # Option 3: It's a tag, but on beta -> check branches match and add step to build beta image. todo: Useful?
+    # Option 4: It's a normal build on either alpha or beta. Release images with incremented revision of the last tag on the channel.
     # Everything else doesn't trigger image builds, only build native images for compile-checks
 
     steps = {
@@ -137,6 +139,13 @@ class PipelineRenderer
       steps[:after_wait].push PipelineStep.new
         .label(":docker: Release stable #{@context.tag.stringify}")
         .command("./server/.buildkite/pipeline.sh build #{@context.tag.stringify}")
+
+    elsif @context.tag != nil && @context.tag.beta? && @context.branch == @context.tag.stringify
+      next_tag = @context.branch
+      steps[:before_wait] = build_steps_for(next_tag)
+      steps[:after_wait].push PipelineStep.new
+        .label(":docker: Release #{@context.branch} #{next_tag}")
+        .command("./server/.buildkite/pipeline.sh build #{next_tag}")
 
     elsif @context.branch == "alpha" || @context.branch == "beta"
       next_tag = calculate_next_unstable_docker_tag()

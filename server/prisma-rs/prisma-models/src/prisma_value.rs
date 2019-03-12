@@ -48,22 +48,30 @@ impl fmt::Display for PrismaValue {
     }
 }
 
-impl Into<DatabaseValue> for PrismaValue {
-    fn into(self) -> DatabaseValue {
-        match self {
+impl From<GraphqlId> for DatabaseValue {
+    fn from(id: GraphqlId) -> DatabaseValue {
+        match id {
+            GraphqlId::String(s) => s.into(),
+            GraphqlId::Int(i) => (i as i64).into(),
+            GraphqlId::UUID(s) => s.into(),
+        }
+    }
+}
+
+impl From<PrismaValue> for DatabaseValue {
+    fn from(pv: PrismaValue) -> DatabaseValue {
+        match pv {
             PrismaValue::String(s) => s.into(),
             PrismaValue::Float(f) => (f as f64).into(),
             PrismaValue::Boolean(b) => b.into(),
-            PrismaValue::DateTime(d) => (d.timestamp() * 1000).into(),
+            PrismaValue::DateTime(d) => d.timestamp_millis().into(),
             PrismaValue::Enum(e) => e.into(),
             PrismaValue::Json(j) => j.into(),
             PrismaValue::Int(i) => (i as i64).into(),
             PrismaValue::Relation(i) => (i as i64).into(),
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
             PrismaValue::Uuid(u) => u.into(),
-            PrismaValue::GraphqlId(GraphqlId::String(s)) => s.into(),
-            PrismaValue::GraphqlId(GraphqlId::Int(i)) => (i as i64).into(),
-            PrismaValue::GraphqlId(GraphqlId::UUID(s)) => s.into(),
+            PrismaValue::GraphqlId(id) => id.into(),
         }
     }
 }

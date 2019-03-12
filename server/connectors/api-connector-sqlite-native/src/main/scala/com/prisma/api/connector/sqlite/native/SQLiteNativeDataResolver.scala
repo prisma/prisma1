@@ -30,7 +30,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     val input = prisma.protocol.GetNodeByWhereInput(
       protocol.Header("GetNodeByWhereInput"),
       ByteString.copyFromUtf8(projectJson.toString()),
-      where.model.dbName,
+      where.model.name,
       where.fieldName,
       protocol.ValueContainer(toPrismaValue(where.fieldGCValue)),
       toPrismaSelectedFields(selectedFields)
@@ -45,7 +45,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     val input = prisma.protocol.GetNodesInput(
       protocol.Header("GetNodesInput"),
       ByteString.copyFromUtf8(projectJson.toString()),
-      model.dbName,
+      model.name,
       toPrismaArguments(queryArguments),
       toPrismaSelectedFields(selectedFields)
     )
@@ -57,37 +57,41 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
   override def getRelatedNodes(fromField: RelationField,
                                fromNodeIds: Vector[IdGCValue],
                                queryArguments: QueryArguments,
-                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
-//    val projectJson = Json.toJson(project)
-//    val input = prisma.protocol.GetRelatedNodesInput(
-//      protocol.Header("GetRelatedNodesInput"),
-//      ByteString.copyFromUtf8(projectJson.toString()),
-//      fromField.model.dbName,
-//      toRelationalField(fromField),
-//      fromNodeIds.map(f => toPrismaValue(f).asInstanceOf[GraphqlId].value),
-//      toPrismaArguments(queryArguments),
-//      toPrismaSelectedFields(selectedFields)
-//    )
-//
-//    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
-//    val nodes                                      = nodeResult._1
-//    val columnNames                                = nodeResult._2
-//    val mappedNodes: Vector[PrismaNodeWithParent] = nodes.map { pbNode =>
-//      PrismaNodeWithParent(
-//        toIdGcValue(pbNode.parentId.getOrElse(sys.error("Expected get_related_nodes to return parent IDs alongside nodes."))),
-//        transformNode((pbNode, columnNames), fromField.relatedModel_!)
-//      )
-//    }
-//
-//    val itemGroupsByModelId = mappedNodes.groupBy(_.parentId)
-//    fromNodeIds.map { id =>
-//      itemGroupsByModelId.find(_._1 == id) match {
-//        case Some((_, itemsForId)) => ResolverResult(queryArguments, itemsForId, parentModelId = Some(id))
-//        case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
-//      }
-//    }
+                               selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = Future {
+    val projectJson = Json.toJson(project)
+    val input = prisma.protocol.GetRelatedNodesInput(
+      header = protocol.Header("GetRelatedNodesInput"),
+      projectJson = ByteString.copyFromUtf8(projectJson.toString()),
+      modelName = fromField.model.name,
+      fromField = fromField.name,
+      fromNodeIds = fromNodeIds.map(f => toPrismaValue(f).asInstanceOf[GraphqlId].value),
+      queryArguments = toPrismaArguments(queryArguments),
+      selectedFields = toPrismaSelectedFields(selectedFields)
+    )
 
-    forwarder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
+    println(fromField.model.name)
+    println(fromField.name)
+    println("toPrismaSelectedFields(selectedFields)", toPrismaSelectedFields(selectedFields))
+
+    val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
+    val nodes                                      = nodeResult._1
+    val columnNames                                = nodeResult._2
+    val mappedNodes: Vector[PrismaNodeWithParent] = nodes.map { pbNode =>
+      PrismaNodeWithParent(
+        toIdGcValue(pbNode.parentId.getOrElse(sys.error("Expected get_related_nodes to return parent IDs alongside nodes."))),
+        transformNode((pbNode, columnNames), fromField.relatedModel_!)
+      )
+    }
+
+    val itemGroupsByModelId = mappedNodes.groupBy(_.parentId)
+    fromNodeIds.map { id =>
+      itemGroupsByModelId.find(_._1 == id) match {
+        case Some((_, itemsForId)) => ResolverResult(queryArguments, itemsForId, parentModelId = Some(id))
+        case None                  => ResolverResult(Vector.empty[PrismaNodeWithParent], hasPreviousPage = false, hasNextPage = false, parentModelId = Some(id))
+      }
+    }
+
+//    forwarder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
   }
 
   override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] =

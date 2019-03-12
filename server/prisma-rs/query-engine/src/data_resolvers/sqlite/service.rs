@@ -1,11 +1,10 @@
-use crate::data_resolvers::{DataResolver, SelectQuery, Sqlite};
+use crate::data_resolvers::*;
 use futures::{future, Async, Future, Poll};
 use prisma_common::error::Error;
-use prisma_models::prelude::*;
 use tower_service::Service;
 
 impl Service<SelectQuery> for Sqlite {
-    type Response = (Vec<Vec<PrismaValue>>, Vec<String>);
+    type Response = SelectResult;
     type Error = Error;
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 

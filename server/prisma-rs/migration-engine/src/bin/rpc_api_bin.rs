@@ -4,8 +4,8 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 
 fn main() {
-//    test_json_serialization::<MigrationStep>(r#"{"name":"Blog","stepType":"CreateModel"}"#);
-//    test_json_serialization::<MigrationStep>(r#"{"name":"Blog","stepType":"UpdateModel"}"#);
+    //    test_json_serialization::<MigrationStep>(r#"{"name":"Blog","stepType":"CreateModel"}"#);
+    //    test_json_serialization::<MigrationStep>(r#"{"name":"Blog","stepType":"UpdateModel"}"#);
 
     let rpc_api = RpcApi::new();
     rpc_api.handle();

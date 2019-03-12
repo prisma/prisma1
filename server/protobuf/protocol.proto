@@ -71,7 +71,7 @@ message GetNodeByWhereInput {
     required string         model_name      = 3;
     required string         field_name      = 4;
     required ValueContainer value           = 5;
-    repeated SelectedField  selected_fields = 6;
+    required SelectedFields  selected_fields = 6;
 }
 
 message GetNodesInput {
@@ -79,17 +79,21 @@ message GetNodesInput {
     required bytes          project_json    = 2;
     required string         model_name      = 3;
     required QueryArguments query_arguments = 4;
-    repeated SelectedField  selected_fields = 5;
+    required SelectedFields  selected_fields = 5;
 }
 
 message GetRelatedNodesInput {
     required Header          header          = 1;
     required bytes           project_json    = 2;
     required string          model_name      = 3;
-    required RelationalField from_field      = 4;
+    required string          from_field      = 4;
     repeated GraphqlId       from_node_ids   = 5;
     required QueryArguments  query_arguments = 6;
-    repeated SelectedField   selected_fields = 7;
+    required SelectedFields  selected_fields = 7;
+}
+
+message SelectedFields {
+    repeated SelectedField fields = 1;
 }
 
 message QueryArguments {
@@ -127,8 +131,8 @@ message Filter {
 }
 
 message RelationalField {
-    required string        field           = 1;
-    repeated SelectedField selected_fields = 2;
+    required string         field           = 1;
+    required SelectedFields selected_fields = 2;
 }
 
 message SelectedField {

@@ -37,20 +37,34 @@ impl CursorCondition {
                 let sort_order: Order = order_by.map(|order| order.sort_order().into()).unwrap_or(Order::Asc);
 
                 let cursor_for = |cursor_type: CursorType, id: IdValue| {
-                    let row = Row::from((field.as_column(), model.fields().id().as_column()));
-                    let id_column = model.fields().id().as_column();
-                    let where_condition = id_column.clone().equals(id.clone());
+                    let model_id = model.fields().id();
+                    let where_condition = model_id.as_column().equals(id.clone());
 
                     let select_query = Select::from(model.table())
                         .column(field.as_column())
-                        .column(id_column)
                         .so_that(ConditionTree::single(where_condition));
 
                     let compare = match (cursor_type, sort_order) {
-                        (CursorType::Before, Order::Asc) => row.less_than(select_query),
-                        (CursorType::Before, Order::Desc) => row.greater_than(select_query),
-                        (CursorType::After, Order::Asc) => row.greater_than(select_query),
-                        (CursorType::After, Order::Desc) => row.less_than(select_query),
+                        (CursorType::Before, Order::Asc) => field
+                            .as_column()
+                            .equals(select_query.clone())
+                            .and(model_id.as_column().less_than(id))
+                            .or(field.as_column().less_than(select_query)),
+                        (CursorType::Before, Order::Desc) => field
+                            .as_column()
+                            .equals(select_query.clone())
+                            .and(model_id.as_column().less_than(id))
+                            .or(field.as_column().greater_than(select_query)),
+                        (CursorType::After, Order::Asc) => field
+                            .as_column()
+                            .equals(select_query.clone())
+                            .and(model_id.as_column().greater_than(id))
+                            .or(field.as_column().greater_than(select_query)),
+                        (CursorType::After, Order::Desc) => field
+                            .as_column()
+                            .equals(select_query.clone())
+                            .and(model_id.as_column().greater_than(id))
+                            .or(field.as_column().less_than(select_query)),
                     };
 
                     ConditionTree::single(compare)
@@ -62,6 +76,7 @@ impl CursorCondition {
                         cursor_for(CursorType::After, id_val)
                     })
                     .unwrap_or(ConditionTree::NoCondition);
+
                 let before_cursor = before
                     .map(|id| {
                         let id_val = id.id_value.clone().unwrap();

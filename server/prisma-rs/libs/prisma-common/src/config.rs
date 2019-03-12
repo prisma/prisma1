@@ -13,9 +13,7 @@ trait WithMigrations {
     fn is_active(&self) -> Option<bool>;
 
     fn with_migrations(&self) -> bool {
-        self.migrations()
-            .or_else(|| self.is_active())
-            .unwrap_or(false)
+        self.migrations().or_else(|| self.is_active()).unwrap_or(false)
     }
 }
 

@@ -23,7 +23,7 @@ lazy val commonSettings = Seq(
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xfatal-warnings", "-language:implicitConversions"),
   resolvers ++= Seq(
     "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
-    "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+    "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
   ),
   libraryDependencies := common
 )
@@ -40,12 +40,11 @@ def commonDockerImageSettings(imageName: String, baseImage: String, tag: String)
     val appDir    = stage.value
     val targetDir = "/app"
     val systemLibs = "/lib"
-
     // Collect libraries that have to be part of the docker container
     val libraries = (
         MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
         MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources"))) ++
-        MappingsHelper.contentOf(file(absolute("prisma-rs/query-engine/build")))
+        MappingsHelper.contentOf(file(absolute("prisma-rs/build")))
       ).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
       if (prev.exists(_._2 == next._2)) {
         prev
@@ -64,7 +63,7 @@ def commonDockerImageSettings(imageName: String, baseImage: String, tag: String)
       runShell("echo", "set -e", ">>", s"$targetDir/start.sh")
       runShell("echo", s"$targetDir/prerun_hook.sh", ">>", s"$targetDir/start.sh")
       runShell("echo", s"$targetDir/bin/${executableScriptName.value}", ">>", s"$targetDir/start.sh")
-      runShell(s"chmod", "+x", s"$targetDir/start.sh")
+      runShell(s"chmod", "+x", s"$targetDir/start.sh $targetDir/bin/${executableScriptName.value}")
       env("COMMIT_SHA", sys.env.getOrElse("COMMIT_SHA", sys.error("Env var COMMIT_SHA required but not found.")))
       env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
       entryPointShell(s"$targetDir/start.sh")

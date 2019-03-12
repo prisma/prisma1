@@ -1,4 +1,4 @@
-use crate::{Field, RelationField, ScalarField};
+use crate::{Field, ModelRef, ModelWeakRef, RelationField, ScalarField};
 use once_cell::unsync::OnceCell;
 use prisma_common::{error::Error, PrismaResult};
 use std::{
@@ -12,15 +12,17 @@ pub struct Fields {
     id: OnceCell<Weak<ScalarField>>,
     scalar: OnceCell<Vec<Weak<ScalarField>>>,
     relation: OnceCell<Vec<Weak<RelationField>>>,
+    model: ModelWeakRef,
 }
 
 impl Fields {
-    pub fn new(all: Vec<Field>) -> Fields {
+    pub fn new(all: Vec<Field>, model: ModelWeakRef) -> Fields {
         Fields {
             all: all,
             id: OnceCell::new(),
             scalar: OnceCell::new(),
             relation: OnceCell::new(),
+            model,
         }
     }
 
@@ -94,15 +96,27 @@ impl Fields {
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.db_name() == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("2 Field not found: {}", name)))
+            .ok_or_else(|| {
+                Error::InvalidInputError(format!(
+                    "Scalar field not found: {}. In model {}",
+                    name,
+                    self.model().name
+                ))
+            })
+    }
+
+    fn model(&self) -> ModelRef {
+        self.model.upgrade().unwrap()
     }
 
     pub fn find_from_relation_fields(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
         self.relation_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
-            .find(|field| field.db_name() == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("3 Field not found: {}", name)))
+            .find(|field| field.name == name)
+            .ok_or_else(|| {
+                Error::InvalidInputError(format!("Field {} on model {} not found.", name, self.model().name))
+            })
     }
 
     pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
@@ -110,7 +124,13 @@ impl Fields {
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.relation().name == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("3 Field not found: {}", name)))
+            .ok_or_else(|| {
+                Error::InvalidInputError(format!(
+                    "Field for relation {} on model {} not found.",
+                    name,
+                    self.model().name
+                ))
+            })
     }
 
     fn scalar_filter(mut acc: Vec<Weak<ScalarField>>, field: &Field) -> Vec<Weak<ScalarField>> {

@@ -14,8 +14,8 @@ prost-types = "0.4"
 bytes = "0.4"
 lazy_static = "1.2"
 r2d2 = "0.8"
-r2d2_sqlite = "0.8.0"
-rusqlite = "0.16"
+r2d2_sqlite = "0.8"
+rusqlite = { version = "0.16", features = ["chrono", "bundled"] }
 chrono = { version = "0.4", features = ["serde"] }
 serde_json = "1.0"
 serde_yaml = "0.8"

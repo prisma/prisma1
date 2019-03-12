@@ -95,13 +95,14 @@ impl RelationTemplate {
 }
 
 impl Relation {
-    const MODEL_A_DEFAULT_COLUMN: &'static str = "A";
-    const MODEL_B_DEFAULT_COLUMN: &'static str = "B";
+    pub const MODEL_A_DEFAULT_COLUMN: &'static str = "A";
+    pub const MODEL_B_DEFAULT_COLUMN: &'static str = "B";
+    pub const TABLE_ALIAS: &'static str = "RelationTable";
 
     fn schema(&self) -> SchemaRef {
-        self.schema.upgrade().expect(
-            "Schema does not exist anymore. Parent schema is deleted without deleting the child schema."
-        )
+        self.schema
+            .upgrade()
+            .expect("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
     }
 
     pub fn is_inline_relation(&self) -> bool {
@@ -148,11 +149,7 @@ impl Relation {
     pub fn field_a(&self) -> Arc<RelationField> {
         self.field_a
             .get_or_init(|| {
-                let field = self
-                    .model_a()
-                    .fields()
-                    .find_from_relation(&self.name)
-                    .unwrap();
+                let field = self.model_a().fields().find_from_relation(&self.name).unwrap();
 
                 Arc::downgrade(&field)
             })
@@ -173,11 +170,7 @@ impl Relation {
     pub fn field_b(&self) -> Arc<RelationField> {
         self.field_b
             .get_or_init(|| {
-                let field = self
-                    .model_b()
-                    .fields()
-                    .find_from_relation(&self.name)
-                    .unwrap();
+                let field = self.model_b().fields().find_from_relation(&self.name).unwrap();
 
                 Arc::downgrade(&field)
             })
@@ -248,9 +241,7 @@ impl Relation {
 
         match self.manifestation {
             None => Some("id"),
-            Some(RelationTable(ref m)) => {
-                m.id_column.as_ref().map(|s|s.as_ref())
-            },
+            Some(RelationTable(ref m)) => m.id_column.as_ref().map(|s| s.as_ref()),
             _ => None,
         }
     }
