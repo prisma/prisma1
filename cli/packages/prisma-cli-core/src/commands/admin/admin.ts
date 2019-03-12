@@ -3,7 +3,7 @@ import * as express from 'express'
 import chalk from 'chalk'
 import * as opn from 'opn'
 import { renderAdminPage } from 'prisma-admin-html'
-import * as semver from 'semver'
+import { satisfiesVersion } from '../../utils/satisfiesVersion'
 
 export default class Admin extends Command {
   static topic = 'admin'
@@ -37,7 +37,7 @@ export default class Admin extends Command {
     const cluster = await this.definition.getCluster(false)
     const clusterVersion = await cluster!.getVersion()
 
-    if (semver.satisfies(`${clusterVersion}`, `>= 1.25.0`)) {
+    if (satisfiesVersion(clusterVersion!, '1.25.0')) {
       const link = await this.startServer({
         endpoint: this.definition.endpoint,
         token,
@@ -58,8 +58,18 @@ Please upgrade your Prisma server to use Prisma Admin.`)
     }
   }
 
-  startServer = async ({ endpoint, token, port = 3000 }) =>
-    new Promise(async (resolve, reject) => {
+  normalizeVersion(version: string) {
+    version = version.replace(/-beta.*/, '').replace('-alpha', '')
+    const regex = /(\d+\.\d+)/
+    const match = regex.exec(version)
+    if (match) {
+      return match[1] + '.0'
+    }
+    return version
+  }
+
+  startServer = ({ endpoint, token, port = 3000 }) =>
+    new Promise((resolve, reject) => {
       const app = express()
 
       app.use('/admin', (req, res) => {

@@ -6,12 +6,18 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
-import { prettyTime, concatName, defaultDockerCompose } from '../../utils/util'
+import {
+  prettyTime,
+  concatName,
+  defaultDockerCompose,
+  printAdminLink,
+} from '../../utils/util'
 import * as sillyname from 'sillyname'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
+import { satisfiesVersion } from '../../utils/satisfiesVersion'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -63,9 +69,7 @@ ${chalk.gray(
       char: 'p',
     }),
   }
-  private deploying: boolean = false
   private showedHooks: boolean = false
-  private loggedIn: boolean = false
   async run() {
     /**
      * Get Args
@@ -99,7 +103,6 @@ ${chalk.gray(
      */
     let workspace: string | undefined | null = this.definition.getWorkspace()
     let cluster
-    let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
       await this.env.fetchClusters()
       const endpointDialog = new EndpointDialog({
@@ -115,7 +118,6 @@ ${chalk.gray(
       workspace = results.workspace
       serviceName = results.service
       stage = results.stage
-      dockerComposeYml = results.dockerComposeYml
       this.definition.replaceEndpoint(results.endpoint)
       // Reload definition because we are changing the yml file
       await this.definition.load(this.flags, envFile)
@@ -236,7 +238,6 @@ ${chalk.gray(
     workspace: string | null,
     noMigrate: boolean,
   ): Promise<void> {
-    this.deploying = true
     let before = Date.now()
 
     const b = s => `\`${chalk.bold(s)}\``
@@ -355,9 +356,8 @@ ${chalk.gray(
       }
 
       // no action required
-      this.deploying = false
       if (migrationResult.migration) {
-        this.printEndpoints(
+        await this.printEndpoints(
           cluster,
           serviceName,
           stageName,
@@ -462,26 +462,28 @@ ${chalk.gray(
     }
   }
 
-  private printEndpoints(
+  private async printEndpoints(
     cluster: Cluster,
     serviceName: string,
     stageName: string,
     workspace?: string,
   ) {
-    this.out.log(`\n${chalk.bold(
-      'Your Prisma GraphQL database endpoint is live:',
-    )}
+    const version = await cluster.getVersion()
+    const hasAdmin = satisfiesVersion(version!, '1.29.0')
+    const adminText = hasAdmin
+      ? printAdminLink(
+          cluster.getApiEndpoint(serviceName, stageName, workspace),
+        )
+      : ''
 
-  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
+    this.out.log(`\n${'Your Prisma GraphQL database endpoint is live:'}
+
+  ${'HTTP:'}  ${cluster.getApiEndpoint(serviceName, stageName, workspace)}
+  ${'WS:'}    ${cluster.getWSEndpoint(
       serviceName,
       stageName,
       workspace,
-    )}
-  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
-      serviceName,
-      stageName,
-      workspace,
-    )}
+    )}${adminText}
 `)
   }
 
@@ -508,7 +510,6 @@ ${chalk.gray(
 
     if (cluster === 'login') {
       await this.client.login()
-      this.loggedIn = true
       return this.clusterSelection(true)
     }
 
