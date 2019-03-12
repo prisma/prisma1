@@ -16,7 +16,7 @@ impl Ordering {
         )
     }
 
-    pub fn internal<C>(second_field: C, order_by: Option<&OrderBy>) -> OrderVec
+    pub fn internal<C>(second_field: C, order_by: Option<&OrderBy>, reverse: bool) -> OrderVec
     where
         C: Into<Column>,
     {
@@ -24,7 +24,7 @@ impl Ordering {
             order_by.map(|oby| oby.field.as_column()),
             second_field.into(),
             order_by,
-            false,
+            reverse,
         )
     }
 
@@ -33,12 +33,13 @@ impl Ordering {
         secondary_alias: &str,
         secondary_field: &str,
         order_by: Option<&OrderBy>,
+        reverse: bool,
     ) -> OrderVec {
         Self::by_fields(
             order_by.map(|oby| (alias, oby.field.db_name()).into()),
             (secondary_alias, secondary_field).into(),
             order_by,
-            false,
+            reverse,
         )
     }
 

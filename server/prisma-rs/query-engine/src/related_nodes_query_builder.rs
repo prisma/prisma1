@@ -15,6 +15,7 @@ pub struct RelatedNodesQueryBuilder<'a> {
     window_limits: (u32, u32),
     order_by: Option<OrderBy>,
     cursor_condition: ConditionTree,
+    reverse_order: bool,
 }
 
 impl<'a> RelatedNodesQueryBuilder<'a> {
@@ -43,6 +44,8 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             .map(|filter| filter.into())
             .unwrap_or(ConditionTree::NoCondition);
 
+        let reverse_order = query_arguments.last.is_some();
+
         RelatedNodesQueryBuilder {
             from_field,
             from_node_ids,
@@ -53,6 +56,7 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             window_limits,
             order_by,
             cursor_condition,
+            reverse_order,
         }
     }
 
@@ -66,6 +70,7 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             Self::BASE_TABLE_ALIAS,
             SelectedFields::RELATED_MODEL_ALIAS,
             self.order_by.as_ref(),
+            self.reverse_order,
         );
 
         let conditions = relation_side_column
@@ -105,9 +110,13 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             .and(cursor_condition)
             .and(self.conditions);
 
-        Ordering::internal(opposite_relation_side_column, self.order_by.as_ref())
-            .into_iter()
-            .fold(base_query.so_that(conditions), |acc, ord| acc.order_by(ord))
+        Ordering::internal(
+            opposite_relation_side_column,
+            self.order_by.as_ref(),
+            self.reverse_order,
+        )
+        .into_iter()
+        .fold(base_query.so_that(conditions), |acc, ord| acc.order_by(ord))
     }
 
     fn base_query(&self) -> Select {
