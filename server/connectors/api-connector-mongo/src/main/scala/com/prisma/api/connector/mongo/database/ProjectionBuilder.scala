@@ -8,7 +8,7 @@ import org.mongodb.scala.model.Aggregates.project
 import org.mongodb.scala.model.Projections._
 
 trait ProjectionBuilder {
-  val idProjection: conversions.Bson = include(ReservedFields.mongoInternalIdfieldName)
+  val idProjection: conversions.Bson = include(ReservedFields.mongoInternalIdFieldName)
   val idProjectionStage              = project(idProjection)
 
   def projectSelected(selectedFields: SelectedFields): conversions.Bson = {

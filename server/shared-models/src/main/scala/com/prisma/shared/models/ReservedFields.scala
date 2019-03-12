@@ -5,7 +5,7 @@ import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 object ReservedFields {
   val idFieldName              = "id"
   val embeddedIdFieldName      = "_id"
-  val mongoInternalIdfieldName = "_id"
+  val mongoInternalIdFieldName = "_id"
   val updatedAtFieldName       = "updatedAt"
   val createdAtFieldName       = "createdAt"
   val reservedFieldNames       = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)

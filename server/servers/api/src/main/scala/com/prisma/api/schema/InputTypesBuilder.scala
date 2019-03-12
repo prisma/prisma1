@@ -275,7 +275,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   private def computeScalarInputFieldsForCreate(model: Model) = {
-    val filteredModel = model.filterScalarFields(_.isWritable)
+    val filteredModel = model.filterScalarFields(x => !x.isCreatedAt && !x.isUpdatedAt)
     computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForCreateCase, "Create")
   }
 
@@ -443,7 +443,8 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
 object FieldToInputTypeMapper {
   def mapForCreateCase(field: ScalarField): InputType[Any] = field.isRequired && field.defaultValue.isEmpty match {
-    case true  => SchemaBuilderUtils.mapToRequiredInputType(field)
-    case false => SchemaBuilderUtils.mapToOptionalInputType(field)
+    case true if field.isId => SchemaBuilderUtils.mapToOptionalInputType(field)
+    case true               => SchemaBuilderUtils.mapToRequiredInputType(field)
+    case false              => SchemaBuilderUtils.mapToOptionalInputType(field)
   }
 }
