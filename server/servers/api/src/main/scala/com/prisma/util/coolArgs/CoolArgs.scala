@@ -170,11 +170,11 @@ case class CoolArgs(raw: Map[String, Any]) {
   def generateNonListCreateArgs(model: Model): CoolArgs = {
     CoolArgs(model.scalarNonListFields.flatMap { field =>
       raw.get(field.name) match {
-        case Some(None) if field.defaultValue.isEmpty && field.isRequired && field.isId => None
-        case Some(None) if field.defaultValue.isEmpty && field.isRequired               => throw APIErrors.InputInvalid("null", field.name, model.name)
-        case Some(value)                                                                => Some((field.name, value))
-        case None if field.defaultValue.isDefined                                       => Some((field.name, field.defaultValue.get.value))
-        case None                                                                       => None
+        case Some(None) if field.isRequired && field.isId                   => None
+        case Some(None) if field.defaultValue.isDefined && field.isRequired => throw APIErrors.InputInvalid("null", field.name, model.name)
+        case Some(value)                                                    => Some((field.name, value))
+        case None if field.defaultValue.isDefined                           => Some((field.name, field.defaultValue.get.value))
+        case None                                                           => None
       }
     }.toMap)
   }
