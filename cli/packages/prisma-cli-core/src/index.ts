@@ -74,11 +74,11 @@ export const topics = [
     description: 'Opens the admin for current service',
     group: 'data',
   },
-  {
-    name: 'playground',
-    description: 'Opens the playground for the current service',
-    group: 'data',
-  },
+  // {
+  //   name: 'playground',
+  //   description: 'Opens the playground for the current service',
+  //   group: 'data',
+  // },
   { name: 'seed', description: 'Load seed data', group: 'data' },
   {
     name: 'import',
