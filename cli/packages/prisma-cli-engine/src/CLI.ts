@@ -227,7 +227,10 @@ export class CLI {
       })
     }
 
-    if (!this.config.argv.includes('playground')) {
+    if (
+      !this.config.argv.includes('playground') &&
+      !this.config.argv.includes('admin')
+    ) {
       const { timeout } = require('./util')
       await timeout(this.flush(), 1000)
 
