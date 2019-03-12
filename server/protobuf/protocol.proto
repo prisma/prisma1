@@ -92,6 +92,14 @@ message GetRelatedNodesInput {
     required SelectedFields  selected_fields = 7;
 }
 
+message GetScalarListValues {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required string          list_field      = 4;
+    required QueryArguments  query_arguments = 5;
+}
+
 message SelectedFields {
     repeated SelectedField fields = 1;
 }

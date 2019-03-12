@@ -1,5 +1,5 @@
 use crate::{
-    data_resolvers::{IntoSelectQuery, SelectQuery},
+    database_executor::{IntoSelectQuery, SelectQuery},
     protobuf::{prelude::*, InputValidation},
     related_nodes_query_builder::RelatedNodesQueryBuilder,
 };

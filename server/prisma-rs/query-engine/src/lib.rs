@@ -4,9 +4,12 @@
 extern crate prost_derive;
 
 mod cursor_condition;
-mod data_resolvers;
+mod data_resolver;
+mod database_executor;
+mod node_selector;
 mod ordering;
 mod protobuf;
+mod query_builder;
 mod related_nodes_query_builder;
 pub mod req_handlers;
 
@@ -14,10 +17,9 @@ use lazy_static::lazy_static;
 use prisma_common::{config::PrismaConfig, error::Error};
 use protobuf::{ExternalInterface, ProtoBufEnvelope, ProtoBufInterface};
 use serde_yaml;
+use std::{env, fs::File, slice};
 
 pub use protobuf::prelude::*;
-
-use std::{env, fs::File, slice};
 
 lazy_static! {
     pub static ref PBI: ProtoBufInterface = ProtoBufInterface::new(&CONFIG);
@@ -28,31 +30,23 @@ lazy_static! {
     };
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn get_node_by_where(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
-    let payload = slice::from_raw_parts_mut(data, len);
-    let response_payload = PBI.get_node_by_where(payload);
+macro_rules! data_interface {
+    ($($function:ident),*) => (
+        $(
+            #[no_mangle]
+            pub unsafe extern "C" fn $function(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
+                let payload = slice::from_raw_parts_mut(data, len);
+                let response_payload = PBI.$function(payload);
 
-    ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn get_nodes(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
-    let payload = slice::from_raw_parts_mut(data, len);
-    let response_payload = PBI.get_nodes(payload);
-
-    ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn get_related_nodes(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
-    let payload = slice::from_raw_parts_mut(data, len);
-    let response_payload = PBI.get_related_nodes(payload);
-
-    ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
+                ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
+            }
+        )*
+    )
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {
     Box::from_raw(buffer);
 }
+
+data_interface!(get_node_by_where, get_nodes, get_related_nodes, get_scalar_list_values);

@@ -1,6 +1,6 @@
 use crate::{
     cursor_condition::CursorCondition,
-    data_resolvers::{IntoSelectQuery, SelectQuery},
+    database_executor::{IntoSelectQuery, SelectQuery},
     ordering::Ordering,
     protobuf::filter::IntoFilter,
     protobuf::{prelude::*, InputValidation},

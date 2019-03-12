@@ -75,13 +75,13 @@ pub struct Sequence {
 }
 
 impl ScalarField {
-    fn model(&self) -> ModelRef {
+    pub fn model(&self) -> ModelRef {
         self.model
             .upgrade()
             .expect("Model does not exist anymore. Parent model got deleted without deleting the child.")
     }
 
-    fn schema(&self) -> SchemaRef {
+    pub fn schema(&self) -> SchemaRef {
         self.model().schema()
     }
 
