@@ -7,18 +7,19 @@ mod context;
 use context::PrismaContext;
 
 mod req_handlers;
-use req_handlers::{GraphQlBody, PrismaRequest, RequestHandler};
+use req_handlers::{GraphQlBody, PrismaRequest, RequestHandler, GraphQlRequestHandler};
 
 mod schema;
 
 lazy_static! {
-    pub static ref DEPS: PrismaContext = PrismaContext::new();
+    pub static ref CONTEXT: PrismaContext = PrismaContext::new();
+    pub static ref REQ_HANDLER: GraphQlRequestHandler = GraphQlRequestHandler;
 }
 
 fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest)) -> impl Responder {
     dbg!("Calling `handler`");
     let req: PrismaRequest<GraphQlBody> = (json.clone().unwrap(), req).into();
-    DEPS.request_handler.handle(req, &DEPS);
+    REQ_HANDLER.handle(req, &CONTEXT);
 
     // todo return values
     ""

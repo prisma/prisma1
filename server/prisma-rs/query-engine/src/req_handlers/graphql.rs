@@ -12,7 +12,7 @@ pub struct GraphQlBody {
     variables: HashMap<String, String>,
 }
 
-pub struct GraphQlRequestHandler {}
+pub struct GraphQlRequestHandler;
 
 impl RequestHandler for GraphQlRequestHandler {
     type Body = GraphQlBody;
