@@ -2,7 +2,7 @@ use graphql_parser::{self as gql, query, schema::Document};
 use prisma_models::{SchemaRef, SchemaTemplate};
 use std::env;
 use std::fs::File;
-use std::io::{BufReader, BufWriter, Read, Write};
+use std::io::{BufReader, BufWriter, Read, BufRead, Write};
 use std::process::{Command, Stdio};
 
 use serde::Serialize;
@@ -18,9 +18,7 @@ pub trait Validatable {
     fn validate(&self, doc: &query::Document) -> Result<(), ValidationError>;
 }
 
-pub type GraphQlSchema = Document;
-
-impl Validatable for GraphQlSchema {
+impl Validatable for SchemaRef {
     fn validate(&self, doc: &query::Document) -> Result<(), ValidationError> {
         // It's not really ok 😭
         Ok(())
@@ -28,7 +26,7 @@ impl Validatable for GraphQlSchema {
 }
 
 pub fn load_schema() -> Result<SchemaRef, Box<std::error::Error>> {
-    let path = env::var("PRISMA_EXAMPLE_SCHEMA_JSON")?;
+    let path = env::var("PRISMA_EXAMPLE_SCHEMA")?;
     let mut f = File::open(path)?;
     let mut schema = String::new();
     f.read_to_string(&mut schema)?;
@@ -46,17 +44,13 @@ pub fn load_schema() -> Result<SchemaRef, Box<std::error::Error>> {
         .stdout(Stdio::piped())
         .spawn()?;
 
-    let mut child_in = child.stdin.unwrap();
-    let mut writer = BufWriter::new(&mut child_in);
-
-    let mut child_out = child.stdout.unwrap();
-    let mut reader = BufReader::new(&mut child_out);
+    let child_in = child.stdin.as_mut().unwrap();
 
     let json = serde_json::to_string(&SchemaJson { data_model: schema })?;
-    writer.write_all(json.as_bytes()).expect("Failed to write to stdin");
+    child_in.write_all(json.as_bytes()).expect("Failed to write to stdin");
 
-    let mut inferred = String::new();
-    reader.read_to_string(&mut inferred)?;
+    let output = child.wait_with_output()?;
 
+    let inferred = String::from_utf8(output.stdout)?;
     Ok(serde_json::from_str::<SchemaTemplate>(&inferred)?.build("".into()))
 }
