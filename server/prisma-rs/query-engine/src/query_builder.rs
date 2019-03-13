@@ -1,11 +1,13 @@
+mod related_nodes;
+
 use crate::cursor_condition::CursorCondition;
 use crate::node_selector::NodeSelector;
 use crate::ordering::Ordering;
 use crate::protobuf::prelude::*;
 use crate::protobuf::IntoFilter;
-use crate::related_nodes_query_builder::RelatedNodesQueryBuilder;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
+use related_nodes::RelatedNodesQueryBuilder;
 
 pub struct QueryBuilder;
 

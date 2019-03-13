@@ -11,7 +11,6 @@ mod node_selector;
 mod ordering;
 mod protobuf;
 mod query_builder;
-mod related_nodes_query_builder;
 pub mod req_handlers;
 
 use lazy_static::lazy_static;
