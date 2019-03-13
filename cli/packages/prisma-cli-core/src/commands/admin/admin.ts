@@ -1,8 +1,6 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
-import * as express from 'express'
 import chalk from 'chalk'
 import * as opn from 'opn'
-import { renderAdminPage } from 'prisma-admin-html'
 import { satisfiesVersion } from '../../utils/satisfiesVersion'
 
 export default class Admin extends Command {
@@ -14,19 +12,9 @@ export default class Admin extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
-    port: flags.number({
-      char: 'p',
-      description: 'Port to serve the Prisma Admin',
-    }),
   }
 
   async run() {
-    let { port } = this.flags
-
-    if (!port) {
-      port = 3000
-    }
-
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
 
@@ -37,21 +25,20 @@ export default class Admin extends Command {
     const cluster = await this.definition.getCluster(false)
     const clusterVersion = await cluster!.getVersion()
 
-    if (satisfiesVersion(clusterVersion!, '1.25.0')) {
-      const link = await this.startServer({
-        endpoint: this.definition.endpoint,
-        token,
-        port,
-      })
-
-      opn(link).catch(() => {})
+    if (satisfiesVersion(clusterVersion!, '1.29.0')) {
+      let adminUrl = this.definition.endpoint + '/_admin'
+      if (token && token.length > 0) {
+        adminUrl += `?token=${token}`
+      }
+      this.out.log(`Opening Prisma Admin ${adminUrl} in the browser`)
+      opn(adminUrl).catch(() => {})
     } else {
       this.out.log(`Your Prisma server at ${chalk.bold(
         `${this.definition.endpoint}`,
       )} doesn't support Prisma Admin yet. Prisma Admin is supported from Prisma ${chalk.green(
-        `v1.25`,
+        `1.29`,
       )} and higher. Your Prisma server currently uses Prisma ${chalk.red(
-        `v${clusterVersion}`,
+        `${clusterVersion}`,
       )}.\n\n
 Please upgrade your Prisma server to use Prisma Admin.`)
       this.out.exit(1)
@@ -67,24 +54,4 @@ Please upgrade your Prisma server to use Prisma Admin.`)
     }
     return version
   }
-
-  startServer = ({ endpoint, token, port = 3000 }) =>
-    new Promise((resolve, reject) => {
-      const app = express()
-
-      app.use('/admin', (req, res) => {
-        res.send(renderAdminPage({ endpoint, token, singleProject: true }))
-      })
-
-      const listener = app.listen(port, () => {
-        let host = listener.address().address
-        if (host === '::') {
-          host = 'localhost'
-        }
-        const link = `http://${host}:${port}/admin`
-        console.log('Serving admin at %s', chalk.blue(link))
-
-        resolve(link)
-      })
-    })
 }
