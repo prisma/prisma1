@@ -2,6 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
+import com.prisma.api.connector.sqlite.native.SQLiteDatabaseMutactionExecutor
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RawAccessCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -33,14 +34,18 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
     database.truncateProjectTables(project)
   }
 
-  lazy val slickDatabase = testDependencies.databaseMutactionExecutor.asInstanceOf[JdbcDatabaseMutactionExecutor].slickDatabase
-  lazy val isMySQL       = slickDatabase.isMySql
-  lazy val isPostgres    = slickDatabase.isPostgres
-  lazy val isSQLite      = slickDatabase.isSQLite
-  lazy val sql           = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
-  lazy val modelTable    = table(name(schemaName, model.dbName))
-  lazy val idColumn      = model.idField_!.dbName
-  lazy val titleColumn   = model.getScalarFieldByName_!("title").dbName
+  lazy val slickDatabase = testDependencies.databaseMutactionExecutor match {
+    case m: JdbcDatabaseMutactionExecutor   => m.slickDatabase
+    case m: SQLiteDatabaseMutactionExecutor => m.delegate.asInstanceOf[JdbcDatabaseMutactionExecutor].slickDatabase
+  }
+
+  lazy val isMySQL     = slickDatabase.isMySql
+  lazy val isPostgres  = slickDatabase.isPostgres
+  lazy val isSQLite    = slickDatabase.isSQLite
+  lazy val sql         = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
+  lazy val modelTable  = table(name(schemaName, model.dbName))
+  lazy val idColumn    = model.idField_!.dbName
+  lazy val titleColumn = model.getScalarFieldByName_!("title").dbName
 
   "the simplest query Select 1 should work" in {
     val result = server.query(
