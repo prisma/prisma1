@@ -1,11 +1,11 @@
 use crate::req_handlers::{GraphQlRequestHandler, RequestHandler};
-use prisma_common::config::{self, PrismaConfig};
 use crate::schema::{self, PrismaSchema};
+use prisma_common::config::{self, PrismaConfig};
 
 pub struct PrismaContext {
     pub config: PrismaConfig,
     pub request_handler: GraphQlRequestHandler,
-    pub schema: PrismaSchema
+    pub schema: PrismaSchema,
 }
 
 impl PrismaContext {
