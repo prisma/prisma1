@@ -4,20 +4,12 @@ use crate::{
     database_mutaction_executor::{DatabaseMutactionExecutor, SqliteDatabaseMutactionExecutor},
     node_selector::NodeSelector,
     protobuf::{prelude::*, InputValidation},
+    ExternalInterface,
 };
 use prisma_common::{config::*, error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use prost::Message;
 use std::error::Error as StdError;
-
-pub trait ExternalInterface {
-    fn get_node_by_where(&self, payload: &mut [u8]) -> Vec<u8>;
-    fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
-    fn get_related_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
-    fn get_scalar_list_values(&self, payload: &mut [u8]) -> Vec<u8>;
-    fn get_scalar_list_values_by_node_ids(&self, payload: &mut [u8]) -> Vec<u8>;
-    fn execute_raw(&self, payload: &mut [u8]) -> Vec<u8>;
-}
 
 pub struct ProtoBufInterface {
     data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
@@ -94,8 +86,8 @@ impl ExternalInterface for ProtoBufInterface {
             };
 
             let response = RpcResponse::ok(prisma::NodesResult { nodes, fields });
-            let mut response_payload = Vec::new();
 
+            let mut response_payload = Vec::new();
             response.encode(&mut response_payload).unwrap();
 
             Ok(response_payload)
@@ -122,13 +114,14 @@ impl ExternalInterface for ProtoBufInterface {
                 nodes: proto_nodes,
                 fields: fields,
             });
-            let mut response_payload = Vec::new();
 
+            let mut response_payload = Vec::new();
             response.encode(&mut response_payload).unwrap();
 
             Ok(response_payload)
         })
     }
+
     fn get_related_nodes(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = GetRelatedNodesInput::decode(payload)?;
@@ -160,15 +153,12 @@ impl ExternalInterface for ProtoBufInterface {
                 nodes: proto_nodes,
                 fields: fields,
             });
-            let mut response_payload = Vec::new();
 
+            let mut response_payload = Vec::new();
             response.encode(&mut response_payload).unwrap();
 
             Ok(response_payload)
         })
-    }
-    fn get_scalar_list_values(&self, _: &mut [u8]) -> Vec<u8> {
-        unimplemented!()
     }
 
     fn get_scalar_list_values_by_node_ids(&self, payload: &mut [u8]) -> Vec<u8> {
@@ -186,7 +176,7 @@ impl ExternalInterface for ProtoBufInterface {
 
             let query_result = self
                 .data_resolver
-                .get_scalar_list_values_by_node_ids(model, list_field, node_ids)?;
+                .get_scalar_list_values_by_node_ids(list_field, node_ids)?;
 
             let proto_values = query_result
                 .into_iter()
@@ -196,9 +186,30 @@ impl ExternalInterface for ProtoBufInterface {
                 })
                 .collect();
 
-            let response = RpcResponse::ok_list_values(prisma::ScalarListValuesResult { values: proto_values });
-            let mut response_payload = Vec::new();
+            let response = RpcResponse::ok(prisma::ScalarListValuesResult { values: proto_values });
 
+            let mut response_payload = Vec::new();
+            response.encode(&mut response_payload).unwrap();
+
+            Ok(response_payload)
+        })
+    }
+
+    fn count_by_model(&self, payload: &mut [u8]) -> Vec<u8> {
+        Self::protobuf_result(|| {
+            let input = CountByModelValues::decode(payload)?;
+            input.validate()?;
+
+            let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
+            let project: ProjectRef = project_template.into();
+            let model = project.schema().find_model(&input.model_name)?;
+
+            let query_arguments = input.query_arguments;
+            let count = self.data_resolver.count_by_model(model, query_arguments)?;
+
+            let response = RpcResponse::ok(count);
+
+            let mut response_payload = Vec::new();
             response.encode(&mut response_payload).unwrap();
 
             Ok(response_payload)

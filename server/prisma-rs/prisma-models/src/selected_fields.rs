@@ -56,6 +56,10 @@ impl SelectedFields {
         }
     }
 
+    pub fn add_scalar(&mut self, field: Arc<ScalarField>) {
+        self.scalar.push(SelectedScalarField { field });
+    }
+
     pub fn columns(&self) -> &[Column] {
         self.columns
             .get_or_init(|| {

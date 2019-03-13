@@ -95,7 +95,7 @@ case class JdbcDataResolver(
     performWithTiming("countByTable", runAttached(query))
   }
 
-  override def countByModel(model: Model, args: QueryArguments) = {
+  override def countByModel(model: Model, args: QueryArguments): Future[Int] = {
     val query = queryBuilder.countFromModel(model, args)
     performWithTiming("countByModel", runAttached(query))
   }

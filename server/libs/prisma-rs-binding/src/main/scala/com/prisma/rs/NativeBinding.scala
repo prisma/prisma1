@@ -56,6 +56,12 @@ object NativeBinding {
     }
   }
 
+  def count_by_model(input: CountByModelValues): Int = {
+    val (pointer, length) = writeBuffer(input)
+
+    handleProtoResult(library.count_by_model(pointer, length)) { i: Int => i }
+  }
+
   def handleProtoResult[T, U](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U): U = {
     val messageContent = envelope.data.getByteArray(0, envelope.len.intValue())
     library.destroy(envelope)
@@ -74,6 +80,9 @@ object NativeBinding {
           case Result.Value.ExecuteRawResult(result) =>
             val json = Json.parse(result.json)
             processMessage(json.asInstanceOf[T])
+
+          case Result.Value.Integer(value) =>
+            processMessage(value.asInstanceOf[T])
 
           case Result.Value.Empty =>
             processMessage((Seq.empty[Node], Seq.empty[String]).asInstanceOf[T])

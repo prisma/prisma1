@@ -15,9 +15,10 @@ message Header {
 
 message Result {
     oneof value {
-        NodesResult nodes_result = 1;
+        NodesResult            nodes_result        = 1;
         ScalarListValuesResult scalar_list_results = 2;
-        ExecuteRawResult execute_raw_result = 3;
+        ExecuteRawResult       execute_raw_result  = 3;
+        uint32                 integer             = 4;
     }
 }
 
@@ -126,6 +127,13 @@ message GetScalarListValuesByNodeIds {
 message ExecuteRawInput {
     required Header header = 1;
     required string query  = 2;
+}
+
+message CountByModelValues {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required QueryArguments  query_arguments = 4;
 }
 
 message SelectedFields {
