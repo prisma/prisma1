@@ -94,8 +94,9 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
 //    forwarder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
   }
 
-  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] =
-    forwarder.getScalarListValues(model, listField, queryArguments)
+  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] = {
+    Future.successful(ResolverResult(Vector.empty))
+  }
 
   override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = Future {
     val projectJson = Json.toJson(project)
@@ -116,8 +117,9 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
     }.toVector
   }
 
-  override def getRelationNodes(relationTableName: String, queryArguments: QueryArguments): Future[ResolverResult[RelationNode]] =
-    forwarder.getRelationNodes(relationTableName, queryArguments)
+  override def getRelationNodes(relationTableName: String, queryArguments: QueryArguments): Future[ResolverResult[RelationNode]] = {
+    Future.successful(ResolverResult(Vector.empty))
+  }
 
   override def countByTable(table: String): Future[Int] = forwarder.countByTable(table)
 
