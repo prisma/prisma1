@@ -13,7 +13,7 @@ case class SQLiteApiConnectorNative(config: DatabaseConfig, isPrototype: Boolean
   override def initialize() = Future.unit
   override def shutdown()   = Future.unit
 
-  override def databaseMutactionExecutor: DatabaseMutactionExecutor = base.databaseMutactionExecutor
+  override def databaseMutactionExecutor: DatabaseMutactionExecutor = SQLiteDatabaseMutactionExecutor(base.databaseMutactionExecutor)
   override def dataResolver(project: Project): DataResolver         = SQLiteNativeDataResolver(base.dataResolver(project))
   override def masterDataResolver(project: Project): DataResolver   = SQLiteNativeDataResolver(base.dataResolver(project))
   override def projectIdEncoder: ProjectIdEncoder                   = ProjectIdEncoder('_')
