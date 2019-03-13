@@ -10,6 +10,7 @@ mod req_handlers;
 use req_handlers::{GraphQlBody, PrismaRequest, RequestHandler, GraphQlRequestHandler};
 
 mod schema;
+mod ast;
 
 lazy_static! {
     pub static ref CONTEXT: PrismaContext = PrismaContext::new();
