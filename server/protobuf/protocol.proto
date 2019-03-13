@@ -17,7 +17,7 @@ message Result {
     oneof value {
         NodesResult            nodes_result        = 1;
         ScalarListValuesResult scalar_list_results = 2;
-        uint64                 integer             = 3;
+        uint32                 integer             = 3;
     }
 }
 

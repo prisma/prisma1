@@ -2,6 +2,7 @@ package com.prisma.api.connector.sqlite.native
 
 import com.google.protobuf.ByteString
 import com.prisma.api.connector._
+import com.prisma.api.helpers.SkipAndLimit
 import com.prisma.gc_values._
 import com.prisma.rs.NativeBinding
 import com.prisma.shared.models.{Model, Project, RelationField, ScalarField}
@@ -15,6 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: ExecutionContext) extends DataResolver {
   import NativeUtils._
   import com.prisma.shared.models.ProjectJsonFormatter._
+  import com.prisma.api.helpers.LimitClauseHelper._
 
   override def project: Project = delegate.project
 
@@ -118,6 +120,25 @@ case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: Executi
 
   override def countByTable(table: String): Future[Int] = delegate.countByTable(table)
 
-  override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = delegate.countByModel(model, queryArguments)
+  override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = Future {
+    val projectJson = Json.toJson(project)
+
+    val input = prisma.protocol.CountByModelValues(
+      protocol.Header("CountByModelValues"),
+      ByteString.copyFromUtf8(projectJson.toString()),
+      model.name,
+      toPrismaArguments(queryArguments)
+    )
+
+    val count = NativeBinding.count_by_model(input)
+    val SkipAndLimit(_, limit) = skipAndLimitValues(queryArguments)
+
+    val result = limit match {
+      case Some(lim) => if (count > (lim - 1)) count - 1 else count
+      case None => count
+    }
+
+    Math.max(result, 0)
+  }
 
 }

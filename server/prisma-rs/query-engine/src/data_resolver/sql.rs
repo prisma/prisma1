@@ -99,10 +99,12 @@ where
     ) -> PrismaResult<Vec<ScalarListValues>> {
         let type_identifier = list_field.type_identifier;
         let (db_name, query) = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
+
         let results = self.database_executor.with_rows(query, db_name, |row| {
             let node_id: GraphqlId = row.get(0);
             let position: u32 = row.get(1);
             let value: PrismaValue = Self::fetch_value(type_identifier, row, 2);
+
             ScalarListElement {
                 node_id,
                 position,

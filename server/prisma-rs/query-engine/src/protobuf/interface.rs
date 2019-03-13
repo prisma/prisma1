@@ -183,7 +183,7 @@ impl ExternalInterface for ProtoBufInterface {
                 })
                 .collect();
 
-            let response = RpcResponse::ok_list_values(prisma::ScalarListValuesResult { values: proto_values });
+            let response = RpcResponse::ok(prisma::ScalarListValuesResult { values: proto_values });
 
             let mut response_payload = Vec::new();
             response.encode(&mut response_payload).unwrap();

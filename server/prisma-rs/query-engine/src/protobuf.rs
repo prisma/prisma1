@@ -33,7 +33,15 @@ impl From<prisma::NodesResult> for prisma::Result {
 impl From<usize> for prisma::Result {
     fn from(res: usize) -> prisma::Result {
         prisma::Result {
-            value: Some(result::Value::Integer(res as u64)),
+            value: Some(result::Value::Integer(res as u32)),
+        }
+    }
+}
+
+impl From<prisma::ScalarListValuesResult> for prisma::Result {
+    fn from(res: prisma::ScalarListValuesResult) -> prisma::Result {
+        prisma::Result {
+            value: Some(result::Value::ScalarListResults(res)),
         }
     }
 }
@@ -59,15 +67,6 @@ impl RpcResponse {
         RpcResponse {
             header: Self::header(),
             response: Some(rpc::Response::Result(result.into())),
-        }
-    }
-
-    pub fn ok_list_values(result: prisma::ScalarListValuesResult) -> RpcResponse {
-        RpcResponse {
-            header: Self::header(),
-            response: Some(rpc::Response::Result(prisma::Result {
-                value: Some(result::Value::ScalarListResults(result)),
-            })),
         }
     }
 
