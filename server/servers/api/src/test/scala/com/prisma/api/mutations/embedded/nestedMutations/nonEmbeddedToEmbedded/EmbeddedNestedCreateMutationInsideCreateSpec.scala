@@ -472,11 +472,13 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
+        |    id: ID! @unique
         |    name: String
         |    child: Child
         |}
         |
         |type Friend{
+        |    id: ID! @unique
         |    name: String
         |}
         |
@@ -519,11 +521,13 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
+        |    id: ID! @unique
         |    name: String @unique
         |    children: [Child]
         |}
         |
         |type Friend{
+        |    id: ID! @unique
         |    name: String
         |}
         |
@@ -585,11 +589,13 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
+        |    id: ID! @unique
         |    name: String
         |    children: [Child]
         |}
         |
         |type Friend{
+        |    id: ID! @unique
         |    name: String
         |}
         |
@@ -632,11 +638,13 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() {
       """
         |type Parent{
+        |    id: ID! @unique
         |    name: String
         |    children: [Child]
         |}
         |
         |type Friend{
+        |    id: ID! @unique
         |    name: String
         |}
         |
@@ -677,29 +685,19 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
     val project = SchemaDsl.fromString() {
       """
         |type MealPlan {
-        |
-        |id: ID! @unique
-        |
-        |menuItem: MenuItem @relation(name: "TEST", link: INLINE)
-        |
-        |subtotal: Int
-        |
+        |   id: ID! @unique
+        |   menuItem: MenuItem @relation(name: "TEST", link: INLINE)
+        |   subtotal: Int
         |}
         |
         |type MenuItem {
-        |
-        |id: ID! @unique
-        |
-        |name: String
-        |
-        |image: [menuImage]
-        |
+        |   id: ID! @unique
+        |   name: String
+        |   image: [menuImage]
         |}
         |
         |type menuImage @embedded {
-        |
-        |name: String
-        |
+        |   name: String
         |}"""
     }
 
