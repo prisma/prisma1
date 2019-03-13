@@ -1,9 +1,9 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::context::PrismaContext;
 use crate::schema::Validatable;
+use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use graphql_parser as gql;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct GraphQlBody {
@@ -23,6 +23,5 @@ impl RequestHandler for GraphQlRequestHandler {
         if let Ok(()) = ctx.schema.validate(&ast) {
             dbg!(ast);
         }
-
     }
 }

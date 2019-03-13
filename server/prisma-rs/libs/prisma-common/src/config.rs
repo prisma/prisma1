@@ -71,10 +71,21 @@ pub fn load() -> PrismaResult<PrismaConfig> {
     Ok(config_path.into())
 }
 
+/// Attempts to find a valid Prisma config either via env var or file discovery.
 pub fn find_config_path() -> Option<PathBuf> {
-    let mut bp = PathBuf::new();
-    bp.push(std::env::var("PRISMA_CONFIG_PATH").expect("Did you forget to load your env vars? :)"));
-    Some(bp)
+    match std::env::var("PRISMA_CONFIG_PATH") {
+        Ok(path) => Some(PathBuf::from(path)),
+        Err(_) => {
+            let mut path = std::env::current_dir().expect("Couldn't resolve current working directory");
+            path.push("prisma.yml");
+
+            if path.exists() && path.is_file() {
+                Some(path)
+            } else {
+                None
+            }
+        }
+    }
 }
 
 impl From<PathBuf> for PrismaConfig {

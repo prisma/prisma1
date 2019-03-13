@@ -1,4 +1,4 @@
-use crate::req_handlers::GraphQlRequestHandler;
+use crate::schema;
 use prisma_common::config::{self, PrismaConfig};
 use prisma_models::SchemaRef;
 
@@ -11,7 +11,7 @@ impl PrismaContext {
     pub fn new() -> Self {
         Self {
             config: config::load().unwrap(),
-            schema: crate::schema::load_schema().unwrap(),
+            schema: schema::load_schema().unwrap(),
         }
     }
 }

@@ -1,6 +1,6 @@
 mod graphql;
-pub use graphql::{GraphQlBody, GraphQlRequestHandler};
 use crate::context::PrismaContext;
+pub use graphql::{GraphQlBody, GraphQlRequestHandler};
 
 use actix_web::HttpRequest;
 use std::collections::HashMap;

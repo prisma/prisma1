@@ -1,35 +1,32 @@
-use actix::System;
 use actix_web::{http::Method, server, App, HttpRequest, Json, Responder};
 use lazy_static::lazy_static;
 use std::env;
-use std::sync::Arc;
 
 #[macro_use]
 extern crate prost_derive;
 
+mod ast;
+mod context;
 mod cursor_condition;
 mod data_resolvers;
 mod ordering;
 mod protobuf;
 mod req_handlers;
-mod context;
 mod schema;
-mod ast;
 
 use context::PrismaContext;
 use prisma_common::error::Error;
-use req_handlers::{GraphQlBody, PrismaRequest, RequestHandler, GraphQlRequestHandler};
+use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 
 lazy_static! {
     pub static ref CONTEXT: PrismaContext = PrismaContext::new();
     pub static ref REQ_HANDLER: GraphQlRequestHandler = GraphQlRequestHandler;
 
-    // FIXME(katharina): Deduplicate from lib.rs
+    // FIXME(katharina): Deduplicate from lib.rs -> separate prisma-core (lib pkg) and prisma (bin pkg)
     pub static ref SERVER_ROOT: String = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
 }
 
 fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest)) -> impl Responder {
-    dbg!("Calling `handler`");
     let req: PrismaRequest<GraphQlBody> = (json.clone().unwrap(), req).into();
     REQ_HANDLER.handle(req, &CONTEXT);
 

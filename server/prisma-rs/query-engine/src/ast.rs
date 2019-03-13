@@ -1,7 +1,7 @@
 //! Prisma query AST module
 
-use prisma_models::Model;
 use graphql_parser::{self as gql, query::*};
+use prisma_models::Model;
 use prisma_models::SchemaRef;
 use std::convert::From;
 
@@ -39,7 +39,6 @@ pub struct MultiRelatedRecordQuery {
     // selectedFields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
-
 
 pub struct QueryBuilder {
     pub inner: Document,
