@@ -91,6 +91,7 @@ impl QueryBuilder {
         let db_name = model.schema().db_name.clone();
         let table_name = format!("{}_{}", model.db_name(), list_field.name);
 
+        // I vant to suk your blaad... - Vlad the Impaler
         let vhere = "nodeId".in_selection(node_ids);
 
         let query = Select::from(table_name)
@@ -115,5 +116,9 @@ impl QueryBuilder {
         let select_ast = Select::from(table).value(count(column));
 
         (db_name, select_ast)
+    }
+
+    pub fn count_by_table(database: &str, table: &str) -> Select {
+        Select::from((database, table)).value(count(asterisk()))
     }
 }

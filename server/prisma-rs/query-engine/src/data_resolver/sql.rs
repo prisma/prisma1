@@ -91,6 +91,19 @@ where
         Ok(res as usize)
     }
 
+    fn count_by_table(&self, database: &str, table: &str) -> PrismaResult<usize> {
+        let query = QueryBuilder::count_by_table(database, table);
+
+        let res = self
+            .database_executor
+            .with_rows(query, String::from(database), |row| Self::fetch_int(row))?
+            .into_iter()
+            .next()
+            .unwrap_or(0);
+
+        Ok(res as usize)
+    }
+
     fn get_scalar_list_values_by_node_ids(
         &self,
         list_field: ScalarFieldRef,

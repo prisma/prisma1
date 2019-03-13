@@ -197,7 +197,7 @@ impl ExternalInterface for ProtoBufInterface {
 
     fn count_by_model(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
-            let input = CountByModelValues::decode(payload)?;
+            let input = CountByModelInput::decode(payload)?;
             input.validate()?;
 
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
@@ -206,6 +206,32 @@ impl ExternalInterface for ProtoBufInterface {
 
             let query_arguments = input.query_arguments;
             let count = self.data_resolver.count_by_model(model, query_arguments)?;
+
+            let response = RpcResponse::ok(count);
+
+            let mut response_payload = Vec::new();
+            response.encode(&mut response_payload).unwrap();
+
+            Ok(response_payload)
+        })
+    }
+
+    fn count_by_table(&self, payload: &mut [u8]) -> Vec<u8> {
+        Self::protobuf_result(|| {
+            let input = CountByTableInput::decode(payload)?;
+            input.validate()?;
+
+            let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
+            let project: ProjectRef = project_template.into();
+
+            let count = match project.schema().find_model(&input.model_name) {
+                Ok(model) => self
+                    .data_resolver
+                    .count_by_table(project.schema().db_name.as_ref(), model.db_name()),
+                Err(_) => self
+                    .data_resolver
+                    .count_by_table(project.schema().db_name.as_ref(), &input.model_name),
+            }?;
 
             let response = RpcResponse::ok(count);
 

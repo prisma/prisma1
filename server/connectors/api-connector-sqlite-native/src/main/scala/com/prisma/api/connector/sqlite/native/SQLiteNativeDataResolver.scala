@@ -118,13 +118,23 @@ case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: Executi
     Future.successful(ResolverResult(Vector.empty))
   }
 
-  override def countByTable(table: String): Future[Int] = delegate.countByTable(table)
+  override def countByTable(table: String): Future[Int] = Future {
+    val projectJson = Json.toJson(project)
+
+    val input = prisma.protocol.CountByTableInput(
+      protocol.Header("CountByTableInput"),
+      ByteString.copyFromUtf8(projectJson.toString()),
+      table
+    )
+
+    NativeBinding.count_by_table(input)
+  }
 
   override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = Future {
     val projectJson = Json.toJson(project)
 
-    val input = prisma.protocol.CountByModelValues(
-      protocol.Header("CountByModelValues"),
+    val input = prisma.protocol.CountByModelInput(
+      protocol.Header("CountByModelInput"),
       ByteString.copyFromUtf8(projectJson.toString()),
       model.name,
       toPrismaArguments(queryArguments)

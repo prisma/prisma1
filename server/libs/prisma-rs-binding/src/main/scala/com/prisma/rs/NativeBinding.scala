@@ -56,10 +56,16 @@ object NativeBinding {
     }
   }
 
-  def count_by_model(input: CountByModelValues): Int = {
+  def count_by_model(input: CountByModelInput): Int = {
     val (pointer, length) = writeBuffer(input)
 
     handleProtoResult(library.count_by_model(pointer, length)) { i: Int => i }
+  }
+
+  def count_by_table(input: CountByTableInput): Int = {
+    val (pointer, length) = writeBuffer(input)
+
+    handleProtoResult(library.count_by_table(pointer, length)) { i: Int => i }
   }
 
   def handleProtoResult[T, U](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U): U = {

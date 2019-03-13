@@ -129,11 +129,17 @@ message ExecuteRawInput {
     required string query  = 2;
 }
 
-message CountByModelValues {
+message CountByModelInput {
     required Header          header          = 1;
     required bytes           project_json    = 2;
     required string          model_name      = 3;
     required QueryArguments  query_arguments = 4;
+}
+
+message CountByTableInput {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
 }
 
 message SelectedFields {
