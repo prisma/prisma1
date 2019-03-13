@@ -717,4 +717,45 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
     schema should containInputType("BCreateOneWithoutAInput")
   }
+
+  "Sample schema with relation and relation strategy NONE" should "be generated correctly" in {
+
+    val project = SchemaDsl.fromStringv11() {
+
+      """type User {
+        |  id: ID! @id(strategy:NONE)
+        |  name: String!
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes = """input UserCreateInput {
+                       |  id: ID!
+                       |  name: String!
+                       |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+
+  "Sample schema with relation and relation strategy AUTO" should "be generated correctly" in {
+
+    val project = SchemaDsl.fromStringv11() {
+
+      """type User {
+        |  id: ID! @id(strategy:AUTO)
+        |  name: String!
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes = """input UserCreateInput {
+                       |  id: ID
+                       |  name: String!
+                       |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+  //Fixme once AUTO and idtypes Int, CUID, UUID are explicitly allowed, add them
 }
