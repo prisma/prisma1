@@ -49,4 +49,10 @@ pub unsafe extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {
     Box::from_raw(buffer);
 }
 
-data_interface!(get_node_by_where, get_nodes, get_related_nodes, get_scalar_list_values);
+data_interface!(
+    get_node_by_where,
+    get_nodes,
+    get_related_nodes,
+    get_scalar_list_values,
+    get_scalar_list_values_by_node_ids
+);

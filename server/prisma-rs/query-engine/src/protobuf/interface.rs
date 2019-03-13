@@ -14,6 +14,7 @@ pub trait ExternalInterface {
     fn get_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_related_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_scalar_list_values(&self, payload: &mut [u8]) -> Vec<u8>;
+    fn get_scalar_list_values_by_node_ids(&self, payload: &mut [u8]) -> Vec<u8>;
 }
 
 pub struct ProtoBufInterface {
@@ -163,6 +164,13 @@ impl ExternalInterface for ProtoBufInterface {
         })
     }
     fn get_scalar_list_values(&self, _: &mut [u8]) -> Vec<u8> {
+        unimplemented!()
+    }
+
+    fn get_scalar_list_values_by_node_ids(&self, payload: &mut [u8]) -> Vec<u8> {
+        // Self::protobuf_result(|| {
+        //     self.data_resolver.get_scalar_list_values_by_node_ids(model: ModelRef, list_field: ScalarFieldRef, node_ids: Vec<GraphqlId>)
+        // })
         unimplemented!()
     }
 }
