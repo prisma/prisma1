@@ -30,6 +30,9 @@ case class CreateNodeInterpreter(
     case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).get)
 
+    case e: SQLException if e.getSQLState == "23505" && e.getMessage.contains(s"${model.dbName}_pkey") =>
+      APIErrors.UniqueConstraintViolation(model.name, s"Field name: " + model.idField_!.name)
+
     case e: SQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
 
@@ -123,6 +126,9 @@ case class NestedCreateNodeInterpreter(
   override val errorMapper = {
     case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).isDefined =>
       APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).get)
+
+    case e: SQLException if e.getSQLState == "23505" && e.getMessage.contains(s"${relatedModel.dbName}_pkey") =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, s"Field name: " + relatedModel.idField_!.name)
 
     case e: SQLException if e.getSQLState == "23503" => //Foreign Key Violation
       APIErrors.NodeDoesNotExist("")
