@@ -86,12 +86,12 @@ case class JdbcDataResolver(
     performWithTiming("loadRelationRowsForExport", runAttached(query))
   }
 
-  override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
+  override def countByTable(table: String): Future[Int] = {
     val actualTable = project.schema.getModelByName(table) match {
       case Some(model) => model.dbName
       case None        => table
     }
-    val query = queryBuilder.countAllFromTable(actualTable, whereFilter)
+    val query = queryBuilder.countAllFromTable(actualTable, None)
     performWithTiming("countByTable", runAttached(query))
   }
 

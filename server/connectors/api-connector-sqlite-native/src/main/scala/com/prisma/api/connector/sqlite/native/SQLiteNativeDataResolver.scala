@@ -119,7 +119,7 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
   override def getRelationNodes(relationTableName: String, queryArguments: QueryArguments): Future[ResolverResult[RelationNode]] =
     forwarder.getRelationNodes(relationTableName, queryArguments)
 
-  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = forwarder.countByTable(table, whereFilter)
+  override def countByTable(table: String): Future[Int] = forwarder.countByTable(table)
 
   override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = forwarder.countByModel(model, queryArguments)
 
