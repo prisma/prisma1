@@ -51,6 +51,32 @@ where
         let result = ManyNodes { nodes, field_names };
         Ok(result)
     }
+
+    fn get_related_nodes(
+        &self,
+        from_field: RelationFieldRef,
+        from_node_ids: Vec<GraphqlId>,
+        query_arguments: QueryArguments,
+        selected_fields: SelectedFields,
+    ) -> PrismaResult<ManyNodes> {
+        let scalar_fields = selected_fields.scalar_non_list();
+        let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
+        let (db_name, query) =
+            QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, &selected_fields);
+
+        let nodes = self.database_executor.with_rows(query, db_name, |row| {
+            let mut node = Self::read_row(row, &selected_fields);
+            let position = scalar_fields.len();
+
+            // TODO: These might crash if the ids are null. Check later if it is so, mkay?
+            node.add_related_id(row.get(position));
+            node.add_parent_id(row.get(position + 1));
+            node
+        })?;
+
+        let result = ManyNodes { nodes, field_names };
+        Ok(result)
+    }
 }
 
 impl<T> SqlResolver<T>

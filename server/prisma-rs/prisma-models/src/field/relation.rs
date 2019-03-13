@@ -2,7 +2,10 @@ use super::FieldManifestation;
 use crate::prelude::*;
 use once_cell::unsync::OnceCell;
 use prisma_query::ast::Column;
-use std::sync::Arc;
+use std::sync::{ Arc, Weak };
+
+pub type RelationFieldRef = Arc<RelationField>;
+pub type RelationFieldWeak = Weak<RelationField>;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]

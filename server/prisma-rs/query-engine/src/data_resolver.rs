@@ -19,4 +19,12 @@ pub trait DataResolver {
         query_arguments: QueryArguments,
         selected_fields: SelectedFields,
     ) -> PrismaResult<ManyNodes>;
+
+    fn get_related_nodes(
+        &self,
+        from_field: RelationFieldRef,
+        from_node_ids: Vec<GraphqlId>,
+        query_arguments: QueryArguments,
+        selected_fields: SelectedFields,
+    ) -> PrismaResult<ManyNodes>;
 }

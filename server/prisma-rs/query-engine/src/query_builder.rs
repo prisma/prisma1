@@ -3,6 +3,7 @@ use crate::node_selector::NodeSelector;
 use crate::ordering::Ordering;
 use crate::protobuf::prelude::*;
 use crate::protobuf::IntoFilter;
+use crate::related_nodes_query_builder::RelatedNodesQueryBuilder;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
@@ -61,5 +62,24 @@ impl QueryBuilder {
             Some(limit) => (db_name, select_ast.limit(limit as usize)),
             None => (db_name, select_ast),
         }
+    }
+
+    pub fn get_related_nodes(
+        from_field: RelationFieldRef,
+        from_node_ids: Vec<GraphqlId>,
+        query_arguments: QueryArguments,
+        selected_fields: &SelectedFields,
+    ) -> (String, Select) {
+        let db_name = from_field.model().schema().db_name.clone();
+        let is_with_pagination = query_arguments.is_with_pagination();
+        let builder = RelatedNodesQueryBuilder::new(from_field, from_node_ids, query_arguments, selected_fields);
+
+        let select_ast = if is_with_pagination {
+            builder.with_pagination()
+        } else {
+            builder.without_pagination()
+        };
+
+        (db_name, select_ast)
     }
 }

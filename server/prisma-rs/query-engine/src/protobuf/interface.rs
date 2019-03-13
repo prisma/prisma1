@@ -124,8 +124,43 @@ impl ExternalInterface for ProtoBufInterface {
             Ok(response_payload)
         })
     }
-    fn get_related_nodes(&self, _: &mut [u8]) -> Vec<u8> {
-        unimplemented!()
+    fn get_related_nodes(&self, payload: &mut [u8]) -> Vec<u8> {
+        Self::protobuf_result(|| {
+            let input = GetRelatedNodesInput::decode(payload)?;
+            input.validate()?;
+
+            let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
+
+            let project: ProjectRef = project_template.into();
+            let model = project.schema().find_model(&input.model_name)?;
+
+            let from_field = model.fields().find_from_relation_fields(&input.from_field)?;
+            let from_node_ids: Vec<GraphqlId> = input.from_node_ids.into_iter().map(GraphqlId::from).collect();
+
+            let selected_fields = input
+                .selected_fields
+                .into_selected_fields(from_field.related_model(), Some(from_field.clone()));
+
+            let query_result = self.data_resolver.get_related_nodes(
+                from_field,
+                from_node_ids,
+                input.query_arguments,
+                selected_fields,
+            )?;
+
+            let (nodes, fields) = (query_result.nodes, query_result.field_names);
+            let proto_nodes = nodes.into_iter().map(|n| n.into()).collect();
+
+            let response = RpcResponse::ok(prisma::NodesResult {
+                nodes: proto_nodes,
+                fields: fields,
+            });
+            let mut response_payload = Vec::new();
+
+            response.encode(&mut response_payload).unwrap();
+
+            Ok(response_payload)
+        })
     }
     fn get_scalar_list_values(&self, _: &mut [u8]) -> Vec<u8> {
         unimplemented!()
