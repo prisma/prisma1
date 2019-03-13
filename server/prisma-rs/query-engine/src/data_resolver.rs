@@ -35,6 +35,8 @@ pub trait DataResolver {
         list_field: ScalarFieldRef,
         node_ids: Vec<GraphqlId>,
     ) -> PrismaResult<Vec<ScalarListValues>>;
+
+    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> PrismaResult<usize>;
 }
 
 pub struct ScalarListValues {

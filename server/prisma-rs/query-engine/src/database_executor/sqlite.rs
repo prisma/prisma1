@@ -1,7 +1,6 @@
 use super::DatabaseExecutor;
 use crate::SERVER_ROOT;
 use prisma_common::PrismaResult;
-use prisma_models::prelude::*;
 use prisma_query::{
     ast::Select,
     visitor::{self, Visitor},

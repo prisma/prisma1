@@ -101,4 +101,14 @@ impl QueryBuilder {
 
         (db_name, query)
     }
+
+    pub fn count_by_model(model: ModelRef, query_arguments: QueryArguments) -> (String, Select) {
+        let mut selected_fields = SelectedFields::default();
+        selected_fields.add_scalar(model.fields().id());
+
+        let (db_name, base_query) = Self::get_nodes(model, query_arguments, &selected_fields);
+        let select_ast = Select::from(Table::from(base_query).alias("sub")).value(count(asterisk("sub")));
+
+        (db_name, select_ast)
+    }
 }

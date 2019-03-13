@@ -15,7 +15,7 @@ pub mod req_handlers;
 
 use lazy_static::lazy_static;
 use prisma_common::{config::PrismaConfig, error::Error};
-use protobuf::{ExternalInterface, ProtoBufEnvelope, ProtoBufInterface};
+use protobuf::{ProtoBufEnvelope, ProtoBufInterface};
 use serde_yaml;
 use std::{env, fs::File, slice};
 
@@ -32,6 +32,12 @@ lazy_static! {
 
 macro_rules! data_interface {
     ($($function:ident),*) => (
+        pub trait ExternalInterface {
+            $(
+                fn $function(&self, payload: &mut [u8]) -> Vec<u8>;
+            )*
+        }
+
         $(
             #[no_mangle]
             pub unsafe extern "C" fn $function(data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
@@ -53,6 +59,6 @@ data_interface!(
     get_node_by_where,
     get_nodes,
     get_related_nodes,
-    get_scalar_list_values,
-    get_scalar_list_values_by_node_ids
+    get_scalar_list_values_by_node_ids,
+    count_by_model
 );

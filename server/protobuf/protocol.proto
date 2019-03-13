@@ -15,8 +15,9 @@ message Header {
 
 message Result {
     oneof value {
-        NodesResult nodes_result = 1;
+        NodesResult            nodes_result        = 1;
         ScalarListValuesResult scalar_list_results = 2;
+        uint64                 integer             = 3;
     }
 }
 
@@ -116,6 +117,13 @@ message GetScalarListValuesByNodeIds {
     required string          model_name      = 3;
     required string          list_field      = 4;
     repeated GraphqlId       node_ids        = 5;
+}
+
+message CountByModelValues {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required QueryArguments  query_arguments = 4;
 }
 
 message SelectedFields {

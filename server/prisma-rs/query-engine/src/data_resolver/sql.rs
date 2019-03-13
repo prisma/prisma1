@@ -6,9 +6,7 @@ use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
-use prisma_query::ast::*;
 use rusqlite::Row;
-use std::collections::HashMap;
 
 pub struct SqlResolver<T>
 where
@@ -35,6 +33,7 @@ where
             .with_rows(query, db_name, |row| Self::read_row(row, &selected_fields))?;
 
         let result = nodes.into_iter().next().map(|node| SingleNode { node, field_names });
+
         Ok(result)
     }
 
@@ -52,8 +51,7 @@ where
             .database_executor
             .with_rows(query, db_name, |row| Self::read_row(row, &selected_fields))?;
 
-        let result = ManyNodes { nodes, field_names };
-        Ok(result)
+        Ok(ManyNodes { nodes, field_names })
     }
 
     fn get_related_nodes(
@@ -72,14 +70,25 @@ where
             let mut node = Self::read_row(row, &selected_fields);
             let position = scalar_fields.len();
 
-            // TODO: These might crash if the ids are null. Check later if it is so, mkay?
             node.add_related_id(row.get(position));
             node.add_parent_id(row.get(position + 1));
             node
         })?;
 
-        let result = ManyNodes { nodes, field_names };
-        Ok(result)
+        Ok(ManyNodes { nodes, field_names })
+    }
+
+    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> PrismaResult<usize> {
+        let (db_name, query) = QueryBuilder::count_by_model(model, query_arguments);
+
+        let res = self
+            .database_executor
+            .with_rows(query, db_name, |row| Self::fetch_int(row))?
+            .into_iter()
+            .next()
+            .unwrap_or(0);
+
+        Ok(res as usize)
     }
 
     fn get_scalar_list_values_by_node_ids(
@@ -137,6 +146,10 @@ where
             .collect();
 
         Node::new(fields)
+    }
+
+    fn fetch_int(row: &Row) -> i64 {
+        row.get_checked(0).unwrap_or(0)
     }
 
     /// Converter function to wrap the limited set of types in SQLite to a

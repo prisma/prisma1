@@ -9,7 +9,7 @@ use chrono::prelude::*;
 pub use envelope::ProtoBufEnvelope;
 pub use filter::*;
 pub use input::*;
-pub use interface::{ExternalInterface, ProtoBufInterface};
+pub use interface::ProtoBufInterface;
 
 use crate::Error as CrateError;
 use prelude::*;
@@ -20,6 +20,22 @@ use std::sync::Arc;
 
 pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
+}
+
+impl From<prisma::NodesResult> for prisma::Result {
+    fn from(res: prisma::NodesResult) -> prisma::Result {
+        prisma::Result {
+            value: Some(result::Value::NodesResult(res)),
+        }
+    }
+}
+
+impl From<usize> for prisma::Result {
+    fn from(res: usize) -> prisma::Result {
+        prisma::Result {
+            value: Some(result::Value::Integer(res as u64)),
+        }
+    }
 }
 
 impl RpcResponse {
@@ -36,12 +52,13 @@ impl RpcResponse {
         }
     }
 
-    pub fn ok(result: prisma::NodesResult) -> RpcResponse {
+    pub fn ok<T>(result: T) -> RpcResponse
+    where
+        T: Into<prisma::Result>,
+    {
         RpcResponse {
             header: Self::header(),
-            response: Some(rpc::Response::Result(prisma::Result {
-                value: Some(result::Value::NodesResult(result)),
-            })),
+            response: Some(rpc::Response::Result(result.into())),
         }
     }
 
