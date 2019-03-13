@@ -4,6 +4,7 @@ use crate::node_selector::NodeSelector;
 use crate::protobuf::prelude::*;
 use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
+use prisma_models::ScalarFieldRef;
 pub use sql::*;
 
 pub trait DataResolver {
@@ -27,4 +28,16 @@ pub trait DataResolver {
         query_arguments: QueryArguments,
         selected_fields: SelectedFields,
     ) -> PrismaResult<ManyNodes>;
+
+    fn get_scalar_list_values_by_node_ids(
+        &self,
+        model: ModelRef,
+        list_field: ScalarFieldRef,
+        node_ids: Vec<GraphqlId>,
+    ) -> PrismaResult<Vec<ScalarListValues>>;
+}
+
+pub struct ScalarListValues {
+    node_id: GraphqlId,
+    values: Vec<PrismaValue>,
 }

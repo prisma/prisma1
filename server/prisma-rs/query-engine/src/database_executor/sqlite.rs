@@ -19,9 +19,9 @@ pub struct Sqlite {
 }
 
 impl DatabaseExecutor for Sqlite {
-    fn with_rows<F>(&self, query: Select, db_name: String, mut f: F) -> PrismaResult<Vec<Node>>
+    fn with_rows<F, T>(&self, query: Select, db_name: String, mut f: F) -> PrismaResult<Vec<T>>
     where
-        F: FnMut(&Row) -> Node,
+        F: FnMut(&Row) -> T,
     {
         self.with_connection(&db_name, |conn| {
             let (query_sql, params) = dbg!(visitor::Sqlite::build(query));

@@ -1,10 +1,14 @@
 use super::DataResolver;
+use super::ScalarListValues;
 use crate::protobuf::prelude::*;
 use crate::{database_executor::DatabaseExecutor, node_selector::NodeSelector, query_builder::QueryBuilder};
 use chrono::{DateTime, Utc};
+use itertools::Itertools;
 use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
+use prisma_query::ast::*;
 use rusqlite::Row;
+use std::collections::HashMap;
 
 pub struct SqlResolver<T>
 where
@@ -77,6 +81,43 @@ where
         let result = ManyNodes { nodes, field_names };
         Ok(result)
     }
+
+    fn get_scalar_list_values_by_node_ids(
+        &self,
+        model: ModelRef,
+        list_field: ScalarFieldRef,
+        node_ids: Vec<GraphqlId>,
+    ) -> PrismaResult<Vec<ScalarListValues>> {
+        let type_identifier = list_field.type_identifier;
+        let (db_name, query) = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
+        let results = self.database_executor.with_rows(query, db_name, |row| {
+            let node_id: GraphqlId = row.get(0);
+            let position: u32 = row.get(1);
+            let value: PrismaValue = Self::fetch_value(type_identifier, row, 2);
+            ScalarListElement {
+                node_id,
+                position,
+                value,
+            }
+        })?;
+
+        let mut list_values = vec![];
+        for (node_id, elements) in &results.into_iter().group_by(|ele| ele.node_id.clone()) {
+            let values = ScalarListValues {
+                node_id,
+                values: elements.into_iter().map(|e| e.value).collect(),
+            };
+            list_values.push(values);
+        }
+
+        Ok(list_values)
+    }
+}
+
+struct ScalarListElement {
+    node_id: GraphqlId,
+    position: u32,
+    value: PrismaValue,
 }
 
 impl<T> SqlResolver<T>
