@@ -7,8 +7,7 @@ import com.prisma.shared.models.ConnectorCapability._
 import org.scalatest.{Matchers, WordSpecLike}
 
 class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with PassiveDeploySpecBase {
-  override def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
-  override def runOnlyForCapabilities                            = Set(MigrationsCapability)
+  override def runOnlyForCapabilities = Set(MigrationsCapability)
 
   "it should error if a table is missing" in {
     val postgres =
