@@ -111,8 +111,9 @@ trait NodeActions extends NodeSingleQueries {
     val listValues: Vector[(String, GCValue)] = mutaction.listArgs.map { case (f, v) => (mutaction.model.getFieldByName_!(f).dbName, v) }
 
     val id = mutaction.nonListArgs.rootGCMap.get(mutaction.model.idField_!.name) match {
-      case None     => StringIdGCValue(ObjectId.get().toString)
-      case Some(id) => id
+      case None              => StringIdGCValue(ObjectId.get().toString)
+      case Some(NullGCValue) => StringIdGCValue(ObjectId.get().toString)
+      case Some(id)          => id
     }
 
     val currentParent: NodeAddress = (parent, relationField) match {
