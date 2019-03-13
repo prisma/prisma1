@@ -2,9 +2,8 @@
 
 use prisma_models::Model;
 use graphql_parser::{self as gql, query::*};
-use prisma_models::Schema;
+use prisma_models::SchemaRef;
 use std::convert::From;
-
 
 pub enum PrismaQuery {
     Record(RecordQuery),
@@ -42,9 +41,9 @@ pub struct MultiRelatedRecordQuery {
 }
 
 
-pub struct QueryBuilder<'schema> {
+pub struct QueryBuilder {
     pub inner: Document,
-    pub schema: &'schema Schema
+    pub schema: SchemaRef,
     pub operation: Option<String>,
 }
 

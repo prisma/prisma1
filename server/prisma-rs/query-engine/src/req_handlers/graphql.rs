@@ -20,9 +20,9 @@ impl RequestHandler for GraphQlRequestHandler {
     fn handle<S: Into<PrismaRequest<Self::Body>>>(&self, req: S, ctx: &PrismaContext) {
         let ast = gql::parse_query(&req.into().body.query).unwrap();
 
-        if let Ok(()) = ctx.schema.validate(&ast) {
-            dbg!(ast);
-        }
+        // if let Ok(()) = ctx.schema).validate(&ast) {
+        // dbg!(ast);
+        // }
 
     }
 }
