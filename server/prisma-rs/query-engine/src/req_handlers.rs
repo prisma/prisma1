@@ -1,5 +1,6 @@
 mod graphql;
 pub use graphql::{GraphQlBody, GraphQlRequestHandler};
+use crate::context::PrismaContext;
 
 use actix_web::HttpRequest;
 use std::collections::HashMap;
@@ -7,7 +8,7 @@ use std::collections::HashMap;
 pub trait RequestHandler {
     type Body;
 
-    fn handle<S: Into<PrismaRequest<Self::Body>>>(&self, req: S);
+    fn handle<S: Into<PrismaRequest<Self::Body>>>(&self, req: S, ctx: &PrismaContext);
 }
 
 pub struct PrismaRequest<T> {
