@@ -44,7 +44,10 @@ export function parseEndpoint(endpoint: string): ParseEndpointResult {
   const url = new URL(endpoint)
   const splittedPath = url.pathname.split('/')
   const shared = ['eu1.prisma.sh', 'us2.prisma.sh'].includes(url.host)
-  const isPrivate = !shared && !url.host.endsWith('db.cloud.prisma.sh')
+  const isPrivate =
+    !shared &&
+    !url.hostname.endsWith('db.cloud.prisma.sh') &&
+    url.hostname !== 'localhost'
   const local = !shared && !isPrivate
   // assuming, that the pathname always starts with a leading /, we always can ignore the first element of the split array
   const service =
