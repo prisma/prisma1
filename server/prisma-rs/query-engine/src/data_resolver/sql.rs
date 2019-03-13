@@ -1,4 +1,5 @@
 use super::DataResolver;
+use crate::protobuf::prelude::*;
 use crate::{database_executor::DatabaseExecutor, node_selector::NodeSelector, query_builder::QueryBuilder};
 use chrono::{DateTime, Utc};
 use prisma_common::PrismaResult;
@@ -25,17 +26,30 @@ where
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
 
-        let nodes = self.database_executor.with_rows(query, db_name, |row| {
-            let fields = scalar_fields
-                .iter()
-                .enumerate()
-                .map(|(i, sf)| Self::fetch_value(sf.type_identifier, &row, i))
-                .collect();
+        let nodes = self
+            .database_executor
+            .with_rows(query, db_name, |row| Self::read_row(row, &selected_fields))?;
 
-            Node::new(fields)
-        })?;
+        let result = nodes.into_iter().next().map(|node| SingleNode { node, field_names });
+        Ok(result)
+    }
 
-        Ok(nodes.into_iter().next().map(|node| SingleNode { node, field_names }))
+    fn get_nodes(
+        &self,
+        model: ModelRef,
+        query_arguments: QueryArguments,
+        selected_fields: SelectedFields,
+    ) -> PrismaResult<ManyNodes> {
+        let scalar_fields = selected_fields.scalar_non_list();
+        let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
+        let (db_name, query) = QueryBuilder::get_nodes(model, query_arguments, &selected_fields);
+
+        let nodes = self
+            .database_executor
+            .with_rows(query, db_name, |row| Self::read_row(row, &selected_fields))?;
+
+        let result = ManyNodes { nodes, field_names };
+        Ok(result)
     }
 }
 
@@ -45,6 +59,17 @@ where
 {
     pub fn new(database_executor: T) -> Self {
         Self { database_executor }
+    }
+
+    fn read_row(row: &Row, selected_fields: &SelectedFields) -> Node {
+        let fields = selected_fields
+            .scalar_non_list()
+            .iter()
+            .enumerate()
+            .map(|(i, sf)| Self::fetch_value(sf.type_identifier, &row, i))
+            .collect();
+
+        Node::new(fields)
     }
 
     /// Converter function to wrap the limited set of types in SQLite to a

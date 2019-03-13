@@ -3,9 +3,7 @@ use actix_web::{http::Method, server, App, HttpRequest, HttpResponse, Responder}
 
 mod req_handlers;
 
-struct GraphQl {
-
-}
+struct GraphQl {}
 
 fn handle_stuff(req: &HttpRequest) -> impl Responder {
     ""

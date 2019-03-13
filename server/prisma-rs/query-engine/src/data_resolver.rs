@@ -1,8 +1,9 @@
 mod sql;
 
 use crate::node_selector::NodeSelector;
+use crate::protobuf::prelude::*;
 use prisma_common::PrismaResult;
-use prisma_models::{SelectedFields, SingleNode};
+use prisma_models::prelude::*;
 pub use sql::*;
 
 pub trait DataResolver {
@@ -11,4 +12,11 @@ pub trait DataResolver {
         node_selector: NodeSelector,
         selected_fields: SelectedFields,
     ) -> PrismaResult<Option<SingleNode>>;
+
+    fn get_nodes(
+        &self,
+        model: ModelRef,
+        query_arguments: QueryArguments,
+        selected_fields: SelectedFields,
+    ) -> PrismaResult<ManyNodes>;
 }
