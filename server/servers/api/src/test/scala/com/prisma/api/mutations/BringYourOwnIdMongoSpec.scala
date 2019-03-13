@@ -1,16 +1,16 @@
 package com.prisma.api.mutations
 
 import com.prisma.ConnectorTag
-import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag}
+import com.prisma.ConnectorTag.MongoConnectorTag
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class BringYourOwnIdMongoSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+  override def runOnlyForConnectors: Set[ConnectorTag] = Set(MongoConnectorTag)
 
-  override def runOnlyForConnectors: Set[ConnectorTag] = Set(MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag)
-  val project                                          = SchemaDsl.fromString() { schemaP1optToC1opt }
+  val project = SchemaDsl.fromString() { schemaP1optToC1opt }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -22,16 +22,16 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
   "A Create Mutation" should "create and return item with own Id" in {
     val res = server.query(
       s"""mutation {
-         |  createParent(data: {p: "Parent", id: "Own Id"}){p, id}
+         |  createParent(data: {p: "Parent", id: "5c88f558dee5fb6fe357c7a9"}){p, id}
          |}""",
       project = project
     )
 
-    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id"}}}""")
+    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"5c88f558dee5fb6fe357c7a9"}}}""")
 
     server.queryThatMustFail(
       s"""mutation {
-         |  createParent(data: {p: "Parent", id: "Own Id"}){p, id}
+         |  createParent(data: {p: "Parent", id: "5c88f558dee5fb6fe357c7a9"}){p, id}
          |}""",
       project = project,
       errorCode = 3010,
@@ -39,15 +39,15 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     )
   }
 
-  "A Create Mutation" should "error for id that is invalid" in { //Fixme does that make sense??
-    val res = server.query(
+  "A Create Mutation" should "error for id that is invalid" in {
+    server.queryThatMustFail(
       s"""mutation {
          |  createParent(data: {p: "Parent", id: 12}){p, id}
          |}""",
-      project = project
+      project = project,
+      errorCode = 3044,
+      errorContains = "You provided an ID that was not a valid MongoObjectId: 12"
     )
-
-    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"12"}}}""")
   }
 
   "A Create Mutation" should "error for id that is invalid 2" in {
@@ -67,24 +67,25 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
          |  createParent(data: {p: "Parent", id: "this is probably way to long, lets see what error it throws"}){p, id}
          |}""",
       project = project,
-      errorCode = 3007,
-      errorContains = "Value for field id is too long."
+      errorCode = 3044,
+      errorContains = "You provided an ID that was not a valid MongoObjectId: this is probably way to long, lets see what error it throws"
     )
   }
 
   "A Nested Create Mutation" should "create and return item with own Id" in {
     val res = server.query(
       s"""mutation {
-         |  createParent(data: {p: "Parent", id: "Own Id", childOpt:{create:{c:"Child", id: "Own Child Id"}}}){p, id, childOpt { c, id} }
+         |  createParent(data: {p: "Parent", id: "5c88f558dee5fb6fe357c7a9", childOpt:{create:{c:"Child", id: "5c88f558dee5fb6fe357c7a5"}}}){p, id, childOpt { c, id} }
          |}""",
       project = project
     )
 
-    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id","childOpt":{"c":"Child","id":"Own Child Id"}}}}""")
+    res.toString should be(
+      s"""{"data":{"createParent":{"p":"Parent","id":"5c88f558dee5fb6fe357c7a9","childOpt":{"c":"Child","id":"5c88f558dee5fb6fe357c7a5"}}}}""")
 
     server.queryThatMustFail(
       s"""mutation {
-         |createParent(data: {p: "Parent 2", id: "Own Id 2", childOpt:{create:{c:"Child 2", id: "Own Child Id"}}}){p, id, childOpt { c, id} }
+         |createParent(data: {p: "Parent 2", id: "5c88f558dee5fb6fe357c7a3", childOpt:{create:{c:"Child 2", id: "5c88f558dee5fb6fe357c7a5"}}}){p, id, childOpt { c, id} }
          |}""",
       project = project,
       errorCode = 3010,
@@ -95,11 +96,11 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
   "A Nested Create Mutation" should "error with invalid id" in {
     server.queryThatMustFail(
       s"""mutation {
-         |createParent(data: {p: "Parent 2", id: "Own Id 2", childOpt:{create:{c:"Child 2", id: "This is way too long and should error"}}}){p, id, childOpt { c, id} }
+         |createParent(data: {p: "Parent 2", id: "5c88f558dee5fb6fe357c7a9", childOpt:{create:{c:"Child 2", id: "5c88f558dee5fb6fe357c7a9afafasfsadfasdf"}}}){p, id, childOpt { c, id} }
          |}""",
       project = project,
-      errorCode = 3007,
-      errorContains = "Value for field id is too long."
+      errorCode = 3044,
+      errorContains = "You provided an ID that was not a valid MongoObjectId: 5c88f558dee5fb6fe357c7a9afafasfsadfasdf"
     )
   }
 
@@ -107,8 +108,8 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     val res = server.query(
       s"""mutation {
          |upsertParent(
-         |    where: {id: "Does not exist"}
-         |    create: {p: "Parent 2", id: "Own Id"}
+         |    where: {id: "5c88f558dee5fb6fe357c7a9"}
+         |    create: {p: "Parent 2", id: "5c88f558dee5fb6fe357c7a9"}
          |    update: {p: "Parent 2"}
          |    )
          |  {p, id}
@@ -116,42 +117,42 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
       project = project
     )
 
-    res.toString should be("""{"data":{"upsertParent":{"p":"Parent 2","id":"Own Id"}}}""")
+    res.toString should be("""{"data":{"upsertParent":{"p":"Parent 2","id":"5c88f558dee5fb6fe357c7a9"}}}""")
   }
 
   "An Upsert Mutation" should "error with id that is too long" in {
     server.queryThatMustFail(
       s"""mutation {
          |upsertParent(
-         |    where: {id: "Does not exist"}
-         |    create: {p: "Parent 2", id: "Way way too long for a proper id"}
+         |    where: {id: "5c88f558dee5fb6fe357c7a9"}
+         |    create: {p: "Parent 2", id: "5c88f558dee5fb6fe357c7a9aggfasffgasdgasg"}
          |    update: {p: "Parent 2"}
          |    )
          |  {p, id}
          |}""",
       project = project,
-      errorCode = 3007,
-      errorContains = "Value for field id is too long."
+      errorCode = 3044,
+      errorContains = "You provided an ID that was not a valid MongoObjectId: 5c88f558dee5fb6fe357c7a9aggfasffgasdgasg"
     )
   }
 
   "An nested Upsert Mutation" should "work" in {
     val res = server.query(
       s"""mutation {
-         |  createParent(data: {p: "Parent", id: "Own Id"}){p, id}
+         |  createParent(data: {p: "Parent", id: "5c88f558dee5fb6fe357c7a9"}){p, id}
          |}""",
       project = project
     )
 
-    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id"}}}""")
+    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"5c88f558dee5fb6fe357c7a9"}}}""")
 
     val res2 = server.query(
       s"""mutation {
          |updateParent(
-         |    where: {id: "Own Id"}
+         |    where: {id: "5c88f558dee5fb6fe357c7a9"}
          |    data: {
          |        childOpt: {upsert:{
-         |              create:{ id: "Own Id 3", c: "test 3"}
+         |              create:{ id: "5c88f558dee5fb6fe357c7a4", c: "test 3"}
          |              update:{ c: "Does not matter"}
          |        }}
          |      }
@@ -161,6 +162,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
       project = project
     )
 
-    res2.toString should be("""{"data":{"updateParent":{"p":"Parent","id":"Own Id","childOpt":{"c":"test 3","id":"Own Id 3"}}}}""")
+    res2.toString should be(
+      """{"data":{"updateParent":{"p":"Parent","id":"5c88f558dee5fb6fe357c7a9","childOpt":{"c":"test 3","id":"5c88f558dee5fb6fe357c7a4"}}}}""")
   }
 }
