@@ -9,6 +9,7 @@ use context::PrismaContext;
 mod req_handlers;
 use req_handlers::{GraphQlBody, PrismaRequest, RequestHandler, GraphQlRequestHandler};
 
+mod data_resolvers;
 mod schema;
 mod ast;
 
