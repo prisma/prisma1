@@ -36,6 +36,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
     val inputTypes = """input BCreateInput {
+                       |  id: ID
                        |  rel: UserCreateOneInput
                        |  c: CCreateOneWithoutBInput
                        |}
@@ -46,6 +47,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input BCreateWithoutCInput {
+                       |  id: ID
                        |  rel: UserCreateOneInput
                        |}
                        |
@@ -77,10 +79,16 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input CCreateInput {
+                       |  id: ID
                        |  b: BCreateOneWithoutCInput
                        |}
                        |
+                       |input CCreateWithoutBInput {
+                       |  id: ID
+                       |}
+                       |
                        |input CCreateOneWithoutBInput {
+                       |  create: CCreateWithoutBInput
                        |  connect: CWhereUniqueInput
                        |}
                        |
@@ -89,6 +97,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input CUpdateOneWithoutBInput {
+                       |  create: CCreateWithoutBInput
                        |  connect: CWhereUniqueInput
                        |  disconnect: Boolean
                        |  delete: Boolean
@@ -99,6 +108,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input UserCreateInput {
+                       |  id: ID
                        |  name: String!
                        |}
                        |
