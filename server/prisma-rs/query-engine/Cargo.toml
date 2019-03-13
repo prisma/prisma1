@@ -28,6 +28,7 @@ actix-web = "0.7.18"
 actix = "0.7"
 futures = "0.1"
 graphql-parser = "0.2.2"
+itertools = "0.8"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 prisma-common = { path = "../libs/prisma-common" }
 prisma-models = { path = "../prisma-models" }

@@ -45,6 +45,15 @@ impl RpcResponse {
         }
     }
 
+    pub fn ok_list_values(result: prisma::ScalarListValuesResult) -> RpcResponse {
+        RpcResponse {
+            header: Self::header(),
+            response: Some(rpc::Response::Result(prisma::Result {
+                value: Some(result::Value::ScalarListResults(result)),
+            })),
+        }
+    }
+
     pub fn error(error: CrateError) -> RpcResponse {
         RpcResponse {
             header: Self::header(),

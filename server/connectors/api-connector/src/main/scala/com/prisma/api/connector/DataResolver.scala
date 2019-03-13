@@ -27,7 +27,7 @@ trait DataResolver {
 
   def getRelationNodes(relationTableName: String, queryArguments: QueryArguments): Future[ResolverResult[RelationNode]]
 
-  def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int]
+  def countByTable(table: String): Future[Int]
 
   def countByModel(model: Model, queryArguments: QueryArguments): Future[Int]
 }

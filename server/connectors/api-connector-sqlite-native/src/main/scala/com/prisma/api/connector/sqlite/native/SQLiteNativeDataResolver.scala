@@ -1,29 +1,24 @@
 package com.prisma.api.connector.sqlite.native
 
 import com.google.protobuf.ByteString
-import com.prisma.api.connector.{EveryRelatedNode, _}
+import com.prisma.api.connector._
 import com.prisma.gc_values._
-import com.prisma.rs.{NativeBinding, NodeResult}
+import com.prisma.rs.NativeBinding
 import com.prisma.shared.models.{Model, Project, RelationField, ScalarField}
-import org.joda.time.{DateTime, DateTimeZone}
-import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 import prisma.protocol
-import prisma.protocol.GraphqlId.IdValue
 import prisma.protocol.Node
-import prisma.protocol.ValueContainer.PrismaValue
 import prisma.protocol.ValueContainer.PrismaValue.GraphqlId
 
-import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: ExecutionContext) extends DataResolver {
-  import com.prisma.shared.models.ProjectJsonFormatter._
+case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: ExecutionContext) extends DataResolver {
   import NativeUtils._
+  import com.prisma.shared.models.ProjectJsonFormatter._
 
-  override def project: Project = forwarder.project
+  override def project: Project = delegate.project
 
-  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = forwarder.getModelForGlobalId(globalId)
+  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = delegate.getModelForGlobalId(globalId)
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = Future {
     val projectJson = Json.toJson(project)
@@ -94,17 +89,35 @@ case class SQLiteNativeDataResolver(forwarder: DataResolver)(implicit ec: Execut
 //    forwarder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
   }
 
-  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] =
-    forwarder.getScalarListValues(model, listField, queryArguments)
+  override def getScalarListValues(model: Model, listField: ScalarField, queryArguments: QueryArguments): Future[ResolverResult[ScalarListValues]] = {
+    Future.successful(ResolverResult(Vector.empty))
+  }
 
-  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] =
-    forwarder.getScalarListValuesByNodeIds(model, listField, nodeIds)
+  override def getScalarListValuesByNodeIds(model: Model, listField: ScalarField, nodeIds: Vector[IdGCValue]): Future[Vector[ScalarListValues]] = Future {
+    val projectJson = Json.toJson(project)
+    val input = prisma.protocol.GetScalarListValuesByNodeIds(
+      header = protocol.Header("GetRelatedNodesInput"),
+      projectJson = ByteString.copyFromUtf8(projectJson.toString()),
+      modelName = model.name,
+      listField = listField.name,
+      nodeIds = nodeIds.map(f => toPrismaValue(f).asInstanceOf[GraphqlId].value)
+    )
 
-  override def getRelationNodes(relationTableName: String, queryArguments: QueryArguments): Future[ResolverResult[RelationNode]] =
-    forwarder.getRelationNodes(relationTableName, queryArguments)
+    val result = NativeBinding.get_scalar_list_values_by_node_ids(input)
+    result.map { protoValue =>
+      ScalarListValues(
+        nodeId = toIdGcValue(protoValue.nodeId),
+        value = ListGCValue(protoValue.values.map(v => toGcValue(v.prismaValue)).toVector)
+      )
+    }.toVector
+  }
 
-  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = forwarder.countByTable(table, whereFilter)
+  override def getRelationNodes(relationTableName: String, queryArguments: QueryArguments): Future[ResolverResult[RelationNode]] = {
+    Future.successful(ResolverResult(Vector.empty))
+  }
 
-  override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = forwarder.countByModel(model, queryArguments)
+  override def countByTable(table: String): Future[Int] = delegate.countByTable(table)
+
+  override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = delegate.countByModel(model, queryArguments)
 
 }

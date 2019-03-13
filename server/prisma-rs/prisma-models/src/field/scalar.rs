@@ -2,11 +2,15 @@ use prisma_query::ast::*;
 
 use super::FieldManifestation;
 use crate::prelude::*;
+use std::sync::{Arc, Weak};
 
 static ID_FIELD: &str = "id";
 static EMBEDDED_ID_FIELD: &str = "_id";
 static UPDATED_AT_FIELD: &str = "updatedAt";
 static CREATED_AT_FIELD: &str = "createdAt";
+
+pub type ScalarFieldRef = Arc<ScalarField>;
+pub type ScalarFieldWeak = Weak<ScalarField>;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -75,13 +79,13 @@ pub struct Sequence {
 }
 
 impl ScalarField {
-    fn model(&self) -> ModelRef {
+    pub fn model(&self) -> ModelRef {
         self.model
             .upgrade()
             .expect("Model does not exist anymore. Parent model got deleted without deleting the child.")
     }
 
-    fn schema(&self) -> SchemaRef {
+    pub fn schema(&self) -> SchemaRef {
         self.model().schema()
     }
 

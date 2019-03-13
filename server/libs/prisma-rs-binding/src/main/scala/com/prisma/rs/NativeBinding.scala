@@ -41,6 +41,13 @@ object NativeBinding {
     }
   }
 
+  def get_scalar_list_values_by_node_ids(input: GetScalarListValuesByNodeIds): Seq[ScalarListValues] = {
+    val (pointer, length) = writeBuffer(input)
+    handleProtoResult(library.get_scalar_list_values_by_node_ids(pointer, length)) { values: Seq[ScalarListValues] =>
+      values
+    }
+  }
+
   def handleProtoResult[T, U](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U): U = {
     val messageContent = envelope.data.getByteArray(0, envelope.len.intValue())
     library.destroy(envelope)
@@ -52,6 +59,9 @@ object NativeBinding {
         value match {
           case Result.Value.NodesResult(NodesResult(nodes: Seq[Node], fields: Seq[String])) =>
             processMessage((nodes, fields).asInstanceOf[T])
+
+          case Result.Value.ScalarListResults(value) =>
+            processMessage(value.values.asInstanceOf[T])
 
           case Result.Value.Empty =>
             processMessage((Seq.empty[Node], Seq.empty[String]).asInstanceOf[T])

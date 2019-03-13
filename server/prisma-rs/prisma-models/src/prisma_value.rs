@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum GraphqlId {
     String(String),
     Int(usize),
