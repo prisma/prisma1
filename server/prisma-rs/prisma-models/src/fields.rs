@@ -1,5 +1,5 @@
 use crate::{Field, RelationField, ScalarField};
-use once_cell::unsync::OnceCell;
+use once_cell::sync::OnceCell;
 use prisma_common::{error::Error, PrismaResult};
 use std::{
     collections::BTreeSet,

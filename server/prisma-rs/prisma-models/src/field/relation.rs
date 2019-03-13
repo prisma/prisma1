@@ -1,6 +1,6 @@
 use super::FieldManifestation;
 use crate::prelude::*;
-use once_cell::unsync::OnceCell;
+use once_cell::sync::OnceCell;
 use prisma_query::ast::Column;
 use std::sync::Arc;
 

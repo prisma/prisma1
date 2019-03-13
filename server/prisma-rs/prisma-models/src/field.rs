@@ -5,7 +5,7 @@ pub use relation::*;
 pub use scalar::*;
 
 use crate::prelude::*;
-use once_cell::unsync::OnceCell;
+use once_cell::sync::OnceCell;
 use std::{borrow::Cow, sync::Arc};
 
 #[derive(Debug, Deserialize, Serialize)]

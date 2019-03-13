@@ -1,5 +1,5 @@
 pub use crate::prelude::*;
-use once_cell::unsync::OnceCell;
+use once_cell::sync::OnceCell;
 use std::sync::{Arc, Weak};
 
 pub type ProjectRef = Arc<Project>;
