@@ -3,6 +3,7 @@ import * as AWS from 'aws-sdk'
 import axios from 'axios'
 import * as createLogger from 'progress-estimator'
 import * as os from 'os'
+import * as path from 'path'
 import * as fs from 'fs-extra'
 import { gitCommitPush } from 'git-commit-push-via-github-api'
 import { spawnSync } from 'child_process'
@@ -39,11 +40,26 @@ function uploadFiletoS3(bucket: string, filename: string, file: Buffer) {
   }
 }
 
-async function updateVerion(releaseTag: string) {
+async function updateVersion(releaseTag: string) {
   const data = await fs.readFile('package.json', 'utf-8')
   const pJson = JSON.parse(data)
   pJson.version = releaseTag
   return fs.writeFile('package.json', JSON.stringify(pJson, null, 2))
+}
+
+async function updateDockerVersion(releaseTag: string) {
+  const releaseTagTokens = releaseTag.split('.')
+  const utilsFilePath = path.join(__dirname, '../../../prisma-cli-core/dist/utils/util.js')
+  const data = await fs.readFile(utilsFilePath, 'utf-8')
+  const newData = data.split(os.EOL).reduce((acc, line) => {
+    if (!(line.includes('prisma:1.7'))) {
+      return acc + line + os.EOL
+    } else {
+      return acc + line.replace('1.7', `${releaseTagTokens[0]}.${releaseTagTokens[1]}`) + os.EOL
+    }
+  }, '')
+  console.log(newData)
+  return fs.writeFile(utilsFilePath, newData)
 }
 
 async function createBinary(command: string, release: string) {
@@ -64,7 +80,7 @@ async function createBinary(command: string, release: string) {
 export async function brew(stableReleaseVersion: string) {
   console.log('Home Brew Release')
 
-  const tarFileName = await createBinary('binary-osx', stableReleaseVersion)
+  const tarFileName = await createBinary('binary-macos', stableReleaseVersion)
   const shaResponse = spawnSync('shasum', ['-a', '256', tarFileName])
   const shaValue = shaResponse.stdout
     .toString()
@@ -189,7 +205,24 @@ export function checkEnvs() {
   }
 }
 
-export async function grabRelease() {
+export async function updateFiles(version: string) {
+  await logger(
+    updateVersion(version),
+    'Updating package.json to new version',
+    {
+      estimate: 1000,
+    },
+  )
+  await logger(
+    updateDockerVersion(version),
+    'Updating utils.ts to new version',
+    {
+      estimate: 1000,
+    },
+  )
+}
+
+export async function getReleaseFromGithubAPI() {
   const tData = await logger(
     axios.get('https://api.github.com/repos/prisma/prisma/releases'),
     'Fetching version',
@@ -201,12 +234,5 @@ export async function grabRelease() {
     node => !node.tag_name.includes('alpha') && !node.tag_name.includes('beta'),
   )[0].tag_name
   console.log(`Version to publish: ${stableReleaseVersion}`)
-  await logger(
-    updateVerion(stableReleaseVersion),
-    'Updating package.json to new version',
-    {
-      estimate: 1000,
-    },
-  )
   return stableReleaseVersion
 }
