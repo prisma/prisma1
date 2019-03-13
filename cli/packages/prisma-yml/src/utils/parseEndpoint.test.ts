@@ -24,4 +24,9 @@ describe('parseEndpoint', () => {
       parseEndpoint('https://eu1.prisma.sh/workspace-name/tessst/dev'),
     ).toMatchSnapshot()
   })
+  test('custom hosted url or local in intranet', () => {
+    expect(
+      parseEndpoint('https://api-prisma.divyendusingh.com/zebra-4069/dev'),
+    ).toMatchSnapshot()
+  })
 })
