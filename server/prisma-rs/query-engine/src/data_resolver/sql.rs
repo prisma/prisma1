@@ -1,7 +1,11 @@
 use super::DataResolver;
 use super::ScalarListValues;
 use crate::protobuf::prelude::*;
-use crate::{database_executor::DatabaseExecutor, node_selector::NodeSelector, query_builder::QueryBuilder};
+use crate::{
+    database_executor::{DatabaseExecutor, Sqlite},
+    node_selector::NodeSelector,
+    query_builder::QueryBuilder,
+};
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use prisma_common::PrismaResult;
@@ -15,10 +19,16 @@ where
     database_executor: T,
 }
 
-impl<T> DataResolver for SqlResolver<T>
+impl<T> SqlResolver<T>
 where
     T: DatabaseExecutor,
 {
+    pub fn new(database_executor: T) -> Self {
+        Self { database_executor }
+    }
+}
+
+impl DataResolver for SqlResolver<Sqlite> {
     fn get_node_by_where(
         &self,
         node_selector: NodeSelector,
@@ -143,14 +153,7 @@ struct ScalarListElement {
     value: PrismaValue,
 }
 
-impl<T> SqlResolver<T>
-where
-    T: DatabaseExecutor,
-{
-    pub fn new(database_executor: T) -> Self {
-        Self { database_executor }
-    }
-
+impl SqlResolver<Sqlite> {
     fn read_row(row: &Row, selected_fields: &SelectedFields) -> Node {
         let fields = selected_fields
             .scalar_non_list()
