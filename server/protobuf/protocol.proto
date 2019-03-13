@@ -16,6 +16,7 @@ message Header {
 message Result {
     oneof value {
         NodesResult nodes_result = 1;
+        ScalarListValuesResult scalar_list_results = 2;
     }
 }
 
@@ -39,6 +40,15 @@ message NodesResult {
 message Node {
     repeated ValueContainer values    = 1;
     optional GraphqlId      parent_id = 2;
+}
+
+message ScalarListValuesResult {
+    repeated ScalarListValues values = 1;
+}
+
+message ScalarListValues {
+    required GraphqlId      node_id = 1;
+    repeated ValueContainer values  = 2;
 }
 
 message ValueContainer {
@@ -98,6 +108,14 @@ message GetScalarListValues {
     required string          model_name      = 3;
     required string          list_field      = 4;
     required QueryArguments  query_arguments = 5;
+}
+
+message GetScalarListValuesByNodeIds {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required string          list_field      = 4;
+    repeated GraphqlId       node_ids        = 5;
 }
 
 message SelectedFields {

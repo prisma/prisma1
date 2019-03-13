@@ -38,6 +38,6 @@ pub trait DataResolver {
 }
 
 pub struct ScalarListValues {
-    node_id: GraphqlId,
-    values: Vec<PrismaValue>,
+    pub node_id: GraphqlId,
+    pub values: Vec<PrismaValue>,
 }

@@ -2,7 +2,7 @@ use super::FieldManifestation;
 use crate::prelude::*;
 use once_cell::unsync::OnceCell;
 use prisma_query::ast::Column;
-use std::sync::{ Arc, Weak };
+use std::sync::{Arc, Weak};
 
 pub type RelationFieldRef = Arc<RelationField>;
 pub type RelationFieldWeak = Weak<RelationField>;

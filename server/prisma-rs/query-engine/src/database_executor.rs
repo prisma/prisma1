@@ -8,7 +8,7 @@ use rusqlite::Row;
 pub use sqlite::Sqlite;
 
 pub trait DatabaseExecutor {
-        fn with_rows<F, T>(&self, query: Select, db_name: String, f: F) -> PrismaResult<Vec<T>>
-        where
-                F: FnMut(&Row) -> T;
+    fn with_rows<F, T>(&self, query: Select, db_name: String, f: F) -> PrismaResult<Vec<T>>
+    where
+        F: FnMut(&Row) -> T;
 }
