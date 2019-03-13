@@ -72,7 +72,7 @@ impl Sqlite {
 
     /// Take a new connection from the pool and create the database if it
     /// doesn't exist yet.
-    fn with_connection<F, T>(&self, db_name: &str, f: F) -> PrismaResult<T>
+    pub fn with_connection<F, T>(&self, db_name: &str, f: F) -> PrismaResult<T>
     where
         F: FnOnce(&Connection) -> PrismaResult<T>,
     {

@@ -1,6 +1,7 @@
 use crate::{
     data_resolver::{DataResolver, SqlResolver},
     database_executor::Sqlite,
+    database_mutaction_executor::{DatabaseMutactionExecutor, SqliteDatabaseMutactionExecutor},
     node_selector::NodeSelector,
     protobuf::{prelude::*, InputValidation},
 };
@@ -15,10 +16,12 @@ pub trait ExternalInterface {
     fn get_related_nodes(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_scalar_list_values(&self, payload: &mut [u8]) -> Vec<u8>;
     fn get_scalar_list_values_by_node_ids(&self, payload: &mut [u8]) -> Vec<u8>;
+    fn execute_raw(&self, payload: &mut [u8]) -> Vec<u8>;
 }
 
 pub struct ProtoBufInterface {
     data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
+    database_mutaction_executor: Box<dyn DatabaseMutactionExecutor + Send + Sync + 'static>,
 }
 
 impl ProtoBufInterface {
@@ -32,6 +35,7 @@ impl ProtoBufInterface {
 
         ProtoBufInterface {
             data_resolver: Box::new(data_resolver),
+            database_mutaction_executor: Box::new(SqliteDatabaseMutactionExecutor {}),
         }
     }
 
@@ -193,6 +197,21 @@ impl ExternalInterface for ProtoBufInterface {
                 .collect();
 
             let response = RpcResponse::ok_list_values(prisma::ScalarListValuesResult { values: proto_values });
+            let mut response_payload = Vec::new();
+
+            response.encode(&mut response_payload).unwrap();
+
+            Ok(response_payload)
+        })
+    }
+
+    fn execute_raw(&self, payload: &mut [u8]) -> Vec<u8> {
+        Self::protobuf_result(|| {
+            let input = ExecuteRawInput::decode(payload)?;
+            let json = self.database_mutaction_executor.execute_raw(input.query);
+            let json_as_string = serde_json::to_string(&json)?;
+
+            let response = RpcResponse::ok_raw(prisma::ExecuteRawResult { json: json_as_string });
             let mut response_payload = Vec::new();
 
             response.encode(&mut response_payload).unwrap();

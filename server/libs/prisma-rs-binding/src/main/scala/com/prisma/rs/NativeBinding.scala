@@ -3,6 +3,7 @@ package com.prisma.rs
 import com.prisma.gc_values._
 import com.prisma.rs.jna.{JnaRustBridge, ProtobufEnvelope}
 import com.sun.jna.{Memory, Native, Pointer}
+import play.api.libs.json.{JsValue, Json}
 import prisma.protocol._
 import scalapb.GeneratedMessage
 
@@ -48,6 +49,13 @@ object NativeBinding {
     }
   }
 
+  def execute_raw(input: ExecuteRawInput): JsValue = {
+    val (pointer, length) = writeBuffer(input)
+    handleProtoResult(library.execute_raw(pointer, length)) { json: JsValue =>
+      json
+    }
+  }
+
   def handleProtoResult[T, U](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U): U = {
     val messageContent = envelope.data.getByteArray(0, envelope.len.intValue())
     library.destroy(envelope)
@@ -62,6 +70,10 @@ object NativeBinding {
 
           case Result.Value.ScalarListResults(value) =>
             processMessage(value.values.asInstanceOf[T])
+
+          case Result.Value.ExecuteRawResult(result) =>
+            val json = Json.parse(result.json)
+            processMessage(json.asInstanceOf[T])
 
           case Result.Value.Empty =>
             processMessage((Seq.empty[Node], Seq.empty[String]).asInstanceOf[T])

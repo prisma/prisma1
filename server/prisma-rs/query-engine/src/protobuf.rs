@@ -54,6 +54,15 @@ impl RpcResponse {
         }
     }
 
+    pub fn ok_raw(result: ExecuteRawResult) -> RpcResponse {
+        RpcResponse {
+            header: Self::header(),
+            response: Some(rpc::Response::Result(prisma::Result {
+                value: Some(result::Value::ExecuteRawResult(result)),
+            })),
+        }
+    }
+
     pub fn error(error: CrateError) -> RpcResponse {
         RpcResponse {
             header: Self::header(),

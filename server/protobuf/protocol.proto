@@ -17,6 +17,7 @@ message Result {
     oneof value {
         NodesResult nodes_result = 1;
         ScalarListValuesResult scalar_list_results = 2;
+        ExecuteRawResult execute_raw_result = 3;
     }
 }
 
@@ -49,6 +50,10 @@ message ScalarListValuesResult {
 message ScalarListValues {
     required GraphqlId      node_id = 1;
     repeated ValueContainer values  = 2;
+}
+
+message ExecuteRawResult {
+    required string json   = 1;
 }
 
 message ValueContainer {
@@ -116,6 +121,11 @@ message GetScalarListValuesByNodeIds {
     required string          model_name      = 3;
     required string          list_field      = 4;
     repeated GraphqlId       node_ids        = 5;
+}
+
+message ExecuteRawInput {
+    required Header header = 1;
+    required string query  = 2;
 }
 
 message SelectedFields {

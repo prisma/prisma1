@@ -6,6 +6,7 @@ extern crate prost_derive;
 mod cursor_condition;
 mod data_resolver;
 mod database_executor;
+mod database_mutaction_executor;
 mod node_selector;
 mod ordering;
 mod protobuf;
@@ -54,5 +55,6 @@ data_interface!(
     get_nodes,
     get_related_nodes,
     get_scalar_list_values,
-    get_scalar_list_values_by_node_ids
+    get_scalar_list_values_by_node_ids,
+    execute_raw
 );
