@@ -29,9 +29,6 @@ fn main() {
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
 
-    let ast = schema::load_schema();
-    println!("{:#?}", ast);
-
     let sys = actix::System::new("prisma");
 
     server::new(|| App::new().resource("/", |r| r.method(Method::POST).with(handler)))

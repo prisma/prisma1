@@ -10,6 +10,9 @@ actix = "0.7.5"
 lazy_static = "1.2"
 prisma-common = { path = "../../libs/prisma-common" }
 prisma-models = { path = "../../prisma-models" }
+core = { path = "../core" }
+connector = { path = "../connectors/connector" }
+sqlite-connector = { path = "../connectors/sqlite-connector" }
 env_logger = "0.6"
 graphql-parser = "0.2.2"
 serde = { version = "1.0", features = ["derive"] }

@@ -8,3 +8,4 @@ edition = "2018"
 graphql-parser = "0.2.2"
 prisma-common = { path = "../../libs/prisma-common" }
 prisma-models = { path = "../../prisma-models" }
+connector = { path = "../connectors/connector" }

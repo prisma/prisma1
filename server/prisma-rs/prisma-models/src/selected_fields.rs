@@ -99,4 +99,15 @@ impl SelectedFields {
             .map(|sf| sf.field.clone())
             .collect()
     }
+
+    pub fn all_scalar_fields(model: ModelRef) -> SelectedFields {
+        let fields = model
+            .fields()
+            .scalar()
+            .iter()
+            .map(|field| SelectedField::Scalar(SelectedScalarField { field: field.clone() }))
+            .collect();
+
+        Self::new(fields, None)
+    }
 }
