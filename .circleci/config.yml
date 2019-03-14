@@ -4,6 +4,10 @@ jobs:
   cli_publish:
     docker:
       - image: circleci/node:8
+      - image: circleci/mongo:4.1
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: prisma
+          MONGO_INITDB_ROOT_PASSWORD: prisma
       - image: circleci/postgres:10.3-alpine
         environment:
           POSTGRES_USER: prisma
@@ -38,6 +42,10 @@ jobs:
   cli_test:
     docker:
       - image: circleci/node:8
+      - image: circleci/mongo:4.1
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: prisma
+          MONGO_INITDB_ROOT_PASSWORD: prisma
       - image: circleci/postgres:10.3-alpine
         environment:
           POSTGRES_USER: prisma
@@ -92,6 +100,7 @@ workflows:
               ignore:
                 - beta
                 - alpha
+                - master
       - cli_publish:
           filters:
             tags:
