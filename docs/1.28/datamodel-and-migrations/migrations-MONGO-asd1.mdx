@@ -98,7 +98,7 @@ When running `prisma deploy`, there are three things done by Prisma:
 
 The underlying `User` collection remains untouched, it stays there as a _dangling collection_.
 
-If you want to still use the data in the dangling `User` collection for the new `Person` type in your Prisma API, you need to [manually rename the collection](https://docs.mongodb.com/manual/reference/method/db.collection.renameCollection/) in your MongoDB (and likely delete the empty `Person` collection that was ).
+If you want to still use the data in the dangling `User` collection for the new `Person` type in your Prisma API, you need to [manually rename the collection](https://docs.mongodb.com/manual/reference/method/db.collection.renameCollection/) in your MongoDB (and likely delete the empty `Person` collection that was created earlier).
 
 ### Renaming a field of a collection
 
