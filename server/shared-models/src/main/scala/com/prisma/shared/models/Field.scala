@@ -236,7 +236,7 @@ case class ScalarField(
   override def relationOpt: None.type       = None
   override val dbName: String               = manifestation.map(_.dbName).getOrElse(name)
   override def isUnique: Boolean            = template.isUnique || behaviour.exists(_.isInstanceOf[IdBehaviour])
-  lazy val isWritable: Boolean              = !isId && !isCreatedAt && !isUpdatedAt
+  lazy val isWritableDuringUpdate: Boolean  = !isId && !isCreatedAt && !isUpdatedAt
   override def schema: Schema               = model.schema
   override def userFriendlyTypeName: String = typeIdentifier.userFriendlyTypeName
 

@@ -291,7 +291,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   private def computeScalarInputFieldsForUpdate(model: Model) = {
-    val filteredModel = model.filterScalarFields(f => f.isWritable)
+    val filteredModel = model.filterScalarFields(f => f.isWritableDuringUpdate)
     computeScalarInputFields(filteredModel, SchemaBuilderUtils.mapToOptionalInputType, "Update")
   }
 
