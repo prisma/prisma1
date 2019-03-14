@@ -113,7 +113,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.pathAsString("data.upsertWithDefaultValue.reqString") should be("defaultValue")
   }
 
-  "an item" should "note be created when trying to set a required value to null even if there is a default value for that field" in {
+  "an item" should "not be created when trying to set a required value to null even if there is a default value for that field" in {
     server.queryThatMustFail(
       s"""mutation {
          |  upsertWithDefaultValue(
