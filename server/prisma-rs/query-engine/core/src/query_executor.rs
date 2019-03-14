@@ -3,9 +3,11 @@ use connector::DataResolver;
 use prisma_common::PrismaResult;
 use prisma_models::SingleNode;
 use query_ast::*;
+use std::boxed::Box;
+use std::sync::Arc;
 
 pub struct QueryExecutor {
-    data_resolver: DataResolver,
+    pub data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
 }
 
 impl QueryExecutor {
