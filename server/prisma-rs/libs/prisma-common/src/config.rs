@@ -10,7 +10,7 @@ use crate::{error::Error, PrismaResult};
 use serde_yaml;
 use std::{collections::BTreeMap, env, fs::File, path::PathBuf};
 
-trait WithMigrations {
+pub trait WithMigrations {
     fn migrations(&self) -> Option<bool>;
     fn is_active(&self) -> Option<bool>;
 

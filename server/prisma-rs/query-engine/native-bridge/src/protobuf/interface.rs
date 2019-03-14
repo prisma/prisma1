@@ -4,7 +4,7 @@ use crate::{
     ExternalInterface,
 };
 use connector::{DataResolver, DatabaseMutactionExecutor, NodeSelector};
-use prisma_common::{config::*, error::Error, PrismaResult};
+use prisma_common::{config::*, config::WithMigrations, error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use prost::Message;
 use sqlite_connector::{SqlResolver, Sqlite, SqliteDatabaseMutactionExecutor};
@@ -18,8 +18,8 @@ pub struct ProtoBufInterface {
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
         let data_resolver = match config.databases.get("default") {
-            Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => {
-                SqlResolver::new(Sqlite::new(config.limit(), config.test_mode).unwrap())
+            Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
+                SqlResolver::new(Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap())
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
