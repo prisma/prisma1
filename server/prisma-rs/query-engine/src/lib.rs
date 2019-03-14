@@ -12,6 +12,9 @@ mod ordering;
 mod protobuf;
 mod query_builder;
 pub mod req_handlers;
+pub mod context;
+pub mod schema;
+pub mod ast;
 
 use lazy_static::lazy_static;
 use prisma_common::{config::PrismaConfig, error::Error};

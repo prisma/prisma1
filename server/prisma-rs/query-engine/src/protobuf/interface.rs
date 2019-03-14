@@ -272,6 +272,7 @@ impl From<Error> for super::prisma::error::Value {
                 super::prisma::error::Value::InvalidConnectionArguments(message.to_string())
             }
             e @ Error::NoResultError => super::prisma::error::Value::NoResultsError(e.description().to_string()),
+            _ => unreachable!(),
         }
     }
 }

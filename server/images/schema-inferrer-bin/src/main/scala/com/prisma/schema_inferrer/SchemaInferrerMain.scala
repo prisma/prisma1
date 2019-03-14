@@ -8,7 +8,7 @@ import play.api.libs.json.{Json, Reads}
 import scala.io.StdIn
 
 object SchemaInferrerMain {
-  case class Input(dataModel: String, previousSchema: Schema)
+  case class Input(dataModel: String)
 
   import com.prisma.shared.models.ProjectJsonFormatter._
 
@@ -20,10 +20,8 @@ object SchemaInferrerMain {
 
     val capabilities     = ConnectorCapabilities.mysqlPrototype
     val validationResult = DataModelValidatorImpl.validate(input.dataModel, FieldRequirementsInterface.empty, capabilities)
-//    println(validationResult)
-    val schema = SchemaInferrer(capabilities).infer(input.previousSchema, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
-//    println(schema)
-//    println("------------------------------------------------------")
+    val schema = SchemaInferrer(capabilities).infer(Schema.empty, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
+    
     println(Json.toJson(schema))
   }
 

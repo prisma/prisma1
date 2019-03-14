@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use once_cell::unsync::OnceCell;
+use once_cell::sync::OnceCell;
 use prisma_query::ast::{Column, Table};
 use std::sync::{Arc, Weak};
 
