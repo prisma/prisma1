@@ -27,7 +27,7 @@ impl PrismaContext {
         };
         Self {
             config: config::load().unwrap(),
-            schema: schema::load_schema().unwrap(),
+            schema: dbg!(schema::load_schema().unwrap()),
             query_executor: query_executor,
         }
     }

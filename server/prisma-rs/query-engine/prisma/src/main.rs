@@ -8,6 +8,7 @@ use lazy_static::lazy_static;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use std::env;
 use std::sync::Arc;
+use serde_json;
 
 // lazy_static! {
 // }
@@ -36,10 +37,10 @@ fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>
             .map(|(k, v)| (format!("{}", k), v.to_str().unwrap().into()))
             .collect(),
     };
-    http_handler.graphql_request_handler.handle(req, &http_handler.context);
+    let result = http_handler.graphql_request_handler.handle(req, &http_handler.context);
 
     // todo return values
-    ""
+    serde_json::to_string(&result)
 }
 
 fn main() {

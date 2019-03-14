@@ -11,7 +11,7 @@ pub enum GraphqlId {
     UUID(String),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum PrismaValue {
     String(String),
     Float(f64),

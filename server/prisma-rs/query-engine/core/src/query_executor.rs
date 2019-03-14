@@ -12,9 +12,8 @@ pub struct QueryExecutor {
 
 impl QueryExecutor {
     // WIP
-    pub fn execute(&self, queries: &mut Vec<PrismaQuery>) -> PrismaResult<Option<SingleNode>> {
-        queries.reverse();
-        let query = queries.pop().unwrap();
+    pub fn execute(&self, queries: Vec<PrismaQuery>) -> PrismaResult<Option<SingleNode>> {
+        let query = queries.into_iter().next().unwrap();
         match query {
             PrismaQuery::RecordQuery(query) => self
                 .data_resolver

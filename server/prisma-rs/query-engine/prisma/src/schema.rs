@@ -51,5 +51,6 @@ pub fn load_schema() -> Result<SchemaRef, Box<std::error::Error>> {
     let output = child.wait_with_output()?;
     let inferred = String::from_utf8(output.stdout)?;
 
-    Ok(serde_json::from_str::<SchemaTemplate>(&inferred)?.build("".into()))
+    // FIXME: how can we inject the right db name?
+    Ok(serde_json::from_str::<SchemaTemplate>(&inferred)?.build("FilterSpec_DB".into()))
 }

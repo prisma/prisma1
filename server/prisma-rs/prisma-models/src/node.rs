@@ -1,5 +1,6 @@
 use crate::{GraphqlId, PrismaValue};
 
+#[derive(Debug)]
 pub struct SingleNode {
     pub node: Node,
     pub field_names: Vec<String>,
