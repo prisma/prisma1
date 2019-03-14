@@ -10,8 +10,8 @@ mkdir -p build
 
 for i in "${channels[@]}"
 do
-    mv target/${i}/libprisma.a build/libprisma_static.a 2>/dev/null || :
-    mv target/${i}/libprisma.dylib build/ 2>/dev/null || :
-    mv target/${i}/libprisma.so build/ 2>/dev/null || :
-    mv target/${i}/libprisma.dll build/ 2>/dev/null || :
+    mv target/${i}/libnative_bridge.dylib build/ 2>/dev/null || :
+    mv target/${i}/libnative_bridge.a build/libnative_bridge_static.a 2>/dev/null || :
+    mv target/${i}/libnative_bridge.so build/ 2>/dev/null || :
+    mv target/${i}/libnative_bridge.dll build/ 2>/dev/null || :
 done

@@ -15,7 +15,7 @@ object NativeBinding {
     System.setProperty("jna.debug_load", "true")
     System.setProperty("jna.library.path", sys.env.get("SERVER_ROOT").map(path => s"$path/prisma-rs/build").getOrElse("/lib"))
 
-    Native.loadLibrary("prisma", classOf[JnaRustBridge])
+    Native.loadLibrary("native_bridge", classOf[JnaRustBridge])
   }
 
   def get_node_by_where(getNodeByWhere: GetNodeByWhereInput): Option[(Node, Vector[String])] = {
@@ -59,13 +59,17 @@ object NativeBinding {
   def count_by_model(input: CountByModelInput): Int = {
     val (pointer, length) = writeBuffer(input)
 
-    handleProtoResult(library.count_by_model(pointer, length)) { i: Int => i }
+    handleProtoResult(library.count_by_model(pointer, length)) { i: Int =>
+      i
+    }
   }
 
   def count_by_table(input: CountByTableInput): Int = {
     val (pointer, length) = writeBuffer(input)
 
-    handleProtoResult(library.count_by_table(pointer, length)) { i: Int => i }
+    handleProtoResult(library.count_by_table(pointer, length)) { i: Int =>
+      i
+    }
   }
 
   def handleProtoResult[T, U](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U): U = {
