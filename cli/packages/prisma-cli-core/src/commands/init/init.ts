@@ -4,7 +4,7 @@ import * as path from 'path'
 import chalk from 'chalk'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { isDockerComposeInstalled } from '../../utils/dockerComposeInstalled'
-import { spawnSync } from 'npm-run'
+import { spawnSync } from '@harshitpant/npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 

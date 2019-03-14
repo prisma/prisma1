@@ -11,7 +11,7 @@ import {
   GoGenerator,
   FlowGenerator,
 } from 'prisma-client-lib'
-import { spawnSync } from 'npm-run'
+import { spawnSync } from '@harshitpant/npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import generateCRUDSchemaString, {
   parseInternalTypes,

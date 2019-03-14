@@ -14,7 +14,7 @@ import {
 } from '../../utils/util'
 import * as sillyname from 'sillyname'
 import { EndpointDialog } from '../../utils/EndpointDialog'
-import { spawnSync } from 'npm-run'
+import { spawnSync } from '@harshitpant/npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 import { satisfiesVersion } from '../../utils/satisfiesVersion'
