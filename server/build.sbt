@@ -38,7 +38,6 @@ def commonDockerImageSettings(imageName: String, baseImage: String, tag: String)
     val appDir    = stage.value
     val targetDir = "/app"
     val systemLibs = "/lib"
-
     val libraries = (MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
       MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources")))).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
       if (prev.exists(_._2 == next._2)) {
