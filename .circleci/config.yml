@@ -83,7 +83,6 @@ workflows:
           filters:
             branches:
               ignore:
-                - master
                 - beta
                 - alpha
       - cli_publish:
