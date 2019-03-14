@@ -1,0 +1,10 @@
+[package]
+name = "core"
+version = "0.1.0"
+authors = ["Dominic Petrick <dompetrick@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+graphql-parser = "0.2.2"
+prisma-common = { path = "../../libs/prisma-common" }
+prisma-models = { path = "../../prisma-models" }

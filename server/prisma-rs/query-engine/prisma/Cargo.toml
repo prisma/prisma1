@@ -1,0 +1,16 @@
+[package]
+name = "prisma"
+version = "0.1.0"
+authors = ["Dominic Petrick <dompetrick@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+actix-web = "0.7.18"
+actix = "0.7.5"
+lazy_static = "1.2"
+prisma-common = { path = "../../libs/prisma-common" }
+prisma-models = { path = "../../prisma-models" }
+env_logger = "0.6"
+graphql-parser = "0.2.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
