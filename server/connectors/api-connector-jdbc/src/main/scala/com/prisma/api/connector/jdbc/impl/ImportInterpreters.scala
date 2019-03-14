@@ -7,9 +7,9 @@ import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext
 
-case class ImportNodesInterpreter(mutaction: ImportNodes) extends TopLevelDatabaseMutactionInterpreter {
+case class ImportNodesInterpreter(mutaction: ImportNodes, shouldCreateRelayIds: Boolean) extends TopLevelDatabaseMutactionInterpreter {
   override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
-    mutationBuilder.importNodes(mutaction).andThen(unitResult)
+    mutationBuilder.importNodes(mutaction, shouldCreateRelayIds).andThen(unitResult)
   }
 }
 
