@@ -6,9 +6,9 @@ use actix_web::{http::Method, server, App, HttpRequest, Json, Responder};
 use context::PrismaContext;
 use lazy_static::lazy_static;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
+use serde_json;
 use std::env;
 use std::sync::Arc;
-use serde_json;
 
 // lazy_static! {
 // }

@@ -3,9 +3,9 @@ use crate::context::PrismaContext;
 use crate::schema::Validatable;
 use core::{PrismaQuery, QueryBuilder};
 use graphql_parser as gql;
+use prisma_models::{GraphqlId, PrismaValue, SingleNode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use prisma_models::{SingleNode, PrismaValue, GraphqlId};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -37,24 +37,25 @@ impl RequestHandler for GraphQlRequestHandler {
         let queries: Vec<PrismaQuery> = qb.into();
 
         let result = dbg!(ctx.query_executor.execute(queries)).unwrap();
-        
+
         match result {
             None => serde_json::Value::Null,
             Some(single_node) => serialize_single_node(single_node),
         }
     }
-
 }
 
 fn serialize_single_node(single_node: SingleNode) -> serde_json::Value {
-    let mut fields = serde_json::map::Map::new();
-    for (i, field) in single_node.field_names.into_iter().enumerate() {
+    let mut serde_map = serde_json::map::Map::new();
+    let field_names = single_node.field_names;
+    let values = single_node.node.values;
+
+    for (field, value) in field_names.into_iter().zip(values) {
         let key = field.to_string();
-        let prisma_value = single_node.node.values[i].clone();
-        let value = serialize_prisma_value(prisma_value);
-        fields.insert(field.to_string(), value);
+        let value = serialize_prisma_value(value);
+        serde_map.insert(key, value);
     }
-    serde_json::Value::Object(fields)
+    serde_json::Value::Object(serde_map)
 }
 
 fn serialize_prisma_value(value: PrismaValue) -> serde_json::Value {
@@ -63,7 +64,7 @@ fn serialize_prisma_value(value: PrismaValue) -> serde_json::Value {
         PrismaValue::Float(x) => {
             let num = serde_json::Number::from_f64(x).unwrap();
             serde_json::Value::Number(num)
-        },
+        }
         PrismaValue::Boolean(x) => serde_json::Value::Bool(x),
         PrismaValue::DateTime(x) => unimplemented!(),
         PrismaValue::Enum(x) => serde_json::Value::String(x),
@@ -71,7 +72,7 @@ fn serialize_prisma_value(value: PrismaValue) -> serde_json::Value {
         PrismaValue::Int(x) => {
             let num = serde_json::Number::from_f64(x as f64).unwrap();
             serde_json::Value::Number(num)
-        },
+        }
         PrismaValue::Relation(x) => unimplemented!(),
         PrismaValue::Null => serde_json::Value::Null,
         PrismaValue::Uuid(x) => serde_json::Value::String(x),
@@ -85,7 +86,7 @@ fn serialize_graphql_id(id: GraphqlId) -> serde_json::Value {
         GraphqlId::Int(x) => {
             let num = serde_json::Number::from_f64(x as f64).unwrap();
             serde_json::Value::Number(num)
-        },
+        }
         GraphqlId::UUID(x) => serde_json::Value::String(x),
     }
 }
