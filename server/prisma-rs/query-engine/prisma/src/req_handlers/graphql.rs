@@ -1,6 +1,7 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::context::PrismaContext;
 use crate::schema::Validatable;
+use core::PrismaQueryResult;
 use core::{PrismaQuery, QueryBuilder};
 use graphql_parser as gql;
 use prisma_models::{GraphqlId, PrismaValue, SingleNode};
@@ -36,12 +37,24 @@ impl RequestHandler for GraphQlRequestHandler {
 
         let queries: Vec<PrismaQuery> = qb.into();
 
-        let result = dbg!(ctx.query_executor.execute(queries)).unwrap();
+        let results = dbg!(ctx.query_executor.execute(queries)).unwrap();
+        // let first_query = queries.first().unwrap();
 
-        match result {
-            None => serde_json::Value::Null,
-            Some(single_node) => serialize_single_node(single_node),
+        let mut serde_map = serde_json::map::Map::new();
+        for result in results {
+            match result {
+                PrismaQueryResult::Single(result) => {
+                    let json = match result.result {
+                        None => serde_json::Value::Null,
+                        Some(single_node) => serialize_single_node(single_node),
+                    };
+                    serde_map.insert(result.query.name, json);
+                }
+                _ => unimplemented!(),
+            }
         }
+
+        serde_json::Value::Object(serde_map)
     }
 }
 

@@ -11,8 +11,8 @@ use related_nodes::RelatedNodesQueryBuilder;
 pub struct QueryBuilder;
 
 impl QueryBuilder {
-    pub fn get_node_by_where(node_selector: NodeSelector, selected_fields: &SelectedFields) -> (String, Select) {
-        let condition = ConditionTree::single(node_selector.field.as_column().equals(node_selector.value));
+    pub fn get_node_by_where(node_selector: &NodeSelector, selected_fields: &SelectedFields) -> (String, Select) {
+        let condition = ConditionTree::single(node_selector.field.as_column().equals(node_selector.value.clone()));
         let base_query = Select::from(node_selector.field.model().table())
             .so_that(condition)
             .offset(0);

@@ -77,7 +77,7 @@ impl ExternalInterface for ProtoBufInterface {
             let field = model.fields().find_from_scalar(&input.field_name)?;
             let node_selector = NodeSelector { field, value };
 
-            let query_result = self.data_resolver.get_node_by_where(node_selector, selected_fields)?;
+            let query_result = self.data_resolver.get_node_by_where(&node_selector, &selected_fields)?;
 
             let (nodes, fields) = match query_result {
                 Some(node) => (vec![node.node.into()], node.field_names),

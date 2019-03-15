@@ -5,6 +5,7 @@ use graphql_parser::{self as gql, query::*};
 use prisma_models::{Model, PrismaValue, SchemaRef, SelectedFields};
 use std::convert::From;
 
+#[derive(Debug)]
 pub enum PrismaQuery {
     RecordQuery(RecordQuery),
     MultiRecordQuery(MultiRecordQuery),
@@ -12,12 +13,15 @@ pub enum PrismaQuery {
     MultiRelatedRecordQuery(MultiRelatedRecordQuery),
 }
 
+#[derive(Debug)]
 pub struct RecordQuery {
+    pub name: String,
     pub selector: NodeSelector,
     pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
+#[derive(Debug)]
 pub struct MultiRecordQuery {
     model: Model,
     // args: QueryArguments,
@@ -25,6 +29,7 @@ pub struct MultiRecordQuery {
     pub nested: Vec<PrismaQuery>,
 }
 
+#[derive(Debug)]
 pub struct RelatedRecordQuery {
     // parentField: RelationField,
     // args: QueryArguments,
@@ -32,6 +37,7 @@ pub struct RelatedRecordQuery {
     pub nested: Vec<PrismaQuery>,
 }
 
+#[derive(Debug)]
 pub struct MultiRelatedRecordQuery {
     // parentField: RelationField,
     // args: QueryArguments,
@@ -57,17 +63,17 @@ impl From<QueryBuilder> for Vec<PrismaQuery> {
                         .map(|item| {
                             // Top level field -> Model in our schema
                             match item {
-                                Selection::Field(field) => {
+                                Selection::Field(outer_field) => {
                                     // Find model for field
                                     let model = qb
                                         .schema
                                         .models()
                                         .iter()
-                                        .find(|model| model.name.to_lowercase() == field.name)
+                                        .find(|model| model.name.to_lowercase() == outer_field.name)
                                         .cloned()
                                         .unwrap();
 
-                                    let (name, value) = field.arguments.first().unwrap();
+                                    let (name, value) = outer_field.arguments.first().unwrap();
                                     match value {
                                         Value::Object(obj) => {
                                             let (field_name, value) = obj.iter().next().unwrap();
@@ -75,6 +81,7 @@ impl From<QueryBuilder> for Vec<PrismaQuery> {
                                             let value = value_to_prisma_value(value);
 
                                             PrismaQuery::RecordQuery(RecordQuery {
+                                                name: outer_field.name.clone(),
                                                 selector: NodeSelector {
                                                     field: field.clone(),
                                                     value: value,

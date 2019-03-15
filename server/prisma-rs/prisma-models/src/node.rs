@@ -6,6 +6,7 @@ pub struct SingleNode {
     pub field_names: Vec<String>,
 }
 
+#[derive(Debug)]
 pub struct ManyNodes {
     pub nodes: Vec<Node>,
     pub field_names: Vec<String>,

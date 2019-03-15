@@ -25,10 +25,10 @@ where
 impl DataResolver for SqlResolver<Sqlite> {
     fn get_node_by_where(
         &self,
-        node_selector: NodeSelector,
-        selected_fields: SelectedFields,
+        node_selector: &NodeSelector,
+        selected_fields: &SelectedFields,
     ) -> PrismaResult<Option<SingleNode>> {
-        let (db_name, query) = QueryBuilder::get_node_by_where(node_selector, &selected_fields);
+        let (db_name, query) = QueryBuilder::get_node_by_where(node_selector, selected_fields);
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
 
