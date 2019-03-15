@@ -45,6 +45,7 @@ case class QueryArguments(
     orderBy: Option[OrderBy]
 ) {
   val isWithPagination = last.orElse(first).orElse(skip).isDefined
+  val isEmpty          = skip.isEmpty && after.isEmpty && first.isEmpty && before.isEmpty && last.isEmpty && filter.isEmpty && orderBy.isEmpty
 }
 
 object QueryArguments {
