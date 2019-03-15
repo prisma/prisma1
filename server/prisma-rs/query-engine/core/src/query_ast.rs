@@ -90,7 +90,7 @@ impl From<QueryBuilder> for Vec<PrismaQuery> {
                                                     field: field.clone(),
                                                     value: value,
                                                 },
-                                                selected_fields: SelectedFields::all_scalar_fields(Arc::clone(&model)),
+                                                selected_fields: SelectedFields::all_scalar(Arc::clone(&model), None),
                                                 nested: collect_sub_queries(
                                                     &outer_field.selection_set,
                                                     Arc::clone(&model),
@@ -129,12 +129,15 @@ fn collect_sub_queries(selection_set: &SelectionSet, model: ModelRef) -> Vec<Pri
                     .find_from_all(&gql_field.name)
                     .expect("did not find field");
                 match field {
-                    ModelField::Relation(rf) => Some(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
-                        name: gql_field.name.clone(),
-                        parent_field: Arc::clone(&rf),
-                        selected_fields: SelectedFields::all_scalar_fields(Arc::clone(&rf.related_model())),
-                        nested: vec![],
-                    })),
+                    ModelField::Relation(rf) => {
+                        let mut sf = SelectedFields::all_scalar(Arc::clone(&rf.related_model()), Some(Arc::clone(&rf)));
+                        Some(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
+                            name: gql_field.name.clone(),
+                            parent_field: Arc::clone(&rf),
+                            selected_fields: sf,
+                            nested: vec![],
+                        }))
+                    }
                     ModelField::Scalar(_) => None,
                 }
             }
