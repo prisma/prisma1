@@ -159,7 +159,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
 
-    field.isRequired match {
+    field.isRequired && !field.isId match {
       case true =>
         val optionalFieldSQL = typeMapper.rawSQLForFieldWithoutRequired(field)
         val defaultValue     = migrationValueForField(field)
@@ -189,7 +189,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
       val alterColumn       = sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType"""
 
-      field.isRequired match {
+      field.isRequired && !field.isId match {
         case true =>
           val defaultValue = migrationValueForField(field)
           DatabaseAction.seq(
