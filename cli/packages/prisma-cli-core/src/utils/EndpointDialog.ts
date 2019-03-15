@@ -22,6 +22,7 @@ import {
   hasAuthSource,
   populateMongoDatabase,
 } from '../commands/introspect/util'
+const debug = require('debug')('endpoint-dialog')
 
 export interface GetEndpointParams {
   folderName: string
@@ -681,10 +682,8 @@ export class EndpointDialog {
     try {
       return fs.readdirSync(this.config.definitionDir)
     } catch(e) {
-      if (this.config.debug) {
-        this.out.log(`EndpointDialog workflow called without existing directory.`)
-        this.out.log(e)
-      }
+      debug(`EndpointDialog workflow called without existing directory.`)
+      debug(e.toString())
       return []
     }
   }
