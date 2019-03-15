@@ -24,7 +24,7 @@ impl Validatable for SchemaRef {
     }
 }
 
-pub fn load_schema() -> Result<SchemaRef, Box<std::error::Error>> {
+pub fn load_schema(db_name: String) -> Result<SchemaRef, Box<std::error::Error>> {
     let path = env::var("PRISMA_SCHEMA_PATH")?;
     let mut f = File::open(path)?;
     let mut schema = String::new();
@@ -52,5 +52,5 @@ pub fn load_schema() -> Result<SchemaRef, Box<std::error::Error>> {
     let inferred = String::from_utf8(output.stdout)?;
 
     // FIXME: how can we inject the right db name?
-    Ok(serde_json::from_str::<SchemaTemplate>(&inferred)?.build("FilterSpec_DB".into()))
+    Ok(serde_json::from_str::<SchemaTemplate>(&inferred)?.build(db_name))
 }

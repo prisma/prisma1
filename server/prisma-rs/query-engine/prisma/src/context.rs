@@ -25,9 +25,15 @@ impl PrismaContext {
         let query_executor: QueryExecutor = QueryExecutor {
             data_resolver: Box::new(data_resolver),
         };
+        let db_name = config
+            .databases
+            .get("default")
+            .unwrap()
+            .db_name()
+            .expect("database was not set");
         Self {
-            config: config::load().unwrap(),
-            schema: dbg!(schema::load_schema().unwrap()),
+            config: config,
+            schema: dbg!(schema::load_schema(db_name).unwrap()),
             query_executor: query_executor,
         }
     }

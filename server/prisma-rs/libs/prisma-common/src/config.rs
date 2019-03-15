@@ -39,6 +39,16 @@ pub enum PrismaDatabase {
     File(FileConfig),
 }
 
+impl PrismaDatabase {
+    pub fn db_name(&self) -> Option<String> {
+        match self {
+            PrismaDatabase::Explicit(config) => config.database.clone(),
+            PrismaDatabase::ConnectionString(config) => config.database.clone(),
+            PrismaDatabase::File(config) => config.database.clone(),
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PrismaConfig {
