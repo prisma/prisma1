@@ -138,63 +138,6 @@ export default class Plugins {
     }
   }
 
-  // async install(name: string, tag: string = 'latest') {
-  //   const downgrade = await this.lock.upgrade()
-  //
-  //   await this.load()
-  //   if (this.plugins.find(p => p.name === name && p.tag === tag)) {
-  //     throw new Error(`Plugin ${name} is already installed`)
-  //   }
-  //
-  //   const path = await this.user.install(name, tag)
-  //   this.clearCache(path)
-  //   await downgrade()
-  // }
-  //
-  // async update() {
-  //   if (this.user.list().length === 0) return
-  //   this.out.action.start(`${this.config.name}: Updating plugins`)
-  //   let downgrade = await this.lock.upgrade()
-  //   await this.user.update()
-  //   this.clearCache(...(await this.user.list()).map(p => p.path))
-  //   await downgrade()
-  // }
-  //
-  // async uninstall(name: string) {
-  //   await this.load()
-  //   let plugin = this.plugins.filter(p => ['user', 'link'].includes(p.type)).find(p => p.name === name)
-  //   if (!plugin) throw new Error(`${name} is not installed`)
-  //   let downgrade = await this.lock.upgrade()
-  //   switch (plugin.type) {
-  //     case 'user': {
-  //       if (!this.config.debug) this.out.action.start(`Uninstalling plugin ${name}`)
-  //       await this.user.remove(name)
-  //       break
-  //     }
-  //     case 'link': {
-  //       if (!this.config.debug) this.out.action.start(`Unlinking plugin ${name}`)
-  //       this.linked.remove(plugin.path)
-  //       break
-  //     }
-  //   }
-  //   this.clearCache(plugin.path)
-  //   await downgrade()
-  //   this.out.action.stop()
-  // }
-
-  // addPackageToPJSON(name: string, version: string = '*') {
-  //   this.user.addPackageToPJSON(name, version)
-  // }
-  //
-  // async addLinkedPlugin(p: string) {
-  //   let downgrade = await this.lock.upgrade()
-  //
-  //   await this.load()
-  //   await this.linked.add(p)
-  //   this.clearCache(p)
-  //   await downgrade()
-  // }
-
   clearCache(...paths: string[]) {
     this.cache.deletePlugin(...paths)
   }
