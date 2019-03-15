@@ -167,7 +167,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
     val newColSql = typeMapper.rawSQLForField(field)
 
-    field.isRequired match {
+    field.isRequired && !field.isId match {
       case true =>
         val optionalFieldSQL = typeMapper.rawSQLForFieldWithoutRequired(field)
         val defaultValue     = migrationValueForField(field)
