@@ -14,3 +14,4 @@ r2d2 = "0.8"
 prost = "0.4"
 rusqlite = { version = "0.16", features = ["chrono"] }
 url_serde = "0.2"
+uuid = "0.7"

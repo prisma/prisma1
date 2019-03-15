@@ -3,12 +3,15 @@ use prisma_query::ast::*;
 use chrono::{DateTime, Utc};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use std::fmt;
+use uuid::Uuid;
+
+pub type PrismaListValue = Vec<PrismaValue>;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum GraphqlId {
     String(String),
     Int(usize),
-    UUID(String),
+    UUID(Uuid),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -22,7 +25,7 @@ pub enum PrismaValue {
     Int(i32),
     Relation(usize),
     Null,
-    Uuid(String),
+    Uuid(Uuid),
     GraphqlId(GraphqlId),
 }
 
@@ -53,7 +56,7 @@ impl From<GraphqlId> for DatabaseValue {
         match id {
             GraphqlId::String(s) => s.into(),
             GraphqlId::Int(i) => (i as i64).into(),
-            GraphqlId::UUID(s) => s.into(),
+            GraphqlId::UUID(u) => u.to_hyphenated_ref().to_string().into(),
         }
     }
 }
@@ -76,7 +79,7 @@ impl From<PrismaValue> for DatabaseValue {
             PrismaValue::Int(i) => (i as i64).into(),
             PrismaValue::Relation(i) => (i as i64).into(),
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
-            PrismaValue::Uuid(u) => u.into(),
+            PrismaValue::Uuid(u) => u.to_hyphenated_ref().to_string().into(),
             PrismaValue::GraphqlId(id) => id.into(),
         }
     }

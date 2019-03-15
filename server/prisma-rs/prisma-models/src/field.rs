@@ -5,6 +5,7 @@ pub use relation::*;
 pub use scalar::*;
 
 use crate::prelude::*;
+use prisma_query::ast::Column;
 use once_cell::sync::OnceCell;
 use std::{borrow::Cow, sync::Arc};
 
@@ -55,6 +56,20 @@ impl Field {
         match self {
             Field::Scalar(ref sf) => Cow::from(sf.db_name()),
             Field::Relation(ref rf) => Cow::from(rf.db_name()),
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        match self {
+            Field::Scalar(ref sf) => &sf.name,
+            Field::Relation(ref rf) => &rf.name,
+        }
+    }
+
+    pub fn as_column(&self) -> Column {
+        match self {
+            Field::Scalar(ref sf) => sf.as_column(),
+            Field::Relation(ref rf) => rf.as_column(),
         }
     }
 }

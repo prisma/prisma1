@@ -1,6 +1,5 @@
 use barrel::{backend::Sqlite as Squirrel, types, Migration};
-use prisma_models::prelude::*;
-use rusqlite::{types::ToSql, Connection, Result, NO_PARAMS};
+use rusqlite::{Connection, Result, NO_PARAMS};
 
 /// Create an in-memory database and run migrations on it
 fn create_database() -> Connection {
@@ -57,12 +56,11 @@ fn query_tables(c: &mut Connection) -> Vec<String> {
 
         Ok(())
     })()
-    .map_err(|e| panic!(e));
+        .map_err(|e| panic!(e))
+        .unwrap();
 
     vec![]
 }
-
-use time::Timespec;
 
 #[derive(Debug)]
 struct NameCol {

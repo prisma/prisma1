@@ -4,7 +4,7 @@ import com.prisma.api.connector.PrismaArgs
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, ValueTooLong}
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
-import com.prisma.shared.models.{Model, TypeIdentifier}
+import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 
 import scala.concurrent.ExecutionContext
 
@@ -22,7 +22,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
       }
     }
 
-    val fields = model.fields.filter(field => argsWithIdIfNecessary.hasArgFor(field.name))
+    val fields: Seq[Field] = model.fields.filter(field => argsWithIdIfNecessary.hasArgFor(field.name))
     val query = sql
       .insertInto(modelTable(model))
       .columns(fields.map(modelColumn): _*)

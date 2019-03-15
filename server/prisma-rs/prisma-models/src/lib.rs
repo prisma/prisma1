@@ -15,6 +15,7 @@ mod project;
 mod relation;
 mod schema;
 mod selected_fields;
+mod prisma_args;
 
 pub mod prelude;
 
@@ -28,3 +29,4 @@ pub use project::*;
 pub use relation::*;
 pub use schema::*;
 pub use selected_fields::*;
+pub use prisma_args::*;

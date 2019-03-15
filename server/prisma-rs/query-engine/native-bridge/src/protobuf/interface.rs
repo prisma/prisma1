@@ -8,8 +8,7 @@ use prisma_common::{config::WithMigrations, config::*, error::Error, PrismaResul
 use prisma_models::prelude::*;
 use prost::Message;
 use sqlite_connector::{SqlResolver, Sqlite, SqliteDatabaseMutactionExecutor};
-use std::error::Error as StdError;
-use std::sync::Arc;
+use std::{error::Error as StdError, sync::Arc};
 
 pub struct ProtoBufInterface {
     data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
@@ -18,16 +17,21 @@ pub struct ProtoBufInterface {
 
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
-        let data_resolver = match config.databases.get("default") {
+        let (data_resolver, mutaction_executor) = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
-                SqlResolver::new(Sqlite::new(config.limit(), config.is_active().unwrap_or(true)).unwrap()) // FIXME: active handling
+                let sqlite = Arc::new(Sqlite::new(config.limit(), config.is_active().unwrap(true)).unwrap()); // FIXME: active handling
+
+                (
+                    SqlResolver::new(sqlite.clone()),
+                    SqliteDatabaseMutactionExecutor { _sqlite: sqlite },
+                )
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
 
         ProtoBufInterface {
             data_resolver: Box::new(data_resolver),
-            database_mutaction_executor: Box::new(SqliteDatabaseMutactionExecutor {}),
+            database_mutaction_executor: Box::new(mutaction_executor),
         }
     }
 
@@ -268,7 +272,7 @@ impl From<Error> for super::prisma::error::Value {
                 super::prisma::error::Value::ProtobufDecodeError(message.to_string())
             }
             Error::JsonDecodeError(message, _) => super::prisma::error::Value::JsonDecodeError(message.to_string()),
-            Error::InvalidInputError(message) => super::prisma::error::Value::InvalidInputError(message.to_string()),
+            Error::InvalidInputError(message, _) => super::prisma::error::Value::InvalidInputError(message.to_string()),
             Error::InvalidConnectionArguments(message) => {
                 super::prisma::error::Value::InvalidConnectionArguments(message.to_string())
             }

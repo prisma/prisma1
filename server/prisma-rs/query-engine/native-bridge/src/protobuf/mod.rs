@@ -17,6 +17,7 @@ use prelude::*;
 use prisma_common::{error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use std::sync::Arc;
+use uuid::Uuid;
 
 pub mod prisma {
     include!(concat!(env!("OUT_DIR"), "/prisma.rs"));
@@ -112,7 +113,7 @@ impl From<ValueContainer> for PrismaValue {
             vc::PrismaValue::Int(v) => PrismaValue::Int(v),
             vc::PrismaValue::Relation(v) => PrismaValue::Relation(v as usize),
             vc::PrismaValue::Null(_) => PrismaValue::Null,
-            vc::PrismaValue::Uuid(v) => PrismaValue::Uuid(v),
+            vc::PrismaValue::Uuid(v) => PrismaValue::Uuid(Uuid::parse_str(&v).unwrap()), // You must die if you didn't send uuid
             vc::PrismaValue::GraphqlId(v) => PrismaValue::GraphqlId(v.into()),
         }
     }
@@ -144,7 +145,7 @@ impl From<PrismaValue> for ValueContainer {
             PrismaValue::Int(v) => vc::PrismaValue::Int(v),
             PrismaValue::Relation(v) => vc::PrismaValue::Relation(v as i64),
             PrismaValue::Null => vc::PrismaValue::Null(true),
-            PrismaValue::Uuid(v) => vc::PrismaValue::Uuid(v),
+            PrismaValue::Uuid(v) => vc::PrismaValue::Uuid(v.to_hyphenated().to_string()),
             PrismaValue::GraphqlId(v) => vc::PrismaValue::GraphqlId(v.into()),
         };
 
@@ -161,7 +162,7 @@ impl From<GraphqlId> for prisma::GraphqlId {
         let id_value = match id {
             GraphqlId::String(s) => id::IdValue::String(s),
             GraphqlId::Int(i) => id::IdValue::Int(i as i64),
-            GraphqlId::UUID(s) => id::IdValue::Uuid(s),
+            GraphqlId::UUID(s) => id::IdValue::Uuid(s.to_hyphenated().to_string()),
         };
 
         prisma::GraphqlId {

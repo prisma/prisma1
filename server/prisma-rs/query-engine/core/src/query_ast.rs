@@ -24,7 +24,7 @@ pub struct RecordQuery {
 
 #[derive(Debug)]
 pub struct MultiRecordQuery {
-    model: Model,
+    //model: Model,
     // args: QueryArguments,
     // selectedFields: SelectedFields,
     pub nested: Vec<PrismaQuery>,

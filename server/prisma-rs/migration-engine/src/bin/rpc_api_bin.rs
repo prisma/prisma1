@@ -1,7 +1,6 @@
 use migration_engine::rpc_api::RpcApi;
-use migration_engine::steps::*;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
+//use serde::de::DeserializeOwned;
+//use serde::Serialize;
 
 fn main() {
     //    test_json_serialization::<MigrationStep>(r#"{"name":"Blog","stepType":"CreateModel"}"#);
@@ -11,6 +10,8 @@ fn main() {
     rpc_api.handle();
 }
 
+/*
+ *
 fn test_json_serialization<T: DeserializeOwned + Serialize + std::fmt::Debug>(json: &str) {
     println!("input       : {}", json);
     let deserialized: T = serde_json::from_str(&json).unwrap();
@@ -18,3 +19,4 @@ fn test_json_serialization<T: DeserializeOwned + Serialize + std::fmt::Debug>(js
     let serialized_again = serde_json::to_string(&deserialized).unwrap();
     println!("serialized  : {}", serialized_again);
 }
+ */
