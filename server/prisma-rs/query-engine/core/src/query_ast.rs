@@ -79,9 +79,10 @@ impl From<QueryBuilder> for Vec<PrismaQuery> {
                                             let (field_name, value) = obj.iter().next().unwrap();
                                             let field = model.fields().find_from_scalar(field_name).unwrap();
                                             let value = value_to_prisma_value(value);
+                                            let name = outer_field.alias.as_ref().unwrap_or(&outer_field.name).clone();
 
                                             PrismaQuery::RecordQuery(RecordQuery {
-                                                name: outer_field.name.clone(),
+                                                name: name,
                                                 selector: NodeSelector {
                                                     field: field.clone(),
                                                     value: value,
