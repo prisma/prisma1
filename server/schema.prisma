@@ -1,10 +1,12 @@
 type User {
   id: ID! @id
   name: String!
-  address: Address
+  vehicle: Vehicle @relation(link: TABLE)
 }
 
-type Address {
+type Vehicle {
   id: ID! @id
-  zipCode: String
+  user: User
 }
+
+

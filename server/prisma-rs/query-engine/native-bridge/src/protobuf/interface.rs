@@ -140,9 +140,9 @@ impl ExternalInterface for ProtoBufInterface {
 
             let query_result = self.data_resolver.get_related_nodes(
                 from_field,
-                from_node_ids,
+                &from_node_ids,
                 into_model_query_arguments(model, input.query_arguments),
-                selected_fields,
+                &selected_fields,
             )?;
 
             let (nodes, fields) = (query_result.nodes, query_result.field_names);

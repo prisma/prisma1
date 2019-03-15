@@ -24,4 +24,16 @@ impl QueryArguments {
             None => (skip, 100000000),
         }
     }
+
+    pub fn empty() -> Self {
+        Self {
+            skip: None,
+            after: None,
+            first: None,
+            before: None,
+            last: None,
+            filter: None,
+            order_by: None,
+        }
+    }
 }

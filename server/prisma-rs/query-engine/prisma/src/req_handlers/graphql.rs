@@ -37,7 +37,7 @@ impl RequestHandler for GraphQlRequestHandler {
 
         let queries: Vec<PrismaQuery> = qb.into();
 
-        let results = dbg!(ctx.query_executor.execute(queries)).unwrap();
+        let results = dbg!(ctx.query_executor.execute(&queries)).unwrap();
         // let first_query = queries.first().unwrap();
 
         let mut serde_map = serde_json::map::Map::new();
@@ -46,9 +46,24 @@ impl RequestHandler for GraphQlRequestHandler {
                 PrismaQueryResult::Single(result) => {
                     let json = match result.result {
                         None => serde_json::Value::Null,
-                        Some(single_node) => serialize_single_node(single_node),
+                        Some(single_node) => {
+                            let mut map = serialize_single_node(single_node);
+                            for result in result.nested {
+                                match result {
+                                    PrismaQueryResult::Single(result) => match result.result {
+                                        Some(node) => {
+                                            let mut node_map = serialize_single_node(node);
+                                            map.insert(result.name, serde_json::Value::Object(node_map));
+                                        }
+                                        None => (),
+                                    },
+                                    _ => unimplemented!(),
+                                }
+                            }
+                            serde_json::Value::Object(map)
+                        }
                     };
-                    serde_map.insert(result.query.name, json);
+                    serde_map.insert(result.name, json);
                 }
                 _ => unimplemented!(),
             }
@@ -58,7 +73,7 @@ impl RequestHandler for GraphQlRequestHandler {
     }
 }
 
-fn serialize_single_node(single_node: SingleNode) -> serde_json::Value {
+fn serialize_single_node(single_node: SingleNode) -> serde_json::map::Map<String, serde_json::Value> {
     let mut serde_map = serde_json::map::Map::new();
     let field_names = single_node.field_names;
     let values = single_node.node.values;
@@ -68,7 +83,7 @@ fn serialize_single_node(single_node: SingleNode) -> serde_json::Value {
         let value = serialize_prisma_value(value);
         serde_map.insert(key, value);
     }
-    serde_json::Value::Object(serde_map)
+    serde_map
 }
 
 fn serialize_prisma_value(value: PrismaValue) -> serde_json::Value {

@@ -66,7 +66,7 @@ impl QueryBuilder {
 
     pub fn get_related_nodes(
         from_field: RelationFieldRef,
-        from_node_ids: Vec<GraphqlId>,
+        from_node_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
     ) -> (String, Select) {
