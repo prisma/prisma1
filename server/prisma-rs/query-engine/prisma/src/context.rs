@@ -33,7 +33,7 @@ impl PrismaContext {
             .expect("database was not set");
         Self {
             config: config,
-            schema: dbg!(schema::load_schema(db_name).unwrap()),
+            schema: dbg!(schema::load_schema(db_name).expect("schema loading failed")),
             query_executor: query_executor,
         }
     }
