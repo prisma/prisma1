@@ -19,6 +19,7 @@ import generateCRUDSchemaString, {
 import { DatabaseType, IGQLType } from 'prisma-datamodel'
 import { fetchAndPrintSchema } from '../deploy/printSchema'
 
+const debug = require('debug')('generate')
 export default class GenereateCommand extends Command {
   static topic = 'generate'
   static description = 'Generate a schema or Prisma Bindings'
@@ -267,9 +268,7 @@ export default class GenereateCommand extends Command {
     this.out.log(`Saving Prisma Client (Go) at ${output}`)
     // Run "go fmt" on the file if user has it installed.
     const isPackaged = fs.existsSync('/snapshot')
-    if (this.config.debug) {
-      this.out.log({ isPackaged })
-    }
+    debug({isPackaged})
     const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
     spawnPath('go', ['fmt', path.join(output, 'prisma.go')])
   }
