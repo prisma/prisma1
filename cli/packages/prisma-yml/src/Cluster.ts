@@ -136,6 +136,31 @@ Original error: ${e.message}`,
     return clusterToken
   }
 
+  async addServiceToCloudDBIfMissing(
+    serviceName: string,
+    workspaceSlug: string = this.workspaceSlug || '*',
+    stageName?: string,
+  ): Promise<boolean> {
+    const query = `
+      mutation ($input: GenerateClusterTokenRequest!) {
+        addServiceToCloudDBIfMissing(input: $input)
+      }
+    `
+
+    const serviceCreated = await this.cloudClient.request<{
+      addServiceToCloudDBIfMissing: boolean
+    }>(query, {
+      input: {
+        workspaceSlug,
+        clusterName: this.name,
+        serviceName,
+        stageName,
+      },
+    })
+
+    return serviceCreated.addServiceToCloudDBIfMissing
+  }
+
   getApiEndpoint(
     service: string,
     stage: string,

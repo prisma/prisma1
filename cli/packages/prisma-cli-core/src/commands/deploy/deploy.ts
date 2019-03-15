@@ -6,12 +6,18 @@ import * as path from 'path'
 import * as fs from 'fs-extra'
 import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
-import { prettyTime, concatName, defaultDockerCompose } from '../../utils/util'
+import {
+  prettyTime,
+  concatName,
+  defaultDockerCompose,
+  printAdminLink,
+} from '../../utils/util'
 import * as sillyname from 'sillyname'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
+import { satisfiesVersion } from '../../utils/satisfiesVersion'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
@@ -63,9 +69,7 @@ ${chalk.gray(
       char: 'p',
     }),
   }
-  private deploying: boolean = false
   private showedHooks: boolean = false
-  private loggedIn: boolean = false
   async run() {
     /**
      * Get Args
@@ -99,7 +103,6 @@ ${chalk.gray(
      */
     let workspace: string | undefined | null = this.definition.getWorkspace()
     let cluster
-    let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
       await this.env.fetchClusters()
       const endpointDialog = new EndpointDialog({
@@ -115,7 +118,6 @@ ${chalk.gray(
       workspace = results.workspace
       serviceName = results.service
       stage = results.stage
-      dockerComposeYml = results.dockerComposeYml
       this.definition.replaceEndpoint(results.endpoint)
       // Reload definition because we are changing the yml file
       await this.definition.load(this.flags, envFile)
@@ -186,12 +188,6 @@ ${chalk.gray(
     )
   }
 
-  private getSillyName() {
-    return `${slugify(sillyname()).split('-')[0]}-${Math.round(
-      Math.random() * 1000,
-    )}`
-  }
-
   private async projectExists(
     cluster: Cluster,
     name: string,
@@ -236,7 +232,6 @@ ${chalk.gray(
     workspace: string | null,
     noMigrate: boolean,
   ): Promise<void> {
-    this.deploying = true
     let before = Date.now()
 
     const b = s => `\`${chalk.bold(s)}\``
@@ -356,9 +351,8 @@ ${chalk.gray(
       }
 
       // no action required
-      this.deploying = false
       if (migrationResult.migration) {
-        this.printEndpoints(
+        await this.printEndpoints(
           cluster,
           serviceName,
           stageName,
@@ -463,149 +457,32 @@ ${chalk.gray(
     }
   }
 
-  private printEndpoints(
+  private async printEndpoints(
     cluster: Cluster,
     serviceName: string,
     stageName: string,
     workspace?: string,
   ) {
-    this.out.log(`\n${chalk.bold(
-      'Your Prisma GraphQL database endpoint is live:',
-    )}
+    const version = await cluster.getVersion()
+    const hasAdmin = satisfiesVersion(version!, '1.29.0')
+    const adminText = hasAdmin
+      ? printAdminLink(
+          cluster.getApiEndpoint(serviceName, stageName, workspace),
+        )
+      : ''
 
-  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
+    this.out.log(`\n${'Your Prisma GraphQL database endpoint is live:'}
+
+  ${'HTTP:'}  ${cluster.getApiEndpoint(serviceName, stageName, workspace)}
+  ${'WS:'}    ${cluster.getWSEndpoint(
       serviceName,
       stageName,
       workspace,
-    )}
-  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
-      serviceName,
-      stageName,
-      workspace,
-    )}
+    )}${adminText}
 `)
-  }
-
-  private getCloudClusters(): Cluster[] {
-    return this.env.clusters.filter(c => c.shared || c.isPrivate)
-  }
-
-  private async clusterSelection(loggedIn: boolean): Promise<string> {
-    debug({ loggedIn })
-
-    const choices = loggedIn
-      ? await this.getLoggedInChoices()
-      : this.getPublicChoices()
-
-    const question = {
-      name: 'cluster',
-      type: 'list',
-      message: `Please choose the cluster you want to deploy to`,
-      choices,
-      pageSize: 9,
-    }
-
-    const { cluster } = await this.out.prompt(question)
-
-    if (cluster === 'login') {
-      await this.client.login()
-      this.loggedIn = true
-      return this.clusterSelection(true)
-    }
-
-    return cluster
-  }
-
-  private getLocalClusterChoices(): string[][] {
-    return [['local', 'Local cluster (requires Docker)']]
-  }
-
-  private async getLoggedInChoices(): Promise<any[]> {
-    await this.env.fetchClusters()
-    const localChoices = this.getLocalClusterChoices()
-    const combinations: string[][] = []
-    const remoteClusters = this.env.clusters.filter(
-      c => c.shared || c.isPrivate,
-    )
-
-    remoteClusters.forEach(cluster => {
-      const label = this.env.sharedClusters.includes(cluster.name)
-        ? 'Free development cluster (hosted on Prisma Cloud)'
-        : 'Private Prisma Cluster'
-      combinations.push([`${cluster.workspaceSlug}/${cluster.name}`, label])
-    })
-
-    const allCombinations = [...combinations, ...localChoices]
-
-    return [
-      new inquirer.Separator('                     '),
-      ...this.convertChoices(allCombinations),
-      new inquirer.Separator('                     '),
-      new inquirer.Separator(
-        chalk.dim(
-          `You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`,
-        ),
-      ),
-    ]
-  }
-
-  private convertChoices(
-    choices: string[][],
-  ): Array<{ value: string; name: string }> {
-    const padded = this.out.printPadded(choices, 0, 6).split('\n')
-    return padded.map((name, index) => ({
-      name,
-      value: choices[index][0],
-    }))
-  }
-
-  private getPublicChoices(): any[] {
-    const publicChoices = [
-      [
-        'prisma-eu1',
-        'Public development cluster (hosted in EU on Prisma Cloud)',
-      ],
-      [
-        'prisma-us1',
-        'Public development cluster (hosted in US on Prisma Cloud)',
-      ],
-    ]
-    const allCombinations = [...publicChoices, ...this.getLocalClusterChoices()]
-
-    return [
-      ...this.convertChoices(allCombinations),
-      new inquirer.Separator('                     '),
-      {
-        value: 'login',
-        name: 'Log in or create new account on Prisma Cloud',
-      },
-      new inquirer.Separator('                     '),
-      new inquirer.Separator(
-        chalk.dim(
-          `Note: When not logged in, service deployments to Prisma Cloud expire after 7 days.`,
-        ),
-      ),
-      new inquirer.Separator(
-        chalk.dim(
-          `You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`,
-        ),
-      ),
-      new inquirer.Separator('                     '),
-    ]
   }
 }
 
 export function isValidProjectName(projectName: string): boolean {
   return /^[A-Z](.*)/.test(projectName)
-}
-
-function slugify(text) {
-  return text
-    .toString()
-    .toLowerCase()
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-    .replace(/\-\-+/g, '-') // Replace multiple - with single -
-    .replace(/^-+/, '') // Trim - from start of text
-    .replace(/-+$/, '') // Trim - from end of text
 }

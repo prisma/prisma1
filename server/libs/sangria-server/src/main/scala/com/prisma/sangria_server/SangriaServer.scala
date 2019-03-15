@@ -48,7 +48,6 @@ trait SangriaHandler extends SangriaWebSocketHandler {
         } yield Response(result)
 
       case _ =>
-//        Vector(Failure(InputCompletelyMalformed(malformed.toString)))
         sys.error("request malformed")
     }
   }
