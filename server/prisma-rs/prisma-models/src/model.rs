@@ -1,7 +1,9 @@
 use crate::prelude::*;
 use once_cell::sync::OnceCell;
 use prisma_query::ast::{Column, Table};
+use prisma_common::{PrismaResult, error::Error};
 use std::sync::{Arc, Weak};
+use uuid::Uuid;
 
 pub type ModelRef = Arc<Model>;
 pub type ModelWeakRef = Weak<Model>;
@@ -62,6 +64,15 @@ impl ModelTemplate {
 }
 
 impl Model {
+    pub fn generate_id(&self) -> PrismaResult<GraphqlId> {
+        match self.fields().id().type_identifier {
+            TypeIdentifier::String => Ok(GraphqlId::String(String::from("FOOBAR123TEST"))),
+            TypeIdentifier::UUID => Ok(GraphqlId::UUID(Uuid::new_v4())),
+            TypeIdentifier::Int => Err(Error::InvalidInputError(String::from("Cannot generate integer ids."), None)),
+            t => panic!("You shouldn't even use ids of type {:?}", t),
+        }
+    }
+
     pub fn table(&self) -> Table {
         (self.schema().db_name.as_str(), self.db_name()).into()
     }

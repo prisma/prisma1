@@ -4,7 +4,6 @@ use crate::migration::migration_steps_inferrer::{MigrationStepsInferrer, Migrati
 use crate::migration::schema_inferer::*;
 use crate::steps::*;
 use database_inspector::{DatabaseInspector, EmptyDatabaseInspectorImpl};
-use nullable::Nullable::*;
 
 pub struct SuggestMigrationStepsCommand {
     input: SuggestMigrationStepsInput,

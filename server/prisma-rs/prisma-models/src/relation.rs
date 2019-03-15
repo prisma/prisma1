@@ -270,7 +270,7 @@ impl Relation {
             Err(Error::InvalidInputError(format!(
                 "The model id {} is not part of the relation {}",
                 model_id, self.name
-            )))
+            ), None))
         }
     }
 }

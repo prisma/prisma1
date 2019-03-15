@@ -1,7 +1,7 @@
 //! Prisma query AST module
 
-use graphql_parser::{self as gql, query::*};
-use prisma_models::Model;
+use graphql_parser::{query::*};
+//use prisma_models::Model;
 use prisma_models::SchemaRef;
 use std::convert::From;
 
@@ -13,14 +13,14 @@ pub enum PrismaQuery {
 }
 
 pub struct RecordQuery {
-    model: Model,
+    //model: Model,
     // where: NodeSelector,
     // selectedFields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
 pub struct MultiRecordQuery {
-    model: Model,
+    //model: Model,
     // args: QueryArguments,
     // selectedFields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
@@ -48,15 +48,15 @@ pub struct QueryBuilder {
 
 impl From<QueryBuilder> for Vec<PrismaQuery> {
     fn from(qb: QueryBuilder) -> Self {
-        let operation = qb.operation;
+        let _operation = qb.operation;
         qb.inner.definitions.into_iter().for_each(|d: Definition| match d {
-            Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span, items })) => unimplemented!(),
+            Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span: _, items: _ })) => unimplemented!(),
             Definition::Operation(OperationDefinition::Query(Query {
-                position,
-                name,
-                variable_definitions,
-                directives,
-                selection_set,
+                position: _,
+                name: _,
+                variable_definitions: _,
+                directives: _,
+                selection_set: _,
             })) => unimplemented!(),
             _ => unimplemented!(),
         });

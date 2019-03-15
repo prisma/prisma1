@@ -6,8 +6,10 @@ mod filter_conversion;
 mod ordering;
 mod query_builder;
 mod sqlite;
+mod mutaction_plan;
 
 pub use data_resolver::*;
 pub use database_executor::*;
 pub use database_mutaction_executor::*;
 pub use sqlite::*;
+pub use mutaction_plan::*;

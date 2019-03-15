@@ -13,6 +13,8 @@ pub struct Fields {
     scalar: OnceCell<Vec<Weak<ScalarField>>>,
     relation: OnceCell<Vec<Weak<RelationField>>>,
     model: ModelWeakRef,
+    created_at: OnceCell<Option<Arc<ScalarField>>>,
+    updated_at: OnceCell<Option<Arc<ScalarField>>>,
 }
 
 impl Fields {
@@ -22,6 +24,8 @@ impl Fields {
             id: OnceCell::new(),
             scalar: OnceCell::new(),
             relation: OnceCell::new(),
+            created_at: OnceCell::new(),
+            updated_at: OnceCell::new(),
             model,
         }
     }
@@ -39,6 +43,26 @@ impl Fields {
             })
             .upgrade()
             .unwrap()
+    }
+
+    pub fn created_at(&self) -> &Option<Arc<ScalarField>> {
+        self.created_at
+            .get_or_init(|| {
+                self.scalar_weak()
+                    .iter()
+                    .map(|sf| sf.upgrade().unwrap())
+                    .find(|sf| sf.is_created_at())
+            })
+    }
+
+    pub fn updated_at(&self) -> &Option<Arc<ScalarField>> {
+        self.updated_at
+            .get_or_init(|| {
+                self.scalar_weak()
+                    .iter()
+                    .map(|sf| sf.upgrade().unwrap())
+                    .find(|sf| sf.is_updated_at())
+            })
     }
 
     pub fn scalar(&self) -> Vec<Arc<ScalarField>> {
@@ -88,7 +112,7 @@ impl Fields {
         self.all
             .iter()
             .find(|field| field.db_name() == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("1 Field not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("1 Field not found: {}", name), None))
     }
 
     pub fn find_from_scalar(&self, name: &str) -> PrismaResult<Arc<ScalarField>> {
@@ -101,7 +125,7 @@ impl Fields {
                     "Scalar field not found: {}. In model {}",
                     name,
                     self.model().name
-                ))
+                ), None)
             })
     }
 
@@ -115,7 +139,7 @@ impl Fields {
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.name == name)
             .ok_or_else(|| {
-                Error::InvalidInputError(format!("Field {} on model {} not found.", name, self.model().name))
+                Error::InvalidInputError(format!("Field {} on model {} not found.", name, self.model().name), None)
             })
     }
 
@@ -129,7 +153,7 @@ impl Fields {
                     "Field for relation {} on model {} not found.",
                     name,
                     self.model().name
-                ))
+                ), None)
             })
     }
 

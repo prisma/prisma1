@@ -1,4 +1,5 @@
-use std::error::Error as StdError;
+use std::{error::Error as StdError, borrow::Cow};
+use uuid;
 
 type Cause = Box<dyn StdError>;
 
@@ -14,7 +15,7 @@ pub enum Error {
     /// Couldn't read the JSON from Scala
     JsonDecodeError(&'static str, Option<Cause>),
     /// Input from Scala was not good
-    InvalidInputError(String),
+    InvalidInputError(String, Option<Cause>),
     /// Invalid connection arguments, e.g. first and last were both defined in a query
     InvalidConnectionArguments(&'static str),
     /// No result returned from query
@@ -42,7 +43,7 @@ impl StdError for Error {
             Error::QueryError(message, _) => message,
             Error::ProtobufDecodeError(message, _) => message,
             Error::JsonDecodeError(message, _) => message,
-            Error::InvalidInputError(message) => message,
+            Error::InvalidInputError(message, _) => message,
             Error::InvalidConnectionArguments(message) => message,
             Error::NoResultError => "Query returned no results",
             Error::ConfigurationError(message) => message,
@@ -55,6 +56,7 @@ impl StdError for Error {
             Error::QueryError(_, cause) => Self::fetch_cause(&cause),
             Error::ProtobufDecodeError(_, cause) => Self::fetch_cause(&cause),
             Error::JsonDecodeError(_, cause) => Self::fetch_cause(&cause),
+            Error::InvalidInputError(_, cause) => Self::fetch_cause(&cause),
             _ => None,
         }
     }
@@ -84,5 +86,11 @@ impl From<prost::DecodeError> for Error {
 impl From<serde_json::error::Error> for Error {
     fn from(e: serde_json::error::Error) -> Error {
         Error::JsonDecodeError("Error decoding JSON message", Some(Box::new(e)))
+    }
+}
+
+impl From<uuid::parser::ParseError> for Error {
+    fn from(e: uuid::parser::ParseError) -> Error {
+        Error::InvalidInputError(String::from("Expected database value to be a UUID, but couldn't parse the value into one."), Some(Box::new(e)))
     }
 }

@@ -15,8 +15,8 @@ impl DatabaseInspector for EmptyDatabaseInspectorImpl {
     }
 }
 
-fn get_table_names(schema: &String) -> Vec<String> {
-    let sql: &'static str = "
+fn get_table_names(_schema: &String) -> Vec<String> {
+    let _sql: &'static str = "
 SELECT
     table_name
 FROM
@@ -31,27 +31,27 @@ WHERE
 }
 
 fn get_table(schema: &String, table: &String) -> Table {
-    let cols = get_column(&schema, &table);
-    let foreign = get_foreign_constraint(&schema, &table);
-    let index = get_index(&schema, &table);
-    let seq = get_sequence(&schema, &table);
+    let _cols = get_column(&schema, &table);
+    let _foreign = get_foreign_constraint(&schema, &table);
+    let _index = get_index(&schema, &table);
+    let _seq = get_sequence(&schema, &table);
 
     unimplemented!()
 }
 
-fn get_column(schema: &String, table: &String) -> Column {
+fn get_column(_schema: &String, _table: &String) -> Column {
     unimplemented!()
 }
 
-fn get_foreign_constraint(schema: &String, table: &String) -> ForeignKey {
+fn get_foreign_constraint(_schema: &String, _table: &String) -> ForeignKey {
     unimplemented!()
 }
 
-fn get_sequence(schema: &String, table: &String) -> Sequence {
+fn get_sequence(_schema: &String, _table: &String) -> Sequence {
     unimplemented!()
 }
 
-fn get_index(schema: &String, table: &String) -> Index {
+fn get_index(_schema: &String, _table: &String) -> Index {
     unimplemented!()
 }
 

@@ -77,7 +77,7 @@ impl Schema {
             .get()
             .and_then(|models| models.iter().find(|model| model.name == name))
             .cloned()
-            .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name), None))
     }
 
     pub fn find_relation(&self, name: &str) -> PrismaResult<RelationWeakRef> {
@@ -85,7 +85,7 @@ impl Schema {
             .get()
             .and_then(|relations| relations.iter().find(|relation| relation.name == name))
             .map(|relation| Arc::downgrade(&relation))
-            .ok_or_else(|| Error::InvalidInputError(format!("Relation not found: {}", name)))
+            .ok_or_else(|| Error::InvalidInputError(format!("Relation not found: {}", name), None))
     }
 
     pub fn is_legacy(&self) -> bool {

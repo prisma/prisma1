@@ -5,19 +5,21 @@ use itertools::Itertools;
 use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
 use rusqlite::Row;
+use uuid::Uuid;
+use std::sync::Arc;
 
 pub struct SqlResolver<T>
 where
     T: DatabaseExecutor,
 {
-    database_executor: T,
+    database_executor: Arc<T>,
 }
 
 impl<T> SqlResolver<T>
 where
     T: DatabaseExecutor,
 {
-    pub fn new(database_executor: T) -> Self {
+    pub fn new(database_executor: Arc<T>) -> Self {
         Self { database_executor }
     }
 }
@@ -71,12 +73,12 @@ impl DataResolver for SqlResolver<Sqlite> {
             QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, &selected_fields);
 
         let nodes = self.database_executor.with_rows(query, db_name, |row| {
-            let mut node = Self::read_row(row, &selected_fields);
+            let mut node = Self::read_row(row, &selected_fields)?;
             let position = scalar_fields.len();
 
             node.add_related_id(row.get(position));
             node.add_parent_id(row.get(position + 1));
-            node
+            Ok(node)
         })?;
 
         Ok(ManyNodes { nodes, field_names })
@@ -87,7 +89,7 @@ impl DataResolver for SqlResolver<Sqlite> {
 
         let res = self
             .database_executor
-            .with_rows(query, db_name, |row| Self::fetch_int(row))?
+            .with_rows(query, db_name, |row| Ok(Self::fetch_int(row)))?
             .into_iter()
             .next()
             .unwrap_or(0);
@@ -100,7 +102,7 @@ impl DataResolver for SqlResolver<Sqlite> {
 
         let res = self
             .database_executor
-            .with_rows(query, String::from(database), |row| Self::fetch_int(row))?
+            .with_rows(query, String::from(database), |row| Ok(Self::fetch_int(row)))?
             .into_iter()
             .next()
             .unwrap_or(0);
@@ -119,13 +121,13 @@ impl DataResolver for SqlResolver<Sqlite> {
         let results = self.database_executor.with_rows(query, db_name, |row| {
             let node_id: GraphqlId = row.get(0);
             let position: u32 = row.get(1);
-            let value: PrismaValue = Self::fetch_value(type_identifier, row, 2);
+            let value: PrismaValue = Self::fetch_value(type_identifier, row, 2)?;
 
-            ScalarListElement {
+            Ok(ScalarListElement {
                 node_id,
                 position,
                 value,
-            }
+            })
         })?;
 
         let mut list_values = vec![];
@@ -141,6 +143,8 @@ impl DataResolver for SqlResolver<Sqlite> {
     }
 }
 
+// TODO: Check do we need the position at all.
+#[allow(dead_code)]
 struct ScalarListElement {
     node_id: GraphqlId,
     position: u32,
@@ -148,15 +152,13 @@ struct ScalarListElement {
 }
 
 impl SqlResolver<Sqlite> {
-    fn read_row(row: &Row, selected_fields: &SelectedFields) -> Node {
-        let fields = selected_fields
-            .scalar_non_list()
-            .iter()
-            .enumerate()
-            .map(|(i, sf)| Self::fetch_value(sf.type_identifier, &row, i))
-            .collect();
+    fn read_row(row: &Row, selected_fields: &SelectedFields) -> PrismaResult<Node> {
+        let mut fields = Vec::new();
+        for (i, sf) in selected_fields.scalar_non_list().iter().enumerate() {
+            fields.push(Self::fetch_value(sf.type_identifier, &row, i)?);
+        }
 
-        Node::new(fields)
+        Ok(Node::new(fields))
     }
 
     fn fetch_int(row: &Row) -> i64 {
@@ -165,11 +167,20 @@ impl SqlResolver<Sqlite> {
 
     /// Converter function to wrap the limited set of types in SQLite to a
     /// richer PrismaValue.
-    fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaValue {
+    fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaResult<PrismaValue> {
         let result = match typ {
             TypeIdentifier::String => row.get_checked(i).map(|val| PrismaValue::String(val)),
             TypeIdentifier::GraphQLID => row.get_checked(i).map(|val| PrismaValue::GraphqlId(val)),
-            TypeIdentifier::UUID => row.get_checked(i).map(|val| PrismaValue::Uuid(val)),
+            TypeIdentifier::UUID => {
+                let result: Result<String, rusqlite::Error> = row.get_checked(i);
+
+                if let Ok(val) = result {
+                    let uuid = Uuid::parse_str(val.as_ref())?;
+                    Ok(PrismaValue::Uuid(uuid))
+                }  else {
+                    result.map(|s| PrismaValue::String(s))
+                }
+            },
             TypeIdentifier::Int => row.get_checked(i).map(|val| PrismaValue::Int(val)),
             TypeIdentifier::Boolean => row.get_checked(i).map(|val| PrismaValue::Boolean(val)),
             TypeIdentifier::Enum => row.get_checked(i).map(|val| PrismaValue::Enum(val)),
@@ -186,9 +197,10 @@ impl SqlResolver<Sqlite> {
             TypeIdentifier::Float => row.get_checked(i).map(|val: f64| PrismaValue::Float(val)),
         };
 
-        result.unwrap_or_else(|e| match e {
-            rusqlite::Error::InvalidColumnType(_, rusqlite::types::Type::Null) => PrismaValue::Null,
-            _ => panic!(e),
-        })
+        match result {
+            Err(rusqlite::Error::InvalidColumnType(_, rusqlite::types::Type::Null)) => Ok(PrismaValue::Null),
+            Ok(pv) => Ok(pv),
+            Err(e) => Err(e.into())
+        }
     }
 }
