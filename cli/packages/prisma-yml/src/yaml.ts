@@ -43,7 +43,6 @@ export async function readDefinition(
     : validate(populatedJson)
   // TODO activate as soon as the backend sends valid yaml
   if (!valid) {
-    debugger
     let errorMessage =
       `Invalid prisma.yml file` +
       '\n' +

@@ -241,16 +241,6 @@ Here is what you can do next:
 | [`graphql`](https://github.com/prisma/prisma-examples/tree/master/flow/graphql) | Simple GraphQL server |
 | [`script`](https://github.com/prisma/prisma-examples/tree/master/flow/script) | Simple usage of Prisma client in script |
 
-## Architecture
-
-Prisma takes the role of the **data layer** in your backend architecture, replacing traditional ORMs and custom data access layers. It enables a _layered architecture_ which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
-
-The **Prisma client** is used inside your application server to perform read and write operations against your database through the Prisma API.
-
-Prisma runs as _standalone processes_ which allows for it to be scaled independently from your application server.
-
-<p align="center"><img src="https://imgur.com/OyIQQxF.png" height="132" /></p>
-
 ## Database Connectors
 
 [Database connectors](https://github.com/prisma/prisma/issues/1751) provide the link between Prisma and the underlying database.
