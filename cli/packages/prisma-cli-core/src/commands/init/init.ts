@@ -8,6 +8,8 @@ import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 
+const debug = require('debug')('init')
+
 export default class Init extends Command {
   static topic = 'init'
   static description = 'Initialize a new service'
@@ -53,10 +55,8 @@ export default class Init extends Command {
     try {
       files = fs.readdirSync(this.config.definitionDir)
     } catch(e) {
-      if (this.config.debug) {
-        this.out.log(`prisma init workflow called without existing directory.`)
-        this.out.log(e)
-      }
+      debug(`prisma init workflow called without existing directory.`)
+      debug(e.toString())
     }
     // the .prismarc must be allowed for the docker version to be functioning
     if (
