@@ -25,11 +25,7 @@ impl Validatable for SchemaRef {
 }
 
 pub fn load_schema(db_name: String) -> Result<SchemaRef, Box<std::error::Error>> {
-    let path = env::var("PRISMA_SCHEMA_PATH")?;
-    let mut f = File::open(path)?;
-    let mut schema = String::new();
-
-    f.read_to_string(&mut schema)?;
+    let schema = load_datamodel_file()?;
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
@@ -53,4 +49,14 @@ pub fn load_schema(db_name: String) -> Result<SchemaRef, Box<std::error::Error>>
 
     // FIXME: how can we inject the right db name?
     Ok(serde_json::from_str::<SchemaTemplate>(&inferred)?.build(db_name))
+}
+
+pub fn load_datamodel_file() -> Result<String, Box<std::error::Error>> {
+    let path = env::var("PRISMA_SCHEMA_PATH")?;
+    let mut f = File::open(path)?;
+    let mut schema = String::new();
+
+    f.read_to_string(&mut schema)?;
+
+    Ok(schema)
 }

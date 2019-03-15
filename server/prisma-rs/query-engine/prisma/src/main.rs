@@ -26,23 +26,6 @@ struct HttpHandler {
     graphql_request_handler: GraphQlRequestHandler,
 }
 
-fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>>)) -> impl Responder {
-    let http_handler = req.state();
-    let req: PrismaRequest<GraphQlBody> = PrismaRequest {
-        body: json.clone().unwrap(),
-        path: req.path().into(),
-        headers: req
-            .headers()
-            .iter()
-            .map(|(k, v)| (format!("{}", k), v.to_str().unwrap().into()))
-            .collect(),
-    };
-    let result = http_handler.graphql_request_handler.handle(req, &http_handler.context);
-
-    // todo return values
-    serde_json::to_string(&result)
-}
-
 fn main() {
     // FIXME(katharina): Deduplicate from lib.rs -> separate prisma-core (lib pkg) and prisma (bin pkg)
     let SERVER_ROOT: String = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
@@ -61,7 +44,9 @@ fn main() {
     let sys = actix::System::new("prisma");
 
     server::new(move || {
-        App::with_state(Arc::clone(&http_handler_arc)).resource("/", |r| r.method(Method::POST).with(handler))
+        App::with_state(Arc::clone(&http_handler_arc))
+            .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
+            .resource("/", |r| r.method(Method::POST).with(handler))
     })
     .bind("127.0.0.1:8000")
     .unwrap()
@@ -69,4 +54,25 @@ fn main() {
 
     println!("Started http server: 127.0.0.1:8000");
     let _ = sys.run();
+}
+
+fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>>)) -> impl Responder {
+    let http_handler = req.state();
+    let req: PrismaRequest<GraphQlBody> = PrismaRequest {
+        body: json.clone().unwrap(),
+        path: req.path().into(),
+        headers: req
+            .headers()
+            .iter()
+            .map(|(k, v)| (format!("{}", k), v.to_str().unwrap().into()))
+            .collect(),
+    };
+    let result = http_handler.graphql_request_handler.handle(req, &http_handler.context);
+
+    // todo return values
+    serde_json::to_string(&result)
+}
+
+fn data_model_handler<T>(req: HttpRequest<T>) -> impl Responder {
+    schema::load_datamodel_file().unwrap()
 }
