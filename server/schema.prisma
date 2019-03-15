@@ -1,4 +1,10 @@
 type User {
-  id: ID! @id @unique
+  id: ID! @id
   name: String!
+  address: Address
+}
+
+type Address {
+  id: ID! @id
+  zipCode: String
 }

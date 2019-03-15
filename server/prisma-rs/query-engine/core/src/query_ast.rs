@@ -2,8 +2,10 @@
 
 use connector::NodeSelector;
 use graphql_parser::{self as gql, query::*};
-use prisma_models::{Model, PrismaValue, SchemaRef, SelectedFields};
+use prisma_models::{Field as ModelField, *};
+use std::collections::BTreeMap;
 use std::convert::From;
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub enum PrismaQuery {
@@ -31,9 +33,10 @@ pub struct MultiRecordQuery {
 
 #[derive(Debug)]
 pub struct RelatedRecordQuery {
-    // parentField: RelationField,
+    pub name: String,
+    pub parent_field: RelationFieldRef,
     // args: QueryArguments,
-    // selectedFields: SelectedFields,
+    pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
@@ -87,8 +90,11 @@ impl From<QueryBuilder> for Vec<PrismaQuery> {
                                                     field: field.clone(),
                                                     value: value,
                                                 },
-                                                selected_fields: SelectedFields::all_scalar_fields(model),
-                                                nested: vec![],
+                                                selected_fields: SelectedFields::all_scalar_fields(Arc::clone(&model)),
+                                                nested: collect_sub_queries(
+                                                    &outer_field.selection_set,
+                                                    Arc::clone(&model),
+                                                ),
                                             })
                                         }
                                         _ => unimplemented!(),
@@ -110,6 +116,29 @@ impl From<QueryBuilder> for Vec<PrismaQuery> {
             })
             .collect::<Vec<PrismaQuery>>()
     }
+}
+
+fn collect_sub_queries(selection_set: &SelectionSet, model: ModelRef) -> Vec<PrismaQuery> {
+    let queries = selection_set
+        .items
+        .iter()
+        .flat_map(|item| match item {
+            Selection::Field(gql_field) => {
+                let field = model.fields().find_from_all(&gql_field.name).unwrap();
+                match field {
+                    ModelField::Relation(rf) => Some(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
+                        name: gql_field.name.clone(),
+                        parent_field: Arc::clone(&rf),
+                        selected_fields: SelectedFields::all_scalar_fields(Arc::clone(&model)),
+                        nested: vec![],
+                    })),
+                    ModelField::Scalar(_) => None,
+                }
+            }
+            _ => unimplemented!(),
+        })
+        .collect();
+    queries
 }
 
 fn value_to_prisma_value(val: &Value) -> PrismaValue {
