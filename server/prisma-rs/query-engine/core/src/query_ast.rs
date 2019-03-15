@@ -132,7 +132,7 @@ fn collect_sub_queries(selection_set: &SelectionSet, model: ModelRef) -> Vec<Pri
                     ModelField::Relation(rf) => Some(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
                         name: gql_field.name.clone(),
                         parent_field: Arc::clone(&rf),
-                        selected_fields: SelectedFields::all_scalar_fields(Arc::clone(&model)),
+                        selected_fields: SelectedFields::all_scalar_fields(Arc::clone(&rf.related_model())),
                         nested: vec![],
                     })),
                     ModelField::Scalar(_) => None,
