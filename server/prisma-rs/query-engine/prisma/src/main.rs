@@ -43,16 +43,18 @@ fn main() {
 
     let sys = actix::System::new("prisma");
 
+    let address = "127.0.0.1:8000";
+
     server::new(move || {
         App::with_state(Arc::clone(&http_handler_arc))
             .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
             .resource("/", |r| r.method(Method::POST).with(handler))
     })
-    .bind("127.0.0.1:8000")
+    .bind(address)
     .unwrap()
     .start();
 
-    println!("Started http server: 127.0.0.1:8000");
+    println!("Started http server: {}", address);
     let _ = sys.run();
 }
 
