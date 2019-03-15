@@ -2,7 +2,7 @@ mod context;
 mod req_handlers;
 mod schema;
 
-use actix_web::{http::Method, server, App, HttpRequest, Json, Responder};
+use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
 use context::PrismaContext;
 use lazy_static::lazy_static;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
@@ -47,8 +47,11 @@ fn main() {
 
     server::new(move || {
         App::with_state(Arc::clone(&http_handler_arc))
+            .resource("/", |r| {
+                r.method(Method::GET).with(playground);
+                r.method(Method::POST).with(handler);
+            })
             .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
-            .resource("/", |r| r.method(Method::POST).with(handler))
     })
     .bind(address)
     .unwrap()
@@ -77,4 +80,8 @@ fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>
 
 fn data_model_handler<T>(req: HttpRequest<T>) -> impl Responder {
     schema::load_datamodel_file().unwrap()
+}
+
+fn playground<T>(req: HttpRequest<T>) -> impl Responder {
+    fs::NamedFile::open("playground.html")
 }

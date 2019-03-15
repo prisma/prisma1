@@ -68,8 +68,9 @@ impl RequestHandler for GraphQlRequestHandler {
                 _ => unimplemented!(),
             }
         }
-
-        serde_json::Value::Object(serde_map)
+        let mut envelope = serde_json::map::Map::new();
+        envelope.insert("data".to_owned(), serde_json::Value::Object(serde_map));
+        serde_json::Value::Object(envelope)
     }
 }
 
