@@ -74,12 +74,12 @@ impl From<QueryBuilder> for Vec<PrismaQuery> {
                                         .iter()
                                         .find(|model| model.name.to_lowercase() == outer_field.name)
                                         .cloned()
-                                        .unwrap();
+                                        .expect("model not found");
 
-                                    let (name, value) = outer_field.arguments.first().unwrap();
+                                    let (name, value) = outer_field.arguments.first().expect("no arguments found");
                                     match value {
                                         Value::Object(obj) => {
-                                            let (field_name, value) = obj.iter().next().unwrap();
+                                            let (field_name, value) = obj.iter().next().expect("object was empty");
                                             let field = model.fields().find_from_scalar(field_name).unwrap();
                                             let value = value_to_prisma_value(value);
                                             let name = outer_field.alias.as_ref().unwrap_or(&outer_field.name).clone();
@@ -124,7 +124,10 @@ fn collect_sub_queries(selection_set: &SelectionSet, model: ModelRef) -> Vec<Pri
         .iter()
         .flat_map(|item| match item {
             Selection::Field(gql_field) => {
-                let field = model.fields().find_from_all(&gql_field.name).unwrap();
+                let field = model
+                    .fields()
+                    .find_from_all(&gql_field.name)
+                    .expect("did not find field");
                 match field {
                     ModelField::Relation(rf) => Some(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
                         name: gql_field.name.clone(),
