@@ -21,6 +21,8 @@ pub enum Error {
     NoResultError,
     /// Configuration error
     ConfigurationError(String),
+    /// IO error
+    IOError(String),
 }
 
 impl std::fmt::Display for Error {
@@ -46,6 +48,7 @@ impl StdError for Error {
             Error::InvalidConnectionArguments(message) => message,
             Error::NoResultError => "Query returned no results",
             Error::ConfigurationError(message) => message,
+            Error::IOError(message) => message,
         }
     }
 
@@ -84,5 +87,11 @@ impl From<prost::DecodeError> for Error {
 impl From<serde_json::error::Error> for Error {
     fn from(e: serde_json::error::Error) -> Error {
         Error::JsonDecodeError("Error decoding JSON message", Some(Box::new(e)))
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Error {
+        Error::IOError(format!("IO error: {}", e.description()))
     }
 }
