@@ -1,0 +1,7 @@
+{
+  "name": "prisma-client-generate",
+  "version": "0.0.0",
+  "main": "index.js",
+  "author": "Tim Suchanek <suchanek@prisma.io>",
+  "license": "Apache-2.0"
+}

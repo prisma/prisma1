@@ -23,41 +23,5 @@ prisma-models = { path = "../../prisma-models" }
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 chrono = { version = "0.4", features = ["serde"] }
 
-# [package]
-# name = "prisma-old"
-# version = "0.0.0"
-# authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>", "Marcus Böhm <boehm@prisma.io>" ]
-# edition = "2018"
-
-# [lib]
-# crate-type = ["cdylib", "staticlib"]
-
-# [dependencies]
-# prost = "0.4"
-# prost-derive = "0.4"
-# prost-types = "0.4"
-#
-#
-# r2d2 = "0.8"
-# r2d2_sqlite = "0.8"
-#
-# rusqlite = { version = "0.16", features = ["chrono", "bundled"] }
-# serde = { version = "1.0", features = ["derive"] }
-# serde_json = "1.0"
-# serde_yaml = "0.8"
-# uuid = "0.7"
-# arc-swap = "0.3"
-# log = "0.4"
-# env_logger = "0.6"
-# tower-service = "0.2"
-# actix-web = "0.7.18"
-# actix = "0.7"
-# futures = "0.1"
-# graphql-parser = "0.2.2"
-# itertools = "0.8"
-# prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
-# prisma-common = { path = "../libs/prisma-common" }
-# prisma-models = { path = "../prisma-models" }
-
 [build-dependencies]
 prost-build = "0.4"

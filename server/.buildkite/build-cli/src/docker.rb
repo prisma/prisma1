@@ -34,6 +34,7 @@ class DockerCommands
   def self.run_rust_tests(context)
     Command.new("docker", "run",
       "-e", "SERVER_ROOT=/root/build",
+      "-e", "RUST_BACKTRACE=1",
       '-w', '/root/build/prisma-rs',
       '-v', "#{context.server_root_path}:/root/build",
       'prismagraphql/build-image:debian',

@@ -8,7 +8,7 @@ pub use file::FileConfig;
 
 use crate::{error::Error, PrismaResult};
 use serde_yaml;
-use std::{collections::BTreeMap, env, fs::File, path::PathBuf};
+use std::{collections::BTreeMap, env, fs::File, io::prelude::*, path::PathBuf};
 
 pub trait WithMigrations {
     fn migrations(&self) -> Option<bool>;
@@ -39,6 +39,16 @@ pub enum PrismaDatabase {
     File(FileConfig),
 }
 
+impl PrismaDatabase {
+    pub fn db_name(&self) -> Option<String> {
+        match self {
+            PrismaDatabase::Explicit(config) => config.database.clone(),
+            PrismaDatabase::ConnectionString(config) => config.database.clone(),
+            PrismaDatabase::File(config) => config.database.clone(),
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PrismaConfig {
@@ -52,23 +62,20 @@ pub struct PrismaConfig {
 
 /// Loads the config
 pub fn load() -> PrismaResult<PrismaConfig> {
-    let config_path: PathBuf = match env::var("PRISMA_CONFIG") {
-        Ok(ref p) => {
-            let path = PathBuf::from(p);
-            if path.exists() {
-                Err(Error::ConfigurationError(format!("File {} doesn't exist", p)))
-            } else {
-                Ok(path)
-            }
-        }
+    let config: String = match env::var("PRISMA_CONFIG") {
+        Ok(c) => c,
         Err(_) => match find_config_path() {
-            Some(path) => Ok(path),
-            None => Err(Error::ConfigurationError("Unable to find Prisma config.".into())),
+            Some(path) => {
+                let mut f = File::open(path)?;
+                let mut contents = String::new();
+                f.read_to_string(&mut contents)?;
+                contents
+            }
+            None => return Err(Error::ConfigurationError("Unable to find Prisma config.".into())),
         },
-    }
-    .unwrap();
+    };
 
-    Ok(config_path.into())
+    Ok(serde_yaml::from_str(&config).expect("Unable to parse YML config."))
 }
 
 /// Attempts to find a valid Prisma config either via env var or file discovery.
@@ -85,11 +92,5 @@ pub fn find_config_path() -> Option<PathBuf> {
                 None
             }
         }
-    }
-}
-
-impl From<PathBuf> for PrismaConfig {
-    fn from(pb: PathBuf) -> PrismaConfig {
-        serde_yaml::from_reader(File::open(pb).unwrap()).unwrap()
     }
 }

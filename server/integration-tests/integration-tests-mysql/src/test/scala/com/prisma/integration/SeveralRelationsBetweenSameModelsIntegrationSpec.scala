@@ -1,6 +1,7 @@
 package com.prisma.integration
 
 import com.prisma.IgnoreSQLite
+import com.prisma.IgnoreMongo
 import org.scalatest.{FlatSpec, Matchers}
 
 class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
@@ -244,7 +245,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     deployServer.deploySchemaThatMustErrorWithCode(project, schema1, errorCode = 3018)
   }
 
-  "Going from two named relations between the same models to one named one without a backrelation" should "work" in {
+  "Going from two named relations between the same models to one named one without a backrelation" should "work" taggedAs (IgnoreMongo) in {
 
     val schema =
       """type A {
@@ -291,7 +292,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b":{"title":"B1"}}]}}""")
   }
 
-  "Going from two named relations between the same models to one named one without a backrelation" should "work even when there is a rename" taggedAs (IgnoreSQLite) in {
+  "Going from two named relations between the same models to one named one without a backrelation" should "work even when there is a rename" taggedAs (IgnoreMongo, IgnoreSQLite) in {
 
     val schema =
       """type A {

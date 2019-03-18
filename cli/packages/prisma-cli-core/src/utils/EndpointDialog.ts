@@ -22,6 +22,7 @@ import {
   hasAuthSource,
   populateMongoDatabase,
 } from '../commands/introspect/util'
+const debug = require('debug')('endpoint-dialog')
 
 export interface GetEndpointParams {
   folderName: string
@@ -678,7 +679,13 @@ export class EndpointDialog {
   }
 
   private listFiles() {
-    return fs.readdirSync(this.config.definitionDir)
+    try {
+      return fs.readdirSync(this.config.definitionDir)
+    } catch(e) {
+      debug(`EndpointDialog workflow called without existing directory.`)
+      debug(e.toString())
+      return []
+    }
   }
 
   private async isClusterOnline(endpoint: string): Promise<boolean> {

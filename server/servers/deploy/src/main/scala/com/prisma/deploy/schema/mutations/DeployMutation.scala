@@ -63,11 +63,9 @@ case class DeployMutation(
     case Failure(e)   => throw InvalidQuery(e.getMessage)
   }
 
-  override def execute: Future[MutationResult[DeployMutationPayload]] = {
-    internalExecute.map {
-      case Good(payload) => MutationSuccess(payload)
-      case Bad(errors)   => MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = errors, warnings = Vector.empty, steps = Vector.empty))
-    }
+  override def execute: Future[MutationResult[DeployMutationPayload]] = internalExecute.map {
+    case Good(payload) => MutationSuccess(payload)
+    case Bad(errors)   => MutationSuccess(DeployMutationPayload(args.clientMutationId, None, errors = errors, warnings = Vector.empty, steps = Vector.empty))
   }
 
   private def internalExecute: Future[DeployMutationPayload Or Vector[DeployError]] = {

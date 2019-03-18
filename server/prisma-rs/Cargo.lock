@@ -323,6 +323,7 @@ dependencies = [
 name = "core"
 version = "0.1.0"
 dependencies = [
+ "connector 0.1.0",
  "graphql-parser 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-common 0.0.0",
  "prisma-models 0.0.0",
@@ -1083,6 +1084,8 @@ version = "0.1.0"
 dependencies = [
  "actix 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 0.7.18 (registry+https://github.com/rust-lang/crates.io-index)",
+ "connector 0.1.0",
+ "core 0.1.0",
  "env_logger 0.6.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "graphql-parser 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1090,6 +1093,7 @@ dependencies = [
  "prisma-models 0.0.0",
  "serde 1.0.89 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
+ "sqlite-connector 0.1.0",
 ]
 
 [[package]]

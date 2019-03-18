@@ -27,10 +27,10 @@ where
 impl DataResolver for SqlResolver<Sqlite> {
     fn get_node_by_where(
         &self,
-        node_selector: NodeSelector,
-        selected_fields: SelectedFields,
+        node_selector: &NodeSelector,
+        selected_fields: &SelectedFields,
     ) -> PrismaResult<Option<SingleNode>> {
-        let (db_name, query) = QueryBuilder::get_node_by_where(node_selector, &selected_fields);
+        let (db_name, query) = QueryBuilder::get_node_by_where(node_selector, selected_fields);
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
 
@@ -63,14 +63,14 @@ impl DataResolver for SqlResolver<Sqlite> {
     fn get_related_nodes(
         &self,
         from_field: RelationFieldRef,
-        from_node_ids: Vec<GraphqlId>,
+        from_node_ids: &[GraphqlId],
         query_arguments: QueryArguments,
-        selected_fields: SelectedFields,
+        selected_fields: &SelectedFields,
     ) -> PrismaResult<ManyNodes> {
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
         let (db_name, query) =
-            QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, &selected_fields);
+            QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, selected_fields);
 
         let nodes = self.database_executor.with_rows(query, db_name, |row| {
             let mut node = Self::read_row(row, &selected_fields)?;

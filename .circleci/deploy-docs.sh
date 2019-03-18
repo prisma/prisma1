@@ -50,7 +50,16 @@ then
   curl -X POST -d '' $NETLIFY_HOOK
 elif [[ "$changedFiles" = *"docs/"* ]]; then
   echo "Deploying new docs"
-  curl -X POST -d '' $NETLIFY_HOOK_DOCS_V2
+  curl -H "Authorization: Bearer $BUILDKITE_TOKEN" -X POST "https://api.buildkite.com/v2/organizations/prisma/pipelines/prisma-docs/builds" \
+  -d '{
+    "commit": "HEAD",
+    "branch": "master",
+    "message": "Build trigger from content",
+    "author": {
+      "name": "Nikolas Burk",
+      "email": "burk@prisma.io"
+    }
+  }'
 else
   echo "No Changes. Exiting"
   exit 0

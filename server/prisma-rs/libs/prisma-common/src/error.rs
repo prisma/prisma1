@@ -22,6 +22,8 @@ pub enum Error {
     NoResultError,
     /// Configuration error
     ConfigurationError(String),
+    /// IO error
+    IOError(String),
 }
 
 impl std::fmt::Display for Error {
@@ -47,6 +49,7 @@ impl StdError for Error {
             Error::InvalidConnectionArguments(message) => message,
             Error::NoResultError => "Query returned no results",
             Error::ConfigurationError(message) => message,
+            Error::IOError(message) => message,
         }
     }
 
@@ -92,5 +95,11 @@ impl From<serde_json::error::Error> for Error {
 impl From<uuid::parser::ParseError> for Error {
     fn from(e: uuid::parser::ParseError) -> Error {
         Error::InvalidInputError(String::from("Expected database value to be a UUID, but couldn't parse the value into one."), Some(Box::new(e)))
+    }
+}
+
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Error {
+        Error::IOError(format!("IO error: {}", e.description()))
     }
 }

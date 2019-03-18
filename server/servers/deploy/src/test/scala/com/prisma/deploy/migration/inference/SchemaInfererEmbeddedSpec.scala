@@ -10,7 +10,7 @@ import com.prisma.shared.schema_dsl.TestProject
 import org.scalatest.{Matchers, WordSpec}
 
 class SchemaInfererEmbeddedSpec extends WordSpec with Matchers with DeploySpecBase {
-  val emptyProject = TestProject.empty
+  val emptyProject = TestProject.emptyV11
 
   "Inferring embedded typeDirectives" should {
     "work if one side provides embedded" in {

@@ -61,6 +61,12 @@ impl From<GraphqlId> for DatabaseValue {
     }
 }
 
+impl From<&GraphqlId> for DatabaseValue {
+    fn from(id: &GraphqlId) -> DatabaseValue {
+        id.clone().into()
+    }
+}
+
 impl From<PrismaValue> for DatabaseValue {
     fn from(pv: PrismaValue) -> DatabaseValue {
         match pv {

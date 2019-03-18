@@ -167,7 +167,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
     val newColSql = typeMapper.rawSQLForField(field)
 
-    field.isRequired match {
+    field.isRequired && !field.isId match {
       case true =>
         val optionalFieldSQL = typeMapper.rawSQLForFieldWithoutRequired(field)
         val defaultValue     = migrationValueForField(field)
@@ -240,14 +240,6 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
     sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} DROP INDEX #${qualify(indexName)}"
-  }
-
-  override def renameTable(project: Project, oldTableName: String, newTableName: String): DBIO[_] = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(project.dbName, newTableName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
   }
 
   //Here this is only used for relationtables

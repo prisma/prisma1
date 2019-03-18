@@ -11,7 +11,7 @@ import org.scalatest.{Matchers, WordSpec}
 
 class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
 
-  val emptyProject = TestProject.empty
+  val emptyProject = TestProject.emptyV11
 
   "if a given relation does not exist yet, the inferrer" should {
     "infer relations with the given name if a relation directive is provided on both sides" in {

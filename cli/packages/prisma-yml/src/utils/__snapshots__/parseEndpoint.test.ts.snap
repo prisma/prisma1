@@ -1,5 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`parseEndpoint custom hosted url or local in intranet 1`] = `
+Object {
+  "clusterBaseUrl": "https://api-prisma.divyendusingh.com",
+  "clusterName": "default",
+  "isPrivate": true,
+  "local": false,
+  "service": "zebra-4069",
+  "shared": false,
+  "stage": "dev",
+  "workspaceSlug": null,
+}
+`;
+
 exports[`parseEndpoint private url 1`] = `
 Object {
   "clusterBaseUrl": "https://test1_workspace.prisma.sh",
@@ -35,7 +48,7 @@ Object {
   "service": "default",
   "shared": false,
   "stage": "default",
-  "workspaceSlug": undefined,
+  "workspaceSlug": null,
 }
 `;
 
@@ -48,7 +61,7 @@ Object {
   "service": "service-name",
   "shared": false,
   "stage": "default",
-  "workspaceSlug": undefined,
+  "workspaceSlug": null,
 }
 `;
 
@@ -61,6 +74,6 @@ Object {
   "service": "service-name",
   "shared": false,
   "stage": "stage",
-  "workspaceSlug": undefined,
+  "workspaceSlug": null,
 }
 `;

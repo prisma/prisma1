@@ -5,7 +5,7 @@ import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 object ReservedFields {
   val idFieldName              = "id"
   val embeddedIdFieldName      = "_id"
-  val mongoInternalIdfieldName = "_id"
+  val mongoInternalIdFieldName = "_id"
   val updatedAtFieldName       = "updatedAt"
   val createdAtFieldName       = "createdAt"
   val reservedFieldNames       = Vector(idFieldName, updatedAtFieldName, createdAtFieldName)
@@ -27,7 +27,6 @@ object ReservedFields {
       isList = false,
       isUnique = false,
       isHidden = true,
-      isReadonly = true,
       enum = None,
       defaultValue = None,
       relationName = None,
@@ -45,7 +44,6 @@ object ReservedFields {
       isList = false,
       isUnique = false,
       isHidden = true,
-      isReadonly = true,
       enum = None,
       defaultValue = None,
       relationName = None,
@@ -63,7 +61,6 @@ object ReservedFields {
       isList = false,
       isUnique = true,
       isHidden = true,
-      isReadonly = true,
       enum = None,
       defaultValue = None,
       relationName = None,
@@ -81,7 +78,6 @@ object ReservedFields {
       isList = false,
       isUnique = true,
       isHidden = true,
-      isReadonly = true,
       enum = None,
       defaultValue = None,
       relationName = None,

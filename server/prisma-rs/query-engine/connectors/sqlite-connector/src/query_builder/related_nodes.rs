@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 pub struct RelatedNodesQueryBuilder<'a> {
     from_field: Arc<RelationField>,
-    from_node_ids: Vec<GraphqlId>,
+    from_node_ids: &'a [GraphqlId],
     selected_fields: &'a SelectedFields,
     conditions: ConditionTree,
     relation: Arc<Relation>,
@@ -26,7 +26,7 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
 
     pub fn new(
         from_field: Arc<RelationField>,
-        from_node_ids: Vec<GraphqlId>,
+        from_node_ids: &'a [GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &'a SelectedFields,
     ) -> Self {
@@ -70,8 +70,9 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             self.reverse_order,
         );
 
+        // TODO: prisma query crate slice handling
         let conditions = relation_side_column
-            .in_selection(self.from_node_ids)
+            .in_selection(self.from_node_ids.to_owned())
             .and(self.conditions)
             .and(cursor_condition);
 
@@ -101,9 +102,10 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
         let base_query = self.base_query();
         let cursor_condition = self.cursor_condition;
 
+        // TODO: prisma query crate slice handling
         let conditions = relation_side_column
             .clone()
-            .in_selection(self.from_node_ids)
+            .in_selection(self.from_node_ids.to_owned())
             .and(cursor_condition)
             .and(self.conditions);
 

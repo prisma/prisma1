@@ -266,14 +266,6 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     sqlu"ALTER TABLE #${qualify(project.dbName, tableName)} DROP INDEX #${qualify(indexName)};"
   }
 
-  override def renameTable(project: Project, oldTableName: String, newTableName: String): DBIO[_] = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(newTableName)};"""
-    } else {
-      DBIO.successful(())
-    }
-  }
-
   override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier) = {
     if (oldColumnName != newColumnName) {
       sqlu"""ALTER TABLE #${qualify(project.dbName, tableName)} RENAME COLUMN #${qualify(oldColumnName)} TO #${qualify(newColumnName)};"""
