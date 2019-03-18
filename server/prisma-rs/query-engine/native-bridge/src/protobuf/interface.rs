@@ -9,6 +9,7 @@ use prisma_models::prelude::*;
 use prost::Message;
 use sqlite_connector::{SqlResolver, Sqlite, SqliteDatabaseMutactionExecutor};
 use std::error::Error as StdError;
+use std::sync::Arc;
 
 pub struct ProtoBufInterface {
     data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
@@ -133,15 +134,16 @@ impl ExternalInterface for ProtoBufInterface {
 
             let from_field = model.fields().find_from_relation_fields(&input.from_field)?;
             let from_node_ids: Vec<GraphqlId> = input.from_node_ids.into_iter().map(GraphqlId::from).collect();
+            let related_model = from_field.related_model();
 
             let selected_fields = input
                 .selected_fields
-                .into_selected_fields(from_field.related_model(), Some(from_field.clone()));
+                .into_selected_fields(Arc::clone(&related_model), Some(from_field.clone()));
 
             let query_result = self.data_resolver.get_related_nodes(
                 from_field,
                 &from_node_ids,
-                into_model_query_arguments(model, input.query_arguments),
+                into_model_query_arguments(Arc::clone(&related_model), input.query_arguments),
                 &selected_fields,
             )?;
 
