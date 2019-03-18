@@ -36,6 +36,40 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
     }
   }
 
+  def getNodeIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
+    if (parentField.relationIsInlinedInParent) {
+      import org.mongodb.scala.model.Projections._
+
+      val filter = Some(ScalarFilter(parentField.model.idField_!, In(parentIds)))
+      def reads(document: Document): Vector[IdGCValue] = parentField.isList match {
+        case true  => document(parentField.dbName).asArray().getValues.asScala.map(v => StringIdGCValue(v.asObjectId().getValue.toString)).toVector
+        case false => Vector(StringIdGCValue(document(parentField.dbName).asObjectId().getValue.toString))
+      }
+
+      database
+        .getCollection(parentField.model.dbName)
+        .find(buildConditionForFilter(filter))
+        .projection(include(parentField.dbName))
+        .collect()
+        .toFuture
+        .map(_.flatMap(reads))
+
+    } else {
+      val filter = Some(parentField.relatedField match {
+        case f if !f.isList => ScalarFilter(parentField.relatedModel_!.dummyField(f), In(parentIds))
+        case f if f.isList  => ScalarListFilter(parentField.relatedModel_!.dummyField(f), ListContainsSome(parentIds))
+      })
+
+      database
+        .getCollection(parentField.relatedModel_!.dbName)
+        .find(buildConditionForFilter(filter))
+        .projection(idProjection)
+        .collect()
+        .toFuture
+        .map(_.map(readsId))
+    }
+  }
+
   def manyQueryHelper(model: Model,
                       queryArguments: QueryArguments,
                       extraFilter: Option[Filter] = None,

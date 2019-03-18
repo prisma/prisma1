@@ -6,11 +6,13 @@ import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLe
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.NodesNotConnectedError
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
-import com.prisma.shared.models.{Model, Project}
+import com.prisma.shared.models.{Model, Project, RelationField}
 
 import scala.concurrent.ExecutionContext
 
-case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec: ExecutionContext)
+    extends TopLevelDatabaseMutactionInterpreter
+    with CascadingDeleteSharedStuff {
 
   override def mongoAction(mutationBuilder: MongoActionsBuilder) = {
     for {
@@ -18,7 +20,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
       node <- nodeOpt match {
                case Some(node) =>
                  for {
-//            _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, node.id)
+                   _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, Vector(node.id))
                    _ <- DeleteShared.checkForRequiredRelationsViolations(mutaction.project, mutaction.model, mutationBuilder, Vector(node.id))
                    _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id)
                  } yield node
@@ -123,5 +125,62 @@ object DeleteShared {
     val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodesAreInRelation(nodeIds.toVector, field))
 
     SequenceAction(actions.toVector)
+  }
+}
+
+trait CascadingDeleteSharedStuff {
+  implicit def ec: ExecutionContext
+
+  def performCascadingDelete(mutationBuilder: MongoActionsBuilder, model: Model, startingIds: Vector[IdGCValue]): MongoAction[_] = {
+    val actions = model.cascadingRelationFields.map(field => recurse(mutationBuilder = mutationBuilder, parentField = field, parentIds = startingIds))
+    MongoAction.seq(actions.toVector)
+  }
+
+  private def recurse(
+      mutationBuilder: MongoActionsBuilder,
+      parentField: RelationField,
+      parentIds: Vector[IdGCValue],
+      idsThatCanBeIgnored: Vector[IdGCValue] = Vector.empty
+  ): MongoAction[Unit] = {
+
+    for {
+      childIds        <- mutationBuilder.getNodeIdsByParentIds(parentField, parentIds)
+      filteredIds     = childIds.filter(x => !idsThatCanBeIgnored.contains(x))
+      childIdsGrouped = filteredIds.grouped(10000).toVector
+      model           = parentField.relatedModel_!
+      //nestedActions
+      _ <- if (filteredIds.isEmpty) {
+            MongoAction.successful(())
+          } else {
+            //children
+            val cascadingChildrenFields = model.cascadingRelationFields.filter(_ != parentField.relatedField)
+            val childActions = for {
+              field        <- cascadingChildrenFields
+              childIdGroup <- childIdsGrouped
+            } yield {
+              recurse(mutationBuilder, field, childIdGroup.toVector)
+            }
+            //other parent
+            val cascadingBackRelationFieldOfParentField = model.cascadingRelationFields.find(_ == parentField.relatedField)
+            val parentActions = for {
+              field        <- cascadingBackRelationFieldOfParentField.toVector
+              childIdGroup <- childIdsGrouped.map(_.toVector)
+            } yield {
+              recurse(mutationBuilder, field, childIdGroup, idsThatCanBeIgnored = parentIds)
+            }
+
+            MongoAction.seq((childActions ++ parentActions).toVector)
+          }
+      //actions for this level
+      _ <- MongoAction.seq(childIdsGrouped.map(checkTheseOnes(mutationBuilder, parentField, _)))
+      _ <- MongoAction.seq(childIdsGrouped.map(mutationBuilder.deleteNodes(model, _)))
+    } yield ()
+  }
+
+  private def checkTheseOnes(mutationBuilder: MongoActionsBuilder, parentField: RelationField, parentIds: Seq[IdGCValue]) = {
+    val model                          = parentField.relatedModel_!
+    val fieldsWhereThisModelIsRequired = model.schema.fieldsWhereThisModelIsRequired(model).filter(_ != parentField)
+    val actions                        = fieldsWhereThisModelIsRequired.map(field => mutationBuilder.errorIfNodesAreInRelation(parentIds.toVector, field))
+    MongoAction.seq(actions.toVector)
   }
 }
