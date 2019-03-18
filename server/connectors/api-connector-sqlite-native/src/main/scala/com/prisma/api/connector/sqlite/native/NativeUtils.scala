@@ -8,6 +8,7 @@ import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 import prisma.protocol
 import prisma.protocol.GraphqlId.IdValue
+import prisma.protocol.ValueContainer
 import prisma.protocol.ValueContainer.PrismaValue
 
 import scala.collection.mutable
@@ -55,6 +56,8 @@ object NativeUtils {
       case _                 => sys.error("empty protobuf")
     }
   }
+
+  def toValueContainer(value: GCValue): ValueContainer = protocol.ValueContainer(toPrismaValue(value))
 
   def toPrismaValue(value: GCValue): PrismaValue = {
     value match {

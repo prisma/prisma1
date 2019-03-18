@@ -11,6 +11,7 @@ public interface JnaRustBridge extends Library {
     ProtobufEnvelope.ByReference execute_raw(Pointer data, int len);
     ProtobufEnvelope.ByReference count_by_model(Pointer data, int len);
     ProtobufEnvelope.ByReference count_by_table(Pointer data, int len);
+    ProtobufEnvelope.ByReference execute_mutaction(Pointer data, int len);
 
     void destroy(ProtobufEnvelope.ByReference data);
 }
