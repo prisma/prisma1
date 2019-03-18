@@ -72,6 +72,14 @@ object NativeBinding {
     }
   }
 
+  def execute_mutaction(input: DatabaseMutaction) = {
+    val (pointer, length) = writeBuffer(input)
+    // FIXME: this must return proper result intead of this int
+    handleProtoResult(library.execute_mutaction(pointer, length)) { i: Int =>
+      i
+    }
+  }
+
   def handleProtoResult[T, U](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U): U = {
     val messageContent = envelope.data.getByteArray(0, envelope.len.intValue())
     library.destroy(envelope)

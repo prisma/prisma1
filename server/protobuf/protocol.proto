@@ -254,3 +254,30 @@ message RelationFilter {
     required Filter          nested_filter = 2;
     required Condition       condition     = 3;
 }
+
+message DatabaseMutaction {
+    oneof type {
+        CreateNode        create = 1;
+    }
+}
+
+message PrismaArgs {
+    repeated KeyValueContainer args = 1;
+}
+
+message KeyValueContainer {
+    required string           key = 1;
+    required ValueContainer value = 2;
+}
+
+message CreateNode {
+    required Header         header          = 1;
+    required bytes          project_json    = 2;
+    required string         model_name      = 3;
+    required PrismaArgs     non_list_args   = 4;
+    required PrismaArgs     list_args       = 5;
+}
+
+// message CreateNodeResult {
+//     required NodeSel
+// }
