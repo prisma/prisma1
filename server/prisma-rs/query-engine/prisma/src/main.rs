@@ -4,22 +4,10 @@ mod schema;
 
 use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
 use context::PrismaContext;
-use lazy_static::lazy_static;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
 use std::env;
 use std::sync::Arc;
-
-// lazy_static! {
-// }
-
-// fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest)) -> impl Responder {
-//     // let req: PrismaRequest<GraphQlBody> = (json.clone().unwrap(), req).into();
-//     // REQ_HANDLER.handle(req, &CONTEXT);
-
-//     // todo return values
-//     ""
-// }
 
 struct HttpHandler {
     context: PrismaContext,
@@ -27,22 +15,17 @@ struct HttpHandler {
 }
 
 fn main() {
-    // FIXME(katharina): Deduplicate from lib.rs -> separate prisma-core (lib pkg) and prisma (bin pkg)
-    let SERVER_ROOT: String = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
-
     let http_handler = HttpHandler {
         context: PrismaContext::new(),
         graphql_request_handler: GraphQlRequestHandler,
     };
     let http_handler_arc = Arc::new(http_handler);
-    // let handler = http_handler.handle;
 
     env::set_var("RUST_LOG", "actix_web=debug");
     env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
 
     let sys = actix::System::new("prisma");
-
     let address = "127.0.0.1:8000";
 
     server::new(move || {
@@ -72,9 +55,8 @@ fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>
             .map(|(k, v)| (format!("{}", k), v.to_str().unwrap().into()))
             .collect(),
     };
-    let result = http_handler.graphql_request_handler.handle(req, &http_handler.context);
 
-    // todo return values
+    let result = http_handler.graphql_request_handler.handle(req, &http_handler.context);
     serde_json::to_string(&result)
 }
 

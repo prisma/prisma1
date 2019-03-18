@@ -1,4 +1,13 @@
 [[package]]
+name = "Inflector"
+version = "0.11.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "lazy_static 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "regex 1.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "actix"
 version = "0.7.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -321,6 +330,7 @@ dependencies = [
 name = "core"
 version = "0.1.0"
 dependencies = [
+ "Inflector 0.11.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "connector 0.1.0",
  "graphql-parser 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-common 0.0.0",
@@ -2180,6 +2190,7 @@ dependencies = [
 ]
 
 [metadata]
+"checksum Inflector 0.11.4 (registry+https://github.com/rust-lang/crates.io-index)" = "fe438c63458706e03479442743baae6c88256498e6431708f6dfc520a26515d3"
 "checksum actix 0.7.9 (registry+https://github.com/rust-lang/crates.io-index)" = "6c616db5fa4b0c40702fb75201c2af7f8aa8f3a2e2c1dda3b0655772aa949666"
 "checksum actix-net 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "8bebfbe6629e0131730746718c9e032b58f02c6ce06ed7c982b9fef6c8545acd"
 "checksum actix-web 0.7.18 (registry+https://github.com/rust-lang/crates.io-index)" = "e9f33c941e5e69a58a6bfef33853228042ed3799fc4b5a4923a36a85776fb690"

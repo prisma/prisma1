@@ -36,10 +36,9 @@ impl RequestHandler for GraphQlRequestHandler {
         };
 
         let queries: Vec<PrismaQuery> = qb.into();
-
         let results = dbg!(ctx.query_executor.execute(&queries)).unwrap();
-        // let first_query = queries.first().unwrap();
 
+        // FIXME: Serialization with separate GQL specific type
         let mut serde_map = serde_json::map::Map::new();
         for result in results {
             match result {

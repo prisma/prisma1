@@ -35,7 +35,6 @@ impl QueryExecutor {
                             let ids = vec![node.get_id_value(model).clone()];
 
                             let nested_results = self.execute_internal(&query.nested, ids)?;
-
                             let result = SinglePrismaQueryResult {
                                 name: query.name.clone(),
                                 result: result,
@@ -53,6 +52,7 @@ impl QueryExecutor {
                         QueryArguments::empty(),
                         &query.selected_fields,
                     )?;
+
                     let result = SinglePrismaQueryResult {
                         name: query.name.clone(),
                         result: result.into_single_node(),

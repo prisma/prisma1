@@ -5,6 +5,7 @@ pub struct SingleNode {
     pub node: Node,
     pub field_names: Vec<String>,
 }
+
 impl SingleNode {
     pub fn get_id_value(&self, model: ModelRef) -> &GraphqlId {
         let id_field = model.fields().id();
