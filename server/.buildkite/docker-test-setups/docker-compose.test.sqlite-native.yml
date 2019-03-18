@@ -8,6 +8,7 @@ services:
       COMMIT_SHA: "123abcd"
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
       RABBITMQ_URI: amqp://rabbit
+      RUST_BACKTRACE: "1"
       PRISMA_CONFIG: |
         port: 4466
         rabbitUri: amqp://rabbit
