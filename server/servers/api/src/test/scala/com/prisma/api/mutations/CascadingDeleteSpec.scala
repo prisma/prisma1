@@ -690,6 +690,33 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A deleteMany " should " work with cascading delete" in {
 
+    val project: Project = setupForDeleteManys
+
+    server.query("""mutation {deleteManyTops(where:{int_lt: 10}){count}}""", project).toString should be("""{"data":{"deleteManyTops":{"count":2}}}""")
+
+    server.query("""query {tops{int}}""", project).toString should be("""{"data":{"tops":[]}}""")
+
+    server.query("""query {middles{int}}""", project).toString should be("""{"data":{"middles":[]}}""")
+
+    server.query("""query {bottoms{int}}""", project).toString should be("""{"data":{"bottoms":[]}}""")
+
+  }
+
+  "A nested deleteMany " should " work with cascading delete" in {
+
+    val project: Project = setupForDeleteManys
+
+    server.query("""mutation {deleteManyMiddles(where:{int_gt: 0}){count}}""", project).toString should be("""{"data":{"deleteManyMiddles":{"count":40}}}""")
+
+    server.query("""query {tops{int}}""", project).toString should be("""{"data":{"tops":[{"int":1},{"int":2}]}}""")
+
+    server.query("""query {middles{int}}""", project).toString should be("""{"data":{"middles":[]}}""")
+
+    server.query("""query {bottoms{int}}""", project).toString should be("""{"data":{"bottoms":[]}}""")
+
+  }
+
+  private def setupForDeleteManys = {
     val project: Project = SchemaDsl.fromString() {
       """
         |type Top {
@@ -714,9 +741,12 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     }
     database.setup(project)
 
-    def createMiddle(int: Int)  = server.query(s"""mutation {createMiddle(data:{int: $int top: {connect:{int: 1}}}){int}}""", project)
+    def createMiddle(int: Int) = server.query(s"""mutation {createMiddle(data:{int: $int top: {connect:{int: 1}}}){int}}""", project)
+
     def createMiddle2(int: Int) = server.query(s"""mutation {createMiddle(data:{int: 1000${int} top: {connect:{int: 2}}}){int}}""", project)
-    def createBottom(int: Int)  = server.query(s"""mutation{a: createBottom(data:{int: $int$int middle: {connect:{int: $int}}}){int}}""", project)
+
+    def createBottom(int: Int) = server.query(s"""mutation{a: createBottom(data:{int: $int$int middle: {connect:{int: $int}}}){int}}""", project)
+
     def createBottom2(int: Int) = server.query(s"""mutation{a: createBottom(data:{int: 1000$int$int middle: {connect:{int: 1000$int}}}){int}}""", project)
 
     val top  = server.query("""mutation {createTop(data:{int: 1}){int}}""", project)
@@ -734,15 +764,6 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
         createBottom2(int)
       }
     }
-
-    server.query("""mutation {deleteManyTops(where:{int_lt: 10}){count}}""", project).toString should be("""{"data":{"deleteManyTops":{"count":2}}}""")
-
-    server.query("""query {tops{int}}""", project).toString should be("""{"data":{"tops":[]}}""")
-
-    server.query("""query {middles{int}}""", project).toString should be("""{"data":{"middles":[]}}""")
-
-    server.query("""query {bottoms{int}}""", project).toString should be("""{"data":{"bottoms":[]}}""")
-
+    project
   }
-
 }
