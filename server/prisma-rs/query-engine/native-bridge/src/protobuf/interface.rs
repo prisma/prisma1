@@ -4,7 +4,7 @@ use crate::{
     ExternalInterface,
 };
 use connector::{DataResolver, DatabaseMutactionExecutor, NodeSelector};
-use prisma_common::{config::*, config::WithMigrations, error::Error, PrismaResult};
+use prisma_common::{config::WithMigrations, config::*, error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use prost::Message;
 use sqlite_connector::{SqlResolver, Sqlite, SqliteDatabaseMutactionExecutor};
@@ -19,7 +19,7 @@ impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
         let data_resolver = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
-                SqlResolver::new(Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap())
+                SqlResolver::new(Sqlite::new(config.limit(), config.is_active().unwrap_or(true)).unwrap()) // FIXME: active handling
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
@@ -77,7 +77,7 @@ impl ExternalInterface for ProtoBufInterface {
             let field = model.fields().find_from_scalar(&input.field_name)?;
             let node_selector = NodeSelector { field, value };
 
-            let query_result = self.data_resolver.get_node_by_where(node_selector, selected_fields)?;
+            let query_result = self.data_resolver.get_node_by_where(&node_selector, &selected_fields)?;
 
             let (nodes, fields) = match query_result {
                 Some(node) => (vec![node.node.into()], node.field_names),
@@ -140,9 +140,9 @@ impl ExternalInterface for ProtoBufInterface {
 
             let query_result = self.data_resolver.get_related_nodes(
                 from_field,
-                from_node_ids,
+                &from_node_ids,
                 into_model_query_arguments(model, input.query_arguments),
-                selected_fields,
+                &selected_fields,
             )?;
 
             let (nodes, fields) = (query_result.nodes, query_result.field_names);

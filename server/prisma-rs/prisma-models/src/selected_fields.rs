@@ -56,6 +56,17 @@ impl SelectedFields {
         }
     }
 
+    pub fn all_scalar(model: ModelRef, from_field: Option<Arc<RelationField>>) -> SelectedFields {
+        let fields = model
+            .fields()
+            .scalar()
+            .iter()
+            .map(|field| SelectedField::Scalar(SelectedScalarField { field: field.clone() }))
+            .collect();
+
+        Self::new(fields, from_field)
+    }
+
     pub fn add_scalar(&mut self, field: Arc<ScalarField>) {
         self.scalar.push(SelectedScalarField { field });
     }

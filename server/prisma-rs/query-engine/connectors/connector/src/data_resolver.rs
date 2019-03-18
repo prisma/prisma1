@@ -6,8 +6,8 @@ use prisma_models::ScalarFieldRef;
 pub trait DataResolver {
     fn get_node_by_where(
         &self,
-        node_selector: NodeSelector,
-        selected_fields: SelectedFields,
+        node_selector: &NodeSelector,
+        selected_fields: &SelectedFields,
     ) -> PrismaResult<Option<SingleNode>>;
 
     fn get_nodes(
@@ -20,9 +20,9 @@ pub trait DataResolver {
     fn get_related_nodes(
         &self,
         from_field: RelationFieldRef,
-        from_node_ids: Vec<GraphqlId>,
+        from_node_ids: &[GraphqlId],
         query_arguments: QueryArguments,
-        selected_fields: SelectedFields,
+        selected_fields: &SelectedFields,
     ) -> PrismaResult<ManyNodes>;
 
     fn get_scalar_list_values_by_node_ids(

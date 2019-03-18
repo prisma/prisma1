@@ -11,7 +11,7 @@ pub enum GraphqlId {
     UUID(String),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum PrismaValue {
     String(String),
     Float(f64),
@@ -55,6 +55,12 @@ impl From<GraphqlId> for DatabaseValue {
             GraphqlId::Int(i) => (i as i64).into(),
             GraphqlId::UUID(s) => s.into(),
         }
+    }
+}
+
+impl From<&GraphqlId> for DatabaseValue {
+    fn from(id: &GraphqlId) -> DatabaseValue {
+        id.clone().into()
     }
 }
 
