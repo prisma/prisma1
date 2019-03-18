@@ -74,6 +74,11 @@ object ConnectorCapabilities extends BooleanUtils {
     ConnectorCapabilities(capas)
   }
 
+  lazy val sqliteNative: ConnectorCapabilities = {
+    val filteredCapas = sqlite.capabilities.filter(_ != TransactionalExecutionCapability)
+    ConnectorCapabilities(filteredCapas)
+  }
+
   lazy val mysql: ConnectorCapabilities = {
     val capas = Set(
       LegacyDataModelCapability,
