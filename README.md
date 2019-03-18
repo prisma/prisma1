@@ -4,13 +4,13 @@
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prismagraphql/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![npm version](https://badge.fury.io/js/prisma.svg)](https://badge.fury.io/js/prisma)
 
-**Prisma replaces traditional ORMs** and custom data access layers with a universal database abstraction used via the **Prisma client**. It is used to build **GraphQL servers, REST APIs & more**.
+Prisma replaces traditional ORMs and simplifies database workflows: 
 
-- **Prisma client for various languages** such as [JavaScript](https://www.prisma.io/client/client-javascript), [TypeScript](https://www.prisma.io/client/client-typescript), [Flow](https://www.prisma.io/client/client-flow), [Go](https://www.prisma.io/client/client-go).
-- **Supports multiple databases** such as MySQL, PostgreSQL, MongoDB ([see all supported databases](https://www.prisma.io/features/databases/)).
-- **Type-safe database access** including filters, aggregations, pagination and transactions.
-- **Realtime event systems for your database** to get notified about database events.
-- **Declarative data modeling & migrations (optional)** with simple SDL syntax.
+- _Access_: **Type-safe database access with the auto-generated Prisma client** (in [JavaScript](https://www.prisma.io/client/client-javscript/), [TypeScript](https://www.prisma.io/client/client-typescript/), [Go](https://www.prisma.io/client/client-go/))
+- _Migrate_: **Declarative data modelling and migrations** (optional)
+- _Manage_: **Visual data management with Prisma Admin**
+
+It is used to build **GraphQL, REST, gRPC APIs** and a lot more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
 
 Try a Prisma example online with CodeSandbox:
 
@@ -20,7 +20,6 @@ Try a Prisma example online with CodeSandbox:
 
 - [Quickstart](#quickstart)
 - [Examples](#examples)
-- [Architecture](#architecture)
 - [Database Connectors](#database-connectors)
 - [Community](#community)
 - [Contributing](#contributing)
@@ -242,16 +241,6 @@ Here is what you can do next:
 | [`graphql`](https://github.com/prisma/prisma-examples/tree/master/flow/graphql) | Simple GraphQL server |
 | [`script`](https://github.com/prisma/prisma-examples/tree/master/flow/script) | Simple usage of Prisma client in script |
 
-## Architecture
-
-Prisma takes the role of the **data layer** in your backend architecture, replacing traditional ORMs and custom data access layers. It enables a _layered architecture_ which leads to better _separation of concerns_ and improves _maintainability_ of the entire backend.
-
-The **Prisma client** is used inside your application server to perform read and write operations against your database through the Prisma API.
-
-Prisma runs as _standalone processes_ which allows for it to be scaled independently from your application server.
-
-<p align="center"><img src="https://imgur.com/OyIQQxF.png" height="132" /></p>
-
 ## Database Connectors
 
 [Database connectors](https://github.com/prisma/prisma/issues/1751) provide the link between Prisma and the underlying database.
@@ -291,6 +280,7 @@ Prisma has a [community](https://www.prisma.io/community) of thousands of amazin
 ### Channels
 
 - [Forum](https://www.prisma.io/forum)
+- [Spectrum](https://spectrum.chat/prisma)
 - [Slack](https://slack.prisma.io/)
 - [Twitter](https://twitter.com/prisma)
 - [Facebook](https://www.facebook.com/prisma.io)

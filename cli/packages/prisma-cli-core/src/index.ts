@@ -2,6 +2,7 @@ import Deploy from './commands/deploy/deploy'
 import Init from './commands/init/init'
 // import Auth from './commands/auth/index'
 import Info from './commands/info/index'
+import Admin from './commands/admin/admin'
 import Playground from './commands/playground/index'
 import List from './commands/list/index'
 import Account from './commands/account/account'
@@ -69,10 +70,15 @@ export const topics = [
   },
   /* Data workflows */
   {
-    name: 'playground',
-    description: 'Opens the playground for the current service',
+    name: 'admin',
+    description: 'Opens the admin for current service',
     group: 'data',
   },
+  // {
+  //   name: 'playground',
+  //   description: 'Opens the playground for the current service',
+  //   group: 'data',
+  // },
   { name: 'seed', description: 'Load seed data', group: 'data' },
   {
     name: 'import',
@@ -120,6 +126,7 @@ export const commands = [
   Deploy,
   Init,
   Info,
+  Admin,
   Playground,
   ConsoleCommand,
   List,
@@ -141,6 +148,7 @@ export {
   Deploy,
   Init,
   Info,
+  Admin,
   Playground,
   List,
   Seed,

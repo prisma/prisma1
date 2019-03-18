@@ -23,7 +23,7 @@ import { padEnd, repeat, set, uniqBy, values } from 'lodash'
 import { Project, Stages } from '../types/common'
 import * as Raven from 'raven'
 import { getStatusChecker } from '../StatusChecker'
-const debug = require('debug')('Output')
+const debug = require('debug')('output')
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -269,9 +269,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
   }
 
   exit(code: number = 0) {
-    if (this.config.debug) {
-      console.error(`Exiting with code: ${code}`)
-    }
+    debug(`Exiting with code: ${code}`)
     if (this.mock && process.env.NODE_ENV === 'test') {
       throw new ExitError(code)
     } else {

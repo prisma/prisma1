@@ -159,7 +159,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
 
-    field.isRequired match {
+    field.isRequired && !field.isId match {
       case true =>
         val optionalFieldSQL = typeMapper.rawSQLForFieldWithoutRequired(field)
         val defaultValue     = migrationValueForField(field)
@@ -189,7 +189,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
       val alterColumn       = sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType"""
 
-      field.isRequired match {
+      field.isRequired && !field.isId match {
         case true =>
           val defaultValue = migrationValueForField(field)
           DatabaseAction.seq(
@@ -217,14 +217,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
     sqlu"""DROP INDEX #${qualify(project.dbName, indexName)}"""
-  }
-
-  override def renameTable(project: Project, oldTableName: String, newTableName: String) = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(newTableName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
   }
 
   override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier) = {

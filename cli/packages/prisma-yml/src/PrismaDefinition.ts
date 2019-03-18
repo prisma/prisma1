@@ -244,9 +244,9 @@ and execute ${chalk.bold.green(
     const {
       clusterName,
       clusterBaseUrl,
-      shared,
       isPrivate,
       local,
+      shared,
       workspaceSlug,
     } = data
 
@@ -268,7 +268,7 @@ and execute ${chalk.bold.green(
       local,
       shared,
       isPrivate,
-      workspaceSlug,
+      workspaceSlug!,
     )
   }
 

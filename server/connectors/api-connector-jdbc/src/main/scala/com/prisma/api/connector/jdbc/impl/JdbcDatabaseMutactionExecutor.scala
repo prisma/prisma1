@@ -108,7 +108,7 @@ case class JdbcDatabaseMutactionExecutor(
     case m: TopLevelUpdateNodes => UpdateNodesInterpreter(m)
     case m: TopLevelDeleteNodes => DeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     case m: ResetData           => ResetDataInterpreter(m)
-    case m: ImportNodes         => ImportNodesInterpreter(m)
+    case m: ImportNodes         => ImportNodesInterpreter(m, shouldCreateRelayIds = manageRelayIds)
     case m: ImportRelations     => ImportRelationsInterpreter(m)
     case m: ImportScalarLists   => ImportScalarListsInterpreter(m)
   }

@@ -4,19 +4,19 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{as, entity, extractClientIP, _}
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.http.scaladsl.server.{ExceptionHandler, Route, UnsupportedWebSocketSubprotocolRejection}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-import play.api.libs.json.{JsObject, JsValue, Json}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import com.prisma.akkautil.throttler.Throttler.ThrottlerException
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import play.api.libs.json.JsValue
 
 import scala.concurrent.{Await, Future}
 
@@ -35,8 +35,9 @@ case class AkkaHttpSangriaServer(
 )(implicit val system: ActorSystem, val materializer: ActorMaterializer)
     extends SangriaServer
     with PlayJsonSupport {
-  import scala.concurrent.duration._
   import system.dispatcher
+
+  import scala.concurrent.duration._
 
   val routes = {
     handleRejections(CorsDirectives.corsRejectionHandler) {
@@ -68,6 +69,8 @@ case class AkkaHttpSangriaServer(
                       case _ =>
                         reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
                     }
+                  } ~ (get & pathSuffix("_admin")) {
+                    getFromResource("admin.html", ContentTypes.`text/html(UTF-8)`)
                   } ~
                     getFromResource("playground.html", ContentTypes.`text/html(UTF-8)`)
                 }

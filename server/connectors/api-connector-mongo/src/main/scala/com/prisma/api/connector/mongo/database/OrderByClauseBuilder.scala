@@ -12,7 +12,7 @@ object OrderByClauseBuilder {
   def sortStage(args: QueryArguments): conversions.Bson = sort(sortBson(args))
   def sortBson(args: QueryArguments): conversions.Bson = {
 
-    val idField                   = ReservedFields.mongoInternalIdfieldName
+    val idField                   = ReservedFields.mongoInternalIdFieldName
     val (first, last, orderByArg) = (args.first, args.last, args.orderBy)
     val isReverseOrder            = last.isDefined
     if (first.isDefined && last.isDefined) throw APIErrors.InvalidConnectionArguments()
