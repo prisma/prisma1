@@ -13,8 +13,8 @@ The following lists represent a number of smaller-scope issues and improvements 
 #### Improvements
 
 - [ ] [Nested upsert in create mutations (correct: nested connectOrCreate) #2194](https://github.com/prisma/prisma/issues/2194)
-- [ ] [Use sensible migration values for existing nodes when adding required fields #2323](https://github.com/prisma/prisma/issues/2323)
-- [ ] [Allow for custom IDs to be submitted in a create-mutation #3839](https://github.com/prisma/prisma/issues/3839)
+- [x] [Use sensible migration values for existing nodes when adding required fields #2323](https://github.com/prisma/prisma/issues/2323)
+- [x] [Allow for custom IDs to be submitted in a create-mutation #3839](https://github.com/prisma/prisma/issues/3839)
 - [ ] [Support cascading delete with deleteMany #1936](https://github.com/prisma/prisma/issues/1936)
 - [ ] [[Mongo] improve relational link design to enhance performance #3754](https://github.com/prisma/prisma/issues/3754)
 - [ ] [Add inner connection fields #1780](https://github.com/prisma/prisma/issues/1780)
