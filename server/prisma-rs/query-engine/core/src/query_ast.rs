@@ -59,6 +59,20 @@ enum QueryType {
     Multiple(ModelRef),
 }
 
+impl QueryType {
+    fn lowercase(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
+        if model.name.to_lowercase() == field.name {
+            Some(QueryType::Single(Arc::clone(&model)))
+        } else {
+            None
+        }
+    }
+
+    fn singular(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
+        None
+    }
+}
+
 impl QueryBuilder {
     fn build(self) -> PrismaResult<Vec<PrismaQuery>> {
         self.query
@@ -82,6 +96,25 @@ impl QueryBuilder {
             })
             .collect::<PrismaResult<Vec<Vec<PrismaQuery>>>>()
             .flatten()
+    }
+
+    /// Finds the model and infers the query type for the given GraphQL field.
+    fn infer_query_type(&self, field: gql::query::Field) -> PrismaResult<QueryType> {
+        // Find model for field
+        let model: Option<QueryType> = self
+            .schema
+            .models()
+            .iter()
+            .filter_map(|model| QueryType::lowercase(model, &field).or(QueryType::singular(model, &field)))
+            .nth(0);
+
+        match model {
+            Some(model_type) => Ok(model_type),
+            None => Err(Error::QueryValidationError(format!(
+                "Model not found for field {}",
+                field.alias.unwrap_or(field.name)
+            ))),
+        }
     }
 
     // Q: How do you infer multi or single relation?
@@ -127,29 +160,6 @@ impl QueryBuilder {
             .collect();
 
         unimplemented!()
-    }
-
-    /// Finds the model and infers the query type for the given GraphQL field.
-    fn infer_query_type(&self, field: &gql::query::Field) -> PrismaResult<QueryType> {
-        // Find model for field
-        let mut query_type: Option<QueryType> = None;
-        for model in self.schema.models() {
-            if model.name.to_lowercase() == field.name {
-                query_type.replace(QueryType::Single(Arc::clone(&model)));
-                break;
-            } else if model.name.to_lowercase().to_singular() == field.name {
-                query_type.replace(QueryType::Multiple(Arc::clone(&model)));
-                break;
-            }
-        }
-
-        match query_type {
-            Some(model_type) => Ok(model_type),
-            None => Err(Error::QueryValidationError(format!(
-                "Model not found for field {}",
-                field.alias.unwrap_or(field.name)
-            ))),
-        }
     }
 
     fn to_selected_fields(selection_set: &SelectionSet, model: ModelRef) -> Vec<SelectedField> {
