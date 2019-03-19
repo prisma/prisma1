@@ -99,7 +99,7 @@ impl QueryBuilder {
                 _ => unimplemented!(),
             })
             .collect::<PrismaResult<Vec<Vec<PrismaQuery>>>>()
-            .flatten()
+            .map(|v| v.into_iter().flatten().collect())
     }
 
     /// Finds the model and infers the query type for the given GraphQL field.
