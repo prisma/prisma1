@@ -14,137 +14,264 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "P1!-C1! relation deleting the parent" should "work if parent is marked marked cascading" in {
 
-    val project = SchemaDsl.fromStringv11() {
+    def run(schema: String) = {
+      val project = SchemaDsl.fromStringv11() { schema }
 
-      """type P {
-      |   id: ID! @id
-      |   p: String @unique
-      |   c: C! @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
-      |}
-      |
-      |type C {
-      |   id: ID! @id
-      |   c: String @unique
-      |   p: P! @relation(name: "PtoC", onDelete: SET_NULL)
-      |}
-      """.stripMargin
+      database.setup(project)
+
+      server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
+      server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
+
+      server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+      server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
+      server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
     }
 
-    database.setup(project)
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: C! @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
+                    }
 
-    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
-    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: P! @relation(name: "PtoC", onDelete: SET_NULL)
+                    }""")
 
-    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2"}}]}}""")
-    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: C! @relation(name: "PtoC", onDelete: CASCADE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: P! @relation(name: "PtoC", onDelete: SET_NULL, link: INLINE)
+                    }""")
   }
 
-//  "PM-CM relation deleting the parent" should "delete all children if the parent is marked cascading" in {
-//    //         P-C
-//    val project = SchemaDsl.fromBuilder { schema =>
-//      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-//      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
-//
-//      child.manyToManyRelation("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-//    }
-//    database.setup(project)
-//
-//    server.query("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
-//    server.query("""mutation{createP(data:{p:"p2", c: {create:[{c: "cx"}, {c: "cx2"}]}}){p, c {c}}}""", project)
-//    server.query("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
-//
-//    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-//    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":[{"c":"cx"},{"c":"cx2"}]},{"p":"pz","c":[]}]}}""")
-//    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"cx","p":[{"p":"p2"}]},{"c":"cx2","p":[{"p":"p2"}]}]}}""")
-//
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
-//  }
-//
-//  "PM-CM relation deleting the parent" should "error if both sides are marked cascading since it would be a circle" in {
-//    //         P-C
-//    val project = SchemaDsl.fromBuilder { schema =>
-//      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-//      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
-//
-//      child.manyToManyRelation("p", "c", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
-//    }
-//    database.setup(project)
-//
-//    server.query("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
-//    server.query("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
-//
-//    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-//    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[]}}""")
-//
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(0) }
-//  }
-//
-//  "P1!-C1! relation deleting the parent" should "work if both sides are marked marked cascading" in {
-//    //         P-C
-//    val project = SchemaDsl.fromBuilder { schema =>
-//      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-//      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
-//
-//      child.oneToOneRelation_!("p", "c", parent, modelAOnDelete = OnDelete.Cascade, modelBOnDelete = OnDelete.Cascade)
-//    }
-//    database.setup(project)
-//
-//    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
-//
-//    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-//    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[]}}""")
-//    server.query("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[]}}""")
-//
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(0) }
-//  }
-//
-//  "P1!-C1! relation deleting the parent" should "error if only child is marked marked cascading" in {
-//    //         P-C
-//    val project = SchemaDsl.fromBuilder { schema =>
-//      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
-//      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
-//
-//      child.oneToOneRelation_!("p", "c", parent, modelAOnDelete = OnDelete.Cascade)
-//    }
-//    database.setup(project)
-//
-//    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
-//    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
-//
-//    server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3042)
-//    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
-//    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
-//
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
-//  }
-//
-//  "P1!-C1!-C1!-GC! relation deleting the parent and child and grandchild if marked cascading" should "work" in {
-//    //         P-C-GC
-//    val project = SchemaDsl.fromBuilder { schema =>
-//      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
-//      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
-//      val grandChild = schema.model("GC").field_!("gc", _.String, isUnique = true)
-//
-//      grandChild.oneToOneRelation_!("c", "gc", child, modelBOnDelete = OnDelete.Cascade)
-//      child.oneToOneRelation_!("p", "c", parent, modelBOnDelete = OnDelete.Cascade)
-//    }
-//    database.setup(project)
-//
-//    server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
-//    server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
-//
-//    server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
-//
-//    server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
-//    server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
-//    server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
-//
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
-//  }
-//
-//  "P1!-C1!-C1-GC relation deleting the parent and child marked cascading" should "work but preserve the grandchild" in {
-//    //         P-C-GC
+  "PM-CM relation deleting the parent" should "delete all children if the parent is marked cascading" in {
+
+    def run(schema: String) = {
+      val project = SchemaDsl.fromStringv11() { schema }
+
+      database.setup(project)
+
+      server.query("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
+      server.query("""mutation{createP(data:{p:"p2", c: {create:[{c: "cx"}, {c: "cx2"}]}}){p, c {c}}}""", project)
+      server.query("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
+
+      server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+      server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":[{"c":"cx"},{"c":"cx2"}]},{"p":"pz","c":[]}]}}""")
+      server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"cx","p":[{"p":"p2"}]},{"c":"cx2","p":[{"p":"p2"}]}]}}""")
+    }
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: [C] @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: [P] @relation(name: "PtoC", onDelete: SET_NULL)
+                    }""")
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: [C] @relation(name: "PtoC", onDelete: CASCADE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: [P] @relation(name: "PtoC", onDelete: SET_NULL, link: INLINE)
+                    }""")
+
+  }
+
+  "PM-CM relation deleting the parent" should "work if both sides are marked cascading since it would be a circle" in {
+
+    def run(schema: String) = {
+      val project = SchemaDsl.fromStringv11() { schema }
+
+      database.setup(project)
+
+      server.query("""mutation{createP(data:{p:"p",  c: {create:[{c: "c"},  {c: "c2"}]}}){p, c {c}}}""", project)
+      server.query("""mutation{updateC(where:{c:"c2"}, data:{p: {create:{p: "pz"}}}){id}}""", project)
+
+      server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+      server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[]}}""")
+    }
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: [C] @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: [P] @relation(name: "PtoC", onDelete: CASCADE)
+                    }""")
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: [C] @relation(name: "PtoC", onDelete: CASCADE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: [P] @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
+                    }""")
+  }
+
+  "P1!-C1! relation deleting the parent" should "work if both sides are marked marked cascading" in {
+
+    def run(schema: String) = {
+      val project = SchemaDsl.fromStringv11() { schema }
+
+      database.setup(project)
+
+      server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
+
+      server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+
+      server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[]}}""")
+      server.query("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[]}}""")
+    }
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: C! @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: P! @relation(name: "PtoC", onDelete: CASCADE)
+                    }""")
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: C! @relation(name: "PtoC", onDelete: CASCADE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: P! @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
+                    }""")
+  }
+
+  "P1!-C1! relation deleting the parent" should "error if only child is marked marked cascading" in {
+    //         P-C
+    def run(schema: String) = {
+      val project = SchemaDsl.fromStringv11() { schema }
+
+      database.setup(project)
+
+      server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c"}}}){p, c {c}}}""", project)
+      server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2"}}}){p, c {c}}}""", project)
+
+      server.queryThatMustFail("""mutation{deleteP(where: {p:"p"}){id}}""", project, errorCode = 3042)
+      server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
+      server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
+    }
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: C! @relation(name: "PtoC", onDelete: SET_NULL, link: INLINE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: P! @relation(name: "PtoC", onDelete: CASCADE)
+                    }""")
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: C! @relation(name: "PtoC", onDelete: SET_NULL)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: P! @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
+                    }""")
+  }
+
+  "P1!-C1!-C1!-GC! relation deleting the parent and child and grandchild if marked cascading" should "work" in {
+    //         P-C-GC
+
+    def run(schema: String) = {
+      val project = SchemaDsl.fromStringv11() { schema }
+
+      database.setup(project)
+
+      server.query("""mutation{createP(data:{p:"p", c: {create:{c: "c", gc :{create:{gc: "gc"}}}}}){p, c {c, gc{gc}}}}""", project)
+      server.query("""mutation{createP(data:{p:"p2", c: {create:{c: "c2", gc :{create:{gc: "gc2"}}}}}){p, c {c,gc{gc}}}}""", project)
+
+      server.query("""mutation{deleteP(where: {p:"p"}){id}}""", project)
+
+      server.query("""query{ps{p, c {c, gc{gc}}}}""", project).toString should be("""{"data":{"ps":[{"p":"p2","c":{"c":"c2","gc":{"gc":"gc2"}}}]}}""")
+      server.query("""query{cs{c, gc{gc}, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","gc":{"gc":"gc2"},"p":{"p":"p2"}}]}}""")
+      server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
+    }
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: C! @relation(name: "PtoC", onDelete: CASCADE, link: INLINE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: P! @relation(name: "PtoC", onDelete: SET_NULL)
+                       gc: GC! @relation(name: "CtoGC", onDelete: CASCADE, link: INLINE)
+                    }
+        
+                    type GC {
+                      id: ID! @id
+                      gc: String @unique
+                      c: C! @relation(name: "CtoGC", onDelete: SET_NULL)
+                    }""")
+
+    run("""type P {
+                       id: ID! @id
+                       p: String @unique
+                       c: C! @relation(name: "PtoC", onDelete: CASCADE)
+                    }
+
+                    type C {
+                       id: ID! @id
+                       c: String @unique
+                       p: P! @relation(name: "PtoC", onDelete: SET_NULL, link: INLINE)
+                       gc: GC! @relation(name: "CtoGC", onDelete: CASCADE)
+                    }
+        
+                    type GC {
+                      id: ID! @id
+                      gc: String @unique
+                      c: C! @relation(name: "CtoGC", onDelete: SET_NULL, link: INLINE)
+                    }""")
+  }
+
+  "P1!-C1!-C1-GC relation deleting the parent and child marked cascading" should "work but preserve the grandchild" in {
+    //         P-C-GC
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -165,11 +292,10 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{gCs{gc, c {c, p{p}}}}""", project).toString should be(
 //      """{"data":{"gCs":[{"gc":"gc","c":null},{"gc":"gc2","c":{"c":"c2","p":{"p":"p2"}}}]}}""")
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
-//  }
-//
-//  "P1!-C1! relation deleting the parent marked cascading" should "error if the child is required in another non-cascading relation" in {
-//    //         P-C-GC
+  }
+
+  "P1!-C1! relation deleting the parent marked cascading" should "error if the child is required in another non-cascading relation" in {
+    //         P-C-GC
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -187,11 +313,10 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{ps{p, c {c}}}""", project).toString should be("""{"data":{"ps":[{"p":"p","c":{"c":"c"}},{"p":"p2","c":{"c":"c2"}}]}}""")
 //    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":{"p":"p"}},{"c":"c2","p":{"p":"p2"}}]}}""")
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(6) }
-//  }
-//
-//  "If the parent is not cascading nothing on the path" should "be deleted except for the parent" in {
-//    //         P-C-GC
+  }
+
+  "If the parent is not cascading nothing on the path" should "be deleted except for the parent" in {
+    //         P-C-GC
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -209,14 +334,13 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c","p":null}]}}""")
 //    server.query("""query{gCs{gc, c {c}}}""", project).toString should be("""{"data":{"gCs":[{"gc":"gc","c":{"c":"c"}}]}}""")
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
-//  }
-//
-//  "P1!-C1! PM-SC1! relation deleting the parent marked cascading" should "work" in {
-//    //         P
-//    //       /   \
-//    //      C     SC
-//
+  }
+
+  "P1!-C1! PM-SC1! relation deleting the parent marked cascading" should "work" in {
+    //         P
+    //       /   \
+    //      C     SC
+
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child     = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -238,14 +362,13 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{cs{c, p {p}}}""", project).toString should be("""{"data":{"cs":[{"c":"c2","p":{"p":"p2"}}]}}""")
 //    server.query("""query{sCs{sc,  p{p}}}""", project).toString should be("""{"data":{"sCs":[{"sc":"sc3","p":{"p":"p2"}},{"sc":"sc4","p":{"p":"p2"}}]}}""")
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
-//  }
-//
-//  "P!->C PM->SC relation without backrelations" should "work when deleting the parent marked cascading" in {
-//    //         P
-//    //       /   \      not a real circle since from the children there are no backrelations to the parent
-//    //      C  -  SC
-//
+  }
+
+  "P!->C PM->SC relation without backrelations" should "work when deleting the parent marked cascading" in {
+    //         P
+    //       /   \      not a real circle since from the children there are no backrelations to the parent
+    //      C  -  SC
+
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent    = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child     = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -268,11 +391,10 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{cs{c}}""", project).toString should be("""{"data":{"cs":[{"c":"c2"}]}}""")
 //    server.query("""query{sCs{sc}}""", project).toString should be("""{"data":{"sCs":[]}}""")
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(1) }
-//  }
-//
-//  "A path that is interrupted since there are nodes missing" should "only cascade up until the gap" in {
-//    //         P-C-GC-|-D-E
+  }
+
+  "A path that is interrupted since there are nodes missing" should "only cascade up until the gap" in {
+    //         P-C-GC-|-D-E
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -299,11 +421,10 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[{"d":"d","gc":[],"e":[{"e":"e"}]}]}}""")
 //    server.query("""query{es{e, d {d}}}""", project).toString should be("""{"data":{"es":[{"e":"e","d":[{"d":"d"}]}]}}""")
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(5) }
-//  }
-//
-//  "A deep uninterrupted path" should "cascade all the way down" in {
-//    //         P-C-GC-D-E
+  }
+
+  "A deep uninterrupted path" should "cascade all the way down" in {
+    //         P-C-GC-D-E
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -330,11 +451,10 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[]}}""")
 //    server.query("""query{es{e, d {d}}}""", project).toString should be("""{"data":{"es":[]}}""")
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
-//  }
-//
-//  "A deep uninterrupted path" should "error on a required relation violation at the end" in {
-//    //         P-C-GC-D-E-F!
+  }
+
+  "A deep uninterrupted path" should "error on a required relation violation at the end" in {
+    //         P-C-GC-D-E-F!
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent     = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child      = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -370,19 +490,18 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{ds{d, gc {gc},e {e}}}""", project).toString should be("""{"data":{"ds":[{"d":"d","gc":[{"gc":"gc"}],"e":[{"e":"e"}]}]}}""")
 //    server.query("""query{fs{f, e {e}}}""", project).toString should be("""{"data":{"fs":[{"f":"f","e":{"e":"e"}}]}}""")
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(9) }
-//  }
-//
-//  "A required relation violation anywhere on the path" should "error and roll back all of the changes" in {
-//
-//    /**           A           If cascading all the way down to D from A is fine, but deleting C would
-//      *          /            violate a required relation on E that is not cascading then this should
-//      *         B             error and not delete anything.
-//      *          \
-//      *          C . E
-//      *          /
-//      *         D
-//      */
+  }
+
+  "A required relation violation anywhere on the path" should "error and roll back all of the changes" in {
+
+    /**           A           If cascading all the way down to D from A is fine, but deleting C would
+      *          /            violate a required relation on E that is not cascading then this should
+      *         B             error and not delete anything.
+      *          \
+      *          C . E
+      *          /
+      *         D
+      */
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val a = schema.model("A").field_!("a", _.DateTime, isUnique = true)
 //      val b = schema.model("B").field_!("b", _.DateTime, isUnique = true)
@@ -409,16 +528,16 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //      errorCode = 3042,
 //      errorContains = "The change you are trying to make would violate the required relation 'CToE' between C and E"
 //    )
-//  }
-//
-//  "A required relation violation on the parent" should "roll back all cascading deletes on the path" in {
-//
-//    /**           A           If A!<->D! ia not marked cascading an existing D should cause all the deletes to fail
-//      *         / | :         even if A<->B, A<->C and C<->E could successfully cascade.
-//      *        B  C  D
-//      *          |
-//      *          E
-//      */
+  }
+
+  "A required relation violation on the parent" should "roll back all cascading deletes on the path" in {
+
+    /**           A           If A!<->D! ia not marked cascading an existing D should cause all the deletes to fail
+      *         / | :         even if A<->B, A<->C and C<->E could successfully cascade.
+      *        B  C  D
+      *          |
+      *          E
+      */
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val a = schema.model("A").field_!("a", _.String, isUnique = true)
 //      val b = schema.model("B").field_!("b", _.String, isUnique = true)
@@ -449,19 +568,18 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //      errorContains = "The change you are trying to make would violate the required relation 'AToD' between A and D"
 //    )
 //
-//    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(7) }
-//  }
-//
-//  "Several relations between the same model" should "be handled correctly" in {
-//
-//    /**           A           If there are two relations between B and C and only one of them is marked
-//      *          /            cascading, then only the nodes connected to C's which are connected to B
-//      *         B             by this relations should be deleted.
-//      *        /  :
-//      *       Cs   C
-//      *        \ /
-//      *         D
-//      */
+  }
+
+  "Several relations between the same model" should "be handled correctly" in {
+
+    /**           A           If there are two relations between B and C and only one of them is marked
+      *          /            cascading, then only the nodes connected to C's which are connected to B
+      *         B             by this relations should be deleted.
+      *        /  :
+      *       Cs   C
+      *        \ /
+      *         D
+      */
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val a = schema.model("A").field_!("a", _.Float, isUnique = true)
 //      val b = schema.model("B").field_!("b", _.Float, isUnique = true)
@@ -489,13 +607,13 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //    server.query("""query{bs{b, c {c}, cs {c}}}""", project).toString should be("""{"data":{"bs":[]}}""")
 //    server.query("""query{cs{c, d {d}}}""", project).toString should be("""{"data":{"cs":[{"c":12.99,"d":[{"d":13.99}]}]}}""")
 //    server.query("""query{ds{d}}""", project).toString should be("""{"data":{"ds":[{"d":13.99}]}}""")
-//  }
-//  //endregion
-//
-//  //region  NESTED DELETE
-//
-//  "NESTING P1!-C1! relation deleting the parent" should "work if parent is marked cascading but error on returning previous values" in {
-//    //         P-C
+  }
+  //endregion
+
+  //region  NESTED DELETE
+
+  "NESTING P1!-C1! relation deleting the parent" should "work if parent is marked cascading but error on returning previous values" in {
+    //         P-C
 //    val project = SchemaDsl.fromBuilder { schema =>
 //      val parent = schema.model("P").field_!("p", _.String, isUnique = true)
 //      val child  = schema.model("C").field_!("c", _.String, isUnique = true)
@@ -513,7 +631,7 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 //      errorCode = 0,
 //      errorContains = "Argument 'data' expected type 'CUpdateInput!'"
 //    )
-//  }
+  }
 //
 //  "P1-C1-C1!-GC! relation updating the parent to delete the child and grandchild if marked cascading" should "work" in {
 //    //         P-C-GC
