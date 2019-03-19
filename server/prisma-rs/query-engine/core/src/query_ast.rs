@@ -69,7 +69,11 @@ impl QueryType {
     }
 
     fn singular(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
-        None
+        if model.name.to_lowercase().to_singular() == field.name {
+            Some(QueryType::Multiple(Arc::clone(&model)))
+        } else {
+            None
+        }
     }
 }
 
