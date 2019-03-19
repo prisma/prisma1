@@ -2,7 +2,7 @@ use super::{PrismaRequest, RequestHandler};
 use crate::context::PrismaContext;
 use crate::schema::Validatable;
 use core::PrismaQueryResult;
-use core::{PrismaQuery, QueryBuilder};
+use core::{PrismaQuery, RootQueryBuilder};
 use graphql_parser as gql;
 use prisma_models::{GraphqlId, PrismaValue, SingleNode};
 use serde::{Deserialize, Serialize};
@@ -29,7 +29,7 @@ impl RequestHandler for GraphQlRequestHandler {
             dbg!(&query_doc);
         }
 
-        let qb = QueryBuilder {
+        let qb = RootQueryBuilder {
             query: query_doc,
             schema: ctx.schema.clone(),
             operation_name: req.body.operation_name,
@@ -38,7 +38,7 @@ impl RequestHandler for GraphQlRequestHandler {
         let queries: Vec<PrismaQuery> = qb.build().unwrap(); // FIXME: Error handling
         let results = dbg!(ctx.query_executor.execute(&queries)).unwrap();
 
-        // FIXME: Serialization with separate GQL specific type
+        // FIXME: Serialization with separate GQL-specific type
         let mut serde_map = serde_json::map::Map::new();
         for result in results {
             match result {

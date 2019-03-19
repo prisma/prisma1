@@ -1,6 +1,7 @@
 //! Prisma query AST module
 
 use connector::NodeSelector;
+use connector::QueryArguments;
 use graphql_parser::{self as gql, query::*};
 use inflector::Inflector;
 use prisma_common::{error::Error, PrismaResult};
@@ -26,8 +27,8 @@ pub struct RecordQuery {
 #[derive(Debug)]
 pub struct MultiRecordQuery {
     model: Model,
-    // args: QueryArguments,
-    // selectedFields: SelectedFields,
+    args: QueryArguments,
+    selectedFields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
@@ -42,13 +43,13 @@ pub struct RelatedRecordQuery {
 
 #[derive(Debug)]
 pub struct MultiRelatedRecordQuery {
-    // parentField: RelationField,
-    // args: QueryArguments,
-    // selectedFields: SelectedFields,
+    parentField: RelationFieldRef,
+    args: QueryArguments,
+    selectedFields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
-pub struct QueryBuilder {
+pub struct RootQueryBuilder {
     pub query: Document,
     pub schema: SchemaRef,
     pub operation_name: Option<String>,
@@ -75,97 +76,139 @@ impl QueryType {
             None
         }
     }
+
+    fn model(&self) -> ModelRef {
+        match self {
+            QueryType::Single(m) => Arc::clone(m),
+            QueryType::Multiple(m) => Arc::clone(m),
+        }
+    }
 }
 
-impl QueryBuilder {
-    pub fn build(self) -> PrismaResult<Vec<PrismaQuery>> {
-        self.query
-            .definitions
-            .iter()
-            .map(|d| match d {
-                // Query without the explicit "query" before the selection set
-                Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span, items })) => {
-                    self.build_query(&items)
-                }
+type BuilderResult<T> = Option<PrismaResult<T>>;
 
-                // Regular query
-                Definition::Operation(OperationDefinition::Query(Query {
-                    position,
-                    name,
-                    variable_definitions,
-                    directives,
-                    selection_set,
-                })) => self.build_query(&selection_set.items),
-                _ => unimplemented!(),
-            })
-            .collect::<PrismaResult<Vec<Vec<PrismaQuery>>>>() // Collect all the "query trees"
-            .map(|v| v.into_iter().flatten().collect())
-    }
+struct QueryBuilder<'a> {
+    schema: SchemaRef,
+    field: &'a gql::query::Field,
+    query_type: BuilderResult<QueryType>,
+    name: Option<String>,
+    selector: BuilderResult<NodeSelector>,
+    selected_fields: Option<SelectedFields>,
+    args: BuilderResult<QueryArguments>,
+    parentField: Option<RelationFieldRef>,
+    nested: Vec<QueryBuilder<'a>>,
+}
 
-    fn build_query(&self, root_fields: &Vec<Selection>) -> PrismaResult<Vec<PrismaQuery>> {
-        let res = root_fields
-            .iter()
-            .map(|item| {
-                // First query-level fields map to a model in our schema, either a plural or singular
-                match item {
-                    Selection::Field(root_field) => {
-                        // Find model for field
-                        let qt = self.infer_query_type(root_field).unwrap(); // FIXME: Do not unwrap here, propagate error (issue with closure here)
-                        let model = match qt {
-                            QueryType::Single(model) => model,
-                            QueryType::Multiple(model) => model,
-                        };
-
-                        let (_, value) = root_field.arguments.first().expect("no arguments found"); // FIXME: this expects at least one query arg...
-                        match value {
-                            Value::Object(obj) => {
-                                let (field_name, value) = obj.iter().next().expect("object was empty");
-                                let field = model.fields().find_from_scalar(field_name).unwrap();
-                                let value = Self::value_to_prisma_value(value);
-                                let name = root_field.alias.as_ref().unwrap_or(&root_field.name).clone();
-                                let selected_fields: Vec<SelectedField> =
-                                    Self::to_selected_fields(&root_field.selection_set, Arc::clone(&model));
-
-                                PrismaQuery::RecordQuery(RecordQuery {
-                                    name: name,
-                                    selector: NodeSelector {
-                                        field: field.clone(),
-                                        value: value,
-                                    },
-                                    selected_fields: SelectedFields::new(selected_fields, None),
-                                    nested: Self::collect_sub_queries(&root_field.selection_set, Arc::clone(&model)),
-                                })
-                            }
-                            _ => unimplemented!(),
-                        }
-                    }
-                    _ => unimplemented!(),
-                }
-            })
-            .collect();
-
-        Ok(res)
-    }
-
-    /// Finds the model and infers the query type for the given GraphQL field.
-    fn infer_query_type(&self, field: &gql::query::Field) -> PrismaResult<QueryType> {
-        // Find model for field
-        let model: Option<QueryType> = self
-            .schema
-            .models()
-            .iter()
-            .filter_map(|model| QueryType::lowercase(model, &field).or(QueryType::singular(model, &field)))
-            .nth(0);
-
-        match model {
-            Some(model_type) => Ok(model_type),
-            None => Err(Error::QueryValidationError(format!(
-                "Model not found for field {}",
-                field.alias.as_ref().unwrap_or(&field.name)
-            ))),
+impl<'a> QueryBuilder<'a> {
+    fn new(schema: SchemaRef, field: &'a gql::query::Field) -> Self {
+        Self {
+            schema,
+            field,
+            query_type: None,
+            name: None,
+            selector: None,
+            selected_fields: None,
+            args: None,
+            parentField: None,
+            nested: vec![],
         }
     }
 
+    /// Finds the model and infers the query type for the given GraphQL field.
+    fn infer_query_type(mut self) -> Self {
+        // Find model for field
+        let qt: Option<QueryType> = self
+            .schema
+            .models()
+            .iter()
+            .filter_map(|model| QueryType::lowercase(model, self.field).or(QueryType::singular(model, self.field)))
+            .nth(0);
+
+        self.query_type = Some(match qt {
+            Some(model_type) => Ok(model_type),
+            None => Err(Error::QueryValidationError(format!(
+                "Model not found for field {}",
+                self.field.alias.as_ref().unwrap_or(&self.field.name)
+            ))),
+        });
+
+        self
+    }
+
+    fn process_arguments(mut self) -> Self {
+        match self.query_type {
+            Some(Ok(QueryType::Single(ref m))) => self.selector = Some(self.extract_node_selector(Arc::clone(m))),
+            Some(Ok(QueryType::Multiple(ref m))) => self.args = Some(self.extract_query_args(Arc::clone(m))),
+            _ => {
+                //FIXME: This is really not ideal, where do we store the error in this case?
+                // This, and many other places, actually point to a separated query builder for many and single
+                let err = Err(Error::QueryValidationError("".to_string()));
+                self.args = Some(err);
+            }
+        };
+
+        self
+    }
+
+    fn extract_node_selector(&self, model: ModelRef) -> PrismaResult<NodeSelector> {
+        let (_, value) = self.field.arguments.first().expect("no arguments found"); // FIXME: this expects at least one query arg...
+        match value {
+            Value::Object(obj) => {
+                let (field_name, value) = obj.iter().next().expect("object was empty");
+                let field = model.fields().find_from_scalar(field_name).unwrap();
+                let value = Self::value_to_prisma_value(value);
+
+                Ok(NodeSelector {
+                    field: Arc::clone(&field),
+                    value: value,
+                })
+            }
+            _ => unimplemented!(),
+        }
+    }
+
+    fn extract_query_args(&self, model: ModelRef) -> PrismaResult<QueryArguments> {
+        unimplemented!()
+    }
+
+    // Q: Wouldn't it make more sense to just call that one from the outside?
+    fn get(self) -> PrismaResult<PrismaQuery> {
+        let name = self.field.alias.as_ref().unwrap_or(&self.field.name).clone();
+
+        match self.query_type {
+            Some(qt) => match qt? {
+                // todo: more smaller functions
+                QueryType::Single(model) => {
+                    let selector = self.selector.unwrap_or(Err(Error::QueryValidationError(
+                        "Required node selector not found".into(),
+                    )))?;
+
+                    let selected_fields: Vec<SelectedField> =
+                        Self::to_selected_fields(&self.field.selection_set, Arc::clone(&model));
+
+                    Ok(PrismaQuery::RecordQuery(RecordQuery {
+                        name: name,
+                        selector: selector,
+                        selected_fields: SelectedFields::new(selected_fields, None),
+                        nested: Self::collect_sub_queries(&self.field.selection_set, Arc::clone(&model)),
+                    }))
+                }
+                QueryType::Multiple(model) => unimplemented!(),
+            },
+            None => unimplemented!(),
+        }
+    }
+
+    // Todo: From trait somewhere?
+    fn value_to_prisma_value(val: &Value) -> PrismaValue {
+        match val {
+            Value::String(s) => PrismaValue::String(s.clone()),
+            Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap() as i32),
+            _ => unimplemented!(),
+        }
+    }
+
+    // todo refactor
     fn to_selected_fields(selection_set: &SelectionSet, model: ModelRef) -> Vec<SelectedField> {
         selection_set
             .items
@@ -222,12 +265,47 @@ impl QueryBuilder {
             .collect();
         queries
     }
+}
 
-    fn value_to_prisma_value(val: &Value) -> PrismaValue {
-        match val {
-            Value::String(s) => PrismaValue::String(s.clone()),
-            Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap() as i32),
-            _ => unimplemented!(),
-        }
+impl RootQueryBuilder {
+    // FIXME: Find op name and only execute op!
+    pub fn build(self) -> PrismaResult<Vec<PrismaQuery>> {
+        self.query
+            .definitions
+            .iter()
+            .map(|d| match d {
+                // Query without the explicit "query" before the selection set
+                Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span, items })) => {
+                    self.build_query(&items)
+                }
+
+                // Regular query
+                Definition::Operation(OperationDefinition::Query(Query {
+                    position,
+                    name,
+                    variable_definitions,
+                    directives,
+                    selection_set,
+                })) => self.build_query(&selection_set.items),
+                _ => unimplemented!(),
+            })
+            .collect::<PrismaResult<Vec<Vec<PrismaQuery>>>>() // Collect all the "query trees"
+            .map(|v| v.into_iter().flatten().collect())
+    }
+
+    fn build_query(&self, root_fields: &Vec<Selection>) -> PrismaResult<Vec<PrismaQuery>> {
+        root_fields
+            .iter()
+            .map(|item| {
+                // First query-level fields map to a model in our schema, either a plural or singular
+                match item {
+                    Selection::Field(root_field) => QueryBuilder::new(Arc::clone(&self.schema), root_field)
+                        .infer_query_type()
+                        .process_arguments()
+                        .get(),
+                    _ => unimplemented!(),
+                }
+            })
+            .collect()
     }
 }

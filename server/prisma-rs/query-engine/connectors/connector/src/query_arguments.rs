@@ -1,6 +1,7 @@
 use crate::filter::Filter;
 use prisma_models::prelude::*;
 
+#[derive(Debug)]
 pub struct QueryArguments {
     pub skip: Option<u32>,
     pub after: Option<GraphqlId>,
