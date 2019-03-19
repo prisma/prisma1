@@ -1,0 +1,1 @@
+curl localhost:8000 -H 'Content-Type:application/json' -d '{"query":"{\n    artist(where: {ArtistId: 4}) {\n        id\n        Name\n    }\n}","operationName":"","variables":{}}'
