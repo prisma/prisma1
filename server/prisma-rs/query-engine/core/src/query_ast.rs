@@ -60,22 +60,30 @@ enum QueryType {
     Multiple(ModelRef),
 }
 
+impl QueryType {
+    fn lowercase(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
+        if model.name.to_lowercase() == field.name {
+            Some(QueryType::Single(Arc::clone(&model)))
+        } else {
+            None
+        }
+    }
+
+    fn singular(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
+        None
+    }
+}
+
 impl QueryBuilder {
     /// Finds the model and infers the query type for the given GraphQL field.
     fn infer_query_type(&self, field: gql::query::Field) -> PrismaResult<QueryType> {
         // Find model for field
-        let model = self
+        let model: Option<QueryType> = self
             .schema
             .models()
             .iter()
-            .find(|model| model.name.to_lowercase() == field.name)
-            .map(|model| QueryType::Single(Arc::clone(&model)))
-            .or(self
-                .schema
-                .models()
-                .iter()
-                .find(|model| model.name.to_lowercase().to_singular() == field.name)
-                .map(|model| QueryType::Single(Arc::clone(&model))));
+            .filter_map(|model| QueryType::lowercase(model, &field).or(QueryType::singular(model, &field)))
+            .nth(0);
 
         match model {
             Some(model_type) => Ok(model_type),
