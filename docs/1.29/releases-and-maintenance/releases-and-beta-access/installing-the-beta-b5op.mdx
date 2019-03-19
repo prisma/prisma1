@@ -1,0 +1,58 @@
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'Installing the Beta',
+  position: 110
+}
+
+## Beta access
+
+### Prisma CLI
+
+You can get access to the latest beta release of the Prisma CLI by appending the `@beta`-tag when installing it via NPM:
+
+```
+npm install -g prisma@beta
+```
+
+### Prisma server (Docker)
+
+You can find the latest beta Prisma Docker image on [Docker Hub](https://hub.docker.com/r/prismagraphql/prisma/tags/). To use the latest version of a Prisma server, you need to configure the `image` property in your Docker Compose file accordingly by appending `-beta` to the the version number, e.g.:
+
+<Code lines="4">
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.30-beta
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+        port: __YOUR_PRISMA_SERVER_PORT__
+        databases:
+          default:
+            connector: __YOUR_DATABASE_CONNECTOR__
+            migrations: __ENABLE_DB_MIGRATIONS__
+            host: __YOUR_DATABASE_HOST__
+            port: __YOUR_DATABASE_PORT__
+            user: __YOUR_DATABASE_USER__
+            password: __YOUR_DATABASE_PASSWORD__
+```
+
+</Code>
+
+To then reboot your Prisma server with the new version, run:
+
+```bash
+docker-compose up -d
+```
+
+You can also pull the latest beta version directly using the Docker CLI:
+
+```bash
+docker pull prismagraphql/prisma:1.30-beta
+```

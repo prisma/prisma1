@@ -1,0 +1,262 @@
+import Warning from 'components/Markdown/Warning'
+import QueryChooser from 'components/Markdown/QueryChooser'
+import Code from 'components/Markdown/Code'
+import Collapse from 'components/Markdown/Collapse'
+
+export const meta = {
+  title: 'Set up Prisma',
+  position: 1,
+  gettingStartedOrder: 2,
+  gettingStartedTitle: 'Existing database',
+  nextText: 'Great work! 👏  Move on to learn how you can extend your datamodel and make changes to your Prisma API.',
+  technology: 'typescript',
+  technologyOrder: 2,
+  articleGroup: 'Set up Prisma',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Install the Prisma CLI
+- Set up Prisma using Docker
+- Introspect your existing database and derive a datamodel
+- Use the datamodel to configure your Prisma API
+- Generate a Prisma client
+- Read and write data using the Prisma client
+
+<Warning>
+
+Using your existing database with Prisma currently only works when using **PostgreSQL** or **MongoDB** databases. It is [not yet](https://github.com/prisma/prisma/issues/2506) supported for **MySQL**.
+
+</Warning>
+
+## Install the Prisma CLI
+
+The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
+
+<Code languages={["Homebrew", "NPM"]}>
+
+```bash copy
+brew tap prisma/prisma
+brew install prisma
+```
+
+```bash copy
+npm install -g prisma
+```
+
+</Code>
+
+## Install Docker
+
+To use Prisma locally, you need to have [Docker](https://www.docker.com) installed on your machine. If you don't have Docker yet, you can download the Docker Community Edition for your operating system [here](https://www.docker.com/community-edition).
+
+## Set up Prisma
+
+Run the following command to connect Prisma to your existing database:
+
+``` bash copy
+prisma init hello-world
+```
+
+This launches an interactive wizard. Here's what you need to do:
+
+1. Select **Use existing database**
+1. Select your database, either **PostgreSQL** or **MongoDB**
+1. Provide the **connection details** for your database (see below for more info)
+1. Select the **Prisma TypeScript client**
+
+<Collapse title="Connection details for PostgreSQL">
+
+- The host of your Postgres server, e.g. `localhost`. (When connecting to a local database, you might need to use `host.docker.internal`.)
+- The port where your Postgres server listens, e.g. `5432`.
+- The name of your Postgres database.
+- The name of your Postgres schema, e.g. `public`.
+- The database user.
+- The password for the database user.
+- Whether your database server uses SSL, possible values are `true` and `false`.
+
+</Collapse>
+
+<Collapse title="Connection details for MongoDB">
+
+- Your MongoDB connection string, e.g. `http://user1:myPassword@localhost:27017/admin`. Note that this must include the database credentials as well as the [`authSource`](https://docs.mongodb.com/manual/reference/connection-string/#authentication-options) database that's storing the credentials of your MongoDB admin user (by default it is often called `admin`). Learn more [here](b6o5#prisma_config).
+- The name of your MongoDB [database](https://docs.mongodb.com/manual/core/databases-and-collections/#databases).
+
+If you're using MongoDB Atlas, you can find your connection string by clicking the **CONNECT**-button on your cluster overview page. It looks similar to this: `mongodb+srv://user:pw@cluster0-sapwg.mongodb.net/test?retryWrites=true`.
+
+</Collapse>
+
+### Launch Prisma
+
+To start Prisma and connect it to your database, run the following commands:
+
+```bash copy
+cd hello-world
+docker-compose up -d
+```
+
+Prisma is now connected to your database and runs on `http://localhost:4466`.
+
+<Collapse title="Securing your Prisma server">
+
+The Prisma server is currently _unprotected_, meaning everyone with access to its endpoint can send arbitrary requests to it. To secure the Prisma server, you need to set the `managementApiSecret` property in your Docker Compose file when deploying the server. 
+
+When using the Prisma CLI, you then need to set the `PRISMA_MANAGEMENT_API_SECRET` to the same value so that the CLI can authenticate against the secured server. Learn more [here](kke4).
+
+</Collapse>
+
+## Deploy the Prisma datamodel
+
+You now have the _minimal_ setup ready to deploy your Prisma datamodel. Run the following command (this does **not** change anything in your database):
+
+```bash copy
+prisma deploy
+```
+
+<Warning>
+
+Launching the Prisma server may take a few minutes. In case the `prisma deploy` command fails, wait a few minutes and try again. Also run `docker ps` to ensure the Prisma Docker container is actually running.
+
+</Warning>
+
+## Prepare TypeScript application
+
+Create your [`tsconfig.json`](https://www.typescriptlang.org/docs/handbook/tsconfig-json.html) with the following command:
+
+```bash copy
+touch tsconfig.json
+```
+
+Add the following configuration to the `tsconfig.json` file:
+
+```json copy
+{
+  "compilerOptions": {
+    "lib": ["es2016", "esnext.asynciterable"]
+  }
+}
+```
+
+Next, initialize an empty NPM project in the current directory and install the required dependencies:
+
+```bash copy
+npm init -y
+npm install --save prisma-client-lib
+npm install --save-dev typescript ts-node
+```
+
+Almost done! Run the following command to create an empty TypeScript script:
+
+```bash copy
+touch index.ts
+```
+
+Great, you're now ready to write some code and talk to your database programmatically!
+
+## Read and write data using the Prisma client
+
+The API operations of the Prisma client depend on the datamodel that was generated from the database introspection. The following sample queries assume there is a `User` type in the datamodel defined as follows:
+
+```graphql
+type User {
+  id: ID! @unique
+  name: String!
+}
+```
+
+If you don't have such a `User` type, you need to adjust the following code snippets with a type that matches your datamodel.
+
+Add the following code in `index.ts`:
+
+```js copy
+import { prisma } from './generated/prisma-client'
+
+// A `main` function so that we can use async/await
+async function main() {
+
+  // Create a new user called `Alice`
+  const newUser = await prisma.createUser({ name: 'Alice' })
+  console.log(`Created new user: ${newUser.name} (ID: ${newUser.id})`)
+
+  // Read all users from the database and print them to the console
+  const allUsers = await prisma.users()
+  console.log(allUsers)
+}
+
+main().catch(e => console.error(e))
+```
+
+Before executing the code, go ahead and add a `start` script to `package.json` so you can comfortably run the code:
+
+<Code lines="8">
+
+```json copy
+{
+  "name": "hello-world",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \\"Error: no test specified\\" && exit 1",
+    "start": "ts-node index.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "graphql": "^14.0.2",
+    "prisma-client-lib": "^1.20.0"
+  },
+  "devDependencies": {
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.6"
+  }
+}
+```
+
+</Code>
+
+Now execute the script with the following command:
+
+```bash copy
+npm run start
+```
+
+Whenever you run the script with that command, a new user record is created in the database (because of the call to `createUser`).
+
+Feel free to play around with the Prisma client API and try out some of the following operations by adding the following code snippets to the file (at the end of the `main` function) and re-executing the script:
+
+<QueryChooser titles={["Fetch single user", "Filter user list", "Update a user's name", "Delete user"]}>
+
+```js lineNumbers,copy
+const user = await prisma
+  .user({ id: '__USER_ID__' })
+```
+
+```js lineNumbers,copy
+const usersCalledAlice = await prisma
+  .users({
+    where: {
+      name: 'Alice'
+    }
+  })
+```
+
+```js lineNumbers,copy
+ const updatedUser = await prisma
+  .updateUser({
+    where: { id: '__USER_ID__' },
+    data: { name: 'Bob' }
+  })
+```
+
+```js lineNumbers,copy
+ const deletedUser = await prisma
+  .deleteUser({ id: '__USER_ID__' })
+```
+
+</QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` placeholder with the ID of an actual user.
