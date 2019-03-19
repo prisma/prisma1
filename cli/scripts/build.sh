@@ -13,10 +13,10 @@ yarn build
 cd ../prisma-db-introspection
 yarn
 yarn build
-cd ../prisma-client-lib
+cd ../prisma-generate-schema
 yarn
 yarn build
-cd ../prisma-generate-schema
+cd ../prisma-client-lib
 yarn
 yarn build
 cd ../prisma-cli-core

@@ -10,28 +10,23 @@ trait MiscActions extends BuilderBase {
     val modelTables    = project.models.map(modelTable)
     val listTables     = project.models.flatMap(model => model.scalarListFields.map(scalarListTable))
 
-    val actions = (relationTables ++ listTables ++ Vector(relayTable) ++ modelTables).map { table =>
-      if (isMySql) {
-        truncateToDBIO(sql.truncate(table))
-      } else {
-        truncateToDBIO(sql.truncate(table).cascade())
-      }
+    val actions = (relationTables ++ listTables ++ Vector(relayTable) ++ modelTables).map {
+      case table if isMySql => truncateToDBIO(sql.truncate(table))
+      case table            => truncateToDBIO(sql.truncate(table).cascade())
     }
-    val truncatesAction = DBIO.sequence(actions)
 
-    def disableForeignKeyChecks = SimpleDBIO { ctx =>
+    lazy val disableForeignKeyChecks = SimpleDBIO { ctx =>
       val ps = ctx.connection.prepareStatement("SET FOREIGN_KEY_CHECKS=0")
       ps.executeUpdate()
     }
-    def enableForeignKeyChecks = SimpleDBIO { ctx =>
+    lazy val enableForeignKeyChecks = SimpleDBIO { ctx =>
       val ps = ctx.connection.prepareStatement("SET FOREIGN_KEY_CHECKS=1")
       ps.executeUpdate()
     }
 
-    if (isMySql) {
-      DBIO.seq(disableForeignKeyChecks, truncatesAction, enableForeignKeyChecks)
-    } else {
-      truncatesAction
-    }
+    val truncatesAction = DBIO.sequence(actions)
+
+    if (isMySql) DBIO.seq(disableForeignKeyChecks, truncatesAction, enableForeignKeyChecks) else truncatesAction
   }
+
 }

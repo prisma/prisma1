@@ -157,13 +157,15 @@ case class DataModelValidatorImpl(
     val fieldDirectiveValidations = tryValidation(validateFieldDirectives())
     val typeDirectiveValidations  = tryValidation(validateTypeDirectives())
     val enumValidations           = tryValidation(EnumValidator(doc).validate())
+    val validateRenames           = tryValidation(validateCrossRenames(doc.objectTypes))
 
     val allValidations = Vector(
       globalValidations,
       reservedFieldsValidations,
       fieldDirectiveValidations,
       enumValidations,
-      typeDirectiveValidations
+      typeDirectiveValidations,
+      validateRenames
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -235,6 +237,20 @@ case class DataModelValidatorImpl(
     } yield schemaError
 
     requiredArgErrors ++ optionalArgErrors
+  }
+
+  def validateCrossRenames(objectTypes: Seq[ObjectTypeDefinition]): Seq[DeployError] = {
+    for {
+      renamedType1                     <- objectTypes
+      oldName                          <- renamedType1.oldName
+      allObjectTypesExceptThisOne      = objectTypes.filterNot(_ == renamedType1)
+      renamedTypeThatHadTheNameOfType1 <- allObjectTypesExceptThisOne.find(_.oldName.contains(renamedType1.name))
+    } yield {
+      DeployError(
+        renamedType1.name,
+        s"You renamed type `$oldName` to `${renamedType1.name}`. But that is the old name of type `${renamedTypeThatHadTheNameOfType1.name}`. Please do this in two steps."
+      )
+    }
   }
 
   def validateDirectiveUniqueness(fieldAndType: FieldAndType): Option[DeployError] = {

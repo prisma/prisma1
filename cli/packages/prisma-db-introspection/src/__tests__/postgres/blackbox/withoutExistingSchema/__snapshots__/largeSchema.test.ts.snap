@@ -5,7 +5,7 @@ exports[`Introspector large example database 1`] = `
   {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
 ]) @pgTable(name: \\"actor\\") {
   id: Int! @pgColumn(name: \\"actor_id\\") @unique
-  film_actor: [Film_actor]
+  film_actor: [FilmActor]
   first_name: String!
   last_name: String!
   last_update: DateTime!
@@ -27,7 +27,7 @@ type Address @pgTable(name: \\"address\\") {
 
 type Category @pgTable(name: \\"category\\") {
   id: Int! @pgColumn(name: \\"category_id\\") @unique
-  film_category: [Film_category]
+  film_category: [FilmCategory]
   last_update: DateTime!
   name: String!
 }
@@ -71,15 +71,15 @@ type Film @indexes(value: [
 ]) @pgTable(name: \\"film\\") {
   id: Int! @pgColumn(name: \\"film_id\\") @unique
   description: String
-  film_actor: [Film_actor]
-  film_category: [Film_category]
+  film_actor: [FilmActor]
+  film_category: [FilmCategory]
   # Type tsvector is not supported
   # fulltext: tsvector!
   inventory: [Inventory]
   language_id: Language!
   last_update: DateTime!
   length: Int
-  rating: Mpaa_rating
+  rating: MpaaRating
   release_year: Int
   rental_duration: Int! @default(value: 3)
   rental_rate: Float! @default(value: 4.99)
@@ -88,7 +88,7 @@ type Film @indexes(value: [
   title: String!
 }
 
-type Film_actor @pgTable(name: \\"film_actor\\") {
+type FilmActor @pgTable(name: \\"film_actor\\") {
   # Multiple ID fields (compound indexes) are not supported
   # id: Actor! @pgColumn(name: \\"actor_id\\") @unique
   # Multiple ID fields (compound indexes) are not supported
@@ -96,7 +96,7 @@ type Film_actor @pgTable(name: \\"film_actor\\") {
   last_update: DateTime!
 }
 
-type Film_category @pgTable(name: \\"film_category\\") {
+type FilmCategory @pgTable(name: \\"film_category\\") {
   # Multiple ID fields (compound indexes) are not supported
   # id: Film! @pgColumn(name: \\"film_id\\") @unique
   # Multiple ID fields (compound indexes) are not supported
@@ -121,7 +121,7 @@ type Language @pgTable(name: \\"language\\") {
   name: String!
 }
 
-enum Mpaa_rating {
+enum MpaaRating {
   G
   NC-17
   PG
@@ -182,7 +182,7 @@ exports[`Introspector large example database 2`] = `
   {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
 ]) {
   actor_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"actor_actor_id_seq\\", initialValue: 1, allocationSize: 1)
-  film_actor: [Film_actor]
+  film_actor: [FilmActor]
   first_name: String!
   last_name: String!
   last_update: DateTime!
@@ -204,7 +204,7 @@ type Address @db(name: \\"address\\") {
 
 type Category @db(name: \\"category\\") {
   category_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"category_category_id_seq\\", initialValue: 1, allocationSize: 1)
-  film_category: [Film_category]
+  film_category: [FilmCategory]
   last_update: DateTime!
   name: String!
 }
@@ -248,15 +248,15 @@ type Film @db(name: \\"film\\") @indexes(value: [
 ]) {
   film_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"film_film_id_seq\\", initialValue: 1, allocationSize: 1)
   description: String
-  film_actor: [Film_actor]
-  film_category: [Film_category]
+  film_actor: [FilmActor]
+  film_category: [FilmCategory]
   # Type tsvector is not supported
   # fulltext: tsvector!
   inventory: [Inventory]
   language_id: Language!
   last_update: DateTime!
   length: Int
-  rating: Mpaa_rating
+  rating: MpaaRating
   release_year: Int
   rental_duration: Int! @default(value: 3)
   rental_rate: Float! @default(value: 4.99)
@@ -265,7 +265,7 @@ type Film @db(name: \\"film\\") @indexes(value: [
   title: String!
 }
 
-type Film_actor @db(name: \\"film_actor\\") {
+type FilmActor @db(name: \\"film_actor\\") {
   # Multiple ID fields (compound indexes) are not supported
   # actor_id: Actor! @id(strategy: NONE)
   # Multiple ID fields (compound indexes) are not supported
@@ -273,7 +273,7 @@ type Film_actor @db(name: \\"film_actor\\") {
   last_update: DateTime!
 }
 
-type Film_category @db(name: \\"film_category\\") {
+type FilmCategory @db(name: \\"film_category\\") {
   # Multiple ID fields (compound indexes) are not supported
   # film_id: Film! @id(strategy: NONE)
   # Multiple ID fields (compound indexes) are not supported
@@ -298,7 +298,7 @@ type Language @db(name: \\"language\\") {
   name: String!
 }
 
-enum Mpaa_rating {
+enum MpaaRating {
   G
   NC-17
   PG

@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector DateTime columns 1`] = `
-"type Boolean @pgTable(name: \\"Booleans\\") {
+"type Booleans {
   a: DateTime
   b: DateTime!
   c: DateTime!
@@ -9,7 +9,7 @@ exports[`Introspector DateTime columns 1`] = `
 `;
 
 exports[`Introspector DateTime columns 2`] = `
-"type Boolean @db(name: \\"Booleans\\") {
+"type Booleans {
   a: DateTime
   b: DateTime!
   c: DateTime!
@@ -17,14 +17,14 @@ exports[`Introspector DateTime columns 2`] = `
 `;
 
 exports[`Introspector Json columns 1`] = `
-"type Boolean @pgTable(name: \\"Booleans\\") {
+"type Booleans {
   a: Json
   b: Json!
 }"
 `;
 
 exports[`Introspector Json columns 2`] = `
-"type Boolean @db(name: \\"Booleans\\") {
+"type Booleans {
   a: Json
   b: Json!
 }"
@@ -49,21 +49,21 @@ exports[`Introspector Unmapped columns 2`] = `
 `;
 
 exports[`Introspector boolean columns 1`] = `
-"type Boolean @pgTable(name: \\"Booleans\\") {
+"type Booleans {
   a: Boolean
   b: Boolean!
 }"
 `;
 
 exports[`Introspector boolean columns 2`] = `
-"type Boolean @db(name: \\"Booleans\\") {
+"type Booleans {
   a: Boolean
   b: Boolean!
 }"
 `;
 
 exports[`Introspector float columns 1`] = `
-"type Float @pgTable(name: \\"Floats\\") {
+"type Floats {
   a: Float @default(value: 3.4)
   b: Float
   c: Float
@@ -78,7 +78,7 @@ exports[`Introspector float columns 1`] = `
 `;
 
 exports[`Introspector float columns 2`] = `
-"type Float @db(name: \\"Floats\\") {
+"type Floats {
   a: Float @default(value: 3.4)
   b: Float
   c: Float
@@ -93,7 +93,7 @@ exports[`Introspector float columns 2`] = `
 `;
 
 exports[`Introspector int columns 1`] = `
-"type Int @pgTable(name: \\"Ints\\") {
+"type Ints {
   a: Int @default(value: 3)
   b: Int
   c: Int
@@ -104,7 +104,7 @@ exports[`Introspector int columns 1`] = `
 `;
 
 exports[`Introspector int columns 2`] = `
-"type Int @db(name: \\"Ints\\") {
+"type Ints {
   a: Int @default(value: 3)
   b: Int
   c: Int
@@ -115,7 +115,7 @@ exports[`Introspector int columns 2`] = `
 `;
 
 exports[`Introspector text columns 1`] = `
-"type String @pgTable(name: \\"Strings\\") {
+"type Strings {
   id: ID! @pgColumn(name: \\"pk\\") @unique
   a: String @unique
   aa: String! @unique
@@ -131,7 +131,7 @@ exports[`Introspector text columns 1`] = `
 `;
 
 exports[`Introspector text columns 2`] = `
-"type String @db(name: \\"Strings\\") {
+"type Strings {
   pk: ID! @id(strategy: NONE)
   a: String @unique
   aa: String! @unique
@@ -147,7 +147,7 @@ exports[`Introspector text columns 2`] = `
 `;
 
 exports[`Introspector uuid columns 1`] = `
-"type UUID @pgTable(name: \\"UUIDs\\") {
+"type UUIDs {
   id: UUID! @pgColumn(name: \\"pk\\") @unique
   nk: UUID!
   tk: UUID
@@ -155,7 +155,7 @@ exports[`Introspector uuid columns 1`] = `
 `;
 
 exports[`Introspector uuid columns 2`] = `
-"type UUID @db(name: \\"UUIDs\\") {
+"type UUIDs {
   pk: UUID! @id(strategy: NONE)
   nk: UUID!
   tk: UUID

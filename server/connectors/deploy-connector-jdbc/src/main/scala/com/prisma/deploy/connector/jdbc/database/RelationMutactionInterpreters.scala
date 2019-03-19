@@ -65,7 +65,8 @@ case class UpdateInlineRelationInterpreter(builder: JdbcDeployDatabaseMutationBu
       project = mutaction.project,
       tableName = mutaction.previous.relationTableName,
       oldColumnName = mutaction.previous.inlineManifestation.get.referencingColumn,
-      newColumnName = mutaction.next.inlineManifestation.get.referencingColumn
+      newColumnName = mutaction.next.inlineManifestation.get.referencingColumn,
+      typeIdentifier = mutaction.next.schema.getModelByName_!(mutaction.next.inlineManifestation.get.inTableOfModelName).idField_!.typeIdentifier
     )
   }
 

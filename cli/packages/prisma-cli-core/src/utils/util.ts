@@ -70,3 +70,7 @@ services:
         # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
         # managementApiSecret: my-secret
 `
+
+export const printAdminLink = link => `\n\nYou can view & edit your data here:
+
+  ${chalk.bold(`Prisma Admin: ${link}/_admin`)}`

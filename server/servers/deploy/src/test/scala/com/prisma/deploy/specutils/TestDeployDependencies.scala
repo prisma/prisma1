@@ -31,7 +31,8 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
                                     CustomJdbcDriver.jna
                                   } else {
                                     new org.postgresql.Driver
-                                  })
+                                  }),
+    SupportedDrivers.SQLITE -> new org.sqlite.JDBC
   )
 
   implicit val reporter: ErrorReporter = DummyErrorReporter

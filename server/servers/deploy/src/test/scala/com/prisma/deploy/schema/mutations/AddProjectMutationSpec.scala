@@ -9,7 +9,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
   val projectPersistence = testDependencies.projectPersistence
 
   "AddProjectMutation" should "succeed for valid input" in {
-    val name  = s"${Cuid.createCuid()}~test"
+    val name  = s"${Cuid.createCuid()}Xtest"
     val stage = Cuid.createCuid()
 
     val result = server.query(s"""
@@ -33,7 +33,7 @@ class AddProjectMutationSpec extends FlatSpec with Matchers with DeploySpecBase 
   }
 
   "AddProjectMutation" should "fail if a project already exists" in {
-    val name  = s"${Cuid.createCuid()}~test"
+    val name  = s"${Cuid.createCuid()}Xtest"
     val stage = Cuid.createCuid()
 
     server.query(s"""

@@ -137,7 +137,7 @@ class Tag
       chunked = tag.split("-")
       raw_version = chunked[0]
 
-      if chunked.length > 2
+      if chunked.length >= 2
         @channel = chunked[1]
       end
 
@@ -151,6 +151,10 @@ class Tag
 
   def nil?
     @major.nil? || @minor.nil?
+  end
+
+  def beta?
+    !nil? && @channel == "beta"
   end
 
   def stable?

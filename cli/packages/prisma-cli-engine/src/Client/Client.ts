@@ -60,6 +60,15 @@ export class Client {
         workspaceSlug || undefined,
         stageName,
       )
+      debug(`is local cluster: ${cluster.local}`)
+      if (!cluster.local) {
+        const serviceCreatedInCloud = await cluster.addServiceToCloudDBIfMissing(
+          serviceName,
+          workspaceSlug || undefined,
+          stageName
+        )
+        debug({ serviceCreatedInCloud })
+      }
       const agent = getProxyAgent(cluster.getDeployEndpoint())
       this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
         headers: {
