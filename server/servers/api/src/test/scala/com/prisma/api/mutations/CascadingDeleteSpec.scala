@@ -376,11 +376,11 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       *         D
       */
     val project = SchemaDsl.fromBuilder { schema =>
-      val a = schema.model("A").field_!("a", _.DateTime, isUnique = true)
-      val b = schema.model("B").field_!("b", _.DateTime, isUnique = true)
-      val c = schema.model("C").field_!("c", _.DateTime, isUnique = true)
-      val d = schema.model("D").field_!("d", _.DateTime, isUnique = true)
-      val e = schema.model("E").field_!("e", _.DateTime, isUnique = true)
+      val a = schema.model("A").field_!("a", _.String, isUnique = true)
+      val b = schema.model("B").field_!("b", _.String, isUnique = true)
+      val c = schema.model("C").field_!("c", _.String, isUnique = true)
+      val d = schema.model("D").field_!("d", _.String, isUnique = true)
+      val e = schema.model("E").field_!("e", _.String, isUnique = true)
 
       a.oneToOneRelation_!("b", "a", b, modelAOnDelete = OnDelete.Cascade)
       b.oneToOneRelation_!("c", "b", c, modelAOnDelete = OnDelete.Cascade)
@@ -401,6 +401,10 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorCode = 3042,
       errorContains = "The change you are trying to make would violate the required relation 'CToE' between C and E"
     )
+
+    server.query("""query{as{a, b {b, c{c, d{d}, e{e}}}}}""", project).toString should be(
+      """{"data":{"as":[{"a":"2020","b":{"b":"2021","c":{"c":"2022","d":[{"d":"2024"},{"d":"2025"}],"e":{"e":"2023"}}}},{"a":"2030","b":{"b":"2031","c":{"c":"2032","d":[{"d":"2034"},{"d":"2035"}],"e":{"e":"2033"}}}}]}}""")
+
   }
 
   "A required relation violation on the parent" should "roll back all cascading deletes on the path" in {
@@ -440,6 +444,9 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorCode = 3042,
       errorContains = "The change you are trying to make would violate the required relation 'AToD' between A and D"
     )
+
+    server.query("""query{as{a, b {b}, c{c, e{e}}, d{d}}}""", project).toString should be(
+      """{"data":{"as":[{"a":"a","b":{"b":"b"},"c":[{"c":"c1","e":{"e":"e"}},{"c":"c2","e":{"e":"e2"}}],"d":{"d":"d"}}]}}""")
 
     ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(7) }
   }
