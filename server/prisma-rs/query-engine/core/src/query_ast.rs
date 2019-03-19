@@ -78,10 +78,10 @@ impl QueryType {
 }
 
 impl QueryBuilder {
-    fn build(self) -> PrismaResult<Vec<PrismaQuery>> {
+    pub fn build(self) -> PrismaResult<Vec<PrismaQuery>> {
         self.query
             .definitions
-            .into_iter()
+            .iter()
             .map(|d| match d {
                 // Query without the explicit "query" before the selection set
                 Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span, items })) => {
@@ -98,39 +98,20 @@ impl QueryBuilder {
                 })) => self.build_query(&selection_set.items),
                 _ => unimplemented!(),
             })
-            .collect::<PrismaResult<Vec<Vec<PrismaQuery>>>>()
+            .collect::<PrismaResult<Vec<Vec<PrismaQuery>>>>() // Collect all the "query trees"
             .map(|v| v.into_iter().flatten().collect())
     }
 
-    /// Finds the model and infers the query type for the given GraphQL field.
-    fn infer_query_type(&self, field: gql::query::Field) -> PrismaResult<QueryType> {
-        // Find model for field
-        let model: Option<QueryType> = self
-            .schema
-            .models()
-            .iter()
-            .filter_map(|model| QueryType::lowercase(model, &field).or(QueryType::singular(model, &field)))
-            .nth(0);
-
-        match model {
-            Some(model_type) => Ok(model_type),
-            None => Err(Error::QueryValidationError(format!(
-                "Model not found for field {}",
-                field.alias.unwrap_or(field.name)
-            ))),
-        }
-    }
-
-    // Q: How do you infer multi or single relation?
     fn build_query(&self, root_fields: &Vec<Selection>) -> PrismaResult<Vec<PrismaQuery>> {
-        root_fields
+        let res = root_fields
             .iter()
             .map(|item| {
                 // First query-level fields map to a model in our schema, either a plural or singular
                 match item {
                     Selection::Field(root_field) => {
                         // Find model for field
-                        let model = match self.infer_query_type(root_field)? {
+                        let qt = self.infer_query_type(root_field).unwrap(); // FIXME: Do not unwrap here, propagate error (issue with closure here)
+                        let model = match qt {
                             QueryType::Single(model) => model,
                             QueryType::Multiple(model) => model,
                         };
@@ -163,7 +144,26 @@ impl QueryBuilder {
             })
             .collect();
 
-        unimplemented!()
+        Ok(res)
+    }
+
+    /// Finds the model and infers the query type for the given GraphQL field.
+    fn infer_query_type(&self, field: &gql::query::Field) -> PrismaResult<QueryType> {
+        // Find model for field
+        let model: Option<QueryType> = self
+            .schema
+            .models()
+            .iter()
+            .filter_map(|model| QueryType::lowercase(model, &field).or(QueryType::singular(model, &field)))
+            .nth(0);
+
+        match model {
+            Some(model_type) => Ok(model_type),
+            None => Err(Error::QueryValidationError(format!(
+                "Model not found for field {}",
+                field.alias.as_ref().unwrap_or(&field.name)
+            ))),
+        }
     }
 
     fn to_selected_fields(selection_set: &SelectionSet, model: ModelRef) -> Vec<SelectedField> {

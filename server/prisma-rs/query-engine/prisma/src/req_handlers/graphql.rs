@@ -35,7 +35,7 @@ impl RequestHandler for GraphQlRequestHandler {
             operation_name: req.body.operation_name,
         };
 
-        let queries: Vec<PrismaQuery> = qb.into();
+        let queries: Vec<PrismaQuery> = qb.build().unwrap(); // FIXME: Error handling
         let results = dbg!(ctx.query_executor.execute(&queries)).unwrap();
 
         // FIXME: Serialization with separate GQL specific type
