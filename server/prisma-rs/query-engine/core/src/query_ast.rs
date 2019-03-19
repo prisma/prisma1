@@ -5,7 +5,6 @@ use graphql_parser::{self as gql, query::*};
 use inflector::Inflector;
 use prisma_common::{error::Error, PrismaResult};
 use prisma_models::{Field as ModelField, *};
-use std::convert::From;
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -61,34 +60,32 @@ enum QueryType {
 }
 
 impl QueryBuilder {
-    /// Finds the model and infers the query type for the given GraphQL field.
-    fn infer_query_type(&self, field: gql::query::Field) -> PrismaResult<QueryType> {
-        // Find model for field
-        let model = self
-            .schema
-            .models()
-            .iter()
-            .find(|model| model.name.to_lowercase() == field.name)
-            .map(|model| QueryType::Single(Arc::clone(&model)))
-            .or(self
-                .schema
-                .models()
-                .iter()
-                .find(|model| model.name.to_lowercase().to_singular() == field.name)
-                .map(|model| QueryType::Single(Arc::clone(&model))));
+    fn build(self) -> PrismaResult<Vec<PrismaQuery>> {
+        self.query
+            .definitions
+            .into_iter()
+            .map(|d| match d {
+                // Query without the explicit "query" before the selection set
+                Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span, items })) => {
+                    self.build_query(&items)
+                }
 
-        match model {
-            Some(model_type) => Ok(model_type),
-            None => Err(Error::QueryValidationError(format!(
-                "Model not found for field {}",
-                field.alias.unwrap_or(field.name)
-            ))),
-        }
+                // Regular query
+                Definition::Operation(OperationDefinition::Query(Query {
+                    position,
+                    name,
+                    variable_definitions,
+                    directives,
+                    selection_set,
+                })) => self.build_query(&selection_set.items),
+                _ => unimplemented!(),
+            })
+            .collect::<PrismaResult<Vec<Vec<PrismaQuery>>>>()
+            .flatten()
     }
 
     // Q: How do you infer multi or single relation?
-
-    fn build_query(&self, root_fields: &Vec<Selection>) -> Vec<PrismaQuery> {
+    fn build_query(&self, root_fields: &Vec<Selection>) -> PrismaResult<Vec<PrismaQuery>> {
         root_fields
             .iter()
             .map(|item| {
@@ -96,13 +93,10 @@ impl QueryBuilder {
                 match item {
                     Selection::Field(root_field) => {
                         // Find model for field
-                        let model = self
-                            .schema
-                            .models()
-                            .iter()
-                            .find(|model| model.name.to_lowercase() == root_field.name)
-                            .cloned()
-                            .expect("model not found");
+                        let model = match self.infer_query_type(root_field)? {
+                            QueryType::Single(model) => model,
+                            QueryType::Multiple(model) => model,
+                        };
 
                         let (_, value) = root_field.arguments.first().expect("no arguments found"); // FIXME: this expects at least one query arg...
                         match value {
@@ -130,7 +124,32 @@ impl QueryBuilder {
                     _ => unimplemented!(),
                 }
             })
-            .collect()
+            .collect();
+
+        unimplemented!()
+    }
+
+    /// Finds the model and infers the query type for the given GraphQL field.
+    fn infer_query_type(&self, field: &gql::query::Field) -> PrismaResult<QueryType> {
+        // Find model for field
+        let mut query_type: Option<QueryType> = None;
+        for model in self.schema.models() {
+            if model.name.to_lowercase() == field.name {
+                query_type.replace(QueryType::Single(Arc::clone(&model)));
+                break;
+            } else if model.name.to_lowercase().to_singular() == field.name {
+                query_type.replace(QueryType::Multiple(Arc::clone(&model)));
+                break;
+            }
+        }
+
+        match query_type {
+            Some(model_type) => Ok(model_type),
+            None => Err(Error::QueryValidationError(format!(
+                "Model not found for field {}",
+                field.alias.unwrap_or(field.name)
+            ))),
+        }
     }
 
     fn to_selected_fields(selection_set: &SelectionSet, model: ModelRef) -> Vec<SelectedField> {
@@ -196,30 +215,5 @@ impl QueryBuilder {
             Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap() as i32),
             _ => unimplemented!(),
         }
-    }
-}
-
-impl From<QueryBuilder> for Vec<PrismaQuery> {
-    fn from(qb: QueryBuilder) -> Self {
-        qb.query
-            .definitions
-            .iter()
-            .flat_map(|d| match d {
-                // Query without the explicit "query" before the selection set
-                Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span, items })) => {
-                    qb.build_query(items)
-                }
-
-                // Regular query
-                Definition::Operation(OperationDefinition::Query(Query {
-                    position,
-                    name,
-                    variable_definitions,
-                    directives,
-                    selection_set,
-                })) => qb.build_query(&selection_set.items),
-                _ => unimplemented!(),
-            })
-            .collect::<Vec<PrismaQuery>>()
     }
 }
