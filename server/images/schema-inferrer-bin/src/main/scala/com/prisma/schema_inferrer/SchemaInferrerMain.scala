@@ -20,8 +20,8 @@ object SchemaInferrerMain {
 
     val capabilities     = ConnectorCapabilities.mysqlPrototype
     val validationResult = DataModelValidatorImpl.validate(input.dataModel, FieldRequirementsInterface.empty, capabilities)
-    val schema = SchemaInferrer(capabilities).infer(Schema.empty, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
-    
+    val schema           = SchemaInferrer(capabilities).infer(Schema.emptyV11, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
+
     println(Json.toJson(schema))
   }
 

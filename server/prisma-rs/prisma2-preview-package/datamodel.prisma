@@ -1,0 +1,102 @@
+type Album {
+  AlbumId: Int! @id
+  Title: String!
+  Artist: Artist! @db(name:"ArtistId")
+  Tracks: [Track]
+}
+
+type Track {
+  TrackId: Int! @id
+  Name: String!
+  Album: Album @db(name: "AlbumId")
+  AlbumId: Int
+  MediaType: MediaType! @db(name: "MediaTypeId")
+  Genre: Genre @db(name: "GenreId")
+  Composer: String
+  Milliseconds: Int!
+  UnitPrice: Float!
+  Playlists: [Playlist] @relation(name:"PlaylistTrack")
+}
+
+type MediaType {
+  MediaTypeId: Int! @id
+  Name: String
+}
+
+type Genre {
+  GenreId: Int! @id
+  Name: String
+  Tracks: [Track]
+}
+
+type Artist {
+  ArtistId: Int! @id
+  Name: String
+  Albums: [Album]
+}
+
+type Customer {
+  CustomerId: Int! @id
+  FirstName: String!
+  LastName: String!
+  Company: String
+  Address: String
+  City: String
+  State: String
+  Country: String
+  PostalCode: String
+  Phone: String
+  Fax: String
+  Email: String!
+  SupportRep: Employee @db(name: "SupportRepId")
+}
+
+type Employee {
+  EmployeeId: Int! @id
+  FirstName: String!
+  LastName: String!
+  Title: String
+  ReportsTo: Employee
+  BirthDate: DateTime
+  HireDate: DateTime
+  Address: String
+  City: String
+  State: String
+  Country: String
+  PostalCode: String
+  Phone: String
+  Fax: String
+  Email: String
+}
+
+type Invoice {
+  InvoiceId: Int! @id
+  Customer: Customer! @db(name: "CustomerId")
+  InvoiceDate: DateTime!
+  BillingAddress: String
+  BillingCity: String
+  BillingState: String
+  BillingCountry: String
+  BillingPostalCode: String
+  Total: Float!
+  Lines: [InvoiceLine]
+}
+
+type InvoiceLine {
+  InvoiceLineId: Int! @id
+  Invoice: Invoice! @db(name: "InvoiceId")
+  Track: Track! @db(name: "TrackId")
+  UnitPrice: Float!
+  Quantity: Int!
+}
+
+type Playlist {
+  PlaylistId: Int! @id
+  Name: String
+  Tracks: [Track] @relation(name:"PlaylistTrack")
+}
+
+type PlaylistTrack @linkTable {
+  PlaylistId: Playlist
+  TrackId: Track
+}
