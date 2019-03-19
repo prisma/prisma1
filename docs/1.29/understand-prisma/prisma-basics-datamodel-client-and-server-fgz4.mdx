@@ -19,7 +19,7 @@ When working with Prisma, you're primarily dealing with **three concepts**:
 
 ## Datamodel
 
-The datamodel primarily serves as foundation for the API operations of your Prisma client.
+The [datamodel](knul) primarily serves as foundation for the API operations of your Prisma client.
 
 ### Prisma client operations are derived from datamodel
 
@@ -85,7 +85,7 @@ The Prisma client is an auto-generated library that replaces a traditional ORM i
 
 ### Seamless relation API
 
-The Prisma client is available in various programming languages and provides type safe database access. In contrast to traditional ORMs, it provides a seamless API to work with relational data, JOINs and transactions.
+The Prisma client is available in various programming languages and provides type-safe database access. In contrast to traditional ORMs, it provides a seamless API to work with relational data, JOINs and transactions.
 
 Here is an example that performs several write operations in a single transaction:
 
@@ -161,7 +161,7 @@ name := "Alice"
 
 For traditional ORMs, such a set of write operations requires you to manually control a database transaction. Prisma client handles the transaction for you.
 
-### Type safe data access
+### Type-safe data access
 
 The operations exposed by your Prisma client are strongly typed. For any typed programming language, this means that you get _compile-time safety_ for all database operations and you know _exactly_ what shape of data is going to be returned.
 

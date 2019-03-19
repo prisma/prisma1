@@ -8,14 +8,13 @@ export const meta = {
 
 ## What is Prisma?
 
-Prisma is a _data layer_ that replaces traditional ORMs in your application architecture. 
+Prisma replaces traditional ORMs and simplifies database workflows: 
 
-The data layer consists of several components:
+- _Access_: **Type-safe database access with the auto-generated Prisma client** (in [JavaScript](https://www.prisma.io/client/client-javscript/), [TypeScript](https://www.prisma.io/client/client-typescript/), [Go](https://www.prisma.io/client/client-go/))
+- _Migrate_: **Declarative data modelling and migrations** (optional)
+- _Manage_: **Visual data management with [Prisma Admin](https://www.prisma.io/blog/prisma-admin-beta-pai5lah43soe/)**
 
-- A **Prisma server** acting as a proxy for your database
-- A high-performance **query engine** that runs on the Prisma server and generates actual database queries
-- A **Prisma client** that connects to the Prisma server
-- A **realtime event system** that lets you subscribe to database events 
+It is used to build **GraphQL, REST, gRPC APIs** and a lot more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
 
 <Collapse title="A note on Prisma Cloud">
 
@@ -49,8 +48,9 @@ Prisma has an extremely flexible API which makes it a great fit for a variety of
 
 Prisma's overall goal is to remove complexity from common database workflows and simplify data access in your applications:
 
-- **Type safe database access** thanks to the custom and auto-generated Prisma client.
+- **Type-safe database access** thanks to the custom and auto-generated Prisma client.
 - Simple and powerful API for working with **relational data and transactions**.
+- Visual **data management** with Prisma Admin. 
 - Prisma unifies access to multiple databases at once (_coming soon_) and therefore drastically **reduces complexity in cross-database workflows**.
 - **Realtime streaming & event system for your database** ensuring you're getting updates for all important events happening in your database.
 - **Automatic database migrations (optional)** based on a declarative datamodel expressed using GraphQL's schema definition language (SDL).
