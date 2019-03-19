@@ -28,7 +28,7 @@ To ensure only entitled users are able to perform actions through the Management
 The Management API secret is set in the Docker Compose file you're using to configure your Prisma server. It is part of the `PRISMA_CONFIG` environment variable and specified via the `managementApiSecret` key:
 
 <Code lines="10">
-
+  
 ```
 version: '3'
 services:
@@ -54,10 +54,12 @@ services:
 </Code>
 
 <Warning>
-
-If the Docker configuration of your Prisma server does not contain a `managementApiSecret`, everyone with access to the URL of your Prisma server will be able to make arbitrary requests to it. This includes deploying and deleting Prisma services as well as modifying data.
+  
+Unless `managementApiSecret` is defined in the Docker configuration, everyone with access to the URL of the Prisma server will be able to make changes, including deploying and deleting Prisma services as well as modifying data. 
 
 </Warning>
+
+After setting `managementApiSecret` run `docker-compose up -d` to recreate the containers. Note that this will create a new, empty database for your server. After that, you'll need to use the environment variable `PRISMA_MANAGEMENT_SECRET` to authenticate with the management api from the command line. For example, to deploy your server after changes run `PRISMA_MANAGEMENT_SECRET=__YOUR_MANAGEMENT_API_SECRET prisma deploy`.
 
 ### Management API token
 
