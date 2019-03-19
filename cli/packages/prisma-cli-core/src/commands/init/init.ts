@@ -173,6 +173,7 @@ datamodel: datamodel.prisma${databaseTypeString}`
       results.datamodel,
     )
     if (results.cluster!.local && results.writeDockerComposeYml) {
+      debug(`prisma init: writing docker-compose.yml`)
       fs.writeFileSync(
         path.join(this.config.definitionDir, 'docker-compose.yml'),
         results.dockerComposeYml,
@@ -261,6 +262,7 @@ ${steps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
         this.out.log(chalk.red(err))
       }
       const isPackaged = fs.existsSync('/snapshot')
+      debug({ isPackaged })
       const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
       const child = spawnPath('prisma', ['generate'])
       const stderr = child.stderr && child.stderr.toString()

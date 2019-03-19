@@ -6,6 +6,7 @@ import com.prisma.integration.IntegrationBaseSpec
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  override def doNotRunForPrototypes: Boolean = true
 
   "Updating a field from scalar non-list to scalar list" should "throw a warning if there is already data" in {
 
@@ -278,7 +279,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Updating a scalar field to required" should "throw an error if a newly required field is null" taggedAs (IgnoreMongo) in {
+  "Updating a scalar field to required" should "warn if a newly required field is null" taggedAs (IgnoreMongo) in {
 
     val schema =
       """|type A {
@@ -296,11 +297,10 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         | value: String!
         |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
+    deployServer.deploySchemaThatMustWarn(project, schema2).toString should include("""The fields will be pre-filled with the value: ``.""")
   }
 
-  "Updating the type of a required scalar field" should "throw an error if there are nodes for that type" in {
+  "Updating the type of a required scalar field" should "warn if there are nodes for that type" in {
 
     val schema =
       """|type A {
@@ -318,8 +318,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
         | value: Int!
         |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema2, force = true).toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."}],"warnings":[]}}}""")
+    deployServer.deploySchemaThatMustWarn(project, schema2, force = true).toString should include("""The fields will be pre-filled with the value: `0`.""")
   }
 
   "Updating a relation field to required" should "not throw an error if there is no data yet" in {
@@ -410,8 +409,7 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
          | a: A!
          |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
+    deployServer.deploySchemaThatMustError(project, schema2).toString should include(
+      """You are updating the field `a` to be required. But there are already nodes for the model `B` that would violate that constraint.""")
   }
-
 }

@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object MicrometerMetricsRegistry extends MetricsRegistry {
-  private val prismaPushGatewayAddress = "metrics-eu1.prisma.io"
+  private val prismaPushGatewayAddress = sys.env.getOrElse("PROMETHEUS_PUSHGATEWAY_ENDPOINT", "metrics-eu1.prisma.io")
   private[metrics] val meterRegistry   = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
   private val job                      = "prisma-connect"
   private var initialized              = false

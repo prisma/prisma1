@@ -85,6 +85,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
         |}
         |
         |type Comment {
+        |  id: ID! @unique
         |  text1: String!
         |  text2: String!
         |  text3: String!
