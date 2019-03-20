@@ -1,11 +1,9 @@
 use crate::schema;
-use connector::*;
 use core::QueryExecutor;
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase, WithMigrations};
 use prisma_models::SchemaRef;
 use sqlite_connector::{SqlResolver, Sqlite};
 use std::boxed::Box;
-use std::sync::Arc;
 
 pub struct PrismaContext {
     pub config: PrismaConfig,

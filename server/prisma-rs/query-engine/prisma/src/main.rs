@@ -1,10 +1,11 @@
+#![deny(warnings)]
+
 mod context;
 mod req_handlers;
 mod schema;
 
 use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
 use context::PrismaContext;
-use lazy_static::lazy_static;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
 use std::env;
@@ -26,8 +27,10 @@ struct HttpHandler {
     graphql_request_handler: GraphQlRequestHandler,
 }
 
+#[allow(unused_variables)]
 fn main() {
     // FIXME(katharina): Deduplicate from lib.rs -> separate prisma-core (lib pkg) and prisma (bin pkg)
+    #[allow(dead_code, non_snake_case)]
     let SERVER_ROOT: String = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
 
     let http_handler = HttpHandler {
@@ -78,10 +81,10 @@ fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>
     serde_json::to_string(&result)
 }
 
-fn data_model_handler<T>(req: HttpRequest<T>) -> impl Responder {
+fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
     schema::load_datamodel_file().unwrap()
 }
 
-fn playground<T>(req: HttpRequest<T>) -> impl Responder {
+fn playground<T>(_: HttpRequest<T>) -> impl Responder {
     fs::NamedFile::open("playground.html")
 }

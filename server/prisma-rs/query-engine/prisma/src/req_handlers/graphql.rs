@@ -18,6 +18,7 @@ pub struct GraphQlBody {
 
 pub struct GraphQlRequestHandler;
 
+#[allow(unused_variables)]
 impl RequestHandler for GraphQlRequestHandler {
     type Body = GraphQlBody;
 
@@ -52,7 +53,7 @@ impl RequestHandler for GraphQlRequestHandler {
                                 match result {
                                     PrismaQueryResult::Single(result) => match result.result {
                                         Some(node) => {
-                                            let mut node_map = serialize_single_node(node);
+                                            let node_map = serialize_single_node(node);
                                             map.insert(result.name, serde_json::Value::Object(node_map));
                                         }
                                         None => (),
@@ -87,6 +88,7 @@ fn serialize_single_node(single_node: SingleNode) -> serde_json::map::Map<String
     serde_map
 }
 
+#[allow(unused_variables)]
 fn serialize_prisma_value(value: PrismaValue) -> serde_json::Value {
     match value {
         PrismaValue::String(x) => serde_json::Value::String(x),

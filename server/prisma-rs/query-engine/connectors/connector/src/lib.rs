@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 mod data_resolver;
 mod database_mutaction_executor;
 mod filter;

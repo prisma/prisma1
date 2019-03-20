@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 mod query_ast;
 mod query_executor;
 

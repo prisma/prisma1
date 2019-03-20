@@ -8,8 +8,11 @@ use std::io::{Read, Write};
 use std::process::{Command, Stdio};
 
 pub enum ValidationError {
+    #[allow(dead_code)]
     EverythingIsBroken,
+    #[allow(dead_code)]
     Problematic(String),
+    #[allow(dead_code)]
     Duplicate(String),
 }
 
@@ -18,7 +21,7 @@ pub trait Validatable {
 }
 
 impl Validatable for SchemaRef {
-    fn validate(&self, doc: &query::Document) -> Result<(), ValidationError> {
+    fn validate(&self, _: &query::Document) -> Result<(), ValidationError> {
         // It's not really ok 😭
         Ok(())
     }
