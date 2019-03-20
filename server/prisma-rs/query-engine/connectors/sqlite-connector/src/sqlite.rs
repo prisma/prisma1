@@ -1,6 +1,7 @@
-use crate::DatabaseExecutor;
+use crate::{DatabaseExecutor, MutactionPlan, Returning};
 use connector::*;
 use prisma_common::PrismaResult;
+use prisma_models::prelude::*;
 use prisma_query::{
     ast::*,
     visitor::{self, *},
@@ -51,38 +52,59 @@ impl DatabaseMutactionExecutor for Sqlite {
         Ok(Value::String("hello world!".to_string()))
     }
 
-    fn execute(&self, _db_name: String, _mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
-        unimplemented!()
-        /*
-         *
-        self.with_connection(&db_name, |conn| {
+    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
+        let plan = MutactionPlan::from(mutaction);
+        let mut results = DatabaseMutactionResults::default();
+
+        self.with_connection(&db_name, |ref mut conn| {
             let tx = conn.transaction()?;
-            let plan = MutactionPlan::from(mutaction);
+            let mut mutaction_id = None;
 
-            let id = plan.steps.into_iter().fold(None, |acc, step| {
-                let query = match self.needing {
-                    Some(returning) => match &*returning.read() {
-                        Returning::Expected => panic!("Needed ID value not set for mutaction"),
-                        Returning::Got(id) => match self.query {
-                            Query::Insert(insert) => Query::Insert(insert.value(id)),
-                            _ => panic!("Only inserts are supported for now"),
-                        },
-                    },
-                    None => query,
+            for mut step in plan.steps.into_iter() {
+                // REFACTOR HUNT STARTS
+                if let Some((column, needing)) = step.needing.clone() {
+                    if let Returning::Got(id) = &*needing.read() {
+                        if let Query::Insert(insert) = step.query {
+                            step.query = Query::from(insert.value(column, id.clone()));
+                        }
+                    }
                 };
+                // REFACTOR HUNT ENDS
 
-                let id: Option<GraphqlId> = executor.with_rows(self.query, db_name, |row| row.get(0));
+                let (sql, params) = visitor::Sqlite::build(step.query);
+                tx.prepare(&sql)?.execute(&params)?;
 
-                if let Some(returning) = self.returning {
-                    returning.write().set(id);
+                if let Some((id_column, returning)) = step.returning {
+                    let ast = Select::from(step.table.clone())
+                        .column(id_column)
+                        .so_that("row_id".equals(tx.last_insert_rowid()));
+
+                    let (sql, params) = visitor::Sqlite::build(ast);
+
+                    let id: GraphqlId = tx
+                        .prepare(&sql)?
+                        .query_map(&params, |row| row.get(0))?
+                        .map(|row_res| row_res.unwrap())
+                        .next()
+                        .unwrap();
+
+                    let mut switch = returning.write();
+                    *switch = Returning::Got(id.clone());
+
+                    mutaction_id = Some(id);
                 };
+            }
+
+            results.push(DatabaseMutactionResult {
+                id: mutaction_id.unwrap(),
+                typ: plan.mutaction.typ(),
+                mutaction: plan.mutaction,
             });
 
-            DatabaseMutactionResult(id, mutaction);
-
             tx.commit()?;
+
+            Ok(results)
         })
-         */
     }
 }
 
@@ -125,12 +147,12 @@ impl Sqlite {
     /// doesn't exist yet.
     pub fn with_connection<F, T>(&self, db_name: &str, f: F) -> PrismaResult<T>
     where
-        F: FnOnce(&Connection) -> PrismaResult<T>,
+        F: FnOnce(&mut Connection) -> PrismaResult<T>,
     {
         let mut conn = dbg!(self.pool.get()?);
         Self::attach_database(&mut conn, db_name)?;
 
-        let result = f(&conn);
+        let result = f(&mut conn);
 
         if self.test_mode {
             dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);

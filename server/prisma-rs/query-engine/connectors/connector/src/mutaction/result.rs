@@ -1,13 +1,25 @@
+use super::{DatabaseMutaction, DatabaseMutactionResultType};
 use prisma_models::prelude::GraphqlId;
-use super::{NodeAddress, CreateNode};
 
+#[derive(Default)]
 pub struct DatabaseMutactionResults {
-    pub results: Vec<DatabaseMutactionResult>,
+    results: Vec<DatabaseMutactionResult>,
+}
+
+#[derive(Clone)]
+pub struct DatabaseMutactionResult {
+    pub id: GraphqlId,
+    pub typ: DatabaseMutactionResultType,
+    pub mutaction: DatabaseMutaction,
 }
 
 impl DatabaseMutactionResults {
-    pub fn new(results: Vec<DatabaseMutactionResult>) -> Self {
-        Self { results }
+    pub fn push(&mut self, result: DatabaseMutactionResult) {
+        self.results.push(result);
+    }
+
+    pub fn pop(&mut self) -> Option<DatabaseMutactionResult> {
+        self.results.pop()
     }
 
     pub fn merge(&mut self, mut other_result: DatabaseMutactionResults) {
@@ -21,33 +33,4 @@ impl DatabaseMutactionResults {
             self.merge(mrs);
         }
     }
-
-    /*
-    pub fn id(&self, m: &FurtherNestedMutaction) -> Option<&GraphqlId> {
-        self.find(m).map(|mr| mr.id())
-    }
-
-    pub fn node_address(&self, m: &FurtherNestedMutaction) -> Option<&GraphqlId> {
-        self.find(m).map(|mr| mr.node_address())
-    }
-
-    pub fn containts(&self, m: &FurtherNestedMutaction) -> bool {
-        self.find(m).is_some()
-    }
-
-    fn find(&self, m: &FurtherNestedMutaction) -> Option<&MutactionResult> {
-        self.results.iter().find(|mr| mr.mutaction.id() == m.id())
-    }
-     *
-     */
-}
-
-pub struct CreateNodeResult {
-    pub id: GraphqlId,
-    pub mutaction: CreateNode,
-    pub node_address: NodeAddress,
-}
-
-pub enum DatabaseMutactionResult {
-    CreateNode(CreateNodeResult)
 }

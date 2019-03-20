@@ -16,10 +16,28 @@ pub trait NestedMutaction {
     fn nested_mutactions(&self) -> &[&DatabaseMutaction];
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum DatabaseMutactionResultType {
+    Create,
+}
+
 #[derive(Debug, Clone)]
 pub enum DatabaseMutaction {
     TopLevel(TopLevelDatabaseMutaction),
     Nested(NestedDatabaseMutaction),
+}
+
+impl DatabaseMutaction {
+    pub fn typ(&self) -> DatabaseMutactionResultType {
+        match self {
+            DatabaseMutaction::TopLevel(tl) => match tl {
+                TopLevelDatabaseMutaction::CreateNode(_) => DatabaseMutactionResultType::Create,
+            },
+            DatabaseMutaction::Nested(tl) => match tl {
+                NestedDatabaseMutaction::CreateNode(_) => DatabaseMutactionResultType::Create,
+            },
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

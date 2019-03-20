@@ -12,5 +12,5 @@ mod sqlite;
 pub use data_resolver::*;
 pub use database_executor::*;
 pub use mutaction_plan::*;
-pub use sqlite::*;
 pub use mutaction_plan::*;
+pub use sqlite::*;

@@ -1,7 +1,7 @@
 use connector::*;
 use parking_lot::RwLock;
 use prisma_models::prelude::GraphqlId;
-use prisma_query::ast::{Column, Query};
+use prisma_query::ast::{Column, Query, Table};
 use std::sync::Arc;
 
 type ReturnSwitch = Arc<RwLock<Returning>>;
@@ -27,14 +27,9 @@ impl Returning {
 #[derive(Debug, Clone)]
 pub struct MutactionStep {
     pub query: Query,
-    pub returning: Option<ReturnSwitch>,
+    pub table: Table,
+    pub returning: Option<(Column, ReturnSwitch)>,
     pub needing: Option<(Column, ReturnSwitch)>,
-}
-
-impl MutactionStep {
-    fn returning_ref(&self) -> Option<ReturnSwitch> {
-        self.returning.as_ref().map(Arc::clone)
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -63,10 +58,12 @@ impl From<TopLevelDatabaseMutaction> for MutactionPlan {
 impl From<CreateNode> for MutactionPlan {
     fn from(mutaction: CreateNode) -> MutactionPlan {
         let insert = MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
+        let id_column = mutaction.model.fields().id().as_column();
 
         let mut steps = vec![MutactionStep {
             query: Query::from(insert),
-            returning: Some(Returning::new()),
+            table: mutaction.model.table(),
+            returning: Some((id_column, Returning::new())),
             needing: None,
         }];
 
@@ -77,11 +74,12 @@ impl From<CreateNode> for MutactionPlan {
 
             let needing = steps
                 .get(0)
-                .and_then(|step| step.returning_ref())
+                .and_then(|step| step.returning.as_ref().map(|r| Arc::clone(&r.1)))
                 .map(|returning| (table.node_id_column(), returning));
 
             steps.push(MutactionStep {
                 query: Query::from(insert),
+                table: table.table(),
                 returning: None,
                 needing: needing,
             })

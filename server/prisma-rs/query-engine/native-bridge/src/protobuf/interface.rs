@@ -21,10 +21,7 @@ impl ProtoBufInterface {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
                 let sqlite = Arc::new(Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap());
 
-                (
-                    SqlResolver::new(sqlite.clone()),
-                    sqlite,
-                )
+                (SqlResolver::new(sqlite.clone()), sqlite)
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
@@ -271,7 +268,7 @@ impl ExternalInterface for ProtoBufInterface {
             let mutaction = convert_mutaction(input, model);
 
             let mut results = self.database_mutaction_executor.execute("".to_string(), mutaction)?;
-            let result = results.results.pop().expect("no mutaction results returned");
+            let result = results.pop().expect("no mutaction results returned");
 
             let response = RpcResponse::ok_mutaction(convert_mutaction_result(result));
             let mut response_payload = Vec::new();
@@ -334,11 +331,13 @@ fn convert_prisma_args(proto: crate::protobuf::prisma::PrismaArgs) -> PrismaArgs
 
 fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf::prisma::DatabaseMutactionResult {
     use crate::protobuf::prisma::database_mutaction_result;
-    match result {
-        DatabaseMutactionResult::CreateNode(x) => {
-            let result = crate::protobuf::prisma::CreateNodeResult { id: x.id.into() };
-            let type_ = database_mutaction_result::Type::Create(result);
-            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(type_) }
+
+    match result.typ {
+        DatabaseMutactionResultType::Create => {
+            let result = crate::protobuf::prisma::CreateNodeResult { id: result.id.into() };
+            let typ = database_mutaction_result::Type::Create(result);
+
+            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         }
     }
 }
