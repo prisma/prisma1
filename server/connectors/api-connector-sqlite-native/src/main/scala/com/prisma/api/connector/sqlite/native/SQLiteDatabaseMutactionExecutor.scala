@@ -56,12 +56,11 @@ class SQLiteDatabaseMutactionExecutor2(
         val x = prisma.protocol.DatabaseMutaction.Type.Create(
           prisma.protocol.CreateNode(
             header = prisma.protocol.Header(headerName),
-            projectJson = projectJson,
-            modelName = m.model.name,
             nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
             listArgs = listArgsToProtocolArgs(m.listArgs)
           ))
-        top_level_mutaction_interpreter(x)
+        val y = prisma.protocol.DatabaseMutaction(projectJson, m.model.name, x)
+        top_level_mutaction_interpreter(y, m)
 
       case _ =>
         super.interpreterFor(mutaction)
@@ -84,13 +83,22 @@ class SQLiteDatabaseMutactionExecutor2(
     )
   }
 
-  private def top_level_mutaction_interpreter(mutaction: prisma.protocol.DatabaseMutaction.Type): TopLevelDatabaseMutactionInterpreter = {
+  private def top_level_mutaction_interpreter(
+      protoMutaction: prisma.protocol.DatabaseMutaction,
+      mutaction: DatabaseMutaction
+  ): TopLevelDatabaseMutactionInterpreter = {
+
     new TopLevelDatabaseMutactionInterpreter {
       override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): dbio.DBIO[DatabaseMutactionResult] = {
         SimpleDBIO { x =>
-          NativeBinding.execute_mutaction(prisma.protocol.DatabaseMutaction(mutaction))
-          // FIXME: parse result and return
-          UnitDatabaseMutactionResult
+          val executionResult = NativeBinding.execute_mutaction(protoMutaction)
+          executionResult.`type` match {
+            case prisma.protocol.DatabaseMutactionResult.Type.Create(result) =>
+              CreateNodeResult(toIdGcValue(result.id), mutaction.asInstanceOf[CreateNode])
+
+            case prisma.protocol.DatabaseMutactionResult.Type.Empty =>
+              UnitDatabaseMutactionResult
+          }
         }
       }
     }

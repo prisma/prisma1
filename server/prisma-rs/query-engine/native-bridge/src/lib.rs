@@ -53,5 +53,6 @@ data_interface!(
     get_scalar_list_values_by_node_ids,
     execute_raw,
     count_by_model,
-    count_by_table
+    count_by_table,
+    execute_mutaction
 );

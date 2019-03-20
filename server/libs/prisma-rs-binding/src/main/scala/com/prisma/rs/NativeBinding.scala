@@ -72,11 +72,11 @@ object NativeBinding {
     }
   }
 
-  def execute_mutaction(input: DatabaseMutaction) = {
+  def execute_mutaction(input: DatabaseMutaction): DatabaseMutactionResult = {
     val (pointer, length) = writeBuffer(input)
     // FIXME: this must return proper result intead of this int
-    handleProtoResult(library.execute_mutaction(pointer, length)) { i: Int =>
-      i
+    handleProtoResult(library.execute_mutaction(pointer, length)) { x: DatabaseMutactionResult =>
+      x
     }
   }
 
@@ -100,6 +100,9 @@ object NativeBinding {
             processMessage(json.asInstanceOf[T])
 
           case Result.Value.Integer(value) =>
+            processMessage(value.asInstanceOf[T])
+
+          case Result.Value.MutactionResult(value) =>
             processMessage(value.asInstanceOf[T])
 
           case Result.Value.Empty =>

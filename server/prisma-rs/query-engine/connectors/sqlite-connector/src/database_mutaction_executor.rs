@@ -1,8 +1,8 @@
-use connector::{DatabaseMutaction, DatabaseMutactionExecutor, DatabaseMutactionResults};
-use serde_json::Value;
-use prisma_common::PrismaResult;
-use std::sync::Arc;
 use crate::Sqlite;
+use connector::{DatabaseMutaction, DatabaseMutactionExecutor, DatabaseMutactionResults};
+use prisma_common::PrismaResult;
+use serde_json::Value;
+use std::sync::Arc;
 
 pub struct SqliteDatabaseMutactionExecutor {
     pub _sqlite: Arc<Sqlite>,
@@ -22,8 +22,9 @@ impl DatabaseMutactionExecutor for SqliteDatabaseMutactionExecutor {
         Value::String("hello world!".to_string())
     }
 
-    fn execute(&self, _mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
-        unimplemented!()
+    fn execute(&self, mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
+        dbg!(mutaction);
+        Ok(DatabaseMutactionResults { results: vec![] })
         /*
         executor.transaction(|tx| {
             let id = self.steps.into_iter().fold(None, |acc, step| {

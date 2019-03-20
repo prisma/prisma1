@@ -80,6 +80,15 @@ impl RpcResponse {
         }
     }
 
+    pub fn ok_mutaction(result: crate::protobuf::prisma::DatabaseMutactionResult) -> RpcResponse {
+        RpcResponse {
+            header: Self::header(),
+            response: Some(rpc::Response::Result(prisma::Result {
+                value: Some(result::Value::MutactionResult(result)),
+            })),
+        }
+    }
+
     pub fn error(error: CrateError) -> RpcResponse {
         RpcResponse {
             header: Self::header(),

@@ -3,7 +3,7 @@ use crate::{
     protobuf::{prelude::*, InputValidation},
     ExternalInterface,
 };
-use connector::{DataResolver, DatabaseMutactionExecutor, NodeSelector};
+use connector::*;
 use prisma_common::{config::WithMigrations, config::*, error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use prost::Message;
@@ -23,7 +23,7 @@ impl ProtoBufInterface {
 
                 (
                     SqlResolver::new(sqlite.clone()),
-                    SqliteDatabaseMutactionExecutor { _sqlite: sqlite }
+                    SqliteDatabaseMutactionExecutor { _sqlite: sqlite },
                 )
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
@@ -261,6 +261,25 @@ impl ExternalInterface for ProtoBufInterface {
             Ok(response_payload)
         })
     }
+
+    fn execute_mutaction(&self, payload: &mut [u8]) -> Vec<u8> {
+        Self::protobuf_result(|| {
+            let input = crate::protobuf::prisma::DatabaseMutaction::decode(payload)?;
+            let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
+            let project: ProjectRef = project_template.into();
+            let model = project.schema().find_model(&input.model_name).unwrap();
+            let mutaction = convert_mutaction(input, model);
+
+            let mut results = self.database_mutaction_executor.execute(mutaction)?;
+            let result = results.results.pop().expect("no mutaction results returned");
+
+            let response = RpcResponse::ok_mutaction(convert_mutaction_result(result));
+            let mut response_payload = Vec::new();
+
+            response.encode(&mut response_payload).unwrap();
+            Ok(response_payload)
+        })
+    }
 }
 
 impl From<Error> for super::prisma::error::Value {
@@ -278,6 +297,48 @@ impl From<Error> for super::prisma::error::Value {
             }
             e @ Error::NoResultError => super::prisma::error::Value::NoResultsError(e.description().to_string()),
             _ => unreachable!(),
+        }
+    }
+}
+
+fn convert_mutaction(m: crate::protobuf::prisma::DatabaseMutaction, model: ModelRef) -> DatabaseMutaction {
+    use crate::protobuf::prisma::database_mutaction;
+    let m = match m.type_.unwrap() {
+        database_mutaction::Type::Create(x) => convert_create(x, model),
+    };
+
+    DatabaseMutaction::TopLevel(m)
+}
+
+fn convert_create(m: crate::protobuf::prisma::CreateNode, model: ModelRef) -> TopLevelDatabaseMutaction {
+    let create_node = CreateNode {
+        model: model,
+        non_list_args: convert_prisma_args(m.non_list_args),
+        list_args: convert_prisma_args(m.list_args),
+        nested_mutactions: empty_nested_mutactions(),
+    };
+    TopLevelDatabaseMutaction::CreateNode(create_node)
+}
+
+fn empty_nested_mutactions() -> NestedMutactions {
+    NestedMutactions { creates: vec![] }
+}
+
+fn convert_prisma_args(proto: crate::protobuf::prisma::PrismaArgs) -> PrismaArgs {
+    let mut result = PrismaArgs::empty();
+    for arg in proto.args {
+        result.insert(arg.key, arg.value);
+    }
+    result
+}
+
+fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf::prisma::DatabaseMutactionResult {
+    use crate::protobuf::prisma::database_mutaction_result;
+    match result {
+        DatabaseMutactionResult::CreateNode(x) => {
+            let result = crate::protobuf::prisma::CreateNodeResult { id: x.id.into() };
+            let type_ = database_mutaction_result::Type::Create(result);
+            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(type_) }
         }
     }
 }
