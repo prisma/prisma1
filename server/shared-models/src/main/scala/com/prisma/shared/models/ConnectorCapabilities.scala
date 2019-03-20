@@ -59,6 +59,21 @@ object ConnectorCapabilities extends BooleanUtils {
   val empty: ConnectorCapabilities                                     = ConnectorCapabilities(Set.empty[ConnectorCapability])
   def apply(capabilities: ConnectorCapability*): ConnectorCapabilities = ConnectorCapabilities(Set(capabilities: _*))
 
+  lazy val sqlite: ConnectorCapabilities = {
+    val capas = Set(
+      LegacyDataModelCapability,
+      TransactionalExecutionCapability,
+      JoinRelationsFilterCapability,
+      JoinRelationLinksCapability,
+      RelationLinkTableCapability,
+      MigrationsCapability,
+      NonEmbeddedScalarListCapability,
+      NodeQueryCapability,
+      RawAccessCapability
+    )
+    ConnectorCapabilities(capas)
+  }
+
   lazy val mysql: ConnectorCapabilities = {
     val capas = Set(
       LegacyDataModelCapability,

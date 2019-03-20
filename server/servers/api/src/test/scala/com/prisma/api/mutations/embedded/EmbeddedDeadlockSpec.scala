@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.embedded
 
+import com.prisma.ConnectorTag
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -13,6 +14,7 @@ class EmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiS
   override def doNotRunForPrototypes: Boolean = true
 
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
+  override def doNotRunForConnectors  = Set(ConnectorTag.SQLiteConnectorTag)
 
   import testDependencies.system.dispatcher
 

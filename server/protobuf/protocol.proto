@@ -1,0 +1,256 @@
+syntax="proto2";
+package prisma;
+
+message RpcResponse {
+    required Header header = 1;
+    oneof response {
+        Result result = 2;
+        Error  error  = 3;
+    }
+}
+
+message Header {
+    required string type_name = 1;
+}
+
+message Result {
+    oneof value {
+        NodesResult            nodes_result        = 1;
+        ScalarListValuesResult scalar_list_results = 2;
+        ExecuteRawResult       execute_raw_result  = 3;
+        uint32                 integer             = 4;
+    }
+}
+
+message Error {
+    oneof value {
+        string connection_error             = 1;
+        string query_error                  = 2;
+        string no_results_error             = 3;
+        string protobuf_decode_error        = 4;
+        string json_decode_error            = 5;
+        string invalid_input_error          = 6;
+        string invalid_connection_arguments = 7;
+    }
+}
+
+message NodesResult {
+    repeated Node nodes = 1;
+    repeated string fields = 2;
+}
+
+message Node {
+    repeated ValueContainer values    = 1;
+    optional GraphqlId      parent_id = 2;
+}
+
+message ScalarListValuesResult {
+    repeated ScalarListValues values = 1;
+}
+
+message ScalarListValues {
+    required GraphqlId      node_id = 1;
+    repeated ValueContainer values  = 2;
+}
+
+message ExecuteRawResult {
+    required string json   = 1;
+}
+
+message ValueContainer {
+    oneof prisma_value {
+        string    string     = 1;
+        double    float      = 2;
+        bool      boolean    = 3;
+        string    date_time  = 4;
+        string    enum       = 5;
+        string    json       = 6;
+        int32     int        = 7;
+        int64     relation   = 8;
+        bool      null       = 9;
+        string    uuid       = 10;
+        GraphqlId graphql_id = 11;
+    }
+}
+
+message GraphqlId {
+    oneof id_value {
+        string string = 1;
+        int64  int    = 2;
+        string uuid   = 3;
+    }
+}
+
+message GetNodeByWhereInput {
+    required Header         header          = 1;
+    required bytes          project_json    = 2;
+    required string         model_name      = 3;
+    required string         field_name      = 4;
+    required ValueContainer value           = 5;
+    required SelectedFields  selected_fields = 6;
+}
+
+message GetNodesInput {
+    required Header         header          = 1;
+    required bytes          project_json    = 2;
+    required string         model_name      = 3;
+    required QueryArguments query_arguments = 4;
+    required SelectedFields  selected_fields = 5;
+}
+
+message GetRelatedNodesInput {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required string          from_field      = 4;
+    repeated GraphqlId       from_node_ids   = 5;
+    required QueryArguments  query_arguments = 6;
+    required SelectedFields  selected_fields = 7;
+}
+
+message GetScalarListValues {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required string          list_field      = 4;
+    required QueryArguments  query_arguments = 5;
+}
+
+message GetScalarListValuesByNodeIds {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required string          list_field      = 4;
+    repeated GraphqlId       node_ids        = 5;
+}
+
+message ExecuteRawInput {
+    required Header header = 1;
+    required string query  = 2;
+}
+
+message CountByModelInput {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+    required QueryArguments  query_arguments = 4;
+}
+
+message CountByTableInput {
+    required Header          header          = 1;
+    required bytes           project_json    = 2;
+    required string          model_name      = 3;
+}
+
+message SelectedFields {
+    repeated SelectedField fields = 1;
+}
+
+message QueryArguments {
+    optional uint32    skip     = 1;
+    optional GraphqlId after    = 2;
+    optional uint32    first    = 3;
+    optional GraphqlId before   = 4;
+    optional uint32    last     = 5;
+    optional Filter    filter   = 6;
+    optional OrderBy   order_by = 7;
+}
+
+message OrderBy {
+    enum SortOrder {
+        ASC = 0;
+        DESC = 1;
+    };
+
+    required string scalar_field = 1;
+    required SortOrder sort_order = 2;
+}
+
+message Filter {
+    oneof type {
+        AndFilter        and                  = 1;
+        OrFilter         or                   = 2;
+        NotFilter        not                  = 3;
+        ScalarFilter     scalar               = 4;
+        ScalarListFilter scalar_list          = 5;
+        RelationalField  one_relation_is_null = 6;
+        RelationFilter   relation             = 7;
+        bool             node_subscription    = 8;
+        bool             bool_filter          = 9;
+    }
+}
+
+message RelationalField {
+    required string         field           = 1;
+    required SelectedFields selected_fields = 2;
+}
+
+message SelectedField {
+    oneof field {
+        string          scalar     = 1;
+        RelationalField relational = 2;
+    }
+}
+
+message AndFilter {
+    repeated Filter filters = 1;
+}
+
+message OrFilter {
+    repeated Filter filters = 1;
+}
+
+message NotFilter {
+    repeated Filter filters = 1;
+}
+
+message ScalarFilter {
+    required string field = 1;
+
+    oneof condition {
+        ValueContainer equals                 = 2;
+        ValueContainer not_equals             = 3;
+        ValueContainer contains               = 4;
+        ValueContainer not_contains           = 5;
+        ValueContainer starts_with            = 6;
+        ValueContainer not_starts_with        = 7;
+        ValueContainer ends_with              = 8;
+        ValueContainer not_ends_with          = 9;
+        ValueContainer less_than              = 10;
+        ValueContainer less_than_or_equals    = 11;
+        ValueContainer greater_than           = 12;
+        ValueContainer greater_than_or_equals = 13;
+        MultiContainer in                     = 14;
+        MultiContainer not_in                 = 15;
+    }
+}
+
+message MultiContainer {
+    repeated ValueContainer values = 1;
+}
+
+message ScalarListFilter {
+    required string              field     = 1;
+    required ScalarListCondition condition = 2;
+}
+
+message ScalarListCondition {
+    oneof condition {
+        ValueContainer contains       = 1;
+        MultiContainer contains_every = 2;
+        MultiContainer contains_some  = 3;
+    }
+}
+
+message RelationFilter {
+    enum Condition {
+        EVERY_RELATED_NODE = 0;
+        AT_LEAST_ONE_RELATED_NODE = 1;
+        NO_RELATED_NODE = 2;
+        TO_ONE_RELATED_NODE = 3;
+    };
+
+    required RelationalField field         = 1;
+    required Filter          nested_filter = 2;
+    required Condition       condition     = 3;
+}
