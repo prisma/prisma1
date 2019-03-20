@@ -157,6 +157,8 @@ impl<'a> QueryBuilder<'a> {
         match self.query_type {
             Some(Ok(QueryType::Single(ref m))) => self.selector = Some(self.extract_node_selector(Arc::clone(m))),
             Some(Ok(QueryType::Multiple(ref m))) => self.args = Some(self.extract_query_args(Arc::clone(m))),
+            Some(Ok(QueryType::OneRelation(ref m))) => self.args = Some(self.extract_query_args(Arc::clone(m))),
+            Some(Ok(QueryType::ManyRelation(ref m))) => self.args = Some(self.extract_query_args(Arc::clone(m))),
             _ => {
                 //FIXME: This is really not ideal, where do we store the error in this case?
                 // This, and many other places, actually point to a separated query builder for many and single
@@ -236,7 +238,7 @@ impl<'a> QueryBuilder<'a> {
                         Err(Error::QueryValidationError("...".into()))
                     }
                 }
-                ("filter", _) => panic!("lolnope"),
+                ("where", _) => panic!("lolnope"),
                 (name, _) => Err(Error::QueryValidationError(format!("Unknown key: `{}`", name))),
             }
         } else {
@@ -357,7 +359,6 @@ impl<'a> QueryBuilder<'a> {
 
     // Q: Wouldn't it make more sense to just call that one from the outside and not the other ones?
     fn get(self) -> PrismaResult<PrismaQuery> {
-        dbg!(&self);
         let name = self.field.alias.as_ref().unwrap_or(&self.field.name).clone();
         let selected_fields = self.selected_fields.unwrap_or(Err(Error::QueryValidationError(
             "Selected fields required but not found".into(),

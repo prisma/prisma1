@@ -38,9 +38,8 @@ impl RequestHandler for GraphQlRequestHandler {
         let queries: Vec<PrismaQuery> = qb.build().unwrap(); // FIXME: Error handling
         let results = dbg!(ctx.query_executor.execute(&queries)).unwrap();
 
-        // FIXME: Serialization with separate GQL-specific type
-        let mut serde_map = serde_json::map::Map::new();
-        for result in results {
+        /// Recursively serialize query results
+        fn serialize(map: &mut serde_json::map::Map<String, serde_json::Value>, result: PrismaQueryResult) {
             match result {
                 PrismaQueryResult::Single(result) => {
                     let json = match result.result {
@@ -48,24 +47,20 @@ impl RequestHandler for GraphQlRequestHandler {
                         Some(single_node) => {
                             let mut map = serialize_single_node(single_node);
                             for result in result.nested {
-                                match result {
-                                    PrismaQueryResult::Single(result) => match result.result {
-                                        Some(node) => {
-                                            let mut node_map = serialize_single_node(node);
-                                            map.insert(result.name, serde_json::Value::Object(node_map));
-                                        }
-                                        None => (),
-                                    },
-                                    _ => unimplemented!(),
-                                }
+                                serialize(&mut map, result);
                             }
                             serde_json::Value::Object(map)
                         }
                     };
-                    serde_map.insert(result.name, json);
+                    map.insert(result.name, json);
                 }
                 _ => unimplemented!(),
             }
+        }
+
+        let mut serde_map = serde_json::map::Map::new();
+        for result in results {
+            serialize(&mut serde_map, result);
         }
         let mut envelope = serde_json::map::Map::new();
         envelope.insert("data".to_owned(), serde_json::Value::Object(serde_map));
@@ -94,14 +89,14 @@ fn serialize_prisma_value(value: PrismaValue) -> serde_json::Value {
             serde_json::Value::Number(num)
         }
         PrismaValue::Boolean(x) => serde_json::Value::Bool(x),
-        PrismaValue::DateTime(x) => unimplemented!(),
+        PrismaValue::DateTime(_) => unimplemented!(),
         PrismaValue::Enum(x) => serde_json::Value::String(x),
         PrismaValue::Json(x) => serde_json::from_str(&x).unwrap(),
         PrismaValue::Int(x) => {
             let num = serde_json::Number::from_f64(x as f64).unwrap();
             serde_json::Value::Number(num)
         }
-        PrismaValue::Relation(x) => unimplemented!(),
+        PrismaValue::Relation(_) => unimplemented!(),
         PrismaValue::Null => serde_json::Value::Null,
         PrismaValue::Uuid(x) => serde_json::Value::String(x),
         PrismaValue::GraphqlId(x) => serialize_graphql_id(x),

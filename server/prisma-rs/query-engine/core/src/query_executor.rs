@@ -47,23 +47,24 @@ impl QueryExecutor {
                     }
                 }
                 PrismaQuery::RelatedRecordQuery(query) => {
-                    // let result = self.data_resolver.get_related_nodes(
-                    //     Arc::clone(&query.parent_field),
-                    //     &parent_ids,
-                    //     QueryArguments::empty(),
-                    //     &query.selected_fields,
-                    // )?;
+                    let result = self.data_resolver.get_related_nodes(
+                        Arc::clone(&query.parent_field),
+                        &parent_ids,
+                        QueryArguments::empty(),
+                        &query.selected_fields,
+                    )?;
 
-                    // let ids = vec![node.get_id_value(model).clone()];
-                    // let nested_results = self.execute_internal(&query.nested, ids)?;
-                    // let result = SinglePrismaQueryResult {
-                    //     name: query.name.clone(),
-                    //     result: result.into_single_node(),
-                    //     nested: vec![],
-                    // };
-                    // results.push(PrismaQueryResult::Single(result));
-
-                    unimplemented!()
+                    // FIXME: Required fields need to return Errors, non-required can be ignored!
+                    if let Some(node) = dbg!(result.into_single_node()) {
+                        let ids = vec![node.get_id_value(query.parent_field.related_model()).clone()];
+                        let nested_results = self.execute_internal(&query.nested, ids)?;
+                        let result = SinglePrismaQueryResult {
+                            name: query.name.clone(),
+                            result: Some(node),
+                            nested: nested_results,
+                        };
+                        results.push(PrismaQueryResult::Single(result));
+                    }
                 }
                 _ => unimplemented!(),
             }

@@ -9,7 +9,7 @@ type Album {
   id: ID! @id
   AlbumId: Int! @unique
   Title: String!
-  Artist: Artist!
+  Artist: Artist! @relation(link: TABLE)
   Tracks: [Track!]!
 }
 
@@ -18,8 +18,8 @@ type Track {
   TrackId: Int! @unique
   Name: String!
   Album: Album! @relation(link: TABLE)
-  MediaType: MediaType!
-  Genre: Genre!
+  MediaType: MediaType! @relation(link: TABLE)
+  Genre: Genre! @relation(link: TABLE)
   Composer: String
   Milliseconds: Int!
   Bytes: Int!
