@@ -99,7 +99,7 @@ struct QueryBuilder<'a> {
     selector: BuilderResult<NodeSelector>,
     selected_fields: BuilderResult<SelectedFields>,
     args: BuilderResult<QueryArguments>,
-    parent_field: BuilderResult<RelationFieldRef>,
+    parent_field: Option<RelationFieldRef>,
     nested: BuilderResult<Vec<QueryBuilder<'a>>>,
 }
 
@@ -118,27 +118,29 @@ impl<'a> QueryBuilder<'a> {
         }
     }
 
-    fn nested(schema: SchemaRef, field: &'a gql::query::Field) -> Self {
-        unimplemented!()
-    }
-
     /// Finds the model and infers the query type for the given GraphQL field.
-    fn infer_query_type(mut self) -> Self {
-        // Find model for field
-        let qt: Option<QueryType> = self
-            .schema
-            .models()
-            .iter()
-            .filter_map(|model| QueryType::lowercase(model, self.field).or(QueryType::singular(model, self.field)))
-            .nth(0);
+    fn infer_query_type(mut self, parent: Option<RelationFieldRef>) -> Self {
+        self.parent_field = parent;
 
-        self.query_type = Some(match qt {
-            Some(model_type) => Ok(model_type),
-            None => Err(Error::QueryValidationError(format!(
-                "Model not found for field {}",
-                self.field.alias.as_ref().unwrap_or(&self.field.name)
-            ))),
-        });
+        self.query_type = if let Some(ref parent) = &self.parent_field {
+            Some(Ok(QueryType::Relation(parent.related_model())))
+        } else {
+            // Find model for field
+            let qt: Option<QueryType> = self
+                .schema
+                .models()
+                .iter()
+                .filter_map(|model| QueryType::lowercase(model, self.field).or(QueryType::singular(model, self.field)))
+                .nth(0);
+
+            Some(match qt {
+                Some(model_type) => Ok(model_type),
+                None => Err(Error::QueryValidationError(format!(
+                    "Model not found for field {}",
+                    self.field.alias.as_ref().unwrap_or(&self.field.name)
+                ))),
+            })
+        };
 
         self
     }
@@ -223,7 +225,7 @@ impl<'a> QueryBuilder<'a> {
 
             self.selected_fields = match qt {
                 QueryType::Relation(_) => {
-                    if let Some(Ok(ref rel)) = self.parent_field {
+                    if let Some(ref rel) = self.parent_field {
                         Some(selected_fields.map(|sf| SelectedFields::new(sf, Some(Arc::clone(rel)))))
                     } else {
                         None
@@ -265,7 +267,7 @@ impl<'a> QueryBuilder<'a> {
                                 // Todo: How to handle relations?
                                 // The QB needs to know that it's a relation, needs to find the related model, etc.
                                 let qb = QueryBuilder::new(Arc::clone(&self.schema), f)
-                                    .infer_query_type()
+                                    .infer_query_type(Some(Arc::clone(&field)))
                                     .process_arguments()
                                     .map_selected_scalar_fields()
                                     .collect_nested_queries();
@@ -324,9 +326,12 @@ impl<'a> QueryBuilder<'a> {
                 }
                 QueryType::Multiple(model) => unimplemented!(),
                 QueryType::Relation(model) => {
-                    let parent_field = self.parent_field.unwrap_or(Err(Error::QueryValidationError(
-                        "Required parent field not found".into(),
-                    )))?;
+                    let parent_field = self
+                        .parent_field
+                        .map(|i| Ok(i)) // FIXME: 🤮 This is bad
+                        .unwrap_or(Err(Error::QueryValidationError(
+                            "Required parent field not found".into(),
+                        )))?;
 
                     Ok(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
                         name: name,
@@ -374,7 +379,7 @@ impl RootQueryBuilder {
                 // First query-level fields map to a model in our schema, either a plural or singular
                 match item {
                     Selection::Field(root_field) => QueryBuilder::new(Arc::clone(&self.schema), root_field)
-                        .infer_query_type()
+                        .infer_query_type(None)
                         .process_arguments()
                         .map_selected_scalar_fields()
                         .collect_nested_queries()
