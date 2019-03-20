@@ -1,4 +1,5 @@
 package com.prisma.api.connector.mongo.database
+import com.mongodb.async.client.ClientSession
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,7 +45,7 @@ object MongoAction {
 case class MapAction[A, B](source: MongoAction[A], fn: A => B)                  extends MongoAction[B]
 case class FlatMapAction[A, B](source: MongoAction[A], fn: A => MongoAction[B]) extends MongoAction[B]
 
-case class SimpleMongoAction[+A](fn: MongoDatabase => Future[A]) extends MongoAction[A]
+case class SimpleMongoAction[+A](fn: (MongoDatabase, ClientSession) => Future[A]) extends MongoAction[A]
 
 case class SequenceAction[A](actions: Vector[MongoAction[A]]) extends MongoAction[Vector[A]]
 case class SuccessAction[A](value: A)                         extends MongoAction[A]

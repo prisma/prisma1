@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait RelationActions extends FilterConditionBuilder {
 
   def createRelation(relationField: RelationField, parent: NodeAddress, childId: IdGCValue)(implicit ec: ExecutionContext) =
-    SimpleMongoAction { database =>
+    SimpleMongoAction { (database, session) =>
       val childModel         = relationField.relatedModel_!
       val relatedField       = relationField.relatedField
       val parentField        = parent.path.stringForField(relationField.dbName)
@@ -34,16 +34,16 @@ trait RelationActions extends FilterConditionBuilder {
 
       database
         .getCollection(collectionName)
-        .updateOne(where, update, updateOptions)
+        .updateOne(session, where, update, updateOptions)
         .toFuture()
     }
 
-  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue) = SimpleMongoAction { database =>
+  def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue) = SimpleMongoAction { (database, session) =>
     assert(!relationField.relatedField.isList)
     relationField.relationIsInlinedInParent match {
       case true =>
         val mongoFilter = buildConditionForFilter(Some(ScalarFilter(relationField.model.dummyField(relationField), Equals(childId))))
-        database.getCollection(relationField.model.dbName).updateMany(mongoFilter, unset(relationField.dbName)).collect().toFuture()
+        database.getCollection(relationField.model.dbName).updateMany(session, mongoFilter, unset(relationField.dbName)).collect().toFuture()
 
       case false =>
         Future.successful(())
@@ -51,7 +51,7 @@ trait RelationActions extends FilterConditionBuilder {
   }
 
   def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parent: NodeAddress, fromDelete: Boolean = false) =
-    SimpleMongoAction { database =>
+    SimpleMongoAction { (database, session) =>
       val parentModel = parent.where.model
       val childModel  = relationField.relatedModel_!
 
@@ -63,7 +63,7 @@ trait RelationActions extends FilterConditionBuilder {
           val mongoFilter   = buildConditionForFilter(Some(ScalarFilter(parentModel.idField_!, Equals(parent.idValue))))
           val update        = if (relationField.isList) pull(field, GCToBson(childId)) else unset(field)
 
-          database.getCollection(parentModel.dbName).updateMany(mongoFilter, update, updateOptions).collect().toFuture()
+          database.getCollection(parentModel.dbName).updateMany(session, mongoFilter, update, updateOptions).collect().toFuture()
 
         case false if !fromDelete =>
           val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.idField_!, Equals(childId))))
@@ -72,7 +72,7 @@ trait RelationActions extends FilterConditionBuilder {
             case true  => pull(relationField.relatedField.dbName, GCToBson(parent.idValue))
           }
 
-          database.getCollection(childModel.dbName).updateOne(mongoFilter, update).collect().toFuture()
+          database.getCollection(childModel.dbName).updateOne(session, mongoFilter, update).collect().toFuture()
 
         case false if fromDelete =>
           Future.successful(())
@@ -80,7 +80,7 @@ trait RelationActions extends FilterConditionBuilder {
     }
 
   def deleteRelationRowByParent(relationField: RelationField, parent: NodeAddress)(implicit ec: ExecutionContext) =
-    SimpleMongoAction { database =>
+    SimpleMongoAction { (database, session) =>
       val childModel   = relationField.relatedModel_!
       val relatedField = relationField.relatedField
 
@@ -91,18 +91,18 @@ trait RelationActions extends FilterConditionBuilder {
           val updateOptions = UpdateOptions().arrayFilters(af.toList.asJava)
           val update: Bson  = unset(field)
 
-          database.getCollection(parent.where.model.dbName).updateOne(parent.where, update, updateOptions).collect().toFuture
+          database.getCollection(parent.where.model.dbName).updateOne(session, parent.where, update, updateOptions).collect().toFuture
 
         case false =>
           relatedField.isList match {
             case false =>
               val mongoFilter = buildConditionForFilter(Some(ScalarFilter(childModel.dummyField(relatedField), Equals(parent.idValue))))
-              database.getCollection(childModel.dbName).updateOne(mongoFilter, unset(relatedField.dbName)).collect().toFuture
+              database.getCollection(childModel.dbName).updateOne(session, mongoFilter, unset(relatedField.dbName)).collect().toFuture
 
             case true =>
               val mongoFilter = buildConditionForFilter(Some(ScalarListFilter(childModel.dummyField(relatedField), ListContains(parent.idValue))))
               val update      = pull(relatedField.dbName, GCToBson(parent.idValue))
-              database.getCollection(childModel.dbName).updateMany(mongoFilter, update).collect().toFuture
+              database.getCollection(childModel.dbName).updateMany(session, mongoFilter, update).collect().toFuture
           }
       }
     }

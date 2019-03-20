@@ -1,5 +1,6 @@
 package com.prisma.api.connector.mongo.database
 
+import com.mongodb.async.client.ClientSession
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.extensions.ArrayFilter
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
@@ -25,16 +26,16 @@ trait NodeActions extends NodeSingleQueries {
   //region Top Level
 
   def createNode(mutaction: CreateNode, inlineRelations: List[(String, GCValue)])(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] =
-    SimpleMongoAction { database =>
+    SimpleMongoAction { (database, session) =>
       val (docWithId: Document, childResults: Vector[DatabaseMutactionResult]) = createToDoc(inlineRelations, mutaction, None, None)
 
-      database.getCollection(mutaction.model.dbName).insertOne(docWithId).toFuture().map(_ => MutactionResults(childResults))
+      database.getCollection(mutaction.model.dbName).insertOne(session, docWithId).toFuture().map(_ => MutactionResults(childResults))
     }
 
   def deleteNodeById(model: Model, id: IdGCValue) = deleteNodes(model, Vector(id))
 
-  def deleteNodes(model: Model, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
-    database.getCollection(model.dbName).deleteMany(in("_id", ids.map(x => GCToBson(x)): _*)).toFuture()
+  def deleteNodes(model: Model, ids: Seq[IdGCValue]) = SimpleMongoAction { (database, session) =>
+    database.getCollection(model.dbName).deleteMany(session, in("_id", ids.map(x => GCToBson(x)): _*)).toFuture()
   }
 
   def updateNode(mutaction: TopLevelUpdateNode)(implicit ec: ExecutionContext): MongoAction[MutactionResults] = {
@@ -49,7 +50,7 @@ trait NodeActions extends NodeSingleQueries {
   }
 
   def updateHelper(mutaction: UpdateNode, where: NodeSelector, previousValues: Option[PrismaNode])(implicit ec: ExecutionContext) = SimpleMongoAction {
-    database =>
+    (database, session) =>
       previousValues match {
         case None =>
           throw APIErrors.NodeNotFoundForWhereError(where)
@@ -79,20 +80,20 @@ trait NodeActions extends NodeSingleQueries {
 
             database
               .getCollection(mutaction.model.dbName)
-              .updateOne(where, combinedUpdates, updateOptions)
+              .updateOne(session, where, combinedUpdates, updateOptions)
               .toFuture()
               .map(_ => MutactionResults(results))
           }
       }
   }
 
-  def updateNodes(mutaction: AllUpdateNodes, ids: Seq[IdGCValue]) = SimpleMongoAction { database =>
+  def updateNodes(mutaction: AllUpdateNodes, ids: Seq[IdGCValue]) = SimpleMongoAction { (database, session) =>
     val nodeAddress = NodeAddress.forId(mutaction.model, StringIdGCValue.dummy)
 
     val scalarUpdates   = scalarUpdateValues(mutaction, nodeAddress)
     val combinedUpdates = CustomUpdateCombiner.customCombine(scalarUpdates)
 
-    database.getCollection(mutaction.model.dbName).updateMany(in("_id", ids.map(x => GCToBson(x)): _*), combinedUpdates).toFuture()
+    database.getCollection(mutaction.model.dbName).updateMany(session, in("_id", ids.map(x => GCToBson(x)): _*), combinedUpdates).toFuture()
   }
 
   //endregion

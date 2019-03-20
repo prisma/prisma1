@@ -3,8 +3,9 @@ version: "3"
 services:
   mongo:
     container_name: mongo
-    image: mongo:3.6
+    image: mongo:4.0
     restart: always
+    command: mongod --replSet single_node_replica_set
     environment:
       MONGO_INITDB_ROOT_USERNAME: prisma
       MONGO_INITDB_ROOT_PASSWORD: prisma

@@ -15,20 +15,20 @@ import scala.language.existentials
 
 trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilder with ProjectionBuilder with MongoResultReader {
 
-  def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { database =>
+  def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields) = SimpleMongoAction { (database, session) =>
     manyQueryHelper(model, queryArguments, None, database, false, selectedFields).map { results: Seq[Document] =>
       val nodes = results.map(readsPrismaNode(_, model, selectedFields))
       ResolverResult[PrismaNode](queryArguments, nodes.toVector)
     }
   }
 
-  def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
+  def getNodeIdsByFilter(model: Model, filter: Option[Filter]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { (database, session) =>
     if (needsAggregation(filter)) {
       aggregationQueryForId(database, model, QueryArguments.withFilter(filter))
     } else {
       database
         .getCollection(model.dbName)
-        .find(buildConditionForFilter(filter))
+        .find(session, buildConditionForFilter(filter))
         .projection(idProjection)
         .collect()
         .toFuture
@@ -36,38 +36,39 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
     }
   }
 
-  def getNodeIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction { database =>
-    if (parentField.relationIsInlinedInParent) {
-      import org.mongodb.scala.model.Projections._
+  def getNodeIdsByParentIds(parentField: RelationField, parentIds: Vector[IdGCValue]): SimpleMongoAction[Seq[IdGCValue]] = SimpleMongoAction {
+    (database, session) =>
+      if (parentField.relationIsInlinedInParent) {
+        import org.mongodb.scala.model.Projections._
 
-      val filter = Some(ScalarFilter(parentField.model.idField_!, In(parentIds)))
-      def reads(document: Document): Vector[IdGCValue] = parentField.isList match {
-        case true  => document(parentField.dbName).asArray().getValues.asScala.map(v => StringIdGCValue(v.asObjectId().getValue.toString)).toVector
-        case false => Vector(StringIdGCValue(document(parentField.dbName).asObjectId().getValue.toString))
+        val filter = Some(ScalarFilter(parentField.model.idField_!, In(parentIds)))
+        def reads(document: Document): Vector[IdGCValue] = parentField.isList match {
+          case true  => document(parentField.dbName).asArray().getValues.asScala.map(v => StringIdGCValue(v.asObjectId().getValue.toString)).toVector
+          case false => Vector(StringIdGCValue(document(parentField.dbName).asObjectId().getValue.toString))
+        }
+
+        database
+          .getCollection(parentField.model.dbName)
+          .find(session, buildConditionForFilter(filter))
+          .projection(include(parentField.dbName))
+          .collect()
+          .toFuture
+          .map(_.flatMap(reads))
+
+      } else {
+        val filter = Some(parentField.relatedField match {
+          case f if !f.isList => ScalarFilter(parentField.relatedModel_!.dummyField(f), In(parentIds))
+          case f if f.isList  => ScalarListFilter(parentField.relatedModel_!.dummyField(f), ListContainsSome(parentIds))
+        })
+
+        database
+          .getCollection(parentField.relatedModel_!.dbName)
+          .find(session, buildConditionForFilter(filter))
+          .projection(idProjection)
+          .collect()
+          .toFuture
+          .map(_.map(readsId))
       }
-
-      database
-        .getCollection(parentField.model.dbName)
-        .find(buildConditionForFilter(filter))
-        .projection(include(parentField.dbName))
-        .collect()
-        .toFuture
-        .map(_.flatMap(reads))
-
-    } else {
-      val filter = Some(parentField.relatedField match {
-        case f if !f.isList => ScalarFilter(parentField.relatedModel_!.dummyField(f), In(parentIds))
-        case f if f.isList  => ScalarListFilter(parentField.relatedModel_!.dummyField(f), ListContainsSome(parentIds))
-      })
-
-      database
-        .getCollection(parentField.relatedModel_!.dbName)
-        .find(buildConditionForFilter(filter))
-        .projection(idProjection)
-        .collect()
-        .toFuture
-        .map(_.map(readsId))
-    }
   }
 
   def manyQueryHelper(model: Model,
@@ -118,7 +119,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
   }
 
   def getRelatedNodes(fromField: RelationField, fromNodeIds: Vector[IdGCValue], queryArguments: QueryArguments, selectedFields: SelectedFields) =
-    SimpleMongoAction { database =>
+    SimpleMongoAction { (database, session) =>
       val relatedField = fromField.relatedField
       val model        = fromField.relatedModel_!
 
@@ -149,7 +150,7 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
     }
 
   //Fixme this does not use all queryarguments
-  def countFromModel(model: Model, queryArguments: QueryArguments) = SimpleMongoAction { database =>
+  def countFromModel(model: Model, queryArguments: QueryArguments) = SimpleMongoAction { (database, session) =>
     //    val queryArgFilter = queryArguments match {
 //      case Some(arg) => arg.filter
 //      case None      => None
@@ -172,11 +173,11 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
 //
 //    queryWithLimit.collect().toFuture
 
-    database.getCollection(model.dbName).countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
+    database.getCollection(model.dbName).countDocuments(session, buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
   }
 
-  def countFromTable(table: String, filter: Option[Filter]) = SimpleMongoAction { database =>
-    database.getCollection(table).countDocuments(buildConditionForFilter(filter)).toFuture.map(_.toInt)
+  def countFromTable(table: String, filter: Option[Filter]) = SimpleMongoAction { (database, session) =>
+    database.getCollection(table).countDocuments(session, buildConditionForFilter(filter)).toFuture.map(_.toInt)
   }
 
 }

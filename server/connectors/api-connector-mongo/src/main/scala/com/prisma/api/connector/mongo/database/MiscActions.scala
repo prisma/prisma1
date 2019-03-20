@@ -9,7 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait MiscActions {
 
-  def truncateTables(mutaction: ResetData)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { database =>
+  def truncateTables(mutaction: ResetData)(implicit ec: ExecutionContext): SimpleMongoAction[MutactionResults] = SimpleMongoAction { (database, session) =>
     val project           = mutaction.project
     val nonEmbeddedModels = project.models.filter(!_.isEmbedded)
 

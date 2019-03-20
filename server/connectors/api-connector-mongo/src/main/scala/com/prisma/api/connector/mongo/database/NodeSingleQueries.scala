@@ -14,9 +14,9 @@ import scala.language.existentials
 
 trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with ProjectionBuilder {
 
-  def getModelForGlobalId(project: Project, globalId: StringIdGCValue) = SimpleMongoAction { database =>
+  def getModelForGlobalId(project: Project, globalId: StringIdGCValue) = SimpleMongoAction { (database, session) =>
     val outer = project.models.map { model =>
-      database.getCollection(model.dbName).find(Filters.eq("_id", GCToBson(globalId))).projection(idProjection).collect().toFuture.map {
+      database.getCollection(model.dbName).find(session, Filters.eq("_id", GCToBson(globalId))).projection(idProjection).collect().toFuture.map {
         results: Seq[Document] =>
           if (results.nonEmpty) Vector(model) else Vector.empty
       }
@@ -25,22 +25,23 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
     Future.sequence(outer).map(_.flatten.headOption)
   }
 
-  def getNodeByWhereComplete(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = SimpleMongoAction { database =>
-    database.getCollection(where.model.dbName).find(where).collect().toFuture.map { results: Seq[Document] =>
+  def getNodeByWhereComplete(where: NodeSelector): SimpleMongoAction[Option[PrismaNode]] = SimpleMongoAction { (database, session) =>
+    database.getCollection(where.model.dbName).find(session, where).collect().toFuture.map { results: Seq[Document] =>
       results.headOption.map(readsCompletePrismaNode(_, where.model))
     }
   }
 
-  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { database =>
-    database.getCollection(where.model.dbName).find(where).projection(projectSelected(selectedFields)).collect().toFuture.map { results: Seq[Document] =>
-      results.headOption.map(readsPrismaNode(_, where.model, selectedFields))
+  def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields) = SimpleMongoAction { (database, session) =>
+    database.getCollection(where.model.dbName).find(session, where).projection(projectSelected(selectedFields)).collect().toFuture.map {
+      results: Seq[Document] =>
+        results.headOption.map(readsPrismaNode(_, where.model, selectedFields))
     }
   }
 
-  def getNodeIdByWhere(where: NodeSelector): SimpleMongoAction[Option[IdGCValue]] = SimpleMongoAction { database =>
+  def getNodeIdByWhere(where: NodeSelector): SimpleMongoAction[Option[IdGCValue]] = SimpleMongoAction { (database, session) =>
     database
       .getCollection(where.model.dbName)
-      .find(where)
+      .find(session, where)
       .projection(idProjection)
       .collect()
       .toFuture
@@ -109,7 +110,7 @@ trait NodeSingleQueries extends FilterConditionBuilder with NodeManyQueries with
     }
   }
 
-  def noneHelper = SimpleMongoAction { database =>
+  def noneHelper = SimpleMongoAction { (database, session) =>
     Future(Option.empty[IdGCValue])
   }
 

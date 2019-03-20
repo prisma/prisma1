@@ -1,11 +1,11 @@
 package com.prisma.api.connector.mongo.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.database.{FilterConditionBuilder, MongoActionsBuilder}
+import com.prisma.api.connector.mongo.database.{FilterConditionBuilder, MongoAction, MongoActionsBuilder}
 import com.prisma.api.connector.mongo.extensions.SlickReplacement
 import com.prisma.gc_values._
 import com.prisma.shared.models._
-import org.mongodb.scala.MongoClient
+import org.mongodb.scala.{MongoClient, MongoDatabase}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,21 +13,28 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
   val queryBuilder = MongoActionsBuilder(project.dbName, client)
 
-  val database = client.getDatabase(project.dbName)
+  val database: MongoDatabase = client.getDatabase(project.dbName)
+
+  private def runQuery[T](query: MongoAction[T]) = {
+    for {
+      session <- client.startSession().toFuture()
+      result  <- SlickReplacement.run(database, query, session)
+    } yield result
+  }
 
   override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = {
     val query = queryBuilder.getModelForGlobalId(project, globalId)
-    SlickReplacement.run(database, query)
+    runQuery(query)
   }
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
     val query = queryBuilder.getNodeByWhere(where, selectedFields)
-    SlickReplacement.run(database, query)
+    runQuery(query)
   }
 
   override def getNodes(model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[ResolverResult[PrismaNode]] = {
     val query = queryBuilder.getNodes(model, queryArguments, selectedFields)
-    SlickReplacement.run(database, query)
+    runQuery(query)
   }
 
   override def getRelatedNodes(fromField: RelationField,
@@ -35,17 +42,17 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
                                queryArguments: QueryArguments,
                                selectedFields: SelectedFields): Future[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     val query = queryBuilder.getRelatedNodes(fromField, fromNodeIds, queryArguments, selectedFields)
-    SlickReplacement.run(database, query)
+    runQuery(query)
   }
 
   override def countByModel(model: Model, queryArguments: QueryArguments): Future[Int] = {
     val query = queryBuilder.countFromModel(model, queryArguments)
-    SlickReplacement.run(database, query)
+    runQuery(query)
   }
 
   override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = {
     val query = queryBuilder.countFromTable(table, whereFilter)
-    SlickReplacement.run(database, query)
+    runQuery(query)
   }
 
   //Export

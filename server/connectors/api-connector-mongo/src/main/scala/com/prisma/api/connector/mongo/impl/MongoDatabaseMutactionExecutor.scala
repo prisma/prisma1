@@ -1,5 +1,7 @@
 package com.prisma.api.connector.mongo.impl
 
+import com.mongodb.async.SingleResultCallback
+import com.mongodb.{ReadConcern, TransactionOptions, WriteConcern}
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database._
 import com.prisma.api.connector.mongo.extensions.SlickReplacement._
@@ -8,7 +10,8 @@ import com.prisma.shared.models.Project
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 import play.api.libs.json.{JsValue, Json}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.{Failure, Success}
 
 class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
@@ -17,10 +20,25 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = MongoActionsBuilder(mutaction.project.dbName, client)
-    val action         = generateTopLevelMutaction(actionsBuilder.database, mutaction, actionsBuilder)
+    val actionsBuilder     = MongoActionsBuilder(mutaction.project.dbName, client)
+    val action             = generateTopLevelMutaction(actionsBuilder.database, mutaction, actionsBuilder)
+    val transactionOptions = TransactionOptions.builder().readConcern(ReadConcern.SNAPSHOT).writeConcern(WriteConcern.MAJORITY).build()
 
-    run(actionsBuilder.database, action)
+    for {
+      session <- client.startSession().toFuture()
+      _       = session.startTransaction(transactionOptions)
+      result  <- run(actionsBuilder.database, action, session)
+      promise = Promise[Unit]()
+      _ = session.commitTransaction(new SingleResultCallback[Void] {
+        override def onResult(result: Void, t: Throwable): Unit = {
+          val theTry = if (t != null) Failure(t) else Success(())
+          promise.complete(theTry)
+        }
+      })
+      _ <- promise.future
+
+    } yield result
+
   }
 
   def generateTopLevelMutaction(
