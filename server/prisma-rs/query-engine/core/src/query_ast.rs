@@ -55,9 +55,11 @@ pub struct RootQueryBuilder {
     pub operation_name: Option<String>,
 }
 
+#[derive(Debug)]
 enum QueryType {
     Single(ModelRef),
     Multiple(ModelRef),
+    Relation(ModelRef),
 }
 
 impl QueryType {
@@ -81,12 +83,14 @@ impl QueryType {
         match self {
             QueryType::Single(m) => Arc::clone(m),
             QueryType::Multiple(m) => Arc::clone(m),
+            QueryType::Relation(m) => Arc::clone(m),
         }
     }
 }
 
 type BuilderResult<T> = Option<PrismaResult<T>>;
 
+#[derive(Debug)]
 struct QueryBuilder<'a> {
     schema: SchemaRef,
     field: &'a gql::query::Field,
@@ -95,7 +99,7 @@ struct QueryBuilder<'a> {
     selector: BuilderResult<NodeSelector>,
     selected_fields: BuilderResult<SelectedFields>,
     args: BuilderResult<QueryArguments>,
-    parentField: Option<RelationFieldRef>,
+    parent_field: BuilderResult<RelationFieldRef>,
     nested: BuilderResult<Vec<QueryBuilder<'a>>>,
 }
 
@@ -109,9 +113,13 @@ impl<'a> QueryBuilder<'a> {
             selector: None,
             selected_fields: None,
             args: None,
-            parentField: None,
+            parent_field: None,
             nested: None,
         }
+    }
+
+    fn nested(schema: SchemaRef, field: &'a gql::query::Field) -> Self {
+        unimplemented!()
     }
 
     /// Finds the model and infers the query type for the given GraphQL field.
@@ -184,12 +192,15 @@ impl<'a> QueryBuilder<'a> {
         if let Some(Ok(ref qt)) = self.query_type {
             let model = qt.model();
 
+            // let sf = Self::to_selected_fields(&gql_field.selection_set, Arc::clone(&rf.related_model()));
+
             let selected_fields = self
                 .field
                 .selection_set
                 .items
                 .iter()
                 .filter_map(|i| {
+                    dbg!(&i);
                     if let Selection::Field(f) = i {
                         // We have to make sure the selected field exists in some form.
                         let field = model.fields().find_from_all(&f.name);
@@ -210,7 +221,16 @@ impl<'a> QueryBuilder<'a> {
                 })
                 .collect::<PrismaResult<Vec<SelectedField>>>();
 
-            self.selected_fields = Some(selected_fields.map(|sf| SelectedFields::new(sf, None))); // Todo: Is none ok here?
+            self.selected_fields = match qt {
+                QueryType::Relation(_) => {
+                    if let Some(Ok(ref rel)) = self.parent_field {
+                        Some(selected_fields.map(|sf| SelectedFields::new(sf, Some(Arc::clone(rel)))))
+                    } else {
+                        None
+                    }
+                }
+                _ => Some(selected_fields.map(|sf| SelectedFields::new(sf, None))),
+            };
         }
 
         self
@@ -251,15 +271,6 @@ impl<'a> QueryBuilder<'a> {
                                     .collect_nested_queries();
 
                                 Some(Ok(qb))
-
-                                // let sf =
-                                //     Self::to_selected_fields(&gql_field.selection_set, Arc::clone(&rf.related_model()));
-                                // Some(Ok(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
-                                //     name: f.name.clone(),
-                                //     parent_field: Arc::clone(&rf),
-                                //     selected_fields: SelectedFields::new(sf, None),
-                                //     nested: vec![],
-                                // })))
                             }
                             _ => Some(Err(Error::QueryValidationError(format!(
                                 "Selected field {} not found on model {}",
@@ -281,10 +292,20 @@ impl<'a> QueryBuilder<'a> {
 
     // Q: Wouldn't it make more sense to just call that one from the outside and not the other ones?
     fn get(self) -> PrismaResult<PrismaQuery> {
+        dbg!(&self);
         let name = self.field.alias.as_ref().unwrap_or(&self.field.name).clone();
         let selected_fields = self.selected_fields.unwrap_or(Err(Error::QueryValidationError(
             "Selected fields required but not found".into(),
         )))?;
+
+        let nested_queries = self
+            .nested
+            .unwrap_or(Err(Error::QueryValidationError(
+                "Required nested queries not found".into(),
+            )))?
+            .into_iter()
+            .map(|qb| qb.get())
+            .collect::<PrismaResult<Vec<PrismaQuery>>>()?;
 
         match self.query_type {
             Some(qt) => match qt? {
@@ -298,10 +319,22 @@ impl<'a> QueryBuilder<'a> {
                         name: name,
                         selector: selector,
                         selected_fields: selected_fields,
-                        nested: vec![], // todo: relations
+                        nested: nested_queries,
                     }))
                 }
                 QueryType::Multiple(model) => unimplemented!(),
+                QueryType::Relation(model) => {
+                    let parent_field = self.parent_field.unwrap_or(Err(Error::QueryValidationError(
+                        "Required parent field not found".into(),
+                    )))?;
+
+                    Ok(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
+                        name: name,
+                        parent_field: parent_field,
+                        selected_fields: selected_fields,
+                        nested: nested_queries,
+                    }))
+                }
             },
             None => unimplemented!(),
         }
