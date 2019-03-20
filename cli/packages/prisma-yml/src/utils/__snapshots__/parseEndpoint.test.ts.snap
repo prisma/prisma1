@@ -1,6 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`parseEndpoint custom hosted url or local in intranet 1`] = `
+exports[`parseEndpoint custom hosted url as ip in internet 1`] = `
+Object {
+  "clusterBaseUrl": "http://13.228.39.83:4466",
+  "clusterName": "default",
+  "isPrivate": true,
+  "local": false,
+  "service": "default",
+  "shared": false,
+  "stage": "default",
+  "workspaceSlug": null,
+}
+`;
+
+exports[`parseEndpoint custom hosted url in internet 1`] = `
 Object {
   "clusterBaseUrl": "https://api-prisma.divyendusingh.com",
   "clusterName": "default",
@@ -9,6 +22,19 @@ Object {
   "service": "zebra-4069",
   "shared": false,
   "stage": "dev",
+  "workspaceSlug": null,
+}
+`;
+
+exports[`parseEndpoint local behind a proxy 1`] = `
+Object {
+  "clusterBaseUrl": "http://local.dev",
+  "clusterName": "default",
+  "isPrivate": true,
+  "local": false,
+  "service": "default",
+  "shared": false,
+  "stage": "default",
   "workspaceSlug": null,
 }
 `;
@@ -36,6 +62,19 @@ Object {
   "shared": true,
   "stage": "dev",
   "workspaceSlug": "workspace-name",
+}
+`;
+
+exports[`parseEndpoint work for minimal docker url 1`] = `
+Object {
+  "clusterBaseUrl": "http://prisma:4466",
+  "clusterName": "default",
+  "isPrivate": false,
+  "local": true,
+  "service": "default",
+  "shared": false,
+  "stage": "default",
+  "workspaceSlug": null,
 }
 `;
 
