@@ -1,9 +1,8 @@
 //! Prisma query AST module
 
 use connector::NodeSelector;
-use graphql_parser::{self as gql, query::*};
+use graphql_parser::query::*;
 use prisma_models::{Field as ModelField, *};
-use std::collections::BTreeMap;
 use std::convert::From;
 use std::sync::Arc;
 
@@ -54,6 +53,7 @@ pub struct QueryBuilder {
     pub operation_name: Option<String>,
 }
 
+#[allow(unused_variables)]
 impl From<QueryBuilder> for Vec<PrismaQuery> {
     fn from(qb: QueryBuilder) -> Self {
         qb.query
@@ -130,7 +130,7 @@ fn collect_sub_queries(selection_set: &SelectionSet, model: ModelRef) -> Vec<Pri
                     .expect("did not find field");
                 match field {
                     ModelField::Relation(rf) => {
-                        let mut sf = SelectedFields::all_scalar(Arc::clone(&rf.related_model()), Some(Arc::clone(&rf)));
+                        let sf = SelectedFields::all_scalar(Arc::clone(&rf.related_model()), Some(Arc::clone(&rf)));
                         Some(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
                             name: gql_field.name.clone(),
                             parent_field: Arc::clone(&rf),

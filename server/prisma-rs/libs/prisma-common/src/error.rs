@@ -1,4 +1,4 @@
-use std::{error::Error as StdError, borrow::Cow};
+use std::error::Error as StdError;
 use uuid;
 
 type Cause = Box<dyn StdError>;
@@ -94,7 +94,10 @@ impl From<serde_json::error::Error> for Error {
 
 impl From<uuid::parser::ParseError> for Error {
     fn from(e: uuid::parser::ParseError) -> Error {
-        Error::InvalidInputError(String::from("Expected database value to be a UUID, but couldn't parse the value into one."), Some(Box::new(e)))
+        Error::InvalidInputError(
+            String::from("Expected database value to be a UUID, but couldn't parse the value into one."),
+            Some(Box::new(e)),
+        )
     }
 }
 

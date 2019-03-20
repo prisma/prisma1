@@ -5,8 +5,8 @@ use itertools::Itertools;
 use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
 use rusqlite::Row;
-use uuid::Uuid;
 use std::sync::Arc;
+use uuid::Uuid;
 
 pub struct SqlResolver<T>
 where
@@ -120,12 +120,12 @@ impl DataResolver for SqlResolver<Sqlite> {
 
         let results = self.database_executor.with_rows(query, db_name, |row| {
             let node_id: GraphqlId = row.get(0);
-            let position: u32 = row.get(1);
+            let _position: u32 = row.get(1);
             let value: PrismaValue = Self::fetch_value(type_identifier, row, 2)?;
 
             Ok(ScalarListElement {
                 node_id,
-                position,
+                _position,
                 value,
             })
         })?;
@@ -147,7 +147,7 @@ impl DataResolver for SqlResolver<Sqlite> {
 #[allow(dead_code)]
 struct ScalarListElement {
     node_id: GraphqlId,
-    position: u32,
+    _position: u32,
     value: PrismaValue,
 }
 
@@ -177,10 +177,10 @@ impl SqlResolver<Sqlite> {
                 if let Ok(val) = result {
                     let uuid = Uuid::parse_str(val.as_ref())?;
                     Ok(PrismaValue::Uuid(uuid))
-                }  else {
+                } else {
                     result.map(|s| PrismaValue::String(s))
                 }
-            },
+            }
             TypeIdentifier::Int => row.get_checked(i).map(|val| PrismaValue::Int(val)),
             TypeIdentifier::Boolean => row.get_checked(i).map(|val| PrismaValue::Boolean(val)),
             TypeIdentifier::Enum => row.get_checked(i).map(|val| PrismaValue::Enum(val)),
@@ -200,7 +200,7 @@ impl SqlResolver<Sqlite> {
         match result {
             Err(rusqlite::Error::InvalidColumnType(_, rusqlite::types::Type::Null)) => Ok(PrismaValue::Null),
             Ok(pv) => Ok(pv),
-            Err(e) => Err(e.into())
+            Err(e) => Err(e.into()),
         }
     }
 }

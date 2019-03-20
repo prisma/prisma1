@@ -2,7 +2,6 @@
 members = [
   "prisma-models",
   "libs/prisma-common",
-  "migration-engine",
   "query-engine/connectors/connector",
   "query-engine/connectors/sqlite-connector",
   "query-engine/prisma",
