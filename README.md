@@ -10,7 +10,7 @@ Prisma replaces traditional ORMs and simplifies database workflows:
 - _Migrate_: **Declarative data modelling and migrations** (optional)
 - _Manage_: **Visual data management with Prisma Admin**
 
-It is used to build **GraphQL, REST, gRPC APIs** and a lot more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
+It is used to build **GraphQL, REST, gRPC APIs** and more. Prisma [currently supports](#database-connectors) MySQL, PostgreSQL, MongoDB.
 
 Try a Prisma example online with CodeSandbox:
 
