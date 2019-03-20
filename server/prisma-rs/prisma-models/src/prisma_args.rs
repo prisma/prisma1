@@ -1,6 +1,6 @@
-use chrono::{Utc};
-use std::collections::{BTreeMap, btree_map::Keys};
-use crate::prelude::{PrismaValue, ModelRef};
+use crate::prelude::{ModelRef, PrismaValue};
+use chrono::Utc;
+use std::collections::{btree_map::Keys, BTreeMap};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct PrismaArgs {
@@ -26,6 +26,10 @@ impl PrismaArgs {
 
     pub fn get_field_value(&self, field: &str) -> Option<&PrismaValue> {
         self.args.get(field)
+    }
+
+    pub fn take_field_value(&mut self, field: &str) -> Option<PrismaValue> {
+        self.args.remove(field)
     }
 
     pub fn keys(&self) -> Keys<String, PrismaValue> {

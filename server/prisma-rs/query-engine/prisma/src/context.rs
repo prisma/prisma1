@@ -3,7 +3,7 @@ use core::QueryExecutor;
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase, WithMigrations};
 use prisma_models::SchemaRef;
 use sqlite_connector::{SqlResolver, Sqlite};
-use std::boxed::Box;
+use std::{boxed::Box, sync::Arc};
 
 pub struct PrismaContext {
     pub config: PrismaConfig,
@@ -16,7 +16,8 @@ impl PrismaContext {
         let config = config::load().unwrap();
         let data_resolver = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
-                SqlResolver::new(Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap())
+                let sqlite = Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap();
+                SqlResolver::new(Arc::new(sqlite))
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };

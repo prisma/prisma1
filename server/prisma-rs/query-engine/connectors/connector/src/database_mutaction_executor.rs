@@ -1,8 +1,8 @@
-use serde_json::Value;
-use crate::mutaction::{DatabaseMutactionResults, DatabaseMutaction};
+use crate::mutaction::{DatabaseMutaction, DatabaseMutactionResults};
 use prisma_common::PrismaResult;
+use serde_json::Value;
 
 pub trait DatabaseMutactionExecutor {
-    fn execute_raw(&self, query: String) -> Value;
-    fn execute(&self, mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults>;
+    fn execute_raw(&self, query: String) -> PrismaResult<Value>;
+    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults>;
 }

@@ -7,31 +7,29 @@ use connector::{DataResolver, DatabaseMutactionExecutor, NodeSelector};
 use prisma_common::{config::WithMigrations, config::*, error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use prost::Message;
-use sqlite_connector::{SqlResolver, Sqlite, SqliteDatabaseMutactionExecutor};
+use sqlite_connector::{SqlResolver, Sqlite};
 use std::{error::Error as StdError, sync::Arc};
 
 pub struct ProtoBufInterface {
     data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
-    database_mutaction_executor: Box<dyn DatabaseMutactionExecutor + Send + Sync + 'static>,
+    database_mutaction_executor: Arc<DatabaseMutactionExecutor + Send + Sync + 'static>,
 }
 
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
         let (data_resolver, mutaction_executor) = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
-                let sqlite = Arc::new(Sqlite::new(config.limit(), config.is_active().unwrap(true)).unwrap()); // FIXME: active handling
+                let is_active = config.is_active().unwrap_or(true);
+                let sqlite = Arc::new(Sqlite::new(config.limit(), is_active).unwrap()); // FIXME: active handling
 
-                (
-                    SqlResolver::new(sqlite.clone()),
-                    SqliteDatabaseMutactionExecutor { _sqlite: sqlite },
-                )
+                (SqlResolver::new(sqlite.clone()), sqlite)
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
 
         ProtoBufInterface {
             data_resolver: Box::new(data_resolver),
-            database_mutaction_executor: Box::new(mutaction_executor),
+            database_mutaction_executor: mutaction_executor,
         }
     }
 
@@ -250,7 +248,7 @@ impl ExternalInterface for ProtoBufInterface {
     fn execute_raw(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = ExecuteRawInput::decode(payload)?;
-            let json = self.database_mutaction_executor.execute_raw(input.query);
+            let json = self.database_mutaction_executor.execute_raw(input.query)?;
             let json_as_string = serde_json::to_string(&json)?;
 
             let response = RpcResponse::ok_raw(prisma::ExecuteRawResult { json: json_as_string });

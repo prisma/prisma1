@@ -155,4 +155,8 @@ impl ScalarField {
             _ => None,
         }
     }
+
+    pub fn scalar_list_table<'a>(&'a self) -> ScalarListTable<'a> {
+        ScalarListTable::new(self)
+    }
 }

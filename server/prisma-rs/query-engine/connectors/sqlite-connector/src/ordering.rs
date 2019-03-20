@@ -56,7 +56,7 @@ impl Ordering {
 
         let ordering = match first_column {
             Some(first) => {
-                if first.name != second_column.name {
+                if first != second_column {
                     match (default_order, reverse) {
                         (SortOrder::Ascending, true) => vec![first.descend(), second_column.descend()],
                         (SortOrder::Descending, true) => vec![first.ascend(), second_column.descend()],

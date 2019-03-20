@@ -10,12 +10,13 @@ mod fields;
 mod model;
 mod node;
 mod order_by;
+mod prisma_args;
 mod prisma_value;
 mod project;
 mod relation;
+mod scalar_list_table;
 mod schema;
 mod selected_fields;
-mod prisma_args;
 
 pub mod prelude;
 
@@ -24,9 +25,10 @@ pub use fields::*;
 pub use model::*;
 pub use node::*;
 pub use order_by::*;
+pub use prisma_args::*;
 pub use prisma_value::*;
 pub use project::*;
 pub use relation::*;
+pub use scalar_list_table::*;
 pub use schema::*;
 pub use selected_fields::*;
-pub use prisma_args::*;

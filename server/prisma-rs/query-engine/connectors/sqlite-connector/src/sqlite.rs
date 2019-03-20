@@ -1,11 +1,13 @@
-use crate::database_executor::DatabaseExecutor;
+use crate::DatabaseExecutor;
+use connector::*;
 use prisma_common::PrismaResult;
 use prisma_query::{
-    ast::Select,
-    visitor::{self, Visitor},
+    ast::*,
+    visitor::{self, *},
 };
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, NO_PARAMS};
+use serde_json::Value;
 use std::{collections::HashSet, env};
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
@@ -32,6 +34,55 @@ impl DatabaseExecutor for Sqlite {
 
             Ok(res?)
         })
+    }
+}
+
+impl DatabaseMutactionExecutor for Sqlite {
+    fn execute_raw(&self, _query: String) -> PrismaResult<Value> {
+        // self.sqlite.with_connection(&db_name, |conn| {
+        //     let res = conn
+        //         .prepare(&query)?
+        //         .query_map(&params, |row| f(row))?
+        //         .map(|row_res| row_res.unwrap())
+        //         .collect();
+
+        //     Ok(res)
+        // });
+        Ok(Value::String("hello world!".to_string()))
+    }
+
+    fn execute(&self, _db_name: String, _mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
+        unimplemented!()
+        /*
+         *
+        self.with_connection(&db_name, |conn| {
+            let tx = conn.transaction()?;
+            let plan = MutactionPlan::from(mutaction);
+
+            let id = plan.steps.into_iter().fold(None, |acc, step| {
+                let query = match self.needing {
+                    Some(returning) => match &*returning.read() {
+                        Returning::Expected => panic!("Needed ID value not set for mutaction"),
+                        Returning::Got(id) => match self.query {
+                            Query::Insert(insert) => Query::Insert(insert.value(id)),
+                            _ => panic!("Only inserts are supported for now"),
+                        },
+                    },
+                    None => query,
+                };
+
+                let id: Option<GraphqlId> = executor.with_rows(self.query, db_name, |row| row.get(0));
+
+                if let Some(returning) = self.returning {
+                    returning.write().set(id);
+                };
+            });
+
+            DatabaseMutactionResult(id, mutaction);
+
+            tx.commit()?;
+        })
+         */
     }
 }
 

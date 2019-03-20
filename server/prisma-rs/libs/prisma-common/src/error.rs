@@ -1,4 +1,4 @@
-use std::{borrow::Cow, error::Error as StdError};
+use std::error::Error as StdError;
 use uuid;
 
 type Cause = Box<dyn StdError>;

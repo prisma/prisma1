@@ -1,8 +1,6 @@
 use crate::steps::*;
 use database_inspector::DatabaseSchema;
-use prisma_models::prelude::*;
-use prisma_models::RelationRef;
-use prisma_models::Schema;
+
 use std::sync::Arc;
 
 pub trait MigrationStepsInferrer {

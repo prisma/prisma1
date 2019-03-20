@@ -1,29 +1,46 @@
-        /*
-impl MutationBuilder {
-    pub fn create_node(model: ModelRef, args: PrismaArgs) -> Insert {
-        let model_id = cn.model.fields().id();
-        let auto_generated_id = model_id.is_auto_generated_by_db;
+use prisma_models::prelude::*;
+use prisma_query::ast::*;
 
-        if !auto_generated_id {
-            args.insert(&model_id.name, cn.model.generate_id());
+pub struct MutationBuilder;
+
+impl MutationBuilder {
+    pub fn create_node(model: ModelRef, mut args: PrismaArgs) -> Insert {
+        let model_id = model.fields().id();
+
+        if !model_id.is_auto_generated {
+            args.insert(model_id.name.as_ref(), model.generate_id());
         }
 
-        let fields = cn
-            .model
+        let fields: Vec<&Field> = model
             .fields()
             .all
             .iter()
-            .filter(|field| args.has_arg_for(&field.name))
+            .filter(|field| args.has_arg_for(&field.name()))
             .collect();
 
-        fields
+        let fields: Vec<(&str, PrismaValue)> = fields
             .iter()
-            .fold(Insert::into(model.table), |query, (field_name, value)| {
-                query.column(field.as_table());
-                query.value(args.get_field_value(&field.name));
-            })
-            .returning(model_id.as_column())
-        unimplemented!()
+            .map(|field| (field.name(), args.take_field_value(field.name()).unwrap()))
+            .collect();
+
+        let insert = fields
+            .into_iter()
+            .fold(Insert::into(model.table()), |query, (field_name, field_value)| {
+                query.value(field_name, field_value)
+            });
+
+        insert
+    }
+
+    pub fn create_scalar_list_value(scalar_list_table: ScalarListTable, list_value: PrismaListValue) -> Insert {
+        let positions = (1..=list_value.len()).map(|v| (v * 1000) as i64);
+        let base = Insert::into(scalar_list_table.table());
+        let values = list_value.into_iter().zip(positions);
+
+        values.fold(base, |query, (value, position)| {
+            query
+                .value(scalar_list_table.position_column(), position)
+                .value(scalar_list_table.value_column(), value)
+        })
     }
 }
-         */
