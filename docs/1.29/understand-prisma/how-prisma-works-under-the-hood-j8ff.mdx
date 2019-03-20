@@ -1,0 +1,65 @@
+import Collapse from 'components/Markdown/Collapse'
+
+export const meta = {
+  title: "Prisma under the Hood",
+  position: 30,
+  description: 'Learn about Prisma\'s use cases, main benefits and how it fits into your stack.'
+}
+
+## Prisma & GraphQL
+
+Prisma uses [GraphQL](http://graphql.org/) as a universal database abstraction, meaning it _turns your database into a GraphQL API_ and enables you to:
+
+- Read and write to your database using _GraphQL queries_ and _mutations_
+- Receive realtime updates for database events using _GraphQL subscriptions_
+- Perform migrations and model your data using _GraphQL SDL_
+
+When a Prisma client makes a request to a Prisma server, it actually generates GraphQL operations which are being sent to Prisma's GraphQL API. The client then transforms the GraphQL response into the expected result structure and returns it from the method that was invoked.
+
+## Prisma services
+
+The GraphQL mapping for a database is provided by a Prisma _service_. Each service provides its own GraphQL CRUD mapping for a database. The GraphQL API is auto-generated and provides CRUD operations for each model in the service's datamodel.
+
+Prisma services are running on Prisma servers. Prisma servers can be configured to host multiple Prisma services.
+
+![](https://imgur.com/3RqTUXQ.png)
+
+
+A Prisma service is configured using two components:
+
+- `prisma.yml`: The root configuration file for a Prisma service (includes the service's endpoint, the service secret, the path to the datamodel file, ...)
+- Datamodel: In the datamodel, you define models which Prisma uses to generate the GraphQL API for your database. It's using the declarative [GraphQL SDL](https://www.prisma.io/blog/graphql-sdl-schema-definition-language-6755bcb9ce51/) syntax and is typically stored in a file called `datamodel.prisma`.
+
+A minimal `prisma.yml` looks similar to this:
+
+```yml
+endpoint: http://localhost:4466
+datamodel: datamodel.prisma
+secret: mysecret42
+```
+
+These are the configuration properties it contains:
+
+- `endpoint`: The HTTP endpoint of the Prisma server to which the service should be deployed. This endpoint exposes the service's Prisma API.
+- `datamodel`: The _file path_ to the datamodel which serves as foundation for the GraphQL CRUD/realtime API.
+- `secret`: The _service secret_ is used to secure the service's GraphQL API endpoint using JWT-based authentication. If no `secret` is specified, the service does not require authentication. [Learn more](kke4#service-secret).
+
+<Collapse title="Learn more about the endpoints of Prisma services">
+
+Each Prisma service has exactly one _endpoint_. The endpoint is composed of the following components:
+
+- **Host**: The _host_ of your Prisma server (incl. protocol and port), e.g. `https://example.com:4466`
+- **Service name**: The first _path component_ of the endpoint URL is a _name_ for the Prisma service, e.g. `my-service`. If no service name is specified, it defaults to `default`.
+- **Service stage**: The second _path component_ of the endpoint URL is the _stage_ of the service. Like the service name, this can be a random string - but you commonly use terms that describe deployment environments (e.g. `dev`, `staging`, `prod`, ...). If no service stage is specified, it defaults to `default`.
+
+Putting it all together, the endpoint for a service might look as follows: `https://example.com:4466/my-service/dev`
+
+![](https://i.imgur.com/Ge85JyL.png)
+
+Prisma services can also be deployed to endpoints without any path components (e.g. `http://localhost:4466`), in these cases Prisma uses `default` for service name _and_ stage. 
+
+**This means `http://localhost:4466/default/default` can always be written as `http://localhost:4466`.**
+
+Another exception for the endpoint structure are [Demo servers](jfr3) on Prisma cloud that have an additional path component _before_ the service name and stage. This corresponds to the _name_ of your workspace. For example, if your workspace is called `john-doe`, the endpoint might look as follows: `http://prisma-eu1.sh/john-doe/my-service/dev`
+
+</Collapse>
