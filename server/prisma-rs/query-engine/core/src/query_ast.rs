@@ -26,7 +26,8 @@ pub struct RecordQuery {
 
 #[derive(Debug)]
 pub struct MultiRecordQuery {
-    model: Model,
+    pub name: String,
+    // model: Model,
     args: QueryArguments,
     selectedFields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
@@ -36,16 +37,17 @@ pub struct MultiRecordQuery {
 pub struct RelatedRecordQuery {
     pub name: String,
     pub parent_field: RelationFieldRef,
-    // args: QueryArguments,
+    pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
 #[derive(Debug)]
 pub struct MultiRelatedRecordQuery {
-    parentField: RelationFieldRef,
-    args: QueryArguments,
-    selectedFields: SelectedFields,
+    pub name: String,
+    pub parent_field: RelationFieldRef,
+    pub args: QueryArguments,
+    pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
@@ -59,7 +61,8 @@ pub struct RootQueryBuilder {
 enum QueryType {
     Single(ModelRef),
     Multiple(ModelRef),
-    Relation(ModelRef),
+    OneRelation(ModelRef),
+    ManyRelation(ModelRef),
 }
 
 impl QueryType {
@@ -83,7 +86,8 @@ impl QueryType {
         match self {
             QueryType::Single(m) => Arc::clone(m),
             QueryType::Multiple(m) => Arc::clone(m),
-            QueryType::Relation(m) => Arc::clone(m),
+            QueryType::OneRelation(m) => Arc::clone(m),
+            QueryType::ManyRelation(m) => Arc::clone(m),
         }
     }
 }
@@ -123,7 +127,11 @@ impl<'a> QueryBuilder<'a> {
         self.parent_field = parent;
 
         self.query_type = if let Some(ref parent) = &self.parent_field {
-            Some(Ok(QueryType::Relation(parent.related_model())))
+            if parent.relation().is_many_to_many() {
+                Some(Ok(QueryType::ManyRelation(parent.related_model())))
+            } else {
+                Some(Ok(QueryType::OneRelation(parent.related_model())))
+            }
         } else {
             // Find model for field
             let qt: Option<QueryType> = self
@@ -224,7 +232,7 @@ impl<'a> QueryBuilder<'a> {
                 .collect::<PrismaResult<Vec<SelectedField>>>();
 
             self.selected_fields = match qt {
-                QueryType::Relation(_) => {
+                QueryType::ManyRelation(_) | QueryType::OneRelation(_) => {
                     if let Some(ref rel) = self.parent_field {
                         Some(selected_fields.map(|sf| SelectedFields::new(sf, Some(Arc::clone(rel)))))
                     } else {
@@ -309,6 +317,7 @@ impl<'a> QueryBuilder<'a> {
             .map(|qb| qb.get())
             .collect::<PrismaResult<Vec<PrismaQuery>>>()?;
 
+        // todo this needs some DRYing
         match self.query_type {
             Some(qt) => match qt? {
                 // todo: more smaller functions
@@ -325,7 +334,7 @@ impl<'a> QueryBuilder<'a> {
                     }))
                 }
                 QueryType::Multiple(model) => unimplemented!(),
-                QueryType::Relation(model) => {
+                QueryType::OneRelation(model) => {
                     let parent_field = self
                         .parent_field
                         .map(|i| Ok(i)) // FIXME: 🤮 This is bad
@@ -333,10 +342,35 @@ impl<'a> QueryBuilder<'a> {
                             "Required parent field not found".into(),
                         )))?;
 
+                    let args = self
+                        .args
+                        .unwrap_or(Err(Error::QueryValidationError("Required query args not found".into())))?;
+
                     Ok(PrismaQuery::RelatedRecordQuery(RelatedRecordQuery {
                         name: name,
                         parent_field: parent_field,
                         selected_fields: selected_fields,
+                        args: args,
+                        nested: nested_queries,
+                    }))
+                }
+                QueryType::ManyRelation(model) => {
+                    let parent_field = self
+                        .parent_field
+                        .map(|i| Ok(i)) // FIXME: 🤮 This is bad
+                        .unwrap_or(Err(Error::QueryValidationError(
+                            "Required parent field not found".into(),
+                        )))?;
+
+                    let args = self
+                        .args
+                        .unwrap_or(Err(Error::QueryValidationError("Required query args not found".into())))?;
+
+                    Ok(PrismaQuery::MultiRelatedRecordQuery(MultiRelatedRecordQuery {
+                        name: name,
+                        parent_field: parent_field,
+                        selected_fields: selected_fields,
+                        args: args,
                         nested: nested_queries,
                     }))
                 }

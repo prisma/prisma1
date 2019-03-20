@@ -22,6 +22,7 @@ impl QueryExecutor {
         parent_ids: Vec<GraphqlId>,
     ) -> PrismaResult<Vec<PrismaQueryResult>> {
         let mut results = vec![];
+        dbg!(queries);
         for query in queries {
             match query {
                 PrismaQuery::RecordQuery(query) => {
@@ -53,6 +54,8 @@ impl QueryExecutor {
                         &query.selected_fields,
                     )?;
 
+                    let ids = vec![node.get_id_value(model).clone()];
+                    let nested_results = self.execute_internal(&query.nested, ids)?;
                     let result = SinglePrismaQueryResult {
                         name: query.name.clone(),
                         result: result.into_single_node(),
