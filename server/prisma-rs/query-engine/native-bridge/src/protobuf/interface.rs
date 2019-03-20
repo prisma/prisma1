@@ -7,12 +7,12 @@ use connector::*;
 use prisma_common::{config::WithMigrations, config::*, error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use prost::Message;
-use sqlite_connector::{SqlResolver, Sqlite, SqliteDatabaseMutactionExecutor};
+use sqlite_connector::{SqlResolver, Sqlite};
 use std::{error::Error as StdError, sync::Arc};
 
 pub struct ProtoBufInterface {
     data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
-    database_mutaction_executor: Box<dyn DatabaseMutactionExecutor + Send + Sync + 'static>,
+    database_mutaction_executor: Arc<DatabaseMutactionExecutor + Send + Sync + 'static>,
 }
 
 impl ProtoBufInterface {
@@ -23,7 +23,7 @@ impl ProtoBufInterface {
 
                 (
                     SqlResolver::new(sqlite.clone()),
-                    SqliteDatabaseMutactionExecutor { _sqlite: sqlite },
+                    sqlite,
                 )
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
@@ -31,7 +31,7 @@ impl ProtoBufInterface {
 
         ProtoBufInterface {
             data_resolver: Box::new(data_resolver),
-            database_mutaction_executor: Box::new(mutaction_executor),
+            database_mutaction_executor: mutaction_executor,
         }
     }
 
@@ -250,7 +250,7 @@ impl ExternalInterface for ProtoBufInterface {
     fn execute_raw(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = ExecuteRawInput::decode(payload)?;
-            let json = self.database_mutaction_executor.execute_raw(input.query);
+            let json = self.database_mutaction_executor.execute_raw(input.query)?;
             let json_as_string = serde_json::to_string(&json)?;
 
             let response = RpcResponse::ok_raw(prisma::ExecuteRawResult { json: json_as_string });
@@ -270,7 +270,7 @@ impl ExternalInterface for ProtoBufInterface {
             let model = project.schema().find_model(&input.model_name).unwrap();
             let mutaction = convert_mutaction(input, model);
 
-            let mut results = self.database_mutaction_executor.execute(mutaction)?;
+            let mut results = self.database_mutaction_executor.execute("".to_string(), mutaction)?;
             let result = results.results.pop().expect("no mutaction results returned");
 
             let response = RpcResponse::ok_mutaction(convert_mutaction_result(result));
@@ -314,7 +314,7 @@ fn convert_create(m: crate::protobuf::prisma::CreateNode, model: ModelRef) -> To
     let create_node = CreateNode {
         model: model,
         non_list_args: convert_prisma_args(m.non_list_args),
-        list_args: convert_prisma_args(m.list_args),
+        list_args: vec![], // todo: convert it
         nested_mutactions: empty_nested_mutactions(),
     };
     TopLevelDatabaseMutaction::CreateNode(create_node)

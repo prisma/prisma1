@@ -106,7 +106,7 @@ fn serialize_prisma_value(value: PrismaValue) -> serde_json::Value {
         }
         PrismaValue::Relation(x) => unimplemented!(),
         PrismaValue::Null => serde_json::Value::Null,
-        PrismaValue::Uuid(x) => serde_json::Value::String(x.to_string()),
+        PrismaValue::Uuid(x) => serde_json::Value::String(x.to_hyphenated().to_string()),
         PrismaValue::GraphqlId(x) => serialize_graphql_id(x),
     }
 }
@@ -118,6 +118,6 @@ fn serialize_graphql_id(id: GraphqlId) -> serde_json::Value {
             let num = serde_json::Number::from_f64(x as f64).unwrap();
             serde_json::Value::Number(num)
         }
-        GraphqlId::UUID(x) => serde_json::Value::String(x.to_string()),
+        GraphqlId::UUID(x) => serde_json::Value::String(x.to_hyphenated().to_string()),
     }
 }

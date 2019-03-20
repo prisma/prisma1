@@ -275,8 +275,8 @@ message KeyValueContainer {
 
 message CreateNode {
     required Header         header          = 1;
-    required PrismaArgs     non_list_args   = 4;
-    required PrismaArgs     list_args       = 5;
+    required PrismaArgs     non_list_args   = 2;
+    required PrismaArgs     list_args       = 3;
 }
 
 message DatabaseMutactionResult {

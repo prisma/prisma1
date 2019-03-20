@@ -1,4 +1,4 @@
-use super::NestedMutactions;
+use super::*;
 use prisma_models::prelude::*;
 use std::sync::Arc;
 
@@ -6,7 +6,7 @@ use std::sync::Arc;
 pub struct CreateNode {
     pub model: ModelRef,
     pub non_list_args: PrismaArgs,
-    pub list_args: PrismaArgs,
+    pub list_args: Vec<(String, PrismaListValue)>,
     pub nested_mutactions: NestedMutactions,
 }
 
@@ -25,7 +25,7 @@ impl CreateNode {
     pub fn new(
         model: ModelRef,
         non_list_args: PrismaArgs,
-        list_args: PrismaArgs,
+        list_args: Vec<(String, PrismaListValue)>,
         nested_creates: Vec<NestedCreateNode>,
         //nested_connects: Vec<Connect>,
     ) -> Self {
@@ -40,5 +40,11 @@ impl CreateNode {
             list_args,
             nested_mutactions,
         }
+    }
+}
+
+impl From<CreateNode> for DatabaseMutaction {
+    fn from(cn: CreateNode) -> DatabaseMutaction {
+        DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(cn))
     }
 }

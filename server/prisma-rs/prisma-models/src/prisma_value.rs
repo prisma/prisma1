@@ -51,6 +51,12 @@ impl fmt::Display for PrismaValue {
     }
 }
 
+impl From<GraphqlId> for PrismaValue {
+    fn from(id: GraphqlId) -> PrismaValue {
+        PrismaValue::GraphqlId(id)
+    }
+}
+
 impl From<GraphqlId> for DatabaseValue {
     fn from(id: GraphqlId) -> DatabaseValue {
         match id {

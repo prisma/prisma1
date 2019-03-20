@@ -1,12 +1,12 @@
 type Album {
-  AlbumId: Int! @id
+  id: Int! @id @db(name:"AlbumId")
   Title: String!
   Artist: Artist! @db(name:"ArtistId")
   Tracks: [Track]
 }
 
 type Track {
-  TrackId: Int! @id
+  id: Int! @id @db(name:"TrackId")
   Name: String!
   Album: Album @db(name: "AlbumId")
   AlbumId: Int
@@ -19,24 +19,24 @@ type Track {
 }
 
 type MediaType {
-  MediaTypeId: Int! @id
+  id: Int! @id @db(name:"MediaTypeId")
   Name: String
 }
 
 type Genre {
-  GenreId: Int! @id
+  id: Int! @id @db(name:"GenreId")
   Name: String
   Tracks: [Track]
 }
 
 type Artist {
-  ArtistId: Int! @id
+  id: Int! @id @db(name:"ArtistId")
   Name: String
   Albums: [Album]
 }
 
 type Customer {
-  CustomerId: Int! @id
+  id: Int! @id @db(name:"CustomerId")
   FirstName: String!
   LastName: String!
   Company: String
@@ -52,7 +52,7 @@ type Customer {
 }
 
 type Employee {
-  EmployeeId: Int! @id
+  id: Int! @id @db(name:"EmployeeId")
   FirstName: String!
   LastName: String!
   Title: String
@@ -70,7 +70,7 @@ type Employee {
 }
 
 type Invoice {
-  InvoiceId: Int! @id
+  id: Int! @id @db(name:"InvoiceId")
   Customer: Customer! @db(name: "CustomerId")
   InvoiceDate: DateTime!
   BillingAddress: String
@@ -83,7 +83,7 @@ type Invoice {
 }
 
 type InvoiceLine {
-  InvoiceLineId: Int! @id
+  id: Int! @id @db(name:"InvoiceLineId")
   Invoice: Invoice! @db(name: "InvoiceId")
   Track: Track! @db(name: "TrackId")
   UnitPrice: Float!
@@ -91,7 +91,7 @@ type InvoiceLine {
 }
 
 type Playlist {
-  PlaylistId: Int! @id
+  id: Int! @id @db(name:"PlaylistId")
   Name: String
   Tracks: [Track] @relation(name:"PlaylistTrack")
 }

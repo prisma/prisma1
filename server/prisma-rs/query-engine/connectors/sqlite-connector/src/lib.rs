@@ -3,15 +3,14 @@
 mod cursor_condition;
 mod data_resolver;
 mod database_executor;
-mod database_mutaction_executor;
 mod filter_conversion;
+mod mutaction_plan;
 mod ordering;
 mod query_builder;
 mod sqlite;
-mod mutaction_plan;
 
 pub use data_resolver::*;
 pub use database_executor::*;
-pub use database_mutaction_executor::*;
+pub use mutaction_plan::*;
 pub use sqlite::*;
 pub use mutaction_plan::*;
