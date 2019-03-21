@@ -144,9 +144,6 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
 
     for (const field of model.fields) {
       const isScalar = this.generators.scalarTypeGenerator.isScalarField(field)
-      if (field.name === 'id') {
-        debugger
-      }
       const fieldSchema: GraphQLInputFieldConfig | null = isScalar
         ? this.generateScalarField(model, args, field)
         : this.generateRelationField(model, args, field)
