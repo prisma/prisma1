@@ -65,7 +65,7 @@ impl ModelTemplate {
 impl Model {
     pub fn generate_id(&self) -> GraphqlId {
         match self.fields().id().type_identifier {
-            TypeIdentifier::String => GraphqlId::String(String::from("FOOBAR123TEST")),
+            TypeIdentifier::GraphQLID => GraphqlId::String(Uuid::new_v4().to_string()),
             TypeIdentifier::UUID => GraphqlId::UUID(Uuid::new_v4()),
             TypeIdentifier::Int => panic!("Cannot generate integer ids."),
             t => panic!("You shouldn't even use ids of type {:?}", t),
