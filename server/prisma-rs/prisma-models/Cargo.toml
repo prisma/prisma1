@@ -1,0 +1,16 @@
+[package]
+name = "prisma-models"
+version = "0.0.0"
+authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>", "Marcus Böhm <boehm@prisma.io>" ]
+edition = "2018"
+
+[dependencies]
+once_cell = "0.1"
+serde_derive = "1.0"
+serde_json = "1.0"
+serde = "1.0"
+debug_stub_derive = "0.3"
+prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
+prisma-common = { path = "../libs/prisma-common" }
+rusqlite = { version = "0.16", features = ["chrono"] }
+chrono = { version = "0.4", features = ["serde"] }

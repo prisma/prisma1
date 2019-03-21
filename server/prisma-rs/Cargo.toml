@@ -1,0 +1,10 @@
+[workspace]
+members = [
+  "prisma-models",
+  "libs/prisma-common",
+  "query-engine/connectors/connector",
+  "query-engine/connectors/sqlite-connector",
+  "query-engine/prisma",
+  "query-engine/native-bridge",
+  "query-engine/core",
+]

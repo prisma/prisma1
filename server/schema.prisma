@@ -1,0 +1,12 @@
+type User {
+  id: ID! @id
+  name: String!
+  vehicle: Vehicle @relation(link: TABLE)
+}
+
+type Vehicle {
+  id: ID! @id
+  user: User
+}
+
+

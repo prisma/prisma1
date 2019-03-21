@@ -31,8 +31,22 @@ class DockerCommands
     test_run
   end
 
+  def self.run_rust_tests(context)
+    Command.new("docker", "run",
+      "-e", "SERVER_ROOT=/root/build",
+      "-e", "RUST_BACKTRACE=1",
+      '-w', '/root/build/prisma-rs',
+      '-v', "#{context.server_root_path}:/root/build",
+      'prismagraphql/build-image:debian',
+      './test.sh').puts!.run!.raise!
+  end
+
   def self.build(context, prisma_version)
-    Command.new("docker", "run", "-e", "BRANCH=#{context.branch}", "-e", "COMMIT_SHA=#{context.commit}", "-e", "CLUSTER_VERSION=#{prisma_version.stringify}",
+    Command.new("docker", "run",
+      "-e", "SERVER_ROOT=/root/build",
+      "-e", "BRANCH=#{context.branch}",
+      "-e", "COMMIT_SHA=#{context.commit}",
+      "-e", "CLUSTER_VERSION=#{prisma_version.stringify}",
       '-w', '/root/build',
       '-v', "#{context.server_root_path}:/root/build",
       '-v', "#{File.expand_path('~')}/.ivy2:/root/.ivy2",
@@ -56,7 +70,11 @@ class DockerCommands
   end
 
   def self.native_image(context, prisma_version, build_image)
-    Command.new("docker", "run", "-e", "BRANCH=#{context.branch}", "-e", "COMMIT_SHA=#{context.commit}", "-e", "CLUSTER_VERSION=#{prisma_version}",
+    Command.new("docker", "run",
+      "-e", "SERVER_ROOT=/root/build",
+      "-e", "BRANCH=#{context.branch}",
+      "-e", "COMMIT_SHA=#{context.commit}",
+      "-e", "CLUSTER_VERSION=#{prisma_version}",
       '-w', '/root/build',
       '-v', "#{context.server_root_path}:/root/build",
       '-v', "#{File.expand_path('~')}/.ivy2:/root/.ivy2",

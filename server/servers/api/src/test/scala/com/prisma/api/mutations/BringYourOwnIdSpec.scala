@@ -31,11 +31,11 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
 
     server.queryThatMustFail(
       s"""mutation {
-         |  createParent(data: {p: "Parent", id: "Own Id"}){p, id}
+         |  createParent(data: {p: "Parent2", id: "Own Id"}){p, id}
          |}""",
       project = project,
       errorCode = 3010,
-      errorContains = "A unique constraint would be violated on Parent. Details: Field name: id"
+      errorContains = "A unique constraint would be violated on Parent. Details: Field name = id"
     )
   }
 
@@ -88,7 +88,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
          |}""",
       project = project,
       errorCode = 3010,
-      errorContains = "A unique constraint would be violated on Child. Details: Field name: id"
+      errorContains = "A unique constraint would be violated on Child. Details: Field name = id"
     )
   }
 

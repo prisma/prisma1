@@ -1,3 +1,5 @@
+import java.io.File
+
 import sbt.Keys.{name, scalacOptions}
 import sbt._
 import SbtUtils._
@@ -38,8 +40,12 @@ def commonDockerImageSettings(imageName: String, baseImage: String, tag: String)
     val appDir    = stage.value
     val targetDir = "/app"
     val systemLibs = "/lib"
-    val libraries = (MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
-      MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources")))).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
+    // Collect libraries that have to be part of the docker container
+    val libraries = (
+        MappingsHelper.contentOf(file(absolute("libs/jdbc-native/src/main/resources"))) ++
+        MappingsHelper.contentOf(file(absolute("libs/jwt-native/src/main/resources"))) ++
+        MappingsHelper.contentOf(file(absolute("prisma-rs/build")))
+      ).foldLeft(Vector.empty[(File, String)]) { (prev, next) =>
       if (prev.exists(_._2 == next._2)) {
         prev
       } else {
@@ -121,6 +127,7 @@ lazy val prismaNative = imageProject("prisma-native", "prisma-native")
       "--enable-all-security-services",
       s"-H:CLibraryPath=${absolute("libs/jdbc-native/src/main/resources")}",
       s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
+      s"-H:CLibraryPath=${absolute("prisma-rs/build")}",
       "--rerun-class-initialization-at-runtime=javax.net.ssl.SSLContext,java.sql.DriverManager,com.prisma.native_jdbc.CustomJdbcDriver,com.zaxxer.hikari.pool.HikariPool,com.prisma.logging.PrismaLogger$LogLevel",
       "-H:IncludeResources=playground.html|.*/.*.h$|org/joda/time/tz/data/.*|reference\\.conf,version\\.conf\\|public_suffix_trie\\\\.json|application\\.conf|resources/application\\.conf",
       s"-H:ReflectionConfigurationFiles=${absolute("images/prisma-native/reflection_config.json")}",
@@ -138,6 +145,19 @@ lazy val prismaNative = imageProject("prisma-native", "prisma-native")
       !exclude
     }},
     excludeJars := Seq("org/latencyutils", "io/prometheus", "org\\latencyutils", "io\\prometheus")
+  )
+
+lazy val schemaInferrerBin = imageProject("schema-inferrer-bin", "schema-inferrer-bin")
+  .dependsOn(deploy)
+  .enablePlugins(PrismaGraalPlugin)
+  .settings(
+    nativeImageOptions ++= Seq(
+      "--verbose",
+      "--no-server",
+      "-H:+AllowVMInspection",
+      s"-H:CLibraryPath=${absolute("libs/jwt-native/src/main/resources")}",
+    ),
+    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/svm/builder/svm.jar")
   )
 
 def absolute(relativePathToProjectRoot: String) = {
@@ -278,6 +298,10 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
       oldOptions.filterNot(_ == "-Xfatal-warnings")
     })
 
+lazy val apiConnectorSQLiteNative = connectorProject("api-connector-sqlite-native")
+  .dependsOn(apiConnector)
+  .dependsOn(prismaRsBinding)
+  .dependsOn(apiConnectorSQLite)
 
 
 // ##################
@@ -431,6 +455,20 @@ lazy val cache = libProject("cache")
       jsr305
     ))
 
+lazy val prismaRsBinding = libProject("prisma-rs-binding")
+  .dependsOn(sharedModels)
+  .enablePlugins(ProtocPlugin)
+  .settings(
+    ProtocPlugin.protobufGlobalSettings,
+    PB.protocVersion := "-v261",
+    PB.protoSources in Compile := Seq(new File("protobuf")),
+    PB.targets in Compile := Seq(
+      scalapb.gen() -> (sourceManaged in Compile).value
+    ),
+    libraryDependencies ++= Seq(jna),
+    unmanagedJars in Compile += file(sys.env("GRAAL_HOME") + "/jre/lib/boot/graal-sdk.jar")
+  )
+
 
 // #######################
 //       AGGREGATORS
@@ -452,7 +490,8 @@ val allDockerImageProjects = List(
   prismaLocal,
   prismaLocalGraalVM,
   prismaProd,
-  prismaProdGraalVM
+  prismaProdGraalVM,
+  schemaInferrerBin
 )
 
 val allServerProjects = List(
@@ -479,7 +518,8 @@ lazy val apiConnectorProjects = List(
   apiConnectorMySql,
   apiConnectorPostgres,
   apiConnectorMongo,
-  apiConnectorSQLite
+  apiConnectorSQLite,
+  apiConnectorSQLiteNative
 )
 
 lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)
@@ -500,7 +540,8 @@ val allLibProjects = List(
   mongoUtils,
   jdbcNative,
   jwtNative,
-  logging
+  logging,
+  prismaRsBinding
 )
 
 val allIntegrationTestProjects = List(

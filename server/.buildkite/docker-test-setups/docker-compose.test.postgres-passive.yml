@@ -3,10 +3,12 @@ services:
   app:
     image: prismagraphql/build-image:debian
     environment:
+      SERVER_ROOT: /root/build
       CLUSTER_VERSION: "latest"
       COMMIT_SHA: "123abcd"
       PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
       RABBITMQ_URI: amqp://rabbit
+      RUST_BACKTRACE: "1"
       PRISMA_CONFIG: |
         port: 4466
         rabbitUri: amqp://rabbit

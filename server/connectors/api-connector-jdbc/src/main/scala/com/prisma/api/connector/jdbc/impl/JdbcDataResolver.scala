@@ -26,7 +26,7 @@ case class JdbcDataResolver(
       import slickDatabase.profile.api._
 
       val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/${project.dbName}'"""
+      val path               = s"""'db/${project.dbName}.db'"""
       val attach             = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
       val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
 
@@ -86,16 +86,16 @@ case class JdbcDataResolver(
     performWithTiming("loadRelationRowsForExport", runAttached(query))
   }
 
-  override def countByTable(table: String, whereFilter: Option[Filter] = None): Future[Int] = {
+  override def countByTable(table: String): Future[Int] = {
     val actualTable = project.schema.getModelByName(table) match {
       case Some(model) => model.dbName
       case None        => table
     }
-    val query = queryBuilder.countAllFromTable(actualTable, whereFilter)
+    val query = queryBuilder.countAllFromTable(actualTable, None)
     performWithTiming("countByTable", runAttached(query))
   }
 
-  override def countByModel(model: Model, args: QueryArguments) = {
+  override def countByModel(model: Model, args: QueryArguments): Future[Int] = {
     val query = queryBuilder.countFromModel(model, args)
     performWithTiming("countByModel", runAttached(query))
   }

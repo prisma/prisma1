@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded
 
+import com.prisma.ConnectorTag
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, ScalarListsCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -13,6 +14,7 @@ class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with A
   override def doNotRunForPrototypes: Boolean = true
 
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability, ScalarListsCapability)
+  override def doNotRunForConnectors  = Set(ConnectorTag.SQLiteConnectorTag)
 
   import testDependencies.system.dispatcher
 
