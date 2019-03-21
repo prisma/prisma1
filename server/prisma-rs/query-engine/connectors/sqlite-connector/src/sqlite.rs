@@ -53,59 +53,85 @@ impl DatabaseMutactionExecutor for Sqlite {
     }
 
     fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
-        let plan = MutactionPlan::from(mutaction);
         let mut results = DatabaseMutactionResults::default();
-
         self.with_connection(&db_name, |ref mut conn| {
             let tx = conn.transaction()?;
-            let mut mutaction_id = None;
-
-            for mut step in plan.steps.into_iter() {
-                // REFACTOR HUNT STARTS
-                if let Some((column, needing)) = step.needing.clone() {
-                    if let Returning::Got(id) = &*needing.read() {
-                        if let Query::Insert(insert) = step.query {
-                            step.query = Query::from(insert.value(column, id.clone()));
-                        }
-                    }
-                };
-                // REFACTOR HUNT ENDS
-
-                let (sql, params) = visitor::Sqlite::build(step.query);
-                tx.prepare(&sql)?.execute(&params)?;
-
-                if let Some((id_column, returning)) = step.returning {
-                    let ast = Select::from(step.table.clone())
-                        .column(id_column)
-                        .so_that("row_id".equals(tx.last_insert_rowid()));
-
-                    let (sql, params) = visitor::Sqlite::build(ast);
-
-                    let id: GraphqlId = tx
-                        .prepare(&sql)?
-                        .query_map(&params, |row| row.get(0))?
-                        .map(|row_res| row_res.unwrap())
-                        .next()
-                        .unwrap();
-
-                    let mut switch = returning.write();
-                    *switch = Returning::Got(id.clone());
-
-                    mutaction_id = Some(id);
-                };
-            }
-
-            results.push(DatabaseMutactionResult {
-                id: mutaction_id.unwrap(),
-                typ: plan.mutaction.typ(),
-                mutaction: plan.mutaction,
-            });
+            let results = match mutaction {
+                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref x)) => {
+                    let (insert, id) = MutationBuilder::create_node(x.model.clone(), x.non_list_args.clone());
+                    let (sql, params) = visitor::Sqlite::build(insert);
+                    tx.prepare(&dbg!(sql))?.execute(&params)?;
+                    let result = DatabaseMutactionResult {
+                        id: id.unwrap(),
+                        typ: DatabaseMutactionResultType::Create,
+                        mutaction: mutaction,
+                    };
+                    results.push(result);
+                    Ok(results)
+                }
+                DatabaseMutaction::Nested(_) => panic!("nested mutactions are not supported yet!"),
+            };
 
             tx.commit()?;
-
-            Ok(results)
+            results
         })
     }
+
+    // fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
+    //     let plan = MutactionPlan::from(mutaction);
+    //     let mut results = DatabaseMutactionResults::default();
+
+    //     self.with_connection(&db_name, |ref mut conn| {
+    //         let tx = conn.transaction()?;
+    //         let mut mutaction_id = None;
+
+    //         for mut step in plan.steps.into_iter() {
+    //             // REFACTOR HUNT STARTS
+    //             if let Some((column, needing)) = step.needing.clone() {
+    //                 if let Returning::Got(id) = &*needing.read() {
+    //                     if let Query::Insert(insert) = step.query {
+    //                         step.query = Query::from(insert.value(column, id.clone()));
+    //                     }
+    //                 }
+    //             };
+    //             // REFACTOR HUNT ENDS
+
+    //             let (sql, params) = visitor::Sqlite::build(step.query);
+    //             tx.prepare(&dbg!(sql))?.execute(&params)?;
+
+    //             if let Some((id_column, returning)) = step.returning {
+    //                 let last_inserted_id = dbg!(tx.last_insert_rowid());
+    //                 let ast = Select::from(step.table.clone())
+    //                     .column(id_column)
+    //                     .so_that("id".equals(last_inserted_id)); // FIXME: how to not hardcode "id" here
+
+    //                 let (sql, params) = visitor::Sqlite::build(ast);
+
+    //                 let id: GraphqlId = tx
+    //                     .prepare(&dbg!(sql))?
+    //                     .query_map(&params, |row| row.get(0))?
+    //                     .map(|row_res| row_res.unwrap())
+    //                     .next()
+    //                     .unwrap();
+
+    //                 let mut switch = returning.write();
+    //                 *switch = Returning::Got(id.clone());
+
+    //                 mutaction_id = Some(id);
+    //             };
+    //         }
+
+    //         results.push(DatabaseMutactionResult {
+    //             id: mutaction_id.unwrap(),
+    //             typ: plan.mutaction.typ(),
+    //             mutaction: plan.mutaction,
+    //         });
+
+    //         tx.commit()?;
+
+    //         Ok(results)
+    //     })
+    // }
 }
 
 impl Sqlite {

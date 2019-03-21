@@ -50,44 +50,46 @@ impl From<DatabaseMutaction> for MutactionPlan {
 impl From<TopLevelDatabaseMutaction> for MutactionPlan {
     fn from(mutaction: TopLevelDatabaseMutaction) -> MutactionPlan {
         match mutaction {
-            TopLevelDatabaseMutaction::CreateNode(create_node) => MutactionPlan::from(create_node),
+            TopLevelDatabaseMutaction::CreateNode(create_node) => 
+                unimplemented!()
+                // MutactionPlan::from(create_node),
         }
     }
 }
 
-impl From<CreateNode> for MutactionPlan {
-    fn from(mutaction: CreateNode) -> MutactionPlan {
-        let insert = MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
-        let id_column = mutaction.model.fields().id().as_column();
+// impl From<CreateNode> for MutactionPlan {
+//     fn from(mutaction: CreateNode) -> MutactionPlan {
+//         let insert = MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
+//         let id_column = mutaction.model.fields().id().as_column();
 
-        let mut steps = vec![MutactionStep {
-            query: Query::from(insert),
-            table: mutaction.model.table(),
-            returning: Some((id_column, Returning::new())),
-            needing: None,
-        }];
+//         let mut steps = vec![MutactionStep {
+//             query: Query::from(insert),
+//             table: mutaction.model.table(),
+//             returning: Some((id_column, Returning::new())),
+//             needing: None,
+//         }];
 
-        for (field_name, list_value) in mutaction.list_args.clone() {
-            let field = mutaction.model.fields().find_from_scalar(&field_name).unwrap();
-            let table = field.scalar_list_table();
-            let insert = MutationBuilder::create_scalar_list_value(table.clone(), list_value);
+//         for (field_name, list_value) in mutaction.list_args.clone() {
+//             let field = mutaction.model.fields().find_from_scalar(&field_name).unwrap();
+//             let table = field.scalar_list_table();
+//             let insert = MutationBuilder::create_scalar_list_value(table.clone(), list_value);
 
-            let needing = steps
-                .get(0)
-                .and_then(|step| step.returning.as_ref().map(|r| Arc::clone(&r.1)))
-                .map(|returning| (table.node_id_column(), returning));
+//             let needing = steps
+//                 .get(0)
+//                 .and_then(|step| step.returning.as_ref().map(|r| Arc::clone(&r.1)))
+//                 .map(|returning| (table.node_id_column(), returning));
 
-            steps.push(MutactionStep {
-                query: Query::from(insert),
-                table: table.table(),
-                returning: None,
-                needing: needing,
-            })
-        }
+//             steps.push(MutactionStep {
+//                 query: Query::from(insert),
+//                 table: table.table(),
+//                 returning: None,
+//                 needing: needing,
+//             })
+//         }
 
-        MutactionPlan {
-            steps: steps,
-            mutaction: DatabaseMutaction::from(mutaction),
-        }
-    }
-}
+//         MutactionPlan {
+//             steps: steps,
+//             mutaction: DatabaseMutaction::from(mutaction),
+//         }
+//     }
+// }

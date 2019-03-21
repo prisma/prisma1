@@ -1,4 +1,4 @@
-#![deny(warnings)]
+// #![deny(warnings)]
 
 mod cursor_condition;
 mod data_resolver;

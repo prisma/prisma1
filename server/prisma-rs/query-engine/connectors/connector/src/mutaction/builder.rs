@@ -4,11 +4,15 @@ use prisma_query::ast::*;
 pub struct MutationBuilder;
 
 impl MutationBuilder {
-    pub fn create_node(model: ModelRef, mut args: PrismaArgs) -> Insert {
+    pub fn create_node(model: ModelRef, mut args: PrismaArgs) -> (Insert, Option<GraphqlId>) {
         let model_id = model.fields().id();
 
+        let mut return_id: Option<GraphqlId> = None;
+
         if !model_id.is_auto_generated {
-            args.insert(model_id.name.as_ref(), model.generate_id());
+            let id = model.generate_id();
+            args.insert(model_id.name.as_ref(), id.clone());
+            return_id = Some(id)
         }
 
         let fields: Vec<&Field> = model
@@ -29,7 +33,7 @@ impl MutationBuilder {
                 query.value(field_name, field_value)
             });
 
-        insert
+        (insert, return_id)
     }
 
     pub fn create_scalar_list_value(scalar_list_table: ScalarListTable, list_value: PrismaListValue) -> Insert {
