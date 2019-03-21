@@ -53,6 +53,7 @@ class MongoForeignRelationsSpec extends FlatSpec with Matchers with ApiSpecBase 
     val project = SchemaDsl.fromString() {
       """
         |type Friend {
+        |    id: ID! @unique
         |    name: String @unique
         |}
         |
@@ -114,6 +115,7 @@ class MongoForeignRelationsSpec extends FlatSpec with Matchers with ApiSpecBase 
     val project = SchemaDsl.fromString() {
       """
         |type Friend {
+        |    id: ID! @unique
         |    name: String @unique
         |}
         |
@@ -200,6 +202,7 @@ class MongoForeignRelationsSpec extends FlatSpec with Matchers with ApiSpecBase 
     val project = SchemaDsl.fromString() {
       """
         |type ZChild{
+        |    id: ID! @unique
         |    name: String @unique
         |    parent: Parent
         |}

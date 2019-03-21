@@ -21,7 +21,6 @@ pub struct ScalarFieldTemplate {
     pub is_list: bool,
     pub is_unique: bool,
     pub is_hidden: bool,
-    pub is_readonly: bool,
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
@@ -35,7 +34,6 @@ pub struct ScalarField {
     pub is_list: bool,
     pub is_unique: bool,
     pub is_hidden: bool,
-    pub is_readonly: bool,
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
@@ -125,7 +123,7 @@ impl ScalarField {
     }
 
     pub fn is_writable(&self) -> bool {
-        !self.is_readonly && !self.is_id() && !self.is_created_at() && !self.is_updated_at()
+        !self.is_id() && !self.is_created_at() && !self.is_updated_at()
     }
 
     pub fn db_name(&self) -> &str {

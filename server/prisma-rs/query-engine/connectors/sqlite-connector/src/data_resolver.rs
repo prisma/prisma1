@@ -118,12 +118,12 @@ impl DataResolver for SqlResolver<Sqlite> {
 
         let results = self.database_executor.with_rows(query, db_name, |row| {
             let node_id: GraphqlId = row.get(0);
-            let position: u32 = row.get(1);
+            let _position: u32 = row.get(1);
             let value: PrismaValue = Self::fetch_value(type_identifier, row, 2);
 
             ScalarListElement {
                 node_id,
-                position,
+                _position,
                 value,
             }
         })?;
@@ -143,7 +143,7 @@ impl DataResolver for SqlResolver<Sqlite> {
 
 struct ScalarListElement {
     node_id: GraphqlId,
-    position: u32,
+    _position: u32,
     value: PrismaValue,
 }
 

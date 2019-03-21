@@ -60,6 +60,19 @@ export class Client {
         workspaceSlug || undefined,
         stageName,
       )
+      debug(`is local cluster: ${cluster.local}`)
+      const authenticationPayload = await this.isAuthenticated()
+      if (!cluster.local && authenticationPayload.isAuthenticated && workspaceSlug) {
+        // Added a check for login because we can only add a service to cloud when we are logged in
+        // Added a check for workspace slug because we want to add services for self-hosted and private servers hosted by Prisma
+        // while "*" applies to demo servers.
+        const serviceCreatedInCloud = await cluster.addServiceToCloudDBIfMissing(
+          serviceName,
+          workspaceSlug || undefined,
+          stageName
+        )
+        debug({ serviceCreatedInCloud })
+      }
       const agent = getProxyAgent(cluster.getDeployEndpoint())
       this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
         headers: {
@@ -115,15 +128,18 @@ export class Client {
               if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
                 throw new Error(
                   `Server at ${chalk.bold(
-                    this.env.activeCluster.name
-                  )
-                  } requires the Management API secret. Please set the the ${chalk.bold('PRISMA_MANAGEMENT_API_SECRET')} environment variable.
+                    this.env.activeCluster.name,
+                  )} requires the Management API secret. Please set the the ${chalk.bold(
+                    'PRISMA_MANAGEMENT_API_SECRET',
+                  )} environment variable.
 
                   Learn more about this error in the docs: https://bit.ly/authentication-and-security-docs`,
                 )
               } else {
                 throw new Error(
-                  `Can not authenticate against Prisma server. It seems that your ${chalk.bold('PRISMA_MANAGEMENT_API_SECRET')} environment variable is set incorrectly. Please make sure that it matches the value that was used when the Prisma server was deployed.
+                  `Can not authenticate against Prisma server. It seems that your ${chalk.bold(
+                    'PRISMA_MANAGEMENT_API_SECRET',
+                  )} environment variable is set incorrectly. Please make sure that it matches the value that was used when the Prisma server was deployed.
 
                   For more info visit: https://bit.ly/authentication-and-security-docs`,
                 )
@@ -505,6 +521,7 @@ export class Client {
     serviceName: string,
     stageName: string,
   ): Promise<string> {
+    debug('Calling generateClusterToken')
     const query = `
       mutation ($input: GenerateClusterTokenRequest!) {
         generateClusterToken(input: $input) {

@@ -1,3 +1,4 @@
+#![deny(warnings)]
 #![recursion_limit = "128"]
 
 #[macro_use]

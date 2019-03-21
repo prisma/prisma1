@@ -26,7 +26,6 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
   //UpdateModelTable  -> for PostGres and MySQL this is just rename
   //                  -> for SQLite this does everything???
 
-  def renameTable(project: Project, currentName: String, newName: String): DBIO[_]
   def addUniqueConstraint(project: Project, field: Field): DBIO[_]
   def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_]
   def createModelTable(project: Project, model: Model): DBIO[_]
@@ -55,14 +54,16 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     DBIO.sequence(all)
   }
 
-  def createDatabaseForProject(id: String) = {
+  def createDatabaseForProject(id: String, shouldCreateRelayTable: Boolean) = {
     val schema = createSchema(id)
-    val table = changeDatabaseQueryToDBIO(
-      sql
-        .createTableIfNotExists(name(id, "_RelayId"))
-        .column("id", SQLDataType.VARCHAR(36).nullable(false))
-        .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
-        .constraint(constraint("pk_RelayId").primaryKey(name(id, "_RelayId", "id"))))()
+    val table = if (shouldCreateRelayTable) {
+      changeDatabaseQueryToDBIO(
+        sql
+          .createTableIfNotExists(name(id, "_RelayId"))
+          .column("id", SQLDataType.VARCHAR(36).nullable(false))
+          .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
+          .constraint(constraint("pk_RelayId").primaryKey(name(id, "_RelayId", "id"))))()
+    } else { DBIO.successful(()) }
 
     DBIO.seq(schema, table).withPinnedSession
   }
@@ -84,14 +85,15 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     renameTable(project, s"${modelName}_$fieldName", s"${newModelName}_$newFieldName")
   }
 
-  //There is a bug in jOOQ currently that does not render this correctly for all connectors, until it is fixed this is connector specific
-  //Scheduled to be fixed in 3.11.10 https://github.com/jOOQ/jOOQ/issues/8042
-//  def renameTable(projectId: String, currentName: String, newName: String) = {
+  def renameTable(project: Project, currentName: String, newName: String) = {
+    if (currentName != newName) {
+      val query = sql.alterTable(table(name(project.dbName, currentName))).renameTo(name(project.dbName, newName))
+      changeDatabaseQueryToDBIO(query)()
 
-//  def renameTable(project: Project, currentName: String, newName: String) = {
-//    val query = sql.alterTable(table(name(projectId, currentName))).renameTo(name(projectId, newName))
-//    changeDatabaseQueryToDBIO(query)()
-//  }
+    } else {
+      DBIO.successful(())
+    }
+  }
 
   def addOrRemoveIdColumn(project: Project, previousRelation: Relation, nextRelation: Relation): DBIO[_] = {
     (previousRelation.idColumn, nextRelation.idColumn) match {

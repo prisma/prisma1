@@ -63,7 +63,8 @@ def commonDockerImageSettings(imageName: String, baseImage: String, tag: String)
       runShell("echo", "set -e", ">>", s"$targetDir/start.sh")
       runShell("echo", s"$targetDir/prerun_hook.sh", ">>", s"$targetDir/start.sh")
       runShell("echo", s"$targetDir/bin/${executableScriptName.value}", ">>", s"$targetDir/start.sh")
-      runShell(s"chmod", "+x", s"$targetDir/start.sh $targetDir/bin/${executableScriptName.value}")
+      runShell(s"chmod", "+x", s"$targetDir/start.sh")
+      runShell(s"chmod", "+x", s"$targetDir/bin/${executableScriptName.value}")
       env("COMMIT_SHA", sys.env.getOrElse("COMMIT_SHA", sys.error("Env var COMMIT_SHA required but not found.")))
       env("CLUSTER_VERSION", sys.env.getOrElse("CLUSTER_VERSION", sys.error("Env var CLUSTER_VERSION required but not found.")))
       entryPointShell(s"$targetDir/start.sh")
@@ -261,7 +262,7 @@ lazy val deployConnectorMongo = connectorProject("deploy-connector-mongo")
   .dependsOn(deployConnector)
   .dependsOn(mongoUtils)
   .settings(
-    libraryDependencies ++= Seq(mongoClient)
+    libraryDependencies ++= Seq(mongoClient) ++ netty
   )
 
 lazy val apiConnector = connectorProject("api-connector")
@@ -291,7 +292,7 @@ lazy val apiConnectorPostgres = connectorProject("api-connector-postgres")
 
 lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
   .dependsOn(apiConnector)
-  .settings(libraryDependencies ++= Seq(mongoClient),
+  .settings(libraryDependencies ++= Seq(mongoClient) ++netty,
     scalacOptions := {
       val oldOptions = scalacOptions.value
       oldOptions.filterNot(_ == "-Xfatal-warnings")

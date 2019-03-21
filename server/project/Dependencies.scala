@@ -42,6 +42,10 @@ object Dependencies {
   val playJson    = "com.typesafe.play" %% "play-json"    % v.play
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play
 
+  val nettyTransport = "io.netty" % "netty-transport" % "4.1.17.Final"
+  val nettyHandler   = "io.netty" % "netty-handler" % "4.1.17.Final"
+  val netty          = Seq(nettyTransport, nettyHandler)
+
   val akka            = "com.typesafe.akka" %% "akka-actor"        % v.akka
   val akkaStream      = "com.typesafe.akka" %% "akka-stream"       % v.akka
   val akkaTestKit     = "com.typesafe.akka" %% "akka-testkit"      % v.akka
@@ -88,8 +92,8 @@ object Dependencies {
   val apacheCommons     = "org.apache.commons"         % "commons-lang3"                  % "3.8.1"
   val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.6"
   val jooq = Vector(
-    "org.jooq" % "jooq"        % "3.11.9",
-    "org.jooq" %% "jooq-scala" % "3.11.9"
+    "org.jooq" % "jooq"        % "3.11.10",
+    "org.jooq" %% "jooq-scala" % "3.11.10"
   )
 
   val jna              = "net.java.dev.jna"      % "jna"                   % "4.5.2"

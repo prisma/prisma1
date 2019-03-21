@@ -6,7 +6,7 @@ pub struct SqliteDatabaseMutactionExecutor {
 }
 
 impl DatabaseMutactionExecutor for SqliteDatabaseMutactionExecutor {
-    fn execute_raw(&self, query: String) -> Value {
+    fn execute_raw(&self, _query: String) -> Value {
         // self.sqlite.with_connection(&db_name, |conn| {
         //     let res = conn
         //         .prepare(&query)?

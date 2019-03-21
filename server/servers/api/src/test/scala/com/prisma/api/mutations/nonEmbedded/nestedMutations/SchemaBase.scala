@@ -150,6 +150,7 @@ trait SchemaBase {
 
   //EMBEDDED TO NON-EMBEDDED
   val embedddedToJoinFriendReq = """type Parent{
+                            |    id: ID! @unique
                             |    p: String @unique
                             |    children: [Child]
                             |}
@@ -160,10 +161,12 @@ trait SchemaBase {
                             |}
                             |
                             |type Friend{
+                            |    id: ID! @unique
                             |    f: String @unique
                             |}"""
 
   val embedddedToJoinFriendOpt = """type Parent{
+                               |    id: ID! @unique
                                |    p: String @unique
                                |    children: [Child]
                                |}
@@ -174,6 +177,7 @@ trait SchemaBase {
                                |}
                                |
                                |type Friend{
+                               |    id: ID! @unique
                                |    f: String @unique
                                |}"""
 
@@ -190,6 +194,7 @@ trait SchemaBase {
                         |}
                         |
                         |type Friend{
+                        |    id: ID! @unique
                         |    f: String @unique
                         |    test: String
                         |}"""

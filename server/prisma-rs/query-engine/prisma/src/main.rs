@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 mod context;
 mod req_handlers;
 mod schema;
@@ -14,6 +16,7 @@ struct HttpHandler {
     graphql_request_handler: GraphQlRequestHandler,
 }
 
+#[allow(unused_variables)]
 fn main() {
     let http_handler = HttpHandler {
         context: PrismaContext::new(),
@@ -60,10 +63,10 @@ fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>
     serde_json::to_string(&result)
 }
 
-fn data_model_handler<T>(req: HttpRequest<T>) -> impl Responder {
+fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
     schema::load_datamodel_file().unwrap()
 }
 
-fn playground<T>(req: HttpRequest<T>) -> impl Responder {
+fn playground<T>(_: HttpRequest<T>) -> impl Responder {
     fs::NamedFile::open("playground.html")
 }

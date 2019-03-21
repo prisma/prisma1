@@ -23,6 +23,7 @@ pub struct GraphQlBody {
 
 pub struct GraphQlRequestHandler;
 
+#[allow(unused_variables)]
 impl RequestHandler for GraphQlRequestHandler {
     type Body = GraphQlBody;
 

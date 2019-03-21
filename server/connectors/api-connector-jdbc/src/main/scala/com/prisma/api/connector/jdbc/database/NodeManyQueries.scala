@@ -25,10 +25,11 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
 
   def countFromModel(model: Model, queryArguments: QueryArguments): DBIO[Int] = {
     val baseQuery = modelQuery(model, queryArguments, SelectedFields(Set(SelectedScalarField(model.idField_!))))
-    val query     = sql.selectCount().from(baseQuery)
+
+    val query = if (queryArguments.isEmpty) sql.selectCount().from(modelTable(model)) else sql.selectCount().from(baseQuery)
 
     queryToDBIO(query)(
-      setParams = pp => SetParams.setQueryArgs(pp, queryArguments),
+      setParams = pp => if (queryArguments.isEmpty) () else SetParams.setQueryArgs(pp, queryArguments),
       readResult = { rs =>
         val _                      = rs.next()
         val count                  = rs.getInt(1)

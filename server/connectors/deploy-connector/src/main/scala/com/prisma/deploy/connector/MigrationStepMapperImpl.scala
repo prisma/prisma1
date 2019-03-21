@@ -66,6 +66,7 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
         case _ if previous.isScalarNonList && next.isScalarNonList =>
           val common         = Vector(updateColumn)
           val isIdTypeChange = previous.asScalarField_!.isId && next.asScalarField_!.isId && previous.asScalarField_!.typeIdentifier != next.asScalarField_!.typeIdentifier
+
           if (isIdTypeChange) {
             val deleteRelations = previousSchema.relations.filter(_.containsTheModel(previous.model)).map(deleteRelation).toVector
             val recreateRelations = nextSchema.relations
