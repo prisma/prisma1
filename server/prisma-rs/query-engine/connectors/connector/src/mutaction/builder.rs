@@ -36,6 +36,7 @@ impl MutationBuilder {
         (insert, return_id)
     }
 
+    // FIXME: this must also take a parameter for node_id
     pub fn create_scalar_list_value(scalar_list_table: ScalarListTable, list_value: PrismaListValue) -> Insert {
         let positions = (1..=list_value.len()).map(|v| (v * 1000) as i64);
         let base = Insert::into(scalar_list_table.table());

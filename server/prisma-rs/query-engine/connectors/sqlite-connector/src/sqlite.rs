@@ -58,11 +58,26 @@ impl DatabaseMutactionExecutor for Sqlite {
             let tx = conn.transaction()?;
             let results = match mutaction {
                 DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref x)) => {
-                    let (insert, id) = MutationBuilder::create_node(x.model.clone(), x.non_list_args.clone());
+                    let (insert, returned_id) = MutationBuilder::create_node(x.model.clone(), x.non_list_args.clone());
                     let (sql, params) = visitor::Sqlite::build(insert);
                     tx.prepare(&dbg!(sql))?.execute(&params)?;
+
+                    let id = match returned_id {
+                        Some(id) => id,
+                        None => GraphqlId::Int(tx.last_insert_rowid() as usize),
+                    };
+
+                    for (field_name, list_value) in x.list_args.clone() {
+                        let field = x.model.fields().find_from_scalar(&field_name).unwrap();
+                        let table = field.scalar_list_table();
+                        let insert = MutationBuilder::create_scalar_list_value(table.clone(), list_value);
+                        let (sql, params) = visitor::Sqlite::build(insert);
+
+                        tx.prepare(&dbg!(sql))?.execute(&params)?;
+                    }
+
                     let result = DatabaseMutactionResult {
-                        id: id.unwrap(),
+                        id: id,
                         typ: DatabaseMutactionResultType::Create,
                         mutaction: mutaction,
                     };
