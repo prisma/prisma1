@@ -11,10 +11,9 @@ pub use filter::*;
 pub use input::*;
 pub use interface::ProtoBufInterface;
 
-use crate::Error as CrateError;
+use crate::{BridgeError, BridgeResult};
 use chrono::prelude::*;
 use prelude::*;
-use prisma_common::{error::Error, PrismaResult};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -89,7 +88,7 @@ impl RpcResponse {
         }
     }
 
-    pub fn error(error: CrateError) -> RpcResponse {
+    pub fn error(error: BridgeError) -> RpcResponse {
         RpcResponse {
             header: Self::header(),
             response: Some(rpc::Response::Error(ProtoError {
@@ -229,11 +228,11 @@ impl IntoSelectedFields for prisma::SelectedFields {
 }
 
 trait InputValidation {
-    fn validate(&self) -> PrismaResult<()>;
+    fn validate(&self) -> BridgeResult<()>;
 
-    fn validate_args(query_arguments: &crate::protobuf::QueryArguments) -> PrismaResult<()> {
+    fn validate_args(query_arguments: &crate::protobuf::QueryArguments) -> BridgeResult<()> {
         if let (Some(_), Some(_)) = (query_arguments.first, query_arguments.last) {
-            return Err(Error::InvalidConnectionArguments(
+            return Err(BridgeError::InvalidConnectionArguments(
                 "Cannot have first and last set in the same query",
             ));
         };

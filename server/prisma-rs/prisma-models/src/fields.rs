@@ -1,6 +1,5 @@
-use crate::{Field, ModelRef, ModelWeakRef, RelationField, ScalarField};
+use crate::*;
 use once_cell::sync::OnceCell;
-use prisma_common::{error::Error, PrismaResult};
 use std::{
     collections::BTreeSet,
     sync::{Arc, Weak},
@@ -46,23 +45,21 @@ impl Fields {
     }
 
     pub fn created_at(&self) -> &Option<Arc<ScalarField>> {
-        self.created_at
-            .get_or_init(|| {
-                self.scalar_weak()
-                    .iter()
-                    .map(|sf| sf.upgrade().unwrap())
-                    .find(|sf| sf.is_created_at())
-            })
+        self.created_at.get_or_init(|| {
+            self.scalar_weak()
+                .iter()
+                .map(|sf| sf.upgrade().unwrap())
+                .find(|sf| sf.is_created_at())
+        })
     }
 
     pub fn updated_at(&self) -> &Option<Arc<ScalarField>> {
-        self.updated_at
-            .get_or_init(|| {
-                self.scalar_weak()
-                    .iter()
-                    .map(|sf| sf.upgrade().unwrap())
-                    .find(|sf| sf.is_updated_at())
-            })
+        self.updated_at.get_or_init(|| {
+            self.scalar_weak()
+                .iter()
+                .map(|sf| sf.upgrade().unwrap())
+                .find(|sf| sf.is_updated_at())
+        })
     }
 
     pub fn scalar(&self) -> Vec<Arc<ScalarField>> {
@@ -108,24 +105,25 @@ impl Fields {
             .collect()
     }
 
-    pub fn find_from_all(&self, name: &str) -> PrismaResult<&Field> {
-        self.all
-            .iter()
-            .find(|field| field.db_name() == name)
-            .ok_or_else(|| Error::InvalidInputError(format!("1 Field not found: {}", name), None))
+    pub fn find_from_all(&self, name: &str) -> DomainResult<&Field> {
+        self.all.iter().find(|field| field.db_name() == name).ok_or_else(|| {
+            DomainError::NotFound(Missing::Field {
+                name: name.to_string(),
+                model: self.model().name.clone(),
+            })
+        })
     }
 
-    pub fn find_from_scalar(&self, name: &str) -> PrismaResult<Arc<ScalarField>> {
+    pub fn find_from_scalar(&self, name: &str) -> DomainResult<Arc<ScalarField>> {
         self.scalar_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.db_name() == name)
             .ok_or_else(|| {
-                Error::InvalidInputError(format!(
-                    "Scalar field not found: {}. In model {}",
-                    name,
-                    self.model().name
-                ), None)
+                DomainError::NotFound(Missing::ScalarField {
+                    name: name.to_string(),
+                    model: self.model().name.clone(),
+                })
             })
     }
 
@@ -133,27 +131,29 @@ impl Fields {
         self.model.upgrade().unwrap()
     }
 
-    pub fn find_from_relation_fields(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
+    pub fn find_from_relation_fields(&self, name: &str) -> DomainResult<Arc<RelationField>> {
         self.relation_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.name == name)
             .ok_or_else(|| {
-                Error::InvalidInputError(format!("Field {} on model {} not found.", name, self.model().name), None)
+                DomainError::NotFound(Missing::RelationField {
+                    name: name.to_string(),
+                    model: self.model().name.clone(),
+                })
             })
     }
 
-    pub fn find_from_relation(&self, name: &str) -> PrismaResult<Arc<RelationField>> {
+    pub fn find_from_relation(&self, name: &str) -> DomainResult<Arc<RelationField>> {
         self.relation_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.relation().name == name)
             .ok_or_else(|| {
-                Error::InvalidInputError(format!(
-                    "Field for relation {} on model {} not found.",
-                    name,
-                    self.model().name
-                ), None)
+                DomainError::NotFound(Missing::FieldForRelation {
+                    relation: name.to_string(),
+                    model: self.model().name.clone(),
+                })
             })
     }
 

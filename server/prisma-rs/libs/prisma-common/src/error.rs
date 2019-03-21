@@ -80,12 +80,6 @@ impl From<rusqlite::Error> for Error {
     }
 }
 
-impl From<prost::DecodeError> for Error {
-    fn from(e: prost::DecodeError) -> Error {
-        Error::ProtobufDecodeError("Error decoding protobuf message", Some(Box::new(e)))
-    }
-}
-
 impl From<serde_json::error::Error> for Error {
     fn from(e: serde_json::error::Error) -> Error {
         Error::JsonDecodeError("Error decoding JSON message", Some(Box::new(e)))

@@ -1,13 +1,12 @@
-use crate::{DatabaseExecutor, MutactionPlan, Returning};
+use crate::DatabaseExecutor;
 use connector::*;
-use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
 use prisma_query::{
     ast::*,
     visitor::{self, *},
 };
 use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::{Row, NO_PARAMS};
+use rusqlite::{Row, Transaction, NO_PARAMS};
 use serde_json::Value;
 use std::{collections::HashSet, env};
 
@@ -20,14 +19,14 @@ pub struct Sqlite {
 }
 
 impl DatabaseExecutor for Sqlite {
-    fn with_rows<F, T>(&self, query: Select, db_name: String, mut f: F) -> PrismaResult<Vec<T>>
+    fn with_rows<F, T>(&self, query: Select, db_name: String, mut f: F) -> ConnectorResult<Vec<T>>
     where
-        F: FnMut(&Row) -> PrismaResult<T>,
+        F: FnMut(&Row) -> ConnectorResult<T>,
     {
-        self.with_connection(&db_name, |conn| {
+        self.with_transaction(&db_name, |tx| {
             let (query_sql, params) = dbg!(visitor::Sqlite::build(query));
 
-            let res: PrismaResult<Vec<T>> = conn
+            let res: ConnectorResult<Vec<T>> = tx
                 .prepare(&query_sql)?
                 .query_map(&params, |row| f(row))?
                 .map(|row_res| row_res.unwrap())
@@ -39,7 +38,7 @@ impl DatabaseExecutor for Sqlite {
 }
 
 impl DatabaseMutactionExecutor for Sqlite {
-    fn execute_raw(&self, _query: String) -> PrismaResult<Value> {
+    fn execute_raw(&self, _query: String) -> ConnectorResult<Value> {
         // self.sqlite.with_connection(&db_name, |conn| {
         //     let res = conn
         //         .prepare(&query)?
@@ -52,14 +51,15 @@ impl DatabaseMutactionExecutor for Sqlite {
         Ok(Value::String("hello world!".to_string()))
     }
 
-    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
+    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> ConnectorResult<DatabaseMutactionResults> {
         let mut results = DatabaseMutactionResults::default();
-        self.with_connection(&db_name, |ref mut conn| {
-            let tx = conn.transaction()?;
+
+        self.with_transaction(&db_name, |tx| {
             let results = match mutaction {
                 DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref x)) => {
                     let (insert, returned_id) = MutationBuilder::create_node(x.model.clone(), x.non_list_args.clone());
                     let (sql, params) = visitor::Sqlite::build(insert);
+
                     tx.prepare(&dbg!(sql))?.execute(&params)?;
 
                     let id = match returned_id {
@@ -87,73 +87,16 @@ impl DatabaseMutactionExecutor for Sqlite {
                 DatabaseMutaction::Nested(_) => panic!("nested mutactions are not supported yet!"),
             };
 
-            tx.commit()?;
             results
         })
     }
-
-    // fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> PrismaResult<DatabaseMutactionResults> {
-    //     let plan = MutactionPlan::from(mutaction);
-    //     let mut results = DatabaseMutactionResults::default();
-
-    //     self.with_connection(&db_name, |ref mut conn| {
-    //         let tx = conn.transaction()?;
-    //         let mut mutaction_id = None;
-
-    //         for mut step in plan.steps.into_iter() {
-    //             // REFACTOR HUNT STARTS
-    //             if let Some((column, needing)) = step.needing.clone() {
-    //                 if let Returning::Got(id) = &*needing.read() {
-    //                     if let Query::Insert(insert) = step.query {
-    //                         step.query = Query::from(insert.value(column, id.clone()));
-    //                     }
-    //                 }
-    //             };
-    //             // REFACTOR HUNT ENDS
-
-    //             let (sql, params) = visitor::Sqlite::build(step.query);
-    //             tx.prepare(&dbg!(sql))?.execute(&params)?;
-
-    //             if let Some((id_column, returning)) = step.returning {
-    //                 let last_inserted_id = dbg!(tx.last_insert_rowid());
-    //                 let ast = Select::from(step.table.clone())
-    //                     .column(id_column)
-    //                     .so_that("id".equals(last_inserted_id)); // FIXME: how to not hardcode "id" here
-
-    //                 let (sql, params) = visitor::Sqlite::build(ast);
-
-    //                 let id: GraphqlId = tx
-    //                     .prepare(&dbg!(sql))?
-    //                     .query_map(&params, |row| row.get(0))?
-    //                     .map(|row_res| row_res.unwrap())
-    //                     .next()
-    //                     .unwrap();
-
-    //                 let mut switch = returning.write();
-    //                 *switch = Returning::Got(id.clone());
-
-    //                 mutaction_id = Some(id);
-    //             };
-    //         }
-
-    //         results.push(DatabaseMutactionResult {
-    //             id: mutaction_id.unwrap(),
-    //             typ: plan.mutaction.typ(),
-    //             mutaction: plan.mutaction,
-    //         });
-
-    //         tx.commit()?;
-
-    //         Ok(results)
-    //     })
-    // }
 }
 
 impl Sqlite {
     /// Creates a new SQLite pool connected into local memory. By querying from
     /// different databases, it will try to create them to
     /// `$SERVER_ROOT/db/db_name` if they do not exists yet.
-    pub fn new(connection_limit: u32, test_mode: bool) -> PrismaResult<Sqlite> {
+    pub fn new(connection_limit: u32, test_mode: bool) -> ConnectorResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
@@ -163,7 +106,7 @@ impl Sqlite {
 
     /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
     /// from the SERVER_ROOT.
-    fn attach_database(conn: &mut Connection, db_name: &str) -> PrismaResult<()> {
+    fn attach_database(conn: &mut Connection, db_name: &str) -> ConnectorResult<()> {
         let mut stmt = dbg!(conn.prepare("PRAGMA database_list")?);
 
         let databases: HashSet<String> = stmt
@@ -186,14 +129,17 @@ impl Sqlite {
 
     /// Take a new connection from the pool and create the database if it
     /// doesn't exist yet.
-    pub fn with_connection<F, T>(&self, db_name: &str, f: F) -> PrismaResult<T>
+    pub fn with_transaction<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
     where
-        F: FnOnce(&mut Connection) -> PrismaResult<T>,
+        F: FnOnce(&Transaction) -> ConnectorResult<T>,
     {
         let mut conn = dbg!(self.pool.get()?);
+
         Self::attach_database(&mut conn, db_name)?;
 
-        let result = f(&mut conn);
+        let tx = conn.transaction()?;
+        let result = f(&tx);
+        tx.commit()?;
 
         if self.test_mode {
             dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);

@@ -1,8 +1,7 @@
 use crate::{database_executor::DatabaseExecutor, query_builder::QueryBuilder, sqlite::Sqlite};
 use chrono::{DateTime, Utc};
-use connector::{DataResolver, NodeSelector, QueryArguments, ScalarListValues};
+use connector::*;
 use itertools::Itertools;
-use prisma_common::PrismaResult;
 use prisma_models::prelude::*;
 use rusqlite::Row;
 use std::sync::Arc;
@@ -29,7 +28,7 @@ impl DataResolver for SqlResolver<Sqlite> {
         &self,
         node_selector: &NodeSelector,
         selected_fields: &SelectedFields,
-    ) -> PrismaResult<Option<SingleNode>> {
+    ) -> ConnectorResult<Option<SingleNode>> {
         let (db_name, query) = QueryBuilder::get_node_by_where(node_selector, selected_fields);
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
@@ -48,7 +47,7 @@ impl DataResolver for SqlResolver<Sqlite> {
         model: ModelRef,
         query_arguments: QueryArguments,
         selected_fields: SelectedFields,
-    ) -> PrismaResult<ManyNodes> {
+    ) -> ConnectorResult<ManyNodes> {
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
         let (db_name, query) = QueryBuilder::get_nodes(model, query_arguments, &selected_fields);
@@ -66,7 +65,7 @@ impl DataResolver for SqlResolver<Sqlite> {
         from_node_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> PrismaResult<ManyNodes> {
+    ) -> ConnectorResult<ManyNodes> {
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
         let (db_name, query) =
@@ -84,7 +83,7 @@ impl DataResolver for SqlResolver<Sqlite> {
         Ok(ManyNodes { nodes, field_names })
     }
 
-    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> PrismaResult<usize> {
+    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> ConnectorResult<usize> {
         let (db_name, query) = QueryBuilder::count_by_model(model, query_arguments);
 
         let res = self
@@ -97,7 +96,7 @@ impl DataResolver for SqlResolver<Sqlite> {
         Ok(res as usize)
     }
 
-    fn count_by_table(&self, database: &str, table: &str) -> PrismaResult<usize> {
+    fn count_by_table(&self, database: &str, table: &str) -> ConnectorResult<usize> {
         let query = QueryBuilder::count_by_table(database, table);
 
         let res = self
@@ -114,7 +113,7 @@ impl DataResolver for SqlResolver<Sqlite> {
         &self,
         list_field: ScalarFieldRef,
         node_ids: Vec<GraphqlId>,
-    ) -> PrismaResult<Vec<ScalarListValues>> {
+    ) -> ConnectorResult<Vec<ScalarListValues>> {
         let type_identifier = list_field.type_identifier;
         let (db_name, query) = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
 
@@ -152,7 +151,7 @@ struct ScalarListElement {
 }
 
 impl SqlResolver<Sqlite> {
-    fn read_row(row: &Row, selected_fields: &SelectedFields) -> PrismaResult<Node> {
+    fn read_row(row: &Row, selected_fields: &SelectedFields) -> ConnectorResult<Node> {
         let mut fields = Vec::new();
         for (i, sf) in selected_fields.scalar_non_list().iter().enumerate() {
             fields.push(Self::fetch_value(sf.type_identifier, &row, i)?);
@@ -167,7 +166,7 @@ impl SqlResolver<Sqlite> {
 
     /// Converter function to wrap the limited set of types in SQLite to a
     /// richer PrismaValue.
-    fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> PrismaResult<PrismaValue> {
+    fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> ConnectorResult<PrismaValue> {
         let result = match typ {
             TypeIdentifier::String => row.get_checked(i).map(|val| PrismaValue::String(val)),
             TypeIdentifier::GraphQLID => row.get_checked(i).map(|val| PrismaValue::GraphqlId(val)),

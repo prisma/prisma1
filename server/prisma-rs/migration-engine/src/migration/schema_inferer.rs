@@ -23,7 +23,7 @@ impl SchemaInferer for LegacySchemaInferer {
             .unwrap();
         let input = SchemaInfererBinInput {
             data_model: data_model,
-            previous_schema: SchemaTemplate::empty(),
+            previous_schema: SchemaTemplate::default(),
         };
         write!(cmd.stdin.unwrap(), "{}", serde_json::to_string(&input).unwrap()).unwrap();
         let mut buffer = String::new();

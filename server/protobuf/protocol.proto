@@ -32,6 +32,7 @@ message Error {
         string json_decode_error            = 5;
         string invalid_input_error          = 6;
         string invalid_connection_arguments = 7;
+        string internal_server_error        = 8;
     }
 }
 

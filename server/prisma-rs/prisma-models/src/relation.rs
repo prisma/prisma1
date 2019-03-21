@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use once_cell::sync::OnceCell;
-use prisma_common::{error::Error, PrismaResult};
 use prisma_query::ast::{Column, Table};
 use std::sync::{Arc, Weak};
 
@@ -261,16 +260,16 @@ impl Relation {
         self.model_a().name == model.name || self.model_b().name == model.name
     }
 
-    pub fn get_field_on_model(&self, model_id: &str) -> PrismaResult<Arc<RelationField>> {
+    pub fn get_field_on_model(&self, model_id: &str) -> DomainResult<Arc<RelationField>> {
         if model_id == self.model_a().name {
             Ok(self.field_a())
         } else if model_id == self.model_b().name {
             Ok(self.field_b())
         } else {
-            Err(Error::InvalidInputError(format!(
-                "The model id {} is not part of the relation {}",
-                model_id, self.name
-            ), None))
+            Err(DomainError::NotFound(Missing::ModelForRelation {
+                model_id: model_id.to_string(),
+                relation: self.name.clone(),
+            }))
         }
     }
 }

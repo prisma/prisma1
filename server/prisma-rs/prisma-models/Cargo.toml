@@ -4,6 +4,11 @@ version = "0.0.0"
 authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>", "Marcus Böhm <boehm@prisma.io>" ]
 edition = "2018"
 
+[features]
+default = ["sql", "sqlite"]
+sqlite = ["rusqlite"]
+sql = ["prisma-query"]
+
 [dependencies]
 once_cell = "0.1"
 serde_derive = "1.0"
@@ -12,7 +17,9 @@ serde = "1.0"
 debug_stub_derive = "0.3"
 parking_lot = "0.7"
 uuid = { version = "0.7", features = ["serde", "v4"] }
-prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
-prisma-common = { path = "../libs/prisma-common" }
-rusqlite = { version = "0.16", features = ["chrono"] }
 chrono = { version = "0.4", features = ["serde"] }
+failure = "0.1"
+failure_derive = "0.1"
+
+prisma-query = { git = "https://github.com/prisma/prisma-query.git", optional = true }
+rusqlite = { version = "0.16", features = ["chrono"], optional = true }

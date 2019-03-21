@@ -4,16 +4,17 @@
 #[macro_use]
 extern crate prost_derive;
 
+mod error;
 mod protobuf;
 
 use lazy_static::lazy_static;
-use prisma_common::{
-    config::{self, PrismaConfig},
-    error::Error,
-};
+use prisma_common::config::{self, PrismaConfig};
 
+use error::*;
 use protobuf::{ProtoBufEnvelope, ProtoBufInterface};
 use std::{env, slice};
+
+pub type BridgeResult<T> = Result<T, BridgeError>;
 
 lazy_static! {
     pub static ref PBI: ProtoBufInterface = ProtoBufInterface::new(&CONFIG);

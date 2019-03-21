@@ -5,6 +5,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate debug_stub_derive;
 
+mod error;
 mod field;
 mod fields;
 mod model;
@@ -20,6 +21,7 @@ mod selected_fields;
 
 pub mod prelude;
 
+pub use error::*;
 pub use field::*;
 pub use fields::*;
 pub use model::*;
@@ -33,3 +35,5 @@ pub use relation::*;
 pub use scalar_list_table::*;
 pub use schema::*;
 pub use selected_fields::*;
+
+pub type DomainResult<T> = Result<T, DomainError>;

@@ -1,14 +1,14 @@
 use super::query_arguments::into_model_query_arguments;
 use crate::{
     protobuf::{prelude::*, InputValidation},
-    ExternalInterface,
+    BridgeError, BridgeResult, ExternalInterface,
 };
 use connector::*;
-use prisma_common::{config::WithMigrations, config::*, error::Error, PrismaResult};
+use prisma_common::{config::WithMigrations, config::*};
 use prisma_models::prelude::*;
 use prost::Message;
 use sqlite_connector::{SqlResolver, Sqlite};
-use std::{error::Error as StdError, sync::Arc};
+use std::sync::Arc;
 
 pub struct ProtoBufInterface {
     data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
@@ -34,10 +34,10 @@ impl ProtoBufInterface {
 
     fn protobuf_result<F>(f: F) -> Vec<u8>
     where
-        F: FnOnce() -> PrismaResult<Vec<u8>>,
+        F: FnOnce() -> BridgeResult<Vec<u8>>,
     {
         f().unwrap_or_else(|error| match error {
-            Error::NoResultError => {
+            BridgeError::ConnectorError(ConnectorError::NodeDoesNotExist) => {
                 let response = prisma::RpcResponse::empty();
                 let mut response_payload = Vec::new();
 
@@ -58,7 +58,7 @@ impl ProtoBufInterface {
 }
 
 impl InputValidation for GetNodeByWhereInput {
-    fn validate(&self) -> PrismaResult<()> {
+    fn validate(&self) -> BridgeResult<()> {
         Ok(())
     }
 }
@@ -280,21 +280,32 @@ impl ExternalInterface for ProtoBufInterface {
     }
 }
 
-impl From<Error> for super::prisma::error::Value {
-    fn from(error: Error) -> super::prisma::error::Value {
+impl From<BridgeError> for super::prisma::error::Value {
+    fn from(error: BridgeError) -> super::prisma::error::Value {
         match error {
-            Error::ConnectionError(message, _) => super::prisma::error::Value::ConnectionError(message.to_string()),
-            Error::QueryError(message, _) => super::prisma::error::Value::QueryError(message.to_string()),
-            Error::ProtobufDecodeError(message, _) => {
-                super::prisma::error::Value::ProtobufDecodeError(message.to_string())
+            BridgeError::ConnectorError(e @ ConnectorError::ConnectionError(_)) => {
+                super::prisma::error::Value::ConnectionError(format!("{}", e))
             }
-            Error::JsonDecodeError(message, _) => super::prisma::error::Value::JsonDecodeError(message.to_string()),
-            Error::InvalidInputError(message, _) => super::prisma::error::Value::InvalidInputError(message.to_string()),
-            Error::InvalidConnectionArguments(message) => {
-                super::prisma::error::Value::InvalidConnectionArguments(message.to_string())
+
+            BridgeError::ConnectorError(e @ ConnectorError::QueryError(_)) => {
+                super::prisma::error::Value::QueryError(format!("{}", e))
             }
-            e @ Error::NoResultError => super::prisma::error::Value::NoResultsError(e.description().to_string()),
-            _ => unreachable!(),
+
+            BridgeError::ConnectorError(e @ ConnectorError::InvalidConnectionArguments) => {
+                super::prisma::error::Value::QueryError(format!("{}", e))
+            }
+
+            e @ BridgeError::ProtobufDecodeError(_) => {
+                super::prisma::error::Value::ProtobufDecodeError(format!("{}", e))
+            }
+
+            e @ BridgeError::JsonDecodeError(_) => super::prisma::error::Value::JsonDecodeError(format!("{}", e)),
+
+            e @ BridgeError::DomainError(DomainError::NotFound(_)) => {
+                super::prisma::error::Value::InvalidInputError(format!("{}", e))
+            }
+
+            e => super::prisma::error::Value::InvalidInputError(format!("{}", e)),
         }
     }
 }

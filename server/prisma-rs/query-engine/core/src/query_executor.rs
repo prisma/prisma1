@@ -1,6 +1,5 @@
-use crate::query_ast;
+use crate::{query_ast, CoreResult};
 use connector::{DataResolver, QueryArguments};
-use prisma_common::PrismaResult;
 use prisma_models::{GraphqlId, ManyNodes, SingleNode};
 use query_ast::*;
 use std::boxed::Box;
@@ -12,7 +11,7 @@ pub struct QueryExecutor {
 
 impl QueryExecutor {
     // WIP
-    pub fn execute(&self, queries: &[PrismaQuery]) -> PrismaResult<Vec<PrismaQueryResult>> {
+    pub fn execute(&self, queries: &[PrismaQuery]) -> CoreResult<Vec<PrismaQueryResult>> {
         self.execute_internal(queries, vec![])
     }
 
@@ -20,7 +19,7 @@ impl QueryExecutor {
         &self,
         queries: &[PrismaQuery],
         parent_ids: Vec<GraphqlId>,
-    ) -> PrismaResult<Vec<PrismaQueryResult>> {
+    ) -> CoreResult<Vec<PrismaQueryResult>> {
         let mut results = vec![];
         for query in queries {
             match query {

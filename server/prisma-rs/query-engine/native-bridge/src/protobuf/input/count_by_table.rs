@@ -1,8 +1,7 @@
-use crate::protobuf::{prelude::*, InputValidation};
-use prisma_common::PrismaResult;
+use crate::protobuf::{prelude::*, BridgeResult, InputValidation};
 
 impl InputValidation for CountByTableInput {
-    fn validate(&self) -> PrismaResult<()> {
+    fn validate(&self) -> BridgeResult<()> {
         Ok(())
     }
 }

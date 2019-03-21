@@ -1,29 +1,17 @@
 use crate::prelude::*;
 use once_cell::sync::OnceCell;
-use prisma_common::{error::Error, PrismaResult};
 use std::sync::{Arc, Weak};
 
 pub type SchemaRef = Arc<Schema>;
 pub type SchemaWeakRef = Weak<Schema>;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct SchemaTemplate {
     pub models: Vec<ModelTemplate>,
     pub relations: Vec<RelationTemplate>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
-}
-
-impl SchemaTemplate {
-    pub fn empty() -> SchemaTemplate {
-        SchemaTemplate {
-            models: vec![],
-            relations: vec![],
-            enums: vec![],
-            version: None,
-        }
-    }
 }
 
 #[derive(DebugStub)]
@@ -76,20 +64,20 @@ impl Schema {
         self.models.get().unwrap()
     }
 
-    pub fn find_model(&self, name: &str) -> PrismaResult<ModelRef> {
+    pub fn find_model(&self, name: &str) -> DomainResult<ModelRef> {
         self.models
             .get()
             .and_then(|models| models.iter().find(|model| model.name == name))
             .cloned()
-            .ok_or_else(|| Error::InvalidInputError(format!("Model not found: {}", name), None))
+            .ok_or_else(|| DomainError::NotFound(Missing::Model { name: name.to_string() }))
     }
 
-    pub fn find_relation(&self, name: &str) -> PrismaResult<RelationWeakRef> {
+    pub fn find_relation(&self, name: &str) -> DomainResult<RelationWeakRef> {
         self.relations
             .get()
             .and_then(|relations| relations.iter().find(|relation| relation.name == name))
             .map(|relation| Arc::downgrade(&relation))
-            .ok_or_else(|| Error::InvalidInputError(format!("Relation not found: {}", name), None))
+            .ok_or_else(|| DomainError::NotFound(Missing::Relation { name: name.to_string() }))
     }
 
     pub fn is_legacy(&self) -> bool {

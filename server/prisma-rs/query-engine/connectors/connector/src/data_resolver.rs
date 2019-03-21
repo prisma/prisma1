@@ -1,5 +1,4 @@
-use crate::{node_selector::NodeSelector, query_arguments::QueryArguments};
-use prisma_common::PrismaResult;
+use crate::{node_selector::NodeSelector, query_arguments::QueryArguments, ConnectorResult};
 use prisma_models::prelude::*;
 use prisma_models::ScalarFieldRef;
 
@@ -8,14 +7,14 @@ pub trait DataResolver {
         &self,
         node_selector: &NodeSelector,
         selected_fields: &SelectedFields,
-    ) -> PrismaResult<Option<SingleNode>>;
+    ) -> ConnectorResult<Option<SingleNode>>;
 
     fn get_nodes(
         &self,
         model: ModelRef,
         query_arguments: QueryArguments,
         selected_fields: SelectedFields,
-    ) -> PrismaResult<ManyNodes>;
+    ) -> ConnectorResult<ManyNodes>;
 
     fn get_related_nodes(
         &self,
@@ -23,16 +22,16 @@ pub trait DataResolver {
         from_node_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> PrismaResult<ManyNodes>;
+    ) -> ConnectorResult<ManyNodes>;
 
     fn get_scalar_list_values_by_node_ids(
         &self,
         list_field: ScalarFieldRef,
         node_ids: Vec<GraphqlId>,
-    ) -> PrismaResult<Vec<ScalarListValues>>;
+    ) -> ConnectorResult<Vec<ScalarListValues>>;
 
-    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> PrismaResult<usize>;
-    fn count_by_table(&self, database: &str, table: &str) -> PrismaResult<usize>;
+    fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> ConnectorResult<usize>;
+    fn count_by_table(&self, database: &str, table: &str) -> ConnectorResult<usize>;
 }
 
 pub struct ScalarListValues {
