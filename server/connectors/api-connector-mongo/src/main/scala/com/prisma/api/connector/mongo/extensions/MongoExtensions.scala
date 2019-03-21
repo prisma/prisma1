@@ -1,5 +1,6 @@
 package com.prisma.api.connector.mongo.extensions
 
+import com.mongodb.BasicDBObject
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.FilterConditionBuilder
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
@@ -7,6 +8,7 @@ import com.prisma.api.schema.APIErrors.MongoInvalidObjectId
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
 import com.prisma.shared.models._
+import org.bson.BsonDocument
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mongodb.scala.Document
 import org.mongodb.scala.bson.conversions.Bson
@@ -24,7 +26,7 @@ object GCBisonTransformer {
       case StringGCValue(v)   => BsonString(v)
       case IntGCValue(v)      => BsonInt32(v)
       case FloatGCValue(v)    => BsonDouble(v)
-      case JsonGCValue(v)     => BsonString(v.toString())
+      case JsonGCValue(v)     => BsonDocument.parse(v.toString())
       case EnumGCValue(v)     => BsonString(v)
       case UuidGCValue(v)     => BsonString(v.toString)
       case DateTimeGCValue(v) => BsonDateTime(v.getMillis)
@@ -85,6 +87,7 @@ object BisonToGC {
     case (TypeIdentifier.Boolean, value: BsonBoolean)   => BooleanGCValue(value.getValue)
     case (TypeIdentifier.DateTime, value: BsonDateTime) => DateTimeGCValue(new DateTime(value.getValue, DateTimeZone.UTC))
     case (TypeIdentifier.Json, value: BsonString)       => JsonGCValue(Json.parse(value.getValue))
+    case (TypeIdentifier.Json, value: BsonDocument)     => JsonGCValue(Json.parse(value.toJson))
     case (TypeIdentifier.UUID, value: BsonString)       => sys.error("Not implemented: " + value)
     case (_, value: BsonNull)                           => NullGCValue
     case (x, y)                                         => sys.error("Not implemented: " + x + y)
