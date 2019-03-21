@@ -136,7 +136,7 @@ impl Sqlite {
         // FIXME(Dom): Correct config for sqlite
         let server_root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
         if !databases.contains(db_name) {
-            let path = format!("{}/db/{}.db", server_root, db_name);
+            let path = dbg!(format!("{}/db/{}.db", server_root, db_name));
             dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
         }
 

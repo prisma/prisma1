@@ -266,8 +266,9 @@ impl ExternalInterface for ProtoBufInterface {
             let project: ProjectRef = project_template.into();
             let model = project.schema().find_model(&input.model_name).unwrap();
             let mutaction = convert_mutaction(input, model);
+            let db_name = project.schema().db_name.to_string();
 
-            let mut results = self.database_mutaction_executor.execute("".to_string(), mutaction)?;
+            let mut results = self.database_mutaction_executor.execute(db_name, mutaction)?;
             let result = results.pop().expect("no mutaction results returned");
 
             let response = RpcResponse::ok_mutaction(convert_mutaction_result(result));
