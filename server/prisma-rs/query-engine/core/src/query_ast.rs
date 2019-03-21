@@ -269,6 +269,8 @@ impl<'a> QueryBuilder<'a> {
                 .filter_map(|i| {
                     dbg!(&i);
                     if let Selection::Field(f) = i {
+                        dbg!(&model.fields());
+
                         // We have to make sure the selected field exists in some form.
                         let field = model.fields().find_from_all(&f.name);
                         match field {
