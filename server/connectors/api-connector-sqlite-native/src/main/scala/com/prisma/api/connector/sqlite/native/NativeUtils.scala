@@ -45,6 +45,9 @@ object NativeUtils {
       case PrismaValue.Relation(r: Long)    => ??? // What are we supposed to do here?
       case PrismaValue.String(s: String)    => StringGCValue(s)
       case PrismaValue.Uuid(uuid: String)   => UuidGCValue.parse(uuid).get
+      case PrismaValue.List(values) =>
+        val gcValues = values.values.map(x => toGcValue(x.prismaValue))
+        ListGCValue(gcValues.toVector)
     }
   }
 
@@ -71,7 +74,10 @@ object NativeUtils {
       case IntGCValue(i)       => PrismaValue.GraphqlId(prisma.protocol.GraphqlId(IdValue.Int(i)))
       case JsonGCValue(j)      => PrismaValue.Json(j.toString())
       case StringGCValue(s)    => PrismaValue.String(s)
-      case _                   => sys.error(s"Not supported: $value")
+      case ListGCValue(values) =>
+        val listValues = values.map(toValueContainer)
+        PrismaValue.List(prisma.protocol.PrismaListValue(listValues));
+      case _ => sys.error(s"Not supported: $value")
     }
   }
 

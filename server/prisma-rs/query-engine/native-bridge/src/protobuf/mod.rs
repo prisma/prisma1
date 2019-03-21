@@ -124,6 +124,10 @@ impl From<ValueContainer> for PrismaValue {
             vc::PrismaValue::Null(_) => PrismaValue::Null,
             vc::PrismaValue::Uuid(v) => PrismaValue::Uuid(Uuid::parse_str(&v).unwrap()), // You must die if you didn't send uuid
             vc::PrismaValue::GraphqlId(v) => PrismaValue::GraphqlId(v.into()),
+            vc::PrismaValue::List(list) => {
+                let prisma_values: Vec<PrismaValue> = list.values.into_iter().map(|v| v.into()).collect();
+                PrismaValue::List(prisma_values)
+            }
         }
     }
 }
@@ -156,6 +160,11 @@ impl From<PrismaValue> for ValueContainer {
             PrismaValue::Null => vc::PrismaValue::Null(true),
             PrismaValue::Uuid(v) => vc::PrismaValue::Uuid(v.to_hyphenated().to_string()),
             PrismaValue::GraphqlId(v) => vc::PrismaValue::GraphqlId(v.into()),
+            PrismaValue::List(v) => {
+                let values: Vec<ValueContainer> = v.into_iter().map(|x| x.into()).collect();
+                let list_value = crate::protobuf::prisma::PrismaListValue { values };
+                vc::PrismaValue::List(list_value)
+            }
         };
 
         ValueContainer {

@@ -27,6 +27,7 @@ pub enum PrismaValue {
     Null,
     Uuid(Uuid),
     GraphqlId(GraphqlId),
+    List(Vec<PrismaValue>),
 }
 
 impl fmt::Display for PrismaValue {
@@ -47,6 +48,10 @@ impl fmt::Display for PrismaValue {
                 GraphqlId::Int(x) => x.fmt(f),
                 GraphqlId::UUID(x) => x.fmt(f),
             },
+            PrismaValue::List(x) => {
+                let as_string = format!("{:?}", x);
+                as_string.fmt(f)
+            }
         }
     }
 }
@@ -87,6 +92,7 @@ impl From<PrismaValue> for DatabaseValue {
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
             PrismaValue::Uuid(u) => u.to_hyphenated_ref().to_string().into(),
             PrismaValue::GraphqlId(id) => id.into(),
+            PrismaValue::List(_) => panic!("List values are not supported here"),
         }
     }
 }

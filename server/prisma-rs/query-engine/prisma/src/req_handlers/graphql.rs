@@ -108,6 +108,7 @@ fn serialize_prisma_value(value: PrismaValue) -> serde_json::Value {
         PrismaValue::Null => serde_json::Value::Null,
         PrismaValue::Uuid(x) => serde_json::Value::String(x.to_hyphenated().to_string()),
         PrismaValue::GraphqlId(x) => serialize_graphql_id(x),
+        PrismaValue::List(_) => panic!("can't handle list values yet"),
     }
 }
 
