@@ -30,13 +30,14 @@ object ConnectorLoader {
   def loadDeployConnector(config: PrismaConfig, isTest: Boolean = false)(implicit ec: ExecutionContext, drivers: SupportedDrivers): DeployConnector = {
     val databaseConfig = config.databases.head
     (databaseConfig.connector, databaseConfig.active) match {
-      case ("mysql", true)        => MySqlDeployConnector(databaseConfig, drivers(SupportedDrivers.MYSQL), config.isPrototype)
-      case ("mysql", false)       => sys.error("There is not passive mysql deploy connector yet!")
-      case ("postgres", isActive) => PostgresDeployConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES), isActive, config.isPrototype)
-      case ("mongo", isActive)    => MongoDeployConnector(databaseConfig, isActive = true, isTest = isTest)
-      case ("sqlite", true)       => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = config.isPrototype)
-      case ("sqlite", false)      => sys.error("There is no passive sqlite deploy connector yet!")
-      case (conn, _)              => sys.error(s"Unknown connector $conn")
+      case ("mysql", _) if config.isPrototype => MySqlDeployConnector(databaseConfig, drivers(SupportedDrivers.MYSQL), config.isPrototype)
+      case ("mysql", true)                    => MySqlDeployConnector(databaseConfig, drivers(SupportedDrivers.MYSQL), config.isPrototype)
+      case ("mysql", false)                   => sys.error("There is not passive mysql deploy connector yet!")
+      case ("postgres", isActive)             => PostgresDeployConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES), isActive, config.isPrototype)
+      case ("mongo", isActive)                => MongoDeployConnector(databaseConfig, isActive = true, isTest = isTest)
+      case ("sqlite", true)                   => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = config.isPrototype)
+      case ("sqlite", false)                  => sys.error("There is no passive sqlite deploy connector yet!")
+      case (conn, _)                          => sys.error(s"Unknown connector $conn")
     }
   }
 }
