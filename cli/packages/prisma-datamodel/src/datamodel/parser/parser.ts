@@ -89,7 +89,7 @@ export default abstract class DefaultParser {
           return null
       }
     } else {
-      return null
+      return IdStrategy.Auto
     }
   }
 
