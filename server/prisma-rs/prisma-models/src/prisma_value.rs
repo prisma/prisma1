@@ -4,6 +4,10 @@ use chrono::{DateTime, Utc};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use std::fmt;
 
+/// Small wrapper type that makes differentiating UUIDs easier
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+pub struct UuidString(pub String);
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum GraphqlId {
     String(String),
@@ -88,5 +92,23 @@ impl FromSql for GraphqlId {
             .as_str()
             .map(|strval| GraphqlId::String(strval.to_string()))
             .or_else(|_| value.as_i64().map(|intval| GraphqlId::Int(intval as usize)))
+    }
+}
+
+impl From<String> for GraphqlId {
+    fn from(s: String) -> Self {
+        GraphqlId::String(s)
+    }
+}
+
+impl From<usize> for GraphqlId {
+    fn from(id: usize) -> Self {
+        GraphqlId::Int(id)
+    }
+}
+
+impl From<UuidString> for GraphqlId {
+    fn from(uuid: UuidString) -> Self {
+        GraphqlId::UUID(uuid.0)
     }
 }

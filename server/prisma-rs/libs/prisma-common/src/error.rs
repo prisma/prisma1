@@ -23,6 +23,12 @@ pub enum Error {
     ConfigurationError(String),
     /// IO error
     IOError(String),
+    /// Query parsing failed
+    QueryParsingError(String),
+    /// Query validation error
+    QueryValidationError(String),
+    /// General serialisation error
+    SerialisationError(String),
 }
 
 impl std::fmt::Display for Error {
@@ -49,6 +55,9 @@ impl StdError for Error {
             Error::NoResultError => "Query returned no results",
             Error::ConfigurationError(message) => message,
             Error::IOError(message) => message,
+            Error::QueryValidationError(message) => message,
+            Error::QueryParsingError(message) => message,
+            Error::SerialisationError(message) => message,
         }
     }
 
