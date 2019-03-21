@@ -29,7 +29,7 @@ pub struct MultiRecordQuery {
     pub name: String,
     // model: Model,
     args: QueryArguments,
-    selectedFields: SelectedFields,
+    selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
@@ -277,7 +277,7 @@ impl<'a> QueryBuilder<'a> {
                             Ok(ModelField::Scalar(field)) => Some(Ok(SelectedField::Scalar(SelectedScalarField {
                                 field: Arc::clone(&field),
                             }))),
-                            Ok(ModelField::Relation(field)) => None,
+                            Ok(ModelField::Relation(_field)) => None,
                             _ => Some(Err(Error::QueryValidationError(format!(
                                 "Selected field {} not found on model {}",
                                 f.name, model.name,
@@ -329,7 +329,7 @@ impl<'a> QueryBuilder<'a> {
                     if let Selection::Field(f) = i {
                         let field = model.fields().find_from_all(&f.name);
                         match field {
-                            Ok(ModelField::Scalar(field)) => None,
+                            Ok(ModelField::Scalar(_field)) => None,
                             Ok(ModelField::Relation(field)) => {
                                 // Todo: How to handle relations?
                                 // The QB needs to know that it's a relation, needs to find the related model, etc.
@@ -379,7 +379,7 @@ impl<'a> QueryBuilder<'a> {
         match self.query_type {
             Some(qt) => match qt? {
                 // todo: more smaller functions
-                QueryType::Single(model) => {
+                QueryType::Single(_model) => {
                     let selector = self.selector.unwrap_or(Err(Error::QueryValidationError(
                         "Required node selector not found".into(),
                     )))?;
@@ -391,8 +391,8 @@ impl<'a> QueryBuilder<'a> {
                         nested: nested_queries,
                     }))
                 }
-                QueryType::Multiple(model) => unimplemented!(),
-                QueryType::OneRelation(model) => {
+                QueryType::Multiple(_model) => unimplemented!(),
+                QueryType::OneRelation(_model) => {
                     let parent_field = self
                         .parent_field
                         .map(|i| Ok(i)) // FIXME: 🤮 This is bad
@@ -412,7 +412,7 @@ impl<'a> QueryBuilder<'a> {
                         nested: nested_queries,
                     }))
                 }
-                QueryType::ManyRelation(model) => {
+                QueryType::ManyRelation(_model) => {
                     let parent_field = self
                         .parent_field
                         .map(|i| Ok(i)) // FIXME: 🤮 This is bad
@@ -446,16 +446,16 @@ impl RootQueryBuilder {
             .iter()
             .map(|d| match d {
                 // Query without the explicit "query" before the selection set
-                Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span, items })) => {
+                Definition::Operation(OperationDefinition::SelectionSet(SelectionSet { span: _, items })) => {
                     self.build_query(&items)
                 }
 
                 // Regular query
                 Definition::Operation(OperationDefinition::Query(Query {
-                    position,
-                    name,
-                    variable_definitions,
-                    directives,
+                    position: _,
+                    name: _,
+                    variable_definitions: _,
+                    directives: _,
                     selection_set,
                 })) => self.build_query(&selection_set.items),
                 _ => unimplemented!(),
