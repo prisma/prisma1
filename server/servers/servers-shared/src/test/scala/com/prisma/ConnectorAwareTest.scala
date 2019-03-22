@@ -118,6 +118,13 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   def ifConnectorIsNotMongo[T](assertion: => T): Unit  = if (connectorTag != MongoConnectorTag) assertion
   def ifConnectorIsActive[T](assertion: => T): Unit    = if (connector.active && connectorTag != MongoConnectorTag) assertion
   def ifConnectorIsPassive[T](assertion: => T): Unit   = if (!connector.active) assertion
+  def ifConnectorIsActiveAndNotSqliteNative[T](assertion: => T): Unit = {
+    ifConnectorIsActive {
+      if (connector.connector != "sqlite-native") {
+        assertion
+      }
+    }
+  }
 
   private def ignoredTestsBasedOnIndividualTagging(connector: DatabaseConfig) = {
     super.tags.mapValues { tagNames =>
