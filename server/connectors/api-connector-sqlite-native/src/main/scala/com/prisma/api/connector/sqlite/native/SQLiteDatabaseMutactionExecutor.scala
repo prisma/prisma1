@@ -1,12 +1,13 @@
 package com.prisma.api.connector.sqlite.native
 import com.google.protobuf.ByteString
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
-import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
+import com.prisma.api.connector.jdbc.impl.{GetFieldFromSQLUniqueException, JdbcDatabaseMutactionExecutor}
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
+import com.prisma.api.schema.APIErrors
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.ListGCValue
-import com.prisma.rs.NativeBinding
+import com.prisma.rs.{NativeBinding, UniqueConstraintViolation}
 import com.prisma.shared.models.Project
 import play.api.libs.json.{JsValue, Json}
 import prisma.protocol
@@ -112,6 +113,13 @@ class SQLiteDatabaseMutactionExecutor2(
             case prisma.protocol.DatabaseMutactionResult.Type.Empty =>
               UnitDatabaseMutactionResult
           }
+        }
+      }
+
+      override val errorMapper: PartialFunction[Throwable, APIErrors.UniqueConstraintViolation] = {
+        case UniqueConstraintViolation(fieldName) => {
+          val splitted = fieldName.split(".")
+          APIErrors.UniqueConstraintViolation(splitted(0), splitted(1))
         }
       }
     }

@@ -4,8 +4,8 @@ use rusqlite;
 
 #[derive(Debug, Fail)]
 pub enum ConnectorError {
-    #[fail(display = "Unique constraint violation in model.")]
-    UniqueConstraintViolation,
+    #[fail(display = "Unique constraint failed: {}", field_name)]
+    UniqueConstraintViolation { field_name: String },
     #[fail(display = "Node does not exist.")]
     NodeDoesNotExist,
     #[fail(display = "Error creating a database connection.")]
@@ -36,8 +36,14 @@ impl From<rusqlite::Error> for ConnectorError {
                     code: ffi::ErrorCode::ConstraintViolation,
                     extended_code: 2067,
                 },
-                _,
-            ) => ConnectorError::UniqueConstraintViolation,
+                Some(description),
+            ) => {
+                let splitted: Vec<&str> = description.split(": ").collect();
+
+                ConnectorError::UniqueConstraintViolation {
+                    field_name: splitted[1].into(),
+                }
+            }
 
             e => ConnectorError::QueryError(e.into()),
         }

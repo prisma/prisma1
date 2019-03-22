@@ -1,5 +1,7 @@
 package com.prisma.rs
 
+import java.sql.SQLClientInfoException
+
 import com.prisma.gc_values._
 import com.prisma.rs.jna.{JnaRustBridge, ProtobufEnvelope}
 import com.sun.jna.{Memory, Native, Pointer}
@@ -119,6 +121,7 @@ object NativeBinding {
           case Error.Value.ProtobufDecodeError(str)        => throw ProtobufDecodeError(str)
           case Error.Value.QueryError(str)                 => throw QueryError(str)
           case Error.Value.InvalidConnectionArguments(str) => throw InvalidConnectionArguments(str)
+          case Error.Value.UniqueConstraintViolation(str)  => throw UniqueConstraintViolation(str)
           case Error.Value.InternalServerError(msg)        => throw new NativeError(msg)
           case Error.Value.Empty                           => sys.error("Empty RPC response error value")
         }

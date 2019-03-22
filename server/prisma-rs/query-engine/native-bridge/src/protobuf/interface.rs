@@ -294,6 +294,10 @@ impl From<BridgeError> for super::prisma::error::Value {
                 super::prisma::error::Value::QueryError(format!("{}", e))
             }
 
+            BridgeError::ConnectorError(ConnectorError::UniqueConstraintViolation { field_name }) => {
+                super::prisma::error::Value::UniqueConstraintViolation(field_name)
+            }
+
             e @ BridgeError::ProtobufDecodeError(_) => {
                 super::prisma::error::Value::ProtobufDecodeError(format!("{}", e))
             }
