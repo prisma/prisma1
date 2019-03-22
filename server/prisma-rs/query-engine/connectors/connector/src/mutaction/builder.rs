@@ -7,13 +7,16 @@ impl MutationBuilder {
     pub fn create_node(model: ModelRef, mut args: PrismaArgs) -> (Insert, Option<GraphqlId>) {
         let model_id = model.fields().id();
 
-        let mut return_id: Option<GraphqlId> = None;
-
-        if !model_id.is_auto_generated {
-            let id = model.generate_id();
-            args.insert(model_id.name.as_ref(), id.clone());
-            return_id = Some(id)
-        }
+        let return_id = match args.get_field_value(&model_id.name) {
+            _ if model_id.is_auto_generated => None,
+            Some(PrismaValue::Null) | None => {
+                let id = model.generate_id();
+                args.insert(model_id.name.as_ref(), id.clone());
+                Some(id)
+            }
+            Some(PrismaValue::GraphqlId(id)) => Some(id.clone()),
+            _ => None,
+        };
 
         let fields: Vec<&Field> = model
             .fields()

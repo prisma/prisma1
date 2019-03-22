@@ -45,6 +45,20 @@ impl From<rusqlite::Error> for ConnectorError {
                 }
             }
 
+            rusqlite::Error::SqliteFailure(
+                ffi::Error {
+                    code: ffi::ErrorCode::ConstraintViolation,
+                    extended_code: 1555,
+                },
+                Some(description),
+            ) => {
+                let splitted: Vec<&str> = description.split(": ").collect();
+
+                ConnectorError::UniqueConstraintViolation {
+                    field_name: splitted[1].into(),
+                }
+            }
+
             e => ConnectorError::QueryError(e.into()),
         }
     }
