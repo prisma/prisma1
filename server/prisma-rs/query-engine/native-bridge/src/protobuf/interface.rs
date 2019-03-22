@@ -1,3 +1,4 @@
+use super::filter::IntoFilter;
 use super::query_arguments::into_model_query_arguments;
 use crate::{
     protobuf::{prelude::*, InputValidation},
@@ -314,9 +315,9 @@ fn convert_mutaction(m: crate::protobuf::prisma::DatabaseMutaction, project: Pro
         database_mutaction::Type::Update(x) => convert_update_envelope(x, project),
         database_mutaction::Type::Upsert(x) => convert_upsert(x, project),
         database_mutaction::Type::Delete(x) => convert_delete(x, project),
-        database_mutaction::Type::Reset(_) => unimplemented!(),
-        database_mutaction::Type::DeleteNodes(_) => unimplemented!(),
-        database_mutaction::Type::UpdateNodes(_) => unimplemented!(),
+        database_mutaction::Type::Reset(x) => convert_reset(x, project),
+        database_mutaction::Type::DeleteNodes(x) => convert_delete_nodes(x, project),
+        database_mutaction::Type::UpdateNodes(x) => convert_update_nodes(x, project),
     };
 
     DatabaseMutaction::TopLevel(m)
@@ -349,6 +350,17 @@ fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -
     }
 }
 
+fn convert_update_nodes(m: crate::protobuf::prisma::UpdateNodes, project: ProjectRef) -> TopLevelDatabaseMutaction {
+    let model = project.schema().find_model(&m.model_name).unwrap();
+    let update_nodes = TopLevelUpdateNodes {
+        model: Arc::clone(&model),
+        filter: m.filter.into_filter(model),
+        non_list_args: convert_prisma_args(m.non_list_args),
+        list_args: convert_list_args(m.list_args),
+    };
+    TopLevelDatabaseMutaction::UpdateNodes(update_nodes)
+}
+
 fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
     let upsert_node = TopLevelUpsertNode {
         where_: convert_node_select(m.where_, Arc::clone(&project)),
@@ -363,6 +375,20 @@ fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRef) -
         where_: convert_node_select(m.where_, project),
     };
     TopLevelDatabaseMutaction::DeleteNode(delete_node)
+}
+
+fn convert_delete_nodes(m: crate::protobuf::prisma::DeleteNodes, project: ProjectRef) -> TopLevelDatabaseMutaction {
+    let model = project.schema().find_model(&m.model_name).unwrap();
+    let delete_nodes = TopLevelDeleteNodes {
+        model: Arc::clone(&model),
+        filter: m.filter.into_filter(model),
+    };
+    TopLevelDatabaseMutaction::DeleteNodes(delete_nodes)
+}
+
+fn convert_reset(_: crate::protobuf::prisma::ResetData, project: ProjectRef) -> TopLevelDatabaseMutaction {
+    let mutaction = ResetData { project };
+    TopLevelDatabaseMutaction::ResetData(mutaction)
 }
 
 fn convert_node_select(selector: crate::protobuf::prisma::NodeSelector, project: ProjectRef) -> NodeSelector {
