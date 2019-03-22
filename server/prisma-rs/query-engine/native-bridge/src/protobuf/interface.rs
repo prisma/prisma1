@@ -301,9 +301,7 @@ impl From<BridgeError> for super::prisma::error::Value {
 
             e @ BridgeError::JsonDecodeError(_) => super::prisma::error::Value::JsonDecodeError(format!("{}", e)),
 
-            e @ BridgeError::DomainError(DomainError::NotFound(_)) => {
-                super::prisma::error::Value::InvalidInputError(format!("{}", e))
-            }
+            e @ BridgeError::DomainError(_) => super::prisma::error::Value::InvalidInputError(format!("{}", e)),
 
             e => super::prisma::error::Value::InvalidInputError(format!("{}", e)),
         }

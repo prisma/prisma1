@@ -69,7 +69,7 @@ impl Schema {
             .get()
             .and_then(|models| models.iter().find(|model| model.name == name))
             .cloned()
-            .ok_or_else(|| DomainError::NotFound(Missing::Model { name: name.to_string() }))
+            .ok_or_else(|| DomainError::ModelNotFound { name: name.to_string() })
     }
 
     pub fn find_relation(&self, name: &str) -> DomainResult<RelationWeakRef> {
@@ -77,7 +77,7 @@ impl Schema {
             .get()
             .and_then(|relations| relations.iter().find(|relation| relation.name == name))
             .map(|relation| Arc::downgrade(&relation))
-            .ok_or_else(|| DomainError::NotFound(Missing::Relation { name: name.to_string() }))
+            .ok_or_else(|| DomainError::RelationNotFound { name: name.to_string() })
     }
 
     pub fn is_legacy(&self) -> bool {

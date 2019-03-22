@@ -103,7 +103,9 @@ class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils 
     server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
     ifConnectorIsActive {
-      dataResolver(project).countByTable("_RelayId").await should be(0)
+      ifConnectorIsActiveAndNotSqliteNative {
+        dataResolver(project).countByTable("_RelayId").await should be(0)
+      }
       dataResolver(project).countByTable("_Relation0").await should be(0)
       dataResolver(project).countByTable("_Relation1").await should be(0)
       dataResolver(project).countByTable("_Relation2").await should be(0)
@@ -128,7 +130,7 @@ class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils 
     server.query("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
     server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(0) }
+    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(0) }
 
     import slick.jdbc.PostgresProfile.api._
     val insert = sql"INSERT INTO `#${project.id}`.`_Relation1` VALUES ('someID', 'a', 'b')"
