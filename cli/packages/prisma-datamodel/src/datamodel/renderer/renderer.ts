@@ -69,7 +69,12 @@ export default abstract class Renderer {
     type: IGQLType,
     typeDirectives: IDirectiveInfo[],
   ) {
-    const validIndices = this.getValidIndices(type)
+    /**
+     * Prisma doesn't support indexes yet.
+     * As soon as it does, the following line can be uncommented again
+     */
+    // const validIndices = this.getValidIndices(type)
+    const validIndices = []
     if (validIndices.length > 0) {
       const indexDescriptions: string[] = []
       for (const index of type.indices) {
