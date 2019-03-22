@@ -2,11 +2,11 @@ mod connection_string;
 mod explicit;
 mod file;
 
+use crate::error::CommonError;
 pub use connection_string::ConnectionStringConfig;
 pub use explicit::ExplicitConfig;
 pub use file::FileConfig;
 
-use crate::{error::Error, PrismaResult};
 use serde_yaml;
 use std::{collections::BTreeMap, env, fs::File, io::prelude::*, path::PathBuf};
 
@@ -61,7 +61,7 @@ pub struct PrismaConfig {
 }
 
 /// Loads the config
-pub fn load() -> PrismaResult<PrismaConfig> {
+pub fn load() -> Result<PrismaConfig, CommonError> {
     let config: String = match env::var("PRISMA_CONFIG") {
         Ok(c) => c,
         Err(_) => match find_config_path() {
@@ -71,7 +71,7 @@ pub fn load() -> PrismaResult<PrismaConfig> {
                 f.read_to_string(&mut contents)?;
                 contents
             }
-            None => return Err(Error::ConfigurationError("Unable to find Prisma config.".into())),
+            None => return Err(CommonError::ConfigurationError),
         },
     };
 

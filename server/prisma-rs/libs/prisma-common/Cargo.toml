@@ -6,12 +6,10 @@ edition = "2018"
 
 [dependencies]
 serde_derive = "1.0"
-serde_json = "1.0"
 serde_yaml = "0.8"
 serde = "1.0"
 url = "1.7"
-r2d2 = "0.8"
-prost = "0.4"
-rusqlite = { version = "0.16", features = ["chrono"] }
 url_serde = "0.2"
 uuid = "0.7"
+failure = "0.1"
+failure_derive = "0.1"
