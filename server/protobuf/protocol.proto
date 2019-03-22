@@ -265,10 +265,13 @@ message RelationFilter {
 message DatabaseMutaction {
     required bytes          project_json        = 1;
     oneof type {
-        CreateNode        create = 2;
-        UpdateNode        update = 3;
-        UpsertNode        upsert = 4;
-        DeleteNode        delete = 5;
+        CreateNode        create       = 2;
+        UpdateNode        update       = 3;
+        UpsertNode        upsert       = 4;
+        DeleteNode        delete       = 5;
+        ResetData         reset        = 6;
+        DeleteNodes       delete_nodes = 7;
+        UpdateNodes       update_nodes = 8;
     }
 }
 
@@ -307,11 +310,29 @@ message DeleteNode {
     required NodeSelector   where           = 2;
 }
 
+message ResetData {}
+
+message DeleteNodes {
+    required Header header     = 1;
+    required string model_name = 2;
+    required Filter filter     = 3;
+}
+
+message UpdateNodes {
+    required Header       header        = 1;
+    required string       model_name    = 2;
+    required Filter       filter        = 3;
+    required PrismaArgs   non_list_args = 4;
+    required PrismaArgs   list_args     = 5;
+}
+
 message NodeSelector {
     required string         model_name      = 1;
     required string         field_name      = 2;
     required ValueContainer value           = 3;
 }
+
+
 
 message DatabaseMutactionResult {
     oneof type {

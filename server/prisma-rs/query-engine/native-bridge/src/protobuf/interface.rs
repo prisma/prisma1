@@ -314,6 +314,9 @@ fn convert_mutaction(m: crate::protobuf::prisma::DatabaseMutaction, project: Pro
         database_mutaction::Type::Update(x) => convert_update_envelope(x, project),
         database_mutaction::Type::Upsert(x) => convert_upsert(x, project),
         database_mutaction::Type::Delete(x) => convert_delete(x, project),
+        database_mutaction::Type::Reset(_) => unimplemented!(),
+        database_mutaction::Type::DeleteNodes(_) => unimplemented!(),
+        database_mutaction::Type::UpdateNodes(_) => unimplemented!(),
     };
 
     DatabaseMutaction::TopLevel(m)
