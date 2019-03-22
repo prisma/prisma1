@@ -111,6 +111,8 @@ impl From<ValueContainer> for PrismaValue {
     fn from(container: ValueContainer) -> PrismaValue {
         use prisma::value_container as vc;
 
+        let cloned_container = container.clone();
+
         match container.prisma_value.unwrap() {
             vc::PrismaValue::String(v) => PrismaValue::String(v),
             vc::PrismaValue::Float(v) => PrismaValue::Float(v),
@@ -123,8 +125,8 @@ impl From<ValueContainer> for PrismaValue {
             vc::PrismaValue::Null(_) => PrismaValue::Null,
             vc::PrismaValue::Uuid(v) => PrismaValue::Uuid(Uuid::parse_str(&v).unwrap()), // You must die if you didn't send uuid
             vc::PrismaValue::GraphqlId(v) => PrismaValue::GraphqlId(v.into()),
-            vc::PrismaValue::List(list) => {
-                let prisma_values: Vec<PrismaValue> = list.values.into_iter().map(|v| v.into()).collect();
+            vc::PrismaValue::List(_) => {
+                let prisma_values: PrismaListValue = cloned_container.into();
                 PrismaValue::List(prisma_values)
             }
         }
