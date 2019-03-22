@@ -107,10 +107,10 @@ impl Fields {
 
     pub fn find_from_all(&self, name: &str) -> DomainResult<&Field> {
         self.all.iter().find(|field| field.db_name() == name).ok_or_else(|| {
-            DomainError::NotFound(Missing::Field {
+            DomainError::FieldNotFound {
                 name: name.to_string(),
                 model: self.model().name.clone(),
-            })
+            }
         })
     }
 
@@ -120,10 +120,10 @@ impl Fields {
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.db_name() == name)
             .ok_or_else(|| {
-                DomainError::NotFound(Missing::ScalarField {
+                DomainError::ScalarFieldNotFound {
                     name: name.to_string(),
                     model: self.model().name.clone(),
-                })
+                }
             })
     }
 
@@ -137,10 +137,10 @@ impl Fields {
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.name == name)
             .ok_or_else(|| {
-                DomainError::NotFound(Missing::RelationField {
+                DomainError::RelationFieldNotFound {
                     name: name.to_string(),
                     model: self.model().name.clone(),
-                })
+                }
             })
     }
 
@@ -150,10 +150,10 @@ impl Fields {
             .map(|field| field.upgrade().unwrap())
             .find(|field| field.relation().name == name)
             .ok_or_else(|| {
-                DomainError::NotFound(Missing::FieldForRelation {
+                DomainError::FieldForRelationNotFound {
                     relation: name.to_string(),
                     model: self.model().name.clone(),
-                })
+                }
             })
     }
 
