@@ -19,11 +19,12 @@ pub trait NestedMutaction {
     fn nested_mutactions(&self) -> &[&DatabaseMutaction];
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DatabaseMutactionResultType {
     Create,
     Update,
     Upsert,
+    Delete,
 }
 
 #[derive(Debug, Clone)]
@@ -39,6 +40,7 @@ impl DatabaseMutaction {
                 TopLevelDatabaseMutaction::CreateNode(_) => DatabaseMutactionResultType::Create,
                 TopLevelDatabaseMutaction::UpdateNode(_) => DatabaseMutactionResultType::Update,
                 TopLevelDatabaseMutaction::UpsertNode(_) => DatabaseMutactionResultType::Upsert,
+                TopLevelDatabaseMutaction::DeleteNode(_) => DatabaseMutactionResultType::Delete,
             },
             DatabaseMutaction::Nested(tl) => match tl {
                 NestedDatabaseMutaction::CreateNode(_) => DatabaseMutactionResultType::Create,
@@ -52,6 +54,7 @@ pub enum TopLevelDatabaseMutaction {
     CreateNode(CreateNode),
     UpdateNode(TopLevelUpdateNode),
     UpsertNode(TopLevelUpsertNode),
+    DeleteNode(TopLevelDeleteNode),
 }
 
 #[derive(Debug, Clone)]
@@ -115,16 +118,16 @@ pub struct NestedUpsertNode {
 
     pub relation_field: Arc<RelationField>,
 }
+*/
 
 // DELETE
 
-#[derive(Debug, Default, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct TopLevelDeleteNode {
-    pub project: ProjectRef,
     pub where_: NodeSelector,
-    pub previous_values: Node,
 }
 
+/*
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct NestedDeleteNode {
     pub project: ProjectRef,

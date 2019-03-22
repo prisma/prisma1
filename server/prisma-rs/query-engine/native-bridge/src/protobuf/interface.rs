@@ -313,9 +313,7 @@ fn convert_mutaction(m: crate::protobuf::prisma::DatabaseMutaction, project: Pro
         database_mutaction::Type::Create(x) => convert_create_envelope(x, project),
         database_mutaction::Type::Update(x) => convert_update_envelope(x, project),
         database_mutaction::Type::Upsert(x) => convert_upsert(x, project),
-        database_mutaction::Type::Delete(x) => {
-            unimplemented!()
-        },
+        database_mutaction::Type::Delete(x) => convert_delete(x, project),
     };
 
     DatabaseMutaction::TopLevel(m)
@@ -358,6 +356,13 @@ fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRef) -
     TopLevelDatabaseMutaction::UpsertNode(upsert_node)
 }
 
+fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
+    let delete_node = TopLevelDeleteNode {
+        where_: convert_node_select(m.where_, project),
+    };
+    TopLevelDatabaseMutaction::DeleteNode(delete_node)
+}
+
 fn convert_node_select(selector: crate::protobuf::prisma::NodeSelector, project: ProjectRef) -> NodeSelector {
     let model = project.schema().find_model(&selector.model_name).unwrap();
     let field = model.fields().find_from_scalar(&selector.field_name).unwrap();
@@ -387,6 +392,6 @@ fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf:
 
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         },
-        x => unimplemented!(),
+        x => panic!("can't handle result type {:?}", x),
     }
 }
