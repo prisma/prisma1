@@ -118,7 +118,7 @@ class SQLiteDatabaseMutactionExecutor2(
 
       override val errorMapper: PartialFunction[Throwable, APIErrors.UniqueConstraintViolation] = {
         case UniqueConstraintViolation(fieldName) => {
-          val splitted = fieldName.split(".")
+          val splitted = fieldName.split('.')
           APIErrors.UniqueConstraintViolation(splitted(0), splitted(1))
         }
       }
