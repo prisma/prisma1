@@ -119,6 +119,7 @@ object NativeBinding {
           case Error.Value.ProtobufDecodeError(str)        => throw ProtobufDecodeError(str)
           case Error.Value.QueryError(str)                 => throw QueryError(str)
           case Error.Value.InvalidConnectionArguments(str) => throw InvalidConnectionArguments(str)
+          case Error.Value.InternalServerError(msg)        => throw new NativeError(msg)
           case Error.Value.Empty                           => sys.error("Empty RPC response error value")
         }
 
