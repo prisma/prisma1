@@ -1083,6 +1083,7 @@ dependencies = [
  "once_cell 0.1.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
+ "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusqlite 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.89 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.89 (registry+https://github.com/rust-lang/crates.io-index)",

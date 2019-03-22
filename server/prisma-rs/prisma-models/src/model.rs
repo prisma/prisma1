@@ -1,8 +1,12 @@
 use crate::prelude::*;
 use once_cell::sync::OnceCell;
 use prisma_query::ast::{Column, Table};
-use std::sync::{Arc, Weak};
-use uuid::Uuid;
+use rand::{self, Rng};
+use std::{
+    sync::{Arc, Weak},
+    time::{SystemTime, UNIX_EPOCH},
+};
+use uuid::{v1::Context, Uuid};
 
 pub type ModelRef = Arc<Model>;
 pub type ModelWeakRef = Weak<Model>;
@@ -25,6 +29,7 @@ pub struct Model {
     pub manifestation: Option<ModelManifestation>,
 
     fields: OnceCell<Fields>,
+    id_context: Context, // TODO: replace uuid with cuid!
 
     #[debug_stub = "#SchemaWeakRef#"]
     pub schema: SchemaWeakRef,
@@ -44,7 +49,8 @@ impl ModelTemplate {
             is_embedded: self.is_embedded,
             fields: OnceCell::new(),
             manifestation: self.manifestation,
-            schema,
+            id_context: Context::new(42), // TODO: replace uuid with cuid!
+            schema: schema,
         });
 
         let fields = Fields::new(
@@ -65,7 +71,24 @@ impl ModelTemplate {
 impl Model {
     pub fn generate_id(&self) -> GraphqlId {
         match self.fields().id().type_identifier {
-            TypeIdentifier::GraphQLID => GraphqlId::String(Uuid::new_v4().to_string()),
+            TypeIdentifier::GraphQLID => {
+                let start = SystemTime::now();
+                let since_the_epoch = start.duration_since(UNIX_EPOCH).unwrap(); // will panic if time went backwards
+                let mut rng = rand::thread_rng();
+
+                let mut node_id = [0u8; 6];
+                rng.fill(&mut node_id);
+
+                let uuid = Uuid::new_v1(
+                    &self.id_context,
+                    since_the_epoch.as_secs(),
+                    since_the_epoch.subsec_nanos(),
+                    &node_id,
+                )
+                .unwrap(); // will panic if node_id is not six u8's
+
+                GraphqlId::String(uuid.to_hyphenated().to_string())
+            }
             TypeIdentifier::UUID => GraphqlId::UUID(Uuid::new_v4()),
             TypeIdentifier::Int => panic!("Cannot generate integer ids."),
             t => panic!("You shouldn't even use ids of type {:?}", t),

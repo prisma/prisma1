@@ -63,6 +63,7 @@ class SQLiteDatabaseMutactionExecutor2(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
+        /*
       case m: TopLevelUpdateNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Create(
           prisma.protocol.CreateNode(
@@ -73,7 +74,7 @@ class SQLiteDatabaseMutactionExecutor2(
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
-
+*/
       case _ =>
         super.interpreterFor(mutaction)
     }

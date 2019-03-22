@@ -23,10 +23,10 @@ impl DatabaseExecutor for Sqlite {
     where
         F: FnMut(&Row) -> ConnectorResult<T>,
     {
-        self.with_transaction(&db_name, |tx| {
+        self.with_transaction(&db_name, |conn| {
             let (query_sql, params) = dbg!(visitor::Sqlite::build(query));
 
-            let res: ConnectorResult<Vec<T>> = tx
+            let res: ConnectorResult<Vec<T>> = conn
                 .prepare(&query_sql)?
                 .query_map(&params, |row| f(row))?
                 .map(|row_res| row_res.unwrap())
@@ -54,26 +54,29 @@ impl DatabaseMutactionExecutor for Sqlite {
     fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> ConnectorResult<DatabaseMutactionResults> {
         let mut results = DatabaseMutactionResults::default();
 
-        self.with_transaction(&db_name, |tx| {
+        self.with_transaction(&db_name, |conn| {
             let results = match mutaction {
                 DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref x)) => {
                     let (insert, returned_id) = MutationBuilder::create_node(x.model.clone(), x.non_list_args.clone());
-                    let (sql, params) = visitor::Sqlite::build(insert);
+                    let (sql, params) = dbg!(visitor::Sqlite::build(insert));
 
-                    tx.prepare(&dbg!(sql))?.execute(&params)?;
+                    conn.prepare(&sql)?.execute(&params)?;
 
                     let id = match returned_id {
                         Some(id) => id,
-                        None => GraphqlId::Int(tx.last_insert_rowid() as usize),
+                        None => GraphqlId::Int(conn.last_insert_rowid() as usize),
                     };
 
                     for (field_name, list_value) in x.list_args.clone() {
                         let field = x.model.fields().find_from_scalar(&field_name).unwrap();
                         let table = field.scalar_list_table();
-                        let insert = MutationBuilder::create_scalar_list_value(table.clone(), list_value);
-                        let (sql, params) = visitor::Sqlite::build(insert);
+                        let inserts = MutationBuilder::create_scalar_list_value(table.clone(), list_value, id.clone());
 
-                        tx.prepare(&dbg!(sql))?.execute(&params)?;
+                        for insert in inserts {
+                            let (sql, params) = dbg!(visitor::Sqlite::build(insert));
+
+                            conn.prepare(&sql)?.execute(&params)?;
+                        }
                     }
 
                     let result = DatabaseMutactionResult {
@@ -83,7 +86,7 @@ impl DatabaseMutactionExecutor for Sqlite {
                     };
                     results.push(result);
                     Ok(results)
-                },
+                }
                 DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNode(_)) => unimplemented!(),
                 DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(_)) => unimplemented!(),
                 DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNode(_)) => unimplemented!(),
@@ -130,24 +133,34 @@ impl Sqlite {
         Ok(())
     }
 
-    /// Take a new connection from the pool and create the database if it
-    /// doesn't exist yet.
-    pub fn with_transaction<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
+    pub fn with_connection<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
     where
-        F: FnOnce(&Transaction) -> ConnectorResult<T>,
+        F: FnOnce(&mut Connection) -> ConnectorResult<T>,
     {
         let mut conn = dbg!(self.pool.get()?);
-
         Self::attach_database(&mut conn, db_name)?;
 
-        let tx = conn.transaction()?;
-        let result = f(&tx);
-        tx.commit()?;
+        let result = f(&mut conn);
 
         if self.test_mode {
             dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
         }
 
         result
+    }
+
+    /// Take a new connection from the pool and create the database if it
+    /// doesn't exist yet.
+    pub fn with_transaction<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
+    where
+        F: FnOnce(&Transaction) -> ConnectorResult<T>,
+    {
+        self.with_connection(db_name, |conn| {
+            let tx = conn.transaction()?;
+            let result = f(&tx);
+
+            tx.commit()?;
+            result
+        })
     }
 }

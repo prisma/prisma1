@@ -36,16 +36,21 @@ impl MutationBuilder {
         (insert, return_id)
     }
 
-    // FIXME: this must also take a parameter for node_id
-    pub fn create_scalar_list_value(scalar_list_table: ScalarListTable, list_value: PrismaListValue) -> Insert {
+    pub fn create_scalar_list_value(
+        scalar_list_table: ScalarListTable,
+        list_value: PrismaListValue,
+        id: GraphqlId,
+    ) -> Vec<Insert> {
         let positions = (1..=list_value.len()).map(|v| (v * 1000) as i64);
-        let base = Insert::into(scalar_list_table.table());
         let values = list_value.into_iter().zip(positions);
 
-        values.fold(base, |query, (value, position)| {
-            query
-                .value(scalar_list_table.position_column(), position)
-                .value(scalar_list_table.value_column(), value)
-        })
+        values
+            .map(|(value, position)| {
+                Insert::into(scalar_list_table.table())
+                    .value(ScalarListTable::POSITION_FIELD_NAME, position)
+                    .value(ScalarListTable::VALUE_FIELD_NAME, value)
+                    .value(ScalarListTable::NODE_ID_FIELD_NAME, id.clone())
+            })
+            .collect()
     }
 }
