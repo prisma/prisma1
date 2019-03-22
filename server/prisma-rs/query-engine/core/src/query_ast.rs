@@ -193,56 +193,56 @@ impl<'a> QueryBuilder<'a> {
             .fold(Ok(QueryArguments::empty()), |result, (k, v)| {
                 if let Ok(res) = result {
                     #[cfg_attr(rustfmt, rustfmt_skip)]
-            match (k.as_str(), v) {
-                ("skip", Value::Int(num)) => match num.as_i64() {
-                    Some(num) => Ok(QueryArguments { skip: Some(num as u32), ..res }),
-                    None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
-                },
-                ("first", Value::Int(num)) => match num.as_i64() {
-                    Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                    None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
-                },
-                ("last", Value::Int(num)) => match num.as_i64() {
-                    Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                    None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
-                },
-                //("after", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { after: Some(UuidString(s.clone()).into()), ..res }),
-                ("after", Value::String(s)) => Ok(QueryArguments { after: Some(s.clone().into()), ..res }),
-                ("after", Value::Int(num)) => match num.as_i64() {
-                    Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                    None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
-                },
-                //("before", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { before: Some(UuidString(s.clone()).into()), ..res }),
-                ("before", Value::String(s)) => Ok(QueryArguments { before: Some(s.clone().into()), ..res }),
-                ("before", Value::Int(num)) => match num.as_i64() {
-                    Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                    None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
-                },
-                ("orderby", Value::Enum(name)) => {
-                    let vec = name.split("_").collect::<Vec<&str>>();
-                    if vec.len() == 2 {
-                        model
-                            .fields()
-                            .find_from_scalar(vec[0])
-                            .map(|val| QueryArguments {
-                                order_by: Some(OrderBy {
-                                    field: Arc::clone(&val),
-                                    sort_order: match vec[1] {
-                                        "ASC" => SortOrder::Ascending,
-                                        "DESC" => SortOrder::Descending,
-                                        _ => unreachable!(),
-                                    },
-                                }),
-                                ..res
-                            })
-                            .map_err(|_| CoreError::QueryValidationError(format!("Unknown field `{}`", vec[0])))
-                    } else {
-                        Err(CoreError::QueryValidationError("...".into()))
+                    match (k.as_str(), v) {
+                        ("skip", Value::Int(num)) => match num.as_i64() {
+                            Some(num) => Ok(QueryArguments { skip: Some(num as u32), ..res }),
+                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                        },
+                        ("first", Value::Int(num)) => match num.as_i64() {
+                            Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
+                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                        },
+                        ("last", Value::Int(num)) => match num.as_i64() {
+                            Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
+                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                        },
+                        //("after", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { after: Some(UuidString(s.clone()).into()), ..res }),
+                        ("after", Value::String(s)) => Ok(QueryArguments { after: Some(s.clone().into()), ..res }),
+                        ("after", Value::Int(num)) => match num.as_i64() {
+                            Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
+                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                        },
+                        //("before", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { before: Some(UuidString(s.clone()).into()), ..res }),
+                        ("before", Value::String(s)) => Ok(QueryArguments { before: Some(s.clone().into()), ..res }),
+                        ("before", Value::Int(num)) => match num.as_i64() {
+                            Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
+                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                        },
+                        ("orderby", Value::Enum(name)) => {
+                            let vec = name.split("_").collect::<Vec<&str>>();
+                            if vec.len() == 2 {
+                                model
+                                    .fields()
+                                    .find_from_scalar(vec[0])
+                                    .map(|val| QueryArguments {
+                                        order_by: Some(OrderBy {
+                                            field: Arc::clone(&val),
+                                            sort_order: match vec[1] {
+                                                "ASC" => SortOrder::Ascending,
+                                                "DESC" => SortOrder::Descending,
+                                                _ => unreachable!(),
+                                            },
+                                        }),
+                                        ..res
+                                    })
+                                    .map_err(|_| CoreError::QueryValidationError(format!("Unknown field `{}`", vec[0])))
+                            } else {
+                                Err(CoreError::QueryValidationError("...".into()))
+                            }
+                        }
+                        ("where", _) => panic!("lolnope"),
+                        (name, _) => Err(CoreError::QueryValidationError(format!("Unknown key: `{}`", name))),
                     }
-                }
-                ("where", _) => panic!("lolnope"),
-                (name, _) => Err(CoreError::QueryValidationError(format!("Unknown key: `{}`", name))),
-            }
                 } else {
                     result
                 }
