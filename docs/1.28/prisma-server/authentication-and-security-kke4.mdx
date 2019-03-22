@@ -1,4 +1,3 @@
-
 import Code from 'components/Markdown/Code'
 import Warning from 'components/Markdown/Warning'
 import Collapse from 'components/Markdown/Collapse'
@@ -52,14 +51,6 @@ services:
 ```
 
 </Code>
-
-<Warning>
-  
-Unless `managementApiSecret` is defined in the Docker configuration, everyone with access to the URL of the Prisma server will be able to make changes, including deploying and deleting Prisma services as well as modifying data. 
-
-</Warning>
-
-After setting `managementApiSecret` run `docker-compose up -d` to recreate the containers. Note that this will create a new, empty database for your server. After that, you'll need to use the environment variable `PRISMA_MANAGEMENT_SECRET` to authenticate with the management api from the command line. For example, to deploy your server after changes run `PRISMA_MANAGEMENT_SECRET=__YOUR_MANAGEMENT_API_SECRET prisma deploy`.
 
 ### Management API token
 
