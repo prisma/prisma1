@@ -328,11 +328,10 @@ fn convert_create(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -
     CreateNode {
         model: model,
         non_list_args: convert_prisma_args(m.non_list_args),
-        list_args: vec![], // todo: convert it
+        list_args: convert_list_args(m.list_args),
         nested_mutactions: empty_nested_mutactions(),
     }
 }
-
 
 fn convert_update_envelope(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
     TopLevelDatabaseMutaction::UpdateNode(convert_update(m, project))
@@ -342,7 +341,7 @@ fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -
     TopLevelUpdateNode {
         where_: convert_node_select(m.where_, project),
         non_list_args: convert_prisma_args(m.non_list_args),
-        list_args: vec![], // todo: convert it
+        list_args: convert_list_args(m.list_args),
         nested_mutactions: empty_nested_mutactions(),
     }
 }
@@ -382,6 +381,16 @@ fn convert_prisma_args(proto: crate::protobuf::prisma::PrismaArgs) -> PrismaArgs
     result
 }
 
+fn convert_list_args(proto: crate::protobuf::prisma::PrismaArgs) -> Vec<(String, PrismaListValue)> {
+    let mut result = vec![];
+    for arg in proto.args {
+        let value: PrismaListValue = arg.value.into();
+        let tuple = (arg.key, value);
+        result.push(tuple)
+    }
+    result
+}
+
 fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf::prisma::DatabaseMutactionResult {
     use crate::protobuf::prisma::database_mutaction_result;
 
@@ -391,7 +400,7 @@ fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf:
             let typ = database_mutaction_result::Type::Create(result);
 
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
-        },
+        }
         x => panic!("can't handle result type {:?}", x),
     }
 }

@@ -131,6 +131,19 @@ impl From<ValueContainer> for PrismaValue {
     }
 }
 
+impl From<ValueContainer> for PrismaListValue {
+    fn from(container: ValueContainer) -> PrismaListValue {
+        use prisma::value_container as vc;
+        match container.prisma_value.unwrap() {
+            vc::PrismaValue::List(list) => {
+                let prisma_values: Vec<PrismaValue> = list.values.into_iter().map(|v| v.into()).collect();
+                prisma_values
+            }
+            x => panic!("only prisma lists allowed here but received: {:?}", x),
+        }
+    }
+}
+
 impl From<prisma::GraphqlId> for GraphqlId {
     fn from(id: prisma::GraphqlId) -> GraphqlId {
         use prisma::graphql_id as id;
