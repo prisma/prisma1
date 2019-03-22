@@ -1,4 +1,4 @@
-use crate::{GraphqlId, ModelRef, PrismaValue};
+use crate::{DomainError as Error, DomainResult, GraphqlId, ModelRef, PrismaValue};
 
 #[derive(Debug)]
 pub struct SingleNode {
@@ -7,18 +7,27 @@ pub struct SingleNode {
 }
 
 impl SingleNode {
-    pub fn get_id_value(&self, model: ModelRef) -> &GraphqlId {
+    pub fn get_id_value(&self, model: ModelRef) -> DomainResult<&GraphqlId> {
         let id_field = model.fields().id();
         let index = self
             .field_names
             .iter()
             .position(|r| r == &id_field.name)
-            .expect("did not find value for the id field");
+            .map(|i| Ok(i))
+            .unwrap_or_else(|| {
+                Err(Error::FieldNotFound {
+                    name: id_field.name.clone(),
+                    model: model.name.clone(),
+                })
+            })?;
+
+        // .expect("did not find value for the id field");
         let value = &self.node.values[index];
-        match value {
+
+        Ok(match value {
             PrismaValue::GraphqlId(ref id) => id,
             _ => unimplemented!(),
-        }
+        })
     }
 }
 
