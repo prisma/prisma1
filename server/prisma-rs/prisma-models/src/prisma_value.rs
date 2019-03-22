@@ -27,7 +27,7 @@ pub enum PrismaValue {
     Null,
     Uuid(Uuid),
     GraphqlId(GraphqlId),
-    List(Vec<PrismaValue>),
+    List(PrismaListValue),
 }
 
 impl fmt::Display for PrismaValue {

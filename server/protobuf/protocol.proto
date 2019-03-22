@@ -263,10 +263,12 @@ message RelationFilter {
 }
 
 message DatabaseMutaction {
-    required bytes          project_json    = 1;
-    required string         model_name      = 2;
+    required bytes          project_json        = 1;
     oneof type {
-        CreateNode        create = 3;
+        CreateNode        create = 2;
+        UpdateNode        update = 3;
+        UpsertNode        upsert = 4;
+        DeleteNode        delete = 5;
     }
 }
 
@@ -281,8 +283,34 @@ message KeyValueContainer {
 
 message CreateNode {
     required Header         header          = 1;
-    required PrismaArgs     non_list_args   = 2;
-    required PrismaArgs     list_args       = 3;
+    required string         model_name      = 2;
+    required PrismaArgs     non_list_args   = 3;
+    required PrismaArgs     list_args       = 4;
+}
+
+message UpdateNode {
+    required Header         header          = 1;
+    required NodeSelector   where           = 2;
+    required PrismaArgs     non_list_args   = 3;
+    required PrismaArgs     list_args       = 4;
+}
+
+message UpsertNode {
+    required Header         header          = 1;
+    required NodeSelector   where           = 2;
+    required CreateNode     create          = 3;
+    required UpdateNode     update          = 4;
+}
+
+message DeleteNode {
+    required Header         header          = 1;
+    required NodeSelector   where           = 2;
+}
+
+message NodeSelector {
+    required string         model_name      = 1;
+    required string         field_name      = 2;
+    required ValueContainer value           = 3;
 }
 
 message DatabaseMutactionResult {
