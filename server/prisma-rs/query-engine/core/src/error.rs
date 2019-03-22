@@ -8,6 +8,8 @@ pub enum CoreError {
     ConnectorError(ConnectorError),
     #[fail(display = "Error in domain logic.")]
     DomainError(DomainError),
+    #[fail(display = "{}", _0)]
+    QueryValidationError(String),
 }
 
 impl From<ConnectorError> for CoreError {

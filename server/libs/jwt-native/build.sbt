@@ -2,15 +2,17 @@ import sbt._
 
 val buildNativeLib = TaskKey[Unit]("buildNativeLib", "builds the native JDBC driver and lib")
 buildNativeLib := {
-  import sys.process._
-  println("Building JWT native lib.")
+  if(!sys.env.get("SKIP_RUST_BUILD").contains("1")) {
+    import sys.process._
+    println("Building JWT native lib.")
 
-  val logger = ProcessLogger(println, println)
-  val nativePath = new java.io.File("libs/jwt-native-rs/")
-  val cargoFlags = sys.env.get("RUST_BACKTRACE").map(_ => "").getOrElse("--release")
+    val logger = ProcessLogger(println, println)
+    val nativePath = new java.io.File("libs/jwt-native-rs/")
+    val cargoFlags = sys.env.get("RUST_BACKTRACE").map(_ => "").getOrElse("--release")
 
-  if ((Process(s"make CARGO_FLAGS=$cargoFlags build", nativePath) ! logger) != 0) {
-    sys.error("Rust library build failed.")
+    if ((Process(s"make CARGO_FLAGS=$cargoFlags build", nativePath) ! logger) != 0) {
+      sys.error("Rust library build failed.")
+    }
   }
 }
 

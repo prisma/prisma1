@@ -105,3 +105,27 @@ impl FromSql for GraphqlId {
             .or_else(|_| value.as_i64().map(|intval| GraphqlId::Int(intval as usize)))
     }
 }
+
+impl From<String> for GraphqlId {
+    fn from(s: String) -> Self {
+        GraphqlId::String(s)
+    }
+}
+
+impl From<usize> for GraphqlId {
+    fn from(id: usize) -> Self {
+        GraphqlId::Int(id)
+    }
+}
+
+impl From<Uuid> for GraphqlId {
+    fn from(uuid: Uuid) -> Self {
+        GraphqlId::UUID(uuid)
+    }
+}
+
+impl From<Uuid> for PrismaValue {
+    fn from(uuid: Uuid) -> Self {
+        PrismaValue::Uuid(uuid)
+    }
+}

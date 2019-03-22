@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Dominic Petrick <dompetrick@gmail.com>"]
 edition = "2018"
 
+[features]
+default = ["sql", "graphql"]
+sql = ["sqlite-connector"]
+graphql = ["graphql-parser"]
+
 [dependencies]
 actix-web = "0.7.18"
 actix = "0.7.5"
@@ -12,8 +17,11 @@ prisma-common = { path = "../../libs/prisma-common" }
 prisma-models = { path = "../../prisma-models" }
 core = { path = "../core" }
 connector = { path = "../connectors/connector" }
-sqlite-connector = { path = "../connectors/sqlite-connector" }
+sqlite-connector = { path = "../connectors/sqlite-connector", optional = true }
 env_logger = "0.6"
-graphql-parser = "0.2.2"
+graphql-parser = { version = "0.2.2", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+failure = "0.1"
+failure_derive = "0.1"
