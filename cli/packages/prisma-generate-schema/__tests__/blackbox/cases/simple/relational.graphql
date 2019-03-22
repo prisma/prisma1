@@ -107,6 +107,7 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   name: String!
 }
 

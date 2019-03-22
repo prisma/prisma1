@@ -77,6 +77,7 @@ type MultiSelfReferencingBConnection {
 }
 
 input MultiSelfReferencingBCreateInput {
+  id: ID
   a: MultiSelfReferencingBCreateOneWithoutBInput
   b: MultiSelfReferencingBCreateOneWithoutAInput
 }
@@ -90,10 +91,12 @@ input MultiSelfReferencingBCreateOneWithoutBInput {
 }
 
 input MultiSelfReferencingBCreateWithoutAInput {
+  id: ID
   b: MultiSelfReferencingBCreateOneWithoutAInput
 }
 
 input MultiSelfReferencingBCreateWithoutBInput {
+  id: ID
   a: MultiSelfReferencingBCreateOneWithoutBInput
 }
 
@@ -197,6 +200,7 @@ type MultiSelfReferencingBWithIdConnection {
 }
 
 input MultiSelfReferencingBWithIdCreateInput {
+  id: ID
   a: MultiSelfReferencingBWithIdCreateOneWithoutBInput
   b: MultiSelfReferencingBWithIdCreateOneWithoutAInput
 }
@@ -212,10 +216,12 @@ input MultiSelfReferencingBWithIdCreateOneWithoutBInput {
 }
 
 input MultiSelfReferencingBWithIdCreateWithoutAInput {
+  id: ID
   b: MultiSelfReferencingBWithIdCreateOneWithoutAInput
 }
 
 input MultiSelfReferencingBWithIdCreateWithoutBInput {
+  id: ID
   a: MultiSelfReferencingBWithIdCreateOneWithoutBInput
 }
 
@@ -421,6 +427,7 @@ type MultiSelfReferencingCConnection {
 }
 
 input MultiSelfReferencingCCreateInput {
+  id: ID
   a: MultiSelfReferencingCCreateManyWithoutBInput
   b: MultiSelfReferencingCCreateManyWithoutAInput
 }
@@ -434,10 +441,12 @@ input MultiSelfReferencingCCreateManyWithoutBInput {
 }
 
 input MultiSelfReferencingCCreateWithoutAInput {
+  id: ID
   b: MultiSelfReferencingCCreateManyWithoutAInput
 }
 
 input MultiSelfReferencingCCreateWithoutBInput {
+  id: ID
   a: MultiSelfReferencingCCreateManyWithoutBInput
 }
 
@@ -545,6 +554,7 @@ type MultiSelfReferencingCWithIdConnection {
 }
 
 input MultiSelfReferencingCWithIdCreateInput {
+  id: ID
   a: MultiSelfReferencingCWithIdCreateManyWithoutBInput
   b: MultiSelfReferencingCWithIdCreateManyWithoutAInput
 }
@@ -560,10 +570,12 @@ input MultiSelfReferencingCWithIdCreateManyWithoutBInput {
 }
 
 input MultiSelfReferencingCWithIdCreateWithoutAInput {
+  id: ID
   b: MultiSelfReferencingCWithIdCreateManyWithoutAInput
 }
 
 input MultiSelfReferencingCWithIdCreateWithoutBInput {
+  id: ID
   a: MultiSelfReferencingCWithIdCreateManyWithoutBInput
 }
 
@@ -989,6 +1001,7 @@ type SelfReferencingAConnection {
 }
 
 input SelfReferencingACreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingAWithIdCreateOneInput!
 }
@@ -1195,6 +1208,7 @@ type SelfReferencingAWithIdConnection {
 }
 
 input SelfReferencingAWithIdCreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingAWithIdCreateOneInput!
 }
@@ -1423,6 +1437,7 @@ type SelfReferencingBConnection {
 }
 
 input SelfReferencingBCreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingBCreateOneInput
 }
@@ -1653,6 +1668,7 @@ type SelfReferencingBWithIdConnection {
 }
 
 input SelfReferencingBWithIdCreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingBWithIdCreateOneInput
 }
@@ -2017,6 +2033,7 @@ type SelfReferencingCConnection {
 }
 
 input SelfReferencingCCreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingCCreateManyInput
 }
@@ -2364,6 +2381,7 @@ type SelfReferencingCWithIdConnection {
 }
 
 input SelfReferencingCWithIdCreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingBWithIdCreateManyInput
 }

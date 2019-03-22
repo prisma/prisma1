@@ -25,6 +25,7 @@ input ACreateInput {
   b: Int
   c: String!
   d: String
+  id: ID
 }
 
 input ACreateManyInput {
@@ -565,6 +566,7 @@ type AWithIdConnection {
 }
 
 input AWithIdCreateInput {
+  id: ID
   a: Int
   b: Int
   c: String!
@@ -578,6 +580,7 @@ input AWithIdCreateOneWithoutB2Input {
 }
 
 input AWithIdCreateWithoutB2Input {
+  id: ID
   a: Int
   b: Int
   c: String!
@@ -944,6 +947,7 @@ type BConnection {
 }
 
 input BCreateInput {
+  id: ID
   a: ACreateManyInput
   a2: AWithIdCreateOneWithoutB2Input
 }
@@ -953,6 +957,7 @@ input BCreateOneWithoutA2Input {
 }
 
 input BCreateWithoutA2Input {
+  id: ID
   a: ACreateManyInput
 }
 

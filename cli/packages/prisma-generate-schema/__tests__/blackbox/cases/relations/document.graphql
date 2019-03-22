@@ -55,6 +55,7 @@ type BillingInfoConnection {
 }
 
 input BillingInfoCreateInput {
+  id: ID
   account: String!
   user: UserCreateOneWithoutBillingInfoInput!
 }
@@ -65,6 +66,7 @@ input BillingInfoCreateOneWithoutUserInput {
 }
 
 input BillingInfoCreateWithoutUserInput {
+  id: ID
   account: String!
 }
 
@@ -289,6 +291,7 @@ type BillingInfoWithoutConnectionConnection {
 }
 
 input BillingInfoWithoutConnectionCreateInput {
+  removeThisId: ID
   account: String!
 }
 
@@ -584,6 +587,7 @@ type OptionalDetailsConnection {
 }
 
 input OptionalDetailsCreateInput {
+  removeThisId: ID
   text: String!
   user: UserCreateOneWithoutOptionalDetailsInput!
 }
@@ -594,6 +598,7 @@ input OptionalDetailsCreateOneWithoutUserInput {
 }
 
 input OptionalDetailsCreateWithoutUserInput {
+  removeThisId: ID
   text: String!
 }
 
@@ -820,6 +825,7 @@ type OptionalDetailsWithoutConnectionConnection {
 }
 
 input OptionalDetailsWithoutConnectionCreateInput {
+  removeThisId: ID
   text: String!
 }
 
@@ -1074,6 +1080,7 @@ type PostConnection {
 }
 
 input PostCreateInput {
+  id: ID
   text: String!
   count: Int!
   user: UserCreateOneWithoutPostsInput!
@@ -1091,12 +1098,14 @@ input PostCreateManyWithoutUserInput {
 }
 
 input PostCreateWithoutLikesInput {
+  id: ID
   text: String!
   count: Int!
   user: UserCreateOneWithoutPostsInput!
 }
 
 input PostCreateWithoutUserInput {
+  id: ID
   text: String!
   count: Int!
   likes: UserCreateManyWithoutLikesInput
@@ -1562,6 +1571,7 @@ type PostWithoutConnectionConnection {
 }
 
 input PostWithoutConnectionCreateInput {
+  id: ID
   text: String!
   count: Int!
 }
@@ -2046,6 +2056,7 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   name: String!
   posts: PostCreateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
@@ -2077,6 +2088,7 @@ input UserCreateOneWithoutPostsInput {
 }
 
 input UserCreateWithoutBillingInfoInput {
+  id: ID
   name: String!
   posts: PostCreateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
@@ -2087,6 +2099,7 @@ input UserCreateWithoutBillingInfoInput {
 }
 
 input UserCreateWithoutLikesInput {
+  id: ID
   name: String!
   posts: PostCreateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
@@ -2097,6 +2110,7 @@ input UserCreateWithoutLikesInput {
 }
 
 input UserCreateWithoutOptionalDetailsInput {
+  id: ID
   name: String!
   posts: PostCreateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
@@ -2107,6 +2121,7 @@ input UserCreateWithoutOptionalDetailsInput {
 }
 
 input UserCreateWithoutPostsInput {
+  id: ID
   name: String!
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
   billingInfo: BillingInfoCreateOneWithoutUserInput!

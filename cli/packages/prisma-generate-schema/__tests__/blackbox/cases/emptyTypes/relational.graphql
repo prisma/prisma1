@@ -49,11 +49,11 @@ scalar Long
 type Mutation {
   createOnlyIdAndARelation(data: OnlyIdAndARelationCreateInput!): OnlyIdAndARelation!
   createOnlyIdAndARelation2(data: OnlyIdAndARelation2CreateInput!): OnlyIdAndARelation2!
-  createOnlyRelation: OnlyRelation!
+  createOnlyRelation(data: OnlyRelationCreateInput!): OnlyRelation!
   createOnlyRelationA(data: OnlyRelationACreateInput!): OnlyRelationA!
-  createOnlyDate: OnlyDate!
+  createOnlyDate(data: OnlyDateCreateInput!): OnlyDate!
   createOnlyRelationB(data: OnlyRelationBCreateInput!): OnlyRelationB!
-  createOnlyId: OnlyId!
+  createOnlyId(data: OnlyIdCreateInput!): OnlyId!
   updateOnlyIdAndARelation(data: OnlyIdAndARelationUpdateInput!, where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
   updateOnlyIdAndARelation2(data: OnlyIdAndARelation2UpdateInput!, where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
   deleteOnlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
@@ -103,6 +103,14 @@ type OnlyDateConnection {
   """
   edges: [OnlyDateEdge]!
   aggregate: AggregateOnlyDate!
+}
+
+input OnlyDateCreateInput {
+  id: ID
+}
+
+input OnlyDateCreateManyInput {
+  create: [OnlyDateCreateInput!]
 }
 
 """
@@ -245,6 +253,7 @@ type OnlyIdAndARelation2Connection {
 }
 
 input OnlyIdAndARelation2CreateInput {
+  id: ID
   ref: OnlyIdCreateOneInput
 }
 
@@ -407,6 +416,7 @@ type OnlyIdAndARelationConnection {
 }
 
 input OnlyIdAndARelationCreateInput {
+  id: ID
   ref: OnlyIdCreateOneInput!
 }
 
@@ -568,7 +578,12 @@ type OnlyIdConnection {
   aggregate: AggregateOnlyId!
 }
 
+input OnlyIdCreateInput {
+  id: ID
+}
+
 input OnlyIdCreateOneInput {
+  create: OnlyIdCreateInput
   connect: OnlyIdWhereUniqueInput
 }
 
@@ -639,12 +654,14 @@ input OnlyIdSubscriptionWhereInput {
 }
 
 input OnlyIdUpdateOneInput {
+  create: OnlyIdCreateInput
   connect: OnlyIdWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
 }
 
 input OnlyIdUpdateOneRequiredInput {
+  create: OnlyIdCreateInput
   connect: OnlyIdWhereUniqueInput
 }
 
@@ -744,6 +761,7 @@ type OnlyRelationAConnection {
 }
 
 input OnlyRelationACreateInput {
+  id: ID
   ref: OnlyRelationACreateOneInput!
 }
 
@@ -848,6 +866,7 @@ type OnlyRelationBConnection {
 }
 
 input OnlyRelationBCreateInput {
+  id: ID
   ref: OnlyRelationBCreateOneInput
 }
 
@@ -945,6 +964,11 @@ type OnlyRelationConnection {
   """
   edges: [OnlyRelationEdge]!
   aggregate: AggregateOnlyRelation!
+}
+
+input OnlyRelationCreateInput {
+  id: ID
+  ref: OnlyDateCreateManyInput
 }
 
 """

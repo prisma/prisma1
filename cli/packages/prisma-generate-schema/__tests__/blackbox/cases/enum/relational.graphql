@@ -27,6 +27,7 @@ input ACreatefieldCInput {
 input ACreateInput {
   fieldA: UsedEnum
   fieldB: UsedEnum!
+  id: ID
   fieldC: ACreatefieldCInput
   b: BCreateOneWithoutAInput!
 }
@@ -42,6 +43,7 @@ input ACreateManyWithoutBInput {
 input ACreateWithoutBInput {
   fieldA: UsedEnum
   fieldB: UsedEnum!
+  id: ID
   fieldC: ACreatefieldCInput
 }
 
@@ -221,6 +223,7 @@ input AWithIdCreatefieldCInput {
 }
 
 input AWithIdCreateInput {
+  id: ID
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: AWithIdCreatefieldCInput
@@ -238,6 +241,7 @@ input AWithIdCreateOneWithoutCInput {
 }
 
 input AWithIdCreateWithoutCInput {
+  id: ID
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: AWithIdCreatefieldCInput
@@ -461,6 +465,7 @@ type BConnection {
 
 input BCreateInput {
   field: String!
+  id: ID
   a: ACreateManyWithoutBInput
 }
 
@@ -470,6 +475,7 @@ input BCreateOneWithoutAInput {
 
 input BCreateWithoutAInput {
   field: String!
+  id: ID
 }
 
 """
@@ -640,6 +646,7 @@ input CCreatefieldInput {
 }
 
 input CCreateInput {
+  id: ID
   field: CCreatefieldInput
   a: AWithIdCreateOneWithoutCInput!
 }
@@ -649,6 +656,7 @@ input CCreateOneWithoutAInput {
 }
 
 input CCreateWithoutAInput {
+  id: ID
   field: CCreatefieldInput
 }
 
@@ -786,6 +794,7 @@ input DCreatefieldInput {
 }
 
 input DCreateInput {
+  id: ID
   field: DCreatefieldInput
   a: AWithIdCreateOneInput!
 }
@@ -902,6 +911,7 @@ type EConnection {
 
 input ECreateInput {
   field: Json
+  id: ID
   a: ACreateManyInput
 }
 

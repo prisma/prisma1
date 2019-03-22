@@ -68,6 +68,7 @@ type LotsOfRequiredScalarsConnection {
 }
 
 input LotsOfRequiredScalarsCreateInput {
+  id: ID
   int: Int!
   string: String!
   float: Float!
@@ -401,6 +402,7 @@ type LotsOfRequiredScalarsWithIDConnection {
 }
 
 input LotsOfRequiredScalarsWithIDCreateInput {
+  id: ID
   int: Int!
   string: String!
   float: Float!
@@ -746,6 +748,7 @@ input LotsOfScalarListsCreatefloatInput {
 }
 
 input LotsOfScalarListsCreateInput {
+  id: ID
   int: LotsOfScalarListsCreateintInput
   string: LotsOfScalarListsCreatestringInput
   float: LotsOfScalarListsCreatefloatInput
@@ -970,6 +973,7 @@ input LotsOfScalarListsWithIDCreatefloatInput {
 }
 
 input LotsOfScalarListsWithIDCreateInput {
+  id: ID
   int: LotsOfScalarListsWithIDCreateintInput
   string: LotsOfScalarListsWithIDCreatestringInput
   float: LotsOfScalarListsWithIDCreatefloatInput
@@ -1182,6 +1186,7 @@ type LotsOfScalarsConnection {
 }
 
 input LotsOfScalarsCreateInput {
+  id: ID
   int: Int
   string: String
   float: Float
@@ -1515,6 +1520,7 @@ type LotsOfScalarsWithIDConnection {
 }
 
 input LotsOfScalarsWithIDCreateInput {
+  id: ID
   int: Int
   string: String
   float: Float

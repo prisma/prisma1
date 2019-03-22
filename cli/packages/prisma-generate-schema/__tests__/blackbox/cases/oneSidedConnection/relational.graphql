@@ -19,6 +19,7 @@ type AConnection {
 }
 
 input ACreateInput {
+  id: ID
   x: TypeWithIdCreateOneInput!
   y: TypeWithoutIdCreateOneInput!
 }
@@ -161,6 +162,7 @@ type BConnection {
 }
 
 input BCreateInput {
+  id: ID
   x: TypeWithIdCreateOneInput
   y: TypeWithoutIdCreateOneInput
 }
@@ -264,6 +266,7 @@ type CConnection {
 }
 
 input CCreateInput {
+  id: ID
   x: TypeWithIdCreateManyInput
   y: TypeWithoutIdCreateManyInput
 }
@@ -372,6 +375,7 @@ type DConnection {
 }
 
 input DCreateInput {
+  id: ID
   x: TypeWithIdCreateOneInput!
   y: TypeWithoutIdCreateOneInput!
 }
@@ -543,6 +547,7 @@ type EConnection {
 }
 
 input ECreateInput {
+  id: ID
   x: TypeWithIdCreateOneInput
   y: TypeWithoutIdCreateOneInput
 }
@@ -714,6 +719,7 @@ type FConnection {
 }
 
 input FCreateInput {
+  id: ID
   x: TypeWithIdCreateManyInput
   y: TypeWithoutIdCreateManyInput
 }
@@ -1013,6 +1019,7 @@ type TypeWithIdConnection {
 }
 
 input TypeWithIdCreateInput {
+  id: ID
   field: String!
 }
 
@@ -1427,6 +1434,7 @@ type TypeWithoutIdConnection {
 
 input TypeWithoutIdCreateInput {
   field: String!
+  id: ID
 }
 
 input TypeWithoutIdCreateManyInput {

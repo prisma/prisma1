@@ -151,6 +151,7 @@ type AmenitiesConnection {
 }
 
 input AmenitiesCreateInput {
+  id: ID
   elevator: Boolean
   petsAllowed: Boolean
   internet: Boolean
@@ -200,6 +201,7 @@ input AmenitiesCreateOneWithoutPlaceInput {
 }
 
 input AmenitiesCreateWithoutPlaceInput {
+  id: ID
   elevator: Boolean
   petsAllowed: Boolean
   internet: Boolean
@@ -876,6 +878,7 @@ type BookingConnection {
 }
 
 input BookingCreateInput {
+  id: ID
   startDate: DateTime!
   endDate: DateTime!
   bookee: UserCreateOneWithoutBookingsInput!
@@ -899,6 +902,7 @@ input BookingCreateOneWithoutPaymentInput {
 }
 
 input BookingCreateWithoutBookeeInput {
+  id: ID
   startDate: DateTime!
   endDate: DateTime!
   place: PlaceCreateOneWithoutBookingsInput!
@@ -906,6 +910,7 @@ input BookingCreateWithoutBookeeInput {
 }
 
 input BookingCreateWithoutPaymentInput {
+  id: ID
   startDate: DateTime!
   endDate: DateTime!
   bookee: UserCreateOneWithoutBookingsInput!
@@ -913,6 +918,7 @@ input BookingCreateWithoutPaymentInput {
 }
 
 input BookingCreateWithoutPlaceInput {
+  id: ID
   startDate: DateTime!
   endDate: DateTime!
   bookee: UserCreateOneWithoutBookingsInput!
@@ -1433,6 +1439,7 @@ type CityConnection {
 }
 
 input CityCreateInput {
+  id: ID
   name: String!
   neighbourhoods: NeighbourhoodCreateManyWithoutCityInput
 }
@@ -1443,6 +1450,7 @@ input CityCreateOneWithoutNeighbourhoodsInput {
 }
 
 input CityCreateWithoutNeighbourhoodsInput {
+  id: ID
   name: String!
 }
 
@@ -1698,6 +1706,7 @@ type CreditCardInformationConnection {
 }
 
 input CreditCardInformationCreateInput {
+  id: ID
   cardNumber: String!
   expiresOnMonth: Int!
   expiresOnYear: Int!
@@ -1715,6 +1724,7 @@ input CreditCardInformationCreateOneWithoutPaymentAccountInput {
 }
 
 input CreditCardInformationCreateWithoutPaymentAccountInput {
+  id: ID
   cardNumber: String!
   expiresOnMonth: Int!
   expiresOnYear: Int!
@@ -2388,6 +2398,7 @@ type ExperienceCategoryConnection {
 }
 
 input ExperienceCategoryCreateInput {
+  id: ID
   mainColor: String
   name: String!
   experience: ExperienceCreateOneWithoutCategoryInput
@@ -2399,6 +2410,7 @@ input ExperienceCategoryCreateOneWithoutExperienceInput {
 }
 
 input ExperienceCategoryCreateWithoutExperienceInput {
+  id: ID
   mainColor: String
   name: String!
 }
@@ -2700,6 +2712,7 @@ type ExperienceConnection {
 }
 
 input ExperienceCreateInput {
+  id: ID
   title: String!
   pricePerPerson: Int!
   popularity: Int!
@@ -2731,6 +2744,7 @@ input ExperienceCreateOneWithoutReviewsInput {
 }
 
 input ExperienceCreateWithoutCategoryInput {
+  id: ID
   title: String!
   pricePerPerson: Int!
   popularity: Int!
@@ -2741,6 +2755,7 @@ input ExperienceCreateWithoutCategoryInput {
 }
 
 input ExperienceCreateWithoutHostInput {
+  id: ID
   title: String!
   pricePerPerson: Int!
   popularity: Int!
@@ -2751,6 +2766,7 @@ input ExperienceCreateWithoutHostInput {
 }
 
 input ExperienceCreateWithoutLocationInput {
+  id: ID
   title: String!
   pricePerPerson: Int!
   popularity: Int!
@@ -2761,6 +2777,7 @@ input ExperienceCreateWithoutLocationInput {
 }
 
 input ExperienceCreateWithoutReviewsInput {
+  id: ID
   title: String!
   pricePerPerson: Int!
   popularity: Int!
@@ -3371,6 +3388,7 @@ type GuestRequirementsConnection {
 }
 
 input GuestRequirementsCreateInput {
+  id: ID
   govIssuedId: Boolean
   recommendationsFromOtherHosts: Boolean
   guestTripInformation: Boolean
@@ -3383,6 +3401,7 @@ input GuestRequirementsCreateOneWithoutPlaceInput {
 }
 
 input GuestRequirementsCreateWithoutPlaceInput {
+  id: ID
   govIssuedId: Boolean
   recommendationsFromOtherHosts: Boolean
   guestTripInformation: Boolean
@@ -3612,6 +3631,7 @@ type HouseRulesConnection {
 }
 
 input HouseRulesCreateInput {
+  id: ID
   suitableForChildren: Boolean
   suitableForInfants: Boolean
   petsAllowed: Boolean
@@ -3994,6 +4014,7 @@ type LocationConnection {
 }
 
 input LocationCreateInput {
+  id: ID
   lat: Float!
   lng: Float!
   address: String
@@ -4031,6 +4052,7 @@ input LocationCreateOneWithoutUserInput {
 }
 
 input LocationCreateWithoutExperienceInput {
+  id: ID
   lat: Float!
   lng: Float!
   address: String
@@ -4042,6 +4064,7 @@ input LocationCreateWithoutExperienceInput {
 }
 
 input LocationCreateWithoutNeighbourHoodInput {
+  id: ID
   lat: Float!
   lng: Float!
   address: String
@@ -4053,6 +4076,7 @@ input LocationCreateWithoutNeighbourHoodInput {
 }
 
 input LocationCreateWithoutPlaceInput {
+  id: ID
   lat: Float!
   lng: Float!
   address: String
@@ -4064,6 +4088,7 @@ input LocationCreateWithoutPlaceInput {
 }
 
 input LocationCreateWithoutRestaurantInput {
+  id: ID
   lat: Float!
   lng: Float!
   address: String
@@ -4075,6 +4100,7 @@ input LocationCreateWithoutRestaurantInput {
 }
 
 input LocationCreateWithoutUserInput {
+  id: ID
   lat: Float!
   lng: Float!
   address: String
@@ -4826,6 +4852,7 @@ type MessageConnection {
 }
 
 input MessageCreateInput {
+  id: ID
   deliveredAt: DateTime!
   readAt: DateTime!
   from: UserCreateOneWithoutSentMessagesInput!
@@ -4843,12 +4870,14 @@ input MessageCreateManyWithoutToInput {
 }
 
 input MessageCreateWithoutFromInput {
+  id: ID
   deliveredAt: DateTime!
   readAt: DateTime!
   to: UserCreateOneWithoutReceivedMessagesInput!
 }
 
 input MessageCreateWithoutToInput {
+  id: ID
   deliveredAt: DateTime!
   readAt: DateTime!
   from: UserCreateOneWithoutSentMessagesInput!
@@ -5494,6 +5523,7 @@ type NeighbourhoodConnection {
 }
 
 input NeighbourhoodCreateInput {
+  id: ID
   name: String!
   slug: String!
   featured: Boolean!
@@ -5514,6 +5544,7 @@ input NeighbourhoodCreateOneWithoutLocationsInput {
 }
 
 input NeighbourhoodCreateWithoutCityInput {
+  id: ID
   name: String!
   slug: String!
   featured: Boolean!
@@ -5523,6 +5554,7 @@ input NeighbourhoodCreateWithoutCityInput {
 }
 
 input NeighbourhoodCreateWithoutLocationsInput {
+  id: ID
   name: String!
   slug: String!
   featured: Boolean!
@@ -6161,6 +6193,7 @@ type NotificationConnection {
 }
 
 input NotificationCreateInput {
+  id: ID
   type: NOTIFICATION_TYPE
   link: String!
   readDate: DateTime!
@@ -6173,6 +6206,7 @@ input NotificationCreateManyWithoutUserInput {
 }
 
 input NotificationCreateWithoutUserInput {
+  id: ID
   type: NOTIFICATION_TYPE
   link: String!
   readDate: DateTime!
@@ -6759,6 +6793,7 @@ type PaymentAccountConnection {
 }
 
 input PaymentAccountCreateInput {
+  id: ID
   type: PAYMENT_PROVIDER
   user: UserCreateOneWithoutPaymentAccountInput!
   payments: PaymentCreateManyWithoutPaymentMethodInput
@@ -6787,6 +6822,7 @@ input PaymentAccountCreateOneWithoutPaypalInput {
 }
 
 input PaymentAccountCreateWithoutCreditcardInput {
+  id: ID
   type: PAYMENT_PROVIDER
   user: UserCreateOneWithoutPaymentAccountInput!
   payments: PaymentCreateManyWithoutPaymentMethodInput
@@ -6794,6 +6830,7 @@ input PaymentAccountCreateWithoutCreditcardInput {
 }
 
 input PaymentAccountCreateWithoutPaymentsInput {
+  id: ID
   type: PAYMENT_PROVIDER
   user: UserCreateOneWithoutPaymentAccountInput!
   paypal: PaypalInformationCreateOneWithoutPaymentAccountInput
@@ -6801,6 +6838,7 @@ input PaymentAccountCreateWithoutPaymentsInput {
 }
 
 input PaymentAccountCreateWithoutPaypalInput {
+  id: ID
   type: PAYMENT_PROVIDER
   user: UserCreateOneWithoutPaymentAccountInput!
   payments: PaymentCreateManyWithoutPaymentMethodInput
@@ -6808,6 +6846,7 @@ input PaymentAccountCreateWithoutPaypalInput {
 }
 
 input PaymentAccountCreateWithoutUserInput {
+  id: ID
   type: PAYMENT_PROVIDER
   payments: PaymentCreateManyWithoutPaymentMethodInput
   paypal: PaypalInformationCreateOneWithoutPaymentAccountInput
@@ -7240,6 +7279,7 @@ type PaymentConnection {
 }
 
 input PaymentCreateInput {
+  id: ID
   serviceFee: Float!
   placePrice: Float!
   totalPrice: Float!
@@ -7258,6 +7298,7 @@ input PaymentCreateOneWithoutBookingInput {
 }
 
 input PaymentCreateWithoutBookingInput {
+  id: ID
   serviceFee: Float!
   placePrice: Float!
   totalPrice: Float!
@@ -7265,6 +7306,7 @@ input PaymentCreateWithoutBookingInput {
 }
 
 input PaymentCreateWithoutPaymentMethodInput {
+  id: ID
   serviceFee: Float!
   placePrice: Float!
   totalPrice: Float!
@@ -7818,6 +7860,7 @@ type PaypalInformationConnection {
 }
 
 input PaypalInformationCreateInput {
+  id: ID
   email: String!
   paymentAccount: PaymentAccountCreateOneWithoutPaypalInput!
 }
@@ -7828,6 +7871,7 @@ input PaypalInformationCreateOneWithoutPaymentAccountInput {
 }
 
 input PaypalInformationCreateWithoutPaymentAccountInput {
+  id: ID
   email: String!
 }
 
@@ -8104,6 +8148,7 @@ type PictureConnection {
 
 input PictureCreateInput {
   url: String!
+  id: ID
 }
 
 input PictureCreateManyInput {
@@ -8412,6 +8457,7 @@ type PlaceConnection {
 }
 
 input PlaceCreateInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8481,6 +8527,7 @@ input PlaceCreateOneWithoutViewsInput {
 }
 
 input PlaceCreateWithoutAmenitiesInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8504,6 +8551,7 @@ input PlaceCreateWithoutAmenitiesInput {
 }
 
 input PlaceCreateWithoutBookingsInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8527,6 +8575,7 @@ input PlaceCreateWithoutBookingsInput {
 }
 
 input PlaceCreateWithoutGuestRequirementsInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8550,6 +8599,7 @@ input PlaceCreateWithoutGuestRequirementsInput {
 }
 
 input PlaceCreateWithoutHostInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8573,6 +8623,7 @@ input PlaceCreateWithoutHostInput {
 }
 
 input PlaceCreateWithoutLocationInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8596,6 +8647,7 @@ input PlaceCreateWithoutLocationInput {
 }
 
 input PlaceCreateWithoutPoliciesInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8619,6 +8671,7 @@ input PlaceCreateWithoutPoliciesInput {
 }
 
 input PlaceCreateWithoutPricingInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8642,6 +8695,7 @@ input PlaceCreateWithoutPricingInput {
 }
 
 input PlaceCreateWithoutReviewsInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -8665,6 +8719,7 @@ input PlaceCreateWithoutReviewsInput {
 }
 
 input PlaceCreateWithoutViewsInput {
+  id: ID
   name: String
   size: PLACE_SIZES
   shortDescription: String!
@@ -10089,6 +10144,7 @@ type PoliciesConnection {
 }
 
 input PoliciesCreateInput {
+  id: ID
   checkInStartTime: Float!
   checkInEndTime: Float!
   checkoutTime: Float!
@@ -10101,6 +10157,7 @@ input PoliciesCreateOneWithoutPlaceInput {
 }
 
 input PoliciesCreateWithoutPlaceInput {
+  id: ID
   checkInStartTime: Float!
   checkInEndTime: Float!
   checkoutTime: Float!
@@ -10467,6 +10524,7 @@ type PricingConnection {
 }
 
 input PricingCreateInput {
+  id: ID
   monthlyDiscount: Int
   weeklyDiscount: Int
   perNight: Int!
@@ -10488,6 +10546,7 @@ input PricingCreateOneWithoutPlaceInput {
 }
 
 input PricingCreateWithoutPlaceInput {
+  id: ID
   monthlyDiscount: Int
   weeklyDiscount: Int
   perNight: Int!
@@ -11151,6 +11210,7 @@ type RestaurantConnection {
 }
 
 input RestaurantCreateInput {
+  id: ID
   title: String!
   avgPricePerPerson: Int!
   isCurated: Boolean
@@ -11166,6 +11226,7 @@ input RestaurantCreateOneWithoutLocationInput {
 }
 
 input RestaurantCreateWithoutLocationInput {
+  id: ID
   title: String!
   avgPricePerPerson: Int!
   isCurated: Boolean
@@ -11602,6 +11663,7 @@ type ReviewConnection {
 }
 
 input ReviewCreateInput {
+  id: ID
   text: String!
   stars: Int!
   accuracy: Int!
@@ -11625,6 +11687,7 @@ input ReviewCreateManyWithoutPlaceInput {
 }
 
 input ReviewCreateWithoutExperienceInput {
+  id: ID
   text: String!
   stars: Int!
   accuracy: Int!
@@ -11637,6 +11700,7 @@ input ReviewCreateWithoutExperienceInput {
 }
 
 input ReviewCreateWithoutPlaceInput {
+  id: ID
   text: String!
   stars: Int!
   accuracy: Int!
@@ -12626,6 +12690,7 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -12686,6 +12751,7 @@ input UserCreateOneWithoutSentMessagesInput {
 }
 
 input UserCreateWithoutBookingsInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -12705,6 +12771,7 @@ input UserCreateWithoutBookingsInput {
 }
 
 input UserCreateWithoutHostingExperiencesInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -12724,6 +12791,7 @@ input UserCreateWithoutHostingExperiencesInput {
 }
 
 input UserCreateWithoutLocationInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -12743,6 +12811,7 @@ input UserCreateWithoutLocationInput {
 }
 
 input UserCreateWithoutNotificationsInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -12762,6 +12831,7 @@ input UserCreateWithoutNotificationsInput {
 }
 
 input UserCreateWithoutOwnedPlacesInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -12781,6 +12851,7 @@ input UserCreateWithoutOwnedPlacesInput {
 }
 
 input UserCreateWithoutPaymentAccountInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -12800,6 +12871,7 @@ input UserCreateWithoutPaymentAccountInput {
 }
 
 input UserCreateWithoutReceivedMessagesInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -12819,6 +12891,7 @@ input UserCreateWithoutReceivedMessagesInput {
 }
 
 input UserCreateWithoutSentMessagesInput {
+  id: ID
   firstName: String!
   lastName: String!
   email: String!
@@ -13714,6 +13787,7 @@ type ViewsConnection {
 }
 
 input ViewsCreateInput {
+  id: ID
   lastWeek: Int!
   place: PlaceCreateOneWithoutViewsInput!
 }
@@ -13724,6 +13798,7 @@ input ViewsCreateOneWithoutPlaceInput {
 }
 
 input ViewsCreateWithoutPlaceInput {
+  id: ID
   lastWeek: Int!
 }
 

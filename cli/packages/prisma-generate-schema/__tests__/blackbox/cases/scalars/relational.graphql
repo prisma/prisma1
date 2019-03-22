@@ -73,6 +73,7 @@ input LotsOfRequiredScalarsCreateInput {
   dateTime: DateTime!
   json: Json!
   boolean: Boolean!
+  id: ID
 }
 
 """
@@ -353,6 +354,7 @@ type LotsOfRequiredScalarsWithIDConnection {
 }
 
 input LotsOfRequiredScalarsWithIDCreateInput {
+  id: ID
   int: Int!
   string: String!
   float: Float!
@@ -717,6 +719,7 @@ input LotsOfScalarListsCreatefloatInput {
 }
 
 input LotsOfScalarListsCreateInput {
+  id: ID
   int: LotsOfScalarListsCreateintInput
   string: LotsOfScalarListsCreatestringInput
   float: LotsOfScalarListsCreatefloatInput
@@ -894,6 +897,7 @@ input LotsOfScalarListsWithIDCreatefloatInput {
 }
 
 input LotsOfScalarListsWithIDCreateInput {
+  id: ID
   int: LotsOfScalarListsWithIDCreateintInput
   string: LotsOfScalarListsWithIDCreatestringInput
   float: LotsOfScalarListsWithIDCreatefloatInput
@@ -1131,6 +1135,7 @@ input LotsOfScalarsCreateInput {
   dateTime: DateTime
   json: Json
   boolean: Boolean
+  id: ID
 }
 
 """
@@ -1411,6 +1416,7 @@ type LotsOfScalarsWithIDConnection {
 }
 
 input LotsOfScalarsWithIDCreateInput {
+  id: ID
   int: Int
   string: String
   float: Float

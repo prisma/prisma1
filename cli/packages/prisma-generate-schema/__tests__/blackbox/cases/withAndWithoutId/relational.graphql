@@ -117,6 +117,7 @@ type TypeWithIdConnection {
 }
 
 input TypeWithIdCreateInput {
+  id: ID
   field: String!
 }
 
@@ -343,6 +344,7 @@ type TypeWithoutIdConnection {
 
 input TypeWithoutIdCreateInput {
   field: String!
+  id: ID
 }
 
 """
