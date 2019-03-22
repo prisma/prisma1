@@ -266,10 +266,10 @@ impl Relation {
         } else if model_id == self.model_b().name {
             Ok(self.field_b())
         } else {
-            Err(DomainError::NotFound(Missing::ModelForRelation {
+            Err(DomainError::ModelForRelationNotFound {
                 model_id: model_id.to_string(),
                 relation: self.name.clone(),
-            }))
+            })
         }
     }
 }
