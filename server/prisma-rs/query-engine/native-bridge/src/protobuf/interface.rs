@@ -430,6 +430,11 @@ fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf:
 
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         }
+        DatabaseMutactionResultType::Unit => {
+            let result = crate::protobuf::prisma::Unit {};
+            let typ = database_mutaction_result::Type::Unit(result);
+            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
+        }
         x => panic!("can't handle result type {:?}", x),
     }
 }

@@ -337,8 +337,11 @@ message NodeSelector {
 message DatabaseMutactionResult {
     oneof type {
         CreateNodeResult create = 1;
+        Unit             unit   = 2;
     }
 }
+
+message Unit {}
 
 message CreateNodeResult {
     required GraphqlId id = 1;
