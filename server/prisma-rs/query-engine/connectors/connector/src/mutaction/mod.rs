@@ -1,18 +1,22 @@
 mod builder;
 mod create_node;
+mod delete_node;
 mod node_address;
 mod path;
 mod relay_id;
 mod result;
 mod update_node;
+mod upsert_node;
 
 pub use builder::*;
 pub use create_node::*;
+pub use delete_node::*;
 pub use node_address::*;
 pub use path::*;
 pub use relay_id::*;
 pub use result::*;
 pub use update_node::*;
+pub use upsert_node::*;
 
 use super::{Filter, NodeSelector};
 use prisma_models::prelude::*;
@@ -40,10 +44,10 @@ pub enum DatabaseMutaction {
 pub enum TopLevelDatabaseMutaction {
     CreateNode(CreateNode),
     UpdateNode(UpdateNode),
-    UpsertNode(TopLevelUpsertNode),
-    DeleteNode(TopLevelDeleteNode),
-    UpdateNodes(TopLevelUpdateNodes),
-    DeleteNodes(TopLevelDeleteNodes),
+    DeleteNode(DeleteNode),
+    UpsertNode(UpsertNode),
+    UpdateNodes(UpdateNodes),
+    DeleteNodes(DeleteNodes),
     ResetData(ResetData),
 }
 
@@ -55,71 +59,17 @@ pub enum NestedDatabaseMutaction {
 #[derive(Debug, Default, Clone)]
 pub struct NestedMutactions {
     pub creates: Vec<NestedCreateNode>,
-    /*
     pub updates: Vec<NestedUpdateNode>,
     pub upserts: Vec<NestedUpsertNode>,
     pub deletes: Vec<NestedDeleteNode>,
+    pub update_manys: Vec<NestedUpdateNodes>,
+    pub delete_manys: Vec<NestedDeleteNodes>,
+    /*
     pub connects: Vec<NestedConnect>,
     pub sets: Vec<NestedSet>,
     pub disconnects: Vec<NestedDisconnect>,
-    pub update_manys: Vec<NestedUpdateNodes>,
-    pub delete_manys: Vec<NestedDeleteNodes>,
     */
 }
-
-// UPDATE
-
-#[derive(Debug, Clone)]
-pub struct TopLevelUpdateNodes {
-    pub model: ModelRef,
-    pub filter: Filter,
-    pub non_list_args: PrismaArgs,
-    pub list_args: Vec<(String, PrismaListValue)>,
-}
-
-// UPSERT
-
-#[derive(Debug, Clone)]
-pub struct TopLevelUpsertNode {
-    pub where_: NodeSelector,
-    pub create: CreateNode,
-    pub update: UpdateNode,
-}
-
-// #[derive(Debug, Default, Clone, PartialEq)]
-// pub struct NestedUpsertNode {
-//     pub project: ProjectRef,
-//     pub where_: NodeSelector,
-//     pub create: NestedCreateNode,
-//     pub update: NestedUpdateNode,
-
-//     pub relation_field: Arc<RelationField>,
-// }
-
-// DELETE
-
-#[derive(Debug, Clone)]
-pub struct TopLevelDeleteNode {
-    pub where_: NodeSelector,
-}
-
-/*
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct NestedDeleteNode {
-    pub project: ProjectRef,
-    pub where_: NodeSelector,
-
-    pub relation_field: Arc<RelationField>,
-}
-*/
-
-#[derive(Debug, Clone)]
-pub struct TopLevelDeleteNodes {
-    pub model: ModelRef,
-    pub filter: Filter,
-}
-
-// CONNECT
 
 // #[derive(Debug, Default, Clone, PartialEq)]
 // pub struct NestedConnect {

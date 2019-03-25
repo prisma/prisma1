@@ -1,6 +1,6 @@
 use crate::{DomainError as Error, DomainResult, GraphqlId, ModelRef, PrismaValue};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SingleNode {
     pub node: Node,
     pub field_names: Vec<String>,
@@ -31,7 +31,7 @@ impl SingleNode {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ManyNodes {
     pub nodes: Vec<Node>,
     pub field_names: Vec<String>,
@@ -48,7 +48,7 @@ impl ManyNodes {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct Node {
     pub values: Vec<PrismaValue>,
     pub related_id: Option<GraphqlId>,

@@ -44,6 +44,14 @@ impl From<Arc<ScalarField>> for SelectedFields {
     }
 }
 
+impl From<Vec<Arc<ScalarField>>> for SelectedFields {
+    fn from(sfs: Vec<Arc<ScalarField>>) -> SelectedFields {
+        let fields = sfs.into_iter().map(SelectedField::from).collect();
+
+        SelectedFields::new(fields, None)
+    }
+}
+
 impl SelectedFields {
     pub const RELATED_MODEL_ALIAS: &'static str = "__RelatedModel__";
     pub const PARENT_MODEL_ALIAS: &'static str = "__ParentModel__";

@@ -1,4 +1,5 @@
 use crate::{query_builder::QueryBuilder, DatabaseExecutor};
+use chrono::{DateTime, Utc};
 use connector::*;
 use prisma_models::prelude::*;
 use prisma_query::{
@@ -9,6 +10,7 @@ use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Transaction, NO_PARAMS};
 use serde_json::Value;
 use std::{collections::HashSet, env, sync::Arc};
+use uuid::Uuid;
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
@@ -19,21 +21,11 @@ pub struct Sqlite {
 }
 
 impl DatabaseExecutor for Sqlite {
-    fn with_rows<F, T>(&self, query: Select, db_name: String, mut f: F) -> ConnectorResult<Vec<T>>
+    fn with_rows<F, T>(&self, query: Select, db_name: String, f: F) -> ConnectorResult<Vec<T>>
     where
         F: FnMut(&Row) -> ConnectorResult<T>,
     {
-        self.with_transaction(&db_name, |conn| {
-            let (query_sql, params) = dbg!(visitor::Sqlite::build(query));
-
-            let res: ConnectorResult<Vec<T>> = conn
-                .prepare(&query_sql)?
-                .query_map(&params, |row| f(row))?
-                .map(|row_res| row_res.unwrap())
-                .collect();
-
-            Ok(res?)
-        })
+        self.with_transaction(&db_name, |conn| Self::query(conn, query, f))
     }
 }
 
@@ -85,21 +77,21 @@ impl DatabaseMutactionExecutor for Sqlite {
                     QueryBuilder::get_node_by_where(&mutaction.where_, &selected_fields)
                 };
 
-                let (query_sql, params) = dbg!(visitor::Sqlite::build(select));
+                let ids = Self::query(conn, select, |row| {
+                    let id: GraphqlId = row.get(0);
+                    Ok(id)
+                })?;
 
-                conn.prepare(&query_sql)?
-                    .query_map(&params, |row| row.get(0))?
-                    .map(|row_res| row_res.unwrap())
-                    .next()
-                    .ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
-                        field: mutaction.where_.field.name.clone(),
-                        value: mutaction.where_.value.clone(),
-                    })?
+                let opt_id = ids.into_iter().next();
+
+                opt_id.ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
+                    field: mutaction.where_.field.name.clone(),
+                    value: mutaction.where_.value.clone(),
+                })?
             };
 
-            let update = MutationBuilder::update_node_by_id(Arc::clone(&model), &id, &mutaction.non_list_args)?;
-
-            if let Some(update) = update {
+            if let Some(update) = MutationBuilder::update_node_by_id(Arc::clone(&model), &id, &mutaction.non_list_args)?
+            {
                 Self::execute_one(conn, update)?;
             }
 
@@ -115,6 +107,35 @@ impl DatabaseMutactionExecutor for Sqlite {
             Ok(id)
         })
     }
+
+    fn execute_delete(&self, _db_name: String, _mutaction: &DeleteNode) -> ConnectorResult<SingleNode> {
+        unimplemented!()
+        /*
+         *
+        self.with_transaction(&db_name, |conn| {
+            let model = mutaction.where_.field.model();
+
+            let node: SingleNode = {
+                let selected_fields = SelectedFields::from(model.fields().scalar());
+                let scalar_fields = selected_fields.scalar_non_list();
+                let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
+
+                let (_, select) = QueryBuilder::get_node_by_where(&mutaction.where_, &selected_fields);
+
+                let nodes = Self::query(conn, select, |row| Ok(Self::read_row(row, &selected_fields)?))?;
+
+                let opt_node = nodes.into_iter().next().map(|node| SingleNode { node, field_names });
+
+                opt_node.ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
+                    field: mutaction.where_.field.name.clone(),
+                    value: mutaction.where_.value.clone(),
+                })?
+            };
+
+            let id = node.get_id_value(Arc::clone(&model))?;
+        })
+         */
+    }
 }
 
 impl Sqlite {
@@ -127,6 +148,21 @@ impl Sqlite {
             .build(SqliteConnectionManager::memory())?;
 
         Ok(Sqlite { pool, test_mode })
+    }
+
+    fn query<F, T>(conn: &Transaction, query: Select, mut f: F) -> ConnectorResult<Vec<T>>
+    where
+        F: FnMut(&Row) -> ConnectorResult<T>,
+    {
+        let (query_sql, params) = dbg!(visitor::Sqlite::build(query));
+
+        let res: ConnectorResult<Vec<T>> = conn
+            .prepare(&query_sql)?
+            .query_map(&params, |row| f(row))?
+            .map(|row_res| row_res.unwrap())
+            .collect();
+
+        Ok(res?)
     }
 
     fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>
@@ -174,6 +210,59 @@ impl Sqlite {
         dbg!(conn.execute("PRAGMA foreign_keys = ON", NO_PARAMS)?);
 
         Ok(())
+    }
+
+    pub fn fetch_int(row: &Row) -> i64 {
+        row.get_checked(0).unwrap_or(0)
+    }
+
+    pub fn read_row(row: &Row, selected_fields: &SelectedFields) -> ConnectorResult<Node> {
+        let mut fields = Vec::new();
+
+        for (i, sf) in selected_fields.scalar_non_list().iter().enumerate() {
+            fields.push(Self::fetch_value(sf.type_identifier, &row, i)?);
+        }
+
+        Ok(Node::new(fields))
+    }
+
+    /// Converter function to wrap the limited set of types in SQLite to a
+    /// richer PrismaValue.
+    pub fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> ConnectorResult<PrismaValue> {
+        let result = match typ {
+            TypeIdentifier::String => row.get_checked(i).map(|val| PrismaValue::String(val)),
+            TypeIdentifier::GraphQLID => row.get_checked(i).map(|val| PrismaValue::GraphqlId(val)),
+            TypeIdentifier::UUID => {
+                let result: Result<String, rusqlite::Error> = row.get_checked(i);
+
+                if let Ok(val) = result {
+                    let uuid = Uuid::parse_str(val.as_ref())?;
+                    Ok(PrismaValue::Uuid(uuid))
+                } else {
+                    result.map(|s| PrismaValue::String(s))
+                }
+            }
+            TypeIdentifier::Int => row.get_checked(i).map(|val| PrismaValue::Int(val)),
+            TypeIdentifier::Boolean => row.get_checked(i).map(|val| PrismaValue::Boolean(val)),
+            TypeIdentifier::Enum => row.get_checked(i).map(|val| PrismaValue::Enum(val)),
+            TypeIdentifier::Json => row.get_checked(i).map(|val| PrismaValue::Json(val)),
+            TypeIdentifier::DateTime => row.get_checked(i).map(|ts: i64| {
+                let nsecs = ((ts % 1000) * 1_000_000) as u32;
+                let secs = (ts / 1000) as i64;
+                let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
+                let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+
+                PrismaValue::DateTime(datetime)
+            }),
+            TypeIdentifier::Relation => panic!("We should not have a Relation here!"),
+            TypeIdentifier::Float => row.get_checked(i).map(|val: f64| PrismaValue::Float(val)),
+        };
+
+        match result {
+            Err(rusqlite::Error::InvalidColumnType(_, rusqlite::types::Type::Null)) => Ok(PrismaValue::Null),
+            Ok(pv) => Ok(pv),
+            Err(e) => Err(e.into()),
+        }
     }
 
     pub fn with_connection<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>

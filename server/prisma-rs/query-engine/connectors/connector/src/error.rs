@@ -1,6 +1,6 @@
 use failure::{Error, Fail};
 use libsqlite3_sys as ffi;
-use prisma_models::prelude::PrismaValue;
+use prisma_models::prelude::{DomainError, PrismaValue};
 use rusqlite;
 
 #[derive(Debug, Fail)]
@@ -21,6 +21,14 @@ pub enum ConnectorError {
     NodeNotFoundForWhere { field: String, value: PrismaValue },
     #[fail(display = "Field cannot be null: {}", field)]
     FieldCannotBeNull { field: String },
+    #[fail(display = "{}", _0)]
+    DomainError(DomainError),
+}
+
+impl From<DomainError> for ConnectorError {
+    fn from(e: DomainError) -> ConnectorError {
+        ConnectorError::DomainError(e)
+    }
 }
 
 #[cfg(feature = "sql")]

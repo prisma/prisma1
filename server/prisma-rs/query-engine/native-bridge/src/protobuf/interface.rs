@@ -299,14 +299,6 @@ impl From<BridgeError> for super::prisma::error::Value {
                 super::prisma::error::Value::UniqueConstraintViolation(field_name)
             }
 
-            e @ BridgeError::ConnectorError(ConnectorError::NodeNotFoundForWhere { .. }) => {
-                super::prisma::error::Value::NodeNotFoundForWhere(format!("{}", e))
-            }
-
-            BridgeError::ConnectorError(ConnectorError::FieldCannotBeNull { field }) => {
-                super::prisma::error::Value::FieldCannotBeNull(field)
-            }
-
             e @ BridgeError::ProtobufDecodeError(_) => {
                 super::prisma::error::Value::ProtobufDecodeError(format!("{}", e))
             }
@@ -345,7 +337,7 @@ fn convert_create(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -
         model: model,
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-        nested_mutactions: empty_nested_mutactions(),
+        nested_mutactions: NestedMutactions::default(),
     }
 }
 
@@ -358,13 +350,13 @@ fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -
         where_: convert_node_select(m.where_, project),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-        nested_mutactions: empty_nested_mutactions(),
+        nested_mutactions: NestedMutactions::default(),
     }
 }
 
 fn convert_update_nodes(m: crate::protobuf::prisma::UpdateNodes, project: ProjectRef) -> TopLevelDatabaseMutaction {
     let model = project.schema().find_model(&m.model_name).unwrap();
-    let update_nodes = TopLevelUpdateNodes {
+    let update_nodes = UpdateNodes {
         model: Arc::clone(&model),
         filter: m.filter.into_filter(model),
         non_list_args: convert_prisma_args(m.non_list_args),
@@ -374,7 +366,7 @@ fn convert_update_nodes(m: crate::protobuf::prisma::UpdateNodes, project: Projec
 }
 
 fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
-    let upsert_node = TopLevelUpsertNode {
+    let upsert_node = UpsertNode {
         where_: convert_node_select(m.where_, Arc::clone(&project)),
         create: convert_create(m.create, Arc::clone(&project)),
         update: convert_update(m.update, project),
@@ -383,7 +375,7 @@ fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRef) -
 }
 
 fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
-    let delete_node = TopLevelDeleteNode {
+    let delete_node = DeleteNode {
         where_: convert_node_select(m.where_, project),
     };
     TopLevelDatabaseMutaction::DeleteNode(delete_node)
@@ -391,7 +383,7 @@ fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRef) -
 
 fn convert_delete_nodes(m: crate::protobuf::prisma::DeleteNodes, project: ProjectRef) -> TopLevelDatabaseMutaction {
     let model = project.schema().find_model(&m.model_name).unwrap();
-    let delete_nodes = TopLevelDeleteNodes {
+    let delete_nodes = DeleteNodes {
         model: Arc::clone(&model),
         filter: m.filter.into_filter(model),
     };
@@ -408,10 +400,6 @@ fn convert_node_select(selector: crate::protobuf::prisma::NodeSelector, project:
     let field = model.fields().find_from_scalar(&selector.field_name).unwrap();
     let value: PrismaValue = selector.value.into();
     NodeSelector { field, value }
-}
-
-fn empty_nested_mutactions() -> NestedMutactions {
-    NestedMutactions { creates: vec![] }
 }
 
 fn convert_prisma_args(proto: crate::protobuf::prisma::PrismaArgs) -> PrismaArgs {

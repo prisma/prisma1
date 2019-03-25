@@ -20,3 +20,20 @@ pub struct NestedUpdateNode {
 
     pub relation_field: Arc<RelationField>,
 }
+
+#[derive(Debug, Clone)]
+pub struct UpdateNodes {
+    pub model: ModelRef,
+    pub filter: Filter,
+    pub non_list_args: PrismaArgs,
+    pub list_args: Vec<(String, PrismaListValue)>,
+}
+
+#[derive(Debug, Clone)]
+pub struct NestedUpdateNodes {
+    pub model: ModelRef,
+    pub filter: Filter,
+    pub non_list_args: PrismaArgs,
+    pub list_args: Vec<(String, PrismaListValue)>,
+    pub relation_field: Arc<RelationField>,
+}

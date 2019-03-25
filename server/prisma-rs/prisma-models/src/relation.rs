@@ -13,6 +13,22 @@ pub enum OnDelete {
     Cascade,
 }
 
+impl OnDelete {
+    pub fn is_cascade(&self) -> bool {
+        match self {
+            OnDelete::Cascade => true,
+            OnDelete::SetNull => false,
+        }
+    }
+
+    pub fn is_set_null(&self) -> bool {
+        match self {
+            OnDelete::Cascade => false,
+            OnDelete::SetNull => true,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InlineRelation {

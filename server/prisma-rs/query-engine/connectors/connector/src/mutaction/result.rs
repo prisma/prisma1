@@ -1,5 +1,5 @@
 use super::{DatabaseMutaction, DatabaseMutactionResultType};
-use prisma_models::prelude::GraphqlId;
+use prisma_models::prelude::{GraphqlId, SingleNode};
 
 #[derive(Default)]
 pub struct DatabaseMutactionResults {
@@ -7,30 +7,38 @@ pub struct DatabaseMutactionResults {
 }
 
 #[derive(Clone)]
-pub enum IdOrCount {
+pub enum Identifier {
     Id(GraphqlId),
     Count(usize),
+    Node(SingleNode),
 }
 
 #[derive(Clone)]
 pub struct DatabaseMutactionResult {
-    pub id_or_count: IdOrCount,
+    pub identifier: Identifier,
     pub typ: DatabaseMutactionResultType,
     pub mutaction: DatabaseMutaction,
 }
 
 impl DatabaseMutactionResult {
     pub fn id(&self) -> &GraphqlId {
-        match self.id_or_count {
-            IdOrCount::Id(ref id) => id,
-            _ => panic!("Hey, this doesn't have an id, but a count instead."),
+        match self.identifier {
+            Identifier::Id(ref id) => id,
+            _ => panic!("No id defined in DatabaseMutactionResult"),
         }
     }
 
     pub fn count(&self) -> usize {
-        match self.id_or_count {
-            IdOrCount::Count(count) => count,
-            _ => panic!("Hey, this doesn't have a count, but an id instead."),
+        match self.identifier {
+            Identifier::Count(count) => count,
+            _ => panic!("No count defined in DatabaseMutactionResult"),
+        }
+    }
+
+    pub fn node(&self) -> &SingleNode {
+        match self.identifier {
+            Identifier::Node(ref node) => node,
+            _ => panic!("No node defined in DatabaseMutactionResult"),
         }
     }
 }
