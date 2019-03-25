@@ -161,7 +161,23 @@ class SQLiteDatabaseMutactionExecutor2(
           val executionResult = NativeBinding.execute_mutaction(protoMutaction)
           executionResult.`type` match {
             case prisma.protocol.DatabaseMutactionResult.Type.Create(result) =>
-              CreateNodeResult(toIdGcValue(result.id), mutaction.asInstanceOf[CreateNode])
+              val m = mutaction match {
+                case m: CreateNode => m
+                case m: UpsertNode => m.create
+                case m             => sys.error(s"mutaction of type [$m] is disallowed here")
+              }
+              CreateNodeResult(toIdGcValue(result.id), m)
+
+            case prisma.protocol.DatabaseMutactionResult.Type.Update(result) =>
+              val m = mutaction match {
+                case m: UpdateNode => m
+                case m: UpsertNode => m.update
+                case m             => sys.error(s"mutaction of type [$m] is disallowed here")
+              }
+              UpdateNodeResult(toIdGcValue(result.id), PrismaNode.dummy, m)
+
+            case prisma.protocol.DatabaseMutactionResult.Type.Delete(_) =>
+              DeleteNodeResult(PrismaNode.dummy, mutaction.asInstanceOf[DeleteNode])
 
             case prisma.protocol.DatabaseMutactionResult.Type.Many(result) =>
               ManyNodesResult(mutaction.asInstanceOf[FinalMutaction], result.count)

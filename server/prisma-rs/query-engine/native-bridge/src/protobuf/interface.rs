@@ -429,13 +429,27 @@ fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf:
 
     match result.typ {
         DatabaseMutactionResultType::Create => {
-            let result = crate::protobuf::prisma::CreateNodeResult { id: result.id().into() };
+            let result = crate::protobuf::prisma::IdResult { id: result.id().into() };
             let typ = database_mutaction_result::Type::Create(result);
 
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         }
+        DatabaseMutactionResultType::Update => {
+            let result = crate::protobuf::prisma::IdResult { id: result.id().into() };
+            let typ = database_mutaction_result::Type::Update(result);
+
+            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
+        }
+        DatabaseMutactionResultType::Delete => {
+            let result = crate::protobuf::prisma::IdResult { id: result.id().into() };
+            let typ = database_mutaction_result::Type::Delete(result);
+
+            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
+        }
         DatabaseMutactionResultType::Many => {
-            let result = crate::protobuf::prisma::ManyNodesResult { count: result.count() as u32 };
+            let result = crate::protobuf::prisma::ManyNodesResult {
+                count: result.count() as u32,
+            };
             let typ = database_mutaction_result::Type::Many(result);
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         }
@@ -445,6 +459,6 @@ fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf:
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         }
 
-        x => panic!("can't handle result type {:?}", x),
+        // x => panic!("can't handle result type {:?}", x),
     }
 }

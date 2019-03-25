@@ -141,7 +141,10 @@ case class NestedDeleteNode(project: Project, relationField: RelationField, wher
 }
 
 // UPSERT
-sealed trait UpsertNode extends DatabaseMutaction
+sealed trait UpsertNode extends DatabaseMutaction {
+  def create: CreateNode
+  def update: UpdateNode
+}
 
 case class TopLevelUpsertNode(
     project: Project,

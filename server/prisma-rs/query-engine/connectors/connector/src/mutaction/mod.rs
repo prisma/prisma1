@@ -23,7 +23,6 @@ pub trait NestedMutaction {
 pub enum DatabaseMutactionResultType {
     Create,
     Update,
-    Upsert,
     Delete,
     Many,
     Unit,
@@ -33,25 +32,6 @@ pub enum DatabaseMutactionResultType {
 pub enum DatabaseMutaction {
     TopLevel(TopLevelDatabaseMutaction),
     Nested(NestedDatabaseMutaction),
-}
-
-impl DatabaseMutaction {
-    pub fn typ(&self) -> DatabaseMutactionResultType {
-        match self {
-            DatabaseMutaction::TopLevel(tl) => match tl {
-                TopLevelDatabaseMutaction::CreateNode(_) => DatabaseMutactionResultType::Create,
-                TopLevelDatabaseMutaction::UpdateNode(_) => DatabaseMutactionResultType::Update,
-                TopLevelDatabaseMutaction::UpsertNode(_) => DatabaseMutactionResultType::Upsert,
-                TopLevelDatabaseMutaction::DeleteNode(_) => DatabaseMutactionResultType::Delete,
-                TopLevelDatabaseMutaction::UpdateNodes(_) => DatabaseMutactionResultType::Many,
-                TopLevelDatabaseMutaction::DeleteNodes(_) => DatabaseMutactionResultType::Many,
-                TopLevelDatabaseMutaction::ResetData(_) => DatabaseMutactionResultType::Unit,
-            },
-            DatabaseMutaction::Nested(tl) => match tl {
-                NestedDatabaseMutaction::CreateNode(_) => DatabaseMutactionResultType::Create,
-            },
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
