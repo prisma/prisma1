@@ -52,33 +52,86 @@ class SQLiteDatabaseMutactionExecutor2(
     val projectJson = ByteString.copyFromUtf8(Json.toJson(mutaction.project).toString())
     val headerName  = mutaction.getClass.getSimpleName
 
+    val DO_NOT_FORWARD_THIS_ONE = false
+
     mutaction match {
       case m: TopLevelCreateNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Create(
-          prisma.protocol.CreateNode(
+          createNodeToProtocol(m)
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        top_level_mutaction_interpreter(envelope, m)
+
+      case m: TopLevelUpdateNode if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Update(
+          updateNodeToProtocol(m)
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        top_level_mutaction_interpreter(envelope, m)
+
+      case m: TopLevelUpsertNode if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Upsert(
+          prisma.protocol.UpsertNode(
             header = prisma.protocol.Header(headerName),
-            modelName = m.model.name,
-            nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
-            listArgs = listArgsToProtocolArgs(m.listArgs)
+            where = toNodeSelector(m.where),
+            create = createNodeToProtocol(m.create),
+            update = updateNodeToProtocol(m.update),
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
-      /*
-      case m: TopLevelUpdateNode =>
-        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Create(
-          prisma.protocol.CreateNode(
+      case m: TopLevelDeleteNode if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Delete(
+          prisma.protocol.DeleteNode(
             header = prisma.protocol.Header(headerName),
-            modelName = m.model.name,
-            nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
-            listArgs = listArgsToProtocolArgs(m.listArgs)
+            where = toNodeSelector(m.where),
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
-       */
+
+      case m: TopLevelUpdateNodes if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.UpdateNodes(
+          prisma.protocol.UpdateNodes(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.model.name,
+            filter = toPrismaFilter(m.whereFilter.getOrElse(AndFilter(Vector.empty))),
+            nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
+            listArgs = listArgsToProtocolArgs(m.listArgs),
+          ))
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        top_level_mutaction_interpreter(envelope, m)
+
+      case m: TopLevelDeleteNodes if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.DeleteNodes(
+          prisma.protocol.DeleteNodes(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.model.name,
+            filter = toPrismaFilter(m.whereFilter.getOrElse(AndFilter(Vector.empty))),
+          ))
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        top_level_mutaction_interpreter(envelope, m)
+
       case _ =>
         super.interpreterFor(mutaction)
     }
+  }
+
+  private def createNodeToProtocol(m: CreateNode) = {
+    prisma.protocol.CreateNode(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.model.name,
+      nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
+      listArgs = listArgsToProtocolArgs(m.listArgs)
+    )
+  }
+
+  private def updateNodeToProtocol(m: TopLevelUpdateNode) = {
+    prisma.protocol.UpdateNode(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      where = toNodeSelector(m.where),
+      nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
+      listArgs = listArgsToProtocolArgs(m.listArgs)
+    )
   }
 
   override def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = {
