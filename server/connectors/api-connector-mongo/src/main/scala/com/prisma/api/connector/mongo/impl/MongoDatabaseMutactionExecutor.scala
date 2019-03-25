@@ -1,7 +1,7 @@
 package com.prisma.api.connector.mongo.impl
 
+import com.mongodb.TransactionOptions
 import com.mongodb.async.SingleResultCallback
-import com.mongodb.{ReadConcern, TransactionOptions, WriteConcern}
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database._
 import com.prisma.api.connector.mongo.extensions.SlickReplacement._
@@ -22,13 +22,26 @@ class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: Execution
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
     val actionsBuilder     = MongoActionsBuilder(mutaction.project.dbName, client)
     val action             = generateTopLevelMutaction(actionsBuilder.database, mutaction, actionsBuilder)
-    val transactionOptions = TransactionOptions.builder().readConcern(ReadConcern.SNAPSHOT).writeConcern(WriteConcern.MAJORITY).build()
+    val transactionOptions = TransactionOptions.builder().build()
 
     for {
       session <- client.startSession().toFuture()
       _       = session.startTransaction(transactionOptions)
-      result  <- run(actionsBuilder.database, action, session)
       promise = Promise[Unit]()
+      temp    = run(actionsBuilder.database, action, session)
+      _ = temp.onComplete {
+        case s @ Success(_) =>
+        case f @ Failure(runError) =>
+          session.abortTransaction(new SingleResultCallback[Void] {
+            override def onResult(result: Void, abortError: Throwable): Unit = {
+              if (abortError != null) {
+                println(s"error when aborting the transaction: $abortError")
+                abortError.printStackTrace()
+              }
+            }
+          })
+      }
+      result <- temp
       _ = session.commitTransaction(new SingleResultCallback[Void] {
         override def onResult(result: Void, t: Throwable): Unit = {
           val theTry = if (t != null) Failure(t) else Success(())
