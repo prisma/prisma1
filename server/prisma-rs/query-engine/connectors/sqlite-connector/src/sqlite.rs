@@ -1,4 +1,4 @@
-use crate::DatabaseExecutor;
+use crate::{query_builder::QueryBuilder, DatabaseExecutor};
 use connector::*;
 use prisma_models::prelude::*;
 use prisma_query::{
@@ -8,7 +8,7 @@ use prisma_query::{
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Transaction, NO_PARAMS};
 use serde_json::Value;
-use std::{collections::HashSet, env};
+use std::{collections::HashSet, env, sync::Arc};
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
@@ -23,10 +23,10 @@ impl DatabaseExecutor for Sqlite {
     where
         F: FnMut(&Row) -> ConnectorResult<T>,
     {
-        self.with_transaction(&db_name, |tx| {
+        self.with_transaction(&db_name, |conn| {
             let (query_sql, params) = dbg!(visitor::Sqlite::build(query));
 
-            let res: ConnectorResult<Vec<T>> = tx
+            let res: ConnectorResult<Vec<T>> = conn
                 .prepare(&query_sql)?
                 .query_map(&params, |row| f(row))?
                 .map(|row_res| row_res.unwrap())
@@ -51,49 +51,68 @@ impl DatabaseMutactionExecutor for Sqlite {
         Ok(Value::String("hello world!".to_string()))
     }
 
-    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> ConnectorResult<DatabaseMutactionResults> {
-        let mut results = DatabaseMutactionResults::default();
+    fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId> {
+        self.with_transaction(&db_name, |conn| {
+            let (insert, returned_id) =
+                MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
 
-        self.with_transaction(&db_name, |tx| {
-            let results = match mutaction {
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref x)) => {
-                    let (insert, returned_id) = MutationBuilder::create_node(x.model.clone(), x.non_list_args.clone());
-                    let (sql, params) = visitor::Sqlite::build(insert);
+            Self::execute_one(conn, insert)?;
 
-                    tx.prepare(&dbg!(sql))?.execute(&params)?;
-
-                    let id = match returned_id {
-                        Some(id) => id,
-                        None => GraphqlId::Int(tx.last_insert_rowid() as usize),
-                    };
-
-                    for (field_name, list_value) in x.list_args.clone() {
-                        let field = x.model.fields().find_from_scalar(&field_name).unwrap();
-                        let table = field.scalar_list_table();
-                        let insert = MutationBuilder::create_scalar_list_value(table.clone(), list_value);
-                        let (sql, params) = visitor::Sqlite::build(insert);
-
-                        tx.prepare(&dbg!(sql))?.execute(&params)?;
-                    }
-
-                    let result = DatabaseMutactionResult {
-                        id: id,
-                        typ: DatabaseMutactionResultType::Create,
-                        mutaction: mutaction,
-                    };
-                    results.push(result);
-                    Ok(results)
-                }
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNode(_)) => unimplemented!(),
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(_)) => unimplemented!(),
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNode(_)) => unimplemented!(),
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNodes(_)) => unimplemented!(),
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::ResetData(_)) => unimplemented!(),
-                DatabaseMutaction::Nested(_) => panic!("nested mutactions are not supported yet!"),
+            let id = match returned_id {
+                Some(id) => id,
+                None => GraphqlId::Int(conn.last_insert_rowid() as usize),
             };
 
-            results
+            for (field_name, list_value) in mutaction.list_args.clone() {
+                let field = mutaction.model.fields().find_from_scalar(&field_name).unwrap();
+                let table = field.scalar_list_table();
+                let inserts = MutationBuilder::create_scalar_list_value(table, &list_value, &id);
+
+                Self::execute_many(conn, inserts)?;
+            }
+
+            Ok(id)
+        })
+    }
+
+    fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId> {
+        self.with_transaction(&db_name, |conn| {
+            let model = mutaction.where_.field.model();
+
+            let id: GraphqlId = {
+                let (_, select) = {
+                    let selected_fields = SelectedFields::from(model.fields().id());
+                    QueryBuilder::get_node_by_where(&mutaction.where_, &selected_fields)
+                };
+
+                let (query_sql, params) = dbg!(visitor::Sqlite::build(select));
+
+                conn.prepare(&query_sql)?
+                    .query_map(&params, |row| row.get(0))?
+                    .map(|row_res| row_res.unwrap())
+                    .next()
+                    .ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
+                        field: mutaction.where_.field.name.clone(),
+                        value: mutaction.where_.value.clone(),
+                    })?
+            };
+
+            let update = MutationBuilder::update_node_by_id(Arc::clone(&model), &id, &mutaction.non_list_args)?;
+
+            if let Some(update) = update {
+                Self::execute_one(conn, update)?;
+            }
+
+            for (field_name, list_value) in mutaction.list_args.clone() {
+                let field = model.fields().find_from_scalar(&field_name).unwrap();
+                let table = field.scalar_list_table();
+                let (delete, inserts) = MutationBuilder::update_scalar_list_value(table, &list_value, &id);
+
+                Self::execute_one(conn, delete)?;
+                Self::execute_many(conn, inserts)?;
+            }
+
+            Ok(id)
         })
     }
 }
@@ -108,6 +127,27 @@ impl Sqlite {
             .build(SqliteConnectionManager::memory())?;
 
         Ok(Sqlite { pool, test_mode })
+    }
+
+    fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>
+    where
+        T: Into<Query>,
+    {
+        let (sql, params) = dbg!(visitor::Sqlite::build(query));
+        conn.prepare(&sql)?.execute(&params)?;
+
+        Ok(())
+    }
+
+    fn execute_many<T>(conn: &Transaction, queries: Vec<T>) -> ConnectorResult<()>
+    where
+        T: Into<Query>,
+    {
+        for query in queries {
+            Self::execute_one(conn, query)?;
+        }
+
+        Ok(())
     }
 
     /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
@@ -125,12 +165,31 @@ impl Sqlite {
 
         // FIXME(Dom): Correct config for sqlite
         let server_root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
+
         if !databases.contains(db_name) {
             let path = dbg!(format!("{}/db/{}.db", server_root, db_name));
             dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
         }
 
+        dbg!(conn.execute("PRAGMA foreign_keys = ON", NO_PARAMS)?);
+
         Ok(())
+    }
+
+    pub fn with_connection<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
+    where
+        F: FnOnce(&mut Connection) -> ConnectorResult<T>,
+    {
+        let mut conn = self.pool.get()?;
+        Self::attach_database(&mut conn, db_name)?;
+
+        let result = f(&mut conn);
+
+        if self.test_mode {
+            dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
+        }
+
+        result
     }
 
     /// Take a new connection from the pool and create the database if it
@@ -139,18 +198,12 @@ impl Sqlite {
     where
         F: FnOnce(&Transaction) -> ConnectorResult<T>,
     {
-        let mut conn = dbg!(self.pool.get()?);
+        self.with_connection(db_name, |conn| {
+            let tx = conn.transaction()?;
+            let result = f(&tx);
 
-        Self::attach_database(&mut conn, db_name)?;
-
-        let tx = conn.transaction()?;
-        let result = f(&tx);
-        tx.commit()?;
-
-        if self.test_mode {
-            dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
-        }
-
-        result
+            tx.commit()?;
+            result
+        })
     }
 }

@@ -295,6 +295,18 @@ impl From<BridgeError> for super::prisma::error::Value {
                 super::prisma::error::Value::QueryError(format!("{}", e))
             }
 
+            BridgeError::ConnectorError(ConnectorError::UniqueConstraintViolation { field_name }) => {
+                super::prisma::error::Value::UniqueConstraintViolation(field_name)
+            }
+
+            e @ BridgeError::ConnectorError(ConnectorError::NodeNotFoundForWhere { .. }) => {
+                super::prisma::error::Value::NodeNotFoundForWhere(format!("{}", e))
+            }
+
+            BridgeError::ConnectorError(ConnectorError::FieldCannotBeNull { field }) => {
+                super::prisma::error::Value::FieldCannotBeNull(field)
+            }
+
             e @ BridgeError::ProtobufDecodeError(_) => {
                 super::prisma::error::Value::ProtobufDecodeError(format!("{}", e))
             }
@@ -341,8 +353,8 @@ fn convert_update_envelope(m: crate::protobuf::prisma::UpdateNode, project: Proj
     TopLevelDatabaseMutaction::UpdateNode(convert_update(m, project))
 }
 
-fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> TopLevelUpdateNode {
-    TopLevelUpdateNode {
+fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> UpdateNode {
+    UpdateNode {
         where_: convert_node_select(m.where_, project),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
@@ -403,7 +415,7 @@ fn empty_nested_mutactions() -> NestedMutactions {
 }
 
 fn convert_prisma_args(proto: crate::protobuf::prisma::PrismaArgs) -> PrismaArgs {
-    let mut result = PrismaArgs::empty();
+    let mut result = PrismaArgs::default();
     for arg in proto.args {
         result.insert(arg.key, arg.value);
     }
@@ -425,9 +437,28 @@ fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf:
 
     match result.typ {
         DatabaseMutactionResultType::Create => {
-            let result = crate::protobuf::prisma::CreateNodeResult { id: result.id.into() };
+            let result = crate::protobuf::prisma::IdResult { id: result.id().into() };
             let typ = database_mutaction_result::Type::Create(result);
 
+            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
+        }
+        DatabaseMutactionResultType::Update => {
+            let result = crate::protobuf::prisma::IdResult { id: result.id().into() };
+            let typ = database_mutaction_result::Type::Update(result);
+
+            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
+        }
+        DatabaseMutactionResultType::Delete => {
+            let result = crate::protobuf::prisma::IdResult { id: result.id().into() };
+            let typ = database_mutaction_result::Type::Delete(result);
+
+            crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
+        }
+        DatabaseMutactionResultType::Many => {
+            let result = crate::protobuf::prisma::ManyNodesResult {
+                count: result.count() as u32,
+            };
+            let typ = database_mutaction_result::Type::Many(result);
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         }
         DatabaseMutactionResultType::Unit => {
@@ -435,6 +466,7 @@ fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf:
             let typ = database_mutaction_result::Type::Unit(result);
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         }
-        x => panic!("can't handle result type {:?}", x),
+
+        // x => panic!("can't handle result type {:?}", x),
     }
 }

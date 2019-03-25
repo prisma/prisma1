@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.IgnoreMongo
+import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -477,7 +477,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   // transactionality again -.-
-  "a PM to CM  relation" should "work" taggedAs (IgnoreMongo) in {
+  "a PM to CM  relation" should "work" taggedAs (IgnoreMongo, IgnoreSQLite) in { // TODO: Remove ignore when enabling transactions
     val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)
 

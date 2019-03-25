@@ -1,11 +1,12 @@
 use failure::{Error, Fail};
 use libsqlite3_sys as ffi;
+use prisma_models::prelude::PrismaValue;
 use rusqlite;
 
 #[derive(Debug, Fail)]
 pub enum ConnectorError {
-    #[fail(display = "Unique constraint violation in model.")]
-    UniqueConstraintViolation,
+    #[fail(display = "Unique constraint failed: {}", field_name)]
+    UniqueConstraintViolation { field_name: String },
     #[fail(display = "Node does not exist.")]
     NodeDoesNotExist,
     #[fail(display = "Error creating a database connection.")]
@@ -16,6 +17,10 @@ pub enum ConnectorError {
     InvalidConnectionArguments,
     #[fail(display = "The column value was different from the model")]
     ColumnReadFailure(Error),
+    #[fail(display = "Node not found, where field {} is {}", field, value)]
+    NodeNotFoundForWhere { field: String, value: PrismaValue },
+    #[fail(display = "Field cannot be null: {}", field)]
+    FieldCannotBeNull { field: String },
 }
 
 #[cfg(feature = "sql")]
@@ -36,8 +41,28 @@ impl From<rusqlite::Error> for ConnectorError {
                     code: ffi::ErrorCode::ConstraintViolation,
                     extended_code: 2067,
                 },
-                _,
-            ) => ConnectorError::UniqueConstraintViolation,
+                Some(description),
+            ) => {
+                let splitted: Vec<&str> = description.split(": ").collect();
+
+                ConnectorError::UniqueConstraintViolation {
+                    field_name: splitted[1].into(),
+                }
+            }
+
+            rusqlite::Error::SqliteFailure(
+                ffi::Error {
+                    code: ffi::ErrorCode::ConstraintViolation,
+                    extended_code: 1555,
+                },
+                Some(description),
+            ) => {
+                let splitted: Vec<&str> = description.split(": ").collect();
+
+                ConnectorError::UniqueConstraintViolation {
+                    field_name: splitted[1].into(),
+                }
+            }
 
             e => ConnectorError::QueryError(e.into()),
         }

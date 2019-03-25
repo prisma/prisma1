@@ -5,8 +5,8 @@ pub use relation::*;
 pub use scalar::*;
 
 use crate::prelude::*;
-use prisma_query::ast::Column;
 use once_cell::sync::OnceCell;
+use prisma_query::ast::Column;
 use std::{borrow::Cow, sync::Arc};
 
 #[derive(Debug, Deserialize, Serialize)]

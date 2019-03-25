@@ -249,4 +249,12 @@ object NativeUtils {
   def toRelationalField(field: RelationField): protocol.RelationalField = {
     protocol.RelationalField(field.dbName, protocol.SelectedFields(Vector.empty))
   }
+
+  def toNodeSelector(where: NodeSelector): protocol.NodeSelector = {
+    protocol.NodeSelector(
+      modelName = where.model.name,
+      fieldName = where.field.name,
+      value = toValueContainer(where.fieldGCValue),
+    )
+  }
 }

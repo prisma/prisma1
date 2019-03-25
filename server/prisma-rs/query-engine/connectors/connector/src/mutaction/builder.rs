@@ -1,19 +1,24 @@
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
+use crate::{error::ConnectorError, ConnectorResult};
+
 pub struct MutationBuilder;
 
 impl MutationBuilder {
     pub fn create_node(model: ModelRef, mut args: PrismaArgs) -> (Insert, Option<GraphqlId>) {
         let model_id = model.fields().id();
 
-        let mut return_id: Option<GraphqlId> = None;
-
-        if !model_id.is_auto_generated {
-            let id = model.generate_id();
-            args.insert(model_id.name.as_ref(), id.clone());
-            return_id = Some(id)
-        }
+        let return_id = match args.get_field_value(&model_id.name) {
+            _ if model_id.is_auto_generated => None,
+            Some(PrismaValue::Null) | None => {
+                let id = model.generate_id();
+                args.insert(model_id.name.as_ref(), id.clone());
+                Some(id)
+            }
+            Some(PrismaValue::GraphqlId(id)) => Some(id.clone()),
+            _ => None,
+        };
 
         let fields: Vec<&Field> = model
             .fields()
@@ -36,16 +41,56 @@ impl MutationBuilder {
         (insert, return_id)
     }
 
-    // FIXME: this must also take a parameter for node_id
-    pub fn create_scalar_list_value(scalar_list_table: ScalarListTable, list_value: PrismaListValue) -> Insert {
+    pub fn create_scalar_list_value(
+        scalar_list_table: ScalarListTable,
+        list_value: &PrismaListValue,
+        id: &GraphqlId,
+    ) -> Vec<Insert> {
         let positions = (1..=list_value.len()).map(|v| (v * 1000) as i64);
-        let base = Insert::into(scalar_list_table.table());
-        let values = list_value.into_iter().zip(positions);
+        let values = list_value.iter().zip(positions);
 
-        values.fold(base, |query, (value, position)| {
-            query
-                .value(scalar_list_table.position_column(), position)
-                .value(scalar_list_table.value_column(), value)
-        })
+        values
+            .map(|(value, position)| {
+                Insert::into(scalar_list_table.table())
+                    .value(ScalarListTable::POSITION_FIELD_NAME, position)
+                    .value(ScalarListTable::VALUE_FIELD_NAME, value.clone())
+                    .value(ScalarListTable::NODE_ID_FIELD_NAME, id.clone())
+            })
+            .collect()
+    }
+
+    pub fn update_node_by_id(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> ConnectorResult<Option<Update>> {
+        if args.args.is_empty() {
+            return Ok(None);
+        }
+        let fields = model.fields();
+        let mut query = Update::table(model.table());
+
+        for (name, value) in args.args.iter() {
+            let field = fields.find_from_scalar(&name).unwrap();
+
+            if field.is_required && value.is_null() {
+                return Err(ConnectorError::FieldCannotBeNull {
+                    field: field.name.clone(),
+                });
+            }
+
+            query = query.set(field.db_name(), value.clone());
+        }
+
+        Ok(Some(query.so_that(fields.id().as_column().equals(id.clone()))))
+    }
+
+    pub fn update_scalar_list_value(
+        scalar_list_table: ScalarListTable,
+        list_value: &PrismaListValue,
+        id: &GraphqlId,
+    ) -> (Delete, Vec<Insert>) {
+        let delete =
+            Delete::from(scalar_list_table.table()).so_that(ScalarListTable::NODE_ID_FIELD_NAME.equals(id.clone()));
+
+        let inserts = Self::create_scalar_list_value(scalar_list_table, list_value, id);
+
+        (delete, inserts)
     }
 }

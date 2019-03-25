@@ -203,6 +203,22 @@ impl From<GraphqlId> for prisma::GraphqlId {
     }
 }
 
+impl From<&GraphqlId> for prisma::GraphqlId {
+    fn from(id: &GraphqlId) -> prisma::GraphqlId {
+        use prisma::graphql_id as id;
+
+        let id_value = match id {
+            GraphqlId::String(s) => id::IdValue::String(s.clone()),
+            GraphqlId::Int(i) => id::IdValue::Int(*i as i64),
+            GraphqlId::UUID(s) => id::IdValue::Uuid(s.to_hyphenated().to_string()),
+        };
+
+        prisma::GraphqlId {
+            id_value: Some(id_value),
+        }
+    }
+}
+
 impl From<Node> for prisma::Node {
     fn from(node: Node) -> prisma::Node {
         prisma::Node {

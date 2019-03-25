@@ -30,6 +30,15 @@ pub enum PrismaValue {
     List(PrismaListValue),
 }
 
+impl PrismaValue {
+    pub fn is_null(&self) -> bool {
+        match self {
+            PrismaValue::Null => true,
+            _ => false,
+        }
+    }
+}
+
 impl fmt::Display for PrismaValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

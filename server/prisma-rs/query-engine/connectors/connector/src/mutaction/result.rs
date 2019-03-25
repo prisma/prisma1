@@ -7,10 +7,32 @@ pub struct DatabaseMutactionResults {
 }
 
 #[derive(Clone)]
+pub enum IdOrCount {
+    Id(GraphqlId),
+    Count(usize),
+}
+
+#[derive(Clone)]
 pub struct DatabaseMutactionResult {
-    pub id: GraphqlId,
+    pub id_or_count: IdOrCount,
     pub typ: DatabaseMutactionResultType,
     pub mutaction: DatabaseMutaction,
+}
+
+impl DatabaseMutactionResult {
+    pub fn id(&self) -> &GraphqlId {
+        match self.id_or_count {
+            IdOrCount::Id(ref id) => id,
+            _ => panic!("Hey, this doesn't have an id, but a count instead."),
+        }
+    }
+
+    pub fn count(&self) -> usize {
+        match self.id_or_count {
+            IdOrCount::Count(count) => count,
+            _ => panic!("Hey, this doesn't have a count, but an id instead."),
+        }
+    }
 }
 
 impl DatabaseMutactionResults {
