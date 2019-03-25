@@ -48,7 +48,7 @@ impl QueryExecutor {
                     let result = self.data_resolver.get_related_nodes(
                         Arc::clone(&query.parent_field),
                         &parent_ids,
-                        QueryArguments::empty(),
+                        QueryArguments::default(),
                         &query.selected_fields,
                     )?;
 

@@ -1,7 +1,7 @@
 use crate::filter::Filter;
 use prisma_models::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct QueryArguments {
     pub skip: Option<u32>,
     pub after: Option<GraphqlId>,
@@ -23,18 +23,6 @@ impl QueryArguments {
         match self.last.or(self.first) {
             Some(limited_count) => (skip, limited_count + skip),
             None => (skip, 100000000),
-        }
-    }
-
-    pub fn empty() -> Self {
-        Self {
-            skip: None,
-            after: None,
-            first: None,
-            before: None,
-            last: None,
-            filter: None,
-            order_by: None,
         }
     }
 }

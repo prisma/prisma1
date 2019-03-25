@@ -378,7 +378,7 @@ fn empty_nested_mutactions() -> NestedMutactions {
 }
 
 fn convert_prisma_args(proto: crate::protobuf::prisma::PrismaArgs) -> PrismaArgs {
-    let mut result = PrismaArgs::empty();
+    let mut result = PrismaArgs::default();
     for arg in proto.args {
         result.insert(arg.key, arg.value);
     }

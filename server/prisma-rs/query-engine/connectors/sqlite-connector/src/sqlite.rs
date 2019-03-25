@@ -51,50 +51,56 @@ impl DatabaseMutactionExecutor for Sqlite {
         Ok(Value::String("hello world!".to_string()))
     }
 
-    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> ConnectorResult<DatabaseMutactionResults> {
-        let mut results = DatabaseMutactionResults::default();
-
+    fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId> {
         self.with_transaction(&db_name, |conn| {
-            let results = match mutaction {
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref x)) => {
-                    let (insert, returned_id) = MutationBuilder::create_node(x.model.clone(), x.non_list_args.clone());
+            let (insert, returned_id) =
+                MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
+
+            let (sql, params) = dbg!(visitor::Sqlite::build(insert));
+
+            conn.prepare(&sql)?.execute(&params)?;
+
+            let id = match returned_id {
+                Some(id) => id,
+                None => GraphqlId::Int(conn.last_insert_rowid() as usize),
+            };
+
+            for (field_name, list_value) in mutaction.list_args.clone() {
+                let field = mutaction.model.fields().find_from_scalar(&field_name).unwrap();
+                let table = field.scalar_list_table();
+                let inserts = MutationBuilder::create_scalar_list_value(table.clone(), list_value, id.clone());
+
+                for insert in inserts {
                     let (sql, params) = dbg!(visitor::Sqlite::build(insert));
 
                     conn.prepare(&sql)?.execute(&params)?;
-
-                    let id = match returned_id {
-                        Some(id) => id,
-                        None => GraphqlId::Int(conn.last_insert_rowid() as usize),
-                    };
-
-                    for (field_name, list_value) in x.list_args.clone() {
-                        let field = x.model.fields().find_from_scalar(&field_name).unwrap();
-                        let table = field.scalar_list_table();
-                        let inserts = MutationBuilder::create_scalar_list_value(table.clone(), list_value, id.clone());
-
-                        for insert in inserts {
-                            let (sql, params) = dbg!(visitor::Sqlite::build(insert));
-
-                            conn.prepare(&sql)?.execute(&params)?;
-                        }
-                    }
-
-                    let result = DatabaseMutactionResult {
-                        id: id,
-                        typ: DatabaseMutactionResultType::Create,
-                        mutaction: mutaction,
-                    };
-                    results.push(result);
-                    Ok(results)
                 }
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNode(_)) => unimplemented!(),
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(_)) => unimplemented!(),
-                DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNode(_)) => unimplemented!(),
-                DatabaseMutaction::Nested(_) => panic!("nested mutactions are not supported yet!"),
-            };
+            }
 
-            results
+            Ok(id)
         })
+    }
+
+    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> ConnectorResult<DatabaseMutactionResults> {
+        let mut results = DatabaseMutactionResults::default();
+
+        match mutaction {
+            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref cn)) => {
+                let result = DatabaseMutactionResult {
+                    id: self.execute_create(db_name, cn)?,
+                    typ: DatabaseMutactionResultType::Create,
+                    mutaction: mutaction,
+                };
+
+                results.push(result);
+            }
+            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNode(_)) => unimplemented!(),
+            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(_)) => unimplemented!(),
+            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNode(_)) => unimplemented!(),
+            DatabaseMutaction::Nested(_) => panic!("nested mutactions are not supported yet!"),
+        };
+
+        Ok(results)
     }
 }
 

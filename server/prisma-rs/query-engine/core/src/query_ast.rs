@@ -190,7 +190,7 @@ impl<'a> QueryBuilder<'a> {
         self.field
             .arguments
             .iter()
-            .fold(Ok(QueryArguments::empty()), |result, (k, v)| {
+            .fold(Ok(QueryArguments::default()), |result, (k, v)| {
                 if let Ok(res) = result {
                     #[cfg_attr(rustfmt, rustfmt_skip)]
                     match (k.as_str(), v) {
