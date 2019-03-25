@@ -6,6 +6,7 @@ import com.prisma.gc_values._
 import com.prisma.rs.jna.{JnaRustBridge, ProtobufEnvelope}
 import com.sun.jna.{Memory, Native, Pointer}
 import play.api.libs.json.{JsValue, Json}
+import prisma.protocol.Error.Value.FieldCannotBeNull
 import prisma.protocol._
 import scalapb.GeneratedMessage
 

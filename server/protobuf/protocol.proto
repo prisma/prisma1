@@ -35,6 +35,7 @@ message Error {
         string internal_server_error        = 8;
         string unique_constraint_violation  = 9;
         string node_not_found_for_where     = 10;
+        string field_cannot_be_null         = 11;
     }
 }
 

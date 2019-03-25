@@ -59,7 +59,10 @@ impl MutationBuilder {
             .collect()
     }
 
-    pub fn update_node_by_id(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> ConnectorResult<Update> {
+    pub fn update_node_by_id(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> ConnectorResult<Option<Update>> {
+        if args.args.is_empty() {
+            return Ok(None);
+        }
         let fields = model.fields();
         let mut query = Update::table(model.table());
 
@@ -75,7 +78,7 @@ impl MutationBuilder {
             query = query.set(field.db_name(), value.clone());
         }
 
-        Ok(query.so_that(fields.id().as_column().equals(id.clone())))
+        Ok(Some(query.so_that(fields.id().as_column().equals(id.clone()))))
     }
 
     pub fn update_scalar_list_value(

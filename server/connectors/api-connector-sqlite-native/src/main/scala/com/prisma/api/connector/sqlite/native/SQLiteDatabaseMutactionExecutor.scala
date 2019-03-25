@@ -5,7 +5,7 @@ import com.prisma.api.connector.jdbc.impl.{GetFieldFromSQLUniqueException, JdbcD
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
-import com.prisma.api.schema.APIErrors.NodeNotFoundForWhereError
+import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodeNotFoundForWhereError}
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.ListGCValue
 import com.prisma.rs.{NativeBinding, UniqueConstraintViolation}
@@ -70,7 +70,8 @@ class SQLiteDatabaseMutactionExecutor2(
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
-          case Error.Value.NodeNotFoundForWhere(_) => throw new NodeNotFoundForWhereError(m.where)
+          case Error.Value.NodeNotFoundForWhere(_)  => throw NodeNotFoundForWhereError(m.where)
+          case Error.Value.FieldCannotBeNull(field) => throw FieldCannotBeNull(field)
         }
         top_level_mutaction_interpreter(envelope, m, errorHandler)
 

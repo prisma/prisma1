@@ -99,7 +99,9 @@ impl DatabaseMutactionExecutor for Sqlite {
 
             let update = MutationBuilder::update_node_by_id(Arc::clone(&model), &id, &mutaction.non_list_args)?;
 
-            Self::execute_one(conn, update)?;
+            if let Some(update) = update {
+                Self::execute_one(conn, update)?;
+            }
 
             for (field_name, list_value) in mutaction.list_args.clone() {
                 let field = model.fields().find_from_scalar(&field_name).unwrap();

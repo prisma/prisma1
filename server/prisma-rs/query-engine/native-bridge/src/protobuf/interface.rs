@@ -303,6 +303,10 @@ impl From<BridgeError> for super::prisma::error::Value {
                 super::prisma::error::Value::NodeNotFoundForWhere(format!("{}", e))
             }
 
+            BridgeError::ConnectorError(ConnectorError::FieldCannotBeNull { field }) => {
+                super::prisma::error::Value::FieldCannotBeNull(field)
+            }
+
             e @ BridgeError::ProtobufDecodeError(_) => {
                 super::prisma::error::Value::ProtobufDecodeError(format!("{}", e))
             }
