@@ -5,12 +5,14 @@ import com.prisma.api.connector.jdbc.impl.{GetFieldFromSQLUniqueException, JdbcD
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
+import com.prisma.api.schema.APIErrors.NodeNotFoundForWhereError
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.ListGCValue
 import com.prisma.rs.{NativeBinding, UniqueConstraintViolation}
 import com.prisma.shared.models.Project
 import play.api.libs.json.{JsValue, Json}
 import prisma.protocol
+import prisma.protocol.Error
 import slick.dbio
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -67,7 +69,10 @@ class SQLiteDatabaseMutactionExecutor2(
           updateNodeToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
+        val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
+          case Error.Value.NodeNotFoundForWhere(_) => throw new NodeNotFoundForWhereError(m.where)
+        }
+        top_level_mutaction_interpreter(envelope, m, errorHandler)
 
       case m: TopLevelUpsertNode if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Upsert(
@@ -157,13 +162,14 @@ class SQLiteDatabaseMutactionExecutor2(
 
   private def top_level_mutaction_interpreter(
       protoMutaction: prisma.protocol.DatabaseMutaction,
-      mutaction: DatabaseMutaction
+      mutaction: DatabaseMutaction,
+      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = PartialFunction.empty
   ): TopLevelDatabaseMutactionInterpreter = {
 
     new TopLevelDatabaseMutactionInterpreter {
       override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): dbio.DBIO[DatabaseMutactionResult] = {
         SimpleDBIO { x =>
-          val executionResult = NativeBinding.execute_mutaction(protoMutaction)
+          val executionResult = NativeBinding.execute_mutaction(protoMutaction, errorHandler)
           executionResult.`type` match {
             case prisma.protocol.DatabaseMutactionResult.Type.Create(result) =>
               val m = mutaction match {

@@ -74,15 +74,21 @@ object NativeBinding {
     }
   }
 
-  def execute_mutaction(input: DatabaseMutaction): DatabaseMutactionResult = {
+  def execute_mutaction(
+      input: DatabaseMutaction,
+      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable]
+  ): DatabaseMutactionResult = {
     val (pointer, length) = writeBuffer(input)
     // FIXME: this must return proper result intead of this int
-    handleProtoResult(library.execute_mutaction(pointer, length)) { x: DatabaseMutactionResult =>
+    handleProtoResult(library.execute_mutaction(pointer, length), errorHandler) { x: DatabaseMutactionResult =>
       x
     }
   }
 
-  def handleProtoResult[T, U](envelope: ProtobufEnvelope.ByReference)(processMessage: T => U): U = {
+  def handleProtoResult[T, U](
+      envelope: ProtobufEnvelope.ByReference,
+      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = PartialFunction.empty
+  )(processMessage: T => U): U = {
     val messageContent = envelope.data.getByteArray(0, envelope.len.intValue())
     library.destroy(envelope)
 
@@ -113,18 +119,22 @@ object NativeBinding {
 
       // Error cases
       case RpcResponse.Response.Error(error: Error) =>
-        error.value match {
-          case Error.Value.ConnectionError(str)            => throw ConnectionError(str)
-          case Error.Value.InvalidInputError(str)          => throw InvalidInputError(str)
-          case Error.Value.JsonDecodeError(str)            => throw JsonDecodeError(str)
-          case Error.Value.NoResultsError(str)             => throw NoResultError(str)
-          case Error.Value.ProtobufDecodeError(str)        => throw ProtobufDecodeError(str)
-          case Error.Value.QueryError(str)                 => throw QueryError(str)
-          case Error.Value.InvalidConnectionArguments(str) => throw InvalidConnectionArguments(str)
-          case Error.Value.UniqueConstraintViolation(str)  => throw UniqueConstraintViolation(str)
-          case Error.Value.InternalServerError(msg)        => throw new NativeError(msg)
+        def defaultHandler(error: Error.Value): Throwable = error match {
+          case Error.Value.ConnectionError(str)            => ConnectionError(str)
+          case Error.Value.InvalidInputError(str)          => InvalidInputError(str)
+          case Error.Value.JsonDecodeError(str)            => JsonDecodeError(str)
+          case Error.Value.NoResultsError(str)             => NoResultError(str)
+          case Error.Value.ProtobufDecodeError(str)        => ProtobufDecodeError(str)
+          case Error.Value.QueryError(str)                 => QueryError(str)
+          case Error.Value.InvalidConnectionArguments(str) => InvalidConnectionArguments(str)
+          case Error.Value.UniqueConstraintViolation(str)  => UniqueConstraintViolation(str)
+          case Error.Value.InternalServerError(msg)        => new NativeError(msg)
           case Error.Value.Empty                           => sys.error("Empty RPC response error value")
+          case x                                           => sys.error(s"unhandled error: $x")
         }
+
+        val exception = errorHandler.applyOrElse(error.value, defaultHandler)
+        throw exception
 
       case RpcResponse.Response.Empty => sys.error("Empty RPC response value")
     }
