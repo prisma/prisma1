@@ -2,13 +2,14 @@ use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
 use core::{PrismaQuery, PrismaQueryResult, RootQueryBuilder};
 use graphql_parser as gql;
-use prisma_models::{GraphqlId, PrismaValue, SingleNode};
+use prisma_models::{GraphqlId, ManyNodes, PrismaValue, SingleNode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use serde_json::{Map, Number, Value};
 
 type JsonMap = Map<String, Value>;
+type JsonVec = Vec<Value>;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -85,10 +86,29 @@ fn serialize_tree(map: &mut JsonMap, result: &PrismaQueryResult) -> PrismaResult
             };
             map.insert(result.name.clone(), json);
         }
-        _ => unimplemented!(),
+        PrismaQueryResult::Multi(result) => {
+            let vec = serialize_many_nodes(&result.result)?;
+            map.insert("many".into(), Value::Array(vec));
+        }
     }
 
     Ok(())
+}
+
+// FIXME: Should not panic!
+fn serialize_many_nodes(many_nodes: &ManyNodes) -> PrismaResult<JsonVec> {
+    Ok(many_nodes
+        .as_pairs()
+        .into_iter()
+        .map(|vec| {
+            vec.into_iter()
+                .fold(Ok(JsonMap::new()), |mut map: PrismaResult<JsonMap>, (name, value)| {
+                    map.as_mut().unwrap().insert(name, serialize_prisma_value(&value)?);
+                    map
+                })
+        })
+        .map(|map| Value::Object(map.unwrap()))
+        .collect())
 }
 
 fn serialize_single_node(single_node: &SingleNode) -> PrismaResult<JsonMap> {

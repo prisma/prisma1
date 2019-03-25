@@ -46,6 +46,20 @@ impl ManyNodes {
             field_names: self.field_names,
         })
     }
+
+    /// Maps into a Vector of (field_name, value) tuples
+    pub fn as_pairs(&self) -> Vec<Vec<(String, PrismaValue)>> {
+        self.nodes
+            .iter()
+            .map(|node| {
+                node.values
+                    .iter()
+                    .zip(self.field_names.iter())
+                    .map(|(value, name)| (name.clone(), value.clone()))
+                    .collect()
+            })
+            .collect()
+    }
 }
 
 #[derive(Debug, Default)]

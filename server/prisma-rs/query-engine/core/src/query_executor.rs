@@ -45,13 +45,15 @@ impl QueryExecutor {
                         None => (),
                     }
                 }
-                PrismaQuery::MultiRecordQuery(MultiRecordQuery {
-                    name: _, model, args, selected_fields, nested: _
-                }) => {
-                    let model = Arc::clone(&model);
-                    let result = self.data_resolver.get_nodes(model, args.clone(), selected_fields.clone());
-
-                    unimplemented!()
+                PrismaQuery::MultiRecordQuery(query) => {
+                    let model = Arc::clone(&query.model);
+                    let result =
+                        self.data_resolver
+                            .get_nodes(model, query.args.clone(), query.selected_fields.clone())?;
+                    results.push(PrismaQueryResult::Multi(MultiPrismaQueryResult {
+                        query: query.clone(),
+                        result,
+                    }));
                 }
                 PrismaQuery::RelatedRecordQuery(query) => {
                     let result = self.data_resolver.get_related_nodes(

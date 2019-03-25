@@ -7,7 +7,7 @@ use inflector::Inflector;
 use prisma_models::{Field as ModelField, *};
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum PrismaQuery {
     RecordQuery(RecordQuery),
     MultiRecordQuery(MultiRecordQuery),
@@ -15,7 +15,7 @@ pub enum PrismaQuery {
     MultiRelatedRecordQuery(MultiRelatedRecordQuery),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RecordQuery {
     pub name: String,
     pub selector: NodeSelector,
@@ -23,7 +23,7 @@ pub struct RecordQuery {
     pub nested: Vec<PrismaQuery>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MultiRecordQuery {
     pub name: String,
     pub model: ModelRef,
@@ -32,7 +32,7 @@ pub struct MultiRecordQuery {
     pub nested: Vec<PrismaQuery>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RelatedRecordQuery {
     pub name: String,
     pub parent_field: RelationFieldRef,
@@ -41,7 +41,7 @@ pub struct RelatedRecordQuery {
     pub nested: Vec<PrismaQuery>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MultiRelatedRecordQuery {
     pub name: String,
     pub parent_field: RelationFieldRef,
