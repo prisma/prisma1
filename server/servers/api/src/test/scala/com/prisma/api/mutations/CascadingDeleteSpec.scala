@@ -687,4 +687,83 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{bs{name}}""", project).toString should be("""{"data":{"bs":[]}}""")
 
   }
+
+  "A deleteMany " should " work with cascading delete" in {
+
+    val project: Project = setupForDeleteManys
+
+    server.query("""mutation {deleteManyTops(where:{int_lt: 10}){count}}""", project).toString should be("""{"data":{"deleteManyTops":{"count":2}}}""")
+
+    server.query("""query {tops{int}}""", project).toString should be("""{"data":{"tops":[]}}""")
+
+    server.query("""query {middles{int}}""", project).toString should be("""{"data":{"middles":[]}}""")
+
+    server.query("""query {bottoms{int}}""", project).toString should be("""{"data":{"bottoms":[]}}""")
+
+  }
+
+  "A nested deleteMany " should " work with cascading delete" in {
+
+    val project: Project = setupForDeleteManys
+
+    server.query("""mutation {deleteManyMiddles(where:{int_gt: 0}){count}}""", project).toString should be("""{"data":{"deleteManyMiddles":{"count":40}}}""")
+
+    server.query("""query {tops{int}}""", project).toString should be("""{"data":{"tops":[{"int":1},{"int":2}]}}""")
+
+    server.query("""query {middles{int}}""", project).toString should be("""{"data":{"middles":[]}}""")
+
+    server.query("""query {bottoms{int}}""", project).toString should be("""{"data":{"bottoms":[]}}""")
+
+  }
+
+  private def setupForDeleteManys = {
+    val project: Project = SchemaDsl.fromString() {
+      """
+        |type Top {
+        |   id: ID! @unique
+        |   int: Int @unique
+        |   middles:[Middle]   @relation(name: "TopToMiddle", onDelete: CASCADE)
+        |}
+        |
+        |type Middle {
+        |   id: ID! @unique
+        |   int: Int! @unique
+        |   top: Top @relation(name: "TopToMiddle")
+        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE)
+        |}
+        |
+        |type Bottom {
+        |   id: ID! @unique
+        |   middle: Middle @relation(name: "MiddleToBottom")
+        |   int: Int!
+        |}
+      """
+    }
+    database.setup(project)
+
+    def createMiddle(int: Int) = server.query(s"""mutation {createMiddle(data:{int: $int top: {connect:{int: 1}}}){int}}""", project)
+
+    def createMiddle2(int: Int) = server.query(s"""mutation {createMiddle(data:{int: 1000${int} top: {connect:{int: 2}}}){int}}""", project)
+
+    def createBottom(int: Int) = server.query(s"""mutation{a: createBottom(data:{int: $int$int middle: {connect:{int: $int}}}){int}}""", project)
+
+    def createBottom2(int: Int) = server.query(s"""mutation{a: createBottom(data:{int: 1000$int$int middle: {connect:{int: 1000$int}}}){int}}""", project)
+
+    val top  = server.query("""mutation {createTop(data:{int: 1}){int}}""", project)
+    val top2 = server.query("""mutation {createTop(data:{int: 2}){int}}""", project)
+
+    for (int <- 1 to 20) {
+      createMiddle(int)
+      createMiddle2(int)
+
+    }
+
+    for (_ <- 1 to 20) {
+      for (int <- 1 to 10) {
+        createBottom(int)
+        createBottom2(int)
+      }
+    }
+    project
+  }
 }
