@@ -337,13 +337,20 @@ message NodeSelector {
 
 message DatabaseMutactionResult {
     oneof type {
-        CreateNodeResult create = 1;
-        Unit             unit   = 2;
+        IdResult         create = 1;
+        IdResult         update = 2;
+        IdResult         delete = 3;
+        Unit             unit   = 4;
+        ManyNodesResult  many   = 5;
     }
 }
 
 message Unit {}
 
-message CreateNodeResult {
+message IdResult {
     required GraphqlId id = 1;
+}
+
+message ManyNodesResult {
+    required uint32 count = 1;
 }
