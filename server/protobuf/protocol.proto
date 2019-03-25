@@ -34,6 +34,7 @@ message Error {
         string invalid_connection_arguments = 7;
         string internal_server_error        = 8;
         string unique_constraint_violation  = 9;
+        string node_not_found_for_where     = 10;
     }
 }
 

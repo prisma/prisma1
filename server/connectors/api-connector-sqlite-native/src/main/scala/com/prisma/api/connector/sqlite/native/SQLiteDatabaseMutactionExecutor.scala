@@ -62,7 +62,7 @@ class SQLiteDatabaseMutactionExecutor2(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
-      case m: TopLevelUpdateNode if DO_NOT_FORWARD_THIS_ONE =>
+      case m: TopLevelUpdateNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Update(
           updateNodeToProtocol(m)
         )
