@@ -111,6 +111,11 @@ class SQLiteDatabaseMutactionExecutor2(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
+      case m: ResetData if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Reset(prisma.protocol.ResetData())
+        val envelope       = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        top_level_mutaction_interpreter(envelope, m)
+
       case _ =>
         super.interpreterFor(mutaction)
     }
