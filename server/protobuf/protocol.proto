@@ -339,6 +339,7 @@ message DatabaseMutactionResult {
     oneof type {
         CreateNodeResult create = 1;
         Unit             unit   = 2;
+        ManyNodesResult  many   = 3;
     }
 }
 
@@ -346,4 +347,8 @@ message Unit {}
 
 message CreateNodeResult {
     required GraphqlId id = 1;
+}
+
+message ManyNodesResult {
+    required uint32 count = 1;
 }
