@@ -7,7 +7,7 @@ pub trait IntoSelectedFields {
     fn into_selected_fields(self, model: ModelRef, from_field: Option<Arc<RelationField>>) -> SelectedFields;
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct SelectedFields {
     scalar: Vec<SelectedScalarField>,
     pub relation: Vec<SelectedRelationField>,
@@ -15,18 +15,18 @@ pub struct SelectedFields {
     columns: OnceCell<Vec<Column>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SelectedField {
     Scalar(SelectedScalarField),
     Relation(SelectedRelationField),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SelectedScalarField {
     pub field: Arc<ScalarField>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SelectedRelationField {
     pub field: Arc<RelationField>,
     pub selected_fields: SelectedFields,
