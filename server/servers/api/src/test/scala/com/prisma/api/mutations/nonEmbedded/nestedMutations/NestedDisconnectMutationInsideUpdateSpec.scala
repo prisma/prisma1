@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.IgnoreMongo
+import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -289,7 +289,7 @@ class NestedDisconnectMutationInsideUpdateSpec extends FlatSpec with Matchers wi
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
   }
 
-  "a PM to CM  relation with the children already in a relation" should "be disconnectable through a nested mutation by unique" taggedAs IgnoreMongo in {
+  "a PM to CM  relation with the children already in a relation" should "be disconnectable through a nested mutation by unique" taggedAs (IgnoreMongo, IgnoreSQLite) in { // TODO: Remove ignore when enabling transactions
     // since this assumes transactionality, test ist split below
     val project = SchemaDsl.fromString() { schemaPMToCM }
     database.setup(project)

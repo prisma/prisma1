@@ -49,7 +49,7 @@ impl ModelTemplate {
             is_embedded: self.is_embedded,
             fields: OnceCell::new(),
             manifestation: self.manifestation,
-            id_context: Context::new(42), // TODO: replace uuid with cuid!
+            id_context: Context::new(65535), // TODO: replace uuid with cuid!
             schema: schema,
         });
 

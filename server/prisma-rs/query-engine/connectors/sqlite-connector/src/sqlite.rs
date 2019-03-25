@@ -124,7 +124,7 @@ impl Sqlite {
     where
         F: FnOnce(&mut Connection) -> ConnectorResult<T>,
     {
-        let mut conn = dbg!(self.pool.get()?);
+        let mut conn = self.pool.get()?;
         Self::attach_database(&mut conn, db_name)?;
 
         let result = f(&mut conn);

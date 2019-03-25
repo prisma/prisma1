@@ -1,5 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
+import com.prisma.IgnoreSQLite
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
@@ -449,7 +450,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
   }
 
-  "a PM to C1  relation with a child without a relation" should "error if also trying to connect to a non-existing node" in {
+  "a PM to C1  relation with a child without a relation" should "error if also trying to connect to a non-existing node" taggedAs IgnoreSQLite in { // TODO: Remove when transactions are back
     val project = SchemaDsl.fromString() { schemaPMToC1opt }
     database.setup(project)
 

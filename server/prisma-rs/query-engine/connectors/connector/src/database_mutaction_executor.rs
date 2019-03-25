@@ -9,7 +9,7 @@ pub trait DatabaseMutactionExecutor {
         match mutaction {
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref cn)) => {
                 let result = DatabaseMutactionResult {
-                    id: self.execute_create(db_name, cn)?,
+                    id_or_count: IdOrCount::Id(self.execute_create(db_name, cn)?),
                     typ: DatabaseMutactionResultType::Create,
                     mutaction: mutaction,
                 };

@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.IgnoreMongo
+import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
@@ -312,7 +312,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   //Transactionality
-  "TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreMongo) in {
+  "TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreMongo, IgnoreSQLite) in { // TODO: Remove when transactions are back
     val project = SchemaDsl.fromString() {
       """type Todo {
         | id: ID! @unique

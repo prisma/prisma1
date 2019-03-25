@@ -5,7 +5,7 @@ import java.util.UUID
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
-import com.prisma.{IgnoreMongo, IgnoreMySql}
+import com.prisma.{IgnoreMongo, IgnoreMySql, IgnoreSQLite}
 import org.scalatest.{FlatSpec, Matchers}
 
 class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
@@ -451,7 +451,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
   }
 
-  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute second direction" in {
+  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute second direction" taggedAs IgnoreSQLite in { // TODO: Remove when transactions are back
     val project = SchemaDsl.fromString() {
       """type User{
         |   id: ID! @unique

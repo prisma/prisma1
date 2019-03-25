@@ -429,7 +429,7 @@ fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::protobuf:
 
     match result.typ {
         DatabaseMutactionResultType::Create => {
-            let result = crate::protobuf::prisma::CreateNodeResult { id: result.id.into() };
+            let result = crate::protobuf::prisma::CreateNodeResult { id: result.id().into() };
             let typ = database_mutaction_result::Type::Create(result);
 
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
