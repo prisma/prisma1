@@ -1,5 +1,6 @@
 package com.prisma.api.connector.mongo.impl
 
+import com.mongodb.MongoServerException
 import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database.{MongoAction, MongoActionsBuilder, NodeSingleQueries}
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
@@ -103,10 +104,10 @@ case class NestedUpdateNodesInterpreter(mutaction: NestedUpdateNodes)(implicit e
 
 object UpdateShared {
   def errorHandler(model: Model): PartialFunction[Throwable, UserFacingError] = {
-    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(model, e).isDefined =>
+    case e: MongoServerException if e.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, MongoErrorMessageHelper.getFieldOption(model, e).get)
-    case e: MongoWriteException if e.getError.getCode == 40 =>
-      APIErrors.MongoConflictingUpdates(model.name, e.getError.getMessage)
+    case e: MongoServerException if e.getCode == 40 =>
+      APIErrors.MongoConflictingUpdates(model.name, e.getMessage)
 
   }
 }

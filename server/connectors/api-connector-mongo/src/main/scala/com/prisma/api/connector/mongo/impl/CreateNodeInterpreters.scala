@@ -6,7 +6,7 @@ import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLe
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.ListGCValue
 import com.prisma.shared.models.{Model, RelationField}
-import org.mongodb.scala.MongoWriteException
+import org.mongodb.scala.MongoServerException
 
 import scala.concurrent.ExecutionContext
 
@@ -16,9 +16,9 @@ case class CreateNodeInterpreter(mutaction: CreateNode)(implicit ec: ExecutionCo
   }
 
   override val errorMapper = {
-    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
+    case e: MongoServerException if e.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
-    case e: MongoWriteException if e.getError.getCode == 11000 && e.getMessage.contains("_id_") =>
+    case e: MongoServerException if e.getCode == 11000 && e.getMessage.contains("_id_") =>
       APIErrors.UniqueConstraintViolation(mutaction.model.name, s"Field name: ${mutaction.model.idField_!.name}")
   }
 }
@@ -34,7 +34,7 @@ object MongoErrorMessageHelper {
     }
   }
 
-  def getFieldOption(model: Model, e: MongoWriteException): Option[String] = {
+  def getFieldOption(model: Model, e: MongoServerException): Option[String] = {
     model.scalarFields.filter { field =>
       val constraintName = indexNameHelper(model.dbName, field.dbName, true)
       e.getMessage.contains(constraintName)
@@ -117,9 +117,9 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
   }
 
   override val errorMapper = {
-    case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
+    case e: MongoServerException if e.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
-    case e: MongoWriteException if e.getError.getCode == 11000 && e.getMessage.contains("_id_") =>
+    case e: MongoServerException if e.getCode == 11000 && e.getMessage.contains("_id_") =>
       APIErrors.UniqueConstraintViolation(mutaction.model.name, s"Field name: ${mutaction.model.idField_!.name}")
   }
 }

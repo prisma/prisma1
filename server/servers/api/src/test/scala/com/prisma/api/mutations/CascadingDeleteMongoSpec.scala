@@ -709,7 +709,6 @@ class CascadingDeleteMongoSpec extends FlatSpec with Matchers with ApiSpecBase {
 
       server.query("""query{as{a, b {b}, c{c, e{e}}, d{d}}}""", project).toString should be(
         """{"data":{"as":[{"a":"a","b":{"b":"b"},"c":[{"c":"c1","e":{"e":"e"}},{"c":"c2","e":{"e":"e2"}}],"d":{"d":"d"}}]}}""")
-
     }
 
     run("""type A {
