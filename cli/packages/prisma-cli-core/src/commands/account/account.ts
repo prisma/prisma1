@@ -1,4 +1,4 @@
-import { Command, flags, Flags } from 'prisma-cli-engine'
+import { Command } from 'prisma-cli-engine'
 import chalk from 'chalk'
 
 export default class Account extends Command {

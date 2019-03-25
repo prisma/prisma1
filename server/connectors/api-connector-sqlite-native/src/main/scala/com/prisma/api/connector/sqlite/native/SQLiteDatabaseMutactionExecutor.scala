@@ -110,6 +110,9 @@ class SQLiteDatabaseMutactionExecutor2(
             case prisma.protocol.DatabaseMutactionResult.Type.Create(result) =>
               CreateNodeResult(toIdGcValue(result.id), mutaction.asInstanceOf[CreateNode])
 
+            case prisma.protocol.DatabaseMutactionResult.Type.Unit(_) =>
+              UnitDatabaseMutactionResult
+
             case prisma.protocol.DatabaseMutactionResult.Type.Empty =>
               UnitDatabaseMutactionResult
           }
