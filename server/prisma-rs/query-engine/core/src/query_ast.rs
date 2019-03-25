@@ -26,9 +26,9 @@ pub struct RecordQuery {
 #[derive(Debug)]
 pub struct MultiRecordQuery {
     pub name: String,
-    // model: Model,
-    args: QueryArguments,
-    selected_fields: SelectedFields,
+    pub model: ModelRef,
+    pub args: QueryArguments,
+    pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
 }
 
@@ -65,16 +65,10 @@ enum QueryType {
 }
 
 impl QueryType {
-    fn lowercase(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
-        if model.name.to_lowercase() == field.name {
+    fn infer(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
+        if model.name.to_camel_case().to_singular() == field.name {
             Some(QueryType::Single(Arc::clone(&model)))
-        } else {
-            None
-        }
-    }
-
-    fn singular(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
-        if model.name.to_lowercase().to_singular() == field.name {
+        } else if model.name.to_camel_case().to_plural() == field.name {
             Some(QueryType::Multiple(Arc::clone(&model)))
         } else {
             None
@@ -137,7 +131,7 @@ impl<'a> QueryBuilder<'a> {
                 .schema
                 .models()
                 .iter()
-                .filter_map(|model| QueryType::lowercase(model, self.field).or(QueryType::singular(model, self.field)))
+                .filter_map(|model| QueryType::infer(model, self.field))
                 .nth(0);
 
             Some(match qt {
@@ -394,7 +388,19 @@ impl<'a> QueryBuilder<'a> {
                         nested: nested_queries,
                     }))
                 }
-                QueryType::Multiple(_model) => unimplemented!(),
+                QueryType::Multiple(model) => {
+                    let args = self.args.unwrap_or(Err(CoreError::QueryValidationError(
+                        "Required query args not found".into(),
+                    )))?;
+
+                    Ok(PrismaQuery::MultiRecordQuery(MultiRecordQuery {
+                        name,
+                        args,
+                        model,
+                        selected_fields,
+                        nested: nested_queries,
+                    }))
+                }
                 QueryType::OneRelation(_model) => {
                     let parent_field = self
                         .parent_field
@@ -444,6 +450,7 @@ impl<'a> QueryBuilder<'a> {
 impl RootQueryBuilder {
     // FIXME: Find op name and only execute op!
     pub fn build(self) -> CoreResult<Vec<PrismaQuery>> {
+        dbg!(&self.query);
         self.query
             .definitions
             .iter()
