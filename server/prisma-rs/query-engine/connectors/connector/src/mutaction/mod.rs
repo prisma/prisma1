@@ -4,6 +4,7 @@ mod node_address;
 mod path;
 mod relay_id;
 mod result;
+mod update_node;
 
 pub use builder::*;
 pub use create_node::*;
@@ -11,6 +12,7 @@ pub use node_address::*;
 pub use path::*;
 pub use relay_id::*;
 pub use result::*;
+pub use update_node::*;
 
 use super::{Filter, NodeSelector};
 use prisma_models::prelude::*;
@@ -57,7 +59,7 @@ impl DatabaseMutaction {
 #[derive(Debug, Clone)]
 pub enum TopLevelDatabaseMutaction {
     CreateNode(CreateNode),
-    UpdateNode(TopLevelUpdateNode),
+    UpdateNode(UpdateNode),
     UpsertNode(TopLevelUpsertNode),
     DeleteNode(TopLevelDeleteNode),
     UpdateNodes(TopLevelUpdateNodes),
@@ -88,25 +90,6 @@ pub struct NestedMutactions {
 // UPDATE
 
 #[derive(Debug, Clone)]
-pub struct TopLevelUpdateNode {
-    pub where_: NodeSelector,
-    pub non_list_args: PrismaArgs,
-    pub list_args: Vec<(String, PrismaListValue)>,
-    pub nested_mutactions: NestedMutactions,
-}
-
-// #[derive(Debug, Default, Clone, PartialEq)]
-// pub struct NestedUpdateNode {
-//     pub project: ProjectRef,
-//     pub where_: NodeSelector,
-//     pub non_list_args: PrismaArgs,
-//     pub list_args: Vec<(String, PrismaListValue)>,
-//     pub nested_mutactions: NestedMutactions,
-
-//     pub relation_field: Arc<RelationField>,
-// }
-
-#[derive(Debug, Clone)]
 pub struct TopLevelUpdateNodes {
     pub model: ModelRef,
     pub filter: Filter,
@@ -120,7 +103,7 @@ pub struct TopLevelUpdateNodes {
 pub struct TopLevelUpsertNode {
     pub where_: NodeSelector,
     pub create: CreateNode,
-    pub update: TopLevelUpdateNode,
+    pub update: UpdateNode,
 }
 
 // #[derive(Debug, Default, Clone, PartialEq)]

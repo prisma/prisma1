@@ -345,8 +345,8 @@ fn convert_update_envelope(m: crate::protobuf::prisma::UpdateNode, project: Proj
     TopLevelDatabaseMutaction::UpdateNode(convert_update(m, project))
 }
 
-fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> TopLevelUpdateNode {
-    TopLevelUpdateNode {
+fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> UpdateNode {
+    UpdateNode {
         where_: convert_node_select(m.where_, project),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),

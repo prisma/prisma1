@@ -32,6 +32,18 @@ pub struct SelectedRelationField {
     pub selected_fields: SelectedFields,
 }
 
+impl From<Arc<ScalarField>> for SelectedField {
+    fn from(sf: Arc<ScalarField>) -> SelectedField {
+        SelectedField::Scalar(SelectedScalarField { field: sf })
+    }
+}
+
+impl From<Arc<ScalarField>> for SelectedFields {
+    fn from(sf: Arc<ScalarField>) -> SelectedFields {
+        SelectedFields::new(vec![SelectedField::from(sf)], None)
+    }
+}
+
 impl SelectedFields {
     pub const RELATED_MODEL_ALIAS: &'static str = "__RelatedModel__";
     pub const PARENT_MODEL_ALIAS: &'static str = "__ParentModel__";

@@ -1,6 +1,8 @@
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
+use crate::{error::ConnectorError, ConnectorResult};
+
 pub struct MutationBuilder;
 
 impl MutationBuilder {
@@ -41,19 +43,51 @@ impl MutationBuilder {
 
     pub fn create_scalar_list_value(
         scalar_list_table: ScalarListTable,
-        list_value: PrismaListValue,
-        id: GraphqlId,
+        list_value: &PrismaListValue,
+        id: &GraphqlId,
     ) -> Vec<Insert> {
         let positions = (1..=list_value.len()).map(|v| (v * 1000) as i64);
-        let values = list_value.into_iter().zip(positions);
+        let values = list_value.iter().zip(positions);
 
         values
             .map(|(value, position)| {
                 Insert::into(scalar_list_table.table())
                     .value(ScalarListTable::POSITION_FIELD_NAME, position)
-                    .value(ScalarListTable::VALUE_FIELD_NAME, value)
+                    .value(ScalarListTable::VALUE_FIELD_NAME, value.clone())
                     .value(ScalarListTable::NODE_ID_FIELD_NAME, id.clone())
             })
             .collect()
+    }
+
+    pub fn update_node_by_id(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> ConnectorResult<Update> {
+        let fields = model.fields();
+        let mut query = Update::table(model.table());
+
+        for (name, value) in args.args.iter() {
+            let field = fields.find_from_scalar(&name).unwrap();
+
+            if field.is_required && value.is_null() {
+                return Err(ConnectorError::FieldCannotBeNull {
+                    field: field.name.clone(),
+                });
+            }
+
+            query = query.set(field.db_name(), value.clone());
+        }
+
+        Ok(query.so_that(fields.id().as_column().equals(id.clone())))
+    }
+
+    pub fn update_scalar_list_value(
+        scalar_list_table: ScalarListTable,
+        list_value: &PrismaListValue,
+        id: &GraphqlId,
+    ) -> (Delete, Vec<Insert>) {
+        let delete =
+            Delete::from(scalar_list_table.table()).so_that(ScalarListTable::NODE_ID_FIELD_NAME.equals(id.clone()));
+
+        let inserts = Self::create_scalar_list_value(scalar_list_table, list_value, id);
+
+        (delete, inserts)
     }
 }

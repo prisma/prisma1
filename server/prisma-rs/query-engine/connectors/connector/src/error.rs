@@ -1,5 +1,6 @@
 use failure::{Error, Fail};
 use libsqlite3_sys as ffi;
+use prisma_models::prelude::PrismaValue;
 use rusqlite;
 
 #[derive(Debug, Fail)]
@@ -16,6 +17,10 @@ pub enum ConnectorError {
     InvalidConnectionArguments,
     #[fail(display = "The column value was different from the model")]
     ColumnReadFailure(Error),
+    #[fail(display = "Node not found, where field {} is {}", field, value)]
+    NodeNotFoundForWhere { field: String, value: PrismaValue },
+    #[fail(display = "Field cannot be null: {}", field)]
+    FieldCannotBeNull { field: String },
 }
 
 #[cfg(feature = "sql")]

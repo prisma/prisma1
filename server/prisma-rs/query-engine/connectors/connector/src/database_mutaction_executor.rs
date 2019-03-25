@@ -16,7 +16,15 @@ pub trait DatabaseMutactionExecutor {
 
                 results.push(result);
             }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNode(_)) => unimplemented!(),
+            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNode(ref un)) => {
+                let result = DatabaseMutactionResult {
+                    id_or_count: IdOrCount::Id(self.execute_update(db_name, un)?),
+                    typ: DatabaseMutactionResultType::Update,
+                    mutaction: mutaction,
+                };
+
+                results.push(result)
+            }
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNode(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNodes(_)) => unimplemented!(),
@@ -30,4 +38,5 @@ pub trait DatabaseMutactionExecutor {
 
     fn execute_raw(&self, query: String) -> ConnectorResult<Value>;
     fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId>;
+    fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId>;
 }

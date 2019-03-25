@@ -1,4 +1,4 @@
-use crate::DatabaseExecutor;
+use crate::{query_builder::QueryBuilder, DatabaseExecutor};
 use connector::*;
 use prisma_models::prelude::*;
 use prisma_query::{
@@ -8,7 +8,7 @@ use prisma_query::{
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Transaction, NO_PARAMS};
 use serde_json::Value;
-use std::{collections::HashSet, env};
+use std::{collections::HashSet, env, sync::Arc};
 
 type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
@@ -56,9 +56,7 @@ impl DatabaseMutactionExecutor for Sqlite {
             let (insert, returned_id) =
                 MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
 
-            let (sql, params) = dbg!(visitor::Sqlite::build(insert));
-
-            conn.prepare(&sql)?.execute(&params)?;
+            Self::execute_one(conn, insert)?;
 
             let id = match returned_id {
                 Some(id) => id,
@@ -68,13 +66,48 @@ impl DatabaseMutactionExecutor for Sqlite {
             for (field_name, list_value) in mutaction.list_args.clone() {
                 let field = mutaction.model.fields().find_from_scalar(&field_name).unwrap();
                 let table = field.scalar_list_table();
-                let inserts = MutationBuilder::create_scalar_list_value(table.clone(), list_value, id.clone());
+                let inserts = MutationBuilder::create_scalar_list_value(table, &list_value, &id);
 
-                for insert in inserts {
-                    let (sql, params) = dbg!(visitor::Sqlite::build(insert));
+                Self::execute_many(conn, inserts)?;
+            }
 
-                    conn.prepare(&sql)?.execute(&params)?;
-                }
+            Ok(id)
+        })
+    }
+
+    fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId> {
+        self.with_transaction(&db_name, |conn| {
+            let model = mutaction.where_.field.model();
+
+            let id: GraphqlId = {
+                let (_, select) = {
+                    let selected_fields = SelectedFields::from(model.fields().id());
+                    QueryBuilder::get_node_by_where(&mutaction.where_, &selected_fields)
+                };
+
+                let (query_sql, params) = dbg!(visitor::Sqlite::build(select));
+
+                conn.prepare(&query_sql)?
+                    .query_map(&params, |row| row.get(0))?
+                    .map(|row_res| row_res.unwrap())
+                    .next()
+                    .ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
+                        field: mutaction.where_.field.name.clone(),
+                        value: mutaction.where_.value.clone(),
+                    })?
+            };
+
+            let update = MutationBuilder::update_node_by_id(Arc::clone(&model), &id, &mutaction.non_list_args)?;
+
+            Self::execute_one(conn, update)?;
+
+            for (field_name, list_value) in mutaction.list_args.clone() {
+                let field = model.fields().find_from_scalar(&field_name).unwrap();
+                let table = field.scalar_list_table();
+                let (delete, inserts) = MutationBuilder::update_scalar_list_value(table, &list_value, &id);
+
+                Self::execute_one(conn, delete)?;
+                Self::execute_many(conn, inserts)?;
             }
 
             Ok(id)
@@ -92,6 +125,27 @@ impl Sqlite {
             .build(SqliteConnectionManager::memory())?;
 
         Ok(Sqlite { pool, test_mode })
+    }
+
+    fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>
+    where
+        T: Into<Query>,
+    {
+        let (sql, params) = dbg!(visitor::Sqlite::build(query));
+        conn.prepare(&sql)?.execute(&params)?;
+
+        Ok(())
+    }
+
+    fn execute_many<T>(conn: &Transaction, queries: Vec<T>) -> ConnectorResult<()>
+    where
+        T: Into<Query>,
+    {
+        for query in queries {
+            Self::execute_one(conn, query)?;
+        }
+
+        Ok(())
     }
 
     /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
