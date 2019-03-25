@@ -1,7 +1,7 @@
 use prisma_models::{PrismaValue, RelationField, ScalarField};
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Filter {
     And(Vec<Box<Filter>>),
     Or(Vec<Box<Filter>>),
@@ -14,7 +14,7 @@ pub enum Filter {
     BoolFilter(bool),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ScalarCondition {
     Equals(PrismaValue),
     NotEquals(PrismaValue),
@@ -32,29 +32,29 @@ pub enum ScalarCondition {
     NotIn(Vec<PrismaValue>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ScalarListCondition {
     Contains(PrismaValue),
     ContainsEvery(Vec<PrismaValue>),
     ContainsSome(Vec<PrismaValue>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct OneRelationIsNullFilter {
     pub field: Arc<RelationField>,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ScalarListFilter {
     pub field: Arc<ScalarField>,
     pub condition: ScalarListCondition,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ScalarFilter {
     pub field: Arc<ScalarField>,
     pub condition: ScalarCondition,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RelationFilter {
     pub field: Arc<RelationField>,
     pub nested_filter: Box<Filter>,

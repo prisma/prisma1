@@ -29,7 +29,7 @@
     "http-link-dataloader": "^0.1.6",
     "jsonwebtoken": "^8.3.0",
     "lodash.flatten": "^4.4.0",
-    "prettier": "1.14.3",
+    "prettier": "1.16.4",
     "prisma-datamodel": "1.23.0-alpha.1",
     "prisma-generate-schema": "1.20.4",
     "subscriptions-transport-ws": "^0.9.15",
@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@types/graphql": "14.0.3",
+    "@types/prettier": "1.16.1",
     "ava": "^0.25.0",
     "graphql": "^14.0.2",
     "semantic-release": "^15.10.4",
