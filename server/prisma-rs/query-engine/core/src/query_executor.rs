@@ -94,7 +94,7 @@ impl QueryExecutor {
                     )?;
 
                     // FIXME: Rewrite to not panic and also in a more functional way!
-                    let ids = result.get_id_values(Arc::clone(&query.parent_field.model()))?;
+                    let ids = result.get_id_values(Arc::clone(&query.parent_field.related_model()))?;
                     let nested = result.nodes.iter().fold(vec![], |mut vec, node| {
                         vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
                         vec
