@@ -150,6 +150,7 @@ impl Sqlite {
         let opt_id = ids.into_iter().next();
 
         opt_id.ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
+            model: node_selector.field.model().name.clone(),
             field: node_selector.field.name.clone(),
             value: node_selector.value.clone(),
         })

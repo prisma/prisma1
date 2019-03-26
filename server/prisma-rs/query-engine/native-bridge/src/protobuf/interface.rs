@@ -298,8 +298,22 @@ impl From<BridgeError> for super::prisma::error::Value {
                 super::prisma::error::Value::QueryError(format!("{}", e))
             }
 
+            BridgeError::ConnectorError(ConnectorError::FieldCannotBeNull { field }) => {
+                super::prisma::error::Value::FieldCannotBeNull(field)
+            }
+
             BridgeError::ConnectorError(ConnectorError::UniqueConstraintViolation { field_name }) => {
                 super::prisma::error::Value::UniqueConstraintViolation(field_name)
+            }
+
+            BridgeError::ConnectorError(ConnectorError::NodeNotFoundForWhere { model, field, value }) => {
+                let node_selector = super::prisma::NodeSelector {
+                    model_name: model,
+                    field_name: field,
+                    value: value.into(),
+                };
+
+                super::prisma::error::Value::NodeNotFoundForWhere(node_selector)
             }
 
             e @ BridgeError::ProtobufDecodeError(_) => {
