@@ -12,7 +12,7 @@ sealed trait ApiMutaction {
 // DATABASE MUTACTIONS
 sealed trait DatabaseMutaction extends ApiMutaction {
   def project: Project
-  def allNestedMutactions: Vector[DatabaseMutaction] = Vector.empty
+  def allNestedMutactions: Vector[NestedDatabaseMutaction] = Vector.empty
 }
 
 sealed trait TopLevelDatabaseMutaction extends DatabaseMutaction

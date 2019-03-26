@@ -1,19 +1,20 @@
 package com.prisma.api.connector.sqlite.native
 import com.google.protobuf.ByteString
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
-import com.prisma.api.connector.jdbc.impl.{GetFieldFromSQLUniqueException, JdbcDatabaseMutactionExecutor}
+import com.prisma.api.connector.jdbc.impl._
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodeNotFoundForWhereError}
 import com.prisma.connector.shared.jdbc.SlickDatabase
-import com.prisma.gc_values.ListGCValue
+import com.prisma.gc_values.{IdGCValue, ListGCValue}
 import com.prisma.rs.{NativeBinding, UniqueConstraintViolation}
 import com.prisma.shared.models.Project
 import play.api.libs.json.{JsValue, Json}
 import prisma.protocol
 import prisma.protocol.Error
-import slick.dbio
+import slick.dbio.DBIO
+import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,16 +41,94 @@ class SQLiteDatabaseMutactionExecutor2(
     slickDatabaseArg: SlickDatabase,
     manageRelayIds: Boolean
 )(implicit ec: ExecutionContext)
-    extends JdbcDatabaseMutactionExecutor(slickDatabaseArg, manageRelayIds) {
+    extends DatabaseMutactionExecutor {
 
-  import this.slickDatabaseArg.profile.api._
+  import slickDatabaseArg.profile.api.{DBIO => _, _}
   import NativeUtils._
 
-  override def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = {
-    executeNonTransactionally(mutaction)
+  override def executeRaw(project: Project, query: String): Future[JsValue] = {
+    val action = JdbcActionsBuilder(project, slickDatabaseArg).executeRaw(query)
+    runAttached(project, action)
   }
 
-  override def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = {
+  override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
+  override def executeTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
+
+  private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
+
+    val actionsBuilder = JdbcActionsBuilder(mutaction.project, slickDatabaseArg)
+    val singleAction = transactionally match {
+      case true  => executeTopLevelMutaction(mutaction, actionsBuilder).transactionally
+      case false => executeTopLevelMutaction(mutaction, actionsBuilder)
+    }
+
+    val finalAction = if (slickDatabaseArg.isMySql) singleAction.withTransactionIsolation(TransactionIsolation.ReadCommitted) else singleAction
+
+    runAttached(mutaction.project, finalAction)
+  }
+
+  def executeTopLevelMutaction(
+                                mutaction: TopLevelDatabaseMutaction,
+                                mutationBuilder: JdbcActionsBuilder
+                              ): DBIO[MutactionResults] = {
+    mutaction match {
+      case m: TopLevelUpsertNode =>
+        for {
+          result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
+          childResults <- result match {
+            case result: FurtherNestedMutactionResult =>
+              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+            case _ => DBIO.successful(Vector.empty)
+          }
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
+      case m: FurtherNestedMutaction =>
+        for {
+          result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
+          childResults <- result match {
+            case result: FurtherNestedMutactionResult =>
+              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+            case _ => DBIO.successful(Vector.empty)
+          }
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
+
+      case m: FinalMutaction =>
+        for {
+          result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
+        } yield MutactionResults(Vector(result))
+    }
+  }
+
+  def executeNestedMutaction(
+                              mutaction: NestedDatabaseMutaction,
+                              parentId: IdGCValue,
+                              mutationBuilder: JdbcActionsBuilder
+                            ): DBIO[MutactionResults] = {
+    mutaction match {
+      case m: UpsertNode =>
+        for {
+          result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
+          childResults <- executeNestedMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction], parentId, mutationBuilder)
+            .map(Vector(_))
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
+
+      case m: FurtherNestedMutaction =>
+        for {
+          result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
+          childResults <- result match {
+            case result: FurtherNestedMutactionResult =>
+              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+            case _ => DBIO.successful(Vector.empty)
+          }
+        } yield MutactionResults(result +: childResults.flatMap(_.results))
+
+      case m: FinalMutaction =>
+        for {
+          result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
+        } yield MutactionResults(Vector(result))
+    }
+  }
+
+  def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = {
     import com.prisma.shared.models.ProjectJsonFormatter._
     val projectJson = ByteString.copyFromUtf8(Json.toJson(mutaction.project).toString())
     val headerName  = mutaction.getClass.getSimpleName
@@ -75,7 +154,7 @@ class SQLiteDatabaseMutactionExecutor2(
         }
         top_level_mutaction_interpreter(envelope, m, errorHandler)
 
-      case m: TopLevelUpsertNode if DO_NOT_FORWARD_THIS_ONE =>
+      case m: TopLevelUpsertNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Upsert(
           prisma.protocol.UpsertNode(
             header = prisma.protocol.Header(headerName),
@@ -122,8 +201,13 @@ class SQLiteDatabaseMutactionExecutor2(
         val envelope       = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
-      case _ =>
-        super.interpreterFor(mutaction)
+      case m: TopLevelDeleteNode  => DeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+      case m: TopLevelUpdateNodes => UpdateNodesInterpreter(m)
+      case m: TopLevelDeleteNodes => DeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+      case m: ResetData           => ResetDataInterpreter(m)
+      case m: ImportNodes         => ImportNodesInterpreter(m, shouldCreateRelayIds = manageRelayIds)
+      case m: ImportRelations     => ImportRelationsInterpreter(m)
+      case m: ImportScalarLists   => ImportScalarListsInterpreter(m)
     }
   }
 
@@ -145,8 +229,16 @@ class SQLiteDatabaseMutactionExecutor2(
     )
   }
 
-  override def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = {
-    super.interpreterFor(mutaction)
+  def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
+    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = manageRelayIds)
+    case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
+    case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
+    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+    case m: NestedConnect     => NestedConnectInterpreter(m)
+    case m: NestedSet         => NestedSetInterpreter(m)
+    case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
+    case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
+    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
   }
 
   private def listArgsToProtocolArgs(listArgs: Vector[(String, ListGCValue)]): protocol.PrismaArgs = {
@@ -168,7 +260,7 @@ class SQLiteDatabaseMutactionExecutor2(
   ): TopLevelDatabaseMutactionInterpreter = {
 
     new TopLevelDatabaseMutactionInterpreter {
-      override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): dbio.DBIO[DatabaseMutactionResult] = {
+      override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
         SimpleDBIO { x =>
           val executionResult = NativeBinding.execute_mutaction(protoMutaction, errorHandler)
           executionResult.`type` match {
@@ -178,6 +270,7 @@ class SQLiteDatabaseMutactionExecutor2(
                 case m: UpsertNode => m.create
                 case m             => sys.error(s"mutaction of type [$m] is disallowed here")
               }
+
               CreateNodeResult(toIdGcValue(result.id), m)
 
             case prisma.protocol.DatabaseMutactionResult.Type.Update(result) =>
@@ -186,6 +279,7 @@ class SQLiteDatabaseMutactionExecutor2(
                 case m: UpsertNode => m.update
                 case m             => sys.error(s"mutaction of type [$m] is disallowed here")
               }
+
               UpdateNodeResult(toIdGcValue(result.id), PrismaNode.dummy, m)
 
             case prisma.protocol.DatabaseMutactionResult.Type.Delete(_) =>
@@ -209,6 +303,31 @@ class SQLiteDatabaseMutactionExecutor2(
           APIErrors.UniqueConstraintViolation(splitted(0), "Field name = " + splitted(1))
         }
       }
+    }
+  }
+
+  private def runAttached[T](project: Project, query: DBIO[T]) = {
+    if (slickDatabaseArg.isSQLite) {
+      import slickDatabaseArg.profile.api._
+
+      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val path               = s"""'db/${project.dbName}.db'"""
+      val attach             = sqlu"ATTACH DATABASE #$path AS #${project.dbName};"
+      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
+
+      val attachIfNecessary = for {
+        attachedDbs <- list
+        _ <- attachedDbs.map(_._2).contains(project.dbName) match {
+              case true  => slick.dbio.DBIO.successful(())
+              case false => attach
+            }
+        _      <- activateForeignKey
+        result <- query
+      } yield result
+
+      slickDatabaseArg.database.run(attachIfNecessary.withPinnedSession)
+    } else {
+      slickDatabaseArg.database.run(query)
     }
   }
 }

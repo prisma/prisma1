@@ -44,67 +44,38 @@ impl DatabaseMutactionExecutor for Sqlite {
     }
 
     fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId> {
-        self.with_transaction(&db_name, |conn| {
-            let (insert, returned_id) =
-                MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
-
-            Self::execute_one(conn, insert)?;
-
-            let id = match returned_id {
-                Some(id) => id,
-                None => GraphqlId::Int(conn.last_insert_rowid() as usize),
-            };
-
-            for (field_name, list_value) in mutaction.list_args.clone() {
-                let field = mutaction.model.fields().find_from_scalar(&field_name).unwrap();
-                let table = field.scalar_list_table();
-                let inserts = MutationBuilder::create_scalar_list_value(table, &list_value, &id);
-
-                Self::execute_many(conn, inserts)?;
-            }
-
-            Ok(id)
-        })
+        self.with_transaction(&db_name, |conn| Self::create_node(conn, mutaction))
     }
 
     fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId> {
         self.with_transaction(&db_name, |conn| {
             let model = mutaction.where_.field.model();
+            let id = Self::id_for(conn, Arc::clone(&model), &mutaction.where_)?;
+            Self::update_node(conn, id, mutaction)
+        })
+    }
 
-            let id: GraphqlId = {
-                let (_, select) = {
-                    let selected_fields = SelectedFields::from(model.fields().id());
-                    QueryBuilder::get_node_by_where(&mutaction.where_, &selected_fields)
-                };
+    fn execute_upsert(
+        &self,
+        db_name: String,
+        mutaction: &UpsertNode,
+    ) -> ConnectorResult<(GraphqlId, DatabaseMutactionResultType)> {
+        self.with_transaction(&db_name, |conn| {
+            let model = mutaction.where_.field.model();
 
-                let ids = Self::query(conn, select, |row| {
-                    let id: GraphqlId = row.get(0);
-                    Ok(id)
-                })?;
+            match Self::id_for(conn, Arc::clone(&model), &mutaction.where_) {
+                Err(_e @ ConnectorError::NodeNotFoundForWhere { .. }) => {
+                    let id = Self::create_node(conn, &mutaction.create)?;
 
-                let opt_id = ids.into_iter().next();
+                    Ok((id, DatabaseMutactionResultType::Create))
+                }
+                Ok(id) => {
+                    let id = Self::update_node(conn, id.clone(), &mutaction.update)?;
 
-                opt_id.ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
-                    field: mutaction.where_.field.name.clone(),
-                    value: mutaction.where_.value.clone(),
-                })?
-            };
-
-            if let Some(update) = MutationBuilder::update_node_by_id(Arc::clone(&model), &id, &mutaction.non_list_args)?
-            {
-                Self::execute_one(conn, update)?;
+                    Ok((id, DatabaseMutactionResultType::Update))
+                }
+                Err(e) => Err(e),
             }
-
-            for (field_name, list_value) in mutaction.list_args.clone() {
-                let field = model.fields().find_from_scalar(&field_name).unwrap();
-                let table = field.scalar_list_table();
-                let (delete, inserts) = MutationBuilder::update_scalar_list_value(table, &list_value, &id);
-
-                Self::execute_one(conn, delete)?;
-                Self::execute_many(conn, inserts)?;
-            }
-
-            Ok(id)
         })
     }
 
@@ -163,6 +134,67 @@ impl Sqlite {
             .collect();
 
         Ok(res?)
+    }
+
+    fn id_for(conn: &Transaction, model: ModelRef, node_selector: &NodeSelector) -> ConnectorResult<GraphqlId> {
+        let (_, select) = {
+            let selected_fields = SelectedFields::from(model.fields().id());
+            QueryBuilder::get_node_by_where(&node_selector, &selected_fields)
+        };
+
+        let ids = Self::query(conn, select, |row| {
+            let id: GraphqlId = row.get(0);
+            Ok(id)
+        })?;
+
+        let opt_id = ids.into_iter().next();
+
+        opt_id.ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
+            field: node_selector.field.name.clone(),
+            value: node_selector.value.clone(),
+        })
+    }
+
+    fn create_node(conn: &Transaction, mutaction: &CreateNode) -> ConnectorResult<GraphqlId> {
+        let (insert, returned_id) =
+            MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
+
+        Self::execute_one(conn, insert)?;
+
+        let id = match returned_id {
+            Some(id) => id,
+            None => GraphqlId::Int(conn.last_insert_rowid() as usize),
+        };
+
+        for (field_name, list_value) in mutaction.list_args.clone() {
+            let field = mutaction.model.fields().find_from_scalar(&field_name).unwrap();
+            let table = field.scalar_list_table();
+            let inserts = MutationBuilder::create_scalar_list_value(table, &list_value, &id);
+
+            Self::execute_many(conn, inserts)?;
+        }
+
+        Ok(id)
+    }
+
+    fn update_node(conn: &Transaction, id: GraphqlId, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId> {
+        let model = mutaction.where_.field.model();
+        let updating = MutationBuilder::update_node_by_id(Arc::clone(&model), &id, &mutaction.non_list_args)?;
+
+        if let Some(update) = updating {
+            Self::execute_one(conn, update)?;
+        }
+
+        for (field_name, list_value) in mutaction.list_args.clone() {
+            let field = model.fields().find_from_scalar(&field_name).unwrap();
+            let table = field.scalar_list_table();
+            let (delete, inserts) = MutationBuilder::update_scalar_list_value(table, &list_value, &id);
+
+            Self::execute_one(conn, delete)?;
+            Self::execute_many(conn, inserts)?;
+        }
+
+        Ok(id)
     }
 
     fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>

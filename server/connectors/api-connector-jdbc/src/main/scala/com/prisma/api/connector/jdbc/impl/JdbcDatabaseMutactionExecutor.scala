@@ -52,7 +52,6 @@ case class JdbcDatabaseMutactionExecutor(
           childResults <- executeTopLevelMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[TopLevelDatabaseMutaction], mutationBuilder)
                            .map(Vector(_))
         } yield MutactionResults(result +: childResults.flatMap(_.results))
-
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)

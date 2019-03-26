@@ -11,7 +11,7 @@ pub trait DatabaseMutactionExecutor {
                 let result = DatabaseMutactionResult {
                     identifier: Identifier::Id(self.execute_create(db_name, cn)?),
                     typ: DatabaseMutactionResultType::Create,
-                    mutaction: mutaction,
+                    mutaction,
                 };
 
                 results.push(result);
@@ -20,7 +20,18 @@ pub trait DatabaseMutactionExecutor {
                 let result = DatabaseMutactionResult {
                     identifier: Identifier::Id(self.execute_update(db_name, un)?),
                     typ: DatabaseMutactionResultType::Update,
-                    mutaction: mutaction,
+                    mutaction,
+                };
+
+                results.push(result);
+            }
+            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(ref us)) => {
+                let (id, typ) = self.execute_upsert(db_name, us)?;
+
+                let result = DatabaseMutactionResult {
+                    identifier: Identifier::Id(id),
+                    typ,
+                    mutaction,
                 };
 
                 results.push(result);
@@ -29,12 +40,11 @@ pub trait DatabaseMutactionExecutor {
                 let result = DatabaseMutactionResult {
                     identifier: Identifier::Node(self.execute_delete(db_name, dn)?),
                     typ: DatabaseMutactionResultType::Delete,
-                    mutaction: mutaction,
+                    mutaction,
                 };
 
                 results.push(result);
             }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNodes(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::ResetData(_)) => unimplemented!(),
@@ -45,7 +55,14 @@ pub trait DatabaseMutactionExecutor {
     }
 
     fn execute_raw(&self, query: String) -> ConnectorResult<Value>;
+
     fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId>;
     fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId>;
     fn execute_delete(&self, db_name: String, mutaction: &DeleteNode) -> ConnectorResult<SingleNode>;
+
+    fn execute_upsert(
+        &self,
+        db_name: String,
+        mutaction: &UpsertNode,
+    ) -> ConnectorResult<(GraphqlId, DatabaseMutactionResultType)>;
 }

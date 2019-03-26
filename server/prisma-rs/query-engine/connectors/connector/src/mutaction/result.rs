@@ -11,6 +11,7 @@ pub enum Identifier {
     Id(GraphqlId),
     Count(usize),
     Node(SingleNode),
+    None,
 }
 
 #[derive(Clone)]
