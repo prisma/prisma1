@@ -65,7 +65,8 @@ enum QueryType {
 }
 
 impl QueryType {
-    fn infer(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
+    /// Infers the query type from the field name
+    fn infer_root(model: &ModelRef, field: &gql::query::Field) -> Option<Self> {
         if model.name.to_camel_case().to_singular() == field.name {
             Some(QueryType::Single(Arc::clone(&model)))
         } else if model.name.to_camel_case().to_plural() == field.name {
@@ -120,7 +121,7 @@ impl<'a> QueryBuilder<'a> {
         self.parent_field = parent;
 
         self.query_type = if let Some(ref parent) = &self.parent_field {
-            if parent.relation().is_many_to_many() {
+            if parent.is_list {
                 Some(Ok(QueryType::ManyRelation(parent.related_model())))
             } else {
                 Some(Ok(QueryType::OneRelation(parent.related_model())))
@@ -131,7 +132,7 @@ impl<'a> QueryBuilder<'a> {
                 .schema
                 .models()
                 .iter()
-                .filter_map(|model| QueryType::infer(model, self.field))
+                .filter_map(|model| QueryType::infer_root(model, self.field))
                 .nth(0);
 
             Some(match qt {
@@ -442,7 +443,7 @@ impl<'a> QueryBuilder<'a> {
                     }))
                 }
             },
-            None => unimplemented!(),
+            None => Err(CoreError::QueryValidationError("Unknown query type".into())),
         }
     }
 }

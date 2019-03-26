@@ -1,5 +1,7 @@
 package com.prisma.deploy.migration
 
+import com.prisma.ConnectorTag
+import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
@@ -7,14 +9,13 @@ import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability._
-import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
-  override def runOnlyForCapabilities = Set(MigrationsCapability)
-
-  override def doNotRunForPrototypes: Boolean = true
+  override def runOnlyForCapabilities                   = Set(MigrationsCapability)
+  override def doNotRunForConnectors: Set[ConnectorTag] = Set(SQLiteConnectorTag)
 
   val name      = this.getClass.getSimpleName
   val stage     = "default"
@@ -918,6 +919,48 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       sequence.name should be("B_id_seq")
     }
     sequence.current should be(1)
+  }
+
+  "adding a scalar list for a model with type Int" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |}
+      """.stripMargin
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability))
+    result.table_!("B").column_!("id").typeIdentifier should be(TI.Int)
+
+    val scalarListTable = result.table_!("B_strings")
+    scalarListTable.column_!("nodeId").typeIdentifier should be(TI.Int)
+  }
+
+  "updating a model with a scalar list to id type Int" in {
+    val capas = ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability)
+    val initialDataModel =
+      """
+        |type B {
+        |  id: ID! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |}
+      """.stripMargin
+    val initialResult = deploy(initialDataModel, capas)
+    initialResult.table_!("B").column_!("id").typeIdentifier should be(TI.String)
+    initialResult.table_!("B_strings").column_!("nodeId").typeIdentifier should be(TI.String)
+
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |  strings2: [String] @scalarList(strategy: RELATION) # make sure simultaneously adding new fields works
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel, capas)
+    result.table_!("B").column_!("id").typeIdentifier should be(TI.Int)
+    result.table_!("B_strings").column_!("nodeId").typeIdentifier should be(TI.Int)
   }
 
   def setup() = {

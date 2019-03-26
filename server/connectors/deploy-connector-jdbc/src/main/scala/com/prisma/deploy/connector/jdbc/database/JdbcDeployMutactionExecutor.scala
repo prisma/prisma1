@@ -13,28 +13,6 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
 
   val slickDatabase = builder.slickDatabase
 
-  def runAttached[T](project: Project, action: DBIO[T]) = {
-    if (slickDatabase.isSQLite) {
-      import slickDatabase.profile.api._
-      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/${project.dbName}.db'"""
-      val att                = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
-      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
-
-      val attach = for {
-        attachedDbs <- list
-        _ <- attachedDbs.map(_._2).contains(project.dbName) match {
-              case true  => slick.dbio.DBIO.successful(())
-              case false => att
-            }
-        _ <- activateForeignKey
-      } yield ()
-      database.run(slick.dbio.DBIO.seq(attach, action).withPinnedSession).map(_ => ())
-    } else {
-      database.run(action).map(_ => ())
-    }
-  }
-
   override def execute(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema): Future[Unit] = {
     val action = mutaction match {
       case x: TruncateProject       => TruncateProjectInterpreter(builder).execute(x, schemaBeforeMigration)
@@ -79,5 +57,27 @@ case class JdbcDeployMutactionExecutor(builder: JdbcDeployDatabaseMutationBuilde
     }
 
     runAttached(mutaction.project, action)
+  }
+
+  private def runAttached[T](project: Project, action: DBIO[T]) = {
+    if (slickDatabase.isSQLite) {
+      import slickDatabase.profile.api._
+      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val path               = s"""'db/${project.dbName}.db'"""
+      val att                = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
+      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
+
+      val attach = for {
+        attachedDbs <- list
+        _ <- attachedDbs.map(_._2).contains(project.dbName) match {
+              case true  => slick.dbio.DBIO.successful(())
+              case false => att
+            }
+        _ <- activateForeignKey
+      } yield ()
+      database.run(slick.dbio.DBIO.seq(attach, action).withPinnedSession).map(_ => ())
+    } else {
+      database.run(action).map(_ => ())
+    }
   }
 }

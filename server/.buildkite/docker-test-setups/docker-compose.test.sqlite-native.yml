@@ -17,6 +17,7 @@ services:
           default:
             connector: sqlite-native
             migrations: true
+            active: true
             host: test-db
             port: 3306
             user: root

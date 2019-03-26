@@ -1,4 +1,5 @@
 use crate::{DomainError as Error, DomainResult, GraphqlId, ModelRef, PrismaValue};
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct SingleNode {
@@ -8,26 +9,7 @@ pub struct SingleNode {
 
 impl SingleNode {
     pub fn get_id_value(&self, model: ModelRef) -> DomainResult<&GraphqlId> {
-        let id_field = model.fields().id();
-        let index = self
-            .field_names
-            .iter()
-            .position(|r| r == &id_field.name)
-            .map(|i| Ok(i))
-            .unwrap_or_else(|| {
-                Err(Error::FieldNotFound {
-                    name: id_field.name.clone(),
-                    model: model.name.clone(),
-                })
-            })?;
-
-        // .expect("did not find value for the id field");
-        let value = &self.node.values[index];
-
-        Ok(match value {
-            PrismaValue::GraphqlId(ref id) => id,
-            _ => unimplemented!(),
-        })
+        self.node.get_id_value(&self.field_names, model)
     }
 }
 
@@ -45,6 +27,16 @@ impl ManyNodes {
             node: n,
             field_names: self.field_names,
         })
+    }
+
+    pub fn get_id_values(&self, model: ModelRef) -> DomainResult<Vec<GraphqlId>> {
+        self.nodes
+            .iter()
+            .map(|node| {
+                node.get_id_value(&self.field_names, Arc::clone(&model))
+                    .map(|i| i.clone())
+            })
+            .collect()
     }
 
     /// Maps into a Vector of (field_name, value) tuples
@@ -75,6 +67,25 @@ impl Node {
             values,
             ..Default::default()
         }
+    }
+
+    pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<&GraphqlId> {
+        let id_field = model.fields().id();
+        let index = field_names
+            .iter()
+            .position(|r| r == &id_field.name)
+            .map(|i| Ok(i))
+            .unwrap_or_else(|| {
+                Err(Error::FieldNotFound {
+                    name: id_field.name.clone(),
+                    model: model.name.clone(),
+                })
+            })?;
+
+        Ok(match &self.values[index] {
+            PrismaValue::GraphqlId(ref id) => id,
+            _ => unimplemented!(),
+        })
     }
 
     pub fn add_related_id(&mut self, related_id: GraphqlId) {

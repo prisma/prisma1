@@ -78,13 +78,14 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier)
+    val sqlTypeForValue   = typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier)
+    val sqlTypeForIdField = typeMapper.rawSqlTypeForScalarTypeIdentifier(model.idField_!.typeIdentifier)
 
     sqlu"""
            CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (
-              "nodeId" VARCHAR (25) NOT NULL REFERENCES #${qualify(project.dbName, model.dbName)} (#${qualify(model.dbNameOfIdField_!)}),
+              "nodeId" #$sqlTypeForIdField NOT NULL REFERENCES #${qualify(project.dbName, model.dbName)} (#${qualify(model.dbNameOfIdField_!)}),
               "position" INT NOT NULL,
-              "value" #$sqlType NOT NULL,
+              "value" #$sqlTypeForValue NOT NULL,
               PRIMARY KEY ("nodeId", "position")
            )
       """
