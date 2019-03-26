@@ -20,7 +20,7 @@ connector = { path = "../connectors/connector" }
 sqlite-connector = { path = "../connectors/sqlite-connector" }
 prisma-common = { path = "../../libs/prisma-common" }
 prisma-models = { path = "../../prisma-models" }
-prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
+prisma-query = { path = "../../libs/prisma-query" }
 chrono = { version = "0.4", features = ["serde"] }
 failure = "0.1"
 failure_derive = "0.1"
