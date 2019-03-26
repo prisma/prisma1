@@ -37,7 +37,7 @@ case class SQLiteDatabaseMutactionExecutor(delegate: DatabaseMutactionExecutor) 
   }
 }
 
-class SQLiteDatabaseMutactionExecutor2(
+case class SQLiteDatabaseMutactionExecutor2(
     slickDatabaseArg: SlickDatabase,
     manageRelayIds: Boolean
 )(implicit ec: ExecutionContext)
@@ -76,8 +76,10 @@ class SQLiteDatabaseMutactionExecutor2(
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
           childResults <- result match {
-            case result: FurtherNestedMutactionResult =>
-              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+            case result: CreateNodeResult =>
+              DBIO.sequence(m.create.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+            case result: UpdateNodeResult =>
+              DBIO.sequence(m.update.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
             case _ => DBIO.successful(Vector.empty)
           }
         } yield MutactionResults(result +: childResults.flatMap(_.results))
