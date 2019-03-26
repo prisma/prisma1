@@ -1,5 +1,5 @@
 use crate::{query_ast, CoreResult};
-use connector::{DataResolver, QueryArguments};
+use connector::DataResolver;
 use prisma_models::{GraphqlId, ManyNodes, SingleNode};
 use query_ast::*;
 use std::boxed::Box;
@@ -46,25 +46,35 @@ impl QueryExecutor {
                     }
                 }
                 PrismaQuery::MultiRecordQuery(query) => {
-                    let model = Arc::clone(&query.model);
-                    let result =
-                        self.data_resolver
-                            .get_nodes(model, query.args.clone(), query.selected_fields.clone())?;
+                    let result = self.data_resolver.get_nodes(
+                        Arc::clone(&query.model),
+                        query.args.clone(),
+                        query.selected_fields.clone(),
+                    )?;
+
+                    // FIXME: Rewrite to not panic and also in a more functional way!
+                    let ids = result.get_id_values(Arc::clone(&query.model))?;
+                    let nested = result.nodes.iter().fold(vec![], |mut vec, node| {
+                        vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
+                        vec
+                    });
+
                     results.push(PrismaQueryResult::Multi(MultiPrismaQueryResult {
-                        query: query.clone(),
+                        name: query.name.clone(),
                         result,
+                        nested,
                     }));
                 }
                 PrismaQuery::RelatedRecordQuery(query) => {
                     let result = self.data_resolver.get_related_nodes(
                         Arc::clone(&query.parent_field),
                         &parent_ids,
-                        QueryArguments::default(),
+                        query.args.clone(),
                         &query.selected_fields,
                     )?;
 
                     // FIXME: Required fields need to return Errors, non-required can be ignored!
-                    if let Some(node) = dbg!(result.into_single_node()) {
+                    if let Some(node) = result.into_single_node() {
                         let ids = vec![node.get_id_value(query.parent_field.related_model())?.clone()];
                         let nested_results = self.execute_internal(&query.nested, ids)?;
                         let result = SinglePrismaQueryResult {
@@ -75,7 +85,27 @@ impl QueryExecutor {
                         results.push(PrismaQueryResult::Single(result));
                     }
                 }
-                _ => unimplemented!(),
+                PrismaQuery::MultiRelatedRecordQuery(query) => {
+                    let result = self.data_resolver.get_related_nodes(
+                        Arc::clone(&query.parent_field),
+                        &parent_ids,
+                        query.args.clone(),
+                        &query.selected_fields,
+                    )?;
+
+                    // FIXME: Rewrite to not panic and also in a more functional way!
+                    let ids = result.get_id_values(Arc::clone(&query.parent_field.model()))?;
+                    let nested = result.nodes.iter().fold(vec![], |mut vec, node| {
+                        vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
+                        vec
+                    });
+
+                    results.push(PrismaQueryResult::Multi(MultiPrismaQueryResult {
+                        name: query.name.clone(),
+                        result,
+                        nested,
+                    }));
+                }
             }
         }
 
@@ -98,6 +128,7 @@ pub struct SinglePrismaQueryResult {
 
 #[derive(Debug)]
 pub struct MultiPrismaQueryResult {
-    pub query: MultiRecordQuery,
+    pub name: String,
     pub result: ManyNodes,
+    pub nested: Vec<PrismaQueryResult>,
 }

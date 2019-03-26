@@ -88,7 +88,7 @@ fn serialize_tree(map: &mut JsonMap, result: &PrismaQueryResult) -> PrismaResult
         }
         PrismaQueryResult::Multi(result) => {
             let vec = serialize_many_nodes(&result.result)?;
-            map.insert("many".into(), Value::Array(vec));
+            map.insert(result.name.clone(), Value::Array(vec));
         }
     }
 
