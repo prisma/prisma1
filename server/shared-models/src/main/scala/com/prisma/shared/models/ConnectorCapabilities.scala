@@ -68,7 +68,8 @@ object ConnectorCapabilities extends BooleanUtils {
       RelationLinkTableCapability,
       NonEmbeddedScalarListCapability,
       NodeQueryCapability,
-      RawAccessCapability
+      RawAccessCapability,
+      MigrationsCapability
     )
     ConnectorCapabilities(capas)
   }

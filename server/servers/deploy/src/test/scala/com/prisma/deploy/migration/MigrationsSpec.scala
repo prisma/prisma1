@@ -1,5 +1,7 @@
 package com.prisma.deploy.migration
 
+import com.prisma.ConnectorTag
+import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
@@ -12,7 +14,8 @@ import org.scalatest.{Matchers, WordSpecLike}
 
 class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
-  override def runOnlyForCapabilities = Set(MigrationsCapability)
+  override def runOnlyForCapabilities                   = Set(MigrationsCapability)
+  override def doNotRunForConnectors: Set[ConnectorTag] = Set(SQLiteConnectorTag)
 
   val name      = this.getClass.getSimpleName
   val stage     = "default"
