@@ -174,6 +174,13 @@ object DeployErrors {
     )
   }
 
+  def reservedTypeName(objectTypeDefinition: ObjectTypeDefinition) = {
+    error(
+      objectTypeDefinition,
+      s"The type `${objectTypeDefinition.objectType.name}` has is using a reserved type name. Please rename it."
+    )
+  }
+
   def duplicateTypeName(objectTypeDefinition: ObjectTypeDefinition) = {
     error(
       objectTypeDefinition,
