@@ -15,6 +15,7 @@ impl QueryExecutor {
         self.execute_internal(queries, vec![])
     }
 
+    #[allow(unused_variables)]
     fn execute_internal(
         &self,
         queries: &[PrismaQuery],
@@ -43,6 +44,16 @@ impl QueryExecutor {
                         }
                         None => (),
                     }
+                }
+                PrismaQuery::MultiRecordQuery(query) => {
+                    let model = Arc::clone(&query.model);
+                    let result =
+                        self.data_resolver
+                            .get_nodes(model, query.args.clone(), query.selected_fields.clone())?;
+                    results.push(PrismaQueryResult::Multi(MultiPrismaQueryResult {
+                        query: query.clone(),
+                        result,
+                    }));
                 }
                 PrismaQuery::RelatedRecordQuery(query) => {
                     let result = self.data_resolver.get_related_nodes(
