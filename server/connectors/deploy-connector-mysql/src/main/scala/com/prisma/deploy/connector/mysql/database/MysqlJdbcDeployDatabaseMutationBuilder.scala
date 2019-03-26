@@ -62,7 +62,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
 
   override def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
     val indexSize = indexSizeForSQLType(typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier))
-    val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, TypeIdentifier.Cuid)
+    val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, model.idField_!.typeIdentifier)
     val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, typeIdentifier)
 
     sqlu"""CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (
