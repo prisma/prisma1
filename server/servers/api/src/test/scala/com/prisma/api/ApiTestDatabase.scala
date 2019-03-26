@@ -52,10 +52,10 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
     model.scalarNonListFields
       .filter(f => f.name != ReservedFields.idFieldName)
       .map(field => CreateColumn(project, model, field))
-      .map(runMutaction)
+      .foreach(runMutaction)
 
     model.scalarListFields
       .map(field => CreateScalarListTable(project, model, field))
-      .map(runMutaction)
+      .foreach(runMutaction)
   }
 }

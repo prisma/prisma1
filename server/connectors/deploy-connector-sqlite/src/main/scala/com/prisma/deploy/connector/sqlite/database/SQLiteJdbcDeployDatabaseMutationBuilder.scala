@@ -78,7 +78,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, TypeIdentifier.Cuid)
+    val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, model.idField_!.typeIdentifier)
     val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, typeIdentifier)
 
     val create = sqlu"""CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (

@@ -799,23 +799,23 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     val create = server.query(
       s"""mutation createUser {
-  createUser(data: {
-    nick: "marcus"
-    memberships: {
-      create: [
-        {
-          list: {
-            create: {
-              name: "Personal Inbox"
-            }
-          }
-        }
-      ]
-    }
-  }){
-    nick
-  }
-}""",
+                  createUser(data: {
+                    nick: "marcus"
+                    memberships: {
+                      create: [
+                        {
+                          list: {
+                            create: {
+                              name: "Personal Inbox"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }){
+                    nick
+                  }
+                }""",
       project
     )
 
@@ -823,15 +823,15 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
     val result = server.query(
       s"""query users {
-  users{
-    nick
-    memberships {
-      list {
-        name
-      }
-    }
-  }
-}""",
+                  users{
+                    nick
+                    memberships {
+                      list {
+                        name
+                      }
+                    }
+                  }
+                }""",
       project
     )
 

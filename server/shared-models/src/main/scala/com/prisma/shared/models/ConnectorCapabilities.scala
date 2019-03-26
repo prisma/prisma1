@@ -66,10 +66,10 @@ object ConnectorCapabilities extends BooleanUtils {
       JoinRelationsFilterCapability,
       JoinRelationLinksCapability,
       RelationLinkTableCapability,
-      MigrationsCapability,
       NonEmbeddedScalarListCapability,
       NodeQueryCapability,
-      RawAccessCapability
+      RawAccessCapability,
+      MigrationsCapability
     )
     ConnectorCapabilities(capas)
   }
