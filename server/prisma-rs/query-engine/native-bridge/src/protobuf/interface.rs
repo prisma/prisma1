@@ -20,6 +20,9 @@ impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
         let (data_resolver, mutaction_executor) = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
+                // FIXME: figure out the right way to do it
+                // we are passing is_active as test_mode parameter
+                // this requires us to put `active: true` in all sqlite-native configs used in tests
                 let sqlite = Arc::new(Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap());
 
                 (SqlResolver::new(sqlite.clone()), sqlite)
