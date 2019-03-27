@@ -111,7 +111,7 @@ impl ExternalInterface for ProtoBufInterface {
             let selected_fields = input.selected_fields.into_selected_fields(model.clone(), None);
             let query_arguments = into_model_query_arguments(model.clone(), input.query_arguments);
 
-            let query_result = self.data_resolver.get_nodes(model, query_arguments, selected_fields)?;
+            let query_result = self.data_resolver.get_nodes(model, query_arguments, &selected_fields)?;
             let (nodes, fields) = (query_result.nodes, query_result.field_names);
             let proto_nodes = nodes.into_iter().map(|n| n.into()).collect();
 

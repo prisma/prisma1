@@ -107,7 +107,7 @@ impl QueryBuilder {
         let id_field = model.fields().id();
 
         let mut selected_fields = SelectedFields::default();
-        selected_fields.add_scalar(id_field.clone());
+        selected_fields.add_scalar(id_field.clone(), false);
 
         let (db_name, base_query) = Self::get_nodes(model, query_arguments, &selected_fields);
 

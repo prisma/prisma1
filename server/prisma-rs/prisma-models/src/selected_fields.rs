@@ -9,8 +9,10 @@ pub trait IntoSelectedFields {
 
 #[derive(Debug, Default, Clone)]
 pub struct SelectedFields {
-    scalar: Vec<SelectedScalarField>,
+    pub scalar: Vec<SelectedScalarField>,
     pub relation: Vec<SelectedRelationField>,
+
+    /// FIXME: naming
     pub from_field: Option<Arc<RelationField>>,
     columns: OnceCell<Vec<Column>>,
 }
@@ -24,6 +26,10 @@ pub enum SelectedField {
 #[derive(Debug, Clone)]
 pub struct SelectedScalarField {
     pub field: Arc<ScalarField>,
+
+    /// Denotes whether or not a field was selected implicitly,
+    /// meaning it needs to be selected from the database, but not shown in the actual result set.
+    pub implicit: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -34,7 +40,10 @@ pub struct SelectedRelationField {
 
 impl From<Arc<ScalarField>> for SelectedField {
     fn from(sf: Arc<ScalarField>) -> SelectedField {
-        SelectedField::Scalar(SelectedScalarField { field: sf })
+        SelectedField::Scalar(SelectedScalarField {
+            field: sf,
+            implicit: false,
+        })
     }
 }
 
@@ -81,14 +90,23 @@ impl SelectedFields {
             .fields()
             .scalar()
             .iter()
-            .map(|field| SelectedField::Scalar(SelectedScalarField { field: field.clone() }))
+            .map(|field| {
+                SelectedField::Scalar(SelectedScalarField {
+                    field: field.clone(),
+                    implicit: false,
+                })
+            })
             .collect();
 
         Self::new(fields, from_field)
     }
 
-    pub fn add_scalar(&mut self, field: Arc<ScalarField>) {
-        self.scalar.push(SelectedScalarField { field });
+    pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
+        self.scalar.iter().filter(|sf| sf.implicit).collect()
+    }
+
+    pub fn add_scalar(&mut self, field: Arc<ScalarField>, implicit: bool) {
+        self.scalar.push(SelectedScalarField { field, implicit });
     }
 
     pub fn columns(&self) -> &[Column] {
@@ -129,5 +147,13 @@ impl SelectedFields {
             .filter(|sf| !sf.field.is_list)
             .map(|sf| sf.field.clone())
             .collect()
+    }
+
+    pub fn model(&self) -> ModelRef {
+        let field = self
+            .scalar
+            .first()
+            .expect("Expected at least one scalar field to be present");
+        field.field.model()
     }
 }

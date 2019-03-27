@@ -1,6 +1,6 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
-use core::{MultiPrismaQueryResult, PrismaQuery, PrismaQueryResult, RootQueryBuilder, SinglePrismaQueryResult};
+use core::{MultiPrismaQueryResult, PrismaQuery, PrismaQueryResult, RootQueryBuilder};
 use graphql_parser as gql;
 use prisma_models::{GraphqlId, PrismaValue, SingleNode};
 use serde::{Deserialize, Serialize};
@@ -103,8 +103,6 @@ fn serialize_many_nodes(many_nodes: &MultiPrismaQueryResult) -> PrismaResult<Jso
         .map(|vec| {
             vec.into_iter()
                 .fold(Ok(JsonMap::new()), |mut map: PrismaResult<JsonMap>, (name, value)| {
-
-
                     map.as_mut().unwrap().insert(name, serialize_prisma_value(&value)?);
                     map
                 })
@@ -167,18 +165,18 @@ fn json_envelope(id: &str, map: serde_json::Map<String, Value>) -> Value {
     Value::Object(envelope)
 }
 
-#[allow(dead_code)]
-fn get_result_name(result: &PrismaQueryResult) -> String {
-    match result {
-        PrismaQueryResult::Single(SinglePrismaQueryResult {
-            name,
-            result: _,
-            nested: _,
-        }) => name.clone(),
-        PrismaQueryResult::Multi(MultiPrismaQueryResult {
-            name,
-            result: _,
-            nested: _,
-        }) => name.clone(),
-    }
-}
+// #[allow(dead_code)]
+// fn get_result_name(result: &PrismaQueryResult) -> String {
+//     match result {
+//         PrismaQueryResult::Single(SinglePrismaQueryResult {
+//             name,
+//             result: _,
+//             nested: _,
+//         }) => name.clone(),
+//         PrismaQueryResult::Multi(MultiPrismaQueryResult {
+//             name,
+//             result: _,
+//             nested: _,
+//         }) => name.clone(),
+//     }
+// }

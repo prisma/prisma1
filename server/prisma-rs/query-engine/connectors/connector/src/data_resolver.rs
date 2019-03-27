@@ -13,7 +13,7 @@ pub trait DataResolver {
         &self,
         model: ModelRef,
         query_arguments: QueryArguments,
-        selected_fields: SelectedFields,
+        selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes>;
 
     fn get_related_nodes(
