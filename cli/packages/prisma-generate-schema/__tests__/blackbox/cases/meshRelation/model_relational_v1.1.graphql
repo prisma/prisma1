@@ -9,7 +9,7 @@ type A {
 
 type B {
   id: ID! @id
-  field: [String]
+  field: [String] @scalarList(strategy: RELATION)
   c: C @relation(link: TABLE, name: "BToC")
   b: [B]
   a: A! @relation(link: TABLE)

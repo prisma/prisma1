@@ -133,6 +133,7 @@ type City {
 }
 
 type Picture {
+  id: ID! @id
   url: String!
 }
 
@@ -332,6 +333,7 @@ enum NOTIFICATION_TYPE {
 
 exports[`Introspects defaultValue/relational correctly 1`] = `
 "type A {
+  id: ID! @id
   a: Int @default(value: 10) @unique
   b: Int! @default(value: 10)
   c: String! @unique
@@ -348,6 +350,7 @@ type AWithId {
 }
 
 type B {
+  id: ID! @id
   a: [A]
   a2: AWithId
 }"
@@ -362,12 +365,14 @@ exports[`Introspects embedded/relational correctly 1`] = `
 }
 
 type Child {
+  id: ID! @id
   c: String @unique
   friendsOpt: [Friend]
   jointOpt: Joint! @relation(link: TABLE)
 }
 
 type Friend {
+  id: ID! @id
   f: String @unique
   test: String
 }
@@ -394,18 +399,22 @@ type OnlyIdAndARelation2 {
 }
 
 type OnlyDate {
+  id: ID! @id
   createdAt: DateTime! @createdAt
 }
 
 type OnlyRelation {
+  id: ID! @id
   ref: [OnlyDate]
 }
 
 type OnlyRelationA {
+  id: ID! @id
   ref: OnlyRelationA! @relation(link: TABLE)
 }
 
 type OnlyRelationB {
+  id: ID! @id
   ref: OnlyRelationB @relation(link: TABLE)
 }"
 `;
@@ -425,6 +434,7 @@ enum UnusedEnum {
 }
 
 type A {
+  id: ID! @id
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum]
@@ -440,21 +450,25 @@ type AWithId {
 }
 
 type B {
+  id: ID! @id
   field: String!
   a: [A]
 }
 
 type C {
+  id: ID! @id
   field: [Int]
   a: AWithId!
 }
 
 type D {
+  id: ID! @id
   field: [DateTime]
   a: AWithId! @relation(link: TABLE)
 }
 
 type E {
+  id: ID! @id
   field: Json
   a: [A]
 }"
@@ -663,6 +677,7 @@ type Post {
 
 exports[`Introspects meshRelation/relational correctly 1`] = `
 "type A {
+  id: ID! @id
   field: Int!
   a: A! @relation(link: TABLE)
   b: [B]
@@ -671,6 +686,7 @@ exports[`Introspects meshRelation/relational correctly 1`] = `
 }
 
 type B {
+  id: ID! @id
   field: [String]
   c: C @relation(link: TABLE, name: \\"BToC\\")
   b: [B]
@@ -679,6 +695,7 @@ type B {
 }
 
 type C {
+  id: ID! @id
   expirationDate: DateTime
   c: C! @relation(link: TABLE)
   b: [B] @relation(name: \\"BToC\\")
@@ -687,6 +704,7 @@ type C {
 }
 
 type D {
+  id: ID! @id
   field: Json
   c: C! @relation(link: TABLE)
   b: B! @relation(link: TABLE)
@@ -695,6 +713,7 @@ type D {
 }
 
 type E {
+  id: ID! @id
   field: Json
   a: A! @relation(link: TABLE)
 }"
@@ -707,20 +726,24 @@ exports[`Introspects oneSidedConnection/relational correctly 1`] = `
 }
 
 type TypeWithoutId {
+  id: ID! @id
   field: String!
 }
 
 type A {
+  id: ID! @id
   x: TypeWithId! @relation(link: TABLE)
   y: TypeWithoutId! @relation(link: TABLE)
 }
 
 type B {
+  id: ID! @id
   x: TypeWithId @relation(link: TABLE)
   y: TypeWithoutId @relation(link: TABLE)
 }
 
 type C {
+  id: ID! @id
   x: [TypeWithId]
   y: [TypeWithoutId]
 }
@@ -757,18 +780,21 @@ type UserSpace {
 
 exports[`Introspects relationNames/relational correctly 1`] = `
 "type A {
+  id: ID! @id
   toB: B! @relation(link: TABLE, name: \\"RaToB\\")
   toB2: B! @relation(link: TABLE, name: \\"RaToB2\\")
   toC: C @relation(link: TABLE)
 }
 
 type B {
+  id: ID! @id
   toA: A! @relation(name: \\"RaToB\\")
   toA2: A! @relation(name: \\"RaToB2\\")
   toC: C! @relation(link: TABLE)
 }
 
 type C {
+  id: ID! @id
   toB: [B]
   toA: [A]
 }"
@@ -808,21 +834,25 @@ type BillingInfo {
 }
 
 type BillingInfoWithoutConnection {
+  id: ID! @id
   account: String!
 }
 
 type OptionalDetails {
+  id: ID! @id
   text: String!
   user: User!
 }
 
 type OptionalDetailsWithoutConnection {
+  id: ID! @id
   text: String!
 }"
 `;
 
 exports[`Introspects scalars/relational correctly 1`] = `
 "type LotsOfScalars {
+  id: ID! @id
   int: Int
   string: String
   float: Float
@@ -832,6 +862,7 @@ exports[`Introspects scalars/relational correctly 1`] = `
 }
 
 type LotsOfRequiredScalars {
+  id: ID! @id
   int: Int!
   string: String!
   float: Float!
@@ -841,6 +872,7 @@ type LotsOfRequiredScalars {
 }
 
 type LotsOfScalarLists {
+  id: ID! @id
   int: [Int]
   string: [String]
   float: [Float]
@@ -930,11 +962,13 @@ type MultiSelfReferencingBWithId {
 }
 
 type MultiSelfReferencingC {
+  id: ID! @id
   a: [MultiSelfReferencingC] @relation(name: \\"AToA\\")
   b: [MultiSelfReferencingC] @relation(name: \\"AToA\\")
 }
 
 type MultiSelfReferencingB {
+  id: ID! @id
   a: MultiSelfReferencingB @relation(link: TABLE, name: \\"AToA2\\")
   b: MultiSelfReferencingB @relation(name: \\"AToA2\\")
 }"
@@ -969,6 +1003,7 @@ exports[`Introspects twoSidedConnection/relational correctly 1`] = `
 }
 
 type AWithoutIdWithA {
+  id: ID! @id
   field: String!
   x: AWithA! @relation(link: TABLE)
 }
@@ -980,6 +1015,7 @@ type BWithIdWithA {
 }
 
 type BWithoutIdWithA {
+  id: ID! @id
   field: String!
   x: AWithB @relation(link: TABLE)
 }
@@ -991,6 +1027,7 @@ type CWithIdWithA {
 }
 
 type CWithoutIdWithA {
+  id: ID! @id
   field: String!
   x: [AWithC]
 }
@@ -1002,6 +1039,7 @@ type AWithIdWithB {
 }
 
 type AWithoutIdWithB {
+  id: ID! @id
   field: String!
   x: BWithA! @relation(link: TABLE)
 }
@@ -1013,6 +1051,7 @@ type BWithIdWithB {
 }
 
 type BWithoutIdWithB {
+  id: ID! @id
   field: String!
   x: BWithB @relation(link: TABLE)
 }
@@ -1024,6 +1063,7 @@ type CWithIdWithB {
 }
 
 type CWithoutIdWithB {
+  id: ID! @id
   field: String!
   x: [BWithC]
 }
@@ -1035,6 +1075,7 @@ type AWithIdWithC {
 }
 
 type AWithoutIdWithC {
+  id: ID! @id
   field: String!
   x: CWithA! @relation(link: TABLE)
 }
@@ -1046,6 +1087,7 @@ type BWithIdWithC {
 }
 
 type BWithoutIdWithC {
+  id: ID! @id
   field: String!
   x: CWithB @relation(link: TABLE)
 }
@@ -1057,51 +1099,61 @@ type CWithIdWithC {
 }
 
 type CWithoutIdWithC {
+  id: ID! @id
   field: String!
   x: [CWithC]
 }
 
 type AWithA {
+  id: ID! @id
   x: AWithIdWithA!
   y: AWithoutIdWithA!
 }
 
 type AWithB {
+  id: ID! @id
   x: BWithIdWithA!
   y: BWithoutIdWithA!
 }
 
 type AWithC {
+  id: ID! @id
   x: CWithIdWithA! @relation(link: TABLE)
   y: CWithoutIdWithA! @relation(link: TABLE)
 }
 
 type BWithA {
+  id: ID! @id
   x: AWithIdWithB
   y: AWithoutIdWithB
 }
 
 type BWithB {
+  id: ID! @id
   x: BWithIdWithB
   y: BWithoutIdWithB
 }
 
 type BWithC {
+  id: ID! @id
   x: CWithIdWithB @relation(link: TABLE)
   y: CWithoutIdWithB @relation(link: TABLE)
 }
 
 type CWithA {
+  id: ID! @id
   x: [AWithIdWithC]
   y: [AWithoutIdWithC]
 }
 
 type CWithB {
+  id: ID! @id
   x: [BWithIdWithC]
   y: [BWithoutIdWithC]
 }
 
 type CWithC {
+  id: ID! @id
   x: [CWithIdWithC]
   y: [CWithoutIdWithC]
 }"
@@ -1114,6 +1166,7 @@ exports[`Introspects withAndWithoutId/relational correctly 1`] = `
 }
 
 type TypeWithoutId {
+  id: ID! @id
   field: String!
 }"
 `;

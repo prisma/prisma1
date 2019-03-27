@@ -66,7 +66,7 @@ export default async function blackBoxTest(name: string) {
     normalizedWithReference,
   )
 
-  expect(legacyRenderedWithReference).toEqual(model)
+  expect(legacyRenderedWithReference.trim()).toEqual(model.trim())
 
   // V2 rendering
   const renderer = DefaultRenderer.create(DatabaseType.postgres, true)

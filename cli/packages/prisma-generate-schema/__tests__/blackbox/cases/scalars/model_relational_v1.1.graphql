@@ -20,12 +20,12 @@ type LotsOfRequiredScalars {
 
 type LotsOfScalarLists {
   id: ID! @id
-  int: [Int]
-  string: [String]
-  float: [Float]
-  dateTime: [DateTime]
-  json: [Json]
-  boolean: [Boolean]
+  int: [Int] @scalarList(strategy: RELATION)
+  string: [String] @scalarList(strategy: RELATION)
+  float: [Float] @scalarList(strategy: RELATION)
+  dateTime: [DateTime] @scalarList(strategy: RELATION)
+  json: [Json] @scalarList(strategy: RELATION)
+  boolean: [Boolean] @scalarList(strategy: RELATION)
 }
 
 type LotsOfScalarsWithID {
@@ -50,10 +50,10 @@ type LotsOfRequiredScalarsWithID {
 
 type LotsOfScalarListsWithID {
   id: ID! @id
-  int: [Int]
-  string: [String]
-  float: [Float]
-  dateTime: [DateTime]
-  json: [Json]
-  boolean: [Boolean]
+  int: [Int] @scalarList(strategy: RELATION)
+  string: [String] @scalarList(strategy: RELATION)
+  float: [Float] @scalarList(strategy: RELATION)
+  dateTime: [DateTime] @scalarList(strategy: RELATION)
+  json: [Json] @scalarList(strategy: RELATION)
+  boolean: [Boolean] @scalarList(strategy: RELATION)
 }

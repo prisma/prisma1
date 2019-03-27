@@ -35,13 +35,13 @@ type B {
 
 type C {
   id: ID! @id
-  field: [Int]
+  field: [Int] @scalarList(strategy: RELATION)
   a: AWithId!
 }
 
 type D {
   id: ID! @id
-  field: [DateTime]
+  field: [DateTime] @scalarList(strategy: RELATION)
   a: AWithId! @relation(link: TABLE)
 }
 

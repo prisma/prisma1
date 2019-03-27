@@ -37,6 +37,10 @@ export default class RelationalRenderer extends Renderer {
     return false
   }
 
+  protected shouldCreateScalarListDirective(field: IGQLField) {
+    return false
+  }
+
   protected shouldCreateIsUniqueFieldDirective(field: IGQLField) {
     return field.isUnique || field.isId
   }
