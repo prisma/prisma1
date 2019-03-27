@@ -91,7 +91,7 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       modelType     <- dataModel.modelTypes
       relationField <- modelType.relationFields
       cascade       = relationField.cascade
-      if capabilities.isMongo && (cascade == OnDelete.Cascade || cascade == OnDelete.SetNull)
+      if capabilities.isMongo && cascade == OnDelete.Cascade
     } yield {
       DeployErrors.cascadeUsedWithMongo(relationField)
     }
