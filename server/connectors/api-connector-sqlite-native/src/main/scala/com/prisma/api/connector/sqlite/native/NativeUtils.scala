@@ -116,7 +116,6 @@ object NativeUtils {
   def toPrismaCondition(scalarCondition: ScalarCondition): protocol.ScalarFilter.Condition = {
     scalarCondition match {
       case Equals(value) =>
-
         protocol.ScalarFilter.Condition.Equals(protocol.ValueContainer(toPrismaValue(value)))
       case NotEquals(value) =>
         protocol.ScalarFilter.Condition.NotEquals(protocol.ValueContainer(toPrismaValue(value)))
@@ -169,24 +168,24 @@ object NativeUtils {
     }
   }
 
-  def toPrismaFilter(filter: Filter): protocol.Filter = {
+  def toProtocolFilter(filter: Filter): protocol.Filter = {
     filter match {
       case AndFilter(filters) =>
         protocol.Filter(
           protocol.Filter.Type.And(
-            protocol.AndFilter(filters.map(toPrismaFilter))
+            protocol.AndFilter(filters.map(toProtocolFilter))
           )
         )
       case OrFilter(filters) =>
         protocol.Filter(
           protocol.Filter.Type.Or(
-            protocol.OrFilter(filters.map(toPrismaFilter))
+            protocol.OrFilter(filters.map(toProtocolFilter))
           )
         )
       case NotFilter(filters) =>
         protocol.Filter(
           protocol.Filter.Type.Not(
-            protocol.NotFilter(filters.map(toPrismaFilter))
+            protocol.NotFilter(filters.map(toProtocolFilter))
           )
         )
       case ScalarFilter(field, scalarCondition) =>
@@ -208,7 +207,7 @@ object NativeUtils {
           protocol.Filter.Type.Relation(
             protocol.RelationFilter(
               protocol.RelationalField(field.dbName, protocol.SelectedFields(Vector.empty)),
-              toPrismaFilter(nestedFilter),
+              toProtocolFilter(nestedFilter),
               toRelationFilterCondition(condition)
             )
           )
@@ -242,7 +241,7 @@ object NativeUtils {
       queryArguments.first,
       queryArguments.before.map(toPrismaId),
       queryArguments.last,
-      queryArguments.filter.map(toPrismaFilter),
+      queryArguments.filter.map(toProtocolFilter),
       queryArguments.orderBy.map(toPrismaOrderBy)
     )
   }

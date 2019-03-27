@@ -181,7 +181,7 @@ case class SQLiteDatabaseMutactionExecutor2(
           prisma.protocol.UpdateNodes(
             header = prisma.protocol.Header(headerName),
             modelName = m.model.name,
-            filter = toPrismaFilter(m.whereFilter.getOrElse(AndFilter(Vector.empty))),
+            filter = toProtocolFilter(m.whereFilter.getOrElse(AndFilter(Vector.empty))),
             nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
             listArgs = listArgsToProtocolArgs(m.listArgs),
           ))
@@ -193,7 +193,7 @@ case class SQLiteDatabaseMutactionExecutor2(
           prisma.protocol.DeleteNodes(
             header = prisma.protocol.Header(headerName),
             modelName = m.model.name,
-            filter = toPrismaFilter(m.whereFilter.getOrElse(AndFilter(Vector.empty))),
+            filter = toProtocolFilter(m.whereFilter.getOrElse(AndFilter(Vector.empty))),
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
@@ -210,6 +210,129 @@ case class SQLiteDatabaseMutactionExecutor2(
       case m: ImportNodes         => ImportNodesInterpreter(m, shouldCreateRelayIds = manageRelayIds)
       case m: ImportRelations     => ImportRelationsInterpreter(m)
       case m: ImportScalarLists   => ImportScalarListsInterpreter(m)
+    }
+  }
+
+  def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = {
+    import com.prisma.shared.models.ProjectJsonFormatter._
+    val projectJson = ByteString.copyFromUtf8(Json.toJson(mutaction.project).toString())
+    val headerName  = mutaction.getClass.getSimpleName
+
+    val DO_NOT_FORWARD_THIS_ONE = false
+
+    mutaction match {
+      case m: NestedCreateNode if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedCreate(
+          nestedCreateNodeToProtocol(m)
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedUpdateNode if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedUpdate(
+          nestedUpdateNodeToProtocol(m)
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedUpsertNode if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedUpsert(
+          prisma.protocol.NestedUpsertNode(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.relationField.model.name,
+            fieldName = m.relationField.name,
+            where = m.where.map(toNodeSelector),
+            create = nestedCreateNodeToProtocol(m.create),
+            update = nestedUpdateNodeToProtocol(m.update)
+          )
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedDeleteNode if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedDelete(
+          prisma.protocol.NestedDeleteNode(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.relationField.model.name,
+            fieldName = m.relationField.name,
+            where = m.where.map(toNodeSelector)
+          )
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedConnect if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedConnect(
+          prisma.protocol.NestedConnect(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.relationField.model.name,
+            fieldName = m.relationField.name,
+            where = toNodeSelector(m.where),
+            topIsCreate = m.topIsCreate
+          )
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedDisconnect if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedDisconnect(
+          prisma.protocol.NestedDisconnect(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.relationField.model.name,
+            fieldName = m.relationField.name,
+            where = m.where.map(toNodeSelector)
+          )
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedSet if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedSet(
+          prisma.protocol.NestedSet(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.relationField.model.name,
+            fieldName = m.relationField.name,
+            wheres = m.wheres.map(toNodeSelector)
+          )
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedUpdateNodes if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedUpdateNodes(
+          prisma.protocol.NestedUpdateNodes(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.relationField.model.name,
+            fieldName = m.relationField.name,
+            filter = m.whereFilter.map(toProtocolFilter),
+            nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
+            listArgs = listArgsToProtocolArgs(m.listArgs),
+          )
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedDeleteNodes if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedDeleteNodes(
+          prisma.protocol.NestedDeleteNodes(
+            header = prisma.protocol.Header(headerName),
+            modelName = m.relationField.model.name,
+            fieldName = m.relationField.name,
+            filter = m.whereFilter.map(toProtocolFilter),
+          )
+        )
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        nested_mutaction_interpreter(envelope, m)
+
+      case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = manageRelayIds)
+      case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
+      case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
+      case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+      case m: NestedConnect     => NestedConnectInterpreter(m)
+      case m: NestedSet         => NestedSetInterpreter(m)
+      case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
+      case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
+      case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     }
   }
 
@@ -233,6 +356,18 @@ case class SQLiteDatabaseMutactionExecutor2(
     )
   }
 
+  private def nestedCreateNodeToProtocol(m: NestedCreateNode) = {
+    prisma.protocol.NestedCreateNode(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
+      listArgs = listArgsToProtocolArgs(m.listArgs),
+      topIsCreate = m.topIsCreate,
+      nested = emptyNested,
+    )
+  }
+
   private def updateNodeToProtocol(m: TopLevelUpdateNode) = {
     prisma.protocol.UpdateNode(
       header = prisma.protocol.Header(m.getClass.getSimpleName),
@@ -243,16 +378,16 @@ case class SQLiteDatabaseMutactionExecutor2(
     )
   }
 
-  def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = manageRelayIds)
-    case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
-    case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
-    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
-    case m: NestedConnect     => NestedConnectInterpreter(m)
-    case m: NestedSet         => NestedSetInterpreter(m)
-    case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
-    case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
-    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+  private def nestedUpdateNodeToProtocol(m: NestedUpdateNode) = {
+    prisma.protocol.NestedUpdateNode(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      where = m.where.map(toNodeSelector),
+      nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
+      listArgs = listArgsToProtocolArgs(m.listArgs),
+      nested = emptyNested,
+    )
   }
 
   private def listArgsToProtocolArgs(listArgs: Vector[(String, ListGCValue)]): protocol.PrismaArgs = {
@@ -275,54 +410,79 @@ case class SQLiteDatabaseMutactionExecutor2(
 
     new TopLevelDatabaseMutactionInterpreter {
       override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
-        SimpleDBIO { x =>
-          val executionResult = NativeBinding.execute_mutaction(protoMutaction, errorHandler)
-          executionResult.`type` match {
-            case prisma.protocol.DatabaseMutactionResult.Type.Create(result) =>
-              val m = mutaction match {
-                case m: CreateNode => m
-                case m: UpsertNode => m.create
-                case m             => sys.error(s"mutaction of type [$m] is disallowed here")
-              }
+        forwarding_dbio(protoMutaction, mutaction, errorHandler)
+      }
 
-              CreateNodeResult(toIdGcValue(result.id), m)
+      override val errorMapper: PartialFunction[Throwable, APIErrors.ClientApiError] = sharedErrorMapper
+    }
+  }
 
-            case prisma.protocol.DatabaseMutactionResult.Type.Update(result) =>
-              val m = mutaction match {
-                case m: UpdateNode => m
-                case m: UpsertNode => m.update
-                case m             => sys.error(s"mutaction of type [$m] is disallowed here")
-              }
+  private def nested_mutaction_interpreter(
+      protoMutaction: prisma.protocol.DatabaseMutaction,
+      mutaction: DatabaseMutaction,
+      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = PartialFunction.empty
+  ): NestedDatabaseMutactionInterpreter = {
 
-              UpdateNodeResult(toIdGcValue(result.id), PrismaNode.dummy, m)
+    new NestedDatabaseMutactionInterpreter {
+      override protected def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
+        forwarding_dbio(protoMutaction, mutaction, errorHandler)
+      }
 
-            case prisma.protocol.DatabaseMutactionResult.Type.Delete(_) =>
-              DeleteNodeResult(PrismaNode.dummy, mutaction.asInstanceOf[DeleteNode])
+      override val errorMapper: PartialFunction[Throwable, APIErrors.ClientApiError] = sharedErrorMapper
+    }
+  }
 
-            case prisma.protocol.DatabaseMutactionResult.Type.Many(result) =>
-              ManyNodesResult(mutaction.asInstanceOf[FinalMutaction], result.count)
-
-            case prisma.protocol.DatabaseMutactionResult.Type.Unit(_) =>
-              UnitDatabaseMutactionResult
-
-            case prisma.protocol.DatabaseMutactionResult.Type.Empty =>
-              UnitDatabaseMutactionResult
+  private def forwarding_dbio(
+      protoMutaction: prisma.protocol.DatabaseMutaction,
+      mutaction: DatabaseMutaction,
+      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = PartialFunction.empty
+  ): DBIO[DatabaseMutactionResult] = {
+    SimpleDBIO { _ =>
+      val executionResult = NativeBinding.execute_mutaction(protoMutaction, errorHandler)
+      executionResult.`type` match {
+        case prisma.protocol.DatabaseMutactionResult.Type.Create(result) =>
+          val m = mutaction match {
+            case m: CreateNode => m
+            case m: UpsertNode => m.create
+            case m             => sys.error(s"mutaction of type [$m] is disallowed here")
           }
-        }
-      }
 
-      override val errorMapper: PartialFunction[Throwable, APIErrors.ClientApiError] = {
-        case UniqueConstraintViolation(fieldName) => {
-          val splitted = fieldName.split('.')
-          APIErrors.UniqueConstraintViolation(splitted(0), "Field name = " + splitted(1))
-        }
-        case NodeNotFoundForWhere(modelName, fieldName, value) => {
-          APIErrors.NodeNotFoundForWhereErrorNative(modelName, value, fieldName)
-        }
-        case FieldCannotBeNull(fieldName) => {
-          APIErrors.FieldCannotBeNull(fieldName)
-        }
+          CreateNodeResult(toIdGcValue(result.id), m)
+
+        case prisma.protocol.DatabaseMutactionResult.Type.Update(result) =>
+          val m = mutaction match {
+            case m: UpdateNode => m
+            case m: UpsertNode => m.update
+            case m             => sys.error(s"mutaction of type [$m] is disallowed here")
+          }
+
+          UpdateNodeResult(toIdGcValue(result.id), PrismaNode.dummy, m)
+
+        case prisma.protocol.DatabaseMutactionResult.Type.Delete(_) =>
+          DeleteNodeResult(PrismaNode.dummy, mutaction.asInstanceOf[DeleteNode])
+
+        case prisma.protocol.DatabaseMutactionResult.Type.Many(result) =>
+          ManyNodesResult(mutaction.asInstanceOf[FinalMutaction], result.count)
+
+        case prisma.protocol.DatabaseMutactionResult.Type.Unit(_) =>
+          UnitDatabaseMutactionResult
+
+        case prisma.protocol.DatabaseMutactionResult.Type.Empty =>
+          UnitDatabaseMutactionResult
       }
+    }
+  }
+
+  private val sharedErrorMapper: PartialFunction[Throwable, APIErrors.ClientApiError] = {
+    case UniqueConstraintViolation(fieldName) => {
+      val splitted = fieldName.split('.')
+      APIErrors.UniqueConstraintViolation(splitted(0), "Field name = " + splitted(1))
+    }
+    case NodeNotFoundForWhere(modelName, fieldName, value) => {
+      APIErrors.NodeNotFoundForWhereErrorNative(modelName, value, fieldName)
+    }
+    case FieldCannotBeNull(fieldName) => {
+      APIErrors.FieldCannotBeNull(fieldName)
     }
   }
 
