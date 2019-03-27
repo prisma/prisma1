@@ -12,13 +12,11 @@ pub struct UpdateNode {
 
 #[derive(Debug, Clone)]
 pub struct NestedUpdateNode {
-    pub project: ProjectRef,
-    pub where_: NodeSelector,
+    pub relation_field: Arc<RelationField>,
+    pub where_: Option<NodeSelector>,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
     pub nested_mutactions: NestedMutactions,
-
-    pub relation_field: Arc<RelationField>,
 }
 
 #[derive(Debug, Clone)]
@@ -31,9 +29,8 @@ pub struct UpdateNodes {
 
 #[derive(Debug, Clone)]
 pub struct NestedUpdateNodes {
-    pub model: ModelRef,
-    pub filter: Filter,
+    pub relation_field: Arc<RelationField>,
+    pub filter: Option<Filter>,
     pub non_list_args: PrismaArgs,
     pub list_args: Vec<(String, PrismaListValue)>,
-    pub relation_field: Arc<RelationField>,
 }

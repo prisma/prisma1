@@ -48,7 +48,7 @@ pub trait DatabaseMutactionExecutor {
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNodes(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::ResetData(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(_) => panic!("nested mutactions are not supported yet!"),
+            DatabaseMutaction::Nested(_) => panic!("this nested mutaction is not supported yet!"),
         };
 
         Ok(results)

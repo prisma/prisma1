@@ -9,10 +9,8 @@ pub struct DeleteNode {
 
 #[derive(Debug, Clone)]
 pub struct NestedDeleteNode {
-    pub project: ProjectRef,
-    pub where_: NodeSelector,
-
     pub relation_field: Arc<RelationField>,
+    pub where_: Option<NodeSelector>,
 }
 
 #[derive(Debug, Clone)]
@@ -23,8 +21,7 @@ pub struct DeleteNodes {
 
 #[derive(Debug, Clone)]
 pub struct NestedDeleteNodes {
-    pub model: ModelRef,
-    pub filter: Filter,
-
     pub relation_field: Arc<RelationField>,
+    pub filter: Option<Filter>,
+
 }

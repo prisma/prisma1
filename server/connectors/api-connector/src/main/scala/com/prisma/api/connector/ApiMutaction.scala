@@ -149,7 +149,7 @@ sealed trait UpsertNode extends DatabaseMutaction {
 case class TopLevelUpsertNode(
     project: Project,
     where: NodeSelector,
-    create: CreateNode,
+    create: TopLevelCreateNode,
     update: TopLevelUpdateNode
 ) extends UpsertNode
     with TopLevelDatabaseMutaction

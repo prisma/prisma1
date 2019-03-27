@@ -12,35 +12,11 @@ pub struct CreateNode {
 
 #[derive(Debug, Clone)]
 pub struct NestedCreateNode {
-    pub model: ModelRef,
-    pub non_list_args: PrismaArgs,
-    pub list_args: PrismaArgs,
-    pub nested_mutactions: NestedMutactions,
-
     pub relation_field: Arc<RelationField>,
+    pub non_list_args: PrismaArgs,
+    pub list_args: Vec<(String, PrismaListValue)>,
     pub top_is_create: bool,
-}
-
-impl CreateNode {
-    pub fn new(
-        model: ModelRef,
-        non_list_args: PrismaArgs,
-        list_args: Vec<(String, PrismaListValue)>,
-        nested_creates: Vec<NestedCreateNode>,
-        //nested_connects: Vec<Connect>,
-    ) -> Self {
-        let nested_mutactions = NestedMutactions {
-            creates: nested_creates,
-            ..Default::default()
-        };
-
-        Self {
-            model,
-            non_list_args,
-            list_args,
-            nested_mutactions,
-        }
-    }
+    pub nested_mutactions: NestedMutactions,
 }
 
 impl From<CreateNode> for DatabaseMutaction {

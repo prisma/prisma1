@@ -20,6 +20,7 @@ pub use upsert_node::*;
 
 use super::{Filter, NodeSelector};
 use prisma_models::prelude::*;
+use std::sync::Arc;
 
 pub trait NestedMutaction {
     fn nested_mutactions(&self) -> &[&DatabaseMutaction];
@@ -54,51 +55,51 @@ pub enum TopLevelDatabaseMutaction {
 #[derive(Debug, Clone)]
 pub enum NestedDatabaseMutaction {
     CreateNode(NestedCreateNode),
+    UpdateNode(NestedUpdateNode),
+    UpsertNode(NestedUpsertNode),
+    DeleteNode(NestedDeleteNode),
+    Connect(NestedConnect),
+    Disconnect(NestedDisconnect),
+    Set(NestedSet),
+    UpdateNodes(NestedUpdateNodes),
+    DeleteNodes(NestedDeleteNodes),
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct NestedMutactions {
     pub creates: Vec<NestedCreateNode>,
     pub updates: Vec<NestedUpdateNode>,
     pub upserts: Vec<NestedUpsertNode>,
     pub deletes: Vec<NestedDeleteNode>,
+    pub connects: Vec<NestedConnect>,
+    pub disconnects: Vec<NestedDisconnect>,
+    pub sets: Vec<NestedSet>,
     pub update_manys: Vec<NestedUpdateNodes>,
     pub delete_manys: Vec<NestedDeleteNodes>,
-    /*
-    pub connects: Vec<NestedConnect>,
-    pub sets: Vec<NestedSet>,
-    pub disconnects: Vec<NestedDisconnect>,
-    */
 }
 
-// #[derive(Debug, Default, Clone, PartialEq)]
-// pub struct NestedConnect {
-//     pub project: ProjectRef,
-//     pub where_: NodeSelector,
-
-//     pub relation_field: Arc<RelationField>,
-//     pub top_is_create: bool,
-// }
+#[derive(Debug, Clone)]
+pub struct NestedConnect {
+    pub relation_field: Arc<RelationField>,
+    pub where_: NodeSelector,
+    pub top_is_create: bool,
+}
 
 // SET
 
-// #[derive(Debug, Default, Clone, PartialEq)]
-// pub struct NestedSet {
-//     pub project: ProjectRef,
-//     pub wheres: Vec<NodeSelector>,
-
-//     pub relation_field: Arc<RelationField>,
-// }
+#[derive(Debug, Clone)]
+pub struct NestedSet {
+    pub relation_field: Arc<RelationField>,
+    pub wheres: Vec<NodeSelector>,
+}
 
 // DISCONNECT
 
-// #[derive(Debug, Default, Clone, PartialEq)]
-// pub struct NestedDisconnect {
-//     pub project: ProjectRef,
-//     pub where_: Option<NodeSelector>,
-
-//     pub relation_field: Arc<RelationField>,
-// }
+#[derive(Debug, Clone)]
+pub struct NestedDisconnect {
+    pub relation_field: Arc<RelationField>,
+    pub where_: Option<NodeSelector>,
+}
 
 #[derive(Debug, Clone)]
 pub struct ResetData {
