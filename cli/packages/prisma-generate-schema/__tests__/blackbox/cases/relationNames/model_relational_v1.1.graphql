@@ -1,0 +1,16 @@
+type A {
+  toB: B! @relation(link: TABLE)
+  toB2: B! @relation(link: TABLE)
+  toC: C @relation(link: TABLE)
+}
+
+type B {
+  toA: A! @relation(link: TABLE)
+  toA2: A! @relation(link: TABLE)
+  toC: C! @relation(link: TABLE)
+}
+
+type C {
+  toB: [B] @relation(link: TABLE)
+  toA: [A] @relation(link: TABLE)
+}

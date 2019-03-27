@@ -16,11 +16,6 @@ type BatchPayload {
 scalar DateTime
 
 """
-Raw JSON value
-"""
-scalar Json
-
-"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
@@ -106,6 +101,8 @@ type PostConnection {
 
 input PostCreateInput {
   id: ID
+  createdAt: DateTime!
+  updatedAt: DateTime!
   published: Boolean
   title: String!
   content: String
@@ -119,6 +116,8 @@ input PostCreateManyWithoutAuthorInput {
 
 input PostCreateWithoutAuthorInput {
   id: ID
+  createdAt: DateTime!
+  updatedAt: DateTime!
   published: Boolean
   title: String!
   content: String
@@ -412,14 +411,6 @@ input PostSubscriptionWhereInput {
   """
   AND: [PostSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [PostSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PostSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -439,6 +430,8 @@ input PostSubscriptionWhereInput {
 }
 
 input PostUpdateInput {
+  createdAt: DateTime
+  updatedAt: DateTime
   published: Boolean
   title: String
   content: String
@@ -446,12 +439,16 @@ input PostUpdateInput {
 }
 
 input PostUpdateManyDataInput {
+  createdAt: DateTime
+  updatedAt: DateTime
   published: Boolean
   title: String
   content: String
 }
 
 input PostUpdateManyMutationInput {
+  createdAt: DateTime
+  updatedAt: DateTime
   published: Boolean
   title: String
   content: String
@@ -475,6 +472,8 @@ input PostUpdateManyWithWhereNestedInput {
 }
 
 input PostUpdateWithoutAuthorDataInput {
+  createdAt: DateTime
+  updatedAt: DateTime
   published: Boolean
   title: String
   content: String
@@ -496,14 +495,6 @@ input PostWhereInput {
   Logical AND on all given filters.
   """
   AND: [PostWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PostWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PostWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -817,10 +808,6 @@ enum UserOrderByInput {
   email_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type UserPreviousValues {
@@ -841,14 +828,6 @@ input UserSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [UserSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [UserSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -901,14 +880,6 @@ input UserWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [UserWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [UserWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1068,9 +1039,7 @@ input UserWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
-  posts_every: PostWhereInput
   posts_some: PostWhereInput
-  posts_none: PostWhereInput
 }
 
 input UserWhereUniqueInput {

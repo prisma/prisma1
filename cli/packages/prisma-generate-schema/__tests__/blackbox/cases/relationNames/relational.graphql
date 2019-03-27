@@ -1,7 +1,8 @@
-type A {
+type A implements Node {
   toB: B!
   toB2: B!
   toC: C
+  id: ID!
 }
 
 """
@@ -28,14 +29,17 @@ input ACreateInput {
 
 input ACreateManyWithoutToCInput {
   create: [ACreateWithoutToCInput!]
+  connect: [AWhereUniqueInput!]
 }
 
 input ACreateOneWithoutToB2Input {
   create: ACreateWithoutToB2Input
+  connect: AWhereUniqueInput
 }
 
 input ACreateOneWithoutToBInput {
   create: ACreateWithoutToBInput
+  connect: AWhereUniqueInput
 }
 
 input ACreateWithoutToB2Input {
@@ -85,16 +89,85 @@ type AggregateC {
 enum AOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+}
+
+type APreviousValues {
+  id: ID!
+}
+
+input AScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
 }
 
 type ASubscriptionPayload {
   mutation: MutationType!
   node: A
   updatedFields: [String!]
+  previousValues: APreviousValues
 }
 
 input ASubscriptionWhereInput {
@@ -102,14 +175,6 @@ input ASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [ASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -129,28 +194,145 @@ input ASubscriptionWhereInput {
   node: AWhereInput
 }
 
+input AUpdateInput {
+  toB: BUpdateOneRequiredWithoutToAInput
+  toB2: BUpdateOneRequiredWithoutToA2Input
+  toC: CUpdateOneWithoutToAInput
+}
+
+input AUpdateManyWithoutToCInput {
+  create: [ACreateWithoutToCInput!]
+  connect: [AWhereUniqueInput!]
+  set: [AWhereUniqueInput!]
+  disconnect: [AWhereUniqueInput!]
+  delete: [AWhereUniqueInput!]
+  update: [AUpdateWithWhereUniqueWithoutToCInput!]
+  deleteMany: [AScalarWhereInput!]
+  upsert: [AUpsertWithWhereUniqueWithoutToCInput!]
+}
+
+input AUpdateOneRequiredWithoutToB2Input {
+  create: ACreateWithoutToB2Input
+  connect: AWhereUniqueInput
+  update: AUpdateWithoutToB2DataInput
+  upsert: AUpsertWithoutToB2Input
+}
+
+input AUpdateOneRequiredWithoutToBInput {
+  create: ACreateWithoutToBInput
+  connect: AWhereUniqueInput
+  update: AUpdateWithoutToBDataInput
+  upsert: AUpsertWithoutToBInput
+}
+
+input AUpdateWithoutToB2DataInput {
+  toB: BUpdateOneRequiredWithoutToAInput
+  toC: CUpdateOneWithoutToAInput
+}
+
+input AUpdateWithoutToBDataInput {
+  toB2: BUpdateOneRequiredWithoutToA2Input
+  toC: CUpdateOneWithoutToAInput
+}
+
+input AUpdateWithoutToCDataInput {
+  toB: BUpdateOneRequiredWithoutToAInput
+  toB2: BUpdateOneRequiredWithoutToA2Input
+}
+
+input AUpdateWithWhereUniqueWithoutToCInput {
+  where: AWhereUniqueInput!
+  data: AUpdateWithoutToCDataInput!
+}
+
+input AUpsertWithoutToB2Input {
+  update: AUpdateWithoutToB2DataInput!
+  create: ACreateWithoutToB2Input!
+}
+
+input AUpsertWithoutToBInput {
+  update: AUpdateWithoutToBDataInput!
+  create: ACreateWithoutToBInput!
+}
+
+input AUpsertWithWhereUniqueWithoutToCInput {
+  where: AWhereUniqueInput!
+  update: AUpdateWithoutToCDataInput!
+  create: ACreateWithoutToCInput!
+}
+
 input AWhereInput {
   """
   Logical AND on all given filters.
   """
   AND: [AWhereInput!]
+  id: ID
   """
-  Logical OR on all given filters.
+  All values that are not equal to given value.
   """
-  OR: [AWhereInput!]
+  id_not: ID
   """
-  Logical NOT on all given filters combined by AND.
+  All values that are contained in given list.
   """
-  NOT: [AWhereInput!]
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   toB: BWhereInput
   toB2: BWhereInput
   toC: CWhereInput
 }
 
-type B {
+input AWhereUniqueInput {
+  id: ID
+}
+
+type B implements Node {
   toA: A!
   toA2: A!
   toC: C!
+  id: ID!
 }
 
 type BatchPayload {
@@ -184,14 +366,17 @@ input BCreateInput {
 
 input BCreateManyWithoutToCInput {
   create: [BCreateWithoutToCInput!]
+  connect: [BWhereUniqueInput!]
 }
 
 input BCreateOneWithoutToA2Input {
   create: BCreateWithoutToA2Input
+  connect: BWhereUniqueInput
 }
 
 input BCreateOneWithoutToAInput {
   create: BCreateWithoutToAInput
+  connect: BWhereUniqueInput
 }
 
 input BCreateWithoutToA2Input {
@@ -229,16 +414,85 @@ type BEdge {
 enum BOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+}
+
+type BPreviousValues {
+  id: ID!
+}
+
+input BScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [BScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
 }
 
 type BSubscriptionPayload {
   mutation: MutationType!
   node: B
   updatedFields: [String!]
+  previousValues: BPreviousValues
 }
 
 input BSubscriptionWhereInput {
@@ -246,14 +500,6 @@ input BSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -273,27 +519,144 @@ input BSubscriptionWhereInput {
   node: BWhereInput
 }
 
+input BUpdateInput {
+  toA: AUpdateOneRequiredWithoutToBInput
+  toA2: AUpdateOneRequiredWithoutToB2Input
+  toC: CUpdateOneRequiredWithoutToBInput
+}
+
+input BUpdateManyWithoutToCInput {
+  create: [BCreateWithoutToCInput!]
+  connect: [BWhereUniqueInput!]
+  set: [BWhereUniqueInput!]
+  disconnect: [BWhereUniqueInput!]
+  delete: [BWhereUniqueInput!]
+  update: [BUpdateWithWhereUniqueWithoutToCInput!]
+  deleteMany: [BScalarWhereInput!]
+  upsert: [BUpsertWithWhereUniqueWithoutToCInput!]
+}
+
+input BUpdateOneRequiredWithoutToA2Input {
+  create: BCreateWithoutToA2Input
+  connect: BWhereUniqueInput
+  update: BUpdateWithoutToA2DataInput
+  upsert: BUpsertWithoutToA2Input
+}
+
+input BUpdateOneRequiredWithoutToAInput {
+  create: BCreateWithoutToAInput
+  connect: BWhereUniqueInput
+  update: BUpdateWithoutToADataInput
+  upsert: BUpsertWithoutToAInput
+}
+
+input BUpdateWithoutToA2DataInput {
+  toA: AUpdateOneRequiredWithoutToBInput
+  toC: CUpdateOneRequiredWithoutToBInput
+}
+
+input BUpdateWithoutToADataInput {
+  toA2: AUpdateOneRequiredWithoutToB2Input
+  toC: CUpdateOneRequiredWithoutToBInput
+}
+
+input BUpdateWithoutToCDataInput {
+  toA: AUpdateOneRequiredWithoutToBInput
+  toA2: AUpdateOneRequiredWithoutToB2Input
+}
+
+input BUpdateWithWhereUniqueWithoutToCInput {
+  where: BWhereUniqueInput!
+  data: BUpdateWithoutToCDataInput!
+}
+
+input BUpsertWithoutToA2Input {
+  update: BUpdateWithoutToA2DataInput!
+  create: BCreateWithoutToA2Input!
+}
+
+input BUpsertWithoutToAInput {
+  update: BUpdateWithoutToADataInput!
+  create: BCreateWithoutToAInput!
+}
+
+input BUpsertWithWhereUniqueWithoutToCInput {
+  where: BWhereUniqueInput!
+  update: BUpdateWithoutToCDataInput!
+  create: BCreateWithoutToCInput!
+}
+
 input BWhereInput {
   """
   Logical AND on all given filters.
   """
   AND: [BWhereInput!]
+  id: ID
   """
-  Logical OR on all given filters.
+  All values that are not equal to given value.
   """
-  OR: [BWhereInput!]
+  id_not: ID
   """
-  Logical NOT on all given filters combined by AND.
+  All values that are contained in given list.
   """
-  NOT: [BWhereInput!]
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   toA: AWhereInput
   toA2: AWhereInput
   toC: CWhereInput
 }
 
-type C {
+input BWhereUniqueInput {
+  id: ID
+}
+
+type C implements Node {
   toB(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B!]
   toA(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+  id: ID!
 }
 
 """
@@ -319,10 +682,12 @@ input CCreateInput {
 
 input CCreateOneWithoutToAInput {
   create: CCreateWithoutToAInput
+  connect: CWhereUniqueInput
 }
 
 input CCreateOneWithoutToBInput {
   create: CCreateWithoutToBInput
+  connect: CWhereUniqueInput
 }
 
 input CCreateWithoutToAInput {
@@ -352,16 +717,17 @@ type CEdge {
 enum COrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
+}
+
+type CPreviousValues {
+  id: ID!
 }
 
 type CSubscriptionPayload {
   mutation: MutationType!
   node: C
   updatedFields: [String!]
+  previousValues: CPreviousValues
 }
 
 input CSubscriptionWhereInput {
@@ -369,14 +735,6 @@ input CSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -396,31 +754,110 @@ input CSubscriptionWhereInput {
   node: CWhereInput
 }
 
+input CUpdateInput {
+  toB: BUpdateManyWithoutToCInput
+  toA: AUpdateManyWithoutToCInput
+}
+
+input CUpdateOneRequiredWithoutToBInput {
+  create: CCreateWithoutToBInput
+  connect: CWhereUniqueInput
+  update: CUpdateWithoutToBDataInput
+  upsert: CUpsertWithoutToBInput
+}
+
+input CUpdateOneWithoutToAInput {
+  create: CCreateWithoutToAInput
+  connect: CWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: CUpdateWithoutToADataInput
+  upsert: CUpsertWithoutToAInput
+}
+
+input CUpdateWithoutToADataInput {
+  toB: BUpdateManyWithoutToCInput
+}
+
+input CUpdateWithoutToBDataInput {
+  toA: AUpdateManyWithoutToCInput
+}
+
+input CUpsertWithoutToAInput {
+  update: CUpdateWithoutToADataInput!
+  create: CCreateWithoutToAInput!
+}
+
+input CUpsertWithoutToBInput {
+  update: CUpdateWithoutToBDataInput!
+  create: CCreateWithoutToBInput!
+}
+
 input CWhereInput {
   """
   Logical AND on all given filters.
   """
   AND: [CWhereInput!]
+  id: ID
   """
-  Logical OR on all given filters.
+  All values that are not equal to given value.
   """
-  OR: [CWhereInput!]
+  id_not: ID
   """
-  Logical NOT on all given filters combined by AND.
+  All values that are contained in given list.
   """
-  NOT: [CWhereInput!]
-  toB_every: BWhereInput
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   toB_some: BWhereInput
-  toB_none: BWhereInput
-  toA_every: AWhereInput
   toA_some: AWhereInput
-  toA_none: AWhereInput
 }
 
-"""
-Raw JSON value
-"""
-scalar Json
+input CWhereUniqueInput {
+  id: ID
+}
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
@@ -432,6 +869,15 @@ type Mutation {
   createA(data: ACreateInput!): A!
   createB(data: BCreateInput!): B!
   createC(data: CCreateInput!): C!
+  updateA(data: AUpdateInput!, where: AWhereUniqueInput!): A
+  updateB(data: BUpdateInput!, where: BWhereUniqueInput!): B
+  updateC(data: CUpdateInput!, where: CWhereUniqueInput!): C
+  deleteA(where: AWhereUniqueInput!): A
+  deleteB(where: BWhereUniqueInput!): B
+  deleteC(where: CWhereUniqueInput!): C
+  upsertA(where: AWhereUniqueInput!, create: ACreateInput!, update: AUpdateInput!): A!
+  upsertB(where: BWhereUniqueInput!, create: BCreateInput!, update: BUpdateInput!): B!
+  upsertC(where: CWhereUniqueInput!, create: CCreateInput!, update: CUpdateInput!): C!
   deleteManyAs(where: AWhereInput): BatchPayload!
   deleteManyBs(where: BWhereInput): BatchPayload!
   deleteManyCs(where: CWhereInput): BatchPayload!
@@ -479,6 +925,9 @@ type Query {
   as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
   bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
   cs(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [C]!
+  a(where: AWhereUniqueInput!): A
+  b(where: BWhereUniqueInput!): B
+  c(where: CWhereUniqueInput!): C
   asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
   bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
   csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!

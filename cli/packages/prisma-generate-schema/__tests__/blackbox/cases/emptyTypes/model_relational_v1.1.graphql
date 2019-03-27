@@ -1,0 +1,29 @@
+type OnlyId {
+  id: ID! @id
+}
+
+type OnlyIdAndARelation {
+  id: ID! @id
+  ref: OnlyId! @relation(link: TABLE)
+}
+
+type OnlyIdAndARelation2 {
+  id: ID! @id
+  ref: OnlyId @relation(link: TABLE)
+}
+
+type OnlyDate {
+  createdAt: DateTime! @createdAt
+}
+
+type OnlyRelation {
+  ref: [OnlyDate]
+}
+
+type OnlyRelationA {
+  ref: OnlyRelationA! @relation(link: TABLE)
+}
+
+type OnlyRelationB {
+  ref: OnlyRelationB @relation(link: TABLE)
+}

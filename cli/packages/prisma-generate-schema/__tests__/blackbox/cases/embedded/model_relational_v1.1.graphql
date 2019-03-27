@@ -1,0 +1,22 @@
+type Parent {
+  id: ID! @id
+  p: String @unique
+  children: [Child]
+  j: [Joint]
+}
+
+type Child {
+  c: String @unique
+  friendsOpt: [Friend]
+  jointOpt: Joint! @relation(link: TABLE)
+}
+
+type Friend {
+  f: String @unique
+  test: String
+}
+
+type Joint {
+  id: ID! @id
+  j: String
+}

@@ -1,0 +1,8 @@
+type TypeWithId {
+  id: ID! @id
+  field: String!
+}
+
+type TypeWithoutId {
+  field: String!
+}

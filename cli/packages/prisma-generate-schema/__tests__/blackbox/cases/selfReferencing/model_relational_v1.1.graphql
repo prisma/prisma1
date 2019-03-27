@@ -1,0 +1,57 @@
+type SelfReferencingAWithId {
+  id: ID! @id
+  a: SelfReferencingAWithId! @relation(link: TABLE)
+  field: Int!
+}
+
+type SelfReferencingBWithId {
+  id: ID! @id
+  a: SelfReferencingBWithId @relation(link: TABLE)
+  field: Int!
+}
+
+type SelfReferencingCWithId {
+  id: ID! @id
+  a: [SelfReferencingBWithId]
+  field: Int!
+}
+
+type SelfReferencingA {
+  id: ID! @id
+  a: SelfReferencingAWithId! @relation(link: TABLE)
+  field: Int!
+}
+
+type SelfReferencingB {
+  id: ID! @id
+  a: SelfReferencingB @relation(link: TABLE)
+  field: Int!
+}
+
+type SelfReferencingC {
+  id: ID! @id
+  a: [SelfReferencingC]
+  field: Int!
+}
+
+type MultiSelfReferencingCWithId {
+  id: ID! @id
+  a: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA")
+  b: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA")
+}
+
+type MultiSelfReferencingBWithId {
+  id: ID! @id
+  a: MultiSelfReferencingBWithId @relation(link: TABLE)
+  b: MultiSelfReferencingBWithId @relation(link: TABLE)
+}
+
+type MultiSelfReferencingC {
+  a: [MultiSelfReferencingC] @relation(name: "AToA")
+  b: [MultiSelfReferencingC] @relation(name: "AToA")
+}
+
+type MultiSelfReferencingB {
+  a: MultiSelfReferencingB @relation(link: TABLE)
+  b: MultiSelfReferencingB @relation(link: TABLE)
+}

@@ -1,0 +1,143 @@
+type AWithIdWithA {
+  id: ID! @id
+  field: String!
+  x: AWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithA {
+  field: String!
+  x: AWithA! @relation(link: TABLE)
+}
+
+type BWithIdWithA {
+  id: ID! @id
+  field: String!
+  x: AWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithA {
+  field: String!
+  x: AWithB @relation(link: TABLE)
+}
+
+type CWithIdWithA {
+  id: ID! @id
+  field: String!
+  x: [AWithC] @relation(link: TABLE)
+}
+
+type CWithoutIdWithA {
+  field: String!
+  x: [AWithC] @relation(link: TABLE)
+}
+
+type AWithIdWithB {
+  id: ID! @id
+  field: String!
+  x: BWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithB {
+  field: String!
+  x: BWithA! @relation(link: TABLE)
+}
+
+type BWithIdWithB {
+  id: ID! @id
+  field: String!
+  x: BWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithB {
+  field: String!
+  x: BWithB @relation(link: TABLE)
+}
+
+type CWithIdWithB {
+  id: ID! @id
+  field: String!
+  x: [BWithC] @relation(link: TABLE)
+}
+
+type CWithoutIdWithB {
+  field: String!
+  x: [BWithC] @relation(link: TABLE)
+}
+
+type AWithIdWithC {
+  id: ID! @id
+  field: String!
+  x: CWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithC {
+  field: String!
+  x: CWithA! @relation(link: TABLE)
+}
+
+type BWithIdWithC {
+  id: ID! @id
+  field: String!
+  x: CWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithC {
+  field: String!
+  x: CWithB @relation(link: TABLE)
+}
+
+type CWithIdWithC {
+  id: ID! @id
+  field: String!
+  x: [CWithC]
+}
+
+type CWithoutIdWithC {
+  field: String!
+  x: [CWithC]
+}
+
+type AWithA {
+  x: AWithIdWithA! @relation(link: TABLE)
+  y: AWithoutIdWithA! @relation(link: TABLE)
+}
+
+type AWithB {
+  x: BWithIdWithA! @relation(link: TABLE)
+  y: BWithoutIdWithA! @relation(link: TABLE)
+}
+
+type AWithC {
+  x: CWithIdWithA! @relation(link: TABLE)
+  y: CWithoutIdWithA! @relation(link: TABLE)
+}
+
+type BWithA {
+  x: AWithIdWithB @relation(link: TABLE)
+  y: AWithoutIdWithB @relation(link: TABLE)
+}
+
+type BWithB {
+  x: BWithIdWithB @relation(link: TABLE)
+  y: BWithoutIdWithB @relation(link: TABLE)
+}
+
+type BWithC {
+  x: CWithIdWithB @relation(link: TABLE)
+  y: CWithoutIdWithB @relation(link: TABLE)
+}
+
+type CWithA {
+  x: [AWithIdWithC] @relation(link: TABLE)
+  y: [AWithoutIdWithC] @relation(link: TABLE)
+}
+
+type CWithB {
+  x: [BWithIdWithC] @relation(link: TABLE)
+  y: [BWithoutIdWithC] @relation(link: TABLE)
+}
+
+type CWithC {
+  x: [CWithIdWithC]
+  y: [CWithoutIdWithC]
+}

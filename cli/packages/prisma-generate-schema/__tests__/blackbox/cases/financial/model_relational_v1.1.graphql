@@ -1,0 +1,179 @@
+type User {
+  id: ID! @id
+  person: Person! @relation(link: TABLE)
+}
+
+type Person {
+  id: ID! @id
+  email: String
+  firstName: String
+  lastName: String
+  phoneNumbers: [PhoneNumber]
+  scheduledTransactions: [FinancialScheduledTransaction] @relation(link: TABLE)
+  transactions: [FinancialTransaction] @relation(link: TABLE)
+  user: User @relation(link: TABLE)
+}
+
+type PhoneNumber {
+  id: ID! @id
+  number: String!
+}
+
+type FinancialAccount {
+  id: ID! @id
+  key: String @unique
+  campuses: [Campus]
+  description: String!
+  isActive: Boolean!
+  name: String
+}
+
+enum CREDIT_CARD {
+  VISA
+  MASTERCARD
+  AMEX
+  DISCOVER
+}
+
+enum CURRENCY_TYPE {
+  ACH
+  CC
+}
+
+enum ACH_TYPE {
+  SAVINGS
+  CHECKING
+}
+
+type FinancialPaymentDetail {
+  id: ID! @id
+  accountNumberMasked: String!
+  billingLocation: Location @relation(link: TABLE)
+  creditCardType: CREDIT_CARD
+  achType: ACH_TYPE
+  currencyType: CURRENCY_TYPE
+  expirationDate: DateTime!
+  nameOnCard: String
+}
+
+enum TRANSACTION_FREQUENCY {
+  DAILY
+  MONTHLY
+  BIWEEKLY
+  CUSTOM
+}
+
+type FinancialScheduledTransaction {
+  id: ID! @id
+  person: Person @relation(link: TABLE)
+  endDate: DateTime
+  payment: FinancialPaymentDetail @relation(link: TABLE)
+  isActive: Boolean!
+  startDate: DateTime
+  frequency: TRANSACTION_FREQUENCY
+  transactions: [FinancialTransaction] @relation(link: TABLE)
+  account: FinancialAccount @relation(link: TABLE)
+  amount: Float!
+}
+
+enum TRANSACTION_STATUS {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+type FinancialTransaction {
+  id: ID! @id
+  payment: FinancialPaymentDetail @relation(link: TABLE)
+  person: Person @relation(link: TABLE)
+  processedDate: DateTime
+  scheduledTransaction: FinancialScheduledTransaction @relation(link: TABLE)
+  status: TRANSACTION_STATUS!
+  transactionDate: DateTime
+  amount: Float!
+  account: FinancialAccount @relation(link: TABLE)
+  organization: Group! @relation(link: TABLE)
+}
+
+enum GROUP_INVITE_STATUS {
+  PENDING
+  JOINED
+}
+
+enum GROUP_ROLE_TYPE {
+  ADMIN
+  OWNER
+  MEMBER
+}
+
+type GroupInvite {
+  id: ID! @id
+  email: String!
+  group: Group! @relation(link: TABLE)
+  groupRole: GroupRole @relation(link: TABLE)
+  status: GROUP_INVITE_STATUS!
+}
+
+type GroupMember {
+  id: ID! @id
+  group: Group @relation(link: TABLE)
+  role: GroupRole @relation(link: TABLE)
+  person: Person @relation(link: TABLE)
+}
+
+type GroupRole {
+  id: ID! @id
+  canEdit: Boolean!
+  canView: Boolean!
+  description: String!
+  groupType: GroupType @relation(link: TABLE)
+  isLeader: Boolean
+  name: String! @unique
+  type: GROUP_ROLE_TYPE
+}
+
+type GroupType {
+  id: ID! @id
+  description: String
+  groups: [Group] @relation(link: TABLE)
+  name: String! @unique
+  roles: [GroupRole] @relation(link: TABLE)
+}
+
+type Group {
+  id: ID! @id
+  key: String @unique
+  description: String
+  type: GroupType! @relation(link: TABLE)
+  invites: [GroupInvite] @relation(link: TABLE)
+  isActive: Boolean!
+  members: [GroupMember] @relation(link: TABLE)
+  name: String!
+  organization: Group @relation(link: TABLE)
+}
+
+type Campus {
+  id: ID! @id
+  accounts: [FinancialAccount]
+  description: String
+  isActive: Boolean
+  organization: Group @relation(link: TABLE)
+  location: Location @relation(link: TABLE)
+  name: String!
+  phoneNumbers: [PhoneNumber]
+}
+
+enum LOCATION_TYPE {
+  HOME
+  WORK
+}
+
+type Location {
+  id: ID! @id
+  city: String
+  locationType: LOCATION_TYPE
+  postalCode: String
+  state: String
+  street1: String
+  street2: String
+}

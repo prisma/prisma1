@@ -32,9 +32,13 @@ export class AdjustJoinTableCardinality implements INormalizer {
         if (!refField.isList) {
           field.isList = false
           field.isRequired = refField.isRequired
-          field.directives.push(this.createLinkTableDirective())
+          console.log(`Going to push linkTableDirective`)
+          console.log(field.directives)
+          field.directives.push(this.createLinkTableDirective(field))
           if (field.relatedField !== null) {
-            field.relatedField.directives.push(this.createLinkTableDirective())
+            field.relatedField.directives.push(
+              this.createLinkTableDirective(field.relatedField),
+            )
           }
         }
       }
@@ -53,12 +57,18 @@ export class AdjustJoinTableCardinality implements INormalizer {
     }
   }
 
-  private createLinkTableDirective(): IDirectiveInfo {
-    return {
+  private createLinkTableDirective(field: IGQLField): IDirectiveInfo {
+    const directive = {
       name: DirectiveKeys.relation,
       arguments: {
         link: 'TABLE',
       },
     }
+
+    if (field.relationName) {
+      directive.name = field.relationName
+    }
+
+    return directive
   }
 }

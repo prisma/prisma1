@@ -1,0 +1,56 @@
+type LotsOfScalars {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+type LotsOfRequiredScalars {
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+}
+
+type LotsOfScalarLists {
+  int: [Int]
+  string: [String]
+  float: [Float]
+  dateTime: [DateTime]
+  json: [Json]
+  boolean: [Boolean]
+}
+
+type LotsOfScalarsWithID {
+  id: ID! @id
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+type LotsOfRequiredScalarsWithID {
+  id: ID! @id
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+}
+
+type LotsOfScalarListsWithID {
+  id: ID! @id
+  int: [Int]
+  string: [String]
+  float: [Float]
+  dateTime: [DateTime]
+  json: [Json]
+  boolean: [Boolean]
+}

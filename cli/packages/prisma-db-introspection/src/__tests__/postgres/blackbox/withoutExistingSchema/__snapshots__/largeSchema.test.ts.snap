@@ -1,9 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector large example database 1`] = `
-"type Actor @indexes(value: [
-  {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
-]) @pgTable(name: \\"actor\\") {
+"type Actor @pgTable(name: \\"actor\\") {
   id: Int! @pgColumn(name: \\"actor_id\\") @unique
   film_actor: [FilmActor]
   first_name: String!
@@ -47,10 +45,7 @@ type Country @pgTable(name: \\"country\\") {
   last_update: DateTime!
 }
 
-type Customer @indexes(value: [
-  {name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"]},
-  {name: \\"idx_last_name\\", fields: [\\"last_name\\"]}
-]) @pgTable(name: \\"customer\\") {
+type Customer @pgTable(name: \\"customer\\") {
   id: Int! @pgColumn(name: \\"customer_id\\") @unique
   active: Int
   activebool: Boolean! @default(value: true)
@@ -65,10 +60,7 @@ type Customer @indexes(value: [
   store_id: Int!
 }
 
-type Film @indexes(value: [
-  {name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"]},
-  {name: \\"idx_title\\", fields: [\\"title\\"]}
-]) @pgTable(name: \\"film\\") {
+type Film @pgTable(name: \\"film\\") {
   id: Int! @pgColumn(name: \\"film_id\\") @unique
   description: String
   film_actor: [FilmActor]
@@ -90,23 +82,21 @@ type Film @indexes(value: [
 
 type FilmActor @pgTable(name: \\"film_actor\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # id: Actor! @pgColumn(name: \\"actor_id\\") @unique
-  # Multiple ID fields (compound indexes) are not supported
   # id: Film! @pgColumn(name: \\"film_id\\") @unique
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Actor! @pgColumn(name: \\"actor_id\\") @unique
   last_update: DateTime!
 }
 
 type FilmCategory @pgTable(name: \\"film_category\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # id: Film! @pgColumn(name: \\"film_id\\") @unique
-  # Multiple ID fields (compound indexes) are not supported
   # id: Category! @pgColumn(name: \\"category_id\\") @unique
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Film! @pgColumn(name: \\"film_id\\") @unique
   last_update: DateTime!
 }
 
-type Inventory @indexes(value: [
-  {name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"]}
-]) @pgTable(name: \\"inventory\\") {
+type Inventory @pgTable(name: \\"inventory\\") {
   id: Int! @pgColumn(name: \\"inventory_id\\") @unique
   film_id: Film!
   last_update: DateTime!
@@ -138,9 +128,7 @@ type Payment @pgTable(name: \\"payment\\") {
   staff_id: Staff!
 }
 
-type Rental @indexes(value: [
-  {name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"], unique: true}
-]) @pgTable(name: \\"rental\\") {
+type Rental @pgTable(name: \\"rental\\") {
   id: Int! @pgColumn(name: \\"rental_id\\") @unique
   customer_id: Customer!
   inventory_id: Inventory!
@@ -178,9 +166,7 @@ type Store @pgTable(name: \\"store\\") {
 `;
 
 exports[`Introspector large example database 2`] = `
-"type Actor @db(name: \\"actor\\") @indexes(value: [
-  {name: \\"idx_actor_last_name\\", fields: [\\"last_name\\"]}
-]) {
+"type Actor @db(name: \\"actor\\") {
   actor_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"actor_actor_id_seq\\", initialValue: 1, allocationSize: 1)
   film_actor: [FilmActor]
   first_name: String!
@@ -224,10 +210,7 @@ type Country @db(name: \\"country\\") {
   last_update: DateTime!
 }
 
-type Customer @db(name: \\"customer\\") @indexes(value: [
-  {name: \\"idx_fk_store_id\\", fields: [\\"store_id\\"]},
-  {name: \\"idx_last_name\\", fields: [\\"last_name\\"]}
-]) {
+type Customer @db(name: \\"customer\\") {
   customer_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"customer_customer_id_seq\\", initialValue: 1, allocationSize: 1)
   active: Int
   activebool: Boolean! @default(value: true)
@@ -242,10 +225,7 @@ type Customer @db(name: \\"customer\\") @indexes(value: [
   store_id: Int!
 }
 
-type Film @db(name: \\"film\\") @indexes(value: [
-  {name: \\"film_fulltext_idx\\", fields: [\\"fulltext\\"]},
-  {name: \\"idx_title\\", fields: [\\"title\\"]}
-]) {
+type Film @db(name: \\"film\\") {
   film_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"film_film_id_seq\\", initialValue: 1, allocationSize: 1)
   description: String
   film_actor: [FilmActor]
@@ -267,23 +247,21 @@ type Film @db(name: \\"film\\") @indexes(value: [
 
 type FilmActor @db(name: \\"film_actor\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # actor_id: Actor! @id(strategy: NONE)
-  # Multiple ID fields (compound indexes) are not supported
   # film_id: Film! @id(strategy: NONE)
+  # Multiple ID fields (compound indexes) are not supported
+  # actor_id: Actor! @id(strategy: NONE)
   last_update: DateTime!
 }
 
 type FilmCategory @db(name: \\"film_category\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # film_id: Film! @id(strategy: NONE)
-  # Multiple ID fields (compound indexes) are not supported
   # category_id: Category! @id(strategy: NONE)
+  # Multiple ID fields (compound indexes) are not supported
+  # film_id: Film! @id(strategy: NONE)
   last_update: DateTime!
 }
 
-type Inventory @db(name: \\"inventory\\") @indexes(value: [
-  {name: \\"idx_store_id_film_id\\", fields: [\\"film_id\\", \\"store_id\\"]}
-]) {
+type Inventory @db(name: \\"inventory\\") {
   inventory_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"inventory_inventory_id_seq\\", initialValue: 1, allocationSize: 1)
   film_id: Film!
   last_update: DateTime!
@@ -315,9 +293,7 @@ type Payment @db(name: \\"payment\\") {
   staff_id: Staff!
 }
 
-type Rental @db(name: \\"rental\\") @indexes(value: [
-  {name: \\"idx_unq_rental_rental_date_inventory_id_customer_id\\", fields: [\\"rental_date\\", \\"inventory_id\\", \\"customer_id\\"], unique: true}
-]) {
+type Rental @db(name: \\"rental\\") {
   rental_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"rental_rental_id_seq\\", initialValue: 1, allocationSize: 1)
   customer_id: Customer!
   inventory_id: Inventory!

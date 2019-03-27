@@ -141,10 +141,6 @@ enum CampusOrderByInput {
   isActive_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type CampusPreviousValues {
@@ -346,14 +342,6 @@ input CampusSubscriptionWhereInput {
   """
   AND: [CampusSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [CampusSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CampusSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -436,14 +424,6 @@ input CampusWhereInput {
   Logical AND on all given filters.
   """
   AND: [CampusWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CampusWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CampusWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -608,14 +588,10 @@ input CampusWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
-  accounts_every: FinancialAccountWhereInput
   accounts_some: FinancialAccountWhereInput
-  accounts_none: FinancialAccountWhereInput
   organization: GroupWhereInput
   location: LocationWhereInput
-  phoneNumbers_every: PhoneNumberWhereInput
   phoneNumbers_some: PhoneNumberWhereInput
-  phoneNumbers_none: PhoneNumberWhereInput
 }
 
 input CampusWhereUniqueInput {
@@ -712,10 +688,6 @@ enum FinancialAccountOrderByInput {
   isActive_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FinancialAccountPreviousValues {
@@ -971,14 +943,6 @@ input FinancialAccountSubscriptionWhereInput {
   """
   AND: [FinancialAccountSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialAccountSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialAccountSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1081,14 +1045,6 @@ input FinancialAccountWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialAccountWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialAccountWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialAccountWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1306,9 +1262,7 @@ input FinancialAccountWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
-  campuses_every: CampusWhereInput
   campuses_some: CampusWhereInput
-  campuses_none: CampusWhereInput
 }
 
 input FinancialAccountWhereUniqueInput {
@@ -1387,10 +1341,6 @@ enum FinancialPaymentDetailOrderByInput {
   expirationDate_DESC
   nameOnCard_ASC
   nameOnCard_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FinancialPaymentDetailPreviousValues {
@@ -1415,14 +1365,6 @@ input FinancialPaymentDetailSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialPaymentDetailSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialPaymentDetailSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialPaymentDetailSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1490,14 +1432,6 @@ input FinancialPaymentDetailWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialPaymentDetailWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialPaymentDetailWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialPaymentDetailWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1834,10 +1768,6 @@ enum FinancialScheduledTransactionOrderByInput {
   frequency_DESC
   amount_ASC
   amount_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FinancialScheduledTransactionPreviousValues {
@@ -2035,14 +1965,6 @@ input FinancialScheduledTransactionSubscriptionWhereInput {
   """
   AND: [FinancialScheduledTransactionSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialScheduledTransactionSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialScheduledTransactionSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -2158,14 +2080,6 @@ input FinancialScheduledTransactionWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialScheduledTransactionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialScheduledTransactionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialScheduledTransactionWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -2326,9 +2240,7 @@ input FinancialScheduledTransactionWhereInput {
   amount_gte: Float
   person: PersonWhereInput
   payment: FinancialPaymentDetailWhereInput
-  transactions_every: FinancialTransactionWhereInput
   transactions_some: FinancialTransactionWhereInput
-  transactions_none: FinancialTransactionWhereInput
   account: FinancialAccountWhereInput
 }
 
@@ -2436,10 +2348,6 @@ enum FinancialTransactionOrderByInput {
   transactionDate_DESC
   amount_ASC
   amount_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FinancialTransactionPreviousValues {
@@ -2631,14 +2539,6 @@ input FinancialTransactionSubscriptionWhereInput {
   """
   AND: [FinancialTransactionSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialTransactionSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialTransactionSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -2761,14 +2661,6 @@ input FinancialTransactionWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialTransactionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialTransactionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialTransactionWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -3114,10 +3006,6 @@ enum GroupInviteOrderByInput {
   email_DESC
   status_ASC
   status_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupInvitePreviousValues {
@@ -3273,14 +3161,6 @@ input GroupInviteSubscriptionWhereInput {
   """
   AND: [GroupInviteSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [GroupInviteSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupInviteSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -3355,14 +3235,6 @@ input GroupInviteWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupInviteWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupInviteWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupInviteWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -3547,10 +3419,6 @@ type GroupMemberEdge {
 enum GroupMemberOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupMemberPreviousValues {
@@ -3638,14 +3506,6 @@ input GroupMemberSubscriptionWhereInput {
   """
   AND: [GroupMemberSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [GroupMemberSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupMemberSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -3702,14 +3562,6 @@ input GroupMemberWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupMemberWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupMemberWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupMemberWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -3783,10 +3635,6 @@ enum GroupOrderByInput {
   isActive_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupPreviousValues {
@@ -3883,10 +3731,6 @@ enum GroupRoleOrderByInput {
   name_DESC
   type_ASC
   type_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupRolePreviousValues {
@@ -4114,14 +3958,6 @@ input GroupRoleSubscriptionWhereInput {
   """
   AND: [GroupRoleSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [GroupRoleSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupRoleSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -4234,14 +4070,6 @@ input GroupRoleWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupRoleWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupRoleWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupRoleWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -4682,14 +4510,6 @@ input GroupSubscriptionWhereInput {
   """
   AND: [GroupSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [GroupSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -4784,10 +4604,6 @@ enum GroupTypeOrderByInput {
   description_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type GroupTypePreviousValues {
@@ -4808,14 +4624,6 @@ input GroupTypeSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupTypeSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupTypeSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupTypeSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -4890,14 +4698,6 @@ input GroupTypeWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupTypeWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupTypeWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupTypeWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -5057,12 +4857,8 @@ input GroupTypeWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
-  groups_every: GroupWhereInput
   groups_some: GroupWhereInput
-  groups_none: GroupWhereInput
-  roles_every: GroupRoleWhereInput
   roles_some: GroupRoleWhereInput
-  roles_none: GroupRoleWhereInput
 }
 
 input GroupTypeWhereUniqueInput {
@@ -5216,14 +5012,6 @@ input GroupWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -5442,12 +5230,8 @@ input GroupWhereInput {
   """
   name_not_ends_with: String
   type: GroupTypeWhereInput
-  invites_every: GroupInviteWhereInput
   invites_some: GroupInviteWhereInput
-  invites_none: GroupInviteWhereInput
-  members_every: GroupMemberWhereInput
   members_some: GroupMemberWhereInput
-  members_none: GroupMemberWhereInput
   organization: GroupWhereInput
 }
 
@@ -5455,11 +5239,6 @@ input GroupWhereUniqueInput {
   id: ID
   key: String
 }
-
-"""
-Raw JSON value
-"""
-scalar Json
 
 type Location implements Node {
   id: ID!
@@ -5535,10 +5314,6 @@ enum LocationOrderByInput {
   street1_DESC
   street2_ASC
   street2_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type LocationPreviousValues {
@@ -5563,14 +5338,6 @@ input LocationSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [LocationSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LocationSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LocationSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -5636,14 +5403,6 @@ input LocationWhereInput {
   Logical AND on all given filters.
   """
   AND: [LocationWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LocationWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LocationWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -5995,12 +5754,12 @@ type Mutation {
   createGroupMember(data: GroupMemberCreateInput!): GroupMember!
   createGroupType(data: GroupTypeCreateInput!): GroupType!
   createCampus(data: CampusCreateInput!): Campus!
-  createFinancialAccount(data: FinancialAccountCreateInput!): FinancialAccount!
-  createGroup(data: GroupCreateInput!): Group!
   createPerson(data: PersonCreateInput!): Person!
+  createGroup(data: GroupCreateInput!): Group!
+  createFinancialAccount(data: FinancialAccountCreateInput!): FinancialAccount!
+  createPhoneNumber(data: PhoneNumberCreateInput!): PhoneNumber!
   createGroupRole(data: GroupRoleCreateInput!): GroupRole!
   createLocation(data: LocationCreateInput!): Location!
-  createPhoneNumber(data: PhoneNumberCreateInput!): PhoneNumber!
   createFinancialPaymentDetail(data: FinancialPaymentDetailCreateInput!): FinancialPaymentDetail!
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updateFinancialScheduledTransaction(data: FinancialScheduledTransactionUpdateInput!, where: FinancialScheduledTransactionWhereUniqueInput!): FinancialScheduledTransaction
@@ -6009,12 +5768,12 @@ type Mutation {
   updateGroupMember(data: GroupMemberUpdateInput!, where: GroupMemberWhereUniqueInput!): GroupMember
   updateGroupType(data: GroupTypeUpdateInput!, where: GroupTypeWhereUniqueInput!): GroupType
   updateCampus(data: CampusUpdateInput!, where: CampusWhereUniqueInput!): Campus
-  updateFinancialAccount(data: FinancialAccountUpdateInput!, where: FinancialAccountWhereUniqueInput!): FinancialAccount
-  updateGroup(data: GroupUpdateInput!, where: GroupWhereUniqueInput!): Group
   updatePerson(data: PersonUpdateInput!, where: PersonWhereUniqueInput!): Person
+  updateGroup(data: GroupUpdateInput!, where: GroupWhereUniqueInput!): Group
+  updateFinancialAccount(data: FinancialAccountUpdateInput!, where: FinancialAccountWhereUniqueInput!): FinancialAccount
+  updatePhoneNumber(data: PhoneNumberUpdateInput!, where: PhoneNumberWhereUniqueInput!): PhoneNumber
   updateGroupRole(data: GroupRoleUpdateInput!, where: GroupRoleWhereUniqueInput!): GroupRole
   updateLocation(data: LocationUpdateInput!, where: LocationWhereUniqueInput!): Location
-  updatePhoneNumber(data: PhoneNumberUpdateInput!, where: PhoneNumberWhereUniqueInput!): PhoneNumber
   updateFinancialPaymentDetail(data: FinancialPaymentDetailUpdateInput!, where: FinancialPaymentDetailWhereUniqueInput!): FinancialPaymentDetail
   deleteUser(where: UserWhereUniqueInput!): User
   deleteFinancialScheduledTransaction(where: FinancialScheduledTransactionWhereUniqueInput!): FinancialScheduledTransaction
@@ -6023,12 +5782,12 @@ type Mutation {
   deleteGroupMember(where: GroupMemberWhereUniqueInput!): GroupMember
   deleteGroupType(where: GroupTypeWhereUniqueInput!): GroupType
   deleteCampus(where: CampusWhereUniqueInput!): Campus
-  deleteFinancialAccount(where: FinancialAccountWhereUniqueInput!): FinancialAccount
-  deleteGroup(where: GroupWhereUniqueInput!): Group
   deletePerson(where: PersonWhereUniqueInput!): Person
+  deleteGroup(where: GroupWhereUniqueInput!): Group
+  deleteFinancialAccount(where: FinancialAccountWhereUniqueInput!): FinancialAccount
+  deletePhoneNumber(where: PhoneNumberWhereUniqueInput!): PhoneNumber
   deleteGroupRole(where: GroupRoleWhereUniqueInput!): GroupRole
   deleteLocation(where: LocationWhereUniqueInput!): Location
-  deletePhoneNumber(where: PhoneNumberWhereUniqueInput!): PhoneNumber
   deleteFinancialPaymentDetail(where: FinancialPaymentDetailWhereUniqueInput!): FinancialPaymentDetail
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertFinancialScheduledTransaction(where: FinancialScheduledTransactionWhereUniqueInput!, create: FinancialScheduledTransactionCreateInput!, update: FinancialScheduledTransactionUpdateInput!): FinancialScheduledTransaction!
@@ -6037,24 +5796,24 @@ type Mutation {
   upsertGroupMember(where: GroupMemberWhereUniqueInput!, create: GroupMemberCreateInput!, update: GroupMemberUpdateInput!): GroupMember!
   upsertGroupType(where: GroupTypeWhereUniqueInput!, create: GroupTypeCreateInput!, update: GroupTypeUpdateInput!): GroupType!
   upsertCampus(where: CampusWhereUniqueInput!, create: CampusCreateInput!, update: CampusUpdateInput!): Campus!
-  upsertFinancialAccount(where: FinancialAccountWhereUniqueInput!, create: FinancialAccountCreateInput!, update: FinancialAccountUpdateInput!): FinancialAccount!
-  upsertGroup(where: GroupWhereUniqueInput!, create: GroupCreateInput!, update: GroupUpdateInput!): Group!
   upsertPerson(where: PersonWhereUniqueInput!, create: PersonCreateInput!, update: PersonUpdateInput!): Person!
+  upsertGroup(where: GroupWhereUniqueInput!, create: GroupCreateInput!, update: GroupUpdateInput!): Group!
+  upsertFinancialAccount(where: FinancialAccountWhereUniqueInput!, create: FinancialAccountCreateInput!, update: FinancialAccountUpdateInput!): FinancialAccount!
+  upsertPhoneNumber(where: PhoneNumberWhereUniqueInput!, create: PhoneNumberCreateInput!, update: PhoneNumberUpdateInput!): PhoneNumber!
   upsertGroupRole(where: GroupRoleWhereUniqueInput!, create: GroupRoleCreateInput!, update: GroupRoleUpdateInput!): GroupRole!
   upsertLocation(where: LocationWhereUniqueInput!, create: LocationCreateInput!, update: LocationUpdateInput!): Location!
-  upsertPhoneNumber(where: PhoneNumberWhereUniqueInput!, create: PhoneNumberCreateInput!, update: PhoneNumberUpdateInput!): PhoneNumber!
   upsertFinancialPaymentDetail(where: FinancialPaymentDetailWhereUniqueInput!, create: FinancialPaymentDetailCreateInput!, update: FinancialPaymentDetailUpdateInput!): FinancialPaymentDetail!
   updateManyFinancialScheduledTransactions(data: FinancialScheduledTransactionUpdateManyMutationInput!, where: FinancialScheduledTransactionWhereInput): BatchPayload!
   updateManyFinancialTransactions(data: FinancialTransactionUpdateManyMutationInput!, where: FinancialTransactionWhereInput): BatchPayload!
   updateManyGroupInvites(data: GroupInviteUpdateManyMutationInput!, where: GroupInviteWhereInput): BatchPayload!
   updateManyGroupTypes(data: GroupTypeUpdateManyMutationInput!, where: GroupTypeWhereInput): BatchPayload!
   updateManyCampuses(data: CampusUpdateManyMutationInput!, where: CampusWhereInput): BatchPayload!
-  updateManyFinancialAccounts(data: FinancialAccountUpdateManyMutationInput!, where: FinancialAccountWhereInput): BatchPayload!
-  updateManyGroups(data: GroupUpdateManyMutationInput!, where: GroupWhereInput): BatchPayload!
   updateManyPersons(data: PersonUpdateManyMutationInput!, where: PersonWhereInput): BatchPayload!
+  updateManyGroups(data: GroupUpdateManyMutationInput!, where: GroupWhereInput): BatchPayload!
+  updateManyFinancialAccounts(data: FinancialAccountUpdateManyMutationInput!, where: FinancialAccountWhereInput): BatchPayload!
+  updateManyPhoneNumbers(data: PhoneNumberUpdateManyMutationInput!, where: PhoneNumberWhereInput): BatchPayload!
   updateManyGroupRoles(data: GroupRoleUpdateManyMutationInput!, where: GroupRoleWhereInput): BatchPayload!
   updateManyLocations(data: LocationUpdateManyMutationInput!, where: LocationWhereInput): BatchPayload!
-  updateManyPhoneNumbers(data: PhoneNumberUpdateManyMutationInput!, where: PhoneNumberWhereInput): BatchPayload!
   updateManyFinancialPaymentDetails(data: FinancialPaymentDetailUpdateManyMutationInput!, where: FinancialPaymentDetailWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyFinancialScheduledTransactions(where: FinancialScheduledTransactionWhereInput): BatchPayload!
@@ -6063,12 +5822,12 @@ type Mutation {
   deleteManyGroupMembers(where: GroupMemberWhereInput): BatchPayload!
   deleteManyGroupTypes(where: GroupTypeWhereInput): BatchPayload!
   deleteManyCampuses(where: CampusWhereInput): BatchPayload!
-  deleteManyFinancialAccounts(where: FinancialAccountWhereInput): BatchPayload!
-  deleteManyGroups(where: GroupWhereInput): BatchPayload!
   deleteManyPersons(where: PersonWhereInput): BatchPayload!
+  deleteManyGroups(where: GroupWhereInput): BatchPayload!
+  deleteManyFinancialAccounts(where: FinancialAccountWhereInput): BatchPayload!
+  deleteManyPhoneNumbers(where: PhoneNumberWhereInput): BatchPayload!
   deleteManyGroupRoles(where: GroupRoleWhereInput): BatchPayload!
   deleteManyLocations(where: LocationWhereInput): BatchPayload!
-  deleteManyPhoneNumbers(where: PhoneNumberWhereInput): BatchPayload!
   deleteManyFinancialPaymentDetails(where: FinancialPaymentDetailWhereInput): BatchPayload!
 }
 
@@ -6220,10 +5979,6 @@ enum PersonOrderByInput {
   firstName_DESC
   lastName_ASC
   lastName_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type PersonPreviousValues {
@@ -6245,14 +6000,6 @@ input PersonSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [PersonSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PersonSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PersonSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -6384,14 +6131,6 @@ input PersonWhereInput {
   Logical AND on all given filters.
   """
   AND: [PersonWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PersonWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PersonWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -6604,15 +6343,9 @@ input PersonWhereInput {
   All values not ending with the given string.
   """
   lastName_not_ends_with: String
-  phoneNumbers_every: PhoneNumberWhereInput
   phoneNumbers_some: PhoneNumberWhereInput
-  phoneNumbers_none: PhoneNumberWhereInput
-  scheduledTransactions_every: FinancialScheduledTransactionWhereInput
   scheduledTransactions_some: FinancialScheduledTransactionWhereInput
-  scheduledTransactions_none: FinancialScheduledTransactionWhereInput
-  transactions_every: FinancialTransactionWhereInput
   transactions_some: FinancialTransactionWhereInput
-  transactions_none: FinancialTransactionWhereInput
   user: UserWhereInput
 }
 
@@ -6669,10 +6402,6 @@ enum PhoneNumberOrderByInput {
   id_DESC
   number_ASC
   number_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type PhoneNumberPreviousValues {
@@ -6814,14 +6543,6 @@ input PhoneNumberSubscriptionWhereInput {
   """
   AND: [PhoneNumberSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [PhoneNumberSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PhoneNumberSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -6889,14 +6610,6 @@ input PhoneNumberWhereInput {
   Logical AND on all given filters.
   """
   AND: [PhoneNumberWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PhoneNumberWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PhoneNumberWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -7017,12 +6730,12 @@ type Query {
   groupMembers(where: GroupMemberWhereInput, orderBy: GroupMemberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [GroupMember]!
   groupTypes(where: GroupTypeWhereInput, orderBy: GroupTypeOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [GroupType]!
   campuses(where: CampusWhereInput, orderBy: CampusOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Campus]!
-  financialAccounts(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialAccount]!
-  groups(where: GroupWhereInput, orderBy: GroupOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Group]!
   persons(where: PersonWhereInput, orderBy: PersonOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Person]!
+  groups(where: GroupWhereInput, orderBy: GroupOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Group]!
+  financialAccounts(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialAccount]!
+  phoneNumbers(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PhoneNumber]!
   groupRoles(where: GroupRoleWhereInput, orderBy: GroupRoleOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [GroupRole]!
   locations(where: LocationWhereInput, orderBy: LocationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Location]!
-  phoneNumbers(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PhoneNumber]!
   financialPaymentDetails(where: FinancialPaymentDetailWhereInput, orderBy: FinancialPaymentDetailOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [FinancialPaymentDetail]!
   user(where: UserWhereUniqueInput!): User
   financialScheduledTransaction(where: FinancialScheduledTransactionWhereUniqueInput!): FinancialScheduledTransaction
@@ -7031,12 +6744,12 @@ type Query {
   groupMember(where: GroupMemberWhereUniqueInput!): GroupMember
   groupType(where: GroupTypeWhereUniqueInput!): GroupType
   campus(where: CampusWhereUniqueInput!): Campus
-  financialAccount(where: FinancialAccountWhereUniqueInput!): FinancialAccount
-  group(where: GroupWhereUniqueInput!): Group
   person(where: PersonWhereUniqueInput!): Person
+  group(where: GroupWhereUniqueInput!): Group
+  financialAccount(where: FinancialAccountWhereUniqueInput!): FinancialAccount
+  phoneNumber(where: PhoneNumberWhereUniqueInput!): PhoneNumber
   groupRole(where: GroupRoleWhereUniqueInput!): GroupRole
   location(where: LocationWhereUniqueInput!): Location
-  phoneNumber(where: PhoneNumberWhereUniqueInput!): PhoneNumber
   financialPaymentDetail(where: FinancialPaymentDetailWhereUniqueInput!): FinancialPaymentDetail
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   financialScheduledTransactionsConnection(where: FinancialScheduledTransactionWhereInput, orderBy: FinancialScheduledTransactionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FinancialScheduledTransactionConnection!
@@ -7045,12 +6758,12 @@ type Query {
   groupMembersConnection(where: GroupMemberWhereInput, orderBy: GroupMemberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupMemberConnection!
   groupTypesConnection(where: GroupTypeWhereInput, orderBy: GroupTypeOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupTypeConnection!
   campusesConnection(where: CampusWhereInput, orderBy: CampusOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CampusConnection!
-  financialAccountsConnection(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FinancialAccountConnection!
-  groupsConnection(where: GroupWhereInput, orderBy: GroupOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupConnection!
   personsConnection(where: PersonWhereInput, orderBy: PersonOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PersonConnection!
+  groupsConnection(where: GroupWhereInput, orderBy: GroupOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupConnection!
+  financialAccountsConnection(where: FinancialAccountWhereInput, orderBy: FinancialAccountOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FinancialAccountConnection!
+  phoneNumbersConnection(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PhoneNumberConnection!
   groupRolesConnection(where: GroupRoleWhereInput, orderBy: GroupRoleOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): GroupRoleConnection!
   locationsConnection(where: LocationWhereInput, orderBy: LocationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LocationConnection!
-  phoneNumbersConnection(where: PhoneNumberWhereInput, orderBy: PhoneNumberOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PhoneNumberConnection!
   financialPaymentDetailsConnection(where: FinancialPaymentDetailWhereInput, orderBy: FinancialPaymentDetailOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FinancialPaymentDetailConnection!
   """
   Fetches an object given its ID
@@ -7071,12 +6784,12 @@ type Subscription {
   groupMember(where: GroupMemberSubscriptionWhereInput): GroupMemberSubscriptionPayload
   groupType(where: GroupTypeSubscriptionWhereInput): GroupTypeSubscriptionPayload
   campus(where: CampusSubscriptionWhereInput): CampusSubscriptionPayload
-  financialAccount(where: FinancialAccountSubscriptionWhereInput): FinancialAccountSubscriptionPayload
-  group(where: GroupSubscriptionWhereInput): GroupSubscriptionPayload
   person(where: PersonSubscriptionWhereInput): PersonSubscriptionPayload
+  group(where: GroupSubscriptionWhereInput): GroupSubscriptionPayload
+  financialAccount(where: FinancialAccountSubscriptionWhereInput): FinancialAccountSubscriptionPayload
+  phoneNumber(where: PhoneNumberSubscriptionWhereInput): PhoneNumberSubscriptionPayload
   groupRole(where: GroupRoleSubscriptionWhereInput): GroupRoleSubscriptionPayload
   location(where: LocationSubscriptionWhereInput): LocationSubscriptionPayload
-  phoneNumber(where: PhoneNumberSubscriptionWhereInput): PhoneNumberSubscriptionPayload
   financialPaymentDetail(where: FinancialPaymentDetailSubscriptionWhereInput): FinancialPaymentDetailSubscriptionPayload
 }
 
@@ -7144,10 +6857,6 @@ type UserEdge {
 enum UserOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type UserPreviousValues {
@@ -7166,14 +6875,6 @@ input UserSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [UserSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [UserSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -7209,14 +6910,6 @@ input UserWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [UserWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [UserWhereInput!]
   id: ID
   """
   All values that are not equal to given value.

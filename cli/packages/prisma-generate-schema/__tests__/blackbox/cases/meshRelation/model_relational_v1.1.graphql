@@ -1,0 +1,36 @@
+type A {
+  field: Int!
+  a: A! @relation(link: TABLE)
+  b: [B] @relation(link: TABLE)
+  c: C @relation(link: TABLE)
+  e: [E] @relation(link: TABLE)
+}
+
+type B {
+  field: [String]
+  c: C @relation(link: TABLE)
+  b: [B]
+  a: A! @relation(link: TABLE)
+  c2: C @relation(link: TABLE)
+}
+
+type C {
+  expirationDate: DateTime
+  c: C! @relation(link: TABLE)
+  b: [B] @relation(link: TABLE)
+  a: A @relation(link: TABLE)
+  b2: B @relation(link: TABLE)
+}
+
+type D {
+  field: Json
+  c: C! @relation(link: TABLE)
+  b: B! @relation(link: TABLE)
+  a: A! @relation(link: TABLE)
+  d: [D]
+}
+
+type E {
+  field: Json
+  a: A! @relation(link: TABLE)
+}

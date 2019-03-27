@@ -25,7 +25,6 @@ type Child {
 
 input ChildCreateInput {
   c: String
-  _id: ID
   friendsOpt: FriendCreateManyInput
   jointOpt: JointCreateOneInput!
 }

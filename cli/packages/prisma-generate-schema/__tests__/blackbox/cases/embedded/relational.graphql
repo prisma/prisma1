@@ -1,7 +1,3 @@
-type AggregateChild {
-  count: Int!
-}
-
 type AggregateFriend {
   count: Int!
 }
@@ -27,60 +23,74 @@ type Child {
   jointOpt: Joint!
 }
 
-"""
-A connection to a list of items.
-"""
-type ChildConnection {
-  """
-  Information to aid in pagination.
-  """
-  pageInfo: PageInfo!
-  """
-  A list of edges.
-  """
-  edges: [ChildEdge]!
-  aggregate: AggregateChild!
-}
-
 input ChildCreateInput {
   c: String
-  id: ID
   friendsOpt: FriendCreateManyInput
   jointOpt: JointCreateOneInput!
 }
 
 input ChildCreateManyInput {
   create: [ChildCreateInput!]
-  connect: [ChildWhereUniqueInput!]
 }
 
-"""
-An edge in a connection.
-"""
-type ChildEdge {
+input ChildRestrictedWhereInput {
   """
-  The item at the end of the edge.
+  Logical AND on all given filters.
   """
-  node: Child!
-  """
-  A cursor for use in pagination.
-  """
-  cursor: String!
-}
-
-enum ChildOrderByInput {
-  c_ASC
-  c_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
-}
-
-type ChildPreviousValues {
+  AND: [ChildRestrictedWhereInput!]
   c: String
+  """
+  All values that are not equal to given value.
+  """
+  c_not: String
+  """
+  All values that are contained in given list.
+  """
+  c_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  c_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  c_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  c_lte: String
+  """
+  All values greater than the given value.
+  """
+  c_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  c_gte: String
+  """
+  All values containing the given string.
+  """
+  c_contains: String
+  """
+  All values not containing the given string.
+  """
+  c_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  c_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  c_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  c_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  c_not_ends_with: String
 }
 
 input ChildScalarWhereInput {
@@ -151,75 +161,14 @@ input ChildScalarWhereInput {
   c_not_ends_with: String
 }
 
-type ChildSubscriptionPayload {
-  mutation: MutationType!
-  node: Child
-  updatedFields: [String!]
-  previousValues: ChildPreviousValues
-}
-
-input ChildSubscriptionWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [ChildSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ChildSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ChildSubscriptionWhereInput!]
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: ChildWhereInput
-}
-
-input ChildUpdateDataInput {
-  c: String
-  friendsOpt: FriendUpdateManyInput
-  jointOpt: JointUpdateOneRequiredInput
-}
-
-input ChildUpdateInput {
-  c: String
-  friendsOpt: FriendUpdateManyInput
-  jointOpt: JointUpdateOneRequiredInput
-}
-
 input ChildUpdateManyDataInput {
   c: String
 }
 
 input ChildUpdateManyInput {
   create: [ChildCreateInput!]
-  connect: [ChildWhereUniqueInput!]
-  set: [ChildWhereUniqueInput!]
-  disconnect: [ChildWhereUniqueInput!]
-  delete: [ChildWhereUniqueInput!]
-  update: [ChildUpdateWithWhereUniqueNestedInput!]
   updateMany: [ChildUpdateManyWithWhereNestedInput!]
   deleteMany: [ChildScalarWhereInput!]
-  upsert: [ChildUpsertWithWhereUniqueNestedInput!]
-}
-
-input ChildUpdateManyMutationInput {
-  c: String
 }
 
 input ChildUpdateManyWithWhereNestedInput {
@@ -227,30 +176,11 @@ input ChildUpdateManyWithWhereNestedInput {
   data: ChildUpdateManyDataInput!
 }
 
-input ChildUpdateWithWhereUniqueNestedInput {
-  where: ChildWhereUniqueInput!
-  data: ChildUpdateDataInput!
-}
-
-input ChildUpsertWithWhereUniqueNestedInput {
-  where: ChildWhereUniqueInput!
-  update: ChildUpdateDataInput!
-  create: ChildCreateInput!
-}
-
 input ChildWhereInput {
   """
   Logical AND on all given filters.
   """
   AND: [ChildWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ChildWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ChildWhereInput!]
   c: String
   """
   All values that are not equal to given value.
@@ -304,19 +234,13 @@ input ChildWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
-  friendsOpt_every: FriendWhereInput
   friendsOpt_some: FriendWhereInput
-  friendsOpt_none: FriendWhereInput
   jointOpt: JointWhereInput
-}
-
-input ChildWhereUniqueInput {
-  c: String
 }
 
 type Friend {
   f: String
-  test: String
+  test: ID!
 }
 
 """
@@ -336,8 +260,7 @@ type FriendConnection {
 
 input FriendCreateInput {
   f: String
-  test: String
-  id: ID
+  test: ID
 }
 
 input FriendCreateManyInput {
@@ -364,138 +287,11 @@ enum FriendOrderByInput {
   f_DESC
   test_ASC
   test_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type FriendPreviousValues {
   f: String
-  test: String
-}
-
-input FriendScalarWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [FriendScalarWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FriendScalarWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FriendScalarWhereInput!]
-  f: String
-  """
-  All values that are not equal to given value.
-  """
-  f_not: String
-  """
-  All values that are contained in given list.
-  """
-  f_in: [String!]
-  """
-  All values that are not contained in given list.
-  """
-  f_not_in: [String!]
-  """
-  All values less than the given value.
-  """
-  f_lt: String
-  """
-  All values less than or equal the given value.
-  """
-  f_lte: String
-  """
-  All values greater than the given value.
-  """
-  f_gt: String
-  """
-  All values greater than or equal the given value.
-  """
-  f_gte: String
-  """
-  All values containing the given string.
-  """
-  f_contains: String
-  """
-  All values not containing the given string.
-  """
-  f_not_contains: String
-  """
-  All values starting with the given string.
-  """
-  f_starts_with: String
-  """
-  All values not starting with the given string.
-  """
-  f_not_starts_with: String
-  """
-  All values ending with the given string.
-  """
-  f_ends_with: String
-  """
-  All values not ending with the given string.
-  """
-  f_not_ends_with: String
-  test: String
-  """
-  All values that are not equal to given value.
-  """
-  test_not: String
-  """
-  All values that are contained in given list.
-  """
-  test_in: [String!]
-  """
-  All values that are not contained in given list.
-  """
-  test_not_in: [String!]
-  """
-  All values less than the given value.
-  """
-  test_lt: String
-  """
-  All values less than or equal the given value.
-  """
-  test_lte: String
-  """
-  All values greater than the given value.
-  """
-  test_gt: String
-  """
-  All values greater than or equal the given value.
-  """
-  test_gte: String
-  """
-  All values containing the given string.
-  """
-  test_contains: String
-  """
-  All values not containing the given string.
-  """
-  test_not_contains: String
-  """
-  All values starting with the given string.
-  """
-  test_starts_with: String
-  """
-  All values not starting with the given string.
-  """
-  test_not_starts_with: String
-  """
-  All values ending with the given string.
-  """
-  test_ends_with: String
-  """
-  All values not ending with the given string.
-  """
-  test_not_ends_with: String
+  test: ID!
 }
 
 type FriendSubscriptionPayload {
@@ -510,14 +306,6 @@ input FriendSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [FriendSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FriendSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FriendSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -537,52 +325,12 @@ input FriendSubscriptionWhereInput {
   node: FriendWhereInput
 }
 
-input FriendUpdateDataInput {
-  f: String
-  test: String
-}
-
 input FriendUpdateInput {
   f: String
-  test: String
-}
-
-input FriendUpdateManyDataInput {
-  f: String
-  test: String
-}
-
-input FriendUpdateManyInput {
-  create: [FriendCreateInput!]
-  connect: [FriendWhereUniqueInput!]
-  set: [FriendWhereUniqueInput!]
-  disconnect: [FriendWhereUniqueInput!]
-  delete: [FriendWhereUniqueInput!]
-  update: [FriendUpdateWithWhereUniqueNestedInput!]
-  updateMany: [FriendUpdateManyWithWhereNestedInput!]
-  deleteMany: [FriendScalarWhereInput!]
-  upsert: [FriendUpsertWithWhereUniqueNestedInput!]
 }
 
 input FriendUpdateManyMutationInput {
   f: String
-  test: String
-}
-
-input FriendUpdateManyWithWhereNestedInput {
-  where: FriendScalarWhereInput!
-  data: FriendUpdateManyDataInput!
-}
-
-input FriendUpdateWithWhereUniqueNestedInput {
-  where: FriendWhereUniqueInput!
-  data: FriendUpdateDataInput!
-}
-
-input FriendUpsertWithWhereUniqueNestedInput {
-  where: FriendWhereUniqueInput!
-  update: FriendUpdateDataInput!
-  create: FriendCreateInput!
 }
 
 input FriendWhereInput {
@@ -590,14 +338,6 @@ input FriendWhereInput {
   Logical AND on all given filters.
   """
   AND: [FriendWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FriendWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FriendWhereInput!]
   f: String
   """
   All values that are not equal to given value.
@@ -651,63 +391,64 @@ input FriendWhereInput {
   All values not ending with the given string.
   """
   f_not_ends_with: String
-  test: String
+  test: ID
   """
   All values that are not equal to given value.
   """
-  test_not: String
+  test_not: ID
   """
   All values that are contained in given list.
   """
-  test_in: [String!]
+  test_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  test_not_in: [String!]
+  test_not_in: [ID!]
   """
   All values less than the given value.
   """
-  test_lt: String
+  test_lt: ID
   """
   All values less than or equal the given value.
   """
-  test_lte: String
+  test_lte: ID
   """
   All values greater than the given value.
   """
-  test_gt: String
+  test_gt: ID
   """
   All values greater than or equal the given value.
   """
-  test_gte: String
+  test_gte: ID
   """
   All values containing the given string.
   """
-  test_contains: String
+  test_contains: ID
   """
   All values not containing the given string.
   """
-  test_not_contains: String
+  test_not_contains: ID
   """
   All values starting with the given string.
   """
-  test_starts_with: String
+  test_starts_with: ID
   """
   All values not starting with the given string.
   """
-  test_not_starts_with: String
+  test_not_starts_with: ID
   """
   All values ending with the given string.
   """
-  test_ends_with: String
+  test_ends_with: ID
   """
   All values not ending with the given string.
   """
-  test_not_ends_with: String
+  test_not_ends_with: ID
 }
 
 input FriendWhereUniqueInput {
   f: String
+  test: ID
 }
 
 type Joint implements Node {
@@ -764,10 +505,6 @@ enum JointOrderByInput {
   id_DESC
   j_ASC
   j_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type JointPreviousValues {
@@ -909,14 +646,6 @@ input JointSubscriptionWhereInput {
   """
   AND: [JointSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [JointSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [JointSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -968,21 +697,9 @@ input JointUpdateManyWithWhereNestedInput {
   data: JointUpdateManyDataInput!
 }
 
-input JointUpdateOneRequiredInput {
-  create: JointCreateInput
-  connect: JointWhereUniqueInput
-  update: JointUpdateDataInput
-  upsert: JointUpsertNestedInput
-}
-
 input JointUpdateWithWhereUniqueNestedInput {
   where: JointWhereUniqueInput!
   data: JointUpdateDataInput!
-}
-
-input JointUpsertNestedInput {
-  update: JointUpdateDataInput!
-  create: JointCreateInput!
 }
 
 input JointUpsertWithWhereUniqueNestedInput {
@@ -996,14 +713,6 @@ input JointWhereInput {
   Logical AND on all given filters.
   """
   AND: [JointWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [JointWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [JointWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1117,11 +826,6 @@ input JointWhereUniqueInput {
 }
 
 """
-Raw JSON value
-"""
-scalar Json
-
-"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
@@ -1129,27 +833,21 @@ scalar Long
 
 type Mutation {
   createParent(data: ParentCreateInput!): Parent!
-  createChild(data: ChildCreateInput!): Child!
   createJoint(data: JointCreateInput!): Joint!
   createFriend(data: FriendCreateInput!): Friend!
   updateParent(data: ParentUpdateInput!, where: ParentWhereUniqueInput!): Parent
-  updateChild(data: ChildUpdateInput!, where: ChildWhereUniqueInput!): Child
   updateJoint(data: JointUpdateInput!, where: JointWhereUniqueInput!): Joint
   updateFriend(data: FriendUpdateInput!, where: FriendWhereUniqueInput!): Friend
   deleteParent(where: ParentWhereUniqueInput!): Parent
-  deleteChild(where: ChildWhereUniqueInput!): Child
   deleteJoint(where: JointWhereUniqueInput!): Joint
   deleteFriend(where: FriendWhereUniqueInput!): Friend
   upsertParent(where: ParentWhereUniqueInput!, create: ParentCreateInput!, update: ParentUpdateInput!): Parent!
-  upsertChild(where: ChildWhereUniqueInput!, create: ChildCreateInput!, update: ChildUpdateInput!): Child!
   upsertJoint(where: JointWhereUniqueInput!, create: JointCreateInput!, update: JointUpdateInput!): Joint!
   upsertFriend(where: FriendWhereUniqueInput!, create: FriendCreateInput!, update: FriendUpdateInput!): Friend!
   updateManyParents(data: ParentUpdateManyMutationInput!, where: ParentWhereInput): BatchPayload!
-  updateManyChildren(data: ChildUpdateManyMutationInput!, where: ChildWhereInput): BatchPayload!
   updateManyJoints(data: JointUpdateManyMutationInput!, where: JointWhereInput): BatchPayload!
   updateManyFriends(data: FriendUpdateManyMutationInput!, where: FriendWhereInput): BatchPayload!
   deleteManyParents(where: ParentWhereInput): BatchPayload!
-  deleteManyChildren(where: ChildWhereInput): BatchPayload!
   deleteManyJoints(where: JointWhereInput): BatchPayload!
   deleteManyFriends(where: FriendWhereInput): BatchPayload!
 }
@@ -1195,7 +893,7 @@ type PageInfo {
 type Parent implements Node {
   id: ID!
   p: String
-  children(where: ChildWhereInput, orderBy: ChildOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Child!]
+  children: [Child!]
   j(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Joint!]
 }
 
@@ -1240,10 +938,6 @@ enum ParentOrderByInput {
   id_DESC
   p_ASC
   p_DESC
-  updatedAt_ASC
-  updatedAt_DESC
-  createdAt_ASC
-  createdAt_DESC
 }
 
 type ParentPreviousValues {
@@ -1263,14 +957,6 @@ input ParentSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [ParentSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ParentSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ParentSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1305,14 +991,6 @@ input ParentWhereInput {
   Logical AND on all given filters.
   """
   AND: [ParentWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ParentWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ParentWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1419,12 +1097,10 @@ input ParentWhereInput {
   All values not ending with the given string.
   """
   p_not_ends_with: String
-  children_every: ChildWhereInput
   children_some: ChildWhereInput
-  children_none: ChildWhereInput
-  j_every: JointWhereInput
+  children_every: ChildRestrictedWhereInput
+  children_none: ChildRestrictedWhereInput
   j_some: JointWhereInput
-  j_none: JointWhereInput
 }
 
 input ParentWhereUniqueInput {
@@ -1434,15 +1110,12 @@ input ParentWhereUniqueInput {
 
 type Query {
   parents(where: ParentWhereInput, orderBy: ParentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Parent]!
-  children(where: ChildWhereInput, orderBy: ChildOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Child]!
   joints(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Joint]!
   friends(where: FriendWhereInput, orderBy: FriendOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Friend]!
   parent(where: ParentWhereUniqueInput!): Parent
-  child(where: ChildWhereUniqueInput!): Child
   joint(where: JointWhereUniqueInput!): Joint
   friend(where: FriendWhereUniqueInput!): Friend
   parentsConnection(where: ParentWhereInput, orderBy: ParentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ParentConnection!
-  childrenConnection(where: ChildWhereInput, orderBy: ChildOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ChildConnection!
   jointsConnection(where: JointWhereInput, orderBy: JointOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): JointConnection!
   friendsConnection(where: FriendWhereInput, orderBy: FriendOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): FriendConnection!
   """
@@ -1458,7 +1131,6 @@ type Query {
 
 type Subscription {
   parent(where: ParentSubscriptionWhereInput): ParentSubscriptionPayload
-  child(where: ChildSubscriptionWhereInput): ChildSubscriptionPayload
   joint(where: JointSubscriptionWhereInput): JointSubscriptionPayload
   friend(where: FriendSubscriptionWhereInput): FriendSubscriptionPayload
 }

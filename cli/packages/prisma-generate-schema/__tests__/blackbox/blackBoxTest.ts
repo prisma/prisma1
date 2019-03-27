@@ -51,10 +51,10 @@ export default function blackBoxTest(
 
 const testNames = fs.readdirSync(path.join(__dirname, 'cases'))
 
-for (const testName of testNames) {
-  test(`Generates schema for ${testName}/relational correctly`, () => {
-    blackBoxTest(testName, DatabaseType.postgres, 'relational')
-  })
+for (const testName of testNames.slice(1, 2)) {
+  // test(`Generates schema for ${testName}/relational correctly`, () => {
+  //   blackBoxTest(testName, DatabaseType.postgres, 'relational')
+  // })
   test(`Generates schema for ${testName}/document correctly`, () => {
     blackBoxTest(testName, DatabaseType.mongo, 'document')
   })

@@ -1,0 +1,44 @@
+type User {
+  id: ID! @id
+  name: String!
+  posts: [Post] @relation(link: TABLE)
+  postsWithoutConnection: [PostWithoutConnection]
+  billingInfo: BillingInfo! @relation(link: TABLE)
+  billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(link: TABLE)
+  likes: [Post] @relation(name: "LikesByUser")
+  optionalDetails: OptionalDetails @relation(link: TABLE)
+  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection @relation(link: TABLE)
+}
+
+type Post {
+  id: ID! @id
+  text: String!
+  count: Int!
+  user: User! @relation(link: TABLE)
+  likes: [User] @relation(name: "LikesByUser")
+}
+
+type PostWithoutConnection {
+  id: ID! @id
+  text: String!
+  count: Int!
+}
+
+type BillingInfo {
+  id: ID! @id
+  account: String!
+  user: User! @relation(link: TABLE)
+}
+
+type BillingInfoWithoutConnection {
+  account: String!
+}
+
+type OptionalDetails {
+  text: String!
+  user: User! @relation(link: TABLE)
+}
+
+type OptionalDetailsWithoutConnection {
+  text: String!
+}
