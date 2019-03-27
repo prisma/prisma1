@@ -41,7 +41,8 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
     validateIfRequiredStrategyIsProvided(dataModel, capabilities) ++
       validateBackRelationFields(dataModel, capabilities) ++
       validateStrategyIsProvidedExactlyOnce(dataModel, capabilities) ++
-      validateIfProvidedStrategiesAreSupported(dataModel, capabilities)
+      validateIfProvidedStrategiesAreSupported(dataModel, capabilities) ++
+      validateIfOnDeleteIsUsedByMongo(dataModel, capabilities)
   }
 
   private def validateBackRelationFields(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
@@ -82,6 +83,17 @@ object RelationDirective extends FieldDirective[RelationDirectiveData] {
       val tableMode  = capabilities.has(RelationLinkTableCapability).toOption("`@relation(link: TABLE)`")
       val validModes = (tableMode ++ inlineMode).toVector
       DeployErrors.missingRelationStrategy(relationField, validModes)
+    }
+  }
+
+  private def validateIfOnDeleteIsUsedByMongo(dataModel: PrismaSdl, capabilities: ConnectorCapabilities): Vector[DeployError] = {
+    for {
+      modelType     <- dataModel.modelTypes
+      relationField <- modelType.relationFields
+      cascade       = relationField.cascade
+      if capabilities.isMongo && (cascade == OnDelete.Cascade || cascade == OnDelete.SetNull)
+    } yield {
+      DeployErrors.cascadeUsedWithMongo(relationField)
     }
   }
 

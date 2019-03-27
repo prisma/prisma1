@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.validation
 
+import com.prisma.{IgnoreMySql, IgnorePostgres, IgnoreSQLite}
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.gc_values.{EnumGCValue, StringGCValue}
 import com.prisma.shared.models.ConnectorCapability._
@@ -223,5 +224,25 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
     val dataModel = validate(dataModelString)
     val enum      = dataModel.enum_!("Status")
     enum.values should equal(Vector("A", "B"))
+  }
+
+  "fail if a Mongo is using onDelete" taggedAs (IgnoreSQLite, IgnorePostgres, IgnoreMySql) in {
+    val dataModelString =
+      """
+        |type Test {
+        |  id: ID! @id
+        |  b: B @relation(name:"Test", onDelete: CASCADE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val errors = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability))
+    val error1 = errors.head
+    error1.`type` should equal("Test")
+    error1.field should equal(Some("b"))
+    error1.description should include(
+      s"The Mongo connector currently does not support Cascading Deletes, but the field `b` defines cascade behaviour. Please remove the onDelete argument.")
   }
 }
