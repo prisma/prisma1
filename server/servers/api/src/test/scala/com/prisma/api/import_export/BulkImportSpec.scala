@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromStringv11() { """
+  lazy val project: Project = SchemaDsl.fromStringv11() { """
                                                       |type Model0 {
                                                       |   id: ID! @id
                                                       |   a: String

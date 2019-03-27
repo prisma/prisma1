@@ -54,9 +54,13 @@ object GCValueJsonFormatter {
 
     //filter out createdAt, updatedAt if there is no such field on the model
     def filterCreatedAtUpdatedAt(tuple: (String, JsValue)): Boolean = tuple._1 match {
-      case "createdAt" if !model.fields.exists(_.behaviour.contains(FieldBehaviour.CreatedAtBehaviour)) => false
-      case "updatedAt" if !model.fields.exists(_.behaviour.contains(FieldBehaviour.UpdatedAtBehaviour)) => false
-      case _                                                                                            => true
+      case "createdAt" if model.fields.exists(_.behaviour.contains(FieldBehaviour.CreatedAtBehaviour))                   => true
+      case "createdAt" if model.fields.exists(x => x.name == "createdAt" && x.typeIdentifier == TypeIdentifier.DateTime) => true
+      case "updatedAt" if model.fields.exists(_.behaviour.contains(FieldBehaviour.UpdatedAtBehaviour))                   => true
+      case "updatedAt" if model.fields.exists(x => x.name == "updatedAt" && x.typeIdentifier == TypeIdentifier.DateTime) => true
+      case "updatedAt" | "createdAt"                                                                                     => false
+      case _                                                                                                             => true
+
     }
 
     for {
