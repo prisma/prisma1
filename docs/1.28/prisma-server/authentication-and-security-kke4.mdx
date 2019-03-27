@@ -1,4 +1,3 @@
-
 import Code from 'components/Markdown/Code'
 import Warning from 'components/Markdown/Warning'
 import Collapse from 'components/Markdown/Collapse'
@@ -28,7 +27,7 @@ To ensure only entitled users are able to perform actions through the Management
 The Management API secret is set in the Docker Compose file you're using to configure your Prisma server. It is part of the `PRISMA_CONFIG` environment variable and specified via the `managementApiSecret` key:
 
 <Code lines="10">
-
+  
 ```
 version: '3'
 services:
@@ -52,12 +51,6 @@ services:
 ```
 
 </Code>
-
-<Warning>
-
-If the Docker configuration of your Prisma server does not contain a `managementApiSecret`, everyone with access to the URL of your Prisma server will be able to make arbitrary requests to it. This includes deploying and deleting Prisma services as well as modifying data.
-
-</Warning>
 
 ### Management API token
 
