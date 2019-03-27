@@ -12,13 +12,11 @@ pub struct CreateNode {
 
 #[derive(Debug, Clone)]
 pub struct NestedCreateNode {
-    pub model: ModelRef,
-    pub non_list_args: PrismaArgs,
-    pub list_args: PrismaArgs,
-    pub nested_mutactions: NestedMutactions,
-
     pub relation_field: Arc<RelationField>,
+    pub non_list_args: PrismaArgs,
+    pub list_args: Vec<(String, PrismaListValue)>,
     pub top_is_create: bool,
+    pub nested_mutactions: NestedMutactions,
 }
 
 impl CreateNode {

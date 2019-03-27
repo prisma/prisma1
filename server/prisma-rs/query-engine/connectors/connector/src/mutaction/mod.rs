@@ -55,9 +55,14 @@ pub enum TopLevelDatabaseMutaction {
 #[derive(Debug, Clone)]
 pub enum NestedDatabaseMutaction {
     CreateNode(NestedCreateNode),
+    UpdateNode(NestedUpdateNode),
+    UpsertNode(NestedUpsertNode),
+    DeleteNode(NestedDeleteNode),
     Connect(NestedConnect),
     Disconnect(NestedDisconnect),
     Set(NestedSet),
+    UpdateNodes(NestedUpdateNodes),
+    DeleteNodes(NestedDeleteNodes),
 }
 
 #[derive(Debug, Default, Clone)]
