@@ -17,8 +17,8 @@ exports[`Introspects airbnb/relational correctly 1`] = `
   location: Location @relation(link: TABLE)
   bookings: [Booking] @relation(link: TABLE)
   paymentAccount: [PaymentAccount] @relation(link: TABLE)
-  sentMessages: [Message] @relation(link: TABLE)
-  receivedMessages: [Message] @relation(link: TABLE)
+  sentMessages: [Message] @relation(link: TABLE, name: \\"SentMessages\\")
+  receivedMessages: [Message] @relation(link: TABLE, name: \\"ReceivedMessages\\")
   notifications: [Notification] @relation(link: TABLE)
   profilePicture: Picture @relation(link: TABLE)
   hostingExperiences: [Experience] @relation(link: TABLE)
@@ -269,8 +269,8 @@ type CreditCardInformation {
 type Message {
   id: ID! @id
   createdAt: DateTime! @createdAt
-  from: User! @relation(link: TABLE)
-  to: User! @relation(link: TABLE)
+  from: User! @relation(link: TABLE, name: \\"SentMessages\\")
+  to: User! @relation(link: TABLE, name: \\"ReceivedMessages\\")
   deliveredAt: DateTime!
   readAt: DateTime!
 }
@@ -672,18 +672,18 @@ exports[`Introspects meshRelation/relational correctly 1`] = `
 
 type B {
   field: [String]
-  c: C @relation(link: TABLE)
+  c: C @relation(link: TABLE, name: \\"BToC\\")
   b: [B]
   a: A! @relation(link: TABLE)
-  c2: C @relation(link: TABLE)
+  c2: C @relation(link: TABLE, name: \\"BToC2\\")
 }
 
 type C {
   expirationDate: DateTime
   c: C! @relation(link: TABLE)
-  b: [B] @relation(link: TABLE)
+  b: [B] @relation(link: TABLE, name: \\"BToC\\")
   a: A @relation(link: TABLE)
-  b2: B @relation(link: TABLE)
+  b2: B @relation(link: TABLE, name: \\"BToC2\\")
 }
 
 type D {
@@ -757,14 +757,14 @@ type UserSpace {
 
 exports[`Introspects relationNames/relational correctly 1`] = `
 "type A {
-  toB: B! @relation(link: TABLE)
-  toB2: B! @relation(link: TABLE)
+  toB: B! @relation(link: TABLE, name: \\"RaToB\\")
+  toB2: B! @relation(link: TABLE, name: \\"RaToB2\\")
   toC: C @relation(link: TABLE)
 }
 
 type B {
-  toA: A! @relation(link: TABLE)
-  toA2: A! @relation(link: TABLE)
+  toA: A! @relation(link: TABLE, name: \\"RaToB\\")
+  toA2: A! @relation(link: TABLE, name: \\"RaToB2\\")
   toC: C! @relation(link: TABLE)
 }
 
@@ -778,7 +778,7 @@ exports[`Introspects relations/relational correctly 1`] = `
 "type User {
   id: ID! @id
   name: String!
-  posts: [Post] @relation(link: TABLE)
+  posts: [Post] @relation(link: TABLE, name: \\"PostsByUser\\")
   postsWithoutConnection: [PostWithoutConnection]
   billingInfo: BillingInfo! @relation(link: TABLE)
   billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(link: TABLE)
@@ -791,7 +791,7 @@ type Post {
   id: ID! @id
   text: String!
   count: Int!
-  user: User! @relation(link: TABLE)
+  user: User! @relation(link: TABLE, name: \\"PostsByUser\\")
   likes: [User] @relation(name: \\"LikesByUser\\")
 }
 
@@ -925,8 +925,8 @@ type MultiSelfReferencingCWithId {
 
 type MultiSelfReferencingBWithId {
   id: ID! @id
-  a: MultiSelfReferencingBWithId @relation(link: TABLE)
-  b: MultiSelfReferencingBWithId @relation(link: TABLE)
+  a: MultiSelfReferencingBWithId @relation(link: TABLE, name: \\"WithIdAToA2\\")
+  b: MultiSelfReferencingBWithId @relation(link: TABLE, name: \\"WithIdAToA2\\")
 }
 
 type MultiSelfReferencingC {
@@ -935,8 +935,8 @@ type MultiSelfReferencingC {
 }
 
 type MultiSelfReferencingB {
-  a: MultiSelfReferencingB @relation(link: TABLE)
-  b: MultiSelfReferencingB @relation(link: TABLE)
+  a: MultiSelfReferencingB @relation(link: TABLE, name: \\"AToA2\\")
+  b: MultiSelfReferencingB @relation(link: TABLE, name: \\"AToA2\\")
 }"
 `;
 

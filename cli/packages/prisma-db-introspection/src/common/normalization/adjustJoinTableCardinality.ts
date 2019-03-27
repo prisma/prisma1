@@ -32,8 +32,6 @@ export class AdjustJoinTableCardinality implements INormalizer {
         if (!refField.isList) {
           field.isList = false
           field.isRequired = refField.isRequired
-          console.log(`Going to push linkTableDirective`)
-          console.log(field.directives)
           field.directives.push(this.createLinkTableDirective(field))
           if (field.relatedField !== null) {
             field.relatedField.directives.push(
@@ -58,7 +56,8 @@ export class AdjustJoinTableCardinality implements INormalizer {
   }
 
   private createLinkTableDirective(field: IGQLField): IDirectiveInfo {
-    const directive = {
+    // TODO: Find a way to do this without any
+    const directive: any = {
       name: DirectiveKeys.relation,
       arguments: {
         link: 'TABLE',
@@ -66,7 +65,7 @@ export class AdjustJoinTableCardinality implements INormalizer {
     }
 
     if (field.relationName) {
-      directive.name = field.relationName
+      directive.arguments.name = `"${field.relationName}"`
     }
 
     return directive
