@@ -180,6 +180,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     val goesFromRelationToScalar = oldField.isRelation && newField.isScalar
     val becomesRequired          = !oldField.isRequired && newField.isRequired
     val becomesUnique            = !oldField.isUnique && newField.isUnique
+    def isIdTypeChange: Boolean  = oldField.isScalar && newField.isScalar && oldField.asScalarField_!.isId && newField.asScalarField_!.isId && typeChanges
 
     def warnings: Future[Vector[DeployWarning]] = () match {
       case _ if cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation =>
@@ -234,12 +235,23 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
         validationSuccessful
     }
 
+    def idTypeChangeError: Future[Option[DeployError]] = isIdTypeChange match {
+      case true =>
+        clientDbQueries.existsByModel(model).map {
+          case true  => Option(DeployErrors.changingTypeOfIdField(`type` = model.name, field = oldField.name))
+          case false => None
+        }
+      case false =>
+        validationSuccessfulOpt
+    }
+
     for {
-      warnings: Vector[DeployWarning]      <- warnings
-      resultsForNull: Vector[DeployResult] <- resultsForNull
-      uniqueError: Vector[DeployError]     <- uniqueErrors
+      warnings          <- warnings
+      resultsForNull    <- resultsForNull
+      uniqueError       <- uniqueErrors
+      idTypeChangeError <- idTypeChangeError
     } yield {
-      warnings ++ resultsForNull ++ uniqueError
+      warnings ++ resultsForNull ++ uniqueError ++ idTypeChangeError
     }
   }
 
@@ -336,5 +348,6 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     }
   }
 
-  private def validationSuccessful = Future.successful(Vector.empty)
+  private def validationSuccessful    = Future.successful(Vector.empty)
+  private def validationSuccessfulOpt = Future.successful(Option.empty)
 }
