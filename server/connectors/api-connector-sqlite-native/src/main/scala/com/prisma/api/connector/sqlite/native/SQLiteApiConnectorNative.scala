@@ -15,7 +15,7 @@ case class SQLiteApiConnectorNative(config: DatabaseConfig, isPrototype: Boolean
 
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = {
     val exe = base.databaseMutactionExecutor
-    new SQLiteDatabaseMutactionExecutor2(exe.slickDatabase, exe.manageRelayIds)
+    new SQLiteDatabaseMutactionExecutor(exe.slickDatabase, exe.manageRelayIds)
   }
   override def dataResolver(project: Project): DataResolver       = SQLiteNativeDataResolver(base.dataResolver(project))
   override def masterDataResolver(project: Project): DataResolver = SQLiteNativeDataResolver(base.dataResolver(project))

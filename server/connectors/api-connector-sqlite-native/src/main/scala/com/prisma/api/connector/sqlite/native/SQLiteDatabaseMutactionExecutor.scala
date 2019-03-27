@@ -18,26 +18,7 @@ import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SQLiteDatabaseMutactionExecutor(delegate: DatabaseMutactionExecutor) extends DatabaseMutactionExecutor {
-  override def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = {
-    delegate.executeTransactionally(mutaction)
-  }
-  override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = {
-    // this is only called by the export which we won't support for now
-    ???
-  }
-  override def executeRaw(project: Project, query: String): Future[JsValue] = {
-//    val input = prisma.protocol.ExecuteRawInput(
-//      header = protocol.Header("ExecuteRawInput"),
-//      query = query
-//    )
-//    val json = NativeBinding.execute_raw(input);
-//    Future.successful(json)
-    delegate.executeRaw(project, query)
-  }
-}
-
-case class SQLiteDatabaseMutactionExecutor2(
+case class SQLiteDatabaseMutactionExecutor(
     slickDatabaseArg: SlickDatabase,
     manageRelayIds: Boolean
 )(implicit ec: ExecutionContext)
