@@ -115,6 +115,7 @@ case class LegacyDataModelValidator(
     val enumTypes: Vector[PrismaSdl => PrismaEnum] = doc.enumNames.map { name =>
       val definition: EnumTypeDefinition = doc.enumType(name).get
       val enumValues                     = definition.values.map(_.name)
+
       PrismaEnum(name, values = enumValues)(_)
     }
 
@@ -177,21 +178,23 @@ case class LegacyDataModelValidator(
       field      <- objectType.fields
     } yield FieldAndType(objectType, field)
 
-    val reservedFieldsValidations = tryValidation(validateReservedFields(allFieldAndTypes))
-    val requiredFieldValidations  = tryValidation(validateRequiredReservedFields(doc.objectTypes))
-    val duplicateTypeValidations  = tryValidation(validateDuplicateTypes(doc.objectTypes, allFieldAndTypes))
-    val duplicateFieldValidations = tryValidation(validateDuplicateFields(allFieldAndTypes))
-    val missingTypeValidations    = tryValidation(validateMissingTypes(allFieldAndTypes))
-    val relationFieldValidations  = tryValidation(validateRelationFields(allFieldAndTypes))
-    val scalarFieldValidations    = tryValidation(validateScalarFields(allFieldAndTypes))
-    val fieldDirectiveValidations = tryValidation(allFieldAndTypes.flatMap(validateFieldDirectives))
-    val enumValidations           = tryValidation(validateEnumTypes)
-    val crossRenameValidations    = tryValidation(validateCrossRenames(doc.objectTypes))
+    val reservedFieldsValidations  = tryValidation(validateReservedFields(allFieldAndTypes))
+    val requiredFieldValidations   = tryValidation(validateRequiredReservedFields(doc.objectTypes))
+    val duplicateTypeValidations   = tryValidation(validateDuplicateTypes(doc.objectTypes, allFieldAndTypes))
+    val invalidTypeNameValidations = tryValidation(validateReservedTypeNames(doc.objectTypes, allFieldAndTypes))
+    val duplicateFieldValidations  = tryValidation(validateDuplicateFields(allFieldAndTypes))
+    val missingTypeValidations     = tryValidation(validateMissingTypes(allFieldAndTypes))
+    val relationFieldValidations   = tryValidation(validateRelationFields(allFieldAndTypes))
+    val scalarFieldValidations     = tryValidation(validateScalarFields(allFieldAndTypes))
+    val fieldDirectiveValidations  = tryValidation(allFieldAndTypes.flatMap(validateFieldDirectives))
+    val enumValidations            = tryValidation(validateEnumTypes)
+    val crossRenameValidations     = tryValidation(validateCrossRenames(doc.objectTypes))
 
     val allValidations = Vector(
       reservedFieldsValidations,
       requiredFieldValidations,
       duplicateFieldValidations,
+      invalidTypeNameValidations,
       duplicateTypeValidations,
       missingTypeValidations,
       relationFieldValidations,
@@ -245,6 +248,20 @@ case class LegacyDataModelValidator(
       objectType        <- objectTypes.find(_.name.equalsIgnoreCase(duplicateTypeName))
     } yield {
       DeployErrors.duplicateTypeName(objectType)
+    }
+  }
+
+  val invalidTypeNameList = List("Mutation", "Query", "Subscription", "Node", "PageInfo", "BatchPayload")
+
+  def validateReservedTypeNames(objectTypes: Seq[ObjectTypeDefinition], fieldAndTypes: Seq[FieldAndType]): Seq[DeployError] = {
+    val typeNames        = objectTypes.map(_.name.toLowerCase)
+    val invalidTypeNames = typeNames.filter(name => invalidTypeNameList.contains(name))
+
+    for {
+      invalidTypeName <- invalidTypeNames
+      objectType      <- objectTypes.find(_.name.equalsIgnoreCase(invalidTypeName))
+    } yield {
+      DeployErrors.reservedTypeName(objectType)
     }
   }
 
