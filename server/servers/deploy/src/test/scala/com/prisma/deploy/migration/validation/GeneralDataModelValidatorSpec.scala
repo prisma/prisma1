@@ -197,6 +197,20 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
     error1.description should include(s"The name of the type `Todo` occurs more than once. The detection of duplicates is performed case insensitive.")
   }
 
+  "fail if a type is using a reserved name" in {
+    val dataModelString =
+      """
+        |type Node {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val errors = validateThatMustError(dataModelString)
+    val error1 = errors.head
+    error1.`type` should equal("Node")
+    error1.field should equal(None)
+    error1.description should include(s"The type `Node` has is using a reserved type name. Please rename it.")
+  }
+
   "enum types must be detected" in {
     val dataModelString =
       """
