@@ -55,6 +55,13 @@ impl DatabaseMutactionExecutor for Sqlite {
         })
     }
 
+    fn execute_update_many(&self, db_name: String, mutaction: &UpdateNodes) -> ConnectorResult<usize> {
+        self.with_transaction(&db_name, |conn| {
+            let ids = dbg!(Self::ids_for(conn, mutaction.model.clone(), mutaction.filter.clone())?);
+            Self::update_nodes(conn, ids, mutaction)
+        })
+    }
+
     fn execute_upsert(
         &self,
         db_name: String,
@@ -136,10 +143,13 @@ impl Sqlite {
         Ok(res?)
     }
 
-    fn id_for(conn: &Transaction, model: ModelRef, node_selector: &NodeSelector) -> ConnectorResult<GraphqlId> {
+    fn ids_for<T>(conn: &Transaction, model: ModelRef, into_args: T) -> ConnectorResult<Vec<GraphqlId>>
+    where
+        T: Into<QueryArguments>,
+    {
         let (_, select) = {
             let selected_fields = SelectedFields::from(model.fields().id());
-            QueryBuilder::get_node_by_where(&node_selector, &selected_fields)
+            QueryBuilder::get_nodes(model, into_args, &selected_fields)
         };
 
         let ids = Self::query(conn, select, |row| {
@@ -147,7 +157,11 @@ impl Sqlite {
             Ok(id)
         })?;
 
-        let opt_id = ids.into_iter().next();
+        Ok(ids)
+    }
+
+    fn id_for(conn: &Transaction, model: ModelRef, node_selector: &NodeSelector) -> ConnectorResult<GraphqlId> {
+        let opt_id = Self::ids_for(conn, model, node_selector.clone())?.into_iter().next();
 
         opt_id.ok_or_else(|| ConnectorError::NodeNotFoundForWhere {
             model: node_selector.field.model().name.clone(),
@@ -167,35 +181,70 @@ impl Sqlite {
             None => GraphqlId::Int(conn.last_insert_rowid() as usize),
         };
 
-        for (field_name, list_value) in mutaction.list_args.clone() {
-            let field = mutaction.model.fields().find_from_scalar(&field_name).unwrap();
-            let table = field.scalar_list_table();
-            let inserts = MutationBuilder::create_scalar_list_value(table, &list_value, &id);
-
-            Self::execute_many(conn, inserts)?;
-        }
+        Self::create_list_args(conn, &id, mutaction.model.clone(), mutaction.list_args.clone())?;
 
         Ok(id)
     }
 
+    fn create_list_args(
+        conn: &Transaction,
+        id: &GraphqlId,
+        model: ModelRef,
+        list_args: Vec<(String, PrismaListValue)>,
+    ) -> ConnectorResult<()> {
+        for (field_name, list_value) in list_args {
+            let field = model.fields().find_from_scalar(&field_name).unwrap();
+            let table = field.scalar_list_table();
+
+            if let Some(insert) = MutationBuilder::create_scalar_list_value(table.table(), &list_value, id) {
+                Self::execute_one(conn, insert)?;
+            }
+        }
+
+        Ok(())
+    }
+
+    fn update_list_args(
+        conn: &Transaction,
+        ids: Vec<GraphqlId>,
+        model: ModelRef,
+        list_args: Vec<(String, PrismaListValue)>,
+    ) -> ConnectorResult<()> {
+        for (field_name, list_value) in list_args {
+            let field = model.fields().find_from_scalar(&field_name).unwrap();
+            let table = field.scalar_list_table();
+            let (deletes, inserts) = MutationBuilder::update_scalar_list_value_by_ids(table, &list_value, ids.to_vec());
+
+            Self::execute_many(conn, deletes)?;
+            Self::execute_many(conn, inserts)?;
+        }
+
+        Ok(())
+    }
+
     fn update_node(conn: &Transaction, id: GraphqlId, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId> {
         let model = mutaction.where_.field.model();
-        let updating = MutationBuilder::update_node_by_id(Arc::clone(&model), &id, &mutaction.non_list_args)?;
+        let updating = MutationBuilder::update_node_by_id(Arc::clone(&model), id.clone(), &mutaction.non_list_args)?;
 
         if let Some(update) = updating {
             Self::execute_one(conn, update)?;
         }
 
-        for (field_name, list_value) in mutaction.list_args.clone() {
-            let field = model.fields().find_from_scalar(&field_name).unwrap();
-            let table = field.scalar_list_table();
-            let (delete, inserts) = MutationBuilder::update_scalar_list_value(table, &list_value, &id);
-
-            Self::execute_one(conn, delete)?;
-            Self::execute_many(conn, inserts)?;
-        }
+        Self::update_list_args(conn, vec![id.clone()], Arc::clone(&model), mutaction.list_args.clone())?;
 
         Ok(id)
+    }
+
+    fn update_nodes(conn: &Transaction, ids: Vec<GraphqlId>, mutaction: &UpdateNodes) -> ConnectorResult<usize> {
+        let count = ids.len();
+
+        let updates =
+            MutationBuilder::update_by_ids(Arc::clone(&mutaction.model), &mutaction.non_list_args, ids.clone())?;
+
+        Self::execute_many(conn, updates)?;
+        Self::update_list_args(conn, ids, Arc::clone(&mutaction.model), mutaction.list_args.clone())?;
+
+        Ok(count)
     }
 
     fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>

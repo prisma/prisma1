@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 declare -a channels=("release" "debug") # Release channels to copy
 
-git submodule update --init
+git submodule sync
 cargo build ${CARGO_FLAGS}
 mkdir -p build
 

@@ -27,7 +27,7 @@ impl QueryExecutor {
                 PrismaQuery::RecordQuery(query) => {
                     let result = self
                         .data_resolver
-                        .get_node_by_where(&query.selector, &query.selected_fields)?;
+                        .get_node_by_where(query.selector.clone(), &query.selected_fields)?;
 
                     match result {
                         Some(ref node) => {

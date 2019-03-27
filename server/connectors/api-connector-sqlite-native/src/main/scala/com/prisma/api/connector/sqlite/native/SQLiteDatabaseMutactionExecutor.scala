@@ -167,16 +167,7 @@ case class SQLiteDatabaseMutactionExecutor2(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
-      case m: TopLevelDeleteNode if DO_NOT_FORWARD_THIS_ONE =>
-        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Delete(
-          prisma.protocol.DeleteNode(
-            header = prisma.protocol.Header(headerName),
-            where = toNodeSelector(m.where),
-          ))
-        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        top_level_mutaction_interpreter(envelope, m)
-
-      case m: TopLevelUpdateNodes if DO_NOT_FORWARD_THIS_ONE =>
+      case m: TopLevelUpdateNodes =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.UpdateNodes(
           prisma.protocol.UpdateNodes(
             header = prisma.protocol.Header(headerName),
@@ -184,6 +175,15 @@ case class SQLiteDatabaseMutactionExecutor2(
             filter = toPrismaFilter(m.whereFilter.getOrElse(AndFilter(Vector.empty))),
             nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
             listArgs = listArgsToProtocolArgs(m.listArgs),
+          ))
+        val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
+        top_level_mutaction_interpreter(envelope, m)
+
+      case m: TopLevelDeleteNode if DO_NOT_FORWARD_THIS_ONE =>
+        val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Delete(
+          prisma.protocol.DeleteNode(
+            header = prisma.protocol.Header(headerName),
+            where = toNodeSelector(m.where),
           ))
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
@@ -204,7 +204,6 @@ case class SQLiteDatabaseMutactionExecutor2(
         top_level_mutaction_interpreter(envelope, m)
 
       case m: TopLevelDeleteNode  => DeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
-      case m: TopLevelUpdateNodes => UpdateNodesInterpreter(m)
       case m: TopLevelDeleteNodes => DeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
       case m: ResetData           => ResetDataInterpreter(m)
       case m: ImportNodes         => ImportNodesInterpreter(m, shouldCreateRelayIds = manageRelayIds)

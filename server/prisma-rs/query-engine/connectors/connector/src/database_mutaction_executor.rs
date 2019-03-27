@@ -45,7 +45,16 @@ pub trait DatabaseMutactionExecutor {
 
                 results.push(result);
             }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNodes(_)) => unimplemented!(),
+            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNodes(ref uns)) => {
+                // uns uns uns
+                let result = DatabaseMutactionResult {
+                    identifier: Identifier::Count(self.execute_update_many(db_name, uns)?),
+                    typ: DatabaseMutactionResultType::Many,
+                    mutaction,
+                };
+
+                results.push(result);
+            }
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::ResetData(_)) => unimplemented!(),
             DatabaseMutaction::Nested(_) => panic!("nested mutactions are not supported yet!"),
@@ -59,6 +68,8 @@ pub trait DatabaseMutactionExecutor {
     fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId>;
     fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId>;
     fn execute_delete(&self, db_name: String, mutaction: &DeleteNode) -> ConnectorResult<SingleNode>;
+
+    fn execute_update_many(&self, db_name: String, mutaction: &UpdateNodes) -> ConnectorResult<usize>;
 
     fn execute_upsert(
         &self,
