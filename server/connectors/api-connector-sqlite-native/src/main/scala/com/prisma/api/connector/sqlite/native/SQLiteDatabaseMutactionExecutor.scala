@@ -52,7 +52,7 @@ case class SQLiteDatabaseMutactionExecutor2(
   }
 
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
-  override def executeTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction, transactionally = false)
+  override def executeTransactionally(mutaction: TopLevelDatabaseMutaction)    = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
 
@@ -68,29 +68,29 @@ case class SQLiteDatabaseMutactionExecutor2(
   }
 
   def executeTopLevelMutaction(
-                                mutaction: TopLevelDatabaseMutaction,
-                                mutationBuilder: JdbcActionsBuilder
-                              ): DBIO[MutactionResults] = {
+      mutaction: TopLevelDatabaseMutaction,
+      mutationBuilder: JdbcActionsBuilder
+  ): DBIO[MutactionResults] = {
     mutaction match {
       case m: TopLevelUpsertNode =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
           childResults <- result match {
-            case result: CreateNodeResult =>
-              DBIO.sequence(m.create.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
-            case result: UpdateNodeResult =>
-              DBIO.sequence(m.update.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
-            case _ => DBIO.successful(Vector.empty)
-          }
+                           case result: CreateNodeResult =>
+                             DBIO.sequence(m.create.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+                           case result: UpdateNodeResult =>
+                             DBIO.sequence(m.update.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+                           case _ => DBIO.successful(Vector.empty)
+                         }
         } yield MutactionResults(result +: childResults.flatMap(_.results))
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
           childResults <- result match {
-            case result: FurtherNestedMutactionResult =>
-              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
-            case _ => DBIO.successful(Vector.empty)
-          }
+                           case result: FurtherNestedMutactionResult =>
+                             DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+                           case _ => DBIO.successful(Vector.empty)
+                         }
         } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FinalMutaction =>
@@ -101,26 +101,26 @@ case class SQLiteDatabaseMutactionExecutor2(
   }
 
   def executeNestedMutaction(
-                              mutaction: NestedDatabaseMutaction,
-                              parentId: IdGCValue,
-                              mutationBuilder: JdbcActionsBuilder
-                            ): DBIO[MutactionResults] = {
+      mutaction: NestedDatabaseMutaction,
+      parentId: IdGCValue,
+      mutationBuilder: JdbcActionsBuilder
+  ): DBIO[MutactionResults] = {
     mutaction match {
       case m: UpsertNode =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- executeNestedMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction], parentId, mutationBuilder)
-            .map(Vector(_))
+                           .map(Vector(_))
         } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- result match {
-            case result: FurtherNestedMutactionResult =>
-              DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
-            case _ => DBIO.successful(Vector.empty)
-          }
+                           case result: FurtherNestedMutactionResult =>
+                             DBIO.sequence(m.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+                           case _ => DBIO.successful(Vector.empty)
+                         }
         } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FinalMutaction =>
@@ -213,12 +213,23 @@ case class SQLiteDatabaseMutactionExecutor2(
     }
   }
 
-  private def createNodeToProtocol(m: CreateNode) = {
+  val emptyNested = prisma.protocol.NestedMutactions(Vector.empty,
+                                                     Vector.empty,
+                                                     Vector.empty,
+                                                     Vector.empty,
+                                                     Vector.empty,
+                                                     Vector.empty,
+                                                     Vector.empty,
+                                                     Vector.empty,
+                                                     Vector.empty)
+
+  private def createNodeToProtocol(m: TopLevelCreateNode) = {
     prisma.protocol.CreateNode(
       header = prisma.protocol.Header(m.getClass.getSimpleName),
       modelName = m.model.name,
       nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
-      listArgs = listArgsToProtocolArgs(m.listArgs)
+      listArgs = listArgsToProtocolArgs(m.listArgs),
+      nested = emptyNested,
     )
   }
 
@@ -227,7 +238,8 @@ case class SQLiteDatabaseMutactionExecutor2(
       header = prisma.protocol.Header(m.getClass.getSimpleName),
       where = toNodeSelector(m.where),
       nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
-      listArgs = listArgsToProtocolArgs(m.listArgs)
+      listArgs = listArgsToProtocolArgs(m.listArgs),
+      nested = emptyNested,
     )
   }
 
