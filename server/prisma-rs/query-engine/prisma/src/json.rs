@@ -19,7 +19,7 @@ pub enum ResponseType {
 }
 
 pub type Map = HashMap<String, Item>;
-pub type List = Vec<PrismaValue>;
+pub type List = Vec<Item>;
 
 #[derive(Serialize, Deserialize)]
 pub enum Item {
@@ -30,11 +30,20 @@ pub enum Item {
 
 use PrismaQueryResult::*;
 
-///
-pub fn build(result: PrismaQueryResult) -> Envelope {
+impl Envelope {
+    pub fn convert(self) -> serde_json::Value {
+        serde_json::to_value(&self).unwrap()
+    }
+
+    fn from_str(s: &str) -> Self {
+        serde_json::from_str(s).unwrap()
+    }
+}
+
+pub fn build(result: &PrismaQueryResult) -> Envelope {
     match result {
-        Single(result) => build_map(&result).into(),
-        Multi(result) => build_list(&result).into(),
+        Single(result) => build_map(result).into(),
+        Multi(result) => build_list(result).into(),
     }
 }
 
@@ -64,22 +73,17 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
 }
 
 fn build_list(result: &MultiPrismaQueryResult) -> List {
-    // Ok(many_nodes
-    //     .result
-    //     .as_pairs()
-    //     .into_iter()
-    //     .map(|vec| {
-    //         vec.into_iter()
-    //             .fold(Ok(JsonMap::new()), |mut map: PrismaResult<JsonMap>, (name, value)| {
-
-    //                 map.as_mut().unwrap().insert(name, serialize_prisma_value(&value)?);
-    //                 map
-    //             })
-    //     })
-    //     .map(|map| Value::Object(map.unwrap()))
-    //     .collect())
-
-    unimplemented!()
+    result
+        .result
+        .as_pairs()
+        .iter()
+        .map(|vec| {
+            Item::Map(vec.iter().fold(Map::new(), |mut map, (name, value)| {
+                map.insert(name.clone(), Item::Value(value.clone()));
+                map
+            }))
+        })
+        .collect()
 }
 
 impl From<Map> for Envelope {

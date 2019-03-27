@@ -1,5 +1,5 @@
 use super::{PrismaRequest, RequestHandler};
-use crate::{context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
+use crate::{json, context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
 use core::{MultiPrismaQueryResult, PrismaQuery, PrismaQueryResult, RootQueryBuilder};
 use graphql_parser as gql;
 use prisma_models::{GraphqlId, PrismaValue, SingleNode};
@@ -60,14 +60,18 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     let queries: Vec<PrismaQuery> = qb.build()?;
     let results = dbg!(ctx.query_executor.execute(&queries))?;
 
-    Ok(json_envelope(
+    #[cfg(not(feature = "newjson"))]
+    return Ok(json_envelope(
         "data",
         results
             .iter()
             .fold(Ok(Map::new()), |acc: PrismaResult<JsonMap>, result| {
                 acc.map(|mut a| serialize_tree(&mut a, result).map(|_| a))?
             })?,
-    ))
+    ));
+
+    #[cfg(feature = "newjson")]
+    return Ok(json::build(results.first().unwrap()).convert());
 }
 
 /// Recursively serialize query results
