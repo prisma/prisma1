@@ -71,13 +71,11 @@ pub struct NestedMutactions {
     pub updates: Vec<NestedUpdateNode>,
     pub upserts: Vec<NestedUpsertNode>,
     pub deletes: Vec<NestedDeleteNode>,
+    pub connects: Vec<NestedConnect>,
+    pub disconnects: Vec<NestedDisconnect>,
+    pub sets: Vec<NestedSet>,
     pub update_manys: Vec<NestedUpdateNodes>,
     pub delete_manys: Vec<NestedDeleteNodes>,
-    /*
-    pub connects: Vec<NestedConnect>,
-    pub sets: Vec<NestedSet>,
-    pub disconnects: Vec<NestedDisconnect>,
-    */
 }
 
 #[derive(Debug, Clone)]

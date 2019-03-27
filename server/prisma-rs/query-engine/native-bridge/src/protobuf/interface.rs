@@ -371,7 +371,14 @@ fn convert_create(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -
         model: model,
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-        nested_mutactions: NestedMutactions::default(),
+        nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
+    }
+}
+
+fn convert_nested_mutactions(m: crate::protobuf::prisma::NestedMutactions, project: ProjectRef) -> NestedMutactions {
+    NestedMutactions {
+        creates: vec![],
+        ..Default::default()
     }
 }
 
@@ -383,13 +390,13 @@ fn convert_nested_create_envelope(
 }
 
 fn convert_nested_create(m: crate::protobuf::prisma::NestedCreateNode, project: ProjectRef) -> NestedCreateNode {
-    let relation_field = find_relation_field(project, m.model_name, m.field_name);
+    let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
     NestedCreateNode {
         relation_field: relation_field,
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
         top_is_create: m.top_is_create,
-        nested_mutactions: NestedMutactions::default(),
+        nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
     }
 }
 
@@ -399,10 +406,10 @@ fn convert_update_envelope(m: crate::protobuf::prisma::UpdateNode, project: Proj
 
 fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> UpdateNode {
     UpdateNode {
-        where_: convert_node_select(m.where_, project),
+        where_: convert_node_select(m.where_, Arc::clone(&project)),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-        nested_mutactions: NestedMutactions::default(),
+        nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
     }
 }
 
@@ -417,10 +424,10 @@ fn convert_nested_update(m: crate::protobuf::prisma::NestedUpdateNode, project: 
     let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
     NestedUpdateNode {
         relation_field: relation_field,
-        where_: m.where_.map(|w| convert_node_select(w, project)),
+        where_: m.where_.map(|w| convert_node_select(w, Arc::clone(&project))),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-        nested_mutactions: NestedMutactions::default(),
+        nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
     }
 }
 
