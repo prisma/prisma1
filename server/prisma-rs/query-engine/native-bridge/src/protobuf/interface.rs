@@ -339,24 +339,30 @@ fn convert_mutaction(m: crate::protobuf::prisma::DatabaseMutaction, project: Pro
         database_mutaction::Type::Reset(x) => DatabaseMutaction::TopLevel(convert_reset(x, project)),
         database_mutaction::Type::DeleteNodes(x) => DatabaseMutaction::TopLevel(convert_delete_nodes(x, project)),
         database_mutaction::Type::UpdateNodes(x) => DatabaseMutaction::TopLevel(convert_update_nodes(x, project)),
-        database_mutaction::Type::NestedConnect(x) => DatabaseMutaction::Nested(convert_nested_connect(x, project)),
-        database_mutaction::Type::NestedDisconnect(x) => {
-            DatabaseMutaction::Nested(convert_nested_disconnect(x, project))
+        database_mutaction::Type::NestedConnect(x) => {
+            DatabaseMutaction::Nested(convert_nested_connect_envelope(x, project))
         }
-        database_mutaction::Type::NestedSet(x) => DatabaseMutaction::Nested(convert_nested_set(x, project)),
+        database_mutaction::Type::NestedDisconnect(x) => {
+            DatabaseMutaction::Nested(convert_nested_disconnect_envelope(x, project))
+        }
+        database_mutaction::Type::NestedSet(x) => DatabaseMutaction::Nested(convert_nested_set_envelope(x, project)),
         database_mutaction::Type::NestedCreate(x) => {
             DatabaseMutaction::Nested(convert_nested_create_envelope(x, project))
         }
         database_mutaction::Type::NestedUpdate(x) => {
             DatabaseMutaction::Nested(convert_nested_update_envelope(x, project))
         }
-        database_mutaction::Type::NestedUpsert(x) => DatabaseMutaction::Nested(convert_nested_upsert(x, project)),
-        database_mutaction::Type::NestedDelete(x) => DatabaseMutaction::Nested(convert_nested_delete(x, project)),
+        database_mutaction::Type::NestedUpsert(x) => {
+            DatabaseMutaction::Nested(convert_nested_upsert_envelope(x, project))
+        }
+        database_mutaction::Type::NestedDelete(x) => {
+            DatabaseMutaction::Nested(convert_nested_delete_envelope(x, project))
+        }
         database_mutaction::Type::NestedUpdateNodes(x) => {
-            DatabaseMutaction::Nested(convert_nested_update_nodes(x, project))
+            DatabaseMutaction::Nested(convert_nested_update_nodes_envelope(x, project))
         }
         database_mutaction::Type::NestedDeleteNodes(x) => {
-            DatabaseMutaction::Nested(convert_nested_delete_nodes(x, project))
+            DatabaseMutaction::Nested(convert_nested_delete_nodes_envelope(x, project))
         }
     }
 }
@@ -371,7 +377,57 @@ fn convert_create(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -
         model: model,
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-        nested_mutactions: NestedMutactions::default(),
+        nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
+    }
+}
+
+fn convert_nested_mutactions(m: crate::protobuf::prisma::NestedMutactions, project: ProjectRef) -> NestedMutactions {
+    NestedMutactions {
+        creates: m
+            .creates
+            .into_iter()
+            .map(|m| convert_nested_create(m, Arc::clone(&project)))
+            .collect(),
+        updates: m
+            .updates
+            .into_iter()
+            .map(|m| convert_nested_update(m, Arc::clone(&project)))
+            .collect(),
+        upserts: m
+            .upserts
+            .into_iter()
+            .map(|m| convert_nested_upsert(m, Arc::clone(&project)))
+            .collect(),
+        deletes: m
+            .deletes
+            .into_iter()
+            .map(|m| convert_nested_delete(m, Arc::clone(&project)))
+            .collect(),
+        connects: m
+            .connects
+            .into_iter()
+            .map(|m| convert_nested_connect(m, Arc::clone(&project)))
+            .collect(),
+        disconnects: m
+            .disconnects
+            .into_iter()
+            .map(|m| convert_nested_disconnect(m, Arc::clone(&project)))
+            .collect(),
+        sets: m
+            .sets
+            .into_iter()
+            .map(|m| convert_nested_set(m, Arc::clone(&project)))
+            .collect(),
+        update_manys: m
+            .update_manys
+            .into_iter()
+            .map(|m| convert_nested_update_nodes(m, Arc::clone(&project)))
+            .collect(),
+        delete_manys: m
+            .delete_manys
+            .into_iter()
+            .map(|m| convert_nested_delete_nodes(m, Arc::clone(&project)))
+            .collect(),
     }
 }
 
@@ -383,13 +439,13 @@ fn convert_nested_create_envelope(
 }
 
 fn convert_nested_create(m: crate::protobuf::prisma::NestedCreateNode, project: ProjectRef) -> NestedCreateNode {
-    let relation_field = find_relation_field(project, m.model_name, m.field_name);
+    let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
     NestedCreateNode {
         relation_field: relation_field,
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
         top_is_create: m.top_is_create,
-        nested_mutactions: NestedMutactions::default(),
+        nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
     }
 }
 
@@ -399,10 +455,10 @@ fn convert_update_envelope(m: crate::protobuf::prisma::UpdateNode, project: Proj
 
 fn convert_update(m: crate::protobuf::prisma::UpdateNode, project: ProjectRef) -> UpdateNode {
     UpdateNode {
-        where_: convert_node_select(m.where_, project),
+        where_: convert_node_select(m.where_, Arc::clone(&project)),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-        nested_mutactions: NestedMutactions::default(),
+        nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
     }
 }
 
@@ -417,10 +473,10 @@ fn convert_nested_update(m: crate::protobuf::prisma::NestedUpdateNode, project: 
     let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
     NestedUpdateNode {
         relation_field: relation_field,
-        where_: m.where_.map(|w| convert_node_select(w, project)),
+        where_: m.where_.map(|w| convert_node_select(w, Arc::clone(&project))),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-        nested_mutactions: NestedMutactions::default(),
+        nested_mutactions: convert_nested_mutactions(m.nested, Arc::clone(&project)),
     }
 }
 
@@ -435,18 +491,24 @@ fn convert_update_nodes(m: crate::protobuf::prisma::UpdateNodes, project: Projec
     TopLevelDatabaseMutaction::UpdateNodes(update_nodes)
 }
 
-fn convert_nested_update_nodes(
+fn convert_nested_update_nodes_envelope(
     m: crate::protobuf::prisma::NestedUpdateNodes,
     project: ProjectRef,
 ) -> NestedDatabaseMutaction {
+    NestedDatabaseMutaction::UpdateNodes(convert_nested_update_nodes(m, project))
+}
+
+fn convert_nested_update_nodes(
+    m: crate::protobuf::prisma::NestedUpdateNodes,
+    project: ProjectRef,
+) -> NestedUpdateNodes {
     let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
-    let mutaction = NestedUpdateNodes {
+    NestedUpdateNodes {
         relation_field: Arc::clone(&relation_field),
         filter: m.filter.map(|f| f.into_filter(relation_field.related_model())),
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
-    };
-    NestedDatabaseMutaction::UpdateNodes(mutaction)
+    }
 }
 
 fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
@@ -458,15 +520,21 @@ fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRef) -
     TopLevelDatabaseMutaction::UpsertNode(upsert_node)
 }
 
-fn convert_nested_upsert(m: crate::protobuf::prisma::NestedUpsertNode, project: ProjectRef) -> NestedDatabaseMutaction {
+fn convert_nested_upsert_envelope(
+    m: crate::protobuf::prisma::NestedUpsertNode,
+    project: ProjectRef,
+) -> NestedDatabaseMutaction {
+    NestedDatabaseMutaction::UpsertNode(convert_nested_upsert(m, project))
+}
+
+fn convert_nested_upsert(m: crate::protobuf::prisma::NestedUpsertNode, project: ProjectRef) -> NestedUpsertNode {
     let relation_field = find_relation_field(Arc::clone(&project), m.model_name, m.field_name);
-    let mutaction = NestedUpsertNode {
+    NestedUpsertNode {
         relation_field: relation_field,
         where_: m.where_.map(|w| convert_node_select(w, Arc::clone(&project))),
         create: convert_nested_create(m.create, Arc::clone(&project)),
         update: convert_nested_update(m.update, Arc::clone(&project)),
-    };
-    NestedDatabaseMutaction::UpsertNode(mutaction)
+    }
 }
 
 fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRef) -> TopLevelDatabaseMutaction {
@@ -476,12 +544,18 @@ fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRef) -
     TopLevelDatabaseMutaction::DeleteNode(delete_node)
 }
 
-fn convert_nested_delete(m: crate::protobuf::prisma::NestedDeleteNode, project: ProjectRef) -> NestedDatabaseMutaction {
-    let delete_node = NestedDeleteNode {
+fn convert_nested_delete_envelope(
+    m: crate::protobuf::prisma::NestedDeleteNode,
+    project: ProjectRef,
+) -> NestedDatabaseMutaction {
+    NestedDatabaseMutaction::DeleteNode(convert_nested_delete(m, project))
+}
+
+fn convert_nested_delete(m: crate::protobuf::prisma::NestedDeleteNode, project: ProjectRef) -> NestedDeleteNode {
+    NestedDeleteNode {
         relation_field: find_relation_field(Arc::clone(&project), m.model_name, m.field_name),
         where_: m.where_.map(|w| convert_node_select(w, project)),
-    };
-    NestedDatabaseMutaction::DeleteNode(delete_node)
+    }
 }
 
 fn convert_delete_nodes(m: crate::protobuf::prisma::DeleteNodes, project: ProjectRef) -> TopLevelDatabaseMutaction {
@@ -493,16 +567,22 @@ fn convert_delete_nodes(m: crate::protobuf::prisma::DeleteNodes, project: Projec
     TopLevelDatabaseMutaction::DeleteNodes(delete_nodes)
 }
 
-fn convert_nested_delete_nodes(
+fn convert_nested_delete_nodes_envelope(
     m: crate::protobuf::prisma::NestedDeleteNodes,
     project: ProjectRef,
 ) -> NestedDatabaseMutaction {
+    NestedDatabaseMutaction::DeleteNodes(convert_nested_delete_nodes(m, project))
+}
+
+fn convert_nested_delete_nodes(
+    m: crate::protobuf::prisma::NestedDeleteNodes,
+    project: ProjectRef,
+) -> NestedDeleteNodes {
     let relation_field = find_relation_field(project, m.model_name, m.field_name);
-    let delete_nodes = NestedDeleteNodes {
+    NestedDeleteNodes {
         relation_field: Arc::clone(&relation_field),
         filter: m.filter.map(|f| f.into_filter(relation_field.related_model())),
-    };
-    NestedDatabaseMutaction::DeleteNodes(delete_nodes)
+    }
 }
 
 fn convert_reset(_: crate::protobuf::prisma::ResetData, project: ProjectRef) -> TopLevelDatabaseMutaction {
@@ -510,7 +590,14 @@ fn convert_reset(_: crate::protobuf::prisma::ResetData, project: ProjectRef) -> 
     TopLevelDatabaseMutaction::ResetData(mutaction)
 }
 
-fn convert_nested_connect(m: crate::protobuf::prisma::NestedConnect, project: ProjectRef) -> NestedDatabaseMutaction {
+fn convert_nested_connect_envelope(
+    m: crate::protobuf::prisma::NestedConnect,
+    project: ProjectRef,
+) -> NestedDatabaseMutaction {
+    NestedDatabaseMutaction::Connect(convert_nested_connect(m, project))
+}
+
+fn convert_nested_connect(m: crate::protobuf::prisma::NestedConnect, project: ProjectRef) -> NestedConnect {
     let relation_field = project
         .schema()
         .find_model(&m.model_name)
@@ -519,34 +606,21 @@ fn convert_nested_connect(m: crate::protobuf::prisma::NestedConnect, project: Pr
         .find_from_relation_fields(&m.field_name)
         .unwrap();
 
-    let connect = NestedConnect {
+    NestedConnect {
         relation_field: relation_field,
         where_: convert_node_select(m.where_, project),
         top_is_create: m.top_is_create,
-    };
-    NestedDatabaseMutaction::Connect(connect)
+    }
 }
 
-fn convert_nested_disconnect(
+fn convert_nested_disconnect_envelope(
     m: crate::protobuf::prisma::NestedDisconnect,
     project: ProjectRef,
 ) -> NestedDatabaseMutaction {
-    let relation_field = project
-        .schema()
-        .find_model(&m.model_name)
-        .unwrap()
-        .fields()
-        .find_from_relation_fields(&m.field_name)
-        .unwrap();
-
-    let connect = NestedDisconnect {
-        relation_field: relation_field,
-        where_: m.where_.map(|w| convert_node_select(w, project)),
-    };
-    NestedDatabaseMutaction::Disconnect(connect)
+    NestedDatabaseMutaction::Disconnect(convert_nested_disconnect(m, project))
 }
 
-fn convert_nested_set(m: crate::protobuf::prisma::NestedSet, project: ProjectRef) -> NestedDatabaseMutaction {
+fn convert_nested_disconnect(m: crate::protobuf::prisma::NestedDisconnect, project: ProjectRef) -> NestedDisconnect {
     let relation_field = project
         .schema()
         .find_model(&m.model_name)
@@ -555,15 +629,33 @@ fn convert_nested_set(m: crate::protobuf::prisma::NestedSet, project: ProjectRef
         .find_from_relation_fields(&m.field_name)
         .unwrap();
 
-    let set = NestedSet {
+    NestedDisconnect {
+        relation_field: relation_field,
+        where_: m.where_.map(|w| convert_node_select(w, project)),
+    }
+}
+
+fn convert_nested_set_envelope(m: crate::protobuf::prisma::NestedSet, project: ProjectRef) -> NestedDatabaseMutaction {
+    NestedDatabaseMutaction::Set(convert_nested_set(m, project))
+}
+
+fn convert_nested_set(m: crate::protobuf::prisma::NestedSet, project: ProjectRef) -> NestedSet {
+    let relation_field = project
+        .schema()
+        .find_model(&m.model_name)
+        .unwrap()
+        .fields()
+        .find_from_relation_fields(&m.field_name)
+        .unwrap();
+
+    NestedSet {
         relation_field: relation_field,
         wheres: m
             .wheres
             .into_iter()
             .map(|w| convert_node_select(w, Arc::clone(&project)))
             .collect(),
-    };
-    NestedDatabaseMutaction::Set(set)
+    }
 }
 
 fn convert_node_select(selector: crate::protobuf::prisma::NodeSelector, project: ProjectRef) -> NodeSelector {
