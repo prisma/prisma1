@@ -275,6 +275,9 @@ message DatabaseMutaction {
         ResetData         reset        = 6;
         DeleteNodes       delete_nodes = 7;
         UpdateNodes       update_nodes = 8;
+        NestedConnect     nested_connect    = 9;
+        NestedDisconnect  nested_disconnect = 10;
+        NestedSet         nested_set        = 11;
     }
 }
 
@@ -327,6 +330,28 @@ message UpdateNodes {
     required Filter       filter        = 3;
     required PrismaArgs   non_list_args = 4;
     required PrismaArgs   list_args     = 5;
+}
+
+message NestedConnect {
+    required Header       header        = 1;
+    required string       model_name    = 2;
+    required string       field_name    = 3;
+    required NodeSelector where         = 4;
+    required bool         top_is_create = 5;
+}
+
+message NestedDisconnect {
+    required Header       header        = 1;
+    required string       model_name    = 2;
+    required string       field_name    = 3;
+    optional NodeSelector where         = 4;
+}
+
+message NestedSet {
+    required Header       header        = 1;
+    required string       model_name    = 2;
+    required string       field_name    = 3;
+    repeated NodeSelector wheres        = 4;
 }
 
 message NodeSelector {
