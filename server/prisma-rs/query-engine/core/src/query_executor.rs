@@ -31,6 +31,82 @@ pub struct MultiPrismaQueryResult {
     selected_fields: SelectedFields,
 }
 
+impl PrismaQueryResult {
+    /// Filters implicitly selected fields from the result set.
+    pub fn filter(self) -> Self {
+        match self {
+            PrismaQueryResult::Single(s) => PrismaQueryResult::Single(s.filter()),
+            PrismaQueryResult::Multi(m) => PrismaQueryResult::Multi(m.filter()),
+        }
+    }
+}
+
+// Q: Best pattern here? Mix of in place mutation and recreating result
+impl SinglePrismaQueryResult {
+    /// Filters implicitly selected fields in-place in the result node and field names.
+    /// Traverses nested result tree.
+    pub fn filter(self) -> Self {
+        let implicit_fields = self.selected_fields.get_implicit_fields();
+
+        let result = self.result.map(|mut r| {
+            let positions: Vec<usize> = implicit_fields
+                .into_iter()
+                .filter_map(|implicit| r.field_names.iter().position(|name| &implicit.field.name == name))
+                .collect();
+
+            positions.into_iter().for_each(|p| {
+                r.field_names.remove(p);
+                r.node.values.remove(p);
+            });
+
+            r
+        });
+
+        let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
+
+        Self { result, nested, ..self }
+    }
+}
+
+impl MultiPrismaQueryResult {
+    /// Filters implicitly selected fields in-place in the result nodes and field names.
+    /// Traverses nested result tree.
+    pub fn filter(mut self) -> Self {
+        let implicit_fields = self.selected_fields.get_implicit_fields();
+        let positions: Vec<usize> = implicit_fields
+            .into_iter()
+            .filter_map(|implicit| {
+                self.result
+                    .field_names
+                    .iter()
+                    .position(|name| &implicit.field.name == name)
+            })
+            .collect();
+
+        positions.iter().for_each(|p| {
+            self.result.field_names.remove(p.clone());
+        });
+
+        // Remove values on found positions from all nodes.
+        let nodes = self
+            .result
+            .nodes
+            .into_iter()
+            .map(|mut node| {
+                positions.iter().for_each(|p| {
+                    node.values.remove(p.clone());
+                });
+                node
+            })
+            .collect();
+
+        let result = ManyNodes { nodes, ..self.result };
+        let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
+
+        Self { result, nested, ..self }
+    }
+}
+
 pub struct QueryExecutor {
     pub data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
 }

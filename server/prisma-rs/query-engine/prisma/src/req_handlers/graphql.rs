@@ -58,7 +58,10 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     };
 
     let queries: Vec<PrismaQuery> = qb.build()?;
-    let results = dbg!(ctx.query_executor.execute(&queries))?;
+    let results: Vec<PrismaQueryResult> = dbg!(ctx.query_executor.execute(&queries))?
+        .into_iter()
+        .map(|r| r.filter())
+        .collect();
 
     Ok(json_envelope(
         "data",
