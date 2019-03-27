@@ -237,89 +237,49 @@ case class SQLiteDatabaseMutactionExecutor2(
 
       case m: NestedUpsertNode if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedUpsert(
-          prisma.protocol.NestedUpsertNode(
-            header = prisma.protocol.Header(headerName),
-            modelName = m.relationField.model.name,
-            fieldName = m.relationField.name,
-            where = m.where.map(toNodeSelector),
-            create = nestedCreateNodeToProtocol(m.create),
-            update = nestedUpdateNodeToProtocol(m.update)
-          )
+          nestedUpsertToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
       case m: NestedDeleteNode if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedDelete(
-          prisma.protocol.NestedDeleteNode(
-            header = prisma.protocol.Header(headerName),
-            modelName = m.relationField.model.name,
-            fieldName = m.relationField.name,
-            where = m.where.map(toNodeSelector)
-          )
+          nestedDeleteToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
       case m: NestedConnect if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedConnect(
-          prisma.protocol.NestedConnect(
-            header = prisma.protocol.Header(headerName),
-            modelName = m.relationField.model.name,
-            fieldName = m.relationField.name,
-            where = toNodeSelector(m.where),
-            topIsCreate = m.topIsCreate
-          )
+          nestedConnectToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
       case m: NestedDisconnect if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedDisconnect(
-          prisma.protocol.NestedDisconnect(
-            header = prisma.protocol.Header(headerName),
-            modelName = m.relationField.model.name,
-            fieldName = m.relationField.name,
-            where = m.where.map(toNodeSelector)
-          )
+          nestedDisconnectToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
       case m: NestedSet if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedSet(
-          prisma.protocol.NestedSet(
-            header = prisma.protocol.Header(headerName),
-            modelName = m.relationField.model.name,
-            fieldName = m.relationField.name,
-            wheres = m.wheres.map(toNodeSelector)
-          )
+          nestedSetToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
       case m: NestedUpdateNodes if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedUpdateNodes(
-          prisma.protocol.NestedUpdateNodes(
-            header = prisma.protocol.Header(headerName),
-            modelName = m.relationField.model.name,
-            fieldName = m.relationField.name,
-            filter = m.whereFilter.map(toProtocolFilter),
-            nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
-            listArgs = listArgsToProtocolArgs(m.listArgs),
-          )
+          nestedUpdateManyToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
       case m: NestedDeleteNodes if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedDeleteNodes(
-          prisma.protocol.NestedDeleteNodes(
-            header = prisma.protocol.Header(headerName),
-            modelName = m.relationField.model.name,
-            fieldName = m.relationField.name,
-            filter = m.whereFilter.map(toProtocolFilter),
-          )
+          nestedDeleteManyToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
         nested_mutaction_interpreter(envelope, m)
@@ -336,23 +296,13 @@ case class SQLiteDatabaseMutactionExecutor2(
     }
   }
 
-  val emptyNested = prisma.protocol.NestedMutactions(Vector.empty,
-                                                     Vector.empty,
-                                                     Vector.empty,
-                                                     Vector.empty,
-                                                     Vector.empty,
-                                                     Vector.empty,
-                                                     Vector.empty,
-                                                     Vector.empty,
-                                                     Vector.empty)
-
   private def createNodeToProtocol(m: TopLevelCreateNode) = {
     prisma.protocol.CreateNode(
       header = prisma.protocol.Header(m.getClass.getSimpleName),
       modelName = m.model.name,
       nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
       listArgs = listArgsToProtocolArgs(m.listArgs),
-      nested = emptyNested,
+      nested = nestedMutactionsToProtocol(m),
     )
   }
 
@@ -364,7 +314,74 @@ case class SQLiteDatabaseMutactionExecutor2(
       nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
       listArgs = listArgsToProtocolArgs(m.listArgs),
       topIsCreate = m.topIsCreate,
-      nested = emptyNested,
+      nested = nestedMutactionsToProtocol(m),
+    )
+  }
+
+  private def nestedUpsertToProtocol(m: NestedUpsertNode) = {
+    prisma.protocol.NestedUpsertNode(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      where = m.where.map(toNodeSelector),
+      create = nestedCreateNodeToProtocol(m.create),
+      update = nestedUpdateNodeToProtocol(m.update)
+    )
+  }
+
+  private def nestedDeleteToProtocol(m: NestedDeleteNode) = {
+    prisma.protocol.NestedDeleteNode(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      where = m.where.map(toNodeSelector)
+    )
+  }
+
+  private def nestedConnectToProtocol(m: NestedConnect) = {
+    prisma.protocol.NestedConnect(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      where = toNodeSelector(m.where),
+      topIsCreate = m.topIsCreate
+    )
+  }
+
+  private def nestedDisconnectToProtocol(m: NestedDisconnect) = {
+    prisma.protocol.NestedDisconnect(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      where = m.where.map(toNodeSelector)
+    )
+  }
+
+  private def nestedSetToProtocol(m: NestedSet) = {
+    prisma.protocol.NestedSet(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      wheres = m.wheres.map(toNodeSelector)
+    )
+  }
+
+  private def nestedUpdateManyToProtocol(m: NestedUpdateNodes) = {
+    prisma.protocol.NestedUpdateNodes(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      filter = m.whereFilter.map(toProtocolFilter),
+      nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
+      listArgs = listArgsToProtocolArgs(m.listArgs),
+    )
+  }
+  private def nestedDeleteManyToProtocol(m: NestedDeleteNodes) = {
+    prisma.protocol.NestedDeleteNodes(
+      header = prisma.protocol.Header(m.getClass.getSimpleName),
+      modelName = m.relationField.model.name,
+      fieldName = m.relationField.name,
+      filter = m.whereFilter.map(toProtocolFilter),
     )
   }
 
@@ -374,7 +391,7 @@ case class SQLiteDatabaseMutactionExecutor2(
       where = toNodeSelector(m.where),
       nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
       listArgs = listArgsToProtocolArgs(m.listArgs),
-      nested = emptyNested,
+      nested = nestedMutactionsToProtocol(m),
     )
   }
 
@@ -386,7 +403,21 @@ case class SQLiteDatabaseMutactionExecutor2(
       where = m.where.map(toNodeSelector),
       nonListArgs = prismaArgsToProtoclArgs(m.nonListArgs),
       listArgs = listArgsToProtocolArgs(m.listArgs),
-      nested = emptyNested,
+      nested = nestedMutactionsToProtocol(m),
+    )
+  }
+
+  private def nestedMutactionsToProtocol(m: FurtherNestedMutaction): prisma.protocol.NestedMutactions = {
+    prisma.protocol.NestedMutactions(
+      creates = m.nestedCreates.map(nestedCreateNodeToProtocol),
+      updates = m.nestedUpdates.map(nestedUpdateNodeToProtocol),
+      upserts = m.nestedUpserts.map(nestedUpsertToProtocol),
+      deletes = m.nestedDeletes.map(nestedDeleteToProtocol),
+      connects = m.nestedConnects.map(nestedConnectToProtocol),
+      disconnects = m.nestedDisconnects.map(nestedDisconnectToProtocol),
+      sets = m.nestedSets.map(nestedSetToProtocol),
+      updateManys = m.nestedUpdateManys.map(nestedUpdateManyToProtocol),
+      deleteManys = m.nestedDeleteManys.map(nestedDeleteManyToProtocol)
     )
   }
 
