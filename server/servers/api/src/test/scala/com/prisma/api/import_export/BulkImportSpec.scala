@@ -10,30 +10,32 @@ import org.scalatest.{FlatSpec, Matchers}
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromString() { """
-                                                      |type Model0{
+  val project: Project = SchemaDsl.fromStringv11() { """
+                                                      |type Model0 {
+                                                      |   id: ID! @id
                                                       |   a: String
                                                       |   b: Int
-                                                      |   createdAt: DateTime!
-                                                      |   listfield: [Int!]!
-                                                      |   relation0top: Model1 @relation(name:"Relation0")
-                                                      |   model1: Model1 @relation(name:"Relation1")
-                                                      |}
-                                                      |
-                                                      |type Model1{
-                                                      |   a: String
-                                                      |   b: Int
-                                                      |   createdAt: DateTime!
-                                                      |   listfield: [Int!]!
+                                                      |   createdAt: DateTime! @createdAt
+                                                      |   relation0top: Model0 @relation(name:"Relation0", link: TABLE)
                                                       |   relation0bottom: Model0 @relation(name:"Relation0")
-                                                      |   model0: Model0 @relation(name:"Relation1")
-                                                      |   model2: Model2 @relation(name:"Relation2")
+                                                      |   model1: Model1 @relation(name:"Relation1", link: TABLE)
                                                       |}
                                                       |
-                                                      |type Model2{
+                                                      |type Model1 {
+                                                      |   id: ID! @id
                                                       |   a: String
                                                       |   b: Int
-                                                      |   createdAt: DateTime!
+                                                      |   createdAt: DateTime! @createdAt
+                                                      |   listField: [Int!]! @scalarList(strategy: RELATION)
+                                                      |   model0: Model0 @relation(name:"Relation1")
+                                                      |   model2: Model2 @relation(name:"Relation2", link: TABLE)
+                                                      |}
+                                                      |
+                                                      |type Model2 {
+                                                      |   id: ID! @id
+                                                      |   a: String
+                                                      |   b: Int
+                                                      |   createdAt: DateTime! @createdAt
                                                       |   name: String
                                                       |   model1: Model1 @relation(name:"Relation2")
                                                       |}
@@ -51,7 +53,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
   "Combining the data from the three files" should "work" in {
 
     val nodes = """{"valueType": "nodes", "values": [
-                    |{"_typeName": "Model0", "id": "0", "a": "test", "b":  0, "createdAt": "2017-11-29 14:35:13"},
+                    |{"_typeName": "Model0", "id": "0", "a": "test", "b":  0, "createdAt": "2017-11-29 14:35:13", "updatedAt": "2017-12-29 14:35:13"},
                     |{"_typeName": "Model1", "id": "1", "a": "test", "b":  1},
                     |{"_typeName": "Model2", "id": "2", "a": "test", "b":  2, "createdAt": "2017-11-29 14:35:13"},
                     |{"_typeName": "Model0", "id": "3", "a": "test", "b":  3}

@@ -1,7 +1,7 @@
 package com.prisma.api.import_export
 
 import com.prisma.gc_values._
-import com.prisma.shared.models.{Enum, Model, ScalarField, TypeIdentifier}
+import com.prisma.shared.models.{Enum, FieldBehaviour, Model, ScalarField, TypeIdentifier}
 import org.joda.time.DateTimeZone
 import org.joda.time.format.DateTimeFormat
 import play.api.libs.json._
@@ -51,9 +51,18 @@ object GCValueJsonFormatter {
   case class InvalidFieldValueException(field: String, model: Model) extends Exception
 
   def readModelAwareGcValue(model: Model)(json: JsValue): JsResult[RootGCValue] = {
+
+    //filter out createdAt, updatedAt if there is no such field on the model
+    def filterCreatedAtUpdatedAt(tuple: (String, JsValue)): Boolean = tuple._1 match {
+      case "createdAt" if !model.fields.exists(_.behaviour.contains(FieldBehaviour.CreatedAtBehaviour)) => false
+      case "updatedAt" if !model.fields.exists(_.behaviour.contains(FieldBehaviour.UpdatedAtBehaviour)) => false
+      case _                                                                                            => true
+    }
+
     for {
-      jsObject <- json.validate[JsObject]
-      formattedValues = jsObject.fields.toVector.map { tuple =>
+      jsObject       <- json.validate[JsObject]
+      filteredTuples = jsObject.fields.toVector.filter(filterCreatedAtUpdatedAt)
+      formattedValues = filteredTuples.map { tuple =>
         val (key, value) = tuple
         model.getScalarFieldByName(key) match {
           case Some(field) =>
