@@ -34,7 +34,7 @@ use PrismaQueryResult::*;
 pub fn build(result: PrismaQueryResult) -> Envelope {
     match result {
         Single(result) => build_map(&result).into(),
-        Multi(result) => build_list(result).into(),
+        Multi(result) => build_list(&result).into(),
     }
 }
 
