@@ -17,8 +17,12 @@ pub enum ConnectorError {
     InvalidConnectionArguments,
     #[fail(display = "The column value was different from the model")]
     ColumnReadFailure(Error),
-    #[fail(display = "Node not found, where field {} is {}", field, value)]
-    NodeNotFoundForWhere { field: String, value: PrismaValue },
+    #[fail(display = "Node not found in model {}, where field {} is {}", model, field, value)]
+    NodeNotFoundForWhere {
+        model: String,
+        field: String,
+        value: PrismaValue,
+    },
     #[fail(display = "Field cannot be null: {}", field)]
     FieldCannotBeNull { field: String },
     #[fail(display = "{}", _0)]

@@ -31,7 +31,7 @@ Subcommands:
 
 \ttest-rust
 \t\truns the tests for prisma-rs
-  """
+"""
 end
 
 if ARGV.length <= 0

@@ -25,17 +25,17 @@ message Result {
 
 message Error {
     oneof value {
-        string connection_error             = 1;
-        string query_error                  = 2;
-        string no_results_error             = 3;
-        string protobuf_decode_error        = 4;
-        string json_decode_error            = 5;
-        string invalid_input_error          = 6;
-        string invalid_connection_arguments = 7;
-        string internal_server_error        = 8;
-        string unique_constraint_violation  = 9;
-        string node_not_found_for_where     = 10;
-        string field_cannot_be_null         = 11;
+        string       connection_error             = 1;
+        string       query_error                  = 2;
+        string       no_results_error             = 3;
+        string       protobuf_decode_error        = 4;
+        string       json_decode_error            = 5;
+        string       invalid_input_error          = 6;
+        string       invalid_connection_arguments = 7;
+        string       internal_server_error        = 8;
+        string       unique_constraint_violation  = 9;
+        NodeSelector node_not_found_for_where     = 10;
+        string       field_cannot_be_null         = 11;
     }
 }
 

@@ -23,5 +23,5 @@ failure = "0.1"
 failure_derive = "0.1"
 rand = "0.6"
 
-prisma-query = { git = "https://github.com/prisma/prisma-query.git", optional = true }
+prisma-query = { path = "../libs/prisma-query", optional = true }
 rusqlite = { version = "0.16", features = ["chrono"], optional = true }

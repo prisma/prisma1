@@ -8,7 +8,7 @@ import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodeNotFoundForWhereError}
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
-import com.prisma.rs.{NativeBinding, UniqueConstraintViolation}
+import com.prisma.rs.{NativeBinding, NodeNotFoundForWhere, UniqueConstraintViolation}
 import com.prisma.shared.models.Project
 import play.api.libs.json.{JsValue, Json}
 import prisma.protocol
@@ -299,10 +299,16 @@ case class SQLiteDatabaseMutactionExecutor2(
         }
       }
 
-      override val errorMapper: PartialFunction[Throwable, APIErrors.UniqueConstraintViolation] = {
+      override val errorMapper: PartialFunction[Throwable, APIErrors.ClientApiError] = {
         case UniqueConstraintViolation(fieldName) => {
           val splitted = fieldName.split('.')
           APIErrors.UniqueConstraintViolation(splitted(0), "Field name = " + splitted(1))
+        }
+        case NodeNotFoundForWhere(modelName, fieldName, value) => {
+          APIErrors.NodeNotFoundForWhereErrorNative(modelName, value, fieldName)
+        }
+        case FieldCannotBeNull(fieldName) => {
+          APIErrors.FieldCannotBeNull(fieldName)
         }
       }
     }

@@ -116,6 +116,7 @@ object NativeUtils {
   def toPrismaCondition(scalarCondition: ScalarCondition): protocol.ScalarFilter.Condition = {
     scalarCondition match {
       case Equals(value) =>
+
         protocol.ScalarFilter.Condition.Equals(protocol.ValueContainer(toPrismaValue(value)))
       case NotEquals(value) =>
         protocol.ScalarFilter.Condition.NotEquals(protocol.ValueContainer(toPrismaValue(value)))
