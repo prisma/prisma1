@@ -1,20 +1,21 @@
 use prisma_query::ast::*;
 
 use chrono::{DateTime, Utc};
+use serde::{Serialize, Deserialize};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use std::fmt;
 use uuid::Uuid;
 
 pub type PrismaListValue = Vec<PrismaValue>;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone)]
 pub enum GraphqlId {
     String(String),
     Int(usize),
     UUID(Uuid),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum PrismaValue {
     String(String),
     Float(f64),

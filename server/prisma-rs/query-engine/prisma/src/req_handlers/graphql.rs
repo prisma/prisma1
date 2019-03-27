@@ -111,6 +111,46 @@ fn serialize_many_nodes(many_nodes: &MultiPrismaQueryResult) -> PrismaResult<Jso
         .collect())
 }
 
+// /// This function is a bit magic
+// ///
+// /// First we get the name-value pairs on the main query from a set of nodes.
+// /// After that we push them into a map that is indexed by their `id` field.
+// /// This is so that when we go through the nested queries later,
+// /// we can associate data correctly.
+// /// After that is done we squash the map-values into a Vec agan and return that as json
+// ///
+// // FIXME: Don't panic!
+// #[allow(unused_variables)]
+// fn serialize_many_nodes(many_nodes: &MultiPrismaQueryResult) -> PrismaResult<JsonVec> {
+//     Ok(many_nodes
+//         .result
+//         .as_pairs()
+//         .into_iter()
+//         .fold(JsonMap::new(), |mut map, vec| {
+//             map.insert(
+//                 vec.iter()
+//                     .filter_map(|i| i.is_id())
+//                     .filter_map(|i| match i {
+//                         PrismaValue::String(s) => Some(s.clone()),
+//                         _ => None,
+//                     })
+//                     .nth(0)
+//                     .unwrap(),
+//                 Value::Object(vec.iter().fold(JsonMap::new(), |mut map, (name, value)| {
+//                     map.insert(name.clone(), serialize_prisma_value(&value).unwrap());
+//                     map
+//                 })),
+//             );
+
+//             map
+//         })
+//         .into_iter()
+//         .fold(JsonVec::new(), |mut vec, (_, v)| {
+//             vec.push(v);
+//             vec
+//         }))
+// }
+
 fn serialize_single_node(single_node: &SingleNode) -> PrismaResult<JsonMap> {
     let mut serde_map = Map::new();
     let field_names = &single_node.field_names;
