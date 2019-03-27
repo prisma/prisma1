@@ -86,6 +86,10 @@ impl DatabaseMutactionExecutor for Sqlite {
         })
     }
 
+    fn execute_nested_create(&self, _db_name: String, _mutaction: &NestedCreateNode) -> ConnectorResult<GraphqlId> {
+        unimplemented!()
+    }
+
     fn execute_delete(&self, _db_name: String, _mutaction: &DeleteNode) -> ConnectorResult<SingleNode> {
         unimplemented!()
         /*

@@ -57,7 +57,23 @@ pub trait DatabaseMutactionExecutor {
             }
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::ResetData(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(_) => panic!("this nested mutaction is not supported yet!"),
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::CreateNode(ref cn)) => {
+                let result = DatabaseMutactionResult {
+                    identifier: Identifier::Id(self.execute_nested_create(db_name, cn)?),
+                    typ: DatabaseMutactionResultType::Create,
+                    mutaction,
+                };
+
+                results.push(result);
+            }
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::UpdateNode(_)) => unimplemented!(),
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::UpsertNode(_)) => unimplemented!(),
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::DeleteNode(_)) => unimplemented!(),
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::Connect(_)) => unimplemented!(),
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::Disconnect(_)) => unimplemented!(),
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::Set(_)) => unimplemented!(),
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::UpdateNodes(_)) => unimplemented!(),
+            DatabaseMutaction::Nested(NestedDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
         };
 
         Ok(results)
@@ -68,8 +84,9 @@ pub trait DatabaseMutactionExecutor {
     fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId>;
     fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId>;
     fn execute_delete(&self, db_name: String, mutaction: &DeleteNode) -> ConnectorResult<SingleNode>;
-
     fn execute_update_many(&self, db_name: String, mutaction: &UpdateNodes) -> ConnectorResult<usize>;
+
+    fn execute_nested_create(&self, db_name: String, mutaction: &NestedCreateNode) -> ConnectorResult<GraphqlId>;
 
     fn execute_upsert(
         &self,

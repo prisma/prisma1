@@ -27,6 +27,15 @@ pub enum ConnectorError {
     FieldCannotBeNull { field: String },
     #[fail(display = "{}", _0)]
     DomainError(DomainError),
+    #[fail(
+        display = "Violating a relation {} between {} and {}",
+        relation_name, model_a_name, model_b_name
+    )]
+    RelationViolation {
+        relation_name: String,
+        model_a_name: String,
+        model_b_name: String,
+    },
 }
 
 impl From<DomainError> for ConnectorError {
