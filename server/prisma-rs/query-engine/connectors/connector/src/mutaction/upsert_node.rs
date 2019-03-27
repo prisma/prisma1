@@ -11,10 +11,8 @@ pub struct UpsertNode {
 
 #[derive(Debug, Clone)]
 pub struct NestedUpsertNode {
-    pub project: ProjectRef,
-    pub where_: NodeSelector,
+    pub relation_field: Arc<RelationField>,
+    pub where_: Option<NodeSelector>,
     pub create: NestedCreateNode,
     pub update: NestedUpdateNode,
-
-    pub relation_field: Arc<RelationField>,
 }

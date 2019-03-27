@@ -275,6 +275,16 @@ message DatabaseMutaction {
         ResetData         reset        = 6;
         DeleteNodes       delete_nodes = 7;
         UpdateNodes       update_nodes = 8;
+        NestedConnect     nested_connect    = 9;
+        NestedDisconnect  nested_disconnect = 10;
+        NestedSet         nested_set        = 11;
+        NestedCreateNode  nested_create     = 12;
+        NestedUpdateNode  nested_update     = 13;
+        NestedUpsertNode  nested_upsert     = 14;
+        NestedDeleteNode  nested_delete     = 15;
+        NestedUpdateNodes nested_update_nodes = 16;
+        NestedDeleteNodes nested_delete_nodes = 17;
+
     }
 }
 
@@ -294,11 +304,29 @@ message CreateNode {
     required PrismaArgs     list_args       = 4;
 }
 
+message NestedCreateNode {
+    required Header         header          = 1;
+    required string         model_name      = 2;
+    required string         field_name      = 3;
+    required PrismaArgs     non_list_args   = 4;
+    required PrismaArgs     list_args       = 5;
+    required bool           top_is_create   = 6;
+}
+
 message UpdateNode {
     required Header         header          = 1;
     required NodeSelector   where           = 2;
     required PrismaArgs     non_list_args   = 3;
     required PrismaArgs     list_args       = 4;
+}
+
+message NestedUpdateNode {
+    required Header         header          = 1;
+    required string         model_name      = 2;
+    required string         field_name      = 3;
+    optional NodeSelector   where           = 4;
+    required PrismaArgs     non_list_args   = 5;
+    required PrismaArgs     list_args       = 6;
 }
 
 message UpsertNode {
@@ -308,9 +336,25 @@ message UpsertNode {
     required UpdateNode     update          = 4;
 }
 
+message NestedUpsertNode {
+    required Header         header          = 1;
+    required string         model_name      = 2;
+    required string         field_name      = 3;
+    optional NodeSelector   where           = 4;
+    required NestedCreateNode create        = 5;
+    required NestedUpdateNode update        = 6;
+}
+
 message DeleteNode {
     required Header         header          = 1;
     required NodeSelector   where           = 2;
+}
+
+message NestedDeleteNode {
+    required Header         header          = 1;
+    required string         model_name      = 2;
+    required string         field_name      = 3;
+    optional NodeSelector   where           = 4;
 }
 
 message ResetData {}
@@ -321,12 +365,50 @@ message DeleteNodes {
     required Filter filter     = 3;
 }
 
+message NestedDeleteNodes {
+    required Header         header          = 1;
+    required string         model_name      = 2;
+    required string         field_name      = 3;
+    optional Filter         filter          = 4;
+}
+
 message UpdateNodes {
     required Header       header        = 1;
     required string       model_name    = 2;
     required Filter       filter        = 3;
     required PrismaArgs   non_list_args = 4;
     required PrismaArgs   list_args     = 5;
+}
+
+message NestedUpdateNodes {
+    required Header         header          = 1;
+    required string         model_name      = 2;
+    required string         field_name      = 3;
+    optional Filter         filter          = 4;
+    required PrismaArgs     non_list_args   = 5;
+    required PrismaArgs     list_args       = 6;
+}
+
+message NestedConnect {
+    required Header       header        = 1;
+    required string       model_name    = 2;
+    required string       field_name    = 3;
+    required NodeSelector where         = 4;
+    required bool         top_is_create = 5;
+}
+
+message NestedDisconnect {
+    required Header       header        = 1;
+    required string       model_name    = 2;
+    required string       field_name    = 3;
+    optional NodeSelector where         = 4;
+}
+
+message NestedSet {
+    required Header       header        = 1;
+    required string       model_name    = 2;
+    required string       field_name    = 3;
+    repeated NodeSelector wheres        = 4;
 }
 
 message NodeSelector {
