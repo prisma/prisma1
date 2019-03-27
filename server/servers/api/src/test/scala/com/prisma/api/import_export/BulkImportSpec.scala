@@ -10,31 +10,34 @@ import org.scalatest.{FlatSpec, Matchers}
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    val model1: SchemaDsl.ModelBuilder = schema
-      .model("Model1")
-      .field("createdAt", _.DateTime)
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("listField", _.Int, isList = true)
-
-    val model0: SchemaDsl.ModelBuilder = schema
-      .model("Model0")
-      .field("createdAt", _.DateTime)
-      .field("a", _.String)
-      .field("b", _.Int)
-      .oneToOneRelation("model1", "model0", model1, Some("Relation1"))
-
-    model0.oneToOneRelation("relation0top", "relation0bottom", model0, Some("Relation0"))
-
-    val model2: SchemaDsl.ModelBuilder = schema
-      .model("Model2")
-      .field("createdAt", _.DateTime)
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("name", _.String)
-      .oneToOneRelation("model1", "model2", model1, Some("Relation2"))
-  }
+  val project: Project = SchemaDsl.fromString() { """
+                                                      |type Model0{
+                                                      |   a: String
+                                                      |   b: Int
+                                                      |   createdAt: DateTime!
+                                                      |   listfield: [Int!]!
+                                                      |   relation0top: Model1 @relation(name:"Relation0")
+                                                      |   model1: Model1 @relation(name:"Relation1")
+                                                      |}
+                                                      |
+                                                      |type Model1{
+                                                      |   a: String
+                                                      |   b: Int
+                                                      |   createdAt: DateTime!
+                                                      |   listfield: [Int!]!
+                                                      |   relation0bottom: Model0 @relation(name:"Relation0")
+                                                      |   model0: Model0 @relation(name:"Relation1")
+                                                      |   model2: Model2 @relation(name:"Relation2")
+                                                      |}
+                                                      |
+                                                      |type Model2{
+                                                      |   a: String
+                                                      |   b: Int
+                                                      |   createdAt: DateTime!
+                                                      |   name: String
+                                                      |   model1: Model1 @relation(name:"Relation2")
+                                                      |}
+                                                      |""".stripMargin }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
