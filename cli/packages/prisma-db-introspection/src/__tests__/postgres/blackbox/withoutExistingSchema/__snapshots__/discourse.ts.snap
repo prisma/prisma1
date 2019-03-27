@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector discourse 1`] = `
-"type Api_key @indexes(value: [
+"type ApiKey @indexes(value: [
   {name: \\"index_api_keys_on_key\\", fields: [\\"key\\"]}
 ]) @pgTable(name: \\"api_keys\\") {
   id: Int! @unique
@@ -15,7 +15,7 @@ exports[`Introspector discourse 1`] = `
   user_id: Int @unique
 }
 
-type Application_request @indexes(value: [
+type ApplicationRequest @indexes(value: [
   {name: \\"index_application_requests_on_date_and_req_type\\", fields: [\\"date\\", \\"req_type\\"], unique: true}
 ]) @pgTable(name: \\"application_requests\\") {
   id: Int! @unique
@@ -24,7 +24,7 @@ type Application_request @indexes(value: [
   req_type: Int!
 }
 
-type Ar_internal_metadatum @pgTable(name: \\"ar_internal_metadata\\") {
+type ArInternalMetadatum @pgTable(name: \\"ar_internal_metadata\\") {
   id: ID! @pgColumn(name: \\"key\\") @unique
   created_at: DateTime!
   updated_at: DateTime!
@@ -57,7 +57,7 @@ type Badge @indexes(value: [
   updated_at: DateTime!
 }
 
-type Badge_grouping @pgTable(name: \\"badge_groupings\\") {
+type BadgeGrouping @pgTable(name: \\"badge_groupings\\") {
   id: Int! @unique
   created_at: DateTime!
   description: String
@@ -66,14 +66,14 @@ type Badge_grouping @pgTable(name: \\"badge_groupings\\") {
   updated_at: DateTime!
 }
 
-type Badge_type @pgTable(name: \\"badge_types\\") {
+type BadgeType @pgTable(name: \\"badge_types\\") {
   id: Int! @unique
   created_at: DateTime!
   name: String! @unique
   updated_at: DateTime!
 }
 
-type Categories_web_hook @indexes(value: [
+type CategoriesWebHook @indexes(value: [
   {name: \\"index_categories_web_hooks_on_web_hook_id_and_category_id\\", fields: [\\"web_hook_id\\", \\"category_id\\"], unique: true}
 ]) @pgTable(name: \\"categories_web_hooks\\") {
   category_id: Int!
@@ -133,7 +133,7 @@ type Category @indexes(value: [
   user_id: Int!
 }
 
-type Category_custom_field @indexes(value: [
+type CategoryCustomField @indexes(value: [
   {name: \\"index_category_custom_fields_on_category_id_and_name\\", fields: [\\"category_id\\", \\"name\\"]}
 ]) @pgTable(name: \\"category_custom_fields\\") {
   id: Int! @unique
@@ -144,7 +144,7 @@ type Category_custom_field @indexes(value: [
   value: String
 }
 
-type Category_featured_topic @indexes(value: [
+type CategoryFeaturedTopic @indexes(value: [
   {name: \\"cat_featured_threads\\", fields: [\\"category_id\\", \\"topic_id\\"], unique: true},
   {name: \\"index_category_featured_topics_on_category_id_and_rank\\", fields: [\\"category_id\\", \\"rank\\"]}
 ]) @pgTable(name: \\"category_featured_topics\\") {
@@ -156,7 +156,7 @@ type Category_featured_topic @indexes(value: [
   updated_at: DateTime!
 }
 
-type Category_group @pgTable(name: \\"category_groups\\") {
+type CategoryGroup @pgTable(name: \\"category_groups\\") {
   id: Int! @unique
   category_id: Int!
   created_at: DateTime!
@@ -165,9 +165,7 @@ type Category_group @pgTable(name: \\"category_groups\\") {
   updated_at: DateTime!
 }
 
-type Category_search_datum @indexes(value: [
-  {name: \\"idx_search_category\\", fields: [\\"search_data\\"]}
-]) @pgTable(name: \\"category_search_data\\") {
+type CategorySearchDatum @pgTable(name: \\"category_search_data\\") {
   id: Int! @pgColumn(name: \\"category_id\\") @unique
   locale: String
   raw_data: String
@@ -176,7 +174,7 @@ type Category_search_datum @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type Category_tag @indexes(value: [
+type CategoryTag @indexes(value: [
   {name: \\"idx_category_tags_ix1\\", fields: [\\"category_id\\", \\"tag_id\\"], unique: true},
   {name: \\"idx_category_tags_ix2\\", fields: [\\"category_id\\", \\"tag_id\\"], unique: true}
 ]) @pgTable(name: \\"category_tags\\") {
@@ -187,7 +185,7 @@ type Category_tag @indexes(value: [
   updated_at: DateTime
 }
 
-type Category_tag_group @indexes(value: [
+type CategoryTagGroup @indexes(value: [
   {name: \\"idx_category_tag_groups_ix1\\", fields: [\\"category_id\\", \\"tag_group_id\\"], unique: true}
 ]) @pgTable(name: \\"category_tag_groups\\") {
   id: Int! @unique
@@ -197,7 +195,7 @@ type Category_tag_group @indexes(value: [
   updated_at: DateTime
 }
 
-type Category_tag_stat @indexes(value: [
+type CategoryTagStat @indexes(value: [
   {name: \\"index_category_tag_stats_on_category_id\\", fields: [\\"category_id\\"]},
   {name: \\"index_category_tag_stats_on_category_id_and_tag_id\\", fields: [\\"category_id\\", \\"tag_id\\"], unique: true},
   {name: \\"index_category_tag_stats_on_category_id_and_topic_count\\", fields: [\\"category_id\\", \\"topic_count\\"]},
@@ -209,7 +207,7 @@ type Category_tag_stat @indexes(value: [
   topic_count: Int! @default(value: 0)
 }
 
-type Category_user @indexes(value: [
+type CategoryUser @indexes(value: [
   {name: \\"idx_category_users_u1\\", fields: [\\"category_id\\", \\"user_id\\", \\"notification_level\\"], unique: true},
   {name: \\"idx_category_users_u2\\", fields: [\\"category_id\\", \\"user_id\\", \\"notification_level\\"], unique: true}
 ]) @pgTable(name: \\"category_users\\") {
@@ -219,7 +217,7 @@ type Category_user @indexes(value: [
   user_id: Int!
 }
 
-type Child_theme @indexes(value: [
+type ChildTheme @indexes(value: [
   {name: \\"index_child_themes_on_child_theme_id_and_parent_theme_id\\", fields: [\\"parent_theme_id\\", \\"child_theme_id\\"], unique: true},
   {name: \\"index_child_themes_on_parent_theme_id_and_child_theme_id\\", fields: [\\"parent_theme_id\\", \\"child_theme_id\\"], unique: true}
 ]) @pgTable(name: \\"child_themes\\") {
@@ -230,7 +228,7 @@ type Child_theme @indexes(value: [
   updated_at: DateTime
 }
 
-type Color_scheme @pgTable(name: \\"color_schemes\\") {
+type ColorScheme @pgTable(name: \\"color_schemes\\") {
   id: Int! @unique
   base_scheme_id: String
   created_at: DateTime!
@@ -241,7 +239,7 @@ type Color_scheme @pgTable(name: \\"color_schemes\\") {
   via_wizard: Boolean! @default(value: false)
 }
 
-type Color_scheme_color @indexes(value: [
+type ColorSchemeColor @indexes(value: [
   {name: \\"index_color_scheme_colors_on_color_scheme_id\\", fields: [\\"color_scheme_id\\"]}
 ]) @pgTable(name: \\"color_scheme_colors\\") {
   id: Int! @unique
@@ -252,7 +250,7 @@ type Color_scheme_color @indexes(value: [
   updated_at: DateTime!
 }
 
-type Custom_emoji @pgTable(name: \\"custom_emojis\\") {
+type CustomEmoji @pgTable(name: \\"custom_emojis\\") {
   id: Int! @unique
   created_at: DateTime!
   name: String! @unique
@@ -265,7 +263,7 @@ type Developer @pgTable(name: \\"developers\\") {
   user_id: Int!
 }
 
-type Directory_item @indexes(value: [
+type DirectoryItem @indexes(value: [
   {name: \\"index_directory_items_on_days_visited\\", fields: [\\"days_visited\\"]},
   {name: \\"index_directory_items_on_likes_given\\", fields: [\\"likes_given\\"]},
   {name: \\"index_directory_items_on_likes_received\\", fields: [\\"likes_received\\"]},
@@ -302,7 +300,7 @@ type Draft @indexes(value: [
   user_id: Int!
 }
 
-type Draft_sequence @indexes(value: [
+type DraftSequence @indexes(value: [
   {name: \\"index_draft_sequences_on_user_id_and_draft_key\\", fields: [\\"user_id\\", \\"draft_key\\"], unique: true}
 ]) @pgTable(name: \\"draft_sequences\\") {
   id: Int! @unique
@@ -311,7 +309,7 @@ type Draft_sequence @indexes(value: [
   user_id: Int!
 }
 
-type Email_change_request @indexes(value: [
+type EmailChangeRequest @indexes(value: [
   {name: \\"index_email_change_requests_on_user_id\\", fields: [\\"user_id\\"]}
 ]) @pgTable(name: \\"email_change_requests\\") {
   id: Int! @unique
@@ -325,7 +323,7 @@ type Email_change_request @indexes(value: [
   user_id: Int!
 }
 
-type Email_log @indexes(value: [
+type EmailLog @indexes(value: [
   {name: \\"index_email_logs_on_bounced\\", fields: [\\"bounced\\"]},
   {name: \\"index_email_logs_on_created_at\\", fields: [\\"created_at\\"]},
   {name: \\"index_email_logs_on_message_id\\", fields: [\\"message_id\\"]},
@@ -344,7 +342,7 @@ type Email_log @indexes(value: [
   user_id: Int
 }
 
-type Email_token @indexes(value: [
+type EmailToken @indexes(value: [
   {name: \\"index_email_tokens_on_user_id\\", fields: [\\"user_id\\"]}
 ]) @pgTable(name: \\"email_tokens\\") {
   id: Int! @unique
@@ -357,7 +355,7 @@ type Email_token @indexes(value: [
   user_id: Int!
 }
 
-type Embeddable_host @pgTable(name: \\"embeddable_hosts\\") {
+type EmbeddableHost @pgTable(name: \\"embeddable_hosts\\") {
   id: Int! @unique
   category_id: Int!
   class_name: String
@@ -367,7 +365,7 @@ type Embeddable_host @pgTable(name: \\"embeddable_hosts\\") {
   updated_at: DateTime
 }
 
-type Facebook_user_info @pgTable(name: \\"facebook_user_infos\\") {
+type FacebookUserInfo @pgTable(name: \\"facebook_user_infos\\") {
   id: Int! @unique
   about_me: String
   avatar_url: String
@@ -386,7 +384,7 @@ type Facebook_user_info @pgTable(name: \\"facebook_user_infos\\") {
   website: String
 }
 
-type Github_user_info @pgTable(name: \\"github_user_infos\\") {
+type GithubUserInfo @pgTable(name: \\"github_user_infos\\") {
   id: Int! @unique
   created_at: DateTime!
   github_user_id: Int! @unique
@@ -395,7 +393,7 @@ type Github_user_info @pgTable(name: \\"github_user_infos\\") {
   user_id: Int! @unique
 }
 
-type Given_daily_like @indexes(value: [
+type GivenDailyLike @indexes(value: [
   {name: \\"index_given_daily_likes_on_limit_reached_and_user_id\\", fields: [\\"user_id\\", \\"limit_reached\\"]},
   {name: \\"index_given_daily_likes_on_user_id_and_given_date\\", fields: [\\"user_id\\", \\"given_date\\"], unique: true}
 ]) @pgTable(name: \\"given_daily_likes\\") {
@@ -405,7 +403,7 @@ type Given_daily_like @indexes(value: [
   user_id: Int!
 }
 
-type Google_user_info @pgTable(name: \\"google_user_infos\\") {
+type GoogleUserInfo @pgTable(name: \\"google_user_infos\\") {
   id: Int! @unique
   created_at: DateTime!
   email: String
@@ -451,7 +449,7 @@ type Group @pgTable(name: \\"groups\\") {
   visibility_level: Int! @default(value: 0)
 }
 
-type Group_archived_message @indexes(value: [
+type GroupArchivedMessage @indexes(value: [
   {name: \\"index_group_archived_messages_on_group_id_and_topic_id\\", fields: [\\"group_id\\", \\"topic_id\\"], unique: true}
 ]) @pgTable(name: \\"group_archived_messages\\") {
   id: Int! @unique
@@ -461,7 +459,7 @@ type Group_archived_message @indexes(value: [
   updated_at: DateTime
 }
 
-type Group_custom_field @indexes(value: [
+type GroupCustomField @indexes(value: [
   {name: \\"index_group_custom_fields_on_group_id_and_name\\", fields: [\\"group_id\\", \\"name\\"]}
 ]) @pgTable(name: \\"group_custom_fields\\") {
   id: Int! @unique
@@ -472,7 +470,7 @@ type Group_custom_field @indexes(value: [
   value: String
 }
 
-type Group_history @indexes(value: [
+type GroupHistory @indexes(value: [
   {name: \\"index_group_histories_on_acting_user_id\\", fields: [\\"acting_user_id\\"]},
   {name: \\"index_group_histories_on_action\\", fields: [\\"action\\"]},
   {name: \\"index_group_histories_on_group_id\\", fields: [\\"group_id\\"]},
@@ -490,7 +488,7 @@ type Group_history @indexes(value: [
   updated_at: DateTime!
 }
 
-type Group_mention @indexes(value: [
+type GroupMention @indexes(value: [
   {name: \\"index_group_mentions_on_group_id_and_post_id\\", fields: [\\"post_id\\", \\"group_id\\"], unique: true},
   {name: \\"index_group_mentions_on_post_id_and_group_id\\", fields: [\\"post_id\\", \\"group_id\\"], unique: true}
 ]) @pgTable(name: \\"group_mentions\\") {
@@ -501,7 +499,7 @@ type Group_mention @indexes(value: [
   updated_at: DateTime
 }
 
-type Group_user @indexes(value: [
+type GroupUser @indexes(value: [
   {name: \\"index_group_users_on_group_id_and_user_id\\", fields: [\\"group_id\\", \\"user_id\\"], unique: true},
   {name: \\"index_group_users_on_user_id_and_group_id\\", fields: [\\"group_id\\", \\"user_id\\"], unique: true}
 ]) @pgTable(name: \\"group_users\\") {
@@ -514,14 +512,14 @@ type Group_user @indexes(value: [
   user_id: Int!
 }
 
-type Groups_web_hook @indexes(value: [
+type GroupsWebHook @indexes(value: [
   {name: \\"index_groups_web_hooks_on_web_hook_id_and_group_id\\", fields: [\\"web_hook_id\\", \\"group_id\\"], unique: true}
 ]) @pgTable(name: \\"groups_web_hooks\\") {
   group_id: Int!
   web_hook_id: Int!
 }
 
-type Incoming_domain @indexes(value: [
+type IncomingDomain @indexes(value: [
   {name: \\"index_incoming_domains_on_name_and_https_and_port\\", fields: [\\"name\\", \\"https\\", \\"port\\"], unique: true}
 ]) @pgTable(name: \\"incoming_domains\\") {
   id: Int! @unique
@@ -530,7 +528,7 @@ type Incoming_domain @indexes(value: [
   port: Int!
 }
 
-type Incoming_email @indexes(value: [
+type IncomingEmail @indexes(value: [
   {name: \\"index_incoming_emails_on_created_at\\", fields: [\\"created_at\\"]},
   {name: \\"index_incoming_emails_on_error\\", fields: [\\"error\\"]},
   {name: \\"index_incoming_emails_on_message_id\\", fields: [\\"message_id\\"]},
@@ -554,7 +552,7 @@ type Incoming_email @indexes(value: [
   user_id: Int
 }
 
-type Incoming_link @indexes(value: [
+type IncomingLink @indexes(value: [
   {name: \\"index_incoming_links_on_created_at_and_user_id\\", fields: [\\"created_at\\", \\"user_id\\"]},
   {name: \\"index_incoming_links_on_post_id\\", fields: [\\"post_id\\"]}
 ]) @pgTable(name: \\"incoming_links\\") {
@@ -568,7 +566,7 @@ type Incoming_link @indexes(value: [
   user_id: Int
 }
 
-type Incoming_referer @indexes(value: [
+type IncomingReferer @indexes(value: [
   {name: \\"index_incoming_referers_on_path_and_incoming_domain_id\\", fields: [\\"path\\", \\"incoming_domain_id\\"], unique: true}
 ]) @pgTable(name: \\"incoming_referers\\") {
   id: Int! @unique
@@ -576,7 +574,7 @@ type Incoming_referer @indexes(value: [
   path: String!
 }
 
-type Instagram_user_info @pgTable(name: \\"instagram_user_infos\\") {
+type InstagramUserInfo @pgTable(name: \\"instagram_user_infos\\") {
   id: Int! @unique
   created_at: DateTime!
   instagram_user_id: Int
@@ -603,7 +601,7 @@ type Invite @indexes(value: [
   user_id: Int
 }
 
-type Invited_group @pgTable(name: \\"invited_groups\\") {
+type InvitedGroup @pgTable(name: \\"invited_groups\\") {
   id: Int! @unique
   created_at: DateTime!
   group_id: Int
@@ -611,7 +609,7 @@ type Invited_group @pgTable(name: \\"invited_groups\\") {
   updated_at: DateTime!
 }
 
-type Javascript_cach @indexes(value: [
+type JavascriptCach @indexes(value: [
   {name: \\"index_javascript_caches_on_digest\\", fields: [\\"digest\\"]},
   {name: \\"index_javascript_caches_on_theme_field_id\\", fields: [\\"theme_field_id\\"]}
 ]) @pgTable(name: \\"javascript_caches\\") {
@@ -623,7 +621,7 @@ type Javascript_cach @indexes(value: [
   updated_at: DateTime!
 }
 
-type Message_bus @indexes(value: [
+type MessageBus @indexes(value: [
   {name: \\"index_message_bus_on_created_at\\", fields: [\\"created_at\\"]}
 ]) @pgTable(name: \\"message_bus\\") {
   id: Int! @unique
@@ -633,7 +631,7 @@ type Message_bus @indexes(value: [
   name: String
 }
 
-type Muted_user @indexes(value: [
+type MutedUser @indexes(value: [
   {name: \\"index_muted_users_on_muted_user_id_and_user_id\\", fields: [\\"user_id\\", \\"muted_user_id\\"], unique: true},
   {name: \\"index_muted_users_on_user_id_and_muted_user_id\\", fields: [\\"user_id\\", \\"muted_user_id\\"], unique: true}
 ]) @pgTable(name: \\"muted_users\\") {
@@ -663,7 +661,7 @@ type Notification @indexes(value: [
   user_id: Int!
 }
 
-type Oauth2_user_info @indexes(value: [
+type Oauth2UserInfo @indexes(value: [
   {name: \\"index_oauth2_user_infos_on_uid_and_provider\\", fields: [\\"uid\\", \\"provider\\"], unique: true}
 ]) @pgTable(name: \\"oauth2_user_infos\\") {
   id: Int! @unique
@@ -676,7 +674,7 @@ type Oauth2_user_info @indexes(value: [
   user_id: Int!
 }
 
-type Onceoff_log @indexes(value: [
+type OnceoffLog @indexes(value: [
   {name: \\"index_onceoff_logs_on_job_name\\", fields: [\\"job_name\\"]}
 ]) @pgTable(name: \\"onceoff_logs\\") {
   id: Int! @unique
@@ -685,7 +683,7 @@ type Onceoff_log @indexes(value: [
   updated_at: DateTime!
 }
 
-type Optimized_image @indexes(value: [
+type OptimizedImage @indexes(value: [
   {name: \\"index_optimized_images_on_upload_id\\", fields: [\\"upload_id\\"]},
   {name: \\"index_optimized_images_on_upload_id_and_width_and_height\\", fields: [\\"width\\", \\"height\\", \\"upload_id\\"], unique: true}
 ]) @pgTable(name: \\"optimized_images\\") {
@@ -710,7 +708,7 @@ type Permalink @pgTable(name: \\"permalinks\\") {
   url: String! @unique
 }
 
-type Plugin_store_row @indexes(value: [
+type PluginStoreRow @indexes(value: [
   {name: \\"index_plugin_store_rows_on_plugin_name_and_key\\", fields: [\\"plugin_name\\", \\"key\\"], unique: true}
 ]) @pgTable(name: \\"plugin_store_rows\\") {
   id: Int! @unique
@@ -788,7 +786,7 @@ type Post @indexes(value: [
   word_count: Int
 }
 
-type Post_action @indexes(value: [
+type PostAction @indexes(value: [
   {name: \\"idx_unique_actions\\", fields: [\\"post_id\\", \\"user_id\\", \\"post_action_type_id\\", \\"targets_topic\\"], unique: true},
   {name: \\"idx_unique_flags\\", fields: [\\"post_id\\", \\"user_id\\", \\"targets_topic\\"], unique: true},
   {name: \\"index_post_actions_on_post_id\\", fields: [\\"post_id\\"]},
@@ -813,7 +811,7 @@ type Post_action @indexes(value: [
   user_id: Int!
 }
 
-type Post_action_type @pgTable(name: \\"post_action_types\\") {
+type PostActionType @pgTable(name: \\"post_action_types\\") {
   id: Int! @unique
   created_at: DateTime!
   icon: String
@@ -823,7 +821,7 @@ type Post_action_type @pgTable(name: \\"post_action_types\\") {
   updated_at: DateTime!
 }
 
-type Post_custom_field @indexes(value: [
+type PostCustomField @indexes(value: [
   {name: \\"idx_post_custom_fields_akismet\\", fields: [\\"post_id\\"]},
   {name: \\"index_post_custom_fields_on_name_and_value\\", fields: [\\"name\\"]},
   {name: \\"index_post_custom_fields_on_post_id_and_name\\", fields: [\\"post_id\\", \\"name\\"]}
@@ -836,7 +834,7 @@ type Post_custom_field @indexes(value: [
   value: String
 }
 
-type Post_detail @indexes(value: [
+type PostDetail @indexes(value: [
   {name: \\"index_post_details_on_post_id_and_key\\", fields: [\\"post_id\\", \\"key\\"], unique: true}
 ]) @pgTable(name: \\"post_details\\") {
   id: Int! @unique
@@ -848,7 +846,7 @@ type Post_detail @indexes(value: [
   value: String
 }
 
-type Post_reply @indexes(value: [
+type PostReply @indexes(value: [
   {name: \\"index_post_replies_on_post_id_and_reply_id\\", fields: [\\"post_id\\", \\"reply_id\\"], unique: true}
 ]) @pgTable(name: \\"post_replies\\") {
   created_at: DateTime!
@@ -857,7 +855,7 @@ type Post_reply @indexes(value: [
   updated_at: DateTime!
 }
 
-type Post_reply_key @indexes(value: [
+type PostReplyKey @indexes(value: [
   {name: \\"index_post_reply_keys_on_user_id_and_post_id\\", fields: [\\"user_id\\", \\"post_id\\"], unique: true}
 ]) @pgTable(name: \\"post_reply_keys\\") {
   id: Int! @unique
@@ -868,7 +866,7 @@ type Post_reply_key @indexes(value: [
   user_id: Int!
 }
 
-type Post_revision @indexes(value: [
+type PostRevision @indexes(value: [
   {name: \\"index_post_revisions_on_post_id\\", fields: [\\"post_id\\"]},
   {name: \\"index_post_revisions_on_post_id_and_number\\", fields: [\\"post_id\\", \\"number\\"]}
 ]) @pgTable(name: \\"post_revisions\\") {
@@ -882,9 +880,7 @@ type Post_revision @indexes(value: [
   user_id: Int
 }
 
-type Post_search_datum @indexes(value: [
-  {name: \\"idx_search_post\\", fields: [\\"search_data\\"]}
-]) @pgTable(name: \\"post_search_data\\") {
+type PostSearchDatum @pgTable(name: \\"post_search_data\\") {
   id: Int! @pgColumn(name: \\"post_id\\") @unique
   locale: String
   raw_data: String
@@ -893,7 +889,7 @@ type Post_search_datum @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type Post_stat @indexes(value: [
+type PostStat @indexes(value: [
   {name: \\"index_post_stats_on_post_id\\", fields: [\\"post_id\\"]}
 ]) @pgTable(name: \\"post_stats\\") {
   id: Int! @unique
@@ -905,7 +901,7 @@ type Post_stat @indexes(value: [
   updated_at: DateTime
 }
 
-type Post_timing @indexes(value: [
+type PostTiming @indexes(value: [
   {name: \\"index_post_timings_on_user_id\\", fields: [\\"user_id\\"]},
   {name: \\"post_timings_summary\\", fields: [\\"topic_id\\", \\"post_number\\"]},
   {name: \\"post_timings_unique\\", fields: [\\"topic_id\\", \\"post_number\\", \\"user_id\\"], unique: true}
@@ -916,7 +912,7 @@ type Post_timing @indexes(value: [
   user_id: Int!
 }
 
-type Post_upload @indexes(value: [
+type PostUpload @indexes(value: [
   {name: \\"idx_unique_post_uploads\\", fields: [\\"post_id\\", \\"upload_id\\"], unique: true},
   {name: \\"index_post_uploads_on_post_id\\", fields: [\\"post_id\\"]},
   {name: \\"index_post_uploads_on_upload_id\\", fields: [\\"upload_id\\"]}
@@ -926,7 +922,7 @@ type Post_upload @indexes(value: [
   upload_id: Int!
 }
 
-type Push_subscription @pgTable(name: \\"push_subscriptions\\") {
+type PushSubscription @pgTable(name: \\"push_subscriptions\\") {
   id: Int! @unique
   created_at: DateTime!
   data: String!
@@ -934,7 +930,7 @@ type Push_subscription @pgTable(name: \\"push_subscriptions\\") {
   user_id: Int!
 }
 
-type Queued_post @indexes(value: [
+type QueuedPost @indexes(value: [
   {name: \\"by_queue_status\\", fields: [\\"queue\\", \\"state\\", \\"created_at\\"]},
   {name: \\"by_queue_status_topic\\", fields: [\\"queue\\", \\"state\\", \\"topic_id\\", \\"created_at\\"]}
 ]) @pgTable(name: \\"queued_posts\\") {
@@ -953,7 +949,7 @@ type Queued_post @indexes(value: [
   user_id: Int!
 }
 
-type Quoted_post @indexes(value: [
+type QuotedPost @indexes(value: [
   {name: \\"index_quoted_posts_on_post_id_and_quoted_post_id\\", fields: [\\"post_id\\", \\"quoted_post_id\\"], unique: true},
   {name: \\"index_quoted_posts_on_quoted_post_id_and_post_id\\", fields: [\\"post_id\\", \\"quoted_post_id\\"], unique: true}
 ]) @pgTable(name: \\"quoted_posts\\") {
@@ -964,7 +960,7 @@ type Quoted_post @indexes(value: [
   updated_at: DateTime!
 }
 
-type Remote_theme @pgTable(name: \\"remote_themes\\") {
+type RemoteTheme @pgTable(name: \\"remote_themes\\") {
   id: Int! @unique
   about_url: String
   branch: String
@@ -980,7 +976,7 @@ type Remote_theme @pgTable(name: \\"remote_themes\\") {
   updated_at: DateTime
 }
 
-type Scheduler_stat @pgTable(name: \\"scheduler_stats\\") {
+type SchedulerStat @pgTable(name: \\"scheduler_stats\\") {
   id: Int! @unique
   duration_ms: Int
   error: String
@@ -993,11 +989,11 @@ type Scheduler_stat @pgTable(name: \\"scheduler_stats\\") {
   success: Boolean
 }
 
-type Schema_migration @pgTable(name: \\"schema_migrations\\") {
+type SchemaMigration @pgTable(name: \\"schema_migrations\\") {
   id: ID! @pgColumn(name: \\"version\\") @unique
 }
 
-type Schema_migration_detail @indexes(value: [
+type SchemaMigrationDetail @indexes(value: [
   {name: \\"index_schema_migration_details_on_version\\", fields: [\\"version\\"]}
 ]) @pgTable(name: \\"schema_migration_details\\") {
   id: Int! @unique
@@ -1011,7 +1007,7 @@ type Schema_migration_detail @indexes(value: [
   version: String!
 }
 
-type Screened_email @indexes(value: [
+type ScreenedEmail @indexes(value: [
   {name: \\"index_screened_emails_on_last_match_at\\", fields: [\\"last_match_at\\"]}
 ]) @pgTable(name: \\"screened_emails\\") {
   id: Int! @unique
@@ -1025,7 +1021,7 @@ type Screened_email @indexes(value: [
   updated_at: DateTime!
 }
 
-type Screened_ip_address @indexes(value: [
+type ScreenedIpAddress @indexes(value: [
   {name: \\"index_screened_ip_addresses_on_last_match_at\\", fields: [\\"last_match_at\\"]}
 ]) @pgTable(name: \\"screened_ip_addresses\\") {
   id: Int! @unique
@@ -1038,7 +1034,7 @@ type Screened_ip_address @indexes(value: [
   updated_at: DateTime!
 }
 
-type Screened_url @indexes(value: [
+type ScreenedUrl @indexes(value: [
   {name: \\"index_screened_urls_on_last_match_at\\", fields: [\\"last_match_at\\"]}
 ]) @pgTable(name: \\"screened_urls\\") {
   id: Int! @unique
@@ -1053,7 +1049,7 @@ type Screened_url @indexes(value: [
   url: String! @unique
 }
 
-type Search_log @pgTable(name: \\"search_logs\\") {
+type SearchLog @pgTable(name: \\"search_logs\\") {
   id: Int! @unique
   created_at: DateTime!
   # Type inet is not supported
@@ -1065,7 +1061,7 @@ type Search_log @pgTable(name: \\"search_logs\\") {
   user_id: Int
 }
 
-type Shared_draft @indexes(value: [
+type SharedDraft @indexes(value: [
   {name: \\"index_shared_drafts_on_category_id\\", fields: [\\"category_id\\"]}
 ]) @pgTable(name: \\"shared_drafts\\") {
   id: Int! @unique
@@ -1075,7 +1071,7 @@ type Shared_draft @indexes(value: [
   updated_at: DateTime!
 }
 
-type Single_sign_on_record @pgTable(name: \\"single_sign_on_records\\") {
+type SingleSignOnRecord @pgTable(name: \\"single_sign_on_records\\") {
   id: Int! @unique
   created_at: DateTime!
   external_avatar_url: String
@@ -1090,7 +1086,7 @@ type Single_sign_on_record @pgTable(name: \\"single_sign_on_records\\") {
   user_id: Int!
 }
 
-type Site_setting @pgTable(name: \\"site_settings\\") {
+type SiteSetting @pgTable(name: \\"site_settings\\") {
   id: Int! @unique
   created_at: DateTime!
   data_type: Int!
@@ -1099,7 +1095,7 @@ type Site_setting @pgTable(name: \\"site_settings\\") {
   value: String
 }
 
-type Skipped_email_log @indexes(value: [
+type SkippedEmailLog @indexes(value: [
   {name: \\"index_skipped_email_logs_on_created_at\\", fields: [\\"created_at\\"]},
   {name: \\"index_skipped_email_logs_on_post_id\\", fields: [\\"post_id\\"]},
   {name: \\"index_skipped_email_logs_on_reason_type\\", fields: [\\"reason_type\\"]},
@@ -1116,7 +1112,7 @@ type Skipped_email_log @indexes(value: [
   user_id: Int
 }
 
-type Stylesheet_cache @indexes(value: [
+type StylesheetCache @indexes(value: [
   {name: \\"index_stylesheet_cache_on_target_and_digest\\", fields: [\\"target\\", \\"digest\\"], unique: true}
 ]) @pgTable(name: \\"stylesheet_cache\\") {
   id: Int! @unique
@@ -1138,7 +1134,7 @@ type Tag @pgTable(name: \\"tags\\") {
   updated_at: DateTime
 }
 
-type Tag_group @pgTable(name: \\"tag_groups\\") {
+type TagGroup @pgTable(name: \\"tag_groups\\") {
   id: Int! @unique
   created_at: DateTime
   name: String!
@@ -1147,7 +1143,7 @@ type Tag_group @pgTable(name: \\"tag_groups\\") {
   updated_at: DateTime
 }
 
-type Tag_group_membership @indexes(value: [
+type TagGroupMembership @indexes(value: [
   {name: \\"index_tag_group_memberships_on_tag_group_id_and_tag_id\\", fields: [\\"tag_id\\", \\"tag_group_id\\"], unique: true}
 ]) @pgTable(name: \\"tag_group_memberships\\") {
   id: Int! @unique
@@ -1157,7 +1153,7 @@ type Tag_group_membership @indexes(value: [
   updated_at: DateTime
 }
 
-type Tag_group_permission @indexes(value: [
+type TagGroupPermission @indexes(value: [
   {name: \\"index_tag_group_permissions_on_group_id\\", fields: [\\"group_id\\"]},
   {name: \\"index_tag_group_permissions_on_tag_group_id\\", fields: [\\"tag_group_id\\"]}
 ]) @pgTable(name: \\"tag_group_permissions\\") {
@@ -1169,9 +1165,7 @@ type Tag_group_permission @indexes(value: [
   updated_at: DateTime!
 }
 
-type Tag_search_datum @indexes(value: [
-  {name: \\"idx_search_tag\\", fields: [\\"search_data\\"]}
-]) @pgTable(name: \\"tag_search_data\\") {
+type TagSearchDatum @pgTable(name: \\"tag_search_data\\") {
   id: Int! @pgColumn(name: \\"tag_id\\") @unique
   locale: String
   raw_data: String
@@ -1180,7 +1174,7 @@ type Tag_search_datum @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type Tag_user @indexes(value: [
+type TagUser @indexes(value: [
   {name: \\"idx_tag_users_ix1\\", fields: [\\"tag_id\\", \\"user_id\\", \\"notification_level\\"], unique: true},
   {name: \\"idx_tag_users_ix2\\", fields: [\\"tag_id\\", \\"user_id\\", \\"notification_level\\"], unique: true}
 ]) @pgTable(name: \\"tag_users\\") {
@@ -1206,7 +1200,7 @@ type Theme @pgTable(name: \\"themes\\") {
   user_selectable: Boolean! @default(value: false)
 }
 
-type Theme_field @indexes(value: [
+type ThemeField @indexes(value: [
   {name: \\"theme_field_unique_index\\", fields: [\\"theme_id\\", \\"target_id\\", \\"name\\", \\"type_id\\"], unique: true}
 ]) @pgTable(name: \\"theme_fields\\") {
   id: Int! @unique
@@ -1223,7 +1217,7 @@ type Theme_field @indexes(value: [
   value_baked: String
 }
 
-type Theme_setting @pgTable(name: \\"theme_settings\\") {
+type ThemeSetting @pgTable(name: \\"theme_settings\\") {
   id: Int! @unique
   created_at: DateTime!
   data_type: Int!
@@ -1233,7 +1227,7 @@ type Theme_setting @pgTable(name: \\"theme_settings\\") {
   value: String
 }
 
-type Top_topic @indexes(value: [
+type TopTopic @indexes(value: [
   {name: \\"index_top_topics_on_all_score\\", fields: [\\"all_score\\"]},
   {name: \\"index_top_topics_on_daily_likes_count\\", fields: [\\"daily_likes_count\\"]},
   {name: \\"index_top_topics_on_daily_op_likes_count\\", fields: [\\"daily_op_likes_count\\"]},
@@ -1346,7 +1340,7 @@ type Topic @indexes(value: [
   word_count: Int
 }
 
-type Topic_allowed_group @indexes(value: [
+type TopicAllowedGroup @indexes(value: [
   {name: \\"index_topic_allowed_groups_on_group_id_and_topic_id\\", fields: [\\"group_id\\", \\"topic_id\\"], unique: true},
   {name: \\"index_topic_allowed_groups_on_topic_id_and_group_id\\", fields: [\\"group_id\\", \\"topic_id\\"], unique: true}
 ]) @pgTable(name: \\"topic_allowed_groups\\") {
@@ -1355,7 +1349,7 @@ type Topic_allowed_group @indexes(value: [
   topic_id: Int!
 }
 
-type Topic_allowed_user @indexes(value: [
+type TopicAllowedUser @indexes(value: [
   {name: \\"index_topic_allowed_users_on_topic_id_and_user_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true},
   {name: \\"index_topic_allowed_users_on_user_id_and_topic_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true}
 ]) @pgTable(name: \\"topic_allowed_users\\") {
@@ -1366,7 +1360,7 @@ type Topic_allowed_user @indexes(value: [
   user_id: Int!
 }
 
-type Topic_custom_field @indexes(value: [
+type TopicCustomField @indexes(value: [
   {name: \\"index_topic_custom_fields_on_topic_id_and_name\\", fields: [\\"topic_id\\", \\"name\\"]},
   {name: \\"topic_custom_fields_value_key_idx\\", fields: [\\"name\\", \\"value\\"]}
 ]) @pgTable(name: \\"topic_custom_fields\\") {
@@ -1378,7 +1372,7 @@ type Topic_custom_field @indexes(value: [
   value: String
 }
 
-type Topic_embed @pgTable(name: \\"topic_embeds\\") {
+type TopicEmbed @pgTable(name: \\"topic_embeds\\") {
   id: Int! @unique
   content_sha1: String
   created_at: DateTime!
@@ -1390,7 +1384,7 @@ type Topic_embed @pgTable(name: \\"topic_embeds\\") {
   updated_at: DateTime!
 }
 
-type Topic_invite @indexes(value: [
+type TopicInvite @indexes(value: [
   {name: \\"index_topic_invites_on_invite_id\\", fields: [\\"invite_id\\"]},
   {name: \\"index_topic_invites_on_topic_id_and_invite_id\\", fields: [\\"topic_id\\", \\"invite_id\\"], unique: true}
 ]) @pgTable(name: \\"topic_invites\\") {
@@ -1401,7 +1395,7 @@ type Topic_invite @indexes(value: [
   updated_at: DateTime!
 }
 
-type Topic_link @indexes(value: [
+type TopicLink @indexes(value: [
   {name: \\"index_topic_links_on_extension\\", fields: [\\"extension\\"]},
   {name: \\"index_topic_links_on_link_post_id_and_reflection\\", fields: [\\"reflection\\", \\"link_post_id\\"]},
   {name: \\"index_topic_links_on_post_id\\", fields: [\\"post_id\\"]},
@@ -1427,7 +1421,7 @@ type Topic_link @indexes(value: [
   user_id: Int!
 }
 
-type Topic_link_click @indexes(value: [
+type TopicLinkClick @indexes(value: [
   {name: \\"by_link\\", fields: [\\"topic_link_id\\"]}
 ]) @pgTable(name: \\"topic_link_clicks\\") {
   id: Int! @unique
@@ -1439,9 +1433,7 @@ type Topic_link_click @indexes(value: [
   user_id: Int
 }
 
-type Topic_search_datum @indexes(value: [
-  {name: \\"idx_search_topic\\", fields: [\\"search_data\\"]}
-]) @pgTable(name: \\"topic_search_data\\") {
+type TopicSearchDatum @pgTable(name: \\"topic_search_data\\") {
   id: Int! @pgColumn(name: \\"topic_id\\") @unique
   locale: String!
   raw_data: String
@@ -1450,7 +1442,7 @@ type Topic_search_datum @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type Topic_tag @indexes(value: [
+type TopicTag @indexes(value: [
   {name: \\"index_topic_tags_on_topic_id_and_tag_id\\", fields: [\\"topic_id\\", \\"tag_id\\"], unique: true}
 ]) @pgTable(name: \\"topic_tags\\") {
   id: Int! @unique
@@ -1460,7 +1452,7 @@ type Topic_tag @indexes(value: [
   updated_at: DateTime
 }
 
-type Topic_timer @indexes(value: [
+type TopicTimer @indexes(value: [
   {name: \\"index_topic_timers_on_user_id\\", fields: [\\"user_id\\"]}
 ]) @pgTable(name: \\"topic_timers\\") {
   id: Int! @unique
@@ -1477,7 +1469,7 @@ type Topic_timer @indexes(value: [
   user_id: Int!
 }
 
-type Topic_user @indexes(value: [
+type TopicUser @indexes(value: [
   {name: \\"index_topic_users_on_topic_id_and_user_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true},
   {name: \\"index_topic_users_on_user_id_and_topic_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true}
 ]) @pgTable(name: \\"topic_users\\") {
@@ -1499,7 +1491,7 @@ type Topic_user @indexes(value: [
   user_id: Int!
 }
 
-type Topic_view @indexes(value: [
+type TopicView @indexes(value: [
   {name: \\"index_topic_views_on_topic_id_and_viewed_at\\", fields: [\\"topic_id\\", \\"viewed_at\\"]},
   {name: \\"index_topic_views_on_user_id_and_viewed_at\\", fields: [\\"viewed_at\\", \\"user_id\\"]},
   {name: \\"index_topic_views_on_viewed_at_and_topic_id\\", fields: [\\"topic_id\\", \\"viewed_at\\"]},
@@ -1512,7 +1504,7 @@ type Topic_view @indexes(value: [
   viewed_at: DateTime!
 }
 
-type Translation_override @indexes(value: [
+type TranslationOverride @indexes(value: [
   {name: \\"index_translation_overrides_on_locale_and_translation_key\\", fields: [\\"locale\\", \\"translation_key\\"], unique: true}
 ]) @pgTable(name: \\"translation_overrides\\") {
   id: Int! @unique
@@ -1524,7 +1516,7 @@ type Translation_override @indexes(value: [
   value: String!
 }
 
-type Twitter_user_info @pgTable(name: \\"twitter_user_infos\\") {
+type TwitterUserInfo @pgTable(name: \\"twitter_user_infos\\") {
   id: Int! @unique
   created_at: DateTime!
   email: String
@@ -1534,7 +1526,7 @@ type Twitter_user_info @pgTable(name: \\"twitter_user_infos\\") {
   user_id: Int! @unique
 }
 
-type Unsubscribe_key @indexes(value: [
+type UnsubscribeKey @indexes(value: [
   {name: \\"index_unsubscribe_keys_on_created_at\\", fields: [\\"created_at\\"]}
 ]) @pgTable(name: \\"unsubscribe_keys\\") {
   id: ID! @pgColumn(name: \\"key\\") @unique
@@ -1615,7 +1607,7 @@ type User @indexes(value: [
   views: Int! @default(value: 0)
 }
 
-type User_action @indexes(value: [
+type UserAction @indexes(value: [
   {name: \\"idx_unique_rows\\", fields: [\\"action_type\\", \\"user_id\\", \\"target_topic_id\\", \\"target_post_id\\", \\"acting_user_id\\"], unique: true},
   {name: \\"idx_user_actions_speed_up_user_all\\", fields: [\\"action_type\\", \\"user_id\\", \\"created_at\\"]},
   {name: \\"index_user_actions_on_acting_user_id\\", fields: [\\"acting_user_id\\"]},
@@ -1634,7 +1626,7 @@ type User_action @indexes(value: [
   user_id: Int!
 }
 
-type User_api_key @indexes(value: [
+type UserApiKey @indexes(value: [
   {name: \\"index_user_api_keys_on_user_id\\", fields: [\\"user_id\\"]}
 ]) @pgTable(name: \\"user_api_keys\\") {
   id: Int! @unique
@@ -1650,7 +1642,7 @@ type User_api_key @indexes(value: [
   user_id: Int!
 }
 
-type User_archived_message @indexes(value: [
+type UserArchivedMessage @indexes(value: [
   {name: \\"index_user_archived_messages_on_user_id_and_topic_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true}
 ]) @pgTable(name: \\"user_archived_messages\\") {
   id: Int! @unique
@@ -1660,7 +1652,7 @@ type User_archived_message @indexes(value: [
   user_id: Int!
 }
 
-type User_auth_token @pgTable(name: \\"user_auth_tokens\\") {
+type UserAuthToken @pgTable(name: \\"user_auth_tokens\\") {
   id: Int! @unique
   auth_token: String! @unique
   auth_token_seen: Boolean! @default(value: false)
@@ -1675,7 +1667,7 @@ type User_auth_token @pgTable(name: \\"user_auth_tokens\\") {
   user_id: Int!
 }
 
-type User_auth_token_log @pgTable(name: \\"user_auth_token_logs\\") {
+type UserAuthTokenLog @pgTable(name: \\"user_auth_token_logs\\") {
   id: Int! @unique
   action: String!
   auth_token: String
@@ -1688,7 +1680,7 @@ type User_auth_token_log @pgTable(name: \\"user_auth_token_logs\\") {
   user_id: Int
 }
 
-type User_avatar @indexes(value: [
+type UserAvatar @indexes(value: [
   {name: \\"index_user_avatars_on_custom_upload_id\\", fields: [\\"custom_upload_id\\"]},
   {name: \\"index_user_avatars_on_gravatar_upload_id\\", fields: [\\"gravatar_upload_id\\"]},
   {name: \\"index_user_avatars_on_user_id\\", fields: [\\"user_id\\"]}
@@ -1702,7 +1694,7 @@ type User_avatar @indexes(value: [
   user_id: Int!
 }
 
-type User_badge @indexes(value: [
+type UserBadge @indexes(value: [
   {name: \\"index_user_badges_on_badge_id_and_user_id\\", fields: [\\"badge_id\\", \\"user_id\\"]},
   {name: \\"index_user_badges_on_badge_id_and_user_id_and_post_id\\", fields: [\\"badge_id\\", \\"user_id\\", \\"post_id\\"], unique: true},
   {name: \\"index_user_badges_on_badge_id_and_user_id_and_seq\\", fields: [\\"badge_id\\", \\"user_id\\", \\"seq\\"], unique: true},
@@ -1718,7 +1710,7 @@ type User_badge @indexes(value: [
   user_id: Int!
 }
 
-type User_custom_field @indexes(value: [
+type UserCustomField @indexes(value: [
   {name: \\"index_user_custom_fields_on_user_id_and_name\\", fields: [\\"user_id\\", \\"name\\"]}
 ]) @pgTable(name: \\"user_custom_fields\\") {
   id: Int! @unique
@@ -1729,7 +1721,7 @@ type User_custom_field @indexes(value: [
   value: String
 }
 
-type User_email @indexes(value: [
+type UserEmail @indexes(value: [
   {name: \\"index_user_emails_on_user_id\\", fields: [\\"user_id\\"]},
   {name: \\"index_user_emails_on_user_id_and_primary\\", fields: [\\"user_id\\", \\"primary\\"], unique: true}
 ]) @pgTable(name: \\"user_emails\\") {
@@ -1741,7 +1733,7 @@ type User_email @indexes(value: [
   user_id: Int!
 }
 
-type User_export @pgTable(name: \\"user_exports\\") {
+type UserExport @pgTable(name: \\"user_exports\\") {
   id: Int! @unique
   created_at: DateTime
   file_name: String!
@@ -1750,7 +1742,7 @@ type User_export @pgTable(name: \\"user_exports\\") {
   user_id: Int!
 }
 
-type User_field @pgTable(name: \\"user_fields\\") {
+type UserField @pgTable(name: \\"user_fields\\") {
   id: Int! @unique
   created_at: DateTime
   description: String!
@@ -1766,7 +1758,7 @@ type User_field @pgTable(name: \\"user_fields\\") {
   updated_at: DateTime
 }
 
-type User_field_option @pgTable(name: \\"user_field_options\\") {
+type UserFieldOption @pgTable(name: \\"user_field_options\\") {
   id: Int! @unique
   created_at: DateTime
   updated_at: DateTime
@@ -1774,7 +1766,7 @@ type User_field_option @pgTable(name: \\"user_field_options\\") {
   value: String!
 }
 
-type User_history @indexes(value: [
+type UserHistory @indexes(value: [
   {name: \\"index_user_histories_on_acting_user_id_and_action_and_id\\", fields: [\\"id\\", \\"action\\", \\"acting_user_id\\"]},
   {name: \\"index_user_histories_on_action_and_id\\", fields: [\\"id\\", \\"action\\"]},
   {name: \\"index_user_histories_on_category_id\\", fields: [\\"category_id\\"]},
@@ -1801,7 +1793,7 @@ type User_history @indexes(value: [
   updated_at: DateTime!
 }
 
-type User_open_id @indexes(value: [
+type UserOpenId @indexes(value: [
   {name: \\"index_user_open_ids_on_url\\", fields: [\\"url\\"]}
 ]) @pgTable(name: \\"user_open_ids\\") {
   id: Int! @unique
@@ -1813,7 +1805,7 @@ type User_open_id @indexes(value: [
   user_id: Int!
 }
 
-type User_option @pgTable(name: \\"user_options\\") {
+type UserOption @pgTable(name: \\"user_options\\") {
   id: Int! @pgColumn(name: \\"user_id\\") @unique
   allow_private_messages: Boolean! @default(value: true)
   auto_track_topics_after_msecs: Int
@@ -1842,7 +1834,7 @@ type User_option @pgTable(name: \\"user_options\\") {
   theme_key_seq: Int! @default(value: 0)
 }
 
-type User_profile @indexes(value: [
+type UserProfile @indexes(value: [
   {name: \\"index_user_profiles_on_bio_cooked_version\\", fields: [\\"bio_cooked_version\\"]},
   {name: \\"index_user_profiles_on_card_background\\", fields: [\\"card_background\\"]},
   {name: \\"index_user_profiles_on_profile_background\\", fields: [\\"profile_background\\"]}
@@ -1860,7 +1852,7 @@ type User_profile @indexes(value: [
   website: String
 }
 
-type User_profile_view @indexes(value: [
+type UserProfileView @indexes(value: [
   {name: \\"index_user_profile_views_on_user_id\\", fields: [\\"user_id\\"]},
   {name: \\"index_user_profile_views_on_user_profile_id\\", fields: [\\"user_profile_id\\"]},
   {name: \\"unique_profile_view_user_or_ip\\", fields: [\\"user_profile_id\\", \\"viewed_at\\", \\"ip_address\\", \\"user_id\\"], unique: true}
@@ -1873,9 +1865,7 @@ type User_profile_view @indexes(value: [
   viewed_at: DateTime!
 }
 
-type User_search_datum @indexes(value: [
-  {name: \\"idx_search_user\\", fields: [\\"search_data\\"]}
-]) @pgTable(name: \\"user_search_data\\") {
+type UserSearchDatum @pgTable(name: \\"user_search_data\\") {
   id: Int! @pgColumn(name: \\"user_id\\") @unique
   locale: String
   raw_data: String
@@ -1884,7 +1874,7 @@ type User_search_datum @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type User_second_factor @indexes(value: [
+type UserSecondFactor @indexes(value: [
   {name: \\"index_user_second_factors_on_user_id\\", fields: [\\"user_id\\"]}
 ]) @pgTable(name: \\"user_second_factors\\") {
   id: Int! @unique
@@ -1897,7 +1887,7 @@ type User_second_factor @indexes(value: [
   user_id: Int!
 }
 
-type User_stat @pgTable(name: \\"user_stats\\") {
+type UserStat @pgTable(name: \\"user_stats\\") {
   id: Int! @pgColumn(name: \\"user_id\\") @unique
   bounce_score: Float! @default(value: 0)
   days_visited: Int! @default(value: 0)
@@ -1915,7 +1905,7 @@ type User_stat @pgTable(name: \\"user_stats\\") {
   topics_entered: Int! @default(value: 0)
 }
 
-type User_upload @indexes(value: [
+type UserUpload @indexes(value: [
   {name: \\"index_user_uploads_on_upload_id_and_user_id\\", fields: [\\"upload_id\\", \\"user_id\\"], unique: true}
 ]) @pgTable(name: \\"user_uploads\\") {
   id: Int! @unique
@@ -1924,7 +1914,7 @@ type User_upload @indexes(value: [
   user_id: Int!
 }
 
-type User_visit @indexes(value: [
+type UserVisit @indexes(value: [
   {name: \\"index_user_visits_on_user_id_and_visited_at\\", fields: [\\"user_id\\", \\"visited_at\\"], unique: true},
   {name: \\"index_user_visits_on_user_id_and_visited_at_and_time_read\\", fields: [\\"user_id\\", \\"visited_at\\", \\"time_read\\"]},
   {name: \\"index_user_visits_on_visited_at_and_mobile\\", fields: [\\"visited_at\\", \\"mobile\\"]}
@@ -1937,7 +1927,7 @@ type User_visit @indexes(value: [
   visited_at: DateTime!
 }
 
-type User_warning @indexes(value: [
+type UserWarning @indexes(value: [
   {name: \\"index_user_warnings_on_user_id\\", fields: [\\"user_id\\"]}
 ]) @pgTable(name: \\"user_warnings\\") {
   id: Int! @unique
@@ -1948,7 +1938,7 @@ type User_warning @indexes(value: [
   user_id: Int!
 }
 
-type Watched_word @indexes(value: [
+type WatchedWord @indexes(value: [
   {name: \\"index_watched_words_on_action_and_word\\", fields: [\\"word\\", \\"action\\"], unique: true}
 ]) @pgTable(name: \\"watched_words\\") {
   id: Int! @unique
@@ -1958,7 +1948,7 @@ type Watched_word @indexes(value: [
   word: String!
 }
 
-type Web_crawler_request @indexes(value: [
+type WebCrawlerRequest @indexes(value: [
   {name: \\"index_web_crawler_requests_on_date_and_user_agent\\", fields: [\\"date\\", \\"user_agent\\"], unique: true}
 ]) @pgTable(name: \\"web_crawler_requests\\") {
   id: Int! @unique
@@ -1967,7 +1957,7 @@ type Web_crawler_request @indexes(value: [
   user_agent: String!
 }
 
-type Web_hook @pgTable(name: \\"web_hooks\\") {
+type WebHook @pgTable(name: \\"web_hooks\\") {
   id: Int! @unique
   active: Boolean! @default(value: false)
   content_type: Int! @default(value: 1)
@@ -1981,7 +1971,7 @@ type Web_hook @pgTable(name: \\"web_hooks\\") {
   wildcard_web_hook: Boolean! @default(value: false)
 }
 
-type Web_hook_event @indexes(value: [
+type WebHookEvent @indexes(value: [
   {name: \\"index_web_hook_events_on_web_hook_id\\", fields: [\\"web_hook_id\\"]}
 ]) @pgTable(name: \\"web_hook_events\\") {
   id: Int! @unique
@@ -1996,12 +1986,12 @@ type Web_hook_event @indexes(value: [
   web_hook_id: Int!
 }
 
-type Web_hook_event_type @pgTable(name: \\"web_hook_event_types\\") {
+type WebHookEventType @pgTable(name: \\"web_hook_event_types\\") {
   id: Int! @unique
   name: String!
 }
 
-type Web_hook_event_types_hook @indexes(value: [
+type WebHookEventTypesHook @indexes(value: [
   {name: \\"idx_web_hook_event_types_hooks_on_ids\\", fields: [\\"web_hook_id\\", \\"web_hook_event_type_id\\"], unique: true}
 ]) @pgTable(name: \\"web_hook_event_types_hooks\\") {
   web_hook_event_type_id: Int!
@@ -2010,7 +2000,7 @@ type Web_hook_event_types_hook @indexes(value: [
 `;
 
 exports[`Introspector discourse 2`] = `
-"type Api_key @db(name: \\"api_keys\\") @indexes(value: [
+"type ApiKey @db(name: \\"api_keys\\") @indexes(value: [
   {name: \\"index_api_keys_on_key\\", fields: [\\"key\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"api_keys_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2024,7 +2014,7 @@ exports[`Introspector discourse 2`] = `
   user_id: Int @unique
 }
 
-type Application_request @db(name: \\"application_requests\\") @indexes(value: [
+type ApplicationRequest @db(name: \\"application_requests\\") @indexes(value: [
   {name: \\"index_application_requests_on_date_and_req_type\\", fields: [\\"date\\", \\"req_type\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"application_requests_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2033,7 +2023,7 @@ type Application_request @db(name: \\"application_requests\\") @indexes(value: [
   req_type: Int!
 }
 
-type Ar_internal_metadatum @db(name: \\"ar_internal_metadata\\") {
+type ArInternalMetadatum @db(name: \\"ar_internal_metadata\\") {
   key: ID! @id(strategy: NONE)
   created_at: DateTime!
   updated_at: DateTime!
@@ -2066,7 +2056,7 @@ type Badge @db(name: \\"badges\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Badge_grouping @db(name: \\"badge_groupings\\") {
+type BadgeGrouping @db(name: \\"badge_groupings\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"badge_groupings_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   description: String
@@ -2075,14 +2065,14 @@ type Badge_grouping @db(name: \\"badge_groupings\\") {
   updated_at: DateTime!
 }
 
-type Badge_type @db(name: \\"badge_types\\") {
+type BadgeType @db(name: \\"badge_types\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"badge_types_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   name: String! @unique
   updated_at: DateTime!
 }
 
-type Categories_web_hook @db(name: \\"categories_web_hooks\\") @indexes(value: [
+type CategoriesWebHook @db(name: \\"categories_web_hooks\\") @indexes(value: [
   {name: \\"index_categories_web_hooks_on_web_hook_id_and_category_id\\", fields: [\\"web_hook_id\\", \\"category_id\\"], unique: true}
 ]) {
   category_id: Int!
@@ -2142,7 +2132,7 @@ type Category @db(name: \\"categories\\") @indexes(value: [
   user_id: Int!
 }
 
-type Category_custom_field @db(name: \\"category_custom_fields\\") @indexes(value: [
+type CategoryCustomField @db(name: \\"category_custom_fields\\") @indexes(value: [
   {name: \\"index_category_custom_fields_on_category_id_and_name\\", fields: [\\"category_id\\", \\"name\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"category_custom_fields_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2153,7 +2143,7 @@ type Category_custom_field @db(name: \\"category_custom_fields\\") @indexes(valu
   value: String
 }
 
-type Category_featured_topic @db(name: \\"category_featured_topics\\") @indexes(value: [
+type CategoryFeaturedTopic @db(name: \\"category_featured_topics\\") @indexes(value: [
   {name: \\"cat_featured_threads\\", fields: [\\"category_id\\", \\"topic_id\\"], unique: true},
   {name: \\"index_category_featured_topics_on_category_id_and_rank\\", fields: [\\"category_id\\", \\"rank\\"]}
 ]) {
@@ -2165,7 +2155,7 @@ type Category_featured_topic @db(name: \\"category_featured_topics\\") @indexes(
   updated_at: DateTime!
 }
 
-type Category_group @db(name: \\"category_groups\\") {
+type CategoryGroup @db(name: \\"category_groups\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"category_groups_id_seq\\", initialValue: 1, allocationSize: 1)
   category_id: Int!
   created_at: DateTime!
@@ -2174,9 +2164,7 @@ type Category_group @db(name: \\"category_groups\\") {
   updated_at: DateTime!
 }
 
-type Category_search_datum @db(name: \\"category_search_data\\") @indexes(value: [
-  {name: \\"idx_search_category\\", fields: [\\"search_data\\"]}
-]) {
+type CategorySearchDatum @db(name: \\"category_search_data\\") {
   category_id: Int! @id(strategy: NONE)
   locale: String
   raw_data: String
@@ -2185,7 +2173,7 @@ type Category_search_datum @db(name: \\"category_search_data\\") @indexes(value:
   version: Int @default(value: 0)
 }
 
-type Category_tag @db(name: \\"category_tags\\") @indexes(value: [
+type CategoryTag @db(name: \\"category_tags\\") @indexes(value: [
   {name: \\"idx_category_tags_ix1\\", fields: [\\"category_id\\", \\"tag_id\\"], unique: true},
   {name: \\"idx_category_tags_ix2\\", fields: [\\"category_id\\", \\"tag_id\\"], unique: true}
 ]) {
@@ -2196,7 +2184,7 @@ type Category_tag @db(name: \\"category_tags\\") @indexes(value: [
   updated_at: DateTime
 }
 
-type Category_tag_group @db(name: \\"category_tag_groups\\") @indexes(value: [
+type CategoryTagGroup @db(name: \\"category_tag_groups\\") @indexes(value: [
   {name: \\"idx_category_tag_groups_ix1\\", fields: [\\"category_id\\", \\"tag_group_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"category_tag_groups_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2206,7 +2194,7 @@ type Category_tag_group @db(name: \\"category_tag_groups\\") @indexes(value: [
   updated_at: DateTime
 }
 
-type Category_tag_stat @db(name: \\"category_tag_stats\\") @indexes(value: [
+type CategoryTagStat @db(name: \\"category_tag_stats\\") @indexes(value: [
   {name: \\"index_category_tag_stats_on_category_id\\", fields: [\\"category_id\\"]},
   {name: \\"index_category_tag_stats_on_category_id_and_tag_id\\", fields: [\\"category_id\\", \\"tag_id\\"], unique: true},
   {name: \\"index_category_tag_stats_on_category_id_and_topic_count\\", fields: [\\"category_id\\", \\"topic_count\\"]},
@@ -2218,7 +2206,7 @@ type Category_tag_stat @db(name: \\"category_tag_stats\\") @indexes(value: [
   topic_count: Int! @default(value: 0)
 }
 
-type Category_user @db(name: \\"category_users\\") @indexes(value: [
+type CategoryUser @db(name: \\"category_users\\") @indexes(value: [
   {name: \\"idx_category_users_u1\\", fields: [\\"category_id\\", \\"user_id\\", \\"notification_level\\"], unique: true},
   {name: \\"idx_category_users_u2\\", fields: [\\"category_id\\", \\"user_id\\", \\"notification_level\\"], unique: true}
 ]) {
@@ -2228,7 +2216,7 @@ type Category_user @db(name: \\"category_users\\") @indexes(value: [
   user_id: Int!
 }
 
-type Child_theme @db(name: \\"child_themes\\") @indexes(value: [
+type ChildTheme @db(name: \\"child_themes\\") @indexes(value: [
   {name: \\"index_child_themes_on_child_theme_id_and_parent_theme_id\\", fields: [\\"parent_theme_id\\", \\"child_theme_id\\"], unique: true},
   {name: \\"index_child_themes_on_parent_theme_id_and_child_theme_id\\", fields: [\\"parent_theme_id\\", \\"child_theme_id\\"], unique: true}
 ]) {
@@ -2239,7 +2227,7 @@ type Child_theme @db(name: \\"child_themes\\") @indexes(value: [
   updated_at: DateTime
 }
 
-type Color_scheme @db(name: \\"color_schemes\\") {
+type ColorScheme @db(name: \\"color_schemes\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"color_schemes_id_seq\\", initialValue: 1, allocationSize: 1)
   base_scheme_id: String
   created_at: DateTime!
@@ -2250,7 +2238,7 @@ type Color_scheme @db(name: \\"color_schemes\\") {
   via_wizard: Boolean! @default(value: false)
 }
 
-type Color_scheme_color @db(name: \\"color_scheme_colors\\") @indexes(value: [
+type ColorSchemeColor @db(name: \\"color_scheme_colors\\") @indexes(value: [
   {name: \\"index_color_scheme_colors_on_color_scheme_id\\", fields: [\\"color_scheme_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"color_scheme_colors_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2261,7 +2249,7 @@ type Color_scheme_color @db(name: \\"color_scheme_colors\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Custom_emoji @db(name: \\"custom_emojis\\") {
+type CustomEmoji @db(name: \\"custom_emojis\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"custom_emojis_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   name: String! @unique
@@ -2274,7 +2262,7 @@ type Developer @db(name: \\"developers\\") {
   user_id: Int!
 }
 
-type Directory_item @db(name: \\"directory_items\\") @indexes(value: [
+type DirectoryItem @db(name: \\"directory_items\\") @indexes(value: [
   {name: \\"index_directory_items_on_days_visited\\", fields: [\\"days_visited\\"]},
   {name: \\"index_directory_items_on_likes_given\\", fields: [\\"likes_given\\"]},
   {name: \\"index_directory_items_on_likes_received\\", fields: [\\"likes_received\\"]},
@@ -2311,7 +2299,7 @@ type Draft @db(name: \\"drafts\\") @indexes(value: [
   user_id: Int!
 }
 
-type Draft_sequence @db(name: \\"draft_sequences\\") @indexes(value: [
+type DraftSequence @db(name: \\"draft_sequences\\") @indexes(value: [
   {name: \\"index_draft_sequences_on_user_id_and_draft_key\\", fields: [\\"user_id\\", \\"draft_key\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"draft_sequences_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2320,7 +2308,7 @@ type Draft_sequence @db(name: \\"draft_sequences\\") @indexes(value: [
   user_id: Int!
 }
 
-type Email_change_request @db(name: \\"email_change_requests\\") @indexes(value: [
+type EmailChangeRequest @db(name: \\"email_change_requests\\") @indexes(value: [
   {name: \\"index_email_change_requests_on_user_id\\", fields: [\\"user_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"email_change_requests_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2334,7 +2322,7 @@ type Email_change_request @db(name: \\"email_change_requests\\") @indexes(value:
   user_id: Int!
 }
 
-type Email_log @db(name: \\"email_logs\\") @indexes(value: [
+type EmailLog @db(name: \\"email_logs\\") @indexes(value: [
   {name: \\"index_email_logs_on_bounced\\", fields: [\\"bounced\\"]},
   {name: \\"index_email_logs_on_created_at\\", fields: [\\"created_at\\"]},
   {name: \\"index_email_logs_on_message_id\\", fields: [\\"message_id\\"]},
@@ -2353,7 +2341,7 @@ type Email_log @db(name: \\"email_logs\\") @indexes(value: [
   user_id: Int
 }
 
-type Email_token @db(name: \\"email_tokens\\") @indexes(value: [
+type EmailToken @db(name: \\"email_tokens\\") @indexes(value: [
   {name: \\"index_email_tokens_on_user_id\\", fields: [\\"user_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"email_tokens_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2366,7 +2354,7 @@ type Email_token @db(name: \\"email_tokens\\") @indexes(value: [
   user_id: Int!
 }
 
-type Embeddable_host @db(name: \\"embeddable_hosts\\") {
+type EmbeddableHost @db(name: \\"embeddable_hosts\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"embeddable_hosts_id_seq\\", initialValue: 1, allocationSize: 1)
   category_id: Int!
   class_name: String
@@ -2376,7 +2364,7 @@ type Embeddable_host @db(name: \\"embeddable_hosts\\") {
   updated_at: DateTime
 }
 
-type Facebook_user_info @db(name: \\"facebook_user_infos\\") {
+type FacebookUserInfo @db(name: \\"facebook_user_infos\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"facebook_user_infos_id_seq\\", initialValue: 1, allocationSize: 1)
   about_me: String
   avatar_url: String
@@ -2395,7 +2383,7 @@ type Facebook_user_info @db(name: \\"facebook_user_infos\\") {
   website: String
 }
 
-type Github_user_info @db(name: \\"github_user_infos\\") {
+type GithubUserInfo @db(name: \\"github_user_infos\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"github_user_infos_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   github_user_id: Int! @unique
@@ -2404,7 +2392,7 @@ type Github_user_info @db(name: \\"github_user_infos\\") {
   user_id: Int! @unique
 }
 
-type Given_daily_like @db(name: \\"given_daily_likes\\") @indexes(value: [
+type GivenDailyLike @db(name: \\"given_daily_likes\\") @indexes(value: [
   {name: \\"index_given_daily_likes_on_limit_reached_and_user_id\\", fields: [\\"user_id\\", \\"limit_reached\\"]},
   {name: \\"index_given_daily_likes_on_user_id_and_given_date\\", fields: [\\"user_id\\", \\"given_date\\"], unique: true}
 ]) {
@@ -2414,7 +2402,7 @@ type Given_daily_like @db(name: \\"given_daily_likes\\") @indexes(value: [
   user_id: Int!
 }
 
-type Google_user_info @db(name: \\"google_user_infos\\") {
+type GoogleUserInfo @db(name: \\"google_user_infos\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"google_user_infos_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   email: String
@@ -2460,7 +2448,7 @@ type Group @db(name: \\"groups\\") {
   visibility_level: Int! @default(value: 0)
 }
 
-type Group_archived_message @db(name: \\"group_archived_messages\\") @indexes(value: [
+type GroupArchivedMessage @db(name: \\"group_archived_messages\\") @indexes(value: [
   {name: \\"index_group_archived_messages_on_group_id_and_topic_id\\", fields: [\\"group_id\\", \\"topic_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"group_archived_messages_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2470,7 +2458,7 @@ type Group_archived_message @db(name: \\"group_archived_messages\\") @indexes(va
   updated_at: DateTime
 }
 
-type Group_custom_field @db(name: \\"group_custom_fields\\") @indexes(value: [
+type GroupCustomField @db(name: \\"group_custom_fields\\") @indexes(value: [
   {name: \\"index_group_custom_fields_on_group_id_and_name\\", fields: [\\"group_id\\", \\"name\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"group_custom_fields_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2481,7 +2469,7 @@ type Group_custom_field @db(name: \\"group_custom_fields\\") @indexes(value: [
   value: String
 }
 
-type Group_history @db(name: \\"group_histories\\") @indexes(value: [
+type GroupHistory @db(name: \\"group_histories\\") @indexes(value: [
   {name: \\"index_group_histories_on_acting_user_id\\", fields: [\\"acting_user_id\\"]},
   {name: \\"index_group_histories_on_action\\", fields: [\\"action\\"]},
   {name: \\"index_group_histories_on_group_id\\", fields: [\\"group_id\\"]},
@@ -2499,7 +2487,7 @@ type Group_history @db(name: \\"group_histories\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Group_mention @db(name: \\"group_mentions\\") @indexes(value: [
+type GroupMention @db(name: \\"group_mentions\\") @indexes(value: [
   {name: \\"index_group_mentions_on_group_id_and_post_id\\", fields: [\\"post_id\\", \\"group_id\\"], unique: true},
   {name: \\"index_group_mentions_on_post_id_and_group_id\\", fields: [\\"post_id\\", \\"group_id\\"], unique: true}
 ]) {
@@ -2510,7 +2498,7 @@ type Group_mention @db(name: \\"group_mentions\\") @indexes(value: [
   updated_at: DateTime
 }
 
-type Group_user @db(name: \\"group_users\\") @indexes(value: [
+type GroupUser @db(name: \\"group_users\\") @indexes(value: [
   {name: \\"index_group_users_on_group_id_and_user_id\\", fields: [\\"group_id\\", \\"user_id\\"], unique: true},
   {name: \\"index_group_users_on_user_id_and_group_id\\", fields: [\\"group_id\\", \\"user_id\\"], unique: true}
 ]) {
@@ -2523,14 +2511,14 @@ type Group_user @db(name: \\"group_users\\") @indexes(value: [
   user_id: Int!
 }
 
-type Groups_web_hook @db(name: \\"groups_web_hooks\\") @indexes(value: [
+type GroupsWebHook @db(name: \\"groups_web_hooks\\") @indexes(value: [
   {name: \\"index_groups_web_hooks_on_web_hook_id_and_group_id\\", fields: [\\"web_hook_id\\", \\"group_id\\"], unique: true}
 ]) {
   group_id: Int!
   web_hook_id: Int!
 }
 
-type Incoming_domain @db(name: \\"incoming_domains\\") @indexes(value: [
+type IncomingDomain @db(name: \\"incoming_domains\\") @indexes(value: [
   {name: \\"index_incoming_domains_on_name_and_https_and_port\\", fields: [\\"name\\", \\"https\\", \\"port\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"incoming_domains_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2539,7 +2527,7 @@ type Incoming_domain @db(name: \\"incoming_domains\\") @indexes(value: [
   port: Int!
 }
 
-type Incoming_email @db(name: \\"incoming_emails\\") @indexes(value: [
+type IncomingEmail @db(name: \\"incoming_emails\\") @indexes(value: [
   {name: \\"index_incoming_emails_on_created_at\\", fields: [\\"created_at\\"]},
   {name: \\"index_incoming_emails_on_error\\", fields: [\\"error\\"]},
   {name: \\"index_incoming_emails_on_message_id\\", fields: [\\"message_id\\"]},
@@ -2563,7 +2551,7 @@ type Incoming_email @db(name: \\"incoming_emails\\") @indexes(value: [
   user_id: Int
 }
 
-type Incoming_link @db(name: \\"incoming_links\\") @indexes(value: [
+type IncomingLink @db(name: \\"incoming_links\\") @indexes(value: [
   {name: \\"index_incoming_links_on_created_at_and_user_id\\", fields: [\\"created_at\\", \\"user_id\\"]},
   {name: \\"index_incoming_links_on_post_id\\", fields: [\\"post_id\\"]}
 ]) {
@@ -2577,7 +2565,7 @@ type Incoming_link @db(name: \\"incoming_links\\") @indexes(value: [
   user_id: Int
 }
 
-type Incoming_referer @db(name: \\"incoming_referers\\") @indexes(value: [
+type IncomingReferer @db(name: \\"incoming_referers\\") @indexes(value: [
   {name: \\"index_incoming_referers_on_path_and_incoming_domain_id\\", fields: [\\"path\\", \\"incoming_domain_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"incoming_referers_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2585,7 +2573,7 @@ type Incoming_referer @db(name: \\"incoming_referers\\") @indexes(value: [
   path: String!
 }
 
-type Instagram_user_info @db(name: \\"instagram_user_infos\\") {
+type InstagramUserInfo @db(name: \\"instagram_user_infos\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"instagram_user_infos_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   instagram_user_id: Int
@@ -2612,7 +2600,7 @@ type Invite @db(name: \\"invites\\") @indexes(value: [
   user_id: Int
 }
 
-type Invited_group @db(name: \\"invited_groups\\") {
+type InvitedGroup @db(name: \\"invited_groups\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"invited_groups_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   group_id: Int
@@ -2620,7 +2608,7 @@ type Invited_group @db(name: \\"invited_groups\\") {
   updated_at: DateTime!
 }
 
-type Javascript_cach @db(name: \\"javascript_caches\\") @indexes(value: [
+type JavascriptCach @db(name: \\"javascript_caches\\") @indexes(value: [
   {name: \\"index_javascript_caches_on_digest\\", fields: [\\"digest\\"]},
   {name: \\"index_javascript_caches_on_theme_field_id\\", fields: [\\"theme_field_id\\"]}
 ]) {
@@ -2632,7 +2620,7 @@ type Javascript_cach @db(name: \\"javascript_caches\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Message_bus @db(name: \\"message_bus\\") @indexes(value: [
+type MessageBus @db(name: \\"message_bus\\") @indexes(value: [
   {name: \\"index_message_bus_on_created_at\\", fields: [\\"created_at\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"message_bus_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2642,7 +2630,7 @@ type Message_bus @db(name: \\"message_bus\\") @indexes(value: [
   name: String
 }
 
-type Muted_user @db(name: \\"muted_users\\") @indexes(value: [
+type MutedUser @db(name: \\"muted_users\\") @indexes(value: [
   {name: \\"index_muted_users_on_muted_user_id_and_user_id\\", fields: [\\"user_id\\", \\"muted_user_id\\"], unique: true},
   {name: \\"index_muted_users_on_user_id_and_muted_user_id\\", fields: [\\"user_id\\", \\"muted_user_id\\"], unique: true}
 ]) {
@@ -2672,7 +2660,7 @@ type Notification @db(name: \\"notifications\\") @indexes(value: [
   user_id: Int!
 }
 
-type Oauth2_user_info @db(name: \\"oauth2_user_infos\\") @indexes(value: [
+type Oauth2UserInfo @db(name: \\"oauth2_user_infos\\") @indexes(value: [
   {name: \\"index_oauth2_user_infos_on_uid_and_provider\\", fields: [\\"uid\\", \\"provider\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"oauth2_user_infos_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2685,7 +2673,7 @@ type Oauth2_user_info @db(name: \\"oauth2_user_infos\\") @indexes(value: [
   user_id: Int!
 }
 
-type Onceoff_log @db(name: \\"onceoff_logs\\") @indexes(value: [
+type OnceoffLog @db(name: \\"onceoff_logs\\") @indexes(value: [
   {name: \\"index_onceoff_logs_on_job_name\\", fields: [\\"job_name\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"onceoff_logs_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2694,7 +2682,7 @@ type Onceoff_log @db(name: \\"onceoff_logs\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Optimized_image @db(name: \\"optimized_images\\") @indexes(value: [
+type OptimizedImage @db(name: \\"optimized_images\\") @indexes(value: [
   {name: \\"index_optimized_images_on_upload_id\\", fields: [\\"upload_id\\"]},
   {name: \\"index_optimized_images_on_upload_id_and_width_and_height\\", fields: [\\"width\\", \\"height\\", \\"upload_id\\"], unique: true}
 ]) {
@@ -2719,7 +2707,7 @@ type Permalink @db(name: \\"permalinks\\") {
   url: String! @unique
 }
 
-type Plugin_store_row @db(name: \\"plugin_store_rows\\") @indexes(value: [
+type PluginStoreRow @db(name: \\"plugin_store_rows\\") @indexes(value: [
   {name: \\"index_plugin_store_rows_on_plugin_name_and_key\\", fields: [\\"plugin_name\\", \\"key\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"plugin_store_rows_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2797,7 +2785,7 @@ type Post @db(name: \\"posts\\") @indexes(value: [
   word_count: Int
 }
 
-type Post_action @db(name: \\"post_actions\\") @indexes(value: [
+type PostAction @db(name: \\"post_actions\\") @indexes(value: [
   {name: \\"idx_unique_actions\\", fields: [\\"post_id\\", \\"user_id\\", \\"post_action_type_id\\", \\"targets_topic\\"], unique: true},
   {name: \\"idx_unique_flags\\", fields: [\\"post_id\\", \\"user_id\\", \\"targets_topic\\"], unique: true},
   {name: \\"index_post_actions_on_post_id\\", fields: [\\"post_id\\"]},
@@ -2822,7 +2810,7 @@ type Post_action @db(name: \\"post_actions\\") @indexes(value: [
   user_id: Int!
 }
 
-type Post_action_type @db(name: \\"post_action_types\\") {
+type PostActionType @db(name: \\"post_action_types\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"post_action_types_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   icon: String
@@ -2832,7 +2820,7 @@ type Post_action_type @db(name: \\"post_action_types\\") {
   updated_at: DateTime!
 }
 
-type Post_custom_field @db(name: \\"post_custom_fields\\") @indexes(value: [
+type PostCustomField @db(name: \\"post_custom_fields\\") @indexes(value: [
   {name: \\"idx_post_custom_fields_akismet\\", fields: [\\"post_id\\"]},
   {name: \\"index_post_custom_fields_on_name_and_value\\", fields: [\\"name\\"]},
   {name: \\"index_post_custom_fields_on_post_id_and_name\\", fields: [\\"post_id\\", \\"name\\"]}
@@ -2845,7 +2833,7 @@ type Post_custom_field @db(name: \\"post_custom_fields\\") @indexes(value: [
   value: String
 }
 
-type Post_detail @db(name: \\"post_details\\") @indexes(value: [
+type PostDetail @db(name: \\"post_details\\") @indexes(value: [
   {name: \\"index_post_details_on_post_id_and_key\\", fields: [\\"post_id\\", \\"key\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"post_details_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2857,7 +2845,7 @@ type Post_detail @db(name: \\"post_details\\") @indexes(value: [
   value: String
 }
 
-type Post_reply @db(name: \\"post_replies\\") @indexes(value: [
+type PostReply @db(name: \\"post_replies\\") @indexes(value: [
   {name: \\"index_post_replies_on_post_id_and_reply_id\\", fields: [\\"post_id\\", \\"reply_id\\"], unique: true}
 ]) {
   created_at: DateTime!
@@ -2866,7 +2854,7 @@ type Post_reply @db(name: \\"post_replies\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Post_reply_key @db(name: \\"post_reply_keys\\") @indexes(value: [
+type PostReplyKey @db(name: \\"post_reply_keys\\") @indexes(value: [
   {name: \\"index_post_reply_keys_on_user_id_and_post_id\\", fields: [\\"user_id\\", \\"post_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"post_reply_keys_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2877,7 +2865,7 @@ type Post_reply_key @db(name: \\"post_reply_keys\\") @indexes(value: [
   user_id: Int!
 }
 
-type Post_revision @db(name: \\"post_revisions\\") @indexes(value: [
+type PostRevision @db(name: \\"post_revisions\\") @indexes(value: [
   {name: \\"index_post_revisions_on_post_id\\", fields: [\\"post_id\\"]},
   {name: \\"index_post_revisions_on_post_id_and_number\\", fields: [\\"post_id\\", \\"number\\"]}
 ]) {
@@ -2891,9 +2879,7 @@ type Post_revision @db(name: \\"post_revisions\\") @indexes(value: [
   user_id: Int
 }
 
-type Post_search_datum @db(name: \\"post_search_data\\") @indexes(value: [
-  {name: \\"idx_search_post\\", fields: [\\"search_data\\"]}
-]) {
+type PostSearchDatum @db(name: \\"post_search_data\\") {
   post_id: Int! @id(strategy: NONE)
   locale: String
   raw_data: String
@@ -2902,7 +2888,7 @@ type Post_search_datum @db(name: \\"post_search_data\\") @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type Post_stat @db(name: \\"post_stats\\") @indexes(value: [
+type PostStat @db(name: \\"post_stats\\") @indexes(value: [
   {name: \\"index_post_stats_on_post_id\\", fields: [\\"post_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"post_stats_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -2914,7 +2900,7 @@ type Post_stat @db(name: \\"post_stats\\") @indexes(value: [
   updated_at: DateTime
 }
 
-type Post_timing @db(name: \\"post_timings\\") @indexes(value: [
+type PostTiming @db(name: \\"post_timings\\") @indexes(value: [
   {name: \\"index_post_timings_on_user_id\\", fields: [\\"user_id\\"]},
   {name: \\"post_timings_summary\\", fields: [\\"topic_id\\", \\"post_number\\"]},
   {name: \\"post_timings_unique\\", fields: [\\"topic_id\\", \\"post_number\\", \\"user_id\\"], unique: true}
@@ -2925,7 +2911,7 @@ type Post_timing @db(name: \\"post_timings\\") @indexes(value: [
   user_id: Int!
 }
 
-type Post_upload @db(name: \\"post_uploads\\") @indexes(value: [
+type PostUpload @db(name: \\"post_uploads\\") @indexes(value: [
   {name: \\"idx_unique_post_uploads\\", fields: [\\"post_id\\", \\"upload_id\\"], unique: true},
   {name: \\"index_post_uploads_on_post_id\\", fields: [\\"post_id\\"]},
   {name: \\"index_post_uploads_on_upload_id\\", fields: [\\"upload_id\\"]}
@@ -2935,7 +2921,7 @@ type Post_upload @db(name: \\"post_uploads\\") @indexes(value: [
   upload_id: Int!
 }
 
-type Push_subscription @db(name: \\"push_subscriptions\\") {
+type PushSubscription @db(name: \\"push_subscriptions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"push_subscriptions_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   data: String!
@@ -2943,7 +2929,7 @@ type Push_subscription @db(name: \\"push_subscriptions\\") {
   user_id: Int!
 }
 
-type Queued_post @db(name: \\"queued_posts\\") @indexes(value: [
+type QueuedPost @db(name: \\"queued_posts\\") @indexes(value: [
   {name: \\"by_queue_status\\", fields: [\\"queue\\", \\"state\\", \\"created_at\\"]},
   {name: \\"by_queue_status_topic\\", fields: [\\"queue\\", \\"state\\", \\"topic_id\\", \\"created_at\\"]}
 ]) {
@@ -2962,7 +2948,7 @@ type Queued_post @db(name: \\"queued_posts\\") @indexes(value: [
   user_id: Int!
 }
 
-type Quoted_post @db(name: \\"quoted_posts\\") @indexes(value: [
+type QuotedPost @db(name: \\"quoted_posts\\") @indexes(value: [
   {name: \\"index_quoted_posts_on_post_id_and_quoted_post_id\\", fields: [\\"post_id\\", \\"quoted_post_id\\"], unique: true},
   {name: \\"index_quoted_posts_on_quoted_post_id_and_post_id\\", fields: [\\"post_id\\", \\"quoted_post_id\\"], unique: true}
 ]) {
@@ -2973,7 +2959,7 @@ type Quoted_post @db(name: \\"quoted_posts\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Remote_theme @db(name: \\"remote_themes\\") {
+type RemoteTheme @db(name: \\"remote_themes\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"remote_themes_id_seq\\", initialValue: 1, allocationSize: 1)
   about_url: String
   branch: String
@@ -2989,7 +2975,7 @@ type Remote_theme @db(name: \\"remote_themes\\") {
   updated_at: DateTime
 }
 
-type Scheduler_stat @db(name: \\"scheduler_stats\\") {
+type SchedulerStat @db(name: \\"scheduler_stats\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"scheduler_stats_id_seq\\", initialValue: 1, allocationSize: 1)
   duration_ms: Int
   error: String
@@ -3002,11 +2988,11 @@ type Scheduler_stat @db(name: \\"scheduler_stats\\") {
   success: Boolean
 }
 
-type Schema_migration @db(name: \\"schema_migrations\\") {
+type SchemaMigration @db(name: \\"schema_migrations\\") {
   version: ID! @id(strategy: NONE)
 }
 
-type Schema_migration_detail @db(name: \\"schema_migration_details\\") @indexes(value: [
+type SchemaMigrationDetail @db(name: \\"schema_migration_details\\") @indexes(value: [
   {name: \\"index_schema_migration_details_on_version\\", fields: [\\"version\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"schema_migration_details_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3020,7 +3006,7 @@ type Schema_migration_detail @db(name: \\"schema_migration_details\\") @indexes(
   version: String!
 }
 
-type Screened_email @db(name: \\"screened_emails\\") @indexes(value: [
+type ScreenedEmail @db(name: \\"screened_emails\\") @indexes(value: [
   {name: \\"index_screened_emails_on_last_match_at\\", fields: [\\"last_match_at\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"screened_emails_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3034,7 +3020,7 @@ type Screened_email @db(name: \\"screened_emails\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Screened_ip_address @db(name: \\"screened_ip_addresses\\") @indexes(value: [
+type ScreenedIpAddress @db(name: \\"screened_ip_addresses\\") @indexes(value: [
   {name: \\"index_screened_ip_addresses_on_last_match_at\\", fields: [\\"last_match_at\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"screened_ip_addresses_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3047,7 +3033,7 @@ type Screened_ip_address @db(name: \\"screened_ip_addresses\\") @indexes(value: 
   updated_at: DateTime!
 }
 
-type Screened_url @db(name: \\"screened_urls\\") @indexes(value: [
+type ScreenedUrl @db(name: \\"screened_urls\\") @indexes(value: [
   {name: \\"index_screened_urls_on_last_match_at\\", fields: [\\"last_match_at\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"screened_urls_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3062,7 +3048,7 @@ type Screened_url @db(name: \\"screened_urls\\") @indexes(value: [
   url: String! @unique
 }
 
-type Search_log @db(name: \\"search_logs\\") {
+type SearchLog @db(name: \\"search_logs\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"search_logs_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   # Type inet is not supported
@@ -3074,7 +3060,7 @@ type Search_log @db(name: \\"search_logs\\") {
   user_id: Int
 }
 
-type Shared_draft @db(name: \\"shared_drafts\\") @indexes(value: [
+type SharedDraft @db(name: \\"shared_drafts\\") @indexes(value: [
   {name: \\"index_shared_drafts_on_category_id\\", fields: [\\"category_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"shared_drafts_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3084,7 +3070,7 @@ type Shared_draft @db(name: \\"shared_drafts\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Single_sign_on_record @db(name: \\"single_sign_on_records\\") {
+type SingleSignOnRecord @db(name: \\"single_sign_on_records\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"single_sign_on_records_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   external_avatar_url: String
@@ -3099,7 +3085,7 @@ type Single_sign_on_record @db(name: \\"single_sign_on_records\\") {
   user_id: Int!
 }
 
-type Site_setting @db(name: \\"site_settings\\") {
+type SiteSetting @db(name: \\"site_settings\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"site_settings_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   data_type: Int!
@@ -3108,7 +3094,7 @@ type Site_setting @db(name: \\"site_settings\\") {
   value: String
 }
 
-type Skipped_email_log @db(name: \\"skipped_email_logs\\") @indexes(value: [
+type SkippedEmailLog @db(name: \\"skipped_email_logs\\") @indexes(value: [
   {name: \\"index_skipped_email_logs_on_created_at\\", fields: [\\"created_at\\"]},
   {name: \\"index_skipped_email_logs_on_post_id\\", fields: [\\"post_id\\"]},
   {name: \\"index_skipped_email_logs_on_reason_type\\", fields: [\\"reason_type\\"]},
@@ -3125,7 +3111,7 @@ type Skipped_email_log @db(name: \\"skipped_email_logs\\") @indexes(value: [
   user_id: Int
 }
 
-type Stylesheet_cache @db(name: \\"stylesheet_cache\\") @indexes(value: [
+type StylesheetCache @db(name: \\"stylesheet_cache\\") @indexes(value: [
   {name: \\"index_stylesheet_cache_on_target_and_digest\\", fields: [\\"target\\", \\"digest\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"stylesheet_cache_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3147,7 +3133,7 @@ type Tag @db(name: \\"tags\\") {
   updated_at: DateTime
 }
 
-type Tag_group @db(name: \\"tag_groups\\") {
+type TagGroup @db(name: \\"tag_groups\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"tag_groups_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime
   name: String!
@@ -3156,7 +3142,7 @@ type Tag_group @db(name: \\"tag_groups\\") {
   updated_at: DateTime
 }
 
-type Tag_group_membership @db(name: \\"tag_group_memberships\\") @indexes(value: [
+type TagGroupMembership @db(name: \\"tag_group_memberships\\") @indexes(value: [
   {name: \\"index_tag_group_memberships_on_tag_group_id_and_tag_id\\", fields: [\\"tag_id\\", \\"tag_group_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"tag_group_memberships_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3166,7 +3152,7 @@ type Tag_group_membership @db(name: \\"tag_group_memberships\\") @indexes(value:
   updated_at: DateTime
 }
 
-type Tag_group_permission @db(name: \\"tag_group_permissions\\") @indexes(value: [
+type TagGroupPermission @db(name: \\"tag_group_permissions\\") @indexes(value: [
   {name: \\"index_tag_group_permissions_on_group_id\\", fields: [\\"group_id\\"]},
   {name: \\"index_tag_group_permissions_on_tag_group_id\\", fields: [\\"tag_group_id\\"]}
 ]) {
@@ -3178,9 +3164,7 @@ type Tag_group_permission @db(name: \\"tag_group_permissions\\") @indexes(value:
   updated_at: DateTime!
 }
 
-type Tag_search_datum @db(name: \\"tag_search_data\\") @indexes(value: [
-  {name: \\"idx_search_tag\\", fields: [\\"search_data\\"]}
-]) {
+type TagSearchDatum @db(name: \\"tag_search_data\\") {
   tag_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"tag_search_data_tag_id_seq\\", initialValue: 1, allocationSize: 1)
   locale: String
   raw_data: String
@@ -3189,7 +3173,7 @@ type Tag_search_datum @db(name: \\"tag_search_data\\") @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type Tag_user @db(name: \\"tag_users\\") @indexes(value: [
+type TagUser @db(name: \\"tag_users\\") @indexes(value: [
   {name: \\"idx_tag_users_ix1\\", fields: [\\"tag_id\\", \\"user_id\\", \\"notification_level\\"], unique: true},
   {name: \\"idx_tag_users_ix2\\", fields: [\\"tag_id\\", \\"user_id\\", \\"notification_level\\"], unique: true}
 ]) {
@@ -3215,7 +3199,7 @@ type Theme @db(name: \\"themes\\") {
   user_selectable: Boolean! @default(value: false)
 }
 
-type Theme_field @db(name: \\"theme_fields\\") @indexes(value: [
+type ThemeField @db(name: \\"theme_fields\\") @indexes(value: [
   {name: \\"theme_field_unique_index\\", fields: [\\"theme_id\\", \\"target_id\\", \\"name\\", \\"type_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"theme_fields_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3232,7 +3216,7 @@ type Theme_field @db(name: \\"theme_fields\\") @indexes(value: [
   value_baked: String
 }
 
-type Theme_setting @db(name: \\"theme_settings\\") {
+type ThemeSetting @db(name: \\"theme_settings\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"theme_settings_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   data_type: Int!
@@ -3242,7 +3226,7 @@ type Theme_setting @db(name: \\"theme_settings\\") {
   value: String
 }
 
-type Top_topic @db(name: \\"top_topics\\") @indexes(value: [
+type TopTopic @db(name: \\"top_topics\\") @indexes(value: [
   {name: \\"index_top_topics_on_all_score\\", fields: [\\"all_score\\"]},
   {name: \\"index_top_topics_on_daily_likes_count\\", fields: [\\"daily_likes_count\\"]},
   {name: \\"index_top_topics_on_daily_op_likes_count\\", fields: [\\"daily_op_likes_count\\"]},
@@ -3355,7 +3339,7 @@ type Topic @db(name: \\"topics\\") @indexes(value: [
   word_count: Int
 }
 
-type Topic_allowed_group @db(name: \\"topic_allowed_groups\\") @indexes(value: [
+type TopicAllowedGroup @db(name: \\"topic_allowed_groups\\") @indexes(value: [
   {name: \\"index_topic_allowed_groups_on_group_id_and_topic_id\\", fields: [\\"group_id\\", \\"topic_id\\"], unique: true},
   {name: \\"index_topic_allowed_groups_on_topic_id_and_group_id\\", fields: [\\"group_id\\", \\"topic_id\\"], unique: true}
 ]) {
@@ -3364,7 +3348,7 @@ type Topic_allowed_group @db(name: \\"topic_allowed_groups\\") @indexes(value: [
   topic_id: Int!
 }
 
-type Topic_allowed_user @db(name: \\"topic_allowed_users\\") @indexes(value: [
+type TopicAllowedUser @db(name: \\"topic_allowed_users\\") @indexes(value: [
   {name: \\"index_topic_allowed_users_on_topic_id_and_user_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true},
   {name: \\"index_topic_allowed_users_on_user_id_and_topic_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true}
 ]) {
@@ -3375,7 +3359,7 @@ type Topic_allowed_user @db(name: \\"topic_allowed_users\\") @indexes(value: [
   user_id: Int!
 }
 
-type Topic_custom_field @db(name: \\"topic_custom_fields\\") @indexes(value: [
+type TopicCustomField @db(name: \\"topic_custom_fields\\") @indexes(value: [
   {name: \\"index_topic_custom_fields_on_topic_id_and_name\\", fields: [\\"topic_id\\", \\"name\\"]},
   {name: \\"topic_custom_fields_value_key_idx\\", fields: [\\"name\\", \\"value\\"]}
 ]) {
@@ -3387,7 +3371,7 @@ type Topic_custom_field @db(name: \\"topic_custom_fields\\") @indexes(value: [
   value: String
 }
 
-type Topic_embed @db(name: \\"topic_embeds\\") {
+type TopicEmbed @db(name: \\"topic_embeds\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"topic_embeds_id_seq\\", initialValue: 1, allocationSize: 1)
   content_sha1: String
   created_at: DateTime!
@@ -3399,7 +3383,7 @@ type Topic_embed @db(name: \\"topic_embeds\\") {
   updated_at: DateTime!
 }
 
-type Topic_invite @db(name: \\"topic_invites\\") @indexes(value: [
+type TopicInvite @db(name: \\"topic_invites\\") @indexes(value: [
   {name: \\"index_topic_invites_on_invite_id\\", fields: [\\"invite_id\\"]},
   {name: \\"index_topic_invites_on_topic_id_and_invite_id\\", fields: [\\"topic_id\\", \\"invite_id\\"], unique: true}
 ]) {
@@ -3410,7 +3394,7 @@ type Topic_invite @db(name: \\"topic_invites\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type Topic_link @db(name: \\"topic_links\\") @indexes(value: [
+type TopicLink @db(name: \\"topic_links\\") @indexes(value: [
   {name: \\"index_topic_links_on_extension\\", fields: [\\"extension\\"]},
   {name: \\"index_topic_links_on_link_post_id_and_reflection\\", fields: [\\"reflection\\", \\"link_post_id\\"]},
   {name: \\"index_topic_links_on_post_id\\", fields: [\\"post_id\\"]},
@@ -3436,7 +3420,7 @@ type Topic_link @db(name: \\"topic_links\\") @indexes(value: [
   user_id: Int!
 }
 
-type Topic_link_click @db(name: \\"topic_link_clicks\\") @indexes(value: [
+type TopicLinkClick @db(name: \\"topic_link_clicks\\") @indexes(value: [
   {name: \\"by_link\\", fields: [\\"topic_link_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"topic_link_clicks_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3448,9 +3432,7 @@ type Topic_link_click @db(name: \\"topic_link_clicks\\") @indexes(value: [
   user_id: Int
 }
 
-type Topic_search_datum @db(name: \\"topic_search_data\\") @indexes(value: [
-  {name: \\"idx_search_topic\\", fields: [\\"search_data\\"]}
-]) {
+type TopicSearchDatum @db(name: \\"topic_search_data\\") {
   topic_id: Int! @id(strategy: NONE)
   locale: String!
   raw_data: String
@@ -3459,7 +3441,7 @@ type Topic_search_datum @db(name: \\"topic_search_data\\") @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type Topic_tag @db(name: \\"topic_tags\\") @indexes(value: [
+type TopicTag @db(name: \\"topic_tags\\") @indexes(value: [
   {name: \\"index_topic_tags_on_topic_id_and_tag_id\\", fields: [\\"topic_id\\", \\"tag_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"topic_tags_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3469,7 +3451,7 @@ type Topic_tag @db(name: \\"topic_tags\\") @indexes(value: [
   updated_at: DateTime
 }
 
-type Topic_timer @db(name: \\"topic_timers\\") @indexes(value: [
+type TopicTimer @db(name: \\"topic_timers\\") @indexes(value: [
   {name: \\"index_topic_timers_on_user_id\\", fields: [\\"user_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"topic_timers_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3486,7 +3468,7 @@ type Topic_timer @db(name: \\"topic_timers\\") @indexes(value: [
   user_id: Int!
 }
 
-type Topic_user @db(name: \\"topic_users\\") @indexes(value: [
+type TopicUser @db(name: \\"topic_users\\") @indexes(value: [
   {name: \\"index_topic_users_on_topic_id_and_user_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true},
   {name: \\"index_topic_users_on_user_id_and_topic_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true}
 ]) {
@@ -3508,7 +3490,7 @@ type Topic_user @db(name: \\"topic_users\\") @indexes(value: [
   user_id: Int!
 }
 
-type Topic_view @db(name: \\"topic_views\\") @indexes(value: [
+type TopicView @db(name: \\"topic_views\\") @indexes(value: [
   {name: \\"index_topic_views_on_topic_id_and_viewed_at\\", fields: [\\"topic_id\\", \\"viewed_at\\"]},
   {name: \\"index_topic_views_on_user_id_and_viewed_at\\", fields: [\\"viewed_at\\", \\"user_id\\"]},
   {name: \\"index_topic_views_on_viewed_at_and_topic_id\\", fields: [\\"topic_id\\", \\"viewed_at\\"]},
@@ -3521,7 +3503,7 @@ type Topic_view @db(name: \\"topic_views\\") @indexes(value: [
   viewed_at: DateTime!
 }
 
-type Translation_override @db(name: \\"translation_overrides\\") @indexes(value: [
+type TranslationOverride @db(name: \\"translation_overrides\\") @indexes(value: [
   {name: \\"index_translation_overrides_on_locale_and_translation_key\\", fields: [\\"locale\\", \\"translation_key\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"translation_overrides_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3533,7 +3515,7 @@ type Translation_override @db(name: \\"translation_overrides\\") @indexes(value:
   value: String!
 }
 
-type Twitter_user_info @db(name: \\"twitter_user_infos\\") {
+type TwitterUserInfo @db(name: \\"twitter_user_infos\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"twitter_user_infos_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime!
   email: String
@@ -3543,7 +3525,7 @@ type Twitter_user_info @db(name: \\"twitter_user_infos\\") {
   user_id: Int! @unique
 }
 
-type Unsubscribe_key @db(name: \\"unsubscribe_keys\\") @indexes(value: [
+type UnsubscribeKey @db(name: \\"unsubscribe_keys\\") @indexes(value: [
   {name: \\"index_unsubscribe_keys_on_created_at\\", fields: [\\"created_at\\"]}
 ]) {
   key: ID! @id(strategy: NONE)
@@ -3624,7 +3606,7 @@ type User @db(name: \\"users\\") @indexes(value: [
   views: Int! @default(value: 0)
 }
 
-type User_action @db(name: \\"user_actions\\") @indexes(value: [
+type UserAction @db(name: \\"user_actions\\") @indexes(value: [
   {name: \\"idx_unique_rows\\", fields: [\\"action_type\\", \\"user_id\\", \\"target_topic_id\\", \\"target_post_id\\", \\"acting_user_id\\"], unique: true},
   {name: \\"idx_user_actions_speed_up_user_all\\", fields: [\\"action_type\\", \\"user_id\\", \\"created_at\\"]},
   {name: \\"index_user_actions_on_acting_user_id\\", fields: [\\"acting_user_id\\"]},
@@ -3643,7 +3625,7 @@ type User_action @db(name: \\"user_actions\\") @indexes(value: [
   user_id: Int!
 }
 
-type User_api_key @db(name: \\"user_api_keys\\") @indexes(value: [
+type UserApiKey @db(name: \\"user_api_keys\\") @indexes(value: [
   {name: \\"index_user_api_keys_on_user_id\\", fields: [\\"user_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_api_keys_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3659,7 +3641,7 @@ type User_api_key @db(name: \\"user_api_keys\\") @indexes(value: [
   user_id: Int!
 }
 
-type User_archived_message @db(name: \\"user_archived_messages\\") @indexes(value: [
+type UserArchivedMessage @db(name: \\"user_archived_messages\\") @indexes(value: [
   {name: \\"index_user_archived_messages_on_user_id_and_topic_id\\", fields: [\\"user_id\\", \\"topic_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_archived_messages_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3669,7 +3651,7 @@ type User_archived_message @db(name: \\"user_archived_messages\\") @indexes(valu
   user_id: Int!
 }
 
-type User_auth_token @db(name: \\"user_auth_tokens\\") {
+type UserAuthToken @db(name: \\"user_auth_tokens\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_auth_tokens_id_seq\\", initialValue: 1, allocationSize: 1)
   auth_token: String! @unique
   auth_token_seen: Boolean! @default(value: false)
@@ -3684,7 +3666,7 @@ type User_auth_token @db(name: \\"user_auth_tokens\\") {
   user_id: Int!
 }
 
-type User_auth_token_log @db(name: \\"user_auth_token_logs\\") {
+type UserAuthTokenLog @db(name: \\"user_auth_token_logs\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_auth_token_logs_id_seq\\", initialValue: 1, allocationSize: 1)
   action: String!
   auth_token: String
@@ -3697,7 +3679,7 @@ type User_auth_token_log @db(name: \\"user_auth_token_logs\\") {
   user_id: Int
 }
 
-type User_avatar @db(name: \\"user_avatars\\") @indexes(value: [
+type UserAvatar @db(name: \\"user_avatars\\") @indexes(value: [
   {name: \\"index_user_avatars_on_custom_upload_id\\", fields: [\\"custom_upload_id\\"]},
   {name: \\"index_user_avatars_on_gravatar_upload_id\\", fields: [\\"gravatar_upload_id\\"]},
   {name: \\"index_user_avatars_on_user_id\\", fields: [\\"user_id\\"]}
@@ -3711,7 +3693,7 @@ type User_avatar @db(name: \\"user_avatars\\") @indexes(value: [
   user_id: Int!
 }
 
-type User_badge @db(name: \\"user_badges\\") @indexes(value: [
+type UserBadge @db(name: \\"user_badges\\") @indexes(value: [
   {name: \\"index_user_badges_on_badge_id_and_user_id\\", fields: [\\"badge_id\\", \\"user_id\\"]},
   {name: \\"index_user_badges_on_badge_id_and_user_id_and_post_id\\", fields: [\\"badge_id\\", \\"user_id\\", \\"post_id\\"], unique: true},
   {name: \\"index_user_badges_on_badge_id_and_user_id_and_seq\\", fields: [\\"badge_id\\", \\"user_id\\", \\"seq\\"], unique: true},
@@ -3727,7 +3709,7 @@ type User_badge @db(name: \\"user_badges\\") @indexes(value: [
   user_id: Int!
 }
 
-type User_custom_field @db(name: \\"user_custom_fields\\") @indexes(value: [
+type UserCustomField @db(name: \\"user_custom_fields\\") @indexes(value: [
   {name: \\"index_user_custom_fields_on_user_id_and_name\\", fields: [\\"user_id\\", \\"name\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_custom_fields_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3738,7 +3720,7 @@ type User_custom_field @db(name: \\"user_custom_fields\\") @indexes(value: [
   value: String
 }
 
-type User_email @db(name: \\"user_emails\\") @indexes(value: [
+type UserEmail @db(name: \\"user_emails\\") @indexes(value: [
   {name: \\"index_user_emails_on_user_id\\", fields: [\\"user_id\\"]},
   {name: \\"index_user_emails_on_user_id_and_primary\\", fields: [\\"user_id\\", \\"primary\\"], unique: true}
 ]) {
@@ -3750,7 +3732,7 @@ type User_email @db(name: \\"user_emails\\") @indexes(value: [
   user_id: Int!
 }
 
-type User_export @db(name: \\"user_exports\\") {
+type UserExport @db(name: \\"user_exports\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_exports_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime
   file_name: String!
@@ -3759,7 +3741,7 @@ type User_export @db(name: \\"user_exports\\") {
   user_id: Int!
 }
 
-type User_field @db(name: \\"user_fields\\") {
+type UserField @db(name: \\"user_fields\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_fields_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime
   description: String!
@@ -3775,7 +3757,7 @@ type User_field @db(name: \\"user_fields\\") {
   updated_at: DateTime
 }
 
-type User_field_option @db(name: \\"user_field_options\\") {
+type UserFieldOption @db(name: \\"user_field_options\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_field_options_id_seq\\", initialValue: 1, allocationSize: 1)
   created_at: DateTime
   updated_at: DateTime
@@ -3783,7 +3765,7 @@ type User_field_option @db(name: \\"user_field_options\\") {
   value: String!
 }
 
-type User_history @db(name: \\"user_histories\\") @indexes(value: [
+type UserHistory @db(name: \\"user_histories\\") @indexes(value: [
   {name: \\"index_user_histories_on_acting_user_id_and_action_and_id\\", fields: [\\"id\\", \\"action\\", \\"acting_user_id\\"]},
   {name: \\"index_user_histories_on_action_and_id\\", fields: [\\"id\\", \\"action\\"]},
   {name: \\"index_user_histories_on_category_id\\", fields: [\\"category_id\\"]},
@@ -3810,7 +3792,7 @@ type User_history @db(name: \\"user_histories\\") @indexes(value: [
   updated_at: DateTime!
 }
 
-type User_open_id @db(name: \\"user_open_ids\\") @indexes(value: [
+type UserOpenId @db(name: \\"user_open_ids\\") @indexes(value: [
   {name: \\"index_user_open_ids_on_url\\", fields: [\\"url\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_open_ids_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3822,7 +3804,7 @@ type User_open_id @db(name: \\"user_open_ids\\") @indexes(value: [
   user_id: Int!
 }
 
-type User_option @db(name: \\"user_options\\") {
+type UserOption @db(name: \\"user_options\\") {
   user_id: Int! @id(strategy: NONE)
   allow_private_messages: Boolean! @default(value: true)
   auto_track_topics_after_msecs: Int
@@ -3851,7 +3833,7 @@ type User_option @db(name: \\"user_options\\") {
   theme_key_seq: Int! @default(value: 0)
 }
 
-type User_profile @db(name: \\"user_profiles\\") @indexes(value: [
+type UserProfile @db(name: \\"user_profiles\\") @indexes(value: [
   {name: \\"index_user_profiles_on_bio_cooked_version\\", fields: [\\"bio_cooked_version\\"]},
   {name: \\"index_user_profiles_on_card_background\\", fields: [\\"card_background\\"]},
   {name: \\"index_user_profiles_on_profile_background\\", fields: [\\"profile_background\\"]}
@@ -3869,7 +3851,7 @@ type User_profile @db(name: \\"user_profiles\\") @indexes(value: [
   website: String
 }
 
-type User_profile_view @db(name: \\"user_profile_views\\") @indexes(value: [
+type UserProfileView @db(name: \\"user_profile_views\\") @indexes(value: [
   {name: \\"index_user_profile_views_on_user_id\\", fields: [\\"user_id\\"]},
   {name: \\"index_user_profile_views_on_user_profile_id\\", fields: [\\"user_profile_id\\"]},
   {name: \\"unique_profile_view_user_or_ip\\", fields: [\\"user_profile_id\\", \\"viewed_at\\", \\"ip_address\\", \\"user_id\\"], unique: true}
@@ -3882,9 +3864,7 @@ type User_profile_view @db(name: \\"user_profile_views\\") @indexes(value: [
   viewed_at: DateTime!
 }
 
-type User_search_datum @db(name: \\"user_search_data\\") @indexes(value: [
-  {name: \\"idx_search_user\\", fields: [\\"search_data\\"]}
-]) {
+type UserSearchDatum @db(name: \\"user_search_data\\") {
   user_id: Int! @id(strategy: NONE)
   locale: String
   raw_data: String
@@ -3893,7 +3873,7 @@ type User_search_datum @db(name: \\"user_search_data\\") @indexes(value: [
   version: Int @default(value: 0)
 }
 
-type User_second_factor @db(name: \\"user_second_factors\\") @indexes(value: [
+type UserSecondFactor @db(name: \\"user_second_factors\\") @indexes(value: [
   {name: \\"index_user_second_factors_on_user_id\\", fields: [\\"user_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_second_factors_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3906,7 +3886,7 @@ type User_second_factor @db(name: \\"user_second_factors\\") @indexes(value: [
   user_id: Int!
 }
 
-type User_stat @db(name: \\"user_stats\\") {
+type UserStat @db(name: \\"user_stats\\") {
   user_id: Int! @id(strategy: NONE)
   bounce_score: Float! @default(value: 0)
   days_visited: Int! @default(value: 0)
@@ -3924,7 +3904,7 @@ type User_stat @db(name: \\"user_stats\\") {
   topics_entered: Int! @default(value: 0)
 }
 
-type User_upload @db(name: \\"user_uploads\\") @indexes(value: [
+type UserUpload @db(name: \\"user_uploads\\") @indexes(value: [
   {name: \\"index_user_uploads_on_upload_id_and_user_id\\", fields: [\\"upload_id\\", \\"user_id\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_uploads_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3933,7 +3913,7 @@ type User_upload @db(name: \\"user_uploads\\") @indexes(value: [
   user_id: Int!
 }
 
-type User_visit @db(name: \\"user_visits\\") @indexes(value: [
+type UserVisit @db(name: \\"user_visits\\") @indexes(value: [
   {name: \\"index_user_visits_on_user_id_and_visited_at\\", fields: [\\"user_id\\", \\"visited_at\\"], unique: true},
   {name: \\"index_user_visits_on_user_id_and_visited_at_and_time_read\\", fields: [\\"user_id\\", \\"visited_at\\", \\"time_read\\"]},
   {name: \\"index_user_visits_on_visited_at_and_mobile\\", fields: [\\"visited_at\\", \\"mobile\\"]}
@@ -3946,7 +3926,7 @@ type User_visit @db(name: \\"user_visits\\") @indexes(value: [
   visited_at: DateTime!
 }
 
-type User_warning @db(name: \\"user_warnings\\") @indexes(value: [
+type UserWarning @db(name: \\"user_warnings\\") @indexes(value: [
   {name: \\"index_user_warnings_on_user_id\\", fields: [\\"user_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"user_warnings_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3957,7 +3937,7 @@ type User_warning @db(name: \\"user_warnings\\") @indexes(value: [
   user_id: Int!
 }
 
-type Watched_word @db(name: \\"watched_words\\") @indexes(value: [
+type WatchedWord @db(name: \\"watched_words\\") @indexes(value: [
   {name: \\"index_watched_words_on_action_and_word\\", fields: [\\"word\\", \\"action\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"watched_words_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3967,7 +3947,7 @@ type Watched_word @db(name: \\"watched_words\\") @indexes(value: [
   word: String!
 }
 
-type Web_crawler_request @db(name: \\"web_crawler_requests\\") @indexes(value: [
+type WebCrawlerRequest @db(name: \\"web_crawler_requests\\") @indexes(value: [
   {name: \\"index_web_crawler_requests_on_date_and_user_agent\\", fields: [\\"date\\", \\"user_agent\\"], unique: true}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"web_crawler_requests_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -3976,7 +3956,7 @@ type Web_crawler_request @db(name: \\"web_crawler_requests\\") @indexes(value: [
   user_agent: String!
 }
 
-type Web_hook @db(name: \\"web_hooks\\") {
+type WebHook @db(name: \\"web_hooks\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"web_hooks_id_seq\\", initialValue: 1, allocationSize: 1)
   active: Boolean! @default(value: false)
   content_type: Int! @default(value: 1)
@@ -3990,7 +3970,7 @@ type Web_hook @db(name: \\"web_hooks\\") {
   wildcard_web_hook: Boolean! @default(value: false)
 }
 
-type Web_hook_event @db(name: \\"web_hook_events\\") @indexes(value: [
+type WebHookEvent @db(name: \\"web_hook_events\\") @indexes(value: [
   {name: \\"index_web_hook_events_on_web_hook_id\\", fields: [\\"web_hook_id\\"]}
 ]) {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"web_hook_events_id_seq\\", initialValue: 1, allocationSize: 1)
@@ -4005,12 +3985,12 @@ type Web_hook_event @db(name: \\"web_hook_events\\") @indexes(value: [
   web_hook_id: Int!
 }
 
-type Web_hook_event_type @db(name: \\"web_hook_event_types\\") {
+type WebHookEventType @db(name: \\"web_hook_event_types\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"web_hook_event_types_id_seq\\", initialValue: 1, allocationSize: 1)
   name: String!
 }
 
-type Web_hook_event_types_hook @db(name: \\"web_hook_event_types_hooks\\") @indexes(value: [
+type WebHookEventTypesHook @db(name: \\"web_hook_event_types_hooks\\") @indexes(value: [
   {name: \\"idx_web_hook_event_types_hooks_on_ids\\", fields: [\\"web_hook_id\\", \\"web_hook_event_type_id\\"], unique: true}
 ]) {
   web_hook_event_type_id: Int!

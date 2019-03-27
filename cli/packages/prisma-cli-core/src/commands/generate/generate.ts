@@ -27,6 +27,10 @@ export default class GenereateCommand extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
     ['endpoint']: flags.boolean({
       description:
         'Use a specific endpoint for schema generation or pick endpoint from prisma.yml',
@@ -99,11 +103,16 @@ export default class GenereateCommand extends Command {
         const resolvedOutput = output.startsWith('/')
           ? output
           : path.join(this.config.definitionDir, output)
-
-        fs.mkdirpSync(resolvedOutput)
-
+          
         if (generator === 'graphql-schema') {
+          if (!resolvedOutput.endsWith('.graphql')) {
+            throw new Error(`Error: ${chalk.bold('output')} for generator ${chalk.bold('graphql-schema')} should be a ${chalk.green(chalk.bold('.graphql'))}-file. Please change the ${chalk.bold('output')} property for this generator in ${chalk.green(chalk.bold('prisma.yml'))}`)
+          }
+
+          fs.mkdirpSync(path.resolve(resolvedOutput, '../'))
           await this.generateSchema(resolvedOutput, schemaString)
+        } else {
+          fs.mkdirpSync(resolvedOutput)
         }
 
         const isMongo =
@@ -158,7 +167,7 @@ export default class GenereateCommand extends Command {
   }
 
   async generateSchema(output: string, schemaString: string) {
-    fs.writeFileSync(path.join(output, 'prisma.graphql'), schemaString)
+    fs.writeFileSync(output, schemaString)
 
     this.out.log(`Saving Prisma GraphQL schema (SDL) at ${output}`)
   }

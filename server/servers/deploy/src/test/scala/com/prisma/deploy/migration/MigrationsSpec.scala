@@ -14,6 +14,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
   override def runOnlyForCapabilities = Set(MigrationsCapability)
 
+  override def doNotRunForPrototypes: Boolean = true
+
   val name      = this.getClass.getSimpleName
   val stage     = "default"
   val serviceId = testDependencies.projectIdEncoder.toEncodedString(name, stage)
@@ -967,10 +969,10 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       functions = Vector.empty,
       noMigration = None
     )
+
     val refreshedProject: Project = testDependencies.projectPersistence.load(project.id).await.get
-    val temp                      = testDependencies.projectPersistence.load(serviceId).await.get
-    val schema                    = temp.schema
-    val refreshedProjectV2        = temp.copy(schema = schema.copy(version = Some("v2")))
+    val schema                    = refreshedProject.schema
+    val refreshedProjectV2        = refreshedProject.copy(schema = schema.copy(version = Some("v2")))
 
     val mutation = DeployMutation(
       args = input,

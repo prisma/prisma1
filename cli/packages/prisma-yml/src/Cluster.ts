@@ -59,7 +59,7 @@ export class Cluster {
     if (this.isPrivate && process.env.PRISMA_MANAGEMENT_API_SECRET) {
       return this.getLocalToken()
     }
-    if (this.shared || this.isPrivate) {
+    if (this.shared || (this.isPrivate && !process.env.PRISMA_MANAGEMENT_API_SECRET)) {
       return this.generateClusterToken(serviceName, workspaceSlug, stageName)
     } else {
       return this.getLocalToken()
@@ -134,6 +134,31 @@ Original error: ${e.message}`,
     })
 
     return clusterToken
+  }
+
+  async addServiceToCloudDBIfMissing(
+    serviceName: string,
+    workspaceSlug: string = this.workspaceSlug!,
+    stageName?: string,
+  ): Promise<boolean> {
+    const query = `
+      mutation ($input: GenerateClusterTokenRequest!) {
+        addServiceToCloudDBIfMissing(input: $input)
+      }
+    `
+
+    const serviceCreated = await this.cloudClient.request<{
+      addServiceToCloudDBIfMissing: boolean
+    }>(query, {
+      input: {
+        workspaceSlug,
+        clusterName: this.name,
+        serviceName,
+        stageName,
+      },
+    })
+
+    return serviceCreated.addServiceToCloudDBIfMissing
   }
 
   getApiEndpoint(

@@ -17,12 +17,13 @@ object CreateColumnInterpreter extends MongoMutactionInterpreter[CreateColumn] {
 
 object DeleteColumnInterpreter extends MongoMutactionInterpreter[DeleteColumn] {
   override def execute(mutaction: DeleteColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
-    case true  => MongoDeployDatabaseMutationBuilder.deleteIndex(mutaction.model, mutaction.field.dbName)
+
+    case true  => MongoDeployDatabaseMutationBuilder.deleteIndex(mutaction.oldModel, mutaction.field.dbName)
     case false => NoAction.unit
   }
 
   override def rollback(mutaction: DeleteColumn) = mutaction.field.isUnique && !mutaction.field.isId match {
-    case true  => MongoDeployDatabaseMutationBuilder.createIndex(mutaction.model, mutaction.field.dbName)
+    case true  => MongoDeployDatabaseMutationBuilder.createIndex(mutaction.oldModel, mutaction.field.dbName)
     case false => NoAction.unit
   }
 }

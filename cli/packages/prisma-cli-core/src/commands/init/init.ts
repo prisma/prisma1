@@ -8,6 +8,8 @@ import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 
+const debug = require('debug')('init')
+
 export default class Init extends Command {
   static topic = 'init'
   static description = 'Initialize a new service'
@@ -40,7 +42,6 @@ export default class Init extends Command {
     if (dirName) {
       const newDefinitionDir = path.join(this.config.cwd, dirName + '/')
       this.config.definitionDir = newDefinitionDir
-      fs.mkdirpSync(newDefinitionDir)
     } else {
       this.config.definitionDir = this.config.cwd
     }
@@ -50,7 +51,13 @@ export default class Init extends Command {
   }
 
   async runInit({ endpoint }) {
-    const files = fs.readdirSync(this.config.definitionDir)
+    let files: string[] = []
+    try {
+      files = fs.readdirSync(this.config.definitionDir)
+    } catch(e) {
+      debug(`prisma init workflow called without existing directory.`)
+      debug(e.toString())
+    }
     // the .prismarc must be allowed for the docker version to be functioning
     if (
       files.length > 0 &&
@@ -73,6 +80,8 @@ Either try using a new directory name, or remove the files listed above.
      */
 
     if (endpoint) {
+      fs.mkdirpSync(this.config.definitionDir)
+
       const datamodelBoilerplatePath =
         this.definition.definition &&
         this.definition.definition.databaseType === 'document'
@@ -154,6 +163,7 @@ datamodel: datamodel.prisma${databaseTypeString}`
       prismaYmlString += this.getGeneratorConfig(results.generator)
     }
 
+    fs.mkdirpSync(this.config.definitionDir)
     fs.writeFileSync(
       path.join(this.config.definitionDir, 'prisma.yml'),
       prismaYmlString,

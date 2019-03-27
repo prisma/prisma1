@@ -1,7 +1,10 @@
 package com.prisma.deploy.connector.sqlite
 
+import java.sql.Driver
+
 import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
+import com.prisma.deploy.connector.jdbc.SQLiteDatabaseInspector
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
@@ -21,11 +24,11 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
+case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true
   override def fieldRequirements: FieldRequirementsInterface = SQLiteFieldRequirement(isActive)
 
-  lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config)
+  lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config, driver)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases
   lazy val managementDatabase   = databases.primary
@@ -38,7 +41,7 @@ case class SQLiteDeployConnector(config: DatabaseConfig, isPrototype: Boolean)(i
   override val cloudSecretPersistence: JdbcCloudSecretPersistence = JdbcCloudSecretPersistence(managementDatabase)
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
-  override def databaseInspector: DatabaseInspector               = DatabaseInspector.empty
+  override def databaseInspector: DatabaseInspector               = SQLiteDatabaseInspector(managementDatabase)
   override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.mysql //Fixme
 
   override def createProjectDatabase(id: String): Future[Unit] = {
