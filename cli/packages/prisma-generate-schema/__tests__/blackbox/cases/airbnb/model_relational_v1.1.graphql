@@ -10,15 +10,15 @@ type User {
   responseRate: Float
   responseTime: Int
   isSuperHost: Boolean! @default(value: false)
-  ownedPlaces: [Place] @relation(link: TABLE)
+  ownedPlaces: [Place]
   location: Location @relation(link: TABLE)
-  bookings: [Booking] @relation(link: TABLE)
-  paymentAccount: [PaymentAccount] @relation(link: TABLE)
-  sentMessages: [Message] @relation(link: TABLE)
-  receivedMessages: [Message] @relation(link: TABLE)
-  notifications: [Notification] @relation(link: TABLE)
+  bookings: [Booking]
+  paymentAccount: [PaymentAccount]
+  sentMessages: [Message] @relation(name: "SentMessages")
+  receivedMessages: [Message] @relation(name: "ReceivedMessages")
+  notifications: [Notification]
   profilePicture: Picture @relation(link: TABLE)
-  hostingExperiences: [Experience] @relation(link: TABLE)
+  hostingExperiences: [Experience]
 }
 
 type Place {
@@ -32,7 +32,7 @@ type Place {
   numBedrooms: Int!
   numBeds: Int!
   numBaths: Int!
-  reviews: [Review] @relation(link: TABLE)
+  reviews: [Review]
   amenities: Amenities! @relation(link: TABLE)
   host: User! @relation(link: TABLE)
   pricing: Pricing! @relation(link: TABLE)
@@ -41,14 +41,14 @@ type Place {
   guestRequirements: GuestRequirements @relation(link: TABLE)
   policies: Policies @relation(link: TABLE)
   houseRules: HouseRules @relation(link: TABLE)
-  bookings: [Booking] @relation(link: TABLE)
+  bookings: [Booking]
   pictures: [Picture]
   popularity: Int!
 }
 
 type Pricing {
   id: ID! @id
-  place: Place! @relation(link: TABLE)
+  place: Place!
   monthlyDiscount: Int
   weeklyDiscount: Int
   perNight: Int!
@@ -68,7 +68,7 @@ type GuestRequirements {
   govIssuedId: Boolean! @default(value: false)
   recommendationsFromOtherHosts: Boolean! @default(value: false)
   guestTripInformation: Boolean! @default(value: false)
-  place: Place! @relation(link: TABLE)
+  place: Place!
 }
 
 type Policies {
@@ -78,7 +78,7 @@ type Policies {
   checkInStartTime: Float!
   checkInEndTime: Float!
   checkoutTime: Float!
-  place: Place! @relation(link: TABLE)
+  place: Place!
 }
 
 type HouseRules {
@@ -96,7 +96,7 @@ type HouseRules {
 type Views {
   id: ID! @id
   lastWeek: Int!
-  place: Place! @relation(link: TABLE)
+  place: Place!
 }
 
 type Location {
@@ -104,8 +104,8 @@ type Location {
   lat: Float!
   lng: Float!
   neighbourHood: Neighbourhood @relation(link: TABLE)
-  user: User @relation(link: TABLE)
-  place: Place @relation(link: TABLE)
+  user: User
+  place: Place
   address: String
   directions: String
   experience: Experience @relation(link: TABLE)
@@ -114,7 +114,7 @@ type Location {
 
 type Neighbourhood {
   id: ID! @id
-  locations: [Location] @relation(link: TABLE)
+  locations: [Location]
   name: String!
   slug: String!
   homePreview: Picture @relation(link: TABLE)
@@ -126,10 +126,11 @@ type Neighbourhood {
 type City {
   id: ID! @id
   name: String!
-  neighbourhoods: [Neighbourhood] @relation(link: TABLE)
+  neighbourhoods: [Neighbourhood]
 }
 
 type Picture {
+  id: ID! @id
   url: String!
 }
 
@@ -138,9 +139,9 @@ type Experience {
   category: ExperienceCategory @relation(link: TABLE)
   title: String!
   host: User! @relation(link: TABLE)
-  location: Location! @relation(link: TABLE)
+  location: Location!
   pricePerPerson: Int!
-  reviews: [Review] @relation(link: TABLE)
+  reviews: [Review]
   preview: Picture! @relation(link: TABLE)
   popularity: Int!
 }
@@ -149,12 +150,12 @@ type ExperienceCategory {
   id: ID! @id
   mainColor: String! @default(value: "#123456")
   name: String!
-  experience: Experience @relation(link: TABLE)
+  experience: Experience
 }
 
 type Amenities {
   id: ID! @id
-  place: Place! @relation(link: TABLE)
+  place: Place!
   elevator: Boolean! @default(value: false)
   petsAllowed: Boolean! @default(value: false)
   internet: Boolean! @default(value: false)
@@ -228,7 +229,7 @@ type Payment {
   serviceFee: Float!
   placePrice: Float!
   totalPrice: Float!
-  booking: Booking! @relation(link: TABLE)
+  booking: Booking!
   paymentMethod: PaymentAccount! @relation(link: TABLE)
 }
 
@@ -237,7 +238,7 @@ type PaymentAccount {
   createdAt: DateTime! @createdAt
   type: PAYMENT_PROVIDER
   user: User! @relation(link: TABLE)
-  payments: [Payment] @relation(link: TABLE)
+  payments: [Payment]
   paypal: PaypalInformation @relation(link: TABLE)
   creditcard: CreditCardInformation @relation(link: TABLE)
 }
@@ -246,7 +247,7 @@ type PaypalInformation {
   id: ID! @id
   createdAt: DateTime! @createdAt
   email: String!
-  paymentAccount: PaymentAccount! @relation(link: TABLE)
+  paymentAccount: PaymentAccount!
 }
 
 type CreditCardInformation {
@@ -260,14 +261,14 @@ type CreditCardInformation {
   lastName: String!
   postalCode: String!
   country: String!
-  paymentAccount: PaymentAccount @relation(link: TABLE)
+  paymentAccount: PaymentAccount
 }
 
 type Message {
   id: ID! @id
   createdAt: DateTime! @createdAt
-  from: User! @relation(link: TABLE)
-  to: User! @relation(link: TABLE)
+  from: User! @relation(link: TABLE, name: "SentMessages")
+  to: User! @relation(link: TABLE, name: "ReceivedMessages")
   deliveredAt: DateTime!
   readAt: DateTime!
 }
@@ -287,7 +288,7 @@ type Restaurant {
   title: String!
   avgPricePerPerson: Int!
   pictures: [Picture]
-  location: Location! @relation(link: TABLE)
+  location: Location!
   isCurated: Boolean! @default(value: true)
   slug: String!
   popularity: Int!

@@ -13,17 +13,21 @@ type OnlyIdAndARelation2 {
 }
 
 type OnlyDate {
+  id: ID! @id
   createdAt: DateTime! @createdAt
 }
 
 type OnlyRelation {
+  id: ID! @id
   ref: [OnlyDate]
 }
 
 type OnlyRelationA {
+  id: ID! @id
   ref: OnlyRelationA! @relation(link: TABLE)
 }
 
 type OnlyRelationB {
+  id: ID! @id
   ref: OnlyRelationB @relation(link: TABLE)
 }

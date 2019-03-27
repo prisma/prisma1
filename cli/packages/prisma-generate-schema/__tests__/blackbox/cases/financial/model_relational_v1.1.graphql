@@ -9,9 +9,9 @@ type Person {
   firstName: String
   lastName: String
   phoneNumbers: [PhoneNumber]
-  scheduledTransactions: [FinancialScheduledTransaction] @relation(link: TABLE)
-  transactions: [FinancialTransaction] @relation(link: TABLE)
-  user: User @relation(link: TABLE)
+  scheduledTransactions: [FinancialScheduledTransaction]
+  transactions: [FinancialTransaction]
+  user: User
 }
 
 type PhoneNumber {
@@ -71,7 +71,7 @@ type FinancialScheduledTransaction {
   isActive: Boolean!
   startDate: DateTime
   frequency: TRANSACTION_FREQUENCY
-  transactions: [FinancialTransaction] @relation(link: TABLE)
+  transactions: [FinancialTransaction]
   account: FinancialAccount @relation(link: TABLE)
   amount: Float!
 }
@@ -135,9 +135,9 @@ type GroupRole {
 type GroupType {
   id: ID! @id
   description: String
-  groups: [Group] @relation(link: TABLE)
+  groups: [Group]
   name: String! @unique
-  roles: [GroupRole] @relation(link: TABLE)
+  roles: [GroupRole]
 }
 
 type Group {
@@ -145,9 +145,9 @@ type Group {
   key: String @unique
   description: String
   type: GroupType! @relation(link: TABLE)
-  invites: [GroupInvite] @relation(link: TABLE)
+  invites: [GroupInvite]
   isActive: Boolean!
-  members: [GroupMember] @relation(link: TABLE)
+  members: [GroupMember]
   name: String!
   organization: Group @relation(link: TABLE)
 }

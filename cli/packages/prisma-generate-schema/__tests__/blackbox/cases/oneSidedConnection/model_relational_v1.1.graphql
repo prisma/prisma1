@@ -4,20 +4,24 @@ type TypeWithId {
 }
 
 type TypeWithoutId {
+  id: ID! @id
   field: String!
 }
 
 type A {
+  id: ID! @id
   x: TypeWithId! @relation(link: TABLE)
   y: TypeWithoutId! @relation(link: TABLE)
 }
 
 type B {
+  id: ID! @id
   x: TypeWithId @relation(link: TABLE)
   y: TypeWithoutId @relation(link: TABLE)
 }
 
 type C {
+  id: ID! @id
   x: [TypeWithId]
   y: [TypeWithoutId]
 }

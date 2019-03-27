@@ -1,16 +1,19 @@
 type A {
-  toB: B! @relation(link: TABLE)
-  toB2: B! @relation(link: TABLE)
+  id: ID! @id
+  toB: B! @relation(link: TABLE, name: "RaToB")
+  toB2: B! @relation(link: TABLE, name: "RaToB2")
   toC: C @relation(link: TABLE)
 }
 
 type B {
-  toA: A! @relation(link: TABLE)
-  toA2: A! @relation(link: TABLE)
+  id: ID! @id
+  toA: A! @relation(name: "RaToB")
+  toA2: A! @relation(name: "RaToB2")
   toC: C! @relation(link: TABLE)
 }
 
 type C {
-  toB: [B] @relation(link: TABLE)
-  toA: [A] @relation(link: TABLE)
+  id: ID! @id
+  toB: [B]
+  toA: [A]
 }

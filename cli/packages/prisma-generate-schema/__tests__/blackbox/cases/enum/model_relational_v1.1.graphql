@@ -12,6 +12,7 @@ enum UnusedEnum {
 }
 
 type A {
+  id: ID! @id
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum]
@@ -27,21 +28,25 @@ type AWithId {
 }
 
 type B {
+  id: ID! @id
   field: String!
-  a: [A] @relation(link: TABLE)
+  a: [A]
 }
 
 type C {
+  id: ID! @id
   field: [Int]
-  a: AWithId! @relation(link: TABLE)
+  a: AWithId!
 }
 
 type D {
+  id: ID! @id
   field: [DateTime]
   a: AWithId! @relation(link: TABLE)
 }
 
 type E {
+  id: ID! @id
   field: Json
   a: [A]
 }

@@ -6,12 +6,14 @@ type Parent {
 }
 
 type Child {
+  id: ID! @id
   c: String @unique
   friendsOpt: [Friend]
   jointOpt: Joint! @relation(link: TABLE)
 }
 
 type Friend {
+  id: ID! @id
   f: String @unique
   test: String
 }

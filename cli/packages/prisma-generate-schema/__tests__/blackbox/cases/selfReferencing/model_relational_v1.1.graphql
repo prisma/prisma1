@@ -42,16 +42,18 @@ type MultiSelfReferencingCWithId {
 
 type MultiSelfReferencingBWithId {
   id: ID! @id
-  a: MultiSelfReferencingBWithId @relation(link: TABLE)
-  b: MultiSelfReferencingBWithId @relation(link: TABLE)
+  a: MultiSelfReferencingBWithId @relation(link: TABLE, name: "WithIdAToA2")
+  b: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2")
 }
 
 type MultiSelfReferencingC {
+  id: ID! @id
   a: [MultiSelfReferencingC] @relation(name: "AToA")
   b: [MultiSelfReferencingC] @relation(name: "AToA")
 }
 
 type MultiSelfReferencingB {
-  a: MultiSelfReferencingB @relation(link: TABLE)
-  b: MultiSelfReferencingB @relation(link: TABLE)
+  id: ID! @id
+  a: MultiSelfReferencingB @relation(link: TABLE, name: "AToA2")
+  b: MultiSelfReferencingB @relation(name: "AToA2")
 }

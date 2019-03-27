@@ -130,6 +130,7 @@ type City {
 }
 
 type Picture {
+  id: ID! @unique
   url: String!
 }
 

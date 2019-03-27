@@ -79,7 +79,7 @@ describe('Schema normalization from existing postgres schema', () => {
     const expectedResultSchema = dedent(`
       type User {
         id: Id! @id
-        posts: [Post] @relation(link: TABLE)
+        posts: [Post]
       }
       
       type Post {
@@ -127,7 +127,7 @@ describe('Schema normalization from existing postgres schema', () => {
       type Post {
         id: Id! @id
         text: String!
-        user: User! @relation(link: TABLE)
+        user: User!
       }`)
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)

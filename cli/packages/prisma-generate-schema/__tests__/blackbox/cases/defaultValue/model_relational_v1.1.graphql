@@ -1,4 +1,5 @@
 type A {
+  id: ID! @id
   a: Int @default(value: 10) @unique
   b: Int! @default(value: 10)
   c: String! @unique
@@ -15,6 +16,7 @@ type AWithId {
 }
 
 type B {
+  id: ID! @id
   a: [A]
-  a2: AWithId @relation(link: TABLE)
+  a2: AWithId
 }

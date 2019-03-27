@@ -32,12 +32,21 @@ export class AdjustJoinTableCardinality implements INormalizer {
         if (!refField.isList) {
           field.isList = false
           field.isRequired = refField.isRequired
-          field.directives.push(this.createLinkTableDirective(field))
-          if (field.relatedField !== null) {
-            field.relatedField.directives.push(
-              this.createLinkTableDirective(field.relatedField),
+          if (
+            field.relatedField &&
+            field.relatedField.directives.some(
+              d =>
+                d.name === DirectiveKeys.relation && Boolean(d.arguments.link),
             )
+          ) {
+            continue
           }
+          field.directives.push(this.createLinkTableDirective(field))
+          // if (field.relatedField !== null) {
+          //   field.relatedField.directives.push(
+          //     this.createLinkTableDirective(field.relatedField),
+          //   )
+          // }
         }
       }
     }

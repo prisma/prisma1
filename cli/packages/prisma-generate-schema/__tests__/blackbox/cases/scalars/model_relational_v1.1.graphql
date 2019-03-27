@@ -1,4 +1,5 @@
 type LotsOfScalars {
+  id: ID! @id
   int: Int
   string: String
   float: Float
@@ -8,6 +9,7 @@ type LotsOfScalars {
 }
 
 type LotsOfRequiredScalars {
+  id: ID! @id
   int: Int!
   string: String!
   float: Float!
@@ -17,6 +19,7 @@ type LotsOfRequiredScalars {
 }
 
 type LotsOfScalarLists {
+  id: ID! @id
   int: [Int]
   string: [String]
   float: [Float]

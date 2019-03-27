@@ -2,7 +2,7 @@ type User {
   id: ID! @id
   email: String! @unique
   name: String
-  posts: [Post] @relation(link: TABLE)
+  posts: [Post]
 }
 
 type Post {

@@ -13,15 +13,15 @@ exports[`Introspects airbnb/mysql correctly 1`] = `
   responseRate: Float
   responseTime: Int
   isSuperHost: Boolean! @default(value: false)
-  ownedPlaces: [Place] @relation(link: TABLE)
+  ownedPlaces: [Place]
   location: Location @relation(link: TABLE)
-  bookings: [Booking] @relation(link: TABLE)
-  paymentAccount: [PaymentAccount] @relation(link: TABLE)
-  sentMessages: [Message] @relation(link: TABLE, name: \\"SentMessages\\")
-  receivedMessages: [Message] @relation(link: TABLE, name: \\"ReceivedMessages\\")
-  notifications: [Notification] @relation(link: TABLE)
+  bookings: [Booking]
+  paymentAccount: [PaymentAccount]
+  sentMessages: [Message] @relation(name: \\"SentMessages\\")
+  receivedMessages: [Message] @relation(name: \\"ReceivedMessages\\")
+  notifications: [Notification]
   profilePicture: Picture @relation(link: TABLE)
-  hostingExperiences: [Experience] @relation(link: TABLE)
+  hostingExperiences: [Experience]
 }
 
 type Place {
@@ -35,7 +35,7 @@ type Place {
   numBedrooms: Int!
   numBeds: Int!
   numBaths: Int!
-  reviews: [Review] @relation(link: TABLE)
+  reviews: [Review]
   amenities: Amenities! @relation(link: TABLE)
   host: User! @relation(link: TABLE)
   pricing: Pricing! @relation(link: TABLE)
@@ -44,14 +44,14 @@ type Place {
   guestRequirements: GuestRequirements @relation(link: TABLE)
   policies: Policies @relation(link: TABLE)
   houseRules: HouseRules @relation(link: TABLE)
-  bookings: [Booking] @relation(link: TABLE)
+  bookings: [Booking]
   pictures: [Picture]
   popularity: Int!
 }
 
 type Pricing {
   id: ID! @id
-  place: Place! @relation(link: TABLE)
+  place: Place!
   monthlyDiscount: Int
   weeklyDiscount: Int
   perNight: Int!
@@ -71,7 +71,7 @@ type GuestRequirements {
   govIssuedId: Boolean! @default(value: false)
   recommendationsFromOtherHosts: Boolean! @default(value: false)
   guestTripInformation: Boolean! @default(value: false)
-  place: Place! @relation(link: TABLE)
+  place: Place!
 }
 
 type Policies {
@@ -81,7 +81,7 @@ type Policies {
   checkInStartTime: Float!
   checkInEndTime: Float!
   checkoutTime: Float!
-  place: Place! @relation(link: TABLE)
+  place: Place!
 }
 
 type HouseRules {
@@ -99,7 +99,7 @@ type HouseRules {
 type Views {
   id: ID! @id
   lastWeek: Int!
-  place: Place! @relation(link: TABLE)
+  place: Place!
 }
 
 type Location {
@@ -107,8 +107,8 @@ type Location {
   lat: Float!
   lng: Float!
   neighbourHood: Neighbourhood @relation(link: TABLE)
-  user: User @relation(link: TABLE)
-  place: Place @relation(link: TABLE)
+  user: User
+  place: Place
   address: String
   directions: String
   experience: Experience @relation(link: TABLE)
@@ -117,7 +117,7 @@ type Location {
 
 type Neighbourhood {
   id: ID! @id
-  locations: [Location] @relation(link: TABLE)
+  locations: [Location]
   name: String!
   slug: String!
   homePreview: Picture @relation(link: TABLE)
@@ -129,7 +129,7 @@ type Neighbourhood {
 type City {
   id: ID! @id
   name: String!
-  neighbourhoods: [Neighbourhood] @relation(link: TABLE)
+  neighbourhoods: [Neighbourhood]
 }
 
 type Picture {
@@ -141,9 +141,9 @@ type Experience {
   category: ExperienceCategory @relation(link: TABLE)
   title: String!
   host: User! @relation(link: TABLE)
-  location: Location! @relation(link: TABLE)
+  location: Location!
   pricePerPerson: Int!
-  reviews: [Review] @relation(link: TABLE)
+  reviews: [Review]
   preview: Picture! @relation(link: TABLE)
   popularity: Int!
 }
@@ -152,12 +152,12 @@ type ExperienceCategory {
   id: ID! @id
   mainColor: String! @default(value: \\"#123456\\")
   name: String!
-  experience: Experience @relation(link: TABLE)
+  experience: Experience
 }
 
 type Amenities {
   id: ID! @id
-  place: Place! @relation(link: TABLE)
+  place: Place!
   elevator: Boolean! @default(value: false)
   petsAllowed: Boolean! @default(value: false)
   internet: Boolean! @default(value: false)
@@ -231,7 +231,7 @@ type Payment {
   serviceFee: Float!
   placePrice: Float!
   totalPrice: Float!
-  booking: Booking! @relation(link: TABLE)
+  booking: Booking!
   paymentMethod: PaymentAccount! @relation(link: TABLE)
 }
 
@@ -240,7 +240,7 @@ type PaymentAccount {
   createdAt: DateTime! @createdAt
   type: PAYMENT_PROVIDER
   user: User! @relation(link: TABLE)
-  payments: [Payment] @relation(link: TABLE)
+  payments: [Payment]
   paypal: PaypalInformation @relation(link: TABLE)
   creditcard: CreditCardInformation @relation(link: TABLE)
 }
@@ -249,7 +249,7 @@ type PaypalInformation {
   id: ID! @id
   createdAt: DateTime! @createdAt
   email: String!
-  paymentAccount: PaymentAccount! @relation(link: TABLE)
+  paymentAccount: PaymentAccount!
 }
 
 type CreditCardInformation {
@@ -263,7 +263,7 @@ type CreditCardInformation {
   lastName: String!
   postalCode: String!
   country: String!
-  paymentAccount: PaymentAccount @relation(link: TABLE)
+  paymentAccount: PaymentAccount
 }
 
 type Message {
@@ -290,7 +290,7 @@ type Restaurant {
   title: String!
   avgPricePerPerson: Int!
   pictures: [Picture]
-  location: Location! @relation(link: TABLE)
+  location: Location!
   isCurated: Boolean! @default(value: true)
   slug: String!
   popularity: Int!
@@ -349,7 +349,7 @@ type AWithId {
 
 type B {
   a: [A]
-  a2: AWithId @relation(link: TABLE)
+  a2: AWithId
 }"
 `;
 
@@ -441,12 +441,12 @@ type AWithId {
 
 type B {
   field: String!
-  a: [A] @relation(link: TABLE)
+  a: [A]
 }
 
 type C {
   field: [Int]
-  a: AWithId! @relation(link: TABLE)
+  a: AWithId!
 }
 
 type D {
@@ -472,9 +472,9 @@ type Person {
   firstName: String
   lastName: String
   phoneNumbers: [PhoneNumber]
-  scheduledTransactions: [FinancialScheduledTransaction] @relation(link: TABLE)
-  transactions: [FinancialTransaction] @relation(link: TABLE)
-  user: User @relation(link: TABLE)
+  scheduledTransactions: [FinancialScheduledTransaction]
+  transactions: [FinancialTransaction]
+  user: User
 }
 
 type PhoneNumber {
@@ -534,7 +534,7 @@ type FinancialScheduledTransaction {
   isActive: Boolean!
   startDate: DateTime
   frequency: TRANSACTION_FREQUENCY
-  transactions: [FinancialTransaction] @relation(link: TABLE)
+  transactions: [FinancialTransaction]
   account: FinancialAccount @relation(link: TABLE)
   amount: Float!
 }
@@ -598,9 +598,9 @@ type GroupRole {
 type GroupType {
   id: ID! @id
   description: String
-  groups: [Group] @relation(link: TABLE)
+  groups: [Group]
   name: String! @unique
-  roles: [GroupRole] @relation(link: TABLE)
+  roles: [GroupRole]
 }
 
 type Group {
@@ -608,9 +608,9 @@ type Group {
   key: String @unique
   description: String
   type: GroupType! @relation(link: TABLE)
-  invites: [GroupInvite] @relation(link: TABLE)
+  invites: [GroupInvite]
   isActive: Boolean!
-  members: [GroupMember] @relation(link: TABLE)
+  members: [GroupMember]
   name: String!
   organization: Group @relation(link: TABLE)
 }
@@ -647,7 +647,7 @@ exports[`Introspects flavian/mysql correctly 1`] = `
   id: ID! @id
   email: String! @unique
   name: String
-  posts: [Post] @relation(link: TABLE)
+  posts: [Post]
 }
 
 type Post {
@@ -665,9 +665,9 @@ exports[`Introspects meshRelation/mysql correctly 1`] = `
 "type A {
   field: Int!
   a: A! @relation(link: TABLE)
-  b: [B] @relation(link: TABLE)
+  b: [B]
   c: C @relation(link: TABLE)
-  e: [E] @relation(link: TABLE)
+  e: [E]
 }
 
 type B {
@@ -681,9 +681,9 @@ type B {
 type C {
   expirationDate: DateTime
   c: C! @relation(link: TABLE)
-  b: [B] @relation(link: TABLE, name: \\"BToC\\")
-  a: A @relation(link: TABLE)
-  b2: B @relation(link: TABLE, name: \\"BToC2\\")
+  b: [B] @relation(name: \\"BToC\\")
+  a: A
+  b2: B @relation(name: \\"BToC2\\")
 }
 
 type D {
@@ -763,14 +763,14 @@ exports[`Introspects relationNames/mysql correctly 1`] = `
 }
 
 type B {
-  toA: A! @relation(link: TABLE, name: \\"RaToB\\")
-  toA2: A! @relation(link: TABLE, name: \\"RaToB2\\")
+  toA: A! @relation(name: \\"RaToB\\")
+  toA2: A! @relation(name: \\"RaToB2\\")
   toC: C! @relation(link: TABLE)
 }
 
 type C {
-  toB: [B] @relation(link: TABLE)
-  toA: [A] @relation(link: TABLE)
+  toB: [B]
+  toA: [A]
 }"
 `;
 
@@ -778,7 +778,7 @@ exports[`Introspects relations/mysql correctly 1`] = `
 "type User {
   id: ID! @id
   name: String!
-  posts: [Post] @relation(link: TABLE, name: \\"PostsByUser\\")
+  posts: [Post] @relation(name: \\"PostsByUser\\")
   postsWithoutConnection: [PostWithoutConnection]
   billingInfo: BillingInfo! @relation(link: TABLE)
   billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(link: TABLE)
@@ -804,7 +804,7 @@ type PostWithoutConnection {
 type BillingInfo {
   id: ID! @id
   account: String!
-  user: User! @relation(link: TABLE)
+  user: User!
 }
 
 type BillingInfoWithoutConnection {
@@ -813,7 +813,7 @@ type BillingInfoWithoutConnection {
 
 type OptionalDetails {
   text: String!
-  user: User! @relation(link: TABLE)
+  user: User!
 }
 
 type OptionalDetailsWithoutConnection {
@@ -926,7 +926,7 @@ type MultiSelfReferencingCWithId {
 type MultiSelfReferencingBWithId {
   id: ID! @id
   a: MultiSelfReferencingBWithId @relation(link: TABLE, name: \\"WithIdAToA2\\")
-  b: MultiSelfReferencingBWithId @relation(link: TABLE, name: \\"WithIdAToA2\\")
+  b: MultiSelfReferencingBWithId @relation(name: \\"WithIdAToA2\\")
 }
 
 type MultiSelfReferencingC {
@@ -936,7 +936,7 @@ type MultiSelfReferencingC {
 
 type MultiSelfReferencingB {
   a: MultiSelfReferencingB @relation(link: TABLE, name: \\"AToA2\\")
-  b: MultiSelfReferencingB @relation(link: TABLE, name: \\"AToA2\\")
+  b: MultiSelfReferencingB @relation(name: \\"AToA2\\")
 }"
 `;
 
@@ -987,12 +987,12 @@ type BWithoutIdWithA {
 type CWithIdWithA {
   id: ID! @id
   field: String!
-  x: [AWithC] @relation(link: TABLE)
+  x: [AWithC]
 }
 
 type CWithoutIdWithA {
   field: String!
-  x: [AWithC] @relation(link: TABLE)
+  x: [AWithC]
 }
 
 type AWithIdWithB {
@@ -1020,12 +1020,12 @@ type BWithoutIdWithB {
 type CWithIdWithB {
   id: ID! @id
   field: String!
-  x: [BWithC] @relation(link: TABLE)
+  x: [BWithC]
 }
 
 type CWithoutIdWithB {
   field: String!
-  x: [BWithC] @relation(link: TABLE)
+  x: [BWithC]
 }
 
 type AWithIdWithC {
@@ -1062,13 +1062,13 @@ type CWithoutIdWithC {
 }
 
 type AWithA {
-  x: AWithIdWithA! @relation(link: TABLE)
-  y: AWithoutIdWithA! @relation(link: TABLE)
+  x: AWithIdWithA!
+  y: AWithoutIdWithA!
 }
 
 type AWithB {
-  x: BWithIdWithA! @relation(link: TABLE)
-  y: BWithoutIdWithA! @relation(link: TABLE)
+  x: BWithIdWithA!
+  y: BWithoutIdWithA!
 }
 
 type AWithC {
@@ -1077,13 +1077,13 @@ type AWithC {
 }
 
 type BWithA {
-  x: AWithIdWithB @relation(link: TABLE)
-  y: AWithoutIdWithB @relation(link: TABLE)
+  x: AWithIdWithB
+  y: AWithoutIdWithB
 }
 
 type BWithB {
-  x: BWithIdWithB @relation(link: TABLE)
-  y: BWithoutIdWithB @relation(link: TABLE)
+  x: BWithIdWithB
+  y: BWithoutIdWithB
 }
 
 type BWithC {
@@ -1092,13 +1092,13 @@ type BWithC {
 }
 
 type CWithA {
-  x: [AWithIdWithC] @relation(link: TABLE)
-  y: [AWithoutIdWithC] @relation(link: TABLE)
+  x: [AWithIdWithC]
+  y: [AWithoutIdWithC]
 }
 
 type CWithB {
-  x: [BWithIdWithC] @relation(link: TABLE)
-  y: [BWithoutIdWithC] @relation(link: TABLE)
+  x: [BWithIdWithC]
+  y: [BWithoutIdWithC]
 }
 
 type CWithC {
