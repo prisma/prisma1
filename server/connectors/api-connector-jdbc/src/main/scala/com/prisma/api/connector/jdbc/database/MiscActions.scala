@@ -1,8 +1,9 @@
 package com.prisma.api.connector.jdbc.database
 
 import com.prisma.shared.models.Project
+import com.prisma.utils.boolean.BooleanUtils
 
-trait MiscActions extends BuilderBase {
+trait MiscActions extends BuilderBase with BooleanUtils {
   import slickDatabase.profile.api._
 
   def truncateTables(project: Project): DBIO[_] = {
@@ -10,7 +11,8 @@ trait MiscActions extends BuilderBase {
     val modelTables    = project.models.map(modelTable)
     val listTables     = project.models.flatMap(model => model.scalarListFields.map(scalarListTable))
 
-    val actions = (relationTables ++ listTables ++ Vector(relayTable) ++ modelTables).map {
+    val relayTableOption = project.schema.isLegacy.toOption(relayTable) // only legacy projects have this table
+    val actions = (relationTables ++ listTables ++ relayTableOption ++ modelTables).map {
       case table if isMySql => truncateToDBIO(sql.truncate(table))
       case table            => truncateToDBIO(sql.truncate(table).cascade())
     }
