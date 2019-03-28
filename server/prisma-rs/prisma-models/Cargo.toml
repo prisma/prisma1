@@ -7,7 +7,7 @@ edition = "2018"
 [features]
 default = ["sql", "sqlite"]
 sqlite = ["rusqlite"]
-sql = ["prisma-query"]
+sql = ["prisma-query", "diesel", "diesel-dynamic-schema"]
 
 [dependencies]
 once_cell = "0.1"
@@ -22,6 +22,8 @@ chrono = { version = "0.4", features = ["serde"] }
 failure = "0.1"
 failure_derive = "0.1"
 rand = "0.6"
+diesel = { version = "1.0", optional = true }
+diesel-dynamic-schema = { git = "https://github.com/diesel-rs/diesel-dynamic-schema.git", optional = true }
 
 prisma-query = { path = "../libs/prisma-query", optional = true }
 rusqlite = { version = "0.16", features = ["chrono"], optional = true }

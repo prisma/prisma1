@@ -1,20 +1,25 @@
 use prisma_query::ast::*;
 
 use chrono::{DateTime, Utc};
+use diesel::{
+    backend::Backend,
+    serialize::{self, ToSql as _},
+    sql_types,
+};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
-use std::fmt;
+use std::{fmt, io::Write};
 use uuid::Uuid;
 
 pub type PrismaListValue = Vec<PrismaValue>;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(AsExpression, FromSqlRow, Debug, PartialEq, Eq, Hash, Clone)]
 pub enum GraphqlId {
     String(String),
     Int(usize),
     UUID(Uuid),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(AsExpression, FromSqlRow, Debug, PartialEq, Clone)]
 pub enum PrismaValue {
     String(String),
     Float(f64),
@@ -81,6 +86,16 @@ impl From<GraphqlId> for DatabaseValue {
     }
 }
 
+impl<DB: Backend> serialize::ToSql<GraphqlId, DB> for GraphqlId {
+    fn to_sql<W: Write>(&self, out: &mut serialize::Output<W, DB>) -> serialize::Result {
+        match self {
+            GraphqlId::String(s) => s.to_sql::<sql_types::Text>(out),
+            GraphqlId::Int(i) => (*i as i64).to_sql(out),
+            GraphqlId::UUID(u) => u.to_hyphenated_ref().to_string().to_sql(out),
+        }
+    }
+}
+
 impl From<&GraphqlId> for DatabaseValue {
     fn from(id: &GraphqlId) -> DatabaseValue {
         id.clone().into()
@@ -101,6 +116,25 @@ impl From<PrismaValue> for DatabaseValue {
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
             PrismaValue::Uuid(u) => u.to_hyphenated_ref().to_string().into(),
             PrismaValue::GraphqlId(id) => id.into(),
+            PrismaValue::List(_) => panic!("List values are not supported here"),
+        }
+    }
+}
+
+impl<DB: Backend> serialize::ToSql<PrismaValue, DB> for PrismaValue {
+    fn to_sql<W: Write>(&self, out: &mut serialize::Output<W, DB>) -> diesel::serialize::Result {
+        match self {
+            PrismaValue::String(s) => s.to_sql(out),
+            PrismaValue::Float(f) => f.to_sql(out),
+            PrismaValue::Boolean(b) => b.to_sql(out),
+            PrismaValue::DateTime(d) => d.timestamp_millis().to_sql(out),
+            PrismaValue::Enum(e) => e.to_sql(out),
+            PrismaValue::Json(j) => j.to_sql(out),
+            PrismaValue::Int(i) => i.to_sql(out),
+            PrismaValue::Relation(i) => i.to_sql(out),
+            PrismaValue::Null => None.to_sql(out),
+            PrismaValue::Uuid(u) => u.to_hyphenated_ref().to_string().to_sql(out),
+            PrismaValue::GraphqlId(id) => id.to_sql(out),
             PrismaValue::List(_) => panic!("List values are not supported here"),
         }
     }

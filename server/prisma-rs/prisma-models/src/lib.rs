@@ -4,6 +4,8 @@
 extern crate serde_derive;
 #[macro_use]
 extern crate debug_stub_derive;
+#[macro_use]
+extern crate diesel;
 
 mod error;
 mod field;
