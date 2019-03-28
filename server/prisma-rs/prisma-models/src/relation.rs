@@ -147,6 +147,14 @@ impl Relation {
         }
     }
 
+    pub fn inline_relation_column(&self) -> Option<Column> {
+        if let Some(mani) = self.inline_manifestation() {
+            Some(Column::from(mani.referencing_column.as_ref()).table(self.relation_table()))
+        } else {
+            None
+        }
+    }
+
     pub fn both_sides_cascade(&self) -> bool {
         self.model_a_on_delete == OnDelete::Cascade && self.model_b_on_delete == OnDelete::Cascade
     }

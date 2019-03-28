@@ -4,6 +4,8 @@ use prisma_query::ast::*;
 
 pub trait NestedValidation {
     fn required_check(&self, parent_id: GraphqlId) -> ConnectorResult<Option<Query>>;
+    fn removal_action(&self, parent_id: GraphqlId) -> ConnectorResult<Option<Query>>;
+
     fn relation_field(&self) -> RelationFieldRef;
     fn relation(&self) -> RelationRef;
 
@@ -28,6 +30,22 @@ pub trait NestedValidation {
             .column(opposite_column.clone())
             .so_that(opposite_column.equals(id).and(relation_column.is_not_null()))
             .into()
+    }
+
+    fn removal_by_parent(&self, id: GraphqlId) -> Query {
+        let rf = self.relation_field();
+        let relation = self.relation();
+        let relation_column = relation.column_for_relation_side(rf.relation_side);
+
+        let condition = relation_column.equals(PrismaValue::Null);
+
+        match self.inline_relation_column() {
+            Some(column) => Update::table(relation.relation_table())
+                .set(column, id)
+                .so_that(condition)
+                .into(),
+            None => Delete::from(relation.relation_table()).so_that(condition).into(),
+        }
     }
 }
 
@@ -59,6 +77,22 @@ impl NestedValidation for NestedCreateNode {
             (false, false, true, false) => Ok(None),
             (true, false, true, false) => Ok(None),
             _ => unreachable!(),
+        }
+    }
+
+    fn removal_action(&self, parent_id: GraphqlId) -> ConnectorResult<Option<Query>> {
+        if self.top_is_create {
+            return Ok(None);
+        }
+
+        let p = self.relation_field.clone();
+        let c = p.related_field();
+
+        match (p.is_list, c.is_list) {
+            (false, false) => Ok(Some(self.removal_by_parent(parent_id))),
+            (true, false) => Ok(None),
+            (false, true) => Ok(Some(self.removal_by_parent(parent_id))),
+            (true, true) => Ok(None),
         }
     }
 }
