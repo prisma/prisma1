@@ -104,12 +104,12 @@ impl Node {
         parent: &ManyNodes,
         selected_fields: &Vec<String>,
     ) -> Vec<Vec<(String, PrismaValue)>> {
-        parent.nodes.iter().fold(Vec::new(), |mut vec, parent| {
+        parent.nodes.iter().fold(Vec::new(), |mut vec, _parent| {
             vec.push(
                 self.values
                     .iter()
                     .zip(selected_fields)
-                    .fold(Vec::new(), |mut vec, (value, field)| vec),
+                    .fold(Vec::new(), |vec, (_value, _field)| vec),
             );
             vec
         })
