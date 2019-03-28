@@ -131,7 +131,7 @@ impl QueryExecutor {
 
                     let result = self
                         .data_resolver
-                        .get_node_by_where(&query.selector, &selected_fields)?;
+                        .get_node_by_where(query.selector.clone(), &selected_fields)?;
 
                     match result {
                         Some(ref node) => {

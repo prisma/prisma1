@@ -1,9 +1,8 @@
-#![deny(warnings)]
-
 mod context;
 mod error;
 mod req_handlers;
 mod schema;
+mod json;
 
 use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
 use context::PrismaContext;

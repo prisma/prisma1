@@ -3,7 +3,7 @@ mod related_nodes;
 use crate::cursor_condition::CursorCondition;
 use crate::filter_conversion as convert;
 use crate::ordering::Ordering;
-use connector::{NodeSelector, QueryArguments};
+use connector::QueryArguments;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 use related_nodes::RelatedNodesQueryBuilder;
@@ -11,27 +11,11 @@ use related_nodes::RelatedNodesQueryBuilder;
 pub struct QueryBuilder;
 
 impl QueryBuilder {
-    pub fn get_node_by_where(node_selector: &NodeSelector, selected_fields: &SelectedFields) -> (String, Select) {
-        let condition = ConditionTree::single(node_selector.field.as_column().equals(node_selector.value.clone()));
-        let base_query = Select::from(node_selector.field.model().table())
-            .so_that(condition)
-            .offset(0);
-
-        let select_ast = selected_fields
-            .columns()
-            .into_iter()
-            .fold(base_query, |acc, column| acc.column(column.clone()));
-
-        let db_name = node_selector.field.schema().db_name.clone();
-
-        (db_name, select_ast)
-    }
-
-    pub fn get_nodes(
-        model: ModelRef,
-        query_arguments: QueryArguments,
-        selected_fields: &SelectedFields,
-    ) -> (String, Select) {
+    pub fn get_nodes<T>(model: ModelRef, into_arguments: T, selected_fields: &SelectedFields) -> (String, Select)
+    where
+        T: Into<QueryArguments>,
+    {
+        let query_arguments = into_arguments.into();
         let cursor: ConditionTree = CursorCondition::build(&query_arguments, &model);
         let order_by = query_arguments.order_by;
         let ordering = Ordering::for_model(&model, order_by.as_ref(), query_arguments.last.is_some());

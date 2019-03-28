@@ -89,6 +89,32 @@ impl Node {
         })
     }
 
+    /// (WIP) Associate a nested selection-set with a set of parents
+    ///
+    /// - A parent is a `ManyNodes` which has selected fields and nested queries.
+    /// - Nested queries aren't associated to a parent, but have a `parent_id` and `related_id`
+    /// - This function takes the parent query and creates a set of `(String, PrismaValue)` for each query
+    /// - Returns a nested vector of tuples
+    ///   - List item for every query in parent
+    ///   - Then a vector of selected fields in each nested query
+    ///   - Actual association is made via `get_pairs` to `(String, PrismaValue)`
+    ///
+    pub fn get_parent_pairs(
+        &self,
+        parent: &ManyNodes,
+        selected_fields: &Vec<String>,
+    ) -> Vec<Vec<(String, PrismaValue)>> {
+        parent.nodes.iter().fold(Vec::new(), |mut vec, parent| {
+            vec.push(
+                self.values
+                    .iter()
+                    .zip(selected_fields)
+                    .fold(Vec::new(), |mut vec, (value, field)| vec),
+            );
+            vec
+        })
+    }
+
     pub fn add_related_id(&mut self, related_id: GraphqlId) {
         self.related_id = Some(related_id);
     }
