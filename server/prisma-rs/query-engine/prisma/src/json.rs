@@ -1,5 +1,4 @@
 //! Json serialisation module
-
 use core::{MultiPrismaQueryResult, PrismaQueryResult, SinglePrismaQueryResult};
 use prisma_models::PrismaValue;
 use serde::{Deserialize, Serialize};
@@ -30,6 +29,7 @@ pub enum Item {
 
 use PrismaQueryResult::*;
 
+#[allow(dead_code)]
 impl Envelope {
     pub fn convert(self) -> serde_json::Value {
         serde_json::to_value(&self).unwrap()
@@ -40,6 +40,7 @@ impl Envelope {
     }
 }
 
+#[allow(dead_code)]
 pub fn build(result: &PrismaQueryResult) -> Envelope {
     match result {
         Single(result) => build_map(result).into(),
@@ -47,6 +48,7 @@ pub fn build(result: &PrismaQueryResult) -> Envelope {
     }
 }
 
+#[allow(dead_code)]
 fn build_map(result: &SinglePrismaQueryResult) -> Map {
     // Build selected fields first
     let outer = match &result.result {
