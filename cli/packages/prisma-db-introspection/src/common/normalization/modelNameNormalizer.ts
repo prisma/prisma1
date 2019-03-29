@@ -8,6 +8,7 @@ import {
   toposort,
   isTypeIdentifier,
 } from 'prisma-datamodel'
+import camelcase from 'camelcase'
 import { INormalizer } from './normalizer'
 import * as uppercamelcase from 'uppercamelcase'
 import { groupBy, uniqBy } from 'lodash'
@@ -101,6 +102,16 @@ export default class ModelNameNormalizer implements INormalizer {
     parentModel: ISDL,
   ) {
     // Make embedded type names pretty
+    if (!parentType.isEnum && !field.isId) {
+      if (field.name !== camelcase(field.name)) {
+        // if we can't find another field with the camelcased name, we're save
+        // and don't have a collision
+        // if (!parentType.fields.find(f => f.name === camelcase(field.name))) {
+        field.databaseName = field.name
+        field.name = camelcase(field.name)
+        // }
+      }
+    }
     if (typeof field.type !== 'string' && field.type.isEmbedded) {
       if (!field.type.databaseName) field.type.databaseName = field.type.name
 

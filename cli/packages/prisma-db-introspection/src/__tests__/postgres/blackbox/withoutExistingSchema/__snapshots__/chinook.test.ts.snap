@@ -3,219 +3,219 @@
 exports[`Introspector chinook example database 1`] = `
 "type Album {
   id: Int! @pgColumn(name: \\"AlbumId\\") @unique
-  ArtistId: Artist!
-  Title: String!
+  artistId: Artist! @pgColumn(name: \\"ArtistId\\")
+  title: String! @pgColumn(name: \\"Title\\")
   track: [Track]
 }
 
 type Artist {
   id: Int! @pgColumn(name: \\"ArtistId\\") @unique
   album: [Album]
-  Name: String
+  name: String @pgColumn(name: \\"Name\\")
 }
 
 type Customer {
   id: Int! @pgColumn(name: \\"CustomerId\\") @unique
-  Address: String
-  City: String
-  Company: String
-  Country: String
-  Email: String!
-  Fax: String
-  FirstName: String!
+  address: String @pgColumn(name: \\"Address\\")
+  city: String @pgColumn(name: \\"City\\")
+  company: String @pgColumn(name: \\"Company\\")
+  country: String @pgColumn(name: \\"Country\\")
+  email: String! @pgColumn(name: \\"Email\\")
+  fax: String @pgColumn(name: \\"Fax\\")
+  firstName: String! @pgColumn(name: \\"FirstName\\")
   invoice: [Invoice]
-  LastName: String!
-  Phone: String
-  PostalCode: String
-  State: String
-  SupportRepId: Employee
+  lastName: String! @pgColumn(name: \\"LastName\\")
+  phone: String @pgColumn(name: \\"Phone\\")
+  postalCode: String @pgColumn(name: \\"PostalCode\\")
+  state: String @pgColumn(name: \\"State\\")
+  supportRepId: Employee @pgColumn(name: \\"SupportRepId\\")
 }
 
 type Employee {
   id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
-  Address: String
-  BirthDate: DateTime
-  City: String
-  Country: String
+  address: String @pgColumn(name: \\"Address\\")
+  birthDate: DateTime @pgColumn(name: \\"BirthDate\\")
+  city: String @pgColumn(name: \\"City\\")
+  country: String @pgColumn(name: \\"Country\\")
   customer: [Customer]
-  Email: String
+  email: String @pgColumn(name: \\"Email\\")
   employee: [Employee]
-  Fax: String
-  FirstName: String!
-  HireDate: DateTime
-  LastName: String!
-  Phone: String
-  PostalCode: String
-  ReportsTo: Employee
-  State: String
-  Title: String
+  fax: String @pgColumn(name: \\"Fax\\")
+  firstName: String! @pgColumn(name: \\"FirstName\\")
+  hireDate: DateTime @pgColumn(name: \\"HireDate\\")
+  lastName: String! @pgColumn(name: \\"LastName\\")
+  phone: String @pgColumn(name: \\"Phone\\")
+  postalCode: String @pgColumn(name: \\"PostalCode\\")
+  reportsTo: Employee @pgColumn(name: \\"ReportsTo\\")
+  state: String @pgColumn(name: \\"State\\")
+  title: String @pgColumn(name: \\"Title\\")
 }
 
 type Genre {
   id: Int! @pgColumn(name: \\"GenreId\\") @unique
-  Name: String
+  name: String @pgColumn(name: \\"Name\\")
   track: [Track]
 }
 
 type Invoice {
   id: Int! @pgColumn(name: \\"InvoiceId\\") @unique
-  BillingAddress: String
-  BillingCity: String
-  BillingCountry: String
-  BillingPostalCode: String
-  BillingState: String
-  CustomerId: Customer!
-  InvoiceDate: DateTime!
+  billingAddress: String @pgColumn(name: \\"BillingAddress\\")
+  billingCity: String @pgColumn(name: \\"BillingCity\\")
+  billingCountry: String @pgColumn(name: \\"BillingCountry\\")
+  billingPostalCode: String @pgColumn(name: \\"BillingPostalCode\\")
+  billingState: String @pgColumn(name: \\"BillingState\\")
+  customerId: Customer! @pgColumn(name: \\"CustomerId\\")
+  invoiceDate: DateTime! @pgColumn(name: \\"InvoiceDate\\")
   invoiceLine: [InvoiceLine]
-  Total: Float!
+  total: Float! @pgColumn(name: \\"Total\\")
 }
 
 type InvoiceLine {
   id: Int! @pgColumn(name: \\"InvoiceLineId\\") @unique
-  InvoiceId: Invoice!
-  Quantity: Int!
-  TrackId: Track!
-  UnitPrice: Float!
+  invoiceId: Invoice! @pgColumn(name: \\"InvoiceId\\")
+  quantity: Int! @pgColumn(name: \\"Quantity\\")
+  trackId: Track! @pgColumn(name: \\"TrackId\\")
+  unitPrice: Float! @pgColumn(name: \\"UnitPrice\\")
 }
 
 type MediaType {
   id: Int! @pgColumn(name: \\"MediaTypeId\\") @unique
-  Name: String
+  name: String @pgColumn(name: \\"Name\\")
   track: [Track]
 }
 
 type Playlist {
   id: Int! @pgColumn(name: \\"PlaylistId\\") @unique
-  Name: String
+  name: String @pgColumn(name: \\"Name\\")
   playlistTrack: [PlaylistTrack]
 }
 
 type PlaylistTrack @linkTable {
-  PlaylistId: Playlist!
-  TrackId: Track!
+  playlistId: Playlist! @pgColumn(name: \\"PlaylistId\\")
+  trackId: Track! @pgColumn(name: \\"TrackId\\")
 }
 
 type Track {
   id: Int! @pgColumn(name: \\"TrackId\\") @unique
-  AlbumId: Album
-  Bytes: Int
-  Composer: String
-  GenreId: Genre
+  albumId: Album @pgColumn(name: \\"AlbumId\\")
+  bytes: Int @pgColumn(name: \\"Bytes\\")
+  composer: String @pgColumn(name: \\"Composer\\")
+  genreId: Genre @pgColumn(name: \\"GenreId\\")
   invoiceLine: [InvoiceLine]
-  MediaTypeId: MediaType!
-  Milliseconds: Int!
-  Name: String!
+  mediaTypeId: MediaType! @pgColumn(name: \\"MediaTypeId\\")
+  milliseconds: Int! @pgColumn(name: \\"Milliseconds\\")
+  name: String! @pgColumn(name: \\"Name\\")
   playlistTrack: [PlaylistTrack]
-  UnitPrice: Float!
+  unitPrice: Float! @pgColumn(name: \\"UnitPrice\\")
 }"
 `;
 
 exports[`Introspector chinook example database 2`] = `
 "type Album {
   AlbumId: Int! @id
-  ArtistId: Artist!
-  Title: String!
+  artistId: Artist! @db(name: \\"ArtistId\\")
+  title: String! @db(name: \\"Title\\")
   track: [Track]
 }
 
 type Artist {
   ArtistId: Int! @id
   album: [Album]
-  Name: String
+  name: String @db(name: \\"Name\\")
 }
 
 type Customer {
   CustomerId: Int! @id
-  Address: String
-  City: String
-  Company: String
-  Country: String
-  Email: String!
-  Fax: String
-  FirstName: String!
+  address: String @db(name: \\"Address\\")
+  city: String @db(name: \\"City\\")
+  company: String @db(name: \\"Company\\")
+  country: String @db(name: \\"Country\\")
+  email: String! @db(name: \\"Email\\")
+  fax: String @db(name: \\"Fax\\")
+  firstName: String! @db(name: \\"FirstName\\")
   invoice: [Invoice]
-  LastName: String!
-  Phone: String
-  PostalCode: String
-  State: String
-  SupportRepId: Employee
+  lastName: String! @db(name: \\"LastName\\")
+  phone: String @db(name: \\"Phone\\")
+  postalCode: String @db(name: \\"PostalCode\\")
+  state: String @db(name: \\"State\\")
+  supportRepId: Employee @db(name: \\"SupportRepId\\")
 }
 
 type Employee {
   EmployeeId: Int! @id
-  Address: String
-  BirthDate: DateTime
-  City: String
-  Country: String
+  address: String @db(name: \\"Address\\")
+  birthDate: DateTime @db(name: \\"BirthDate\\")
+  city: String @db(name: \\"City\\")
+  country: String @db(name: \\"Country\\")
   customer: [Customer]
-  Email: String
+  email: String @db(name: \\"Email\\")
   employee: [Employee]
-  Fax: String
-  FirstName: String!
-  HireDate: DateTime
-  LastName: String!
-  Phone: String
-  PostalCode: String
-  ReportsTo: Employee
-  State: String
-  Title: String
+  fax: String @db(name: \\"Fax\\")
+  firstName: String! @db(name: \\"FirstName\\")
+  hireDate: DateTime @db(name: \\"HireDate\\")
+  lastName: String! @db(name: \\"LastName\\")
+  phone: String @db(name: \\"Phone\\")
+  postalCode: String @db(name: \\"PostalCode\\")
+  reportsTo: Employee @db(name: \\"ReportsTo\\")
+  state: String @db(name: \\"State\\")
+  title: String @db(name: \\"Title\\")
 }
 
 type Genre {
   GenreId: Int! @id
-  Name: String
+  name: String @db(name: \\"Name\\")
   track: [Track]
 }
 
 type Invoice {
   InvoiceId: Int! @id
-  BillingAddress: String
-  BillingCity: String
-  BillingCountry: String
-  BillingPostalCode: String
-  BillingState: String
-  CustomerId: Customer!
-  InvoiceDate: DateTime!
+  billingAddress: String @db(name: \\"BillingAddress\\")
+  billingCity: String @db(name: \\"BillingCity\\")
+  billingCountry: String @db(name: \\"BillingCountry\\")
+  billingPostalCode: String @db(name: \\"BillingPostalCode\\")
+  billingState: String @db(name: \\"BillingState\\")
+  customerId: Customer! @db(name: \\"CustomerId\\")
+  invoiceDate: DateTime! @db(name: \\"InvoiceDate\\")
   invoiceLine: [InvoiceLine]
-  Total: Float!
+  total: Float! @db(name: \\"Total\\")
 }
 
 type InvoiceLine {
   InvoiceLineId: Int! @id
-  InvoiceId: Invoice!
-  Quantity: Int!
-  TrackId: Track!
-  UnitPrice: Float!
+  invoiceId: Invoice! @db(name: \\"InvoiceId\\")
+  quantity: Int! @db(name: \\"Quantity\\")
+  trackId: Track! @db(name: \\"TrackId\\")
+  unitPrice: Float! @db(name: \\"UnitPrice\\")
 }
 
 type MediaType {
   MediaTypeId: Int! @id
-  Name: String
+  name: String @db(name: \\"Name\\")
   track: [Track]
 }
 
 type Playlist {
   PlaylistId: Int! @id
-  Name: String
+  name: String @db(name: \\"Name\\")
   playlistTrack: [PlaylistTrack]
 }
 
 type PlaylistTrack @linkTable {
-  PlaylistId: Playlist!
-  TrackId: Track!
+  playlistId: Playlist! @db(name: \\"PlaylistId\\")
+  trackId: Track! @db(name: \\"TrackId\\")
 }
 
 type Track {
   TrackId: Int! @id
-  AlbumId: Album
-  Bytes: Int
-  Composer: String
-  GenreId: Genre
+  albumId: Album @db(name: \\"AlbumId\\")
+  bytes: Int @db(name: \\"Bytes\\")
+  composer: String @db(name: \\"Composer\\")
+  genreId: Genre @db(name: \\"GenreId\\")
   invoiceLine: [InvoiceLine]
-  MediaTypeId: MediaType!
-  Milliseconds: Int!
-  Name: String!
+  mediaTypeId: MediaType! @db(name: \\"MediaTypeId\\")
+  milliseconds: Int! @db(name: \\"Milliseconds\\")
+  name: String! @db(name: \\"Name\\")
   playlistTrack: [PlaylistTrack]
-  UnitPrice: Float!
+  unitPrice: Float! @db(name: \\"UnitPrice\\")
 }"
 `;

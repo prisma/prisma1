@@ -103,9 +103,9 @@ type User @db(name: \\"users\\") {
 
 type UserPaymentInfo @embedded {
   accountId: String
-  BIC: String
+  bic: String @db(name: \\"BIC\\")
   expires: String
-  IBAN: String
+  iban: String @db(name: \\"IBAN\\")
   number: String
   type: String
 }
