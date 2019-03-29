@@ -58,8 +58,10 @@ pub trait DatabaseMutactionExecutor {
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
             DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::ResetData(_)) => unimplemented!(),
             DatabaseMutaction::Nested(NestedDatabaseMutaction::CreateNode(ref cn)) => {
+                let parent_id = GraphqlId::Int(420);
+
                 let result = DatabaseMutactionResult {
-                    identifier: Identifier::Id(self.execute_nested_create(db_name, cn)?),
+                    identifier: Identifier::Id(self.execute_nested_create(db_name, &parent_id, cn)?),
                     typ: DatabaseMutactionResultType::Create,
                     mutaction,
                 };
@@ -86,7 +88,12 @@ pub trait DatabaseMutactionExecutor {
     fn execute_delete(&self, db_name: String, mutaction: &DeleteNode) -> ConnectorResult<SingleNode>;
     fn execute_update_many(&self, db_name: String, mutaction: &UpdateNodes) -> ConnectorResult<usize>;
 
-    fn execute_nested_create(&self, db_name: String, mutaction: &NestedCreateNode) -> ConnectorResult<GraphqlId>;
+    fn execute_nested_create(
+        &self,
+        db_name: String,
+        parent_id: &GraphqlId,
+        mutaction: &NestedCreateNode,
+    ) -> ConnectorResult<GraphqlId>;
 
     fn execute_upsert(
         &self,

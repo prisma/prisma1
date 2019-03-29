@@ -259,12 +259,15 @@ impl Relation {
         self.field_a().is_list && self.field_b().is_list
     }
 
-    pub fn id_column(&self) -> Option<&str> {
+    pub fn id_column(&self) -> Option<Column> {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
-            None => Some("id"),
-            Some(RelationTable(ref m)) => m.id_column.as_ref().map(|s| s.as_ref()),
+            None => Some("id".into()),
+            Some(RelationTable(ref m)) => m.id_column.as_ref().map(|s| {
+                let st: &str = s.as_ref();
+                st.into()
+            }),
             _ => None,
         }
     }
