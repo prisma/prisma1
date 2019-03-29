@@ -99,7 +99,7 @@ describe(`Renderer directives test`, () => {
     expect(res).toEqual(modelWithDirectives)
   })
 
-  test('Render built-in index directive correctly', () => {
+  test.skip('Render built-in index directive correctly', () => {
     const renderer = Renderer.create(DatabaseType.mongo)
 
     const modelWithDirectives = dedent(`
