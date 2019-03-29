@@ -54,13 +54,14 @@ export default async function blackBoxTest(name: string) {
   const legacyRenderer = DefaultRenderer.create(DatabaseType.postgres)
   const legacyRenderedWithReference = legacyRenderer.render(
     normalizedWithReference,
+    true,
   )
 
   expect(legacyRenderedWithReference).toMatchSnapshot()
 
   // V2 rendering
   const renderer = DefaultRenderer.create(DatabaseType.postgres, true)
-  const renderedWithReference = renderer.render(normalizedWithReference)
+  const renderedWithReference = renderer.render(normalizedWithReference, true)
 
   expect(renderedWithReference).toMatchSnapshot()
 
