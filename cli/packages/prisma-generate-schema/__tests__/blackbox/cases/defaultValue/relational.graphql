@@ -1,6 +1,8 @@
-type A {
+type A implements Node {
+  id: ID!
+  a: Int
+  b: Int!
   c: String!
-  removeThisIdd: ID!
   d: String
 }
 
@@ -20,8 +22,10 @@ type AConnection {
 }
 
 input ACreateInput {
+  id: ID
+  a: Int
+  b: Int
   c: String!
-  removeThisIdd: ID
   d: String
 }
 
@@ -57,17 +61,27 @@ type AggregateB {
 }
 
 enum AOrderByInput {
+  id_ASC
+  id_DESC
+  a_ASC
+  a_DESC
+  b_ASC
+  b_DESC
   c_ASC
   c_DESC
-  removeThisIdd_ASC
-  removeThisIdd_DESC
   d_ASC
   d_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type APreviousValues {
+  id: ID!
+  a: Int
+  b: Int!
   c: String!
-  removeThisIdd: ID!
   d: String
 }
 
@@ -84,6 +98,117 @@ input AScalarWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [AScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  a: Int
+  """
+  All values that are not equal to given value.
+  """
+  a_not: Int
+  """
+  All values that are contained in given list.
+  """
+  a_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  a_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  a_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  a_lte: Int
+  """
+  All values greater than the given value.
+  """
+  a_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  a_gte: Int
+  b: Int
+  """
+  All values that are not equal to given value.
+  """
+  b_not: Int
+  """
+  All values that are contained in given list.
+  """
+  b_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  b_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  b_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  b_lte: Int
+  """
+  All values greater than the given value.
+  """
+  b_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  b_gte: Int
   c: String
   """
   All values that are not equal to given value.
@@ -137,59 +262,6 @@ input AScalarWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
-  removeThisIdd: ID
-  """
-  All values that are not equal to given value.
-  """
-  removeThisIdd_not: ID
-  """
-  All values that are contained in given list.
-  """
-  removeThisIdd_in: [ID!]
-  """
-  All values that are not contained in given list.
-  """
-  removeThisIdd_not_in: [ID!]
-  """
-  All values less than the given value.
-  """
-  removeThisIdd_lt: ID
-  """
-  All values less than or equal the given value.
-  """
-  removeThisIdd_lte: ID
-  """
-  All values greater than the given value.
-  """
-  removeThisIdd_gt: ID
-  """
-  All values greater than or equal the given value.
-  """
-  removeThisIdd_gte: ID
-  """
-  All values containing the given string.
-  """
-  removeThisIdd_contains: ID
-  """
-  All values not containing the given string.
-  """
-  removeThisIdd_not_contains: ID
-  """
-  All values starting with the given string.
-  """
-  removeThisIdd_starts_with: ID
-  """
-  All values not starting with the given string.
-  """
-  removeThisIdd_not_starts_with: ID
-  """
-  All values ending with the given string.
-  """
-  removeThisIdd_ends_with: ID
-  """
-  All values not ending with the given string.
-  """
-  removeThisIdd_not_ends_with: ID
   d: String
   """
   All values that are not equal to given value.
@@ -258,6 +330,14 @@ input ASubscriptionWhereInput {
   """
   AND: [ASubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [ASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ASubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -277,16 +357,22 @@ input ASubscriptionWhereInput {
 }
 
 input AUpdateDataInput {
+  a: Int
+  b: Int
   c: String
   d: String
 }
 
 input AUpdateInput {
+  a: Int
+  b: Int
   c: String
   d: String
 }
 
 input AUpdateManyDataInput {
+  a: Int
+  b: Int
   c: String
   d: String
 }
@@ -304,6 +390,8 @@ input AUpdateManyInput {
 }
 
 input AUpdateManyMutationInput {
+  a: Int
+  b: Int
   c: String
   d: String
 }
@@ -329,6 +417,125 @@ input AWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  a: Int
+  """
+  All values that are not equal to given value.
+  """
+  a_not: Int
+  """
+  All values that are contained in given list.
+  """
+  a_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  a_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  a_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  a_lte: Int
+  """
+  All values greater than the given value.
+  """
+  a_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  a_gte: Int
+  b: Int
+  """
+  All values that are not equal to given value.
+  """
+  b_not: Int
+  """
+  All values that are contained in given list.
+  """
+  b_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  b_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  b_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  b_lte: Int
+  """
+  All values greater than the given value.
+  """
+  b_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  b_gte: Int
   c: String
   """
   All values that are not equal to given value.
@@ -382,59 +589,6 @@ input AWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
-  removeThisIdd: ID
-  """
-  All values that are not equal to given value.
-  """
-  removeThisIdd_not: ID
-  """
-  All values that are contained in given list.
-  """
-  removeThisIdd_in: [ID!]
-  """
-  All values that are not contained in given list.
-  """
-  removeThisIdd_not_in: [ID!]
-  """
-  All values less than the given value.
-  """
-  removeThisIdd_lt: ID
-  """
-  All values less than or equal the given value.
-  """
-  removeThisIdd_lte: ID
-  """
-  All values greater than the given value.
-  """
-  removeThisIdd_gt: ID
-  """
-  All values greater than or equal the given value.
-  """
-  removeThisIdd_gte: ID
-  """
-  All values containing the given string.
-  """
-  removeThisIdd_contains: ID
-  """
-  All values not containing the given string.
-  """
-  removeThisIdd_not_contains: ID
-  """
-  All values starting with the given string.
-  """
-  removeThisIdd_starts_with: ID
-  """
-  All values not starting with the given string.
-  """
-  removeThisIdd_not_starts_with: ID
-  """
-  All values ending with the given string.
-  """
-  removeThisIdd_ends_with: ID
-  """
-  All values not ending with the given string.
-  """
-  removeThisIdd_not_ends_with: ID
   d: String
   """
   All values that are not equal to given value.
@@ -491,12 +645,15 @@ input AWhereInput {
 }
 
 input AWhereUniqueInput {
+  id: ID
+  a: Int
   c: String
-  removeThisIdd: ID
 }
 
 type AWithId implements Node {
   id: ID!
+  a: Int
+  b: Int!
   c: String!
   d: String
   b2: B!
@@ -519,6 +676,8 @@ type AWithIdConnection {
 
 input AWithIdCreateInput {
   id: ID
+  a: Int
+  b: Int
   c: String!
   d: String
   b2: BCreateOneWithoutA2Input!
@@ -531,6 +690,8 @@ input AWithIdCreateOneWithoutB2Input {
 
 input AWithIdCreateWithoutB2Input {
   id: ID
+  a: Int
+  b: Int
   c: String!
   d: String
 }
@@ -552,14 +713,24 @@ type AWithIdEdge {
 enum AWithIdOrderByInput {
   id_ASC
   id_DESC
+  a_ASC
+  a_DESC
+  b_ASC
+  b_DESC
   c_ASC
   c_DESC
   d_ASC
   d_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type AWithIdPreviousValues {
   id: ID!
+  a: Int
+  b: Int!
   c: String!
   d: String
 }
@@ -576,6 +747,14 @@ input AWithIdSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithIdSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -596,12 +775,16 @@ input AWithIdSubscriptionWhereInput {
 }
 
 input AWithIdUpdateInput {
+  a: Int
+  b: Int
   c: String
   d: String
   b2: BUpdateOneRequiredWithoutA2Input
 }
 
 input AWithIdUpdateManyMutationInput {
+  a: Int
+  b: Int
   c: String
   d: String
 }
@@ -616,6 +799,8 @@ input AWithIdUpdateOneWithoutB2Input {
 }
 
 input AWithIdUpdateWithoutB2DataInput {
+  a: Int
+  b: Int
   c: String
   d: String
 }
@@ -630,6 +815,14 @@ input AWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -683,6 +876,64 @@ input AWithIdWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  a: Int
+  """
+  All values that are not equal to given value.
+  """
+  a_not: Int
+  """
+  All values that are contained in given list.
+  """
+  a_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  a_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  a_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  a_lte: Int
+  """
+  All values greater than the given value.
+  """
+  a_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  a_gte: Int
+  b: Int
+  """
+  All values that are not equal to given value.
+  """
+  b_not: Int
+  """
+  All values that are contained in given list.
+  """
+  b_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  b_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  b_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  b_lte: Int
+  """
+  All values greater than the given value.
+  """
+  b_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  b_gte: Int
   c: String
   """
   All values that are not equal to given value.
@@ -794,12 +1045,13 @@ input AWithIdWhereInput {
 
 input AWithIdWhereUniqueInput {
   id: ID
+  a: Int
   c: String
 }
 
 type B implements Node {
-  a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
   id: ID!
+  a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
   a2: AWithId
 }
 
@@ -858,6 +1110,10 @@ type BEdge {
 enum BOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type BPreviousValues {
@@ -876,6 +1132,14 @@ input BSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -921,6 +1185,14 @@ input BWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -974,13 +1246,20 @@ input BWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  a_every: AWhereInput
   a_some: AWhereInput
+  a_none: AWhereInput
   a2: AWithIdWhereInput
 }
 
 input BWhereUniqueInput {
   id: ID
 }
+
+"""
+Raw JSON value
+"""
+scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.

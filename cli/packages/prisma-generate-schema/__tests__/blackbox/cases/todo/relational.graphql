@@ -14,6 +14,11 @@ type BatchPayload {
 }
 
 """
+Raw JSON value
+"""
+scalar Json
+
+"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
@@ -145,6 +150,10 @@ enum TodoOrderByInput {
   text_DESC
   done_ASC
   done_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type TodoPreviousValues {
@@ -165,6 +174,14 @@ input TodoSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [TodoSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [TodoSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TodoSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -200,6 +217,14 @@ input TodoWhereInput {
   Logical AND on all given filters.
   """
   AND: [TodoWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [TodoWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TodoWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -367,6 +392,10 @@ enum UserOrderByInput {
   id_DESC
   name_ASC
   name_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type UserPreviousValues {
@@ -386,6 +415,14 @@ input UserSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -434,6 +471,14 @@ input UserWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserWhereInput!]
   id: ID
   """
   All values that are not equal to given value.

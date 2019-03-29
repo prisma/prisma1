@@ -1,4 +1,3 @@
-import * as util from 'util'
 import { parse } from 'graphql'
 import { printSchema, buildSchema } from 'graphql/utilities'
 import { AstTools, DatabaseType, DefaultParser } from 'prisma-datamodel'
@@ -15,7 +14,7 @@ export default function blackBoxTest(
 
   const modelPath = path.join(
     __dirname,
-    `cases/${name}/model_${filePrefix}.graphql`,
+    `cases/${name}/model_${filePrefix}_v1.1.graphql`,
   )
   const prismaPath = path.join(__dirname, `cases/${name}/${filePrefix}.graphql`)
 
@@ -51,11 +50,11 @@ export default function blackBoxTest(
 
 const testNames = fs.readdirSync(path.join(__dirname, 'cases'))
 
-for (const testName of testNames.slice(1, 2)) {
-  // test(`Generates schema for ${testName}/relational correctly`, () => {
-  //   blackBoxTest(testName, DatabaseType.postgres, 'relational')
-  // })
-  test(`Generates schema for ${testName}/document correctly`, () => {
-    blackBoxTest(testName, DatabaseType.mongo, 'document')
+for (const testName of testNames) {
+  test(`Generates schema for ${testName}/relational correctly`, () => {
+    blackBoxTest(testName, DatabaseType.postgres, 'relational')
   })
+  // test(`Generates schema for ${testName}/document correctly`, () => {
+  //   blackBoxTest(testName, DatabaseType.mongo, 'document')
+  // })
 }

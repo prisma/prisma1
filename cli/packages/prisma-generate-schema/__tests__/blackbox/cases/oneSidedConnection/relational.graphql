@@ -74,6 +74,10 @@ type AggregateTypeWithoutId {
 enum AOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type APreviousValues {
@@ -92,6 +96,14 @@ input ASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [ASubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -121,6 +133,14 @@ input AWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -233,6 +253,10 @@ type BEdge {
 enum BOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type BPreviousValues {
@@ -251,6 +275,14 @@ input BSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -280,6 +312,14 @@ input BWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -385,6 +425,10 @@ type CEdge {
 enum COrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type CPreviousValues {
@@ -403,6 +447,14 @@ input CSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -432,6 +484,14 @@ input CWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -485,8 +545,12 @@ input CWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  x_every: TypeWithIdWhereInput
   x_some: TypeWithIdWhereInput
+  x_none: TypeWithIdWhereInput
+  y_every: TypeWithoutIdWhereInput
   y_some: TypeWithoutIdWhereInput
+  y_none: TypeWithoutIdWhereInput
 }
 
 input CWhereUniqueInput {
@@ -537,6 +601,10 @@ type DEdge {
 enum DOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type DPreviousValues {
@@ -555,6 +623,14 @@ input DSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [DSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [DSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [DSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -584,6 +660,14 @@ input DWhereInput {
   Logical AND on all given filters.
   """
   AND: [DWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [DWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [DWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -689,6 +773,10 @@ type EEdge {
 enum EOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type EPreviousValues {
@@ -707,6 +795,14 @@ input ESubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [ESubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ESubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ESubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -736,6 +832,14 @@ input EWhereInput {
   Logical AND on all given filters.
   """
   AND: [EWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [EWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [EWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -841,6 +945,10 @@ type FEdge {
 enum FOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type FPreviousValues {
@@ -859,6 +967,14 @@ input FSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [FSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [FSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [FSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -888,6 +1004,14 @@ input FWhereInput {
   Logical AND on all given filters.
   """
   AND: [FWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [FWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [FWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -941,13 +1065,22 @@ input FWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  x_every: TypeWithIdWhereInput
   x_some: TypeWithIdWhereInput
+  x_none: TypeWithIdWhereInput
+  y_every: TypeWithoutIdWhereInput
   y_some: TypeWithoutIdWhereInput
+  y_none: TypeWithoutIdWhereInput
 }
 
 input FWhereUniqueInput {
   id: ID
 }
+
+"""
+Raw JSON value
+"""
+scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
@@ -1139,6 +1272,10 @@ enum TypeWithIdOrderByInput {
   id_DESC
   field_ASC
   field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type TypeWithIdPreviousValues {
@@ -1280,6 +1417,14 @@ input TypeWithIdSubscriptionWhereInput {
   """
   AND: [TypeWithIdSubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [TypeWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TypeWithIdSubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1368,6 +1513,14 @@ input TypeWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [TypeWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [TypeWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TypeWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1534,6 +1687,10 @@ enum TypeWithoutIdOrderByInput {
   id_DESC
   field_ASC
   field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type TypeWithoutIdPreviousValues {
@@ -1675,6 +1832,14 @@ input TypeWithoutIdSubscriptionWhereInput {
   """
   AND: [TypeWithoutIdSubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [TypeWithoutIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TypeWithoutIdSubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1763,6 +1928,14 @@ input TypeWithoutIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [TypeWithoutIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [TypeWithoutIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [TypeWithoutIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.

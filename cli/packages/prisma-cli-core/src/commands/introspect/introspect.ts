@@ -273,17 +273,20 @@ ${chalk.bold(
 
   async getConnector(): Promise<IntermediateConnectorData> {
     const hasExecuteRaw = await this.hasExecuteRaw()
-    if (!hasExecuteRaw && this.flags.sdl) {
-      throw new Error(
-        `When using the --sdl flag, executeRaw must be available on the Prisma instance`,
-      )
-    }
     let credentials = this.getCredentialsByFlags()
     let interactive = false
+
     if (!credentials) {
       credentials = await this.getCredentialsInteractively(hasExecuteRaw)
       interactive = true
+
+      if (!hasExecuteRaw && this.flags.sdl) {
+        throw new Error(
+          `When using the --sdl flag, either executeRaw or credentials must be available`,
+        )
+      }
     }
+
     if (credentials) {
       const {
         connector,

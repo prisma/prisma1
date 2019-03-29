@@ -36,6 +36,11 @@ type BatchPayload {
 scalar DateTime
 
 """
+Raw JSON value
+"""
+scalar Json
+
+"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
@@ -46,9 +51,9 @@ type Mutation {
   createOnlyIdAndARelation2(data: OnlyIdAndARelation2CreateInput!): OnlyIdAndARelation2!
   createOnlyRelation(data: OnlyRelationCreateInput!): OnlyRelation!
   createOnlyRelationA(data: OnlyRelationACreateInput!): OnlyRelationA!
+  createOnlyDate(data: OnlyDateCreateInput!): OnlyDate!
   createOnlyRelationB(data: OnlyRelationBCreateInput!): OnlyRelationB!
   createOnlyId(data: OnlyIdCreateInput!): OnlyId!
-  createOnlyDate(data: OnlyDateCreateInput!): OnlyDate!
   updateOnlyIdAndARelation(data: OnlyIdAndARelationUpdateInput!, where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
   updateOnlyIdAndARelation2(data: OnlyIdAndARelation2UpdateInput!, where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
   updateOnlyRelation(data: OnlyRelationUpdateInput!, where: OnlyRelationWhereUniqueInput!): OnlyRelation
@@ -58,9 +63,9 @@ type Mutation {
   deleteOnlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
   deleteOnlyRelation(where: OnlyRelationWhereUniqueInput!): OnlyRelation
   deleteOnlyRelationA(where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
+  deleteOnlyDate(where: OnlyDateWhereUniqueInput!): OnlyDate
   deleteOnlyRelationB(where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
   deleteOnlyId(where: OnlyIdWhereUniqueInput!): OnlyId
-  deleteOnlyDate(where: OnlyDateWhereUniqueInput!): OnlyDate
   upsertOnlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!, create: OnlyIdAndARelationCreateInput!, update: OnlyIdAndARelationUpdateInput!): OnlyIdAndARelation!
   upsertOnlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!, create: OnlyIdAndARelation2CreateInput!, update: OnlyIdAndARelation2UpdateInput!): OnlyIdAndARelation2!
   upsertOnlyRelation(where: OnlyRelationWhereUniqueInput!, create: OnlyRelationCreateInput!, update: OnlyRelationUpdateInput!): OnlyRelation!
@@ -70,9 +75,9 @@ type Mutation {
   deleteManyOnlyIdAndARelation2s(where: OnlyIdAndARelation2WhereInput): BatchPayload!
   deleteManyOnlyRelations(where: OnlyRelationWhereInput): BatchPayload!
   deleteManyOnlyRelationAs(where: OnlyRelationAWhereInput): BatchPayload!
+  deleteManyOnlyDates(where: OnlyDateWhereInput): BatchPayload!
   deleteManyOnlyRelationBs(where: OnlyRelationBWhereInput): BatchPayload!
   deleteManyOnlyIds(where: OnlyIdWhereInput): BatchPayload!
-  deleteManyOnlyDates(where: OnlyDateWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -139,6 +144,8 @@ enum OnlyDateOrderByInput {
   id_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OnlyDatePreviousValues {
@@ -256,6 +263,14 @@ input OnlyDateSubscriptionWhereInput {
   """
   AND: [OnlyDateSubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyDateSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyDateSubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -288,6 +303,14 @@ input OnlyDateWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyDateWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyDateWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyDateWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -427,6 +450,10 @@ type OnlyIdAndARelation2Edge {
 enum OnlyIdAndARelation2OrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type OnlyIdAndARelation2PreviousValues {
@@ -445,6 +472,14 @@ input OnlyIdAndARelation2SubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdAndARelation2SubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdAndARelation2SubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdAndARelation2SubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -473,6 +508,14 @@ input OnlyIdAndARelation2WhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdAndARelation2WhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdAndARelation2WhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdAndARelation2WhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -570,6 +613,10 @@ type OnlyIdAndARelationEdge {
 enum OnlyIdAndARelationOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type OnlyIdAndARelationPreviousValues {
@@ -588,6 +635,14 @@ input OnlyIdAndARelationSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdAndARelationSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdAndARelationSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdAndARelationSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -616,6 +671,14 @@ input OnlyIdAndARelationWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdAndARelationWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdAndARelationWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdAndARelationWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -717,6 +780,10 @@ type OnlyIdEdge {
 enum OnlyIdOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type OnlyIdPreviousValues {
@@ -735,6 +802,14 @@ input OnlyIdSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -771,6 +846,14 @@ input OnlyIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -882,6 +965,10 @@ type OnlyRelationAEdge {
 enum OnlyRelationAOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type OnlyRelationAPreviousValues {
@@ -900,6 +987,14 @@ input OnlyRelationASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationASubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -944,6 +1039,14 @@ input OnlyRelationAWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationAWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationAWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationAWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1051,6 +1154,10 @@ type OnlyRelationBEdge {
 enum OnlyRelationBOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type OnlyRelationBPreviousValues {
@@ -1069,6 +1176,14 @@ input OnlyRelationBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationBSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationBSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1115,6 +1230,14 @@ input OnlyRelationBWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationBWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationBWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationBWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1212,6 +1335,10 @@ type OnlyRelationEdge {
 enum OnlyRelationOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type OnlyRelationPreviousValues {
@@ -1230,6 +1357,14 @@ input OnlyRelationSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1258,6 +1393,14 @@ input OnlyRelationWhereInput {
   Logical AND on all given filters.
   """
   AND: [OnlyRelationWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1311,7 +1454,9 @@ input OnlyRelationWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  ref_every: OnlyDateWhereInput
   ref_some: OnlyDateWhereInput
+  ref_none: OnlyDateWhereInput
 }
 
 input OnlyRelationWhereUniqueInput {
@@ -1345,23 +1490,23 @@ type Query {
   onlyIdAndARelation2s(where: OnlyIdAndARelation2WhereInput, orderBy: OnlyIdAndARelation2OrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyIdAndARelation2]!
   onlyRelations(where: OnlyRelationWhereInput, orderBy: OnlyRelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelation]!
   onlyRelationAs(where: OnlyRelationAWhereInput, orderBy: OnlyRelationAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelationA]!
+  onlyDates(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyDate]!
   onlyRelationBs(where: OnlyRelationBWhereInput, orderBy: OnlyRelationBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelationB]!
   onlyIds(where: OnlyIdWhereInput, orderBy: OnlyIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyId]!
-  onlyDates(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyDate]!
   onlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
   onlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
   onlyRelation(where: OnlyRelationWhereUniqueInput!): OnlyRelation
   onlyRelationA(where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
+  onlyDate(where: OnlyDateWhereUniqueInput!): OnlyDate
   onlyRelationB(where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
   onlyId(where: OnlyIdWhereUniqueInput!): OnlyId
-  onlyDate(where: OnlyDateWhereUniqueInput!): OnlyDate
   onlyIdAndARelationsConnection(where: OnlyIdAndARelationWhereInput, orderBy: OnlyIdAndARelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdAndARelationConnection!
   onlyIdAndARelation2sConnection(where: OnlyIdAndARelation2WhereInput, orderBy: OnlyIdAndARelation2OrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdAndARelation2Connection!
   onlyRelationsConnection(where: OnlyRelationWhereInput, orderBy: OnlyRelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationConnection!
   onlyRelationAsConnection(where: OnlyRelationAWhereInput, orderBy: OnlyRelationAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationAConnection!
+  onlyDatesConnection(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyDateConnection!
   onlyRelationBsConnection(where: OnlyRelationBWhereInput, orderBy: OnlyRelationBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationBConnection!
   onlyIdsConnection(where: OnlyIdWhereInput, orderBy: OnlyIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdConnection!
-  onlyDatesConnection(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyDateConnection!
   """
   Fetches an object given its ID
   """
@@ -1378,8 +1523,8 @@ type Subscription {
   onlyIdAndARelation2(where: OnlyIdAndARelation2SubscriptionWhereInput): OnlyIdAndARelation2SubscriptionPayload
   onlyRelation(where: OnlyRelationSubscriptionWhereInput): OnlyRelationSubscriptionPayload
   onlyRelationA(where: OnlyRelationASubscriptionWhereInput): OnlyRelationASubscriptionPayload
+  onlyDate(where: OnlyDateSubscriptionWhereInput): OnlyDateSubscriptionPayload
   onlyRelationB(where: OnlyRelationBSubscriptionWhereInput): OnlyRelationBSubscriptionPayload
   onlyId(where: OnlyIdSubscriptionWhereInput): OnlyIdSubscriptionPayload
-  onlyDate(where: OnlyDateSubscriptionWhereInput): OnlyDateSubscriptionPayload
 }
 

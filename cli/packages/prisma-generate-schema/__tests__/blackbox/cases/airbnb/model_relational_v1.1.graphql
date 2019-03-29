@@ -24,7 +24,7 @@ type User {
 type Place {
   id: ID! @id
   name: String
-  size: PLACE_SIZES
+  size: PLACE_SIZES @scalarList(strategy: RELATION)
   shortDescription: String!
   description: String!
   slug: String!
@@ -60,7 +60,7 @@ type Pricing {
   securityDeposit: Int
   extraGuests: Int
   weekendPricing: Int
-  currency: CURRENCY
+  currency: CURRENCY @scalarList(strategy: RELATION)
 }
 
 type GuestRequirements {
@@ -236,7 +236,7 @@ type Payment {
 type PaymentAccount {
   id: ID! @id
   createdAt: DateTime! @createdAt
-  type: PAYMENT_PROVIDER
+  type: PAYMENT_PROVIDER @scalarList(strategy: RELATION)
   user: User! @relation(link: TABLE)
   payments: [Payment]
   paypal: PaypalInformation @relation(link: TABLE)
@@ -276,7 +276,7 @@ type Message {
 type Notification {
   id: ID! @id
   createdAt: DateTime! @createdAt
-  type: NOTIFICATION_TYPE
+  type: NOTIFICATION_TYPE @scalarList(strategy: RELATION)
   user: User! @relation(link: TABLE)
   link: String!
   readDate: DateTime!

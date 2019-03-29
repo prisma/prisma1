@@ -1,3 +1,19 @@
+type AggregateMultiSelfReferencingB {
+  count: Int!
+}
+
+type AggregateMultiSelfReferencingBWithId {
+  count: Int!
+}
+
+type AggregateMultiSelfReferencingC {
+  count: Int!
+}
+
+type AggregateMultiSelfReferencingCWithId {
+  count: Int!
+}
+
 type AggregateSelfReferencingA {
   count: Int!
 }
@@ -30,48 +46,1161 @@ type BatchPayload {
 }
 
 """
+Raw JSON value
+"""
+scalar Json
+
+"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
 scalar Long
 
+type MultiSelfReferencingB implements Node {
+  id: ID!
+  a: MultiSelfReferencingB
+  b: MultiSelfReferencingB
+}
+
+"""
+A connection to a list of items.
+"""
+type MultiSelfReferencingBConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [MultiSelfReferencingBEdge]!
+  aggregate: AggregateMultiSelfReferencingB!
+}
+
+input MultiSelfReferencingBCreateInput {
+  id: ID
+  a: MultiSelfReferencingBCreateOneWithoutBInput
+  b: MultiSelfReferencingBCreateOneWithoutAInput
+}
+
+input MultiSelfReferencingBCreateOneWithoutAInput {
+  create: MultiSelfReferencingBCreateWithoutAInput
+  connect: MultiSelfReferencingBWhereUniqueInput
+}
+
+input MultiSelfReferencingBCreateOneWithoutBInput {
+  create: MultiSelfReferencingBCreateWithoutBInput
+  connect: MultiSelfReferencingBWhereUniqueInput
+}
+
+input MultiSelfReferencingBCreateWithoutAInput {
+  id: ID
+  b: MultiSelfReferencingBCreateOneWithoutAInput
+}
+
+input MultiSelfReferencingBCreateWithoutBInput {
+  id: ID
+  a: MultiSelfReferencingBCreateOneWithoutBInput
+}
+
+"""
+An edge in a connection.
+"""
+type MultiSelfReferencingBEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: MultiSelfReferencingB!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum MultiSelfReferencingBOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type MultiSelfReferencingBPreviousValues {
+  id: ID!
+}
+
+type MultiSelfReferencingBSubscriptionPayload {
+  mutation: MutationType!
+  node: MultiSelfReferencingB
+  updatedFields: [String!]
+  previousValues: MultiSelfReferencingBPreviousValues
+}
+
+input MultiSelfReferencingBSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingBSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingBSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingBSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: MultiSelfReferencingBWhereInput
+}
+
+input MultiSelfReferencingBUpdateInput {
+  a: MultiSelfReferencingBUpdateOneWithoutBInput
+  b: MultiSelfReferencingBUpdateOneWithoutAInput
+}
+
+input MultiSelfReferencingBUpdateOneWithoutAInput {
+  create: MultiSelfReferencingBCreateWithoutAInput
+  connect: MultiSelfReferencingBWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: MultiSelfReferencingBUpdateWithoutADataInput
+  upsert: MultiSelfReferencingBUpsertWithoutAInput
+}
+
+input MultiSelfReferencingBUpdateOneWithoutBInput {
+  create: MultiSelfReferencingBCreateWithoutBInput
+  connect: MultiSelfReferencingBWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: MultiSelfReferencingBUpdateWithoutBDataInput
+  upsert: MultiSelfReferencingBUpsertWithoutBInput
+}
+
+input MultiSelfReferencingBUpdateWithoutADataInput {
+  b: MultiSelfReferencingBUpdateOneWithoutAInput
+}
+
+input MultiSelfReferencingBUpdateWithoutBDataInput {
+  a: MultiSelfReferencingBUpdateOneWithoutBInput
+}
+
+input MultiSelfReferencingBUpsertWithoutAInput {
+  update: MultiSelfReferencingBUpdateWithoutADataInput!
+  create: MultiSelfReferencingBCreateWithoutAInput!
+}
+
+input MultiSelfReferencingBUpsertWithoutBInput {
+  update: MultiSelfReferencingBUpdateWithoutBDataInput!
+  create: MultiSelfReferencingBCreateWithoutBInput!
+}
+
+input MultiSelfReferencingBWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingBWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingBWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingBWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  a: MultiSelfReferencingBWhereInput
+  b: MultiSelfReferencingBWhereInput
+}
+
+input MultiSelfReferencingBWhereUniqueInput {
+  id: ID
+}
+
+type MultiSelfReferencingBWithId implements Node {
+  id: ID!
+  a: MultiSelfReferencingBWithId
+  b: MultiSelfReferencingBWithId
+}
+
+"""
+A connection to a list of items.
+"""
+type MultiSelfReferencingBWithIdConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [MultiSelfReferencingBWithIdEdge]!
+  aggregate: AggregateMultiSelfReferencingBWithId!
+}
+
+input MultiSelfReferencingBWithIdCreateInput {
+  id: ID
+  a: MultiSelfReferencingBWithIdCreateOneWithoutBInput
+  b: MultiSelfReferencingBWithIdCreateOneWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdCreateOneWithoutAInput {
+  create: MultiSelfReferencingBWithIdCreateWithoutAInput
+  connect: MultiSelfReferencingBWithIdWhereUniqueInput
+}
+
+input MultiSelfReferencingBWithIdCreateOneWithoutBInput {
+  create: MultiSelfReferencingBWithIdCreateWithoutBInput
+  connect: MultiSelfReferencingBWithIdWhereUniqueInput
+}
+
+input MultiSelfReferencingBWithIdCreateWithoutAInput {
+  id: ID
+  b: MultiSelfReferencingBWithIdCreateOneWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdCreateWithoutBInput {
+  id: ID
+  a: MultiSelfReferencingBWithIdCreateOneWithoutBInput
+}
+
+"""
+An edge in a connection.
+"""
+type MultiSelfReferencingBWithIdEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: MultiSelfReferencingBWithId!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum MultiSelfReferencingBWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type MultiSelfReferencingBWithIdPreviousValues {
+  id: ID!
+}
+
+type MultiSelfReferencingBWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: MultiSelfReferencingBWithId
+  updatedFields: [String!]
+  previousValues: MultiSelfReferencingBWithIdPreviousValues
+}
+
+input MultiSelfReferencingBWithIdSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingBWithIdSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: MultiSelfReferencingBWithIdWhereInput
+}
+
+input MultiSelfReferencingBWithIdUpdateInput {
+  a: MultiSelfReferencingBWithIdUpdateOneWithoutBInput
+  b: MultiSelfReferencingBWithIdUpdateOneWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdUpdateOneWithoutAInput {
+  create: MultiSelfReferencingBWithIdCreateWithoutAInput
+  connect: MultiSelfReferencingBWithIdWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: MultiSelfReferencingBWithIdUpdateWithoutADataInput
+  upsert: MultiSelfReferencingBWithIdUpsertWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdUpdateOneWithoutBInput {
+  create: MultiSelfReferencingBWithIdCreateWithoutBInput
+  connect: MultiSelfReferencingBWithIdWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: MultiSelfReferencingBWithIdUpdateWithoutBDataInput
+  upsert: MultiSelfReferencingBWithIdUpsertWithoutBInput
+}
+
+input MultiSelfReferencingBWithIdUpdateWithoutADataInput {
+  b: MultiSelfReferencingBWithIdUpdateOneWithoutAInput
+}
+
+input MultiSelfReferencingBWithIdUpdateWithoutBDataInput {
+  a: MultiSelfReferencingBWithIdUpdateOneWithoutBInput
+}
+
+input MultiSelfReferencingBWithIdUpsertWithoutAInput {
+  update: MultiSelfReferencingBWithIdUpdateWithoutADataInput!
+  create: MultiSelfReferencingBWithIdCreateWithoutAInput!
+}
+
+input MultiSelfReferencingBWithIdUpsertWithoutBInput {
+  update: MultiSelfReferencingBWithIdUpdateWithoutBDataInput!
+  create: MultiSelfReferencingBWithIdCreateWithoutBInput!
+}
+
+input MultiSelfReferencingBWithIdWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingBWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingBWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingBWithIdWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  a: MultiSelfReferencingBWithIdWhereInput
+  b: MultiSelfReferencingBWithIdWhereInput
+}
+
+input MultiSelfReferencingBWithIdWhereUniqueInput {
+  id: ID
+}
+
+type MultiSelfReferencingC implements Node {
+  id: ID!
+  a(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingC!]
+  b(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingC!]
+}
+
+"""
+A connection to a list of items.
+"""
+type MultiSelfReferencingCConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [MultiSelfReferencingCEdge]!
+  aggregate: AggregateMultiSelfReferencingC!
+}
+
+input MultiSelfReferencingCCreateInput {
+  id: ID
+  a: MultiSelfReferencingCCreateManyWithoutBInput
+  b: MultiSelfReferencingCCreateManyWithoutAInput
+}
+
+input MultiSelfReferencingCCreateManyWithoutAInput {
+  create: [MultiSelfReferencingCCreateWithoutAInput!]
+  connect: [MultiSelfReferencingCWhereUniqueInput!]
+}
+
+input MultiSelfReferencingCCreateManyWithoutBInput {
+  create: [MultiSelfReferencingCCreateWithoutBInput!]
+  connect: [MultiSelfReferencingCWhereUniqueInput!]
+}
+
+input MultiSelfReferencingCCreateWithoutAInput {
+  id: ID
+  b: MultiSelfReferencingCCreateManyWithoutAInput
+}
+
+input MultiSelfReferencingCCreateWithoutBInput {
+  id: ID
+  a: MultiSelfReferencingCCreateManyWithoutBInput
+}
+
+"""
+An edge in a connection.
+"""
+type MultiSelfReferencingCEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: MultiSelfReferencingC!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum MultiSelfReferencingCOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type MultiSelfReferencingCPreviousValues {
+  id: ID!
+}
+
+input MultiSelfReferencingCScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingCScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingCScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingCScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+}
+
+type MultiSelfReferencingCSubscriptionPayload {
+  mutation: MutationType!
+  node: MultiSelfReferencingC
+  updatedFields: [String!]
+  previousValues: MultiSelfReferencingCPreviousValues
+}
+
+input MultiSelfReferencingCSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingCSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingCSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingCSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: MultiSelfReferencingCWhereInput
+}
+
+input MultiSelfReferencingCUpdateInput {
+  a: MultiSelfReferencingCUpdateManyWithoutBInput
+  b: MultiSelfReferencingCUpdateManyWithoutAInput
+}
+
+input MultiSelfReferencingCUpdateManyWithoutAInput {
+  create: [MultiSelfReferencingCCreateWithoutAInput!]
+  connect: [MultiSelfReferencingCWhereUniqueInput!]
+  set: [MultiSelfReferencingCWhereUniqueInput!]
+  disconnect: [MultiSelfReferencingCWhereUniqueInput!]
+  delete: [MultiSelfReferencingCWhereUniqueInput!]
+  update: [MultiSelfReferencingCUpdateWithWhereUniqueWithoutAInput!]
+  deleteMany: [MultiSelfReferencingCScalarWhereInput!]
+  upsert: [MultiSelfReferencingCUpsertWithWhereUniqueWithoutAInput!]
+}
+
+input MultiSelfReferencingCUpdateManyWithoutBInput {
+  create: [MultiSelfReferencingCCreateWithoutBInput!]
+  connect: [MultiSelfReferencingCWhereUniqueInput!]
+  set: [MultiSelfReferencingCWhereUniqueInput!]
+  disconnect: [MultiSelfReferencingCWhereUniqueInput!]
+  delete: [MultiSelfReferencingCWhereUniqueInput!]
+  update: [MultiSelfReferencingCUpdateWithWhereUniqueWithoutBInput!]
+  deleteMany: [MultiSelfReferencingCScalarWhereInput!]
+  upsert: [MultiSelfReferencingCUpsertWithWhereUniqueWithoutBInput!]
+}
+
+input MultiSelfReferencingCUpdateWithoutADataInput {
+  b: MultiSelfReferencingCUpdateManyWithoutAInput
+}
+
+input MultiSelfReferencingCUpdateWithoutBDataInput {
+  a: MultiSelfReferencingCUpdateManyWithoutBInput
+}
+
+input MultiSelfReferencingCUpdateWithWhereUniqueWithoutAInput {
+  where: MultiSelfReferencingCWhereUniqueInput!
+  data: MultiSelfReferencingCUpdateWithoutADataInput!
+}
+
+input MultiSelfReferencingCUpdateWithWhereUniqueWithoutBInput {
+  where: MultiSelfReferencingCWhereUniqueInput!
+  data: MultiSelfReferencingCUpdateWithoutBDataInput!
+}
+
+input MultiSelfReferencingCUpsertWithWhereUniqueWithoutAInput {
+  where: MultiSelfReferencingCWhereUniqueInput!
+  update: MultiSelfReferencingCUpdateWithoutADataInput!
+  create: MultiSelfReferencingCCreateWithoutAInput!
+}
+
+input MultiSelfReferencingCUpsertWithWhereUniqueWithoutBInput {
+  where: MultiSelfReferencingCWhereUniqueInput!
+  update: MultiSelfReferencingCUpdateWithoutBDataInput!
+  create: MultiSelfReferencingCCreateWithoutBInput!
+}
+
+input MultiSelfReferencingCWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingCWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingCWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingCWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  a_every: MultiSelfReferencingCWhereInput
+  a_some: MultiSelfReferencingCWhereInput
+  a_none: MultiSelfReferencingCWhereInput
+  b_every: MultiSelfReferencingCWhereInput
+  b_some: MultiSelfReferencingCWhereInput
+  b_none: MultiSelfReferencingCWhereInput
+}
+
+input MultiSelfReferencingCWhereUniqueInput {
+  id: ID
+}
+
+type MultiSelfReferencingCWithId implements Node {
+  id: ID!
+  a(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingCWithId!]
+  b(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingCWithId!]
+}
+
+"""
+A connection to a list of items.
+"""
+type MultiSelfReferencingCWithIdConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [MultiSelfReferencingCWithIdEdge]!
+  aggregate: AggregateMultiSelfReferencingCWithId!
+}
+
+input MultiSelfReferencingCWithIdCreateInput {
+  id: ID
+  a: MultiSelfReferencingCWithIdCreateManyWithoutBInput
+  b: MultiSelfReferencingCWithIdCreateManyWithoutAInput
+}
+
+input MultiSelfReferencingCWithIdCreateManyWithoutAInput {
+  create: [MultiSelfReferencingCWithIdCreateWithoutAInput!]
+  connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+}
+
+input MultiSelfReferencingCWithIdCreateManyWithoutBInput {
+  create: [MultiSelfReferencingCWithIdCreateWithoutBInput!]
+  connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+}
+
+input MultiSelfReferencingCWithIdCreateWithoutAInput {
+  id: ID
+  b: MultiSelfReferencingCWithIdCreateManyWithoutAInput
+}
+
+input MultiSelfReferencingCWithIdCreateWithoutBInput {
+  id: ID
+  a: MultiSelfReferencingCWithIdCreateManyWithoutBInput
+}
+
+"""
+An edge in a connection.
+"""
+type MultiSelfReferencingCWithIdEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: MultiSelfReferencingCWithId!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum MultiSelfReferencingCWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type MultiSelfReferencingCWithIdPreviousValues {
+  id: ID!
+}
+
+input MultiSelfReferencingCWithIdScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+}
+
+type MultiSelfReferencingCWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: MultiSelfReferencingCWithId
+  updatedFields: [String!]
+  previousValues: MultiSelfReferencingCWithIdPreviousValues
+}
+
+input MultiSelfReferencingCWithIdSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingCWithIdSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: MultiSelfReferencingCWithIdWhereInput
+}
+
+input MultiSelfReferencingCWithIdUpdateInput {
+  a: MultiSelfReferencingCWithIdUpdateManyWithoutBInput
+  b: MultiSelfReferencingCWithIdUpdateManyWithoutAInput
+}
+
+input MultiSelfReferencingCWithIdUpdateManyWithoutAInput {
+  create: [MultiSelfReferencingCWithIdCreateWithoutAInput!]
+  connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  set: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  disconnect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  delete: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  update: [MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutAInput!]
+  deleteMany: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  upsert: [MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutAInput!]
+}
+
+input MultiSelfReferencingCWithIdUpdateManyWithoutBInput {
+  create: [MultiSelfReferencingCWithIdCreateWithoutBInput!]
+  connect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  set: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  disconnect: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  delete: [MultiSelfReferencingCWithIdWhereUniqueInput!]
+  update: [MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutBInput!]
+  deleteMany: [MultiSelfReferencingCWithIdScalarWhereInput!]
+  upsert: [MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutBInput!]
+}
+
+input MultiSelfReferencingCWithIdUpdateWithoutADataInput {
+  b: MultiSelfReferencingCWithIdUpdateManyWithoutAInput
+}
+
+input MultiSelfReferencingCWithIdUpdateWithoutBDataInput {
+  a: MultiSelfReferencingCWithIdUpdateManyWithoutBInput
+}
+
+input MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutAInput {
+  where: MultiSelfReferencingCWithIdWhereUniqueInput!
+  data: MultiSelfReferencingCWithIdUpdateWithoutADataInput!
+}
+
+input MultiSelfReferencingCWithIdUpdateWithWhereUniqueWithoutBInput {
+  where: MultiSelfReferencingCWithIdWhereUniqueInput!
+  data: MultiSelfReferencingCWithIdUpdateWithoutBDataInput!
+}
+
+input MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutAInput {
+  where: MultiSelfReferencingCWithIdWhereUniqueInput!
+  update: MultiSelfReferencingCWithIdUpdateWithoutADataInput!
+  create: MultiSelfReferencingCWithIdCreateWithoutAInput!
+}
+
+input MultiSelfReferencingCWithIdUpsertWithWhereUniqueWithoutBInput {
+  where: MultiSelfReferencingCWithIdWhereUniqueInput!
+  update: MultiSelfReferencingCWithIdUpdateWithoutBDataInput!
+  create: MultiSelfReferencingCWithIdCreateWithoutBInput!
+}
+
+input MultiSelfReferencingCWithIdWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [MultiSelfReferencingCWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [MultiSelfReferencingCWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [MultiSelfReferencingCWithIdWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  a_every: MultiSelfReferencingCWithIdWhereInput
+  a_some: MultiSelfReferencingCWithIdWhereInput
+  a_none: MultiSelfReferencingCWithIdWhereInput
+  b_every: MultiSelfReferencingCWithIdWhereInput
+  b_some: MultiSelfReferencingCWithIdWhereInput
+  b_none: MultiSelfReferencingCWithIdWhereInput
+}
+
+input MultiSelfReferencingCWithIdWhereUniqueInput {
+  id: ID
+}
+
 type Mutation {
   createSelfReferencingCWithId(data: SelfReferencingCWithIdCreateInput!): SelfReferencingCWithId!
   createSelfReferencingA(data: SelfReferencingACreateInput!): SelfReferencingA!
+  createMultiSelfReferencingCWithId(data: MultiSelfReferencingCWithIdCreateInput!): MultiSelfReferencingCWithId!
+  createMultiSelfReferencingBWithId(data: MultiSelfReferencingBWithIdCreateInput!): MultiSelfReferencingBWithId!
+  createMultiSelfReferencingC(data: MultiSelfReferencingCCreateInput!): MultiSelfReferencingC!
+  createMultiSelfReferencingB(data: MultiSelfReferencingBCreateInput!): MultiSelfReferencingB!
   createSelfReferencingB(data: SelfReferencingBCreateInput!): SelfReferencingB!
-  createSelfReferencingC(data: SelfReferencingCCreateInput!): SelfReferencingC!
-  createSelfReferencingAWithId(data: SelfReferencingAWithIdCreateInput!): SelfReferencingAWithId!
   createSelfReferencingBWithId(data: SelfReferencingBWithIdCreateInput!): SelfReferencingBWithId!
+  createSelfReferencingAWithId(data: SelfReferencingAWithIdCreateInput!): SelfReferencingAWithId!
+  createSelfReferencingC(data: SelfReferencingCCreateInput!): SelfReferencingC!
   updateSelfReferencingCWithId(data: SelfReferencingCWithIdUpdateInput!, where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
   updateSelfReferencingA(data: SelfReferencingAUpdateInput!, where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
+  updateMultiSelfReferencingCWithId(data: MultiSelfReferencingCWithIdUpdateInput!, where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
+  updateMultiSelfReferencingBWithId(data: MultiSelfReferencingBWithIdUpdateInput!, where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
+  updateMultiSelfReferencingC(data: MultiSelfReferencingCUpdateInput!, where: MultiSelfReferencingCWhereUniqueInput!): MultiSelfReferencingC
+  updateMultiSelfReferencingB(data: MultiSelfReferencingBUpdateInput!, where: MultiSelfReferencingBWhereUniqueInput!): MultiSelfReferencingB
   updateSelfReferencingB(data: SelfReferencingBUpdateInput!, where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
-  updateSelfReferencingC(data: SelfReferencingCUpdateInput!, where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
-  updateSelfReferencingAWithId(data: SelfReferencingAWithIdUpdateInput!, where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
   updateSelfReferencingBWithId(data: SelfReferencingBWithIdUpdateInput!, where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
+  updateSelfReferencingAWithId(data: SelfReferencingAWithIdUpdateInput!, where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
+  updateSelfReferencingC(data: SelfReferencingCUpdateInput!, where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
   deleteSelfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
   deleteSelfReferencingA(where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
+  deleteMultiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
+  deleteMultiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
+  deleteMultiSelfReferencingC(where: MultiSelfReferencingCWhereUniqueInput!): MultiSelfReferencingC
+  deleteMultiSelfReferencingB(where: MultiSelfReferencingBWhereUniqueInput!): MultiSelfReferencingB
   deleteSelfReferencingB(where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
-  deleteSelfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
-  deleteSelfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
   deleteSelfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
+  deleteSelfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
+  deleteSelfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
   upsertSelfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!, create: SelfReferencingCWithIdCreateInput!, update: SelfReferencingCWithIdUpdateInput!): SelfReferencingCWithId!
   upsertSelfReferencingA(where: SelfReferencingAWhereUniqueInput!, create: SelfReferencingACreateInput!, update: SelfReferencingAUpdateInput!): SelfReferencingA!
+  upsertMultiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!, create: MultiSelfReferencingCWithIdCreateInput!, update: MultiSelfReferencingCWithIdUpdateInput!): MultiSelfReferencingCWithId!
+  upsertMultiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!, create: MultiSelfReferencingBWithIdCreateInput!, update: MultiSelfReferencingBWithIdUpdateInput!): MultiSelfReferencingBWithId!
+  upsertMultiSelfReferencingC(where: MultiSelfReferencingCWhereUniqueInput!, create: MultiSelfReferencingCCreateInput!, update: MultiSelfReferencingCUpdateInput!): MultiSelfReferencingC!
+  upsertMultiSelfReferencingB(where: MultiSelfReferencingBWhereUniqueInput!, create: MultiSelfReferencingBCreateInput!, update: MultiSelfReferencingBUpdateInput!): MultiSelfReferencingB!
   upsertSelfReferencingB(where: SelfReferencingBWhereUniqueInput!, create: SelfReferencingBCreateInput!, update: SelfReferencingBUpdateInput!): SelfReferencingB!
-  upsertSelfReferencingC(where: SelfReferencingCWhereUniqueInput!, create: SelfReferencingCCreateInput!, update: SelfReferencingCUpdateInput!): SelfReferencingC!
-  upsertSelfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!, create: SelfReferencingAWithIdCreateInput!, update: SelfReferencingAWithIdUpdateInput!): SelfReferencingAWithId!
   upsertSelfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!, create: SelfReferencingBWithIdCreateInput!, update: SelfReferencingBWithIdUpdateInput!): SelfReferencingBWithId!
+  upsertSelfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!, create: SelfReferencingAWithIdCreateInput!, update: SelfReferencingAWithIdUpdateInput!): SelfReferencingAWithId!
+  upsertSelfReferencingC(where: SelfReferencingCWhereUniqueInput!, create: SelfReferencingCCreateInput!, update: SelfReferencingCUpdateInput!): SelfReferencingC!
   updateManySelfReferencingCWithIds(data: SelfReferencingCWithIdUpdateManyMutationInput!, where: SelfReferencingCWithIdWhereInput): BatchPayload!
   updateManySelfReferencingAs(data: SelfReferencingAUpdateManyMutationInput!, where: SelfReferencingAWhereInput): BatchPayload!
   updateManySelfReferencingBs(data: SelfReferencingBUpdateManyMutationInput!, where: SelfReferencingBWhereInput): BatchPayload!
-  updateManySelfReferencingCs(data: SelfReferencingCUpdateManyMutationInput!, where: SelfReferencingCWhereInput): BatchPayload!
-  updateManySelfReferencingAWithIds(data: SelfReferencingAWithIdUpdateManyMutationInput!, where: SelfReferencingAWithIdWhereInput): BatchPayload!
   updateManySelfReferencingBWithIds(data: SelfReferencingBWithIdUpdateManyMutationInput!, where: SelfReferencingBWithIdWhereInput): BatchPayload!
+  updateManySelfReferencingAWithIds(data: SelfReferencingAWithIdUpdateManyMutationInput!, where: SelfReferencingAWithIdWhereInput): BatchPayload!
+  updateManySelfReferencingCs(data: SelfReferencingCUpdateManyMutationInput!, where: SelfReferencingCWhereInput): BatchPayload!
   deleteManySelfReferencingCWithIds(where: SelfReferencingCWithIdWhereInput): BatchPayload!
   deleteManySelfReferencingAs(where: SelfReferencingAWhereInput): BatchPayload!
+  deleteManyMultiSelfReferencingCWithIds(where: MultiSelfReferencingCWithIdWhereInput): BatchPayload!
+  deleteManyMultiSelfReferencingBWithIds(where: MultiSelfReferencingBWithIdWhereInput): BatchPayload!
+  deleteManyMultiSelfReferencingCs(where: MultiSelfReferencingCWhereInput): BatchPayload!
+  deleteManyMultiSelfReferencingBs(where: MultiSelfReferencingBWhereInput): BatchPayload!
   deleteManySelfReferencingBs(where: SelfReferencingBWhereInput): BatchPayload!
-  deleteManySelfReferencingCs(where: SelfReferencingCWhereInput): BatchPayload!
-  deleteManySelfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput): BatchPayload!
   deleteManySelfReferencingBWithIds(where: SelfReferencingBWithIdWhereInput): BatchPayload!
+  deleteManySelfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput): BatchPayload!
+  deleteManySelfReferencingCs(where: SelfReferencingCWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -115,22 +1244,34 @@ type PageInfo {
 type Query {
   selfReferencingCWithIds(where: SelfReferencingCWithIdWhereInput, orderBy: SelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingCWithId]!
   selfReferencingAs(where: SelfReferencingAWhereInput, orderBy: SelfReferencingAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingA]!
+  multiSelfReferencingCWithIds(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingCWithId]!
+  multiSelfReferencingBWithIds(where: MultiSelfReferencingBWithIdWhereInput, orderBy: MultiSelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingBWithId]!
+  multiSelfReferencingCs(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingC]!
+  multiSelfReferencingBs(where: MultiSelfReferencingBWhereInput, orderBy: MultiSelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingB]!
   selfReferencingBs(where: SelfReferencingBWhereInput, orderBy: SelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingB]!
-  selfReferencingCs(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC]!
-  selfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingAWithId]!
   selfReferencingBWithIds(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingBWithId]!
+  selfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingAWithId]!
+  selfReferencingCs(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC]!
   selfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
   selfReferencingA(where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
+  multiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
+  multiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
+  multiSelfReferencingC(where: MultiSelfReferencingCWhereUniqueInput!): MultiSelfReferencingC
+  multiSelfReferencingB(where: MultiSelfReferencingBWhereUniqueInput!): MultiSelfReferencingB
   selfReferencingB(where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
-  selfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
-  selfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
   selfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
+  selfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
+  selfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
   selfReferencingCWithIdsConnection(where: SelfReferencingCWithIdWhereInput, orderBy: SelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCWithIdConnection!
   selfReferencingAsConnection(where: SelfReferencingAWhereInput, orderBy: SelfReferencingAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingAConnection!
+  multiSelfReferencingCWithIdsConnection(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingCWithIdConnection!
+  multiSelfReferencingBWithIdsConnection(where: MultiSelfReferencingBWithIdWhereInput, orderBy: MultiSelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingBWithIdConnection!
+  multiSelfReferencingCsConnection(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingCConnection!
+  multiSelfReferencingBsConnection(where: MultiSelfReferencingBWhereInput, orderBy: MultiSelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingBConnection!
   selfReferencingBsConnection(where: SelfReferencingBWhereInput, orderBy: SelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingBConnection!
-  selfReferencingCsConnection(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCConnection!
-  selfReferencingAWithIdsConnection(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingAWithIdConnection!
   selfReferencingBWithIdsConnection(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingBWithIdConnection!
+  selfReferencingAWithIdsConnection(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingAWithIdConnection!
+  selfReferencingCsConnection(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCConnection!
   """
   Fetches an object given its ID
   """
@@ -142,8 +1283,8 @@ type Query {
   ): Node
 }
 
-type SelfReferencingA {
-  removeThisId: ID!
+type SelfReferencingA implements Node {
+  id: ID!
   a: SelfReferencingAWithId!
   field: Int!
 }
@@ -164,7 +1305,7 @@ type SelfReferencingAConnection {
 }
 
 input SelfReferencingACreateInput {
-  removeThisId: ID
+  id: ID
   field: Int!
   a: SelfReferencingAWithIdCreateOneInput!
 }
@@ -184,14 +1325,18 @@ type SelfReferencingAEdge {
 }
 
 enum SelfReferencingAOrderByInput {
-  removeThisId_ASC
-  removeThisId_DESC
+  id_ASC
+  id_DESC
   field_ASC
   field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type SelfReferencingAPreviousValues {
-  removeThisId: ID!
+  id: ID!
   field: Int!
 }
 
@@ -207,6 +1352,14 @@ input SelfReferencingASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingASubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -240,59 +1393,67 @@ input SelfReferencingAWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingAWhereInput!]
-  removeThisId: ID
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingAWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingAWhereInput!]
+  id: ID
   """
   All values that are not equal to given value.
   """
-  removeThisId_not: ID
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  removeThisId_in: [ID!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  removeThisId_not_in: [ID!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  removeThisId_lt: ID
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  removeThisId_lte: ID
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  removeThisId_gt: ID
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  removeThisId_gte: ID
+  id_gte: ID
   """
   All values containing the given string.
   """
-  removeThisId_contains: ID
+  id_contains: ID
   """
   All values not containing the given string.
   """
-  removeThisId_not_contains: ID
+  id_not_contains: ID
   """
   All values starting with the given string.
   """
-  removeThisId_starts_with: ID
+  id_starts_with: ID
   """
   All values not starting with the given string.
   """
-  removeThisId_not_starts_with: ID
+  id_not_starts_with: ID
   """
   All values ending with the given string.
   """
-  removeThisId_ends_with: ID
+  id_ends_with: ID
   """
   All values not ending with the given string.
   """
-  removeThisId_not_ends_with: ID
+  id_not_ends_with: ID
   field: Int
   """
   All values that are not equal to given value.
@@ -326,7 +1487,7 @@ input SelfReferencingAWhereInput {
 }
 
 input SelfReferencingAWhereUniqueInput {
-  removeThisId: ID
+  id: ID
 }
 
 type SelfReferencingAWithId implements Node {
@@ -380,6 +1541,10 @@ enum SelfReferencingAWithIdOrderByInput {
   id_DESC
   field_ASC
   field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type SelfReferencingAWithIdPreviousValues {
@@ -399,6 +1564,14 @@ input SelfReferencingAWithIdSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingAWithIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingAWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingAWithIdSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -449,6 +1622,14 @@ input SelfReferencingAWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingAWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingAWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingAWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -538,8 +1719,8 @@ input SelfReferencingAWithIdWhereUniqueInput {
   id: ID
 }
 
-type SelfReferencingB {
-  removeThisId: ID!
+type SelfReferencingB implements Node {
+  id: ID!
   a: SelfReferencingB
   field: Int!
 }
@@ -560,7 +1741,7 @@ type SelfReferencingBConnection {
 }
 
 input SelfReferencingBCreateInput {
-  removeThisId: ID
+  id: ID
   field: Int!
   a: SelfReferencingBCreateOneInput
 }
@@ -585,14 +1766,18 @@ type SelfReferencingBEdge {
 }
 
 enum SelfReferencingBOrderByInput {
-  removeThisId_ASC
-  removeThisId_DESC
+  id_ASC
+  id_DESC
   field_ASC
   field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type SelfReferencingBPreviousValues {
-  removeThisId: ID!
+  id: ID!
   field: Int!
 }
 
@@ -608,6 +1793,14 @@ input SelfReferencingBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingBSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingBSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -660,59 +1853,67 @@ input SelfReferencingBWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingBWhereInput!]
-  removeThisId: ID
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingBWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingBWhereInput!]
+  id: ID
   """
   All values that are not equal to given value.
   """
-  removeThisId_not: ID
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  removeThisId_in: [ID!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  removeThisId_not_in: [ID!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  removeThisId_lt: ID
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  removeThisId_lte: ID
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  removeThisId_gt: ID
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  removeThisId_gte: ID
+  id_gte: ID
   """
   All values containing the given string.
   """
-  removeThisId_contains: ID
+  id_contains: ID
   """
   All values not containing the given string.
   """
-  removeThisId_not_contains: ID
+  id_not_contains: ID
   """
   All values starting with the given string.
   """
-  removeThisId_starts_with: ID
+  id_starts_with: ID
   """
   All values not starting with the given string.
   """
-  removeThisId_not_starts_with: ID
+  id_not_starts_with: ID
   """
   All values ending with the given string.
   """
-  removeThisId_ends_with: ID
+  id_ends_with: ID
   """
   All values not ending with the given string.
   """
-  removeThisId_not_ends_with: ID
+  id_not_ends_with: ID
   field: Int
   """
   All values that are not equal to given value.
@@ -746,7 +1947,7 @@ input SelfReferencingBWhereInput {
 }
 
 input SelfReferencingBWhereUniqueInput {
-  removeThisId: ID
+  id: ID
 }
 
 type SelfReferencingBWithId implements Node {
@@ -805,6 +2006,10 @@ enum SelfReferencingBWithIdOrderByInput {
   id_DESC
   field_ASC
   field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type SelfReferencingBWithIdPreviousValues {
@@ -922,6 +2127,14 @@ input SelfReferencingBWithIdSubscriptionWhereInput {
   """
   AND: [SelfReferencingBWithIdSubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingBWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingBWithIdSubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1005,6 +2218,14 @@ input SelfReferencingBWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [SelfReferencingBWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingBWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingBWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1094,8 +2315,8 @@ input SelfReferencingBWithIdWhereUniqueInput {
   id: ID
 }
 
-type SelfReferencingC {
-  removeThisId: ID!
+type SelfReferencingC implements Node {
+  id: ID!
   a(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC!]
   field: Int!
 }
@@ -1116,7 +2337,7 @@ type SelfReferencingCConnection {
 }
 
 input SelfReferencingCCreateInput {
-  removeThisId: ID
+  id: ID
   field: Int!
   a: SelfReferencingCCreateManyInput
 }
@@ -1141,14 +2362,18 @@ type SelfReferencingCEdge {
 }
 
 enum SelfReferencingCOrderByInput {
-  removeThisId_ASC
-  removeThisId_DESC
+  id_ASC
+  id_DESC
   field_ASC
   field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type SelfReferencingCPreviousValues {
-  removeThisId: ID!
+  id: ID!
   field: Int!
 }
 
@@ -1165,359 +2390,6 @@ input SelfReferencingCScalarWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [SelfReferencingCScalarWhereInput!]
-  removeThisId: ID
-  """
-  All values that are not equal to given value.
-  """
-  removeThisId_not: ID
-  """
-  All values that are contained in given list.
-  """
-  removeThisId_in: [ID!]
-  """
-  All values that are not contained in given list.
-  """
-  removeThisId_not_in: [ID!]
-  """
-  All values less than the given value.
-  """
-  removeThisId_lt: ID
-  """
-  All values less than or equal the given value.
-  """
-  removeThisId_lte: ID
-  """
-  All values greater than the given value.
-  """
-  removeThisId_gt: ID
-  """
-  All values greater than or equal the given value.
-  """
-  removeThisId_gte: ID
-  """
-  All values containing the given string.
-  """
-  removeThisId_contains: ID
-  """
-  All values not containing the given string.
-  """
-  removeThisId_not_contains: ID
-  """
-  All values starting with the given string.
-  """
-  removeThisId_starts_with: ID
-  """
-  All values not starting with the given string.
-  """
-  removeThisId_not_starts_with: ID
-  """
-  All values ending with the given string.
-  """
-  removeThisId_ends_with: ID
-  """
-  All values not ending with the given string.
-  """
-  removeThisId_not_ends_with: ID
-  field: Int
-  """
-  All values that are not equal to given value.
-  """
-  field_not: Int
-  """
-  All values that are contained in given list.
-  """
-  field_in: [Int!]
-  """
-  All values that are not contained in given list.
-  """
-  field_not_in: [Int!]
-  """
-  All values less than the given value.
-  """
-  field_lt: Int
-  """
-  All values less than or equal the given value.
-  """
-  field_lte: Int
-  """
-  All values greater than the given value.
-  """
-  field_gt: Int
-  """
-  All values greater than or equal the given value.
-  """
-  field_gte: Int
-}
-
-type SelfReferencingCSubscriptionPayload {
-  mutation: MutationType!
-  node: SelfReferencingC
-  updatedFields: [String!]
-  previousValues: SelfReferencingCPreviousValues
-}
-
-input SelfReferencingCSubscriptionWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [SelfReferencingCSubscriptionWhereInput!]
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: SelfReferencingCWhereInput
-}
-
-input SelfReferencingCUpdateDataInput {
-  field: Int
-  a: SelfReferencingCUpdateManyInput
-}
-
-input SelfReferencingCUpdateInput {
-  field: Int
-  a: SelfReferencingCUpdateManyInput
-}
-
-input SelfReferencingCUpdateManyDataInput {
-  field: Int
-}
-
-input SelfReferencingCUpdateManyInput {
-  create: [SelfReferencingCCreateInput!]
-  connect: [SelfReferencingCWhereUniqueInput!]
-  set: [SelfReferencingCWhereUniqueInput!]
-  disconnect: [SelfReferencingCWhereUniqueInput!]
-  delete: [SelfReferencingCWhereUniqueInput!]
-  update: [SelfReferencingCUpdateWithWhereUniqueNestedInput!]
-  updateMany: [SelfReferencingCUpdateManyWithWhereNestedInput!]
-  deleteMany: [SelfReferencingCScalarWhereInput!]
-  upsert: [SelfReferencingCUpsertWithWhereUniqueNestedInput!]
-}
-
-input SelfReferencingCUpdateManyMutationInput {
-  field: Int
-}
-
-input SelfReferencingCUpdateManyWithWhereNestedInput {
-  where: SelfReferencingCScalarWhereInput!
-  data: SelfReferencingCUpdateManyDataInput!
-}
-
-input SelfReferencingCUpdateWithWhereUniqueNestedInput {
-  where: SelfReferencingCWhereUniqueInput!
-  data: SelfReferencingCUpdateDataInput!
-}
-
-input SelfReferencingCUpsertWithWhereUniqueNestedInput {
-  where: SelfReferencingCWhereUniqueInput!
-  update: SelfReferencingCUpdateDataInput!
-  create: SelfReferencingCCreateInput!
-}
-
-input SelfReferencingCWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [SelfReferencingCWhereInput!]
-  removeThisId: ID
-  """
-  All values that are not equal to given value.
-  """
-  removeThisId_not: ID
-  """
-  All values that are contained in given list.
-  """
-  removeThisId_in: [ID!]
-  """
-  All values that are not contained in given list.
-  """
-  removeThisId_not_in: [ID!]
-  """
-  All values less than the given value.
-  """
-  removeThisId_lt: ID
-  """
-  All values less than or equal the given value.
-  """
-  removeThisId_lte: ID
-  """
-  All values greater than the given value.
-  """
-  removeThisId_gt: ID
-  """
-  All values greater than or equal the given value.
-  """
-  removeThisId_gte: ID
-  """
-  All values containing the given string.
-  """
-  removeThisId_contains: ID
-  """
-  All values not containing the given string.
-  """
-  removeThisId_not_contains: ID
-  """
-  All values starting with the given string.
-  """
-  removeThisId_starts_with: ID
-  """
-  All values not starting with the given string.
-  """
-  removeThisId_not_starts_with: ID
-  """
-  All values ending with the given string.
-  """
-  removeThisId_ends_with: ID
-  """
-  All values not ending with the given string.
-  """
-  removeThisId_not_ends_with: ID
-  field: Int
-  """
-  All values that are not equal to given value.
-  """
-  field_not: Int
-  """
-  All values that are contained in given list.
-  """
-  field_in: [Int!]
-  """
-  All values that are not contained in given list.
-  """
-  field_not_in: [Int!]
-  """
-  All values less than the given value.
-  """
-  field_lt: Int
-  """
-  All values less than or equal the given value.
-  """
-  field_lte: Int
-  """
-  All values greater than the given value.
-  """
-  field_gt: Int
-  """
-  All values greater than or equal the given value.
-  """
-  field_gte: Int
-  a_some: SelfReferencingCWhereInput
-}
-
-input SelfReferencingCWhereUniqueInput {
-  removeThisId: ID
-}
-
-type SelfReferencingCWithId implements Node {
-  id: ID!
-  a(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingBWithId!]
-  field: Int!
-}
-
-"""
-A connection to a list of items.
-"""
-type SelfReferencingCWithIdConnection {
-  """
-  Information to aid in pagination.
-  """
-  pageInfo: PageInfo!
-  """
-  A list of edges.
-  """
-  edges: [SelfReferencingCWithIdEdge]!
-  aggregate: AggregateSelfReferencingCWithId!
-}
-
-input SelfReferencingCWithIdCreateInput {
-  id: ID
-  field: Int!
-  a: SelfReferencingBWithIdCreateManyInput
-}
-
-"""
-An edge in a connection.
-"""
-type SelfReferencingCWithIdEdge {
-  """
-  The item at the end of the edge.
-  """
-  node: SelfReferencingCWithId!
-  """
-  A cursor for use in pagination.
-  """
-  cursor: String!
-}
-
-enum SelfReferencingCWithIdOrderByInput {
-  id_ASC
-  id_DESC
-  field_ASC
-  field_DESC
-}
-
-type SelfReferencingCWithIdPreviousValues {
-  id: ID!
-  field: Int!
-}
-
-type SelfReferencingCWithIdSubscriptionPayload {
-  mutation: MutationType!
-  node: SelfReferencingCWithId
-  updatedFields: [String!]
-  previousValues: SelfReferencingCWithIdPreviousValues
-}
-
-input SelfReferencingCWithIdSubscriptionWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [SelfReferencingCWithIdSubscriptionWhereInput!]
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: SelfReferencingCWithIdWhereInput
-}
-
-input SelfReferencingCWithIdUpdateInput {
-  field: Int
-  a: SelfReferencingBWithIdUpdateManyInput
-}
-
-input SelfReferencingCWithIdUpdateManyMutationInput {
-  field: Int
-}
-
-input SelfReferencingCWithIdWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [SelfReferencingCWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1600,7 +2472,400 @@ input SelfReferencingCWithIdWhereInput {
   All values greater than or equal the given value.
   """
   field_gte: Int
+}
+
+type SelfReferencingCSubscriptionPayload {
+  mutation: MutationType!
+  node: SelfReferencingC
+  updatedFields: [String!]
+  previousValues: SelfReferencingCPreviousValues
+}
+
+input SelfReferencingCSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [SelfReferencingCSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingCSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingCSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: SelfReferencingCWhereInput
+}
+
+input SelfReferencingCUpdateDataInput {
+  field: Int
+  a: SelfReferencingCUpdateManyInput
+}
+
+input SelfReferencingCUpdateInput {
+  field: Int
+  a: SelfReferencingCUpdateManyInput
+}
+
+input SelfReferencingCUpdateManyDataInput {
+  field: Int
+}
+
+input SelfReferencingCUpdateManyInput {
+  create: [SelfReferencingCCreateInput!]
+  connect: [SelfReferencingCWhereUniqueInput!]
+  set: [SelfReferencingCWhereUniqueInput!]
+  disconnect: [SelfReferencingCWhereUniqueInput!]
+  delete: [SelfReferencingCWhereUniqueInput!]
+  update: [SelfReferencingCUpdateWithWhereUniqueNestedInput!]
+  updateMany: [SelfReferencingCUpdateManyWithWhereNestedInput!]
+  deleteMany: [SelfReferencingCScalarWhereInput!]
+  upsert: [SelfReferencingCUpsertWithWhereUniqueNestedInput!]
+}
+
+input SelfReferencingCUpdateManyMutationInput {
+  field: Int
+}
+
+input SelfReferencingCUpdateManyWithWhereNestedInput {
+  where: SelfReferencingCScalarWhereInput!
+  data: SelfReferencingCUpdateManyDataInput!
+}
+
+input SelfReferencingCUpdateWithWhereUniqueNestedInput {
+  where: SelfReferencingCWhereUniqueInput!
+  data: SelfReferencingCUpdateDataInput!
+}
+
+input SelfReferencingCUpsertWithWhereUniqueNestedInput {
+  where: SelfReferencingCWhereUniqueInput!
+  update: SelfReferencingCUpdateDataInput!
+  create: SelfReferencingCCreateInput!
+}
+
+input SelfReferencingCWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [SelfReferencingCWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingCWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingCWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  field: Int
+  """
+  All values that are not equal to given value.
+  """
+  field_not: Int
+  """
+  All values that are contained in given list.
+  """
+  field_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  field_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: Int
+  """
+  All values greater than the given value.
+  """
+  field_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: Int
+  a_every: SelfReferencingCWhereInput
+  a_some: SelfReferencingCWhereInput
+  a_none: SelfReferencingCWhereInput
+}
+
+input SelfReferencingCWhereUniqueInput {
+  id: ID
+}
+
+type SelfReferencingCWithId implements Node {
+  id: ID!
+  a(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingBWithId!]
+  field: Int!
+}
+
+"""
+A connection to a list of items.
+"""
+type SelfReferencingCWithIdConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [SelfReferencingCWithIdEdge]!
+  aggregate: AggregateSelfReferencingCWithId!
+}
+
+input SelfReferencingCWithIdCreateInput {
+  id: ID
+  field: Int!
+  a: SelfReferencingBWithIdCreateManyInput
+}
+
+"""
+An edge in a connection.
+"""
+type SelfReferencingCWithIdEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: SelfReferencingCWithId!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum SelfReferencingCWithIdOrderByInput {
+  id_ASC
+  id_DESC
+  field_ASC
+  field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
+}
+
+type SelfReferencingCWithIdPreviousValues {
+  id: ID!
+  field: Int!
+}
+
+type SelfReferencingCWithIdSubscriptionPayload {
+  mutation: MutationType!
+  node: SelfReferencingCWithId
+  updatedFields: [String!]
+  previousValues: SelfReferencingCWithIdPreviousValues
+}
+
+input SelfReferencingCWithIdSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [SelfReferencingCWithIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingCWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingCWithIdSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: SelfReferencingCWithIdWhereInput
+}
+
+input SelfReferencingCWithIdUpdateInput {
+  field: Int
+  a: SelfReferencingBWithIdUpdateManyInput
+}
+
+input SelfReferencingCWithIdUpdateManyMutationInput {
+  field: Int
+}
+
+input SelfReferencingCWithIdWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [SelfReferencingCWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [SelfReferencingCWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [SelfReferencingCWithIdWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  field: Int
+  """
+  All values that are not equal to given value.
+  """
+  field_not: Int
+  """
+  All values that are contained in given list.
+  """
+  field_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  field_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: Int
+  """
+  All values greater than the given value.
+  """
+  field_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: Int
+  a_every: SelfReferencingBWithIdWhereInput
   a_some: SelfReferencingBWithIdWhereInput
+  a_none: SelfReferencingBWithIdWhereInput
 }
 
 input SelfReferencingCWithIdWhereUniqueInput {
@@ -1610,9 +2875,13 @@ input SelfReferencingCWithIdWhereUniqueInput {
 type Subscription {
   selfReferencingCWithId(where: SelfReferencingCWithIdSubscriptionWhereInput): SelfReferencingCWithIdSubscriptionPayload
   selfReferencingA(where: SelfReferencingASubscriptionWhereInput): SelfReferencingASubscriptionPayload
+  multiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdSubscriptionWhereInput): MultiSelfReferencingCWithIdSubscriptionPayload
+  multiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdSubscriptionWhereInput): MultiSelfReferencingBWithIdSubscriptionPayload
+  multiSelfReferencingC(where: MultiSelfReferencingCSubscriptionWhereInput): MultiSelfReferencingCSubscriptionPayload
+  multiSelfReferencingB(where: MultiSelfReferencingBSubscriptionWhereInput): MultiSelfReferencingBSubscriptionPayload
   selfReferencingB(where: SelfReferencingBSubscriptionWhereInput): SelfReferencingBSubscriptionPayload
-  selfReferencingC(where: SelfReferencingCSubscriptionWhereInput): SelfReferencingCSubscriptionPayload
-  selfReferencingAWithId(where: SelfReferencingAWithIdSubscriptionWhereInput): SelfReferencingAWithIdSubscriptionPayload
   selfReferencingBWithId(where: SelfReferencingBWithIdSubscriptionWhereInput): SelfReferencingBWithIdSubscriptionPayload
+  selfReferencingAWithId(where: SelfReferencingAWithIdSubscriptionWhereInput): SelfReferencingAWithIdSubscriptionPayload
+  selfReferencingC(where: SelfReferencingCSubscriptionWhereInput): SelfReferencingCSubscriptionPayload
 }
 

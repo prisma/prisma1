@@ -95,6 +95,10 @@ enum AOrderByInput {
   fieldA_DESC
   fieldB_ASC
   fieldB_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type APreviousValues {
@@ -211,6 +215,14 @@ input ASubscriptionWhereInput {
   """
   AND: [ASubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [ASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ASubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -321,6 +333,14 @@ input AWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -480,6 +500,10 @@ enum AWithIdOrderByInput {
   fieldA_DESC
   fieldB_ASC
   fieldB_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type AWithIdPreviousValues {
@@ -501,6 +525,14 @@ input AWithIdSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithIdSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -579,6 +611,14 @@ input AWithIdWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AWithIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AWithIdWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -666,8 +706,8 @@ input AWithIdWhereUniqueInput {
 }
 
 type B implements Node {
-  field: String!
   id: ID!
+  field: String!
   a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
 }
 
@@ -694,8 +734,8 @@ type BConnection {
 }
 
 input BCreateInput {
-  field: String!
   id: ID
+  field: String!
   a: ACreateManyWithoutBInput
 }
 
@@ -705,8 +745,8 @@ input BCreateOneWithoutAInput {
 }
 
 input BCreateWithoutAInput {
-  field: String!
   id: ID
+  field: String!
 }
 
 """
@@ -724,15 +764,19 @@ type BEdge {
 }
 
 enum BOrderByInput {
-  field_ASC
-  field_DESC
   id_ASC
   id_DESC
+  field_ASC
+  field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type BPreviousValues {
-  field: String!
   id: ID!
+  field: String!
 }
 
 type BSubscriptionPayload {
@@ -747,6 +791,14 @@ input BSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -796,59 +848,14 @@ input BWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWhereInput!]
-  field: String
   """
-  All values that are not equal to given value.
+  Logical OR on all given filters.
   """
-  field_not: String
+  OR: [BWhereInput!]
   """
-  All values that are contained in given list.
+  Logical NOT on all given filters combined by AND.
   """
-  field_in: [String!]
-  """
-  All values that are not contained in given list.
-  """
-  field_not_in: [String!]
-  """
-  All values less than the given value.
-  """
-  field_lt: String
-  """
-  All values less than or equal the given value.
-  """
-  field_lte: String
-  """
-  All values greater than the given value.
-  """
-  field_gt: String
-  """
-  All values greater than or equal the given value.
-  """
-  field_gte: String
-  """
-  All values containing the given string.
-  """
-  field_contains: String
-  """
-  All values not containing the given string.
-  """
-  field_not_contains: String
-  """
-  All values starting with the given string.
-  """
-  field_starts_with: String
-  """
-  All values not starting with the given string.
-  """
-  field_not_starts_with: String
-  """
-  All values ending with the given string.
-  """
-  field_ends_with: String
-  """
-  All values not ending with the given string.
-  """
-  field_not_ends_with: String
+  NOT: [BWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -902,7 +909,62 @@ input BWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  field: String
+  """
+  All values that are not equal to given value.
+  """
+  field_not: String
+  """
+  All values that are contained in given list.
+  """
+  field_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  field_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  field_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  field_lte: String
+  """
+  All values greater than the given value.
+  """
+  field_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  field_gte: String
+  """
+  All values containing the given string.
+  """
+  field_contains: String
+  """
+  All values not containing the given string.
+  """
+  field_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  field_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  field_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  field_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  field_not_ends_with: String
+  a_every: AWhereInput
   a_some: AWhereInput
+  a_none: AWhereInput
 }
 
 input BWhereUniqueInput {
@@ -910,8 +972,8 @@ input BWhereUniqueInput {
 }
 
 type C implements Node {
-  field: [Int!]!
   id: ID!
+  field: [Int!]!
   a: AWithId!
 }
 
@@ -967,11 +1029,15 @@ type CEdge {
 enum COrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type CPreviousValues {
-  field: [Int!]!
   id: ID!
+  field: [Int!]!
 }
 
 type CSubscriptionPayload {
@@ -986,6 +1052,14 @@ input CSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1041,6 +1115,14 @@ input CWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1102,8 +1184,8 @@ input CWhereUniqueInput {
 }
 
 type D implements Node {
-  field: [DateTime!]!
   id: ID!
+  field: [DateTime!]!
   a: AWithId!
 }
 
@@ -1151,11 +1233,15 @@ type DEdge {
 enum DOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type DPreviousValues {
-  field: [DateTime!]!
   id: ID!
+  field: [DateTime!]!
 }
 
 type DSubscriptionPayload {
@@ -1170,6 +1256,14 @@ input DSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [DSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [DSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [DSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1207,6 +1301,14 @@ input DWhereInput {
   Logical AND on all given filters.
   """
   AND: [DWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [DWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [DWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1268,8 +1370,8 @@ input DWhereUniqueInput {
 }
 
 type E implements Node {
-  field: Json
   id: ID!
+  field: Json
   a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
 }
 
@@ -1289,8 +1391,8 @@ type EConnection {
 }
 
 input ECreateInput {
-  field: Json
   id: ID
+  field: Json
   a: ACreateManyInput
 }
 
@@ -1309,15 +1411,19 @@ type EEdge {
 }
 
 enum EOrderByInput {
-  field_ASC
-  field_DESC
   id_ASC
   id_DESC
+  field_ASC
+  field_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type EPreviousValues {
-  field: Json
   id: ID!
+  field: Json
 }
 
 type ESubscriptionPayload {
@@ -1332,6 +1438,14 @@ input ESubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [ESubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ESubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ESubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1365,6 +1479,14 @@ input EWhereInput {
   Logical AND on all given filters.
   """
   AND: [EWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [EWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [EWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1418,7 +1540,9 @@ input EWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  a_every: AWhereInput
   a_some: AWhereInput
+  a_none: AWhereInput
 }
 
 input EWhereUniqueInput {

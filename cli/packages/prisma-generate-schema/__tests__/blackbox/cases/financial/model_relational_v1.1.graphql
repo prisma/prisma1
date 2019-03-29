@@ -49,9 +49,9 @@ type FinancialPaymentDetail {
   id: ID! @id
   accountNumberMasked: String!
   billingLocation: Location @relation(link: TABLE)
-  creditCardType: CREDIT_CARD
-  achType: ACH_TYPE
-  currencyType: CURRENCY_TYPE
+  creditCardType: CREDIT_CARD @scalarList(strategy: RELATION)
+  achType: ACH_TYPE @scalarList(strategy: RELATION)
+  currencyType: CURRENCY_TYPE @scalarList(strategy: RELATION)
   expirationDate: DateTime!
   nameOnCard: String
 }
@@ -70,7 +70,7 @@ type FinancialScheduledTransaction {
   payment: FinancialPaymentDetail @relation(link: TABLE)
   isActive: Boolean!
   startDate: DateTime
-  frequency: TRANSACTION_FREQUENCY
+  frequency: TRANSACTION_FREQUENCY @scalarList(strategy: RELATION)
   transactions: [FinancialTransaction]
   account: FinancialAccount @relation(link: TABLE)
   amount: Float!
@@ -88,7 +88,7 @@ type FinancialTransaction {
   person: Person @relation(link: TABLE)
   processedDate: DateTime
   scheduledTransaction: FinancialScheduledTransaction @relation(link: TABLE)
-  status: TRANSACTION_STATUS!
+  status: TRANSACTION_STATUS! @scalarList(strategy: RELATION)
   transactionDate: DateTime
   amount: Float!
   account: FinancialAccount @relation(link: TABLE)
@@ -111,7 +111,7 @@ type GroupInvite {
   email: String!
   group: Group! @relation(link: TABLE)
   groupRole: GroupRole @relation(link: TABLE)
-  status: GROUP_INVITE_STATUS!
+  status: GROUP_INVITE_STATUS! @scalarList(strategy: RELATION)
 }
 
 type GroupMember {
@@ -129,7 +129,7 @@ type GroupRole {
   groupType: GroupType @relation(link: TABLE)
   isLeader: Boolean
   name: String! @unique
-  type: GROUP_ROLE_TYPE
+  type: GROUP_ROLE_TYPE @scalarList(strategy: RELATION)
 }
 
 type GroupType {
@@ -171,7 +171,7 @@ enum LOCATION_TYPE {
 type Location {
   id: ID! @id
   city: String
-  locationType: LOCATION_TYPE
+  locationType: LOCATION_TYPE @scalarList(strategy: RELATION)
   postalCode: String
   state: String
   street1: String

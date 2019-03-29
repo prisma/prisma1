@@ -13,21 +13,17 @@ type OnlyIdAndARelation2 {
 }
 
 type OnlyDate {
-  id: ID! @unique
   createdAt: DateTime!
 }
 
 type OnlyRelation {
-  id: ID! @unique
   ref: [OnlyDate]
 }
 
 type OnlyRelationA {
-  id: ID! @unique
   ref: OnlyRelationA!
 }
 
 type OnlyRelationB {
-  id: ID! @unique
   ref: OnlyRelationB
 }

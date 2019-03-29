@@ -236,7 +236,7 @@ type Film @db(name: \\"film\\") {
   language_id: Language!
   last_update: DateTime!
   length: Int
-  rating: MpaaRating
+  rating: MpaaRating @scalarList(strategy: RELATION)
   release_year: Int
   rental_duration: Int! @default(value: 3)
   rental_rate: Float! @default(value: 4.99)

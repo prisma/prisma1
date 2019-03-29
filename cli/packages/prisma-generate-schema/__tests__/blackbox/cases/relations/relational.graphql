@@ -89,6 +89,10 @@ enum BillingInfoOrderByInput {
   id_DESC
   account_ASC
   account_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type BillingInfoPreviousValues {
@@ -108,6 +112,14 @@ input BillingInfoSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BillingInfoSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BillingInfoSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BillingInfoSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -157,6 +169,14 @@ input BillingInfoWhereInput {
   Logical AND on all given filters.
   """
   AND: [BillingInfoWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BillingInfoWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BillingInfoWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -270,8 +290,8 @@ input BillingInfoWhereUniqueInput {
   id: ID
 }
 
-type BillingInfoWithoutConnection {
-  removeThisId: ID!
+type BillingInfoWithoutConnection implements Node {
+  id: ID!
   account: String!
 }
 
@@ -291,7 +311,7 @@ type BillingInfoWithoutConnectionConnection {
 }
 
 input BillingInfoWithoutConnectionCreateInput {
-  removeThisId: ID
+  id: ID
   account: String!
 }
 
@@ -315,14 +335,18 @@ type BillingInfoWithoutConnectionEdge {
 }
 
 enum BillingInfoWithoutConnectionOrderByInput {
-  removeThisId_ASC
-  removeThisId_DESC
+  id_ASC
+  id_DESC
   account_ASC
   account_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type BillingInfoWithoutConnectionPreviousValues {
-  removeThisId: ID!
+  id: ID!
   account: String!
 }
 
@@ -338,6 +362,14 @@ input BillingInfoWithoutConnectionSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BillingInfoWithoutConnectionSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BillingInfoWithoutConnectionSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BillingInfoWithoutConnectionSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -386,59 +418,67 @@ input BillingInfoWithoutConnectionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BillingInfoWithoutConnectionWhereInput!]
-  removeThisId: ID
+  """
+  Logical OR on all given filters.
+  """
+  OR: [BillingInfoWithoutConnectionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [BillingInfoWithoutConnectionWhereInput!]
+  id: ID
   """
   All values that are not equal to given value.
   """
-  removeThisId_not: ID
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  removeThisId_in: [ID!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  removeThisId_not_in: [ID!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  removeThisId_lt: ID
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  removeThisId_lte: ID
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  removeThisId_gt: ID
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  removeThisId_gte: ID
+  id_gte: ID
   """
   All values containing the given string.
   """
-  removeThisId_contains: ID
+  id_contains: ID
   """
   All values not containing the given string.
   """
-  removeThisId_not_contains: ID
+  id_not_contains: ID
   """
   All values starting with the given string.
   """
-  removeThisId_starts_with: ID
+  id_starts_with: ID
   """
   All values not starting with the given string.
   """
-  removeThisId_not_starts_with: ID
+  id_not_starts_with: ID
   """
   All values ending with the given string.
   """
-  removeThisId_ends_with: ID
+  id_ends_with: ID
   """
   All values not ending with the given string.
   """
-  removeThisId_not_ends_with: ID
+  id_not_ends_with: ID
   account: String
   """
   All values that are not equal to given value.
@@ -495,8 +535,13 @@ input BillingInfoWithoutConnectionWhereInput {
 }
 
 input BillingInfoWithoutConnectionWhereUniqueInput {
-  removeThisId: ID
+  id: ID
 }
+
+"""
+Raw JSON value
+"""
+scalar Json
 
 """
 The `Long` scalar type represents non-fractional signed whole numeric values.
@@ -510,43 +555,43 @@ type Mutation {
   createBillingInfo(data: BillingInfoCreateInput!): BillingInfo!
   createOptionalDetails(data: OptionalDetailsCreateInput!): OptionalDetails!
   createOptionalDetailsWithoutConnection(data: OptionalDetailsWithoutConnectionCreateInput!): OptionalDetailsWithoutConnection!
-  createBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionCreateInput!): BillingInfoWithoutConnection!
   createPostWithoutConnection(data: PostWithoutConnectionCreateInput!): PostWithoutConnection!
+  createBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionCreateInput!): BillingInfoWithoutConnection!
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post
   updateBillingInfo(data: BillingInfoUpdateInput!, where: BillingInfoWhereUniqueInput!): BillingInfo
   updateOptionalDetails(data: OptionalDetailsUpdateInput!, where: OptionalDetailsWhereUniqueInput!): OptionalDetails
   updateOptionalDetailsWithoutConnection(data: OptionalDetailsWithoutConnectionUpdateInput!, where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
-  updateBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionUpdateInput!, where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   updatePostWithoutConnection(data: PostWithoutConnectionUpdateInput!, where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
+  updateBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionUpdateInput!, where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   deleteUser(where: UserWhereUniqueInput!): User
   deletePost(where: PostWhereUniqueInput!): Post
   deleteBillingInfo(where: BillingInfoWhereUniqueInput!): BillingInfo
   deleteOptionalDetails(where: OptionalDetailsWhereUniqueInput!): OptionalDetails
   deleteOptionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
-  deleteBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   deletePostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
+  deleteBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
   upsertBillingInfo(where: BillingInfoWhereUniqueInput!, create: BillingInfoCreateInput!, update: BillingInfoUpdateInput!): BillingInfo!
   upsertOptionalDetails(where: OptionalDetailsWhereUniqueInput!, create: OptionalDetailsCreateInput!, update: OptionalDetailsUpdateInput!): OptionalDetails!
   upsertOptionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!, create: OptionalDetailsWithoutConnectionCreateInput!, update: OptionalDetailsWithoutConnectionUpdateInput!): OptionalDetailsWithoutConnection!
-  upsertBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!, create: BillingInfoWithoutConnectionCreateInput!, update: BillingInfoWithoutConnectionUpdateInput!): BillingInfoWithoutConnection!
   upsertPostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!, create: PostWithoutConnectionCreateInput!, update: PostWithoutConnectionUpdateInput!): PostWithoutConnection!
+  upsertBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!, create: BillingInfoWithoutConnectionCreateInput!, update: BillingInfoWithoutConnectionUpdateInput!): BillingInfoWithoutConnection!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyPosts(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload!
   updateManyBillingInfoes(data: BillingInfoUpdateManyMutationInput!, where: BillingInfoWhereInput): BatchPayload!
   updateManyOptionalDetailses(data: OptionalDetailsUpdateManyMutationInput!, where: OptionalDetailsWhereInput): BatchPayload!
   updateManyOptionalDetailsWithoutConnections(data: OptionalDetailsWithoutConnectionUpdateManyMutationInput!, where: OptionalDetailsWithoutConnectionWhereInput): BatchPayload!
-  updateManyBillingInfoWithoutConnections(data: BillingInfoWithoutConnectionUpdateManyMutationInput!, where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
   updateManyPostWithoutConnections(data: PostWithoutConnectionUpdateManyMutationInput!, where: PostWithoutConnectionWhereInput): BatchPayload!
+  updateManyBillingInfoWithoutConnections(data: BillingInfoWithoutConnectionUpdateManyMutationInput!, where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyPosts(where: PostWhereInput): BatchPayload!
   deleteManyBillingInfoes(where: BillingInfoWhereInput): BatchPayload!
   deleteManyOptionalDetailses(where: OptionalDetailsWhereInput): BatchPayload!
   deleteManyOptionalDetailsWithoutConnections(where: OptionalDetailsWithoutConnectionWhereInput): BatchPayload!
-  deleteManyBillingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
   deleteManyPostWithoutConnections(where: PostWithoutConnectionWhereInput): BatchPayload!
+  deleteManyBillingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -565,8 +610,8 @@ interface Node {
   id: ID!
 }
 
-type OptionalDetails {
-  removeThisId: ID!
+type OptionalDetails implements Node {
+  id: ID!
   text: String!
   user: User!
 }
@@ -587,7 +632,7 @@ type OptionalDetailsConnection {
 }
 
 input OptionalDetailsCreateInput {
-  removeThisId: ID
+  id: ID
   text: String!
   user: UserCreateOneWithoutOptionalDetailsInput!
 }
@@ -598,7 +643,7 @@ input OptionalDetailsCreateOneWithoutUserInput {
 }
 
 input OptionalDetailsCreateWithoutUserInput {
-  removeThisId: ID
+  id: ID
   text: String!
 }
 
@@ -617,14 +662,18 @@ type OptionalDetailsEdge {
 }
 
 enum OptionalDetailsOrderByInput {
-  removeThisId_ASC
-  removeThisId_DESC
+  id_ASC
+  id_DESC
   text_ASC
   text_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type OptionalDetailsPreviousValues {
-  removeThisId: ID!
+  id: ID!
   text: String!
 }
 
@@ -640,6 +689,14 @@ input OptionalDetailsSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OptionalDetailsSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OptionalDetailsSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OptionalDetailsSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -691,59 +748,67 @@ input OptionalDetailsWhereInput {
   Logical AND on all given filters.
   """
   AND: [OptionalDetailsWhereInput!]
-  removeThisId: ID
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OptionalDetailsWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OptionalDetailsWhereInput!]
+  id: ID
   """
   All values that are not equal to given value.
   """
-  removeThisId_not: ID
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  removeThisId_in: [ID!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  removeThisId_not_in: [ID!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  removeThisId_lt: ID
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  removeThisId_lte: ID
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  removeThisId_gt: ID
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  removeThisId_gte: ID
+  id_gte: ID
   """
   All values containing the given string.
   """
-  removeThisId_contains: ID
+  id_contains: ID
   """
   All values not containing the given string.
   """
-  removeThisId_not_contains: ID
+  id_not_contains: ID
   """
   All values starting with the given string.
   """
-  removeThisId_starts_with: ID
+  id_starts_with: ID
   """
   All values not starting with the given string.
   """
-  removeThisId_not_starts_with: ID
+  id_not_starts_with: ID
   """
   All values ending with the given string.
   """
-  removeThisId_ends_with: ID
+  id_ends_with: ID
   """
   All values not ending with the given string.
   """
-  removeThisId_not_ends_with: ID
+  id_not_ends_with: ID
   text: String
   """
   All values that are not equal to given value.
@@ -801,11 +866,11 @@ input OptionalDetailsWhereInput {
 }
 
 input OptionalDetailsWhereUniqueInput {
-  removeThisId: ID
+  id: ID
 }
 
-type OptionalDetailsWithoutConnection {
-  removeThisId: ID!
+type OptionalDetailsWithoutConnection implements Node {
+  id: ID!
   text: String!
 }
 
@@ -825,7 +890,7 @@ type OptionalDetailsWithoutConnectionConnection {
 }
 
 input OptionalDetailsWithoutConnectionCreateInput {
-  removeThisId: ID
+  id: ID
   text: String!
 }
 
@@ -849,14 +914,18 @@ type OptionalDetailsWithoutConnectionEdge {
 }
 
 enum OptionalDetailsWithoutConnectionOrderByInput {
-  removeThisId_ASC
-  removeThisId_DESC
+  id_ASC
+  id_DESC
   text_ASC
   text_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type OptionalDetailsWithoutConnectionPreviousValues {
-  removeThisId: ID!
+  id: ID!
   text: String!
 }
 
@@ -872,6 +941,14 @@ input OptionalDetailsWithoutConnectionSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OptionalDetailsWithoutConnectionSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OptionalDetailsWithoutConnectionSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OptionalDetailsWithoutConnectionSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -922,59 +999,67 @@ input OptionalDetailsWithoutConnectionWhereInput {
   Logical AND on all given filters.
   """
   AND: [OptionalDetailsWithoutConnectionWhereInput!]
-  removeThisId: ID
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OptionalDetailsWithoutConnectionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OptionalDetailsWithoutConnectionWhereInput!]
+  id: ID
   """
   All values that are not equal to given value.
   """
-  removeThisId_not: ID
+  id_not: ID
   """
   All values that are contained in given list.
   """
-  removeThisId_in: [ID!]
+  id_in: [ID!]
   """
   All values that are not contained in given list.
   """
-  removeThisId_not_in: [ID!]
+  id_not_in: [ID!]
   """
   All values less than the given value.
   """
-  removeThisId_lt: ID
+  id_lt: ID
   """
   All values less than or equal the given value.
   """
-  removeThisId_lte: ID
+  id_lte: ID
   """
   All values greater than the given value.
   """
-  removeThisId_gt: ID
+  id_gt: ID
   """
   All values greater than or equal the given value.
   """
-  removeThisId_gte: ID
+  id_gte: ID
   """
   All values containing the given string.
   """
-  removeThisId_contains: ID
+  id_contains: ID
   """
   All values not containing the given string.
   """
-  removeThisId_not_contains: ID
+  id_not_contains: ID
   """
   All values starting with the given string.
   """
-  removeThisId_starts_with: ID
+  id_starts_with: ID
   """
   All values not starting with the given string.
   """
-  removeThisId_not_starts_with: ID
+  id_not_starts_with: ID
   """
   All values ending with the given string.
   """
-  removeThisId_ends_with: ID
+  id_ends_with: ID
   """
   All values not ending with the given string.
   """
-  removeThisId_not_ends_with: ID
+  id_not_ends_with: ID
   text: String
   """
   All values that are not equal to given value.
@@ -1031,7 +1116,7 @@ input OptionalDetailsWithoutConnectionWhereInput {
 }
 
 input OptionalDetailsWithoutConnectionWhereUniqueInput {
-  removeThisId: ID
+  id: ID
 }
 
 """
@@ -1132,6 +1217,10 @@ enum PostOrderByInput {
   text_DESC
   count_ASC
   count_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type PostPreviousValues {
@@ -1303,6 +1392,14 @@ input PostSubscriptionWhereInput {
   """
   AND: [PostSubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [PostSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PostSubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1406,6 +1503,14 @@ input PostWhereInput {
   Logical AND on all given filters.
   """
   AND: [PostWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PostWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PostWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1542,7 +1647,9 @@ input PostWhereInput {
   """
   count_gte: Int
   user: UserWhereInput
+  likes_every: UserWhereInput
   likes_some: UserWhereInput
+  likes_none: UserWhereInput
 }
 
 input PostWhereUniqueInput {
@@ -1602,6 +1709,10 @@ enum PostWithoutConnectionOrderByInput {
   text_DESC
   count_ASC
   count_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type PostWithoutConnectionPreviousValues {
@@ -1773,6 +1884,14 @@ input PostWithoutConnectionSubscriptionWhereInput {
   """
   AND: [PostWithoutConnectionSubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [PostWithoutConnectionSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PostWithoutConnectionSubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1844,6 +1963,14 @@ input PostWithoutConnectionWhereInput {
   Logical AND on all given filters.
   """
   AND: [PostWithoutConnectionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PostWithoutConnectionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PostWithoutConnectionWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1991,22 +2118,22 @@ type Query {
   billingInfoes(where: BillingInfoWhereInput, orderBy: BillingInfoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BillingInfo]!
   optionalDetailses(where: OptionalDetailsWhereInput, orderBy: OptionalDetailsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OptionalDetails]!
   optionalDetailsWithoutConnections(where: OptionalDetailsWithoutConnectionWhereInput, orderBy: OptionalDetailsWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OptionalDetailsWithoutConnection]!
-  billingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput, orderBy: BillingInfoWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BillingInfoWithoutConnection]!
   postWithoutConnections(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PostWithoutConnection]!
+  billingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput, orderBy: BillingInfoWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BillingInfoWithoutConnection]!
   user(where: UserWhereUniqueInput!): User
   post(where: PostWhereUniqueInput!): Post
   billingInfo(where: BillingInfoWhereUniqueInput!): BillingInfo
   optionalDetails(where: OptionalDetailsWhereUniqueInput!): OptionalDetails
   optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
-  billingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   postWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
+  billingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
   billingInfoesConnection(where: BillingInfoWhereInput, orderBy: BillingInfoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BillingInfoConnection!
   optionalDetailsesConnection(where: OptionalDetailsWhereInput, orderBy: OptionalDetailsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OptionalDetailsConnection!
   optionalDetailsWithoutConnectionsConnection(where: OptionalDetailsWithoutConnectionWhereInput, orderBy: OptionalDetailsWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OptionalDetailsWithoutConnectionConnection!
-  billingInfoWithoutConnectionsConnection(where: BillingInfoWithoutConnectionWhereInput, orderBy: BillingInfoWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BillingInfoWithoutConnectionConnection!
   postWithoutConnectionsConnection(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostWithoutConnectionConnection!
+  billingInfoWithoutConnectionsConnection(where: BillingInfoWithoutConnectionWhereInput, orderBy: BillingInfoWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BillingInfoWithoutConnectionConnection!
   """
   Fetches an object given its ID
   """
@@ -2024,8 +2151,8 @@ type Subscription {
   billingInfo(where: BillingInfoSubscriptionWhereInput): BillingInfoSubscriptionPayload
   optionalDetails(where: OptionalDetailsSubscriptionWhereInput): OptionalDetailsSubscriptionPayload
   optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionSubscriptionWhereInput): OptionalDetailsWithoutConnectionSubscriptionPayload
-  billingInfoWithoutConnection(where: BillingInfoWithoutConnectionSubscriptionWhereInput): BillingInfoWithoutConnectionSubscriptionPayload
   postWithoutConnection(where: PostWithoutConnectionSubscriptionWhereInput): PostWithoutConnectionSubscriptionPayload
+  billingInfoWithoutConnection(where: BillingInfoWithoutConnectionSubscriptionWhereInput): BillingInfoWithoutConnectionSubscriptionPayload
 }
 
 type User implements Node {
@@ -2150,6 +2277,10 @@ enum UserOrderByInput {
   id_DESC
   name_ASC
   name_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type UserPreviousValues {
@@ -2290,6 +2421,14 @@ input UserSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -2437,6 +2576,14 @@ input UserWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -2543,11 +2690,17 @@ input UserWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  posts_every: PostWhereInput
   posts_some: PostWhereInput
+  posts_none: PostWhereInput
+  postsWithoutConnection_every: PostWithoutConnectionWhereInput
   postsWithoutConnection_some: PostWithoutConnectionWhereInput
+  postsWithoutConnection_none: PostWithoutConnectionWhereInput
   billingInfo: BillingInfoWhereInput
   billingInfoWithoutConnection: BillingInfoWithoutConnectionWhereInput
+  likes_every: PostWhereInput
   likes_some: PostWhereInput
+  likes_none: PostWhereInput
   optionalDetails: OptionalDetailsWhereInput
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionWhereInput
 }

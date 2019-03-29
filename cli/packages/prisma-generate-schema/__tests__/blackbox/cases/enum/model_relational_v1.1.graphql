@@ -13,17 +13,17 @@ enum UnusedEnum {
 
 type A {
   id: ID! @id
-  fieldA: UsedEnum
-  fieldB: UsedEnum!
-  fieldC: [UsedEnum]
+  fieldA: UsedEnum @scalarList(strategy: RELATION)
+  fieldB: UsedEnum! @scalarList(strategy: RELATION)
+  fieldC: [UsedEnum] @scalarList(strategy: RELATION)
   b: B! @relation(link: TABLE)
 }
 
 type AWithId {
   id: ID! @id
-  fieldA: UsedEnum
-  fieldB: UsedEnum!
-  fieldC: [UsedEnum]
+  fieldA: UsedEnum @scalarList(strategy: RELATION)
+  fieldB: UsedEnum! @scalarList(strategy: RELATION)
+  fieldC: [UsedEnum] @scalarList(strategy: RELATION)
   c: C @relation(link: TABLE)
 }
 

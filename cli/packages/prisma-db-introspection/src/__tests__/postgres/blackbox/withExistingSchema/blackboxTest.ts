@@ -50,13 +50,13 @@ export default async function blackBoxTest(name: string) {
     refModel,
   )
 
-  // Backwards compatible (v1) rendering
+  // Correctly introduces id, createdAt, updatedAt when needed
   const legacyRenderer = DefaultRenderer.create(DatabaseType.postgres)
   const legacyRenderedWithReference = legacyRenderer.render(
     normalizedWithReference,
   )
 
-  expect(legacyRenderedWithReference.trim()).toEqual(model.trim())
+  expect(legacyRenderedWithReference).toMatchSnapshot()
 
   // V2 rendering
   const renderer = DefaultRenderer.create(DatabaseType.postgres, true)

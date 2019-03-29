@@ -14,6 +14,11 @@ type BatchPayload {
 }
 
 """
+Raw JSON value
+"""
+scalar Json
+
+"""
 The `Long` scalar type represents non-fractional signed whole numeric values.
 Long can represent values between -(2^63) and 2^63 - 1.
 """
@@ -131,6 +136,10 @@ type StoryEdge {
 enum StoryOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type StoryPreviousValues {
@@ -218,6 +227,14 @@ input StorySubscriptionWhereInput {
   """
   AND: [StorySubscriptionWhereInput!]
   """
+  Logical OR on all given filters.
+  """
+  OR: [StorySubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [StorySubscriptionWhereInput!]
+  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -250,6 +267,14 @@ input StoryWhereInput {
   Logical AND on all given filters.
   """
   AND: [StoryWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [StoryWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [StoryWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -356,6 +381,10 @@ type UserSpaceEdge {
 enum UserSpaceOrderByInput {
   id_ASC
   id_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+  createdAt_ASC
+  createdAt_DESC
 }
 
 type UserSpacePreviousValues {
@@ -374,6 +403,14 @@ input UserSpaceSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserSpaceSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserSpaceSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserSpaceSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -402,6 +439,14 @@ input UserSpaceWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserSpaceWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [UserSpaceWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [UserSpaceWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -455,7 +500,9 @@ input UserSpaceWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  stories_every: StoryWhereInput
   stories_some: StoryWhereInput
+  stories_none: StoryWhereInput
 }
 
 input UserSpaceWhereUniqueInput {

@@ -44,6 +44,8 @@ describe('Schema normalization from existing postgres schema', () => {
       id: Id! @id
       age: Int!
       name: String!
+      createdAt: DateTime! @createdAt
+      updatedAt: DateTime! @updatedAt
     }`)
 
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)

@@ -4,6 +4,5 @@ type TypeWithId {
 }
 
 type TypeWithoutId {
-  id: ID! @unique
   field: String!
 }

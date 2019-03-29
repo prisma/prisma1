@@ -296,9 +296,9 @@ export default abstract class Renderer {
 
   protected shouldCreateScalarListDirective(field: IGQLField) {
     return (
-      field.isList &&
-      typeof field.type === 'string' &&
-      isTypeIdentifier(field.type)
+      (field.isList &&
+        (typeof field.type === 'string' && isTypeIdentifier(field.type))) ||
+      (typeof field.type === 'object' && field.type.isEnum)
     )
   }
 

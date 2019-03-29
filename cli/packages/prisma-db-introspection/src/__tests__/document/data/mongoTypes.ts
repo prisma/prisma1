@@ -26,7 +26,7 @@ export const scalars = [
 export const schemaString = `type scalars {
   # Type Int is currently not supported for id fields.
   _id: Int! @id
-  array: [Int]
+  array: [Int] @scalarList(strategy: RELATION)
   # Field type not supported: Binary
   # binary: <Unknown>
   boolean: Boolean

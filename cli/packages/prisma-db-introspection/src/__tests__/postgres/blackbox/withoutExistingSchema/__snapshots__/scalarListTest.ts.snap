@@ -52,8 +52,8 @@ type User {
   createdAt: DateTime! @createdAt
   House: [House]
   name355: String!
-  scalarIntList: [Int]
-  scalarStringList: [String]
+  scalarIntList: [Int] @scalarList(strategy: RELATION)
+  scalarStringList: [String] @scalarList(strategy: RELATION)
   updatedAt: DateTime! @updatedAt
 }"
 `;
