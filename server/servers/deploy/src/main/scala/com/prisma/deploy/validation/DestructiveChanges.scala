@@ -16,9 +16,9 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
                               steps: Vector[MigrationStep],
                               deployConnector: DeployConnector)
     extends MigrationValueGenerator {
-  val previousSchema        = project.schema
-  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
-  val isMongo               = deployConnector.capabilities.isMongo
+  val previousSchema         = project.schema
+  val isMigrationFromV1ToV11 = previousSchema.isLegacy && nextSchema.isV11
+  val isMongo                = deployConnector.capabilities.isMongo
 
   def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
     checkAgainstExistingData.map { results =>
@@ -140,14 +140,14 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     val field = model.getFieldByName_!(x.name)
 
     val accidentalRemovalError = field match {
-      case f if isMigrationFromV1ToV2 && f.name == ReservedFields.createdAtFieldName =>
+      case f if isMigrationFromV1ToV11 && f.name == ReservedFields.createdAtFieldName =>
         Some(
           DeployError(
             model.name,
             field.name,
             s"You are removing the field `${ReservedFields.createdAtFieldName}` while migrating to the new datamodel. Add the field `createdAt: DateTime! @createdAt` explicitly to your model to keep this functionality."
           ))
-      case f if isMigrationFromV1ToV2 && f.name == ReservedFields.updatedAtFieldName =>
+      case f if isMigrationFromV1ToV11 && f.name == ReservedFields.updatedAtFieldName =>
         Some(
           DeployError(
             model.name,

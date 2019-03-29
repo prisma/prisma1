@@ -49,8 +49,8 @@ case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
 
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
 
-  def isDataModelV2: Boolean = !capabilities.contains(LegacyDataModelCapability)
-  def isMongo: Boolean       = has(EmbeddedTypesCapability)
+  def isDataModelV11: Boolean = !capabilities.contains(LegacyDataModelCapability)
+  def isMongo: Boolean        = has(EmbeddedTypesCapability)
 }
 
 object ConnectorCapabilities extends BooleanUtils {

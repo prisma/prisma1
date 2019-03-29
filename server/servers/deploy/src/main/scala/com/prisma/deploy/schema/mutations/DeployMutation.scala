@@ -49,7 +49,7 @@ case class DeployMutation(
 
   val databaseInspector = deployConnector.databaseInspector
 
-  val actsAsActive = if (capabilities.isDataModelV2) {
+  val actsAsActive = if (capabilities.isDataModelV11) {
     val noMigration = args.noMigration.getOrElse(false)
     !noMigration
   } else {
@@ -72,23 +72,23 @@ case class DeployMutation(
     val x = for {
       validationResult   <- FutureOr(validateSyntax)
       schemaMapping      = schemaMapper.createMapping(graphQlSdl)
-      inferredTables     <- FutureOr(inferTables) // TODO: remove once fully switched to v2 datamodel
+      inferredTables     <- FutureOr(inferTables) // TODO: remove once fully switched to v1.1 datamodel
       newDatabaseSchema  <- FutureOr(introspectDatabaseSchema)
       inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
-      _ <- if (capabilities.isDataModelV2) { // TODO: remove if once fully switched to v2 datamodel
+      _ <- if (capabilities.isDataModelV11) { // TODO: remove if once fully switched to v1.1 datamodel
             FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, newDatabaseSchema))
           } else {
             FutureOr(checkProjectSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
           }
-      functions             <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
-      steps                 <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
-      destructiveWarnings   <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
-      isMigratingFromV1ToV2 = project.schema.isLegacy && inferredNextSchema.isV2
-      v1ToV2Warning = isMigratingFromV1ToV2.toOption {
+      functions              <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
+      steps                  <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
+      destructiveWarnings    <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
+      isMigratingFromV1ToV11 = project.schema.isLegacy && inferredNextSchema.isV11
+      v1ToV11Warning = isMigratingFromV1ToV11.toOption {
         DeployWarning.global(
           "You are migrating from the old datamodel syntax to the new one. Make sure that you understand the listed changes because the semantics are different now. Then perform the deployment with the `--force` flag.")
       }
-      warnings = validationResult.warnings ++ destructiveWarnings ++ v1ToV2Warning
+      warnings = validationResult.warnings ++ destructiveWarnings ++ v1ToV11Warning
 
       result <- (args.force.getOrElse(false), warnings.isEmpty) match {
                  case (_, true)     => FutureOr(performDeployment(inferredNextSchema, steps, functions))

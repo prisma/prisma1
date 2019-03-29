@@ -29,7 +29,7 @@ case class DeleteProjectMutation(
       projectOpt <- projectPersistence.load(projectId)
       project    = validate(projectOpt)
       _          <- projectPersistence.delete(projectId)
-      _ <- if (connectorCapabilities.isDataModelV2) {
+      _ <- if (connectorCapabilities.isDataModelV11) {
             if (!deployConnector.capabilities.isMongo) deployConnector.deleteProjectDatabase(project.id)
             else Future.successful(())
           } else {

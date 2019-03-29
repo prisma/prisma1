@@ -48,7 +48,7 @@ case class SchemaInferrerImpl(
       modelTemplates = nextModels.toList,
       relationTemplates = nextRelations.toList,
       enums = nextEnums.toList,
-      version = if (isLegacy) None else Some(Schema.version.v2)
+      version = if (isLegacy) None else Some(Schema.version.v11)
     )
     val schemaWithOptionalBackRelations = MissingBackRelations.add(schemaWithOutOptionalBackrelations)
     schemaWithOptionalBackRelations

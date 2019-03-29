@@ -41,7 +41,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
   override def capabilities = if (isPrototype) ConnectorCapabilities.mysqlPrototype else ConnectorCapabilities.mysql
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createDatabaseForProject(id = id, !capabilities.isDataModelV2)
+    val action = mutationBuilder.createDatabaseForProject(id = id, !capabilities.isDataModelV11)
     projectDatabase.run(action)
   }
 
