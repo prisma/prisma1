@@ -14,7 +14,7 @@ import {
   GraphQLEnumValueConfig,
   GraphQLEnumValueConfigMap,
 } from 'graphql/type'
-import { IGQLType, IGQLField } from 'prisma-datamodel'
+import { IGQLType, IGQLField, IdStrategy } from 'prisma-datamodel'
 import { GraphQLList, GraphQLNonNull } from 'graphql'
 
 // tslint:disable:max-classes-per-file
@@ -115,6 +115,27 @@ export abstract class TypeFromModelGenerator<
    */
   public hasFieldsExcept(fields: IGQLField[], ...fieldNames: string[]) {
     return fields.filter(field => !fieldNames.includes(field.name)).length > 0
+  }
+
+  /**
+   * Returns all fields needed for the create input in the given field list.
+   * @param fields
+   */
+  public getCreateInputFields(fields: IGQLField[]) {
+    return fields.filter(
+      field =>
+        !field.isReadOnly ||
+        field.idStrategy === IdStrategy.Auto ||
+        field.idStrategy === IdStrategy.None,
+    )
+  }
+
+  /**
+   * Checks if the given field list contains at least one field that is used in the created input
+   * @param fields
+   */
+  public hasCreateInputFields(fields: IGQLField[]) {
+    return this.getCreateInputFields(fields).length > 0
   }
 
   /**

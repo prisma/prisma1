@@ -132,7 +132,7 @@ exports[`Introspector text columns 1`] = `
 
 exports[`Introspector text columns 2`] = `
 "type Strings {
-  pk: ID! @id(strategy: NONE)
+  pk: ID! @id
   a: String @unique
   aa: String! @unique
   b: String @unique
@@ -156,7 +156,7 @@ exports[`Introspector uuid columns 1`] = `
 
 exports[`Introspector uuid columns 2`] = `
 "type UUIDs {
-  pk: UUID! @id(strategy: NONE)
+  pk: UUID! @id
   nk: UUID!
   tk: UUID
 }"

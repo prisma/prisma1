@@ -13,6 +13,8 @@ type BatchPayload {
   count: Long!
 }
 
+scalar DateTime
+
 """
 Raw JSON value
 """
@@ -26,7 +28,7 @@ scalar Long
 
 type Mutation {
   createUserSpace(data: UserSpaceCreateInput!): UserSpace!
-  createStory: Story!
+  createStory(data: StoryCreateInput!): Story!
   updateUserSpace(data: UserSpaceUpdateInput!, where: UserSpaceWhereUniqueInput!): UserSpace
   deleteUserSpace(where: UserSpaceWhereUniqueInput!): UserSpace
   deleteStory(where: StoryWhereUniqueInput!): Story
@@ -93,6 +95,8 @@ type Query {
 
 type Story implements Node {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -110,7 +114,12 @@ type StoryConnection {
   aggregate: AggregateStory!
 }
 
+input StoryCreateInput {
+  id: ID
+}
+
 input StoryCreateManyInput {
+  create: [StoryCreateInput!]
   connect: [StoryWhereUniqueInput!]
 }
 
@@ -131,14 +140,16 @@ type StoryEdge {
 enum StoryOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type StoryPreviousValues {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input StoryScalarWhereInput {
@@ -207,6 +218,64 @@ input StoryScalarWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type StorySubscriptionPayload {
@@ -249,6 +318,7 @@ input StorySubscriptionWhereInput {
 }
 
 input StoryUpdateManyInput {
+  create: [StoryCreateInput!]
   connect: [StoryWhereUniqueInput!]
   set: [StoryWhereUniqueInput!]
   disconnect: [StoryWhereUniqueInput!]
@@ -322,6 +392,64 @@ input StoryWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 input StoryWhereUniqueInput {
@@ -336,6 +464,8 @@ type Subscription {
 type UserSpace implements Node {
   id: ID!
   stories(where: StoryWhereInput, orderBy: StoryOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Story!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -354,6 +484,7 @@ type UserSpaceConnection {
 }
 
 input UserSpaceCreateInput {
+  id: ID
   stories: StoryCreateManyInput
 }
 
@@ -374,14 +505,16 @@ type UserSpaceEdge {
 enum UserSpaceOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type UserSpacePreviousValues {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type UserSpaceSubscriptionPayload {
@@ -493,6 +626,64 @@ input UserSpaceWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   stories_every: StoryWhereInput
   stories_some: StoryWhereInput
   stories_none: StoryWhereInput

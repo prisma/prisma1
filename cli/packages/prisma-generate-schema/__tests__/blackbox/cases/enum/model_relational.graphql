@@ -12,6 +12,7 @@ enum UnusedEnum {
 }
 
 type A {
+  id: ID! @unique
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum]
@@ -27,21 +28,25 @@ type AWithId {
 }
 
 type B {
+  id: ID! @unique
   field: String!
   a: [A]
 }
 
 type C {
+  id: ID! @unique
   field: [Int]
   a: AWithId!
 }
 
 type D {
+  id: ID! @unique
   field: [DateTime]
   a: AWithId!
 }
 
 type E {
+  id: ID! @unique
   field: Json
   a: [A]
 }

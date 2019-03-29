@@ -28,7 +28,7 @@ export default class ModelCreateWithoutRelatedInputGenerator extends RelatedMode
 
   public wouldBeEmpty(model: IGQLType, args: RelatedGeneratorArgs) {
     return !this.hasFieldsExcept(
-      this.getWriteableFields(model.fields),
+      this.getCreateInputFields(model.fields),
       (args.relatedField.relatedField as IGQLField).name,
     )
   }

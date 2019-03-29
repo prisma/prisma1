@@ -82,17 +82,17 @@ type Film @pgTable(name: \\"film\\") {
 
 type FilmActor @pgTable(name: \\"film_actor\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # id: Actor! @pgColumn(name: \\"actor_id\\") @unique
-  # Multiple ID fields (compound indexes) are not supported
   # id: Film! @pgColumn(name: \\"film_id\\") @unique
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Actor! @pgColumn(name: \\"actor_id\\") @unique
   last_update: DateTime!
 }
 
 type FilmCategory @pgTable(name: \\"film_category\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # id: Film! @pgColumn(name: \\"film_id\\") @unique
-  # Multiple ID fields (compound indexes) are not supported
   # id: Category! @pgColumn(name: \\"category_id\\") @unique
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Film! @pgColumn(name: \\"film_id\\") @unique
   last_update: DateTime!
 }
 
@@ -247,17 +247,17 @@ type Film @db(name: \\"film\\") {
 
 type FilmActor @db(name: \\"film_actor\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # actor_id: Actor! @id(strategy: NONE)
+  # film_id: Film! @id
   # Multiple ID fields (compound indexes) are not supported
-  # film_id: Film! @id(strategy: NONE)
+  # actor_id: Actor! @id
   last_update: DateTime!
 }
 
 type FilmCategory @db(name: \\"film_category\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # film_id: Film! @id(strategy: NONE)
+  # category_id: Category! @id
   # Multiple ID fields (compound indexes) are not supported
-  # category_id: Category! @id(strategy: NONE)
+  # film_id: Film! @id
   last_update: DateTime!
 }
 

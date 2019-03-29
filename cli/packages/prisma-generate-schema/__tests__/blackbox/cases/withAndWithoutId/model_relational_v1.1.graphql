@@ -1,0 +1,13 @@
+type TypeWithId {
+  id: ID! @id
+  field: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type TypeWithoutId {
+  id: ID! @id
+  field: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

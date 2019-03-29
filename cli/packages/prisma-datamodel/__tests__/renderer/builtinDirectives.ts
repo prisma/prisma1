@@ -102,11 +102,15 @@ describe(`Renderer directives test`, () => {
   test('Render built-in index directive correctly', () => {
     const renderer = Renderer.create(DatabaseType.mongo)
 
-    const modelWithDirectives = dedent(`
-      type User @indexes(value: [
+    /**
+     * Add indexes later if they're implemented in the backend
+     *  @indexes(value: [
         {name: "NameIndex", fields: ["firstName", "lastName"]},
         {name: "PrimaryIndex", fields: ["id"], unique: true}
-      ]) {
+      ]) 
+     */
+    const modelWithDirectives = dedent(`
+      type User {
         createdAt: DateTime! @createdAt
         firstName: String!
         id: Int! @id

@@ -66,13 +66,15 @@ export default async function blackBoxTest(name: string) {
     normalizedWithReference,
   )
 
-  expect(legacyRenderedWithReference).toEqual(model)
+  expect(legacyRenderedWithReference).toMatchSnapshot(
+    `${name} - legacy datamodel`,
+  )
 
   // V2 rendering
   const renderer = DefaultRenderer.create(DatabaseType.postgres, true)
   const renderedWithReference = renderer.render(normalizedWithReference)
 
-  expect(renderedWithReference).toMatchSnapshot()
+  expect(renderedWithReference).toMatchSnapshot(`${name} - v1.1 datamodel`)
 
   await dbClient.end()
 }

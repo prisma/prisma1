@@ -1,4 +1,5 @@
 type A {
+  id: ID! @unique
   a: Int @default(value: 10) @unique
   b: Int! @default(value: 10)
   c: String! @unique
@@ -15,6 +16,7 @@ type AWithId {
 }
 
 type B {
+  id: ID! @unique
   a: [A]
   a2: AWithId
 }

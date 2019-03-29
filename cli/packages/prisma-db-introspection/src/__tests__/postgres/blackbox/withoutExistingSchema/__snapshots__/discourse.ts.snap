@@ -1698,7 +1698,7 @@ type ApplicationRequest @db(name: \\"application_requests\\") {
 }
 
 type ArInternalMetadatum @db(name: \\"ar_internal_metadata\\") {
-  key: ID! @id(strategy: NONE)
+  key: ID! @id
   created_at: DateTime!
   updated_at: DateTime!
   value: String
@@ -1828,7 +1828,7 @@ type CategoryGroup @db(name: \\"category_groups\\") {
 }
 
 type CategorySearchDatum @db(name: \\"category_search_data\\") {
-  category_id: Int! @id(strategy: NONE)
+  category_id: Int! @id
   locale: String
   raw_data: String
   # Type tsvector is not supported
@@ -2418,7 +2418,7 @@ type PostRevision @db(name: \\"post_revisions\\") {
 }
 
 type PostSearchDatum @db(name: \\"post_search_data\\") {
-  post_id: Int! @id(strategy: NONE)
+  post_id: Int! @id
   locale: String
   raw_data: String
   # Type tsvector is not supported
@@ -2511,7 +2511,7 @@ type SchedulerStat @db(name: \\"scheduler_stats\\") {
 }
 
 type SchemaMigration @db(name: \\"schema_migrations\\") {
-  version: ID! @id(strategy: NONE)
+  version: ID! @id
 }
 
 type SchemaMigrationDetail @db(name: \\"schema_migration_details\\") {
@@ -2873,7 +2873,7 @@ type TopicLinkClick @db(name: \\"topic_link_clicks\\") {
 }
 
 type TopicSearchDatum @db(name: \\"topic_search_data\\") {
-  topic_id: Int! @id(strategy: NONE)
+  topic_id: Int! @id
   locale: String!
   raw_data: String
   # Type tsvector is not supported
@@ -2952,7 +2952,7 @@ type TwitterUserInfo @db(name: \\"twitter_user_infos\\") {
 }
 
 type UnsubscribeKey @db(name: \\"unsubscribe_keys\\") {
-  key: ID! @id(strategy: NONE)
+  key: ID! @id
   created_at: DateTime
   post_id: Int
   topic_id: Int
@@ -3187,7 +3187,7 @@ type UserOpenId @db(name: \\"user_open_ids\\") {
 }
 
 type UserOption @db(name: \\"user_options\\") {
-  user_id: Int! @id(strategy: NONE)
+  user_id: Int! @id
   allow_private_messages: Boolean! @default(value: true)
   auto_track_topics_after_msecs: Int
   automatically_unpin_topics: Boolean! @default(value: true)
@@ -3216,7 +3216,7 @@ type UserOption @db(name: \\"user_options\\") {
 }
 
 type UserProfile @db(name: \\"user_profiles\\") {
-  user_id: Int! @id(strategy: NONE)
+  user_id: Int! @id
   badge_granted_title: Boolean @default(value: false)
   bio_cooked: String
   bio_cooked_version: Int
@@ -3239,7 +3239,7 @@ type UserProfileView @db(name: \\"user_profile_views\\") {
 }
 
 type UserSearchDatum @db(name: \\"user_search_data\\") {
-  user_id: Int! @id(strategy: NONE)
+  user_id: Int! @id
   locale: String
   raw_data: String
   # Type tsvector is not supported
@@ -3259,7 +3259,7 @@ type UserSecondFactor @db(name: \\"user_second_factors\\") {
 }
 
 type UserStat @db(name: \\"user_stats\\") {
-  user_id: Int! @id(strategy: NONE)
+  user_id: Int! @id
   bounce_score: Float! @default(value: 0)
   days_visited: Int! @default(value: 0)
   first_post_created_at: DateTime

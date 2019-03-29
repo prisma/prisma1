@@ -9,4 +9,5 @@ do
     echo "Deploying $model"
     sed s/{{model}}/${model}/g prisma.yml.template | sed s/{{prisma_host}}/${PRISMA_HOST}/g | sed s/{{type}}/$1/g > prisma.yml
     prisma deploy
+    # prisma introspect --sdl --prototype > "${dir}/model_${1}_v1.1.graphql" #--mongo-uri mongodb://prisma:prisma@localhost:27017/admin --mongo-db "schema-generator_$model"
 done
