@@ -99,6 +99,7 @@ interface Node {
 type OnlyDate implements Node {
   id: ID!
   createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -151,6 +152,7 @@ enum OnlyDateOrderByInput {
 type OnlyDatePreviousValues {
   id: ID!
   createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input OnlyDateScalarWhereInput {
@@ -248,6 +250,35 @@ input OnlyDateScalarWhereInput {
   All values greater than or equal the given value.
   """
   createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type OnlyDateSubscriptionPayload {
@@ -393,6 +424,35 @@ input OnlyDateWhereInput {
   All values greater than or equal the given value.
   """
   createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 input OnlyDateWhereUniqueInput {
@@ -401,16 +461,22 @@ input OnlyDateWhereUniqueInput {
 
 type OnlyId implements Node {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyIdAndARelation implements Node {
   id: ID!
   ref: OnlyId!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyIdAndARelation2 implements Node {
   id: ID!
   ref: OnlyId
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -450,14 +516,16 @@ type OnlyIdAndARelation2Edge {
 enum OnlyIdAndARelation2OrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OnlyIdAndARelation2PreviousValues {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyIdAndARelation2SubscriptionPayload {
@@ -569,6 +637,64 @@ input OnlyIdAndARelation2WhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   ref: OnlyIdWhereInput
 }
 
@@ -613,14 +739,16 @@ type OnlyIdAndARelationEdge {
 enum OnlyIdAndARelationOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OnlyIdAndARelationPreviousValues {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyIdAndARelationSubscriptionPayload {
@@ -732,6 +860,64 @@ input OnlyIdAndARelationWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   ref: OnlyIdWhereInput
 }
 
@@ -780,14 +966,16 @@ type OnlyIdEdge {
 enum OnlyIdOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OnlyIdPreviousValues {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyIdSubscriptionPayload {
@@ -907,6 +1095,64 @@ input OnlyIdWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 input OnlyIdWhereUniqueInput {
@@ -916,11 +1162,15 @@ input OnlyIdWhereUniqueInput {
 type OnlyRelation implements Node {
   id: ID!
   ref(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyDate!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyRelationA implements Node {
   id: ID!
   ref: OnlyRelationA!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -965,14 +1215,16 @@ type OnlyRelationAEdge {
 enum OnlyRelationAOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OnlyRelationAPreviousValues {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyRelationASubscriptionPayload {
@@ -1100,6 +1352,64 @@ input OnlyRelationAWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   ref: OnlyRelationAWhereInput
 }
 
@@ -1110,6 +1420,8 @@ input OnlyRelationAWhereUniqueInput {
 type OnlyRelationB implements Node {
   id: ID!
   ref: OnlyRelationB
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -1154,14 +1466,16 @@ type OnlyRelationBEdge {
 enum OnlyRelationBOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OnlyRelationBPreviousValues {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyRelationBSubscriptionPayload {
@@ -1291,6 +1605,64 @@ input OnlyRelationBWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   ref: OnlyRelationBWhereInput
 }
 
@@ -1335,14 +1707,16 @@ type OnlyRelationEdge {
 enum OnlyRelationOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OnlyRelationPreviousValues {
   id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OnlyRelationSubscriptionPayload {
@@ -1454,6 +1828,64 @@ input OnlyRelationWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   ref_every: OnlyDateWhereInput
   ref_some: OnlyDateWhereInput
   ref_none: OnlyDateWhereInput

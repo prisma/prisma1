@@ -2,58 +2,78 @@ type SelfReferencingAWithId {
   id: ID! @id
   a: SelfReferencingAWithId! @relation(link: TABLE)
   field: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type SelfReferencingBWithId {
   id: ID! @id
   a: SelfReferencingBWithId @relation(link: TABLE)
   field: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type SelfReferencingCWithId {
   id: ID! @id
   a: [SelfReferencingBWithId]
   field: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type SelfReferencingA {
   id: ID! @id
   a: SelfReferencingAWithId! @relation(link: TABLE)
   field: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type SelfReferencingB {
   id: ID! @id
   a: SelfReferencingB @relation(link: TABLE)
   field: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type SelfReferencingC {
   id: ID! @id
   a: [SelfReferencingC]
   field: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type MultiSelfReferencingCWithId {
   id: ID! @id
   a: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA")
   b: [MultiSelfReferencingCWithId] @relation(name: "WithIdAToA")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type MultiSelfReferencingBWithId {
   id: ID! @id
   a: MultiSelfReferencingBWithId @relation(link: TABLE, name: "WithIdAToA2")
   b: MultiSelfReferencingBWithId @relation(name: "WithIdAToA2")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type MultiSelfReferencingC {
   id: ID! @id
   a: [MultiSelfReferencingC] @relation(name: "AToA")
   b: [MultiSelfReferencingC] @relation(name: "AToA")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type MultiSelfReferencingB {
   id: ID! @id
   a: MultiSelfReferencingB @relation(link: TABLE, name: "AToA2")
   b: MultiSelfReferencingB @relation(name: "AToA2")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

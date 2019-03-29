@@ -6,6 +6,8 @@ type LotsOfScalars {
   dateTime: DateTime
   json: Json
   boolean: Boolean
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type LotsOfRequiredScalars {
@@ -16,6 +18,8 @@ type LotsOfRequiredScalars {
   dateTime: DateTime!
   json: Json!
   boolean: Boolean!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type LotsOfScalarLists {
@@ -26,6 +30,8 @@ type LotsOfScalarLists {
   dateTime: [DateTime] @scalarList(strategy: RELATION)
   json: [Json] @scalarList(strategy: RELATION)
   boolean: [Boolean] @scalarList(strategy: RELATION)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type LotsOfScalarsWithID {
@@ -36,6 +42,8 @@ type LotsOfScalarsWithID {
   dateTime: DateTime
   json: Json
   boolean: Boolean
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type LotsOfRequiredScalarsWithID {
@@ -46,6 +54,8 @@ type LotsOfRequiredScalarsWithID {
   dateTime: DateTime!
   json: Json!
   boolean: Boolean!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type LotsOfScalarListsWithID {
@@ -56,4 +66,6 @@ type LotsOfScalarListsWithID {
   dateTime: [DateTime] @scalarList(strategy: RELATION)
   json: [Json] @scalarList(strategy: RELATION)
   boolean: [Boolean] @scalarList(strategy: RELATION)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

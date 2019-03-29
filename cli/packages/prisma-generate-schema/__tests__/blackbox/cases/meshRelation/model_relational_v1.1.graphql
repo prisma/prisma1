@@ -5,6 +5,8 @@ type A {
   b: [B]
   c: C @relation(link: TABLE)
   e: [E]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type B {
@@ -14,6 +16,8 @@ type B {
   b: [B]
   a: A! @relation(link: TABLE)
   c2: C @relation(link: TABLE, name: "BToC2")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type C {
@@ -23,6 +27,8 @@ type C {
   b: [B] @relation(name: "BToC")
   a: A
   b2: B @relation(name: "BToC2")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type D {
@@ -32,10 +38,14 @@ type D {
   b: B! @relation(link: TABLE)
   a: A! @relation(link: TABLE)
   d: [D]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type E {
   id: ID! @id
   field: Json
   a: A! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

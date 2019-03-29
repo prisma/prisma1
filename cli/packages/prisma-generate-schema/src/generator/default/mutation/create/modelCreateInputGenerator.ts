@@ -142,7 +142,8 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
   protected generateFields(model: IGQLType, args: {}) {
     const fields = {} as GraphQLInputFieldConfigMap
 
-    for (const field of model.fields) {
+    const fieldList = this.getCreateInputFields(model.fields)
+    for (const field of fieldList) {
       const isScalar = this.generators.scalarTypeGenerator.isScalarField(field)
       const fieldSchema: GraphQLInputFieldConfig | null = isScalar
         ? this.generateScalarField(model, args, field)

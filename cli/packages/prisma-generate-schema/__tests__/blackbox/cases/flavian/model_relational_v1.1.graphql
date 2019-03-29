@@ -3,6 +3,8 @@ type User {
   email: String! @unique
   name: String
   posts: [Post]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Post {

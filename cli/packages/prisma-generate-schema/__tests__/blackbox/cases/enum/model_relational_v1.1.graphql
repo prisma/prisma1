@@ -13,40 +13,52 @@ enum UnusedEnum {
 
 type A {
   id: ID! @id
-  fieldA: UsedEnum @scalarList(strategy: RELATION)
-  fieldB: UsedEnum! @scalarList(strategy: RELATION)
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
   fieldC: [UsedEnum] @scalarList(strategy: RELATION)
   b: B! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithId {
   id: ID! @id
-  fieldA: UsedEnum @scalarList(strategy: RELATION)
-  fieldB: UsedEnum! @scalarList(strategy: RELATION)
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
   fieldC: [UsedEnum] @scalarList(strategy: RELATION)
   c: C @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type B {
   id: ID! @id
   field: String!
   a: [A]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type C {
   id: ID! @id
   field: [Int] @scalarList(strategy: RELATION)
   a: AWithId!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type D {
   id: ID! @id
   field: [DateTime] @scalarList(strategy: RELATION)
   a: AWithId! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type E {
   id: ID! @id
   field: Json
   a: [A]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

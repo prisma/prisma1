@@ -13,6 +13,8 @@ type BatchPayload {
   count: Long!
 }
 
+scalar DateTime
+
 """
 Raw JSON value
 """
@@ -103,6 +105,8 @@ type Subscription {
 type TypeWithId implements Node {
   id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -144,15 +148,17 @@ enum TypeWithIdOrderByInput {
   id_DESC
   field_ASC
   field_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type TypeWithIdPreviousValues {
   id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type TypeWithIdSubscriptionPayload {
@@ -321,6 +327,64 @@ input TypeWithIdWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 input TypeWithIdWhereUniqueInput {
@@ -330,6 +394,8 @@ input TypeWithIdWhereUniqueInput {
 type TypeWithoutId implements Node {
   id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -371,15 +437,17 @@ enum TypeWithoutIdOrderByInput {
   id_DESC
   field_ASC
   field_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type TypeWithoutIdPreviousValues {
   id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type TypeWithoutIdSubscriptionPayload {
@@ -548,6 +616,64 @@ input TypeWithoutIdWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 input TypeWithoutIdWhereUniqueInput {

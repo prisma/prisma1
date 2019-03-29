@@ -76,6 +76,10 @@ export default abstract class DefaultParser {
     const idDirective = this.getDirectiveByName(field, DirectiveKeys.isId)
     const idType = this.getDirectiveArgument(idDirective, 'strategy')
 
+    if (!idDirective) {
+      return null
+    }
+
     if (idType) {
       switch (idType) {
         case IdStrategy.Auto:

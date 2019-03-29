@@ -33,7 +33,7 @@ export abstract class ModelCreateOneOrManyInputGenerator extends ModelInputObjec
   protected generateFields(model: IGQLType, args: {}) {
     const fields = {} as GraphQLInputFieldConfigMap
 
-    if (this.hasWriteableFields(model.fields)) {
+    if (this.hasCreateInputFields(model.fields)) {
       fields.create = {
         type: this.maybeWrapList(
           this.generators.modelCreateInput.generate(model, {}),

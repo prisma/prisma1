@@ -9,12 +9,13 @@ export default function blackBoxTest(
   name: string,
   databaseType: DatabaseType,
   filePrefix: string,
+  v11?: boolean,
 ) {
   const generator = Generator.create(databaseType)
 
   const modelPath = path.join(
     __dirname,
-    `cases/${name}/model_${filePrefix}_v1.1.graphql`,
+    `cases/${name}/model_${filePrefix}${v11 ? '_v1.1' : ''}.graphql`,
   )
   const prismaPath = path.join(__dirname, `cases/${name}/${filePrefix}.graphql`)
 
@@ -27,6 +28,7 @@ export default function blackBoxTest(
   const { types } = DefaultParser.create(databaseType).parseFromSchemaString(
     model,
   )
+
   const ourSchema = generator.schema.generate(types, {})
 
   const ourPrintedSchema = printSchema(ourSchema)
@@ -52,9 +54,9 @@ const testNames = fs.readdirSync(path.join(__dirname, 'cases'))
 
 for (const testName of testNames) {
   test(`Generates schema for ${testName}/relational correctly`, () => {
-    blackBoxTest(testName, DatabaseType.postgres, 'relational')
+    blackBoxTest(testName, DatabaseType.postgres, 'relational', true)
   })
-  // test(`Generates schema for ${testName}/document correctly`, () => {
-  //   blackBoxTest(testName, DatabaseType.mongo, 'document')
-  // })
+  test(`Generates schema for ${testName}/document correctly`, () => {
+    blackBoxTest(testName, DatabaseType.mongo, 'document')
+  })
 }

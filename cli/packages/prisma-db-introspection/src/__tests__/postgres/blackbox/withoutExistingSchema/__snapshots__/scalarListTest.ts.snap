@@ -31,7 +31,7 @@ type User {
 
 exports[`Introspector Type with scalar lists 2`] = `
 "type Car {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   createdAt: DateTime! @createdAt
   name: String!
   updatedAt: DateTime! @updatedAt
@@ -39,7 +39,7 @@ exports[`Introspector Type with scalar lists 2`] = `
 }
 
 type House {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
   User: [User]
@@ -47,7 +47,7 @@ type House {
 }
 
 type User {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   Car: [Car]
   createdAt: DateTime! @createdAt
   House: [House]

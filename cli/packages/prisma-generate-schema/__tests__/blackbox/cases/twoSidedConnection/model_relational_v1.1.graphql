@@ -2,160 +2,214 @@ type AWithIdWithA {
   id: ID! @id
   field: String!
   x: AWithA! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithoutIdWithA {
   id: ID! @id
   field: String!
   x: AWithA! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithIdWithA {
   id: ID! @id
   field: String!
   x: AWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithoutIdWithA {
   id: ID! @id
   field: String!
   x: AWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithIdWithA {
   id: ID! @id
   field: String!
   x: [AWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithoutIdWithA {
   id: ID! @id
   field: String!
   x: [AWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithIdWithB {
   id: ID! @id
   field: String!
   x: BWithA! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithoutIdWithB {
   id: ID! @id
   field: String!
   x: BWithA! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithIdWithB {
   id: ID! @id
   field: String!
   x: BWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithoutIdWithB {
   id: ID! @id
   field: String!
   x: BWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithIdWithB {
   id: ID! @id
   field: String!
   x: [BWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithoutIdWithB {
   id: ID! @id
   field: String!
   x: [BWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithIdWithC {
   id: ID! @id
   field: String!
   x: CWithA! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithoutIdWithC {
   id: ID! @id
   field: String!
   x: CWithA! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithIdWithC {
   id: ID! @id
   field: String!
   x: CWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithoutIdWithC {
   id: ID! @id
   field: String!
   x: CWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithIdWithC {
   id: ID! @id
   field: String!
   x: [CWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithoutIdWithC {
   id: ID! @id
   field: String!
   x: [CWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithA {
   id: ID! @id
   x: AWithIdWithA!
   y: AWithoutIdWithA!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithB {
   id: ID! @id
   x: BWithIdWithA!
   y: BWithoutIdWithA!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithC {
   id: ID! @id
   x: CWithIdWithA! @relation(link: TABLE)
   y: CWithoutIdWithA! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithA {
   id: ID! @id
   x: AWithIdWithB
   y: AWithoutIdWithB
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithB {
   id: ID! @id
   x: BWithIdWithB
   y: BWithoutIdWithB
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type BWithC {
   id: ID! @id
   x: CWithIdWithB @relation(link: TABLE)
   y: CWithoutIdWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithA {
   id: ID! @id
   x: [AWithIdWithC]
   y: [AWithoutIdWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithB {
   id: ID! @id
   x: [BWithIdWithC]
   y: [BWithoutIdWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type CWithC {
   id: ID! @id
   x: [CWithIdWithC]
   y: [CWithoutIdWithC]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

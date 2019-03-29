@@ -3,6 +3,8 @@ type A {
   toB: B! @relation(link: TABLE, name: "RaToB")
   toB2: B! @relation(link: TABLE, name: "RaToB2")
   toC: C @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type B {
@@ -10,10 +12,14 @@ type B {
   toA: A! @relation(name: "RaToB")
   toA2: A! @relation(name: "RaToB2")
   toC: C! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type C {
   id: ID! @id
   toB: [B]
   toA: [A]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

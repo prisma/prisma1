@@ -389,7 +389,7 @@ exports[`Introspects airbnb/mysql correctly: airbnb - v1.1 datamodel 1`] = `
 type Place {
   id: ID! @id
   name: String
-  size: PLACE_SIZES @scalarList(strategy: RELATION)
+  size: PLACE_SIZES
   shortDescription: String!
   description: String!
   slug: String!
@@ -427,7 +427,7 @@ type Pricing {
   securityDeposit: Int
   extraGuests: Int
   weekendPricing: Int
-  currency: CURRENCY @scalarList(strategy: RELATION)
+  currency: CURRENCY
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
@@ -509,7 +509,7 @@ type City {
 }
 
 type Picture {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   url: String!
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
@@ -626,7 +626,7 @@ type Payment {
 type PaymentAccount {
   id: ID! @id
   createdAt: DateTime! @createdAt
-  type: PAYMENT_PROVIDER @scalarList(strategy: RELATION)
+  type: PAYMENT_PROVIDER
   user: User! @relation(link: TABLE)
   payments: [Payment]
   paypal: PaypalInformation @relation(link: TABLE)
@@ -670,7 +670,7 @@ type Message {
 type Notification {
   id: ID! @id
   createdAt: DateTime! @createdAt
-  type: NOTIFICATION_TYPE @scalarList(strategy: RELATION)
+  type: NOTIFICATION_TYPE
   user: User! @relation(link: TABLE)
   link: String!
   readDate: DateTime!
@@ -927,27 +927,27 @@ type OnlyIdAndARelation2 {
 }
 
 type OnlyDate {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
 
 type OnlyRelation {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   ref: [OnlyDate]
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
 
 type OnlyRelationA {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   ref: OnlyRelationA! @relation(link: TABLE)
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
 
 type OnlyRelationB {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   ref: OnlyRelationB @relation(link: TABLE)
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
@@ -1037,8 +1037,8 @@ enum UnusedEnum {
 
 type A {
   id: ID! @id
-  fieldA: UsedEnum @scalarList(strategy: RELATION)
-  fieldB: UsedEnum! @scalarList(strategy: RELATION)
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
   fieldC: [UsedEnum] @scalarList(strategy: RELATION)
   b: B! @relation(link: TABLE)
   createdAt: DateTime! @createdAt
@@ -1047,8 +1047,8 @@ type A {
 
 type AWithId {
   id: ID! @id
-  fieldA: UsedEnum @scalarList(strategy: RELATION)
-  fieldB: UsedEnum! @scalarList(strategy: RELATION)
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
   fieldC: [UsedEnum] @scalarList(strategy: RELATION)
   c: C @relation(link: TABLE)
   createdAt: DateTime! @createdAt
@@ -1358,9 +1358,9 @@ type FinancialPaymentDetail {
   id: ID! @id
   accountNumberMasked: String!
   billingLocation: Location @relation(link: TABLE)
-  creditCardType: CREDIT_CARD @scalarList(strategy: RELATION)
-  achType: ACH_TYPE @scalarList(strategy: RELATION)
-  currencyType: CURRENCY_TYPE @scalarList(strategy: RELATION)
+  creditCardType: CREDIT_CARD
+  achType: ACH_TYPE
+  currencyType: CURRENCY_TYPE
   expirationDate: DateTime!
   nameOnCard: String
   createdAt: DateTime! @createdAt
@@ -1381,7 +1381,7 @@ type FinancialScheduledTransaction {
   payment: FinancialPaymentDetail @relation(link: TABLE)
   isActive: Boolean!
   startDate: DateTime
-  frequency: TRANSACTION_FREQUENCY @scalarList(strategy: RELATION)
+  frequency: TRANSACTION_FREQUENCY
   transactions: [FinancialTransaction]
   account: FinancialAccount @relation(link: TABLE)
   amount: Float!
@@ -1401,7 +1401,7 @@ type FinancialTransaction {
   person: Person @relation(link: TABLE)
   processedDate: DateTime
   scheduledTransaction: FinancialScheduledTransaction @relation(link: TABLE)
-  status: TRANSACTION_STATUS! @scalarList(strategy: RELATION)
+  status: TRANSACTION_STATUS!
   transactionDate: DateTime
   amount: Float!
   account: FinancialAccount @relation(link: TABLE)
@@ -1426,7 +1426,7 @@ type GroupInvite {
   email: String!
   group: Group! @relation(link: TABLE)
   groupRole: GroupRole @relation(link: TABLE)
-  status: GROUP_INVITE_STATUS! @scalarList(strategy: RELATION)
+  status: GROUP_INVITE_STATUS!
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
@@ -1448,7 +1448,7 @@ type GroupRole {
   groupType: GroupType @relation(link: TABLE)
   isLeader: Boolean
   name: String! @unique
-  type: GROUP_ROLE_TYPE @scalarList(strategy: RELATION)
+  type: GROUP_ROLE_TYPE
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt
 }
@@ -1498,7 +1498,7 @@ enum LOCATION_TYPE {
 type Location {
   id: ID! @id
   city: String
-  locationType: LOCATION_TYPE @scalarList(strategy: RELATION)
+  locationType: LOCATION_TYPE
   postalCode: String
   state: String
   street1: String
@@ -2827,7 +2827,7 @@ exports[`Introspects withAndWithoutId/mysql correctly: withAndWithoutId - v1.1 d
 }
 
 type TypeWithoutId {
-  id: ID! @id(strategy: NONE)
+  id: ID! @id
   field: String!
   createdAt: DateTime! @createdAt
   updatedAt: DateTime! @updatedAt

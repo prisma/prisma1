@@ -24,7 +24,7 @@ type User {
 type Place {
   id: ID! @id
   name: String
-  size: PLACE_SIZES @scalarList(strategy: RELATION)
+  size: PLACE_SIZES
   shortDescription: String!
   description: String!
   slug: String!
@@ -44,6 +44,8 @@ type Place {
   bookings: [Booking]
   pictures: [Picture]
   popularity: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Pricing {
@@ -60,7 +62,9 @@ type Pricing {
   securityDeposit: Int
   extraGuests: Int
   weekendPricing: Int
-  currency: CURRENCY @scalarList(strategy: RELATION)
+  currency: CURRENCY
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type GuestRequirements {
@@ -69,6 +73,8 @@ type GuestRequirements {
   recommendationsFromOtherHosts: Boolean! @default(value: false)
   guestTripInformation: Boolean! @default(value: false)
   place: Place!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Policies {
@@ -97,6 +103,8 @@ type Views {
   id: ID! @id
   lastWeek: Int!
   place: Place!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Location {
@@ -110,6 +118,8 @@ type Location {
   directions: String
   experience: Experience @relation(link: TABLE)
   restaurant: Restaurant @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Neighbourhood {
@@ -121,17 +131,23 @@ type Neighbourhood {
   city: City! @relation(link: TABLE)
   featured: Boolean!
   popularity: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type City {
   id: ID! @id
   name: String!
   neighbourhoods: [Neighbourhood]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Picture {
   id: ID! @id
   url: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Experience {
@@ -144,6 +160,8 @@ type Experience {
   reviews: [Review]
   preview: Picture! @relation(link: TABLE)
   popularity: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type ExperienceCategory {
@@ -151,6 +169,8 @@ type ExperienceCategory {
   mainColor: String! @default(value: "#123456")
   name: String!
   experience: Experience
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Amenities {
@@ -196,6 +216,8 @@ type Amenities {
   childrensBooksAndToys: Boolean! @default(value: false)
   childrensDinnerware: Boolean! @default(value: false)
   crib: Boolean! @default(value: false)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Review {
@@ -211,6 +233,7 @@ type Review {
   communication: Int!
   place: Place! @relation(link: TABLE)
   experience: Experience @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
 }
 
 type Booking {
@@ -221,6 +244,7 @@ type Booking {
   startDate: DateTime!
   endDate: DateTime!
   payment: Payment! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
 }
 
 type Payment {
@@ -231,16 +255,18 @@ type Payment {
   totalPrice: Float!
   booking: Booking!
   paymentMethod: PaymentAccount! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
 }
 
 type PaymentAccount {
   id: ID! @id
   createdAt: DateTime! @createdAt
-  type: PAYMENT_PROVIDER @scalarList(strategy: RELATION)
+  type: PAYMENT_PROVIDER
   user: User! @relation(link: TABLE)
   payments: [Payment]
   paypal: PaypalInformation @relation(link: TABLE)
   creditcard: CreditCardInformation @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
 }
 
 type PaypalInformation {
@@ -248,6 +274,7 @@ type PaypalInformation {
   createdAt: DateTime! @createdAt
   email: String!
   paymentAccount: PaymentAccount!
+  updatedAt: DateTime! @updatedAt
 }
 
 type CreditCardInformation {
@@ -262,6 +289,7 @@ type CreditCardInformation {
   postalCode: String!
   country: String!
   paymentAccount: PaymentAccount
+  updatedAt: DateTime! @updatedAt
 }
 
 type Message {
@@ -271,15 +299,17 @@ type Message {
   to: User! @relation(link: TABLE, name: "ReceivedMessages")
   deliveredAt: DateTime!
   readAt: DateTime!
+  updatedAt: DateTime! @updatedAt
 }
 
 type Notification {
   id: ID! @id
   createdAt: DateTime! @createdAt
-  type: NOTIFICATION_TYPE @scalarList(strategy: RELATION)
+  type: NOTIFICATION_TYPE
   user: User! @relation(link: TABLE)
   link: String!
   readDate: DateTime!
+  updatedAt: DateTime! @updatedAt
 }
 
 type Restaurant {
@@ -292,6 +322,7 @@ type Restaurant {
   isCurated: Boolean! @default(value: true)
   slug: String!
   popularity: Int!
+  updatedAt: DateTime! @updatedAt
 }
 
 enum CURRENCY {

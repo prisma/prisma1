@@ -133,6 +133,8 @@ type Amenities implements Node {
   childrensBooksAndToys: Boolean!
   childrensDinnerware: Boolean!
   crib: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -341,10 +343,10 @@ enum AmenitiesOrderByInput {
   childrensDinnerware_DESC
   crib_ASC
   crib_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type AmenitiesPreviousValues {
@@ -389,6 +391,8 @@ type AmenitiesPreviousValues {
   childrensBooksAndToys: Boolean!
   childrensDinnerware: Boolean!
   crib: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type AmenitiesSubscriptionPayload {
@@ -838,6 +842,64 @@ input AmenitiesWhereInput {
   All values that are not equal to given value.
   """
   crib_not: Boolean
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   place: PlaceWhereInput
 }
 
@@ -860,6 +922,7 @@ type Booking implements Node {
   startDate: DateTime!
   endDate: DateTime!
   payment: Payment!
+  updatedAt: DateTime!
 }
 
 """
@@ -957,6 +1020,7 @@ type BookingPreviousValues {
   createdAt: DateTime!
   startDate: DateTime!
   endDate: DateTime!
+  updatedAt: DateTime!
 }
 
 input BookingScalarWhereInput {
@@ -1112,6 +1176,35 @@ input BookingScalarWhereInput {
   All values greater than or equal the given value.
   """
   endDate_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type BookingSubscriptionPayload {
@@ -1408,6 +1501,35 @@ input BookingWhereInput {
   All values greater than or equal the given value.
   """
   endDate_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   bookee: UserWhereInput
   place: PlaceWhereInput
   payment: PaymentWhereInput
@@ -1421,6 +1543,8 @@ type City implements Node {
   id: ID!
   name: String!
   neighbourhoods(where: NeighbourhoodWhereInput, orderBy: NeighbourhoodOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Neighbourhood!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -1473,15 +1597,17 @@ enum CityOrderByInput {
   id_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type CityPreviousValues {
   id: ID!
   name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type CitySubscriptionPayload {
@@ -1667,6 +1793,64 @@ input CityWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   neighbourhoods_every: NeighbourhoodWhereInput
   neighbourhoods_some: NeighbourhoodWhereInput
   neighbourhoods_none: NeighbourhoodWhereInput
@@ -1688,6 +1872,7 @@ type CreditCardInformation implements Node {
   postalCode: String!
   country: String!
   paymentAccount: PaymentAccount
+  updatedAt: DateTime!
 }
 
 """
@@ -1785,6 +1970,7 @@ type CreditCardInformationPreviousValues {
   lastName: String!
   postalCode: String!
   country: String!
+  updatedAt: DateTime!
 }
 
 type CreditCardInformationSubscriptionPayload {
@@ -2345,6 +2531,35 @@ input CreditCardInformationWhereInput {
   All values not ending with the given string.
   """
   country_not_ends_with: String
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   paymentAccount: PaymentAccountWhereInput
 }
 
@@ -2373,6 +2588,8 @@ type Experience implements Node {
   reviews(where: ReviewWhereInput, orderBy: ReviewOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Review!]
   preview: Picture!
   popularity: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type ExperienceCategory implements Node {
@@ -2380,6 +2597,8 @@ type ExperienceCategory implements Node {
   mainColor: String!
   name: String!
   experience: Experience
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -2436,16 +2655,18 @@ enum ExperienceCategoryOrderByInput {
   mainColor_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type ExperienceCategoryPreviousValues {
   id: ID!
   mainColor: String!
   name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type ExperienceCategorySubscriptionPayload {
@@ -2689,6 +2910,64 @@ input ExperienceCategoryWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   experience: ExperienceWhereInput
 }
 
@@ -2810,10 +3089,10 @@ enum ExperienceOrderByInput {
   pricePerPerson_DESC
   popularity_ASC
   popularity_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type ExperiencePreviousValues {
@@ -2821,6 +3100,8 @@ type ExperiencePreviousValues {
   title: String!
   pricePerPerson: Int!
   popularity: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input ExperienceScalarWhereInput {
@@ -3000,6 +3281,64 @@ input ExperienceScalarWhereInput {
   All values greater than or equal the given value.
   """
   popularity_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type ExperienceSubscriptionPayload {
@@ -3351,6 +3690,64 @@ input ExperienceWhereInput {
   All values greater than or equal the given value.
   """
   popularity_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   category: ExperienceCategoryWhereInput
   host: UserWhereInput
   location: LocationWhereInput
@@ -3370,6 +3767,8 @@ type GuestRequirements implements Node {
   recommendationsFromOtherHosts: Boolean!
   guestTripInformation: Boolean!
   place: Place!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -3430,10 +3829,10 @@ enum GuestRequirementsOrderByInput {
   recommendationsFromOtherHosts_DESC
   guestTripInformation_ASC
   guestTripInformation_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type GuestRequirementsPreviousValues {
@@ -3441,6 +3840,8 @@ type GuestRequirementsPreviousValues {
   govIssuedId: Boolean!
   recommendationsFromOtherHosts: Boolean!
   guestTripInformation: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type GuestRequirementsSubscriptionPayload {
@@ -3596,6 +3997,64 @@ input GuestRequirementsWhereInput {
   All values that are not equal to given value.
   """
   guestTripInformation_not: Boolean
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   place: PlaceWhereInput
 }
 
@@ -3996,6 +4455,8 @@ type Location implements Node {
   directions: String
   experience: Experience
   restaurant: Restaurant
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -4136,10 +4597,10 @@ enum LocationOrderByInput {
   address_DESC
   directions_ASC
   directions_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type LocationPreviousValues {
@@ -4148,6 +4609,8 @@ type LocationPreviousValues {
   lng: Float!
   address: String
   directions: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input LocationScalarWhereInput {
@@ -4380,6 +4843,64 @@ input LocationScalarWhereInput {
   All values not ending with the given string.
   """
   directions_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type LocationSubscriptionPayload {
@@ -4810,6 +5331,64 @@ input LocationWhereInput {
   All values not ending with the given string.
   """
   directions_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   neighbourHood: NeighbourhoodWhereInput
   user: UserWhereInput
   place: PlaceWhereInput
@@ -4834,6 +5413,7 @@ type Message implements Node {
   to: User!
   deliveredAt: DateTime!
   readAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -4915,6 +5495,7 @@ type MessagePreviousValues {
   createdAt: DateTime!
   deliveredAt: DateTime!
   readAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input MessageScalarWhereInput {
@@ -5070,6 +5651,35 @@ input MessageScalarWhereInput {
   All values greater than or equal the given value.
   """
   readAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type MessageSubscriptionPayload {
@@ -5344,6 +5954,35 @@ input MessageWhereInput {
   All values greater than or equal the given value.
   """
   readAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   from: UserWhereInput
   to: UserWhereInput
 }
@@ -5508,6 +6147,8 @@ type Neighbourhood implements Node {
   city: City!
   featured: Boolean!
   popularity: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -5591,10 +6232,10 @@ enum NeighbourhoodOrderByInput {
   featured_DESC
   popularity_ASC
   popularity_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type NeighbourhoodPreviousValues {
@@ -5603,6 +6244,8 @@ type NeighbourhoodPreviousValues {
   slug: String!
   featured: Boolean!
   popularity: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input NeighbourhoodScalarWhereInput {
@@ -5811,6 +6454,64 @@ input NeighbourhoodScalarWhereInput {
   All values greater than or equal the given value.
   """
   popularity_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type NeighbourhoodSubscriptionPayload {
@@ -6142,6 +6843,64 @@ input NeighbourhoodWhereInput {
   All values greater than or equal the given value.
   """
   popularity_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   locations_every: LocationWhereInput
   locations_some: LocationWhereInput
   locations_none: LocationWhereInput
@@ -6170,6 +6929,7 @@ type Notification implements Node {
   user: User!
   link: String!
   readDate: DateTime!
+  updatedAt: DateTime!
 }
 
 enum NOTIFICATION_TYPE {
@@ -6250,6 +7010,7 @@ type NotificationPreviousValues {
   type: NOTIFICATION_TYPE
   link: String!
   readDate: DateTime!
+  updatedAt: DateTime!
 }
 
 input NotificationScalarWhereInput {
@@ -6442,6 +7203,35 @@ input NotificationScalarWhereInput {
   All values greater than or equal the given value.
   """
   readDate_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type NotificationSubscriptionPayload {
@@ -6726,6 +7516,35 @@ input NotificationWhereInput {
   All values greater than or equal the given value.
   """
   readDate_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   user: UserWhereInput
 }
 
@@ -6763,6 +7582,7 @@ type Payment implements Node {
   totalPrice: Float!
   booking: Booking!
   paymentMethod: PaymentAccount!
+  updatedAt: DateTime!
 }
 
 enum PAYMENT_PROVIDER {
@@ -6778,6 +7598,7 @@ type PaymentAccount implements Node {
   payments(where: PaymentWhereInput, orderBy: PaymentOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Payment!]
   paypal: PaypalInformation
   creditcard: CreditCardInformation
+  updatedAt: DateTime!
 }
 
 """
@@ -6885,6 +7706,7 @@ type PaymentAccountPreviousValues {
   id: ID!
   createdAt: DateTime!
   type: PAYMENT_PROVIDER
+  updatedAt: DateTime!
 }
 
 input PaymentAccountScalarWhereInput {
@@ -6995,6 +7817,35 @@ input PaymentAccountScalarWhereInput {
   All values that are not contained in given list.
   """
   type_not_in: [PAYMENT_PROVIDER!]
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type PaymentAccountSubscriptionPayload {
@@ -7254,6 +8105,35 @@ input PaymentAccountWhereInput {
   All values that are not contained in given list.
   """
   type_not_in: [PAYMENT_PROVIDER!]
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   user: UserWhereInput
   payments_every: PaymentWhereInput
   payments_some: PaymentWhereInput
@@ -7351,6 +8231,7 @@ type PaymentPreviousValues {
   serviceFee: Float!
   placePrice: Float!
   totalPrice: Float!
+  updatedAt: DateTime!
 }
 
 input PaymentScalarWhereInput {
@@ -7535,6 +8416,35 @@ input PaymentScalarWhereInput {
   All values greater than or equal the given value.
   """
   totalPrice_gte: Float
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type PaymentSubscriptionPayload {
@@ -7832,6 +8742,35 @@ input PaymentWhereInput {
   All values greater than or equal the given value.
   """
   totalPrice_gte: Float
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   booking: BookingWhereInput
   paymentMethod: PaymentAccountWhereInput
 }
@@ -7845,6 +8784,7 @@ type PaypalInformation implements Node {
   createdAt: DateTime!
   email: String!
   paymentAccount: PaymentAccount!
+  updatedAt: DateTime!
 }
 
 """
@@ -7907,6 +8847,7 @@ type PaypalInformationPreviousValues {
   id: ID!
   createdAt: DateTime!
   email: String!
+  updatedAt: DateTime!
 }
 
 type PaypalInformationSubscriptionPayload {
@@ -8123,6 +9064,35 @@ input PaypalInformationWhereInput {
   All values not ending with the given string.
   """
   email_not_ends_with: String
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   paymentAccount: PaymentAccountWhereInput
 }
 
@@ -8133,6 +9103,8 @@ input PaypalInformationWhereUniqueInput {
 type Picture implements Node {
   id: ID!
   url: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -8184,15 +9156,17 @@ enum PictureOrderByInput {
   id_DESC
   url_ASC
   url_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type PicturePreviousValues {
   id: ID!
   url: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input PictureScalarWhereInput {
@@ -8314,6 +9288,64 @@ input PictureScalarWhereInput {
   All values not ending with the given string.
   """
   url_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type PictureSubscriptionPayload {
@@ -8539,6 +9571,64 @@ input PictureWhereInput {
   All values not ending with the given string.
   """
   url_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 input PictureWhereUniqueInput {
@@ -8568,6 +9658,8 @@ type Place implements Node {
   bookings(where: BookingWhereInput, orderBy: BookingOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Booking!]
   pictures(where: PictureWhereInput, orderBy: PictureOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Picture!]
   popularity: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 enum PLACE_SIZES {
@@ -8919,10 +10011,10 @@ enum PlaceOrderByInput {
   numBaths_DESC
   popularity_ASC
   popularity_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type PlacePreviousValues {
@@ -8937,6 +10029,8 @@ type PlacePreviousValues {
   numBeds: Int!
   numBaths: Int!
   popularity: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input PlaceScalarWhereInput {
@@ -9375,6 +10469,64 @@ input PlaceScalarWhereInput {
   All values greater than or equal the given value.
   """
   popularity_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type PlaceSubscriptionPayload {
@@ -10235,6 +11387,64 @@ input PlaceWhereInput {
   All values greater than or equal the given value.
   """
   popularity_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   reviews_every: ReviewWhereInput
   reviews_some: ReviewWhereInput
   reviews_none: ReviewWhereInput
@@ -10646,6 +11856,8 @@ type Pricing implements Node {
   extraGuests: Int
   weekendPricing: Int
   currency: CURRENCY
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -10742,10 +11954,10 @@ enum PricingOrderByInput {
   weekendPricing_DESC
   currency_ASC
   currency_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type PricingPreviousValues {
@@ -10762,6 +11974,8 @@ type PricingPreviousValues {
   extraGuests: Int
   weekendPricing: Int
   currency: CURRENCY
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type PricingSubscriptionPayload {
@@ -11235,6 +12449,64 @@ input PricingWhereInput {
   All values that are not contained in given list.
   """
   currency_not_in: [CURRENCY!]
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   place: PlaceWhereInput
 }
 
@@ -11333,6 +12605,7 @@ type Restaurant implements Node {
   isCurated: Boolean!
   slug: String!
   popularity: Int!
+  updatedAt: DateTime!
 }
 
 """
@@ -11417,6 +12690,7 @@ type RestaurantPreviousValues {
   isCurated: Boolean!
   slug: String!
   popularity: Int!
+  updatedAt: DateTime!
 }
 
 type RestaurantSubscriptionPayload {
@@ -11763,6 +13037,35 @@ input RestaurantWhereInput {
   All values greater than or equal the given value.
   """
   popularity_gte: Int
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   pictures_every: PictureWhereInput
   pictures_some: PictureWhereInput
   pictures_none: PictureWhereInput
@@ -11786,6 +13089,7 @@ type Review implements Node {
   communication: Int!
   place: Place!
   experience: Experience
+  updatedAt: DateTime!
 }
 
 """
@@ -11903,6 +13207,7 @@ type ReviewPreviousValues {
   value: Int!
   cleanliness: Int!
   communication: Int!
+  updatedAt: DateTime!
 }
 
 input ReviewScalarWhereInput {
@@ -12256,6 +13561,35 @@ input ReviewScalarWhereInput {
   All values greater than or equal the given value.
   """
   communication_gte: Int
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type ReviewSubscriptionPayload {
@@ -12758,6 +14092,35 @@ input ReviewWhereInput {
   All values greater than or equal the given value.
   """
   communication_gte: Int
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   place: PlaceWhereInput
   experience: ExperienceWhereInput
 }
@@ -13910,6 +15273,8 @@ type Views implements Node {
   id: ID!
   lastWeek: Int!
   place: Place!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -13962,15 +15327,17 @@ enum ViewsOrderByInput {
   id_DESC
   lastWeek_ASC
   lastWeek_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type ViewsPreviousValues {
   id: ID!
   lastWeek: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type ViewsSubscriptionPayload {
@@ -14132,6 +15499,64 @@ input ViewsWhereInput {
   All values greater than or equal the given value.
   """
   lastWeek_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   place: PlaceWhereInput
 }
 

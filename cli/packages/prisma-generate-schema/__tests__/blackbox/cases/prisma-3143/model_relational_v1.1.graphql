@@ -1,8 +1,12 @@
 type Story {
   id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type UserSpace {
   id: ID! @id
   stories: [Story] @relation(name: "StoriesByUserSpace")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

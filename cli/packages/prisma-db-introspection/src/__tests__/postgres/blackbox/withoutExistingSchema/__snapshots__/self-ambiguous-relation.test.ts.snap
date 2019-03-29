@@ -23,7 +23,7 @@ exports[`Introspector test schema - 2504 1`] = `
 
 exports[`Introspector test schema - 2504 2`] = `
 "type Employee {
-  EmployeeId: Int! @id(strategy: NONE)
+  EmployeeId: Int! @id
   Address: String
   BirthDate: DateTime
   City: String

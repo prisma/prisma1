@@ -1,6 +1,8 @@
 type User {
   id: ID! @id
   person: Person! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Person {
@@ -12,11 +14,15 @@ type Person {
   scheduledTransactions: [FinancialScheduledTransaction]
   transactions: [FinancialTransaction]
   user: User
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type PhoneNumber {
   id: ID! @id
   number: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type FinancialAccount {
@@ -26,6 +32,8 @@ type FinancialAccount {
   description: String!
   isActive: Boolean!
   name: String
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 enum CREDIT_CARD {
@@ -49,11 +57,13 @@ type FinancialPaymentDetail {
   id: ID! @id
   accountNumberMasked: String!
   billingLocation: Location @relation(link: TABLE)
-  creditCardType: CREDIT_CARD @scalarList(strategy: RELATION)
-  achType: ACH_TYPE @scalarList(strategy: RELATION)
-  currencyType: CURRENCY_TYPE @scalarList(strategy: RELATION)
+  creditCardType: CREDIT_CARD
+  achType: ACH_TYPE
+  currencyType: CURRENCY_TYPE
   expirationDate: DateTime!
   nameOnCard: String
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 enum TRANSACTION_FREQUENCY {
@@ -70,10 +80,12 @@ type FinancialScheduledTransaction {
   payment: FinancialPaymentDetail @relation(link: TABLE)
   isActive: Boolean!
   startDate: DateTime
-  frequency: TRANSACTION_FREQUENCY @scalarList(strategy: RELATION)
+  frequency: TRANSACTION_FREQUENCY
   transactions: [FinancialTransaction]
   account: FinancialAccount @relation(link: TABLE)
   amount: Float!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 enum TRANSACTION_STATUS {
@@ -88,11 +100,13 @@ type FinancialTransaction {
   person: Person @relation(link: TABLE)
   processedDate: DateTime
   scheduledTransaction: FinancialScheduledTransaction @relation(link: TABLE)
-  status: TRANSACTION_STATUS! @scalarList(strategy: RELATION)
+  status: TRANSACTION_STATUS!
   transactionDate: DateTime
   amount: Float!
   account: FinancialAccount @relation(link: TABLE)
   organization: Group! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 enum GROUP_INVITE_STATUS {
@@ -111,7 +125,9 @@ type GroupInvite {
   email: String!
   group: Group! @relation(link: TABLE)
   groupRole: GroupRole @relation(link: TABLE)
-  status: GROUP_INVITE_STATUS! @scalarList(strategy: RELATION)
+  status: GROUP_INVITE_STATUS!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type GroupMember {
@@ -119,6 +135,8 @@ type GroupMember {
   group: Group @relation(link: TABLE)
   role: GroupRole @relation(link: TABLE)
   person: Person @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type GroupRole {
@@ -129,7 +147,9 @@ type GroupRole {
   groupType: GroupType @relation(link: TABLE)
   isLeader: Boolean
   name: String! @unique
-  type: GROUP_ROLE_TYPE @scalarList(strategy: RELATION)
+  type: GROUP_ROLE_TYPE
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type GroupType {
@@ -138,6 +158,8 @@ type GroupType {
   groups: [Group]
   name: String! @unique
   roles: [GroupRole]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Group {
@@ -150,6 +172,8 @@ type Group {
   members: [GroupMember]
   name: String!
   organization: Group @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type Campus {
@@ -161,6 +185,8 @@ type Campus {
   location: Location @relation(link: TABLE)
   name: String!
   phoneNumbers: [PhoneNumber]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 enum LOCATION_TYPE {
@@ -171,9 +197,11 @@ enum LOCATION_TYPE {
 type Location {
   id: ID! @id
   city: String
-  locationType: LOCATION_TYPE @scalarList(strategy: RELATION)
+  locationType: LOCATION_TYPE
   postalCode: String
   state: String
   street1: String
   street2: String
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

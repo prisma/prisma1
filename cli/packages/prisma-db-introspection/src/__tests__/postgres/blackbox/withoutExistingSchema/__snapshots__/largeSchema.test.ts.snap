@@ -236,7 +236,7 @@ type Film @db(name: \\"film\\") {
   language_id: Language!
   last_update: DateTime!
   length: Int
-  rating: MpaaRating @scalarList(strategy: RELATION)
+  rating: MpaaRating
   release_year: Int
   rental_duration: Int! @default(value: 3)
   rental_rate: Float! @default(value: 4.99)
@@ -247,17 +247,17 @@ type Film @db(name: \\"film\\") {
 
 type FilmActor @db(name: \\"film_actor\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # film_id: Film! @id(strategy: NONE)
+  # film_id: Film! @id
   # Multiple ID fields (compound indexes) are not supported
-  # actor_id: Actor! @id(strategy: NONE)
+  # actor_id: Actor! @id
   last_update: DateTime!
 }
 
 type FilmCategory @db(name: \\"film_category\\") {
   # Multiple ID fields (compound indexes) are not supported
-  # category_id: Category! @id(strategy: NONE)
+  # category_id: Category! @id
   # Multiple ID fields (compound indexes) are not supported
-  # film_id: Film! @id(strategy: NONE)
+  # film_id: Film! @id
   last_update: DateTime!
 }
 

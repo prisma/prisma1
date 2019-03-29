@@ -4,6 +4,8 @@ type A {
   b: Int! @default(value: 10)
   c: String! @unique
   d: String @default(value: "Hello")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type AWithId {
@@ -13,10 +15,14 @@ type AWithId {
   c: String! @unique
   d: String @default(value: "Hello")
   b2: B! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type B {
   id: ID! @id
   a: [A]
   a2: AWithId
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

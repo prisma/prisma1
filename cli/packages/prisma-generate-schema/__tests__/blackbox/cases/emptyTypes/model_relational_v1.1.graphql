@@ -1,33 +1,46 @@
 type OnlyId {
   id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type OnlyIdAndARelation {
   id: ID! @id
   ref: OnlyId! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type OnlyIdAndARelation2 {
   id: ID! @id
   ref: OnlyId @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type OnlyDate {
   id: ID! @id
   createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type OnlyRelation {
   id: ID! @id
   ref: [OnlyDate]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type OnlyRelationA {
   id: ID! @id
   ref: OnlyRelationA! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }
 
 type OnlyRelationB {
   id: ID! @id
   ref: OnlyRelationB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
 }

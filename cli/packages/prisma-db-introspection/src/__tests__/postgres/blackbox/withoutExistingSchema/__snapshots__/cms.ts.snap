@@ -175,7 +175,7 @@ type ServiceProviderPerformanceSummaryType @pgTable(name: \\"service_provider_pe
 
 exports[`Introspector CMS/sequences 2`] = `
 "type Provider @db(name: \\"providers\\") {
-  npi: Int! @id(strategy: NONE)
+  npi: Int! @id
   address_city: String
   address_country: String
   address_latitude: Float
@@ -209,7 +209,7 @@ type ProviderPerformance @db(name: \\"provider_performance\\") {
 }
 
 type ProvidersIndividual @db(name: \\"providers_individuals\\") {
-  npi: Provider! @id(strategy: NONE)
+  npi: Provider! @id
   credentials: String
   gender: String
   name_first: String
@@ -218,12 +218,12 @@ type ProvidersIndividual @db(name: \\"providers_individuals\\") {
 }
 
 type ProvidersOrganization @db(name: \\"providers_organizations\\") {
-  npi: Provider! @id(strategy: NONE)
+  npi: Provider! @id
   name: String
 }
 
 type Service @db(name: \\"services\\") {
-  hcpcs_code: ID! @id(strategy: NONE)
+  hcpcs_code: ID! @id
   hcpcs_description: String
   hcpcs_drug_indicator: String
   provider_performance: [ProviderPerformance]
