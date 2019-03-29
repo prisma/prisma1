@@ -23,8 +23,8 @@ exports[`Introspector sportsdb 1`] = `
 
 type Affiliation @pgTable(name: \\"affiliations\\") {
   id: Int! @unique
+  affiliation_phases: [AffiliationPhase]
   affiliationKey: String! @pgColumn(name: \\"affiliation_key\\")
-  affiliationPhases: [AffiliationPhase] @pgColumn(name: \\"affiliation_phases\\")
   affiliationPhases: [AffiliationPhase] @pgColumn(name: \\"affiliation_phases\\")
   affiliationsDocuments: [AffiliationsDocument] @pgColumn(name: \\"affiliations_documents\\")
   affiliationsEvents: [AffiliationsEvent] @pgColumn(name: \\"affiliations_events\\")
@@ -969,13 +969,13 @@ type Period @pgTable(name: \\"periods\\") {
 type Person @pgTable(name: \\"persons\\") {
   id: Int! @unique
   americanFootballActionParticipants: [AmericanFootballActionParticipant] @pgColumn(name: \\"american_football_action_participants\\")
-  baseballActionSubstitutions: [BaseballActionSubstitution] @pgColumn(name: \\"baseball_action_substitutions\\")
+  baseball_action_substitutions: [BaseballActionSubstitution]
+  baseball_event_states: [BaseballEventState]
+  baseball_event_states: [BaseballEventState]
+  baseball_event_states: [BaseballEventState]
+  baseball_event_states: [BaseballEventState]
   baseballActionSubstitutions: [BaseballActionSubstitution] @pgColumn(name: \\"baseball_action_substitutions\\")
   baseballDefensivePlayers: [BaseballDefensivePlayer] @pgColumn(name: \\"baseball_defensive_players\\")
-  baseballEventStates: [BaseballEventState] @pgColumn(name: \\"baseball_event_states\\")
-  baseballEventStates: [BaseballEventState] @pgColumn(name: \\"baseball_event_states\\")
-  baseballEventStates: [BaseballEventState] @pgColumn(name: \\"baseball_event_states\\")
-  baseballEventStates: [BaseballEventState] @pgColumn(name: \\"baseball_event_states\\")
   baseballEventStates: [BaseballEventState] @pgColumn(name: \\"baseball_event_states\\")
   birthDate: String @pgColumn(name: \\"birth_date\\")
   birthLocationId: Location @pgColumn(name: \\"birth_location_id\\")
@@ -1047,7 +1047,7 @@ type Position @pgTable(name: \\"positions\\") {
   id: Int! @unique
   abbreviation: String!
   affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
-  baseballActionSubstitutions: [BaseballActionSubstitution] @pgColumn(name: \\"baseball_action_substitutions\\")
+  baseball_action_substitutions: [BaseballActionSubstitution]
   baseballActionSubstitutions: [BaseballActionSubstitution] @pgColumn(name: \\"baseball_action_substitutions\\")
   baseballDefensivePlayers: [BaseballDefensivePlayer] @pgColumn(name: \\"baseball_defensive_players\\")
   corePersonStats: [CorePersonStat] @pgColumn(name: \\"core_person_stats\\")
@@ -1085,18 +1085,18 @@ type Role @pgTable(name: \\"roles\\") {
 
 type Season @pgTable(name: \\"seasons\\") {
   id: Int! @unique
-  affiliationPhases: [AffiliationPhase] @pgColumn(name: \\"affiliation_phases\\")
+  affiliation_phases: [AffiliationPhase]
   affiliationPhases: [AffiliationPhase] @pgColumn(name: \\"affiliation_phases\\")
   endDateTime: DateTime @pgColumn(name: \\"end_date_time\\")
   injuryPhases: [InjuryPhase] @pgColumn(name: \\"injury_phases\\")
   leagueId: Affiliation! @pgColumn(name: \\"league_id\\")
-  personPhases: [PersonPhase] @pgColumn(name: \\"person_phases\\")
+  person_phases: [PersonPhase]
   personPhases: [PersonPhase] @pgColumn(name: \\"person_phases\\")
   publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
   seasonKey: Int! @pgColumn(name: \\"season_key\\")
   startDateTime: DateTime @pgColumn(name: \\"start_date_time\\")
   subSeasons: [SubSeason] @pgColumn(name: \\"sub_seasons\\")
-  teamPhases: [TeamPhase] @pgColumn(name: \\"team_phases\\")
+  team_phases: [TeamPhase]
   teamPhases: [TeamPhase] @pgColumn(name: \\"team_phases\\")
 }
 
@@ -1462,8 +1462,8 @@ exports[`Introspector sportsdb 2`] = `
 
 type Affiliation @db(name: \\"affiliations\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"affiliations_id_seq\\", initialValue: 1, allocationSize: 1)
+  affiliation_phases: [AffiliationPhase]
   affiliationKey: String! @db(name: \\"affiliation_key\\")
-  affiliationPhases: [AffiliationPhase] @db(name: \\"affiliation_phases\\")
   affiliationPhases: [AffiliationPhase] @db(name: \\"affiliation_phases\\")
   affiliationsDocuments: [AffiliationsDocument] @db(name: \\"affiliations_documents\\")
   affiliationsEvents: [AffiliationsEvent] @db(name: \\"affiliations_events\\")
@@ -2408,13 +2408,13 @@ type Period @db(name: \\"periods\\") {
 type Person @db(name: \\"persons\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"persons_id_seq\\", initialValue: 1, allocationSize: 1)
   americanFootballActionParticipants: [AmericanFootballActionParticipant] @db(name: \\"american_football_action_participants\\")
-  baseballActionSubstitutions: [BaseballActionSubstitution] @db(name: \\"baseball_action_substitutions\\")
+  baseball_action_substitutions: [BaseballActionSubstitution]
+  baseball_event_states: [BaseballEventState]
+  baseball_event_states: [BaseballEventState]
+  baseball_event_states: [BaseballEventState]
+  baseball_event_states: [BaseballEventState]
   baseballActionSubstitutions: [BaseballActionSubstitution] @db(name: \\"baseball_action_substitutions\\")
   baseballDefensivePlayers: [BaseballDefensivePlayer] @db(name: \\"baseball_defensive_players\\")
-  baseballEventStates: [BaseballEventState] @db(name: \\"baseball_event_states\\")
-  baseballEventStates: [BaseballEventState] @db(name: \\"baseball_event_states\\")
-  baseballEventStates: [BaseballEventState] @db(name: \\"baseball_event_states\\")
-  baseballEventStates: [BaseballEventState] @db(name: \\"baseball_event_states\\")
   baseballEventStates: [BaseballEventState] @db(name: \\"baseball_event_states\\")
   birthDate: String @db(name: \\"birth_date\\")
   birthLocationId: Location @db(name: \\"birth_location_id\\")
@@ -2486,7 +2486,7 @@ type Position @db(name: \\"positions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"positions_id_seq\\", initialValue: 1, allocationSize: 1)
   abbreviation: String!
   affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
-  baseballActionSubstitutions: [BaseballActionSubstitution] @db(name: \\"baseball_action_substitutions\\")
+  baseball_action_substitutions: [BaseballActionSubstitution]
   baseballActionSubstitutions: [BaseballActionSubstitution] @db(name: \\"baseball_action_substitutions\\")
   baseballDefensivePlayers: [BaseballDefensivePlayer] @db(name: \\"baseball_defensive_players\\")
   corePersonStats: [CorePersonStat] @db(name: \\"core_person_stats\\")
@@ -2524,18 +2524,18 @@ type Role @db(name: \\"roles\\") {
 
 type Season @db(name: \\"seasons\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"seasons_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliationPhases: [AffiliationPhase] @db(name: \\"affiliation_phases\\")
+  affiliation_phases: [AffiliationPhase]
   affiliationPhases: [AffiliationPhase] @db(name: \\"affiliation_phases\\")
   endDateTime: DateTime @db(name: \\"end_date_time\\")
   injuryPhases: [InjuryPhase] @db(name: \\"injury_phases\\")
   leagueId: Affiliation! @db(name: \\"league_id\\")
-  personPhases: [PersonPhase] @db(name: \\"person_phases\\")
+  person_phases: [PersonPhase]
   personPhases: [PersonPhase] @db(name: \\"person_phases\\")
   publisherId: Publisher! @db(name: \\"publisher_id\\")
   seasonKey: Int! @db(name: \\"season_key\\")
   startDateTime: DateTime @db(name: \\"start_date_time\\")
   subSeasons: [SubSeason] @db(name: \\"sub_seasons\\")
-  teamPhases: [TeamPhase] @db(name: \\"team_phases\\")
+  team_phases: [TeamPhase]
   teamPhases: [TeamPhase] @db(name: \\"team_phases\\")
 }
 

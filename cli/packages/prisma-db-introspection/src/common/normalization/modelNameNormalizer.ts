@@ -106,10 +106,10 @@ export default class ModelNameNormalizer implements INormalizer {
       if (field.name !== camelcase(field.name)) {
         // if we can't find another field with the camelcased name, we're save
         // and don't have a collision
-        // if (!parentType.fields.find(f => f.name === camelcase(field.name))) {
-        field.databaseName = field.name
-        field.name = camelcase(field.name)
-        // }
+        if (!parentType.fields.find(f => f.name === camelcase(field.name))) {
+          field.databaseName = field.name
+          field.name = camelcase(field.name)
+        }
       }
     }
     if (typeof field.type !== 'string' && field.type.isEmbedded) {
