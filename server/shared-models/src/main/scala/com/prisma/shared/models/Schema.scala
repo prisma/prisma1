@@ -4,10 +4,10 @@ import com.prisma.shared.errors.SharedErrors
 
 object Schema {
   val empty    = Schema()
-  val emptyV11 = Schema(version = Some("v2"))
+  val emptyV11 = Schema(version = Some(version.v11))
 
   object version {
-    val v2 = "v2"
+    val v11 = "v2" // the datamodel v1.1 was originally called v2. For backwards compatibility we still call it v2 here.
   }
 }
 
@@ -18,7 +18,7 @@ case class Schema(
     version: Option[String] = None
 ) {
   val isLegacy                              = version.isEmpty
-  val isV2                                  = version.contains(Schema.version.v2)
+  val isV11                                 = version.contains(Schema.version.v11)
   val models                                = modelTemplates.map(_.build(this))
   val relations                             = relationTemplates.map(_.build(this))
   val allFields: Seq[Field]                 = models.flatMap(_.fields)

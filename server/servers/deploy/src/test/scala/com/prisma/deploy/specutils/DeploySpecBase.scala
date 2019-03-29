@@ -78,7 +78,7 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
   override def runOnlyForCapabilities = Set(MigrationsCapability)
 }
 
-trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: Suite =>
+trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV11Base { self: Suite =>
   private val stageSeparator           = this.deployConnector.projectIdEncoder.stageSeparator
   val projectName                      = this.getClass.getSimpleName
   val projectStage                     = "default"
@@ -160,7 +160,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
   }
 }
 
-trait DataModelV2Base { self: PassiveDeploySpecBase =>
+trait DataModelV11Base { self: PassiveDeploySpecBase =>
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val project = Project(id = projectId, schema = Schema.empty)

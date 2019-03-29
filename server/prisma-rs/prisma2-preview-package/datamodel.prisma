@@ -96,7 +96,7 @@ type Playlist {
   Tracks: [Track] @relation(name:"PlaylistTrack")
 }
 
-type PlaylistTrack @linkTable {
+type PlaylistTrack @relationTable {
   PlaylistId: Playlist
   TrackId: Track
 }
