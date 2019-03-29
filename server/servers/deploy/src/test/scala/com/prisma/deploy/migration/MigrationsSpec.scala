@@ -353,7 +353,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myB: B
         |  myA: A
@@ -385,7 +385,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myId: ID! @id
         |  myB: B
@@ -419,7 +419,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myId: ID! @id
         |  myB: B
@@ -445,7 +445,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myB: B
         |  myA: A
@@ -471,7 +471,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  myB: B
         |  myA: A
         |}
@@ -494,7 +494,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myId: ID! @id
         |  myB: B
@@ -533,7 +533,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  id: ID! @id
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  one: A
         |  two: B
         |}
@@ -565,7 +565,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  id: ID! @id
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  one: A
         |  two: C
         |}
@@ -597,7 +597,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  a: A @relation(name: "CustomLinkTable")
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  myA: A
         |  myB: B
         |}

@@ -543,7 +543,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         |  model: Model @relation(name: "ModelToModelRelation", link: TABLE)
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  firstColumn: Model!
         |  secondColumn: Model!
         |}
@@ -589,7 +589,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  firstColumn: Model!
         |  secondColumn: Model!
         |}
@@ -611,7 +611,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         |  model: Model @relation(name: "ModelToModelRelation", link: TABLE)
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  idColumn: ID! @id @db(name: "id_column")
         |  firstColumn: Model!
         |  secondColumn: Model!

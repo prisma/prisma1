@@ -7,8 +7,8 @@ import com.prisma.shared.models.ConnectorCapability.RelationLinkTableCapability
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import sangria.ast.{Directive, Document, ObjectTypeDefinition}
 
-object LinkTableDirective extends TypeDirective[Boolean] {
-  override def name = "linkTable"
+object RelationTableDirective extends TypeDirective[Boolean] {
+  override def name = "relationTable"
 
   override def validate(
       document: Document,

@@ -85,7 +85,7 @@ object DataSchemaAstExtensions {
 
     def dbName: Option[String] = objectType.directiveArgumentAsString("db", "name")
 
-    def isRelationTable: Boolean = objectType.hasDirective("linkTable")
+    def isRelationTable: Boolean = objectType.hasDirective("relationTable")
 
     def relationFields(doc: Document): Vector[FieldDefinition] = objectType.fields.filter(_.isRelationField(doc))
   }

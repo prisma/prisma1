@@ -4,7 +4,7 @@ import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, RelationLinkTableCapability}
 import org.scalatest.{Matchers, WordSpecLike}
 
-class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
+class RelationTableDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {
   "it must be parsed correctly" in {
     val dataModelString =
       """
@@ -13,7 +13,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  A: Model!
         |  B: Model!
         |}
@@ -32,7 +32,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  A: Model!
         |  B: Model!
         |}
@@ -43,7 +43,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
     val error = errors.head
     error.`type` should be("ModelToModelRelation")
     error.field should be(None)
-    error.description should be("The directive `@linkTable` is not supported by this connector.")
+    error.description should be("The directive `@relationTable` is not supported by this connector.")
   }
 
   "should error if the name of the link table is not referred to from any relation" in {
@@ -54,7 +54,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model
         |}
         |
-        |type MyLinkTable @linkTable {
+        |type MyLinkTable @relationTable {
         |  A: Model!
         |  B: Model!
         |}
@@ -82,7 +82,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  A: Model!
         |  B: Model!
         |}
@@ -110,7 +110,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model @relation(name: "MyRelation")
         |}
         |
-        |type MyRelation @linkTable {
+        |type MyRelation @relationTable {
         |  A: Model!
         |  B: Model!
         |}
@@ -133,7 +133,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  A: Model!
         |  B: Model!
         |  field: Int!
@@ -156,7 +156,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  A: Model!
         |  B: Model!
         |  C: Model!
@@ -180,7 +180,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  id: ID! @id
         |  A: Model!
         |  B: Model!
@@ -209,7 +209,7 @@ class LinkTableDirectiveSpec extends WordSpecLike with Matchers with DataModelVa
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  id: Int! @id
         |  A: Model!
         |  B: Model!
