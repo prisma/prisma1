@@ -487,9 +487,21 @@ export default abstract class Renderer {
     if (!this.sortBeforeRendering) {
       return fields
     } else {
-      return [...fields].sort((a, b) =>
-        a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
-      )
+      return [...fields].sort((a, b) => {
+        if (a.name.toLowerCase() === b.name.toLowerCase()) {
+          return this.getTypeName(a.type) > this.getTypeName(b.type) ? 1 : -1
+        }
+
+        return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
+      })
     }
+  }
+
+  protected getTypeName(type: IGQLType | string) {
+    if (typeof type === 'string') {
+      return type
+    }
+
+    return type.name
   }
 }
