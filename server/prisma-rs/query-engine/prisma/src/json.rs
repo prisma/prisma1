@@ -3,6 +3,7 @@ use core::{MultiPrismaQueryResult, PrismaQueryResult, SinglePrismaQueryResult};
 use prisma_models::PrismaValue;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use PrismaQueryResult::*;
 
 /// Wraps a response in a deterministic envelope
 #[derive(Serialize, Deserialize)]
@@ -26,8 +27,6 @@ pub enum Item {
     List(List),
     Value(PrismaValue),
 }
-
-use PrismaQueryResult::*;
 
 #[allow(dead_code)]
 impl Envelope {

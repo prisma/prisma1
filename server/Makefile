@@ -24,6 +24,10 @@ dev-sqlite-native:
 	mkdir -p db
 	cp ./docker-compose/sqlite-native/prisma.yml ./prisma.yml
 
+dev-native-integration-tests:
+	mkdir -p db
+	cp ./docker-compose/native-integration-tests/prisma.yml ./prisma.yml
+
 dev-down:
 	docker-compose -f docker-compose/mysql/dev-mysql.yml down -v --remove-orphans
 	docker-compose -f docker-compose/postgres/dev-postgres.yml down -v --remove-orphans
