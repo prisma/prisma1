@@ -20,10 +20,6 @@ use super::{Filter, NodeSelector};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 
-pub trait NestedMutaction {
-    fn nested_mutactions(&self) -> &[&DatabaseMutaction];
-}
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DatabaseMutactionResultType {
     Create,

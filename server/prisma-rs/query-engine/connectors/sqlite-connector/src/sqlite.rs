@@ -265,17 +265,18 @@ impl Sqlite {
 
             Self::create_node(
                 conn,
-                mutaction.relation_field.model().clone(),
+                mutaction.relation_field.related_model().clone(),
                 prisma_args,
                 mutaction.list_args.clone(),
             )
         } else {
             let id = Self::create_node(
                 conn,
-                mutaction.relation_field.model().clone(),
+                mutaction.relation_field.related_model().clone(),
                 mutaction.non_list_args.clone(),
                 mutaction.list_args.clone(),
             )?;
+
             let relation_query = MutationBuilder::create_relation(mutaction.relation_field.clone(), parent_id, &id);
 
             Self::execute_one(conn, relation_query)?;

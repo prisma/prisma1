@@ -21,7 +21,7 @@ pub trait NestedActions {
 
     fn check_for_old_child(&self, id: &GraphqlId) -> Query {
         let relation = self.relation();
-        let rf = self.relation_field();
+        let rf = self.relation_field().related_field();
 
         let relation_column = relation.column_for_relation_side(rf.relation_side);
         let opposite_column = relation.column_for_relation_side(rf.relation_side.opposite());
@@ -37,7 +37,7 @@ pub trait NestedActions {
         let relation = self.relation();
         let relation_column = relation.column_for_relation_side(rf.relation_side);
 
-        let condition = relation_column.equals(PrismaValue::Null);
+        let condition = relation_column.equals(id.clone());
 
         match relation.inline_relation_column() {
             Some(column) => Update::table(relation.relation_table())

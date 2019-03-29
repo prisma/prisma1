@@ -3,79 +3,95 @@ use prisma_models::{GraphqlId, SingleNode};
 use serde_json::Value;
 
 pub trait DatabaseMutactionExecutor {
-    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> ConnectorResult<DatabaseMutactionResults> {
+    fn execute_nested(
+        &self,
+        db_name: String,
+        mutaction: NestedDatabaseMutaction,
+        parent_id: GraphqlId,
+    ) -> ConnectorResult<DatabaseMutactionResults> {
         let mut results = DatabaseMutactionResults::default();
 
         match mutaction {
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref cn)) => {
+            NestedDatabaseMutaction::CreateNode(ref cn) => {
+                let result = DatabaseMutactionResult {
+                    identifier: Identifier::Id(self.execute_nested_create(db_name, &parent_id, cn)?),
+                    typ: DatabaseMutactionResultType::Create,
+                    mutaction: DatabaseMutaction::Nested(mutaction),
+                };
+
+                results.push(result);
+            }
+            NestedDatabaseMutaction::UpdateNode(_) => unimplemented!(),
+            NestedDatabaseMutaction::UpsertNode(_) => unimplemented!(),
+            NestedDatabaseMutaction::DeleteNode(_) => unimplemented!(),
+            NestedDatabaseMutaction::Connect(_) => unimplemented!(),
+            NestedDatabaseMutaction::Disconnect(_) => unimplemented!(),
+            NestedDatabaseMutaction::Set(_) => unimplemented!(),
+            NestedDatabaseMutaction::UpdateNodes(_) => unimplemented!(),
+            NestedDatabaseMutaction::DeleteNodes(_) => unimplemented!(),
+        }
+
+        Ok(results)
+    }
+
+    fn execute_toplevel(
+        &self,
+        db_name: String,
+        mutaction: TopLevelDatabaseMutaction,
+    ) -> ConnectorResult<DatabaseMutactionResults> {
+        let mut results = DatabaseMutactionResults::default();
+
+        match mutaction {
+            TopLevelDatabaseMutaction::CreateNode(ref cn) => {
                 let result = DatabaseMutactionResult {
                     identifier: Identifier::Id(self.execute_create(db_name, cn)?),
                     typ: DatabaseMutactionResultType::Create,
-                    mutaction,
+                    mutaction: DatabaseMutaction::TopLevel(mutaction),
                 };
 
                 results.push(result);
             }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNode(ref un)) => {
+            TopLevelDatabaseMutaction::UpdateNode(ref un) => {
                 let result = DatabaseMutactionResult {
                     identifier: Identifier::Id(self.execute_update(db_name, un)?),
                     typ: DatabaseMutactionResultType::Update,
-                    mutaction,
+                    mutaction: DatabaseMutaction::TopLevel(mutaction),
                 };
 
                 results.push(result);
             }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(ref us)) => {
+            TopLevelDatabaseMutaction::UpsertNode(ref us) => {
                 let (id, typ) = self.execute_upsert(db_name, us)?;
 
                 let result = DatabaseMutactionResult {
                     identifier: Identifier::Id(id),
                     typ,
-                    mutaction,
+                    mutaction: DatabaseMutaction::TopLevel(mutaction),
                 };
 
                 results.push(result);
             }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNode(ref dn)) => {
+            TopLevelDatabaseMutaction::DeleteNode(ref dn) => {
                 let result = DatabaseMutactionResult {
                     identifier: Identifier::Node(self.execute_delete(db_name, dn)?),
                     typ: DatabaseMutactionResultType::Delete,
-                    mutaction,
+                    mutaction: DatabaseMutaction::TopLevel(mutaction),
                 };
 
                 results.push(result);
             }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNodes(ref uns)) => {
+            TopLevelDatabaseMutaction::UpdateNodes(ref uns) => {
                 // uns uns uns
                 let result = DatabaseMutactionResult {
                     identifier: Identifier::Count(self.execute_update_many(db_name, uns)?),
                     typ: DatabaseMutactionResultType::Many,
-                    mutaction,
+                    mutaction: DatabaseMutaction::TopLevel(mutaction),
                 };
 
                 results.push(result);
             }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::ResetData(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::CreateNode(ref cn)) => {
-                let parent_id = GraphqlId::Int(420);
-
-                let result = DatabaseMutactionResult {
-                    identifier: Identifier::Id(self.execute_nested_create(db_name, &parent_id, cn)?),
-                    typ: DatabaseMutactionResultType::Create,
-                    mutaction,
-                };
-
-                results.push(result);
-            }
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::UpdateNode(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::UpsertNode(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::DeleteNode(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::Connect(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::Disconnect(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::Set(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::UpdateNodes(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(NestedDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
+            TopLevelDatabaseMutaction::DeleteNodes(_) => unimplemented!(),
+            TopLevelDatabaseMutaction::ResetData(_) => unimplemented!(),
         };
 
         Ok(results)

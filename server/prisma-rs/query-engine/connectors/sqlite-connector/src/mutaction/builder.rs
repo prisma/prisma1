@@ -66,10 +66,12 @@ impl MutationBuilder {
             }
             None => {
                 let relation = field.relation();
+                let parent_column = field.relation_column();
+                let child_column = field.opposite_column();
 
                 let insert = Insert::single_into(relation.relation_table())
-                    .value(field.as_column(), parent_id.clone())
-                    .value(field.related_field().as_column(), child_id.clone());
+                    .value(parent_column.name, parent_id.clone())
+                    .value(child_column.name, child_id.clone());
 
                 let insert: Insert = match relation.id_column() {
                     Some(id_column) => insert.value(id_column, cuid::cuid().unwrap()).into(),
