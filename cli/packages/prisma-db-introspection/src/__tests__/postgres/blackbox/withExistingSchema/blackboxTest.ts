@@ -90,7 +90,18 @@ export default async function blackBoxTest(name: string) {
   */
 }
 
-const testNames = fs.readdirSync(relativeTestCaseDir)
+const testNames = fs
+  .readdirSync(relativeTestCaseDir)
+  .filter(
+    t =>
+      ![
+        'selfReferencing',
+        'relations',
+        'relationNames',
+        'meshRelation',
+        'airbnb',
+      ].includes(t),
+  )
 
 for (const testName of testNames) {
   test(
