@@ -113,6 +113,20 @@ impl RelationField {
         }
     }
 
+    pub fn opposite_column(&self) -> Column {
+        match self.relation_side {
+            RelationSide::A => self.relation().model_b_column(),
+            RelationSide::B => self.relation().model_a_column(),
+        }
+    }
+
+    pub fn relation_column(&self) -> Column {
+        match self.relation_side {
+            RelationSide::A => self.relation().model_a_column(),
+            RelationSide::B => self.relation().model_b_column(),
+        }
+    }
+
     pub fn as_column(&self) -> Column {
         let model = self.model();
         let schema = model.schema();

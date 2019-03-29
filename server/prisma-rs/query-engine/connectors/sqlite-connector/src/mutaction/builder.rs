@@ -1,9 +1,7 @@
-#[allow(unused_imports)]
-use itertools::Itertools;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
-use crate::{error::ConnectorError, ConnectorResult};
+use connector::{ConnectorError, ConnectorResult};
 
 pub struct MutationBuilder;
 
@@ -42,6 +40,47 @@ impl MutationBuilder {
             .fold(base, |acc, (name, value)| acc.value(name, value));
 
         (insert.into(), return_id)
+    }
+
+    pub fn create_relation(field: RelationFieldRef, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query {
+        let relation = field.relation();
+
+        match relation.inline_manifestation() {
+            Some(mani) => {
+                let referencing_column = mani.referencing_column.as_ref();
+
+                let (update_id, link_id) = match field.relation_is_inlined_in_parent() {
+                    true => (parent_id, child_id),
+                    false => (child_id, parent_id),
+                };
+
+                let update_condition = match field.relation_is_inlined_in_parent() {
+                    true => field.model().fields().id().as_column().equals(update_id),
+                    false => field.related_model().fields().id().as_column().equals(link_id),
+                };
+
+                Update::table(relation.relation_table())
+                    .set(referencing_column, link_id.clone())
+                    .so_that(update_condition)
+                    .into()
+            }
+            None => {
+                let relation = field.relation();
+                let parent_column = field.relation_column();
+                let child_column = field.opposite_column();
+
+                let insert = Insert::single_into(relation.relation_table())
+                    .value(parent_column.name, parent_id.clone())
+                    .value(child_column.name, child_id.clone());
+
+                let insert: Insert = match relation.id_column() {
+                    Some(id_column) => insert.value(id_column, cuid::cuid().unwrap()).into(),
+                    None => insert.into(),
+                };
+
+                insert.on_conflict(OnConflict::DoNothing).into()
+            }
+        }
     }
 
     pub fn create_scalar_list_value(

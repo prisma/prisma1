@@ -1,4 +1,8 @@
-use crate::{query_builder::QueryBuilder, DatabaseExecutor};
+use crate::{
+    mutaction::{MutationBuilder, NestedActions},
+    query_builder::QueryBuilder,
+    DatabaseExecutor,
+};
 use chrono::{DateTime, Utc};
 use connector::*;
 use prisma_models::prelude::*;
@@ -44,7 +48,14 @@ impl DatabaseMutactionExecutor for Sqlite {
     }
 
     fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId> {
-        self.with_transaction(&db_name, |conn| Self::create_node(conn, mutaction))
+        self.with_transaction(&db_name, |conn| {
+            Self::create_node(
+                conn,
+                mutaction.model.clone(),
+                mutaction.non_list_args.clone(),
+                mutaction.list_args.clone(),
+            )
+        })
     }
 
     fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId> {
@@ -72,7 +83,8 @@ impl DatabaseMutactionExecutor for Sqlite {
 
             match Self::id_for(conn, Arc::clone(&model), &mutaction.where_) {
                 Err(_e @ ConnectorError::NodeNotFoundForWhere { .. }) => {
-                    let id = Self::create_node(conn, &mutaction.create)?;
+                    let m = &mutaction.create;
+                    let id = Self::create_node(conn, m.model.clone(), m.non_list_args.clone(), m.list_args.clone())?;
 
                     Ok((id, DatabaseMutactionResultType::Create))
                 }
@@ -83,6 +95,38 @@ impl DatabaseMutactionExecutor for Sqlite {
                 }
                 Err(e) => Err(e),
             }
+        })
+    }
+
+    fn execute_nested_create(
+        &self,
+        db_name: String,
+        parent_id: &GraphqlId,
+        mutaction: &NestedCreateNode,
+    ) -> ConnectorResult<GraphqlId> {
+        self.with_transaction(&db_name, |conn| {
+            let relation = mutaction.relation_field.relation();
+
+            if let Some(Query::Select(select)) = mutaction.required_check(parent_id)? {
+                let ids = Self::query(conn, select, |row| {
+                    let id: GraphqlId = row.get(0);
+                    Ok(id)
+                })?;
+
+                if ids.into_iter().next().is_some() {
+                    return Err(ConnectorError::RelationViolation {
+                        relation_name: relation.name.clone(),
+                        model_a_name: relation.model_a().name.clone(),
+                        model_b_name: relation.model_b().name.clone(),
+                    });
+                }
+            };
+
+            if let Some(query) = mutaction.removal_action(parent_id) {
+                Self::execute_one(conn, query)?;
+            }
+
+            Self::create_node_and_connect_to_parent(conn, parent_id, mutaction)
         })
     }
 
@@ -170,9 +214,13 @@ impl Sqlite {
         })
     }
 
-    fn create_node(conn: &Transaction, mutaction: &CreateNode) -> ConnectorResult<GraphqlId> {
-        let (insert, returned_id) =
-            MutationBuilder::create_node(mutaction.model.clone(), mutaction.non_list_args.clone());
+    fn create_node(
+        conn: &Transaction,
+        model: ModelRef,
+        non_list_args: PrismaArgs,
+        list_args: Vec<(String, PrismaListValue)>,
+    ) -> ConnectorResult<GraphqlId> {
+        let (insert, returned_id) = MutationBuilder::create_node(model.clone(), non_list_args);
 
         Self::execute_one(conn, insert)?;
 
@@ -181,7 +229,7 @@ impl Sqlite {
             None => GraphqlId::Int(conn.last_insert_rowid() as usize),
         };
 
-        Self::create_list_args(conn, &id, mutaction.model.clone(), mutaction.list_args.clone())?;
+        Self::create_list_args(conn, &id, model, list_args)?;
 
         Ok(id)
     }
@@ -202,6 +250,39 @@ impl Sqlite {
         }
 
         Ok(())
+    }
+
+    fn create_node_and_connect_to_parent(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        mutaction: &NestedCreateNode,
+    ) -> ConnectorResult<GraphqlId> {
+        let related_field = mutaction.relation_field.related_field();
+
+        if related_field.relation_is_inlined_in_parent() {
+            let mut prisma_args = mutaction.non_list_args.clone();
+            prisma_args.insert(related_field.name.clone(), parent_id.clone());
+
+            Self::create_node(
+                conn,
+                mutaction.relation_field.related_model().clone(),
+                prisma_args,
+                mutaction.list_args.clone(),
+            )
+        } else {
+            let id = Self::create_node(
+                conn,
+                mutaction.relation_field.related_model().clone(),
+                mutaction.non_list_args.clone(),
+                mutaction.list_args.clone(),
+            )?;
+
+            let relation_query = MutationBuilder::create_relation(mutaction.relation_field.clone(), parent_id, &id);
+
+            Self::execute_one(conn, relation_query)?;
+
+            Ok(id)
+        }
     }
 
     fn update_list_args(

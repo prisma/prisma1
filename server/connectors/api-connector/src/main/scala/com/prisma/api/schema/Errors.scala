@@ -115,6 +115,12 @@ object APIErrors {
         3042
       )
 
+  case class RequiredRelationWouldBeViolatedNative(relationName: String, modelAName: String, modelBName: String)
+    extends ClientApiError(
+      s"The change you are trying to make would violate the required relation '$relationName' between $modelAName and $modelBName",
+      3042
+    )
+
   case class MongoConflictingUpdates(model: String, override val message: String)
       extends ClientApiError(
         s"You have several updates affecting the same area of the document underlying $model. MongoMessage: $message",

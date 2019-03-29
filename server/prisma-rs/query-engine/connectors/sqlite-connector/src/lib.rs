@@ -8,6 +8,8 @@ mod ordering;
 mod query_builder;
 mod sqlite;
 
+pub mod mutaction;
+
 pub use data_resolver::*;
 pub use database_executor::*;
 pub use sqlite::*;

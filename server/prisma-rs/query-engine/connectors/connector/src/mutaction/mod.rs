@@ -1,4 +1,3 @@
-mod builder;
 mod create_node;
 mod delete_node;
 mod node_address;
@@ -8,7 +7,6 @@ mod result;
 mod update_node;
 mod upsert_node;
 
-pub use builder::*;
 pub use create_node::*;
 pub use delete_node::*;
 pub use node_address::*;
@@ -21,10 +19,6 @@ pub use upsert_node::*;
 use super::{Filter, NodeSelector};
 use prisma_models::prelude::*;
 use std::sync::Arc;
-
-pub trait NestedMutaction {
-    fn nested_mutactions(&self) -> &[&DatabaseMutaction];
-}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DatabaseMutactionResultType {
