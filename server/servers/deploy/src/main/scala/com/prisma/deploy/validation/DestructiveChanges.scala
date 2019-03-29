@@ -21,12 +21,12 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
   val isMongo                = deployConnector.capabilities.isMongo
 
   def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
-    checkAgainstExistingData.map { results =>
-      val destructiveWarnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
-      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError => error }
-      val errors                                     = inconsistencyErrors ++ missingCreatedAtOrUpdatedAtDirectives
+    checkAgainstExistingData.map { existingDataResults =>
+      val results                         = existingDataResults ++ missingCreatedAtOrUpdatedAtDirectives
+      val warnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
+      val errors: Vector[DeployError]     = results.collect { case error: DeployError => error }
       if (errors.isEmpty) {
-        Good(destructiveWarnings)
+        Good(warnings)
       } else {
         Bad(errors)
       }
@@ -37,19 +37,41 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     def errorMessage(fieldName: String) = {
       s"You are migrating to the new datamodel with the field `$fieldName` but is missing the directive `@$fieldName`. Please specify the field as `$fieldName: DateTime! @$fieldName` to keep its original behaviour."
     }
-    for {
-      model <- nextSchema.models
-      field <- model.scalarFields
-      if isMigrationFromV1ToV2
-      error <- field.name match {
-                case ReservedFields.createdAtFieldName if !field.behaviour.contains(CreatedAtBehaviour) =>
-                  Some(DeployError(model.name, field.name, errorMessage(ReservedFields.createdAtFieldName)))
-                case ReservedFields.updatedAtFieldName if !field.behaviour.contains(UpdatedAtBehaviour) =>
-                  Some(DeployError(model.name, field.name, errorMessage(ReservedFields.updatedAtFieldName)))
-                case _ =>
-                  None
-              }
-    } yield error
+    def warningMessage(fieldName: String, changeVerb: String) = {
+      s"You are adding the field `$fieldName` but is missing the directive `@$fieldName`. Please specify the field as `$fieldName: DateTime! @$fieldName` if you want to track the times for when a record was $changeVerb. Or deploy with `--force` to ignore this."
+    }
+    // Not specifying `@createdAt` or `@updatedAt` is an error when migrating from v1 to v11.
+    // It is just a one time warning when new fields are created when completely in v11 mode.
+    if (isMigrationFromV1ToV11) {
+      for {
+        model <- nextSchema.models
+        field <- model.scalarFields
+        error <- field.name match {
+                  case ReservedFields.createdAtFieldName if !field.behaviour.contains(CreatedAtBehaviour) =>
+                    Some(DeployError(model.name, field.name, errorMessage(ReservedFields.createdAtFieldName)))
+                  case ReservedFields.updatedAtFieldName if !field.behaviour.contains(UpdatedAtBehaviour) =>
+                    Some(DeployError(model.name, field.name, errorMessage(ReservedFields.updatedAtFieldName)))
+                  case _ =>
+                    None
+                }
+      } yield error
+
+    } else if (nextSchema.isV11) {
+      for {
+        createField <- steps.collect { case x: CreateField => x }
+        field       = nextSchema.getFieldByName_!(createField.model, createField.name)
+        warning <- field.name match {
+                    case ReservedFields.createdAtFieldName if !field.behaviour.contains(CreatedAtBehaviour) =>
+                      Some(DeployWarning(field.model.name, field.name, warningMessage(ReservedFields.createdAtFieldName, "created")))
+                    case ReservedFields.updatedAtFieldName if !field.behaviour.contains(UpdatedAtBehaviour) =>
+                      Some(DeployWarning(field.model.name, field.name, warningMessage(ReservedFields.updatedAtFieldName, "updated")))
+                    case _ =>
+                      None
+                  }
+      } yield warning
+    } else {
+      Vector.empty
+    }
   }
 
   private def checkAgainstExistingData: Future[Vector[DeployResult]] = {
