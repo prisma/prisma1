@@ -53,6 +53,12 @@ export class Cluster {
     stageName?: string,
   ): Promise<string | null> {
     // public clusters just take the token
+
+    const needsAuth = await this.needsAuth()
+    if (!needsAuth) {
+      return null
+    }
+
     if (this.name === 'shared-public-demo') {
       return ''
     }
@@ -278,9 +284,9 @@ Original error: ${e.message}`,
           name
         }
       }`)
-      return true
-    } catch (e) {
       return false
+    } catch (e) {
+      return true
     }
   }
 

@@ -62,10 +62,8 @@ export class Client {
       )
       debug(`is local cluster: ${cluster.local}`)
       const authenticationPayload = await this.isAuthenticated()
-      if (!cluster.local && authenticationPayload.isAuthenticated && workspaceSlug) {
+      if (!cluster.local && authenticationPayload.isAuthenticated && !cluster.shared) {
         // Added a check for login because we can only add a service to cloud when we are logged in
-        // Added a check for workspace slug because we want to add services for self-hosted and private servers hosted by Prisma
-        // while "*" applies to demo servers.
         const serviceCreatedInCloud = await cluster.addServiceToCloudDBIfMissing(
           serviceName,
           workspaceSlug || undefined,
@@ -76,7 +74,7 @@ export class Client {
       const agent = getProxyAgent(cluster.getDeployEndpoint())
       this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token && {Authorization: `Bearer ${token}`}),
         },
         agent,
       } as any)
