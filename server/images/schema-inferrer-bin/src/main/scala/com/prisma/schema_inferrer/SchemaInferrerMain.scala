@@ -15,14 +15,25 @@ object SchemaInferrerMain {
   implicit lazy val inputReads: Reads[Input] = Json.reads[Input]
 
   def main(args: Array[String]): Unit = {
-    val inputAsJson = Json.parse(StdIn.readLine())
+    println("WURST")
+    val line = StdIn.readLine()
+    println(s"READ: $line")
+
+    val inputAsJson = Json.parse(line)
     val input       = inputAsJson.as[Input]
 
-    val capabilities     = ConnectorCapabilities.mysqlPrototype
+    val (capabilities, emptySchema) =
+      if (line.contains("@id")) {
+        println("IS V1.1")
+        (ConnectorCapabilities.mysqlPrototype, Schema.emptyV11)
+      } else {
+        println("IS V1.0")
+        (ConnectorCapabilities.mysql, Schema.empty)
+      }
+
     val validationResult = DataModelValidatorImpl.validate(input.dataModel, FieldRequirementsInterface.empty, capabilities)
-    val schema           = SchemaInferrer(capabilities).infer(Schema.emptyV11, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
+    val schema           = SchemaInferrer(capabilities).infer(emptySchema, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
 
     println(Json.toJson(schema))
   }
-
 }
