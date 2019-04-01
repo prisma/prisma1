@@ -1,5 +1,8 @@
 package com.prisma.api
 
+import java.nio.charset.StandardCharsets
+import java.util.Base64
+
 import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
 import com.prisma.graphql.GraphQlClient
 import com.prisma.shared.models.Project
@@ -80,8 +83,8 @@ case class PrismaLogger() extends ProcessLogger {
   private val stdout = new StringBuffer()
   private val stderr = new StringBuffer()
 
-  override def out(s: => String): Unit = stdout.append(s)
-  override def err(s: => String): Unit = stderr.append(s)
+  override def out(s: => String): Unit = stdout.append(s + "\n")
+  override def err(s: => String): Unit = stderr.append(s + "\n")
 
   override def buffer[T](f: => T): T = ???
 
@@ -109,10 +112,20 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
   val prismaBinaryConfigPath: String = sys.env.getOrElse("PRISMA_BINARY_CONFIG_PATH", sys.error("Required PRISMA_BINARY_CONFIG_PATH env var not found"))
   val gqlClient                      = GraphQlClient("http://127.0.0.1:8000") // todo rust code currently ignores port in config
 
-  def startPrismaProcess(): ProcessHandle = {
+  def startPrismaProcess(schema: Schema[ApiUserContext, Unit]): ProcessHandle = {
     val logger     = PrismaLogger()
     val workingDir = new java.io.File(".")
-    val process    = Process(prismaBinaryPath, workingDir, "PRISMA_CONFIG_PATH" -> prismaBinaryConfigPath).run(logger)
+    val encoded    = Base64.getEncoder.encode(SchemaRenderer.renderSchema(schema).getBytes)
+
+    // Important: Rust requires UTF-8 encoding (encodeToString uses Latin-1)
+    val schemaEnv = new String(encoded, StandardCharsets.UTF_8)
+
+    val process = Process(
+      prismaBinaryPath,
+      workingDir,
+      "PRISMA_CONFIG_PATH" -> prismaBinaryConfigPath,
+      "PRISMA_SCHEMA"      -> schemaEnv
+    ).run(logger)
 
     ProcessHandle(process, logger)
   }
@@ -156,7 +169,7 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
       """.stripMargin))
       result
     } else {
-      val prismaProcess = startPrismaProcess()
+      val prismaProcess = startPrismaProcess(schema)
       val res           = gqlClient.sendQuery(query).map(r => r.jsonBody.get) // todo don't unwrap
 
       res.onComplete(_ => {

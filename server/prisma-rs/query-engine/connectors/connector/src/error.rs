@@ -36,19 +36,25 @@ impl From<&NodeSelector> for NodeSelectorInfo {
 pub enum ConnectorError {
     #[fail(display = "Unique constraint failed: {}", field_name)]
     UniqueConstraintViolation { field_name: String },
+
     #[fail(display = "Node does not exist.")]
     NodeDoesNotExist,
+
     #[fail(display = "Error creating a database connection.")]
     ConnectionError(Error),
 
-    #[fail(display = "Error querying the database.")]
+    #[fail(display = "Error querying the database: {}", _0)]
     QueryError(Error),
+
     #[fail(display = "The provided arguments are not supported.")]
     InvalidConnectionArguments,
+
     #[fail(display = "The column value was different from the model")]
     ColumnReadFailure(Error),
+
     #[fail(display = "Field cannot be null: {}", field)]
     FieldCannotBeNull { field: String },
+
     #[fail(display = "{}", _0)]
     DomainError(DomainError),
 
