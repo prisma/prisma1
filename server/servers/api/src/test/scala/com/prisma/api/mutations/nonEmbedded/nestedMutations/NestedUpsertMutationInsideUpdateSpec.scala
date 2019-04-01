@@ -8,15 +8,16 @@ import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBaseV11 {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "a PM to C1!  relation with a child already in a relation" should "work with create" in {
-    val project = SchemaDsl.fromString() { schemaPMToC1req }
-    database.setup(project)
+    schemaPMToC1req.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    server.query(
-      """mutation {
+      server.query(
+        """mutation {
         |  createParent(data: {
         |    p: "p1"
         |    childrenOpt: {
@@ -28,13 +29,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |    }
         |  }
         |}""".stripMargin,
-      project
-    )
+        project
+      )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
-    val res = server.query(
-      s"""
+      val res = server.query(
+        s"""
          |mutation {
          |  updateParent(
          |    where: {p: "p1"}
@@ -54,23 +55,25 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |}
          |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+      res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+    }
   }
 
   "a PM to C1!  relation with a child already in a relation" should "work with update" in {
-    val project = SchemaDsl.fromString() { schemaPMToC1req }
-    database.setup(project)
+    schemaPMToC1req.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    server.query(
-      """mutation {
+      server.query(
+        """mutation {
         |  createParent(data: {
         |    p: "p1"
         |    childrenOpt: {
@@ -82,13 +85,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |    }
         |  }
         |}""".stripMargin,
-      project
-    )
+        project
+      )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
-    val res = server.query(
-      s"""
+      val res = server.query(
+        s"""
          |mutation {
          |  updateParent(
          |    where: {p: "p1"}
@@ -105,24 +108,26 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"updated C"}]}}}""")
+      res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"updated C"}]}}}""")
 
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(2) }
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(2) }
+    }
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for create" in {
-    val project = SchemaDsl.fromString() { schemaPMToC1opt }
-    database.setup(project)
+    schemaPMToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    server
-      .query(
-        """mutation {
+      server
+        .query(
+          """mutation {
           |  createParent(data: {
           |    p: "p1"
           |    childrenOpt: {
@@ -134,13 +139,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
           |    }
           |  }
           |}""".stripMargin,
-        project
-      )
+          project
+        )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
-    val res = server.query(
-      s"""
+      val res = server.query(
+        s"""
          |mutation {
          |  updateParent(
          |  where: { p: "p1"}
@@ -157,24 +162,26 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"},{"c":"new C"}]}}}""")
+      res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"},{"c":"new C"}]}}}""")
 
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
+      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
+    }
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for update" in {
-    val project = SchemaDsl.fromString() { schemaPMToC1opt }
-    database.setup(project)
+    schemaPMToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    server
-      .query(
-        """mutation {
+      server
+        .query(
+          """mutation {
           |  createParent(data: {
           |    p: "p1"
           |    childrenOpt: {
@@ -186,13 +193,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
           |    }
           |  }
           |}""".stripMargin,
-        project
-      )
+          project
+        )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
-    val res = server.query(
-      s"""
+      val res = server.query(
+        s"""
          |mutation {
          |  updateParent(
          |  where: { p: "p1"}
@@ -209,23 +216,25 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"updated C"},{"c":"c2"}]}}}""")
+      res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"updated C"},{"c":"c2"}]}}}""")
 
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+    }
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for update" in {
-    val project = SchemaDsl.fromString() { schemaPMToCM }
-    database.setup(project)
+    schemaPMToCM.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    server.query(
-      """mutation {
+      server.query(
+        """mutation {
         |  createParent(data: {
         |    p: "p1"
         |    childrenOpt: {
@@ -237,13 +246,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |    }
         |  }
         |}""".stripMargin,
-      project
-    )
+        project
+      )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
-    val res = server.query(
-      s"""
+      val res = server.query(
+        s"""
          |mutation {
          |  updateParent(
          |  where: { p: "p1"}
@@ -260,26 +269,28 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"updated C"}]}}}""")
+      res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"updated C"}]}}}""")
 
-    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
+      server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
+        """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+    }
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for create" in {
-    val project = SchemaDsl.fromString() { schemaPMToCM }
-    database.setup(project)
+    schemaPMToCM.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    server.query(
-      """mutation {
+      server.query(
+        """mutation {
         |  createParent(data: {
         |    p: "p1"
         |    childrenOpt: {
@@ -291,13 +302,13 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
         |    }
         |  }
         |}""".stripMargin,
-      project
-    )
+        project
+      )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
-    val res = server.query(
-      s"""
+      val res = server.query(
+        s"""
          |mutation {
          |  updateParent(
          |  where: { p: "p1"}
@@ -314,18 +325,19 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
          |  }
          |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"},{"c":"updated C"}]}}}""")
+      res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"},{"c":"updated C"}]}}}""")
 
-    server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
-      """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"c2","parentsOpt":[{"p":"p1"}]},{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
+      server.query(s"""query{children{c, parentsOpt{p}}}""", project).toString should be(
+        """{"data":{"children":[{"c":"c1","parentsOpt":[{"p":"p1"}]},{"c":"c2","parentsOpt":[{"p":"p1"}]},{"c":"updated C","parentsOpt":[{"p":"p1"}]}]}}""")
 
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
+      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
+    }
   }
 
   "a one to many relation" should "be upsertable by id through a nested mutation" in {
