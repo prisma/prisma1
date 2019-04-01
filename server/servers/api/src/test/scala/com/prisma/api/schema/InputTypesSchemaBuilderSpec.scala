@@ -720,7 +720,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "Sample schema with relation and relation strategy NONE" should "be generated correctly" in {
 
-    val project = SchemaDsl.fromStringv11() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User {
         |  id: ID! @id(strategy:NONE)
@@ -740,7 +740,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "Sample schema with relation and relation strategy AUTO" should "be generated correctly" in {
 
-    val project = SchemaDsl.fromStringv11() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User {
         |  id: ID! @id(strategy:AUTO)
