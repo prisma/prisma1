@@ -68,7 +68,6 @@ export function parseEndpoint(endpoint: string): ParseEndpointResult {
   const localAliases = ['localhost', '127.0.0.1', 'prisma']
   const isPrivate =
     !shared &&
-    !url.hostname.endsWith('db.cloud.prisma.sh') &&
     !localAliases.includes(url.hostname)
   const local = !shared && !isPrivate && !workspaceSlug
   
