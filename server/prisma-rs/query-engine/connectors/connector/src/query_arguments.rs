@@ -1,7 +1,4 @@
-use crate::{
-    filter::{Filter, ScalarCondition, ScalarFilter},
-    node_selector::NodeSelector,
-};
+use crate::{filter::Filter, node_selector::NodeSelector};
 use prisma_models::prelude::*;
 
 #[derive(Debug, Default, Clone)]
@@ -32,12 +29,7 @@ impl QueryArguments {
 
 impl From<NodeSelector> for QueryArguments {
     fn from(node_selector: NodeSelector) -> Self {
-        let filter = Filter::Scalar(ScalarFilter {
-            field: node_selector.field,
-            condition: ScalarCondition::Equals(node_selector.value),
-        });
-
-        QueryArguments::from(filter)
+        QueryArguments::from(Filter::from(node_selector))
     }
 }
 

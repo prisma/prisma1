@@ -11,7 +11,7 @@ use related_nodes::RelatedNodesQueryBuilder;
 pub struct QueryBuilder;
 
 impl QueryBuilder {
-    pub fn get_nodes<T>(model: ModelRef, into_arguments: T, selected_fields: &SelectedFields) -> (String, Select)
+    pub fn get_nodes<T>(model: ModelRef, into_arguments: T, selected_fields: &SelectedFields) -> Select
     where
         T: Into<QueryArguments>,
     {
@@ -35,16 +35,14 @@ impl QueryBuilder {
         let select_ast = Select::from(model.table()).so_that(conditions).offset(skip as usize);
         let select_ast = ordering.into_iter().fold(select_ast, |acc, ord| acc.order_by(ord));
 
-        let db_name = model.schema().db_name.clone();
-
         let select_ast = selected_fields
             .columns()
             .into_iter()
             .fold(select_ast, |acc, col| acc.column(col.clone()));
 
         match limit {
-            Some(limit) => (db_name, select_ast.limit(limit as usize)),
-            None => (db_name, select_ast),
+            Some(limit) => select_ast.limit(limit as usize),
+            None => select_ast,
         }
     }
 
@@ -53,8 +51,7 @@ impl QueryBuilder {
         from_node_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> (String, Select) {
-        let db_name = from_field.model().schema().db_name.clone();
+    ) -> Select {
         let is_with_pagination = query_arguments.is_with_pagination();
         let builder = RelatedNodesQueryBuilder::new(from_field, from_node_ids, query_arguments, selected_fields);
 
@@ -64,15 +61,11 @@ impl QueryBuilder {
             builder.without_pagination()
         };
 
-        (db_name, select_ast)
+        select_ast
     }
 
-    pub fn get_scalar_list_values_by_node_ids(
-        list_field: ScalarFieldRef,
-        node_ids: Vec<GraphqlId>,
-    ) -> (String, Select) {
+    pub fn get_scalar_list_values_by_node_ids(list_field: ScalarFieldRef, node_ids: Vec<GraphqlId>) -> Select {
         let model = list_field.model();
-        let db_name = model.schema().db_name.clone();
         let table_name = format!("{}_{}", model.db_name(), list_field.name);
 
         // I vant to suk your blaad... - Vlad the Impaler
@@ -84,22 +77,22 @@ impl QueryBuilder {
             .column("value")
             .so_that(vhere);
 
-        (db_name, query)
+        query
     }
 
-    pub fn count_by_model(model: ModelRef, query_arguments: QueryArguments) -> (String, Select) {
+    pub fn count_by_model(model: ModelRef, query_arguments: QueryArguments) -> Select {
         let id_field = model.fields().id();
 
         let mut selected_fields = SelectedFields::default();
         selected_fields.add_scalar(id_field.clone(), false);
 
-        let (db_name, base_query) = Self::get_nodes(model, query_arguments, &selected_fields);
+        let base_query = Self::get_nodes(model, query_arguments, &selected_fields);
 
         let table = Table::from(base_query).alias("sub");
         let column = Column::from(("sub", id_field.db_name()));
         let select_ast = Select::from(table).value(count(column));
 
-        (db_name, select_ast)
+        select_ast
     }
 
     pub fn count_by_table(database: &str, table: &str) -> Select {

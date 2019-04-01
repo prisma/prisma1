@@ -29,6 +29,14 @@ message RelationViolationError {
   required string model_b_name  = 3;
 }
 
+message NodesNotConnectedError {
+  required string       relation_name = 1;
+  required string       parent_name   = 2;
+  optional NodeSelector parent_where  = 3;
+  required string       child_name    = 4;
+  optional NodeSelector child_where   = 5;
+}
+
 message Error {
   oneof value {
     string                 connection_error             = 1;
@@ -43,6 +51,7 @@ message Error {
     NodeSelector           node_not_found_for_where     = 10;
     string                 field_cannot_be_null         = 11;
     RelationViolationError relation_violation           = 12;
+    NodesNotConnectedError nodes_not_connected          = 13;
   }
 }
 

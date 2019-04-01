@@ -8,7 +8,7 @@ import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodeNotFoundForWhereError}
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
-import com.prisma.rs.{NativeBinding, NodeNotFoundForWhere, RelationViolation, UniqueConstraintViolation}
+import com.prisma.rs.{NativeBinding, NodeNotFoundForWhere, NodeSelectorInfo, NodesNotConnected, RelationViolation, UniqueConstraintViolation}
 import com.prisma.shared.models.Project
 import play.api.libs.json.{JsValue, Json}
 import prisma.protocol
@@ -214,12 +214,22 @@ case class SQLiteDatabaseMutactionExecutor(
 
         nested_mutaction_interpreter(envelope, m, errorHandler)
 
-      case m: NestedUpdateNode if DO_NOT_FORWARD_THIS_ONE =>
+      case m: NestedUpdateNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedUpdate(
           nestedUpdateNodeToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, Some(prismaId), protoMutaction)
-        nested_mutaction_interpreter(envelope, m)
+
+        val mapNodeSelector = (ns: protocol.NodeSelector) => {
+          NodeSelectorInfo(ns.modelName, ns.fieldName, toGcValue(ns.value.prismaValue))
+        }
+
+        val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
+          case Error.Value.NodesNotConnected(rv)    =>
+            throw NodesNotConnected(rv.relationName, rv.parentName, rv.parentWhere.map(mapNodeSelector), rv.childName, rv.childWhere.map(mapNodeSelector))
+        }
+
+        nested_mutaction_interpreter(envelope, m, errorHandler)
 
       case m: NestedUpsertNode if DO_NOT_FORWARD_THIS_ONE =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedUpsert(
@@ -270,7 +280,6 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, Some(prismaId), protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
-      case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
       case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
       case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
       case m: NestedConnect     => NestedConnectInterpreter(m)
@@ -502,6 +511,13 @@ case class SQLiteDatabaseMutactionExecutor(
     }
     case FieldCannotBeNull(fieldName) => {
       APIErrors.FieldCannotBeNull(fieldName)
+    }
+    case NodesNotConnected(relationName, parentName, parentWhere, childName, childWhere) => {
+      val mapWhere = (ns: NodeSelectorInfo) => {
+        APIErrors.NodeSelectorInfo(ns.model, ns.field, ns.value)
+      }
+
+      APIErrors.NodesNotConnectedNative(relationName, parentName, parentWhere.map(mapWhere), childName, childWhere.map(mapWhere))
     }
   }
 

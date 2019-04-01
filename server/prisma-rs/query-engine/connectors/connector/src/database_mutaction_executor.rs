@@ -21,7 +21,15 @@ pub trait DatabaseMutactionExecutor {
 
                 results.push(result);
             }
-            NestedDatabaseMutaction::UpdateNode(_) => unimplemented!(),
+            NestedDatabaseMutaction::UpdateNode(ref un) => {
+                let result = DatabaseMutactionResult {
+                    identifier: Identifier::Id(self.execute_nested_update(db_name, &parent_id, un)?),
+                    typ: DatabaseMutactionResultType::Update,
+                    mutaction: DatabaseMutaction::Nested(mutaction),
+                };
+
+                results.push(result);
+            }
             NestedDatabaseMutaction::UpsertNode(_) => unimplemented!(),
             NestedDatabaseMutaction::DeleteNode(_) => unimplemented!(),
             NestedDatabaseMutaction::Connect(_) => unimplemented!(),
@@ -109,6 +117,13 @@ pub trait DatabaseMutactionExecutor {
         db_name: String,
         parent_id: &GraphqlId,
         mutaction: &NestedCreateNode,
+    ) -> ConnectorResult<GraphqlId>;
+
+    fn execute_nested_update(
+        &self,
+        db_name: String,
+        parent_id: &GraphqlId,
+        mutaction: &NestedUpdateNode,
     ) -> ConnectorResult<GraphqlId>;
 
     fn execute_upsert(

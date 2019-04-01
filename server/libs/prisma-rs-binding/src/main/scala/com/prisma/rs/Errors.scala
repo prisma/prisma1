@@ -20,3 +20,11 @@ case class NodeNotFoundForWhere(modelName: String,
 case class RelationViolation(relationName: String,
                              modelAName: String,
                              modelBName: String) extends NativeError(relationName)
+
+case class NodeSelectorInfo(model: String, field: String, value: GCValue)
+
+case class NodesNotConnected(relationName: String,
+                             parentName: String,
+                             parentModel: Option[NodeSelectorInfo],
+                             childName: String,
+                             childWhere: Option[NodeSelectorInfo]) extends NativeError(relationName)

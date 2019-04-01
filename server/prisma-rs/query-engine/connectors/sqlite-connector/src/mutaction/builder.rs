@@ -112,7 +112,7 @@ impl MutationBuilder {
         Some(result)
     }
 
-    pub fn update_node_by_id(model: ModelRef, id: GraphqlId, args: &PrismaArgs) -> ConnectorResult<Option<Update>> {
+    pub fn update_by_id(model: ModelRef, id: GraphqlId, args: &PrismaArgs) -> ConnectorResult<Option<Update>> {
         Self::update_by_ids(model, args, vec![id]).map(|updates| updates.into_iter().next())
     }
 

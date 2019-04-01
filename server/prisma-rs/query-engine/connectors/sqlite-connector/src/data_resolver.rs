@@ -26,7 +26,8 @@ impl DataResolver for SqlResolver<Sqlite> {
         node_selector: NodeSelector,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<Option<SingleNode>> {
-        let (db_name, query) = QueryBuilder::get_nodes(node_selector.field.model(), node_selector, selected_fields);
+        let db_name = &node_selector.field.model().schema().db_name;
+        let query = QueryBuilder::get_nodes(node_selector.field.model(), node_selector, selected_fields);
 
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
@@ -46,9 +47,10 @@ impl DataResolver for SqlResolver<Sqlite> {
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes> {
+        let db_name = &model.schema().db_name;
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
-        let (db_name, query) = QueryBuilder::get_nodes(model, query_arguments, selected_fields);
+        let query = QueryBuilder::get_nodes(model, query_arguments, selected_fields);
 
         let nodes = self
             .database_executor
@@ -64,10 +66,10 @@ impl DataResolver for SqlResolver<Sqlite> {
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes> {
+        let db_name = &from_field.model().schema().db_name;
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
-        let (db_name, query) =
-            QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, selected_fields);
+        let query = QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, selected_fields);
 
         let nodes = self.database_executor.with_rows(query, db_name, |row| {
             let mut node = Sqlite::read_row(row, &selected_fields)?;
@@ -82,7 +84,8 @@ impl DataResolver for SqlResolver<Sqlite> {
     }
 
     fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> ConnectorResult<usize> {
-        let (db_name, query) = QueryBuilder::count_by_model(model, query_arguments);
+        let db_name = &model.schema().db_name;
+        let query = QueryBuilder::count_by_model(model, query_arguments);
 
         let res = self
             .database_executor
@@ -99,7 +102,7 @@ impl DataResolver for SqlResolver<Sqlite> {
 
         let res = self
             .database_executor
-            .with_rows(query, String::from(database), |row| Ok(Sqlite::fetch_int(row)))?
+            .with_rows(query, database, |row| Ok(Sqlite::fetch_int(row)))?
             .into_iter()
             .next()
             .unwrap_or(0);
@@ -112,8 +115,9 @@ impl DataResolver for SqlResolver<Sqlite> {
         list_field: ScalarFieldRef,
         node_ids: Vec<GraphqlId>,
     ) -> ConnectorResult<Vec<ScalarListValues>> {
+        let db_name = &list_field.model().schema().db_name;
         let type_identifier = list_field.type_identifier;
-        let (db_name, query) = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
+        let query = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
 
         let results = self.database_executor.with_rows(query, db_name, |row| {
             let node_id: GraphqlId = row.get(0);

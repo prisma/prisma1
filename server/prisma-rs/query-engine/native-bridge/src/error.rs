@@ -1,5 +1,5 @@
 use crate::protobuf;
-use connector::ConnectorError;
+use connector::{ConnectorError, NodeSelectorInfo};
 use failure::{Error, Fail};
 use prisma_models::DomainError;
 use prost::DecodeError;
@@ -43,6 +43,16 @@ impl From<serde_json::error::Error> for BridgeError {
     }
 }
 
+impl From<NodeSelectorInfo> for protobuf::prisma::NodeSelector {
+    fn from(info: NodeSelectorInfo) -> Self {
+        Self {
+            model_name: info.model,
+            field_name: info.field,
+            value: info.value.into(),
+        }
+    }
+}
+
 impl From<BridgeError> for protobuf::prisma::error::Value {
     fn from(error: BridgeError) -> protobuf::prisma::error::Value {
         match error {
@@ -80,14 +90,32 @@ impl From<BridgeError> for protobuf::prisma::error::Value {
                 protobuf::prisma::error::Value::RelationViolation(error)
             }
 
-            BridgeError::ConnectorError(ConnectorError::NodeNotFoundForWhere { model, field, value }) => {
+            BridgeError::ConnectorError(ConnectorError::NodeNotFoundForWhere(info)) => {
                 let node_selector = protobuf::prisma::NodeSelector {
-                    model_name: model,
-                    field_name: field,
-                    value: value.into(),
+                    model_name: info.model,
+                    field_name: info.field,
+                    value: info.value.into(),
                 };
 
                 protobuf::prisma::error::Value::NodeNotFoundForWhere(node_selector)
+            }
+
+            BridgeError::ConnectorError(ConnectorError::NodesNotConnected {
+                relation_name,
+                parent_name,
+                parent_where,
+                child_name,
+                child_where,
+            }) => {
+                let error = protobuf::prisma::NodesNotConnectedError {
+                    relation_name: relation_name,
+                    parent_name: parent_name,
+                    parent_where: parent_where.map(protobuf::prisma::NodeSelector::from),
+                    child_name: child_name,
+                    child_where: child_where.map(protobuf::prisma::NodeSelector::from),
+                };
+
+                protobuf::prisma::error::Value::NodesNotConnected(error)
             }
 
             e @ BridgeError::ProtobufDecodeError(_) => {
