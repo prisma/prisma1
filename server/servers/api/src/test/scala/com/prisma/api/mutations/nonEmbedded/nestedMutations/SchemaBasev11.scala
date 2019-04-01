@@ -1,33 +1,110 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 import com.prisma.TestDataModels
 
-trait SchemaBasev11 {
+trait SchemaBaseV11 {
 
   //NON EMBEDDED A
 
-  val schemaP1reqToC1reqA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childReq: Child! @relation(link: INLINE)
-                        }
+  val schemaP1reqToC1req = {
+    val s1 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childReq: Child! @relation(link: INLINE)
+    }
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentReq: Parent!
-                        }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentReq: Parent!
+    }"""
 
-  val schemaP1reqToC1reqA_foo = {
+    val s2 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childReq: Child!
+    }
+
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentReq: Parent! @relation(link: INLINE)
+    }"""
+
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s2))
+  }
+
+  val schemaP1optToC1req = {
+    val s1 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childOpt: Child @relation(link: INLINE)
+    }
+
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentReq: Parent!
+    }"""
+
+    val s2 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childOpt: Child
+    }
+
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentReq: Parent! @relation(link: INLINE)
+    }"""
+
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s2))
+  }
+
+  val schemaP1optToC1opt = {
     val s1 = """type Parent{
           id: ID! @id
           p: String! @unique
-          childReq: Child! @relation(link: INLINE)
+          childOpt: Child @relation(link: INLINE)
       }
 
       type Child{
           id: ID! @id
           c: String! @unique
-          parentReq: Parent!
+          parentOpt: Parent
+      }"""
+
+    val s2 = """type Parent{
+          id: ID! @id
+          p: String! @unique
+          childOpt: Child
+      }
+
+      type Child{
+          id: ID! @id
+          c: String! @unique
+          parentOpt: Parent @relation(link: INLINE)
+      }
+          """
+
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s2))
+  }
+
+  val schemaP1reqToC1opt = {
+    val s1 = """type Parent{
+          id: ID! @id
+          p: String! @unique
+          childReq: Child! @relation(link: INLINE)
+      }
+      
+      type Child{
+          id: ID! @id
+          c: String! @unique
+          parentOpt: Parent
       }"""
 
     val s2 = """type Parent{
@@ -35,243 +112,239 @@ trait SchemaBasev11 {
           p: String! @unique
           childReq: Child!
       }
-
+      
       type Child{
           id: ID! @id
           c: String! @unique
-          parentReq: Parent! @relation(link: INLINE)
+          parentOpt: Parent @relation(link: INLINE)
       }"""
 
     TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s2))
   }
 
-  val schemaP1optToC1reqA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childOpt: Child @relation(link: INLINE)
-                        }
-                        
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentReq: Parent!
-                        }"""
+  val schemaPMToC1req = {
+    val s1 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child] @relation(link: INLINE)
+    }
 
-  val schemaP1optToC1optA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childOpt: Child @relation(link: INLINE)
-                        }
-                        
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentOpt: Parent
-                        }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentReq: Parent!
+        test: String
+    }"""
 
-  val schemaP1reqToC1optA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childReq: Child! @relation(link: INLINE)
-                        }
-                        
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentOpt: Parent
-                        }"""
+    val s2 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child]
+    }
 
-  val schemaPMToC1reqA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childrenOpt: [Child] @relation(link: INLINE)
-                        }
-                        
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentReq: Parent!
-                            test: String
-                        }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentReq: Parent! @relation(link: INLINE)
+        test: String
+    }"""
 
-  val schemaPMToC1optA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childrenOpt: [Child] @relation(link: INLINE)
-                        }
-                        
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentOpt: Parent
-                            test: String
-                        }"""
+    val s3 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child]
+    }
 
-  val schemaP1reqToCMA = {
-    val dm1 = """type Parent{
-                    id: ID! @id
-                    p: String! @unique
-                    childReq: Child! 
-                }
-                
-                type Child{
-                    id: ID! @id
-                    c: String! @unique
-                    parentsOpt: [Parent]
-                }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentReq: Parent!
+        test: String
+    }"""
 
-    val dm2 = """type Parent{
-                    id: ID! @id
-                    p: String! @unique
-                    childReq: Child! @relation(link: INLINE)
-                }
-                
-                type Child{
-                    id: ID! @id
-                    c: String! @unique
-                    parentsOpt: [Parent]
-                }"""
-
-    val dm3 = """type Parent{
-                    id: ID! @id
-                    p: String! @unique
-                    childReq: Child! 
-                }
-                
-                type Child{
-                    id: ID! @id
-                    c: String! @unique
-                    parentsOpt: [Parent] @relation(link: INLINE)
-                }"""
-
-    TestDataModels(mongo = Vector(dm2, dm3), sql = Vector(dm1))
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s2, s3))
   }
 
-  val schemaP1optToCMA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childOpt: Child @relation(link: INLINE)
-                        }
+  val schemaPMToC1opt = {
+    val s1 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child] @relation(link: INLINE)
+    }
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentsOpt: [Parent]
-                        }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentOpt: Parent
+        test: String
+    }"""
 
-  val schemaPMToCMA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childrenOpt: [Child] @relation(link: INLINE)
-                        }
+    val s2 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child]
+    }
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentsOpt: [Parent]
-                            test: String
-                        }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentOpt: Parent @relation(link: INLINE)
+        test: String
+    }"""
 
-  //NON-EMBEDDED B
+    val s3 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child]
+    }
 
-  val schemaP1reqToC1reqB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childReq: Child!
-                        }
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentOpt: Parent
+        test: String
+    }"""
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentReq: Parent! @relation(link: INLINE)
-                        }"""
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s2, s3))
+  }
 
-  val schemaP1optToC1reqB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childOpt: Child
-                        }
+  val schemaP1reqToCM = {
+    val s1 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childReq: Child! @relation(link: INLINE) 
+    }
+    
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent]
+    }"""
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentReq: Parent! @relation(link: INLINE)
-                        }"""
+    val s2 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childReq: Child! 
+    }
+    
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent] @relation(link: INLINE)
+    }"""
 
-  val schemaP1optToC1optB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childOpt: Child
-                        }
+    val s3 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childReq: Child! 
+    }
+    
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent]
+    }"""
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentOpt: Parent @relation(link: INLINE)
-                        }"""
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s3))
+  }
 
-  val schemaP1reqToC1optB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childReq: Child!
-                        }
+  val schemaP1optToCM = {
+    val s1 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childOpt: Child @relation(link: INLINE)
+    }
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentOpt: Parent @relation(link: INLINE)
-                        }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent]
+    }"""
 
-  val schemaPMToC1reqB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childrenOpt: [Child]
-                        }
+    val s2 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childOpt: Child
+    }
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentReq: Parent! @relation(link: INLINE)
-                            test: String
-                        }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent] @relation(link: INLINE)
+    }"""
 
-  val schemaPMToC1optB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childrenOpt: [Child]
-                        }
+    val s3 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childOpt: Child
+    }
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentOpt: Parent @relation(link: INLINE)
-                            test: String
-                        }"""
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent]
+    }"""
 
-  val schemaP1optToCMB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childOpt: Child
-                        }
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s3))
+  }
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentsOpt: [Parent] @relation(link: INLINE)
-                        }"""
+  val schemaPMToCM = {
+    val s1 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child] @relation(link: INLINE)
+    }
 
-  val schemaPMToCMB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childrenOpt: [Child]
-                        }
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent]
+        test: String
+    }"""
 
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentsOpt: [Parent] @relation(link: INLINE)
-                            test: String
-                        }"""
+    val s2 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child]
+    }
+
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent] @relation(link: INLINE)
+        test: String
+    }"""
+
+    val s3 = """
+    type Parent{
+        id: ID! @id
+        p: String! @unique
+        childrenOpt: [Child]
+    }
+
+    type Child{
+        id: ID! @id
+        c: String! @unique
+        parentsOpt: [Parent]
+        test: String
+    }"""
+
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s3))
+  }
 
   //EMBEDDED
 
