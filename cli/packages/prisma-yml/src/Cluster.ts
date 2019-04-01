@@ -284,6 +284,10 @@ Original error: ${e.message}`,
           name
         }
       }`)
+      const data = await result.json()
+      if (data.errors.length > 0) {
+        return true
+      }
       return false
     } catch (e) {
       return true
