@@ -262,7 +262,6 @@ impl<'a> QueryBuilder<'a> {
                 .items
                 .iter()
                 .filter_map(|i| {
-                    dbg!(&i);
                     if let Selection::Field(f) = i {
                         // We have to make sure the selected field exists in some form.
                         let field = model.fields().find_from_all(&f.name);
@@ -271,6 +270,7 @@ impl<'a> QueryBuilder<'a> {
                                 field: Arc::clone(&field),
                                 implicit: false,
                             }))),
+                            // Relation fields are not handled here, but in nested queries
                             Ok(ModelField::Relation(_field)) => None,
                             _ => Some(Err(CoreError::QueryValidationError(format!(
                                 "Selected field {} not found on model {}",
@@ -439,7 +439,6 @@ impl<'a> QueryBuilder<'a> {
 impl RootQueryBuilder {
     // FIXME: Find op name and only execute op!
     pub fn build(self) -> CoreResult<Vec<PrismaQuery>> {
-        dbg!(&self.query);
         self.query
             .definitions
             .iter()
