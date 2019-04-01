@@ -6,45 +6,48 @@ import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.{IgnoreMongo, IgnoreMySql, IgnoreSQLite}
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{Matchers, WordSpecLike}
 
-class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers with ApiSpecBase with SchemaBaseV11 {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  "a P1! to C1! relation" should "be possible" in {
-    val project = SchemaDsl.fromString() { schemaP1reqToC1req }
-    database.setup(project)
+  "a P1! to C1! relation should be possible" in {
+    schemaP1reqToC1req.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    p
-          |    childReq{
-          |       c
-          |    }
-          |  }
-          |}""".stripMargin,
-        project
-      )
+      val res = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p1"
+            |    childReq: {
+            |      create: {c: "c1"}
+            |    }
+            |  }){
+            |    p
+            |    childReq{
+            |       c
+            |    }
+            |  }
+            |}""".stripMargin,
+          project
+        )
 
-    res.toString should be("""{"data":{"createParent":{"p":"p1","childReq":{"c":"c1"}}}}""")
+      res.toString should be("""{"data":{"createParent":{"p":"p1","childReq":{"c":"c1"}}}}""")
 
-    (ifConnectorIsActive) { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    }
   }
 
-  "a P1! to C1 relation " should "work" in {
-    val project = SchemaDsl.fromString() { schemaP1reqToC1opt }
-    database.setup(project)
+  "a P1! to C1 relation should work" in {
+    schemaP1reqToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    val child1Id = server
-      .query(
-        """mutation {
+      val child1Id = server
+        .query(
+          """mutation {
           |  createParent(data: {
           |    p: "p1"
           |    childReq: {
@@ -56,212 +59,228 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
           |    }
           |  }
           |}""".stripMargin,
-        project
-      )
-      .pathAsString("data.createParent.childReq.id")
+          project
+        )
+        .pathAsString("data.createParent.childReq.id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    }
   }
 
-  "a P1 to C1  relation" should "work" in {
-    val project = SchemaDsl.fromString() { schemaP1optToC1opt }
-    database.setup(project)
+  "a P1 to C1 relation should work" in {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childOpt: {
-          |      create: {c: "c1"}
+      val res = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p1"
+            |    childOpt: {
+            |      create: {c: "c1"}
+            |    }
+            |  }){
+            |   childOpt{
+            |     c
+            |   }
+            |  }
+            |}""".stripMargin,
+          project
+        )
+
+      res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
+
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    }
+  }
+
+  "a PM to C1! should work" in {
+    schemaPMToC1req.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p1"
+            |    childrenOpt: {
+            |      create: [{c: "c1"},{c:"c2"}]
+            |    }
+            |  }){
+            |   childrenOpt{
+            |     c
+            |   }
+            |  }
+            |}""".stripMargin,
+          project
+        )
+
+      res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+    }
+  }
+
+  "a P1 to C1! relation  should work" in {
+    schemaP1optToC1req.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p1"
+            |    childOpt: {
+            |      create: {c: "c1"}
+            |    }
+            |  }){
+            |   childOpt{
+            |     c
+            |   }
+            |  }
+            |}""".stripMargin,
+          project
+        )
+
+      res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
+
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    }
+  }
+
+  "a PM to C1 relation should work" in {
+    schemaPMToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p1"
+            |    childrenOpt: {
+            |      create: [{c: "c1"},{c: "c2"}]
+            |    }
+            |  }){
+            |   childrenOpt{
+            |     c
+            |   }
+            |  }
+            |}""".stripMargin,
+          project
+        )
+
+      res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+    }
+  }
+
+  "a P1! to CM  relation  should work" in {
+    schemaP1reqToCM.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p1"
+            |    childReq: {
+            |      create: {c: "c1"}
+            |    }
+            |  }){
+            |   childReq{
+            |     c
+            |   }
+            |  }
+            |}""".stripMargin,
+          project
+        )
+
+      res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
+
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    }
+  }
+
+  "a P1 to CM relation should work" in {
+    schemaP1optToCM.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p1"
+            |    childOpt: {
+            |      create: {c: "c1"}
+            |    }
+            |  }){
+            |   childOpt{
+            |     c
+            |   }
+            |  }
+            |}""".stripMargin,
+          project
+        )
+
+      res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
+
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+
+      // make sure it is traversable in the opposite direction as well
+      val queryResult = server.query(
+        """
+          |{
+          |  children {
+          |    parentsOpt {
+          |      p
           |    }
-          |  }){
-          |   childOpt{
-          |     c
-          |   }
           |  }
-          |}""".stripMargin,
+          |}
+        """.stripMargin,
         project
       )
 
-    res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
+      queryResult.toString should be("""{"data":{"children":[{"parentsOpt":[{"p":"p1"}]}]}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
+    }
   }
 
-  "a PM to C1! " should "work" in {
-    val project = SchemaDsl.fromString() { schemaPMToC1req }
-    database.setup(project)
+  "a PM to CM  relation  should work" in {
+    schemaPMToCM.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
 
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childrenOpt: {
-          |      create: [{c: "c1"},{c:"c2"}]
-          |    }
-          |  }){
-          |   childrenOpt{
-          |     c
-          |   }
-          |  }
-          |}""".stripMargin,
-        project
-      )
+      val res = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p1"
+            |    childrenOpt: {
+            |      create: [{c: "c1"},{c:"c2"}]
+            |    }
+            |  }){
+            |   childrenOpt{
+            |     c
+            |   }
+            |  }
+            |}""".stripMargin,
+          project
+        )
 
-    res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+      res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+    }
   }
 
-  "a P1 to C1!  relation " should "work" in {
-    val project = SchemaDsl.fromString() { schemaP1optToC1req }
-    database.setup(project)
-
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childOpt: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |   childOpt{
-          |     c
-          |   }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-  }
-
-  "a PM to C1  relation" should "work" in {
-    val project = SchemaDsl.fromString() { schemaPMToC1opt }
-    database.setup(project)
-
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childrenOpt: {
-          |      create: [{c: "c1"},{c: "c2"}]
-          |    }
-          |  }){
-          |   childrenOpt{
-          |     c
-          |   }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-  }
-
-  "a P1! to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() { schemaP1reqToCM }
-    database.setup(project)
-
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |   childReq{
-          |     c
-          |   }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    res.toString should be("""{"data":{"createParent":{"childReq":{"c":"c1"}}}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-  }
-
-  "a P1 to CM relation" should "work" in {
-    val project = SchemaDsl.fromString() { schemaP1optToCM }
-    database.setup(project)
-
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childOpt: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |   childOpt{
-          |     c
-          |   }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    res.toString should be("""{"data":{"createParent":{"childOpt":{"c":"c1"}}}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-
-    // make sure it is traversable in the opposite direction as well
-    val queryResult = server.query(
-      """
-        |{
-        |  children {
-        |    parentsOpt {
-        |      p
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-
-    queryResult.toString should be("""{"data":{"children":[{"parentsOpt":[{"p":"p1"}]}]}}""")
-  }
-
-  "a PM to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() { schemaPMToCM }
-    database.setup(project)
-
-    val res = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childrenOpt: {
-          |      create: [{c: "c1"},{c:"c2"}]
-          |    }
-          |  }){
-          |   childrenOpt{
-          |     c
-          |   }
-          |  }
-          |}""".stripMargin,
-        project
-      )
-
-    res.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-  }
-
-  "a one to many relation" should "be creatable through a nested mutation" in {
+  "a one to many relation should be creatable through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """type Todo{
         |   id: ID! @unique
@@ -297,7 +316,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsJsValue("data.createTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
-  "a many to one relation" should "be creatable through a nested mutation" in {
+  "a many to one relation should be creatable through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """type Todo{
         |   id: ID! @unique
@@ -335,7 +354,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result.pathAsString("data.createComment.todo.title"), "todo1")
   }
 
-  "a many to many relation" should "be creatable through a nested mutation" in {
+  "a many to many relation should be creatable through a nested mutation" in {
     val project = SchemaDsl.fromString() {
       """type Todo{
         |   id: ID! @unique
@@ -395,7 +414,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     mustBeEqual(result2.pathAsJsValue("data.createTag.todos").toString, """[{"title":"todo1"},{"title":"todo2"}]""")
   }
 
-  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute first direction" in {
+  "A nested create on a one to one relation should correctly assign violations to offending model and not partially execute first direction" in {
     val project = SchemaDsl.fromString() {
       """type User{
         |   id: ID! @unique
@@ -451,7 +470,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
   }
 
-  "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute second direction" taggedAs IgnoreSQLite in { // TODO: Remove when transactions are back
+  "A nested create on a one to one relation should correctly assign violations to offending model and not partially execute second direction" taggedAs IgnoreSQLite in { // TODO: Remove when transactions are back
     val project = SchemaDsl.fromString() {
       """type User{
         |   id: ID! @unique
@@ -507,7 +526,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
   }
 
-  "a deeply nested mutation" should "execute all levels of the mutation" in {
+  "a deeply nested mutation should execute all levels of the mutation" in {
     val project = SchemaDsl.fromString() {
       """type List{
         |   id: ID! @unique
@@ -566,7 +585,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     result.pathAsString("data.createList.todos.[0].tag.name") should equal("the tag")
   }
 
-  "a required one2one relation" should "be creatable through a nested create mutation" in {
+  "a required one2one relation should be creatable through a nested create mutation" in {
 
     val project = SchemaDsl.fromString() {
       """type Comment{
@@ -624,7 +643,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     )
   }
 
-  "a required one2one relation" should "be creatable through a nested connected mutation" in {
+  "a required one2one relation should be creatable through a nested connected mutation" in {
 
     val project = SchemaDsl.fromString() {
       """type Comment{
@@ -731,7 +750,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
 
   }
 
-  "creating a nested item with an id of type UUID" should "work" taggedAs (IgnoreMySql, IgnoreMongo) in {
+  "creating a nested item with an id of type UUID should work" taggedAs (IgnoreMySql, IgnoreMongo) in {
     val project = SchemaDsl.fromString() {
       s"""
          |type List {
@@ -770,7 +789,7 @@ class NestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with A
     UUID.fromString(theUuid) // should now blow up
   }
 
-  "Backrelation bug" should "be fixed" in {
+  "Backrelation bug should be fixed" in {
 
     val project = SchemaDsl.fromString() {
       """
