@@ -1,6 +1,5 @@
 package com.prisma
 
-import com.prisma.ConnectorTag.{MongoConnectorTag, MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag}
 import com.prisma.config.{DatabaseConfig, PrismaConfig}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability}
 import enumeratum.{Enum, EnumEntry}
@@ -11,16 +10,16 @@ sealed trait AssociatedWithConnectorTags {
 }
 
 object IgnorePostgres extends Tag("ignore.postgres") with AssociatedWithConnectorTags {
-  override def tag = PostgresConnectorTag
+  override def tag = ConnectorTag.PostgresConnectorTag
 }
 object IgnoreMySql extends Tag("ignore.mysql") with AssociatedWithConnectorTags {
-  override def tag = MySqlConnectorTag
+  override def tag = ConnectorTag.MySqlConnectorTag
 }
 object IgnoreMongo extends Tag("ignore.mongo") with AssociatedWithConnectorTags {
-  override def tag = MongoConnectorTag
+  override def tag = ConnectorTag.MongoConnectorTag
 }
 object IgnoreSQLite extends Tag("ignore.sqlite") with AssociatedWithConnectorTags {
-  override def tag = SQLiteConnectorTag
+  override def tag = ConnectorTag.SQLiteConnectorTag
 }
 
 object IgnoreSet {
@@ -34,7 +33,6 @@ object ConnectorTag extends Enum[ConnectorTag] {
   def values = findValues
 
   sealed trait RelationalConnectorTag extends ConnectorTag
-  object RelationalConnectorTag       extends RelationalConnectorTag
   object MySqlConnectorTag            extends RelationalConnectorTag
   object PostgresConnectorTag         extends RelationalConnectorTag
   object SQLiteConnectorTag           extends RelationalConnectorTag
@@ -48,10 +46,10 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
 
   lazy val connector = prismaConfig.databases.head
   private lazy val connectorTag = connector.connector match {
-    case "mongo"                    => MongoConnectorTag
-    case "mysql"                    => MySqlConnectorTag
-    case "postgres"                 => PostgresConnectorTag
-    case "sqlite" | "sqlite-native" => SQLiteConnectorTag
+    case "mongo"                    => ConnectorTag.MongoConnectorTag
+    case "mysql"                    => ConnectorTag.MySqlConnectorTag
+    case "postgres"                 => ConnectorTag.PostgresConnectorTag
+    case "sqlite" | "sqlite-native" => ConnectorTag.SQLiteConnectorTag
   }
   private lazy val isPrototype: Boolean = prismaConfig.prototype.getOrElse(false) // connectorTag == MongoConnectorTag
 
@@ -113,10 +111,10 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
     }
   }
 
-  def ifConnectorIsNotSQLite[T](assertion: => T): Unit = if (connectorTag != SQLiteConnectorTag) assertion
-  def ifConnectorIsSQLite[T](assertion: => T): Unit    = if (connectorTag == SQLiteConnectorTag) assertion
-  def ifConnectorIsNotMongo[T](assertion: => T): Unit  = if (connectorTag != MongoConnectorTag) assertion
-  def ifConnectorIsActive[T](assertion: => T): Unit    = if (connector.active && connectorTag != MongoConnectorTag) assertion
+  def ifConnectorIsNotSQLite[T](assertion: => T): Unit = if (connectorTag != ConnectorTag.SQLiteConnectorTag) assertion
+  def ifConnectorIsSQLite[T](assertion: => T): Unit    = if (connectorTag == ConnectorTag.SQLiteConnectorTag) assertion
+  def ifConnectorIsNotMongo[T](assertion: => T): Unit  = if (connectorTag != ConnectorTag.MongoConnectorTag) assertion
+  def ifConnectorIsActive[T](assertion: => T): Unit    = if (connector.active && connectorTag != ConnectorTag.MongoConnectorTag) assertion
   def ifConnectorIsPassive[T](assertion: => T): Unit   = if (!connector.active) assertion
   def ifConnectorIsActiveAndNotSqliteNative[T](assertion: => T): Unit = {
     ifConnectorIsActive {
@@ -147,4 +145,13 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
       testName -> Set("org.scalatest.Ignore")
     }.toMap
   }
+
+  implicit def testDataModelsWrapper(testDataModel: TestDataModels): TestDataModelsWrapper = {
+    TestDataModelsWrapper(testDataModel, connectorTag)
+  }
 }
+
+case class TestDataModels(
+    mongo: Vector[String],
+    sql: Vector[String]
+)

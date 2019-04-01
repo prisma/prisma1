@@ -4,14 +4,14 @@ import com.prisma.ConnectorTag
 import com.prisma.ConnectorTag.MongoConnectorTag
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers, WordSpecLike}
 
-class NestedConnectMutationInsideUpdatev11Spec extends FlatSpec with Matchers with ApiSpecBase with SchemaBasev11 {
+class NestedConnectMutationInsideUpdatev11Spec extends WordSpecLike with Matchers with ApiSpecBase with SchemaBasev11 {
   override def runOnlyForConnectors: Set[ConnectorTag] = Set(MongoConnectorTag)
-  "a P1! to CM  relation with the child already in a relation" should "be connectable through a nested mutation by unique" in {
 
-    def run(sdl: String) = {
-      val project = SchemaDsl.fromStringv11() { sdl }
+  schemaP1reqToCMA.testEach { (testSuffix, dm) =>
+    "a P1! to CM  relation with the child already in a relation should be connectable through a nested mutation by unique" + testSuffix in {
+      val project = SchemaDsl.fromStringv11() { dm }
       database.setup(project)
 
       server.query(
@@ -72,8 +72,5 @@ class NestedConnectMutationInsideUpdatev11Spec extends FlatSpec with Matchers wi
 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
     }
-
-    run(schemaP1reqToCMA)
-    run(schemaP1reqToCMB)
   }
 }

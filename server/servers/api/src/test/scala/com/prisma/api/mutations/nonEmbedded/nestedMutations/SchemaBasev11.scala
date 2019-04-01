@@ -1,4 +1,5 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
+import com.prisma.TestDataModels
 
 trait SchemaBasev11 {
 
@@ -9,12 +10,40 @@ trait SchemaBasev11 {
                             p: String! @unique
                             childReq: Child! @relation(link: INLINE)
                         }
-                        
+
                         type Child{
                             id: ID! @id
                             c: String! @unique
                             parentReq: Parent!
                         }"""
+
+  val schemaP1reqToC1reqA_foo = {
+    val s1 = """type Parent{
+          id: ID! @id
+          p: String! @unique
+          childReq: Child! @relation(link: INLINE)
+      }
+
+      type Child{
+          id: ID! @id
+          c: String! @unique
+          parentReq: Parent!
+      }"""
+
+    val s2 = """type Parent{
+          id: ID! @id
+          p: String! @unique
+          childReq: Child!
+      }
+
+      type Child{
+          id: ID! @id
+          c: String! @unique
+          parentReq: Parent! @relation(link: INLINE)
+      }"""
+
+    TestDataModels(mongo = Vector(s1, s2), sql = Vector(s1, s2))
+  }
 
   val schemaP1optToC1reqA = """type Parent{
                             id: ID! @id
@@ -78,17 +107,45 @@ trait SchemaBasev11 {
                             test: String
                         }"""
 
-  val schemaP1reqToCMA = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childReq: Child! @relation(link: INLINE)
-                        }
-                        
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentsOpt: [Parent]
-                        }"""
+  val schemaP1reqToCMA = {
+    val dm1 = """type Parent{
+                    id: ID! @id
+                    p: String! @unique
+                    childReq: Child! 
+                }
+                
+                type Child{
+                    id: ID! @id
+                    c: String! @unique
+                    parentsOpt: [Parent]
+                }"""
+
+    val dm2 = """type Parent{
+                    id: ID! @id
+                    p: String! @unique
+                    childReq: Child! @relation(link: INLINE)
+                }
+                
+                type Child{
+                    id: ID! @id
+                    c: String! @unique
+                    parentsOpt: [Parent]
+                }"""
+
+    val dm3 = """type Parent{
+                    id: ID! @id
+                    p: String! @unique
+                    childReq: Child! 
+                }
+                
+                type Child{
+                    id: ID! @id
+                    c: String! @unique
+                    parentsOpt: [Parent] @relation(link: INLINE)
+                }"""
+
+    TestDataModels(mongo = Vector(dm2, dm3), sql = Vector(dm1))
+  }
 
   val schemaP1optToCMA = """type Parent{
                             id: ID! @id
@@ -189,18 +246,6 @@ trait SchemaBasev11 {
                             c: String! @unique
                             parentOpt: Parent @relation(link: INLINE)
                             test: String
-                        }"""
-
-  val schemaP1reqToCMB = """type Parent{
-                            id: ID! @id
-                            p: String! @unique
-                            childReq: Child!
-                        }
-
-                        type Child{
-                            id: ID! @id
-                            c: String! @unique
-                            parentsOpt: [Parent] @relation(link: INLINE)
                         }"""
 
   val schemaP1optToCMB = """type Parent{
