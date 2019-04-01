@@ -147,7 +147,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   }
 
   implicit def testDataModelsWrapper(testDataModel: TestDataModels): TestDataModelsWrapper = {
-    TestDataModelsWrapper(testDataModel, connectorTag)
+    TestDataModelsWrapper(testDataModel, connectorTag, connector.connector)
   }
 }
 

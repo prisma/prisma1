@@ -9,40 +9,40 @@ import org.scalatest.{FlatSpec, Matchers, WordSpecLike}
 class NestedConnectMutationInsideUpdatev11Spec extends WordSpecLike with Matchers with ApiSpecBase with SchemaBasev11 {
   override def runOnlyForConnectors: Set[ConnectorTag] = Set(MongoConnectorTag)
 
-  schemaP1reqToCMA.testEach { (testSuffix, dm) =>
-    "a P1! to CM  relation with the child already in a relation should be connectable through a nested mutation by unique" + testSuffix in {
+  "a P1! to CM  relation with the child already in a relation should be connectable through a nested mutation by unique" in {
+    schemaP1reqToCMA.test { dm =>
       val project = SchemaDsl.fromStringv11() { dm }
       database.setup(project)
 
       server.query(
         """mutation {
-          |  createParent(data: {
-          |    p: "p1"
-          |    childReq: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    childReq{
-          |       c
-          |    }
-          |  }
-          |}""",
+            |  createParent(data: {
+            |    p: "p1"
+            |    childReq: {
+            |      create: {c: "c1"}
+            |    }
+            |  }){
+            |    childReq{
+            |       c
+            |    }
+            |  }
+            |}""",
         project
       )
 
       server.query(
         """mutation {
-          |  createParent(data: {
-          |    p: "p2"
-          |    childReq: {
-          |      create: {c: "c2"}
-          |    }
-          |  }){
-          |    childReq{
-          |       c
-          |    }
-          |  }
-          |}""",
+            |  createParent(data: {
+            |    p: "p2"
+            |    childReq: {
+            |      create: {c: "c2"}
+            |    }
+            |  }){
+            |    childReq{
+            |       c
+            |    }
+            |  }
+            |}""",
         project
       )
 
@@ -50,17 +50,17 @@ class NestedConnectMutationInsideUpdatev11Spec extends WordSpecLike with Matcher
 
       val res = server.query(
         s"""
-           |mutation {
-           |  updateParent(
-           |  where: {p: "p2"}
-           |  data:{
-           |    childReq: {connect: {c: "c1"}}
-           |  }){
-           |    childReq {
-           |      c
-           |    }
-           |  }
-           |}
+             |mutation {
+             |  updateParent(
+             |  where: {p: "p2"}
+             |  data:{
+             |    childReq: {connect: {c: "c1"}}
+             |  }){
+             |    childReq {
+             |      c
+             |    }
+             |  }
+             |}
       """,
         project
       )
