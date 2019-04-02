@@ -6,6 +6,7 @@ import java.util.Base64
 import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
 import com.prisma.graphql.GraphQlClient
 import com.prisma.shared.models.Project
+import com.prisma.shared.models.{Schema => SchemaModel}
 import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json._
 import sangria.parser.QueryParser
@@ -102,8 +103,8 @@ case class ProcessHandle(process: Process, logger: PrismaLogger) {
  */
 case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) extends ApiTestServer {
   import dependencies.system.dispatcher
-
   import sys.process._
+  import com.prisma.shared.models.ProjectJsonFormatter._
 
   implicit val system       = dependencies.system
   implicit val materializer = dependencies.materializer
@@ -112,19 +113,19 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
   val prismaBinaryConfigPath: String = sys.env.getOrElse("PRISMA_BINARY_CONFIG_PATH", sys.error("Required PRISMA_BINARY_CONFIG_PATH env var not found"))
   val gqlClient                      = GraphQlClient("http://127.0.0.1:8000") // todo rust code currently ignores port in config
 
-  def startPrismaProcess(schema: Schema[ApiUserContext, Unit]): ProcessHandle = {
+  def startPrismaProcess(schema: SchemaModel): ProcessHandle = {
     val logger     = PrismaLogger()
     val workingDir = new java.io.File(".")
-    val encoded    = Base64.getEncoder.encode(SchemaRenderer.renderSchema(schema).getBytes)
 
     // Important: Rust requires UTF-8 encoding (encodeToString uses Latin-1)
+    val encoded   = Base64.getEncoder.encode(Json.toJson(schema).toString().getBytes(StandardCharsets.UTF_8))
     val schemaEnv = new String(encoded, StandardCharsets.UTF_8)
 
     val process = Process(
       prismaBinaryPath,
       workingDir,
       "PRISMA_CONFIG_PATH" -> prismaBinaryConfigPath,
-      "PRISMA_SCHEMA"      -> schemaEnv
+      "PRISMA_SCHEMA_JSON" -> schemaEnv
     ).run(logger)
 
     ProcessHandle(process, logger)
@@ -169,7 +170,7 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
       """.stripMargin))
       result
     } else {
-      val prismaProcess = startPrismaProcess(schema)
+      val prismaProcess = startPrismaProcess(project.schema)
       val res           = gqlClient.sendQuery(query).map(r => r.jsonBody.get) // todo don't unwrap
 
       res.onComplete(_ => {

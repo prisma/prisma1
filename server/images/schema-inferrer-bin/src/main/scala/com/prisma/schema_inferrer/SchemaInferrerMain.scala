@@ -15,19 +15,14 @@ object SchemaInferrerMain {
   implicit lazy val inputReads: Reads[Input] = Json.reads[Input]
 
   def main(args: Array[String]): Unit = {
-    println("WURST")
-    val line = StdIn.readLine()
-    println(s"READ: $line")
-
+    val line        = StdIn.readLine()
     val inputAsJson = Json.parse(line)
     val input       = inputAsJson.as[Input]
 
     val (capabilities, emptySchema) =
-      if (line.contains("@id")) {
-        println("IS V1.1")
+      if (line.contains("@id")) { // todo doesn't work as intended,
         (ConnectorCapabilities.mysqlPrototype, Schema.emptyV11)
       } else {
-        println("IS V1.0")
         (ConnectorCapabilities.mysql, Schema.empty)
       }
 
