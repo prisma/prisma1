@@ -1,3 +1,4 @@
+use crate::SelectDefinition;
 use connector::*;
 use prisma_models::*;
 use prisma_query::ast::*;
@@ -7,16 +8,23 @@ pub trait DatabaseRead {
     /// Execute the `SELECT` and return a vector mapped with `F`.
     ///
     /// See implementations for usage.
-    fn query<F, T>(conn: &Transaction, query: Select, f: F) -> ConnectorResult<Vec<T>>
+    fn query<F, T, S>(conn: &Transaction, query: S, f: F) -> ConnectorResult<Vec<T>>
     where
-        F: FnMut(&Row) -> ConnectorResult<T>;
+        F: FnMut(&Row) -> ConnectorResult<T>,
+        S: Into<Select>;
+
+    /// Count the records of the given query.
+    fn count<C, T>(conn: &Transaction, table: T, into_args: C) -> ConnectorResult<usize>
+    where
+        C: Into<ConditionTree>,
+        T: Into<Table>;
 
     /// Find all ids from the `Model` with the filter being true.
     ///
     /// See implementations for usage.
     fn ids_for<T>(conn: &Transaction, model: ModelRef, into_args: T) -> ConnectorResult<Vec<GraphqlId>>
     where
-        T: Into<QueryArguments>;
+        T: SelectDefinition;
 
     /// Find all ids from the `Model` with the filter being true.
     ///
@@ -46,13 +54,6 @@ pub trait DatabaseWrite {
         non_list_args: PrismaArgs,
         list_args: Vec<(String, PrismaListValue)>,
     ) -> ConnectorResult<GraphqlId>;
-
-    fn create_list_args(
-        conn: &Transaction,
-        id: &GraphqlId,
-        model: ModelRef,
-        list_args: Vec<(String, PrismaListValue)>,
-    ) -> ConnectorResult<()>;
 
     fn create_node_and_connect_to_parent(
         conn: &Transaction,

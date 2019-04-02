@@ -2,7 +2,6 @@ use crate::{query_ast, CoreResult};
 use connector::DataResolver;
 use prisma_models::{GraphqlId, ManyNodes, SelectedFields, SingleNode};
 use query_ast::*;
-use std::boxed::Box;
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -108,7 +107,7 @@ impl MultiPrismaQueryResult {
 }
 
 pub struct QueryExecutor {
-    pub data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
+    pub data_resolver: Arc<DataResolver + Send + Sync + 'static>,
 }
 
 impl QueryExecutor {

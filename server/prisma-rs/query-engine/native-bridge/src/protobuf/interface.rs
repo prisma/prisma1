@@ -7,31 +7,31 @@ use connector::*;
 use prisma_common::{config::WithMigrations, config::*};
 use prisma_models::prelude::*;
 use prost::Message;
-use sqlite_connector::{SqlResolver, Sqlite};
+use sqlite_connector::Sqlite;
 use std::sync::Arc;
 
 pub struct ProtoBufInterface {
-    data_resolver: Box<dyn DataResolver + Send + Sync + 'static>,
+    data_resolver: Arc<DataResolver + Send + Sync + 'static>,
     database_mutaction_executor: Arc<DatabaseMutactionExecutor + Send + Sync + 'static>,
 }
 
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
-        let (data_resolver, mutaction_executor) = match config.databases.get("default") {
+        let connector = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
                 // FIXME: figure out the right way to do it
                 // we are passing is_active as test_mode parameter
                 // this requires us to put `active: true` in all sqlite-native configs used in tests
-                let sqlite = Arc::new(Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap());
+                let sqlite = Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap();
 
-                (SqlResolver::new(sqlite.clone()), sqlite)
+                Arc::new(sqlite)
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
 
         ProtoBufInterface {
-            data_resolver: Box::new(data_resolver),
-            database_mutaction_executor: mutaction_executor,
+            data_resolver: connector.clone(),
+            database_mutaction_executor: connector,
         }
     }
 

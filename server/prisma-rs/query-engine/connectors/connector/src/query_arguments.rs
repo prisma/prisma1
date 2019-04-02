@@ -1,5 +1,5 @@
 use crate::{filter::Filter, node_selector::NodeSelector};
-use prisma_models::prelude::*;
+use prisma_models::*;
 
 #[derive(Debug, Default, Clone)]
 pub struct QueryArguments {

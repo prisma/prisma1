@@ -1,6 +1,7 @@
 mod executor;
 mod mutaction_executor;
 mod read;
+mod resolver;
 mod write;
 
 use chrono::{DateTime, Utc};

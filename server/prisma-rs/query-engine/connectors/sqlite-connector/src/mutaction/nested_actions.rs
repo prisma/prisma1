@@ -26,7 +26,7 @@ pub trait NestedActions {
         let relation_column = relation.column_for_relation_side(rf.relation_side);
         let opposite_column = relation.column_for_relation_side(rf.relation_side.opposite());
 
-        Select::from(relation.relation_table())
+        Select::from_table(relation.relation_table())
             .column(opposite_column.clone())
             .so_that(opposite_column.equals(id.clone()).and(relation_column.is_not_null()))
             .into()
@@ -44,7 +44,7 @@ pub trait NestedActions {
                 .set(column, id.clone())
                 .so_that(condition)
                 .into(),
-            None => Delete::from(relation.relation_table()).so_that(condition).into(),
+            None => Delete::from_table(relation.relation_table()).so_that(condition).into(),
         }
     }
 }

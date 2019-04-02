@@ -9,27 +9,43 @@ use rusqlite::Transaction;
 use std::sync::Arc;
 
 impl DatabaseWrite for Sqlite {
-    fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>
-    where
-        T: Into<Query>,
-    {
-        let (sql, params) = dbg!(visitor::Sqlite::build(query));
-        conn.prepare(&sql)?.execute(&params)?;
-
-        Ok(())
-    }
-
-    fn execute_many<T>(conn: &Transaction, queries: Vec<T>) -> ConnectorResult<()>
-    where
-        T: Into<Query>,
-    {
-        for query in queries {
-            Self::execute_one(conn, query)?;
-        }
-
-        Ok(())
-    }
-
+    /// Creates a new record to the database.
+    ///
+    /// A single record with no list arguments. The return value is the `id` of
+    /// the created record:
+    ///
+    /// ```rust
+    /// # use prisma_models::*;
+    /// # use rusqlite::{Connection, NO_PARAMS};
+    /// # use sqlite_connector::*;
+    /// # use connector::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// # let mut conn = Connection::open_in_memory().unwrap();
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let trans = conn.transaction().unwrap();
+    /// # trans.execute("ATTACH DATABASE './test.db' AS 'test'", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User (id Text, name Text);", NO_PARAMS).unwrap();
+    /// #
+    /// let model = schema.find_model("User").unwrap();
+    ///
+    /// let mut args = PrismaArgs::default();
+    /// args.insert("id", GraphqlId::from("id1"));
+    /// args.insert("name", "John");
+    ///
+    /// assert_eq!(
+    ///    GraphqlId::from("id1"),
+    ///    Sqlite::create_node(&trans, model, args, vec![]).unwrap(),
+    /// );
+    ///
+    /// assert_eq!(
+    ///     1,
+    ///     Sqlite::count(&trans, "User", ConditionTree::default()).unwrap()
+    /// );
+    /// ```
     fn create_node(
         conn: &Transaction,
         model: ModelRef,
@@ -45,27 +61,16 @@ impl DatabaseWrite for Sqlite {
             None => GraphqlId::Int(conn.last_insert_rowid() as usize),
         };
 
-        Self::create_list_args(conn, &id, model, list_args)?;
-
-        Ok(id)
-    }
-
-    fn create_list_args(
-        conn: &Transaction,
-        id: &GraphqlId,
-        model: ModelRef,
-        list_args: Vec<(String, PrismaListValue)>,
-    ) -> ConnectorResult<()> {
         for (field_name, list_value) in list_args {
             let field = model.fields().find_from_scalar(&field_name).unwrap();
             let table = field.scalar_list_table();
 
-            if let Some(insert) = MutationBuilder::create_scalar_list_value(table.table(), &list_value, id) {
+            if let Some(insert) = MutationBuilder::create_scalar_list_value(table.table(), &list_value, &id) {
                 Self::execute_one(conn, insert)?;
             }
         }
 
-        Ok(())
+        Ok(id)
     }
 
     fn create_node_and_connect_to_parent(
@@ -150,5 +155,28 @@ impl DatabaseWrite for Sqlite {
         Self::update_list_args(conn, ids, Arc::clone(&mutaction.model), mutaction.list_args.clone())?;
 
         Ok(count)
+    }
+
+    /// Execute a single statement in the database.
+    fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>
+    where
+        T: Into<Query>,
+    {
+        let (sql, params) = dbg!(visitor::Sqlite::build(query));
+        conn.prepare(&sql)?.execute(&params)?;
+
+        Ok(())
+    }
+
+    /// Execute a multiple statements in the database.
+    fn execute_many<T>(conn: &Transaction, queries: Vec<T>) -> ConnectorResult<()>
+    where
+        T: Into<Query>,
+    {
+        for query in queries {
+            Self::execute_one(conn, query)?;
+        }
+
+        Ok(())
     }
 }
