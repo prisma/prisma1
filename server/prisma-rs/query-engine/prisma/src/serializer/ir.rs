@@ -1,12 +1,19 @@
 //! Serializer Intermediate Representation
 //!
-//! A flexible serializer IR that parses `PrismaQueryResult`s
+//! Flexible intermediate representation for `PrismaQueryResult`s
+//! which associates data from subsequent chained and nested queries
+//! correctly.
+//!
+//! In the main `PrismaQueraResult` DSL, there's no trivial way of
+//! associating data from a nested multi-query with a parent.
+//! This IR fixes that issue, allowing us to serialize to various
+//! flexible formats.
 
 use super::Envelope;
 use core::{MultiPrismaQueryResult, PrismaQueryResult, SinglePrismaQueryResult};
 use prisma_models::PrismaValue;
-use std::collections::BTreeMap;
 use serde::Serialize;
+use std::collections::BTreeMap;
 
 /// A `QueryResponse` is either some data or an error
 #[derive(Serialize)] // TODO: REMOVE AGAIN
@@ -45,7 +52,14 @@ impl<'results> IrBuilder<'results> {
 
     /// Parse collected queries into an envelope type
     pub fn build(self) -> Envelope {
-        unimplemented!()
+        match self.0.first() {
+            Some(PrismaQueryResult::Single(query)) => build_map(query).into(),
+            Some(PrismaQueryResult::Multi(query)) => build_list(query).into(),
+            _ => Envelope {
+                tt: ResponseType::Error,
+                root: Item::Value(PrismaValue::String("Failed to find QueryResult".into())),
+            },
+        }
     }
 }
 
@@ -79,14 +93,25 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
         .result
         .as_pairs()
         .iter()
-        .map(|vec| {
-            Item::Map(vec.iter().fold(Map::new(), |mut map, (name, value)| {
+        .zip(&result.nested)
+        .map(|(vec, nested)| {
+            let mut map = vec.iter().fold(Map::new(), |mut map, (name, value)| {
                 map.insert(name.clone(), Item::Value(value.clone()));
                 map
-            }))
+            });
+
+            match nested {
+                PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
+                PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+            };
+
+            Item::Map(map)
         })
         .collect()
 }
+
+
+
 
 impl From<Map> for Envelope {
     fn from(map: Map) -> Self {
