@@ -55,6 +55,7 @@ export class Cluster {
     // public clusters just take the token
 
     const needsAuth = await this.needsAuth()
+    debug({needsAuth})
     if (!needsAuth) {
       return null
     }
@@ -285,11 +286,13 @@ Original error: ${e.message}`,
         }
       }`)
       const data = await result.json()
-      if (data.errors.length > 0) {
+      if (data.errors && data.errors.length > 0) {
         return true
       }
       return false
     } catch (e) {
+      debug('Assuming that the server needs authentication')
+      debug(e.toString())
       return true
     }
   }
