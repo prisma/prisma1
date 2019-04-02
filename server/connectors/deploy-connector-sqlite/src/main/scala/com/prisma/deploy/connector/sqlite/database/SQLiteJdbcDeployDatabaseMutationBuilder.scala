@@ -122,8 +122,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, references.idField_!.typeIdentifier)
     sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)}
-          ADD COLUMN #$colSql,
-          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.dbName, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
+          ADD COLUMN #$colSql REFERENCES #${qualify(references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE SET NULL;
         """
   }
 
