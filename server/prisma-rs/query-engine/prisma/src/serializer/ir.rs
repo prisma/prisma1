@@ -6,8 +6,10 @@ use super::Envelope;
 use core::{MultiPrismaQueryResult, PrismaQueryResult, SinglePrismaQueryResult};
 use prisma_models::PrismaValue;
 use std::collections::BTreeMap;
+use serde::Serialize;
 
 /// A `QueryResponse` is either some data or an error
+#[derive(Serialize)] // TODO: REMOVE AGAIN
 pub enum ResponseType {
     Data,
     Error,
@@ -20,6 +22,7 @@ pub type Map = BTreeMap<String, Item>;
 pub type List = Vec<Item>;
 
 /// An IR item that either expands to a subtype or leaf-node
+#[derive(Serialize)] // TODO: REMOVE AGAIN
 pub enum Item {
     Map(Map),
     List(List),
