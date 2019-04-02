@@ -79,6 +79,8 @@ export class Client {
         agent,
       } as any)
     } catch (e) {
+      debug('Trying manual login')
+      debug(e.toString())
       if (e.message.includes('Not authorized')) {
         await this.login()
         if (cluster.shared) {
