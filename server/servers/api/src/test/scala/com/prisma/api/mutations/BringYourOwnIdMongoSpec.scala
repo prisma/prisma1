@@ -3,7 +3,7 @@ package com.prisma.api.mutations
 import com.prisma.ConnectorTag
 import com.prisma.ConnectorTag.MongoConnectorTag
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.{SchemaBase, SchemaBaseV11}
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
