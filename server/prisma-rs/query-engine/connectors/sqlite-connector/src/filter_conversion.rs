@@ -103,7 +103,7 @@ fn relation_filter_to_select(filter: RelationFilter) -> Select {
             let tree = relation_filter_conditions(other_column, condition, sub_select);
             let conditions = tree.invert_if(condition.invert_of_subselect());
 
-            Select::from(relation.relation_table())
+            Select::from_table(relation.relation_table())
                 .column(this_column)
                 .so_that(conditions)
         }
@@ -117,7 +117,7 @@ fn relation_filter_to_select(filter: RelationFilter) -> Select {
                 .table()
                 .on(id_column.clone().equals(other_column));
 
-            Select::from(relation.relation_table())
+            Select::from_table(relation.relation_table())
                 .column(this_column)
                 .inner_join(join)
                 .so_that(tree.invert_if(condition.invert_of_subselect()))
@@ -141,7 +141,7 @@ fn one_relation_isnull_filter_to_condition_tree(filter: OneRelationIsNullFilter)
     } else {
         let relation = filter.field.relation();
         let column = relation.column_for_relation_side(filter.field.relation_side);
-        let select = Select::from(relation.relation_table()).column(column);
+        let select = Select::from_table(relation.relation_table()).column(column);
 
         filter.field.model().id_column().not_in_selection(select)
     };

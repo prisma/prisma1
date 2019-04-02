@@ -162,7 +162,7 @@ impl MutationBuilder {
             .chunks(Self::PARAMETER_LIMIT)
             .into_iter()
             .map(|ids| {
-                Delete::from(scalar_list_table.table())
+                Delete::from_table(scalar_list_table.table())
                     .so_that(ScalarListTable::NODE_ID_FIELD_NAME.in_selection(ids.to_vec()))
             })
             .collect();

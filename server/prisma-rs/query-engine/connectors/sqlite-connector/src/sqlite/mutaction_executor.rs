@@ -121,7 +121,7 @@ impl DatabaseMutactionExecutor for Sqlite {
 
             let ids = Self::get_ids_by_parents(
                 conn,
-                mutaction.relation_field.clone(),
+                Arc::clone(&mutaction.relation_field),
                 vec![parent_id.clone()],
                 &mutaction.where_,
             )?;

@@ -10,6 +10,6 @@ pub fn into_model_query_arguments(model: ModelRef, args: QueryArguments) -> conn
         before: args.before.map(|x| x.into()),
         last: args.last,
         filter: args.filter.map(|x| x.into_filter(model.clone())),
-        order_by: args.order_by.map(|x| order_by::into_model_order_by(model, x)),
+        order_by: args.order_by.map(|x| order_by::into_model_order_by(model.clone(), x)),
     }
 }
