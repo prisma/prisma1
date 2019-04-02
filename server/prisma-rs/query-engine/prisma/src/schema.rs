@@ -36,7 +36,6 @@ pub fn load_schema(db_name: String) -> PrismaResult<SchemaRef> {
 }
 
 pub fn load_schema_from_env() -> PrismaResult<String> {
-    std::env::vars().for_each(|var| println!("{} -> {}", var.0, var.1));
     debug!("Trying to load schema from env...");
 
     utilities::get_env("PRISMA_SCHEMA_JSON").and_then(|schema| {
@@ -50,6 +49,7 @@ pub fn load_schema_from_env() -> PrismaResult<String> {
 
 pub fn load_datamodel_file() -> PrismaResult<String> {
     debug!("Trying to load schema from file...");
+
     let path = utilities::get_env("PRISMA_SCHEMA_PATH")?;
     let mut f = File::open(path)?;
     let mut schema = String::new();

@@ -19,6 +19,8 @@ import scala.reflect.io.File
 import scala.sys.process.{Process, ProcessLogger}
 
 trait ApiTestServer extends PlayJsonExtensions {
+  System.setProperty("org.jooq.no-logo", "true")
+
   val dependencies: ApiDependencies
 
   /**
@@ -113,6 +115,33 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
   val prismaBinaryConfigPath: String = sys.env.getOrElse("PRISMA_BINARY_CONFIG_PATH", sys.error("Required PRISMA_BINARY_CONFIG_PATH env var not found"))
   val gqlClient                      = GraphQlClient("http://127.0.0.1:8000") // todo rust code currently ignores port in config
 
+  def startPrismaProcessJava(schema: SchemaModel): java.lang.Process = {
+    import java.lang.ProcessBuilder.Redirect
+
+    val pb         = new java.lang.ProcessBuilder(prismaBinaryPath)
+    val workingDir = new java.io.File(".")
+
+    // Important: Rust requires UTF-8 encoding (encodeToString uses Latin-1)
+    val encoded   = Base64.getEncoder.encode(Json.toJson(schema).toString().getBytes(StandardCharsets.UTF_8))
+    val schemaEnv = new String(encoded, StandardCharsets.UTF_8)
+
+    val env = pb.environment
+    env.put("PRISMA_CONFIG_PATH", prismaBinaryConfigPath)
+    env.put("PRISMA_SCHEMA_JSON", schemaEnv)
+
+    pb.directory(workingDir)
+    pb.redirectErrorStream(true)
+    pb.redirectOutput(Redirect.INHERIT)
+
+    val p = pb.start
+    while (!p.isAlive) {
+      println("Waiting...")
+      Thread.sleep(20)
+    }
+
+    p
+  }
+
   def startPrismaProcess(schema: SchemaModel): ProcessHandle = {
     val logger     = PrismaLogger()
     val workingDir = new java.io.File(".")
@@ -121,13 +150,14 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
     val encoded   = Base64.getEncoder.encode(Json.toJson(schema).toString().getBytes(StandardCharsets.UTF_8))
     val schemaEnv = new String(encoded, StandardCharsets.UTF_8)
 
-    val process = Process(
+    val p = Process(
       prismaBinaryPath,
       workingDir,
       "PRISMA_CONFIG_PATH" -> prismaBinaryConfigPath,
       "PRISMA_SCHEMA_JSON" -> schemaEnv
-    ).run(logger)
+    )
 
+    val process = p.run(logger)
     ProcessHandle(process, logger)
   }
 
@@ -170,15 +200,14 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
       """.stripMargin))
       result
     } else {
-      val prismaProcess = startPrismaProcess(project.schema)
+      val prismaProcess = startPrismaProcessJava(project.schema)
       val res           = gqlClient.sendQuery(query).map(r => r.jsonBody.get) // todo don't unwrap
 
-      res.onComplete(_ => {
-        println(prismaProcess.logger.getStdout)
-        println(prismaProcess.logger.getStderr)
-        prismaProcess.kill
+      res.transform(r => {
+        prismaProcess.destroyForcibly().waitFor()
+        println(prismaProcess.exitValue())
+        r
       })
-      res
     }
   }
 

@@ -54,6 +54,8 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         ));
     }
 
+    dbg!(&query_doc);
+
     let qb = RootQueryBuilder {
         query: query_doc,
         schema: ctx.schema.clone(),
