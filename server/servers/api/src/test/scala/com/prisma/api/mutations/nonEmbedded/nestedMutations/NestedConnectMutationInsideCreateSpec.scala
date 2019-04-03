@@ -777,14 +777,14 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
   }
 
   "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Role {
-        | id: ID! @unique
+        | id: ID! @id
         | r: String! @unique
         |}
         |
         |type User {
-        | id: ID! @unique
+        | id: ID! @id
         | u: String! @unique
         | roles: [Role]
         |}
@@ -824,60 +824,18 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     ifConnectorIsActive { dataResolver(project).countByTable("_RoleToUser").await should be(1) }
   }
 
-  "a many relation" should "be connectable through a nested mutation by id" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment {
-        | id: ID! @unique
-        | text: String!
-        | todo: Todo
-        |}
-        |
+  "A PM to C1 relation" should "throw a proper error if connected by wrong id" in {
+    val project = SchemaDsl.fromStringV11() {
+      """
         |type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | comments: [Comment]
         |}
-      """.stripMargin
-    }
-    database.setup(project)
-
-    val comment1Id = server.query("""mutation { createComment(data: {text: "comment1"}){ id } }""", project).pathAsString("data.createComment.id")
-    val comment2Id = server.query("""mutation { createComment(data: {text: "comment2"}){ id } }""", project).pathAsString("data.createComment.id")
-
-    val result = server.query(
-      s"""
-         |mutation {
-         |  createTodo(data:{
-         |    comments: {
-         |      connect: [{id: "$comment1Id"}, {id: "$comment2Id"}]
-         |    }
-         |  }){
-         |    id
-         |    comments {
-         |      id
-         |      text
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(
-      actual = result.pathAsJsValue("data.createTodo.comments").toString,
-      expected = s"""[{"id":"$comment1Id","text":"comment1"},{"id":"$comment2Id","text":"comment2"}]"""
-    )
-  }
-
-  "a many relation" should "throw a proper error if connected by wrong id" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment {
-        | id: ID! @unique
+        |
+        |type Comment {
+        | id: ID! @id
         | text: String!
         | todo: Todo
-        |}
-        |
-        |type Todo {
-        | id: ID! @unique
-        | comments: [Comment]
         |}
       """.stripMargin
     }
@@ -905,16 +863,16 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     )
   }
 
-  "a many relation" should "throw a proper error if connected by wrong id the other way around" in {
-    val project = SchemaDsl.fromString() {
+  "A P1 to CM relation " should "throw a proper error if connected by wrong id the other way around" in {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String!
         | todo: Todo
         |}
         |
         |type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | comments: [Comment]
         |}
@@ -941,17 +899,17 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     )
   }
 
-  "a many relation" should "throw a proper error if the id of a wrong model is provided" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment {
-        | id: ID! @unique
-        | text: String!
-        | todo: Todo
+  "A PM to C1 relation" should "throw a proper error if the id of a wrong model is provided" in {
+    val project = SchemaDsl.fromStringV11() {
+      """type Todo {
+        | id: ID! @id
+        | comments: [Comment]
         |}
         |
-        |type Todo {
-        | id: ID! @unique
-        | comments: [Comment]
+        |type Comment {
+        | id: ID! @id
+        | text: String!
+        | todo: Todo
         |}
       """.stripMargin
     }
@@ -994,100 +952,5 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       errorContains = s"No Node for the model Comment with value $todoId for id found."
     )
 
-  }
-
-  "a many relation" should "be connectable through a nested mutation by any unique argument" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment {
-        | id: ID! @unique
-        | text: String!
-        | alias: String! @unique
-        | todo: Todo
-        |}
-        |
-        |type Todo {
-        | id: ID! @unique
-        | comments: [Comment]
-        |}
-      """.stripMargin
-    }
-    database.setup(project)
-
-    val comment1Alias = server
-      .query("""mutation { createComment(data: {text: "text comment1", alias: "comment1"}){ alias } }""", project)
-      .pathAsString("data.createComment.alias")
-    val comment2Alias = server
-      .query("""mutation { createComment(data: {text: "text comment2", alias: "comment2"}){ alias } }""", project)
-      .pathAsString("data.createComment.alias")
-
-    val result = server.query(
-      s"""
-         |mutation {
-         |  createTodo(data:{
-         |    comments: {
-         |      connect: [{alias: "$comment1Alias"}, {alias: "$comment2Alias"}]
-         |    }
-         |  }){
-         |    id
-         |    comments {
-         |      alias
-         |      text
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(
-      actual = result.pathAsJsValue("data.createTodo.comments").toString,
-      expected = s"""[{"alias":"$comment1Alias","text":"text comment1"},{"alias":"$comment2Alias","text":"text comment2"}]"""
-    )
-  }
-
-  "a many relation" should "be connectable through a nested mutation by any unique argument in the opposite direction" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment {
-        | id: ID! @unique
-        | todo: Todo
-        |}
-        |
-        |type Todo {
-        | id: ID! @unique
-        | title: String!
-        | alias: String! @unique
-        | comments: [Comment]
-        |}
-      """.stripMargin
-    }
-    database.setup(project)
-
-    val todoAlias = server
-      .query("""mutation { createTodo(data: {title: "the title", alias: "todo1"}){ alias } }""", project)
-      .pathAsString("data.createTodo.alias")
-
-    val result = server.query(
-      s"""
-         |mutation {
-         |  createComment(
-         |    data: {
-         |      todo: {
-         |        connect: { alias: "$todoAlias"}
-         |      }
-         |    }
-         |  )
-         |  {
-         |    todo {
-         |      alias
-         |      title
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(
-      actual = result.pathAsJsValue("data.createComment.todo").toString,
-      expected = s"""{"alias":"$todoAlias","title":"the title"}"""
-    )
   }
 }
