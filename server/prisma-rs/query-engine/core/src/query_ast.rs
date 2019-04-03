@@ -262,7 +262,6 @@ impl<'a> QueryBuilder<'a> {
                 .items
                 .iter()
                 .filter_map(|i| {
-                    dbg!(&i);
                     if let Selection::Field(f) = i {
                         // We have to make sure the selected field exists in some form.
                         let field = model.fields().find_from_all(&f.name);
@@ -271,6 +270,7 @@ impl<'a> QueryBuilder<'a> {
                                 field: Arc::clone(&field),
                                 implicit: false,
                             }))),
+                            // Relation fields are not handled here, but in nested queries
                             Ok(ModelField::Relation(_field)) => None,
                             _ => Some(Err(CoreError::QueryValidationError(format!(
                                 "Selected field {} not found on model {}",
@@ -345,6 +345,7 @@ impl<'a> QueryBuilder<'a> {
 
     // Q: Wouldn't it make more sense to just call that one from the outside and not the other ones?
     fn get(self) -> CoreResult<PrismaQuery> {
+        dbg!(&self);
         let name = self.field.alias.as_ref().unwrap_or(&self.field.name).clone();
         let selected_fields = self.selected_fields.unwrap_or(Err(CoreError::QueryValidationError(
             "Selected fields required but not found".into(),
@@ -439,7 +440,6 @@ impl<'a> QueryBuilder<'a> {
 impl RootQueryBuilder {
     // FIXME: Find op name and only execute op!
     pub fn build(self) -> CoreResult<Vec<PrismaQuery>> {
-        dbg!(&self.query);
         self.query
             .definitions
             .iter()

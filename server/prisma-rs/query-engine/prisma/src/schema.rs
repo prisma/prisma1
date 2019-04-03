@@ -1,11 +1,13 @@
+use crate::{utilities, PrismaResult};
 use graphql_parser::query;
 use prisma_models::{SchemaRef, SchemaTemplate};
 use serde::Serialize;
 use serde_json;
-use std::env;
-use std::fs::File;
-use std::io::{Read, Write};
-use std::process::{Command, Stdio};
+use std::{
+    fs::File,
+    io::{Read, Write},
+    process::{Command, Stdio},
+};
 
 pub enum ValidationError {
     #[allow(dead_code)]
@@ -16,6 +18,7 @@ pub enum ValidationError {
     Duplicate(String),
 }
 
+// todo: Return crate::error errors, removing the above?
 pub trait Validatable {
     fn validate(&self, doc: &query::Document) -> Result<(), ValidationError>;
 }
@@ -27,8 +30,31 @@ impl Validatable for SchemaRef {
     }
 }
 
-pub fn load_schema(db_name: String) -> Result<SchemaRef, Box<std::error::Error>> {
-    let schema = load_datamodel_file()?;
+pub fn load_schema(db_name: String) -> PrismaResult<SchemaRef> {
+    let schema_json = load_schema_from_env().or_else(|_| load_datamodel_file())?;
+    Ok(serde_json::from_str::<SchemaTemplate>(&schema_json)?.build(db_name))
+}
+
+pub fn load_schema_from_env() -> PrismaResult<String> {
+    debug!("Trying to load schema from env...");
+
+    utilities::get_env("PRISMA_SCHEMA_JSON").and_then(|schema| {
+        let bytes = base64::decode(&schema)?;
+        let schema_json = String::from_utf8(bytes)?;
+        debug!("Loaded schema from env.");
+
+        Ok(schema_json)
+    })
+}
+
+pub fn load_datamodel_file() -> PrismaResult<String> {
+    debug!("Trying to load schema from file...");
+
+    let path = utilities::get_env("PRISMA_SCHEMA_PATH")?;
+    let mut f = File::open(path)?;
+    let mut schema = String::new();
+
+    f.read_to_string(&mut schema)?;
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
@@ -36,7 +62,7 @@ pub fn load_schema(db_name: String) -> Result<SchemaRef, Box<std::error::Error>>
         data_model: String,
     }
 
-    let schema_inferrer = env::var("SCHEMA_INFERRER_PATH")?;
+    let schema_inferrer = utilities::get_env("SCHEMA_INFERRER_PATH")?;
     let mut child = Command::new(schema_inferrer)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -50,17 +76,6 @@ pub fn load_schema(db_name: String) -> Result<SchemaRef, Box<std::error::Error>>
     let output = child.wait_with_output()?;
     let inferred = String::from_utf8(output.stdout)?;
 
-    println!("{}", inferred);
-
-    Ok(serde_json::from_str::<SchemaTemplate>(&inferred)?.build(db_name))
-}
-
-pub fn load_datamodel_file() -> Result<String, Box<std::error::Error>> {
-    let path = env::var("PRISMA_SCHEMA_PATH")?;
-    let mut f = File::open(path)?;
-    let mut schema = String::new();
-
-    f.read_to_string(&mut schema)?;
-
-    Ok(schema)
+    debug!("Loaded schema from file.");
+    Ok(inferred)
 }

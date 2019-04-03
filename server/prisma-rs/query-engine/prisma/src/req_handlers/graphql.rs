@@ -54,6 +54,8 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         ));
     }
 
+    dbg!(&query_doc);
+
     let qb = RootQueryBuilder {
         query: query_doc,
         schema: ctx.schema.clone(),
@@ -63,7 +65,7 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     let queries: Vec<PrismaQuery> = qb.build()?;
 
     #[cfg(not(feature = "newjson"))]
-    let results: Vec<PrismaQueryResult> = dbg!(ctx.query_executor.execute(&queries))?
+    let results: Vec<PrismaQueryResult> = ctx.query_executor.execute(&queries)?
         .into_iter()
         .map(|r| r.filter())
         .collect();

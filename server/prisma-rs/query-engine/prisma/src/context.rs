@@ -1,4 +1,4 @@
-use crate::schema;
+use crate::{schema, PrismaResult};
 use core::QueryExecutor;
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase, WithMigrations};
 use prisma_models::SchemaRef;
@@ -12,7 +12,7 @@ pub struct PrismaContext {
 }
 
 impl PrismaContext {
-    pub fn new() -> Self {
+    pub fn new() -> PrismaResult<Self> {
         let config = config::load().unwrap();
         let data_resolver = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
@@ -31,10 +31,11 @@ impl PrismaContext {
             .db_name()
             .expect("database was not set");
 
-        Self {
+        let schema = schema::load_schema(db_name)?;
+        Ok(Self {
             config: config,
-            schema: dbg!(schema::load_schema(db_name).expect("schema loading failed")),
+            schema: schema,
             query_executor: query_executor,
-        }
+        })
     }
 }
