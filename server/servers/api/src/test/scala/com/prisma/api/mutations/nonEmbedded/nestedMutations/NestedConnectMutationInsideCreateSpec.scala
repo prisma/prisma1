@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.IgnoreSQLite
+import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
@@ -776,7 +776,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     }
   }
 
-  "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" in {
+  "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromStringV11() {
       """type Role {
         | id: ID! @id
@@ -835,7 +835,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |type Comment {
         | id: ID! @id
         | text: String!
-        | todo: Todo
+        | todo: Todo @relation(link:INLINE)
         |}
       """.stripMargin
     }
@@ -868,7 +868,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       """type Comment {
         | id: ID! @id
         | text: String!
-        | todo: Todo
+        | todo: Todo @relation(link:INLINE)
         |}
         |
         |type Todo {
@@ -909,7 +909,7 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
         |type Comment {
         | id: ID! @id
         | text: String!
-        | todo: Todo
+        | todo: Todo @relation(link:INLINE)
         |}
       """.stripMargin
     }
@@ -951,6 +951,5 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
       errorCode = 3039,
       errorContains = s"No Node for the model Comment with value $todoId for id found."
     )
-
   }
 }
