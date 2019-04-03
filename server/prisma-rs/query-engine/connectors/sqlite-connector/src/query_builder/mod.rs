@@ -1,51 +1,78 @@
 mod related_nodes;
 
-use crate::cursor_condition::CursorCondition;
-use crate::filter_conversion as convert;
-use crate::ordering::Ordering;
-use connector::QueryArguments;
+use crate::{cursor_condition::CursorCondition, filter_conversion as convert, ordering::Ordering};
+use connector::{Filter, NodeSelector, QueryArguments};
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 use related_nodes::RelatedNodesQueryBuilder;
+use std::sync::Arc;
 
-pub struct QueryBuilder;
+pub trait SelectDefinition {
+    fn into_select(self, _: ModelRef) -> Select;
+}
 
-impl QueryBuilder {
-    pub fn get_nodes<T>(model: ModelRef, into_arguments: T, selected_fields: &SelectedFields) -> (String, Select)
-    where
-        T: Into<QueryArguments>,
-    {
-        let query_arguments = into_arguments.into();
-        let cursor: ConditionTree = CursorCondition::build(&query_arguments, &model);
-        let order_by = query_arguments.order_by;
-        let ordering = Ordering::for_model(&model, order_by.as_ref(), query_arguments.last.is_some());
+impl SelectDefinition for Filter {
+    fn into_select(self, model: ModelRef) -> Select {
+        let args = QueryArguments::from(self);
+        args.into_select(model)
+    }
+}
 
-        let filter: ConditionTree = query_arguments
+impl SelectDefinition for NodeSelector {
+    fn into_select(self, model: ModelRef) -> Select {
+        let args = QueryArguments::from(self);
+        args.into_select(model)
+    }
+}
+
+impl SelectDefinition for Select {
+    fn into_select(self, _: ModelRef) -> Select {
+        self
+    }
+}
+
+impl SelectDefinition for QueryArguments {
+    fn into_select(self, model: ModelRef) -> Select {
+        let cursor: ConditionTree = CursorCondition::build(&self, Arc::clone(&model));
+        let order_by = self.order_by;
+        let ordering = Ordering::for_model(Arc::clone(&model), order_by.as_ref(), self.last.is_some());
+
+        let filter: ConditionTree = self
             .filter
             .map(convert::filter_to_condition_tree)
             .unwrap_or(ConditionTree::NoCondition);
 
         let conditions = ConditionTree::and(filter, cursor);
 
-        let (skip, limit) = match query_arguments.last.or(query_arguments.first) {
-            Some(c) => (query_arguments.skip.unwrap_or(0), Some(c + 1)), // +1 to see if there's more data
-            None => (query_arguments.skip.unwrap_or(0), None),
+        let (skip, limit) = match self.last.or(self.first) {
+            Some(c) => (self.skip.unwrap_or(0), Some(c + 1)), // +1 to see if there's more data
+            None => (self.skip.unwrap_or(0), None),
         };
 
-        let select_ast = Select::from(model.table()).so_that(conditions).offset(skip as usize);
+        let select_ast = Select::from_table(model.table())
+            .so_that(conditions)
+            .offset(skip as usize);
+
         let select_ast = ordering.into_iter().fold(select_ast, |acc, ord| acc.order_by(ord));
 
-        let db_name = model.schema().db_name.clone();
+        match limit {
+            Some(limit) => select_ast.limit(limit as usize),
+            None => select_ast,
+        }
+    }
+}
 
-        let select_ast = selected_fields
+pub struct QueryBuilder;
+
+impl QueryBuilder {
+    pub fn get_nodes<T>(model: ModelRef, selected_fields: &SelectedFields, query: T) -> Select
+    where
+        T: SelectDefinition,
+    {
+        selected_fields
             .columns()
             .into_iter()
-            .fold(select_ast, |acc, col| acc.column(col.clone()));
-
-        match limit {
-            Some(limit) => (db_name, select_ast.limit(limit as usize)),
-            None => (db_name, select_ast),
-        }
+            .fold(query.into_select(model), |acc, col| acc.column(col.clone()))
     }
 
     pub fn get_related_nodes(
@@ -53,8 +80,7 @@ impl QueryBuilder {
         from_node_ids: &[GraphqlId],
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
-    ) -> (String, Select) {
-        let db_name = from_field.model().schema().db_name.clone();
+    ) -> Select {
         let is_with_pagination = query_arguments.is_with_pagination();
         let builder = RelatedNodesQueryBuilder::new(from_field, from_node_ids, query_arguments, selected_fields);
 
@@ -64,45 +90,41 @@ impl QueryBuilder {
             builder.without_pagination()
         };
 
-        (db_name, select_ast)
+        select_ast
     }
 
-    pub fn get_scalar_list_values_by_node_ids(
-        list_field: ScalarFieldRef,
-        node_ids: Vec<GraphqlId>,
-    ) -> (String, Select) {
+    pub fn get_scalar_list_values_by_node_ids(list_field: ScalarFieldRef, node_ids: Vec<GraphqlId>) -> Select {
         let model = list_field.model();
-        let db_name = model.schema().db_name.clone();
         let table_name = format!("{}_{}", model.db_name(), list_field.name);
 
         // I vant to suk your blaad... - Vlad the Impaler
         let vhere = "nodeId".in_selection(node_ids);
 
-        let query = Select::from(table_name)
+        let query = Select::from_table(table_name)
             .column("nodeId")
             .column("position")
             .column("value")
             .so_that(vhere);
 
-        (db_name, query)
+        query
     }
 
-    pub fn count_by_model(model: ModelRef, query_arguments: QueryArguments) -> (String, Select) {
+    pub fn count_by_model(model: ModelRef, query_arguments: QueryArguments) -> Select {
         let id_field = model.fields().id();
 
         let mut selected_fields = SelectedFields::default();
         selected_fields.add_scalar(id_field.clone(), false);
 
-        let (db_name, base_query) = Self::get_nodes(model, query_arguments, &selected_fields);
+        let base_query = Self::get_nodes(model, &selected_fields, query_arguments);
 
         let table = Table::from(base_query).alias("sub");
         let column = Column::from(("sub", id_field.db_name()));
-        let select_ast = Select::from(table).value(count(column));
+        let select_ast = Select::from_table(table).value(count(column));
 
-        (db_name, select_ast)
+        select_ast
     }
 
     pub fn count_by_table(database: &str, table: &str) -> Select {
-        Select::from((database, table)).value(count(asterisk()))
+        Select::from_table((database, table)).value(count(asterisk()))
     }
 }

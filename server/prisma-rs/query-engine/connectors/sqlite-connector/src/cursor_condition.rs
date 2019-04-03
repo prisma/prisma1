@@ -12,7 +12,7 @@ enum CursorType {
 pub struct CursorCondition;
 
 impl CursorCondition {
-    pub fn build(query_arguments: &QueryArguments, model: &Model) -> ConditionTree {
+    pub fn build(query_arguments: &QueryArguments, model: ModelRef) -> ConditionTree {
         match (
             query_arguments.before.as_ref(),
             query_arguments.after.as_ref(),
@@ -31,7 +31,7 @@ impl CursorCondition {
                     let model_id = model.fields().id();
                     let where_condition = model_id.as_column().equals(id.clone());
 
-                    let select_query = Select::from(model.table())
+                    let select_query = Select::from_table(model.table())
                         .column(field.as_column())
                         .so_that(ConditionTree::single(where_condition));
 

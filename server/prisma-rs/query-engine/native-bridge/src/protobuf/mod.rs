@@ -2,6 +2,7 @@ mod envelope;
 mod filter;
 mod input;
 mod interface;
+mod mutaction;
 mod order_by;
 mod query_arguments;
 
@@ -10,6 +11,7 @@ pub use envelope::ProtoBufEnvelope;
 pub use filter::*;
 pub use input::*;
 pub use interface::ProtoBufInterface;
+pub use mutaction::*;
 
 use crate::{BridgeError, BridgeResult};
 use chrono::prelude::*;

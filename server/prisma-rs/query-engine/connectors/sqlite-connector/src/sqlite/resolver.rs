@@ -1,39 +1,21 @@
-use crate::{database_executor::DatabaseExecutor, query_builder::QueryBuilder, sqlite::Sqlite};
+use crate::{query_builder::QueryBuilder, DatabaseExecutor, Sqlite};
 use connector::*;
 use itertools::Itertools;
-use prisma_models::prelude::*;
-use std::sync::Arc;
+use prisma_models::*;
 
-pub struct SqlResolver<T>
-where
-    T: DatabaseExecutor,
-{
-    database_executor: Arc<T>,
-}
-
-impl<T> SqlResolver<T>
-where
-    T: DatabaseExecutor,
-{
-    pub fn new(database_executor: Arc<T>) -> Self {
-        Self { database_executor }
-    }
-}
-
-impl DataResolver for SqlResolver<Sqlite> {
+impl DataResolver for Sqlite {
     fn get_node_by_where(
         &self,
         node_selector: NodeSelector,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<Option<SingleNode>> {
-        let (db_name, query) = QueryBuilder::get_nodes(node_selector.field.model(), node_selector, selected_fields);
+        let db_name = &node_selector.field.model().schema().db_name;
+        let query = QueryBuilder::get_nodes(node_selector.field.model(), selected_fields, node_selector);
 
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
 
-        let nodes = self
-            .database_executor
-            .with_rows(query, db_name, |row| Sqlite::read_row(row, &selected_fields))?;
+        let nodes = self.with_rows(query, db_name, |row| Sqlite::read_row(row, &selected_fields))?;
 
         let result = nodes.into_iter().next().map(|node| SingleNode { node, field_names });
 
@@ -46,13 +28,12 @@ impl DataResolver for SqlResolver<Sqlite> {
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes> {
+        let db_name = &model.schema().db_name;
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
-        let (db_name, query) = QueryBuilder::get_nodes(model, query_arguments, selected_fields);
+        let query = QueryBuilder::get_nodes(model, selected_fields, query_arguments);
 
-        let nodes = self
-            .database_executor
-            .with_rows(query, db_name, |row| Sqlite::read_row(row, selected_fields))?;
+        let nodes = self.with_rows(query, db_name, |row| Sqlite::read_row(row, selected_fields))?;
 
         Ok(ManyNodes { nodes, field_names })
     }
@@ -64,12 +45,12 @@ impl DataResolver for SqlResolver<Sqlite> {
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes> {
+        let db_name = &from_field.model().schema().db_name;
         let scalar_fields = selected_fields.scalar_non_list();
         let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
-        let (db_name, query) =
-            QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, selected_fields);
+        let query = QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, selected_fields);
 
-        let nodes = self.database_executor.with_rows(query, db_name, |row| {
+        let nodes = self.with_rows(query, db_name, |row| {
             let mut node = Sqlite::read_row(row, &selected_fields)?;
             let position = scalar_fields.len();
 
@@ -82,10 +63,10 @@ impl DataResolver for SqlResolver<Sqlite> {
     }
 
     fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> ConnectorResult<usize> {
-        let (db_name, query) = QueryBuilder::count_by_model(model, query_arguments);
+        let db_name = &model.schema().db_name;
+        let query = QueryBuilder::count_by_model(model, query_arguments);
 
         let res = self
-            .database_executor
             .with_rows(query, db_name, |row| Ok(Sqlite::fetch_int(row)))?
             .into_iter()
             .next()
@@ -98,8 +79,7 @@ impl DataResolver for SqlResolver<Sqlite> {
         let query = QueryBuilder::count_by_table(database, table);
 
         let res = self
-            .database_executor
-            .with_rows(query, String::from(database), |row| Ok(Sqlite::fetch_int(row)))?
+            .with_rows(query, database, |row| Ok(Sqlite::fetch_int(row)))?
             .into_iter()
             .next()
             .unwrap_or(0);
@@ -112,10 +92,11 @@ impl DataResolver for SqlResolver<Sqlite> {
         list_field: ScalarFieldRef,
         node_ids: Vec<GraphqlId>,
     ) -> ConnectorResult<Vec<ScalarListValues>> {
+        let db_name = &list_field.model().schema().db_name;
         let type_identifier = list_field.type_identifier;
-        let (db_name, query) = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
+        let query = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
 
-        let results = self.database_executor.with_rows(query, db_name, |row| {
+        let results = self.with_rows(query, db_name, |row| {
             let node_id: GraphqlId = row.get(0);
             let _position: u32 = row.get(1);
             let value: PrismaValue = Sqlite::fetch_value(type_identifier, row, 2)?;
@@ -127,7 +108,7 @@ impl DataResolver for SqlResolver<Sqlite> {
             })
         })?;
 
-        let mut list_values = vec![];
+        let mut list_values = Vec::new();
         for (node_id, elements) in &results.into_iter().group_by(|ele| ele.node_id.clone()) {
             let values = ScalarListValues {
                 node_id,

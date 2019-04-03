@@ -1,5 +1,5 @@
 use super::{PrismaRequest, RequestHandler};
-use crate::{json, context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
+use crate::{context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
 use core::{MultiPrismaQueryResult, PrismaQuery, PrismaQueryResult, RootQueryBuilder};
 use graphql_parser as gql;
 use prisma_models::{GraphqlId, PrismaValue, SingleNode};
@@ -7,6 +7,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use serde_json::{Map, Number, Value};
+
+#[cfg(feature = "newjson")]
+use crate::serializer::{Envelope, ir::IrBuilder};
 
 type JsonMap = Map<String, Value>;
 type JsonVec = Vec<Value>;
@@ -58,6 +61,8 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     };
 
     let queries: Vec<PrismaQuery> = qb.build()?;
+
+    #[cfg(not(feature = "newjson"))]
     let results: Vec<PrismaQueryResult> = dbg!(ctx.query_executor.execute(&queries))?
         .into_iter()
         .map(|r| r.filter())
@@ -74,7 +79,13 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     ));
 
     #[cfg(feature = "newjson")]
-    return Ok(json::build(results.first().unwrap()).convert());
+    let envelope = dbg!(ctx.query_executor.execute(&queries))?
+        .iter()
+        .fold(IrBuilder::new(), |builder, res| builder.add(&res))
+        .build();
+
+    #[cfg(feature = "newjson")]
+    return Ok(envelope.convert());
 }
 
 /// Recursively serialize query results
