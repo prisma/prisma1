@@ -14,21 +14,21 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "Sample schema with relation and id only types" should "be generated correctly" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  rel: User
-        |  c: C
+        |  c: C @relation(link: INLINE)
         |}
         |
         |type C {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  b: B
         |}""".stripMargin
     }
@@ -152,7 +152,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val project = SchemaDsl.fromString() {
 
       """type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |}
         |
@@ -705,7 +705,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
   "Nested Create types" should "not be omitted anymore since we now have bring your own id" in {
     val project = SchemaDsl.fromString() {
       """type A {
-        |    id: ID! @unique
+        |    id: ID! @id
         |    b: B
         |}
         |
