@@ -530,175 +530,18 @@ class EmbeddedNestedCreateMutationInsideUpdateSpec extends FlatSpec with Matcher
     }
   }
 
-  "a one to many relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment{
-        |   id: ID! @unique
-        |   text: String
-        |   todo: Todo
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   comments: [Comment]
-        |}"""
-    }
+  "A PM relation with a create in Update" should "add to toMany relations" in {
 
-    database.setup(project)
-
-    val createResult = server.query(
-      """mutation {
-        |  createTodo(data:{}){
-        |    id
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-    val id = createResult.pathAsString("data.createTodo.id")
-
-    val result = server.query(
-      s"""mutation {
-        |  updateTodo(
-        |    where: {
-        |      id: "$id"
-        |    }
-        |    data:{
-        |      comments: {
-        |        create: [{text: "comment1"}, {text: "comment2"}]
-        |      }
-        |    }
-        |  ){
-        |    comments {
-        |      text
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-
-    mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
-  }
-
-  "a many to one relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment{
-        |   id: ID! @unique
-        |   text: String
-        |   todo: Todo
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   title: String
-        |   comments: [Comment]
-        |}"""
-    }
-
-    database.setup(project)
-
-    val createResult = server.query(
-      """mutation {
-        |  createComment(data:{}){
-        |    id
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-    val id = createResult.pathAsString("data.createComment.id")
-
-    val result = server.query(
-      s"""
-        |mutation {
-        |  updateComment(
-        |    where: {
-        |      id: "$id"
-        |    }
-        |    data: {
-        |      todo: {
-        |        create: {title: "todo1"}
-        |      }
-        |    }
-        |  ){
-        |    id
-        |    todo {
-        |      title
-        |    }
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(result.pathAsString("data.updateComment.todo.title"), "todo1")
-  }
-
-  "a many to one relation" should "be creatable through a nested mutation using non-id unique field" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment{
-        |   id: ID! @unique
-        |   text: String! @unique
-        |   todo: Todo
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   title: String! @unique
-        |   comments: [Comment]
-        |}"""
-    }
-
-    database.setup(project)
-
-    server.query(
-      """mutation {
-        |  createComment(data:{ text: "comment"}){
-        |    id
-        |    text
-        |  }
-        |}
-      """.stripMargin,
-      project
-    )
-
-    val result = server.query(
-      s"""
-         |mutation {
-         |  updateComment(
-         |    where: {
-         |      text: "comment"
-         |    }
-         |    data: {
-         |      todo: {
-         |        create: {title: "todo1"}
-         |      }
-         |    }
-         |  ){
-         |    id
-         |    todo {
-         |      title
-         |    }
-         |  }
-         |}
-      """.stripMargin,
-      project
-    )
-    mustBeEqual(result.pathAsString("data.updateComment.todo.title"), "todo1")
-  }
-
-  "Create in Update" should "add to toMany relations" in {
-
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
-        |   unique: Int! @unique
+        |   int: Int!
         |   name: String!
         | }"""
     }
@@ -711,24 +554,24 @@ class EmbeddedNestedCreateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |   unique: 1,
          |   name: "Top",
          |   middle: {create:[{
-         |      unique: 11,
+         |      int: 11,
          |      name: "Middle"
          |      },
          |      {
-         |      unique: 12,
+         |      int: 12,
          |      name: "Middle2"
          |    }]
          |   }
          |}){
          |  unique,
          |  middle{
-         |    unique
+         |    int
          |  }
          |}}""",
       project
     )
 
-    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11},{"unique":12}]}}}""")
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"int":11},{"int":12}]}}}""")
 
     val res2 = server.query(
       s"""mutation {
@@ -736,39 +579,39 @@ class EmbeddedNestedCreateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |   where:{unique: 1}
          |   data: {
          |      middle: {create:[{
-         |          unique: 13,
+         |          int: 13,
          |          name: "Middle3"
          |          },
          |          {
-         |          unique: 14,
+         |          int: 14,
          |          name: "Middle4"
          |        }]
          |   }
          |}){
          |  unique,
          |  middle{
-         |    unique,
+         |    int,
          |  }
          |}}""",
       project
     )
 
-    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"unique":11},{"unique":12},{"unique":13},{"unique":14}]}}}""")
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"int":11},{"int":12},{"int":13},{"int":14}]}}}""")
 
   }
 
-  "Update with nested Create" should "work" in {
+  "A PM relation with an update with nested Create" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
-        |   unique: Int! @unique
+        |   int: Int! 
         |   name: String!
         |}"""
     }
@@ -794,24 +637,24 @@ class EmbeddedNestedCreateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |   name: "Top2",
          |   middle: {create:[
          |      {
-         |      unique: 11,
+         |      int: 11,
          |      name: "Middle"
          |      },
          |      {
-         |      unique: 12,
+         |      int: 12,
          |      name: "Middle2"
          |    }]
          |   }
          |}){
          |  unique,
          |  middle{
-         |    unique
+         |    int
          |  }
          |}}""".stripMargin,
       project
     )
 
-    res.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"unique":11},{"unique":12}]}}}""")
+    res.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"int":11},{"int":12}]}}}""")
   }
 
 }
