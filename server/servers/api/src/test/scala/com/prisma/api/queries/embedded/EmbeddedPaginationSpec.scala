@@ -10,16 +10,17 @@ import org.scalatest.{FlatSpec, Matchers}
 class EmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(EmbeddedTypesCapability)
-  lazy val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromStringV11() {
     """
       |type List {
-      |  id: ID! @unique
+      |  id: ID! @id
       |  name: String! @unique
       |  todos: [Todo]
       |}
       |
       |type Todo @embedded{
-      |  title: String! @unique
+      |  id: ID! @id
+      |  title: String!
       |}
     """
   }

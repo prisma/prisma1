@@ -12,9 +12,9 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
 
   "Nested scalar lists" should "work in creates " in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type List{
-         |   id: ID! @unique
+         |   id: ID! @id
          |   todos: [Todo]
          |   listInts: [Int]
          |}
@@ -38,9 +38,9 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
 
   "Deeply nested scalar lists" should "work in creates " in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type List {
-         |   id: ID! @unique
+         |   id: ID! @id
          |   todo: Todo
          |   listInts: [Int]
          |}
@@ -70,22 +70,24 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
 
   "Deeply nested scalar lists" should "work in updates " in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type List{
-         |   id: ID! @unique
+         |   id: ID! @id
          |   todo: Todo
          |   uList: String! @unique
          |   listInts: [Int]
          |}
          |
          |type Todo @embedded {
-         |   uTodo: String! @unique
+         |   id: ID! @id
+         |   uTodo: String!
          |   tag: Tag
          |   todoInts: [Int]
          |}
          |
          |type Tag @embedded {
-         |   uTag: String! @unique
+         |   id: ID! @id
+         |   uTag: String!
          |   tagInts: [Int]
          |}
          |"""
@@ -113,16 +115,17 @@ class EmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBa
 
   "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type List{
-         |   id: ID! @unique
+         |   id: ID! @id
          |   todo: Todo
          |   uList: String! @unique
          |   listInts: [Int]
          |}
          |
          |type Todo @embedded {
-         |   uTodo: String! @unique
+         |   id: ID! @id
+         |   uTodo: String!
          |   todoInts: [Int]
          |}
          |"""
