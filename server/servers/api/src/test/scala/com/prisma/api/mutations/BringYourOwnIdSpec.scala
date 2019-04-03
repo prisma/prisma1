@@ -1,6 +1,6 @@
 package com.prisma.api.mutations
 
-import com.prisma.ConnectorTag
+import com.prisma.{ConnectorTag, IgnoreSQLite}
 import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag}
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
@@ -31,11 +31,11 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
 
     server.queryThatMustFail(
       s"""mutation {
-         |  createParent(data: {p: "Parent", id: "Own Id"}){p, id}
+         |  createParent(data: {p: "Parent2", id: "Own Id"}){p, id}
          |}""",
       project = project,
       errorCode = 3010,
-      errorContains = "A unique constraint would be violated on Parent. Details: Field name: id"
+      errorContains = "A unique constraint would be violated on Parent. Details: Field name = id"
     )
   }
 
@@ -61,7 +61,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     )
   }
 
-  "A Create Mutation" should "error for id that is invalid 3" in {
+  "A Create Mutation" should "error for id that is invalid 3" taggedAs IgnoreSQLite in {
     server.queryThatMustFail(
       s"""mutation {
          |  createParent(data: {p: "Parent", id: "this is probably way to long, lets see what error it throws"}){p, id}
@@ -88,11 +88,11 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
          |}""",
       project = project,
       errorCode = 3010,
-      errorContains = "A unique constraint would be violated on Child. Details: Field name: id"
+      errorContains = "A unique constraint would be violated on Child. Details: Field name = id"
     )
   }
 
-  "A Nested Create Mutation" should "error with invalid id" in {
+  "A Nested Create Mutation" should "error with invalid id" taggedAs IgnoreSQLite in {
     server.queryThatMustFail(
       s"""mutation {
          |createParent(data: {p: "Parent 2", id: "Own Id 2", childOpt:{create:{c:"Child 2", id: "This is way too long and should error"}}}){p, id, childOpt { c, id} }
@@ -119,7 +119,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     res.toString should be("""{"data":{"upsertParent":{"p":"Parent 2","id":"Own Id"}}}""")
   }
 
-  "An Upsert Mutation" should "error with id that is too long" in {
+  "An Upsert Mutation" should "error with id that is too long" taggedAs IgnoreSQLite in {
     server.queryThatMustFail(
       s"""mutation {
          |upsertParent(

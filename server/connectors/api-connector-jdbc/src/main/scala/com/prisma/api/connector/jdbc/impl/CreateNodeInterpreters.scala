@@ -1,6 +1,7 @@
 package com.prisma.api.connector.jdbc.impl
 
 import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
+
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
@@ -31,7 +32,7 @@ case class CreateNodeInterpreter(
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).get)
 
     case e: SQLException if e.getSQLState == "23505" && e.getMessage.contains(s"${model.dbName}_pkey") =>
-      APIErrors.UniqueConstraintViolation(model.name, s"Field name: " + model.idField_!.name)
+      APIErrors.UniqueConstraintViolation(model.name, s"Field name = " + model.idField_!.name)
 
     case e: SQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
@@ -41,7 +42,7 @@ case class CreateNodeInterpreter(
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && e.getMessage.contains("'PRIMARY'") =>
-      APIErrors.UniqueConstraintViolation(model.name, s"Field name: " + model.idField_!.name)
+      APIErrors.UniqueConstraintViolation(model.name, s"Field name = " + model.idField_!.name)
 
     case e: SQLException if e.getErrorCode == 19 && GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).get)
@@ -128,7 +129,7 @@ case class NestedCreateNodeInterpreter(
       APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).get)
 
     case e: SQLException if e.getSQLState == "23505" && e.getMessage.contains(s"${relatedModel.dbName}_pkey") =>
-      APIErrors.UniqueConstraintViolation(relatedModel.name, s"Field name: " + relatedModel.idField_!.name)
+      APIErrors.UniqueConstraintViolation(relatedModel.name, s"Field name = " + relatedModel.idField_!.name)
 
     case e: SQLException if e.getSQLState == "23503" => //Foreign Key Violation
       APIErrors.NodeDoesNotExist("")
@@ -138,7 +139,7 @@ case class NestedCreateNodeInterpreter(
       APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
 
     case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && e.getMessage.contains("'PRIMARY'") =>
-      APIErrors.UniqueConstraintViolation(relatedModel.name, s"Field name: " + relatedModel.idField_!.name)
+      APIErrors.UniqueConstraintViolation(relatedModel.name, s"Field name = " + relatedModel.idField_!.name)
 
     case e: SQLException if e.getErrorCode == 19 && GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).get)

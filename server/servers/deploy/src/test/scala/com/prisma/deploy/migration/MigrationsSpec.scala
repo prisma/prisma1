@@ -1,5 +1,7 @@
 package com.prisma.deploy.migration
 
+import com.prisma.ConnectorTag
+import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
@@ -7,12 +9,13 @@ import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability._
-import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
-  override def runOnlyForCapabilities = Set(MigrationsCapability)
+  override def runOnlyForCapabilities                   = Set(MigrationsCapability)
+  override def doNotRunForConnectors: Set[ConnectorTag] = Set(SQLiteConnectorTag)
 
   val name      = this.getClass.getSimpleName
   val stage     = "default"
@@ -363,7 +366,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myB: B
         |  myA: A
@@ -395,7 +398,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myId: ID! @id
         |  myB: B
@@ -429,7 +432,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myId: ID! @id
         |  myB: B
@@ -455,7 +458,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myB: B
         |  myA: A
@@ -481,7 +484,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  myB: B
         |  myA: A
         |}
@@ -504,7 +507,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myId: ID! @id
         |  myB: B
@@ -543,7 +546,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  id: ID! @id
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  one: A
         |  two: B
         |}
@@ -575,7 +578,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  id: ID! @id
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  one: A
         |  two: C
         |}
@@ -607,7 +610,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  a: A @relation(name: "CustomLinkTable")
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  myA: A
         |  myB: B
         |}
@@ -931,6 +934,48 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     sequence.current should be(1)
   }
 
+  "adding a scalar list for a model with type Int" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |}
+      """.stripMargin
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability))
+    result.table_!("B").column_!("id").typeIdentifier should be(TI.Int)
+
+    val scalarListTable = result.table_!("B_strings")
+    scalarListTable.column_!("nodeId").typeIdentifier should be(TI.Int)
+  }
+
+  "updating a model with a scalar list to id type Int" in {
+    val capas = ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability)
+    val initialDataModel =
+      """
+        |type B {
+        |  id: ID! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |}
+      """.stripMargin
+    val initialResult = deploy(initialDataModel, capas)
+    initialResult.table_!("B").column_!("id").typeIdentifier should be(TI.String)
+    initialResult.table_!("B_strings").column_!("nodeId").typeIdentifier should be(TI.String)
+
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |  strings2: [String] @scalarList(strategy: RELATION) # make sure simultaneously adding new fields works
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel, capas)
+    result.table_!("B").column_!("id").typeIdentifier should be(TI.Int)
+    result.table_!("B_strings").column_!("nodeId").typeIdentifier should be(TI.Int)
+  }
+
   def setup() = {
     val idAsString = testDependencies.projectIdEncoder.toEncodedString(name, stage)
     deployConnector.deleteProjectDatabase(idAsString).await()
@@ -983,11 +1028,11 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
     val refreshedProject: Project = testDependencies.projectPersistence.load(project.id).await.get
     val schema                    = refreshedProject.schema
-    val refreshedProjectV2        = refreshedProject.copy(schema = schema.copy(version = Some("v2")))
+    val refreshedProjectV11       = refreshedProject.copy(schema = schema.copy(version = Some(Schema.version.v11)))
 
     val mutation = DeployMutation(
       args = input,
-      project = refreshedProjectV2,
+      project = refreshedProjectV11,
       schemaInferrer = SchemaInferrer(capabilities),
       migrationStepsInferrer = MigrationStepsInferrer(),
       schemaMapper = SchemaMapper,
@@ -997,7 +1042,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       functionValidator = testDependencies.functionValidator,
       invalidationPublisher = testDependencies.invalidationPublisher,
       capabilities = capabilities,
-      clientDbQueries = deployConnector.clientDBQueries(refreshedProjectV2),
+      clientDbQueries = deployConnector.clientDBQueries(refreshedProjectV11),
       databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
       fieldRequirements = FieldRequirementsInterface.empty,
       isActive = true,

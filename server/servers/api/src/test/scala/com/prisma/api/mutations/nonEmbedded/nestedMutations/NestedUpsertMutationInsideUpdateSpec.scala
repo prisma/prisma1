@@ -62,7 +62,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
+    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
   "a PM to C1!  relation with a child already in a relation" should "work with update" in {
@@ -113,7 +113,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(2) }
+    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(2) }
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for create" in {
@@ -165,7 +165,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
+    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "a PM to C1  relation with the parent already in a relation" should "work through a nested mutation by unique for update" in {
@@ -217,7 +217,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
+    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for update" in {
@@ -271,7 +271,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(3) }
+    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
   }
 
   "a PM to CM  relation with the children already in a relation" should "work through a nested mutation by unique for create" in {
@@ -325,7 +325,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
     dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(4) }
+    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
   "a one to many relation" should "be upsertable by id through a nested mutation" in {

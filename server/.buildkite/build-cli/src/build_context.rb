@@ -96,7 +96,7 @@ class BuildContext
   end
 
   def connectors
-    [:mongo, :postgres, :mysql]
+    [:mongo, :postgres, :mysql, :sqlite, :"sqlite-native"] # :"native-integration-tests"
   end
 
   def native_image_targets
@@ -122,7 +122,6 @@ class BuildContext
       end
     )
   end
-
 
   def find_server_root
     Pathname.new(Dir.pwd).parent.dirname

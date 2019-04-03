@@ -52,7 +52,6 @@ case class JdbcDatabaseMutactionExecutor(
           childResults <- executeTopLevelMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[TopLevelDatabaseMutaction], mutationBuilder)
                            .map(Vector(_))
         } yield MutactionResults(result +: childResults.flatMap(_.results))
-
       case m: FurtherNestedMutaction =>
         for {
           result <- interpreterFor(m).dbioActionWithErrorMapped(mutationBuilder)
@@ -130,8 +129,8 @@ case class JdbcDatabaseMutactionExecutor(
       import slickDatabase.profile.api._
 
       val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/${project.dbName}'"""
-      val attach             = sqlu"ATTACH DATABASE #${path} AS #${project.dbName};"
+      val path               = s"""'db/${project.dbName}.db'"""
+      val attach             = sqlu"ATTACH DATABASE #$path AS #${project.dbName};"
       val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
 
       val attachIfNecessary = for {

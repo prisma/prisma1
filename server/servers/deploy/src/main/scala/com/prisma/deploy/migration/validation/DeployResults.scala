@@ -77,6 +77,15 @@ object DeployErrors {
       s"You are updating the field `$field` to be unique. But there are already nodes for the model `${`type`}` that would violate that constraint."
     )
   }
+
+  def changingTypeOfIdField(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are changing the type of the id field `$field`. But there are already nodes for this model. This would require to regenerate IDs for all nodes which is not possible. You have to remove all nodes for this type by either running `prisma reset` or through a `deleteMany${`type`}s` mutation."
+    )
+  }
+
   def missingRelationDirective(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` must specify a `@relation` directive: `@relation(name: "MyRelation")`""")
   }

@@ -78,7 +78,7 @@ trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
   override def runOnlyForCapabilities = Set(MigrationsCapability)
 }
 
-trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: Suite =>
+trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV11Base { self: Suite =>
   private val stageSeparator           = this.deployConnector.projectIdEncoder.stageSeparator
   val projectName                      = this.getClass.getSimpleName
   val projectStage                     = "default"
@@ -119,7 +119,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
 
       case c: SQLiteDeployConnector =>
         val session = c.managementDatabase.database.createSession()
-        val path    = s"""'db/$projectId'"""
+        val path    = s"""'db/$projectId.db'"""
         (session, s"ATTACH DATABASE $path AS $projectId;")
 
       case x => sys.error(s"$x is not supported here")
@@ -160,7 +160,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
   }
 }
 
-trait DataModelV2Base { self: PassiveDeploySpecBase =>
+trait DataModelV11Base { self: PassiveDeploySpecBase =>
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val project = Project(id = projectId, schema = Schema.empty)

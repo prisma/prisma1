@@ -57,7 +57,7 @@ class DeeplyNestedSelfRelationSpec extends FlatSpec with Matchers with ApiSpecBa
       """{"data":{"createUser":{"name":"A","parent":null,"children":[{"name":"B","parent":{"name":"A"},"children":[{"name":"C","parent":{"name":"B"},"children":[]}]}]}}}""")
 
     val query = server.query("""{
-                   |  users {
+                   |  users{
                    |    name
                    |  }
                    |}

@@ -42,10 +42,10 @@ case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver, isProto
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
   override def databaseInspector: DatabaseInspector               = SQLiteDatabaseInspector(managementDatabase)
-  override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.mysql //Fixme
+  override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.sqlite
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createDatabaseForProject(id = id, !capabilities.isDataModelV2)
+    val action = mutationBuilder.createDatabaseForProject(id = id, !capabilities.isDataModelV11)
     projectDatabase.run(action)
   }
 
@@ -78,17 +78,10 @@ case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver, isProto
       .flatMap(_ => internalDatabaseDefs.setupDatabases.shutdown)
   }
 
-  override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
-  override def shutdown()            = databases.shutdown
-
+  override def reset(): Future[Unit]                            = truncateTablesInDatabase(managementDatabase.database)
+  override def shutdown(): Future[Unit]                         = databases.shutdown
+  override def managementLock(): Future[Unit]                   = Future.unit
   override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
-
-  override def managementLock(): Future[Unit] = {
-    managementDatabase.database.run(sql"SELECT GET_LOCK('deploy_privileges', -1);".as[Int].head.withPinnedSession).transformWith {
-      case Success(result) => if (result == 1) Future.successful(()) else managementLock()
-      case Failure(err)    => Future.failed(err)
-    }
-  }
 
   protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {

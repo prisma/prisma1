@@ -94,6 +94,7 @@ export class Client {
         },
         inactivityTimeout: 60000,
         lazy: true,
+        reconnect: true,
       },
       WS,
     )

@@ -1,0 +1,58 @@
+version: "3"
+services:
+  app:
+    image: prismagraphql/build-image:debian
+    environment:
+      SERVER_ROOT: /root/build
+      CLUSTER_VERSION: "latest"
+      COMMIT_SHA: "123abcd"
+      PACKAGECLOUD_PW: "${PACKAGECLOUD_PW}"
+      RABBITMQ_URI: amqp://rabbit
+      RUST_BACKTRACE: "1"
+      PRISMA_CONFIG: |
+        port: 4466
+        rabbitUri: amqp://rabbit
+        prototype: true
+        databases:
+          default:
+            connector: native-integration-tests
+            migrations: true
+            active: true
+            host: test-db
+            port: 3306
+            user: root
+            password: prisma
+            rawAccess: true
+    volumes:
+      - ../..:/root/build
+      - ~/.ivy2:/root/.ivy2
+      - ~/.coursier:/root/.coursier
+    working_dir: /root/build
+    networks:
+      - tests
+
+  test-db:
+    image: mysql:5.7
+    command: mysqld
+    restart: always
+    environment:
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: prisma
+      MYSQL_DATABASE: prisma
+    ports:
+      - "3306"
+    networks:
+      - tests
+    tmpfs: /var/lib/mysql
+
+  rabbit:
+    image: rabbitmq:3.7.2-management
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - tests
+
+networks:
+  tests:

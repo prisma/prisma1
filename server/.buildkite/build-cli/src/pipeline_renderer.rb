@@ -84,6 +84,7 @@ class PipelineRenderer
     release_steps = release_artifacts_steps
     [ test_steps,
       release_steps[:before_wait],
+      rust_steps,
       @@wait_step,
       release_steps[:after_wait]].flatten
   end
@@ -111,6 +112,14 @@ class PipelineRenderer
         end
       end
     end.flatten
+  end
+
+  def rust_steps
+    [
+      PipelineStep.new
+        .label(":rust: prisma-rs")
+        .command("./server/.buildkite/pipeline.sh test-rust")
+    ]
   end
 
   def release_artifacts_steps
@@ -153,12 +162,13 @@ class PipelineRenderer
   end
 
   def build_steps_for(version)
-    ['debian', 'lambda'].map do |target|
-      PipelineStep.new
-        .label(":rust: Native image [#{target}] [#{version}]")
-        .command("./server/.buildkite/pipeline.sh native-image #{target} #{version}")
-        .queue("native-linux")
-    end
+    # ['debian', 'lambda'].map do |target|
+    #   PipelineStep.new
+    #     .label(":rust: Native image [#{target}] [#{version}]")
+    #     .command("./server/.buildkite/pipeline.sh native-image #{target} #{version}")
+    #     .queue("native-linux")
+    # end
+    []
   end
 
   def calculate_next_unstable_docker_tag()

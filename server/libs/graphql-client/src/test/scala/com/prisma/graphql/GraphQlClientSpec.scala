@@ -17,7 +17,7 @@ class GraphQlClientSpec extends FlatSpec with Matchers {
       val query  = """ { mutation { createTodo(title:"the title"){id} }} """
       val result = await(client.sendQuery(query))
 
-      val expectedBody = s"""{"query":"${escapeQuery(query)}"}"""
+      val expectedBody = s"""{"query":"${escapeQuery(query)}","variables":{}}"""
       server.lastRequest.body should equal(expectedBody)
 
       result.status should equal(defaultStub.stubbedResponse.status)

@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded
 
-import com.prisma.IgnoreMongo
+import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
@@ -79,7 +79,7 @@ class RelationGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   //Fixme this tests transactionality as well
-  "Required One2One relations" should "throw an error if an update would leave one item without a partner" taggedAs (IgnoreMongo) in {
+  "Required One2One relations" should "throw an error if an update would leave one item without a partner" taggedAs (IgnoreMongo, IgnoreSQLite) in { // TODO: Remove when transactions are back
 
     val project = SchemaDsl.fromString() {
       """type Owner{

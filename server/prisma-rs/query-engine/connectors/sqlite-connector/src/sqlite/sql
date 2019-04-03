@@ -1,0 +1,12 @@
+SELECT `NonEmbeddedUpsertListDesignSpec_DB`.`Todo`.`id`
+FROM `NonEmbeddedUpsertListDesignSpec_DB`.`Todo`
+WHERE (
+    (
+        `NonEmbeddedUpsertListDesignSpec_DB`.`Todo`.`id` IN (?)
+        AND `NonEmbeddedUpsertListDesignSpec_DB`.`Todo`.`uTodo` = ?
+    )
+    AND 1=1)
+ORDER BY `NonEmbeddedUpsertListDesignSpec_DB`.`Todo`.`id` ASC
+LIMIT -1 OFFSET 0,
+
+Text("cjtyknc1m0000c7ji3t5e8gfw"), Text("B")

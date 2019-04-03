@@ -28,7 +28,10 @@ Subcommands:
 
 \tnative-image <target> <version>
 \t\tBuilds the native image on the current branch. Artifacts are always published to S3. <version> is the version string to be baked into the binary.
-  """
+
+\ttest-rust
+\t\truns the tests for prisma-rs
+"""
 end
 
 if ARGV.length <= 0
@@ -72,6 +75,9 @@ when "native-image"
   end
 
   native_image(context, ARGV[1], ARGV[2])
+
+when "test-rust"
+  test_rust(context)
 
 else
   puts "Invalid command: #{command}"

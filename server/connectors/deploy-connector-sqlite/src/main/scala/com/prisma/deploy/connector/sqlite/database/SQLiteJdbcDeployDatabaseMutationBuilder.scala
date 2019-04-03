@@ -24,7 +24,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
 
   override def createSchema(projectId: String): DBIO[_] = {
     val list = sql"""PRAGMA database_list;""".as[(String, String, String)]
-    val path = s"""'db/$projectId'"""
+    val path = s"""'db/$projectId.db'"""
     val att  = sqlu"ATTACH DATABASE #${path} AS #$projectId;"
 
     for {
@@ -55,7 +55,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
     //          yes -> detach, delete
     //          no  -> delete
     //http://www.sqlitetutorial.net/sqlite-attach-database/
-    val fileTemp = new File(s"""./db/$projectId""")
+    val fileTemp = new File(s"""./db/$projectId.db""")
 
     if (fileTemp.exists) {
       //      val action = mutationBuilder.deleteProjectDatabase(projectId = id).map(_ => ())
@@ -78,7 +78,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, TypeIdentifier.Cuid)
+    val nodeIdSql = typeMapper.rawSQLFromParts("nodeId", isRequired = true, model.idField_!.typeIdentifier)
     val valueSql  = typeMapper.rawSQLFromParts("value", isRequired = true, typeIdentifier)
 
     val create = sqlu"""CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (

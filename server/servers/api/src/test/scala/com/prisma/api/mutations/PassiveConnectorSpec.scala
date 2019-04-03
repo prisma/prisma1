@@ -238,7 +238,7 @@ class PassiveConnectorSpecForTableRelations extends FlatSpec with PassiveConnect
       |   list: List @relation(name: "ListToTodo")
       | }
       |
-      | type ListToTodo @linkTable @db(name: "list_to_todo") {
+      | type ListToTodo @relationTable @db(name: "list_to_todo") {
       |   list: List! @db(name: "list_id")
       |   todo_id: Todo!
       | }

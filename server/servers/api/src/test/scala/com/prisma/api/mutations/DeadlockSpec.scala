@@ -1,5 +1,6 @@
 package com.prisma.api.mutations
 
+import com.prisma.ConnectorTag
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -12,6 +13,7 @@ import scala.concurrent.Future
 class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
   override def doNotRunForPrototypes: Boolean = true
   override def runOnlyForCapabilities         = Set(ScalarListsCapability)
+  override def doNotRunForConnectors          = Set(ConnectorTag.SQLiteConnectorTag)
 
   import testDependencies.system.dispatcher
 

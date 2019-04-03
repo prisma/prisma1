@@ -1,0 +1,9 @@
+{
+  "id": 1,
+  "jsonrpc": "2.0",
+  "method": "suggestMigrationSteps",
+  "params": {
+    "project": "the-project-id",
+    "dataModel": "type Blog { id: ID! @id \n title: String }"
+  }
+}

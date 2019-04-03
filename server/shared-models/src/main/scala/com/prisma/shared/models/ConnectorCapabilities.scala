@@ -49,8 +49,8 @@ case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
 
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
 
-  def isDataModelV2: Boolean = !capabilities.contains(LegacyDataModelCapability)
-  def isMongo: Boolean       = has(EmbeddedTypesCapability)
+  def isDataModelV11: Boolean = !capabilities.contains(LegacyDataModelCapability)
+  def isMongo: Boolean        = has(EmbeddedTypesCapability)
 }
 
 object ConnectorCapabilities extends BooleanUtils {
@@ -58,6 +58,26 @@ object ConnectorCapabilities extends BooleanUtils {
 
   val empty: ConnectorCapabilities                                     = ConnectorCapabilities(Set.empty[ConnectorCapability])
   def apply(capabilities: ConnectorCapability*): ConnectorCapabilities = ConnectorCapabilities(Set(capabilities: _*))
+
+  lazy val sqlite: ConnectorCapabilities = {
+    val capas = Set(
+      LegacyDataModelCapability,
+      TransactionalExecutionCapability,
+      JoinRelationsFilterCapability,
+      JoinRelationLinksCapability,
+      RelationLinkTableCapability,
+      NonEmbeddedScalarListCapability,
+      NodeQueryCapability,
+      RawAccessCapability,
+      MigrationsCapability
+    )
+    ConnectorCapabilities(capas)
+  }
+
+  lazy val sqliteNative: ConnectorCapabilities = {
+    val filteredCapas = sqlite.capabilities.filter(_ != TransactionalExecutionCapability)
+    ConnectorCapabilities(filteredCapas)
+  }
 
   lazy val mysql: ConnectorCapabilities = {
     val capas = Set(
