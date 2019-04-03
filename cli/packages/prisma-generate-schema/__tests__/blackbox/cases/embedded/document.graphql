@@ -260,6 +260,7 @@ type FriendConnection {
 
 input FriendCreateInput {
   f: String
+  test: ID
 }
 
 input FriendCreateManyInput {
@@ -471,6 +472,7 @@ type JointConnection {
 }
 
 input JointCreateInput {
+  id: ID
   j: String
 }
 
@@ -911,6 +913,7 @@ type ParentConnection {
 }
 
 input ParentCreateInput {
+  id: ID
   p: String
   children: ChildCreateManyInput
   j: JointCreateManyInput

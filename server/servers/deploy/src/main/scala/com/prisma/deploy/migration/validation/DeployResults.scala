@@ -1,6 +1,7 @@
 package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.connector.FieldRequirement
+import com.prisma.gc_values.GCValue
 import sangria.ast.{EnumTypeDefinition, FieldDefinition, ObjectTypeDefinition, TypeDefinition}
 
 object DeployWarnings {
@@ -15,6 +16,19 @@ object DeployWarnings {
   def dataLossField(`type`: String, field: String): DeployWarning = {
     DeployWarning(`type`, "You already have nodes for this model. This change may result in data loss.", Some(field))
   }
+
+  def migValueUsedOnExistingField(`type`: String, field: String, migValue: GCValue): DeployWarning = {
+    DeployWarning(`type`, s"You are changing the type of a required field. The fields will be pre-filled with the value: `${migValue.value}`.", Some(field))
+  }
+
+  def migValueUsedOnNewField(`type`: String, field: String, migValue: GCValue): DeployWarning = {
+    DeployWarning(
+      `type`,
+      s"You are creating a required field but there are already nodes present that would violate that constraint." +
+        s"The fields will be pre-filled with the value `${migValue.value}`.",
+      Some(field)
+    )
+  }
 }
 
 object DeployErrors {
@@ -28,10 +42,41 @@ object DeployErrors {
     error(fieldAndType, s"""All id fields must specify the `@unique` directive.""")
   }
 
-  def uniqueDisallowedOnEmbeddedTyps(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
+  def uniqueDisallowedOnEmbeddedTypes(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
     error(objectType, fieldDef, s"The field `${fieldDef.name}` is marked as unique but its type `${objectType.name}` is embedded. This is disallowed.")
   }
 
+  def creatingUniqueRequiredFieldWithExistingNulls(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are creating a new required unique field `$field`. There are already nodes for the model `${`type`}` that would violate that constraint."
+    )
+  }
+
+  def updatingUniqueRequiredFieldWithExistingNulls(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are updating the field `$field` to be required and unique. But there are already nodes for the model `${`type`}` that would violate that constraint."
+    )
+  }
+
+  def makingFieldRequired(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are updating the field `$field` to be required. But there are already nodes for the model `${`type`}` that would violate that constraint."
+    )
+  }
+
+  def makingFieldUnique(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are updating the field `$field` to be unique. But there are already nodes for the model `${`type`}` that would violate that constraint."
+    )
+  }
   def missingRelationDirective(fieldAndType: FieldAndType): DeployError = {
     error(fieldAndType, s"""The relation field `${fieldAndType.fieldDef.name}` must specify a `@relation` directive: `@relation(name: "MyRelation")`""")
   }

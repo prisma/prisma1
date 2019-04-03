@@ -100,6 +100,7 @@ type PostConnection {
 }
 
 input PostCreateInput {
+  id: ID
   createdAt: DateTime!
   updatedAt: DateTime!
   published: Boolean
@@ -114,6 +115,7 @@ input PostCreateManyWithoutAuthorInput {
 }
 
 input PostCreateWithoutAuthorInput {
+  id: ID
   createdAt: DateTime!
   updatedAt: DateTime!
   published: Boolean
@@ -768,6 +770,7 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   email: String!
   name: String
   posts: PostCreateManyWithoutAuthorInput
@@ -779,6 +782,7 @@ input UserCreateOneWithoutPostsInput {
 }
 
 input UserCreateWithoutPostsInput {
+  id: ID
   email: String!
   name: String
 }

@@ -66,7 +66,7 @@ case class SchemaInferrerImpl(
           Vector.empty
         }
       } else if (isMongo) { // MONGO
-        if (isLegacy) { // this is the case in tests
+        if (isLegacy && prismaType.isEmbedded) { // this is the case in tests
           Vector(ReservedFields.embeddedIdField)
         } else {
           Vector.empty

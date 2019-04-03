@@ -31,14 +31,17 @@ type BillingInfo {
 }
 
 type BillingInfoWithoutConnection {
+  id: ID! @unique
   account: String!
 }
 
 type OptionalDetails {
+  id: ID! @unique
   text: String!
   user: User!
 }
 
 type OptionalDetailsWithoutConnection {
+  id: ID! @unique
   text: String!
 }

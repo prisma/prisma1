@@ -18,6 +18,8 @@ case class CreateNodeInterpreter(mutaction: CreateNode)(implicit ec: ExecutionCo
   override val errorMapper = {
     case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
+    case e: MongoWriteException if e.getError.getCode == 11000 && e.getMessage.contains("_id_") =>
+      APIErrors.UniqueConstraintViolation(mutaction.model.name, s"Field name: ${mutaction.model.idField_!.name}")
   }
 }
 
@@ -117,5 +119,7 @@ case class NestedCreateNodeInterpreter(mutaction: NestedCreateNode)(implicit val
   override val errorMapper = {
     case e: MongoWriteException if e.getError.getCode == 11000 && MongoErrorMessageHelper.getFieldOption(mutaction.model, e).isDefined =>
       APIErrors.UniqueConstraintViolation(mutaction.model.name, MongoErrorMessageHelper.getFieldOption(mutaction.model, e).get)
+    case e: MongoWriteException if e.getError.getCode == 11000 && e.getMessage.contains("_id_") =>
+      APIErrors.UniqueConstraintViolation(mutaction.model.name, s"Field name: ${mutaction.model.idField_!.name}")
   }
 }

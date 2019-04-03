@@ -2,6 +2,7 @@ package com.prisma.api.schema
 
 import com.prisma.cache.Cache
 import com.prisma.cache.factory.CacheFactory
+import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import com.prisma.shared.models._
 import sangria.schema.{Field => _, _}
 
@@ -274,13 +275,23 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
     }
   }
 
+  private def filterID(scalarField: ScalarField): Boolean = (scalarField.behaviour, scalarField.typeIdentifier) match {
+    case _ if !scalarField.isId                                                                    => true
+    case (Some(IdBehaviour(IdStrategy.Auto, _)) | None, TypeIdentifier.Int)                        => false
+    case (Some(IdBehaviour(IdStrategy.Auto, _)) | None, TypeIdentifier.UUID | TypeIdentifier.Cuid) => true
+    case (Some(IdBehaviour(IdStrategy.None, _)), TypeIdentifier.Int)                               => false
+    case (Some(IdBehaviour(IdStrategy.None, _)), TypeIdentifier.UUID | TypeIdentifier.Cuid)        => true
+    case (Some(IdBehaviour(IdStrategy.Sequence, _)), TypeIdentifier.Int)                           => false
+    case _                                                                                         => sys.error("Id Behaviour unhandled")
+  }
+
   private def computeScalarInputFieldsForCreate(model: Model) = {
-    val filteredModel = model.filterScalarFields(_.isWritable)
+    val filteredModel = model.filterScalarFields(x => !x.isCreatedAt && !x.isUpdatedAt && x.isVisible && filterID(x))
     computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForCreateCase, "Create")
   }
 
   private def computeScalarInputFieldsForUpdate(model: Model) = {
-    val filteredModel = model.filterScalarFields(f => f.isWritable)
+    val filteredModel = model.filterScalarFields(f => f.isWritableDuringUpdate)
     computeScalarInputFields(filteredModel, SchemaBuilderUtils.mapToOptionalInputType, "Update")
   }
 
@@ -443,6 +454,12 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
 
 object FieldToInputTypeMapper {
   def mapForCreateCase(field: ScalarField): InputType[Any] = field.isRequired && field.defaultValue.isEmpty match {
+    case true if field.isId =>
+      (field.behaviour, field.typeIdentifier) match {
+        case (Some(IdBehaviour(IdStrategy.Auto, _)) | None, TypeIdentifier.UUID | TypeIdentifier.Cuid) => SchemaBuilderUtils.mapToOptionalInputType(field)
+        case (Some(IdBehaviour(IdStrategy.None, _)), TypeIdentifier.UUID | TypeIdentifier.Cuid)        => SchemaBuilderUtils.mapToRequiredInputType(field)
+        case _                                                                                         => sys.error("Should not happen.")
+      }
     case true  => SchemaBuilderUtils.mapToRequiredInputType(field)
     case false => SchemaBuilderUtils.mapToOptionalInputType(field)
   }

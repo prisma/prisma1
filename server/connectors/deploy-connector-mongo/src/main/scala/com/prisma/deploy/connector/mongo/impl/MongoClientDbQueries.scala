@@ -1,11 +1,12 @@
 package com.prisma.deploy.connector.mongo.impl
 
 import com.prisma.deploy.connector.ClientDbQueries
+import com.prisma.deploy.connector.mongo.database.MongoDeployDatabaseQueryBuilder
 import com.prisma.shared.models.RelationSide.RelationSide
 import com.prisma.shared.models._
-import org.mongodb.scala.{Document, MongoClient}
-import org.mongodb.scala.model.Aggregates.{project => mongoProjection, `match`, limit, group}
+import org.mongodb.scala.MongoClient
 import org.mongodb.scala.model.Accumulators._
+import org.mongodb.scala.model.Aggregates.{`match`, group, limit, project => mongoProjection}
 import org.mongodb.scala.model.Filters._
 import org.mongodb.scala.model.Projections._
 
@@ -14,9 +15,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class MongoClientDbQueries(project: Project, clientDatabase: MongoClient)(implicit ec: ExecutionContext) extends ClientDbQueries {
   val database = project.dbName
 
-  def existsByModel(model: Model): Future[Boolean] = {
-    clientDatabase.getDatabase(database).getCollection(model.dbName).countDocuments().toFuture().map(count => if (count > 0) true else false)
-  }
+  def existsByModel(model: Model): Future[Boolean] = MongoDeployDatabaseQueryBuilder.existsByModel(clientDatabase, database, model)
 
   def existsByRelation(relation: Relation): Future[Boolean] = {
 //    val query = MongoDeployDatabaseQueryBuilder.existsByRelation(project.id, relationId)
