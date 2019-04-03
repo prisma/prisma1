@@ -233,17 +233,18 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
   }
 
-  "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+  "A PM relation" should "be deletable by any unique argument through a nested mutation" in {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo{
-        | id: ID! @unique
+        | id: ID! @id
         | comments: [Comment]
         |}
         |
         |type Comment @embedded{
+        | id: ID! @id
         | text: String
-        | alias: String! @unique
+        | alias: String!
         |}
       """
     }
@@ -260,12 +261,14 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  ){
         |    id
-        |    comments { text }
+        |    comments { id }
         |  }
         |}""",
       project
     )
-    val todoId = createResult.pathAsString("data.createTodo.id")
+    val todoId     = createResult.pathAsString("data.createTodo.id")
+    val commentId  = createResult.pathAsString("data.createTodo.comments.[0].id")
+    val commentId2 = createResult.pathAsString("data.createTodo.comments.[1].id")
 
     val result = server.query(
       s"""mutation {
@@ -275,7 +278,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |    data:{
          |      comments: {
-         |        delete: [{alias: "alias1"}, {alias: "alias2"}]
+         |        delete: [{id: "$commentId"}, {id: "$commentId2"}]
          |      }
          |    }
          |  ){
