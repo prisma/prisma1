@@ -11,9 +11,9 @@ class MongoObjectIdSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Using an invalid MongoObjectId" should "return a proper error" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Test{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int
         |}"""
     }
