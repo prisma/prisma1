@@ -89,29 +89,31 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
 }
 
 fn build_list(result: &MultiPrismaQueryResult) -> List {
-    result
+    let mut vec: Vec<Item> = result
         .result
         .as_pairs()
         .iter()
-        .zip(&result.nested)
-        .map(|(vec, nested)| {
-            let mut map = vec.iter().fold(Map::new(), |mut map, (name, value)| {
+        .map(|vec| {
+            Item::Map(vec.iter().fold(Map::new(), |mut map, (name, value)| {
                 map.insert(name.clone(), Item::Value(value.clone()));
                 map
-            });
-
-            match nested {
-                PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
-                PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
-            };
-
-            Item::Map(map)
+            }))
         })
-        .collect()
+        .collect();
+
+    result.nested.iter().zip(&mut vec).for_each(|(nested, map)| {
+        match map {
+            Item::Map(ref mut map) =>
+                match nested {
+                    PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
+                    PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+                },
+            _ => unreachable!()
+        };
+    });
+
+    vec
 }
-
-
-
 
 impl From<Map> for Envelope {
     fn from(map: Map) -> Self {
