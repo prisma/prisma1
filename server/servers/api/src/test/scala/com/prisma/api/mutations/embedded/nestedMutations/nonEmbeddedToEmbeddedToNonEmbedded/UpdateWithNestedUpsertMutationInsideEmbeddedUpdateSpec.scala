@@ -11,7 +11,7 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
 
   "a FriendReq relation" should "be possible for the Update branch" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendReq }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendReq }
 
     database.setup(project)
 
@@ -29,6 +29,7 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendReq{
           |         f
@@ -40,16 +41,16 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f1"}}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendReq:{upsert:{
           |             create:{f:"SHOULD NOT MATTER"},
@@ -78,7 +79,7 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
 
   "a FriendOpt relation" should "be possible for the Update branch" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendOpt }
 
     database.setup(project)
 
@@ -96,6 +97,7 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendOpt{
           |         f
@@ -107,16 +109,16 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendOpt":{"f":"f1"}}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendOpt:{upsert:{
           |             create:{f:"SHOULD NOT MATTER"},
@@ -145,7 +147,7 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
 
   "a FriendOpt relation" should "be possible for the Create branch" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendOpt }
 
     database.setup(project)
 
@@ -162,6 +164,7 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendOpt{
           |         f
@@ -173,16 +176,16 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendOpt":null}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendOpt:{upsert:{
           |             create:{f:"fCreated"},
@@ -211,7 +214,7 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
 
   "a FriendsOpt relation" should "be possible for the Create branch" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
 
     database.setup(project)
 
@@ -229,6 +232,7 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendsOpt{
           |         f
@@ -240,16 +244,16 @@ class UpdateWithNestedUpsertMutationInsideEmbeddedUpdateSpec extends FlatSpec wi
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[{"f":"f1"}]}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendsOpt:{upsert:{
           |             where:{f:"DOES NOT EXIST"}

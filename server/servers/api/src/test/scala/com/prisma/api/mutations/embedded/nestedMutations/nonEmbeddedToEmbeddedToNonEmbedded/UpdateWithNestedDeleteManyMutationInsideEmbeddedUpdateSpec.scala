@@ -11,10 +11,10 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability, EmbeddedTypesCapability)
 
   "a PM to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
     database.setup(project)
 
-    setUpData(project)
+    val idOfC1 = setUpData(project)
 
     server.query(
       s"""
@@ -23,7 +23,7 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
          |    where: {p: "p1"}
          |    data:{
          |    children: {update: {
-         |        where: {c:"c1"}
+         |        where: {id: "$idOfC1"}
          |        data: {
          |          friendsOpt: {deleteMany:{
          |              f_contains: "1"
@@ -32,6 +32,7 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
          |    }}
          |  }){
          |    children {
+         |      id
          |      c
          |      friendsOpt{
          |         f
@@ -51,10 +52,10 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
   }
 
   "a PM to CM  relation " should "work with multiple filters" in {
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
     database.setup(project)
 
-    setUpData(project)
+    val idOfC1 = setUpData(project)
 
     server.query(
       s"""
@@ -63,7 +64,7 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
          |    where: {p: "p1"}
          |    data:{
          |    children: {update: {
-         |        where: {c:"c1"}
+         |        where: {id: "$idOfC1"}
          |        data: {
          |          friendsOpt: {deleteMany:[
          |            {f_contains: "1"},
@@ -91,10 +92,10 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
   }
 
   "a PM to CM  relation " should "work with empty filter" in {
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
     database.setup(project)
 
-    setUpData(project)
+    val idOfC1 = setUpData(project)
 
     server.query(
       s"""
@@ -103,7 +104,7 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
          |    where: {p: "p1"}
          |    data:{
          |    children: {update: {
-         |        where: {c:"c1"}
+         |        where: {id: "$idOfC1"}
          |        data: {
          |          friendsOpt: {deleteMany:[
          |            {}
@@ -131,10 +132,10 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
   }
 
   "a PM to CM  relation " should "work when there is no hit" in {
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
     database.setup(project)
 
-    setUpData(project)
+    val idOfC1 = setUpData(project)
 
     server.query(
       s"""
@@ -143,7 +144,7 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
          |    where: {p: "p1"}
          |    data:{
          |    children: {update: {
-         |        where: {c:"c1"}
+         |        where: {id: "$idOfC1"}
          |        data: {
          |          friendsOpt: {deleteMany:[
          |            {
@@ -173,8 +174,9 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
   }
 
   private def setUpData(project: Project) = {
-    server.query(
-      """mutation {
+    val idOfC1 = server
+      .query(
+        """mutation {
         |  createParent(data: {
         |    p: "p1"
         |    children: {
@@ -191,6 +193,7 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
         |    }
         |  }){
         |    children{
+        |       id
         |       c
         |       friendsOpt{
         |         f
@@ -198,8 +201,9 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
         |    }
         |  }
         |}""".stripMargin,
-      project
-    )
+        project
+      )
+      .pathAsString("data.createParent.children.[0].id")
 
     server.query(
       """mutation {
@@ -228,5 +232,7 @@ class UpdateWithNestedDeleteManyMutationInsideEmbeddedUpdateSpec extends FlatSpe
         |}""".stripMargin,
       project
     )
+
+    idOfC1
   }
 }

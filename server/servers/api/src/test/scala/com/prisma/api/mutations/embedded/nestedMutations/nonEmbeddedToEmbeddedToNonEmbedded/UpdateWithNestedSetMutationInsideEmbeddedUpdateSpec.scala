@@ -11,7 +11,7 @@ class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with 
 
   "a FriendsOpt relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
 
     database.setup(project)
 
@@ -27,6 +27,7 @@ class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with 
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendsOpt{
           |         f
@@ -38,7 +39,7 @@ class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with 
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[{"f":"f1"}]}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val create2 = server.query("""mutation { createFriend(data: {f: "f2"}){f}}""", project)
 
@@ -46,12 +47,12 @@ class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with 
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendsOpt:{set:{f: "f2"}}
           |       }

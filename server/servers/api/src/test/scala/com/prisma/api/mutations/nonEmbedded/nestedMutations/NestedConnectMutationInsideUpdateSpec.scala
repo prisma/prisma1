@@ -778,7 +778,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  createParent(data: {
           |    p: "p1"
           |    childrenOpt: {
-          |      create: [{c: "c1"}, {c: "c2"}]
+          |      create: [{c: "c1"}, {c: "c2"}, {c: "c3"}]
           |    }
           |  }){
           |    childrenOpt{
@@ -823,6 +823,8 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+
+      server.query("""query{parent(where:{p: "p1"}){childrenOpt{c}}}""", project).toString should be("""{"data":{"parent":{"childrenOpt":[{"c":"c3"}]}}}""")
     }
   }
 

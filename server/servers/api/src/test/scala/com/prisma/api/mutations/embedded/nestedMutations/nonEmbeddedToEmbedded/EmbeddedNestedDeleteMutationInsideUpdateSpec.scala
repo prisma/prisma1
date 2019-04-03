@@ -14,7 +14,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   //test nestedDeleteMany (whereFilter instead of where) -> for no hit/ partial hit / full hit
 
   "a P1! relation " should "error due to the operation not being in the schema anymore" in {
-    val project = SchemaDsl.fromString() { embeddedP1req }
+    val project = SchemaDsl.fromStringV11() { embeddedP1req }
 
     database.setup(project)
 
@@ -61,7 +61,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a P1 relation " should "work through a nested mutation by id" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
+    val project = SchemaDsl.fromStringV11() { embeddedP1opt }
 
     database.setup(project)
 
@@ -144,7 +144,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a P1 relation" should "error if there is no child connected" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
+    val project = SchemaDsl.fromStringV11() { embeddedP1opt }
 
     database.setup(project)
 
@@ -186,7 +186,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a PM relation " should "work" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
 
     database.setup(project)
 
@@ -199,6 +199,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  }){
         |    childrenOpt{
+        |       id
         |       c
         |    }
         |  }
@@ -206,7 +207,9 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
       project
     )
 
-    res1.toString should be("""{"data":{"createParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
+    val array = res1.pathAsJsArray("data.createParent.childrenOpt")
+    array.value should have(size(2))
+    val idOfC1 = array.value.head.pathAsString("id")
 
     val res2 = server.query(
       s"""
@@ -214,7 +217,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |  updateParent(
          |    where: {p: "p1"}
          |    data:{
-         |    childrenOpt: {delete: {c: "c1"}}
+         |    childrenOpt: {delete: {id: "$idOfC1"}}
          |  }){
          |    childrenOpt {
          |      c
