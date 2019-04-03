@@ -1,0 +1,189 @@
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "Migrations (MongoDB)",
+  position: 240,
+  articleGroup: "Migrations",
+  technology: "mongodb",
+  technologyOrder: 3,
+}
+
+## Overview
+
+MongoDB is a _schemaless_ database, which means it is _possible_ to insert data of various structures into it. MongoDB never complains because a piece of inserted data doesn't adhere to some predefined, expected format. This is different from relational databases where data that's inserted needs to adhere to the predefined [database schema](https://en.wikipedia.org/wiki/Database_schema).
+
+This changes when using MongoDB with Prisma. Prisma adds a "schema" (i.e. the Prisma [datamodel](knun)) on top of MongoDB. That's why _migrations_ now become a relevant topic when using MongoDB with Prisma.
+
+The general process for performing a migration with Prisma is as follows:
+
+1. Adjust the [datamodel](knun) file to reflect the new desired schema
+1. Run [`prisma deploy`](xcv9) to apply the changes and perform the migration of the Prisma API (and potentially) the underlying MongoDB database)
+
+When going through that process, Prisma will only ever make _additive_ structural changes to the underlying MongoDB database(s).
+
+During a migration, **Prisma will never**:
+
+- Delete an existing collection
+- Rename an existing collection
+- Drop an existing database
+- Delete or change any field names on existing documents
+
+<Warning>
+
+Be aware that this might lead to _dangling collections or fields_, i.e. collections or fields that still exist in the underlying MongoDB database but that can't be accessed through the Prisma API.
+
+</Warning>
+
+During a migration, **Prisma might**:
+
+- Create new collections
+- Create new documents
+- Create new fields on existing documents
+
+## Examples
+
+### Renaming a collection
+
+#### Scenario 1: With the `@db` directive
+
+Assume you have the following datamodel:
+
+```graphql
+type User @db(name: "users") {
+  id: ID! @id
+  name: String!
+}
+```
+
+Because the `@db` directive is used on the type, the name of the type in the Prisma API is _decoupled_ from the name of the collection in the underlying MongoDB.
+
+To rename the type in the Prisma API, you need to adjust the name of the type in your Prisma datamodel:
+
+```graphql
+type Person @db(name: "users") {
+  id: ID! @id
+  name: String!
+}
+```
+
+To apply the changes and update the Prisma API, run `prisma deploy`.
+
+#### Scenario 2: Without the `@db` directive
+
+Assume you have the following datamodel:
+
+```graphql
+type User {
+  id: ID! @id
+  name: String!
+}
+```
+
+Because there is no `@db` directive, the collection in the underlying MongoDB is also called `User`.
+
+To rename the type in the Prisma API, you need to adjust the name of the type in your Prisma datamodel:
+
+```graphql
+type Person {
+  id: ID! @id
+  name: String!
+}
+```
+
+When running `prisma deploy`, there are three things done by Prisma:
+
+- Remove CRUD operations for the `User` type from the Prisma API
+- Expose CRUD operations for the new `Person` type in the Prisma API
+- Create a new `Person` collection in the underlying database
+
+The underlying `User` collection remains untouched, it stays there as a _dangling collection_.
+
+If you want to still use the data in the dangling `User` collection for the new `Person` type in your Prisma API, you need to [manually rename the collection](https://docs.mongodb.com/manual/reference/method/db.collection.renameCollection/) in your MongoDB (and likely delete the empty `Person` collection that was ).
+
+### Renaming a field of a collection
+
+Assume you have the following datamodel:
+
+```graphql
+type User {
+  id: ID! @id
+  name: String!
+}
+```
+
+Now you want to rename the `name` field to `lastName`. This can actually mean three things:
+
+1. You want to rename the field **only** in the Prisma API
+1. You want to rename the field **only** in the underlying MongoDB
+1. You want to rename the field in both, the Prisma API **and** the underlying MongoDB
+
+#### Scenario 1: Renaming only in the Prisma API
+
+If you want to rename the field only in the Prisma API, you can do so by changing the name of the field in the datamodel and addding the `@db` directive to create a mapping from the `lastName` datamodel field to the `name` field in the underlying MongoDB:
+
+```graphql
+type User {
+  id: ID! @id
+  lastName: String! @db(name: "name")
+}
+```
+
+Now run `prisma deploy` to apply the changes.
+
+#### Scenario 2: Renaming only in the underlying MongoDB
+
+Because Prisma never performs any structural changes to your underlying MongoDB, the only way to achieve this is by [renaming the field manually](https://docs.mongodb.com/manual/reference/operator/update/rename/).
+
+After you've done this, your Prisma API of course has not changed. This also means that when you're now trying to retrieve the `name` of a document in the `User` collection via the Prisma API, Prisma will throw an error because the `name` does not exist any more in the underlying MongoDB.
+
+To prevent this, you have two options:
+
+- Delete the `name` field from the datamodel and run `prisma deploy`. This means there is no way to get access to the new `lastName` through Prisma.
+- Also rename the field in the Prisma API, see the third scenario for more info on this.
+
+#### Scenario 3: Renaming in the Prisma API and the underlying MongoDB
+
+Similar to the second scenario, you first need to [manually rename the field](https://docs.mongodb.com/manual/reference/operator/update/rename/) in the underlying MonngoDB.
+
+Once this is done, you can rename the field in the Prisma API. Adjust the datamodel to look as follows:
+
+```graphql
+type User {
+  id: ID! @id
+  lastName: String!
+```
+
+Finally, run `prisma deploy`. 
+
+> Note that the Prisma CLI might require you to run `prisma deploy --force` to execute this operation. This is a bug in the CLI that has been reported [here](https://github.com/prisma/prisma/issues/3871).
+
+### Deleting a collection
+
+Assume you have the following datamodel:
+
+```graphql
+type User {
+  id: ID! @id
+  name: String!
+}
+
+type Post {
+  id: ID!
+  title: String!
+}
+```
+ 
+Now you want to remove the `Post` type from the Prisma API and drop the `Post` collection in the underlying MongoDB.
+
+You first need to remove the `Post` from the datamodel:
+
+```graphql
+type User {
+  id: ID! @id
+  name: String!
+}
+```
+
+Now run `prisma deploy` to apply the changes. This does not change anything in the underlying MongoDB, the `Post` collections remains there as a _dangling collection_.
+
+To get rid of the dangling collection, you need to [manually remove the collection](https://docs.mongodb.com/manual/reference/method/db.collection.remove/) from your MongoDB database.
