@@ -1,0 +1,51 @@
+type A {
+  id: ID! @id
+  field: Int!
+  a: A! @relation(link: TABLE)
+  b: [B]
+  c: C @relation(link: TABLE)
+  e: [E]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type B {
+  id: ID! @id
+  field: [String] @scalarList(strategy: RELATION)
+  c: C @relation(link: TABLE, name: "BToC")
+  b: [B]
+  a: A! @relation(link: TABLE)
+  c2: C @relation(link: TABLE, name: "BToC2")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type C {
+  id: ID! @id
+  expirationDate: DateTime
+  c: C! @relation(link: TABLE)
+  b: [B] @relation(name: "BToC")
+  a: A
+  b2: B @relation(name: "BToC2")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type D {
+  id: ID! @id
+  field: Json
+  c: C! @relation(link: TABLE)
+  b: B! @relation(link: TABLE)
+  a: A! @relation(link: TABLE)
+  d: [D]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type E {
+  id: ID! @id
+  field: Json
+  a: A! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

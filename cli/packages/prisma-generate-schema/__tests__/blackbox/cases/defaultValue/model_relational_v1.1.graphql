@@ -1,0 +1,28 @@
+type A {
+  id: ID! @id
+  a: Int @default(value: 10) @unique
+  b: Int! @default(value: 10)
+  c: String! @unique
+  d: String @default(value: "Hello")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type AWithId {
+  id: ID! @id
+  a: Int @default(value: 10) @unique
+  b: Int! @default(value: 10)
+  c: String! @unique
+  d: String @default(value: "Hello")
+  b2: B! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type B {
+  id: ID! @id
+  a: [A]
+  a2: AWithId
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

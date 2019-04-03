@@ -1,0 +1,32 @@
+type Parent {
+  id: ID! @id
+  p: String @unique
+  children: [Child]
+  j: [Joint]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type Child {
+  id: ID! @id
+  c: String @unique
+  friendsOpt: [Friend]
+  jointOpt: Joint! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type Friend {
+  id: ID! @id
+  f: String @unique
+  test: String
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type Joint {
+  id: ID! @id
+  j: String
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

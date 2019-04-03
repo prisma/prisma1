@@ -94,6 +94,19 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     column.isRequired should be(true)
   }
 
+  "adding an id field with a special name should work" in {
+    val dataModel =
+      """
+        |type B {
+        |  specialName: ID! @id
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel)
+
+    result.table_!("B").column("specialName").isDefined should be(true)
+  }
+
   "removing a scalar field should work" in {
     val initialDataModel =
       """

@@ -1,63 +1,47 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Introspector CMS/sequences 1`] = `
-"type Provider @indexes(value: [
-  {name: \\"providers_entity_type_index\\", fields: [\\"entity_type\\"]},
-  {name: \\"providers_provider_type_index\\", fields: [\\"provider_type\\"]}
-]) @pgTable(name: \\"providers\\") {
+"type Provider @pgTable(name: \\"providers\\") {
   id: Int! @pgColumn(name: \\"npi\\") @unique
-  address_city: String
-  address_country: String
-  address_latitude: Float
-  address_longitude: Float
-  address_state: String
-  address_street_01: String
-  address_street_02: String
-  address_zip_code: String
-  entity_type: String
-  provider_performance: [ProviderPerformance]
-  provider_type: String
-  providers_individuals: [ProvidersIndividual]
-  providers_organizations: [ProvidersOrganization]
-  service_provider_performance: [ServiceProviderPerformance]
-  service_provider_performance_summary: [ServiceProviderPerformanceSummary]
+  addressCity: String @pgColumn(name: \\"address_city\\")
+  addressCountry: String @pgColumn(name: \\"address_country\\")
+  addressLatitude: Float @pgColumn(name: \\"address_latitude\\")
+  addressLongitude: Float @pgColumn(name: \\"address_longitude\\")
+  addressState: String @pgColumn(name: \\"address_state\\")
+  addressStreet01: String @pgColumn(name: \\"address_street_01\\")
+  addressStreet02: String @pgColumn(name: \\"address_street_02\\")
+  addressZipCode: String @pgColumn(name: \\"address_zip_code\\")
+  entityType: String @pgColumn(name: \\"entity_type\\")
+  providerPerformance: [ProviderPerformance] @pgColumn(name: \\"provider_performance\\")
+  providersIndividuals: [ProvidersIndividual] @pgColumn(name: \\"providers_individuals\\")
+  providersOrganizations: [ProvidersOrganization] @pgColumn(name: \\"providers_organizations\\")
+  providerType: String @pgColumn(name: \\"provider_type\\")
+  serviceProviderPerformance: [ServiceProviderPerformance] @pgColumn(name: \\"service_provider_performance\\")
+  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary] @pgColumn(name: \\"service_provider_performance_summary\\")
 }
 
-type ProviderPerformance @indexes(value: [
-  {name: \\"provider_performance_avg_mcare_allowed_amt_index\\", fields: [\\"avg_mcare_allowed_amt\\"]},
-  {name: \\"provider_performance_avg_mcare_pay_amt_index\\", fields: [\\"avg_mcare_pay_amt\\"]},
-  {name: \\"provider_performance_avg_mcare_standardized_amt_index\\", fields: [\\"avg_mcare_standardized_amt\\"]},
-  {name: \\"provider_performance_avg_submitted_charge_amt_index\\", fields: [\\"avg_submitted_charge_amt\\"]},
-  {name: \\"provider_performance_mcare_participation_indicator_index\\", fields: [\\"mcare_participation_indicator\\"]},
-  {name: \\"provider_performance_n_of_distinct_mcare_beneficiary_pe\\", fields: [\\"n_of_distinct_mcare_beneficiary_per_day_svcs\\"]},
-  {name: \\"provider_performance_n_of_mcare_beneficiaries_index\\", fields: [\\"n_of_mcare_beneficiaries\\"]},
-  {name: \\"provider_performance_n_of_svcs_index\\", fields: [\\"n_of_svcs\\"]},
-  {name: \\"provider_performance_npi_hcpcs_code_place_of_service_pk\\", fields: [\\"npi\\", \\"place_of_service\\", \\"hcpcs_code\\"], unique: true},
-  {name: \\"provider_performance_place_of_service_index\\", fields: [\\"place_of_service\\"]}
-]) @pgTable(name: \\"provider_performance\\") {
+type ProviderPerformance @pgTable(name: \\"provider_performance\\") {
   id: Int! @pgColumn(name: \\"prisma_id\\") @unique
-  avg_mcare_allowed_amt: Float
-  avg_mcare_pay_amt: Float
-  avg_mcare_standardized_amt: Float
-  avg_submitted_charge_amt: Float
-  hcpcs_code: Service!
-  mcare_participation_indicator: String
-  n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  n_of_mcare_beneficiaries: Int
-  n_of_svcs: Float
+  avgMcareAllowedAmt: Float @pgColumn(name: \\"avg_mcare_allowed_amt\\")
+  avgMcarePayAmt: Float @pgColumn(name: \\"avg_mcare_pay_amt\\")
+  avgMcareStandardizedAmt: Float @pgColumn(name: \\"avg_mcare_standardized_amt\\")
+  avgSubmittedChargeAmt: Float @pgColumn(name: \\"avg_submitted_charge_amt\\")
+  hcpcsCode: Service! @pgColumn(name: \\"hcpcs_code\\")
+  mcareParticipationIndicator: String @pgColumn(name: \\"mcare_participation_indicator\\")
+  nOfDistinctMcareBeneficiaryPerDaySvcs: Int @pgColumn(name: \\"n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  nOfMcareBeneficiaries: Int @pgColumn(name: \\"n_of_mcare_beneficiaries\\")
+  nOfSvcs: Float @pgColumn(name: \\"n_of_svcs\\")
   npi: Provider!
-  place_of_service: String!
+  placeOfService: String! @pgColumn(name: \\"place_of_service\\")
 }
 
-type ProvidersIndividual @indexes(value: [
-  {name: \\"providers_individuals_gender_index\\", fields: [\\"gender\\"]}
-]) @pgTable(name: \\"providers_individuals\\") {
+type ProvidersIndividual @pgTable(name: \\"providers_individuals\\") {
   id: Provider! @pgColumn(name: \\"npi\\") @unique
   credentials: String
   gender: String
-  name_first: String
-  name_last: String
-  name_middle: String
+  nameFirst: String @pgColumn(name: \\"name_first\\")
+  nameLast: String @pgColumn(name: \\"name_last\\")
+  nameMiddle: String @pgColumn(name: \\"name_middle\\")
 }
 
 type ProvidersOrganization @pgTable(name: \\"providers_organizations\\") {
@@ -65,421 +49,299 @@ type ProvidersOrganization @pgTable(name: \\"providers_organizations\\") {
   name: String
 }
 
-type Service @indexes(value: [
-  {name: \\"svcs_hcpcs_drug_indicator_index\\", fields: [\\"hcpcs_drug_indicator\\"]}
-]) @pgTable(name: \\"services\\") {
+type Service @pgTable(name: \\"services\\") {
   id: ID! @pgColumn(name: \\"hcpcs_code\\") @unique
-  hcpcs_description: String
-  hcpcs_drug_indicator: String
-  provider_performance: [ProviderPerformance]
-  service_performance: [ServicePerformance]
-  service_provider_performance: [ServiceProviderPerformance]
+  hcpcsDescription: String @pgColumn(name: \\"hcpcs_description\\")
+  hcpcsDrugIndicator: String @pgColumn(name: \\"hcpcs_drug_indicator\\")
+  providerPerformance: [ProviderPerformance] @pgColumn(name: \\"provider_performance\\")
+  servicePerformance: [ServicePerformance] @pgColumn(name: \\"service_performance\\")
+  serviceProviderPerformance: [ServiceProviderPerformance] @pgColumn(name: \\"service_provider_performance\\")
 }
 
-type ServicePerformance @indexes(value: [
-  {name: \\"service_performance_entity_type_index\\", fields: [\\"entity_type\\"]},
-  {name: \\"service_performance_hcpcs_code_entity_type_pk\\", fields: [\\"hcpcs_code\\", \\"entity_type\\"], unique: true},
-  {name: \\"service_performance_rank_avg_avg_mcare_allowed_amt_in\\", fields: [\\"rank_avg_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_avg_avg_mcare_pay_amt_in\\", fields: [\\"rank_avg_avg_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_avg_avg_mcare_standardized_amou\\", fields: [\\"rank_avg_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_avg_avg_submitted_charge_amt_in\\", fields: [\\"rank_avg_avg_submitted_charge_amt\\"]},
-  {name: \\"service_performance_rank_est_ttl_mcare_allowed_amt_inde\\", fields: [\\"rank_est_ttl_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_est_ttl_mcare_pay_amt_inde\\", fields: [\\"rank_est_ttl_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_est_ttl_mcare_standardized_amt\\", fields: [\\"rank_est_ttl_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_est_ttl_submitted_charge_amt_inde\\", fields: [\\"rank_est_ttl_submitted_charge_amt\\"]},
-  {name: \\"service_performance_rank_max_avg_mcare_allowed_amt_in\\", fields: [\\"rank_max_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_max_avg_mcare_pay_amt_in\\", fields: [\\"rank_max_avg_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_max_avg_mcare_standardized_amou\\", fields: [\\"rank_max_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_max_avg_submitted_charge_amt_in\\", fields: [\\"rank_max_avg_submitted_charge_amt\\"]},
-  {name: \\"service_performance_rank_min_avg_mcare_allowed_amt_in\\", fields: [\\"rank_min_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_min_avg_mcare_pay_amt_in\\", fields: [\\"rank_min_avg_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_min_avg_mcare_standardized_amou\\", fields: [\\"rank_min_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_min_avg_submitted_charge_amt_in\\", fields: [\\"rank_min_avg_submitted_charge_amt\\"]},
-  {name: \\"service_performance_rank_n_of_distinct_mcare_beneficiar\\", fields: [\\"rank_n_of_distinct_mcare_beneficiary_per_day_svcs\\"]},
-  {name: \\"service_performance_rank_n_of_mcare_beneficiaries_index\\", fields: [\\"rank_n_of_mcare_beneficiaries\\"]},
-  {name: \\"service_performance_rank_n_of_svcs_index\\", fields: [\\"rank_n_of_svcs\\"]},
-  {name: \\"service_performance_rank_providers_index\\", fields: [\\"rank_providers\\"]},
-  {name: \\"service_performance_rank_var_avg_mcare_allowed_amou\\", fields: [\\"rank_var_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_var_avg_mcare_pay_amou\\", fields: [\\"rank_var_avg_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_var_avg_mcare_standardized\\", fields: [\\"rank_var_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_var_avg_mcare_submitted_ch\\", fields: [\\"rank_var_avg_mcare_submitted_charge_pay_amt\\"]},
-  {name: \\"service_performance_rank_var_avg_submitted_charge_amou\\", fields: [\\"rank_var_avg_submitted_charge_amt\\"]}
-]) @pgTable(name: \\"service_performance\\") {
+type ServicePerformance @pgTable(name: \\"service_performance\\") {
   id: Int! @pgColumn(name: \\"prisma_id\\") @unique
-  avg_avg_mcare_allowed_amt: Float
-  avg_avg_mcare_pay_amt: Float
-  avg_avg_mcare_standardized_amt: Float
-  avg_avg_submitted_charge_amt: Float
-  entity_type: String!
-  est_ttl_mcare_allowed_amt: Float
-  est_ttl_mcare_pay_amt: Float
-  est_ttl_mcare_standardized_amt: Float
-  est_ttl_submitted_charge_amt: Float
-  hcpcs_code: Service!
-  max_avg_mcare_allowed_amt: Float
-  max_avg_mcare_pay_amt: Float
-  max_avg_mcare_standardized_amt: Float
-  max_avg_submitted_charge_amt: Float
-  min_avg_mcare_allowed_amt: Float
-  min_avg_mcare_pay_amt: Float
-  min_avg_mcare_standardized_amt: Float
-  min_avg_submitted_charge_amt: Float
-  n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  n_of_mcare_beneficiaries: Int
-  n_of_svcs: Float
+  avgAvgMcareAllowedAmt: Float @pgColumn(name: \\"avg_avg_mcare_allowed_amt\\")
+  avgAvgMcarePayAmt: Float @pgColumn(name: \\"avg_avg_mcare_pay_amt\\")
+  avgAvgMcareStandardizedAmt: Float @pgColumn(name: \\"avg_avg_mcare_standardized_amt\\")
+  avgAvgSubmittedChargeAmt: Float @pgColumn(name: \\"avg_avg_submitted_charge_amt\\")
+  entityType: String! @pgColumn(name: \\"entity_type\\")
+  estTtlMcareAllowedAmt: Float @pgColumn(name: \\"est_ttl_mcare_allowed_amt\\")
+  estTtlMcarePayAmt: Float @pgColumn(name: \\"est_ttl_mcare_pay_amt\\")
+  estTtlMcareStandardizedAmt: Float @pgColumn(name: \\"est_ttl_mcare_standardized_amt\\")
+  estTtlSubmittedChargeAmt: Float @pgColumn(name: \\"est_ttl_submitted_charge_amt\\")
+  hcpcsCode: Service! @pgColumn(name: \\"hcpcs_code\\")
+  maxAvgMcareAllowedAmt: Float @pgColumn(name: \\"max_avg_mcare_allowed_amt\\")
+  maxAvgMcarePayAmt: Float @pgColumn(name: \\"max_avg_mcare_pay_amt\\")
+  maxAvgMcareStandardizedAmt: Float @pgColumn(name: \\"max_avg_mcare_standardized_amt\\")
+  maxAvgSubmittedChargeAmt: Float @pgColumn(name: \\"max_avg_submitted_charge_amt\\")
+  minAvgMcareAllowedAmt: Float @pgColumn(name: \\"min_avg_mcare_allowed_amt\\")
+  minAvgMcarePayAmt: Float @pgColumn(name: \\"min_avg_mcare_pay_amt\\")
+  minAvgMcareStandardizedAmt: Float @pgColumn(name: \\"min_avg_mcare_standardized_amt\\")
+  minAvgSubmittedChargeAmt: Float @pgColumn(name: \\"min_avg_submitted_charge_amt\\")
+  nOfDistinctMcareBeneficiaryPerDaySvcs: Int @pgColumn(name: \\"n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  nOfMcareBeneficiaries: Int @pgColumn(name: \\"n_of_mcare_beneficiaries\\")
+  nOfSvcs: Float @pgColumn(name: \\"n_of_svcs\\")
   providers: Int
-  rank_avg_avg_mcare_allowed_amt: Int
-  rank_avg_avg_mcare_pay_amt: Int
-  rank_avg_avg_mcare_standardized_amt: Int
-  rank_avg_avg_submitted_charge_amt: Int
-  rank_est_ttl_mcare_allowed_amt: Int
-  rank_est_ttl_mcare_pay_amt: Int
-  rank_est_ttl_mcare_standardized_amt: Int
-  rank_est_ttl_submitted_charge_amt: Int
-  rank_max_avg_mcare_allowed_amt: Int
-  rank_max_avg_mcare_pay_amt: Int
-  rank_max_avg_mcare_standardized_amt: Int
-  rank_max_avg_submitted_charge_amt: Int
-  rank_min_avg_mcare_allowed_amt: Int
-  rank_min_avg_mcare_pay_amt: Int
-  rank_min_avg_mcare_standardized_amt: Int
-  rank_min_avg_submitted_charge_amt: Int
-  rank_n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  rank_n_of_mcare_beneficiaries: Int
-  rank_n_of_svcs: Int
-  rank_providers: Int
-  rank_var_avg_mcare_allowed_amt: Int
-  rank_var_avg_mcare_pay_amt: Int
-  rank_var_avg_mcare_standardized_amt: Int
-  rank_var_avg_mcare_submitted_charge_pay_amt: Int
-  rank_var_avg_submitted_charge_amt: Int
-  var_avg_mcare_allowed_amt: Float
-  var_avg_mcare_pay_amt: Float
-  var_avg_mcare_standardized_amt: Float
-  var_avg_mcare_submitted_charge_pay_amt: Float
-  var_avg_submitted_charge_amt: Float
+  rankAvgAvgMcareAllowedAmt: Int @pgColumn(name: \\"rank_avg_avg_mcare_allowed_amt\\")
+  rankAvgAvgMcarePayAmt: Int @pgColumn(name: \\"rank_avg_avg_mcare_pay_amt\\")
+  rankAvgAvgMcareStandardizedAmt: Int @pgColumn(name: \\"rank_avg_avg_mcare_standardized_amt\\")
+  rankAvgAvgSubmittedChargeAmt: Int @pgColumn(name: \\"rank_avg_avg_submitted_charge_amt\\")
+  rankEstTtlMcareAllowedAmt: Int @pgColumn(name: \\"rank_est_ttl_mcare_allowed_amt\\")
+  rankEstTtlMcarePayAmt: Int @pgColumn(name: \\"rank_est_ttl_mcare_pay_amt\\")
+  rankEstTtlMcareStandardizedAmt: Int @pgColumn(name: \\"rank_est_ttl_mcare_standardized_amt\\")
+  rankEstTtlSubmittedChargeAmt: Int @pgColumn(name: \\"rank_est_ttl_submitted_charge_amt\\")
+  rankMaxAvgMcareAllowedAmt: Int @pgColumn(name: \\"rank_max_avg_mcare_allowed_amt\\")
+  rankMaxAvgMcarePayAmt: Int @pgColumn(name: \\"rank_max_avg_mcare_pay_amt\\")
+  rankMaxAvgMcareStandardizedAmt: Int @pgColumn(name: \\"rank_max_avg_mcare_standardized_amt\\")
+  rankMaxAvgSubmittedChargeAmt: Int @pgColumn(name: \\"rank_max_avg_submitted_charge_amt\\")
+  rankMinAvgMcareAllowedAmt: Int @pgColumn(name: \\"rank_min_avg_mcare_allowed_amt\\")
+  rankMinAvgMcarePayAmt: Int @pgColumn(name: \\"rank_min_avg_mcare_pay_amt\\")
+  rankMinAvgMcareStandardizedAmt: Int @pgColumn(name: \\"rank_min_avg_mcare_standardized_amt\\")
+  rankMinAvgSubmittedChargeAmt: Int @pgColumn(name: \\"rank_min_avg_submitted_charge_amt\\")
+  rankNOfDistinctMcareBeneficiaryPerDaySvcs: Int @pgColumn(name: \\"rank_n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  rankNOfMcareBeneficiaries: Int @pgColumn(name: \\"rank_n_of_mcare_beneficiaries\\")
+  rankNOfSvcs: Int @pgColumn(name: \\"rank_n_of_svcs\\")
+  rankProviders: Int @pgColumn(name: \\"rank_providers\\")
+  rankVarAvgMcareAllowedAmt: Int @pgColumn(name: \\"rank_var_avg_mcare_allowed_amt\\")
+  rankVarAvgMcarePayAmt: Int @pgColumn(name: \\"rank_var_avg_mcare_pay_amt\\")
+  rankVarAvgMcareStandardizedAmt: Int @pgColumn(name: \\"rank_var_avg_mcare_standardized_amt\\")
+  rankVarAvgMcareSubmittedChargePayAmt: Int @pgColumn(name: \\"rank_var_avg_mcare_submitted_charge_pay_amt\\")
+  rankVarAvgSubmittedChargeAmt: Int @pgColumn(name: \\"rank_var_avg_submitted_charge_amt\\")
+  varAvgMcareAllowedAmt: Float @pgColumn(name: \\"var_avg_mcare_allowed_amt\\")
+  varAvgMcarePayAmt: Float @pgColumn(name: \\"var_avg_mcare_pay_amt\\")
+  varAvgMcareStandardizedAmt: Float @pgColumn(name: \\"var_avg_mcare_standardized_amt\\")
+  varAvgMcareSubmittedChargePayAmt: Float @pgColumn(name: \\"var_avg_mcare_submitted_charge_pay_amt\\")
+  varAvgSubmittedChargeAmt: Float @pgColumn(name: \\"var_avg_submitted_charge_amt\\")
 }
 
-type ServiceProviderPerformance @indexes(value: [
-  {name: \\"service_provider_performance_entity_type_index\\", fields: [\\"entity_type\\"]},
-  {name: \\"service_provider_performance_hcpcs_code_npi_place_of_service_pk\\", fields: [\\"hcpcs_code\\", \\"npi\\", \\"place_of_service\\"], unique: true},
-  {name: \\"service_provider_performance_rank_avg_mcare_allowed_amou\\", fields: [\\"rank_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_provider_performance_rank_avg_mcare_pay_amou\\", fields: [\\"rank_avg_mcare_pay_amt\\"]},
-  {name: \\"service_provider_performance_rank_avg_mcare_standardized\\", fields: [\\"rank_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_provider_performance_rank_avg_submitted_charge_amou\\", fields: [\\"rank_avg_submitted_charge_amt\\"]},
-  {name: \\"service_provider_performance_rank_est_ttl_mcare_pay_am\\", fields: [\\"rank_est_ttl_mcare_pay_amt\\"]},
-  {name: \\"service_provider_performance_rank_est_ttl_submitted_charge_am\\", fields: [\\"rank_est_ttl_submitted_charge_amt\\"]},
-  {name: \\"service_provider_performance_rank_n_of_distinct_mcare_b\\", fields: [\\"rank_n_of_distinct_mcare_beneficiary_per_day_svcs\\"]},
-  {name: \\"service_provider_performance_rank_n_of_mcare_beneficiar\\", fields: [\\"rank_n_of_mcare_beneficiaries\\"]},
-  {name: \\"service_provider_performance_rank_n_of_svcs_index\\", fields: [\\"rank_n_of_svcs\\"]},
-  {name: \\"service_provider_performance_rank_var_avg_mcare_sub\\", fields: [\\"rank_var_avg_mcare_submitted_charge_pay_amt\\"]}
-]) @pgTable(name: \\"service_provider_performance\\") {
+type ServiceProviderPerformance @pgTable(name: \\"service_provider_performance\\") {
   id: Int! @pgColumn(name: \\"prisma_id\\") @unique
-  avg_mcare_allowed_amt: Float
-  avg_mcare_pay_amt: Float
-  avg_mcare_standardized_amt: Float
-  avg_submitted_charge_amt: Float
-  entity_type: String
-  est_ttl_mcare_pay_amt: Float
-  est_ttl_submitted_charge_amt: Float
-  hcpcs_code: Service!
-  mcare_participation_indicator: String
-  n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  n_of_mcare_beneficiaries: Int
-  n_of_svcs: Float
+  avgMcareAllowedAmt: Float @pgColumn(name: \\"avg_mcare_allowed_amt\\")
+  avgMcarePayAmt: Float @pgColumn(name: \\"avg_mcare_pay_amt\\")
+  avgMcareStandardizedAmt: Float @pgColumn(name: \\"avg_mcare_standardized_amt\\")
+  avgSubmittedChargeAmt: Float @pgColumn(name: \\"avg_submitted_charge_amt\\")
+  entityType: String @pgColumn(name: \\"entity_type\\")
+  estTtlMcarePayAmt: Float @pgColumn(name: \\"est_ttl_mcare_pay_amt\\")
+  estTtlSubmittedChargeAmt: Float @pgColumn(name: \\"est_ttl_submitted_charge_amt\\")
+  hcpcsCode: Service! @pgColumn(name: \\"hcpcs_code\\")
+  mcareParticipationIndicator: String @pgColumn(name: \\"mcare_participation_indicator\\")
+  nOfDistinctMcareBeneficiaryPerDaySvcs: Int @pgColumn(name: \\"n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  nOfMcareBeneficiaries: Int @pgColumn(name: \\"n_of_mcare_beneficiaries\\")
+  nOfSvcs: Float @pgColumn(name: \\"n_of_svcs\\")
   npi: Provider!
-  place_of_service: String!
-  rank_avg_mcare_allowed_amt: Int
-  rank_avg_mcare_pay_amt: Int
-  rank_avg_mcare_standardized_amt: Int
-  rank_avg_submitted_charge_amt: Int
-  rank_est_ttl_mcare_pay_amt: Int
-  rank_est_ttl_submitted_charge_amt: Int
-  rank_n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  rank_n_of_mcare_beneficiaries: Int
-  rank_n_of_svcs: Int
-  rank_var_avg_mcare_submitted_charge_pay_amt: Int
-  var_avg_mcare_submitted_charge_pay_amt: Float
+  placeOfService: String! @pgColumn(name: \\"place_of_service\\")
+  rankAvgMcareAllowedAmt: Int @pgColumn(name: \\"rank_avg_mcare_allowed_amt\\")
+  rankAvgMcarePayAmt: Int @pgColumn(name: \\"rank_avg_mcare_pay_amt\\")
+  rankAvgMcareStandardizedAmt: Int @pgColumn(name: \\"rank_avg_mcare_standardized_amt\\")
+  rankAvgSubmittedChargeAmt: Int @pgColumn(name: \\"rank_avg_submitted_charge_amt\\")
+  rankEstTtlMcarePayAmt: Int @pgColumn(name: \\"rank_est_ttl_mcare_pay_amt\\")
+  rankEstTtlSubmittedChargeAmt: Int @pgColumn(name: \\"rank_est_ttl_submitted_charge_amt\\")
+  rankNOfDistinctMcareBeneficiaryPerDaySvcs: Int @pgColumn(name: \\"rank_n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  rankNOfMcareBeneficiaries: Int @pgColumn(name: \\"rank_n_of_mcare_beneficiaries\\")
+  rankNOfSvcs: Int @pgColumn(name: \\"rank_n_of_svcs\\")
+  rankVarAvgMcareSubmittedChargePayAmt: Int @pgColumn(name: \\"rank_var_avg_mcare_submitted_charge_pay_amt\\")
+  varAvgMcareSubmittedChargePayAmt: Float @pgColumn(name: \\"var_avg_mcare_submitted_charge_pay_amt\\")
 }
 
-type ServiceProviderPerformanceSummary @indexes(value: [
-  {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_by_ttl_hcpc\\", fields: [\\"rank_est_ttl_mcare_pay_amt_by_ttl_hcpcs_code\\"]},
-  {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_by_ttl_numb\\", fields: [\\"rank_est_ttl_mcare_pay_amt_by_ttl_n_of_servi\\"]},
-  {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_index\\", fields: [\\"rank_est_ttl_mcare_pay_amt\\"]},
-  {name: \\"prvdr_smry_rank_est_ttl_submitted_charge_amt_index\\", fields: [\\"rank_est_ttl_submitted_charge_amt\\"]},
-  {name: \\"prvdr_smry_rank_ttl_hcpcs_code_index\\", fields: [\\"rank_ttl_hcpcs_code\\"]},
-  {name: \\"prvdr_smry_rank_ttl_n_of_svcs_index\\", fields: [\\"rank_ttl_n_of_svcs\\"]},
-  {name: \\"prvdr_smry_rank_var_est_ttl_mcare_submitted_charge_pa\\", fields: [\\"rank_var_est_ttl_mcare_submitted_charge_pay_amoun\\"]},
-  {name: \\"service_provider_performance_summary_entity_type_index\\", fields: [\\"entity_type\\"]},
-  {name: \\"service_provider_performance_summary_npi_summary_type_pk\\", fields: [\\"npi\\", \\"summary_type\\"], unique: true}
-]) @pgTable(name: \\"service_provider_performance_summary\\") {
+type ServiceProviderPerformanceSummary @pgTable(name: \\"service_provider_performance_summary\\") {
   id: Int! @pgColumn(name: \\"prisma_id\\") @unique
-  entity_type: String
-  est_ttl_mcare_pay_amt: Float
-  est_ttl_mcare_pay_amt_by_ttl_hcpcs_code: Float
-  est_ttl_mcare_pay_amt_by_ttl_n_of_svcs: Float
-  est_ttl_submitted_charge_amt: Float
+  entityType: String @pgColumn(name: \\"entity_type\\")
+  estTtlMcarePayAmt: Float @pgColumn(name: \\"est_ttl_mcare_pay_amt\\")
+  estTtlMcarePayAmtByTtlHcpcsCode: Float @pgColumn(name: \\"est_ttl_mcare_pay_amt_by_ttl_hcpcs_code\\")
+  estTtlMcarePayAmtByTtlNOfSvcs: Float @pgColumn(name: \\"est_ttl_mcare_pay_amt_by_ttl_n_of_svcs\\")
+  estTtlSubmittedChargeAmt: Float @pgColumn(name: \\"est_ttl_submitted_charge_amt\\")
   npi: Provider!
-  rank_est_ttl_mcare_pay_amt: Int
-  rank_est_ttl_mcare_pay_amt_by_ttl_hcpcs_code: Int
-  rank_est_ttl_mcare_pay_amt_by_ttl_n_of_servi: Int
-  rank_est_ttl_submitted_charge_amt: Int
-  rank_ttl_hcpcs_code: Int
-  rank_ttl_n_of_svcs: Int
-  rank_var_est_ttl_mcare_submitted_charge_pay_amoun: Int
-  summary_type: ServiceProviderPerformanceSummaryType!
-  ttl_hcpcs_code: String
-  ttl_n_of_svcs: Int
-  var_est_ttl_mcare_submitted_charge_pay_amt: Float
+  rankEstTtlMcarePayAmt: Int @pgColumn(name: \\"rank_est_ttl_mcare_pay_amt\\")
+  rankEstTtlMcarePayAmtByTtlHcpcsCode: Int @pgColumn(name: \\"rank_est_ttl_mcare_pay_amt_by_ttl_hcpcs_code\\")
+  rankEstTtlMcarePayAmtByTtlNOfServi: Int @pgColumn(name: \\"rank_est_ttl_mcare_pay_amt_by_ttl_n_of_servi\\")
+  rankEstTtlSubmittedChargeAmt: Int @pgColumn(name: \\"rank_est_ttl_submitted_charge_amt\\")
+  rankTtlHcpcsCode: Int @pgColumn(name: \\"rank_ttl_hcpcs_code\\")
+  rankTtlNOfSvcs: Int @pgColumn(name: \\"rank_ttl_n_of_svcs\\")
+  rankVarEstTtlMcareSubmittedChargePayAmoun: Int @pgColumn(name: \\"rank_var_est_ttl_mcare_submitted_charge_pay_amoun\\")
+  summaryType: ServiceProviderPerformanceSummaryType! @pgColumn(name: \\"summary_type\\")
+  ttlHcpcsCode: String @pgColumn(name: \\"ttl_hcpcs_code\\")
+  ttlNOfSvcs: Int @pgColumn(name: \\"ttl_n_of_svcs\\")
+  varEstTtlMcareSubmittedChargePayAmt: Float @pgColumn(name: \\"var_est_ttl_mcare_submitted_charge_pay_amt\\")
 }
 
 type ServiceProviderPerformanceSummaryType @pgTable(name: \\"service_provider_performance_summary_type\\") {
   id: Int! @unique
   description: String!
-  group_membership: Boolean! @default(value: true)
-  service_provider_performance_summary: [ServiceProviderPerformanceSummary]
+  groupMembership: Boolean! @default(value: true) @pgColumn(name: \\"group_membership\\")
+  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary] @pgColumn(name: \\"service_provider_performance_summary\\")
   slug: String @unique
 }"
 `;
 
 exports[`Introspector CMS/sequences 2`] = `
-"type Provider @db(name: \\"providers\\") @indexes(value: [
-  {name: \\"providers_entity_type_index\\", fields: [\\"entity_type\\"]},
-  {name: \\"providers_provider_type_index\\", fields: [\\"provider_type\\"]}
-]) {
-  npi: Int! @id(strategy: NONE)
-  address_city: String
-  address_country: String
-  address_latitude: Float
-  address_longitude: Float
-  address_state: String
-  address_street_01: String
-  address_street_02: String
-  address_zip_code: String
-  entity_type: String
-  provider_performance: [ProviderPerformance]
-  provider_type: String
-  providers_individuals: [ProvidersIndividual]
-  providers_organizations: [ProvidersOrganization]
-  service_provider_performance: [ServiceProviderPerformance]
-  service_provider_performance_summary: [ServiceProviderPerformanceSummary]
+"type Provider @db(name: \\"providers\\") {
+  npi: Int! @id
+  addressCity: String @db(name: \\"address_city\\")
+  addressCountry: String @db(name: \\"address_country\\")
+  addressLatitude: Float @db(name: \\"address_latitude\\")
+  addressLongitude: Float @db(name: \\"address_longitude\\")
+  addressState: String @db(name: \\"address_state\\")
+  addressStreet01: String @db(name: \\"address_street_01\\")
+  addressStreet02: String @db(name: \\"address_street_02\\")
+  addressZipCode: String @db(name: \\"address_zip_code\\")
+  entityType: String @db(name: \\"entity_type\\")
+  providerPerformance: [ProviderPerformance] @db(name: \\"provider_performance\\")
+  providersIndividuals: [ProvidersIndividual] @db(name: \\"providers_individuals\\")
+  providersOrganizations: [ProvidersOrganization] @db(name: \\"providers_organizations\\")
+  providerType: String @db(name: \\"provider_type\\")
+  serviceProviderPerformance: [ServiceProviderPerformance] @db(name: \\"service_provider_performance\\")
+  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary] @db(name: \\"service_provider_performance_summary\\")
 }
 
-type ProviderPerformance @db(name: \\"provider_performance\\") @indexes(value: [
-  {name: \\"provider_performance_avg_mcare_allowed_amt_index\\", fields: [\\"avg_mcare_allowed_amt\\"]},
-  {name: \\"provider_performance_avg_mcare_pay_amt_index\\", fields: [\\"avg_mcare_pay_amt\\"]},
-  {name: \\"provider_performance_avg_mcare_standardized_amt_index\\", fields: [\\"avg_mcare_standardized_amt\\"]},
-  {name: \\"provider_performance_avg_submitted_charge_amt_index\\", fields: [\\"avg_submitted_charge_amt\\"]},
-  {name: \\"provider_performance_mcare_participation_indicator_index\\", fields: [\\"mcare_participation_indicator\\"]},
-  {name: \\"provider_performance_n_of_distinct_mcare_beneficiary_pe\\", fields: [\\"n_of_distinct_mcare_beneficiary_per_day_svcs\\"]},
-  {name: \\"provider_performance_n_of_mcare_beneficiaries_index\\", fields: [\\"n_of_mcare_beneficiaries\\"]},
-  {name: \\"provider_performance_n_of_svcs_index\\", fields: [\\"n_of_svcs\\"]},
-  {name: \\"provider_performance_npi_hcpcs_code_place_of_service_pk\\", fields: [\\"npi\\", \\"place_of_service\\", \\"hcpcs_code\\"], unique: true},
-  {name: \\"provider_performance_place_of_service_index\\", fields: [\\"place_of_service\\"]}
-]) {
+type ProviderPerformance @db(name: \\"provider_performance\\") {
   prisma_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"provider_performance_prisma_id_seq1\\", initialValue: 1, allocationSize: 1)
-  avg_mcare_allowed_amt: Float
-  avg_mcare_pay_amt: Float
-  avg_mcare_standardized_amt: Float
-  avg_submitted_charge_amt: Float
-  hcpcs_code: Service!
-  mcare_participation_indicator: String
-  n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  n_of_mcare_beneficiaries: Int
-  n_of_svcs: Float
+  avgMcareAllowedAmt: Float @db(name: \\"avg_mcare_allowed_amt\\")
+  avgMcarePayAmt: Float @db(name: \\"avg_mcare_pay_amt\\")
+  avgMcareStandardizedAmt: Float @db(name: \\"avg_mcare_standardized_amt\\")
+  avgSubmittedChargeAmt: Float @db(name: \\"avg_submitted_charge_amt\\")
+  hcpcsCode: Service! @db(name: \\"hcpcs_code\\")
+  mcareParticipationIndicator: String @db(name: \\"mcare_participation_indicator\\")
+  nOfDistinctMcareBeneficiaryPerDaySvcs: Int @db(name: \\"n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  nOfMcareBeneficiaries: Int @db(name: \\"n_of_mcare_beneficiaries\\")
+  nOfSvcs: Float @db(name: \\"n_of_svcs\\")
   npi: Provider!
-  place_of_service: String!
+  placeOfService: String! @db(name: \\"place_of_service\\")
 }
 
-type ProvidersIndividual @db(name: \\"providers_individuals\\") @indexes(value: [
-  {name: \\"providers_individuals_gender_index\\", fields: [\\"gender\\"]}
-]) {
-  npi: Provider! @id(strategy: NONE)
+type ProvidersIndividual @db(name: \\"providers_individuals\\") {
+  npi: Provider! @id
   credentials: String
   gender: String
-  name_first: String
-  name_last: String
-  name_middle: String
+  nameFirst: String @db(name: \\"name_first\\")
+  nameLast: String @db(name: \\"name_last\\")
+  nameMiddle: String @db(name: \\"name_middle\\")
 }
 
 type ProvidersOrganization @db(name: \\"providers_organizations\\") {
-  npi: Provider! @id(strategy: NONE)
+  npi: Provider! @id
   name: String
 }
 
-type Service @db(name: \\"services\\") @indexes(value: [
-  {name: \\"svcs_hcpcs_drug_indicator_index\\", fields: [\\"hcpcs_drug_indicator\\"]}
-]) {
-  hcpcs_code: ID! @id(strategy: NONE)
-  hcpcs_description: String
-  hcpcs_drug_indicator: String
-  provider_performance: [ProviderPerformance]
-  service_performance: [ServicePerformance]
-  service_provider_performance: [ServiceProviderPerformance]
+type Service @db(name: \\"services\\") {
+  hcpcs_code: ID! @id
+  hcpcsDescription: String @db(name: \\"hcpcs_description\\")
+  hcpcsDrugIndicator: String @db(name: \\"hcpcs_drug_indicator\\")
+  providerPerformance: [ProviderPerformance] @db(name: \\"provider_performance\\")
+  servicePerformance: [ServicePerformance] @db(name: \\"service_performance\\")
+  serviceProviderPerformance: [ServiceProviderPerformance] @db(name: \\"service_provider_performance\\")
 }
 
-type ServicePerformance @db(name: \\"service_performance\\") @indexes(value: [
-  {name: \\"service_performance_entity_type_index\\", fields: [\\"entity_type\\"]},
-  {name: \\"service_performance_hcpcs_code_entity_type_pk\\", fields: [\\"hcpcs_code\\", \\"entity_type\\"], unique: true},
-  {name: \\"service_performance_rank_avg_avg_mcare_allowed_amt_in\\", fields: [\\"rank_avg_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_avg_avg_mcare_pay_amt_in\\", fields: [\\"rank_avg_avg_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_avg_avg_mcare_standardized_amou\\", fields: [\\"rank_avg_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_avg_avg_submitted_charge_amt_in\\", fields: [\\"rank_avg_avg_submitted_charge_amt\\"]},
-  {name: \\"service_performance_rank_est_ttl_mcare_allowed_amt_inde\\", fields: [\\"rank_est_ttl_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_est_ttl_mcare_pay_amt_inde\\", fields: [\\"rank_est_ttl_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_est_ttl_mcare_standardized_amt\\", fields: [\\"rank_est_ttl_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_est_ttl_submitted_charge_amt_inde\\", fields: [\\"rank_est_ttl_submitted_charge_amt\\"]},
-  {name: \\"service_performance_rank_max_avg_mcare_allowed_amt_in\\", fields: [\\"rank_max_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_max_avg_mcare_pay_amt_in\\", fields: [\\"rank_max_avg_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_max_avg_mcare_standardized_amou\\", fields: [\\"rank_max_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_max_avg_submitted_charge_amt_in\\", fields: [\\"rank_max_avg_submitted_charge_amt\\"]},
-  {name: \\"service_performance_rank_min_avg_mcare_allowed_amt_in\\", fields: [\\"rank_min_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_min_avg_mcare_pay_amt_in\\", fields: [\\"rank_min_avg_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_min_avg_mcare_standardized_amou\\", fields: [\\"rank_min_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_min_avg_submitted_charge_amt_in\\", fields: [\\"rank_min_avg_submitted_charge_amt\\"]},
-  {name: \\"service_performance_rank_n_of_distinct_mcare_beneficiar\\", fields: [\\"rank_n_of_distinct_mcare_beneficiary_per_day_svcs\\"]},
-  {name: \\"service_performance_rank_n_of_mcare_beneficiaries_index\\", fields: [\\"rank_n_of_mcare_beneficiaries\\"]},
-  {name: \\"service_performance_rank_n_of_svcs_index\\", fields: [\\"rank_n_of_svcs\\"]},
-  {name: \\"service_performance_rank_providers_index\\", fields: [\\"rank_providers\\"]},
-  {name: \\"service_performance_rank_var_avg_mcare_allowed_amou\\", fields: [\\"rank_var_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_performance_rank_var_avg_mcare_pay_amou\\", fields: [\\"rank_var_avg_mcare_pay_amt\\"]},
-  {name: \\"service_performance_rank_var_avg_mcare_standardized\\", fields: [\\"rank_var_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_performance_rank_var_avg_mcare_submitted_ch\\", fields: [\\"rank_var_avg_mcare_submitted_charge_pay_amt\\"]},
-  {name: \\"service_performance_rank_var_avg_submitted_charge_amou\\", fields: [\\"rank_var_avg_submitted_charge_amt\\"]}
-]) {
+type ServicePerformance @db(name: \\"service_performance\\") {
   prisma_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"service_performance_prisma_id_seq1\\", initialValue: 1, allocationSize: 1)
-  avg_avg_mcare_allowed_amt: Float
-  avg_avg_mcare_pay_amt: Float
-  avg_avg_mcare_standardized_amt: Float
-  avg_avg_submitted_charge_amt: Float
-  entity_type: String!
-  est_ttl_mcare_allowed_amt: Float
-  est_ttl_mcare_pay_amt: Float
-  est_ttl_mcare_standardized_amt: Float
-  est_ttl_submitted_charge_amt: Float
-  hcpcs_code: Service!
-  max_avg_mcare_allowed_amt: Float
-  max_avg_mcare_pay_amt: Float
-  max_avg_mcare_standardized_amt: Float
-  max_avg_submitted_charge_amt: Float
-  min_avg_mcare_allowed_amt: Float
-  min_avg_mcare_pay_amt: Float
-  min_avg_mcare_standardized_amt: Float
-  min_avg_submitted_charge_amt: Float
-  n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  n_of_mcare_beneficiaries: Int
-  n_of_svcs: Float
+  avgAvgMcareAllowedAmt: Float @db(name: \\"avg_avg_mcare_allowed_amt\\")
+  avgAvgMcarePayAmt: Float @db(name: \\"avg_avg_mcare_pay_amt\\")
+  avgAvgMcareStandardizedAmt: Float @db(name: \\"avg_avg_mcare_standardized_amt\\")
+  avgAvgSubmittedChargeAmt: Float @db(name: \\"avg_avg_submitted_charge_amt\\")
+  entityType: String! @db(name: \\"entity_type\\")
+  estTtlMcareAllowedAmt: Float @db(name: \\"est_ttl_mcare_allowed_amt\\")
+  estTtlMcarePayAmt: Float @db(name: \\"est_ttl_mcare_pay_amt\\")
+  estTtlMcareStandardizedAmt: Float @db(name: \\"est_ttl_mcare_standardized_amt\\")
+  estTtlSubmittedChargeAmt: Float @db(name: \\"est_ttl_submitted_charge_amt\\")
+  hcpcsCode: Service! @db(name: \\"hcpcs_code\\")
+  maxAvgMcareAllowedAmt: Float @db(name: \\"max_avg_mcare_allowed_amt\\")
+  maxAvgMcarePayAmt: Float @db(name: \\"max_avg_mcare_pay_amt\\")
+  maxAvgMcareStandardizedAmt: Float @db(name: \\"max_avg_mcare_standardized_amt\\")
+  maxAvgSubmittedChargeAmt: Float @db(name: \\"max_avg_submitted_charge_amt\\")
+  minAvgMcareAllowedAmt: Float @db(name: \\"min_avg_mcare_allowed_amt\\")
+  minAvgMcarePayAmt: Float @db(name: \\"min_avg_mcare_pay_amt\\")
+  minAvgMcareStandardizedAmt: Float @db(name: \\"min_avg_mcare_standardized_amt\\")
+  minAvgSubmittedChargeAmt: Float @db(name: \\"min_avg_submitted_charge_amt\\")
+  nOfDistinctMcareBeneficiaryPerDaySvcs: Int @db(name: \\"n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  nOfMcareBeneficiaries: Int @db(name: \\"n_of_mcare_beneficiaries\\")
+  nOfSvcs: Float @db(name: \\"n_of_svcs\\")
   providers: Int
-  rank_avg_avg_mcare_allowed_amt: Int
-  rank_avg_avg_mcare_pay_amt: Int
-  rank_avg_avg_mcare_standardized_amt: Int
-  rank_avg_avg_submitted_charge_amt: Int
-  rank_est_ttl_mcare_allowed_amt: Int
-  rank_est_ttl_mcare_pay_amt: Int
-  rank_est_ttl_mcare_standardized_amt: Int
-  rank_est_ttl_submitted_charge_amt: Int
-  rank_max_avg_mcare_allowed_amt: Int
-  rank_max_avg_mcare_pay_amt: Int
-  rank_max_avg_mcare_standardized_amt: Int
-  rank_max_avg_submitted_charge_amt: Int
-  rank_min_avg_mcare_allowed_amt: Int
-  rank_min_avg_mcare_pay_amt: Int
-  rank_min_avg_mcare_standardized_amt: Int
-  rank_min_avg_submitted_charge_amt: Int
-  rank_n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  rank_n_of_mcare_beneficiaries: Int
-  rank_n_of_svcs: Int
-  rank_providers: Int
-  rank_var_avg_mcare_allowed_amt: Int
-  rank_var_avg_mcare_pay_amt: Int
-  rank_var_avg_mcare_standardized_amt: Int
-  rank_var_avg_mcare_submitted_charge_pay_amt: Int
-  rank_var_avg_submitted_charge_amt: Int
-  var_avg_mcare_allowed_amt: Float
-  var_avg_mcare_pay_amt: Float
-  var_avg_mcare_standardized_amt: Float
-  var_avg_mcare_submitted_charge_pay_amt: Float
-  var_avg_submitted_charge_amt: Float
+  rankAvgAvgMcareAllowedAmt: Int @db(name: \\"rank_avg_avg_mcare_allowed_amt\\")
+  rankAvgAvgMcarePayAmt: Int @db(name: \\"rank_avg_avg_mcare_pay_amt\\")
+  rankAvgAvgMcareStandardizedAmt: Int @db(name: \\"rank_avg_avg_mcare_standardized_amt\\")
+  rankAvgAvgSubmittedChargeAmt: Int @db(name: \\"rank_avg_avg_submitted_charge_amt\\")
+  rankEstTtlMcareAllowedAmt: Int @db(name: \\"rank_est_ttl_mcare_allowed_amt\\")
+  rankEstTtlMcarePayAmt: Int @db(name: \\"rank_est_ttl_mcare_pay_amt\\")
+  rankEstTtlMcareStandardizedAmt: Int @db(name: \\"rank_est_ttl_mcare_standardized_amt\\")
+  rankEstTtlSubmittedChargeAmt: Int @db(name: \\"rank_est_ttl_submitted_charge_amt\\")
+  rankMaxAvgMcareAllowedAmt: Int @db(name: \\"rank_max_avg_mcare_allowed_amt\\")
+  rankMaxAvgMcarePayAmt: Int @db(name: \\"rank_max_avg_mcare_pay_amt\\")
+  rankMaxAvgMcareStandardizedAmt: Int @db(name: \\"rank_max_avg_mcare_standardized_amt\\")
+  rankMaxAvgSubmittedChargeAmt: Int @db(name: \\"rank_max_avg_submitted_charge_amt\\")
+  rankMinAvgMcareAllowedAmt: Int @db(name: \\"rank_min_avg_mcare_allowed_amt\\")
+  rankMinAvgMcarePayAmt: Int @db(name: \\"rank_min_avg_mcare_pay_amt\\")
+  rankMinAvgMcareStandardizedAmt: Int @db(name: \\"rank_min_avg_mcare_standardized_amt\\")
+  rankMinAvgSubmittedChargeAmt: Int @db(name: \\"rank_min_avg_submitted_charge_amt\\")
+  rankNOfDistinctMcareBeneficiaryPerDaySvcs: Int @db(name: \\"rank_n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  rankNOfMcareBeneficiaries: Int @db(name: \\"rank_n_of_mcare_beneficiaries\\")
+  rankNOfSvcs: Int @db(name: \\"rank_n_of_svcs\\")
+  rankProviders: Int @db(name: \\"rank_providers\\")
+  rankVarAvgMcareAllowedAmt: Int @db(name: \\"rank_var_avg_mcare_allowed_amt\\")
+  rankVarAvgMcarePayAmt: Int @db(name: \\"rank_var_avg_mcare_pay_amt\\")
+  rankVarAvgMcareStandardizedAmt: Int @db(name: \\"rank_var_avg_mcare_standardized_amt\\")
+  rankVarAvgMcareSubmittedChargePayAmt: Int @db(name: \\"rank_var_avg_mcare_submitted_charge_pay_amt\\")
+  rankVarAvgSubmittedChargeAmt: Int @db(name: \\"rank_var_avg_submitted_charge_amt\\")
+  varAvgMcareAllowedAmt: Float @db(name: \\"var_avg_mcare_allowed_amt\\")
+  varAvgMcarePayAmt: Float @db(name: \\"var_avg_mcare_pay_amt\\")
+  varAvgMcareStandardizedAmt: Float @db(name: \\"var_avg_mcare_standardized_amt\\")
+  varAvgMcareSubmittedChargePayAmt: Float @db(name: \\"var_avg_mcare_submitted_charge_pay_amt\\")
+  varAvgSubmittedChargeAmt: Float @db(name: \\"var_avg_submitted_charge_amt\\")
 }
 
-type ServiceProviderPerformance @db(name: \\"service_provider_performance\\") @indexes(value: [
-  {name: \\"service_provider_performance_entity_type_index\\", fields: [\\"entity_type\\"]},
-  {name: \\"service_provider_performance_hcpcs_code_npi_place_of_service_pk\\", fields: [\\"hcpcs_code\\", \\"npi\\", \\"place_of_service\\"], unique: true},
-  {name: \\"service_provider_performance_rank_avg_mcare_allowed_amou\\", fields: [\\"rank_avg_mcare_allowed_amt\\"]},
-  {name: \\"service_provider_performance_rank_avg_mcare_pay_amou\\", fields: [\\"rank_avg_mcare_pay_amt\\"]},
-  {name: \\"service_provider_performance_rank_avg_mcare_standardized\\", fields: [\\"rank_avg_mcare_standardized_amt\\"]},
-  {name: \\"service_provider_performance_rank_avg_submitted_charge_amou\\", fields: [\\"rank_avg_submitted_charge_amt\\"]},
-  {name: \\"service_provider_performance_rank_est_ttl_mcare_pay_am\\", fields: [\\"rank_est_ttl_mcare_pay_amt\\"]},
-  {name: \\"service_provider_performance_rank_est_ttl_submitted_charge_am\\", fields: [\\"rank_est_ttl_submitted_charge_amt\\"]},
-  {name: \\"service_provider_performance_rank_n_of_distinct_mcare_b\\", fields: [\\"rank_n_of_distinct_mcare_beneficiary_per_day_svcs\\"]},
-  {name: \\"service_provider_performance_rank_n_of_mcare_beneficiar\\", fields: [\\"rank_n_of_mcare_beneficiaries\\"]},
-  {name: \\"service_provider_performance_rank_n_of_svcs_index\\", fields: [\\"rank_n_of_svcs\\"]},
-  {name: \\"service_provider_performance_rank_var_avg_mcare_sub\\", fields: [\\"rank_var_avg_mcare_submitted_charge_pay_amt\\"]}
-]) {
+type ServiceProviderPerformance @db(name: \\"service_provider_performance\\") {
   prisma_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"service_provider_performance_prisma_id_seq1\\", initialValue: 1, allocationSize: 1)
-  avg_mcare_allowed_amt: Float
-  avg_mcare_pay_amt: Float
-  avg_mcare_standardized_amt: Float
-  avg_submitted_charge_amt: Float
-  entity_type: String
-  est_ttl_mcare_pay_amt: Float
-  est_ttl_submitted_charge_amt: Float
-  hcpcs_code: Service!
-  mcare_participation_indicator: String
-  n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  n_of_mcare_beneficiaries: Int
-  n_of_svcs: Float
+  avgMcareAllowedAmt: Float @db(name: \\"avg_mcare_allowed_amt\\")
+  avgMcarePayAmt: Float @db(name: \\"avg_mcare_pay_amt\\")
+  avgMcareStandardizedAmt: Float @db(name: \\"avg_mcare_standardized_amt\\")
+  avgSubmittedChargeAmt: Float @db(name: \\"avg_submitted_charge_amt\\")
+  entityType: String @db(name: \\"entity_type\\")
+  estTtlMcarePayAmt: Float @db(name: \\"est_ttl_mcare_pay_amt\\")
+  estTtlSubmittedChargeAmt: Float @db(name: \\"est_ttl_submitted_charge_amt\\")
+  hcpcsCode: Service! @db(name: \\"hcpcs_code\\")
+  mcareParticipationIndicator: String @db(name: \\"mcare_participation_indicator\\")
+  nOfDistinctMcareBeneficiaryPerDaySvcs: Int @db(name: \\"n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  nOfMcareBeneficiaries: Int @db(name: \\"n_of_mcare_beneficiaries\\")
+  nOfSvcs: Float @db(name: \\"n_of_svcs\\")
   npi: Provider!
-  place_of_service: String!
-  rank_avg_mcare_allowed_amt: Int
-  rank_avg_mcare_pay_amt: Int
-  rank_avg_mcare_standardized_amt: Int
-  rank_avg_submitted_charge_amt: Int
-  rank_est_ttl_mcare_pay_amt: Int
-  rank_est_ttl_submitted_charge_amt: Int
-  rank_n_of_distinct_mcare_beneficiary_per_day_svcs: Int
-  rank_n_of_mcare_beneficiaries: Int
-  rank_n_of_svcs: Int
-  rank_var_avg_mcare_submitted_charge_pay_amt: Int
-  var_avg_mcare_submitted_charge_pay_amt: Float
+  placeOfService: String! @db(name: \\"place_of_service\\")
+  rankAvgMcareAllowedAmt: Int @db(name: \\"rank_avg_mcare_allowed_amt\\")
+  rankAvgMcarePayAmt: Int @db(name: \\"rank_avg_mcare_pay_amt\\")
+  rankAvgMcareStandardizedAmt: Int @db(name: \\"rank_avg_mcare_standardized_amt\\")
+  rankAvgSubmittedChargeAmt: Int @db(name: \\"rank_avg_submitted_charge_amt\\")
+  rankEstTtlMcarePayAmt: Int @db(name: \\"rank_est_ttl_mcare_pay_amt\\")
+  rankEstTtlSubmittedChargeAmt: Int @db(name: \\"rank_est_ttl_submitted_charge_amt\\")
+  rankNOfDistinctMcareBeneficiaryPerDaySvcs: Int @db(name: \\"rank_n_of_distinct_mcare_beneficiary_per_day_svcs\\")
+  rankNOfMcareBeneficiaries: Int @db(name: \\"rank_n_of_mcare_beneficiaries\\")
+  rankNOfSvcs: Int @db(name: \\"rank_n_of_svcs\\")
+  rankVarAvgMcareSubmittedChargePayAmt: Int @db(name: \\"rank_var_avg_mcare_submitted_charge_pay_amt\\")
+  varAvgMcareSubmittedChargePayAmt: Float @db(name: \\"var_avg_mcare_submitted_charge_pay_amt\\")
 }
 
-type ServiceProviderPerformanceSummary @db(name: \\"service_provider_performance_summary\\") @indexes(value: [
-  {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_by_ttl_hcpc\\", fields: [\\"rank_est_ttl_mcare_pay_amt_by_ttl_hcpcs_code\\"]},
-  {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_by_ttl_numb\\", fields: [\\"rank_est_ttl_mcare_pay_amt_by_ttl_n_of_servi\\"]},
-  {name: \\"prvdr_smry_rank_est_ttl_mcare_pay_amt_index\\", fields: [\\"rank_est_ttl_mcare_pay_amt\\"]},
-  {name: \\"prvdr_smry_rank_est_ttl_submitted_charge_amt_index\\", fields: [\\"rank_est_ttl_submitted_charge_amt\\"]},
-  {name: \\"prvdr_smry_rank_ttl_hcpcs_code_index\\", fields: [\\"rank_ttl_hcpcs_code\\"]},
-  {name: \\"prvdr_smry_rank_ttl_n_of_svcs_index\\", fields: [\\"rank_ttl_n_of_svcs\\"]},
-  {name: \\"prvdr_smry_rank_var_est_ttl_mcare_submitted_charge_pa\\", fields: [\\"rank_var_est_ttl_mcare_submitted_charge_pay_amoun\\"]},
-  {name: \\"service_provider_performance_summary_entity_type_index\\", fields: [\\"entity_type\\"]},
-  {name: \\"service_provider_performance_summary_npi_summary_type_pk\\", fields: [\\"npi\\", \\"summary_type\\"], unique: true}
-]) {
+type ServiceProviderPerformanceSummary @db(name: \\"service_provider_performance_summary\\") {
   prisma_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"service_provider_performance_summary_prisma_id_seq1\\", initialValue: 1, allocationSize: 1)
-  entity_type: String
-  est_ttl_mcare_pay_amt: Float
-  est_ttl_mcare_pay_amt_by_ttl_hcpcs_code: Float
-  est_ttl_mcare_pay_amt_by_ttl_n_of_svcs: Float
-  est_ttl_submitted_charge_amt: Float
+  entityType: String @db(name: \\"entity_type\\")
+  estTtlMcarePayAmt: Float @db(name: \\"est_ttl_mcare_pay_amt\\")
+  estTtlMcarePayAmtByTtlHcpcsCode: Float @db(name: \\"est_ttl_mcare_pay_amt_by_ttl_hcpcs_code\\")
+  estTtlMcarePayAmtByTtlNOfSvcs: Float @db(name: \\"est_ttl_mcare_pay_amt_by_ttl_n_of_svcs\\")
+  estTtlSubmittedChargeAmt: Float @db(name: \\"est_ttl_submitted_charge_amt\\")
   npi: Provider!
-  rank_est_ttl_mcare_pay_amt: Int
-  rank_est_ttl_mcare_pay_amt_by_ttl_hcpcs_code: Int
-  rank_est_ttl_mcare_pay_amt_by_ttl_n_of_servi: Int
-  rank_est_ttl_submitted_charge_amt: Int
-  rank_ttl_hcpcs_code: Int
-  rank_ttl_n_of_svcs: Int
-  rank_var_est_ttl_mcare_submitted_charge_pay_amoun: Int
-  summary_type: ServiceProviderPerformanceSummaryType!
-  ttl_hcpcs_code: String
-  ttl_n_of_svcs: Int
-  var_est_ttl_mcare_submitted_charge_pay_amt: Float
+  rankEstTtlMcarePayAmt: Int @db(name: \\"rank_est_ttl_mcare_pay_amt\\")
+  rankEstTtlMcarePayAmtByTtlHcpcsCode: Int @db(name: \\"rank_est_ttl_mcare_pay_amt_by_ttl_hcpcs_code\\")
+  rankEstTtlMcarePayAmtByTtlNOfServi: Int @db(name: \\"rank_est_ttl_mcare_pay_amt_by_ttl_n_of_servi\\")
+  rankEstTtlSubmittedChargeAmt: Int @db(name: \\"rank_est_ttl_submitted_charge_amt\\")
+  rankTtlHcpcsCode: Int @db(name: \\"rank_ttl_hcpcs_code\\")
+  rankTtlNOfSvcs: Int @db(name: \\"rank_ttl_n_of_svcs\\")
+  rankVarEstTtlMcareSubmittedChargePayAmoun: Int @db(name: \\"rank_var_est_ttl_mcare_submitted_charge_pay_amoun\\")
+  summaryType: ServiceProviderPerformanceSummaryType! @db(name: \\"summary_type\\")
+  ttlHcpcsCode: String @db(name: \\"ttl_hcpcs_code\\")
+  ttlNOfSvcs: Int @db(name: \\"ttl_n_of_svcs\\")
+  varEstTtlMcareSubmittedChargePayAmt: Float @db(name: \\"var_est_ttl_mcare_submitted_charge_pay_amt\\")
 }
 
 type ServiceProviderPerformanceSummaryType @db(name: \\"service_provider_performance_summary_type\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"service_provider_performance_summary_type_id_seq1\\", initialValue: 1, allocationSize: 1)
   description: String!
-  group_membership: Boolean! @default(value: true)
-  service_provider_performance_summary: [ServiceProviderPerformanceSummary]
+  groupMembership: Boolean! @db(name: \\"group_membership\\") @default(value: true)
+  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary] @db(name: \\"service_provider_performance_summary\\")
   slug: String @unique
 }"
 `;

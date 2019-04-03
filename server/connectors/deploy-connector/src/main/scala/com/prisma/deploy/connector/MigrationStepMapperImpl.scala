@@ -24,9 +24,9 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       val field = model.getFieldByName_!(x.name)
 
       field match {
-        case _ if ReservedFields.idFieldName == field.name => Vector.empty
-        case _: RelationField                              => Vector.empty
-        case f: ScalarField                                => Vector(createField(f))
+        case f: ScalarField if f.isId                => Vector.empty
+        case _: RelationField                        => Vector.empty
+        case f: ScalarField                          => Vector(createField(f))
       }
 
     case x: DeleteField =>

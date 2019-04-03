@@ -172,7 +172,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val inputTypes =
       """
         |input BCreateInput {
-        |  id: ID
         |  rel: UserCreateOneInput
         |  c: CCreateOneWithoutBInput
         |}
@@ -182,7 +181,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |input BCreateWithoutCInput {
-        |  id: ID
         |  rel: UserCreateOneInput
         |}
         |
@@ -205,7 +203,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input CCreateInput {
         |  name: String!
-        |  id: ID
         |  b: BCreateOneWithoutCInput
         |}
         |
@@ -216,7 +213,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input CCreateWithoutBInput {
         |  name: String!
-        |  id: ID
         |}
         |
         |input CUpdateInput {
@@ -286,7 +282,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val inputTypes = """input UserCreateInput {
                        |  name: String!
-                       |  id: ID
                        |  friend: UserCreateOneWithoutFriendOfInput!
                        |  friendOf: UserCreateOneWithoutFriendInput!
                        |}
@@ -303,13 +298,11 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input UserCreateWithoutFriendInput {
                        |  name: String!
-                       |  id: ID
                        |  friendOf: UserCreateOneWithoutFriendInput!
                        |}
                        |
                        |input UserCreateWithoutFriendOfInput {
                        |  name: String!
-                       |  id: ID
                        |  friend: UserCreateOneWithoutFriendOfInput!
                        |}
                        |
@@ -373,7 +366,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val inputTypes = """input UserCreateInput {
                        |  name: String!
-                       |  id: ID
                        |  bestBuddy: UserCreateOneInput
                        |}
                        |
@@ -431,7 +423,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val inputTypes = """input ChildCreateInput {
                        |  name: String!
-                       |  id: ID
                        |  parent: ParentCreateOneWithoutChildInput!
                        |}
                        |
@@ -442,7 +433,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input ChildCreateWithoutParentInput {
                        |  name: String!
-                       |  id: ID
                        |}
                        |
                        |input ChildUpdateInput {
@@ -483,7 +473,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input ParentCreateInput {
                        |  name: String!
-                       |  id: ID
                        |  child: ChildCreateManyWithoutParentInput
                        |}
                        |
@@ -494,7 +483,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |
                        |input ParentCreateWithoutChildInput {
                        |  name: String!
-                       |  id: ID
                        |}
                        |
                        |input ParentUpdateInput {
@@ -529,15 +517,18 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val project = SchemaDsl.fromString() {
       """type A {
+        |    id: ID! @unique
         |    field: Int @unique
         |}
         |
         |type B {
+        |    id: ID! @unique
         |    field: Int @unique
         |    a: A!
         |}
         |
         |type C {
+        |    id: ID! @unique
         |    field: Int @unique
         |    a: A
         |}"""
@@ -546,8 +537,8 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
     val inputTypes = """input ACreateInput {
-                       |  field: Int
                        |  id: ID
+                       |  field: Int
                        |}
                        |
                        |input ACreateOneInput {
@@ -589,8 +580,8 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input BCreateInput {
-                       |  field: Int
                        |  id: ID
+                       |  field: Int
                        |  a: ACreateOneInput!
                        |}
                        |
@@ -604,8 +595,8 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input CCreateInput {
-                       |  field: Int
                        |  id: ID
+                       |  field: Int
                        |  a: ACreateOneInput
                        |}
                        |
@@ -640,7 +631,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val inputTypes =
       """input ACreateInput {
         |  field: Int
-        |  id: ID
         |}
         |
         |input ACreateOneInput {
@@ -679,7 +669,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input BCreateInput {
         |  field: Int
-        |  id: ID
         |  a: ACreateOneInput
         |}
         |
@@ -690,7 +679,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |
         |input CCreateInput {
         |  field: Int
-        |  id: ID
         |  a: ACreateOneInput!
         |}
         |
@@ -715,7 +703,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
-    schema should containInputType("BCreateOneWithoutAInput")
+    schema should not(containInputType("BCreateOneWithoutAInput"))
   }
 
   "Sample schema with relation and relation strategy NONE" should "be generated correctly" in {

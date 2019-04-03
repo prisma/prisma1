@@ -93,6 +93,7 @@ type CampusConnection {
 }
 
 input CampusCreateInput {
+  id: ID
   description: String
   isActive: Boolean
   name: String!
@@ -108,6 +109,7 @@ input CampusCreateManyWithoutAccountsInput {
 }
 
 input CampusCreateWithoutAccountsInput {
+  id: ID
   description: String
   isActive: Boolean
   name: String!
@@ -635,6 +637,7 @@ type FinancialAccountConnection {
 }
 
 input FinancialAccountCreateInput {
+  id: ID
   key: String
   description: String!
   isActive: Boolean!
@@ -653,6 +656,7 @@ input FinancialAccountCreateOneInput {
 }
 
 input FinancialAccountCreateWithoutCampusesInput {
+  id: ID
   key: String
   description: String!
   isActive: Boolean!
@@ -1293,6 +1297,7 @@ type FinancialPaymentDetailConnection {
 }
 
 input FinancialPaymentDetailCreateInput {
+  id: ID
   accountNumberMasked: String!
   creditCardType: CREDIT_CARD
   achType: ACH_TYPE
@@ -1690,6 +1695,7 @@ type FinancialScheduledTransactionConnection {
 }
 
 input FinancialScheduledTransactionCreateInput {
+  id: ID
   endDate: DateTime
   isActive: Boolean!
   startDate: DateTime
@@ -1712,6 +1718,7 @@ input FinancialScheduledTransactionCreateOneWithoutTransactionsInput {
 }
 
 input FinancialScheduledTransactionCreateWithoutPersonInput {
+  id: ID
   endDate: DateTime
   isActive: Boolean!
   startDate: DateTime
@@ -1723,6 +1730,7 @@ input FinancialScheduledTransactionCreateWithoutPersonInput {
 }
 
 input FinancialScheduledTransactionCreateWithoutTransactionsInput {
+  id: ID
   endDate: DateTime
   isActive: Boolean!
   startDate: DateTime
@@ -2269,6 +2277,7 @@ type FinancialTransactionConnection {
 }
 
 input FinancialTransactionCreateInput {
+  id: ID
   processedDate: DateTime
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
@@ -2291,6 +2300,7 @@ input FinancialTransactionCreateManyWithoutScheduledTransactionInput {
 }
 
 input FinancialTransactionCreateWithoutPersonInput {
+  id: ID
   processedDate: DateTime
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
@@ -2302,6 +2312,7 @@ input FinancialTransactionCreateWithoutPersonInput {
 }
 
 input FinancialTransactionCreateWithoutScheduledTransactionInput {
+  id: ID
   processedDate: DateTime
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
@@ -2853,6 +2864,7 @@ type GroupConnection {
 }
 
 input GroupCreateInput {
+  id: ID
   key: String
   description: String
   isActive: Boolean!
@@ -2884,6 +2896,7 @@ input GroupCreateOneWithoutMembersInput {
 }
 
 input GroupCreateWithoutInvitesInput {
+  id: ID
   key: String
   description: String
   isActive: Boolean!
@@ -2894,6 +2907,7 @@ input GroupCreateWithoutInvitesInput {
 }
 
 input GroupCreateWithoutMembersInput {
+  id: ID
   key: String
   description: String
   isActive: Boolean!
@@ -2904,6 +2918,7 @@ input GroupCreateWithoutMembersInput {
 }
 
 input GroupCreateWithoutTypeInput {
+  id: ID
   key: String
   description: String
   isActive: Boolean!
@@ -2951,6 +2966,7 @@ type GroupInviteConnection {
 }
 
 input GroupInviteCreateInput {
+  id: ID
   email: String!
   status: GROUP_INVITE_STATUS!
   group: GroupCreateOneWithoutInvitesInput!
@@ -2963,6 +2979,7 @@ input GroupInviteCreateManyWithoutGroupInput {
 }
 
 input GroupInviteCreateWithoutGroupInput {
+  id: ID
   email: String!
   status: GROUP_INVITE_STATUS!
   groupRole: GroupRoleCreateOneInput
@@ -3368,6 +3385,7 @@ type GroupMemberConnection {
 }
 
 input GroupMemberCreateInput {
+  id: ID
   group: GroupCreateOneWithoutMembersInput
   role: GroupRoleCreateOneInput
   person: PersonCreateOneInput
@@ -3379,6 +3397,7 @@ input GroupMemberCreateManyWithoutGroupInput {
 }
 
 input GroupMemberCreateWithoutGroupInput {
+  id: ID
   role: GroupRoleCreateOneInput
   person: PersonCreateOneInput
 }
@@ -3653,6 +3672,7 @@ type GroupRoleConnection {
 }
 
 input GroupRoleCreateInput {
+  id: ID
   canEdit: Boolean!
   canView: Boolean!
   description: String!
@@ -3673,6 +3693,7 @@ input GroupRoleCreateOneInput {
 }
 
 input GroupRoleCreateWithoutGroupTypeInput {
+  id: ID
   canEdit: Boolean!
   canView: Boolean!
   description: String!
@@ -4531,6 +4552,7 @@ type GroupTypeConnection {
 }
 
 input GroupTypeCreateInput {
+  id: ID
   description: String
   name: String!
   groups: GroupCreateManyWithoutTypeInput
@@ -4548,12 +4570,14 @@ input GroupTypeCreateOneWithoutRolesInput {
 }
 
 input GroupTypeCreateWithoutGroupsInput {
+  id: ID
   description: String
   name: String!
   roles: GroupRoleCreateManyWithoutGroupTypeInput
 }
 
 input GroupTypeCreateWithoutRolesInput {
+  id: ID
   description: String
   name: String!
   groups: GroupCreateManyWithoutTypeInput
@@ -5247,6 +5271,7 @@ type LocationConnection {
 }
 
 input LocationCreateInput {
+  id: ID
   city: String
   locationType: LOCATION_TYPE
   postalCode: String
@@ -5871,6 +5896,7 @@ type PersonConnection {
 }
 
 input PersonCreateInput {
+  id: ID
   email: String
   firstName: String
   lastName: String
@@ -5901,6 +5927,7 @@ input PersonCreateOneWithoutUserInput {
 }
 
 input PersonCreateWithoutScheduledTransactionsInput {
+  id: ID
   email: String
   firstName: String
   lastName: String
@@ -5910,6 +5937,7 @@ input PersonCreateWithoutScheduledTransactionsInput {
 }
 
 input PersonCreateWithoutTransactionsInput {
+  id: ID
   email: String
   firstName: String
   lastName: String
@@ -5919,6 +5947,7 @@ input PersonCreateWithoutTransactionsInput {
 }
 
 input PersonCreateWithoutUserInput {
+  id: ID
   email: String
   firstName: String
   lastName: String
@@ -6345,6 +6374,7 @@ type PhoneNumberConnection {
 }
 
 input PhoneNumberCreateInput {
+  id: ID
   number: String!
 }
 
@@ -6797,11 +6827,17 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   person: PersonCreateOneWithoutUserInput!
 }
 
 input UserCreateOneWithoutPersonInput {
+  create: UserCreateWithoutPersonInput
   connect: UserWhereUniqueInput
+}
+
+input UserCreateWithoutPersonInput {
+  id: ID
 }
 
 """
@@ -6863,6 +6899,7 @@ input UserUpdateInput {
 }
 
 input UserUpdateOneWithoutPersonInput {
+  create: UserCreateWithoutPersonInput
   connect: UserWhereUniqueInput
   disconnect: Boolean
   delete: Boolean

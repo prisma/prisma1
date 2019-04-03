@@ -1,0 +1,15 @@
+type Todo {
+  id: ID! @id
+  text: String!
+  done: Boolean!
+  user: User! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type User {
+  id: ID! @id
+  name: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

@@ -1,7 +1,7 @@
 import testSchema from '../common'
 
 describe('Introspector', () => {
-  test('large example database', async () => {
+  test.skip('large example database', async () => {
     // See http://www.postgresqltutorial.com/postgresql-sample-database/
     await testSchema(`--
     -- NOTE:

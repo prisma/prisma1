@@ -21,7 +21,7 @@ scalar Long
 
 type Mutation {
   createUserSpace(data: UserSpaceCreateInput!): UserSpace!
-  createStory: Story!
+  createStory(data: StoryCreateInput!): Story!
   updateUserSpace(data: UserSpaceUpdateInput!, where: UserSpaceWhereUniqueInput!): UserSpace
   deleteUserSpace(where: UserSpaceWhereUniqueInput!): UserSpace
   deleteStory(where: StoryWhereUniqueInput!): Story
@@ -105,7 +105,12 @@ type StoryConnection {
   aggregate: AggregateStory!
 }
 
+input StoryCreateInput {
+  id: ID
+}
+
 input StoryCreateManyInput {
+  create: [StoryCreateInput!]
   connect: [StoryWhereUniqueInput!]
 }
 
@@ -232,6 +237,7 @@ input StorySubscriptionWhereInput {
 }
 
 input StoryUpdateManyInput {
+  create: [StoryCreateInput!]
   connect: [StoryWhereUniqueInput!]
   set: [StoryWhereUniqueInput!]
   disconnect: [StoryWhereUniqueInput!]
@@ -329,6 +335,7 @@ type UserSpaceConnection {
 }
 
 input UserSpaceCreateInput {
+  id: ID
   stories: StoryCreateManyInput
 }
 

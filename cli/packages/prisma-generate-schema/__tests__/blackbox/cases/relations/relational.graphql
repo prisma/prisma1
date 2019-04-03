@@ -37,6 +37,8 @@ type BillingInfo implements Node {
   id: ID!
   account: String!
   user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -55,6 +57,7 @@ type BillingInfoConnection {
 }
 
 input BillingInfoCreateInput {
+  id: ID
   account: String!
   user: UserCreateOneWithoutBillingInfoInput!
 }
@@ -65,6 +68,7 @@ input BillingInfoCreateOneWithoutUserInput {
 }
 
 input BillingInfoCreateWithoutUserInput {
+  id: ID
   account: String!
 }
 
@@ -87,15 +91,17 @@ enum BillingInfoOrderByInput {
   id_DESC
   account_ASC
   account_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type BillingInfoPreviousValues {
   id: ID!
   account: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type BillingInfoSubscriptionPayload {
@@ -281,6 +287,64 @@ input BillingInfoWhereInput {
   All values not ending with the given string.
   """
   account_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   user: UserWhereInput
 }
 
@@ -288,8 +352,11 @@ input BillingInfoWhereUniqueInput {
   id: ID
 }
 
-type BillingInfoWithoutConnection {
+type BillingInfoWithoutConnection implements Node {
+  id: ID!
   account: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -308,11 +375,13 @@ type BillingInfoWithoutConnectionConnection {
 }
 
 input BillingInfoWithoutConnectionCreateInput {
+  id: ID
   account: String!
 }
 
 input BillingInfoWithoutConnectionCreateOneInput {
   create: BillingInfoWithoutConnectionCreateInput
+  connect: BillingInfoWithoutConnectionWhereUniqueInput
 }
 
 """
@@ -330,18 +399,21 @@ type BillingInfoWithoutConnectionEdge {
 }
 
 enum BillingInfoWithoutConnectionOrderByInput {
-  account_ASC
-  account_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
+  account_ASC
+  account_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type BillingInfoWithoutConnectionPreviousValues {
+  id: ID!
   account: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type BillingInfoWithoutConnectionSubscriptionPayload {
@@ -387,12 +459,17 @@ input BillingInfoWithoutConnectionUpdateDataInput {
   account: String
 }
 
+input BillingInfoWithoutConnectionUpdateInput {
+  account: String
+}
+
 input BillingInfoWithoutConnectionUpdateManyMutationInput {
   account: String
 }
 
 input BillingInfoWithoutConnectionUpdateOneRequiredInput {
   create: BillingInfoWithoutConnectionCreateInput
+  connect: BillingInfoWithoutConnectionWhereUniqueInput
   update: BillingInfoWithoutConnectionUpdateDataInput
   upsert: BillingInfoWithoutConnectionUpsertNestedInput
 }
@@ -415,6 +492,59 @@ input BillingInfoWithoutConnectionWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [BillingInfoWithoutConnectionWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   account: String
   """
   All values that are not equal to given value.
@@ -468,7 +598,71 @@ input BillingInfoWithoutConnectionWhereInput {
   All values not ending with the given string.
   """
   account_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
+
+input BillingInfoWithoutConnectionWhereUniqueInput {
+  id: ID
+}
+
+scalar DateTime
 
 """
 Raw JSON value
@@ -492,15 +686,24 @@ type Mutation {
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post
   updateBillingInfo(data: BillingInfoUpdateInput!, where: BillingInfoWhereUniqueInput!): BillingInfo
+  updateOptionalDetails(data: OptionalDetailsUpdateInput!, where: OptionalDetailsWhereUniqueInput!): OptionalDetails
+  updateOptionalDetailsWithoutConnection(data: OptionalDetailsWithoutConnectionUpdateInput!, where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
   updatePostWithoutConnection(data: PostWithoutConnectionUpdateInput!, where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
+  updateBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionUpdateInput!, where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   deleteUser(where: UserWhereUniqueInput!): User
   deletePost(where: PostWhereUniqueInput!): Post
   deleteBillingInfo(where: BillingInfoWhereUniqueInput!): BillingInfo
+  deleteOptionalDetails(where: OptionalDetailsWhereUniqueInput!): OptionalDetails
+  deleteOptionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
   deletePostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
+  deleteBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
   upsertBillingInfo(where: BillingInfoWhereUniqueInput!, create: BillingInfoCreateInput!, update: BillingInfoUpdateInput!): BillingInfo!
+  upsertOptionalDetails(where: OptionalDetailsWhereUniqueInput!, create: OptionalDetailsCreateInput!, update: OptionalDetailsUpdateInput!): OptionalDetails!
+  upsertOptionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!, create: OptionalDetailsWithoutConnectionCreateInput!, update: OptionalDetailsWithoutConnectionUpdateInput!): OptionalDetailsWithoutConnection!
   upsertPostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!, create: PostWithoutConnectionCreateInput!, update: PostWithoutConnectionUpdateInput!): PostWithoutConnection!
+  upsertBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!, create: BillingInfoWithoutConnectionCreateInput!, update: BillingInfoWithoutConnectionUpdateInput!): BillingInfoWithoutConnection!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyPosts(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload!
   updateManyBillingInfoes(data: BillingInfoUpdateManyMutationInput!, where: BillingInfoWhereInput): BatchPayload!
@@ -533,9 +736,12 @@ interface Node {
   id: ID!
 }
 
-type OptionalDetails {
+type OptionalDetails implements Node {
+  id: ID!
   text: String!
   user: User!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -554,15 +760,18 @@ type OptionalDetailsConnection {
 }
 
 input OptionalDetailsCreateInput {
+  id: ID
   text: String!
   user: UserCreateOneWithoutOptionalDetailsInput!
 }
 
 input OptionalDetailsCreateOneWithoutUserInput {
   create: OptionalDetailsCreateWithoutUserInput
+  connect: OptionalDetailsWhereUniqueInput
 }
 
 input OptionalDetailsCreateWithoutUserInput {
+  id: ID
   text: String!
 }
 
@@ -581,18 +790,21 @@ type OptionalDetailsEdge {
 }
 
 enum OptionalDetailsOrderByInput {
-  text_ASC
-  text_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
+  text_ASC
+  text_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OptionalDetailsPreviousValues {
+  id: ID!
   text: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OptionalDetailsSubscriptionPayload {
@@ -634,12 +846,18 @@ input OptionalDetailsSubscriptionWhereInput {
   node: OptionalDetailsWhereInput
 }
 
+input OptionalDetailsUpdateInput {
+  text: String
+  user: UserUpdateOneRequiredWithoutOptionalDetailsInput
+}
+
 input OptionalDetailsUpdateManyMutationInput {
   text: String
 }
 
 input OptionalDetailsUpdateOneWithoutUserInput {
   create: OptionalDetailsCreateWithoutUserInput
+  connect: OptionalDetailsWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
   update: OptionalDetailsUpdateWithoutUserDataInput
@@ -668,6 +886,59 @@ input OptionalDetailsWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [OptionalDetailsWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   text: String
   """
   All values that are not equal to given value.
@@ -721,11 +992,76 @@ input OptionalDetailsWhereInput {
   All values not ending with the given string.
   """
   text_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   user: UserWhereInput
 }
 
-type OptionalDetailsWithoutConnection {
+input OptionalDetailsWhereUniqueInput {
+  id: ID
+}
+
+type OptionalDetailsWithoutConnection implements Node {
+  id: ID!
   text: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -744,11 +1080,13 @@ type OptionalDetailsWithoutConnectionConnection {
 }
 
 input OptionalDetailsWithoutConnectionCreateInput {
+  id: ID
   text: String!
 }
 
 input OptionalDetailsWithoutConnectionCreateOneInput {
   create: OptionalDetailsWithoutConnectionCreateInput
+  connect: OptionalDetailsWithoutConnectionWhereUniqueInput
 }
 
 """
@@ -766,18 +1104,21 @@ type OptionalDetailsWithoutConnectionEdge {
 }
 
 enum OptionalDetailsWithoutConnectionOrderByInput {
-  text_ASC
-  text_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
+  text_ASC
+  text_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type OptionalDetailsWithoutConnectionPreviousValues {
+  id: ID!
   text: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type OptionalDetailsWithoutConnectionSubscriptionPayload {
@@ -823,12 +1164,17 @@ input OptionalDetailsWithoutConnectionUpdateDataInput {
   text: String
 }
 
+input OptionalDetailsWithoutConnectionUpdateInput {
+  text: String
+}
+
 input OptionalDetailsWithoutConnectionUpdateManyMutationInput {
   text: String
 }
 
 input OptionalDetailsWithoutConnectionUpdateOneInput {
   create: OptionalDetailsWithoutConnectionCreateInput
+  connect: OptionalDetailsWithoutConnectionWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
   update: OptionalDetailsWithoutConnectionUpdateDataInput
@@ -853,6 +1199,59 @@ input OptionalDetailsWithoutConnectionWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [OptionalDetailsWithoutConnectionWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   text: String
   """
   All values that are not equal to given value.
@@ -906,6 +1305,68 @@ input OptionalDetailsWithoutConnectionWhereInput {
   All values not ending with the given string.
   """
   text_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input OptionalDetailsWithoutConnectionWhereUniqueInput {
+  id: ID
 }
 
 """
@@ -936,6 +1397,8 @@ type Post implements Node {
   count: Int!
   user: User!
   likes(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [User!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -954,6 +1417,7 @@ type PostConnection {
 }
 
 input PostCreateInput {
+  id: ID
   text: String!
   count: Int!
   user: UserCreateOneWithoutPostsInput!
@@ -971,12 +1435,14 @@ input PostCreateManyWithoutUserInput {
 }
 
 input PostCreateWithoutLikesInput {
+  id: ID
   text: String!
   count: Int!
   user: UserCreateOneWithoutPostsInput!
 }
 
 input PostCreateWithoutUserInput {
+  id: ID
   text: String!
   count: Int!
   likes: UserCreateManyWithoutLikesInput
@@ -1003,16 +1469,18 @@ enum PostOrderByInput {
   text_DESC
   count_ASC
   count_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type PostPreviousValues {
   id: ID!
   text: String!
   count: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input PostScalarWhereInput {
@@ -1163,6 +1631,64 @@ input PostScalarWhereInput {
   All values greater than or equal the given value.
   """
   count_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type PostSubscriptionPayload {
@@ -1432,6 +1958,64 @@ input PostWhereInput {
   All values greater than or equal the given value.
   """
   count_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   user: UserWhereInput
   likes_every: UserWhereInput
   likes_some: UserWhereInput
@@ -1446,6 +2030,8 @@ type PostWithoutConnection implements Node {
   id: ID!
   text: String!
   count: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -1464,6 +2050,7 @@ type PostWithoutConnectionConnection {
 }
 
 input PostWithoutConnectionCreateInput {
+  id: ID
   text: String!
   count: Int!
 }
@@ -1494,16 +2081,18 @@ enum PostWithoutConnectionOrderByInput {
   text_DESC
   count_ASC
   count_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type PostWithoutConnectionPreviousValues {
   id: ID!
   text: String!
   count: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input PostWithoutConnectionScalarWhereInput {
@@ -1654,6 +2243,64 @@ input PostWithoutConnectionScalarWhereInput {
   All values greater than or equal the given value.
   """
   count_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type PostWithoutConnectionSubscriptionPayload {
@@ -1891,6 +2538,64 @@ input PostWithoutConnectionWhereInput {
   All values greater than or equal the given value.
   """
   count_gte: Int
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 input PostWithoutConnectionWhereUniqueInput {
@@ -1908,7 +2613,10 @@ type Query {
   user(where: UserWhereUniqueInput!): User
   post(where: PostWhereUniqueInput!): Post
   billingInfo(where: BillingInfoWhereUniqueInput!): BillingInfo
+  optionalDetails(where: OptionalDetailsWhereUniqueInput!): OptionalDetails
+  optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
   postWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
+  billingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
   billingInfoesConnection(where: BillingInfoWhereInput, orderBy: BillingInfoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BillingInfoConnection!
@@ -1947,6 +2655,8 @@ type User implements Node {
   likes(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
   optionalDetails: OptionalDetails
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -1965,6 +2675,7 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   name: String!
   posts: PostCreateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
@@ -1996,6 +2707,7 @@ input UserCreateOneWithoutPostsInput {
 }
 
 input UserCreateWithoutBillingInfoInput {
+  id: ID
   name: String!
   posts: PostCreateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
@@ -2006,6 +2718,7 @@ input UserCreateWithoutBillingInfoInput {
 }
 
 input UserCreateWithoutLikesInput {
+  id: ID
   name: String!
   posts: PostCreateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
@@ -2016,6 +2729,7 @@ input UserCreateWithoutLikesInput {
 }
 
 input UserCreateWithoutOptionalDetailsInput {
+  id: ID
   name: String!
   posts: PostCreateManyWithoutUserInput
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
@@ -2026,6 +2740,7 @@ input UserCreateWithoutOptionalDetailsInput {
 }
 
 input UserCreateWithoutPostsInput {
+  id: ID
   name: String!
   postsWithoutConnection: PostWithoutConnectionCreateManyInput
   billingInfo: BillingInfoCreateOneWithoutUserInput!
@@ -2054,15 +2769,17 @@ enum UserOrderByInput {
   id_DESC
   name_ASC
   name_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type UserPreviousValues {
   id: ID!
   name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 input UserScalarWhereInput {
@@ -2184,6 +2901,64 @@ input UserScalarWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type UserSubscriptionPayload {
@@ -2268,6 +3043,13 @@ input UserUpdateOneRequiredWithoutBillingInfoInput {
   upsert: UserUpsertWithoutBillingInfoInput
 }
 
+input UserUpdateOneRequiredWithoutOptionalDetailsInput {
+  create: UserCreateWithoutOptionalDetailsInput
+  connect: UserWhereUniqueInput
+  update: UserUpdateWithoutOptionalDetailsDataInput
+  upsert: UserUpsertWithoutOptionalDetailsInput
+}
+
 input UserUpdateOneRequiredWithoutPostsInput {
   create: UserCreateWithoutPostsInput
   connect: UserWhereUniqueInput
@@ -2295,6 +3077,16 @@ input UserUpdateWithoutLikesDataInput {
   optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
 }
 
+input UserUpdateWithoutOptionalDetailsDataInput {
+  name: String
+  posts: PostUpdateManyWithoutUserInput
+  postsWithoutConnection: PostWithoutConnectionUpdateManyInput
+  billingInfo: BillingInfoUpdateOneRequiredWithoutUserInput
+  billingInfoWithoutConnection: BillingInfoWithoutConnectionUpdateOneRequiredInput
+  likes: PostUpdateManyWithoutLikesInput
+  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnectionUpdateOneInput
+}
+
 input UserUpdateWithoutPostsDataInput {
   name: String
   postsWithoutConnection: PostWithoutConnectionUpdateManyInput
@@ -2313,6 +3105,11 @@ input UserUpdateWithWhereUniqueWithoutLikesInput {
 input UserUpsertWithoutBillingInfoInput {
   update: UserUpdateWithoutBillingInfoDataInput!
   create: UserCreateWithoutBillingInfoInput!
+}
+
+input UserUpsertWithoutOptionalDetailsInput {
+  update: UserUpdateWithoutOptionalDetailsDataInput!
+  create: UserCreateWithoutOptionalDetailsInput!
 }
 
 input UserUpsertWithoutPostsInput {
@@ -2445,6 +3242,64 @@ input UserWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   posts_every: PostWhereInput
   posts_some: PostWhereInput
   posts_none: PostWhereInput

@@ -95,15 +95,21 @@ export default class IntrospectCommand extends Command {
     }),
 
     /**
-     * Temporary flag needed to test Datamodel v2
+     * Temporary flag needed to test Datamodel v1.1
      */
     ['prototype']: flags.boolean({
       description:
         'Output Datamodel v2. Note: This is a temporary flag for debugging',
     }),
+
+    ['sdl']: flags.boolean({
+      description:
+        'Omit any CLI output and just print the resulting datamodel. Requires an existing Prisma project with executeRaw. Useful for scripting',
+    }),
   }
   static hidden = false
   async run() {
+    const { sdl } = this.flags
     /**
      * Get connector and connect to database
      */
@@ -114,41 +120,52 @@ export default class IntrospectCommand extends Command {
      */
 
     const before = Date.now()
-    this.out.action.start(
-      `Introspecting database ${chalk.bold(connectorData.databaseName)}`,
-    )
+    if (!sdl) {
+      this.out.action.start(
+        `Introspecting database ${chalk.bold(connectorData.databaseName)}`,
+      )
+    }
     const {
       sdl: newDatamodelSdl,
       numTables,
       referenceDatamodelExists,
     } = await this.introspect(connectorData)
-    this.out.action.stop(prettyTime(Date.now() - before))
+    if (!sdl) {
+      this.out.action.stop(prettyTime(Date.now() - before))
+    }
 
-    /**
-     * Write the result to the filesystem
-     */
-    const fileName = this.writeDatamodel(newDatamodelSdl)
+    if (!sdl) {
+      /**
+       * Write the result to the filesystem
+       */
+      const fileName = this.writeDatamodel(newDatamodelSdl)
 
-    this.out.log(
-      `Created datamodel definition based on ${numTables} database tables.`,
-    )
-    const andDatamodelText = referenceDatamodelExists
-      ? ' and the existing datamodel'
-      : ''
-    this.out.log(`\
+      this.out.log(
+        `Created datamodel definition based on ${numTables} database tables.`,
+      )
+      const andDatamodelText = referenceDatamodelExists
+        ? ' and the existing datamodel'
+        : ''
+      this.out.log(`\
 ${chalk.bold(
-      'Created 1 new file:',
-    )}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
+        'Created 1 new file:',
+      )}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
 
   ${chalk.cyan(fileName)}
 `)
 
-    if (this.definition.definition && !this.definition.definition!.datamodel) {
-      await this.definition.load(this.flags)
-      this.definition.addDatamodel(fileName)
-      this.out.log(
-        `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
-      )
+      if (
+        this.definition.definition &&
+        !this.definition.definition!.datamodel
+      ) {
+        await this.definition.load(this.flags)
+        this.definition.addDatamodel(fileName)
+        this.out.log(
+          `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
+        )
+      }
+    } else {
+      this.out.log(newDatamodelSdl)
     }
   }
 
@@ -258,10 +275,18 @@ ${chalk.bold(
     const hasExecuteRaw = await this.hasExecuteRaw()
     let credentials = this.getCredentialsByFlags()
     let interactive = false
+
     if (!credentials) {
       credentials = await this.getCredentialsInteractively(hasExecuteRaw)
       interactive = true
+
+      if (!hasExecuteRaw && this.flags.sdl) {
+        throw new Error(
+          `When using the --sdl flag, either executeRaw or credentials must be available`,
+        )
+      }
     }
+
     if (credentials) {
       const {
         connector,
