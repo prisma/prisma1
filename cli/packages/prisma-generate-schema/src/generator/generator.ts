@@ -588,7 +588,6 @@ export class FieldConfigUtils {
       Object.keys(fieldMap).forEach((name: string) => {
         const field = fieldMap[name]
         if (name in newMap) {
-          console.dir(fieldMaps)
           throw new Error(
             'Field configuration to merge has duplicate field names.',
           )
