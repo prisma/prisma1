@@ -1,4 +1,4 @@
-use crate::{ModelRef, Relation, RelationField, ScalarField};
+use crate::{ModelRef, Relation, RelationField, ScalarField, TypeIdentifier};
 use once_cell::unsync::OnceCell;
 use prisma_query::ast::Column;
 use std::sync::Arc;
@@ -85,27 +85,12 @@ impl SelectedFields {
         }
     }
 
-    pub fn all_scalar(model: ModelRef, from_field: Option<Arc<RelationField>>) -> SelectedFields {
-        let fields = model
-            .fields()
-            .scalar()
-            .iter()
-            .map(|field| {
-                SelectedField::Scalar(SelectedScalarField {
-                    field: field.clone(),
-                    implicit: false,
-                })
-            })
-            .collect();
-
-        Self::new(fields, from_field)
-    }
-
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.scalar.iter().filter(|sf| sf.implicit).collect()
     }
 
     pub fn add_scalar(&mut self, field: Arc<ScalarField>, implicit: bool) {
+        self.columns = OnceCell::new();
         self.scalar.push(SelectedScalarField { field, implicit });
     }
 
@@ -113,6 +98,10 @@ impl SelectedFields {
         self.columns
             .get_or_init(|| {
                 let mut result: Vec<Column> = self.scalar_non_list().iter().map(|f| f.as_column()).collect();
+
+                for rf in self.relation_inlined().iter() {
+                    result.push(rf.as_column());
+                }
 
                 if let Some(ref from_field) = self.from_field {
                     let relation = from_field.relation();
@@ -137,16 +126,18 @@ impl SelectedFields {
             .as_slice()
     }
 
-    pub fn needs_relation_fields(&self) -> bool {
-        self.from_field.is_some()
+    pub fn names(&self) -> Vec<String> {
+        self.columns().iter().map(|c| c.name.clone()).collect()
     }
 
-    pub fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
-        self.scalar
-            .iter()
-            .filter(|sf| !sf.field.is_list)
-            .map(|sf| sf.field.clone())
-            .collect()
+    pub fn type_identifiers(&self) -> Vec<TypeIdentifier> {
+        let mut result: Vec<TypeIdentifier> = self.scalar_non_list().iter().map(|sf| sf.type_identifier).collect();
+
+        for rf in self.relation_inlined().iter() {
+            result.push(rf.type_identifier);
+        }
+
+        result
     }
 
     pub fn model(&self) -> ModelRef {
@@ -154,6 +145,23 @@ impl SelectedFields {
             .scalar
             .first()
             .expect("Expected at least one scalar field to be present");
+
         field.field.model()
+    }
+
+    fn relation_inlined(&self) -> Vec<Arc<RelationField>> {
+        self.relation
+            .iter()
+            .filter(|rf| rf.field.relation_is_inlined_in_parent())
+            .map(|sf| sf.field.clone())
+            .collect()
+    }
+
+    fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar
+            .iter()
+            .filter(|sf| !sf.field.is_list)
+            .map(|sf| sf.field.clone())
+            .collect()
     }
 }

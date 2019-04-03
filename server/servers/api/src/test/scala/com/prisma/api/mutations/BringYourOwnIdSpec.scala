@@ -110,7 +110,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     }
   }
 
-  "A Nested Create Mutation" should "error with invalid id" in {
+  "A Nested Create Mutation" should "error with invalid id" taggedAs IgnoreSQLite in { // TODO: Should we really validate this
     schemaP1optToC1opt.test { dataModel =>
       val project = SchemaDsl.fromStringV11() { dataModel }
       database.setup(project)

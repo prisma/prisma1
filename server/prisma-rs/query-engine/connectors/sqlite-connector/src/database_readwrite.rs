@@ -78,7 +78,7 @@ pub trait DatabaseRead {
     ///
     /// assert_eq!(
     ///     1,
-    ///     Sqlite::count(&trans, "users", ConditionTree::single("name".equals("Alice"))).unwrap(),
+    ///     Sqlite::count(&trans, "users", "name".equals("Alice")).unwrap(),
     /// );
     /// ```
     fn count<C, T>(conn: &Transaction, table: T, into_args: C) -> ConnectorResult<usize>
