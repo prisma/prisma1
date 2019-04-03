@@ -1,6 +1,6 @@
 package com.prisma.api.queries.nonEmbedded
 
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, ScalarListsCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -9,81 +9,124 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
   override def runOnlyForCapabilities = Set(ScalarListsCapability, JoinRelationLinksCapability)
 
   "Nested scalar lists" should "work in creates " in {
+    val testDataModels = {
+      val s1 = s"""type List{
+                  |   id: ID! @id
+                  |   todos: [Todo] @relation(link: INLINE)
+                  |   listInts: [Int]
+                  |}
+                  |
+                  |type Todo{
+                  |   id: ID! @id
+                  |   lists: [List]
+                  |   todoInts: [Int]
+                  |}"""
 
-    val project = SchemaDsl.fromString() {
-      s"""type List{
-         |   id: ID! @unique
-         |   todos: [Todo]
-         |   listInts: [Int]
-         |}
-         |
-         |type Todo{
-         |   id: ID! @unique
-         |   lists: [List]
-         |   todoInts: [Int]
-         |}"""
+      val s2 = s"""type List{
+                  |   id: ID! @id
+                  |   todos: [Todo]
+                  |   listInts: [Int]
+                  |}
+                  |
+                  |type Todo{
+                  |   id: ID! @id
+                  |   lists: [List]
+                  |   todoInts: [Int]
+                  |}"""
+      TestDataModels(mongo = Vector(s1), sql = Vector(s2))
     }
 
-    database.setup(project)
+    testDataModels.test { dm =>
+      val project = SchemaDsl.fromStringV11()(dm)
 
-    server.query(
-      s"""mutation{createList(data: {listInts: {set: [1, 2]}, todos: {create: {todoInts: {set: [3, 4]}}}}) {id}}""".stripMargin,
-      project
-    )
+      database.setup(project)
 
-    val result = server.query(s"""query{lists {listInts, todos {todoInts}}}""".stripMargin, project)
+      server.query(
+        s"""mutation{createList(data: {listInts: {set: [1, 2]}, todos: {create: {todoInts: {set: [3, 4]}}}}) {id}}""".stripMargin,
+        project
+      )
 
-    result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todos":[{"todoInts":[3,4]}]}]}}""")
+      val result = server.query(s"""query{lists {listInts, todos {todoInts}}}""".stripMargin, project)
+
+      result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todos":[{"todoInts":[3,4]}]}]}}""")
+    }
+
   }
 
   "Deeply nested scalar lists" should "work in creates " in {
-
-    val project = SchemaDsl.fromString() {
-      s"""type List{
-         |   id: ID! @unique
-         |   todo: Todo
-         |   listInts: [Int]
-         |}
-         |
-         |type Todo{
-         |   id: ID! @unique
-         |   list: List
-         |   tag: Tag
-         |   todoInts: [Int]
-         |}
-         |
-         |type Tag{
-         |   id: ID! @unique
-         |   todo: Todo
-         |   tagInts: [Int]
-         |}
-         |"""
+    val testDataModels = {
+      val s1 = s"""type List{
+                  |   id: ID! @id
+                  |   todo: Todo @relation(link: INLINE)
+                  |   listInts: [Int]
+                  |}
+                  |
+                  |type Todo{
+                  |   id: ID! @id
+                  |   list: List
+                  |   tag: Tag @relation(link: INLINE)
+                  |   todoInts: [Int]
+                  |}
+                  |
+                  |type Tag{
+                  |   id: ID! @id
+                  |   todo: Todo
+                  |   tagInts: [Int]
+                  |}
+                  |"""
+      TestDataModels(mongo = Vector(s1), sql = Vector(s1))
     }
 
-    database.setup(project)
+    testDataModels.test { dm =>
+      val project = SchemaDsl.fromStringV11()(dm)
+      database.setup(project)
 
-    server.query(
-      s"""mutation{createList(data: {listInts: {set: [1, 2]}, todo: {create: {todoInts: {set: [3, 4]}, tag: {create: {tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
-      project
-    )
+      server.query(
+        s"""mutation{createList(data: {listInts: {set: [1, 2]}, todo: {create: {todoInts: {set: [3, 4]}, tag: {create: {tagInts: {set: [5, 6]}}}}}}) {id}}""".stripMargin,
+        project
+      )
 
-    val result = server.query(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
+      val result = server.query(s"""query{lists {listInts, todo {todoInts, tag {tagInts}}}}""".stripMargin, project)
 
-    result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todo":{"todoInts":[3,4],"tag":{"tagInts":[5,6]}}}]}}""")
+      result.toString should equal("""{"data":{"lists":[{"listInts":[1,2],"todo":{"todoInts":[3,4],"tag":{"tagInts":[5,6]}}}]}}""")
+    }
+
   }
 
   "Deeply nested scalar lists" should "work in updates " in {
+    val testDataModels = {
+      val s1 = s"""type List{
+                  |   id: ID! @id
+                  |   todo: Todo @relation(link: INLINE)
+                  |   listInts: [Int]
+                  |}
+                  |
+                  |type Todo{
+                  |   id: ID! @id
+                  |   list: List
+                  |   tag: Tag @relation(link: INLINE)
+                  |   todoInts: [Int]
+                  |}
+                  |
+                  |type Tag{
+                  |   id: ID! @id
+                  |   todo: Todo
+                  |   tagInts: [Int]
+                  |}
+                  |"""
+      TestDataModels(mongo = Vector(s1), sql = Vector(s1))
+    }
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type List{
-         |   id: ID! @unique
+         |   id: ID! @id
          |   todo: Todo
          |   uList: String! @unique
          |   listInts: [Int]
          |}
          |
          |type Todo{
-         |   id: ID! @unique
+         |   id: ID! @id
          |   uTodo: String! @unique
          |   list: List
          |   tag: Tag
@@ -91,7 +134,7 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
          |}
          |
          |type Tag{
-         |   id: ID! @unique
+         |   id: ID! @id
          |   uTag: String! @unique
          |   todo: Todo
          |   tagInts: [Int]
@@ -121,16 +164,16 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
 
   "Nested scalar lists" should "work in upserts and only execute one branch of the upsert" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type List{
-         |   id: ID! @unique
+         |   id: ID! @id
          |   todo: Todo
          |   uList: String! @unique
          |   listInts: [Int]
          |}
          |
          |type Todo{
-         |   id: ID! @unique
+         |   id: ID! @id
          |   uTodo: String! @unique
          |   list: List
          |   todoInts: [Int]

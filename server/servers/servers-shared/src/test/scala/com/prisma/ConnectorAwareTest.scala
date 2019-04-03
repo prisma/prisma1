@@ -148,13 +148,4 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
       testName -> Set("org.scalatest.Ignore")
     }.toMap
   }
-
-  implicit def testDataModelsWrapper(testDataModel: TestDataModels): TestDataModelsWrapper = {
-    TestDataModelsWrapper(testDataModel, connectorTag, connector.connector)
-  }
 }
-
-case class TestDataModels(
-    mongo: Vector[String],
-    sql: Vector[String]
-)
