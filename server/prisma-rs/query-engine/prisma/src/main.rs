@@ -27,7 +27,7 @@ struct HttpHandler {
 fn main() {
     env_logger::init();
 
-    let context = PrismaContext::new();
+    let context = PrismaContext::new().unwrap();
     let http_handler = HttpHandler {
         context: context,
         graphql_request_handler: GraphQlRequestHandler,
