@@ -27,19 +27,19 @@ class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with 
     webhookTestKit.reset
   }
 
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """
       |type Todo {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   title: String
       |   status: TodoStatus
       |   comments: [Comment]
       |}
       |
       |type Comment{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   text: String
-      |   todo: Todo
+      |   todo: Todo @relation(link: INLINE)
       |}
       |
       |enum TodoStatus {

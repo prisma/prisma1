@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.IgnoreSQLite
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -778,7 +778,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
           |  createParent(data: {
           |    p: "p1"
           |    childrenOpt: {
-          |      create: [{c: "c1"}, {c: "c2"}]
+          |      create: [{c: "c1"}, {c: "c2"}, {c: "c3"}]
           |    }
           |  }){
           |    childrenOpt{
@@ -823,6 +823,8 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"},{"c":"c2"}]}}}""")
 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+
+      server.query("""query{parent(where:{p: "p1"}){childrenOpt{c}}}""", project).toString should be("""{"data":{"parent":{"childrenOpt":[{"c":"c3"}]}}}""")
     }
   }
 
@@ -1224,17 +1226,108 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     }
   }
 
-  "a one to many relation" should "be connectable by id through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment {
-        | id: ID! @unique
-        | text: String
-        | todo: Todo
+  "A PM to PM relation connecting two nodes twice" should "not error" in {
+    schemaPMToCM.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() {
+        dataModel
+      }
+      database.setup(project)
+
+      val parentId = server
+        .query(
+          """mutation {
+            |  createParent(data: {p: "p1"})
+            |  {
+            |    id
+            |  }
+            |}""",
+          project
+        )
+        .pathAsString("data.createParent.id")
+
+      val childId = server
+        .query(
+          """mutation {
+            |  createParent(data: {
+            |    p: "p2"
+            |    childrenOpt: {
+            |      create: {c: "c1"}
+            |    }
+            |  }){
+            |    childrenOpt{id}
+            |  }
+            |}""",
+          project
+        )
+        .pathAsString("data.createParent.childrenOpt.[0].id")
+
+      ifConnectorIsActive {
+        dataResolver(project).countByTable("_ChildToParent").await should be(1)
+      }
+
+      val res = server.query(
+        s"""
+           |mutation {
+           |  updateParent(
+           |  where:{id: "$parentId"}
+           |  data:{
+           |    childrenOpt: {connect: {id: "$childId"}}
+           |  }){
+           |    childrenOpt {
+           |      c
+           |    }
+           |  }
+           |}
+      """,
+        project
+      )
+
+      res.toString should be("""{"data":{"updateParent":{"childrenOpt":[{"c":"c1"}]}}}""")
+
+      ifConnectorIsActive {
+        dataResolver(project).countByTable("_ChildToParent").await should be(2)
+      }
+
+      val res2 = server.query(
+        s"""
+           |mutation {
+           |  updateParent(
+           |  where:{id: "$parentId"}
+           |  data:{
+           |    childrenOpt: {connect: {id: "$childId"}}
+           |  }){
+           |    childrenOpt {
+           |      c
+           |    }
+           |  }
+           |}
+      """,
+        project
+      )
+
+      res2 should be(res)
+
+      ifConnectorIsActive {
+        dataResolver(project).countByTable("_ChildToParent").await should be(2)
+      }
+
+      server.query("""query{parents{p, childrenOpt{c}}}""", project).toString should be(
+        """{"data":{"parents":[{"p":"p1","childrenOpt":[{"c":"c1"}]},{"p":"p2","childrenOpt":[{"c":"c1"}]}]}}""")
+    }
+
+  }
+  "A PM to C1 relation" should "be connectable by id through a nested mutation" in {
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        | id: ID! @id
+        | comments: [Comment]
         |}
         |
-        |type Todo {
-        | id: ID! @unique
-        | comments: [Comment]
+        |type Comment {
+        | id: ID! @id
+        | text: String
+        | todo: Todo @relation(link:INLINE)
         |}
       """.stripMargin
     }
@@ -1268,18 +1361,19 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
-  "a one to many relation" should "be connectable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment {
-        | id: ID! @unique
-        | text: String
-        | alias: String! @unique
-        | todo: Todo
+  "A PM to C1 relation" should "be connectable by any unique argument through a nested mutation" in {
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        | id: ID! @id
+        | comments: [Comment]
         |}
         |
-        |type Todo {
-        | id: ID! @unique
-        | comments: [Comment]
+        |type Comment {
+        | id: ID! @id
+        | text: String
+        | alias: String! @unique
+        | todo: Todo @relation(link:INLINE)
         |}
       """.stripMargin
     }
@@ -1313,16 +1407,16 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
-  "a one to many relation" should "be connectable by id through a nested mutation 2" in {
-    val project = SchemaDsl.fromString() {
+  "A P1 to CM relation" should "be connectable by id through a nested mutation" in {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
-        | todo: Todo
+        | todo: Todo @relation(link:INLINE)
         |}
         |
         |type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | title: String!
         | comments: [Comment]
         |}
@@ -1358,16 +1452,16 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsString("data.updateComment.todo.title"), "the title")
   }
 
-  "a one to one relation" should "be connectable by id through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+  "A P1 to C1 relation" should "be connectable by id through a nested mutation" in {
+    val project = SchemaDsl.fromStringV11() {
       """type Note {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
-        | todo: Todo
+        | todo: Todo @relation(link:INLINE)
         |}
         |
         |type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | title: String!
         | note: Note
         |}
@@ -1403,18 +1497,18 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsString("data.updateNote.todo.title"), "the title")
   }
 
-  "A one to one relation" should "connecting nodes by id through a nested mutation should not error when items are already connected" in {
-    val project = SchemaDsl.fromString() {
+  "A P1 to C1 relation" should "connecting nodes by id through a nested mutation should not error when items are already connected" in {
+    val project = SchemaDsl.fromStringV11() {
       """type Note {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | todo: Todo
         |}
         |
         |type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | title: String!
-        | note: Note
+        | note: Note @relation(link:INLINE)
         |}
       """.stripMargin
     }
@@ -1471,18 +1565,19 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     )
   }
 
-  "a one to many relation" should "be connectable by unique through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """type Comment {
-        | id: ID! @unique
-        | text: String @unique
-        | todo: Todo
-        |}
-        |
+  "A PM to C1 relation" should "be connectable by unique through a nested mutation" in {
+    val project = SchemaDsl.fromStringV11() {
+      """
         |type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | title: String @unique
         | comments: [Comment]
+        |}
+        |
+        |type Comment {
+        | id: ID! @id
+        | text: String @unique
+        | todo: Todo @relation(link:INLINE)
         |}
       """.stripMargin
     }
@@ -1517,166 +1612,69 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
   }
 
   "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
-    val project = SchemaDsl.fromString() {
-      """type Technology {
-        | id: ID! @unique
-        | name: String! @unique
-        | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
-        | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
-        |}
-      """.stripMargin
+    val testDataModels = {
+      val s1 =
+        """type Technology {
+          | id: ID! @id
+          | name: String! @unique
+          | childTechnologies: [Technology] @relation(name: "ChildTechnologies", link: INLINE)
+          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
+          |}
+        """
+
+      val s2 =
+        """type Technology {
+          | id: ID! @id
+          | name: String! @unique
+          | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies", link: INLINE)
+          |}
+        """
+
+      val s3 =
+        """type Technology {
+          | id: ID! @id
+          | name: String! @unique
+          | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
+          |}
+        """
+      TestDataModels(mongo = Vector(s1, s2), sql = Vector(s3))
     }
-    database.setup(project)
 
-    server.query("""mutation {createTechnology(data: {name: "techA"}){name}}""", project)
+    testDataModels.testV11 { project =>
+      server.query("""mutation {createTechnology(data: {name: "techA"}){name}}""", project)
 
-    server.query("""mutation {createTechnology(data: {name: "techB"}){name}}""", project)
+      server.query("""mutation {createTechnology(data: {name: "techB"}){name}}""", project)
 
-    val res = server.query(
-      s"""mutation {
-         |  updateTechnology(where: {name: "techA"},
-         |                   data:  {childTechnologies: {connect: {name: "techB"}}})
-         |      {name,
-         |       childTechnologies  {name}
-         |       parentTechnologies {name}}
-         |}
+      val res = server.query(
+        s"""mutation {
+           |  updateTechnology(where: {name: "techA"},
+           |                   data:  {childTechnologies: {connect: {name: "techB"}}})
+           |      {name,
+           |       childTechnologies  {name}
+           |       parentTechnologies {name}}
+           |}
       """,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateTechnology":{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]}}}""")
-
-    val res2 = server.query(
-      s"""query {
-         |  technologies{
-         |       name
-         |       childTechnologies  {name}
-         |       parentTechnologies {name}
-         |  }
-         |}
-      """,
-      project
-    )
-
-    res2.toString should be(
-      """{"data":{"technologies":[{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]},{"name":"techB","childTechnologies":[],"parentTechnologies":[{"name":"techA"}]}]}}""")
-  }
-
-  "Connecting two nodes twice" should "not error" in {
-    val project = SchemaDsl.fromString() {
-      """type Child {
-        | id: ID! @unique
-        | c: String! @unique
-        | parents: [Parent]
-        |}
-        |
-        |type Parent {
-        | id: ID! @unique
-        | p: String! @unique
-        | children: [Child]
-        |}
-      """.stripMargin
-    }
-    database.setup(project)
-
-    val parentId = server
-      .query(
-        """mutation {
-          |  createParent(data: {p: "p1"})
-          |  {
-          |    id
-          |  }
-          |}""",
         project
       )
-      .pathAsString("data.createParent.id")
 
-    val childId = server
-      .query(
-        """mutation {
-          |  createParent(data: {
-          |    p: "p2"
-          |    children: {
-          |      create: {c: "c1"}
-          |    }
-          |  }){
-          |    children{id}
-          |  }
-          |}""",
+      res.toString should be("""{"data":{"updateTechnology":{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]}}}""")
+
+      val res2 = server.query(
+        s"""query {
+           |  technologies{
+           |       name
+           |       childTechnologies  {name}
+           |       parentTechnologies {name}
+           |  }
+           |}
+      """,
         project
       )
-      .pathAsString("data.createParent.children.[0].id")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-
-    val res = server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where:{id: "$parentId"}
-         |  data:{
-         |    children: {connect: {id: "$childId"}}
-         |  }){
-         |    children {
-         |      c
-         |    }
-         |  }
-         |}
-      """,
-      project
-    )
-
-    res.toString should be("""{"data":{"updateParent":{"children":[{"c":"c1"}]}}}""")
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-
-    server.query(
-      s"""
-         |mutation {
-         |  updateParent(
-         |  where:{id: "$parentId"}
-         |  data:{
-         |    children: {connect: {id: "$childId"}}
-         |  }){
-         |    children {
-         |      c
-         |    }
-         |  }
-         |}
-      """,
-      project
-    )
-
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-  }
-
-  "Connecting several times" should "not error and only connect the item once" in {
-
-    val project = SchemaDsl.fromString() {
-      """
-        |type Post {
-        |  id: ID! @unique
-        |  authors: [AUser]
-        |  title: String! @unique
-        |}
-        |
-        |type AUser {
-        |  id: ID! @unique
-        |  name: String! @unique
-        |  posts: [Post]
-        |}"""
+      res2.toString should be(
+        """{"data":{"technologies":[{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]},{"name":"techB","childTechnologies":[],"parentTechnologies":[{"name":"techA"}]}]}}""")
     }
-
-    database.setup(project)
-
-    server.query(s""" mutation {createPost(data: {title:"Title"}) {title}} """, project)
-    server.query(s""" mutation {createAUser(data: {name:"Author"}) {name}} """, project)
-
-    server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
-    server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
-    server.query(s""" mutation {updateAUser(where: { name: "Author"}, data:{posts:{connect:{title: "Title"}}}) {name}} """, project)
-
-    server.query("""query{aUsers{name, posts{title}}}""", project).toString should be("""{"data":{"aUsers":[{"name":"Author","posts":[{"title":"Title"}]}]}}""")
   }
-
 }

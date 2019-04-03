@@ -45,7 +45,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   def prismaConfig: PrismaConfig
 
   lazy val connector = prismaConfig.databases.head
-  private lazy val connectorTag = connector.connector match {
+  lazy val connectorTag = connector.connector match {
     case "mongo"                    => ConnectorTag.MongoConnectorTag
     case "mysql"                    => ConnectorTag.MySqlConnectorTag
     case "postgres"                 => ConnectorTag.PostgresConnectorTag
@@ -148,13 +148,4 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
       testName -> Set("org.scalatest.Ignore")
     }.toMap
   }
-
-  implicit def testDataModelsWrapper(testDataModel: TestDataModels): TestDataModelsWrapper = {
-    TestDataModelsWrapper(testDataModel, connectorTag, connector.connector)
-  }
 }
-
-case class TestDataModels(
-    mongo: Vector[String],
-    sql: Vector[String]
-)

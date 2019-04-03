@@ -1,36 +1,61 @@
 package com.prisma.api.filters.nonEmbedded
 
+import com.prisma.ConnectorTag.{DocumentConnectorTag, RelationalConnectorTag}
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, SupportsExistingDatabasesCapability}
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class SelfRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
-  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability)
-  override def runOnlyForCapabilities  = Set(JoinRelationLinksCapability)
+  override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val project = SchemaDsl.fromString() {
-    """type Human{
-    |   id: ID! @unique
-    |   name: String
-    |   wife: Human @relation(name: "Marriage")
-    |   husband: Human @relation(name: "Marriage")
-    |   daughters: [Human] @relation(name:"Offspring")
-    |   father: Human @relation(name:"Offspring")
-    |   stepdaughters: [Human] @relation(name:"Cuckoo")
-    |   mother: Human @relation(name:"Cuckoo")
-    |   fans: [Human] @relation(name:"Admirers")
-    |   rockstars: [Human] @relation(name:"Admirers")
-    |   singer: Human @relation(name:"Team")
-    |   bandmembers: [Human] @relation(name:"Team")
-    |   title: Song
-    |}
-    |type Song{
-    |   id: ID! @unique
-    |   title: String
-    |   creator: Human 
-    |}""".stripMargin
+  val project = SchemaDsl.fromStringV11() {
+    connectorTag match {
+      case _: RelationalConnectorTag =>
+        """type Human{
+          |   id: ID! @id
+          |   name: String
+          |   wife: Human @relation(name: "Marriage" link: INLINE)
+          |   husband: Human @relation(name: "Marriage")
+          |   daughters: [Human] @relation(name:"Offspring")
+          |   father: Human @relation(name:"Offspring")
+          |   stepdaughters: [Human] @relation(name:"Cuckoo")
+          |   mother: Human @relation(name:"Cuckoo")
+          |   fans: [Human] @relation(name:"Admirers")
+          |   rockstars: [Human] @relation(name:"Admirers")
+          |   singer: Human @relation(name:"Team")
+          |   bandmembers: [Human] @relation(name:"Team")
+          |   title: Song @relation(link: INLINE)
+          |}
+          |type Song{
+          |   id: ID! @id
+          |   title: String
+          |   creator: Human
+          |}""".stripMargin
+
+      case _: DocumentConnectorTag =>
+        """type Human{
+          |   id: ID! @id
+          |   name: String
+          |   wife: Human @relation(name: "Marriage" link: INLINE)
+          |   husband: Human @relation(name: "Marriage")
+          |   daughters: [Human] @relation(name:"Offspring")
+          |   father: Human @relation(name:"Offspring" link: INLINE)
+          |   stepdaughters: [Human] @relation(name:"Cuckoo")
+          |   mother: Human @relation(name:"Cuckoo" link: INLINE)
+          |   fans: [Human] @relation(name:"Admirers" link: INLINE)
+          |   rockstars: [Human] @relation(name:"Admirers")
+          |   singer: Human @relation(name:"Team" link: INLINE)
+          |   bandmembers: [Human] @relation(name:"Team")
+          |   title: Song @relation(link: INLINE)
+          |}
+          |type Song{
+          |   id: ID! @id
+          |   title: String
+          |   creator: Human
+          |}""".stripMargin
+    }
   }
 
   //All Queries run against the same data that is only set up once before all testcases

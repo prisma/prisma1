@@ -8,20 +8,20 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedPaginationSpecForCuids extends NonEmbeddedPaginationSpec {
-  override val project = SchemaDsl.fromString() {
+  override val project = SchemaDsl.fromStringV11() {
     """
       |type List {
-      |  id: ID! @unique
-      |  createdAt: DateTime!
+      |  id: ID! @id
+      |  createdAt: DateTime! @createdAt
       |  name: String! @unique
       |  todos: [Todo]
       |}
       |
       |type Todo {
-      |  id: ID! @unique
-      |  createdAt: DateTime!
+      |  id: ID! @id
+      |  createdAt: DateTime! @createdAt
       |  title: String! @unique
-      |  list: List!
+      |  list: List! @relation(link: INLINE)
       |}
     """
   }
@@ -31,20 +31,20 @@ class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
 
   override def runOnlyForConnectors = Set(PostgresConnectorTag)
 
-  override lazy val project = SchemaDsl.fromString() {
+  override lazy val project = SchemaDsl.fromStringV11() {
     """
       |type List {
-      |  id: UUID! @unique
-      |  createdAt: DateTime!
+      |  id: UUID! @id
+      |  createdAt: DateTime! @createdAt
       |  name: String! @unique
       |  todos: [Todo]
       |}
       |
       |type Todo {
-      |  id: UUID! @unique
-      |  createdAt: DateTime!
+      |  id: UUID! @id
+      |  createdAt: DateTime! @createdAt
       |  title: String! @unique
-      |  list: List!
+      |  list: List! @relation(link: INLINE)
       |}
     """
   }

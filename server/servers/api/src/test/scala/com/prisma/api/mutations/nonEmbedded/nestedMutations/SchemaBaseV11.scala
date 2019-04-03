@@ -1,5 +1,5 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
-import com.prisma.TestDataModels
+import com.prisma.api.TestDataModels
 
 trait SchemaBaseV11 {
 
@@ -355,7 +355,7 @@ trait SchemaBaseV11 {
                         }
                         
                         type Child @embedded {
-                            c: String! @unique
+                            c: String!
                         }"""
 
   val embeddedP1opt = """type Parent{
@@ -365,7 +365,7 @@ trait SchemaBaseV11 {
                         }
                         
                         type Child @embedded {
-                            c: String! @unique
+                            c: String!
                         }"""
 
   val embeddedPM = """type Parent{
@@ -375,36 +375,45 @@ trait SchemaBaseV11 {
                         }
                         
                         type Child @embedded{
-                            c: String! @unique
+                            id: ID! @id
+                            c: String!
                             test: String
                         }"""
 
   //EMBEDDED TO NON-EMBEDDED
-  val embedddedToJoinFriendReq = """type Parent{
+  val embedddedToJoinFriendReq = """
+                            |type Parent{
+                            |    id: ID! @id
                             |    p: String @unique
                             |    children: [Child]
                             |}
                             |
                             |type Child @embedded {
-                            |    c: String @unique
-                            |    friendReq: Friend! @mongoRelation(field: "friends")
+                            |    id: ID! @id
+                            |    c: String
+                            |    friendReq: Friend!
                             |}
                             |
                             |type Friend{
+                            |    id: ID! @id
                             |    f: String @unique
                             |}"""
 
-  val embedddedToJoinFriendOpt = """type Parent{
+  val embedddedToJoinFriendOpt = """
+                               |type Parent{
+                               |    id: ID! @id
                                |    p: String @unique
                                |    children: [Child]
                                |}
                                |
                                |type Child @embedded {
-                               |    c: String @unique
-                               |    friendOpt: Friend @mongoRelation(field: "friends")
+                               |    id: ID! @id
+                               |    c: String
+                               |    friendOpt: Friend
                                |}
                                |
                                |type Friend{
+                               |    id: ID! @id
                                |    f: String @unique
                                |}"""
 
@@ -416,11 +425,13 @@ trait SchemaBaseV11 {
                         |}
                         |
                         |type Child @embedded {
-                        |    c: String @unique
-                        |    friendsOpt: [Friend] @mongoRelation(field: "friends")
+                        |    id: ID! @id
+                        |    c: String
+                        |    friendsOpt: [Friend]
                         |}
                         |
                         |type Friend{
+                        |    id: ID! @id
                         |    f: String @unique
                         |    test: String
                         |}"""

@@ -10,7 +10,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a P1! relation" should "be possible" in {
-    val project = SchemaDsl.fromString() { embeddedP1req }
+    val project = SchemaDsl.fromStringV11() { embeddedP1req }
     database.setup(project)
 
     val res = server
@@ -35,7 +35,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a P1 relation" should "work" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
+    val project = SchemaDsl.fromStringV11() { embeddedP1opt }
     database.setup(project)
 
     val res = server
@@ -59,7 +59,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a PM relation" should "work" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     val res = server

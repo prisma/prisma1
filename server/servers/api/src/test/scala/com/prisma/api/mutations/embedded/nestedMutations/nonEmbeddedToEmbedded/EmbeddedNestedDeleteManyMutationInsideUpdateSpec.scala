@@ -11,7 +11,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "A 1-n relation" should "error if trying to use nestedDeleteMany" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
+    val project = SchemaDsl.fromStringV11() { embeddedP1opt }
     database.setup(project)
 
     val parent1Id = server
@@ -50,7 +50,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -83,7 +83,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "work with several deleteManys" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -120,7 +120,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "work with empty Filter" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -152,7 +152,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "not change anything when there is no hit" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
