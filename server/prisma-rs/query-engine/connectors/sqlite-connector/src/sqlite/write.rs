@@ -9,44 +9,7 @@ use rusqlite::Transaction;
 use std::sync::Arc;
 
 impl DatabaseWrite for Sqlite {
-    /// Creates a new record to the database.
-    ///
-    /// A single record with no list arguments. The return value is the `id` of
-    /// the created record:
-    ///
-    /// ```rust
-    /// # use prisma_models::*;
-    /// # use rusqlite::{Connection, NO_PARAMS};
-    /// # use sqlite_connector::*;
-    /// # use connector::*;
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// # let mut conn = Connection::open_in_memory().unwrap();
-    /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// # let schema = tmp.build(String::from("test"));
-    /// # let trans = conn.transaction().unwrap();
-    /// # trans.execute("ATTACH DATABASE './test.db' AS 'test'", NO_PARAMS).unwrap();
-    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User (id Text, name Text);", NO_PARAMS).unwrap();
-    /// #
-    /// let model = schema.find_model("User").unwrap();
-    ///
-    /// let mut args = PrismaArgs::default();
-    /// args.insert("id", GraphqlId::from("id1"));
-    /// args.insert("name", "John");
-    ///
-    /// assert_eq!(
-    ///    GraphqlId::from("id1"),
-    ///    Sqlite::create_node(&trans, model, args, vec![]).unwrap(),
-    /// );
-    ///
-    /// assert_eq!(
-    ///     1,
-    ///     Sqlite::count(&trans, "User", ConditionTree::default()).unwrap()
-    /// );
-    /// ```
-    fn create_node(
+    fn create(
         conn: &Transaction,
         model: ModelRef,
         non_list_args: PrismaArgs,
@@ -73,35 +36,25 @@ impl DatabaseWrite for Sqlite {
         Ok(id)
     }
 
-    fn create_node_and_connect_to_parent(
+    fn create_and_connect(
         conn: &Transaction,
         parent_id: &GraphqlId,
-        mutaction: &NestedCreateNode,
+        relation_field: RelationFieldRef,
+        non_list_args: PrismaArgs,
+        list_args: Vec<(String, PrismaListValue)>,
     ) -> ConnectorResult<GraphqlId> {
-        let related_field = mutaction.relation_field.related_field();
+        let related_field = relation_field.related_field();
 
         if related_field.relation_is_inlined_in_parent() {
-            let mut prisma_args = mutaction.non_list_args.clone();
+            let mut prisma_args = non_list_args;
             prisma_args.insert(related_field.name.clone(), parent_id.clone());
 
-            Self::create_node(
-                conn,
-                mutaction.relation_field.related_model().clone(),
-                prisma_args,
-                mutaction.list_args.clone(),
-            )
+            Self::create(conn, relation_field.related_model(), prisma_args, list_args)
         } else {
-            let id = Self::create_node(
-                conn,
-                mutaction.relation_field.related_model().clone(),
-                mutaction.non_list_args.clone(),
-                mutaction.list_args.clone(),
-            )?;
-
-            let relation_query = MutationBuilder::create_relation(mutaction.relation_field.clone(), parent_id, &id);
+            let id = Self::create(conn, relation_field.related_model(), non_list_args, list_args)?;
+            let relation_query = MutationBuilder::create_relation(relation_field, parent_id, &id);
 
             Self::execute_one(conn, relation_query)?;
-
             Ok(id)
         }
     }
@@ -157,7 +110,6 @@ impl DatabaseWrite for Sqlite {
         Ok(count)
     }
 
-    /// Execute a single statement in the database.
     fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>
     where
         T: Into<Query>,
@@ -168,7 +120,6 @@ impl DatabaseWrite for Sqlite {
         Ok(())
     }
 
-    /// Execute a multiple statements in the database.
     fn execute_many<T>(conn: &Transaction, queries: Vec<T>) -> ConnectorResult<()>
     where
         T: Into<Query>,

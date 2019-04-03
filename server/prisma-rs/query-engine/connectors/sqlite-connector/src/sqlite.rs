@@ -21,9 +21,7 @@ pub struct Sqlite {
 }
 
 impl Sqlite {
-    /// Creates a new SQLite pool connected into local memory. By querying from
-    /// different databases, it will try to create them to
-    /// `$SERVER_ROOT/db/db_name` if they do not exists yet.
+    /// Creates a new SQLite pool connected into local memory.
     pub fn new(connection_limit: u32, test_mode: bool) -> ConnectorResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
@@ -32,8 +30,10 @@ impl Sqlite {
         Ok(Sqlite { pool, test_mode })
     }
 
-    /// Will create a new file if it doesn't exist. Otherwise loads db/db_name
-    /// from the SERVER_ROOT.
+    /// When querying and we haven't yet loaded the database, it'll be loaded on
+    /// or created to `$SERVER_ROOT/db/{db_name}.db`.
+    ///
+    /// The database is then attached to the memory with an alias of `{db_name}`.
     fn attach_database(conn: &mut Connection, db_name: &str) -> ConnectorResult<()> {
         let mut stmt = dbg!(conn.prepare("PRAGMA database_list")?);
 
@@ -58,10 +58,14 @@ impl Sqlite {
         Ok(())
     }
 
+    /// If querying a single integer, such as a `COUNT()`, the function will get
+    /// the first column with the default value being `0`.
     pub fn fetch_int(row: &Row) -> i64 {
         row.get_checked(0).unwrap_or(0)
     }
 
+    /// Read and cast a `Row` into a `Record`, casting the columns from the
+    /// `DataModel` definitions.
     pub fn read_row(row: &Row, selected_fields: &SelectedFields) -> ConnectorResult<Node> {
         let mut fields = Vec::new();
 
@@ -72,8 +76,8 @@ impl Sqlite {
         Ok(Node::new(fields))
     }
 
-    /// Converter function to wrap the limited set of types in SQLite to a
-    /// richer PrismaValue.
+    /// Converter function to wrap the limited set of types in SQLite to the internal `PrismaValue`
+    /// definition.
     pub fn fetch_value(typ: TypeIdentifier, row: &Row, i: usize) -> ConnectorResult<PrismaValue> {
         let result = match typ {
             TypeIdentifier::String => row.get_checked(i).map(|val| PrismaValue::String(val)),
@@ -111,6 +115,10 @@ impl Sqlite {
         }
     }
 
+    /// Takes a new connection and if needed attaches the database if needed.
+    ///
+    /// [with_transaction](struct.Sqlite.html#method.with_transaction) should be
+    /// used if atomicity is needed.
     pub fn with_connection<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
     where
         F: FnOnce(&mut Connection) -> ConnectorResult<T>,
@@ -127,8 +135,49 @@ impl Sqlite {
         result
     }
 
-    /// Take a new connection from the pool and create the database if it
-    /// doesn't exist yet.
+    /// Takes a new connection and starts a transaction, that is commited if the
+    /// given `F` was successful. Attaches any databases, if not yet in memory.
+    ///
+    /// [with_connection](struct.Sqlite.html#methid.with_connection) should be
+    /// used if atomicity is not needed.
+    /// ```rust
+    /// # use rusqlite::{Connection, NO_PARAMS};
+    /// # use connector::{ConnectorError, ConnectorResult};
+    /// # use sqlite_connector::*;
+    /// # use prisma_query::ast::*;
+    /// # let sqlite = Sqlite::new(1, false).unwrap();
+    /// let _ = sqlite.with_transaction("test", |trans| {
+    ///     trans.execute(
+    ///         "CREATE TABLE IF NOT EXISTS test.users (id Text, name Text);",
+    ///         NO_PARAMS
+    ///     ).unwrap();
+    ///
+    ///     Ok(())
+    /// });
+    ///
+    /// let _: ConnectorResult<()> = sqlite.with_transaction("test", |trans| {
+    ///     trans.execute(
+    ///         "INSERT INTO test.users (id, name) VALUES ('id1', 'John')",
+    ///         NO_PARAMS,
+    ///     ).unwrap();
+    ///
+    ///     Err(ConnectorError::RelationViolation {
+    ///         relation_name: String::from("Cats"),
+    ///         model_a_name: String::from("A"),
+    ///         model_b_name: String::from("B"),
+    ///     })
+    /// });
+    ///
+    /// let count: i64 = sqlite.with_connection("test", |conn| {
+    ///     let res = conn.query_row("SELECT COUNT(id) FROM test.users", NO_PARAMS, |row| {
+    ///         row.get_checked(0).unwrap_or(0)
+    ///     })?;
+    ///
+    ///     Ok(res)
+    /// }).unwrap();
+    ///
+    /// assert_eq!(0, count);
+    /// ```
     pub fn with_transaction<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
     where
         F: FnOnce(&Transaction) -> ConnectorResult<T>,
@@ -137,7 +186,10 @@ impl Sqlite {
             let tx = conn.transaction()?;
             let result = f(&tx);
 
-            tx.commit()?;
+            if result.is_ok() {
+                tx.commit()?;
+            }
+
             result
         })
     }

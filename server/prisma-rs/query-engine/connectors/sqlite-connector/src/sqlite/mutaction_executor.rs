@@ -21,7 +21,7 @@ impl DatabaseMutactionExecutor for Sqlite {
 
     fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId> {
         self.with_transaction(&db_name, |conn| {
-            Self::create_node(
+            Self::create(
                 conn,
                 mutaction.model.clone(),
                 mutaction.non_list_args.clone(),
@@ -56,7 +56,7 @@ impl DatabaseMutactionExecutor for Sqlite {
             match Self::id_for(conn, Arc::clone(&model), &mutaction.where_) {
                 Err(_e @ ConnectorError::NodeNotFoundForWhere { .. }) => {
                     let m = &mutaction.create;
-                    let id = Self::create_node(conn, m.model.clone(), m.non_list_args.clone(), m.list_args.clone())?;
+                    let id = Self::create(conn, m.model.clone(), m.non_list_args.clone(), m.list_args.clone())?;
 
                     Ok((id, DatabaseMutactionResultType::Create))
                 }
@@ -98,7 +98,13 @@ impl DatabaseMutactionExecutor for Sqlite {
                 Self::execute_one(conn, query)?;
             }
 
-            Self::create_node_and_connect_to_parent(conn, parent_id, mutaction)
+            Self::create_and_connect(
+                conn,
+                parent_id,
+                mutaction.relation_field.clone(),
+                mutaction.non_list_args.clone(),
+                mutaction.list_args.clone(),
+            )
         })
     }
 
