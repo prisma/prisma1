@@ -44,7 +44,7 @@ impl PrismaDatabase {
         match self {
             PrismaDatabase::Explicit(config) => config.database.clone(),
             PrismaDatabase::ConnectionString(config) => config.database.clone(),
-            PrismaDatabase::File(config) => config.database.clone(),
+            PrismaDatabase::File(config) => Some(config.db_name()),
         }
     }
 }

@@ -75,5 +75,5 @@ fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
 }
 
 fn playground<T>(_: HttpRequest<T>) -> impl Responder {
-    fs::NamedFile::open("prisma-rs/playground.html")
+    fs::NamedFile::open("playground.html")
 }

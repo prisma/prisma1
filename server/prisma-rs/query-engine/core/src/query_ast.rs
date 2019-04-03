@@ -120,6 +120,7 @@ impl<'a> QueryBuilder<'a> {
     fn infer_query_type(mut self, parent: Option<RelationFieldRef>) -> Self {
         self.parent_field = parent;
 
+        // Query is a relation
         self.query_type = if let Some(ref parent) = &self.parent_field {
             if parent.is_list {
                 Some(Ok(QueryType::ManyRelation(parent.related_model())))
@@ -127,7 +128,7 @@ impl<'a> QueryBuilder<'a> {
                 Some(Ok(QueryType::OneRelation(parent.related_model())))
             }
         } else {
-            // Find model for field
+            // Query is for a model, which we need to find on the schema.
             let qt: Option<QueryType> = self
                 .schema
                 .models()
@@ -457,6 +458,7 @@ impl RootQueryBuilder {
                     directives: _,
                     selection_set,
                 })) => self.build_query(&selection_set.items),
+
                 _ => unimplemented!(),
             })
             .collect::<CoreResult<Vec<Vec<PrismaQuery>>>>() // Collect all the "query trees"

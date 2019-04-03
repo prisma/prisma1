@@ -1,3 +1,4 @@
+# The default config, which points to the default db in the prisma server folder.
 port: 4466
 prototype: true
 databases:
@@ -10,4 +11,4 @@ databases:
     user: root
     password: prisma
     rawAccess: true
-    database: default_default
+    database_file: ${SERVER_ROOT}/db/default_default

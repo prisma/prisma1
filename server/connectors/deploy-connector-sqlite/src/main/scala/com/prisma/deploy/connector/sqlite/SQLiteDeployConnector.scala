@@ -22,7 +22,6 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
   override def isActive                                      = true

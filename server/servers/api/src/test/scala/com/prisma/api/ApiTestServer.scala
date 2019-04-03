@@ -19,7 +19,6 @@ import sangria.schema.Schema
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Awaitable, Future}
 import scala.reflect.io.File
-import scala.sys.process.{Process, ProcessLogger}
 
 trait ApiTestServer extends PlayJsonExtensions {
   System.setProperty("org.jooq.no-logo", "true")
@@ -128,6 +127,9 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
 
   def startPrismaProcess(schema: SchemaModel): java.lang.Process = {
     import java.lang.ProcessBuilder.Redirect
+
+    // we need the database name
+    dependencies.projectIdEncoder
 
     val pb         = new java.lang.ProcessBuilder(prismaBinaryPath)
     val workingDir = new java.io.File(".")

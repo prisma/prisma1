@@ -16,8 +16,7 @@ case class SQLiteInternalDatabaseDefs(dbConfig: DatabaseConfig, driver: Driver) 
   lazy val managementDatabases = databases(root = false)
 
   def databases(root: Boolean): Databases = {
-    val masterDb = Database.forDriver(driver, "jdbc:sqlite:management.db")
-
+    val masterDb      = Database.forDriver(driver, "jdbc:sqlite:management.db")
     val slickDatabase = SlickDatabase(SQLiteProfile, masterDb)
 
     Databases(primary = slickDatabase, replica = slickDatabase)
