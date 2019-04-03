@@ -1,6 +1,12 @@
-package com.prisma
+package com.prisma.api
+import com.prisma.ConnectorTag
 import com.prisma.ConnectorTag.{MongoConnectorTag, RelationalConnectorTag}
 import org.scalatest.WordSpecLike
+
+case class TestDataModels(
+    mongo: Vector[String],
+    sql: Vector[String]
+)
 
 case class TestDataModelsWrapper(
     dataModel: TestDataModels,

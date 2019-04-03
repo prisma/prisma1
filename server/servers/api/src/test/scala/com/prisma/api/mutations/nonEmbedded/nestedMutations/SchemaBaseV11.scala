@@ -1,5 +1,5 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
-import com.prisma.TestDataModels
+import com.prisma.api.TestDataModels
 
 trait SchemaBaseV11 {
 

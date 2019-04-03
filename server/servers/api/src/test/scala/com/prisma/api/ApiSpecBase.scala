@@ -6,7 +6,7 @@ import com.prisma.ConnectorAwareTest
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.config.PrismaConfig
-import com.prisma.shared.models.{ConnectorCapability, Project}
+import com.prisma.shared.models.Project
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
@@ -38,4 +38,8 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   }
 
   def escapeString(str: String) = JsString(str).toString()
+
+  implicit def testDataModelsWrapper(testDataModel: TestDataModels): TestDataModelsWrapper = {
+    TestDataModelsWrapper(testDataModel, connectorTag, connector.connector)
+  }
 }
