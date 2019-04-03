@@ -294,11 +294,11 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[]""")
   }
 
-  "one2one relation both exist and are connected" should "be deletable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+  "A P1 relation where both exist and are connected" should "be deletable through a nested mutation" in {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Note {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | todo: Todo
         |}
@@ -352,17 +352,17 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     mustBeEqual(result.pathAsJsValue("data.updateNote").toString, """{"todo":null}""")
   }
 
-  "one2one relation where both sides exist and are connected" should "be deletable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+  "A P1 relation  where both sides exist and are connected" should "be deletable through a nested mutation" in {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Note {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String! @unique
         | todo: Todo
         |}
         |
         |type Todo @embedded{
-        | title: String! @unique
+        | title: String!
         |}
         |"""
     }
@@ -412,17 +412,17 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
     mustBeEqual(query.toString, """{"data":{"notes":[{"text":"FirstUnique"}]}}""")
   }
 
-  "a one to one relation" should "not do a nested delete if the nested node does not exist" in {
-    val project = SchemaDsl.fromString() {
+  "A P1 relation" should "not do a nested delete if the nested node does not exist" in {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Note {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String! @unique
         | todo: Todo
         |}
         |
         |type Todo @embedded{
-        | title: String! @unique
+        | title: String!
         |}"""
     }
     database.setup(project)
@@ -997,16 +997,16 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
 
   "Deleting toOne relations" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: Middle
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   int: Int!
         |   name: String!
         |}"""
     }
@@ -1019,20 +1019,20 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |   unique: 1,
          |   name: "Top",
          |   middle: {create:{
-         |      unique: 11,
+         |      int: 11,
          |      name: "Middle"
          |   }
          |   }
          |}){
          |  unique,
          |  middle{
-         |    unique
+         |    int
          |  }
          |}}""".stripMargin,
       project
     )
 
-    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"unique":11}}}}""")
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":{"int":11}}}}""")
 
     val res2 = server.query(
       s"""mutation {
@@ -1044,7 +1044,7 @@ class EmbeddedNestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matcher
          |}){
          |  unique,
          |  middle{
-         |    unique
+         |    int
          |  }
          |}}""".stripMargin,
       project
