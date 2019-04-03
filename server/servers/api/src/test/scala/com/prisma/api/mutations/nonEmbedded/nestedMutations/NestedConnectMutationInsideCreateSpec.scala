@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.{IgnoreMongo, IgnoreSQLite}
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -776,52 +776,73 @@ class NestedConnectMutationInsideCreateSpec extends FlatSpec with Matchers with 
     }
   }
 
-  "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" taggedAs (IgnoreMongo) in {
-    val project = SchemaDsl.fromStringV11() {
-      """type Role {
-        | id: ID! @id
-        | r: String! @unique
-        |}
-        |
-        |type User {
-        | id: ID! @id
-        | u: String! @unique
-        | roles: [Role]
-        |}
-      """.stripMargin
+  "a PM to CM  relation without a backrelation" should "be connectable through a nested mutation by unique" in {
+
+    val testDataModels = {
+      val s1 =
+        """type Role {
+          | id: ID! @id
+          | r: String! @unique
+          |}
+          |
+          |type User {
+          | id: ID! @id
+          | u: String! @unique
+          | roles: [Role] @relation(link: INLINE)
+          |}
+        """
+
+      val s2 =
+        """type Role {
+          | id: ID! @id
+          | r: String! @unique
+          |}
+          |
+          |type User {
+          | id: ID! @id
+          | u: String! @unique
+          | roles: [Role]
+          |}
+        """
+      TestDataModels(mongo = Vector(s1), sql = Vector(s2))
     }
-    database.setup(project)
 
-    server.query(
-      """mutation {
-        |  createRole(data: {r: "r1"}){
-        |       r
-        |  }
-        |}""".stripMargin,
-      project
-    )
+    testDataModels.testV11 { project =>
+      server.query(
+        """mutation {
+          |  createRole(data: {r: "r1"}){
+          |       r
+          |  }
+          |}""".stripMargin,
+        project
+      )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_RoleToUser").await should be(0) }
+      ifConnectorIsActive {
+        dataResolver(project).countByTable("_RoleToUser").await should be(0)
+      }
 
-    val res = server.query(
-      s"""
-         |mutation {
-         |  createUser(data:{
-         |    u: "u2"
-         |    roles: {connect: {r: "r1"}}
-         |  }){
-         |    roles {
-         |      r
-         |    }
-         |  }
-         |}
+      val res = server.query(
+        s"""
+           |mutation {
+           |  createUser(data:{
+           |    u: "u2"
+           |    roles: {connect: {r: "r1"}}
+           |  }){
+           |    roles {
+           |      r
+           |    }
+           |  }
+           |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"createUser":{"roles":[{"r":"r1"}]}}}""")
+      res.toString should be("""{"data":{"createUser":{"roles":[{"r":"r1"}]}}}""")
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_RoleToUser").await should be(1) }
+      ifConnectorIsActive {
+        dataResolver(project).countByTable("_RoleToUser").await should be(1)
+      }
+    }
   }
 
   "A PM to C1 relation" should "throw a proper error if connected by wrong id" in {

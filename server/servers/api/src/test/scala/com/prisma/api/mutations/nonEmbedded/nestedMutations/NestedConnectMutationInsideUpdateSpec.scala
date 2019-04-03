@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.{IgnoreMongo, IgnoreSQLite}
-import com.prisma.api.ApiSpecBase
+import com.prisma.IgnoreSQLite
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -1611,49 +1611,70 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     mustBeEqual(result.pathAsJsValue("data.updateTodo.comments").toString, """[{"text":"comment1"},{"text":"comment2"}]""")
   }
 
-  "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" taggedAs (IgnoreMongo) in {
-    val project = SchemaDsl.fromStringV11() {
-      """type Technology {
-        | id: ID! @id
-        | name: String! @unique
-        | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
-        | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
-        |}
-      """.stripMargin
+  "a PM to CM  self relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
+    val testDataModels = {
+      val s1 =
+        """type Technology {
+          | id: ID! @id
+          | name: String! @unique
+          | childTechnologies: [Technology] @relation(name: "ChildTechnologies", link: INLINE)
+          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
+          |}
+        """
+
+      val s2 =
+        """type Technology {
+          | id: ID! @id
+          | name: String! @unique
+          | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies", link: INLINE)
+          |}
+        """
+
+      val s3 =
+        """type Technology {
+          | id: ID! @id
+          | name: String! @unique
+          | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
+          | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
+          |}
+        """
+      TestDataModels(mongo = Vector(s1, s2), sql = Vector(s3))
     }
-    database.setup(project)
 
-    server.query("""mutation {createTechnology(data: {name: "techA"}){name}}""", project)
+    testDataModels.testV11 { project =>
+      server.query("""mutation {createTechnology(data: {name: "techA"}){name}}""", project)
 
-    server.query("""mutation {createTechnology(data: {name: "techB"}){name}}""", project)
+      server.query("""mutation {createTechnology(data: {name: "techB"}){name}}""", project)
 
-    val res = server.query(
-      s"""mutation {
-         |  updateTechnology(where: {name: "techA"},
-         |                   data:  {childTechnologies: {connect: {name: "techB"}}})
-         |      {name,
-         |       childTechnologies  {name}
-         |       parentTechnologies {name}}
-         |}
+      val res = server.query(
+        s"""mutation {
+           |  updateTechnology(where: {name: "techA"},
+           |                   data:  {childTechnologies: {connect: {name: "techB"}}})
+           |      {name,
+           |       childTechnologies  {name}
+           |       parentTechnologies {name}}
+           |}
       """,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"updateTechnology":{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]}}}""")
+      res.toString should be("""{"data":{"updateTechnology":{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]}}}""")
 
-    val res2 = server.query(
-      s"""query {
-         |  technologies{
-         |       name
-         |       childTechnologies  {name}
-         |       parentTechnologies {name}
-         |  }
-         |}
+      val res2 = server.query(
+        s"""query {
+           |  technologies{
+           |       name
+           |       childTechnologies  {name}
+           |       parentTechnologies {name}
+           |  }
+           |}
       """,
-      project
-    )
+        project
+      )
 
-    res2.toString should be(
-      """{"data":{"technologies":[{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]},{"name":"techB","childTechnologies":[],"parentTechnologies":[{"name":"techA"}]}]}}""")
+      res2.toString should be(
+        """{"data":{"technologies":[{"name":"techA","childTechnologies":[{"name":"techB"}],"parentTechnologies":[]},{"name":"techB","childTechnologies":[],"parentTechnologies":[{"name":"techA"}]}]}}""")
+    }
   }
 }
