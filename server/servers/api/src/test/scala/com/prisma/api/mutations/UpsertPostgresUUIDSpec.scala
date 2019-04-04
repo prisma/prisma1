@@ -13,10 +13,10 @@ class UpsertPostgresUUIDSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
 
   "Upserting an item with an id field of type UUID" should "work" taggedAs (IgnoreMySql, IgnoreMongo) in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""
          |type Todo {
-         |  id: UUID! @unique
+         |  id: UUID! @id
          |  title: String!
          |}
        """.stripMargin

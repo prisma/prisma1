@@ -86,17 +86,17 @@ class UpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "UpdateMany" should "work between top level types" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type ZChild{
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |    test: String
-        |    parent: Parent
+        |    parent: Parent @relation(link: INLINE)
         |}
         |
         |type Parent{
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |    children: [ZChild]
         |}"""

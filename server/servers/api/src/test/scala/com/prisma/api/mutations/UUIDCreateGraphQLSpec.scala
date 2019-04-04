@@ -10,10 +10,10 @@ import org.scalatest.{FlatSpec, Matchers}
 class UUIDCreateGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Creating an item with an id field of type UUID" should "work" taggedAs (IgnoreMySql, IgnoreMongo) in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""
          |type Todo {
-         |  id: UUID! @unique
+         |  id: UUID! @id
          |  title: String!
          |}
        """.stripMargin
@@ -38,12 +38,12 @@ class UUIDCreateGraphQLSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Fetching a UUID field that is null" should "work" taggedAs (IgnoreMySql, IgnoreMongo) in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""
          |type TableA {
-         |    id:             UUID! @unique
-         |    name:           String!
-         |    b:              UUID @unique
+         |    id: UUID! @id
+         |    name: String!
+         |    b: UUID @unique
          |}""".stripMargin
     }
     database.setup(project)

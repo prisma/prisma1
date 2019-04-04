@@ -58,9 +58,9 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the delete mutation" should "work when node ids are UUIDs" taggedAs (IgnoreMySql, IgnoreMongo) in {
-    val project = SchemaDsl.fromString()(s"""
+    val project = SchemaDsl.fromStringV11()(s"""
          |type Todo {
-         |  id: UUID! @unique
+         |  id: UUID! @id
          |  title: String
          |}
        """.stripMargin)
