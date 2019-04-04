@@ -9,17 +9,17 @@
 //! This IR fixes that issue, allowing us to serialize to various
 //! flexible formats.
 
-use super::Envelope;
 use core::{MultiPrismaQueryResult, PrismaQueryResult, SinglePrismaQueryResult};
 use prisma_models::PrismaValue;
 use serde::Serialize;
 use std::collections::BTreeMap;
 
-/// A `QueryResponse` is either some data or an error
-#[derive(Serialize)] // TODO: REMOVE AGAIN
-pub enum ResponseType {
-    Data,
-    Error,
+/// A set of responses to provided queries
+pub type Responses = Vec<IrResponse>;
+
+pub enum IrResponse {
+    Data(Item),
+    Error(String), // TODO: Get a better error kind?
 }
 
 /// A key -> value map to an IR item
@@ -50,16 +50,15 @@ impl<'results> IrBuilder<'results> {
         self
     }
 
-    /// Parse collected queries into an envelope type
-    pub fn build(self) -> Envelope {
-        match self.0.first() {
-            Some(PrismaQueryResult::Single(query)) => build_map(query).into(),
-            Some(PrismaQueryResult::Multi(query)) => build_list(query).into(),
-            _ => Envelope {
-                tt: ResponseType::Error,
-                root: Item::Value(PrismaValue::String("Failed to find QueryResult".into())),
-            },
-        }
+    /// Parse collected queries into a wrapper type
+    pub fn build(self) -> Responses {
+        self.0.into_iter().fold(vec![], |mut vec, res| {
+            vec.push(match res {
+                PrismaQueryResult::Single(query) => IrResponse::Data(Item::Map(build_map(query))),
+                PrismaQueryResult::Multi(query) => IrResponse::Data(Item::List(build_list(query))),
+            });
+            vec
+        })
     }
 }
 
@@ -74,7 +73,7 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
                 map.insert(name.clone(), Item::Value(val.clone()));
                 map
             }),
-        None => panic!("No result found"),
+        None => panic!("No result found"), // FIXME: Can this ever happen?
     };
 
     // Then add nested selected fields
@@ -113,22 +112,4 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
     });
 
     vec
-}
-
-impl From<Map> for Envelope {
-    fn from(map: Map) -> Self {
-        Self {
-            tt: ResponseType::Data,
-            root: Item::Map(map),
-        }
-    }
-}
-
-impl From<List> for Envelope {
-    fn from(list: List) -> Self {
-        Self {
-            tt: ResponseType::Data,
-            root: Item::List(list),
-        }
-    }
 }

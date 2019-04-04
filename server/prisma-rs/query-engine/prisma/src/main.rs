@@ -7,7 +7,6 @@ mod req_handlers;
 mod schema;
 mod utilities;
 
-#[cfg(feature = "newjson")]
 mod serializer;
 
 use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
@@ -28,7 +27,7 @@ struct HttpHandler {
 fn main() {
     env_logger::init();
 
-    let context = PrismaContext::new().unwrap(); // todo graceful error handling at top level
+    let context = PrismaContext::new().unwrap();
     let http_handler = HttpHandler {
         context: context,
         graphql_request_handler: GraphQlRequestHandler,
