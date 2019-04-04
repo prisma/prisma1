@@ -87,14 +87,14 @@ def infer_additional_tags(context, tag)
   additional_tags = []
 
   unless tag.nil?
-    if tag.stable?
+    if tag.stable? || tag.beta?
       if tag.patch.nil?
-        # E.g. not only tag 1.30, but also 1.30.0
+        # E.g. not only tag 1.30(-beta), but also 1.30.0(-beta)
         additional_tag = tag.dup
         additional_tag.patch = 0
         additional_tags.push additional_tag.stringify
       else
-        # E.g. not only tag 1.30.0, but also 1.30
+        # E.g. not only tag 1.30.0(-beta), but also 1.30(-beta)
         additional_tag = tag.dup
         additional_tag.patch = nil
         additional_tags.push additional_tag.stringify
