@@ -128,7 +128,8 @@ export abstract class RelationalConnector implements IConnector {
       WHERE 
         table_schema = ${this.parameter(1, 'text')}
         -- Views are not supported yet
-        AND table_type = 'BASE TABLE'`
+        AND table_type = 'BASE TABLE'
+      ORDER BY table_name`
 
     return (await this.query(allTablesQuery, [schemaName])).map(row => {
       GQLAssert.raiseIf(
@@ -173,7 +174,8 @@ export abstract class RelationalConnector implements IConnector {
         information_schema.columns
       WHERE
         table_schema = '${schemaName}'
-        AND table_name  = '${tableName}'`
+        AND table_name  = '${tableName}'
+      ORDER BY column_name`
 
     /**
      * Note, that ordinal_position comes back as a string because it's a bigint!

@@ -7,10 +7,9 @@ import {
   plural,
   toposort,
   isTypeIdentifier,
+  camelCase,
 } from 'prisma-datamodel'
-import camelcase from 'camelcase'
 import { INormalizer } from './normalizer'
-import * as uppercamelcase from 'uppercamelcase'
 import { groupBy, uniqBy } from 'lodash'
 
 export default class ModelNameNormalizer implements INormalizer {
@@ -21,8 +20,6 @@ export default class ModelNameNormalizer implements INormalizer {
     for (const type of toposort(model.types)) {
       this.normalizeType(type, model)
     }
-
-    this.fixConflicts(model)
   }
 
   protected assignName(obj: IGQLType | IGQLField, newName: string) {
@@ -36,12 +33,12 @@ export default class ModelNameNormalizer implements INormalizer {
     }
   }
 
-  protected getNormalizedName(name: string, model: ISDL) {
+  protected getNormalizedTypeName(name: string, model: ISDL) {
     if (name.toUpperCase() === name) {
       return name
     }
 
-    const normalizedName = uppercamelcase(singular(name))
+    const normalizedName = capitalize(camelCase(singular(name)))
 
     // if there is a naming conflict with a known scalar type, use the default name
     if (isTypeIdentifier(normalizedName) || isTypeIdentifier(singular(name))) {
@@ -49,7 +46,7 @@ export default class ModelNameNormalizer implements INormalizer {
     }
 
     // if there is already a table in the database with the exact name we're generating - let's just not do it
-    if (model.types.some(t => (t.databaseName || t.name) === normalizedName)) {
+    if (model.types.some(t => t.name === normalizedName)) {
       return name
     }
 
@@ -62,7 +59,7 @@ export default class ModelNameNormalizer implements INormalizer {
     forceNoRename: boolean = false,
   ) {
     if (!forceNoRename) {
-      this.assignName(type, this.getNormalizedName(type.name, model))
+      this.assignName(type, this.getNormalizedTypeName(type.name, model))
     }
 
     for (const field of type.fields) {
@@ -70,30 +67,19 @@ export default class ModelNameNormalizer implements INormalizer {
     }
   }
 
-  protected fixConflicts(model: ISDL) {
-    const groupedTypesByName = groupBy(model.types, t => t.name)
-
-    for (const types of Object.values(groupedTypesByName)) {
-      if (types.length > 1) {
-        for (const type of types) {
-          if (type.databaseName) {
-            type.name = uppercamelcase(type.databaseName)
-          }
-        }
-
-        const uniqueTypes = uniqBy(types, t => t.name)
-
-        // if there still are duplicates, default to the database name
-        if (uniqueTypes.length < types.length) {
-          for (const type of types) {
-            if (type.databaseName) {
-              type.name = type.databaseName
-              type.databaseName = null
-            }
-          }
-        }
-      }
+  protected getNormalizedFieldName(name: string, type: IGQLType) {
+    if (name.toUpperCase() === name) {
+      return name.toLowerCase()
     }
+
+    const normalizedName = camelCase(name)
+
+    // if there is already a field of in this type for the normalized name, don't rename.
+    if (type.fields.some(t => t.name === normalizedName)) {
+      return name
+    }
+
+    return normalizedName
   }
 
   protected normalizeField(
@@ -101,17 +87,13 @@ export default class ModelNameNormalizer implements INormalizer {
     parentType: IGQLType,
     parentModel: ISDL,
   ) {
-    // Make embedded type names pretty
+    // Make field names pretty
     if (!parentType.isEnum && !field.isId) {
-      if (field.name !== camelcase(field.name)) {
-        // if we can't find another field with the camelcased name, we're save
-        // and don't have a collision
-        if (!parentType.fields.find(f => f.name === camelcase(field.name))) {
-          field.databaseName = field.name
-          field.name = camelcase(field.name)
-        }
-      }
+      const normalizedName = this.getNormalizedFieldName(field.name, parentType)
+      this.assignName(field, normalizedName)
     }
+
+    // Make embedded type names pretty
     if (typeof field.type !== 'string' && field.type.isEmbedded) {
       if (!field.type.databaseName) field.type.databaseName = field.type.name
 
