@@ -169,7 +169,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
   ): GraphQLInputFieldConfigMap {
     const type = this.generate(field.type as IGQLType, {})
     return ModelWhereInputGenerator.generateFiltersForSuffix(
-      this.getRelationManyFilters(field.type as IGQLType),
+      this.getRelationaManyFilters(field.type as IGQLType),
       field,
       type,
     )
@@ -177,7 +177,7 @@ export default class ModelWhereInputGenerator extends ModelInputObjectTypeGenera
 
   //#endregion
 
-  protected getRelationManyFilters(type: IGQLType): string[] {
+  protected getRelationaManyFilters(type: IGQLType): string[] {
     return ['_every', '_some', '_none']
   }
 
