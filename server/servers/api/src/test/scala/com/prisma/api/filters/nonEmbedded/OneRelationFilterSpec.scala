@@ -8,27 +8,27 @@ import org.scalatest._
 class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """
       |type Blog {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   name: String!
       |   post: Post
       |}
       |
       |type Post {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   title: String!
       |   popularity: Int!
-      |   blog: Blog
+      |   blog: Blog @relation(link:INLINE)
       |   comment: Comment
       |}
       |
       |type Comment {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   text: String!
       |   likes: Int!
-      |   post: Post
+      |   post: Post @relation(link:INLINE)
       |}
     """
   }
@@ -122,19 +122,19 @@ class OneRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Join Relation Filter on one to one relation" should "work on one level" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Post {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  author: AUser
         |  title: String! @unique
         |}
         |
         |type AUser {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String! @unique
         |  int: Int
-        |  post: Post @mongoRelation(field: "posts")
+        |  post: Post @relation(link:INLINE)
         |}"""
     }
 

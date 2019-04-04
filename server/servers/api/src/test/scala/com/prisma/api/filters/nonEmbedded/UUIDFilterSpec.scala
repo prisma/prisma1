@@ -10,9 +10,9 @@ class UUIDFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(UuidIdCapability)
 
   "Using a UUID field in where clause" should "work" in {
-    val project: Project = SchemaDsl.fromString() { """
+    val project: Project = SchemaDsl.fromStringV11() { """
                                                       |type User {
-                                                      |  id: UUID! @unique
+                                                      |  id: UUID! @id
                                                       |  name: String!
                                                       |}""".stripMargin }
     database.setup(project)
