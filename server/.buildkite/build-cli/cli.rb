@@ -28,6 +28,10 @@ Subcommands:
 
 \tnative-image <target> <version>
 \t\tBuilds the native image on the current branch. Artifacts are always published to S3. <version> is the version string to be baked into the binary.
+\t\tTarget is the platform, e.g. `debian`, `lambda`.
+
+\trust-binary
+\t\tCompiles the Prisma Rust binary on the current platform on the current CI branch. Artifacts are always published to S3.
 
 \ttest-rust
 \t\truns the tests for prisma-rs
@@ -75,6 +79,14 @@ when "native-image"
   end
 
   native_image(context, ARGV[1], ARGV[2])
+
+when "rust-binary"
+  if ARGV.length != 1
+    print_usage
+    exit 1
+  end
+
+  rust_binary(context)
 
 when "test-rust"
   test_rust(context)

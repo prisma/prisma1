@@ -42,7 +42,7 @@ export abstract class ModelCreateOneOrManyWithoutRelatedInputGenerator extends R
 
     if (
       this.hasFieldsExcept(
-        this.getWriteableFields(model.fields),
+        this.getCreateInputFields(model.fields),
         (args.relatedField.relatedField as IGQLField).name,
       )
     ) {

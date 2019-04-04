@@ -15,7 +15,7 @@ import {
 } from 'graphql/type/definition'
 import { GraphQLDirective } from 'graphql/type/directives'
 import { DirectiveKeys } from '../directives'
-import { TypeIdentifiers } from '../scalar'
+import { TypeIdentifiers, isTypeIdentifier } from '../scalar'
 
 const indent = '  '
 const comment = '#'
@@ -69,7 +69,12 @@ export default abstract class Renderer {
     type: IGQLType,
     typeDirectives: IDirectiveInfo[],
   ) {
-    const validIndices = this.getValidIndices(type)
+    /**
+     * Prisma doesn't support indexes yet.
+     * As soon as it does, the following line can be uncommented again
+     */
+    // const validIndices = this.getValidIndices(type)
+    const validIndices = []
     if (validIndices.length > 0) {
       const indexDescriptions: string[] = []
       for (const index of type.indices) {
@@ -248,6 +253,15 @@ export default abstract class Renderer {
     }
   }
 
+  protected createScalarListFieldDirective(field: IGQLField) {
+    return {
+      name: DirectiveKeys.scalarList,
+      arguments: {
+        strategy: 'RELATION',
+      },
+    }
+  }
+
   protected shouldCreateDefaultValueFieldDirective(field: IGQLField) {
     return field.defaultValue !== null
   }
@@ -280,6 +294,14 @@ export default abstract class Renderer {
     return field.databaseName !== null
   }
 
+  protected shouldCreateScalarListDirective(field: IGQLField) {
+    return (
+      field.isList &&
+      ((typeof field.type === 'string' && isTypeIdentifier(field.type)) ||
+        (typeof field.type === 'object' && field.type.isEnum))
+    )
+  }
+
   protected createReservedFieldDirectives(
     field: IGQLField,
     fieldDirectives: IDirectiveInfo[],
@@ -307,6 +329,9 @@ export default abstract class Renderer {
     }
     if (this.shouldCreateDatabaseNameFieldDirective(field)) {
       fieldDirectives.push(this.createDatabaseNameFieldDirective(field))
+    }
+    if (this.shouldCreateScalarListDirective(field)) {
+      fieldDirectives.push(this.createScalarListFieldDirective(field))
     }
   }
 
@@ -462,9 +487,21 @@ export default abstract class Renderer {
     if (!this.sortBeforeRendering) {
       return fields
     } else {
-      return [...fields].sort((a, b) =>
-        a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
-      )
+      return [...fields].sort((a, b) => {
+        if (a.name.toLowerCase() === b.name.toLowerCase()) {
+          return this.getTypeName(a.type) > this.getTypeName(b.type) ? 1 : -1
+        }
+
+        return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
+      })
     }
+  }
+
+  protected getTypeName(type: IGQLType | string) {
+    if (typeof type === 'string') {
+      return type
+    }
+
+    return type.name
   }
 }

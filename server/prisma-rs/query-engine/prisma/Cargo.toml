@@ -8,7 +8,6 @@ edition = "2018"
 default = ["sql", "graphql"]
 sql = ["sqlite-connector"]
 graphql = ["graphql-parser"]
-newjson = []
 
 [dependencies]
 actix-web = "0.7.18"

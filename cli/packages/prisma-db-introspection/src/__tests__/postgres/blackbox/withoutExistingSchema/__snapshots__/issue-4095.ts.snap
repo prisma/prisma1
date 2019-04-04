@@ -6,7 +6,7 @@ exports[`Introspector issue4095 relations 1`] = `
   createdAt: DateTime!
   customerId: Customer!
   invoice: [Invoice]
-  item_BillingAccount: [ItemBillingAccount]
+  itemBillingAccount: [ItemBillingAccount] @pgColumn(name: \\"item_BillingAccount\\")
   name: String!
   updatedAt: DateTime!
 }
@@ -102,7 +102,7 @@ type Item {
   cost: [Cost]
   createdAt: DateTime!
   enabled: Boolean @default(value: false)
-  item_BillingAccount: [ItemBillingAccount]
+  itemBillingAccount: [ItemBillingAccount] @pgColumn(name: \\"item_BillingAccount\\")
   product: [Product]
   specificFreeTrialDays: Int
   updatedAt: DateTime!
@@ -134,7 +134,7 @@ exports[`Introspector issue4095 relations 2`] = `
   createdAt: DateTime! @createdAt
   customerId: Customer!
   invoice: [Invoice]
-  item_BillingAccount: [ItemBillingAccount]
+  itemBillingAccount: [ItemBillingAccount] @db(name: \\"item_BillingAccount\\")
   name: String!
   updatedAt: DateTime! @updatedAt
 }
@@ -230,7 +230,7 @@ type Item {
   cost: [Cost]
   createdAt: DateTime! @createdAt
   enabled: Boolean @default(value: false)
-  item_BillingAccount: [ItemBillingAccount]
+  itemBillingAccount: [ItemBillingAccount] @db(name: \\"item_BillingAccount\\")
   product: [Product]
   specificFreeTrialDays: Int
   updatedAt: DateTime! @updatedAt

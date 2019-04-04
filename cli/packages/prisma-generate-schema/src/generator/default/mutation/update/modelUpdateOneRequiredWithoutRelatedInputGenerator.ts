@@ -26,7 +26,7 @@ export default class ModelUpdateOneWithoutRelatedInputTypeGenerator extends Rela
 
     if (
       this.hasFieldsExcept(
-        this.getWriteableFields(model.fields),
+        this.getCreateInputFields(model.fields),
         (args.relatedField.relatedField as IGQLField).name,
       )
     ) {
@@ -36,6 +36,14 @@ export default class ModelUpdateOneWithoutRelatedInputTypeGenerator extends Rela
           args,
         ),
       }
+    }
+
+    if (
+      this.hasFieldsExcept(
+        this.getWriteableFields(model.fields),
+        (args.relatedField.relatedField as IGQLField).name,
+      )
+    ) {
       fields.update = {
         type: this.generators.modelUpdateWithoutRelatedDataInput.generate(
           model,

@@ -3,10 +3,11 @@ extern crate log;
 
 mod context;
 mod error;
-mod json;
 mod req_handlers;
 mod schema;
 mod utilities;
+
+mod serializer;
 
 use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
 use context::PrismaContext;
@@ -26,7 +27,7 @@ struct HttpHandler {
 fn main() {
     env_logger::init();
 
-    let context = PrismaContext::new().unwrap(); // todo graceful error handling at top level
+    let context = PrismaContext::new().unwrap();
     let http_handler = HttpHandler {
         context: context,
         graphql_request_handler: GraphQlRequestHandler,
@@ -73,5 +74,5 @@ fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
 }
 
 fn playground<T>(_: HttpRequest<T>) -> impl Responder {
-    fs::NamedFile::open("playground.html")
+    fs::NamedFile::open("prisma-rs/playground.html")
 }

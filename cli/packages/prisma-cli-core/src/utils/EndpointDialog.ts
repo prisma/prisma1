@@ -226,6 +226,7 @@ export class EndpointDialog {
       user: credentials.user,
       password: credentials.password,
       uri: credentials.uri ? this.replaceLocalhost(credentials.uri) : undefined,
+      ...((credentials.type === DatabaseType.postgres) ? { ...{ ssl: credentials.ssl } } : {})
     }
     if (credentials.type !== DatabaseType.mongo) {
       data = {
@@ -383,6 +384,9 @@ export class EndpointDialog {
               ', ',
             )}`,
           )
+        }
+        if (databaseName) {
+          credentials.schema = databaseName
         }
 
         /**
@@ -562,6 +566,7 @@ export class EndpointDialog {
       credentials.password = await this.ask({
         message: 'Enter database password',
         key: 'password',
+        inputType: 'password',
       })
       credentials.database =
         type === DatabaseType.postgres

@@ -53,6 +53,13 @@ export class Cluster {
     stageName?: string,
   ): Promise<string | null> {
     // public clusters just take the token
+
+    const needsAuth = await this.needsAuth()
+    debug({needsAuth})
+    if (!needsAuth) {
+      return null
+    }
+
     if (this.name === 'shared-public-demo') {
       return ''
     }
@@ -278,9 +285,15 @@ Original error: ${e.message}`,
           name
         }
       }`)
-      return true
-    } catch (e) {
+      const data = await result.json()
+      if (data.errors && data.errors.length > 0) {
+        return true
+      }
       return false
+    } catch (e) {
+      debug('Assuming that the server needs authentication')
+      debug(e.toString())
+      return true
     }
   }
 

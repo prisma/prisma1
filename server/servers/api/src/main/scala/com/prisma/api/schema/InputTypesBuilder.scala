@@ -286,7 +286,7 @@ abstract class UncachedInputTypesBuilder(project: Project) extends InputTypesBui
   }
 
   private def computeScalarInputFieldsForCreate(model: Model) = {
-    val filteredModel = model.filterScalarFields(x => !x.isCreatedAt && !x.isUpdatedAt && filterID(x))
+    val filteredModel = model.filterScalarFields(x => !x.isCreatedAt && !x.isUpdatedAt && x.isVisible && filterID(x))
     computeScalarInputFields(filteredModel, FieldToInputTypeMapper.mapForCreateCase, "Create")
   }
 

@@ -345,6 +345,7 @@ impl<'a> QueryBuilder<'a> {
 
     // Q: Wouldn't it make more sense to just call that one from the outside and not the other ones?
     fn get(self) -> CoreResult<PrismaQuery> {
+        dbg!(&self);
         let name = self.field.alias.as_ref().unwrap_or(&self.field.name).clone();
         let selected_fields = self.selected_fields.unwrap_or(Err(CoreError::QueryValidationError(
             "Selected fields required but not found".into(),

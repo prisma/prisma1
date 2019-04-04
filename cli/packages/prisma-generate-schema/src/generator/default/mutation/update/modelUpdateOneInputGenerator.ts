@@ -29,10 +29,13 @@ export default class ModelUpdateOneInputTypeGenerator extends RelatedModelInputO
   protected generateFields(model: IGQLType, args: RelatedGeneratorArgs) {
     const fields = {} as GraphQLInputFieldConfigMap
 
-    if (this.hasWriteableFields(model.fields)) {
+    if (this.hasCreateInputFields(model.fields)) {
       fields.create = {
         type: this.generators.modelCreateInput.generate(model, {}),
       }
+    }
+
+    if (this.hasWriteableFields(model.fields)) {
       fields.update = {
         type: this.generators.modelUpdateDataInput.generate(model, {}),
       }

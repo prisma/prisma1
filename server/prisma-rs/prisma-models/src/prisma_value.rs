@@ -1,8 +1,8 @@
 use prisma_query::ast::*;
 
 use chrono::{DateTime, Utc};
-use serde::{Serialize, Deserialize};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
+use serde::{Deserialize, Serialize};
 use std::fmt;
 use uuid::Uuid;
 
@@ -66,6 +66,54 @@ impl fmt::Display for PrismaValue {
     }
 }
 
+impl From<&str> for PrismaValue {
+    fn from(s: &str) -> Self {
+        PrismaValue::from(s.to_string())
+    }
+}
+
+impl From<String> for PrismaValue {
+    fn from(s: String) -> Self {
+        PrismaValue::String(s)
+    }
+}
+
+impl From<f64> for PrismaValue {
+    fn from(s: f64) -> Self {
+        PrismaValue::Float(s)
+    }
+}
+
+impl From<f32> for PrismaValue {
+    fn from(s: f32) -> Self {
+        PrismaValue::Float(s as f64)
+    }
+}
+
+impl From<bool> for PrismaValue {
+    fn from(s: bool) -> Self {
+        PrismaValue::Boolean(s)
+    }
+}
+
+impl From<i32> for PrismaValue {
+    fn from(s: i32) -> Self {
+        PrismaValue::Int(s)
+    }
+}
+
+impl From<Uuid> for PrismaValue {
+    fn from(s: Uuid) -> Self {
+        PrismaValue::Uuid(s)
+    }
+}
+
+impl From<PrismaListValue> for PrismaValue {
+    fn from(s: PrismaListValue) -> Self {
+        PrismaValue::List(s)
+    }
+}
+
 impl From<GraphqlId> for PrismaValue {
     fn from(id: GraphqlId) -> PrismaValue {
         PrismaValue::GraphqlId(id)
@@ -116,6 +164,12 @@ impl FromSql for GraphqlId {
     }
 }
 
+impl From<&str> for GraphqlId {
+    fn from(s: &str) -> Self {
+        GraphqlId::from(s.to_string())
+    }
+}
+
 impl From<String> for GraphqlId {
     fn from(s: String) -> Self {
         GraphqlId::String(s)
@@ -131,11 +185,5 @@ impl From<usize> for GraphqlId {
 impl From<Uuid> for GraphqlId {
     fn from(uuid: Uuid) -> Self {
         GraphqlId::UUID(uuid)
-    }
-}
-
-impl From<Uuid> for PrismaValue {
-    fn from(uuid: Uuid) -> Self {
-        PrismaValue::Uuid(uuid)
     }
 }

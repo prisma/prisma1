@@ -5,7 +5,12 @@ import {
   ModelEnumTypeGeneratorBase,
   ScalarTypeGeneratorBase,
 } from '../../generator'
-import { IGQLType, IGQLField, TypeIdentifiers } from 'prisma-datamodel'
+import {
+  IGQLType,
+  IGQLField,
+  TypeIdentifiers,
+  IdStrategy,
+} from 'prisma-datamodel'
 import GQLAssert from '../../../util/gqlAssert'
 import {
   GraphQLList,
@@ -72,9 +77,24 @@ export default class ScalarTypeGenerator extends ScalarTypeGeneratorBase {
   public mapToScalarFieldTypeForInput(field: IGQLField) {
     const maybeListType = this.mapToScalarFieldTypeForceOptional(field)
     return this.requiredIf(
-      (field.isRequired || field.isList) && field.defaultValue === null,
+      this.isCreateInputFieldRequired(field),
       maybeListType,
     )
+  }
+
+  public isCreateInputFieldRequired(field: IGQLField): boolean {
+    if (field.isId) {
+      if (field.idStrategy === IdStrategy.None) {
+        return true
+      }
+
+      if (field.idStrategy === IdStrategy.Auto) {
+        return false
+      }
+    }
+
+    // all non id fields
+    return (field.isRequired || field.isList) && field.defaultValue === null
   }
 
   public mapToScalarFieldTypeForceRequired(field: IGQLField) {

@@ -13,6 +13,8 @@ type BatchPayload {
   count: Long!
 }
 
+scalar DateTime
+
 """
 Raw JSON value
 """
@@ -28,8 +30,11 @@ type Mutation {
   createTypeWithId(data: TypeWithIdCreateInput!): TypeWithId!
   createTypeWithoutId(data: TypeWithoutIdCreateInput!): TypeWithoutId!
   updateTypeWithId(data: TypeWithIdUpdateInput!, where: TypeWithIdWhereUniqueInput!): TypeWithId
+  updateTypeWithoutId(data: TypeWithoutIdUpdateInput!, where: TypeWithoutIdWhereUniqueInput!): TypeWithoutId
   deleteTypeWithId(where: TypeWithIdWhereUniqueInput!): TypeWithId
+  deleteTypeWithoutId(where: TypeWithoutIdWhereUniqueInput!): TypeWithoutId
   upsertTypeWithId(where: TypeWithIdWhereUniqueInput!, create: TypeWithIdCreateInput!, update: TypeWithIdUpdateInput!): TypeWithId!
+  upsertTypeWithoutId(where: TypeWithoutIdWhereUniqueInput!, create: TypeWithoutIdCreateInput!, update: TypeWithoutIdUpdateInput!): TypeWithoutId!
   updateManyTypeWithIds(data: TypeWithIdUpdateManyMutationInput!, where: TypeWithIdWhereInput): BatchPayload!
   updateManyTypeWithoutIds(data: TypeWithoutIdUpdateManyMutationInput!, where: TypeWithoutIdWhereInput): BatchPayload!
   deleteManyTypeWithIds(where: TypeWithIdWhereInput): BatchPayload!
@@ -78,6 +83,7 @@ type Query {
   typeWithIds(where: TypeWithIdWhereInput, orderBy: TypeWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithId]!
   typeWithoutIds(where: TypeWithoutIdWhereInput, orderBy: TypeWithoutIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [TypeWithoutId]!
   typeWithId(where: TypeWithIdWhereUniqueInput!): TypeWithId
+  typeWithoutId(where: TypeWithoutIdWhereUniqueInput!): TypeWithoutId
   typeWithIdsConnection(where: TypeWithIdWhereInput, orderBy: TypeWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): TypeWithIdConnection!
   typeWithoutIdsConnection(where: TypeWithoutIdWhereInput, orderBy: TypeWithoutIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): TypeWithoutIdConnection!
   """
@@ -99,6 +105,8 @@ type Subscription {
 type TypeWithId implements Node {
   id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -117,6 +125,7 @@ type TypeWithIdConnection {
 }
 
 input TypeWithIdCreateInput {
+  id: ID
   field: String!
 }
 
@@ -139,15 +148,17 @@ enum TypeWithIdOrderByInput {
   id_DESC
   field_ASC
   field_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type TypeWithIdPreviousValues {
   id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type TypeWithIdSubscriptionPayload {
@@ -316,14 +327,75 @@ input TypeWithIdWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 input TypeWithIdWhereUniqueInput {
   id: ID
 }
 
-type TypeWithoutId {
+type TypeWithoutId implements Node {
+  id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -342,6 +414,7 @@ type TypeWithoutIdConnection {
 }
 
 input TypeWithoutIdCreateInput {
+  id: ID
   field: String!
 }
 
@@ -360,18 +433,21 @@ type TypeWithoutIdEdge {
 }
 
 enum TypeWithoutIdOrderByInput {
-  field_ASC
-  field_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
+  field_ASC
+  field_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type TypeWithoutIdPreviousValues {
+  id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type TypeWithoutIdSubscriptionPayload {
@@ -413,6 +489,10 @@ input TypeWithoutIdSubscriptionWhereInput {
   node: TypeWithoutIdWhereInput
 }
 
+input TypeWithoutIdUpdateInput {
+  field: String
+}
+
 input TypeWithoutIdUpdateManyMutationInput {
   field: String
 }
@@ -430,6 +510,59 @@ input TypeWithoutIdWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [TypeWithoutIdWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   field: String
   """
   All values that are not equal to given value.
@@ -483,5 +616,67 @@ input TypeWithoutIdWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input TypeWithoutIdWhereUniqueInput {
+  id: ID
 }
 

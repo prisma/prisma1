@@ -1,0 +1,71 @@
+type LotsOfScalars {
+  id: ID! @id
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type LotsOfRequiredScalars {
+  id: ID! @id
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type LotsOfScalarLists {
+  id: ID! @id
+  int: [Int] @scalarList(strategy: RELATION)
+  string: [String] @scalarList(strategy: RELATION)
+  float: [Float] @scalarList(strategy: RELATION)
+  dateTime: [DateTime] @scalarList(strategy: RELATION)
+  json: [Json] @scalarList(strategy: RELATION)
+  boolean: [Boolean] @scalarList(strategy: RELATION)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type LotsOfScalarsWithID {
+  id: ID! @id
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type LotsOfRequiredScalarsWithID {
+  id: ID! @id
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type LotsOfScalarListsWithID {
+  id: ID! @id
+  int: [Int] @scalarList(strategy: RELATION)
+  string: [String] @scalarList(strategy: RELATION)
+  float: [Float] @scalarList(strategy: RELATION)
+  dateTime: [DateTime] @scalarList(strategy: RELATION)
+  json: [Json] @scalarList(strategy: RELATION)
+  boolean: [Boolean] @scalarList(strategy: RELATION)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

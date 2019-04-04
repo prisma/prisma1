@@ -16,3 +16,15 @@ case class FieldCannotBeNull(fieldName: String)         extends NativeError(fiel
 case class NodeNotFoundForWhere(modelName: String,
                                 fieldName: String,
                                 value: GCValue) extends NativeError(fieldName)
+
+case class RelationViolation(relationName: String,
+                             modelAName: String,
+                             modelBName: String) extends NativeError(relationName)
+
+case class NodeSelectorInfo(model: String, field: String, value: GCValue)
+
+case class NodesNotConnected(relationName: String,
+                             parentName: String,
+                             parentModel: Option[NodeSelectorInfo],
+                             childName: String,
+                             childWhere: Option[NodeSelectorInfo]) extends NativeError(relationName)

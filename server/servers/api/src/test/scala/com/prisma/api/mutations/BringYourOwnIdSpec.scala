@@ -92,7 +92,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     )
   }
 
-  "A Nested Create Mutation" should "error with invalid id" in {
+  "A Nested Create Mutation" should "error with invalid id" taggedAs IgnoreSQLite in {
     server.queryThatMustFail(
       s"""mutation {
          |createParent(data: {p: "Parent 2", id: "Own Id 2", childOpt:{create:{c:"Child 2", id: "This is way too long and should error"}}}){p, id, childOpt { c, id} }

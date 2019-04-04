@@ -164,6 +164,7 @@ type SelfReferencingAConnection {
 }
 
 input SelfReferencingACreateInput {
+  removeThisId: ID
   field: Int!
   a: SelfReferencingAWithIdCreateOneInput!
 }
@@ -350,6 +351,7 @@ type SelfReferencingAWithIdConnection {
 }
 
 input SelfReferencingAWithIdCreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingAWithIdCreateOneInput!
 }
@@ -558,6 +560,7 @@ type SelfReferencingBConnection {
 }
 
 input SelfReferencingBCreateInput {
+  removeThisId: ID
   field: Int!
   a: SelfReferencingBCreateOneInput
 }
@@ -768,6 +771,7 @@ type SelfReferencingBWithIdConnection {
 }
 
 input SelfReferencingBWithIdCreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingBWithIdCreateOneInput
 }
@@ -1112,6 +1116,7 @@ type SelfReferencingCConnection {
 }
 
 input SelfReferencingCCreateInput {
+  removeThisId: ID
   field: Int!
   a: SelfReferencingCCreateManyInput
 }
@@ -1437,6 +1442,7 @@ type SelfReferencingCWithIdConnection {
 }
 
 input SelfReferencingCWithIdCreateInput {
+  id: ID
   field: Int!
   a: SelfReferencingBWithIdCreateManyInput
 }

@@ -42,4 +42,9 @@ describe('parseEndpoint', () => {
       parseEndpoint('http://13.228.39.83:4466'),
     ).toMatchSnapshot()
   })
+  test('url on a subdomain', () => {
+    expect(
+      parseEndpoint('https://db.cloud.prisma.sh/test-token/test'),
+    ).toMatchSnapshot()
+  })
 })

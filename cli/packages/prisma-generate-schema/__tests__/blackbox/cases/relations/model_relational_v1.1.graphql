@@ -1,0 +1,61 @@
+type User {
+  id: ID! @id
+  name: String!
+  posts: [Post] @relation(name: "PostsByUser")
+  postsWithoutConnection: [PostWithoutConnection]
+  billingInfo: BillingInfo! @relation(link: TABLE)
+  billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(link: TABLE)
+  likes: [Post] @relation(name: "LikesByUser")
+  optionalDetails: OptionalDetails @relation(link: TABLE)
+  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type Post {
+  id: ID! @id
+  text: String!
+  count: Int!
+  user: User! @relation(link: TABLE, name: "PostsByUser")
+  likes: [User] @relation(name: "LikesByUser")
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type PostWithoutConnection {
+  id: ID! @id
+  text: String!
+  count: Int!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type BillingInfo {
+  id: ID! @id
+  account: String!
+  user: User!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type BillingInfoWithoutConnection {
+  id: ID! @id
+  account: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type OptionalDetails {
+  id: ID! @id
+  text: String!
+  user: User!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type OptionalDetailsWithoutConnection {
+  id: ID! @id
+  text: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

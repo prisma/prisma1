@@ -1,8 +1,11 @@
-type A {
+type A implements Node {
+  id: ID!
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum!]!
   b: B!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -25,6 +28,7 @@ input ACreatefieldCInput {
 }
 
 input ACreateInput {
+  id: ID
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: ACreatefieldCInput
@@ -33,13 +37,16 @@ input ACreateInput {
 
 input ACreateManyInput {
   create: [ACreateInput!]
+  connect: [AWhereUniqueInput!]
 }
 
 input ACreateManyWithoutBInput {
   create: [ACreateWithoutBInput!]
+  connect: [AWhereUniqueInput!]
 }
 
 input ACreateWithoutBInput {
+  id: ID
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: ACreatefieldCInput
@@ -84,22 +91,177 @@ type AggregateE {
 }
 
 enum AOrderByInput {
+  id_ASC
+  id_DESC
   fieldA_ASC
   fieldA_DESC
   fieldB_ASC
   fieldB_DESC
-  id_ASC
-  id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type APreviousValues {
+  id: ID!
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input AScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [AScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [AScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [AScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  fieldA: UsedEnum
+  """
+  All values that are not equal to given value.
+  """
+  fieldA_not: UsedEnum
+  """
+  All values that are contained in given list.
+  """
+  fieldA_in: [UsedEnum!]
+  """
+  All values that are not contained in given list.
+  """
+  fieldA_not_in: [UsedEnum!]
+  fieldB: UsedEnum
+  """
+  All values that are not equal to given value.
+  """
+  fieldB_not: UsedEnum
+  """
+  All values that are contained in given list.
+  """
+  fieldB_in: [UsedEnum!]
+  """
+  All values that are not contained in given list.
+  """
+  fieldB_not_in: [UsedEnum!]
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
 }
 
 type ASubscriptionPayload {
@@ -141,14 +303,91 @@ input ASubscriptionWhereInput {
   node: AWhereInput
 }
 
+input AUpdateDataInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AUpdatefieldCInput
+  b: BUpdateOneRequiredWithoutAInput
+}
+
 input AUpdatefieldCInput {
   set: [UsedEnum!]
+}
+
+input AUpdateInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AUpdatefieldCInput
+  b: BUpdateOneRequiredWithoutAInput
+}
+
+input AUpdateManyDataInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AUpdatefieldCInput
+}
+
+input AUpdateManyInput {
+  create: [ACreateInput!]
+  connect: [AWhereUniqueInput!]
+  set: [AWhereUniqueInput!]
+  disconnect: [AWhereUniqueInput!]
+  delete: [AWhereUniqueInput!]
+  update: [AUpdateWithWhereUniqueNestedInput!]
+  updateMany: [AUpdateManyWithWhereNestedInput!]
+  deleteMany: [AScalarWhereInput!]
+  upsert: [AUpsertWithWhereUniqueNestedInput!]
 }
 
 input AUpdateManyMutationInput {
   fieldA: UsedEnum
   fieldB: UsedEnum
   fieldC: AUpdatefieldCInput
+}
+
+input AUpdateManyWithoutBInput {
+  create: [ACreateWithoutBInput!]
+  connect: [AWhereUniqueInput!]
+  set: [AWhereUniqueInput!]
+  disconnect: [AWhereUniqueInput!]
+  delete: [AWhereUniqueInput!]
+  update: [AUpdateWithWhereUniqueWithoutBInput!]
+  updateMany: [AUpdateManyWithWhereNestedInput!]
+  deleteMany: [AScalarWhereInput!]
+  upsert: [AUpsertWithWhereUniqueWithoutBInput!]
+}
+
+input AUpdateManyWithWhereNestedInput {
+  where: AScalarWhereInput!
+  data: AUpdateManyDataInput!
+}
+
+input AUpdateWithoutBDataInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AUpdatefieldCInput
+}
+
+input AUpdateWithWhereUniqueNestedInput {
+  where: AWhereUniqueInput!
+  data: AUpdateDataInput!
+}
+
+input AUpdateWithWhereUniqueWithoutBInput {
+  where: AWhereUniqueInput!
+  data: AUpdateWithoutBDataInput!
+}
+
+input AUpsertWithWhereUniqueNestedInput {
+  where: AWhereUniqueInput!
+  update: AUpdateDataInput!
+  create: ACreateInput!
+}
+
+input AUpsertWithWhereUniqueWithoutBInput {
+  where: AWhereUniqueInput!
+  update: AUpdateWithoutBDataInput!
+  create: ACreateWithoutBInput!
 }
 
 input AWhereInput {
@@ -164,6 +403,59 @@ input AWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [AWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   fieldA: UsedEnum
   """
   All values that are not equal to given value.
@@ -190,7 +482,69 @@ input AWhereInput {
   All values that are not contained in given list.
   """
   fieldB_not_in: [UsedEnum!]
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   b: BWhereInput
+}
+
+input AWhereUniqueInput {
+  id: ID
 }
 
 type AWithId implements Node {
@@ -199,6 +553,8 @@ type AWithId implements Node {
   fieldB: UsedEnum!
   fieldC: [UsedEnum!]!
   c: C
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -221,6 +577,7 @@ input AWithIdCreatefieldCInput {
 }
 
 input AWithIdCreateInput {
+  id: ID
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: AWithIdCreatefieldCInput
@@ -238,6 +595,7 @@ input AWithIdCreateOneWithoutCInput {
 }
 
 input AWithIdCreateWithoutCInput {
+  id: ID
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: AWithIdCreatefieldCInput
@@ -264,10 +622,10 @@ enum AWithIdOrderByInput {
   fieldA_DESC
   fieldB_ASC
   fieldB_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type AWithIdPreviousValues {
@@ -275,6 +633,8 @@ type AWithIdPreviousValues {
   fieldA: UsedEnum
   fieldB: UsedEnum!
   fieldC: [UsedEnum!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type AWithIdSubscriptionPayload {
@@ -316,6 +676,13 @@ input AWithIdSubscriptionWhereInput {
   node: AWithIdWhereInput
 }
 
+input AWithIdUpdateDataInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AWithIdUpdatefieldCInput
+  c: CUpdateOneWithoutAInput
+}
+
 input AWithIdUpdatefieldCInput {
   set: [UsedEnum!]
 }
@@ -331,6 +698,36 @@ input AWithIdUpdateManyMutationInput {
   fieldA: UsedEnum
   fieldB: UsedEnum
   fieldC: AWithIdUpdatefieldCInput
+}
+
+input AWithIdUpdateOneRequiredInput {
+  create: AWithIdCreateInput
+  connect: AWithIdWhereUniqueInput
+  update: AWithIdUpdateDataInput
+  upsert: AWithIdUpsertNestedInput
+}
+
+input AWithIdUpdateOneRequiredWithoutCInput {
+  create: AWithIdCreateWithoutCInput
+  connect: AWithIdWhereUniqueInput
+  update: AWithIdUpdateWithoutCDataInput
+  upsert: AWithIdUpsertWithoutCInput
+}
+
+input AWithIdUpdateWithoutCDataInput {
+  fieldA: UsedEnum
+  fieldB: UsedEnum
+  fieldC: AWithIdUpdatefieldCInput
+}
+
+input AWithIdUpsertNestedInput {
+  update: AWithIdUpdateDataInput!
+  create: AWithIdCreateInput!
+}
+
+input AWithIdUpsertWithoutCInput {
+  update: AWithIdUpdateWithoutCDataInput!
+  create: AWithIdCreateWithoutCInput!
 }
 
 input AWithIdWhereInput {
@@ -425,6 +822,64 @@ input AWithIdWhereInput {
   All values that are not contained in given list.
   """
   fieldB_not_in: [UsedEnum!]
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   c: CWhereInput
 }
 
@@ -432,9 +887,12 @@ input AWithIdWhereUniqueInput {
   id: ID
 }
 
-type B {
+type B implements Node {
+  id: ID!
   field: String!
   a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type BatchPayload {
@@ -460,15 +918,18 @@ type BConnection {
 }
 
 input BCreateInput {
+  id: ID
   field: String!
   a: ACreateManyWithoutBInput
 }
 
 input BCreateOneWithoutAInput {
   create: BCreateWithoutAInput
+  connect: BWhereUniqueInput
 }
 
 input BCreateWithoutAInput {
+  id: ID
   field: String!
 }
 
@@ -487,18 +948,21 @@ type BEdge {
 }
 
 enum BOrderByInput {
-  field_ASC
-  field_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
+  field_ASC
+  field_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type BPreviousValues {
+  id: ID!
   field: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type BSubscriptionPayload {
@@ -540,8 +1004,29 @@ input BSubscriptionWhereInput {
   node: BWhereInput
 }
 
+input BUpdateInput {
+  field: String
+  a: AUpdateManyWithoutBInput
+}
+
 input BUpdateManyMutationInput {
   field: String
+}
+
+input BUpdateOneRequiredWithoutAInput {
+  create: BCreateWithoutAInput
+  connect: BWhereUniqueInput
+  update: BUpdateWithoutADataInput
+  upsert: BUpsertWithoutAInput
+}
+
+input BUpdateWithoutADataInput {
+  field: String
+}
+
+input BUpsertWithoutAInput {
+  update: BUpdateWithoutADataInput!
+  create: BCreateWithoutAInput!
 }
 
 input BWhereInput {
@@ -557,6 +1042,59 @@ input BWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [BWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
   field: String
   """
   All values that are not equal to given value.
@@ -610,14 +1148,79 @@ input BWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   a_every: AWhereInput
   a_some: AWhereInput
   a_none: AWhereInput
 }
 
-type C {
+input BWhereUniqueInput {
+  id: ID
+}
+
+type C implements Node {
+  id: ID!
   field: [Int!]!
   a: AWithId!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -640,15 +1243,18 @@ input CCreatefieldInput {
 }
 
 input CCreateInput {
+  id: ID
   field: CCreatefieldInput
   a: AWithIdCreateOneWithoutCInput!
 }
 
 input CCreateOneWithoutAInput {
   create: CCreateWithoutAInput
+  connect: CWhereUniqueInput
 }
 
 input CCreateWithoutAInput {
+  id: ID
   field: CCreatefieldInput
 }
 
@@ -669,14 +1275,17 @@ type CEdge {
 enum COrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type CPreviousValues {
+  id: ID!
   field: [Int!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type CSubscriptionPayload {
@@ -722,12 +1331,18 @@ input CUpdatefieldInput {
   set: [Int!]
 }
 
+input CUpdateInput {
+  field: CUpdatefieldInput
+  a: AWithIdUpdateOneRequiredWithoutCInput
+}
+
 input CUpdateManyMutationInput {
   field: CUpdatefieldInput
 }
 
 input CUpdateOneWithoutAInput {
   create: CCreateWithoutAInput
+  connect: CWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
   update: CUpdateWithoutADataInput
@@ -756,12 +1371,130 @@ input CWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [CWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   a: AWithIdWhereInput
 }
 
-type D {
+input CWhereUniqueInput {
+  id: ID
+}
+
+type D implements Node {
+  id: ID!
   field: [DateTime!]!
   a: AWithId!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 scalar DateTime
@@ -786,6 +1519,7 @@ input DCreatefieldInput {
 }
 
 input DCreateInput {
+  id: ID
   field: DCreatefieldInput
   a: AWithIdCreateOneInput!
 }
@@ -807,14 +1541,17 @@ type DEdge {
 enum DOrderByInput {
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type DPreviousValues {
+  id: ID!
   field: [DateTime!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type DSubscriptionPayload {
@@ -860,6 +1597,11 @@ input DUpdatefieldInput {
   set: [DateTime!]
 }
 
+input DUpdateInput {
+  field: DUpdatefieldInput
+  a: AWithIdUpdateOneRequiredInput
+}
+
 input DUpdateManyMutationInput {
   field: DUpdatefieldInput
 }
@@ -877,12 +1619,130 @@ input DWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [DWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   a: AWithIdWhereInput
 }
 
-type E {
+input DWhereUniqueInput {
+  id: ID
+}
+
+type E implements Node {
+  id: ID!
   field: Json
   a(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 """
@@ -901,6 +1761,7 @@ type EConnection {
 }
 
 input ECreateInput {
+  id: ID
   field: Json
   a: ACreateManyInput
 }
@@ -920,18 +1781,21 @@ type EEdge {
 }
 
 enum EOrderByInput {
-  field_ASC
-  field_DESC
   id_ASC
   id_DESC
-  updatedAt_ASC
-  updatedAt_DESC
+  field_ASC
+  field_DESC
   createdAt_ASC
   createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
 }
 
 type EPreviousValues {
+  id: ID!
   field: Json
+  createdAt: DateTime!
+  updatedAt: DateTime!
 }
 
 type ESubscriptionPayload {
@@ -973,6 +1837,11 @@ input ESubscriptionWhereInput {
   node: EWhereInput
 }
 
+input EUpdateInput {
+  field: Json
+  a: AUpdateManyInput
+}
+
 input EUpdateManyMutationInput {
   field: Json
 }
@@ -990,9 +1859,124 @@ input EWhereInput {
   Logical NOT on all given filters combined by AND.
   """
   NOT: [EWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
   a_every: AWhereInput
   a_some: AWhereInput
   a_none: AWhereInput
+}
+
+input EWhereUniqueInput {
+  id: ID
 }
 
 """
@@ -1013,8 +1997,23 @@ type Mutation {
   createE(data: ECreateInput!): E!
   createA(data: ACreateInput!): A!
   createAWithId(data: AWithIdCreateInput!): AWithId!
+  updateB(data: BUpdateInput!, where: BWhereUniqueInput!): B
+  updateC(data: CUpdateInput!, where: CWhereUniqueInput!): C
+  updateD(data: DUpdateInput!, where: DWhereUniqueInput!): D
+  updateE(data: EUpdateInput!, where: EWhereUniqueInput!): E
+  updateA(data: AUpdateInput!, where: AWhereUniqueInput!): A
   updateAWithId(data: AWithIdUpdateInput!, where: AWithIdWhereUniqueInput!): AWithId
+  deleteB(where: BWhereUniqueInput!): B
+  deleteC(where: CWhereUniqueInput!): C
+  deleteD(where: DWhereUniqueInput!): D
+  deleteE(where: EWhereUniqueInput!): E
+  deleteA(where: AWhereUniqueInput!): A
   deleteAWithId(where: AWithIdWhereUniqueInput!): AWithId
+  upsertB(where: BWhereUniqueInput!, create: BCreateInput!, update: BUpdateInput!): B!
+  upsertC(where: CWhereUniqueInput!, create: CCreateInput!, update: CUpdateInput!): C!
+  upsertD(where: DWhereUniqueInput!, create: DCreateInput!, update: DUpdateInput!): D!
+  upsertE(where: EWhereUniqueInput!, create: ECreateInput!, update: EUpdateInput!): E!
+  upsertA(where: AWhereUniqueInput!, create: ACreateInput!, update: AUpdateInput!): A!
   upsertAWithId(where: AWithIdWhereUniqueInput!, create: AWithIdCreateInput!, update: AWithIdUpdateInput!): AWithId!
   updateManyBs(data: BUpdateManyMutationInput!, where: BWhereInput): BatchPayload!
   updateManyCs(data: CUpdateManyMutationInput!, where: CWhereInput): BatchPayload!
@@ -1075,6 +2074,11 @@ type Query {
   es(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E]!
   as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
   aWithIds(where: AWithIdWhereInput, orderBy: AWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [AWithId]!
+  b(where: BWhereUniqueInput!): B
+  c(where: CWhereUniqueInput!): C
+  d(where: DWhereUniqueInput!): D
+  e(where: EWhereUniqueInput!): E
+  a(where: AWhereUniqueInput!): A
   aWithId(where: AWithIdWhereUniqueInput!): AWithId
   bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
   csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!

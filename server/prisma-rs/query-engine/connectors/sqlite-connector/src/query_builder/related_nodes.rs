@@ -32,7 +32,7 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
     ) -> Self {
         let relation = from_field.relation();
         let related_model = from_field.related_model();
-        let cursor_condition = CursorCondition::build(&query_arguments, &related_model);
+        let cursor_condition = CursorCondition::build(&query_arguments, related_model.clone());
         let window_limits = query_arguments.window_limits();
 
         let order_by: Option<OrderBy> = query_arguments.order_by;
@@ -87,11 +87,11 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             .partition_by((Self::BASE_TABLE_ALIAS, SelectedFields::PARENT_MODEL_ALIAS))
             .into();
 
-        let with_row_numbers = Select::from(Table::from(base_with_conditions).alias(Self::BASE_TABLE_ALIAS))
+        let with_row_numbers = Select::from_table(Table::from(base_with_conditions).alias(Self::BASE_TABLE_ALIAS))
             .value(Table::from(Self::BASE_TABLE_ALIAS).asterisk())
             .value(row_number_part.alias(Self::ROW_NUMBER_ALIAS));
 
-        Select::from(Table::from(with_row_numbers).alias(Self::ROW_NUMBER_TABLE_ALIAS))
+        Select::from_table(Table::from(with_row_numbers).alias(Self::ROW_NUMBER_TABLE_ALIAS))
             .value(Table::from(Self::ROW_NUMBER_TABLE_ALIAS).asterisk())
             .so_that(Self::ROW_NUMBER_ALIAS.between(self.window_limits.0 as i64, self.window_limits.1 as i64))
     }
@@ -122,9 +122,10 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
         self.selected_fields
             .columns()
             .into_iter()
-            .fold(Select::from(self.from_field.related_model().table()), |acc, col| {
-                acc.column(col.clone())
-            })
+            .fold(
+                Select::from_table(self.from_field.related_model().table()),
+                |acc, col| acc.column(col.clone()),
+            )
             .inner_join(
                 self.relation_table()
                     .on(self.id_column().equals(self.opposite_relation_side_column())),
