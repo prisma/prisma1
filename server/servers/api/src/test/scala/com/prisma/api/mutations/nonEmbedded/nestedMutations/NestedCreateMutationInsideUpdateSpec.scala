@@ -535,15 +535,15 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   text: String
-        |   todo: Todo
+        |   todo: Todo @relation(link: INLINE)
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   comments: [Comment]
         |}"""
     }
@@ -586,15 +586,15 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to one relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   text: String
-        |   todo: Todo
+        |   todo: Todo @relation(link: INLINE)
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   title: String
         |   comments: [Comment]
         |}"""
@@ -639,15 +639,15 @@ class NestedCreateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a many to one relation" should "be creatable through a nested mutation using non-id unique field" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   text: String! @unique
-        |   todo: Todo
+        |   todo: Todo @relation(link: INLINE)
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   title: String! @unique
         |   comments: [Comment]
         |}"""

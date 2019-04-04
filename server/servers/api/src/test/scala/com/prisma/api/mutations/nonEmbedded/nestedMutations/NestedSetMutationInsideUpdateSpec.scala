@@ -2,7 +2,7 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -396,15 +396,15 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
   }
 
   "a one to many relation" should "be setable by id through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
-        | todo: Todo
+        | todo: Todo @relation(link: INLINE)
         |}
         |
         |type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | comments: [Comment]
         |}
       """.stripMargin
@@ -440,15 +440,15 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
   }
 
   "a one to many relation" should "be setable by unique through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String @unique
-        | todo: Todo
+        | todo: Todo @relation(link: INLINE)
         |}
         |
         |type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | title: String @unique
         | comments: [Comment]
         |}
@@ -485,12 +485,12 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
   }
 
   "a PM to CM  self relation with the child not already in a relation" should "be setable through a nested mutation by unique" in {
-    val project = SchemaDsl.fromString() {
-      """type Technology {
-        | id: ID! @unique
-        | name: String! @unique
-        | childTechnologies: [Technology] @relation(name: "ChildTechnologies")
-        | parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Technology {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  childTechnologies: [Technology] @relation(name: "ChildTechnologies" $inlineListArgument)
+         |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
         |}
       """.stripMargin
     }
@@ -530,15 +530,15 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
   }
 
   "Setting two nodes twice" should "not error" in {
-    val project = SchemaDsl.fromString() {
-      """type Child {
-        | id: ID! @unique
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Child {
+        | id: ID! @id
         | c: String! @unique
-        | parents: [Parent]
+        | parents: [Parent] $inlineListDirective
         |}
         |
         |type Parent {
-        | id: ID! @unique
+        | id: ID! @id
         | p: String! @unique
         | children: [Child]
         |}
@@ -619,16 +619,16 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
 
   "Setting several times" should "not error and only connect the item once" in {
 
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type Post {
-        |  id: ID! @unique
-        |  authors: [AUser]
+        |  id: ID! @id
+        |  authors: [AUser] $inlineListDirective
         |  title: String! @unique
         |}
         |
         |type AUser {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String! @unique
         |  posts: [Post]
         |}"""
@@ -645,4 +645,9 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
 
     server.query("""query{aUsers{name, posts{title}}}""", project).toString should be("""{"data":{"aUsers":[{"name":"Author","posts":[{"title":"Title"}]}]}}""")
   }
+
+  val inlineListArgument  = if (capabilities.has(RelationLinkListCapability)) "link: INLINE" else ""
+  val inlineListDirective = if (capabilities.has(RelationLinkListCapability)) "@relation(link: INLINE)" else ""
+
+  println(inlineListDirective)
 }

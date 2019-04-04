@@ -58,7 +58,7 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
       s"""type Top {
         | id: ID! @id
         | name: String! @unique
-        | bottom: Bottom @relation(name: "Test", onDelete: CASCADE)
+        | bottom: Bottom @relation(name: "Test", onDelete: CASCADE, link: INLINE)
         |}
         |
         |type Bottom {
