@@ -103,8 +103,6 @@ class BuildContext
     [:debian, :lambda]
   end
 
-  private
-
   def os
     @os ||= (
       host_os = RbConfig::CONFIG['host_os']
