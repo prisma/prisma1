@@ -1,6 +1,6 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -12,17 +12,17 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
   "a P0 to C1! relation " should "error when deleting the parent" in {
 
     val schema = """type Parent{
-                            id: ID! @unique
+                            id: ID! @id
                             p: String! @unique
                         }
                         
                         type Child{
-                            id: ID! @unique
+                            id: ID! @id
                             c: String! @unique
-                            parentReq: Parent!
+                            parentReq: Parent! @relation(link: INLINE)
                         }"""
 
-    val project = SchemaDsl.fromString() { schema }
+    val project = SchemaDsl.fromStringV11() { schema }
     database.setup(project)
 
     server
@@ -64,17 +64,17 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
   "a P0 to C1! relation " should "error when deleting the parent with empty filter" in {
     val schema = """type Parent{
-                            id: ID! @unique
+                            id: ID! @id
                             p: String! @unique
                         }
                         
                         type Child{
-                            id: ID! @unique
+                            id: ID! @id
                             c: String! @unique
-                            parentReq: Parent!
+                            parentReq: Parent! @relation(link: INLINE)
                         }"""
 
-    val project = SchemaDsl.fromString() { schema }
+    val project = SchemaDsl.fromStringV11() { schema }
     database.setup(project)
 
     server
@@ -769,30 +769,50 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
 
   "a PM to CM  relation" should "delete the parent from other relations as well" in {
 
-    val schema = """    type Parent{
-                            id: ID! @unique
-                            p: String! @unique
-                            childrenOpt: [Child]
-                            stepChildOpt: StepChild
-                        }
+    val testDataModels = {
+      val dm1 = """type Parent{
+                       id: ID! @id
+                       p: String! @unique
+                       childrenOpt: [Child] @relation(link: INLINE)
+                       stepChildOpt: StepChild @relation(link: INLINE)
+                   }
+  
+                   type Child{
+                       id: ID! @id
+                       c: String! @unique
+                       parentsOpt: [Parent]
+                   }
+                   
+                   type StepChild{
+                        id: ID! @id
+                        s: String! @unique
+                        parentOpt: Parent
+                   }"""
 
-                        type Child{
-                            id: ID! @unique
-                            c: String! @unique
-                            parentsOpt: [Parent]
-                        }
-                 
-                        type StepChild{
-                             id: ID! @unique
-                             s: String! @unique
-                             parentOpt: Parent
-                         }"""
+      val dm2 = """type Parent{
+                       id: ID! @id
+                       p: String! @unique
+                       childrenOpt: [Child]
+                       stepChildOpt: StepChild @relation(link: INLINE)
+                   }
+  
+                   type Child{
+                       id: ID! @id
+                       c: String! @unique
+                       parentsOpt: [Parent]
+                   }
+                   
+                   type StepChild{
+                        id: ID! @id
+                        s: String! @unique
+                        parentOpt: Parent
+                   }"""
+      TestDataModels(mongo = dm1, sql = dm2)
+    }
 
-    val project = SchemaDsl.fromString() { schema }
-    database.setup(project)
-
-    server.query(
-      """mutation {
+    testDataModels.testV11 { project =>
+      server.query(
+        """mutation {
         |  createParent(data: {
         |    p: "p1"
         |    childrenOpt: {
@@ -805,14 +825,14 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
         |    p
         |  }
         |}""".stripMargin,
-      project
-    )
+        project
+      )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToStepChild").await should be(1) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ParentToStepChild").await should be(1) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
-    server.query(
-      s"""
+      server.query(
+        s"""
          |mutation {
          |  deleteManyParents(
          |  where: { p: "p1"}
@@ -821,13 +841,14 @@ class DeleteManyMutationRelationsSpec extends FlatSpec with Matchers with ApiSpe
          |  }
          |}
       """.stripMargin,
-      project
-    )
+        project
+      )
 
-    ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
-    ifConnectorIsActive { dataResolver(project).countByTable("_ParentToStepChild").await should be(0) }
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(0)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
-    dataResolver(project).countByTable(project.schema.getModelByName_!("StepChild").dbName).await should be(1)
+      ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
+      ifConnectorIsActive { dataResolver(project).countByTable("_ParentToStepChild").await should be(0) }
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(0)
+      dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
+      dataResolver(project).countByTable(project.schema.getModelByName_!("StepChild").dbName).await should be(1)
+    }
   }
 }

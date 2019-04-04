@@ -10,10 +10,10 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(NodeQueryCapability, JoinRelationLinksCapability)
 
   "the node query" should "return null if the id does not exist" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String!
         |}
       """.stripMargin
@@ -36,10 +36,10 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the node query" should "work if the given id exists" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String!
         |}
       """.stripMargin
@@ -74,18 +74,18 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the node query" should "work if the given id exists when using multiple complicated fragments" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String!
-        |  todo: Todo @relation(name:"TodoSelfRelation1")
-        |  todo2: Todo @relation(name:"TodoSelfRelation2")
-        |  comment: Comment @relation(name:"TodoToComment1")
+        |  todo: Todo @relation(name:"TodoSelfRelation1" link: INLINE)
+        |  todo2: Todo @relation(name:"TodoSelfRelation2" link: INLINE)
+        |  comment: Comment @relation(name:"TodoToComment1" link: INLINE)
         |}
         |
         |type Comment {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  text1: String!
         |  text2: String!
         |  text3: String!
@@ -173,7 +173,7 @@ class NodeQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
 //  "the node query" should "work if the model name changed and the stableRelayIdentifier is the same" in {
-//    val project = SchemaDsl.fromString() {
+//    val project = SchemaDsl.fromStringV11() {
 //      """
 //        |type Todo {
 //        |  id: ID!

@@ -11,16 +11,16 @@ class EmbeddedToOneRelationFilterSpec extends FlatSpec with Matchers with ApiSpe
 
   "Using a toOne relational filter checking for null " should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: Middle
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |}"""
     }
@@ -80,16 +80,16 @@ class EmbeddedToOneRelationFilterSpec extends FlatSpec with Matchers with ApiSpe
 
   "Using a toOne relational filter checking for two nested values" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: Middle
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |}"""
     }
@@ -149,22 +149,22 @@ class EmbeddedToOneRelationFilterSpec extends FlatSpec with Matchers with ApiSpe
 
   "Using a toOne relational filter over two levels" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: Middle
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |   bottom: Bottom
         |}
         |
         |type Bottom @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |}"""
     }

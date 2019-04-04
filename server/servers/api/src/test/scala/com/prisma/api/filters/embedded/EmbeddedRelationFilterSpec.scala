@@ -9,10 +9,10 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
-  lazy val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromStringV11() {
     """
       |type Blog {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   name: String!
       |   posts: [Post]
       |}
@@ -206,31 +206,31 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
   "Fancy filter" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |  pets: [Dog]
         |  posts: [Post]
         |}
         |
         |type Post {
-        |  id: ID! @unique
-        |  author: User @mongoRelation(field: "author")
+        |  id: ID! @id
+        |  author: User @relation(link: INLINE)
         |  title: String!
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Walker {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |}
         |
         |type Dog @embedded {
         |  breed: String!
-        |  walker: Walker @mongoRelation(field: "dogtowalker")
+        |  walker: Walker @relation(link: INLINE) @db(name: "dogtowalker")
         |}"""
     }
 
@@ -303,23 +303,23 @@ class EmbeddedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
   "Self relations bug" should "be fixed" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type User {
-        |  id: ID! @unique
-        |  updatedAt: DateTime!
+        |  id: ID! @id
+        |  updatedAt: DateTime! @updatedAt
         |  nick: String! @unique
         |}
         |
         |type Todo {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String! @unique
         |  comments: [Comment]
         |}
         |
         |type Comment @embedded {
         |  text: String!
-        |  user: User! @mongoRelation(field: "user")
+        |  user: User! @relation(link: INLINE)
         |  snarkyRemark: Comment
         |}"""
     }

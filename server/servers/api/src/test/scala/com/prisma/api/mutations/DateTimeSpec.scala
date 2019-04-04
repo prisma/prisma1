@@ -7,9 +7,9 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """type Person {
-        | id: ID! @unique
+        | id: ID! @id
         | name: String! @unique
         | born: DateTime!
         |}"""

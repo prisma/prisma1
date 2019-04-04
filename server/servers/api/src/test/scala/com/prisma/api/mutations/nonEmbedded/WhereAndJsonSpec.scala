@@ -1,28 +1,34 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class WhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
+  val inlineDirective = if (capabilities.has(RelationLinkListCapability)) {
+    "@relation(link: INLINE)"
+  } else {
+    ""
+  }
+
   "Using the same input in an update using where as used during creation of the item" should "work" in {
 
     val outerWhere = """"{\"stuff\": 1, \"nestedStuff\" : {\"stuff\": 2 } }""""
     val innerWhere = """"{\"stuff\": 2, \"nestedStuff\" : {\"stuff\": 1, \"nestedStuff\" : {\"stuff\": 2 } } }""""
 
-    val project = SchemaDsl.fromString() {
-      """type Note{
-        |   id: ID! @unique
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Note{
+        |   id: ID! @id
         |   outerString: String!
         |   outerJson: Json! @unique
-        |   todos: [Todo]
+        |   todos: [Todo] $inlineDirective
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   innerString: String!
         |   innerJson: Json! @unique
         |   notes: [Note]

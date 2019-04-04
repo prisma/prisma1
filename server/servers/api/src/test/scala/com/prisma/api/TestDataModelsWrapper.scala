@@ -10,6 +10,11 @@ case class TestDataModels(
     mongo: Vector[String],
     sql: Vector[String]
 )
+object TestDataModels {
+  def apply(mongo: String, sql: String): TestDataModels = {
+    TestDataModels(mongo = Vector(mongo), sql = Vector(sql))
+  }
+}
 
 case class TestDataModelsWrapper(
     dataModel: TestDataModels,

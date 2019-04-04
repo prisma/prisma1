@@ -3,7 +3,7 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 import java.util.UUID
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.{IgnoreMongo, IgnoreMySql, IgnoreSQLite}
 import org.scalatest.{Matchers, WordSpecLike}
@@ -281,14 +281,14 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
   }
 
   "a one to many relation should be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """type Todo{
-        |   id: ID! @unique
-        |   comments: [Comment]
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Todo{
+        |   id: ID! @id
+        |   comments: [Comment] $inlineDirectiveForListField
         |}
         |
         |type Comment{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   text: String!
         |   todo: Todo
         |}"""
@@ -317,15 +317,15 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
   }
 
   "a many to one relation should be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   title: String!
-        |   comments: Comment
+        |   comments: Comment @relation(link: INLINE)
         |}
         |
         |type Comment{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   text: String!
         |   todo: Todo
         |}"""
@@ -355,15 +355,15 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
   }
 
   "a many to many relation should be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """type Todo{
-        |   id: ID! @unique
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Todo{
+        |   id: ID! @id
         |   title: String!
-        |   tags: [Tag]
+        |   tags: [Tag] $inlineDirectiveForListField
         |}
         |
         |type Tag{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   name: String!
         |   todos: [Todo]
         |}"""
@@ -415,16 +415,16 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
   }
 
   "A nested create on a one to one relation should correctly assign violations to offending model and not partially execute first direction" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type User{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   name: String!
         |   unique: String @unique
-        |   post: Post
+        |   post: Post @relation(link: INLINE)
         |}
         |
         |type Post{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   title: String!
         |   uniquePost: String @unique
         |   user: User
@@ -471,16 +471,16 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
   }
 
   "A nested create on a one to one relation should correctly assign violations to offending model and not partially execute second direction" taggedAs IgnoreSQLite in { // TODO: Remove when transactions are back
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type User{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   name: String!
         |   unique: String @unique
-        |   post: Post
+        |   post: Post @relation(link: INLINE)
         |}
         |
         |type Post{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   title: String!
         |   uniquePost: String @unique
         |   user: User
@@ -527,22 +527,22 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
   }
 
   "a deeply nested mutation should execute all levels of the mutation" in {
-    val project = SchemaDsl.fromString() {
-      """type List{
-        |   id: ID! @unique
+    val project = SchemaDsl.fromStringV11() {
+      s"""type List{
+        |   id: ID! @id
         |   name: String!
-        |   todos: [Todo]
+        |   todos: [Todo] $inlineDirectiveForListField
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   title: String!
         |   list: List
-        |   tag: Tag
+        |   tag: Tag @relation(link: INLINE)
         |}
         |
         |type Tag{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   name: String!
         |   todo: Todo
         |}"""
@@ -587,16 +587,16 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "a required one2one relation should be creatable through a nested create mutation" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   reqOnComment: String!
         |   optOnComment: String
-        |   todo: Todo!
+        |   todo: Todo! @relation(link: INLINE)
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   reqOnTodo: String!
         |   optOnTodo: String
         |   comment: Comment!
@@ -645,16 +645,16 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "a required one2one relation should be creatable through a nested connected mutation" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Comment{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   reqOnComment: String!
         |   optOnComment: String
-        |   todo: Todo!
+        |   todo: Todo! @relation(link: INLINE)
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   reqOnTodo: String!
         |   optOnTodo: String
         |   comment: Comment
@@ -751,15 +751,15 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
   }
 
   "creating a nested item with an id of type UUID should work" taggedAs (IgnoreMySql, IgnoreMongo) in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""
          |type List {
-         |  id: ID! @unique
+         |  id: ID! @id
          |  todos: [Todo]
          |}
          |
          |type Todo {
-         |  id: UUID! @unique
+         |  id: UUID! @id
          |  title: String!
          |}
        """.stripMargin
@@ -791,16 +791,16 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   "Backrelation bug should be fixed" in {
 
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  nick: String! @unique
         |  memberships: [ListMembership]
         |}
         |
         |type List {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  createdAt: DateTime! @createdAt
         |  updatedAt: DateTime! @updatedAt
         |  name: String!
@@ -808,9 +808,9 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
         |}
         |
         |type ListMembership {
-        |  id: ID! @unique
-        |  user: User! @mongoRelation(field: "user")
-        |  list: List! @mongoRelation(field: "list")
+        |  id: ID! @id
+        |  user: User! @relation(link: INLINE)
+        |  list: List! @relation(link: INLINE)
         |}"""
     }
 
@@ -857,4 +857,9 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
     result.toString should be("""{"data":{"users":[{"nick":"marcus","memberships":[{"list":{"name":"Personal Inbox"}}]}]}}""")
   }
 
+  val inlineDirectiveForListField = if (capabilities.has(RelationLinkListCapability)) {
+    "@relation(link: INLINE)"
+  } else {
+    ""
+  }
 }

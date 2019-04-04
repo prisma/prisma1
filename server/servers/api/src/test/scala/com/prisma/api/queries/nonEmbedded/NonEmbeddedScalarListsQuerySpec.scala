@@ -24,14 +24,14 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
 
       val s2 = s"""type List{
                   |   id: ID! @id
-                  |   todos: [Todo]
-                  |   listInts: [Int]
+                  |   todos: [Todo] @scalarList(strategy: RELATION)
+                  |   listInts: [Int] @scalarList(strategy: RELATION)
                   |}
                   |
                   |type Todo{
                   |   id: ID! @id
-                  |   lists: [List]
-                  |   todoInts: [Int]
+                  |   lists: [List] @scalarList(strategy: RELATION)
+                  |   todoInts: [Int] @scalarList(strategy: RELATION)
                   |}"""
       TestDataModels(mongo = Vector(s1), sql = Vector(s2))
     }
@@ -70,7 +70,27 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
                   |   tagInts: [Int]
                   |}
                   |"""
-      TestDataModels(mongo = Vector(s1), sql = Vector(s1))
+
+      val s2 = s"""type List{
+                  |   id: ID! @id
+                  |   todo: Todo @relation(link: INLINE)
+                  |   listInts: [Int] @scalarList(strategy: RELATION)
+                  |}
+                  |
+                  |type Todo{
+                  |   id: ID! @id
+                  |   list: List
+                  |   tag: Tag @relation(link: INLINE)
+                  |   todoInts: [Int] @scalarList(strategy: RELATION)
+                  |}
+                  |
+                  |type Tag{
+                  |   id: ID! @id
+                  |   todo: Todo
+                  |   tagInts: [Int] @scalarList(strategy: RELATION)
+                  |}
+                  |"""
+      TestDataModels(mongo = Vector(s1), sql = Vector(s2))
     }
 
     testDataModels.testV11 { project =>
@@ -110,7 +130,30 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
                   |   tagInts: [Int]
                   |}
                   |"""
-      TestDataModels(mongo = Vector(s1), sql = Vector(s1))
+
+      val s2 = s"""type List{
+                  |   id: ID! @id
+                  |   todo: Todo @relation(link: INLINE)
+                  |   uList: String! @unique
+                  |   listInts: [Int] @scalarList(strategy: RELATION)
+                  |}
+                  |
+                  |type Todo{
+                  |   id: ID! @id
+                  |   uTodo: String! @unique
+                  |   list: List
+                  |   tag: Tag @relation(link: INLINE)
+                  |   todoInts: [Int] @scalarList(strategy: RELATION)
+                  |}
+                  |
+                  |type Tag{
+                  |   id: ID! @id
+                  |   uTag: String! @unique
+                  |   todo: Todo
+                  |   tagInts: [Int] @scalarList(strategy: RELATION)
+                  |}
+                  |"""
+      TestDataModels(mongo = Vector(s1), sql = Vector(s2))
     }
 
     testDataModels.testV11 { project =>
@@ -150,7 +193,22 @@ class NonEmbeddedScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpe
                   |   todoInts: [Int]
                   |}
                   |"""
-      TestDataModels(mongo = Vector(s1), sql = Vector(s1))
+
+      val s2 = s"""type List{
+                  |   id: ID! @id
+                  |   todo: Todo @relation(link: INLINE)
+                  |   uList: String! @unique
+                  |   listInts: [Int] @scalarList(strategy: RELATION)
+                  |}
+                  |
+                  |type Todo{
+                  |   id: ID! @id
+                  |   uTodo: String! @unique
+                  |   list: List
+                  |   todoInts: [Int] @scalarList(strategy: RELATION)
+                  |}
+                  |"""
+      TestDataModels(mongo = Vector(s1), sql = Vector(s2))
     }
 
     testDataModels.testV11 { project =>

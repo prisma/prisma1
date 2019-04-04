@@ -10,10 +10,10 @@ class DeeplyNestedSelfRelationSpec extends FlatSpec with Matchers with ApiSpecBa
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "A deeply nested self relation create" should "be executed completely" in {
-    val project: Project = SchemaDsl.fromString() { """type User {
-                                                      |  id: ID! @unique
+    val project: Project = SchemaDsl.fromStringV11() { """type User {
+                                                      |  id: ID! @id
                                                       |  name: String! @unique
-                                                      |  parent: User @relation(name: "Users")
+                                                      |  parent: User @relation(name: "Users", link: INLINE)
                                                       |  children: [User] @relation(name: "Users")
                                                       |}""" }
 

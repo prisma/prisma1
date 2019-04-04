@@ -88,11 +88,11 @@ class SingleItemQuerySpec extends WordSpecLike with Matchers with ApiSpecBase {
   }
 
   "should respect custom db names" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
-        |type Todo @pgTable(name: "my_table") {
-        |  id: ID! @unique
-        |  title: String @pgColumn(name: "my_column")
+        |type Todo @db(name: "my_table") {
+        |  id: ID! @id
+        |  title: String @db(name: "my_column")
         |}
       """.stripMargin
     }
