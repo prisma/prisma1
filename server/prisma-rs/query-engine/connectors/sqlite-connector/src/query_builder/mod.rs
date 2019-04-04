@@ -1,6 +1,6 @@
 mod related_nodes;
 
-use crate::{cursor_condition::CursorCondition, filter_conversion as convert, ordering::Ordering};
+use crate::{cursor_condition::CursorCondition, filter_conversion::AliasedCondition, ordering::Ordering};
 use connector::{Filter, NodeSelector, QueryArguments};
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
@@ -39,7 +39,7 @@ impl SelectDefinition for QueryArguments {
 
         let filter: ConditionTree = self
             .filter
-            .map(convert::filter_to_condition_tree)
+            .map(|f| f.aliased_cond(None))
             .unwrap_or(ConditionTree::NoCondition);
 
         let conditions = ConditionTree::and(filter, cursor);

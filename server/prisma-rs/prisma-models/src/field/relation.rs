@@ -131,7 +131,7 @@ impl RelationField {
         let model = self.model();
         let schema = model.schema();
         let db_name = self.db_name();
-        let parts = (schema.db_name.as_ref(), model.db_name(), db_name.as_ref());
+        let parts = ((schema.db_name.as_ref(), model.db_name()), db_name.as_ref());
 
         parts.into()
     }

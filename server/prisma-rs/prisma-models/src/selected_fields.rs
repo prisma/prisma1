@@ -110,14 +110,14 @@ impl SelectedFields {
                         relation
                             .column_for_relation_side(from_field.relation_side.opposite())
                             .alias(Self::RELATED_MODEL_ALIAS)
-                            .table(Relation::TABLE_ALIAS.into()),
+                            .table(Relation::TABLE_ALIAS),
                     );
 
                     result.push(
                         relation
                             .column_for_relation_side(from_field.relation_side)
                             .alias(Self::PARENT_MODEL_ALIAS)
-                            .table(Relation::TABLE_ALIAS.into()),
+                            .table(Relation::TABLE_ALIAS),
                     );
                 };
 
