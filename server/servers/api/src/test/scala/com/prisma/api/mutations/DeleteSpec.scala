@@ -2,6 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.{IgnoreMongo, IgnoreMySql}
 import com.prisma.api.ApiSpecBase
+import com.prisma.shared.models.ConnectorCapability.UuidIdCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -57,29 +58,31 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     todoAndRelayCountShouldBe(project, 3)
   }
 
-  "the delete mutation" should "work when node ids are UUIDs" taggedAs (IgnoreMySql, IgnoreMongo) in {
-    val project = SchemaDsl.fromStringV11()(s"""
+  "the delete mutation" should "work when node ids are UUIDs" in {
+    if (capabilities.has(UuidIdCapability)) {
+      val project = SchemaDsl.fromStringV11()(s"""
          |type Todo {
          |  id: UUID! @id
          |  title: String
          |}
        """.stripMargin)
 
-    database.setup(project)
+      database.setup(project)
 
-    val id = createTodo(project, "1")
-    todoAndRelayCountShouldBe(project, 1)
+      val id = createTodo(project, "1")
+      todoAndRelayCountShouldBe(project, 1)
 
-    server.query(
-      s"""mutation {
+      server.query(
+        s"""mutation {
         |  deleteTodo(where:{id: "$id"}){
         |    id
         |  }
         |}
       """.stripMargin,
-      project
-    )
-    todoAndRelayCountShouldBe(project, 0)
+        project
+      )
+      todoAndRelayCountShouldBe(project, 0)
+    }
   }
 
   def todoAndRelayCountShouldBe(project: Project, int: Int) = {
@@ -108,5 +111,6 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
         project
       )
       .pathAsString("data.createTodo.id")
+
   }
 }
