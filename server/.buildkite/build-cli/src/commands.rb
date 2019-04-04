@@ -69,7 +69,7 @@ def native_image(context, target, version_str)
 end
 
 def rust_binary(context)
-  os = @context.os
+  os = context.os
   artifact_s3_paths = ["s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/#{context.commit}/#{os}"]
 
   if context.branch == "alpha" || context.branch == "beta"
