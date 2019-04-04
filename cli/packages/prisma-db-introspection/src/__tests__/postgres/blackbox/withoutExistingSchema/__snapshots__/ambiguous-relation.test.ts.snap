@@ -10,14 +10,8 @@ exports[`Introspector test schema - 2504 1`] = `
 
 type User @pgTable(name: \\"users\\") {
   id: Int! @unique
-  # Could not auto-generate backwards relation field, name would be ambigous.
-  # Please specify the name of this field and the name of the relation manually.
-  # It references DirectMessage.receiverId.
-  # directMessages: [DirectMessage]
-  # Could not auto-generate backwards relation field, name would be ambigous.
-  # Please specify the name of this field and the name of the relation manually.
-  # It references DirectMessage.senderId.
-  # directMessages: [DirectMessage]
+  direct_messages: [DirectMessage]
+  directMessages: [DirectMessage] @pgColumn(name: \\"direct_messages\\")
   name: String!
 }"
 `;
@@ -32,14 +26,8 @@ exports[`Introspector test schema - 2504 2`] = `
 
 type User @db(name: \\"users\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_id_seq\\", initialValue: 1, allocationSize: 1)
-  # Could not auto-generate backwards relation field, name would be ambigous.
-  # Please specify the name of this field and the name of the relation manually.
-  # It references DirectMessage.receiverId.
-  # directMessages: [DirectMessage]
-  # Could not auto-generate backwards relation field, name would be ambigous.
-  # Please specify the name of this field and the name of the relation manually.
-  # It references DirectMessage.senderId.
-  # directMessages: [DirectMessage]
+  direct_messages: [DirectMessage]
+  directMessages: [DirectMessage] @db(name: \\"direct_messages\\")
   name: String!
 }"
 `;

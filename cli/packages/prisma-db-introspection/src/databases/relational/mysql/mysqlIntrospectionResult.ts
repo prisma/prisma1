@@ -8,7 +8,7 @@ import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import {
   IGQLField,
   IGQLType,
-  capitalize,
+  camelCase,
   DatabaseType,
   Renderer,
   TypeIdentifiers,
@@ -79,7 +79,7 @@ export class MysqlIntrospectionResult extends RelationalIntrospectionResult {
         return TypeIdentifiers.uuid
       // Special case: For enum types we auto-generate some unique name.
       case 'enum':
-        return capitalize(typeName) + capitalize(fieldInfo.name) + 'Enum'
+        return camelCase(typeName) + camelCase(fieldInfo.name) + 'Enum'
       default:
         return null
     }

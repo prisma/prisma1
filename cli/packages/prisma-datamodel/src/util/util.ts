@@ -10,25 +10,11 @@ export function capitalize(name: string): string {
 }
 
 /**
- * Converts the first character of a word to lower case
- * @param name
- */
-export function lowerCase(name: string): string {
-  return name.substring(0, 1).toLowerCase() + name.substring(1)
-}
-
-/**
- * Converts a string to camel case, respecting space, -, or _ as seperators.
+ * Converts the first character of a word to lower case.
  * @param name
  */
 export function camelCase(name: string): string {
-  const capitalized = name
-    .split(/\s|-|_/)
-    // We explicitely don't lowercase the second half - it might already be in camelcase.
-    .map(word => word.substring(0, 1).toUpperCase() + word.substring(1))
-    .join('')
-
-  return lowerCase(capitalized)
+  return name.substring(0, 1).toLowerCase() + name.substring(1)
 }
 
 /**

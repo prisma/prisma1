@@ -1,13 +1,7 @@
-import {
-  IGQLType,
-  IGQLField,
-  ISDL,
-  TypeIdentifiers,
-  IdStrategy,
-  cloneType,
-} from 'prisma-datamodel'
+import { IGQLType, IGQLField, ISDL, TypeIdentifiers } from 'prisma-datamodel'
 
 import ModelNameNormalizer from './modelNameNormalizer'
+import { IdStrategy } from '../../../../prisma-datamodel/dist/datamodel/model'
 
 export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer {
   private baseModel: ISDL | null
@@ -137,17 +131,11 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
       this.baseType === null
     } else {
       this.baseType = this.findBaseByName(this.baseModel.types, type)
-      // We mutate the base type in the normalizeType call,
-      // therefore we need to clone here.
-      if (this.baseType !== null) {
-        this.baseType = cloneType(this.baseType)
-      }
     }
     this.assignTypeProperties(this.baseType, type)
     super.normalizeType(type, parentModel, this.baseType !== null)
   }
 
-  // TODO: This method could use some refactoring.
   protected normalizeField(
     field: IGQLField,
     parentType: IGQLType,
@@ -158,8 +146,6 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
       baseField = this.findBaseByName(this.baseType.fields, field)
 
       if (baseField !== null) {
-        // Only use this base field once.
-        this.baseType.fields = this.baseType.fields.filter(f => f !== baseField)
         this.assignName(field, baseField.name)
         this.assignFieldProperties(baseField, field, parentModel)
       } else {
@@ -167,20 +153,11 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
         baseField = this.findBaseById(this.baseType.fields, field)
 
         if (baseField !== null) {
-          // Only use this base field once.
-          this.baseType.fields = this.baseType.fields.filter(
-            f => f !== baseField,
-          )
           this.assignFieldProperties(baseField, field, parentModel)
         } else {
           // Fallback to relation.
           baseField = this.findBaseByRelation(this.baseType.fields, field)
           if (baseField !== null) {
-            // Only use this base field once.
-            this.baseType.fields = this.baseType.fields.filter(
-              f => f !== baseField,
-            )
-
             // Hard-override name. Relation names are usually auto-generated.
             field.name = baseField.name
             field.databaseName = baseField.databaseName

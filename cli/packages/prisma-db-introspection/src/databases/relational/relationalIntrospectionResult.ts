@@ -17,7 +17,6 @@ import {
   IIndexInfo,
   GQLAssert,
   IComment,
-  lowerCase,
   camelCase,
   TypeIdentifiers,
   IdStrategy,
@@ -129,14 +128,13 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
               fieldA.type = typeB
 
               // Add back connecting
-              // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint.
+              // TODO: We could look at the data to see if this is 1:1 or 1:n. For now, we use a unique constraint. Tell Tim.
               const connectorFieldAtB: IGQLField = {
-                // This needs to generate a fully normalized name.
-                // Otherwise, the normalization pipeline will attempt to normalize,
-                // which will lead to a @db(name: ...) directive for a collumn that does nfot exist.
-                // Caution: This has to work with the name handling in hideScalarListTypes().
-                // TODO: This should be referring the class NameNormalizer or similar.
-                name: lowerCase(camelCase(typeA.name)),
+                // TODO - how do we name that field?
+                // Problems:
+                // * Conflicts
+                // * Need to identify field in existing datamodel to fix naming, fix cardinality or hide
+                name: camelCase(typeA.name),
                 databaseName: null,
                 defaultValue: null,
                 isList: !fieldA.isUnique,
@@ -257,7 +255,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
 
         const candidate = field.type
         // A type is only a scalar list iff it has
-        // * name of ${type.name}${field.name}
+        // * name of ${type.name}_${field.name}
         // * Has exactly three fields
         //     * nodeId: typeof type!
         //     * position: Int!
@@ -307,10 +305,9 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
         field.isList = true
 
         // Update the name, if it follows prisma conventions
-        // e.g. userScalarIntList => scalarIntList
-        // This has to work with the backwards field generation in resolveRelation.
-        if (field.name.startsWith(`${lowerCase(type.name)}`)) {
-          field.name = lowerCase(field.name.substring(type.name.length))
+        // e.g. user_scalarIntList => scalarIntList
+        if (field.name.startsWith(`${camelCase(type.name)}_`)) {
+          field.name = field.name.substring(type.name.length + 1)
         }
       }
     }
@@ -494,7 +491,6 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       ...model.map(x => this.inferObjectType(x)),
       ...enums.map(x => this.inferEnumType(x)),
     ]
-
     types = this.hideUniqueIndices(types)
     types = this.resolveSequences(types, sequences)
     types = this.resolveFallbackIdField(types) // unique flags and index types are required for this step.

@@ -5,7 +5,6 @@ import { ISDL, DatabaseType } from 'prisma-datamodel'
 import { RemoveRelationName } from './removeRelationNames'
 import { RemoveBackRelation } from './removeBackRelations'
 import { AdjustJoinTableCardinality } from './adjustJoinTableCardinality'
-import { RemoveDuplicateBackRelation } from './removeDuplicateBackRelation'
 import { CopyEnums } from './copyEnums'
 
 export default abstract class DefaultNormalizer {
@@ -24,7 +23,6 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null),
         new ModelOrderNormalizer(null),
-        new RemoveDuplicateBackRelation(),
       ])
     } else {
       // Relational normalization
@@ -32,7 +30,6 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null),
         new ModelOrderNormalizer(null),
-        new RemoveDuplicateBackRelation(),
       ])
     }
   }
@@ -49,7 +46,6 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
         new RemoveBackRelation(baseModel),
-        new RemoveDuplicateBackRelation(),
       ])
     } else {
       // Relational normalization with base model
@@ -60,7 +56,6 @@ export default abstract class DefaultNormalizer {
         new ModelOrderNormalizer(baseModel),
         new AdjustJoinTableCardinality(baseModel),
         new RemoveBackRelation(baseModel),
-        new RemoveDuplicateBackRelation(),
       ])
     }
   }
