@@ -81,7 +81,7 @@ when "native-image"
   native_image(context, ARGV[1], ARGV[2])
 
 when "rust-binary"
-  if ARGV.length != 0
+  if ARGV.length != 1
     print_usage
     exit 1
   end
