@@ -1,17 +1,16 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
-use core::{MultiPrismaQueryResult, PrismaQuery, PrismaQueryResult, RootQueryBuilder};
+use core::{PrismaQuery, PrismaQueryResult, RootQueryBuilder};
 use graphql_parser as gql;
 use prisma_models::{GraphqlId, PrismaValue, SingleNode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use serde_json::{Map, Number, Value};
+use serde_json::{Map, Value};
 
 use crate::serializer::{ir::IrBuilder, json};
 
 type JsonMap = Map<String, Value>;
-type JsonVec = Vec<Value>;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
