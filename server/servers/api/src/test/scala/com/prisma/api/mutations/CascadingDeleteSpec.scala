@@ -1,5 +1,7 @@
 package com.prisma.api.mutations
 
+import akka.http.scaladsl.settings.ParserSettings.IllegalResponseHeaderValueProcessingMode.Ignore
+import com.prisma.IgnoreSQLite
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.shared.models._
@@ -589,7 +591,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query("""query{folders{name}}""", project).toString should be("""{"data":{"folders":[]}}""")
   }
 
-  "Self Relations" should "work 2" in {
+  "Self Relations" should "work 2" taggedAs (IgnoreSQLite) in { // FIXME: Eats all the RAM
     val project = SchemaDsl.fromStringV11() { """type Folder  {
                                              |  id: ID! @id
                                              |  name: String! @unique
