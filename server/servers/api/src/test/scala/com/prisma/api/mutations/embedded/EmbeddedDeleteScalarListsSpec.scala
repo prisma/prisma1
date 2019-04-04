@@ -11,16 +11,17 @@ class EmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecB
 
   "A nested delete  mutation" should "also delete ListTable entries" in {
 
-    val project: Project = SchemaDsl.fromString() {
+    val project: Project = SchemaDsl.fromStringV11() {
       """type Top {
-        | id: ID! @unique
+        | id: ID! @id
         | name: String! @unique
         | topList: [Int]
         | bottom: Bottom
         |}
         |
-        |type Bottom @embedded{
-        | name: String! @unique
+        |type Bottom @embedded {
+        | id: ID! @id
+        | name: String!
         | bottomList: [Int]
         |}"""
     }

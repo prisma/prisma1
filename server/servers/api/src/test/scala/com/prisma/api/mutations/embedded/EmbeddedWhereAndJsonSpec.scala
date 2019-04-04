@@ -8,14 +8,17 @@ import org.scalatest.{FlatSpec, Matchers}
 class EmbeddedWhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
+  // We don't support scalar filters on JSON fields at the moment
+  override def doNotRun: Boolean = true
+
   "Using the same input in an update using where as used during creation of the item" should "work" in {
 
     val outerWhere = """"{\"stuff\": 1, \"nestedStuff\" : {\"stuff\": 2 } }""""
     val innerWhere = """"{\"stuff\": 2, \"nestedStuff\" : {\"stuff\": 1, \"nestedStuff\" : {\"stuff\": 2 } } }""""
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Note{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   outerString: String!
         |   outerJson: Json! @unique
         |   todos: [Todo]
@@ -23,7 +26,7 @@ class EmbeddedWhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
         |
         |type Todo @embedded{
         |   innerString: String!
-        |   innerJson: Json! @unique
+        |   innerJson: Json!
         |}"""
     }
 
@@ -56,8 +59,8 @@ class EmbeddedWhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
          |    data: {
          |      outerString: "Changed Outer String"
          |      todos: {
-         |        update: [
-         |        {where: { innerJson: $innerWhere },data:{ innerString: "Changed Inner String"}}
+         |        updateMany: [
+         |          { where: { innerJson: $innerWhere },data:{ innerString: "Changed Inner String"} }
          |        ]
          |      }
          |    }
