@@ -122,7 +122,6 @@ class PipelineRenderer
   end
 
   def release_rust_artifacts
-    # [:windows, :linux, :darwin]
     [:linux].map do |platform|
       PipelineStep.new
         .label(":rust: Build & Publish :#{platform}:")
