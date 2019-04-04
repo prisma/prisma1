@@ -122,15 +122,15 @@ class PipelineRenderer
   end
 
   def release_rust_artifacts
-    PipelineStep.new
+    [
+      PipelineStep.new
+        .label(":rust: Build & Publish :linux:")
+        .command("./server/.buildkite/pipeline.sh rust-binary"),
+      PipelineStep.new
         .label(":rust: Build & Publish :linux:")
         .command("./server/.buildkite/pipeline.sh rust-binary")
-
-    # [:windows, :linux, :darwin]
-    # [:linux].map do |platform|
-
-    #     .queue(platform)
-    # end
+        .queue("macos")
+    ]
   end
 
   def release_artifacts_steps
