@@ -40,7 +40,7 @@ end
 
 def native_image(context, target, version_str)
   parsed_version = Tag.new(version_str)
-  artifact_s3_paths = ["s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/#{context.commit}"]
+  artifact_s3_paths = ["s3://#{ENV["GRAAL_ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/#{context.commit}"]
 
   if parsed_version.stable?
     version_to_build = [version_str, infer_additional_tags(context, parsed_version)].flatten.compact.find do |version|
@@ -49,10 +49,10 @@ def native_image(context, target, version_str)
     end
 
     # Also store as latest
-    artifact_s3_paths.push "s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/latest"
+    artifact_s3_paths.push "s3://#{ENV["GRAAL_ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/latest"
   elsif context.branch == "alpha" || context.branch == "beta"
     version_to_build = version_str
-    artifact_s3_paths.push "s3://#{ENV["ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/latest"
+    artifact_s3_paths.push "s3://#{ENV["GRAAL_ARTIFACT_BUCKET"]}/#{context.branch}/#{target}/latest"
   else
     version_to_build = version_str
   end
@@ -63,6 +63,28 @@ def native_image(context, target, version_str)
 
   artifact_s3_paths.each do |path|
     Command.new("buildkite-agent", "artifact", "upload", "prisma-native").with_env({
+      "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION" => path
+    }).puts!.run!.raise!
+  end
+end
+
+def rust_binary(context)
+  artifact_s3_paths = ["s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/#{context.commit}/#{target}"]
+
+  if context.branch == "alpha" || context.branch == "beta"
+    artifact_s3_paths.push "s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/latest/#{target}"
+  end
+
+  if @context.os == :linux
+    DockerCommands.rust_binary(context)
+  else
+    Command.new('cargo', 'build', "--manifest-path=prisma-rs/Cargo.toml", "--release").puts!.run!.raise!
+  end
+
+  Dir.chdir("#{context.server_root_path}/prisma-rs/target/release") # Necessary to keep the buildkite agent from prefixing the binary when uploading
+
+  artifact_s3_paths.each do |path|
+    Command.new("buildkite-agent", "artifact", "upload", "prisma").with_env({
       "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION" => path
     }).puts!.run!.raise!
   end
