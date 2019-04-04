@@ -1,3 +1,5 @@
+import Collapse from 'components/Markdown/Collapse'
+
 export const meta = {
   title: 'Datamodel v1.1',
   position: 160
@@ -1008,7 +1010,65 @@ Read more about deployment errors here: https://bit.ly/prisma-force-flag
 
 ### 3. Migrating to datamodel v1.1 syntax
 
-> **Note**: In this tutorial, we're updating the tutorial by hand. Alternatively, you can also generate a new datamodel using introspection: `prisma introspect --prototype`
+To update your datamodel and get rid of the previous errors, you can use the `prisma introspect` command. Inside your project directory, run:
+
+```
+prisma introspect --prototype
+```
+
+This introspects your database schema and generates a new datamodel file that uses v1.1 syntax. The new file is called `datamodel-prototype-TIMESTAMP.prisma`, e.g. `datamodel-prototype-1554394432089.prisma`. For the example from above, the following datamodel is generated:
+
+```graphql
+type User {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  name: String
+  email: String! @unique
+  role: Role @default(value: USER)
+  posts: [Post]
+  profile: Profile @relation(link: TABLE)
+}
+
+type Profile {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  user: User!
+  bio: String!
+}
+
+type Post {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  title: String!
+  published: Boolean! @default(value: false)
+  author: User! @relation(link: TABLE)
+  categories: [Category]
+}
+
+type Category {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  name: String!
+  posts: [Post]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+```
+
+You can now upgrade the datamodel of your running Prisma service:
+
+```
+prisma deploy
+```
+
+<Collapse title="Alternative: Fix errors manually instead of using introspection">
 
 To fix the errors that Prisma threw after `prisma deploy`, you need to:
 
@@ -1062,6 +1122,8 @@ Now you can deploy the datamodel with the new syntax:
 ```
 prisma deploy
 ```
+
+</Collapse>
 
 ### 4. Optimizing the database schema
 
