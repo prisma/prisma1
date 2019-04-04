@@ -18,7 +18,7 @@ object UniqueDirective extends FieldDirective[Boolean] {
       capabilities: ConnectorCapabilities
   ) = {
     val error = typeDef.isEmbedded.toOption {
-      DeployErrors.uniqueDisallowedOnEmbeddedTyps(typeDef, fieldDef)
+      DeployErrors.uniqueDisallowedOnEmbeddedTypes(typeDef, fieldDef)
     }
     error.toVector
   }

@@ -30,6 +30,7 @@ services:
   test-db:
     image: postgres:10.3
     restart: always
+    command: postgres -c 'max_connections=1000'
     environment:
       POSTGRES_PASSWORD: "prisma"
       PGDATA: "/pgtmpfs"

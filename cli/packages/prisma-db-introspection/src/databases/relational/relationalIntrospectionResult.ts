@@ -589,6 +589,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           )
         }
         pkField.isId = true
+        pkField.idStrategy = IdStrategy.Auto
       } else {
         // Compound PK - that's not supported, except for join tables
         // We will mark it as error later.
@@ -602,6 +603,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
             )
           }
           pkField.isId = true
+          pkField.idStrategy = IdStrategy.Auto
         }
       }
     }
@@ -637,7 +639,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       isList: field.isList,
       type: field.type,
       isId: false, // Will resolve later, from indices
-      idStrategy: field.isAutoIncrement ? IdStrategy.Auto : IdStrategy.None,
+      idStrategy: null,
       associatedSequence: null,
       relatedField: null,
       relationName: null,

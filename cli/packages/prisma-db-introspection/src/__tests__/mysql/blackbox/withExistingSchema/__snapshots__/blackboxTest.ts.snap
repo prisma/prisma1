@@ -1,421 +1,286 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Introspects airbnb/mysql correctly 1`] = `
-"type User {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  updatedAt: DateTime! @updatedAt
-  firstName: String!
-  lastName: String!
-  email: String! @unique
-  password: String!
-  phone: String!
-  responseRate: Float
-  responseTime: Int
-  isSuperHost: Boolean! @default(value: false)
-  ownedPlaces: [Place] @relation(link: TABLE)
-  location: Location @relation(link: TABLE)
-  bookings: [Booking] @relation(link: TABLE)
-  paymentAccount: [PaymentAccount] @relation(link: TABLE)
-  sentMessages: [Message] @relation(name: \\"SentMessages\\")
-  receivedMessages: [Message] @relation(name: \\"ReceivedMessages\\")
-  notifications: [Notification] @relation(link: TABLE)
-  profilePicture: Picture @relation(link: TABLE)
-  hostingExperiences: [Experience] @relation(link: TABLE)
-}
-
-type Place {
-  id: ID! @id
-  name: String
-  size: PLACE_SIZES
-  shortDescription: String!
-  description: String!
-  slug: String!
-  maxGuests: Int!
-  numBedrooms: Int!
-  numBeds: Int!
-  numBaths: Int!
-  reviews: [Review] @relation(link: TABLE)
-  amenities: Amenities! @relation(link: TABLE)
-  host: User! @relation(link: TABLE)
-  pricing: Pricing! @relation(link: TABLE)
-  location: Location! @relation(link: TABLE)
-  views: Views! @relation(link: TABLE)
-  guestRequirements: GuestRequirements @relation(link: TABLE)
-  policies: Policies @relation(link: TABLE)
-  houseRules: HouseRules @relation(link: TABLE)
-  bookings: [Booking] @relation(link: TABLE)
-  pictures: [Picture]
-  popularity: Int!
-}
-
-type Pricing {
-  id: ID! @id
-  place: Place! @relation(link: TABLE)
-  monthlyDiscount: Int
-  weeklyDiscount: Int
-  perNight: Int!
-  smartPricing: Boolean! @default(value: false)
-  basePrice: Int!
-  averageWeekly: Int!
-  averageMonthly: Int!
-  cleaningFee: Int
-  securityDeposit: Int
-  extraGuests: Int
-  weekendPricing: Int
-  currency: CURRENCY
-}
-
-type GuestRequirements {
-  id: ID! @id
-  govIssuedId: Boolean! @default(value: false)
-  recommendationsFromOtherHosts: Boolean! @default(value: false)
-  guestTripInformation: Boolean! @default(value: false)
-  place: Place! @relation(link: TABLE)
-}
-
-type Policies {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  updatedAt: DateTime! @updatedAt
-  checkInStartTime: Float!
-  checkInEndTime: Float!
-  checkoutTime: Float!
-  place: Place! @relation(link: TABLE)
-}
-
-type HouseRules {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  updatedAt: DateTime! @updatedAt
-  suitableForChildren: Boolean
-  suitableForInfants: Boolean
-  petsAllowed: Boolean
-  smokingAllowed: Boolean
-  partiesAndEventsAllowed: Boolean
-  additionalRules: String
-}
-
-type Views {
-  id: ID! @id
-  lastWeek: Int!
-  place: Place! @relation(link: TABLE)
-}
-
-type Location {
-  id: ID! @id
-  lat: Float!
-  lng: Float!
-  neighbourHood: Neighbourhood @relation(link: TABLE)
-  user: User @relation(link: TABLE)
-  place: Place @relation(link: TABLE)
-  address: String
-  directions: String
-  experience: Experience @relation(link: TABLE)
-  restaurant: Restaurant @relation(link: TABLE)
-}
-
-type Neighbourhood {
-  id: ID! @id
-  locations: [Location] @relation(link: TABLE)
-  name: String!
-  slug: String!
-  homePreview: Picture @relation(link: TABLE)
-  city: City! @relation(link: TABLE)
-  featured: Boolean!
-  popularity: Int!
-}
-
-type City {
-  id: ID! @id
-  name: String!
-  neighbourhoods: [Neighbourhood] @relation(link: TABLE)
-}
-
-type Picture {
-  url: String!
-}
-
-type Experience {
-  id: ID! @id
-  category: ExperienceCategory @relation(link: TABLE)
-  title: String!
-  host: User! @relation(link: TABLE)
-  location: Location! @relation(link: TABLE)
-  pricePerPerson: Int!
-  reviews: [Review] @relation(link: TABLE)
-  preview: Picture! @relation(link: TABLE)
-  popularity: Int!
-}
-
-type ExperienceCategory {
-  id: ID! @id
-  mainColor: String! @default(value: \\"#123456\\")
-  name: String!
-  experience: Experience @relation(link: TABLE)
-}
-
-type Amenities {
-  id: ID! @id
-  place: Place! @relation(link: TABLE)
-  elevator: Boolean! @default(value: false)
-  petsAllowed: Boolean! @default(value: false)
-  internet: Boolean! @default(value: false)
-  kitchen: Boolean! @default(value: false)
-  wirelessInternet: Boolean! @default(value: false)
-  familyKidFriendly: Boolean! @default(value: false)
-  freeParkingOnPremises: Boolean! @default(value: false)
-  hotTub: Boolean! @default(value: false)
-  pool: Boolean! @default(value: false)
-  smokingAllowed: Boolean! @default(value: false)
-  wheelchairAccessible: Boolean! @default(value: false)
-  breakfast: Boolean! @default(value: false)
-  cableTv: Boolean! @default(value: false)
-  suitableForEvents: Boolean! @default(value: false)
-  dryer: Boolean! @default(value: false)
-  washer: Boolean! @default(value: false)
-  indoorFireplace: Boolean! @default(value: false)
-  tv: Boolean! @default(value: false)
-  heating: Boolean! @default(value: false)
-  hangers: Boolean! @default(value: false)
-  iron: Boolean! @default(value: false)
-  hairDryer: Boolean! @default(value: false)
-  doorman: Boolean! @default(value: false)
-  paidParkingOffPremises: Boolean! @default(value: false)
-  freeParkingOnStreet: Boolean! @default(value: false)
-  gym: Boolean! @default(value: false)
-  airConditioning: Boolean! @default(value: false)
-  shampoo: Boolean! @default(value: false)
-  essentials: Boolean! @default(value: false)
-  laptopFriendlyWorkspace: Boolean! @default(value: false)
-  privateEntrance: Boolean! @default(value: false)
-  buzzerWirelessIntercom: Boolean! @default(value: false)
-  babyBath: Boolean! @default(value: false)
-  babyMonitor: Boolean! @default(value: false)
-  babysitterRecommendations: Boolean! @default(value: false)
-  bathtub: Boolean! @default(value: false)
-  changingTable: Boolean! @default(value: false)
-  childrensBooksAndToys: Boolean! @default(value: false)
-  childrensDinnerware: Boolean! @default(value: false)
-  crib: Boolean! @default(value: false)
-}
-
-type Review {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  text: String!
-  stars: Int!
-  accuracy: Int!
-  location: Int!
-  checkIn: Int!
-  value: Int!
-  cleanliness: Int!
-  communication: Int!
-  place: Place! @relation(link: TABLE)
-  experience: Experience @relation(link: TABLE)
-}
-
-type Booking {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  bookee: User! @relation(link: TABLE)
-  place: Place! @relation(link: TABLE)
-  startDate: DateTime!
-  endDate: DateTime!
-  payment: Payment! @relation(link: TABLE)
-}
-
-type Payment {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  serviceFee: Float!
-  placePrice: Float!
-  totalPrice: Float!
-  booking: Booking! @relation(link: TABLE)
-  paymentMethod: PaymentAccount! @relation(link: TABLE)
-}
-
-type PaymentAccount {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  type: PAYMENT_PROVIDER
-  user: User! @relation(link: TABLE)
-  payments: [Payment] @relation(link: TABLE)
-  paypal: PaypalInformation @relation(link: TABLE)
-  creditcard: CreditCardInformation @relation(link: TABLE)
-}
-
-type PaypalInformation {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  email: String!
-  paymentAccount: PaymentAccount! @relation(link: TABLE)
-}
-
-type CreditCardInformation {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  cardNumber: String!
-  expiresOnMonth: Int!
-  expiresOnYear: Int!
-  securityCode: String!
-  firstName: String!
-  lastName: String!
-  postalCode: String!
-  country: String!
-  paymentAccount: PaymentAccount @relation(link: TABLE)
-}
-
-type Message {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  from: User! @relation(name: \\"SentMessages\\")
-  to: User! @relation(name: \\"ReceivedMessages\\")
-  deliveredAt: DateTime!
-  readAt: DateTime!
-}
-
-type Notification {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  type: NOTIFICATION_TYPE
-  user: User! @relation(link: TABLE)
-  link: String!
-  readDate: DateTime!
-}
-
-type Restaurant {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  title: String!
-  avgPricePerPerson: Int!
-  pictures: [Picture]
-  location: Location! @relation(link: TABLE)
-  isCurated: Boolean! @default(value: true)
-  slug: String!
-  popularity: Int!
-}
-
-enum CURRENCY {
-  CAD
-  CHF
-  EUR
-  JPY
-  USD
-  ZAR
-}
-
-enum PLACE_SIZES {
-  ENTIRE_HOUSE
-  ENTIRE_APARTMENT
-  ENTIRE_EARTH_HOUSE
-  ENTIRE_CABIN
-  ENTIRE_VILLA
-  ENTIRE_PLACE
-  ENTIRE_BOAT
-  PRIVATE_ROOM
-}
-
-enum PAYMENT_PROVIDER {
-  PAYPAL
-  CREDIT_CARD
-}
-
-enum NOTIFICATION_TYPE {
-  OFFER
-  INSTANT_BOOK
-  RESPONSIVENESS
-  NEW_AMENITIES
-  HOUSE_RULES
-}"
-`;
-
-exports[`Introspects defaultValue/mysql correctly 1`] = `
+exports[`Introspects defaultValue/mysql correctly: defaultValue - legacy datamodel 1`] = `
 "type A {
   a: Int @default(value: 10) @unique
   b: Int! @default(value: 10)
   c: String! @unique
+  createdAt: DateTime!
   d: String @default(value: \\"Hello\\")
+  id: ID! @unique
+  updatedAt: DateTime!
 }
 
 type AWithId {
-  id: ID! @id
   a: Int @default(value: 10) @unique
   b: Int! @default(value: 10)
+  b2: B!
   c: String! @unique
+  createdAt: DateTime!
   d: String @default(value: \\"Hello\\")
-  b2: B! @relation(link: TABLE)
+  id: ID! @unique
+  updatedAt: DateTime!
 }
 
 type B {
   a: [A]
-  a2: AWithId @relation(link: TABLE)
+  a2: AWithId
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
 }"
 `;
 
-exports[`Introspects embedded/mysql correctly 1`] = `
-"type Parent {
+exports[`Introspects defaultValue/mysql correctly: defaultValue - v1.1 datamodel 1`] = `
+"type A {
+  a: Int @default(value: 10) @unique
+  b: Int! @default(value: 10)
+  c: String! @unique
+  createdAt: DateTime! @createdAt
+  d: String @default(value: \\"Hello\\")
   id: ID! @id
-  p: String @unique
-  children: [Child]
-  j: [Joint]
+  updatedAt: DateTime! @updatedAt
 }
 
-type Child {
+type AWithId {
+  a: Int @default(value: 10) @unique
+  b: Int! @default(value: 10)
+  b2: B! @relation(link: TABLE)
+  c: String! @unique
+  createdAt: DateTime! @createdAt
+  d: String @default(value: \\"Hello\\")
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type B {
+  a: [A]
+  a2: AWithId
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}"
+`;
+
+exports[`Introspects embedded/mysql correctly: embedded - legacy datamodel 1`] = `
+"type Child {
   c: String @unique
+  createdAt: DateTime!
   friendsOpt: [Friend]
-  jointOpt: Joint! @relation(link: TABLE)
+  id: ID! @unique
+  jointOpt: Joint!
+  updatedAt: DateTime!
 }
 
 type Friend {
+  createdAt: DateTime!
   f: String @unique
+  id: ID! @unique
   test: String
+  updatedAt: DateTime!
 }
 
 type Joint {
-  id: ID! @id
+  createdAt: DateTime!
+  id: ID! @unique
   j: String
+  updatedAt: DateTime!
+}
+
+type Parent {
+  children: [Child]
+  createdAt: DateTime!
+  id: ID! @unique
+  j: [Joint]
+  p: String @unique
+  updatedAt: DateTime!
 }"
 `;
 
-exports[`Introspects emptyTypes/mysql correctly 1`] = `
-"type OnlyId {
+exports[`Introspects embedded/mysql correctly: embedded - v1.1 datamodel 1`] = `
+"type Child {
+  c: String @unique
+  createdAt: DateTime! @createdAt
+  friendsOpt: [Friend]
   id: ID! @id
+  jointOpt: Joint! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}
+
+type Friend {
+  createdAt: DateTime! @createdAt
+  f: String @unique
+  id: ID! @id
+  test: String
+  updatedAt: DateTime! @updatedAt
+}
+
+type Joint {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  j: String
+  updatedAt: DateTime! @updatedAt
+}
+
+type Parent {
+  children: [Child]
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  j: [Joint]
+  p: String @unique
+  updatedAt: DateTime! @updatedAt
+}"
+`;
+
+exports[`Introspects emptyTypes/mysql correctly: emptyTypes - legacy datamodel 1`] = `
+"type OnlyDate {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+}
+
+type OnlyId {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
 }
 
 type OnlyIdAndARelation {
-  id: ID! @id
-  ref: OnlyId! @relation(link: TABLE)
+  createdAt: DateTime!
+  id: ID! @unique
+  ref: OnlyId!
+  updatedAt: DateTime!
 }
 
 type OnlyIdAndARelation2 {
-  id: ID! @id
-  ref: OnlyId @relation(link: TABLE)
-}
-
-type OnlyDate {
-  createdAt: DateTime! @createdAt
+  createdAt: DateTime!
+  id: ID! @unique
+  ref: OnlyId
+  updatedAt: DateTime!
 }
 
 type OnlyRelation {
+  createdAt: DateTime!
+  id: ID! @unique
   ref: [OnlyDate]
+  updatedAt: DateTime!
 }
 
 type OnlyRelationA {
-  ref: OnlyRelationA! @relation(link: TABLE)
+  createdAt: DateTime!
+  id: ID! @unique
+  ref: OnlyRelationA!
+  updatedAt: DateTime!
 }
 
 type OnlyRelationB {
-  ref: OnlyRelationB @relation(link: TABLE)
+  createdAt: DateTime!
+  id: ID! @unique
+  ref: OnlyRelationB
+  updatedAt: DateTime!
 }"
 `;
 
-exports[`Introspects enum/mysql correctly 1`] = `
-"enum UsedEnum {
-  A
-  B
-  C
-  D
+exports[`Introspects emptyTypes/mysql correctly: emptyTypes - v1.1 datamodel 1`] = `
+"type OnlyDate {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type OnlyId {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type OnlyIdAndARelation {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  ref: OnlyId! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}
+
+type OnlyIdAndARelation2 {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  ref: OnlyId @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}
+
+type OnlyRelation {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  ref: [OnlyDate]
+  updatedAt: DateTime! @updatedAt
+}
+
+type OnlyRelationA {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  ref: OnlyRelationA! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}
+
+type OnlyRelationB {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  ref: OnlyRelationB @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}"
+`;
+
+exports[`Introspects enum/mysql correctly: enum - legacy datamodel 1`] = `
+"type A {
+  b: B!
+  createdAt: DateTime!
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum]
+  id: ID! @unique
+  updatedAt: DateTime!
+}
+
+type AWithId {
+  c: C
+  createdAt: DateTime!
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum]
+  id: ID! @unique
+  updatedAt: DateTime!
+}
+
+type B {
+  a: [A]
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+}
+
+type C {
+  a: AWithId!
+  createdAt: DateTime!
+  field: [Int]
+  id: ID! @unique
+  updatedAt: DateTime!
+}
+
+type D {
+  a: AWithId!
+  createdAt: DateTime!
+  field: [DateTime]
+  id: ID! @unique
+  updatedAt: DateTime!
+}
+
+type E {
+  a: [A]
+  createdAt: DateTime!
+  field: Json
+  id: ID! @unique
+  updatedAt: DateTime!
 }
 
 enum UnusedEnum {
@@ -424,71 +289,247 @@ enum UnusedEnum {
   Z
 }
 
-type A {
-  fieldA: UsedEnum
-  fieldB: UsedEnum!
-  fieldC: [UsedEnum]
-  b: B! @relation(link: TABLE)
-}
-
-type AWithId {
-  id: ID! @id
-  fieldA: UsedEnum
-  fieldB: UsedEnum!
-  fieldC: [UsedEnum]
-  c: C @relation(link: TABLE)
-}
-
-type B {
-  field: String!
-  a: [A] @relation(link: TABLE)
-}
-
-type C {
-  field: [Int]
-  a: AWithId! @relation(link: TABLE)
-}
-
-type D {
-  field: [DateTime]
-  a: AWithId! @relation(link: TABLE)
-}
-
-type E {
-  field: Json
-  a: [A]
+enum UsedEnum {
+  A
+  B
+  C
+  D
 }"
 `;
 
-exports[`Introspects financial/mysql correctly 1`] = `
-"type User {
+exports[`Introspects enum/mysql correctly: enum - v1.1 datamodel 1`] = `
+"type A {
+  b: B! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum] @scalarList(strategy: RELATION)
   id: ID! @id
-  person: Person! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
 }
 
-type Person {
+type AWithId {
+  c: C @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  fieldA: UsedEnum
+  fieldB: UsedEnum!
+  fieldC: [UsedEnum] @scalarList(strategy: RELATION)
   id: ID! @id
-  email: String
-  firstName: String
-  lastName: String
+  updatedAt: DateTime! @updatedAt
+}
+
+type B {
+  a: [A]
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type C {
+  a: AWithId!
+  createdAt: DateTime! @createdAt
+  field: [Int] @scalarList(strategy: RELATION)
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type D {
+  a: AWithId! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  field: [DateTime] @scalarList(strategy: RELATION)
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type E {
+  a: [A]
+  createdAt: DateTime! @createdAt
+  field: Json
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+enum UnusedEnum {
+  X
+  Y
+  Z
+}
+
+enum UsedEnum {
+  A
+  B
+  C
+  D
+}"
+`;
+
+exports[`Introspects financial/mysql correctly: financial - legacy datamodel 1`] = `
+"type Campus {
+  accounts: [FinancialAccount]
+  createdAt: DateTime!
+  description: String
+  id: ID! @unique
+  isActive: Boolean
+  location: Location
+  name: String!
+  organization: Group
   phoneNumbers: [PhoneNumber]
-  scheduledTransactions: [FinancialScheduledTransaction] @relation(link: TABLE)
-  transactions: [FinancialTransaction] @relation(link: TABLE)
-  user: User @relation(link: TABLE)
-}
-
-type PhoneNumber {
-  id: ID! @id
-  number: String!
+  updatedAt: DateTime!
 }
 
 type FinancialAccount {
-  id: ID! @id
-  key: String @unique
   campuses: [Campus]
+  createdAt: DateTime!
   description: String!
+  id: ID! @unique
   isActive: Boolean!
+  key: String @unique
   name: String
+  updatedAt: DateTime!
+}
+
+type FinancialPaymentDetail {
+  accountNumberMasked: String!
+  achType: ACH_TYPE
+  billingLocation: Location
+  createdAt: DateTime!
+  creditCardType: CREDIT_CARD
+  currencyType: CURRENCY_TYPE
+  expirationDate: DateTime!
+  id: ID! @unique
+  nameOnCard: String
+  updatedAt: DateTime!
+}
+
+type FinancialScheduledTransaction {
+  account: FinancialAccount
+  amount: Float!
+  createdAt: DateTime!
+  endDate: DateTime
+  frequency: TRANSACTION_FREQUENCY
+  id: ID! @unique
+  isActive: Boolean!
+  payment: FinancialPaymentDetail
+  person: Person
+  startDate: DateTime
+  transactions: [FinancialTransaction]
+  updatedAt: DateTime!
+}
+
+type FinancialTransaction {
+  account: FinancialAccount
+  amount: Float!
+  createdAt: DateTime!
+  id: ID! @unique
+  organization: Group!
+  payment: FinancialPaymentDetail
+  person: Person
+  processedDate: DateTime
+  scheduledTransaction: FinancialScheduledTransaction
+  status: TRANSACTION_STATUS!
+  transactionDate: DateTime
+  updatedAt: DateTime!
+}
+
+type Group {
+  createdAt: DateTime!
+  description: String
+  id: ID! @unique
+  invites: [GroupInvite]
+  isActive: Boolean!
+  key: String @unique
+  members: [GroupMember]
+  name: String!
+  organization: Group
+  type: GroupType!
+  updatedAt: DateTime!
+}
+
+type GroupInvite {
+  createdAt: DateTime!
+  email: String!
+  group: Group!
+  groupRole: GroupRole
+  id: ID! @unique
+  status: GROUP_INVITE_STATUS!
+  updatedAt: DateTime!
+}
+
+type GroupMember {
+  createdAt: DateTime!
+  group: Group
+  id: ID! @unique
+  person: Person
+  role: GroupRole
+  updatedAt: DateTime!
+}
+
+type GroupRole {
+  canEdit: Boolean!
+  canView: Boolean!
+  createdAt: DateTime!
+  description: String!
+  groupType: GroupType
+  id: ID! @unique
+  isLeader: Boolean
+  name: String! @unique
+  type: GROUP_ROLE_TYPE
+  updatedAt: DateTime!
+}
+
+type GroupType {
+  createdAt: DateTime!
+  description: String
+  groups: [Group]
+  id: ID! @unique
+  name: String! @unique
+  roles: [GroupRole]
+  updatedAt: DateTime!
+}
+
+type Location {
+  city: String
+  createdAt: DateTime!
+  id: ID! @unique
+  locationType: LOCATION_TYPE
+  postalCode: String
+  state: String
+  street1: String
+  street2: String
+  updatedAt: DateTime!
+}
+
+type Person {
+  createdAt: DateTime!
+  email: String
+  firstName: String
+  id: ID! @unique
+  lastName: String
+  phoneNumbers: [PhoneNumber]
+  scheduledTransactions: [FinancialScheduledTransaction]
+  transactions: [FinancialTransaction]
+  updatedAt: DateTime!
+  user: User
+}
+
+type PhoneNumber {
+  createdAt: DateTime!
+  id: ID! @unique
+  number: String!
+  updatedAt: DateTime!
+}
+
+type User {
+  createdAt: DateTime!
+  id: ID! @unique
+  person: Person!
+  updatedAt: DateTime!
+}
+
+enum ACH_TYPE {
+  SAVINGS
+  CHECKING
 }
 
 enum CREDIT_CARD {
@@ -503,20 +544,20 @@ enum CURRENCY_TYPE {
   CC
 }
 
-enum ACH_TYPE {
-  SAVINGS
-  CHECKING
+enum GROUP_INVITE_STATUS {
+  PENDING
+  JOINED
 }
 
-type FinancialPaymentDetail {
-  id: ID! @id
-  accountNumberMasked: String!
-  billingLocation: Location @relation(link: TABLE)
-  creditCardType: CREDIT_CARD
-  achType: ACH_TYPE
-  currencyType: CURRENCY_TYPE
-  expirationDate: DateTime!
-  nameOnCard: String
+enum GROUP_ROLE_TYPE {
+  ADMIN
+  OWNER
+  MEMBER
+}
+
+enum LOCATION_TYPE {
+  HOME
+  WORK
 }
 
 enum TRANSACTION_FREQUENCY {
@@ -526,36 +567,191 @@ enum TRANSACTION_FREQUENCY {
   CUSTOM
 }
 
-type FinancialScheduledTransaction {
-  id: ID! @id
-  person: Person @relation(link: TABLE)
-  endDate: DateTime
-  payment: FinancialPaymentDetail @relation(link: TABLE)
-  isActive: Boolean!
-  startDate: DateTime
-  frequency: TRANSACTION_FREQUENCY
-  transactions: [FinancialTransaction] @relation(link: TABLE)
-  account: FinancialAccount @relation(link: TABLE)
-  amount: Float!
-}
-
 enum TRANSACTION_STATUS {
   PENDING
   SUCCESS
   FAILED
+}"
+`;
+
+exports[`Introspects financial/mysql correctly: financial - v1.1 datamodel 1`] = `
+"type Campus {
+  accounts: [FinancialAccount]
+  createdAt: DateTime! @createdAt
+  description: String
+  id: ID! @id
+  isActive: Boolean
+  location: Location @relation(link: TABLE)
+  name: String!
+  organization: Group @relation(link: TABLE)
+  phoneNumbers: [PhoneNumber]
+  updatedAt: DateTime! @updatedAt
+}
+
+type FinancialAccount {
+  campuses: [Campus]
+  createdAt: DateTime! @createdAt
+  description: String!
+  id: ID! @id
+  isActive: Boolean!
+  key: String @unique
+  name: String
+  updatedAt: DateTime! @updatedAt
+}
+
+type FinancialPaymentDetail {
+  accountNumberMasked: String!
+  achType: ACH_TYPE
+  billingLocation: Location @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  creditCardType: CREDIT_CARD
+  currencyType: CURRENCY_TYPE
+  expirationDate: DateTime!
+  id: ID! @id
+  nameOnCard: String
+  updatedAt: DateTime! @updatedAt
+}
+
+type FinancialScheduledTransaction {
+  account: FinancialAccount @relation(link: TABLE)
+  amount: Float!
+  createdAt: DateTime! @createdAt
+  endDate: DateTime
+  frequency: TRANSACTION_FREQUENCY
+  id: ID! @id
+  isActive: Boolean!
+  payment: FinancialPaymentDetail @relation(link: TABLE)
+  person: Person @relation(link: TABLE)
+  startDate: DateTime
+  transactions: [FinancialTransaction]
+  updatedAt: DateTime! @updatedAt
 }
 
 type FinancialTransaction {
+  account: FinancialAccount @relation(link: TABLE)
+  amount: Float!
+  createdAt: DateTime! @createdAt
   id: ID! @id
+  organization: Group! @relation(link: TABLE)
   payment: FinancialPaymentDetail @relation(link: TABLE)
   person: Person @relation(link: TABLE)
   processedDate: DateTime
   scheduledTransaction: FinancialScheduledTransaction @relation(link: TABLE)
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
-  amount: Float!
-  account: FinancialAccount @relation(link: TABLE)
-  organization: Group! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}
+
+type Group {
+  createdAt: DateTime! @createdAt
+  description: String
+  id: ID! @id
+  invites: [GroupInvite]
+  isActive: Boolean!
+  key: String @unique
+  members: [GroupMember]
+  name: String!
+  organization: Group @relation(link: TABLE)
+  type: GroupType! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}
+
+type GroupInvite {
+  createdAt: DateTime! @createdAt
+  email: String!
+  group: Group! @relation(link: TABLE)
+  groupRole: GroupRole @relation(link: TABLE)
+  id: ID! @id
+  status: GROUP_INVITE_STATUS!
+  updatedAt: DateTime! @updatedAt
+}
+
+type GroupMember {
+  createdAt: DateTime! @createdAt
+  group: Group @relation(link: TABLE)
+  id: ID! @id
+  person: Person @relation(link: TABLE)
+  role: GroupRole @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}
+
+type GroupRole {
+  canEdit: Boolean!
+  canView: Boolean!
+  createdAt: DateTime! @createdAt
+  description: String!
+  groupType: GroupType @relation(link: TABLE)
+  id: ID! @id
+  isLeader: Boolean
+  name: String! @unique
+  type: GROUP_ROLE_TYPE
+  updatedAt: DateTime! @updatedAt
+}
+
+type GroupType {
+  createdAt: DateTime! @createdAt
+  description: String
+  groups: [Group]
+  id: ID! @id
+  name: String! @unique
+  roles: [GroupRole]
+  updatedAt: DateTime! @updatedAt
+}
+
+type Location {
+  city: String
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  locationType: LOCATION_TYPE
+  postalCode: String
+  state: String
+  street1: String
+  street2: String
+  updatedAt: DateTime! @updatedAt
+}
+
+type Person {
+  createdAt: DateTime! @createdAt
+  email: String
+  firstName: String
+  id: ID! @id
+  lastName: String
+  phoneNumbers: [PhoneNumber]
+  scheduledTransactions: [FinancialScheduledTransaction]
+  transactions: [FinancialTransaction]
+  updatedAt: DateTime! @updatedAt
+  user: User
+}
+
+type PhoneNumber {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  number: String!
+  updatedAt: DateTime! @updatedAt
+}
+
+type User {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  person: Person! @relation(link: TABLE)
+  updatedAt: DateTime! @updatedAt
+}
+
+enum ACH_TYPE {
+  SAVINGS
+  CHECKING
+}
+
+enum CREDIT_CARD {
+  VISA
+  MASTERCARD
+  AMEX
+  DISCOVER
+}
+
+enum CURRENCY_TYPE {
+  ACH
+  CC
 }
 
 enum GROUP_INVITE_STATUS {
@@ -569,551 +765,891 @@ enum GROUP_ROLE_TYPE {
   MEMBER
 }
 
-type GroupInvite {
-  id: ID! @id
-  email: String!
-  group: Group! @relation(link: TABLE)
-  groupRole: GroupRole @relation(link: TABLE)
-  status: GROUP_INVITE_STATUS!
-}
-
-type GroupMember {
-  id: ID! @id
-  group: Group @relation(link: TABLE)
-  role: GroupRole @relation(link: TABLE)
-  person: Person @relation(link: TABLE)
-}
-
-type GroupRole {
-  id: ID! @id
-  canEdit: Boolean!
-  canView: Boolean!
-  description: String!
-  groupType: GroupType @relation(link: TABLE)
-  isLeader: Boolean
-  name: String! @unique
-  type: GROUP_ROLE_TYPE
-}
-
-type GroupType {
-  id: ID! @id
-  description: String
-  groups: [Group] @relation(link: TABLE)
-  name: String! @unique
-  roles: [GroupRole] @relation(link: TABLE)
-}
-
-type Group {
-  id: ID! @id
-  key: String @unique
-  description: String
-  type: GroupType! @relation(link: TABLE)
-  invites: [GroupInvite] @relation(link: TABLE)
-  isActive: Boolean!
-  members: [GroupMember] @relation(link: TABLE)
-  name: String!
-  organization: Group @relation(link: TABLE)
-}
-
-type Campus {
-  id: ID! @id
-  accounts: [FinancialAccount]
-  description: String
-  isActive: Boolean
-  organization: Group @relation(link: TABLE)
-  location: Location @relation(link: TABLE)
-  name: String!
-  phoneNumbers: [PhoneNumber]
-}
-
 enum LOCATION_TYPE {
   HOME
   WORK
 }
 
-type Location {
-  id: ID! @id
-  city: String
-  locationType: LOCATION_TYPE
-  postalCode: String
-  state: String
-  street1: String
-  street2: String
+enum TRANSACTION_FREQUENCY {
+  DAILY
+  MONTHLY
+  BIWEEKLY
+  CUSTOM
+}
+
+enum TRANSACTION_STATUS {
+  PENDING
+  SUCCESS
+  FAILED
 }"
 `;
 
-exports[`Introspects flavian/mysql correctly 1`] = `
-"type User {
-  id: ID! @id
-  email: String! @unique
-  name: String
-  posts: [Post] @relation(link: TABLE)
-}
-
-type Post {
-  id: ID! @id
-  createdAt: DateTime! @createdAt
-  updatedAt: DateTime! @updatedAt
+exports[`Introspects flavian/mysql correctly: flavian - legacy datamodel 1`] = `
+"type Post {
+  author: User!
+  content: String
+  createdAt: DateTime!
+  id: ID! @unique
   published: Boolean! @default(value: false)
   title: String!
-  content: String
+  updatedAt: DateTime!
+}
+
+type User {
+  createdAt: DateTime!
+  email: String! @unique
+  id: ID! @unique
+  name: String
+  posts: [Post]
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspects flavian/mysql correctly: flavian - v1.1 datamodel 1`] = `
+"type Post {
   author: User! @relation(link: TABLE)
-}"
-`;
-
-exports[`Introspects meshRelation/mysql correctly 1`] = `
-"type A {
-  field: Int!
-  a: A! @relation(link: TABLE)
-  b: [B] @relation(link: TABLE)
-  c: C @relation(link: TABLE)
-  e: [E] @relation(link: TABLE)
-}
-
-type B {
-  field: [String]
-  c: C @relation(name: \\"BToC\\")
-  b: [B]
-  a: A! @relation(link: TABLE)
-  c2: C @relation(name: \\"BToC2\\")
-}
-
-type C {
-  expirationDate: DateTime
-  c: C! @relation(link: TABLE)
-  b: [B] @relation(name: \\"BToC\\")
-  a: A @relation(link: TABLE)
-  b2: B @relation(name: \\"BToC2\\")
-}
-
-type D {
-  field: Json
-  c: C! @relation(link: TABLE)
-  b: B! @relation(link: TABLE)
-  a: A! @relation(link: TABLE)
-  d: [D]
-}
-
-type E {
-  field: Json
-  a: A! @relation(link: TABLE)
-}"
-`;
-
-exports[`Introspects oneSidedConnection/mysql correctly 1`] = `
-"type TypeWithId {
+  content: String
+  createdAt: DateTime! @createdAt
   id: ID! @id
-  field: String!
+  published: Boolean! @default(value: false)
+  title: String!
+  updatedAt: DateTime! @updatedAt
 }
 
-type TypeWithoutId {
-  field: String!
-}
+type User {
+  createdAt: DateTime! @createdAt
+  email: String! @unique
+  id: ID! @id
+  name: String
+  posts: [Post]
+  updatedAt: DateTime! @updatedAt
+}"
+`;
 
-type A {
-  x: TypeWithId! @relation(link: TABLE)
-  y: TypeWithoutId! @relation(link: TABLE)
+exports[`Introspects oneSidedConnection/mysql correctly: oneSidedConnection - legacy datamodel 1`] = `
+"type A {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: TypeWithId!
+  y: TypeWithoutId!
 }
 
 type B {
-  x: TypeWithId @relation(link: TABLE)
-  y: TypeWithoutId @relation(link: TABLE)
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: TypeWithId
+  y: TypeWithoutId
 }
 
 type C {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
   x: [TypeWithId]
   y: [TypeWithoutId]
 }
 
 type D {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: TypeWithId!
+  y: TypeWithoutId!
+}
+
+type E {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: TypeWithId
+  y: TypeWithoutId
+}
+
+type F {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [TypeWithId]
+  y: [TypeWithoutId]
+}
+
+type TypeWithId {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+}
+
+type TypeWithoutId {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspects oneSidedConnection/mysql correctly: oneSidedConnection - v1.1 datamodel 1`] = `
+"type A {
+  createdAt: DateTime! @createdAt
   id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: TypeWithId! @relation(link: TABLE)
+  y: TypeWithoutId! @relation(link: TABLE)
+}
+
+type B {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: TypeWithId @relation(link: TABLE)
+  y: TypeWithoutId @relation(link: TABLE)
+}
+
+type C {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [TypeWithId]
+  y: [TypeWithoutId]
+}
+
+type D {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
   x: TypeWithId! @relation(link: TABLE)
   y: TypeWithoutId! @relation(link: TABLE)
 }
 
 type E {
+  createdAt: DateTime! @createdAt
   id: ID! @id
+  updatedAt: DateTime! @updatedAt
   x: TypeWithId @relation(link: TABLE)
   y: TypeWithoutId @relation(link: TABLE)
 }
 
 type F {
+  createdAt: DateTime! @createdAt
   id: ID! @id
+  updatedAt: DateTime! @updatedAt
   x: [TypeWithId]
   y: [TypeWithoutId]
+}
+
+type TypeWithId {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type TypeWithoutId {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
 }"
 `;
 
-exports[`Introspects prisma-3143/mysql correctly 1`] = `
+exports[`Introspects prisma-3143/mysql correctly: prisma-3143 - legacy datamodel 1`] = `
 "type Story {
-  id: ID! @id
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
 }
 
 type UserSpace {
+  createdAt: DateTime!
+  id: ID! @unique
+  stories: [Story] @relation(name: \\"StoriesByUserSpace\\")
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspects prisma-3143/mysql correctly: prisma-3143 - v1.1 datamodel 1`] = `
+"type Story {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type UserSpace {
+  createdAt: DateTime! @createdAt
   id: ID! @id
   stories: [Story] @relation(name: \\"StoriesByUserSpace\\")
+  updatedAt: DateTime! @updatedAt
 }"
 `;
 
-exports[`Introspects relationNames/mysql correctly 1`] = `
-"type A {
-  toB: B! @relation(name: \\"RaToB\\")
-  toB2: B! @relation(name: \\"RaToB2\\")
-  toC: C @relation(link: TABLE)
-}
-
-type B {
-  toA: A! @relation(name: \\"RaToB\\")
-  toA2: A! @relation(name: \\"RaToB2\\")
-  toC: C! @relation(link: TABLE)
-}
-
-type C {
-  toB: [B] @relation(link: TABLE)
-  toA: [A] @relation(link: TABLE)
-}"
-`;
-
-exports[`Introspects relations/mysql correctly 1`] = `
-"type User {
-  id: ID! @id
-  name: String!
-  posts: [Post] @relation(name: \\"PostsByUser\\")
-  postsWithoutConnection: [PostWithoutConnection]
-  billingInfo: BillingInfo! @relation(link: TABLE)
-  billingInfoWithoutConnection: BillingInfoWithoutConnection! @relation(link: TABLE)
-  likes: [Post] @relation(name: \\"LikesByUser\\")
-  optionalDetails: OptionalDetails @relation(link: TABLE)
-  optionalDetailsWithoutConnection: OptionalDetailsWithoutConnection @relation(link: TABLE)
-}
-
-type Post {
-  id: ID! @id
-  text: String!
-  count: Int!
-  user: User! @relation(name: \\"PostsByUser\\")
-  likes: [User] @relation(name: \\"LikesByUser\\")
-}
-
-type PostWithoutConnection {
-  id: ID! @id
-  text: String!
-  count: Int!
-}
-
-type BillingInfo {
-  id: ID! @id
-  account: String!
-  user: User! @relation(link: TABLE)
-}
-
-type BillingInfoWithoutConnection {
-  account: String!
-}
-
-type OptionalDetails {
-  text: String!
-  user: User! @relation(link: TABLE)
-}
-
-type OptionalDetailsWithoutConnection {
-  text: String!
-}"
-`;
-
-exports[`Introspects scalars/mysql correctly 1`] = `
-"type LotsOfScalars {
-  int: Int
-  string: String
-  float: Float
-  dateTime: DateTime
-  json: Json
-  boolean: Boolean
-}
-
-type LotsOfRequiredScalars {
-  int: Int!
-  string: String!
-  float: Float!
-  dateTime: DateTime!
-  json: Json!
+exports[`Introspects scalars/mysql correctly: scalars - legacy datamodel 1`] = `
+"type LotsOfRequiredScalars {
   boolean: Boolean!
-}
-
-type LotsOfScalarLists {
-  int: [Int]
-  string: [String]
-  float: [Float]
-  dateTime: [DateTime]
-  json: [Json]
-  boolean: [Boolean]
-}
-
-type LotsOfScalarsWithID {
-  id: ID! @id
-  int: Int
-  string: String
-  float: Float
-  dateTime: DateTime
-  json: Json
-  boolean: Boolean
+  createdAt: DateTime!
+  dateTime: DateTime!
+  float: Float!
+  id: ID! @unique
+  int: Int!
+  json: Json!
+  string: String!
+  updatedAt: DateTime!
 }
 
 type LotsOfRequiredScalarsWithID {
-  id: ID! @id
-  int: Int!
-  string: String!
-  float: Float!
-  dateTime: DateTime!
-  json: Json!
   boolean: Boolean!
+  createdAt: DateTime!
+  dateTime: DateTime!
+  float: Float!
+  id: ID! @unique
+  int: Int!
+  json: Json!
+  string: String!
+  updatedAt: DateTime!
+}
+
+type LotsOfScalarLists {
+  boolean: [Boolean]
+  createdAt: DateTime!
+  dateTime: [DateTime]
+  float: [Float]
+  id: ID! @unique
+  int: [Int]
+  json: [Json]
+  string: [String]
+  updatedAt: DateTime!
 }
 
 type LotsOfScalarListsWithID {
-  id: ID! @id
-  int: [Int]
-  string: [String]
-  float: [Float]
-  dateTime: [DateTime]
-  json: [Json]
   boolean: [Boolean]
+  createdAt: DateTime!
+  dateTime: [DateTime]
+  float: [Float]
+  id: ID! @unique
+  int: [Int]
+  json: [Json]
+  string: [String]
+  updatedAt: DateTime!
+}
+
+type LotsOfScalars {
+  boolean: Boolean
+  createdAt: DateTime!
+  dateTime: DateTime
+  float: Float
+  id: ID! @unique
+  int: Int
+  json: Json
+  string: String
+  updatedAt: DateTime!
+}
+
+type LotsOfScalarsWithID {
+  boolean: Boolean
+  createdAt: DateTime!
+  dateTime: DateTime
+  float: Float
+  id: ID! @unique
+  int: Int
+  json: Json
+  string: String
+  updatedAt: DateTime!
 }"
 `;
 
-exports[`Introspects selfReferencing/mysql correctly 1`] = `
-"type SelfReferencingAWithId {
+exports[`Introspects scalars/mysql correctly: scalars - v1.1 datamodel 1`] = `
+"type LotsOfRequiredScalars {
+  boolean: Boolean!
+  createdAt: DateTime! @createdAt
+  dateTime: DateTime!
+  float: Float!
   id: ID! @id
-  a: SelfReferencingAWithId! @relation(link: TABLE)
-  field: Int!
+  int: Int!
+  json: Json!
+  string: String!
+  updatedAt: DateTime! @updatedAt
 }
 
-type SelfReferencingBWithId {
+type LotsOfRequiredScalarsWithID {
+  boolean: Boolean!
+  createdAt: DateTime! @createdAt
+  dateTime: DateTime!
+  float: Float!
   id: ID! @id
-  a: SelfReferencingBWithId @relation(link: TABLE)
-  field: Int!
+  int: Int!
+  json: Json!
+  string: String!
+  updatedAt: DateTime! @updatedAt
 }
 
-type SelfReferencingCWithId {
+type LotsOfScalarLists {
+  boolean: [Boolean] @scalarList(strategy: RELATION)
+  createdAt: DateTime! @createdAt
+  dateTime: [DateTime] @scalarList(strategy: RELATION)
+  float: [Float] @scalarList(strategy: RELATION)
   id: ID! @id
-  a: [SelfReferencingBWithId]
-  field: Int!
+  int: [Int] @scalarList(strategy: RELATION)
+  json: [Json] @scalarList(strategy: RELATION)
+  string: [String] @scalarList(strategy: RELATION)
+  updatedAt: DateTime! @updatedAt
 }
 
-type SelfReferencingA {
+type LotsOfScalarListsWithID {
+  boolean: [Boolean] @scalarList(strategy: RELATION)
+  createdAt: DateTime! @createdAt
+  dateTime: [DateTime] @scalarList(strategy: RELATION)
+  float: [Float] @scalarList(strategy: RELATION)
   id: ID! @id
-  a: SelfReferencingAWithId! @relation(link: TABLE)
-  field: Int!
+  int: [Int] @scalarList(strategy: RELATION)
+  json: [Json] @scalarList(strategy: RELATION)
+  string: [String] @scalarList(strategy: RELATION)
+  updatedAt: DateTime! @updatedAt
 }
 
-type SelfReferencingB {
+type LotsOfScalars {
+  boolean: Boolean
+  createdAt: DateTime! @createdAt
+  dateTime: DateTime
+  float: Float
   id: ID! @id
-  a: SelfReferencingB @relation(link: TABLE)
-  field: Int!
+  int: Int
+  json: Json
+  string: String
+  updatedAt: DateTime! @updatedAt
 }
 
-type SelfReferencingC {
+type LotsOfScalarsWithID {
+  boolean: Boolean
+  createdAt: DateTime! @createdAt
+  dateTime: DateTime
+  float: Float
   id: ID! @id
-  a: [SelfReferencingC]
-  field: Int!
-}
-
-type MultiSelfReferencingCWithId {
-  id: ID! @id
-  a: [MultiSelfReferencingCWithId] @relation(name: \\"WithIdAToA\\")
-  b: [MultiSelfReferencingCWithId] @relation(name: \\"WithIdAToA\\")
-}
-
-type MultiSelfReferencingBWithId {
-  id: ID! @id
-  a: MultiSelfReferencingBWithId @relation(name: \\"WithIdAToA2\\")
-  b: MultiSelfReferencingBWithId @relation(name: \\"WithIdAToA2\\")
-}
-
-type MultiSelfReferencingC {
-  a: [MultiSelfReferencingC] @relation(name: \\"AToA\\")
-  b: [MultiSelfReferencingC] @relation(name: \\"AToA\\")
-}
-
-type MultiSelfReferencingB {
-  a: MultiSelfReferencingB @relation(name: \\"AToA2\\")
-  b: MultiSelfReferencingB @relation(name: \\"AToA2\\")
+  int: Int
+  json: Json
+  string: String
+  updatedAt: DateTime! @updatedAt
 }"
 `;
 
-exports[`Introspects simple/mysql correctly 1`] = `
+exports[`Introspects simple/mysql correctly: simple - legacy datamodel 1`] = `
 "type User {
+  createdAt: DateTime!
+  id: ID! @unique
+  name: String!
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspects simple/mysql correctly: simple - v1.1 datamodel 1`] = `
+"type User {
+  createdAt: DateTime! @createdAt
   id: ID! @id
   name: String!
+  updatedAt: DateTime! @updatedAt
 }"
 `;
 
-exports[`Introspects todo/mysql correctly 1`] = `
+exports[`Introspects todo/mysql correctly: todo - legacy datamodel 1`] = `
 "type Todo {
+  createdAt: DateTime!
+  done: Boolean!
+  id: ID! @unique
+  text: String!
+  updatedAt: DateTime!
+  user: User!
+}
+
+type User {
+  createdAt: DateTime!
+  id: ID! @unique
+  name: String!
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspects todo/mysql correctly: todo - v1.1 datamodel 1`] = `
+"type Todo {
+  createdAt: DateTime! @createdAt
+  done: Boolean!
   id: ID! @id
   text: String!
-  done: Boolean!
+  updatedAt: DateTime! @updatedAt
   user: User! @relation(link: TABLE)
 }
 
 type User {
+  createdAt: DateTime! @createdAt
   id: ID! @id
   name: String!
+  updatedAt: DateTime! @updatedAt
 }"
 `;
 
-exports[`Introspects twoSidedConnection/mysql correctly 1`] = `
-"type AWithIdWithA {
-  id: ID! @id
-  field: String!
-  x: AWithA! @relation(link: TABLE)
-}
-
-type AWithoutIdWithA {
-  field: String!
-  x: AWithA! @relation(link: TABLE)
-}
-
-type BWithIdWithA {
-  id: ID! @id
-  field: String!
-  x: AWithB @relation(link: TABLE)
-}
-
-type BWithoutIdWithA {
-  field: String!
-  x: AWithB @relation(link: TABLE)
-}
-
-type CWithIdWithA {
-  id: ID! @id
-  field: String!
-  x: [AWithC] @relation(link: TABLE)
-}
-
-type CWithoutIdWithA {
-  field: String!
-  x: [AWithC] @relation(link: TABLE)
-}
-
-type AWithIdWithB {
-  id: ID! @id
-  field: String!
-  x: BWithA! @relation(link: TABLE)
-}
-
-type AWithoutIdWithB {
-  field: String!
-  x: BWithA! @relation(link: TABLE)
-}
-
-type BWithIdWithB {
-  id: ID! @id
-  field: String!
-  x: BWithB @relation(link: TABLE)
-}
-
-type BWithoutIdWithB {
-  field: String!
-  x: BWithB @relation(link: TABLE)
-}
-
-type CWithIdWithB {
-  id: ID! @id
-  field: String!
-  x: [BWithC] @relation(link: TABLE)
-}
-
-type CWithoutIdWithB {
-  field: String!
-  x: [BWithC] @relation(link: TABLE)
-}
-
-type AWithIdWithC {
-  id: ID! @id
-  field: String!
-  x: CWithA! @relation(link: TABLE)
-}
-
-type AWithoutIdWithC {
-  field: String!
-  x: CWithA! @relation(link: TABLE)
-}
-
-type BWithIdWithC {
-  id: ID! @id
-  field: String!
-  x: CWithB @relation(link: TABLE)
-}
-
-type BWithoutIdWithC {
-  field: String!
-  x: CWithB @relation(link: TABLE)
-}
-
-type CWithIdWithC {
-  id: ID! @id
-  field: String!
-  x: [CWithC]
-}
-
-type CWithoutIdWithC {
-  field: String!
-  x: [CWithC]
-}
-
-type AWithA {
-  x: AWithIdWithA! @relation(link: TABLE)
-  y: AWithoutIdWithA! @relation(link: TABLE)
+exports[`Introspects twoSidedConnection/mysql correctly: twoSidedConnection - legacy datamodel 1`] = `
+"type AWithA {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: AWithIdWithA!
+  y: AWithoutIdWithA!
 }
 
 type AWithB {
-  x: BWithIdWithA! @relation(link: TABLE)
-  y: BWithoutIdWithA! @relation(link: TABLE)
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: BWithIdWithA!
+  y: BWithoutIdWithA!
 }
 
 type AWithC {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: CWithIdWithA!
+  y: CWithoutIdWithA!
+}
+
+type AWithIdWithA {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: AWithA!
+}
+
+type AWithIdWithB {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: BWithA!
+}
+
+type AWithIdWithC {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: CWithA!
+}
+
+type AWithoutIdWithA {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: AWithA!
+}
+
+type AWithoutIdWithB {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: BWithA!
+}
+
+type AWithoutIdWithC {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: CWithA!
+}
+
+type BWithA {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: AWithIdWithB
+  y: AWithoutIdWithB
+}
+
+type BWithB {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: BWithIdWithB
+  y: BWithoutIdWithB
+}
+
+type BWithC {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: CWithIdWithB
+  y: CWithoutIdWithB
+}
+
+type BWithIdWithA {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: AWithB
+}
+
+type BWithIdWithB {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: BWithB
+}
+
+type BWithIdWithC {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: CWithB
+}
+
+type BWithoutIdWithA {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: AWithB
+}
+
+type BWithoutIdWithB {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: BWithB
+}
+
+type BWithoutIdWithC {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: CWithB
+}
+
+type CWithA {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [AWithIdWithC]
+  y: [AWithoutIdWithC]
+}
+
+type CWithB {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [BWithIdWithC]
+  y: [BWithoutIdWithC]
+}
+
+type CWithC {
+  createdAt: DateTime!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [CWithIdWithC]
+  y: [CWithoutIdWithC]
+}
+
+type CWithIdWithA {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [AWithC]
+}
+
+type CWithIdWithB {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [BWithC]
+}
+
+type CWithIdWithC {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [CWithC]
+}
+
+type CWithoutIdWithA {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [AWithC]
+}
+
+type CWithoutIdWithB {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [BWithC]
+}
+
+type CWithoutIdWithC {
+  createdAt: DateTime!
+  field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+  x: [CWithC]
+}"
+`;
+
+exports[`Introspects twoSidedConnection/mysql correctly: twoSidedConnection - v1.1 datamodel 1`] = `
+"type AWithA {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: AWithIdWithA!
+  y: AWithoutIdWithA!
+}
+
+type AWithB {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: BWithIdWithA!
+  y: BWithoutIdWithA!
+}
+
+type AWithC {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
   x: CWithIdWithA! @relation(link: TABLE)
   y: CWithoutIdWithA! @relation(link: TABLE)
 }
 
+type AWithIdWithA {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: AWithA! @relation(link: TABLE)
+}
+
+type AWithIdWithB {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: BWithA! @relation(link: TABLE)
+}
+
+type AWithIdWithC {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: CWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithA {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: AWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithB {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: BWithA! @relation(link: TABLE)
+}
+
+type AWithoutIdWithC {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: CWithA! @relation(link: TABLE)
+}
+
 type BWithA {
-  x: AWithIdWithB @relation(link: TABLE)
-  y: AWithoutIdWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: AWithIdWithB
+  y: AWithoutIdWithB
 }
 
 type BWithB {
-  x: BWithIdWithB @relation(link: TABLE)
-  y: BWithoutIdWithB @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: BWithIdWithB
+  y: BWithoutIdWithB
 }
 
 type BWithC {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
   x: CWithIdWithB @relation(link: TABLE)
   y: CWithoutIdWithB @relation(link: TABLE)
 }
 
+type BWithIdWithA {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: AWithB @relation(link: TABLE)
+}
+
+type BWithIdWithB {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: BWithB @relation(link: TABLE)
+}
+
+type BWithIdWithC {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: CWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithA {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: AWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithB {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: BWithB @relation(link: TABLE)
+}
+
+type BWithoutIdWithC {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: CWithB @relation(link: TABLE)
+}
+
 type CWithA {
-  x: [AWithIdWithC] @relation(link: TABLE)
-  y: [AWithoutIdWithC] @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [AWithIdWithC]
+  y: [AWithoutIdWithC]
 }
 
 type CWithB {
-  x: [BWithIdWithC] @relation(link: TABLE)
-  y: [BWithoutIdWithC] @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [BWithIdWithC]
+  y: [BWithoutIdWithC]
 }
 
 type CWithC {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
   x: [CWithIdWithC]
   y: [CWithoutIdWithC]
+}
+
+type CWithIdWithA {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [AWithC]
+}
+
+type CWithIdWithB {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [BWithC]
+}
+
+type CWithIdWithC {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [CWithC]
+}
+
+type CWithoutIdWithA {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [AWithC]
+}
+
+type CWithoutIdWithB {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [BWithC]
+}
+
+type CWithoutIdWithC {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+  x: [CWithC]
 }"
 `;
 
-exports[`Introspects withAndWithoutId/mysql correctly 1`] = `
+exports[`Introspects withAndWithoutId/mysql correctly: withAndWithoutId - legacy datamodel 1`] = `
 "type TypeWithId {
-  id: ID! @id
+  createdAt: DateTime!
   field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
 }
 
 type TypeWithoutId {
+  createdAt: DateTime!
   field: String!
+  id: ID! @unique
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspects withAndWithoutId/mysql correctly: withAndWithoutId - v1.1 datamodel 1`] = `
+"type TypeWithId {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
+}
+
+type TypeWithoutId {
+  createdAt: DateTime! @createdAt
+  field: String!
+  id: ID! @id
+  updatedAt: DateTime! @updatedAt
 }"
 `;

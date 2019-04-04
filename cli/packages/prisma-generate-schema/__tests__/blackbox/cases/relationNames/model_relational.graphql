@@ -1,16 +1,19 @@
 type A {
+  id: ID! @unique
   toB: B! @relation(name: "RaToB")
   toB2: B! @relation(name: "RaToB2")
   toC: C
 }
 
 type B {
+  id: ID! @unique
   toA: A! @relation(name: "RaToB")
   toA2: A! @relation(name: "RaToB2")
   toC: C!
 }
 
 type C {
+  id: ID! @unique
   toB: [B]
   toA: [A]
 }

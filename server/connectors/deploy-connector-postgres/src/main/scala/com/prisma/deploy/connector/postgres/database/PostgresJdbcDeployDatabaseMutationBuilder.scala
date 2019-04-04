@@ -1,8 +1,11 @@
 package com.prisma.deploy.connector.postgres.database
 
-import com.prisma.connector.shared.jdbc.SlickDatabase
+import java.util.{Calendar, TimeZone}
+
+import com.prisma.connector.shared.jdbc.{SharedJdbcExtensions, SlickDatabase}
+import com.prisma.deploy.connector.MigrationValueGenerator
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
-import com.prisma.gc_values.StringGCValue
+import com.prisma.gc_values._
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
@@ -10,6 +13,7 @@ import com.prisma.shared.models._
 import com.prisma.utils.boolean.BooleanUtils
 import org.jooq.impl.DSL
 import slick.dbio.{DBIOAction => DatabaseAction}
+import slick.jdbc.SetParameter
 
 import scala.concurrent.ExecutionContext
 
@@ -18,7 +22,9 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     typeMapper: TypeMapper
 )(implicit val ec: ExecutionContext)
     extends JdbcDeployDatabaseMutationBuilder
-    with BooleanUtils {
+    with BooleanUtils
+    with MigrationValueGenerator
+    with SharedJdbcExtensions {
 
   import slickDatabase.profile.api._
 
@@ -137,9 +143,38 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     deleteColumn(project, model.dbName, column)
   }
 
+  val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+  implicit val gcValueSetter = SetParameter[GCValue] {
+    case (StringGCValue(string), params)     => params.setString(string)
+    case (BooleanGCValue(boolean), params)   => params.setBoolean(boolean)
+    case (IntGCValue(int), params)           => params.setInt(int)
+    case (FloatGCValue(float), params)       => params.setDouble(float)
+    case (StringIdGCValue(id), params)       => params.setString(id)
+    case (DateTimeGCValue(dateTime), params) => params.setTimestamp(jodaDateTimeToSqlTimestampUTC(dateTime))
+    case (EnumGCValue(enum), params)         => params.setString(enum)
+    case (JsonGCValue(json), params)         => params.setString(json.toString())
+    case (UuidGCValue(uuid), params)         => sys.error("")
+    case _                                   => sys.error("")
+  }
+
   override def createColumn(project: Project, field: ScalarField): DBIO[_] = {
-    val fieldSQL = typeMapper.rawSQLForField(field)
-    sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$fieldSQL"""
+
+    field.isRequired && !field.isId match {
+      case true =>
+        val optionalFieldSQL = typeMapper.rawSQLForFieldWithoutRequired(field)
+        val defaultValue     = migrationValueForField(field)
+
+        DBIO.seq(
+          sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$optionalFieldSQL""",
+          sqlu"""UPDATE #${qualify(project.dbName, field.model.dbName)} SET #${qualify(field.dbName)} = ${defaultValue}""",
+          sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ALTER COLUMN #${qualify(field.dbName)} SET NOT NULL"""
+        )
+
+      case false =>
+        val fieldSQL = typeMapper.rawSQLForField(field)
+        sqlu"""ALTER TABLE #${qualify(project.dbName, field.model.dbName)} ADD COLUMN #$fieldSQL"""
+
+    }
   }
 
   override def updateColumn(project: Project,
@@ -150,15 +185,24 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     if (oldTypeIdentifier != field.typeIdentifier) {
       DatabaseAction.seq(deleteColumn(project, field.model.dbName, oldColumnName), createColumn(project, field))
     } else {
-      val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
-      val nulls             = if (field.isRequired) "SET NOT NULL" else "DROP NOT NULL"
       val renameIfNecessary = renameColumn(project, oldTableName, oldColumnName, field.dbName, field.typeIdentifier)
+      val sqlType           = typeMapper.rawSqlTypeForScalarTypeIdentifier(field.typeIdentifier)
+      val alterColumn       = sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType"""
 
-      DatabaseAction.seq(
-        sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} TYPE #$sqlType""",
-        sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} #$nulls""",
-        renameIfNecessary
-      )
+      field.isRequired && !field.isId match {
+        case true =>
+          val defaultValue = migrationValueForField(field)
+          DatabaseAction.seq(
+            alterColumn,
+            sqlu"""UPDATE #${qualify(project.dbName, oldTableName)} SET #${qualify(oldColumnName)} = ${defaultValue} WHERE #${qualify(oldColumnName)} is null;""",
+            sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} SET NOT NULL""",
+            renameIfNecessary
+          )
+        case false =>
+          DatabaseAction.seq(alterColumn,
+                             sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} ALTER COLUMN #${qualify(oldColumnName)} Drop NOT NULL""",
+                             renameIfNecessary)
+      }
     }
   }
 
@@ -173,14 +217,6 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
 
   override def removeIndex(project: Project, tableName: String, indexName: String): DBIO[_] = {
     sqlu"""DROP INDEX #${qualify(project.dbName, indexName)}"""
-  }
-
-  override def renameTable(project: Project, oldTableName: String, newTableName: String) = {
-    if (oldTableName != newTableName) {
-      sqlu"""ALTER TABLE #${qualify(project.dbName, oldTableName)} RENAME TO #${qualify(newTableName)}"""
-    } else {
-      DatabaseAction.successful(())
-    }
   }
 
   override def renameColumn(project: Project, tableName: String, oldColumnName: String, newColumnName: String, typeIdentifier: TypeIdentifier) = {

@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.SupportsExistingDatabasesCapability
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, SupportsExistingDatabasesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -10,7 +10,7 @@ import sangria.renderer.SchemaRenderer
 class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
   // a lot of the schemas omit the id field which is required for passive connectors
-  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability)
+  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability, EmbeddedTypesCapability)
 
   "Sample schema with relation and id only types" should "be generated correctly" in {
 
@@ -36,6 +36,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
     val inputTypes = """input BCreateInput {
+                       |  id: ID
                        |  rel: UserCreateOneInput
                        |  c: CCreateOneWithoutBInput
                        |}
@@ -46,6 +47,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input BCreateWithoutCInput {
+                       |  id: ID
                        |  rel: UserCreateOneInput
                        |}
                        |
@@ -77,10 +79,16 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input CCreateInput {
+                       |  id: ID
                        |  b: BCreateOneWithoutCInput
                        |}
                        |
+                       |input CCreateWithoutBInput {
+                       |  id: ID
+                       |}
+                       |
                        |input CCreateOneWithoutBInput {
+                       |  create: CCreateWithoutBInput
                        |  connect: CWhereUniqueInput
                        |}
                        |
@@ -89,6 +97,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input CUpdateOneWithoutBInput {
+                       |  create: CCreateWithoutBInput
                        |  connect: CWhereUniqueInput
                        |  disconnect: Boolean
                        |  delete: Boolean
@@ -99,6 +108,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input UserCreateInput {
+                       |  id: ID
                        |  name: String!
                        |}
                        |
@@ -215,6 +225,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |input UserCreateInput {
+        |  id: ID
         |  name: String!
         |}
         |
@@ -506,15 +517,18 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val project = SchemaDsl.fromString() {
       """type A {
+        |    id: ID! @unique
         |    field: Int @unique
         |}
         |
         |type B {
+        |    id: ID! @unique
         |    field: Int @unique
         |    a: A!
         |}
         |
         |type C {
+        |    id: ID! @unique
         |    field: Int @unique
         |    a: A
         |}"""
@@ -523,6 +537,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
     val inputTypes = """input ACreateInput {
+                       |  id: ID
                        |  field: Int
                        |}
                        |
@@ -565,6 +580,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input BCreateInput {
+                       |  id: ID
                        |  field: Int
                        |  a: ACreateOneInput!
                        |}
@@ -579,6 +595,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input CCreateInput {
+                       |  id: ID
                        |  field: Int
                        |  a: ACreateOneInput
                        |}
@@ -673,7 +690,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
 
-  "Nested Create types" should "be omitted if the resulting types are empty" in {
+  "Nested Create types" should "not be omitted anymore since we now have bring your own id" in {
     val project = SchemaDsl.fromString() {
       """type A {
         |    id: ID! @unique
@@ -688,4 +705,45 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
     schema should not(containInputType("BCreateOneWithoutAInput"))
   }
+
+  "Sample schema with relation and relation strategy NONE" should "be generated correctly" in {
+
+    val project = SchemaDsl.fromStringv11() {
+
+      """type User {
+        |  id: ID! @id(strategy:NONE)
+        |  name: String!
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes = """input UserCreateInput {
+                       |  id: ID!
+                       |  name: String!
+                       |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+
+  "Sample schema with relation and relation strategy AUTO" should "be generated correctly" in {
+
+    val project = SchemaDsl.fromStringv11() {
+
+      """type User {
+        |  id: ID! @id(strategy:AUTO)
+        |  name: String!
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    val inputTypes = """input UserCreateInput {
+                       |  id: ID
+                       |  name: String!
+                       |}"""
+
+    inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
+  }
+  //Fixme once AUTO and idtypes Int, CUID, UUID are explicitly allowed, add them
 }

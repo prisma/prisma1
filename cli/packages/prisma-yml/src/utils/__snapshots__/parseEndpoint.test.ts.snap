@@ -65,6 +65,19 @@ Object {
 }
 `;
 
+exports[`parseEndpoint url on a subdomain 1`] = `
+Object {
+  "clusterBaseUrl": "https://db.cloud.prisma.sh",
+  "clusterName": "db.cloud.prisma.sh",
+  "isPrivate": true,
+  "local": false,
+  "service": "test-token",
+  "shared": false,
+  "stage": "test",
+  "workspaceSlug": null,
+}
+`;
+
 exports[`parseEndpoint work for minimal docker url 1`] = `
 Object {
   "clusterBaseUrl": "http://prisma:4466",

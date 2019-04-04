@@ -1,4 +1,5 @@
 type A {
+  id: ID! @unique
   field: Int!
   a: A!
   b: [B]
@@ -7,6 +8,7 @@ type A {
 }
 
 type B {
+  id: ID! @unique
   field: [String]
   c: C @relation(name: "BToC")
   b: [B]
@@ -15,6 +17,7 @@ type B {
 }
 
 type C {
+  id: ID! @unique
   expirationDate: DateTime
   c: C!
   b: [B] @relation(name: "BToC")
@@ -23,6 +26,7 @@ type C {
 }
 
 type D {
+  id: ID! @unique
   field: Json
   c: C!
   b: B!
@@ -31,6 +35,7 @@ type D {
 }
 
 type E {
+  id: ID! @unique
   field: Json
   a: A!
 }

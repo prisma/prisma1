@@ -312,6 +312,7 @@ ${chalk.gray(
       const splittedHook = hook.split(' ')
       this.out.action.start(`Running ${chalk.cyan(hook)}`)
       const isPackaged = fs.existsSync('/snapshot')
+      debug({ isPackaged })
       const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
       const child = spawnPath(splittedHook[0], splittedHook.slice(1))
       const stderr = child.stderr && child.stderr.toString()
