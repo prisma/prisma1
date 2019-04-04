@@ -9,18 +9,18 @@ class MongoForeignRelationsSpec extends FlatSpec with Matchers with ApiSpecBase 
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Delete" should "take care of relations without foreign keys" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Child {
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |    parent: Parent
         |}
         |
         |type Parent{
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
-        |    child: Child @mongoRelation(field: "children")
+        |    child: Child @relation(link: INLINE)
         |}
         |"""
     }
@@ -50,27 +50,29 @@ class MongoForeignRelationsSpec extends FlatSpec with Matchers with ApiSpecBase 
   }
 
   "Delete of something linked to on an embedded type" should "take care of relations without foreign keys " in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Friend {
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |}
         |
         |type Parent{
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |    child: Child
         |}
         |
-        |type Child @embedded{
-        |    name: String @unique
+        |type Child @embedded {
+        |    id: ID! @id
+        |    name: String
         |    child: GrandChild
         |}
         |
-        |type GrandChild @embedded{
-        |    name: String @unique
-        |    friend: Friend @mongoRelation(field:"friend")
+        |type GrandChild @embedded {
+        |    id: ID! @id
+        |    name: String
+        |    friend: Friend @relation(link: INLINE)
         |}"""
     }
 
@@ -112,27 +114,29 @@ class MongoForeignRelationsSpec extends FlatSpec with Matchers with ApiSpecBase 
   }
 
   "Delete of something linked to on an embedded type" should "take care of relations without foreign keys 2" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Friend {
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |}
         |
         |type Parent{
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |    child: Child
         |}
         |
-        |type Child @embedded{
-        |    name: String @unique
+        |type Child @embedded {
+        |    id: ID! @id
+        |    name: String
         |    child: GrandChild
         |}
         |
-        |type GrandChild @embedded{
-        |    name: String @unique
-        |    friend: Friend! @mongoRelation(field:"friend")
+        |type GrandChild @embedded {
+        |    id: ID! @id
+        |    name: String
+        |    friend: Friend! @relation(link: INLINE)
         |}"""
     }
 
@@ -199,16 +203,16 @@ class MongoForeignRelationsSpec extends FlatSpec with Matchers with ApiSpecBase 
   }
 
   "Dangling Ids" should "be ignored" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type ZChild{
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
-        |    parent: Parent
+        |    parent: Parent @relation(link: INLINE)
         |}
         |
         |type Parent{
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |    child: ZChild!
         |}"""
