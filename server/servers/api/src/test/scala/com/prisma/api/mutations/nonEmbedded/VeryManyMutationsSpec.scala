@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -11,19 +11,30 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def doNotRun               = true // we don't run this suite as it takes ages. We rather run it manually.
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
+  val inlineArgument = if (capabilities.has(RelationLinkListCapability)) {
+    "link: INLINE"
+  } else {
+    ""
+  }
+  val inlineRelationDirective = if (capabilities.has(RelationLinkListCapability)) {
+    "@relation(link: INLINE)"
+  } else {
+    ""
+  }
+
   //Postgres has a limit of 32678 parameters to a query
 
   "The delete many Mutation" should "delete the items matching the where clause" in {
-    val project: Project = SchemaDsl.fromString() {
-      """
+    val project: Project = SchemaDsl.fromStringV11() {
+      s"""
       |type Top {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   int: Int!
-      |   middles:[Middle]
+      |   middles:[Middle] $inlineRelationDirective
       |}
       |
       |type Middle {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   int: Int!
       |}
     """
@@ -94,23 +105,23 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A cascading delete" should "not hit the parameter limit" in {
 
-    val project: Project = SchemaDsl.fromString() {
-      """
+    val project: Project = SchemaDsl.fromStringV11() {
+      s"""
         |type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int @unique
-        |   middles:[Middle]   @relation(name: "TopToMiddle", onDelete: CASCADE)
+        |   middles:[Middle] @relation(name: "TopToMiddle", onDelete: CASCADE, $inlineArgument)
         |}
         |
         |type Middle {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int! @unique
         |   top: Top @relation(name: "TopToMiddle")
-        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE)
+        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE, $inlineArgument)
         |}
         |
         |type Bottom {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   middle: Middle @relation(name: "MiddleToBottom")
         |   int: Int!
         |}
@@ -164,34 +175,34 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A cascading delete" should "not hit the parameter limit 2" in {
 
-    val project: Project = SchemaDsl.fromString() {
-      """
+    val project: Project = SchemaDsl.fromStringV11() {
+      s"""
         |type Top{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int @unique
-        |   as: [A] @relation(name: "Top" onDelete: CASCADE)
+        |   as: [A] @relation(name: "Top" onDelete: CASCADE $inlineArgument)
         |}
         |
         |type A {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int @unique
-        |   bs:[B]  @relation(name: "A" onDelete: CASCADE)
+        |   bs:[B]  @relation(name: "A" onDelete: CASCADE $inlineArgument)
         |}
         |
         |type B {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int
-        |   cs: [C] @relation(name: "B" onDelete: CASCADE)
+        |   cs: [C] @relation(name: "B" onDelete: CASCADE $inlineArgument)
         |}
         |
         |type C {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int
-        |   ds: [D] @relation(name: "C" onDelete: CASCADE)
+        |   ds: [D] @relation(name: "C" onDelete: CASCADE $inlineArgument)
         |}
         |
         |type D {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int
         |}
       """
