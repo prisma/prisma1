@@ -51,6 +51,14 @@ impl RelationSide {
             RelationSide::B => RelationSide::A,
         }
     }
+
+    pub fn is_a(&self) -> bool {
+        *self == RelationSide::A
+    }
+
+    pub fn is_b(&self) -> bool {
+        *self == RelationSide::B
+    }
 }
 
 impl RelationField {

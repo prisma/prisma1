@@ -42,7 +42,11 @@ impl SelectDefinition for QueryArguments {
             .map(|f| f.aliased_cond(None))
             .unwrap_or(ConditionTree::NoCondition);
 
-        let conditions = ConditionTree::and(filter, cursor);
+        let conditions = match (filter, cursor) {
+            (ConditionTree::NoCondition, cursor) => cursor,
+            (filter, ConditionTree::NoCondition) => filter,
+            (filter, cursor) => ConditionTree::and(filter, cursor),
+        };
 
         let (skip, limit) = match self.last.or(self.first) {
             Some(c) => (self.skip.unwrap_or(0), Some(c + 1)), // +1 to see if there's more data

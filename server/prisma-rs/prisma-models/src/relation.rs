@@ -124,7 +124,7 @@ impl Relation {
         self.manifestation
             .as_ref()
             .map(|manifestation| match manifestation {
-                RelationLinkManifestation::RelationTable(_) => true,
+                RelationLinkManifestation::Inline(_) => true,
                 _ => false,
             })
             .unwrap_or(false)
@@ -135,7 +135,7 @@ impl Relation {
     }
 
     pub fn is_self_relation(&self) -> bool {
-        self.model_a().name == self.model_b().name
+        self.model_a_name == self.model_b_name
     }
 
     pub fn inline_manifestation(&self) -> Option<&InlineRelation> {
@@ -173,7 +173,6 @@ impl Relation {
         self.field_a
             .get_or_init(|| {
                 let field = self.model_a().fields().find_from_relation(&self.name).unwrap();
-
                 Arc::downgrade(&field)
             })
             .upgrade()
@@ -194,7 +193,6 @@ impl Relation {
         self.field_b
             .get_or_init(|| {
                 let field = self.model_b().fields().find_from_relation(&self.name).unwrap();
-
                 Arc::downgrade(&field)
             })
             .upgrade()

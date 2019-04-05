@@ -152,8 +152,22 @@ impl SelectedFields {
     fn relation_inlined(&self) -> Vec<Arc<RelationField>> {
         self.relation
             .iter()
-            .filter(|rf| rf.field.relation_is_inlined_in_parent())
-            .map(|sf| sf.field.clone())
+            .map(|rf| Arc::clone(&rf.field))
+            .filter(|rf| {
+                let relation = rf.relation();
+                let related = rf.related_field();
+                let is_inline = relation.is_inline_relation();
+                let is_self = relation.is_self_relation();
+
+                let is_intable = relation
+                    .inline_manifestation()
+                    .map(|mf| mf.in_table_of_model_name == rf.model().name)
+                    .unwrap_or(false);
+
+                (!rf.is_hidden && is_inline && is_self && rf.relation_side.is_b())
+                    || (related.is_hidden && is_inline && is_self && rf.relation_side.is_a())
+                    || (is_inline && !is_self && is_intable)
+            })
             .collect()
     }
 

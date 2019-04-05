@@ -62,7 +62,6 @@ trait AliasedSelect {
 
 impl AliasedCondition for Filter {
     fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
-        dbg!(&self);
         match self {
             Filter::And(mut filters) => match filters.pop() {
                 None => ConditionTree::NoCondition,
