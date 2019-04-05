@@ -117,9 +117,10 @@ class PipelineRenderer
   end
 
   def rust_tests
-      PipelineStep.new
-        .label(":rust: Cargo test prisma-rs")
-        .command("./server/.buildkite/pipeline.sh test-rust")
+      # PipelineStep.new
+      #   .label(":rust: Cargo test prisma-rs")
+      #   .command("./server/.buildkite/pipeline.sh test-rust")
+      []
   end
 
   def release_rust_artifacts
