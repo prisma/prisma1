@@ -6,6 +6,7 @@ export default class Delete extends Command {
   static topic = 'delete'
   static description = 'Delete an existing service'
   static group = 'db'
+  static printVersionSyncWarning = true
   static flags: Flags = {
     force: flags.boolean({
       char: 'f',

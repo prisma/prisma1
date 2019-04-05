@@ -7,6 +7,7 @@ export default class Export extends Command {
   static topic = 'export'
   static description = 'Export service data to local file'
   static group = 'data'
+  static printVersionSyncWarning = true
   static flags: Flags = {
     ['path']: flags.string({
       char: 'p',

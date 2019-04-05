@@ -23,6 +23,7 @@ import {
 export default class IntrospectCommand extends Command {
   static topic = 'introspect'
   static description = 'Introspect database schema(s) of service'
+  static printVersionSyncWarning = true
   static flags: Flags = {
     interactive: flags.boolean({
       char: 'i',
