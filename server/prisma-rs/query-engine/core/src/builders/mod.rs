@@ -54,6 +54,9 @@ impl<'a> Builder<'a> {
     }
 }
 
+/// FIXME: Do we want or need this?!
+type BuilderResult<T> = Option<CoreResult<T>>;
+
 /// A trait that describes a query builder
 pub trait BuilderExt {
     type Output;
@@ -185,42 +188,41 @@ pub trait BuilderExt {
             .collect()
     }
 
-    fn collect_nested_queries(model: ModelRef, field: &Field, schema: SchemaRef) -> CoreResult<Vec<Builder>> {
-        // field
-        //     .selection_set
-        //     .items
-        //     .iter()
-        //     .filter_map(|i| {
-        //         if let Selection::Field(f) = i {
-        //             let field = model.fields().find_from_all(&f.name);
-        //             match field {
-        //                 Ok(ModelField::Scalar(_field)) => None,
-        //                 Ok(ModelField::Relation(field)) => {
-        //                     // Todo: How to handle relations?
-        //                     // The QB needs to know that it's a relation, needs to find the related model, etc.
-        //                     // let qb = QueryBuilder::new(Arc::clone(&schema), f)
-        //                     //     .infer_query_type(Some(Arc::clone(&field)))
-        //                     //     .process_arguments()
-        //                     //     .map_selected_scalar_fields()
-        //                     //     .collect_nested_queries();
+    fn collect_nested_queries(model: ModelRef, ast_field: &Field, schema: SchemaRef) -> CoreResult<Vec<Builder>> {
+        ast_field
+            .selection_set
+            .items
+            .iter()
+            .filter_map(|i| {
+                if let Selection::Field(f) = i {
+                    let field = model.fields().find_from_all(&f.name);
+                    match field {
+                        Ok(ModelField::Scalar(_f)) => None,
+                        Ok(ModelField::Relation(f)) => {
+                            // Todo: How to handle relations?
+                            // The QB needs to know that it's a relation, needs to find the related model, etc.
 
-        //                     // Some(Ok(qb))
+                            let qb = Builder::infer(&Arc::clone(&model), &ast_field, Some(Arc::clone(f))).unwrap();
 
-        //                     // TODO: IMPLEMENT
-        //                     unimplemented!()
-        //                 }
-        //                 _ => Some(Err(CoreError::QueryValidationError(format!(
-        //                     "Selected field {} not found on model {}",
-        //                     f.name, model.name,
-        //                 )))),
-        //             }
-        //         } else {
-        //             // Todo: We only support selecting fields at the moment.
-        //             unimplemented!()
-        //         }
-        //     })
-        //     .collect();
+                            // TODO: Actual things!
+                            // let qb = QueryBuilder::new(Arc::clone(&schema), f)
+                            //     .infer_query_type(Some(Arc::clone(&field)))
+                            //     .process_arguments()
+                            //     .map_selected_scalar_fields()
+                            //     .collect_nested_queries();
 
-        unimplemented!()
+                            Some(Ok(qb))
+                        }
+                        _ => Some(Err(CoreError::QueryValidationError(format!(
+                            "Selected field {} not found on model {}",
+                            f.name, model.name,
+                        )))),
+                    }
+                } else {
+                    // Todo: We only support selecting fields at the moment.
+                    unimplemented!()
+                }
+            })
+            .collect()
     }
 }
