@@ -238,7 +238,7 @@ impl Relation {
             Some(Inline(ref m)) => {
                 let model = self.model_b();
 
-                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
+                if m.in_table_of_model_name == model.name {
                     model.fields().id().as_column()
                 } else {
                     let column_name: &str = m.referencing_column.as_ref();
