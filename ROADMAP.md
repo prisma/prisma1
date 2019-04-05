@@ -21,7 +21,6 @@ The following lists represent a number of smaller-scope issues and improvements 
 
 #### Bug fixes
 
-- [ ] [Export import fails #3183](https://github.com/prisma/prisma/issues/3183)
 - [ ] [Introspect postgres: "Could not connect to database. Prisma Config doesn't have any database connection" #3136](https://github.com/prisma/prisma/issues/3136)
 
 ### Specification phase
@@ -40,7 +39,6 @@ Here are the big features that are currently being specced out:
 The "implementation phase" reflects the larger features that we are currently working on. These features typically require multiple weeks/months to be implemented:
 
 - [Prisma Admin](https://github.com/prisma/prisma-admin-feedback)
-- [Datamodel v1.1](https://github.com/prisma/prisma/issues/3408)
 - [Enabling usage of the Prisma client without running an extra server](https://github.com/prisma/prisma/issues/2992)
 - A reimplementation of the Prisma core in Rust
 
