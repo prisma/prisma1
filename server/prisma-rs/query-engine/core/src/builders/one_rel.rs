@@ -1,5 +1,5 @@
 use super::BuilderExt;
-use crate::query_ast::RelatedRecordQuery as QueryType;
+use crate::{query_ast::RelatedRecordQuery as QueryType, CoreResult};
 
 pub struct Builder;
 
@@ -10,7 +10,7 @@ impl BuilderExt for Builder {
         unimplemented!()
     }
 
-    fn build(self) -> Self::Output {
+    fn build(self) -> CoreResult<Self::Output> {
         unimplemented!()
     }
 }

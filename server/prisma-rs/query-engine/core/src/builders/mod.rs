@@ -16,7 +16,7 @@ mod single;
 use graphql_parser::query::{Field, Selection, Value};
 use inflector::Inflector;
 
-use crate::{CoreError, CoreResult};
+use crate::{CoreError, CoreResult, PrismaQuery};
 use connector::{NodeSelector, QueryArguments};
 use prisma_models::{
     Field as ModelField, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
@@ -65,7 +65,7 @@ pub trait BuilderExt {
     fn new() -> Self;
 
     /// Last step that invokes query building
-    fn build(self) -> Self::Output;
+    fn build(self) -> CoreResult<Self::Output>;
 
     /// Get node selector from field and model
     fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResult<NodeSelector> {
@@ -202,16 +202,10 @@ pub trait BuilderExt {
                             // Todo: How to handle relations?
                             // The QB needs to know that it's a relation, needs to find the related model, etc.
 
-                            let qb = Builder::infer(&Arc::clone(&model), &ast_field, Some(Arc::clone(f))).unwrap();
-
-                            // TODO: Actual things!
-                            // let qb = QueryBuilder::new(Arc::clone(&schema), f)
-                            //     .infer_query_type(Some(Arc::clone(&field)))
-                            //     .process_arguments()
-                            //     .map_selected_scalar_fields()
-                            //     .collect_nested_queries();
-
-                            Some(Ok(qb))
+                            // FIXME: Don't unrwap here!
+                            Some(Ok(
+                                Builder::infer(&Arc::clone(&model), &ast_field, Some(Arc::clone(f))).unwrap()
+                            ))
                         }
                         _ => Some(Err(CoreError::QueryValidationError(format!(
                             "Selected field {} not found on model {}",
@@ -222,6 +216,17 @@ pub trait BuilderExt {
                     // Todo: We only support selecting fields at the moment.
                     unimplemented!()
                 }
+            })
+            .collect()
+    }
+
+    fn run_nested_queries(builders: Vec<Builder>) -> Vec<PrismaQuery> {
+        builders
+            .into_iter()
+            .map(|b| match b {
+                Builder::Rel(builder) => unimplemented!(),
+                Builder::ManyRel(builder) => unimplemented!(),
+                _ => unreachable!(),
             })
             .collect()
     }
