@@ -227,22 +227,25 @@ impl AliasedSelect for RelationFilter {
 
 impl AliasedCondition for OneRelationIsNullFilter {
     fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
-        let alias = alias.unwrap_or(Alias::default());
+        let alias = alias.map(|a| a.to_string(None));
 
         let condition = if self.field.relation_is_inlined_in_parent() {
-            self.field.as_column().table(alias.to_string(None)).is_null()
+            self.field.as_column().opt_table(alias.clone()).is_null()
         } else {
-            let nested_alias = alias.inc(AliasMode::Table);
             let relation = self.field.relation();
 
             let column = relation
                 .column_for_relation_side(self.field.relation_side)
-                .table(nested_alias.to_string(None));
+                .opt_table(alias.clone());
 
-            let relation_table = Table::from(relation.relation_table()).alias(alias.to_string(None));
+            let table = Table::from(relation.relation_table());
+            let relation_table = match alias {
+                Some(ref alias) => table.alias(alias.to_string()),
+                None => table,
+            };
+
             let select = Select::from_table(relation_table).column(column);
-
-            let id_column = self.field.model().id_column().table(alias.to_string(None));
+            let id_column = self.field.model().id_column().opt_table(alias.clone());
 
             id_column.not_in_selection(select)
         };
