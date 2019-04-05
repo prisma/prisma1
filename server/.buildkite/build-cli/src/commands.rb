@@ -86,6 +86,7 @@ def rust_binary(context)
 
   artifact_s3_paths.each do |path|
     Command.new("buildkite-agent", "artifact", "upload", "prisma").with_env({
+      "BUILDKITE_S3_DEFAULT_REGION" => "eu-west-1",
       "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION" => path
     }).puts!.run!.raise!
   end
@@ -102,6 +103,7 @@ def trigger_dependent_pipeline(channel, tags)
             BUILD_TAGS: \"#{tags.join(',')}\"
             CHANNEL: \"#{channel}\"
   EOS
+
 
   res = Command.new("buildkite-agent", "pipeline", "upload").with_stdin([pipeline_input]).run!.raise!
 end
