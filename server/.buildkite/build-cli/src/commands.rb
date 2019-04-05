@@ -76,7 +76,7 @@ def rust_binary(context)
     artifact_s3_paths.push "s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/latest/#{os}"
   end
 
-  if @context.os == :linux
+  if context.os == :linux
     DockerCommands.rust_binary(context)
   else
     Command.new('cargo', 'build', "--manifest-path=prisma-rs/Cargo.toml", "--release").puts!.run!.raise!
