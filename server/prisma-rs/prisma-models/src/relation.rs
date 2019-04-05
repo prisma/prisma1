@@ -225,7 +225,7 @@ impl Relation {
                     let column_name: &str = m.referencing_column.as_ref();
                     let column = Column::from(column_name);
 
-                    column.table(model.table())
+                    column.table(self.relation_table())
                 }
             }
             None => Self::MODEL_A_DEFAULT_COLUMN.into(),
@@ -246,7 +246,7 @@ impl Relation {
                     let column_name: &str = m.referencing_column.as_ref();
                     let column = Column::from(column_name);
 
-                    column.table(model.table())
+                    column.table(self.relation_table())
                 }
             }
             None => Self::MODEL_B_DEFAULT_COLUMN.into(),
