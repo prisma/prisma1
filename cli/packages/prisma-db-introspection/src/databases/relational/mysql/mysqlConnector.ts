@@ -7,7 +7,7 @@ import {
   ISequenceInfo,
 } from '../relationalConnector'
 import { Connection } from 'mysql'
-import { DatabaseType, camelCase } from 'prisma-datamodel'
+import { DatabaseType, capitalize } from 'prisma-datamodel'
 import { MysqlIntrospectionResult } from './mysqlIntrospectionResult'
 import { RelationalIntrospectionResult } from '../relationalIntrospectionResult'
 import IDatabaseClient from '../../IDatabaseClient'
@@ -133,8 +133,8 @@ export class MysqlConnector extends RelationalConnector {
 
       return {
         // Enum types in mysql are anonymous. We generate some funny name for them.
-        name: (camelCase(row.table_name) +
-          camelCase(row.column_name) +
+        name: (capitalize(row.table_name) +
+          capitalize(row.column_name) +
           'Enum') as string,
         values: this.parseJoinedArray(strippedEnumValues),
       }
