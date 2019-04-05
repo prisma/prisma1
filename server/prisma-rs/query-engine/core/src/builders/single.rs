@@ -6,13 +6,13 @@ use graphql_parser::query::Field;
 use prisma_models::{ModelRef, SelectedFields};
 use std::sync::Arc;
 
-pub struct Builder<'a> {
+pub struct Builder<'f> {
     model: Option<ModelRef>,
-    field: Option<&'a Field>,
+    field: Option<&'f Field>,
     selector: Option<NodeSelector>,
 }
 
-impl<'a> BuilderExt for Builder<'a> {
+impl<'f> BuilderExt for Builder<'f> {
     type Output = RecordQuery;
 
     fn new() -> Self {
@@ -24,14 +24,16 @@ impl<'a> BuilderExt for Builder<'a> {
     }
 
     fn build(mut self) -> CoreResult<Self::Output> {
-        let model = self.model.as_ref().unwrap();
-        let field = self.field.as_ref().unwrap();
-        let selector = self.selector.as_ref().unwrap();
+        let (model, field, selector) = match (&self.model, &self.field, &self.selector) {
+            (Some(m), Some(f), Some(s)) => Some((m, f, s)),
+            _ => None,
+        }
+        .expect("`RecordQuery` builder not properly initialised!");
 
-        let nested_builders = self.get_nested_queries()?;
-        let nested = Self::run_nested_queries(nested_builders);
+        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.schema())?;
+        let nested = Self::build_nested_queries(nested_builders)?;
 
-        let selected_fields = self.get_selected_fields()?;
+        let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, None)?;
         let selector = Self::extract_node_selector(&field, Arc::clone(&model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
 
@@ -44,26 +46,12 @@ impl<'a> BuilderExt for Builder<'a> {
     }
 }
 
-impl<'a> Builder<'a> {
-    fn setup(self, model: ModelRef, field: &'a Field, selector: NodeSelector) -> Self {
+impl<'f> Builder<'f> {
+    pub fn setup(self, model: ModelRef, field: &'f Field, selector: NodeSelector) -> Self {
         Self {
             model: Some(model),
             field: Some(field),
             selector: Some(selector),
         }
-    }
-
-    fn get_selected_fields(&self) -> CoreResult<SelectedFields> {
-        let model = self.model.as_ref().unwrap();
-        let field = self.field.as_ref().unwrap();
-
-        Self::collect_selected_fields(Arc::clone(&model), field).map(|sf| SelectedFields::new(sf, None))
-    }
-
-    fn get_nested_queries(&self) -> CoreResult<Vec<SuperBuilder>> {
-        let model = self.model.as_ref().unwrap();
-        let field = self.field.as_ref().unwrap();
-
-        Self::collect_nested_queries(Arc::clone(&model), field, model.schema())
     }
 }
