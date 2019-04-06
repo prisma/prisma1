@@ -26,6 +26,17 @@ const createdAndUpdatedUserIterator = await db.$subscribe.user({
 }).node()
 ```
 
+_Subscribe to a "create" events for a specific `User` that has an email address corresponding to `foo@bar.com`
+
+```js
+const fooBarCreatedUserListener = await db.$subscribe.user({
+  mutation_in: ['CREATED', 'UPDATED'],
+  node: {
+    email_contains: `foo@bar.com`,
+  }
+}).node()
+```
+
  _Subscribe to any write event for `User` models where the user has a an email-address that contains the string `gmail`_:
 
  ```js
