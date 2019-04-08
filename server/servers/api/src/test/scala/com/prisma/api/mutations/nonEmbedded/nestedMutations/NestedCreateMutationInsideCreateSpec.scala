@@ -750,7 +750,7 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
 
   }
 
-  "creating a nested item with an id of type UUID should work" taggedAs (IgnoreMySql, IgnoreMongo) in {
+  "creating a nested item with an id of type UUID should work" taggedAs (IgnoreMySql, IgnoreMongo, IgnoreSQLite) in {
     val project = SchemaDsl.fromStringV11() {
       s"""
          |type List {
