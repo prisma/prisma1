@@ -392,7 +392,9 @@ ${chalk.gray(
         !this.flags['no-seed'] &&
         projectNew
       ) {
-        this.printHooks(noHook)
+        if (!noHook) {
+          this.printHooks()
+        }
         await this.seed(
           cluster,
           projectNew,
@@ -414,8 +416,8 @@ ${chalk.gray(
     }
   }
 
-  private printHooks(noHook: boolean = false) {
-    if (!noHook && !this.showedHooks) {
+  private printHooks() {
+    if (!this.showedHooks) {
       this.out.log(chalk.bold(`\nHooks:`))
       this.showedHooks = true
     }
