@@ -13,7 +13,7 @@ const debug = require('debug')('init')
 export default class Init extends Command {
   static topic = 'init'
   static description = 'Initialize a new service'
-
+  static printVersionSyncWarning = true
   static args = [
     {
       name: 'dirName',

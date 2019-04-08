@@ -5,6 +5,7 @@ import { Importer } from './Importer'
 export default class Import extends Command {
   static topic = 'import'
   static description = 'Import data into a service'
+  static printVersionSyncWarning = true
   static flags: Flags = {
     data: flags.string({
       char: 'd',
