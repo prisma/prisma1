@@ -10,9 +10,9 @@ class PaginationTiebreakerSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
 
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """type User {
-      |  id: ID! @unique
+      |  id: ID! @id
       |  numFollowers: Int!
       |  pos: Int!
       |}

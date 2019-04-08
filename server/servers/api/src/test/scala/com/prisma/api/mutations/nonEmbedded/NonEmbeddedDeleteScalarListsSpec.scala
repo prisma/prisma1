@@ -2,7 +2,7 @@ package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, ScalarListsCapability}
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, NonEmbeddedScalarListCapability, ScalarListsCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -10,19 +10,25 @@ import org.scalatest.{FlatSpec, Matchers}
 class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(ScalarListsCapability, JoinRelationLinksCapability)
 
+  val scalarListStrategy = if (capabilities.has(NonEmbeddedScalarListCapability)) {
+    "@scalarList(strategy: RELATION)"
+  } else {
+    ""
+  }
+
   "A nested delete  mutation" should "also delete ListTable entries" in {
 
-    val project: Project = SchemaDsl.fromString() {
-      """type Top {
-        | id: ID! @unique
+    val project: Project = SchemaDsl.fromStringV11() {
+      s"""type Top {
+        | id: ID! @id
         | name: String! @unique
-        | bottom: Bottom
+        | bottom: Bottom @relation(link: INLINE)
         |}
         |
         |type Bottom {
-        | id: ID! @unique
+        | id: ID! @id
         | name: String! @unique
-        | list: [Int]
+        | list: [Int] $scalarListStrategy
         |}"""
     }
 
@@ -48,17 +54,17 @@ class NonEmbeddedDeleteScalarListsSpec extends FlatSpec with Matchers with ApiSp
 
   "A cascading delete  mutation" should "also delete ListTable entries" taggedAs (IgnoreMongo) in {
 
-    val project: Project = SchemaDsl.fromString() {
-      """type Top {
-        | id: ID! @unique
+    val project: Project = SchemaDsl.fromStringV11() {
+      s"""type Top {
+        | id: ID! @id
         | name: String! @unique
-        | bottom: Bottom @relation(name: "Test", onDelete: CASCADE)
+        | bottom: Bottom @relation(name: "Test", onDelete: CASCADE, link: INLINE)
         |}
         |
         |type Bottom {
-        | id: ID! @unique
+        | id: ID! @id
         | name: String! @unique
-        | list: [Int]
+        | list: [Int] $scalarListStrategy
         | top: Top! @relation(name: "Test")
         |}"""
     }

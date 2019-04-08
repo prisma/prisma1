@@ -41,7 +41,7 @@ pub trait NestedActions {
 
         match relation.inline_relation_column() {
             Some(column) => Update::table(relation.relation_table())
-                .set(column, id.clone())
+                .set(column.name.as_ref(), PrismaValue::Null)
                 .so_that(condition)
                 .into(),
             None => Delete::from_table(relation.relation_table()).so_that(condition).into(),

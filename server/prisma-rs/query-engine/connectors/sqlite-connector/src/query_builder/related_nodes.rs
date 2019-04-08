@@ -1,4 +1,4 @@
-use crate::{cursor_condition::CursorCondition, filter_conversion as convert, ordering::Ordering};
+use crate::{cursor_condition::CursorCondition, filter_conversion::AliasedCondition, ordering::Ordering};
 use connector::QueryArguments;
 use prisma_models::prelude::*;
 use prisma_query::ast::{
@@ -38,7 +38,7 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
         let order_by: Option<OrderBy> = query_arguments.order_by;
         let conditions: ConditionTree = query_arguments
             .filter
-            .map(convert::filter_to_condition_tree)
+            .map(|f| f.aliased_cond(None))
             .unwrap_or(ConditionTree::NoCondition);
 
         let reverse_order = query_arguments.last.is_some();
@@ -119,13 +119,12 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
     }
 
     fn base_query(&self) -> Select {
+        let select = Select::from_table(self.from_field.related_model().table());
+
         self.selected_fields
             .columns()
             .into_iter()
-            .fold(
-                Select::from_table(self.from_field.related_model().table()),
-                |acc, col| acc.column(col.clone()),
-            )
+            .fold(select, |acc, col| acc.column(col.clone()))
             .inner_join(
                 self.relation_table()
                     .on(self.id_column().equals(self.opposite_relation_side_column())),
@@ -139,13 +138,13 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
     fn relation_side_column(&self) -> Column {
         self.relation
             .column_for_relation_side(self.from_field.relation_side)
-            .table(Relation::TABLE_ALIAS.into())
+            .table(Relation::TABLE_ALIAS)
     }
 
     fn opposite_relation_side_column(&self) -> Column {
         self.relation
             .column_for_relation_side(self.from_field.relation_side.opposite())
-            .table(Relation::TABLE_ALIAS.into())
+            .table(Relation::TABLE_ALIAS)
     }
 
     fn relation_table(&self) -> Table {

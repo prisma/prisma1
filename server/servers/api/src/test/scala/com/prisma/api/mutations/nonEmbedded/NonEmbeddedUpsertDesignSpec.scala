@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded
 
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -10,22 +10,81 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
   //region top level upserts
 
-  "An upsert on the top level" should "execute a nested connect in the create branch" in {
-
-    val project = SchemaDsl.fromString() {
-      """type List{
-        |   id: ID! @unique
+  val dmP1ToC1 = """type List{
+        |   id: ID! @id
         |   uList: String @unique
-        |   todo: Todo
+        |   todo: Todo @relation(link: INLINE)
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   uTodo: String @unique
         |   list: List
         |}"""
-    }
 
+  val dmPMToCm = {
+    val dm1 = """type List{
+                   id: ID! @id
+                   uList: String @unique
+                   todoes: [Todo] @relation(link: INLINE)
+                }
+
+                type Todo{
+                   id: ID! @id
+                   uTodo: String @unique
+                   lists: [List]
+                   tags: [Tag] @relation(link: INLINE)
+                }
+
+                type Tag{
+                   id: ID! @id
+                   uTag: String @unique
+                   todoes: [Todo]
+                }"""
+
+    val dm2 = """type List{
+                   id: ID! @id
+                   uList: String @unique
+                   todoes: [Todo]
+                }
+
+                type Todo{
+                   id: ID! @id
+                   uTodo: String @unique
+                   lists: [List] @relation(link: INLINE)
+                   tags: [Tag]
+                }
+
+                type Tag{
+                   id: ID! @id
+                   uTag: String @unique
+                   todoes: [Todo] @relation(link: INLINE)
+                }"""
+
+    val dm3 = """type List{
+                   id: ID! @id
+                   uList: String @unique
+                   todoes: [Todo]
+                }
+
+                type Todo{
+                   id: ID! @id
+                   uTodo: String @unique
+                   lists: [List]
+                   tags: [Tag]
+                }
+
+                type Tag{
+                   id: ID! @id
+                   uTag: String @unique
+                   todoes: [Todo]
+                }"""
+
+    TestDataModels(mongo = Vector(dm1, dm2), sql = Vector(dm3))
+  }
+
+  "An upsert on the top level" should "execute a nested connect in the create branch" in {
+    val project = SchemaDsl.fromStringV11()(dmP1ToC1)
     database.setup(project)
 
     server.query("""mutation{createTodo(data:{uTodo: "B"}){uTodo}}""", project)
@@ -50,21 +109,7 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
   }
 
   "An upsert on the top level" should "execute a nested connect in the update branch" in {
-
-    val project = SchemaDsl.fromString() {
-      """type List{
-        |   id: ID! @unique
-        |   uList: String @unique
-        |   todo: Todo
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   uTodo: String @unique
-        |   list: List
-        |}"""
-    }
-
+    val project = SchemaDsl.fromStringV11()(dmP1ToC1)
     database.setup(project)
 
     server.query("""mutation{createTodo(data:{uTodo: "B"}){uTodo}}""", project)
@@ -89,21 +134,7 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
   }
 
   "An upsert on the top level" should "execute a nested disconnect in the update branch" in {
-
-    val project = SchemaDsl.fromString() {
-      """type List{
-        |   id: ID! @unique
-        |   uList: String @unique
-        |   todo: Todo
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   uTodo: String @unique
-        |   list: List
-        |}"""
-    }
-
+    val project = SchemaDsl.fromStringV11()(dmP1ToC1)
     database.setup(project)
 
     server.query("""mutation{createTodo(data:{uTodo: "B", list: {create: {uList:"A"}}}){uTodo}}""", project)
@@ -128,21 +159,7 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
   }
 
   "An upsert on the top level" should "execute a nested delete in the update branch" in {
-
-    val project = SchemaDsl.fromString() {
-      """type List{
-        |   id: ID! @unique
-        |   uList: String @unique
-        |   todo: Todo
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   uTodo: String @unique
-        |   list: List
-        |}"""
-    }
-
+    val project = SchemaDsl.fromStringV11()(dmP1ToC1)
     database.setup(project)
 
     server.query("""mutation{createTodo(data:{uTodo: "B", list: {create: {uList:"A"}}}){uTodo}}""", project)
@@ -167,21 +184,7 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
   }
 
   "An upsert on the top level" should "only execute the nested create mutations of the correct update branch" ignore {
-
-    val project = SchemaDsl.fromString() {
-      """type List{
-        |   id: ID! @unique
-        |   uList: String @unique
-        |   todo: Todo
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   uTodo: String @unique
-        |   list: List
-        |}"""
-    }
-
+    val project = SchemaDsl.fromStringV11()(dmP1ToC1)
     database.setup(project)
 
     server.query("""mutation {createList(data: {uList: "A"}){id}}""", project)
@@ -206,103 +209,58 @@ class NonEmbeddedUpsertDesignSpec extends FlatSpec with Matchers with ApiSpecBas
   }
 
   "A nested upsert" should "execute the nested connect mutations of the correct create branch" in {
+    dmPMToCm.testV11 { project =>
+      server.query("""mutation { createTag(data:{uTag: "D"}){uTag}}""", project)
+      server.query("""mutation {createList(data: {uList: "A"}){id}}""", project)
 
-    val project = SchemaDsl.fromString() {
-      """type List{
-        |   id: ID! @unique
-        |   uList: String @unique
-        |   todoes: [Todo]
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   uTodo: String @unique
-        |   lists: [List]
-        |   tags: [Tag]
-        |}
-        |
-        |type Tag{
-        |   id: ID! @unique
-        |   uTag: String @unique
-        |   todoes: [Todo]
-        |}"""
+      server
+        .query(
+          s"""mutation{updateList(where:{uList: "A"}
+             |                    data:{todoes: {
+             |                        upsert:{
+             |                               where:{uTodo: "B"}
+             |		                           create:{uTodo:"C" tags: {connect: {uTag: "D"}}}
+             |		                           update:{uTodo:"Should Not Matter" tags: {create: {uTag: "D"}}}
+             |}}
+             |}){id}}""".stripMargin,
+          project
+        )
+
+      val result = server.query(s"""query{lists {uList, todoes {uTodo, tags {uTag }}}}""", project)
+      result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"C","tags":[{"uTag":"D"}]}]}]}}""")
+
+      countItems(project, "lists") should be(1)
+      countItems(project, "todoes") should be(1)
+      countItems(project, "tags") should be(1)
     }
-
-    database.setup(project)
-
-    server.query("""mutation { createTag(data:{uTag: "D"}){uTag}}""", project)
-    server.query("""mutation {createList(data: {uList: "A"}){id}}""", project)
-
-    server
-      .query(
-        s"""mutation{updateList(where:{uList: "A"}
-           |                    data:{todoes: {
-           |                        upsert:{
-           |                               where:{uTodo: "B"}
-           |		                           create:{uTodo:"C" tags: {connect: {uTag: "D"}}}
-           |		                           update:{uTodo:"Should Not Matter" tags: {create: {uTag: "D"}}}
-           |}}
-           |}){id}}""".stripMargin,
-        project
-      )
-
-    val result = server.query(s"""query{lists {uList, todoes {uTodo, tags {uTag }}}}""", project)
-    result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"C","tags":[{"uTag":"D"}]}]}]}}""")
-
-    countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(1)
-    countItems(project, "tags") should be(1)
 
   }
 
   "A nested upsert" should "execute the nested connect mutations of the correct update branch" in {
+    dmPMToCm.testV11 { project =>
+      server.query("""mutation { createTag(data:{uTag: "D"}){uTag}}""", project)
+      server.query("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B"}}}){id}}""", project)
 
-    val project = SchemaDsl.fromString() {
-      """type List{
-        |   id: ID! @unique
-        |   uList: String @unique
-        |   todoes: [Todo]
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   uTodo: String @unique
-        |   lists: [List]
-        |   tags: [Tag]
-        |}
-        |
-        |type Tag{
-        |   id: ID! @unique
-        |   uTag: String @unique
-        |   todoes: [Todo]
-        |}"""
+      server
+        .query(
+          s"""mutation{updateList(where:{uList: "A"}
+             |                    data:{todoes: {
+             |                        upsert:{
+             |                               where:{uTodo: "B"}
+             |		                           create:{uTodo:"Should Not Matter" tags: {connect: {uTag: "D"}}}
+             |		                           update:{uTodo:"C" tags: {connect: {uTag: "D"}}}
+             |}}
+             |}){id}}""".stripMargin,
+          project
+        )
+
+      val result = server.query(s"""query{lists {uList, todoes {uTodo, tags {uTag }}}}""", project)
+      result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"C","tags":[{"uTag":"D"}]}]}]}}""")
+
+      countItems(project, "lists") should be(1)
+      countItems(project, "todoes") should be(1)
+      countItems(project, "tags") should be(1)
     }
-
-    database.setup(project)
-
-    server.query("""mutation { createTag(data:{uTag: "D"}){uTag}}""", project)
-    server.query("""mutation {createList(data: {uList: "A" todoes: {create: {uTodo: "B"}}}){id}}""", project)
-
-    server
-      .query(
-        s"""mutation{updateList(where:{uList: "A"}
-           |                    data:{todoes: {
-           |                        upsert:{
-           |                               where:{uTodo: "B"}
-           |		                           create:{uTodo:"Should Not Matter" tags: {connect: {uTag: "D"}}}
-           |		                           update:{uTodo:"C" tags: {connect: {uTag: "D"}}}
-           |}}
-           |}){id}}""".stripMargin,
-        project
-      )
-
-    val result = server.query(s"""query{lists {uList, todoes {uTodo, tags {uTag }}}}""", project)
-    result.toString should equal("""{"data":{"lists":[{"uList":"A","todoes":[{"uTodo":"C","tags":[{"uTag":"D"}]}]}]}}""")
-
-    countItems(project, "lists") should be(1)
-    countItems(project, "todoes") should be(1)
-    countItems(project, "tags") should be(1)
-
   }
 
   //endregion

@@ -11,25 +11,25 @@ class UpdateManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
 
   val schema =
     """type Top{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   top: String!
-      |   bottom: Bottom
+      |   bottom: Bottom @relation(link: INLINE)
       |}
       |
       |type Bottom{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   bottom: String!
       |   top: Top
-      |   veryBottom: VeryBottom
+      |   veryBottom: VeryBottom @relation(link: INLINE)
       |}
       |
       |type VeryBottom{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   veryBottom: String!
       |   bottom: Bottom
       |}""".stripMargin
 
-  lazy val project: Project = SchemaDsl.fromString() { schema }
+  lazy val project: Project = SchemaDsl.fromStringV11() { schema }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

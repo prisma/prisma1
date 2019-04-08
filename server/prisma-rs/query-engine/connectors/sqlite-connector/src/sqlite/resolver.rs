@@ -11,12 +11,9 @@ impl DataResolver for Sqlite {
     ) -> ConnectorResult<Option<SingleNode>> {
         let db_name = &node_selector.field.model().schema().db_name;
         let query = QueryBuilder::get_nodes(node_selector.field.model(), selected_fields, node_selector);
-
-        let scalar_fields = selected_fields.scalar_non_list();
-        let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
+        let field_names = selected_fields.names();
 
         let nodes = self.with_rows(query, db_name, |row| Sqlite::read_row(row, &selected_fields))?;
-
         let result = nodes.into_iter().next().map(|node| SingleNode { node, field_names });
 
         Ok(result)
@@ -29,8 +26,7 @@ impl DataResolver for Sqlite {
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes> {
         let db_name = &model.schema().db_name;
-        let scalar_fields = selected_fields.scalar_non_list();
-        let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
+        let field_names = selected_fields.names();
         let query = QueryBuilder::get_nodes(model, selected_fields, query_arguments);
 
         let nodes = self.with_rows(query, db_name, |row| Sqlite::read_row(row, selected_fields))?;
@@ -46,16 +42,15 @@ impl DataResolver for Sqlite {
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes> {
         let db_name = &from_field.model().schema().db_name;
-        let scalar_fields = selected_fields.scalar_non_list();
-        let field_names = scalar_fields.iter().map(|f| f.name.clone()).collect();
+        let field_names = selected_fields.names();
         let query = QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, selected_fields);
 
         let nodes = self.with_rows(query, db_name, |row| {
-            let mut node = Sqlite::read_row(row, &selected_fields)?;
-            let position = scalar_fields.len();
+            let position = field_names.len();
 
-            node.add_related_id(row.get(position));
-            node.add_parent_id(row.get(position + 1));
+            let mut node = Sqlite::read_row(row, &selected_fields)?;
+            node.add_parent_id(row.get(position - 1));
+
             Ok(node)
         })?;
 

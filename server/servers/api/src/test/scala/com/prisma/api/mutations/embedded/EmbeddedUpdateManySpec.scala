@@ -11,16 +11,16 @@ class EmbeddedUpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "UpdateMany" should "work with embedded types" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
-        |type ZChild @embedded{
-        |    name: String @unique
+        |type ZChild @embedded {
+        |    id: ID! @id
+        |    name: String
         |    test: String
-        |    parent: Parent
         |}
         |
-        |type Parent{
-        |    id: ID! @unique
+        |type Parent {
+        |    id: ID! @id
         |    name: String @unique
         |    children: [ZChild]
         |}"""

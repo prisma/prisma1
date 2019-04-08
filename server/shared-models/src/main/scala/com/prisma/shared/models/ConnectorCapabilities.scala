@@ -151,7 +151,8 @@ object ConnectorCapabilities extends BooleanUtils {
       JoinRelationLinksCapability,
       MongoJoinRelationLinksCapability,
       RelationLinkListCapability,
-      EmbeddedTypesCapability
+      EmbeddedTypesCapability,
+      SupportsExistingDatabasesCapability
     )
     val dataModelCapability = isTest.toOption(LegacyDataModelCapability)
 

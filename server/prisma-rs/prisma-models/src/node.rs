@@ -57,7 +57,6 @@ impl ManyNodes {
 #[derive(Debug, Default, Clone)]
 pub struct Node {
     pub values: Vec<PrismaValue>,
-    pub related_id: Option<GraphqlId>,
     pub parent_id: Option<GraphqlId>,
 }
 
@@ -113,10 +112,6 @@ impl Node {
             );
             vec
         })
-    }
-
-    pub fn add_related_id(&mut self, related_id: GraphqlId) {
-        self.related_id = Some(related_id);
     }
 
     pub fn add_parent_id(&mut self, parent_id: GraphqlId) {

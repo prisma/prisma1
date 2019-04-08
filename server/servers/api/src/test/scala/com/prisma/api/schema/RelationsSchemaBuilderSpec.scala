@@ -107,16 +107,16 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "a schema with optional back relations" should "not include any type related to magical back relations" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""
          |type List {
-         |  id: ID! @unique
+         |  id: ID! @id
          |  title: String!
-         |  todos: [Todo]
          |}
          |type Todo {
-         |  id: ID! @unique
+         |  id: ID! @id
          |  name: String
+         |  list: List @relation(link: INLINE)
          |}
        """.stripMargin
     }

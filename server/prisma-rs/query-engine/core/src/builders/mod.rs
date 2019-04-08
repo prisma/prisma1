@@ -16,21 +16,21 @@ mod single;
 use graphql_parser::query::{Field, Selection, Value};
 use inflector::Inflector;
 
-use crate::{CoreError, CoreResult};
+use crate::{CoreError, CoreResult, PrismaQuery};
 use connector::{NodeSelector, QueryArguments};
 use prisma_models::{
-    Field as ModelField, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
+    Field as ModelField, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField, SelectedFields,
     SelectedScalarField, SortOrder,
 };
 
 use std::sync::Arc;
 
 /// A common query-builder type
-pub enum Builder<'a> {
-    Single(single::Builder<'a>),
-    Multi(multi::Builder),
-    Rel(one_rel::Builder),
-    ManyRel(many_rel::Builder),
+pub enum Builder<'field> {
+    Single(single::Builder<'field>),
+    Multi(multi::Builder<'field>),
+    Rel(one_rel::Builder<'field>),
+    ManyRel(many_rel::Builder<'field>),
 }
 
 impl<'a> Builder<'a> {
@@ -54,6 +54,9 @@ impl<'a> Builder<'a> {
     }
 }
 
+/// FIXME: Do we want or need this?!
+type BuilderResult<T> = Option<CoreResult<T>>;
+
 /// A trait that describes a query builder
 pub trait BuilderExt {
     type Output;
@@ -62,7 +65,7 @@ pub trait BuilderExt {
     fn new() -> Self;
 
     /// Last step that invokes query building
-    fn build(self) -> Self::Output;
+    fn build(self) -> CoreResult<Self::Output>;
 
     /// Get node selector from field and model
     fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResult<NodeSelector> {
@@ -156,7 +159,11 @@ pub trait BuilderExt {
     }
 
     /// Get all selected fields from a model
-    fn collect_selected_fields(model: ModelRef, field: &Field) -> CoreResult<Vec<SelectedField>> {
+    fn collect_selected_fields<I: Into<Option<RelationFieldRef>>>(
+        model: ModelRef,
+        field: &Field,
+        parent: I,
+    ) -> CoreResult<SelectedFields> {
         field
             .selection_set
             .items
@@ -182,45 +189,58 @@ pub trait BuilderExt {
                     unimplemented!()
                 }
             })
+            .collect::<CoreResult<Vec<_>>>()
+            .map(|sf| SelectedFields::new(sf, parent.into()))
+    }
+
+    fn collect_nested_queries<'field>(
+        model: ModelRef,
+        ast_field: &'field Field,
+        schema: SchemaRef,
+    ) -> CoreResult<Vec<Builder<'field>>> {
+        ast_field
+            .selection_set
+            .items
+            .iter()
+            .filter_map(|i| {
+                if let Selection::Field(f) = i {
+                    let field = model.fields().find_from_all(&f.name);
+                    match field {
+                        Ok(ModelField::Scalar(_f)) => None,
+                        Ok(ModelField::Relation(f)) => {
+                            let model = f.related_model();
+                            let parent = Some(Arc::clone(&f));
+
+                            match Builder::infer(&model, &ast_field, parent) {
+                                Some(Builder::Rel(b)) => {
+                                    Some(Ok(Builder::Rel(b.setup(model, ast_field, Arc::clone(f)))))
+                                }
+                                Some(Builder::ManyRel(b)) => {
+                                    Some(Ok(Builder::ManyRel(b.setup(model, ast_field, Arc::clone(f)))))
+                                }
+                                _ => None,
+                            }
+                        }
+                        _ => Some(Err(CoreError::QueryValidationError(format!(
+                            "Selected field {} not found on model {}",
+                            f.name, model.name,
+                        )))),
+                    }
+                } else {
+                    panic!("We only support selecting fields at the moment!");
+                }
+            })
             .collect()
     }
 
-    fn collect_nested_queries(model: ModelRef, field: &Field, schema: SchemaRef) -> CoreResult<Vec<Builder>> {
-        // field
-        //     .selection_set
-        //     .items
-        //     .iter()
-        //     .filter_map(|i| {
-        //         if let Selection::Field(f) = i {
-        //             let field = model.fields().find_from_all(&f.name);
-        //             match field {
-        //                 Ok(ModelField::Scalar(_field)) => None,
-        //                 Ok(ModelField::Relation(field)) => {
-        //                     // Todo: How to handle relations?
-        //                     // The QB needs to know that it's a relation, needs to find the related model, etc.
-        //                     // let qb = QueryBuilder::new(Arc::clone(&schema), f)
-        //                     //     .infer_query_type(Some(Arc::clone(&field)))
-        //                     //     .process_arguments()
-        //                     //     .map_selected_scalar_fields()
-        //                     //     .collect_nested_queries();
-
-        //                     // Some(Ok(qb))
-
-        //                     // TODO: IMPLEMENT
-        //                     unimplemented!()
-        //                 }
-        //                 _ => Some(Err(CoreError::QueryValidationError(format!(
-        //                     "Selected field {} not found on model {}",
-        //                     f.name, model.name,
-        //                 )))),
-        //             }
-        //         } else {
-        //             // Todo: We only support selecting fields at the moment.
-        //             unimplemented!()
-        //         }
-        //     })
-        //     .collect();
-
-        unimplemented!()
+    fn build_nested_queries(builders: Vec<Builder>) -> CoreResult<Vec<PrismaQuery>> {
+        builders
+            .into_iter()
+            .map(|b| match b {
+                Builder::Rel(builder) => unimplemented!(),
+                Builder::ManyRel(builder) => unimplemented!(),
+                _ => unreachable!(),
+            })
+            .collect()
     }
 }

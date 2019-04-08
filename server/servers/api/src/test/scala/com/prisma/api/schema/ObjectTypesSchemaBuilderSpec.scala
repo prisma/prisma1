@@ -9,18 +9,19 @@ import sangria.renderer.SchemaRenderer
 class ObjectTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """
       |type Todo {
-      |  id: ID! @unique
+      |  id: ID! @id
       |  title: String!
-      |  user: User! @relation(name: "TodoToUser1")
+      |  user: User! @relation(name: "TodoToUser1" link: INLINE)
       |  users: [User] @relation(name: "TodoToUser2")
       |}
       |
       |type User {
-      |  id: ID! @unique
+      |  id: ID! @id
       |  name: String!
+      |  todo: Todo @relation(name: "TodoToUser2" link: INLINE)
       |}
     """.stripMargin
   }

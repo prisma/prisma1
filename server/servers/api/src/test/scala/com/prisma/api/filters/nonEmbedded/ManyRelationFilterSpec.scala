@@ -1,7 +1,7 @@
 package com.prisma.api.filters.nonEmbedded
 
 import com.prisma.{IgnoreMongo, IgnorePostgres}
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest._
@@ -10,27 +10,27 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """
       |type Blog {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   name: String!
       |   posts: [Post]
       |}
       |
       |type Post {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   title: String!
       |   popularity: Int!
-      |   blog: Blog
+      |   blog: Blog @relation(link: INLINE)
       |   comments: [Comment]
       |}
       |
       |type Comment {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   text: String!
       |   likes: Int!
-      |   post: Post
+      |   post: Post @relation(link: INLINE)
       |}
     """
   }
@@ -219,39 +219,54 @@ class ManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Join Relation Filter on many to many relation" should "work on one level" taggedAs (IgnorePostgres) in {
-
-    val project = SchemaDsl.fromString() {
-      """
+    val testDataModels = {
+      val dm1 = """
         |type Post {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  authors: [AUser]
         |  title: String! @unique
         |}
         |
         |type AUser {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String! @unique
-        |  posts: [Post] @mongoRelation(field: "posts")
+        |  posts: [Post] @relation(link: INLINE)
         |}"""
+
+      val dm2 = """
+        |type Post {
+        |  id: ID! @id
+        |  authors: [AUser]
+        |  title: String! @unique
+        |}
+        |
+        |type AUser {
+        |  id: ID! @id
+        |  name: String! @unique
+        |  posts: [Post]
+        |}"""
+
+      TestDataModels(mongo = Vector(dm1), sql = Vector(dm2))
     }
 
-    database.setup(project)
+    testDataModels.testV11 { project =>
+      server.query(s""" mutation {createPost(data: {title:"Title1"}) {title}} """, project)
+      server.query(s""" mutation {createPost(data: {title:"Title2"}) {title}} """, project)
+      server.query(s""" mutation {createAUser(data: {name:"Author1"}) {name}} """, project)
+      server.query(s""" mutation {createAUser(data: {name:"Author2"}) {name}} """, project)
 
-    server.query(s""" mutation {createPost(data: {title:"Title1"}) {title}} """, project)
-    server.query(s""" mutation {createPost(data: {title:"Title2"}) {title}} """, project)
-    server.query(s""" mutation {createAUser(data: {name:"Author1"}) {name}} """, project)
-    server.query(s""" mutation {createAUser(data: {name:"Author2"}) {name}} """, project)
+      server.query(s""" mutation {updateAUser(where: { name: "Author1"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
+      server.query(s""" mutation {updateAUser(where: { name: "Author2"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
 
-    server.query(s""" mutation {updateAUser(where: { name: "Author1"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
-    server.query(s""" mutation {updateAUser(where: { name: "Author2"}, data:{posts:{connect:[{title: "Title1"},{title: "Title2"}]}}) {name}} """, project)
+      server.query("""query{aUsers{name, posts{title}}}""", project).toString should be(
+        """{"data":{"aUsers":[{"name":"Author1","posts":[{"title":"Title1"},{"title":"Title2"}]},{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
 
-    server.query("""query{aUsers{name, posts{title}}}""", project).toString should be(
-      """{"data":{"aUsers":[{"name":"Author1","posts":[{"title":"Title1"},{"title":"Title2"}]},{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
+      server.query("""query{posts {title, authors {name}}}""", project).toString should be(
+        """{"data":{"posts":[{"title":"Title1","authors":[{"name":"Author1"},{"name":"Author2"}]},{"title":"Title2","authors":[{"name":"Author1"},{"name":"Author2"}]}]}}""")
 
-    server.query("""query{posts {title, authors {name}}}""", project).toString should be(
-      """{"data":{"posts":[{"title":"Title1","authors":[{"name":"Author1"},{"name":"Author2"}]},{"title":"Title2","authors":[{"name":"Author1"},{"name":"Author2"}]}]}}""")
+      val res = server.query("""query{aUsers(where:{name_starts_with: "Author2", posts_some:{title_ends_with: "1"}}){name, posts{title}}}""", project)
+      res.toString should be("""{"data":{"aUsers":[{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
+    }
 
-    val res = server.query("""query{aUsers(where:{name_starts_with: "Author2", posts_some:{title_ends_with: "1"}}){name, posts{title}}}""", project)
-    res.toString should be("""{"data":{"aUsers":[{"name":"Author2","posts":[{"title":"Title1"},{"title":"Title2"}]}]}}""")
   }
 }

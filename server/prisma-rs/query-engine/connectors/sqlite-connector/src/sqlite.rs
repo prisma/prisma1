@@ -69,8 +69,8 @@ impl Sqlite {
     pub fn read_row(row: &Row, selected_fields: &SelectedFields) -> ConnectorResult<Node> {
         let mut fields = Vec::new();
 
-        for (i, sf) in selected_fields.scalar_non_list().iter().enumerate() {
-            fields.push(Self::fetch_value(sf.type_identifier, &row, i)?);
+        for (i, typid) in selected_fields.type_identifiers().iter().enumerate() {
+            fields.push(Self::fetch_value(*typid, &row, i)?);
         }
 
         Ok(Node::new(fields))
@@ -104,7 +104,7 @@ impl Sqlite {
 
                 PrismaValue::DateTime(datetime)
             }),
-            TypeIdentifier::Relation => panic!("We should not have a Relation here!"),
+            TypeIdentifier::Relation => row.get_checked(i).map(|val| PrismaValue::GraphqlId(val)),
             TypeIdentifier::Float => row.get_checked(i).map(|val: f64| PrismaValue::Float(val)),
         };
 

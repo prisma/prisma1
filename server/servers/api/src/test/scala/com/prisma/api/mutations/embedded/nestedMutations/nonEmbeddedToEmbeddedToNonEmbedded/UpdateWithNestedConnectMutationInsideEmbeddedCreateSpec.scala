@@ -1,17 +1,17 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbeddedToNonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBaseV11 {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a FriendReq relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendReq }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendReq }
 
     database.setup(project)
 
@@ -77,10 +77,8 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
     update.toString should be("""{"data":{"updateParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f1"}}]}}}""")
   }
 
-  //Fixme continue here
   "a FriendOpt relation" should "be possible" in {
-
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendOpt }
 
     database.setup(project)
 
@@ -146,7 +144,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedCreateSpec extends FlatSpec w
 
   "a FriendsOpt relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
 
     database.setup(project)
 
