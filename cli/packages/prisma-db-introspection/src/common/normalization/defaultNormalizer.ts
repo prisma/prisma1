@@ -26,7 +26,7 @@ export default abstract class DefaultNormalizer {
         new RemoveRelationName(null),
         new ModelOrderNormalizer(null),
         new RemoveDuplicateBackRelation(),
-        new NameAmbiguousBackRelation(),
+        new NameAmbiguousBackRelation(null),
       ])
     } else {
       // Relational normalization
@@ -35,7 +35,7 @@ export default abstract class DefaultNormalizer {
         new RemoveRelationName(null),
         new ModelOrderNormalizer(null),
         new RemoveDuplicateBackRelation(),
-        new NameAmbiguousBackRelation(),
+        new NameAmbiguousBackRelation(null),
       ])
     }
   }
@@ -53,7 +53,7 @@ export default abstract class DefaultNormalizer {
         new ModelOrderNormalizer(baseModel),
         new RemoveBackRelation(baseModel),
         new RemoveDuplicateBackRelation(),
-        new NameAmbiguousBackRelation(),
+        new NameAmbiguousBackRelation(null),
       ])
     } else {
       // Relational normalization with base model
@@ -65,7 +65,7 @@ export default abstract class DefaultNormalizer {
         new AdjustJoinTableCardinality(baseModel),
         new RemoveBackRelation(baseModel),
         new RemoveDuplicateBackRelation(),
-        new NameAmbiguousBackRelation(),
+        new NameAmbiguousBackRelation(null),
       ])
     }
   }

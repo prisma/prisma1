@@ -11,7 +11,7 @@ export abstract class Normalizer {
   protected baseField: IGQLField | null
 
   public constructor(baseModel: ISDL | null) {
-    this.baseModel = baseModel
+    this.baseModel = baseModel || null
     this.baseType = null
     this.baseFields = null
     this.baseField = null
