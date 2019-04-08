@@ -8,18 +8,12 @@ import org.scalatest.{FlatSpec, Matchers}
 class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val inlineDirective = if (capabilities.has(RelationLinkListCapability)) {
-    "@relation(link: INLINE)"
-  } else {
-    ""
-  }
-
   val project = SchemaDsl.fromStringV11() {
     s"""type Note{
       |   id: ID! @id
       |   outerString: String!
       |   outerDateTime: DateTime! @unique
-      |   todos: [Todo] $inlineDirective
+      |   todos: [Todo] $listInlineDirective
       |}
       |
       |type Todo{

@@ -489,7 +489,7 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
       s"""type Technology {
          |  id: ID! @id
          |  name: String! @unique
-         |  childTechnologies: [Technology] @relation(name: "ChildTechnologies" $inlineListArgument)
+         |  childTechnologies: [Technology] @relation(name: "ChildTechnologies" $listInlineArgument)
          |  parentTechnologies: [Technology] @relation(name: "ChildTechnologies")
         |}
       """.stripMargin
@@ -534,7 +534,7 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
       s"""type Child {
         | id: ID! @id
         | c: String! @unique
-        | parents: [Parent] $inlineListDirective
+        | parents: [Parent] $listInlineDirective
         |}
         |
         |type Parent {
@@ -623,7 +623,7 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
       s"""
         |type Post {
         |  id: ID! @id
-        |  authors: [AUser] $inlineListDirective
+        |  authors: [AUser] $listInlineDirective
         |  title: String! @unique
         |}
         |
@@ -646,8 +646,5 @@ class NestedSetMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiS
     server.query("""query{aUsers{name, posts{title}}}""", project).toString should be("""{"data":{"aUsers":[{"name":"Author","posts":[{"title":"Title"}]}]}}""")
   }
 
-  val inlineListArgument  = if (capabilities.has(RelationLinkListCapability)) "link: INLINE" else ""
-  val inlineListDirective = if (capabilities.has(RelationLinkListCapability)) "@relation(link: INLINE)" else ""
-
-  println(inlineListDirective)
+  println(listInlineDirective)
 }
