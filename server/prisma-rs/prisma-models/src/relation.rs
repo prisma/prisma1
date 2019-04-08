@@ -172,7 +172,12 @@ impl Relation {
     pub fn field_a(&self) -> Arc<RelationField> {
         self.field_a
             .get_or_init(|| {
-                let field = self.model_a().fields().find_from_relation(&self.name).unwrap();
+                let field = self
+                    .model_a()
+                    .fields()
+                    .find_from_relation(&self.name, RelationSide::A)
+                    .unwrap();
+
                 Arc::downgrade(&field)
             })
             .upgrade()
@@ -192,7 +197,12 @@ impl Relation {
     pub fn field_b(&self) -> Arc<RelationField> {
         self.field_b
             .get_or_init(|| {
-                let field = self.model_b().fields().find_from_relation(&self.name).unwrap();
+                let field = self
+                    .model_b()
+                    .fields()
+                    .find_from_relation(&self.name, RelationSide::B)
+                    .unwrap();
+
                 Arc::downgrade(&field)
             })
             .upgrade()
