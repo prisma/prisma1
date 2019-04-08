@@ -1,14 +1,21 @@
 package com.prisma.api
 
-import com.prisma.IgnoreMongo
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class Queries extends FlatSpec with Matchers with ApiSpecBase {
 
   "schema" should "include simple API features" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Car {
+        |  id: ID! @id
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
+        |  wheelCount: Int
+        |  name: String!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -32,11 +39,26 @@ class Queries extends FlatSpec with Matchers with ApiSpecBase {
     ifConnectorIsActive { server.query(s"""{node(id:"$newId"){... on Car { wheelCount }}}""", project).pathAsLong("data.node.wheelCount") should be(8) }
   }
 
-  "schema" should "include old nested mutations" taggedAs (IgnoreMongo) in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val car = schema.model("Car").field("wheelCount", _.Int).field_!("name", _.String).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
-      schema.model("Wheel").manyToOneRelation("car", "wheels", car).field_!("size", _.Int).field_!("createdAt", _.DateTime).field_!("updatedAt", _.DateTime)
-
+  "schema" should "include old nested mutations" in {
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+        |type Car {
+        |  id: ID! @id
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
+        |  wheelCount: Int
+        |  name: String!
+        |  wheels: [Wheel] $listInlineArgument
+        |}
+        |
+        |type Wheel {
+        |  id: ID! @id
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
+        |  size: Int!
+        |  car: Car
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
