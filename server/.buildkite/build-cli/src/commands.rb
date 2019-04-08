@@ -79,7 +79,7 @@ def rust_binary(context)
   if context.os == :linux
     DockerCommands.rust_binary(context)
   else
-    Command.new('cargo', 'build', "--manifest-path=prisma-rs/Cargo.toml", "--release").puts!.run!.raise!
+    Command.new('cargo', 'build', "--manifest-path=#{context.server_root_path}/prisma-rs/Cargo.toml", "--release").puts!.run!.raise!
   end
 
   Dir.chdir("#{context.server_root_path}/prisma-rs/target/release") # Necessary to keep the buildkite agent from prefixing the binary when uploading
@@ -103,7 +103,6 @@ def trigger_dependent_pipeline(channel, tags)
             BUILD_TAGS: \"#{tags.join(',')}\"
             CHANNEL: \"#{channel}\"
   EOS
-
 
   res = Command.new("buildkite-agent", "pipeline", "upload").with_stdin([pipeline_input]).run!.raise!
 end
