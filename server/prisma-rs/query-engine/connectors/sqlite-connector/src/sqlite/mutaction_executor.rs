@@ -1,5 +1,9 @@
 use crate::{mutaction::NestedActions, DatabaseRead, DatabaseWrite, Sqlite};
-use connector::*;
+use connector::{
+    error::{ConnectorError, NodeSelectorInfo},
+    mutaction::*,
+    ConnectorResult, DatabaseMutactionExecutor,
+};
 use prisma_models::*;
 use prisma_query::ast::*;
 use serde_json::Value;

@@ -1,4 +1,4 @@
-use crate::{filter::Filter, node_selector::NodeSelector};
+use crate::filter::{Filter, NodeSelector};
 use prisma_models::*;
 
 #[derive(Debug, Default, Clone)]

@@ -1,7 +1,7 @@
 //! Prisma query AST module
 
 use crate::{CoreError, CoreResult};
-use connector::{NodeSelector, QueryArguments};
+use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::{self as gql, query::*};
 use inflector::Inflector;
 use prisma_models::{Field as ModelField, *};

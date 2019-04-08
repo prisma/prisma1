@@ -1,71 +1,18 @@
-use crate::{NodeSelector, RelationCompare, ScalarCompare};
-use prisma_models::{PrismaValue, RelationField, ScalarField};
+use super::Filter;
+use crate::compare::ScalarCompare;
+use prisma_models::{PrismaValue, ScalarField};
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
-pub enum Filter {
-    And(Vec<Box<Filter>>),
-    Or(Vec<Box<Filter>>),
-    Not(Vec<Box<Filter>>),
-    Scalar(ScalarFilter),
-    ScalarList(ScalarListFilter),
-    OneRelationIsNull(OneRelationIsNullFilter),
-    Relation(RelationFilter),
-    NodeSubscription,
-    BoolFilter(bool),
+pub struct ScalarFilter {
+    pub field: Arc<ScalarField>,
+    pub condition: ScalarCondition,
 }
 
-impl Filter {
-    pub fn and(filters: Vec<Filter>) -> Self {
-        Filter::And(filters.into_iter().map(Box::new).collect())
-    }
-
-    pub fn or(filters: Vec<Filter>) -> Self {
-        Filter::Or(filters.into_iter().map(Box::new).collect())
-    }
-
-    pub fn not(filters: Vec<Filter>) -> Self {
-        Filter::Not(filters.into_iter().map(Box::new).collect())
-    }
-}
-
-impl From<ScalarFilter> for Filter {
-    fn from(sf: ScalarFilter) -> Self {
-        Filter::Scalar(sf)
-    }
-}
-
-impl From<ScalarListFilter> for Filter {
-    fn from(sf: ScalarListFilter) -> Self {
-        Filter::ScalarList(sf)
-    }
-}
-
-impl From<OneRelationIsNullFilter> for Filter {
-    fn from(sf: OneRelationIsNullFilter) -> Self {
-        Filter::OneRelationIsNull(sf)
-    }
-}
-
-impl From<RelationFilter> for Filter {
-    fn from(sf: RelationFilter) -> Self {
-        Filter::Relation(sf)
-    }
-}
-
-impl From<bool> for Filter {
-    fn from(b: bool) -> Self {
-        Filter::BoolFilter(b)
-    }
-}
-
-impl From<NodeSelector> for Filter {
-    fn from(node_selector: NodeSelector) -> Self {
-        Filter::Scalar(ScalarFilter {
-            field: node_selector.field,
-            condition: ScalarCondition::Equals(node_selector.value),
-        })
-    }
+#[derive(Debug, Clone)]
+pub struct ScalarListFilter {
+    pub field: Arc<ScalarField>,
+    pub condition: ScalarListCondition,
 }
 
 #[derive(Debug, Clone)]
@@ -91,47 +38,6 @@ pub enum ScalarListCondition {
     Contains(PrismaValue),
     ContainsEvery(Vec<PrismaValue>),
     ContainsSome(Vec<PrismaValue>),
-}
-
-#[derive(Debug, Clone)]
-pub struct OneRelationIsNullFilter {
-    pub field: Arc<RelationField>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ScalarListFilter {
-    pub field: Arc<ScalarField>,
-    pub condition: ScalarListCondition,
-}
-
-#[derive(Debug, Clone)]
-pub struct ScalarFilter {
-    pub field: Arc<ScalarField>,
-    pub condition: ScalarCondition,
-}
-
-#[derive(Debug, Clone)]
-pub struct RelationFilter {
-    pub field: Arc<RelationField>,
-    pub nested_filter: Box<Filter>,
-    pub condition: RelationCondition,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum RelationCondition {
-    EveryRelatedNode,
-    AtLeastOneRelatedNode,
-    NoRelatedNode,
-    ToOneRelatedNode, // TODO: This is needed for Mongo and should be discussed with Matthias
-}
-
-impl RelationCondition {
-    pub fn invert_of_subselect(&self) -> bool {
-        match self {
-            RelationCondition::EveryRelatedNode => true,
-            _ => false,
-        }
-    }
 }
 
 impl ScalarCompare for Arc<ScalarField> {
@@ -528,188 +434,6 @@ impl ScalarCompare for Arc<ScalarField> {
         Filter::from(ScalarFilter {
             field: Arc::clone(self),
             condition: ScalarCondition::GreaterThanOrEquals(val.into()),
-        })
-    }
-}
-
-impl RelationCompare for Arc<RelationField> {
-    /// Every related record matches the filter.
-    /// ```rust
-    /// # use connector::*;
-    /// # use prisma_models::*;
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
-    /// # let schema = tmp.build(String::from("test"));
-    /// # let user = schema.find_model("User").unwrap();
-    /// # let site = schema.find_model("Site").unwrap();
-    /// #
-    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
-    /// let site_name = site.fields().find_from_scalar("name").unwrap();
-    /// let filter = rel_field.every_related(site_name.equals("Blog"));
-    ///
-    /// match filter {
-    ///     Filter::Relation(RelationFilter {
-    ///         field: relation_field,
-    ///         nested_filter: nested,
-    ///         condition: condition,
-    ///     }) => {
-    ///         assert_eq!(String::from("sites"), relation_field.name);
-    ///         assert_eq!(RelationCondition::EveryRelatedNode, condition);
-    ///
-    ///         match *nested {
-    ///             Filter::Scalar(ScalarFilter {
-    ///                 field: scalar_field,
-    ///                 condition: ScalarCondition::Equals(scalar_val),
-    ///             }) => {
-    ///                 assert_eq!(String::from("name"), scalar_field.name);
-    ///                 assert_eq!(PrismaValue::from("Blog"), scalar_val);
-    ///             }
-    ///             _ => unreachable!()
-    ///         }
-    ///     }
-    ///     _ => unreachable!()
-    /// }
-    /// ```
-    fn every_related<T>(&self, filter: T) -> Filter
-    where
-        T: Into<Filter>,
-    {
-        Filter::from(RelationFilter {
-            field: Arc::clone(self),
-            nested_filter: Box::new(filter.into()),
-            condition: RelationCondition::EveryRelatedNode,
-        })
-    }
-
-    /// At least one related record matches the filter.
-    /// ```rust
-    /// # use connector::*;
-    /// # use prisma_models::*;
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
-    /// # let schema = tmp.build(String::from("test"));
-    /// # let user = schema.find_model("User").unwrap();
-    /// # let site = schema.find_model("Site").unwrap();
-    /// #
-    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
-    /// let site_name = site.fields().find_from_scalar("name").unwrap();
-    /// let filter = rel_field.at_least_one_related(site_name.equals("Blog"));
-    ///
-    /// match filter {
-    ///     Filter::Relation(RelationFilter {
-    ///         field: relation_field,
-    ///         nested_filter: nested,
-    ///         condition: condition,
-    ///     }) => {
-    ///         assert_eq!(String::from("sites"), relation_field.name);
-    ///         assert_eq!(RelationCondition::AtLeastOneRelatedNode, condition);
-    ///
-    ///         match *nested {
-    ///             Filter::Scalar(ScalarFilter {
-    ///                 field: scalar_field,
-    ///                 condition: ScalarCondition::Equals(scalar_val),
-    ///             }) => {
-    ///                 assert_eq!(String::from("name"), scalar_field.name);
-    ///                 assert_eq!(PrismaValue::from("Blog"), scalar_val);
-    ///             }
-    ///             _ => unreachable!()
-    ///         }
-    ///     }
-    ///     _ => unreachable!()
-    /// }
-    /// ```
-    fn at_least_one_related<T>(&self, filter: T) -> Filter
-    where
-        T: Into<Filter>,
-    {
-        Filter::from(RelationFilter {
-            field: Arc::clone(self),
-            nested_filter: Box::new(filter.into()),
-            condition: RelationCondition::AtLeastOneRelatedNode,
-        })
-    }
-
-    /// None of the related records matches the filter.
-    /// ```rust
-    /// # use connector::*;
-    /// # use prisma_models::*;
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
-    /// # let schema = tmp.build(String::from("test"));
-    /// # let user = schema.find_model("User").unwrap();
-    /// # let site = schema.find_model("Site").unwrap();
-    /// #
-    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
-    /// let site_name = site.fields().find_from_scalar("name").unwrap();
-    /// let filter = rel_field.no_related(site_name.equals("Blog"));
-    ///
-    /// match filter {
-    ///     Filter::Relation(RelationFilter {
-    ///         field: relation_field,
-    ///         nested_filter: nested,
-    ///         condition: condition,
-    ///     }) => {
-    ///         assert_eq!(String::from("sites"), relation_field.name);
-    ///         assert_eq!(RelationCondition::NoRelatedNode, condition);
-    ///
-    ///         match *nested {
-    ///             Filter::Scalar(ScalarFilter {
-    ///                 field: scalar_field,
-    ///                 condition: ScalarCondition::Equals(scalar_val),
-    ///             }) => {
-    ///                 assert_eq!(String::from("name"), scalar_field.name);
-    ///                 assert_eq!(PrismaValue::from("Blog"), scalar_val);
-    ///             }
-    ///             _ => unreachable!()
-    ///         }
-    ///     }
-    ///     _ => unreachable!()
-    /// }
-    /// ```
-    fn no_related<T>(&self, filter: T) -> Filter
-    where
-        T: Into<Filter>,
-    {
-        Filter::from(RelationFilter {
-            field: Arc::clone(self),
-            nested_filter: Box::new(filter.into()),
-            condition: RelationCondition::NoRelatedNode,
-        })
-    }
-
-    /// One of the relations is `Null`.
-    /// ```rust
-    /// # use connector::*;
-    /// # use prisma_models::*;
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
-    /// # let schema = tmp.build(String::from("test"));
-    /// # let user = schema.find_model("User").unwrap();
-    /// #
-    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
-    /// let filter = rel_field.one_relation_is_null();
-    ///
-    /// match filter {
-    ///     Filter::OneRelationIsNull(OneRelationIsNullFilter { field }) =>
-    ///         assert_eq!(String::from("sites"), field.name),
-    ///     _ => unreachable!()
-    /// };
-    /// ```
-    fn one_relation_is_null(&self) -> Filter {
-        Filter::from(OneRelationIsNullFilter {
-            field: Arc::clone(self),
         })
     }
 }

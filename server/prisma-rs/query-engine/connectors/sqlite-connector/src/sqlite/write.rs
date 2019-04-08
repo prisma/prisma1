@@ -1,5 +1,5 @@
 use crate::{mutaction::MutationBuilder, DatabaseWrite, Sqlite};
-use connector::*;
+use connector::{mutaction::*, ConnectorResult};
 use prisma_models::*;
 use prisma_query::{
     ast::*,

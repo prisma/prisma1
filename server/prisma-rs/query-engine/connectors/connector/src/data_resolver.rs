@@ -1,4 +1,4 @@
-use crate::{node_selector::NodeSelector, query_arguments::QueryArguments, ConnectorResult};
+use crate::{filter::NodeSelector, query_arguments::QueryArguments, ConnectorResult};
 use prisma_models::prelude::*;
 use prisma_models::ScalarFieldRef;
 

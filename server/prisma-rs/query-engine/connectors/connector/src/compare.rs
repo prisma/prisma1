@@ -1,4 +1,4 @@
-use crate::Filter;
+use crate::filter::Filter;
 use prisma_models::PrismaValue;
 
 /// Comparing methods for scalars.

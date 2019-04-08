@@ -1,5 +1,5 @@
 use crate::SelectDefinition;
-use connector::*;
+use connector::{filter::NodeSelector, mutaction::*, ConnectorResult};
 use prisma_models::*;
 use prisma_query::ast::*;
 use rusqlite::{Row, Transaction};

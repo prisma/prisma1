@@ -1,4 +1,4 @@
-use connector::{Filter, OneRelationIsNullFilter, RelationCondition, RelationFilter, ScalarCondition, ScalarFilter};
+use connector::filter::*;
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
