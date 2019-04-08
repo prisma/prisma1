@@ -1,23 +1,23 @@
 package com.prisma.api.queries
 
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, NodeQueryCapability}
-import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(NodeQueryCapability, JoinRelationLinksCapability)
 
   "the node query" should "return the correct typename" in {
-    val project = SchemaDsl.fromString() {
-      """
+    val testDataModels = {
+      val s1 = {
+        """
         |type User {
-        |  id: ID! @unique
-        |  person: Person!
+        |  id: ID! @id
+        |  person: Person! @relation(link: INLINE)
         |}
         |
         |type Person {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  email: String
         |  firstName: String
         |  lastName: String
@@ -28,12 +28,12 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type PhoneNumber {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  number: String!
         |}
         |
         |type FinancialAccount {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  key: String @unique
         |  campuses: [Campus]
         |  description: String!
@@ -59,7 +59,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type FinancialPaymentDetail {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  accountNumberMasked: String!
         |  billingLocation: Location
         |  creditCardType: CREDIT_CARD
@@ -77,7 +77,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type FinancialScheduledTransaction {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  person: Person
         |  endDate: DateTime
         |  payment: FinancialPaymentDetail
@@ -96,7 +96,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type FinancialTransaction {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  payment: FinancialPaymentDetail
         |  person: Person
         |  processedDate: DateTime
@@ -120,7 +120,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type GroupInvite {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  email: String!
         |  group: Group!
         |  groupRole: GroupRole
@@ -128,14 +128,14 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type GroupMember {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  group: Group
         |  role: GroupRole
         |  person: Person
         |}
         |
         |type GroupRole {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  canEdit: Boolean!
         |  canView: Boolean!
         |  description: String!
@@ -146,7 +146,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type GroupType {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  description: String
         |  groups: [Group]
         |  name: String! @unique
@@ -154,7 +154,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type Group {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  key: String @unique
         |  description: String
         |  type: GroupType!
@@ -166,7 +166,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type Campus {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  accounts: [FinancialAccount]
         |  description: String
         |  isActive: Boolean
@@ -182,7 +182,7 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |}
         |
         |type Location {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  city: String
         |  locationType: LOCATION_TYPE
         |  postalCode: String
@@ -191,12 +191,13 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
         |  street2: String
         |}
       """.stripMargin
+      }
+      TestDataModels(mongo = Vector.empty, sql = Vector(s1))
     }
 
-    database.setup(project)
-
-    server.query(
-      """mutation {
+    testDataModels.testV11 { project =>
+      server.query(
+        """mutation {
                    |  createGroupType(
                    |    data: {
                    |      name: "Organization"
@@ -316,30 +317,31 @@ class NodeQueryReturningWrongTypeNameSpec extends FlatSpec with Matchers with Ap
                    |    id
                    |  }
                    |}""",
-      project
-    )
-
-    val campusId = server
-      .query(
-        s"""query {
-      campuses {
-        id
-      }
-    }""",
         project
       )
-      .pathAsString("data.campuses.[0].id")
 
-    val result = server.query(
-      s"""{
+      val campusId = server
+        .query(
+          s"""query {
+                      campuses {
+                        id
+                      }
+                    }""",
+          project
+        )
+        .pathAsString("data.campuses.[0].id")
+
+      val result = server.query(
+        s"""{
          |  node(id: "$campusId"){
          |    __typename
          |  }
          |}""",
-      project
-    )
+        project
+      )
 
-    result.toString should equal("""{"data":{"node":{"__typename":"Campus"}}}""")
+      result.toString should equal("""{"data":{"node":{"__typename":"Campus"}}}""")
+    }
   }
 
 }

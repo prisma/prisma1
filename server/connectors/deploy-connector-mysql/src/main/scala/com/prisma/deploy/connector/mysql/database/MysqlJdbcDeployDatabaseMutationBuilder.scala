@@ -123,7 +123,7 @@ case class MySqlJdbcDeployDatabaseMutationBuilder(
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, references.idField_!.typeIdentifier)
     sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)}
           ADD COLUMN #$colSql,
-          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.dbName, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
+          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.dbName, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE SET NULL;
         """
   }
 

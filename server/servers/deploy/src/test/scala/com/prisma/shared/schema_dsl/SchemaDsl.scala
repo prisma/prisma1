@@ -47,7 +47,7 @@ object SchemaDsl extends AwaitUtils {
     }
   }
 
-  def fromStringv11(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
+  def fromStringV11(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     fromString(
       id = projectId(suite),

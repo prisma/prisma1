@@ -1,6 +1,6 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.api.util.TroubleCharacters
 import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -99,31 +99,40 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "ListValues" should "work" in {
+    val testDataModels = {
+      val dm1 = """type Top {
+                     id: ID! @id
+                     unique: Int! @unique
+                     name: String!
+                     ints: [Int]
+                  }"""
 
-    val project2 = SchemaDsl.fromString() {
-      """type Top {
-        |   id: ID! @unique
-        |   unique: Int! @unique
-        |   name: String!
-        |   ints: [Int]
-        |}"""
+      val dm2 = """type Top {
+                     id: ID! @id
+                     unique: Int! @unique
+                     name: String!
+                     ints: [Int] @scalarList(strategy: RELATION)
+                  }"""
+
+      TestDataModels(mongo = dm1, sql = dm2)
     }
 
-    database.setup(project2)
+    testDataModels.testV11 { project =>
+      val res = server.query(
+        s"""mutation {
+           |   createTop(data: {
+           |   unique: 1,
+           |   name: "Top",
+           |   ints: {set:[1,2,3,4,5]}
+           |}){
+           |  unique,
+           |  ints
+           |}}""",
+        project
+      )
 
-    val res = server.query(
-      s"""mutation {
-         |   createTop(data: {
-         |   unique: 1,
-         |   name: "Top",
-         |   ints: {set:[1,2,3,4,5]}
-         |}){
-         |  unique,
-         |  ints
-         |}}""",
-      project2
-    )
+      res.toString should be("""{"data":{"createTop":{"unique":1,"ints":[1,2,3,4,5]}}}""")
+    }
 
-    res.toString should be("""{"data":{"createTop":{"unique":1,"ints":[1,2,3,4,5]}}}""")
   }
 }

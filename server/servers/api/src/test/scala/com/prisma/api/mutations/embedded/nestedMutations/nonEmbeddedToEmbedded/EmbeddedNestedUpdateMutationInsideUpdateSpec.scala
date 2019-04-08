@@ -10,15 +10,16 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(EmbeddedTypesCapability)
 
   "Several many relations" should "be updateable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Todo {
-        | id: ID! @unique
+        | id: ID! @id
         | comments: [Comment]
         |}
         |
         |type Comment @embedded {
-        | alias: String! @unique
-        | text: String
+        | id: ID! @id
+        | alias: String!
+        | text: String!
         |}
       """
     }
@@ -34,11 +35,16 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  ){
         |    id
+        |    comments {
+        |      id
+        |    }
         |  }
         |}""",
       project
     )
-    val todoId = createResult.pathAsString("data.createTodo.id")
+    val todoId     = createResult.pathAsString("data.createTodo.id")
+    val commentId1 = createResult.pathAsString("data.createTodo.comments.[0].id")
+    val commentId2 = createResult.pathAsString("data.createTodo.comments.[1].id")
 
     val result = server.query(
       s"""mutation {
@@ -49,8 +55,8 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    data:{
          |      comments: {
          |        update: [
-         |          {where: {alias: "alias1"}, data: {text: "update comment1"}},
-         |          {where: {alias: "alias2"}, data: {text: "update comment2"}}
+         |          {where: {id: "$commentId1"}, data: {text: "update comment1"}},
+         |          {where: {id: "$commentId2"}, data: {text: "update comment2"}}
          |        ]
          |      }
          |    }
@@ -69,21 +75,22 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "A many relation" should "be updateable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type List {
-        | id: ID! @unique
+        | id: ID! @id
         | listUnique: String! @unique
         | todoes: [Todo]
         |}
         |
         |type Todo @embedded{
-        | todoUnique: String! @unique
+        | id: ID! @id
+        | todoUnique: String!
         |}
       """.stripMargin
     }
     database.setup(project)
 
-    server.query(
+    val setupResult = server.query(
       """mutation {
         |  createList(
         |    data: {
@@ -94,11 +101,15 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |    }
         |  ){
         |    listUnique
-        |    todoes { todoUnique }
+        |    todoes {
+        |      id
+        |    }
         |  }
         |}""".stripMargin,
       project
     )
+    val todoId = setupResult.pathAsString("data.createList.todoes.[0].id")
+
     val result = server.query(
       s"""mutation {
          |  updateList(
@@ -107,7 +118,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |    }
          |    data:{
          |      todoes: {
-         |        update: [{where: {todoUnique: "todo"}, data: {todoUnique: "new todo"}}]
+         |        update: [{where: {id: "$todoId"}, data: {todoUnique: "new todo"}}]
          |      }
          |    }
          |  ){
@@ -125,13 +136,13 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "A to one relation" should "be updateable by id through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Todo @embedded {
         | title: String!
         |}
         |
         |type Note  {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | todo: Todo
         |}
@@ -180,14 +191,15 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Todo @embedded {
+        | id: ID! @id
         | title: String!
-        | t: String! @unique
+        | t: String!
         |}
         |
         |type Note {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | todoes: [Todo]
         |}
@@ -223,7 +235,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |      text: "Some Changed Text"
          |      todoes: {
          |        update: {
-         |          where: {t: "DOES NOT EXIST"},
+         |          where: {id: "DOES NOT EXIST"},
          |          data:{title: "updated title"}
          |        }
          |      }
@@ -236,23 +248,23 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
       project,
       errorCode = 3041,
       errorContains =
-        "The relation NoteToTodo has no node for the model Note connected to a Node for the model Todo with the value 'DOES NOT EXIST' for the field 't' on your mutation path."
+        "The relation NoteToTodo has no node for the model Note connected to a Node for the model Todo with the value 'DOES NOT EXIST' for the field 'id' on your mutation path."
     )
 
     server.query(s"""query{note(where:{id: "$noteId"}){text}}""", project, dataContains = """{"note":{"text":"Some Text"}}""")
   }
 
   "a many to many relation" should "handle null in unique fields" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Note {
-        | id: ID! @unique
+        | id: ID! @id
         | text: String @unique
         | todos: [Todo]
         |}
         |
         |type Todo @embedded{
-        | title: String! @unique
-        | unique: String @unique
+        | id: ID! @id
+        | title: String!
         |}
       """
     }
@@ -265,7 +277,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |      text: "Some Text"
         |      todos:
         |      {
-        |       create: [{ title: "the title", unique: "test"},{ title: "the other title"}]
+        |       create: [{ title: "the title" },{ title: "the other title" }]
         |      }
         |    }
         |  ){
@@ -287,7 +299,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |      text: "Some Changed Text"
          |      todos: {
          |        update: {
-         |          where: {unique: null},
+         |          where: {id: null},
          |          data:{title: "updated title"}
          |        }
          |      }
@@ -307,19 +319,21 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
                                              |  middles: [Middle]
                                              |}
                                              |
-                                             |type Middle @embedded{
-                                             |  nameMiddle: String! @unique
+                                             |type Middle @embedded {
+                                             |  id: ID! @id
+                                             |  nameMiddle: String!
                                              |  bottoms: [Bottom]
                                              |}
                                              |
-                                             |type Bottom @embedded{
-                                             |  nameBottom: String! @unique
+                                             |type Bottom @embedded {
+                                             |  id: ID! @id
+                                             |  nameBottom: String!
                                              |}""" }
     database.setup(project)
 
@@ -344,11 +358,21 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |        }
         |     ]
         |    }
-        |  }) {id}
+        |  }) {
+        |    id
+        |    middles {
+        |      id
+        |      bottoms {
+        |        id
+        |      }
+        |    }
+        |  }
         |}
       """
 
-    server.query(createMutation, project)
+    val setupResult = server.query(createMutation, project)
+    val middleId    = setupResult.pathAsString("data.createTop.middles.[0].id")
+    val bottomId    = setupResult.pathAsString("data.createTop.middles.[0].bottoms.[0].id")
 
     val updateMutation =
       s"""mutation b {
@@ -358,13 +382,16 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |      nameTop: "updated top",
          |      middles: {
          |        update: [{
-         |              where: {nameMiddle: "the middle"},
-         |              data:{  nameMiddle: "updated middle"
-         |                      bottoms: {update: [{ where: {nameBottom: "the bottom"},
-         |                                           data:  {nameBottom: "updated bottom"}
-         |                      }]
+         |              where: { id: "$middleId" },
+         |              data: { nameMiddle: "updated middle"
+         |                      bottoms: {
+         |                        update: [{
+         |                          where: { id: "$bottomId" },
+         |                          data:  { nameBottom: "updated bottom" }
+         |                        }]
+         |                      }
          |              }
-         |              }}]
+         |       }]
          |     }
          |   }
          |  ) {
@@ -386,19 +413,21 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path and there are no backrelations" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
                                              |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
-                                             |  nameMiddle: String! @unique
+                                             |  id: ID! @id
+                                             |  nameMiddle: String!
                                              |  bottoms: [Bottom]
                                              |}
                                              |
                                              |type Bottom @embedded{
-                                             |  nameBottom: String! @unique
+                                             |  id: ID! @id
+                                             |  nameBottom: String!
                                              |}""" }
     database.setup(project)
 
@@ -423,11 +452,21 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |        }
         |     ]
         |    }
-        |  }) {id}
+        |  }) {
+        |    id
+        |    middles {
+        |      id
+        |      bottoms {
+        |        id
+        |      }
+        |    }
+        |  }
         |}
       """.stripMargin
 
-    server.query(createMutation, project)
+    val setupResult = server.query(createMutation, project)
+    val middleId    = setupResult.pathAsString("data.createTop.middles.[0].id")
+    val bottomId    = setupResult.pathAsString("data.createTop.middles.[0].bottoms.[0].id")
 
     val updateMutation =
       s"""mutation b {
@@ -437,9 +476,9 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |      nameTop: "updated top",
          |      middles: {
          |        update: [{
-         |              where: {nameMiddle: "the middle"},
+         |              where: { id: "$middleId" },
          |              data:{  nameMiddle: "updated middle"
-         |                      bottoms: {update: [{ where: {nameBottom: "the bottom"},
+         |                      bottoms: {update: [{ where: { id: "$bottomId" },
          |                                           data:  {nameBottom: "updated bottom"}
          |                      }]
          |              }
@@ -465,19 +504,21 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path " in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
                                              |  middles: [Middle]
                                              |}
                                              |
                                              |type Middle @embedded{
-                                             |  nameMiddle: String! @unique
+                                             |  id: ID! @id
+                                             |  nameMiddle: String!
                                              |  bottom: Bottom
                                              |}
                                              |
                                              |type Bottom @embedded{
-                                             |  nameBottom: String! @unique
+                                             |  id: ID! @id
+                                             |  nameBottom: String!
                                              |}""" }
     database.setup(project)
 
@@ -498,11 +539,15 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |        }
         |     ]
         |    }
-        |  }) {id}
+        |  }) {
+        |    id
+        |    middles { id }
+        |  }
         |}
       """
 
-    server.query(createMutation, project)
+    val setupResult = server.query(createMutation, project)
+    val middleId    = setupResult.pathAsString("data.createTop.middles.[0].id")
 
     val updateMutation =
       s"""mutation b {
@@ -512,7 +557,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |      nameTop: "updated top",
          |      middles: {
          |        update: [{
-         |              where: {nameMiddle: "the middle"},
+         |              where: { id: "$middleId" },
          |              data:{  nameMiddle: "updated middle"
          |                      bottom: {update: {nameBottom: "updated bottom"}}
          |              }
@@ -538,24 +583,27 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
                                              |  middle: Middle
                                              |}
                                              |
                                              |type Middle @embedded{
-                                             |  nameMiddle: String! @unique
+                                             |  id: ID! @id
+                                             |  nameMiddle: String!
                                              |  bottom: Bottom
                                              |}
                                              |
                                              |type Bottom @embedded{
-                                             |  nameBottom: String! @unique
+                                             |  id: ID! @id
+                                             |  nameBottom: String!
                                              |  below: [Below]
                                              |}
                                              |
                                              |type Below @embedded{
-                                             |  nameBelow: String! @unique
+                                             |  id: ID! @id
+                                             |  nameBelow: String!
                                              |}""" }
     database.setup(project)
 
@@ -574,11 +622,14 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |            create: [{ nameBelow: "below"}, { nameBelow: "second below"}]}
         |        }}}
         |        }
-        |  }) {id}
+        |  }) {
+        |   middle { bottom { below { id } } }
+        | }
         |}
       """
 
-    server.query(createMutation, project)
+    val setupResult = server.query(createMutation, project)
+    val belowId     = setupResult.pathAsString("data.createTop.middle.bottom.below.[0].id")
 
     val updateMutation =
       s"""mutation b {
@@ -593,7 +644,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |                update: {
          |                  nameBottom: "updated bottom"
          |                  below: { update: {
-         |                    where: {nameBelow: "below"}
+         |                    where: { id: "$belowId" }
          |                    data:{nameBelow: "updated below"}
          |                  }
          |          }
@@ -625,24 +676,27 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "fail if there are model and node edges on the path and back relations are missing and node edges follow model edges but the path is interrupted" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
                                              |  middle: Middle
                                              |}
                                              |
-                                             |type Middle @embedded{
-                                             |  nameMiddle: String! @unique
+                                             |type Middle @embedded {
+                                             |  id: ID! @id
+                                             |  nameMiddle: String!
                                              |  bottom: Bottom
                                              |}
                                              |
-                                             |type Bottom @embedded{
-                                             |  nameBottom: String! @unique
+                                             |type Bottom @embedded {
+                                             |  id: ID! @id
+                                             |  nameBottom: String!
                                              |  below: [Below]
                                              |}
                                              |
-                                             |type Below @embedded{
-                                             |  nameBelow: String! @unique
+                                             |type Below @embedded {
+                                             |  id: ID! @id
+                                             |  nameBelow: String!
                                              |}""" }
     database.setup(project)
 
@@ -682,11 +736,14 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
         |            create: [{ nameBelow: "other below"}, { nameBelow: "second other below"}]}
         |        }}}
         |        }
-        |  }) {id}
+        |  }) {
+        |    middle { bottom { below { id } } }
+        |  }
         |}
       """
 
-    server.query(createMutation2, project)
+    val setupResult2 = server.query(createMutation2, project)
+    val belowId      = setupResult2.pathAsString("data.createTop.middle.bottom.below.[0].id")
 
     val updateMutation =
       s"""mutation b {
@@ -701,7 +758,7 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
          |                update: {
          |                  nameBottom: "updated bottom"
          |                  below: { update: {
-         |                    where: {nameBelow: "other below"}
+         |                    where: {id:"$belowId"}
          |                    data:{nameBelow: "updated below"}
          |                  }
          |          }
@@ -731,24 +788,26 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
       project,
       errorCode = 3041,
       errorContains =
-        """The relation BelowToBottom has no node for the model Bottom connected to a Node for the model Below with the value 'other below' for the field 'nameBelow' on your mutation path."""
+        s"""The relation BelowToBottom has no node for the model Bottom connected to a Node for the model Below with the value '$belowId' for the field 'id' on your mutation path."""
     )
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
                                              |  middle: Middle
                                              |}
                                              |
                                              |type Middle @embedded{
-                                             |  nameMiddle: String! @unique
+                                             |  id: ID! @id
+                                             |  nameMiddle: String!
                                              |  bottom: Bottom
                                              |}
                                              |
                                              |type Bottom @embedded{
-                                             |  nameBottom: String! @unique
+                                             |  id: ID! @id
+                                             |  nameBottom: String!
                                              |}""" }
     database.setup(project)
 
@@ -809,19 +868,21 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path and there are no backrelations" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
                                              |  middle: Middle
                                              |}
                                              |
-                                             |type Middle @embedded{
-                                             |  nameMiddle: String! @unique
+                                             |type Middle @embedded {
+                                             |  id: ID! @id
+                                             |  nameMiddle: String!
                                              |  bottom: Bottom
                                              |}
                                              |
-                                             |type Bottom @embedded{
-                                             |  nameBottom: String! @unique
+                                             |type Bottom @embedded {
+                                             |  id: ID! @id
+                                             |  nameBottom: String!
                                              |}""".stripMargin }
     database.setup(project)
 
@@ -882,19 +943,21 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "fail if there are only model edges on the path but there is no connected item to update at the end" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
                                              |  middle: Middle
                                              |}
                                              |
                                              |type Middle @embedded {
-                                             |  nameMiddle: String! @unique
+                                             |  id: ID! @id
+                                             |  nameMiddle: String!
                                              |  bottom: Bottom
                                              |}
                                              |
-                                             |type Bottom @embedded{
-                                             |  nameBottom: String! @unique
+                                             |type Bottom @embedded {
+                                             |  id: ID! @id
+                                             |  nameBottom: String!
                                              |}""" }
     database.setup(project)
 
@@ -950,16 +1013,17 @@ class EmbeddedNestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matcher
 
   "Updating toOne relations" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: Middle
         |}
         |
-        |type Middle @embedded{
-        |   unique: Int! @unique
+        |type Middle @embedded {
+        |   id: ID! @id
+        |   unique: Int!
         |   name: String!
         |}"""
     }

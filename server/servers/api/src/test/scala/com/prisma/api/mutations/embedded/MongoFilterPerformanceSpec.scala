@@ -12,10 +12,10 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
   override def doNotRun: Boolean = true
 
   "Testing a query that uses the aggregation framework" should "work" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  a: String
         |  b: String
         |  c: String
@@ -23,13 +23,13 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  e: Float
         |  f: Boolean
         |  int: Int! @unique
-        |  posts: [Post] @mongoRelation(field: "posts")
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  posts: [Post] @relation(link: INLINE)
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Post {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  author: User
         |  int: Int! @unique
         |  a: String
@@ -38,13 +38,13 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  comments: [Comment] @mongoRelation(field: "comments")
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  comments: [Comment] @relation(link: INLINE)
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Comment {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  int: Int! @unique
         |  a: String
         |  b: String
@@ -52,9 +52,9 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  post: Post @mongoRelation(field: "comments")
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  post: Post
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}"""
     }
     database.setup(project)
@@ -102,10 +102,10 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "Testing with embedded types" should "work" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  a: String
         |  b: String
         |  c: String
@@ -113,9 +113,9 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  e: Float
         |  f: Boolean
         |  int: Int! @unique
-        |  posts: [Post]
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  posts: [Post] @relation(link: INLINE)
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Post @embedded {
@@ -126,9 +126,9 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  comments: [Comment]
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  comments: [Comment] @relation(link: INLINE)
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Comment @embedded {
@@ -139,8 +139,8 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}"""
     }
     database.setup(project)

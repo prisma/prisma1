@@ -46,4 +46,8 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
   }
 
   def escapeString(str: String) = JsString(str).toString()
+
+  implicit def testDataModelsWrapper(testDataModel: TestDataModels): TestDataModelsWrapper = {
+    TestDataModelsWrapper(testDataModel, connectorTag, connector.connector, database)
+  }
 }

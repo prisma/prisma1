@@ -1,7 +1,7 @@
 package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
+import com.prisma.shared.models.ConnectorCapability.{NonEmbeddedScalarListCapability, ScalarListsCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -9,12 +9,18 @@ import org.scalatest.{FlatSpec, Matchers}
 class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(ScalarListsCapability)
 
+  val scalarListStrategy = if (capabilities.has(NonEmbeddedScalarListCapability)) {
+    "@scalarList(strategy: RELATION)"
+  } else {
+    ""
+  }
+
   "empty scalar list" should "return empty list" in {
-    val project = SchemaDsl.fromString() {
-      """type Model{
-        |   id: ID! @unique
-        |   ints: [Int]
-        |   strings: [String]
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Model{
+        |   id: ID! @id
+        |   ints: [Int] $scalarListStrategy
+        |   strings: [String] $scalarListStrategy
         |}"""
     }
 
@@ -47,11 +53,11 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "full scalar list" should "return full list" in {
 
-    val project = SchemaDsl.fromString() {
-      """type Model{
-        |   id: ID! @unique
-        |   ints: [Int]
-        |   strings: [String]
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Model{
+        |   id: ID! @id
+        |   ints: [Int] $scalarListStrategy
+        |   strings: [String] $scalarListStrategy
         |}"""
     }
 
@@ -85,11 +91,11 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "full scalar list" should "preserve order of elements" in {
 
-    val project = SchemaDsl.fromString() {
-      """type Model{
-        |   id: ID! @unique
-        |   ints: [Int]
-        |   strings: [String]
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Model{
+        |   id: ID! @id
+        |   ints: [Int] $scalarListStrategy
+        |   strings: [String] $scalarListStrategy
         |}"""
     }
     database.setup(project)
@@ -136,10 +142,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = """"STRING""""
     val outputValue = """"STRING""""
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type Model{
-        |   id: ID! @unique
-        |   $fieldName: [String]
+        |   id: ID! @id
+        |   $fieldName: [String] $scalarListStrategy
         |}"""
     }
 
@@ -152,10 +158,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = 1
     val outputValue = 1
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type Model{
-         |   id: ID! @unique
-         |   $fieldName: [Int]
+         |   id: ID! @id
+         |   $fieldName: [Int] $scalarListStrategy
          |}"""
     }
 
@@ -168,10 +174,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = 1.345
     val outputValue = 1.345
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type Model{
-         |   id: ID! @unique
-         |   $fieldName: [Float]
+         |   id: ID! @id
+         |   $fieldName: [Float] $scalarListStrategy
          |}"""
     }
 
@@ -184,10 +190,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = true
     val outputValue = true
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type Model{
-         |   id: ID! @unique
-         |   $fieldName: [Boolean]
+         |   id: ID! @id
+         |   $fieldName: [Boolean] $scalarListStrategy
          |}"""
     }
 
@@ -200,10 +206,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = """"5beea4aa6183dd734b2dbd9b""""
     val outputValue = """"5beea4aa6183dd734b2dbd9b""""
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type Model{
-         |   id: ID! @unique
-         |   $fieldName: [ID]
+         |   id: ID! @id
+         |   $fieldName: [ID] $scalarListStrategy
          |}"""
     }
 
@@ -216,10 +222,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = """"{\"a\":2}""""
     val outputValue = """{"a":2}"""
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type Model{
-         |   id: ID! @unique
-         |   $fieldName: [Json]
+         |   id: ID! @id
+         |   $fieldName: [Json] $scalarListStrategy
          |}"""
     }
 
@@ -232,10 +238,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = """"2018""""
     val outputValue = """"2018-01-01T00:00:00.000Z""""
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type Model{
-         |   id: ID! @unique
-         |   $fieldName: [DateTime]
+         |   id: ID! @id
+         |   $fieldName: [DateTime] $scalarListStrategy
          |}"""
     }
 
@@ -248,10 +254,10 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     val inputValue  = "HA"
     val outputValue = """"HA""""
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""type Model{
-         |   id: ID! @unique
-         |   $fieldName: [Ha]
+         |   id: ID! @id
+         |   $fieldName: [Ha] $scalarListStrategy
          |}
          |
          |enum Ha{
@@ -265,11 +271,11 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Overwriting a full scalar list with an empty list" should "return an empty list" in {
 
-    val project = SchemaDsl.fromString() {
-      """type Model{
-         |   id: ID! @unique
-         |   ints: [Int]
-         |   strings: [String]
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Model{
+         |   id: ID! @id
+         |   ints: [Int] $scalarListStrategy
+         |   strings: [String] $scalarListStrategy
          |}"""
     }
 
@@ -329,11 +335,11 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Overwriting a full scalar list with a list of different length" should "delete all members of the old list" in {
 
-    val project = SchemaDsl.fromString() {
-      """type Model{
-        |   id: ID! @unique
-        |   ints: [Int]
-        |   strings: [String]
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Model{
+        |   id: ID! @id
+        |   ints: [Int] $scalarListStrategy
+        |   strings: [String] $scalarListStrategy
         |}"""
     }
 

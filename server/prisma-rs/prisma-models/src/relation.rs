@@ -124,7 +124,7 @@ impl Relation {
         self.manifestation
             .as_ref()
             .map(|manifestation| match manifestation {
-                RelationLinkManifestation::RelationTable(_) => true,
+                RelationLinkManifestation::Inline(_) => true,
                 _ => false,
             })
             .unwrap_or(false)
@@ -135,7 +135,7 @@ impl Relation {
     }
 
     pub fn is_self_relation(&self) -> bool {
-        self.model_a().name == self.model_b().name
+        self.model_a_name == self.model_b_name
     }
 
     pub fn inline_manifestation(&self) -> Option<&InlineRelation> {
@@ -172,7 +172,11 @@ impl Relation {
     pub fn field_a(&self) -> Arc<RelationField> {
         self.field_a
             .get_or_init(|| {
-                let field = self.model_a().fields().find_from_relation(&self.name).unwrap();
+                let field = self
+                    .model_a()
+                    .fields()
+                    .find_from_relation(&self.name, RelationSide::A)
+                    .unwrap();
 
                 Arc::downgrade(&field)
             })
@@ -193,7 +197,11 @@ impl Relation {
     pub fn field_b(&self) -> Arc<RelationField> {
         self.field_b
             .get_or_init(|| {
-                let field = self.model_b().fields().find_from_relation(&self.name).unwrap();
+                let field = self
+                    .model_b()
+                    .fields()
+                    .find_from_relation(&self.name, RelationSide::B)
+                    .unwrap();
 
                 Arc::downgrade(&field)
             })
@@ -222,8 +230,10 @@ impl Relation {
                 if m.in_table_of_model_name == model.name && !self.is_self_relation() {
                     model.fields().id().as_column()
                 } else {
-                    let column: &str = m.referencing_column.as_ref();
-                    column.into()
+                    let column_name: &str = m.referencing_column.as_ref();
+                    let column = Column::from(column_name);
+
+                    column.table(self.relation_table())
                 }
             }
             None => Self::MODEL_A_DEFAULT_COLUMN.into(),
@@ -237,13 +247,14 @@ impl Relation {
             Some(RelationTable(ref m)) => m.model_b_column.clone().into(),
             Some(Inline(ref m)) => {
                 let model = self.model_b();
-                let id = model.fields().id();
 
-                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    id.as_column()
+                if m.in_table_of_model_name == model.name {
+                    model.fields().id().as_column()
                 } else {
-                    let column: &str = m.referencing_column.as_ref();
-                    column.into()
+                    let column_name: &str = m.referencing_column.as_ref();
+                    let column = Column::from(column_name);
+
+                    column.table(self.relation_table())
                 }
             }
             None => Self::MODEL_B_DEFAULT_COLUMN.into(),

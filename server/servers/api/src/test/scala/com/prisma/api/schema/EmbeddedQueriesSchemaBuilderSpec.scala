@@ -13,7 +13,7 @@ class EmbeddedQueriesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSp
   val schemaBuilder                   = testDependencies.apiSchemaBuilder
 
   "An embedded type" should "not produce queries in the schema" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
           |type Embedded @embedded {
           |   name: String

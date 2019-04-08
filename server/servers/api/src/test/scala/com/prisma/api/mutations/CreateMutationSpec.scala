@@ -11,7 +11,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val schema =
     """type ScalarModel{
-    |   id: ID! @unique
+    |   id: ID! @id
     |   optString: String
     |   optInt: Int
     |   optFloat: Float
@@ -27,7 +27,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     |   B
     |}""".stripMargin
 
-  val project = SchemaDsl.fromString() { schema }
+  val project = SchemaDsl.fromStringV11() { schema }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

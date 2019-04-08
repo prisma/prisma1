@@ -32,12 +32,12 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The default value" should "work for int" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Service {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
-        |  int: Int @default(value: "1")
+        |  int: Int @default(value: 1)
         |}
       """.stripMargin
     }
@@ -61,7 +61,7 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The default value" should "work for enums" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |enum IsActive{
         |  Yes
@@ -69,11 +69,11 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
         |}
         |
         |type Service {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |  description: String
         |  unit: String
-        |  active: IsActive @default(value: "Yes")
+        |  active: IsActive @default(value: Yes)
         |}
       """.stripMargin
     }

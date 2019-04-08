@@ -11,17 +11,17 @@ class DeleteManyOnEmbeddedBug3662Spec extends FlatSpec with Matchers with ApiSpe
 
   val schema =
     """type Item {
-      |  id: ID! @unique
+      |  id: ID! @id
       |  name: String @unique
       |  subItems: [SubItem!]!
       |}
       |
       |type SubItem @embedded {
-      |  id: ID! @unique
-      |  name: String @unique
+      |  id: ID! @id
+      |  name: String
       |}"""
 
-  lazy val project: Project = SchemaDsl.fromString() {
+  lazy val project: Project = SchemaDsl.fromStringV11() {
     schema
   }
 
@@ -81,24 +81,24 @@ class DeleteManyOnEmbeddedBug3662Spec extends FlatSpec with Matchers with ApiSpe
 
   "DeleteMany bug" should "be fixed" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |  pets: [Dog]
         |}
         |
         |type Post {
-        |  id: ID! @unique
-        |  author: User @mongoRelation(field: "author")
+        |  id: ID! @id
+        |  author: User @relation(link: INLINE)
         |  title: String!
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Walker {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |}
         |

@@ -11,9 +11,9 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   //always running the filter query twice - once with a one relation condition that is always true for all nodes - ensures that
   //Mongo executes the query once as a find query and once using the aggregation framework
 
-  val project: Project = SchemaDsl.fromString() { """
+  val project: Project = SchemaDsl.fromStringV11() { """
                                                     |type ScalarModel {
-                                                    |  id: ID! @unique
+                                                    |  id: ID! @id
                                                     |  idTest: String
                                                     |  optString: String
                                                     |  optInt: Int
@@ -21,11 +21,11 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
                                                     |  optBoolean: Boolean
                                                     |  optDateTime: DateTime
                                                     |  optEnum: Enum
-                                                    |  b: B
+                                                    |  b: B @relation(link: INLINE)
                                                     |}
                                                     |
                                                     |type B {
-                                                    | id: ID! @unique
+                                                    | id: ID! @id
                                                     | int: Int @unique
                                                     |}
                                                     |
