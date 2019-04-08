@@ -8,12 +8,6 @@ import org.scalatest.{FlatSpec, Matchers}
 class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val inlineDirective = if (capabilities.has(RelationLinkListCapability)) {
-    "@relation(link: INLINE)"
-  } else {
-    ""
-  }
-
   "Nested Updates" should "work for models with missing backrelations " in {
     val project = SchemaDsl.fromStringV11() {
       """
@@ -64,7 +58,7 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
         |type Owner {
         |  id: ID! @id
         |  ownerName: String! @unique
-        |  cats: [Cat] $inlineDirective
+        |  cats: [Cat] $listInlineDirective
         |}
         |
         |type Cat {
@@ -113,7 +107,7 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
         |type Owner {
         |  id: ID! @id
         |  ownerName: String! @unique
-        |  cats: [Cat] $inlineDirective
+        |  cats: [Cat] $listInlineDirective
         |}
         |
         |type Cat {

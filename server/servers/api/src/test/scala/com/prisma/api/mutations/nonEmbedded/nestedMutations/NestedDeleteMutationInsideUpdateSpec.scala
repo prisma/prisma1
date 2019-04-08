@@ -2,7 +2,7 @@ package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
 import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -712,23 +712,23 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to CM relation" should "delete fail if other req relations would be violated" in {
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type Parent{
-        | id: ID! @unique
+        | id: ID! @id
         | p: String! @unique
-        | childrenOpt: [Child]
+        | childrenOpt: [Child] $listInlineDirective
         |}
         |
         |type Child{
-        | id: ID! @unique
+        | id: ID! @id
         | c: String! @unique
         | parentsOpt: [Parent]
-        | otherReq: Other!
+        | otherReq: Other! @relation(link: INLINE)
         |}
         |
         |type Other{
-        | id: ID! @unique
+        | id: ID! @id
         | o: String! @unique
         | childReq: Child!
         |}
@@ -793,23 +793,23 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a PM to CM  relation" should "delete the child from other relations as well" in {
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type Parent{
-        | id: ID! @unique
+        | id: ID! @id
         | p: String! @unique
-        | childrenOpt: [Child]
+        | childrenOpt: [Child] $listInlineDirective
         |}
         |
         |type Child{
-        | id: ID! @unique
+        | id: ID! @id
         | c: String! @unique
         | parentsOpt: [Parent]
-        | otherOpt: Other
+        | otherOpt: Other @relation(link: INLINE)
         |}
         |
         |type Other{
-        | id: ID! @unique
+        | id: ID! @id
         | o: String! @unique
         | childOpt: Child
         |}
@@ -876,15 +876,15 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "be deletable by id through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type Todo{
-        | id: ID! @unique
-        | comments: [Comment]
+        | id: ID! @id
+        | comments: [Comment] $listInlineDirective
         |}
         |
         |type Comment{
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | todo: Todo
         |}
@@ -979,15 +979,15 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type Todo{
-        | id: ID! @unique
-        | comments: [Comment]
+        | id: ID! @id
+        | comments: [Comment] $listInlineDirective
         |}
         |
         |type Comment{
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | alias: String! @unique
         | todo: Todo
@@ -1044,15 +1044,15 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
   "a many to one relation" should "be deletable by id through a nested mutation" in {
 
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type Todo{
-        | id: ID! @unique
-        | comments: [Comment]
+        | id: ID! @id
+        | comments: [Comment] $listInlineDirective
         |}
         |
         |type Comment{
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | todo: Todo
         |}
@@ -1125,16 +1125,16 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "one2one relation both exist and are connected" should "be deletable by id through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo{
-        | id: ID! @unique
+        | id: ID! @id
         | title: String
-        | note: Note
+        | note: Note @relation(link: INLINE)
         |}
         |
         |type Note{
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | todo: Todo
         |}
@@ -1189,16 +1189,16 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "one2one relation both exist and are connected" should "be deletable by unique field through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo{
-        | id: ID! @unique
+        | id: ID! @id
         | title: String! @unique
-        | note: Note
+        | note: Note @relation(link: INLINE)
         |}
         |
         |type Note{
-        | id: ID! @unique
+        | id: ID! @id
         | text: String! @unique
         | todo: Todo
         |}
@@ -1254,16 +1254,16 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a one to one relation" should "not do a nested delete by id if the nested node does not exist" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo{
-        | id: ID! @unique
+        | id: ID! @id
         | title: String
-        | note: Note
+        | note: Note @relation(link: INLINE)
         |}
         |
         |type Note{
-        | id: ID! @unique
+        | id: ID! @id
         | text: String
         | todo: Todo
         |}
@@ -1317,21 +1317,21 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { s"""type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle]
+                                             |  middles: [Middle] $listInlineDirective
                                              |}
                                              |
                                              |type Middle {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameMiddle: String! @unique
                                              |  tops: [Top]
-                                             |  bottoms: [Bottom]
+                                             |  bottoms: [Bottom] $listInlineDirective
                                              |}
                                              |
                                              |type Bottom {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameBottom: String! @unique
                                              |  middles: [Middle]
                                              |}""".stripMargin }
@@ -1398,20 +1398,20 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only node edges on the path and there are no backrelations" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { s"""type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle]
+                                             |  middles: [Middle] $listInlineDirective
                                              |}
                                              |
                                              |type Middle {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameMiddle: String! @unique
-                                             |  bottoms: [Bottom]
+                                             |  bottoms: [Bottom] $listInlineDirective
                                              |}
                                              |
                                              |type Bottom {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameBottom: String! @unique
                                              |}""".stripMargin }
     database.setup(project)
@@ -1477,21 +1477,21 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path " in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { s"""type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
-                                             |  middles: [Middle]
+                                             |  middles: [Middle] $listInlineDirective
                                              |}
                                              |
                                              |type Middle {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameMiddle: String! @unique
                                              |  tops: [Top]
-                                             |  bottom: Bottom
+                                             |  bottom: Bottom @relation(link: INLINE)
                                              |}
                                              |
                                              |type Bottom {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameBottom: String! @unique
                                              |  middle: Middle
                                              |}""".stripMargin }
@@ -1554,26 +1554,26 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are model and node edges on the path  and back relations are missing and node edges follow model edges" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { s"""type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
-                                             |  middle: Middle
+                                             |  middle: Middle @relation(link: INLINE)
                                              |}
                                              |
                                              |type Middle {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameMiddle: String! @unique
-                                             |  bottom: Bottom
+                                             |  bottom: Bottom @relation(link: INLINE)
                                              |}
                                              |
                                              |type Bottom {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameBottom: String! @unique
-                                             |  below: [Below]
+                                             |  below: [Below] $listInlineDirective
                                              |}
                                              |
                                              |type Below {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameBelow: String! @unique
                                              |}""".stripMargin }
     database.setup(project)
@@ -1642,21 +1642,21 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
-                                             |  middle: Middle
+                                             |  middle: Middle @relation(link: INLINE)
                                              |}
                                              |
                                              |type Middle {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameMiddle: String! @unique
                                              |  top: Top
-                                             |  bottom: Bottom
+                                             |  bottom: Bottom @relation(link: INLINE)
                                              |}
                                              |
                                              |type Bottom {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  middle: Middle
                                              |  nameBottom: String! @unique
                                              |}""".stripMargin }
@@ -1718,20 +1718,20 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation if there are only model edges on the path and there are no backrelations" in {
-    val project = SchemaDsl.fromString() { """type Top {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { """type Top {
+                                             |  id: ID! @id
                                              |  nameTop: String! @unique
-                                             |  middle: Middle
+                                             |  middle: Middle @relation(link: INLINE)
                                              |}
                                              |
                                              |type Middle {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameMiddle: String! @unique
-                                             |  bottom: Bottom
+                                             |  bottom: Bottom @relation(link: INLINE)
                                              |}
                                              |
                                              |type Bottom {
-                                             |  id: ID! @unique
+                                             |  id: ID! @id
                                              |  nameBottom: String! @unique
                                              |}""".stripMargin }
     database.setup(project)
@@ -1792,10 +1792,10 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   "Nested delete on self relations" should "only delete the specified nodes" in {
-    val project = SchemaDsl.fromString() { """type User {
-                                             |  id: ID! @unique
+    val project = SchemaDsl.fromStringV11() { s"""type User {
+                                             |  id: ID! @id
                                              |  name: String! @unique
-                                             |  follower: [User] @relation(name: "UserFollow")
+                                             |  follower: [User] @relation(name: "UserFollow" $listInlineArgument)
                                              |  following: [User] @relation(name: "UserFollow")
                                              |}""" }
     database.setup(project)

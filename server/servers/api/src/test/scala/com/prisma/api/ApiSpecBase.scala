@@ -6,6 +6,7 @@ import com.prisma.ConnectorAwareTest
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.config.PrismaConfig
+import com.prisma.shared.models.ConnectorCapability.RelationLinkListCapability
 import com.prisma.shared.models.Project
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -49,5 +50,17 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 
   implicit def testDataModelsWrapper(testDataModel: TestDataModels): TestDataModelsWrapper = {
     TestDataModelsWrapper(testDataModel, connectorTag, connector.connector, database)
+  }
+
+  val listInlineDirective = if (capabilities.has(RelationLinkListCapability)) {
+    "@relation(link: INLINE)"
+  } else {
+    ""
+  }
+
+  val listInlineArgument = if (capabilities.has(RelationLinkListCapability)) {
+    "link: INLINE"
+  } else {
+    ""
   }
 }

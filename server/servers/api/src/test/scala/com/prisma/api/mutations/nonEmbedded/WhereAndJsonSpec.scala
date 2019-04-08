@@ -8,12 +8,6 @@ import org.scalatest.{FlatSpec, Matchers}
 class WhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val inlineDirective = if (capabilities.has(RelationLinkListCapability)) {
-    "@relation(link: INLINE)"
-  } else {
-    ""
-  }
-
   "Using the same input in an update using where as used during creation of the item" should "work" in {
 
     val outerWhere = """"{\"stuff\": 1, \"nestedStuff\" : {\"stuff\": 2 } }""""
@@ -24,7 +18,7 @@ class WhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
         |   id: ID! @id
         |   outerString: String!
         |   outerJson: Json! @unique
-        |   todos: [Todo] $inlineDirective
+        |   todos: [Todo] $listInlineDirective
         |}
         |
         |type Todo{
