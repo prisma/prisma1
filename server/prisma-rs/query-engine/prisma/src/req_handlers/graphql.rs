@@ -1,18 +1,16 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
-use core::{MultiPrismaQueryResult, PrismaQuery, PrismaQueryResult, RootQueryBuilder};
+use core::{PrismaQuery, PrismaQueryResult, RootQueryBuilder};
 use graphql_parser as gql;
 use prisma_models::{GraphqlId, PrismaValue, SingleNode};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-use serde_json::{Map, Number, Value};
+use serde_json::{Map, Value};
 
-#[cfg(feature = "newjson")]
-use crate::serializer::{Envelope, ir::IrBuilder};
+use crate::serializer::{ir::IrBuilder, json};
 
 type JsonMap = Map<String, Value>;
-type JsonVec = Vec<Value>;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,6 +52,8 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         ));
     }
 
+    dbg!(&query_doc);
+
     let qb = RootQueryBuilder {
         query: query_doc,
         schema: ctx.schema.clone(),
@@ -62,158 +62,14 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
 
     let queries: Vec<PrismaQuery> = qb.build()?;
 
-    #[cfg(not(feature = "newjson"))]
     let results: Vec<PrismaQueryResult> = dbg!(ctx.query_executor.execute(&queries))?
         .into_iter()
         .map(|r| r.filter())
         .collect();
 
-    #[cfg(not(feature = "newjson"))]
-    return Ok(json_envelope(
-        "data",
-        results
-            .iter()
-            .fold(Ok(Map::new()), |acc: PrismaResult<JsonMap>, result| {
-                acc.map(|mut a| serialize_tree(&mut a, result).map(|_| a))?
-            })?,
-    ));
-
-    #[cfg(feature = "newjson")]
-    let envelope = dbg!(ctx.query_executor.execute(&queries))?
-        .iter()
-        .fold(IrBuilder::new(), |builder, res| builder.add(&res))
-        .build();
-
-    #[cfg(feature = "newjson")]
-    return Ok(envelope.convert());
-}
-
-/// Recursively serialize query results
-fn serialize_tree(map: &mut JsonMap, result: &PrismaQueryResult) -> PrismaResult<()> {
-    match result {
-        PrismaQueryResult::Single(result) => map.insert(
-            result.name.clone(),
-            match &result.result {
-                None => Value::Null,
-                Some(single_node) => {
-                    let mut map = serialize_single_node(single_node)?;
-                    for result in &result.nested {
-                        serialize_tree(&mut map, result)?;
-                    }
-                    Value::Object(map)
-                }
-            },
-        ),
-        PrismaQueryResult::Multi(result) => {
-            map.insert(result.name.clone(), Value::Array(serialize_many_nodes(&result)?))
-        }
-    };
-
-    Ok(())
-}
-
-// FIXME: Should not panic!
-fn serialize_many_nodes(many_nodes: &MultiPrismaQueryResult) -> PrismaResult<JsonVec> {
-    Ok(many_nodes
-        .result
-        .as_pairs()
-        .into_iter()
-        .map(|vec| {
-            vec.into_iter()
-                .fold(Ok(JsonMap::new()), |mut map: PrismaResult<JsonMap>, (name, value)| {
-                    map.as_mut().unwrap().insert(name, serialize_prisma_value(&value)?);
-                    map
-                })
-        })
-        .map(|map| Value::Object(map.unwrap()))
-        .collect())
-}
-
-// /// This function is a bit magic
-// ///
-// /// First we get the name-value pairs on the main query from a set of nodes.
-// /// After that we push them into a map that is indexed by their `id` field.
-// /// This is so that when we go through the nested queries later,
-// /// we can associate data correctly.
-// /// After that is done we squash the map-values into a Vec agan and return that as json
-// ///
-// // FIXME: Don't panic!
-// #[allow(unused_variables)]
-// fn serialize_many_nodes(many_nodes: &MultiPrismaQueryResult) -> PrismaResult<JsonVec> {
-//     Ok(many_nodes
-//         .result
-//         .as_pairs()
-//         .into_iter()
-//         .fold(JsonMap::new(), |mut map, vec| {
-//             map.insert(
-//                 vec.iter()
-//                     .filter_map(|i| i.is_id())
-//                     .filter_map(|i| match i {
-//                         PrismaValue::String(s) => Some(s.clone()),
-//                         _ => None,
-//                     })
-//                     .nth(0)
-//                     .unwrap(),
-//                 Value::Object(vec.iter().fold(JsonMap::new(), |mut map, (name, value)| {
-//                     map.insert(name.clone(), serialize_prisma_value(&value).unwrap());
-//                     map
-//                 })),
-//             );
-
-//             map
-//         })
-//         .into_iter()
-//         .fold(JsonVec::new(), |mut vec, (_, v)| {
-//             vec.push(v);
-//             vec
-//         }))
-// }
-
-fn serialize_single_node(single_node: &SingleNode) -> PrismaResult<JsonMap> {
-    let mut serde_map = Map::new();
-    let field_names = &single_node.field_names;
-    let values = &single_node.node.values;
-
-    for (field, value) in field_names.into_iter().zip(values) {
-        let key = field.to_string();
-        let value = serialize_prisma_value(value)?;
-        serde_map.insert(key, value);
-    }
-    Ok(serde_map)
-}
-
-fn serialize_prisma_value(value: &PrismaValue) -> PrismaResult<Value> {
-    Ok(match value {
-        PrismaValue::String(x) => Value::String(x.clone()),
-        PrismaValue::Float(x) => Value::Number(match Number::from_f64(*x) {
-            Some(num) => num,
-            None => return Err(PrismaError::SerializationError("`f64` number was invalid".into())),
-        }),
-        PrismaValue::Boolean(x) => Value::Bool(*x),
-        PrismaValue::DateTime(_) => unimplemented!(),
-        PrismaValue::Enum(x) => Value::String(x.clone()),
-        PrismaValue::Json(x) => serde_json::from_str(&x)?,
-        PrismaValue::Int(x) => Value::Number(match Number::from_f64(*x as f64) {
-            Some(num) => num,
-            None => return Err(PrismaError::SerializationError("`f64` number was invalid".into())),
-        }),
-        PrismaValue::Relation(_) => unimplemented!(),
-        PrismaValue::Null => Value::Null,
-        PrismaValue::Uuid(x) => Value::String(x.to_hyphenated().to_string()),
-        PrismaValue::GraphqlId(x) => serialize_graphql_id(x)?,
-        PrismaValue::List(_) => unimplemented!(),
-    })
-}
-
-fn serialize_graphql_id(id: &GraphqlId) -> PrismaResult<Value> {
-    Ok(match id {
-        GraphqlId::String(x) => Value::String(x.clone()),
-        GraphqlId::Int(x) => Value::Number(match serde_json::Number::from_f64(*x as f64) {
-            Some(num) => num,
-            None => return Err(PrismaError::SerializationError("`f64` number was invalid".into())),
-        }),
-        GraphqlId::UUID(x) => Value::String(x.to_hyphenated().to_string()),
-    })
+    Ok(json::serialize(
+        results.iter().fold(IrBuilder::new(), |mut b, res| b.add(res)).build(),
+    ))
 }
 
 /// Create a json envelope
@@ -222,19 +78,3 @@ fn json_envelope(id: &str, map: serde_json::Map<String, Value>) -> Value {
     envelope.insert(id.to_owned(), Value::Object(map));
     Value::Object(envelope)
 }
-
-// #[allow(dead_code)]
-// fn get_result_name(result: &PrismaQueryResult) -> String {
-//     match result {
-//         PrismaQueryResult::Single(SinglePrismaQueryResult {
-//             name,
-//             result: _,
-//             nested: _,
-//         }) => name.clone(),
-//         PrismaQueryResult::Multi(MultiPrismaQueryResult {
-//             name,
-//             result: _,
-//             nested: _,
-//         }) => name.clone(),
-//     }
-// }

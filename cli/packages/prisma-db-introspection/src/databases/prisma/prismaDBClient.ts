@@ -107,11 +107,12 @@ export class PrismaDBClient implements IDatabaseClient {
   }
 
   async connect() {
-    await this.setDatabaseType()
     const cluster = await this.definition.getCluster()
     if (!cluster) {
       throw new Error('Could not get Prisma server for introspection')
     }
+    this.cluster = cluster
+    await this.setDatabaseType()
     await this.cluster
       .request(
         `mutation($input: AddProjectInput!) {

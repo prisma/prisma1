@@ -83,9 +83,10 @@ class PipelineRenderer
   def collect_steps
     release_steps = release_artifacts_steps
     [ test_steps,
+      rust_tests,
       release_steps[:before_wait],
-      rust_steps,
       @@wait_step,
+      release_rust_artifacts,
       release_steps[:after_wait]].flatten
   end
 
@@ -114,11 +115,21 @@ class PipelineRenderer
     end.flatten
   end
 
-  def rust_steps
+  def rust_tests
+      PipelineStep.new
+        .label(":rust: Cargo test prisma-rs")
+        .command("./server/.buildkite/pipeline.sh test-rust")
+  end
+
+  def release_rust_artifacts
     [
       PipelineStep.new
-        .label(":rust: prisma-rs")
-        .command("./server/.buildkite/pipeline.sh test-rust")
+        .label(":rust: Build & Publish :linux:")
+        .command("./server/.buildkite/pipeline.sh rust-binary"),
+      PipelineStep.new
+        .label(":rust: Build & Publish :darwin:")
+        .command("./server/.buildkite/pipeline.sh rust-binary")
+        .queue("macos")
     ]
   end
 
@@ -135,27 +146,27 @@ class PipelineRenderer
     }
 
     if @context.tag != nil && @context.tag.stable? && @context.branch == @context.tag.stringify
-      steps[:before_wait] = build_steps_for(@context.tag.stringify)
+      # steps[:before_wait] = build_steps_for(@context.tag.stringify)
       steps[:after_wait].push PipelineStep.new
         .label(":docker: Release stable #{@context.tag.stringify}")
         .command("./server/.buildkite/pipeline.sh build #{@context.tag.stringify}")
 
     elsif @context.tag != nil && @context.tag.beta? && @context.branch == @context.tag.stringify
       next_tag = @context.branch
-      steps[:before_wait] = build_steps_for(next_tag)
+      # steps[:before_wait] = build_steps_for(next_tag)
       steps[:after_wait].push PipelineStep.new
         .label(":docker: Release #{@context.branch} #{next_tag}")
         .command("./server/.buildkite/pipeline.sh build #{next_tag}")
 
     elsif @context.branch == "alpha" || @context.branch == "beta"
       next_tag = calculate_next_unstable_docker_tag()
-      steps[:before_wait] = build_steps_for(next_tag.stringify)
+      # steps[:before_wait] = build_steps_for(next_tag.stringify)
       steps[:after_wait].push PipelineStep.new
         .label(":docker: Release #{@context.branch} #{next_tag.stringify}")
         .command("./server/.buildkite/pipeline.sh build #{next_tag.stringify}")
 
     else
-      steps[:before_wait] = build_steps_for(@context.branch)
+      # steps[:before_wait] = build_steps_for(@context.branch)
     end
 
     steps

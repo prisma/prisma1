@@ -10,7 +10,7 @@ services:
     volumes:
       - mysql:/var/lib/mysql
   postgres:
-    image: postgres
+    image: postgres:10.3
     restart: always
     ports:
       - '5433:5432'

@@ -322,7 +322,8 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
       tryValidation(validateMissingTypes),
       tryValidation(requiredIdDirectiveValidation.toVector),
       tryValidation(validateRelationFields),
-      tryValidation(validateDuplicateFields)
+      tryValidation(validateDuplicateFields),
+      tryValidation(validateReservedTypeNames)
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -365,6 +366,13 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     } yield {
       DeployErrors.duplicateFieldName(FieldAndType(objectType, field))
     }
+  }
+
+  val invalidTypeNameList = List("Mutation", "Query", "Subscription", "Node", "PageInfo", "BatchPayload")
+
+  def validateReservedTypeNames = invalidTypeNameList.contains(objectType.name) match {
+    case false => Seq.empty
+    case true  => Seq(DeployErrors.reservedTypeName(objectType))
   }
 
   def validateRelationFields: Seq[DeployError] = {

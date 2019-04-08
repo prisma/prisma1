@@ -19,6 +19,7 @@ describe(`Renderer datamodel v1.1 test`, () => {
         hasBeenCreatedAt: DateTime @createdAt
         hasBeenUpdatedAt: DateTime @updatedAt
         primaryId: Int @id
+        stringList: [String] @scalarList(strategy: RELATION)
       }`)
 
     const field1 = new GQLScalarField('hasBeenCreatedAt', 'DateTime')
@@ -27,13 +28,15 @@ describe(`Renderer datamodel v1.1 test`, () => {
     field2.isUpdatedAt = true
     const field3 = new GQLScalarField('primaryId', 'Int')
     field3.isId = true
+    const field4 = new GQLScalarField('stringList', 'String')
+    field4.isList = true
 
     const type: IGQLType = {
       name: 'Test',
       isEmbedded: false,
       isLinkTable: false,
       isEnum: false,
-      fields: [field1, field2, field3],
+      fields: [field1, field2, field3, field4],
       comments: [],
       directives: [],
       databaseName: null,

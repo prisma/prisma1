@@ -106,6 +106,14 @@ object DeployErrors {
     )
   }
 
+  def cascadeUsedWithMongo(relationField: RelationalPrismaField): DeployError = {
+    DeployError(
+      relationField.tpe.name,
+      relationField.name,
+      s"The Mongo connector currently does not support Cascading Deletes, but the field `${relationField.name}` defines cascade behaviour. Please remove the onDelete argument.}"
+    )
+  }
+
   def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {
     DeployError(
       tpe.name,
@@ -225,6 +233,13 @@ object DeployErrors {
     error(
       fieldAndType,
       s"The type `${fieldAndType.objectType.name}` has a duplicate fieldName. The detection of duplicates is performed case insensitive. "
+    )
+  }
+
+  def reservedTypeName(objectTypeDefinition: ObjectTypeDefinition) = {
+    error(
+      objectTypeDefinition,
+      s"The type `${objectTypeDefinition.objectType.name}` has is using a reserved type name. Please rename it."
     )
   }
 

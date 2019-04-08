@@ -4,37 +4,37 @@ exports[`Introspector issue4081 relations 1`] = `
 "type AboutAboutpage @pgTable(name: \\"about_aboutpage\\") {
   id: Int! @unique
   heading: String!
-  heading_image: String!
+  headingImage: String! @pgColumn(name: \\"heading_image\\")
   text: String!
 }
 
 type AboutTeammember @pgTable(name: \\"about_teammember\\") {
   id: Int! @unique
   description: String!
-  facebook_url: String!
-  instagram_url: String!
+  facebookUrl: String! @pgColumn(name: \\"facebook_url\\")
+  instagramUrl: String! @pgColumn(name: \\"instagram_url\\")
   name: String!
   order: Int!
-  page_id: Int!
+  pageId: Int! @pgColumn(name: \\"page_id\\")
   picture: String!
   position: String!
-  twitter_url: String!
+  twitterUrl: String! @pgColumn(name: \\"twitter_url\\")
   visible: Boolean!
-  youtube_url: String!
+  youtubeUrl: String! @pgColumn(name: \\"youtube_url\\")
 }
 
 type AccountEmailaddress @pgTable(name: \\"account_emailaddress\\") {
   id: Int! @unique
   email: String!
   primary: Boolean!
-  user_id: Int!
+  userId: Int! @pgColumn(name: \\"user_id\\")
   verified: Boolean!
 }
 
 type AccountEmailconfirmation @pgTable(name: \\"account_emailconfirmation\\") {
   id: Int! @unique
   created: DateTime!
-  email_address_id: Int!
+  emailAddressId: Int! @pgColumn(name: \\"email_address_id\\")
   key: String!
   sent: DateTime
 }
@@ -46,14 +46,14 @@ type AuthGroup @pgTable(name: \\"auth_group\\") {
 
 type AuthGroupPermission @pgTable(name: \\"auth_group_permissions\\") {
   id: Int! @unique
-  group_id: Int!
-  permission_id: Int!
+  groupId: Int! @pgColumn(name: \\"group_id\\")
+  permissionId: Int! @pgColumn(name: \\"permission_id\\")
 }
 
 type AuthPermission @pgTable(name: \\"auth_permission\\") {
   id: Int! @unique
   codename: String!
-  content_type_id: Int!
+  contentTypeId: Int! @pgColumn(name: \\"content_type_id\\")
   name: String!
 }
 
@@ -65,13 +65,13 @@ type ContactContactformcontent @pgTable(name: \\"contact_contactformcontent\\") 
 type ContactContactpage @pgTable(name: \\"contact_contactpage\\") {
   id: Int! @unique
   heading: String!
-  heading_image: String!
+  headingImage: String! @pgColumn(name: \\"heading_image\\")
 }
 
 type ContactThankyoupage @pgTable(name: \\"contact_thankyoupage\\") {
   id: Int! @unique
-  button_link: String!
-  button_text: String!
+  buttonLink: String! @pgColumn(name: \\"button_link\\")
+  buttonText: String! @pgColumn(name: \\"button_text\\")
   heading: String!
   text: String!
   title: String!
@@ -79,18 +79,18 @@ type ContactThankyoupage @pgTable(name: \\"contact_thankyoupage\\") {
 
 type DjangoAdminLog @pgTable(name: \\"django_admin_log\\") {
   id: Int! @unique
-  action_flag: Int!
-  action_time: DateTime!
-  change_message: String!
-  content_type_id: Int
-  object_id: String
-  object_repr: String!
-  user_id: Int!
+  actionFlag: Int! @pgColumn(name: \\"action_flag\\")
+  actionTime: DateTime! @pgColumn(name: \\"action_time\\")
+  changeMessage: String! @pgColumn(name: \\"change_message\\")
+  contentTypeId: Int @pgColumn(name: \\"content_type_id\\")
+  objectId: String @pgColumn(name: \\"object_id\\")
+  objectRepr: String! @pgColumn(name: \\"object_repr\\")
+  userId: Int! @pgColumn(name: \\"user_id\\")
 }
 
 type DjangoContentType @pgTable(name: \\"django_content_type\\") {
   id: Int! @unique
-  app_label: String!
+  appLabel: String! @pgColumn(name: \\"app_label\\")
   model: String!
 }
 
@@ -102,9 +102,9 @@ type DjangoMigration @pgTable(name: \\"django_migrations\\") {
 }
 
 type DjangoSession @pgTable(name: \\"django_session\\") {
-  expire_date: DateTime!
-  session_data: String!
-  session_key: String!
+  expireDate: DateTime! @pgColumn(name: \\"expire_date\\")
+  sessionData: String! @pgColumn(name: \\"session_data\\")
+  sessionKey: String! @pgColumn(name: \\"session_key\\")
 }
 
 type DjangoSite @pgTable(name: \\"django_site\\") {
@@ -115,14 +115,14 @@ type DjangoSite @pgTable(name: \\"django_site\\") {
 
 type EventsEvent @pgTable(name: \\"events_event\\") {
   id: Int! @unique
-  address_line_one: String!
-  address_line_two: String!
+  addressLineOne: String! @pgColumn(name: \\"address_line_one\\")
+  addressLineTwo: String! @pgColumn(name: \\"address_line_two\\")
   city: String!
   country: String!
   date: DateTime!
-  hosted_by: String!
-  location_name: String!
-  map_url: String!
+  hostedBy: String! @pgColumn(name: \\"hosted_by\\")
+  locationName: String! @pgColumn(name: \\"location_name\\")
+  mapUrl: String! @pgColumn(name: \\"map_url\\")
   name: String!
   picture: String!
   # Type time is not supported
@@ -133,20 +133,20 @@ type EventsEvent @pgTable(name: \\"events_event\\") {
 
 type EventsEventspage @pgTable(name: \\"events_eventspage\\") {
   id: Int! @unique
-  heading_image: String!
+  headingImage: String! @pgColumn(name: \\"heading_image\\")
 }
 
 type HelpHelppage @pgTable(name: \\"help_helppage\\") {
   id: Int! @unique
   heading: String!
-  heading_image: String!
+  headingImage: String! @pgColumn(name: \\"heading_image\\")
 }
 
 type HelpHelpquestion @pgTable(name: \\"help_helpquestion\\") {
   id: Int! @unique
   answer: String!
   order: Int
-  section_id: Int!
+  sectionId: Int! @pgColumn(name: \\"section_id\\")
   thumbnail: String!
   title: String!
 }
@@ -154,27 +154,27 @@ type HelpHelpquestion @pgTable(name: \\"help_helpquestion\\") {
 type HelpHelpsection @pgTable(name: \\"help_helpsection\\") {
   id: Int! @unique
   order: Int!
-  page_id: Int!
+  pageId: Int! @pgColumn(name: \\"page_id\\")
   title: String!
 }
 
 type JobsJob @pgTable(name: \\"jobs_job\\") {
   id: Int! @unique
-  apply_page_form_title: String!
-  apply_page_title: String!
+  applyPageFormTitle: String! @pgColumn(name: \\"apply_page_form_title\\")
+  applyPageTitle: String! @pgColumn(name: \\"apply_page_title\\")
   order: Int
-  page_id: Int!
+  pageId: Int! @pgColumn(name: \\"page_id\\")
   picture: String!
-  position_description: String!
-  position_location: String!
-  position_name: String!
+  positionDescription: String! @pgColumn(name: \\"position_description\\")
+  positionLocation: String! @pgColumn(name: \\"position_location\\")
+  positionName: String! @pgColumn(name: \\"position_name\\")
   visible: Boolean!
 }
 
 type JobsJobspage @pgTable(name: \\"jobs_jobspage\\") {
   id: Int! @unique
   heading: String!
-  heading_image: String!
+  headingImage: String! @pgColumn(name: \\"heading_image\\")
   text: String!
 }
 
@@ -183,13 +183,13 @@ type JobsNojobspage @pgTable(name: \\"jobs_nojobspage\\") {
   heading: String!
   text: String!
   title: String!
-  video_thumbnail: String!
+  videoThumbnail: String! @pgColumn(name: \\"video_thumbnail\\")
 }
 
 type JobsThankyoupage @pgTable(name: \\"jobs_thankyoupage\\") {
   id: Int! @unique
-  button_link: String!
-  button_text: String!
+  buttonLink: String! @pgColumn(name: \\"button_link\\")
+  buttonText: String! @pgColumn(name: \\"button_text\\")
   heading: String!
   text: String!
   title: String!
@@ -197,217 +197,217 @@ type JobsThankyoupage @pgTable(name: \\"jobs_thankyoupage\\") {
 
 type LandingLandingpage @pgTable(name: \\"landing_landingpage\\") {
   id: Int! @unique
-  section_four_image: String!
-  section_four_text: String!
-  section_four_title: String!
-  section_one_image: String!
-  section_one_title: String!
-  section_three_image: String!
-  section_three_text: String!
-  section_three_title: String!
-  section_two_image: String!
-  section_two_text: String!
-  section_two_title: String!
+  sectionFourImage: String! @pgColumn(name: \\"section_four_image\\")
+  sectionFourText: String! @pgColumn(name: \\"section_four_text\\")
+  sectionFourTitle: String! @pgColumn(name: \\"section_four_title\\")
+  sectionOneImage: String! @pgColumn(name: \\"section_one_image\\")
+  sectionOneTitle: String! @pgColumn(name: \\"section_one_title\\")
+  sectionThreeImage: String! @pgColumn(name: \\"section_three_image\\")
+  sectionThreeText: String! @pgColumn(name: \\"section_three_text\\")
+  sectionThreeTitle: String! @pgColumn(name: \\"section_three_title\\")
+  sectionTwoImage: String! @pgColumn(name: \\"section_two_image\\")
+  sectionTwoText: String! @pgColumn(name: \\"section_two_text\\")
+  sectionTwoTitle: String! @pgColumn(name: \\"section_two_title\\")
 }
 
 type LanguagesLanguage @pgTable(name: \\"languages_language\\") {
   id: Int! @unique
   language: String!
-  language_code: String!
+  languageCode: String! @pgColumn(name: \\"language_code\\")
 }
 
 type MediaArtist @pgTable(name: \\"media_artist\\") {
   id: Int! @unique
   artist: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type MediaCategory @pgTable(name: \\"media_category\\") {
   id: Int! @unique
   category: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type MediaGenre @pgTable(name: \\"media_genre\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   genre: String!
-  modified_date: DateTime
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type MediaMedia @pgTable(name: \\"media_media\\") {
   id: Int! @unique
   approved: Boolean!
-  artist_id: Int!
-  created_by_id: Int
-  created_date: DateTime
-  genre_id: Int
-  media_language_id: Int!
-  modified_date: DateTime
+  artistId: Int! @pgColumn(name: \\"artist_id\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  genreId: Int @pgColumn(name: \\"genre_id\\")
+  mediaLanguageId: Int! @pgColumn(name: \\"media_language_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  region_id: Int
+  regionId: Int @pgColumn(name: \\"region_id\\")
   title: String!
-  translation_language_id: Int!
-  updated_by_id: Int
+  translationLanguageId: Int! @pgColumn(name: \\"translation_language_id\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type MediaMediaCategory @pgTable(name: \\"media_media_categories\\") {
   id: Int! @unique
-  category_id: Int!
-  media_id: Int!
+  categoryId: Int! @pgColumn(name: \\"category_id\\")
+  mediaId: Int! @pgColumn(name: \\"media_id\\")
 }
 
 type MediaMediasentence @pgTable(name: \\"media_mediasentence\\") {
   id: Int! @unique
   approved: Boolean!
-  created_by_id: Int
-  created_date: DateTime
-  learning_sentence_id: Int!
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  learningSentenceId: Int! @pgColumn(name: \\"learning_sentence_id\\")
   line: Int!
-  lyrics_sentence: String!
-  lyrics_translation: String!
-  lyrics_translation_chunks: String!
-  media_id: Int!
-  modified_date: DateTime
+  lyricsSentence: String! @pgColumn(name: \\"lyrics_sentence\\")
+  lyricsTranslation: String! @pgColumn(name: \\"lyrics_translation\\")
+  lyricsTranslationChunks: String! @pgColumn(name: \\"lyrics_translation_chunks\\")
+  mediaId: Int! @pgColumn(name: \\"media_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   multiple: Boolean!
   note: String!
   order: Int!
-  place_in_line: Int!
+  placeInLine: Int! @pgColumn(name: \\"place_in_line\\")
   repeat: Boolean!
-  repeat_of_line: Int!
-  repeated_in_line: String!
-  updated_by_id: Int
-  word_count: Int!
+  repeatedInLine: String! @pgColumn(name: \\"repeated_in_line\\")
+  repeatOfLine: Int! @pgColumn(name: \\"repeat_of_line\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
+  wordCount: Int! @pgColumn(name: \\"word_count\\")
 }
 
 type MediaRegion @pgTable(name: \\"media_region\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
   region: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesCustomhint @pgTable(name: \\"sentences_customhint\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   hint: String!
-  hint_type_id: Int!
-  modified_date: DateTime
+  hintTypeId: Int! @pgColumn(name: \\"hint_type_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  sentence_id: Int
-  updated_by_id: Int
+  sentenceId: Int @pgColumn(name: \\"sentence_id\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesEcast @pgTable(name: \\"sentences_ecast\\") {
   id: Int! @unique
-  action_id: Int!
-  character_id: Int!
-  created_by_id: Int
-  created_date: DateTime
+  actionId: Int! @pgColumn(name: \\"action_id\\")
+  characterId: Int! @pgColumn(name: \\"character_id\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   description: String!
-  emotion_id: Int!
-  modified_date: DateTime
+  emotionId: Int! @pgColumn(name: \\"emotion_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  sentence_id: Int!
-  setting_id: Int!
-  theme_id: Int
-  updated_by_id: Int
+  sentenceId: Int! @pgColumn(name: \\"sentence_id\\")
+  settingId: Int! @pgColumn(name: \\"setting_id\\")
+  themeId: Int @pgColumn(name: \\"theme_id\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesEcastaction @pgTable(name: \\"sentences_ecastaction\\") {
   id: Int! @unique
   action: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesEcastcharacter @pgTable(name: \\"sentences_ecastcharacter\\") {
   id: Int! @unique
   character: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesEcastemotion @pgTable(name: \\"sentences_ecastemotion\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   emotion: String!
-  modified_date: DateTime
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesEcastsetting @pgTable(name: \\"sentences_ecastsetting\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
   setting: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesEcasttheme @pgTable(name: \\"sentences_ecasttheme\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
   theme: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesHint @pgTable(name: \\"sentences_hint\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   hint: String!
-  hint_type_id: Int!
-  modified_date: DateTime
+  hintTypeId: Int! @pgColumn(name: \\"hint_type_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesHinttype @pgTable(name: \\"sentences_hinttype\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  type_name: String!
-  updated_by_id: Int
+  typeName: String! @pgColumn(name: \\"type_name\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesImagecategory @pgTable(name: \\"sentences_imagecategory\\") {
   id: Int! @unique
   category: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesImagetype @pgTable(name: \\"sentences_imagetype\\") {
@@ -417,169 +417,169 @@ type SentencesImagetype @pgTable(name: \\"sentences_imagetype\\") {
 
 type SentencesPosttranslationword @pgTable(name: \\"sentences_posttranslationword\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  language_id: Int
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  languageId: Int @pgColumn(name: \\"language_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
   post: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesPretranslationword @pgTable(name: \\"sentences_pretranslationword\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  language_id: Int
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  languageId: Int @pgColumn(name: \\"language_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
   pre: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesSentence @pgTable(name: \\"sentences_sentence\\") {
   id: Int! @unique
   approved: Boolean!
-  chunk_id: Int
-  created_by_id: Int
-  created_date: DateTime
-  english_sentence_punctuation_end: String!
-  english_sentence_punctuation_start: String!
-  fifth_chunk_id: Int
-  fifth_order: Boolean!
-  fifth_post_id: Int
-  fifth_pre_id: Int
-  fifth_underlined: Boolean!
-  first_chunk_id: Int
-  first_order: Boolean!
-  first_post_id: Int
-  first_pre_id: Int
-  first_underlined: Boolean!
-  fourth_chunk_id: Int
-  fourth_order: Boolean!
-  fourth_post_id: Int
-  fourth_pre_id: Int
-  fourth_underlined: Boolean!
-  learning_language_id: Int
-  learning_sentence_punctuation_end: String!
-  learning_sentence_punctuation_start: String!
-  modified_date: DateTime
+  chunkId: Int @pgColumn(name: \\"chunk_id\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  englishSentencePunctuationEnd: String! @pgColumn(name: \\"english_sentence_punctuation_end\\")
+  englishSentencePunctuationStart: String! @pgColumn(name: \\"english_sentence_punctuation_start\\")
+  fifthChunkId: Int @pgColumn(name: \\"fifth_chunk_id\\")
+  fifthOrder: Boolean! @pgColumn(name: \\"fifth_order\\")
+  fifthPostId: Int @pgColumn(name: \\"fifth_post_id\\")
+  fifthPreId: Int @pgColumn(name: \\"fifth_pre_id\\")
+  fifthUnderlined: Boolean! @pgColumn(name: \\"fifth_underlined\\")
+  firstChunkId: Int @pgColumn(name: \\"first_chunk_id\\")
+  firstOrder: Boolean! @pgColumn(name: \\"first_order\\")
+  firstPostId: Int @pgColumn(name: \\"first_post_id\\")
+  firstPreId: Int @pgColumn(name: \\"first_pre_id\\")
+  firstUnderlined: Boolean! @pgColumn(name: \\"first_underlined\\")
+  fourthChunkId: Int @pgColumn(name: \\"fourth_chunk_id\\")
+  fourthOrder: Boolean! @pgColumn(name: \\"fourth_order\\")
+  fourthPostId: Int @pgColumn(name: \\"fourth_post_id\\")
+  fourthPreId: Int @pgColumn(name: \\"fourth_pre_id\\")
+  fourthUnderlined: Boolean! @pgColumn(name: \\"fourth_underlined\\")
+  learningLanguageId: Int @pgColumn(name: \\"learning_language_id\\")
+  learningSentencePunctuationEnd: String! @pgColumn(name: \\"learning_sentence_punctuation_end\\")
+  learningSentencePunctuationStart: String! @pgColumn(name: \\"learning_sentence_punctuation_start\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String
-  second_chunk_id: Int
-  second_order: Boolean!
-  second_post_id: Int
-  second_pre_id: Int
-  second_underlined: Boolean!
-  sentence_audio_id: Int
-  sentence_category_id: Int
-  seventh_chunk_id: Int
-  seventh_order: Boolean!
-  seventh_post_id: Int
-  seventh_pre_id: Int
-  seventh_underlined: Boolean!
-  sixth_chunk_id: Int
-  sixth_order: Boolean!
-  sixth_post_id: Int
-  sixth_pre_id: Int
-  sixth_underlined: Boolean!
-  third_chunk_id: Int
-  third_order: Boolean!
-  third_post_id: Int
-  third_pre_id: Int
-  third_underlined: Boolean!
-  to_check: String
-  translation_language_id: Int
-  translation_sentence_punctuation_end: String!
-  translation_sentence_punctuation_start: String!
-  updated_by_id: Int
+  secondChunkId: Int @pgColumn(name: \\"second_chunk_id\\")
+  secondOrder: Boolean! @pgColumn(name: \\"second_order\\")
+  secondPostId: Int @pgColumn(name: \\"second_post_id\\")
+  secondPreId: Int @pgColumn(name: \\"second_pre_id\\")
+  secondUnderlined: Boolean! @pgColumn(name: \\"second_underlined\\")
+  sentenceAudioId: Int @pgColumn(name: \\"sentence_audio_id\\")
+  sentenceCategoryId: Int @pgColumn(name: \\"sentence_category_id\\")
+  seventhChunkId: Int @pgColumn(name: \\"seventh_chunk_id\\")
+  seventhOrder: Boolean! @pgColumn(name: \\"seventh_order\\")
+  seventhPostId: Int @pgColumn(name: \\"seventh_post_id\\")
+  seventhPreId: Int @pgColumn(name: \\"seventh_pre_id\\")
+  seventhUnderlined: Boolean! @pgColumn(name: \\"seventh_underlined\\")
+  sixthChunkId: Int @pgColumn(name: \\"sixth_chunk_id\\")
+  sixthOrder: Boolean! @pgColumn(name: \\"sixth_order\\")
+  sixthPostId: Int @pgColumn(name: \\"sixth_post_id\\")
+  sixthPreId: Int @pgColumn(name: \\"sixth_pre_id\\")
+  sixthUnderlined: Boolean! @pgColumn(name: \\"sixth_underlined\\")
+  thirdChunkId: Int @pgColumn(name: \\"third_chunk_id\\")
+  thirdOrder: Boolean! @pgColumn(name: \\"third_order\\")
+  thirdPostId: Int @pgColumn(name: \\"third_post_id\\")
+  thirdPreId: Int @pgColumn(name: \\"third_pre_id\\")
+  thirdUnderlined: Boolean! @pgColumn(name: \\"third_underlined\\")
+  toCheck: String @pgColumn(name: \\"to_check\\")
+  translationLanguageId: Int @pgColumn(name: \\"translation_language_id\\")
+  translationSentencePunctuationEnd: String! @pgColumn(name: \\"translation_sentence_punctuation_end\\")
+  translationSentencePunctuationStart: String! @pgColumn(name: \\"translation_sentence_punctuation_start\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesSentenceHint @pgTable(name: \\"sentences_sentence_hints\\") {
   id: Int! @unique
-  hint_id: Int!
-  sentence_id: Int!
+  hintId: Int! @pgColumn(name: \\"hint_id\\")
+  sentenceId: Int! @pgColumn(name: \\"sentence_id\\")
 }
 
 type SentencesSentenceaudio @pgTable(name: \\"sentences_sentenceaudio\\") {
   id: Int! @unique
-  audio_file: String
-  audio_language_id: Int!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  audioFile: String @pgColumn(name: \\"audio_file\\")
+  audioLanguageId: Int! @pgColumn(name: \\"audio_language_id\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  sentence_in_audio: String!
-  updated_by_id: Int
+  sentenceInAudio: String! @pgColumn(name: \\"sentence_in_audio\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesSentencecategory @pgTable(name: \\"sentences_sentencecategory\\") {
   id: Int! @unique
-  category_type: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  categoryType: String! @pgColumn(name: \\"category_type\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesSentencegluer @pgTable(name: \\"sentences_sentencegluer\\") {
   id: Int! @unique
-  learning_sentence_id: Int!
-  translation_sentence_id: Int!
+  learningSentenceId: Int! @pgColumn(name: \\"learning_sentence_id\\")
+  translationSentenceId: Int! @pgColumn(name: \\"translation_sentence_id\\")
 }
 
 type SentencesSentenceimage @pgTable(name: \\"sentences_sentenceimage\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   description: String!
   file: String
-  image_category_id: Int!
-  image_text_language_id: Int
-  modified_date: DateTime
+  imageCategoryId: Int! @pgColumn(name: \\"image_category_id\\")
+  imageTextLanguageId: Int @pgColumn(name: \\"image_text_language_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  sentence_id: Int
-  updated_by_id: Int
+  sentenceId: Int @pgColumn(name: \\"sentence_id\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SentencesSentencevideo @pgTable(name: \\"sentences_sentencevideo\\") {
   id: Int! @unique
-  audio_language_id: Int!
-  created_by_id: Int
-  created_date: DateTime
+  audioLanguageId: Int! @pgColumn(name: \\"audio_language_id\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   description: String!
   file: String
-  modified_date: DateTime
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  sentence_id: Int
-  updated_by_id: Int
-  video_category_id: Int!
-  video_thumbnail: String
+  sentenceId: Int @pgColumn(name: \\"sentence_id\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
+  videoCategoryId: Int! @pgColumn(name: \\"video_category_id\\")
+  videoThumbnail: String @pgColumn(name: \\"video_thumbnail\\")
 }
 
 type SentencesVideocategory @pgTable(name: \\"sentences_videocategory\\") {
   id: Int! @unique
   category: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type SocialaccountSocialaccount @pgTable(name: \\"socialaccount_socialaccount\\") {
   id: Int! @unique
-  date_joined: DateTime!
-  extra_data: String!
-  last_login: DateTime!
+  dateJoined: DateTime! @pgColumn(name: \\"date_joined\\")
+  extraData: String! @pgColumn(name: \\"extra_data\\")
+  lastLogin: DateTime! @pgColumn(name: \\"last_login\\")
   provider: String!
   uid: String!
-  user_id: Int!
+  userId: Int! @pgColumn(name: \\"user_id\\")
 }
 
 type SocialaccountSocialapp @pgTable(name: \\"socialaccount_socialapp\\") {
   id: Int! @unique
-  client_id: String!
+  clientId: String! @pgColumn(name: \\"client_id\\")
   key: String!
   name: String!
   provider: String!
@@ -588,59 +588,59 @@ type SocialaccountSocialapp @pgTable(name: \\"socialaccount_socialapp\\") {
 
 type SocialaccountSocialappSite @pgTable(name: \\"socialaccount_socialapp_sites\\") {
   id: Int! @unique
-  site_id: Int!
-  socialapp_id: Int!
+  siteId: Int! @pgColumn(name: \\"site_id\\")
+  socialappId: Int! @pgColumn(name: \\"socialapp_id\\")
 }
 
 type SocialaccountSocialtoken @pgTable(name: \\"socialaccount_socialtoken\\") {
   id: Int! @unique
-  account_id: Int!
-  app_id: Int!
-  expires_at: DateTime
+  accountId: Int! @pgColumn(name: \\"account_id\\")
+  appId: Int! @pgColumn(name: \\"app_id\\")
+  expiresAt: DateTime @pgColumn(name: \\"expires_at\\")
   token: String!
-  token_secret: String!
+  tokenSecret: String! @pgColumn(name: \\"token_secret\\")
 }
 
 type UsersEmailnotification @pgTable(name: \\"users_emailnotifications\\") {
   id: Int! @unique
   events: Boolean!
-  new_features: Boolean!
+  newFeatures: Boolean! @pgColumn(name: \\"new_features\\")
   news: Boolean!
   progress: Boolean!
   promotions: Boolean!
-  user_id: Int!
+  userId: Int! @pgColumn(name: \\"user_id\\")
 }
 
 type UsersProfile @pgTable(name: \\"users_profile\\") {
   id: Int! @unique
-  censored_content: Boolean!
+  censoredContent: Boolean! @pgColumn(name: \\"censored_content\\")
   country: String!
-  date_of_birth: DateTime
+  dateOfBirth: DateTime @pgColumn(name: \\"date_of_birth\\")
   gender: String!
-  learning_language_id: Int
-  profile_picture: String!
-  speaking_language_id: Int
+  learningLanguageId: Int @pgColumn(name: \\"learning_language_id\\")
+  profilePicture: String! @pgColumn(name: \\"profile_picture\\")
+  speakingLanguageId: Int @pgColumn(name: \\"speaking_language_id\\")
 }
 
 type UsersSpotssetting @pgTable(name: \\"users_spotssettings\\") {
   id: Int! @unique
-  autoplay_sentence_audio: Boolean!
-  autoplay_word_audio: Boolean!
-  next_word_seconds: Int!
-  play_videos: Boolean!
-  reveal_seconds: Int!
-  show_keyboard_shortcuts: Boolean!
-  show_main_images: Boolean!
-  show_submitted_images: Boolean!
-  spots_page_auto: Boolean!
-  user_id: Int!
+  autoplaySentenceAudio: Boolean! @pgColumn(name: \\"autoplay_sentence_audio\\")
+  autoplayWordAudio: Boolean! @pgColumn(name: \\"autoplay_word_audio\\")
+  nextWordSeconds: Int! @pgColumn(name: \\"next_word_seconds\\")
+  playVideos: Boolean! @pgColumn(name: \\"play_videos\\")
+  revealSeconds: Int! @pgColumn(name: \\"reveal_seconds\\")
+  showKeyboardShortcuts: Boolean! @pgColumn(name: \\"show_keyboard_shortcuts\\")
+  showMainImages: Boolean! @pgColumn(name: \\"show_main_images\\")
+  showSubmittedImages: Boolean! @pgColumn(name: \\"show_submitted_images\\")
+  spotsPageAuto: Boolean! @pgColumn(name: \\"spots_page_auto\\")
+  userId: Int! @pgColumn(name: \\"user_id\\")
 }
 
 type UsersSubscription @pgTable(name: \\"users_subscription\\") {
   id: Int! @unique
-  expiration_date: DateTime!
+  expirationDate: DateTime! @pgColumn(name: \\"expiration_date\\")
   expired: Boolean!
-  subscription_type_id: Int!
+  subscriptionTypeId: Int! @pgColumn(name: \\"subscription_type_id\\")
 }
 
 type UsersSubscriptiontype @pgTable(name: \\"users_subscriptiontype\\") {
@@ -651,165 +651,165 @@ type UsersSubscriptiontype @pgTable(name: \\"users_subscriptiontype\\") {
 
 type UsersUser @pgTable(name: \\"users_user\\") {
   id: Int! @unique
-  date_joined: DateTime!
+  dateJoined: DateTime! @pgColumn(name: \\"date_joined\\")
   email: String!
-  first_name: String!
-  first_time: Boolean!
-  free_account: Boolean!
-  is_active: Boolean!
-  is_staff: Boolean!
-  is_superuser: Boolean!
-  last_login: DateTime
-  last_name: String!
+  firstName: String! @pgColumn(name: \\"first_name\\")
+  firstTime: Boolean! @pgColumn(name: \\"first_time\\")
+  freeAccount: Boolean! @pgColumn(name: \\"free_account\\")
+  isActive: Boolean! @pgColumn(name: \\"is_active\\")
+  isStaff: Boolean! @pgColumn(name: \\"is_staff\\")
+  isSuperuser: Boolean! @pgColumn(name: \\"is_superuser\\")
+  lastLogin: DateTime @pgColumn(name: \\"last_login\\")
+  lastName: String! @pgColumn(name: \\"last_name\\")
   password: String!
-  profile_id: Int
+  profileId: Int @pgColumn(name: \\"profile_id\\")
   username: String!
 }
 
 type UsersUserGroup @pgTable(name: \\"users_user_groups\\") {
   id: Int! @unique
-  group_id: Int!
-  user_id: Int!
+  groupId: Int! @pgColumn(name: \\"group_id\\")
+  userId: Int! @pgColumn(name: \\"user_id\\")
 }
 
 type UsersUserUserPermission @pgTable(name: \\"users_user_user_permissions\\") {
   id: Int! @unique
-  permission_id: Int!
-  user_id: Int!
+  permissionId: Int! @pgColumn(name: \\"permission_id\\")
+  userId: Int! @pgColumn(name: \\"user_id\\")
 }
 
 type UsersVocabularysetting @pgTable(name: \\"users_vocabularysettings\\") {
   id: Int! @unique
-  sentence_audio_play_click: Boolean!
-  show_keyboard_shortcuts: Boolean!
-  user_id: Int!
-  word_audio_play_click: Boolean!
+  sentenceAudioPlayClick: Boolean! @pgColumn(name: \\"sentence_audio_play_click\\")
+  showKeyboardShortcuts: Boolean! @pgColumn(name: \\"show_keyboard_shortcuts\\")
+  userId: Int! @pgColumn(name: \\"user_id\\")
+  wordAudioPlayClick: Boolean! @pgColumn(name: \\"word_audio_play_click\\")
 }
 
 type WordsChunk @pgTable(name: \\"words_chunk\\") {
   id: Int! @unique
-  chunk_type_id: Int
-  created_by_id: Int
-  created_date: DateTime
-  learning_word_id: Int!
-  modified_date: DateTime
+  chunkTypeId: Int @pgColumn(name: \\"chunk_type_id\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  learningWordId: Int! @pgColumn(name: \\"learning_word_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  translation_word_id: Int!
-  updated_by_id: Int
+  translationWordId: Int! @pgColumn(name: \\"translation_word_id\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
   vocab: Boolean!
 }
 
 type WordsChunktype @pgTable(name: \\"words_chunktype\\") {
   id: Int! @unique
-  chunk_type: String
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  chunkType: String @pgColumn(name: \\"chunk_type\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type WordsEnglishword @pgTable(name: \\"words_englishword\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   definition: String!
-  english_word_note: String!
-  example_sentence: String!
-  grammar_id: Int!
-  modified_date: DateTime
-  updated_by_id: Int
-  word_in_english: String!
+  englishWordNote: String! @pgColumn(name: \\"english_word_note\\")
+  exampleSentence: String! @pgColumn(name: \\"example_sentence\\")
+  grammarId: Int! @pgColumn(name: \\"grammar_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
+  wordInEnglish: String! @pgColumn(name: \\"word_in_english\\")
 }
 
 type WordsGender @pgTable(name: \\"words_gender\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   gender: String!
-  modified_date: DateTime
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type WordsGrammar @pgTable(name: \\"words_grammar\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
   examples: String!
-  grammar_group: String!
-  grammar_note: String!
-  modified_date: DateTime
+  grammarGroup: String! @pgColumn(name: \\"grammar_group\\")
+  grammarNote: String! @pgColumn(name: \\"grammar_note\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   name: String!
   syntax: String!
-  tense_type_id: Int
-  updated_by_id: Int
-  user_grammar: String!
+  tenseTypeId: Int @pgColumn(name: \\"tense_type_id\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
+  userGrammar: String! @pgColumn(name: \\"user_grammar\\")
 }
 
 type WordsKnownword @pgTable(name: \\"words_knownword\\") {
   id: Int! @unique
-  created_at: DateTime!
-  user_id: Int!
-  word_id: Int!
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  userId: Int! @pgColumn(name: \\"user_id\\")
+  wordId: Int! @pgColumn(name: \\"word_id\\")
 }
 
 type WordsMasteredword @pgTable(name: \\"words_masteredword\\") {
   id: Int! @unique
-  created_at: DateTime!
-  user_id: Int!
-  word_id: Int!
+  createdAt: DateTime! @pgColumn(name: \\"created_at\\")
+  userId: Int! @pgColumn(name: \\"user_id\\")
+  wordId: Int! @pgColumn(name: \\"word_id\\")
 }
 
 type WordsPerson @pgTable(name: \\"words_person\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
   person: String!
-  updated_by_id: Int
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type WordsTensetype @pgTable(name: \\"words_tensetype\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  tense_type: String!
-  updated_by_id: Int
+  tenseType: String! @pgColumn(name: \\"tense_type\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
 }
 
 type WordsWord @pgTable(name: \\"words_word\\") {
   id: Int! @unique
-  created_by_id: Int
-  created_date: DateTime
-  gender_id: Int
-  modified_date: DateTime
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  genderId: Int @pgColumn(name: \\"gender_id\\")
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
   number: String
-  person_id: Int
-  updated_by_id: Int
+  personId: Int @pgColumn(name: \\"person_id\\")
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
   word: String!
-  word_audio_id: Int
-  word_grammar_id: Int
-  word_in_english_id: Int!
-  word_language_id: Int!
+  wordAudioId: Int @pgColumn(name: \\"word_audio_id\\")
+  wordGrammarId: Int @pgColumn(name: \\"word_grammar_id\\")
+  wordInEnglishId: Int! @pgColumn(name: \\"word_in_english_id\\")
+  wordLanguageId: Int! @pgColumn(name: \\"word_language_id\\")
 }
 
 type WordsWordaudio @pgTable(name: \\"words_wordaudio\\") {
   id: Int! @unique
-  audio_file: String
-  audio_language_id: Int!
-  created_by_id: Int
-  created_date: DateTime
-  example_sentence: String!
+  audioFile: String @pgColumn(name: \\"audio_file\\")
+  audioLanguageId: Int! @pgColumn(name: \\"audio_language_id\\")
+  createdById: Int @pgColumn(name: \\"created_by_id\\")
+  createdDate: DateTime @pgColumn(name: \\"created_date\\")
+  exampleSentence: String! @pgColumn(name: \\"example_sentence\\")
   ipa: String!
-  modified_date: DateTime
+  modifiedDate: DateTime @pgColumn(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
-  word_in_audio: String!
+  updatedById: Int @pgColumn(name: \\"updated_by_id\\")
+  wordInAudio: String! @pgColumn(name: \\"word_in_audio\\")
 }"
 `;
 
@@ -817,37 +817,37 @@ exports[`Introspector issue4081 relations 2`] = `
 "type AboutAboutpage @db(name: \\"about_aboutpage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"about_aboutpage_id_seq\\", initialValue: 1, allocationSize: 1)
   heading: String!
-  heading_image: String!
+  headingImage: String! @db(name: \\"heading_image\\")
   text: String!
 }
 
 type AboutTeammember @db(name: \\"about_teammember\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"about_teammember_id_seq\\", initialValue: 1, allocationSize: 1)
   description: String!
-  facebook_url: String!
-  instagram_url: String!
+  facebookUrl: String! @db(name: \\"facebook_url\\")
+  instagramUrl: String! @db(name: \\"instagram_url\\")
   name: String!
   order: Int!
-  page_id: Int!
+  pageId: Int! @db(name: \\"page_id\\")
   picture: String!
   position: String!
-  twitter_url: String!
+  twitterUrl: String! @db(name: \\"twitter_url\\")
   visible: Boolean!
-  youtube_url: String!
+  youtubeUrl: String! @db(name: \\"youtube_url\\")
 }
 
 type AccountEmailaddress @db(name: \\"account_emailaddress\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"account_emailaddress_id_seq\\", initialValue: 1, allocationSize: 1)
   email: String!
   primary: Boolean!
-  user_id: Int!
+  userId: Int! @db(name: \\"user_id\\")
   verified: Boolean!
 }
 
 type AccountEmailconfirmation @db(name: \\"account_emailconfirmation\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"account_emailconfirmation_id_seq\\", initialValue: 1, allocationSize: 1)
   created: DateTime!
-  email_address_id: Int!
+  emailAddressId: Int! @db(name: \\"email_address_id\\")
   key: String!
   sent: DateTime
 }
@@ -859,14 +859,14 @@ type AuthGroup @db(name: \\"auth_group\\") {
 
 type AuthGroupPermission @db(name: \\"auth_group_permissions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"auth_group_permissions_id_seq\\", initialValue: 1, allocationSize: 1)
-  group_id: Int!
-  permission_id: Int!
+  groupId: Int! @db(name: \\"group_id\\")
+  permissionId: Int! @db(name: \\"permission_id\\")
 }
 
 type AuthPermission @db(name: \\"auth_permission\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"auth_permission_id_seq\\", initialValue: 1, allocationSize: 1)
   codename: String!
-  content_type_id: Int!
+  contentTypeId: Int! @db(name: \\"content_type_id\\")
   name: String!
 }
 
@@ -878,13 +878,13 @@ type ContactContactformcontent @db(name: \\"contact_contactformcontent\\") {
 type ContactContactpage @db(name: \\"contact_contactpage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"contact_contactpage_id_seq\\", initialValue: 1, allocationSize: 1)
   heading: String!
-  heading_image: String!
+  headingImage: String! @db(name: \\"heading_image\\")
 }
 
 type ContactThankyoupage @db(name: \\"contact_thankyoupage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"contact_thankyoupage_id_seq\\", initialValue: 1, allocationSize: 1)
-  button_link: String!
-  button_text: String!
+  buttonLink: String! @db(name: \\"button_link\\")
+  buttonText: String! @db(name: \\"button_text\\")
   heading: String!
   text: String!
   title: String!
@@ -892,18 +892,18 @@ type ContactThankyoupage @db(name: \\"contact_thankyoupage\\") {
 
 type DjangoAdminLog @db(name: \\"django_admin_log\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"django_admin_log_id_seq\\", initialValue: 1, allocationSize: 1)
-  action_flag: Int!
-  action_time: DateTime!
-  change_message: String!
-  content_type_id: Int
-  object_id: String
-  object_repr: String!
-  user_id: Int!
+  actionFlag: Int! @db(name: \\"action_flag\\")
+  actionTime: DateTime! @db(name: \\"action_time\\")
+  changeMessage: String! @db(name: \\"change_message\\")
+  contentTypeId: Int @db(name: \\"content_type_id\\")
+  objectId: String @db(name: \\"object_id\\")
+  objectRepr: String! @db(name: \\"object_repr\\")
+  userId: Int! @db(name: \\"user_id\\")
 }
 
 type DjangoContentType @db(name: \\"django_content_type\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"django_content_type_id_seq\\", initialValue: 1, allocationSize: 1)
-  app_label: String!
+  appLabel: String! @db(name: \\"app_label\\")
   model: String!
 }
 
@@ -915,9 +915,9 @@ type DjangoMigration @db(name: \\"django_migrations\\") {
 }
 
 type DjangoSession @db(name: \\"django_session\\") {
-  expire_date: DateTime!
-  session_data: String!
-  session_key: String!
+  expireDate: DateTime! @db(name: \\"expire_date\\")
+  sessionData: String! @db(name: \\"session_data\\")
+  sessionKey: String! @db(name: \\"session_key\\")
 }
 
 type DjangoSite @db(name: \\"django_site\\") {
@@ -928,14 +928,14 @@ type DjangoSite @db(name: \\"django_site\\") {
 
 type EventsEvent @db(name: \\"events_event\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"events_event_id_seq\\", initialValue: 1, allocationSize: 1)
-  address_line_one: String!
-  address_line_two: String!
+  addressLineOne: String! @db(name: \\"address_line_one\\")
+  addressLineTwo: String! @db(name: \\"address_line_two\\")
   city: String!
   country: String!
   date: DateTime!
-  hosted_by: String!
-  location_name: String!
-  map_url: String!
+  hostedBy: String! @db(name: \\"hosted_by\\")
+  locationName: String! @db(name: \\"location_name\\")
+  mapUrl: String! @db(name: \\"map_url\\")
   name: String!
   picture: String!
   # Type time is not supported
@@ -946,20 +946,20 @@ type EventsEvent @db(name: \\"events_event\\") {
 
 type EventsEventspage @db(name: \\"events_eventspage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"events_eventpage_id_seq\\", initialValue: 1, allocationSize: 1)
-  heading_image: String!
+  headingImage: String! @db(name: \\"heading_image\\")
 }
 
 type HelpHelppage @db(name: \\"help_helppage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"help_helppage_id_seq\\", initialValue: 1, allocationSize: 1)
   heading: String!
-  heading_image: String!
+  headingImage: String! @db(name: \\"heading_image\\")
 }
 
 type HelpHelpquestion @db(name: \\"help_helpquestion\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"help_helpquestion_id_seq\\", initialValue: 1, allocationSize: 1)
   answer: String!
   order: Int
-  section_id: Int!
+  sectionId: Int! @db(name: \\"section_id\\")
   thumbnail: String!
   title: String!
 }
@@ -967,27 +967,27 @@ type HelpHelpquestion @db(name: \\"help_helpquestion\\") {
 type HelpHelpsection @db(name: \\"help_helpsection\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"help_helpsection_id_seq\\", initialValue: 1, allocationSize: 1)
   order: Int!
-  page_id: Int!
+  pageId: Int! @db(name: \\"page_id\\")
   title: String!
 }
 
 type JobsJob @db(name: \\"jobs_job\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"jobs_job_id_seq\\", initialValue: 1, allocationSize: 1)
-  apply_page_form_title: String!
-  apply_page_title: String!
+  applyPageFormTitle: String! @db(name: \\"apply_page_form_title\\")
+  applyPageTitle: String! @db(name: \\"apply_page_title\\")
   order: Int
-  page_id: Int!
+  pageId: Int! @db(name: \\"page_id\\")
   picture: String!
-  position_description: String!
-  position_location: String!
-  position_name: String!
+  positionDescription: String! @db(name: \\"position_description\\")
+  positionLocation: String! @db(name: \\"position_location\\")
+  positionName: String! @db(name: \\"position_name\\")
   visible: Boolean!
 }
 
 type JobsJobspage @db(name: \\"jobs_jobspage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"jobs_jobspage_id_seq\\", initialValue: 1, allocationSize: 1)
   heading: String!
-  heading_image: String!
+  headingImage: String! @db(name: \\"heading_image\\")
   text: String!
 }
 
@@ -996,13 +996,13 @@ type JobsNojobspage @db(name: \\"jobs_nojobspage\\") {
   heading: String!
   text: String!
   title: String!
-  video_thumbnail: String!
+  videoThumbnail: String! @db(name: \\"video_thumbnail\\")
 }
 
 type JobsThankyoupage @db(name: \\"jobs_thankyoupage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"jobs_thankyoupage_id_seq\\", initialValue: 1, allocationSize: 1)
-  button_link: String!
-  button_text: String!
+  buttonLink: String! @db(name: \\"button_link\\")
+  buttonText: String! @db(name: \\"button_text\\")
   heading: String!
   text: String!
   title: String!
@@ -1010,217 +1010,217 @@ type JobsThankyoupage @db(name: \\"jobs_thankyoupage\\") {
 
 type LandingLandingpage @db(name: \\"landing_landingpage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"landing_landingpage_id_seq\\", initialValue: 1, allocationSize: 1)
-  section_four_image: String!
-  section_four_text: String!
-  section_four_title: String!
-  section_one_image: String!
-  section_one_title: String!
-  section_three_image: String!
-  section_three_text: String!
-  section_three_title: String!
-  section_two_image: String!
-  section_two_text: String!
-  section_two_title: String!
+  sectionFourImage: String! @db(name: \\"section_four_image\\")
+  sectionFourText: String! @db(name: \\"section_four_text\\")
+  sectionFourTitle: String! @db(name: \\"section_four_title\\")
+  sectionOneImage: String! @db(name: \\"section_one_image\\")
+  sectionOneTitle: String! @db(name: \\"section_one_title\\")
+  sectionThreeImage: String! @db(name: \\"section_three_image\\")
+  sectionThreeText: String! @db(name: \\"section_three_text\\")
+  sectionThreeTitle: String! @db(name: \\"section_three_title\\")
+  sectionTwoImage: String! @db(name: \\"section_two_image\\")
+  sectionTwoText: String! @db(name: \\"section_two_text\\")
+  sectionTwoTitle: String! @db(name: \\"section_two_title\\")
 }
 
 type LanguagesLanguage @db(name: \\"languages_language\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"languages_language_id_seq\\", initialValue: 1, allocationSize: 1)
   language: String!
-  language_code: String!
+  languageCode: String! @db(name: \\"language_code\\")
 }
 
 type MediaArtist @db(name: \\"media_artist\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_artist_id_seq\\", initialValue: 1, allocationSize: 1)
   artist: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type MediaCategory @db(name: \\"media_category\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_category_id_seq\\", initialValue: 1, allocationSize: 1)
   category: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type MediaGenre @db(name: \\"media_genre\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_genre_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   genre: String!
-  modified_date: DateTime
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type MediaMedia @db(name: \\"media_media\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_media_id_seq\\", initialValue: 1, allocationSize: 1)
   approved: Boolean!
-  artist_id: Int!
-  created_by_id: Int
-  created_date: DateTime
-  genre_id: Int
-  media_language_id: Int!
-  modified_date: DateTime
+  artistId: Int! @db(name: \\"artist_id\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  genreId: Int @db(name: \\"genre_id\\")
+  mediaLanguageId: Int! @db(name: \\"media_language_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  region_id: Int
+  regionId: Int @db(name: \\"region_id\\")
   title: String!
-  translation_language_id: Int!
-  updated_by_id: Int
+  translationLanguageId: Int! @db(name: \\"translation_language_id\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type MediaMediaCategory @db(name: \\"media_media_categories\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_media_categories_id_seq\\", initialValue: 1, allocationSize: 1)
-  category_id: Int!
-  media_id: Int!
+  categoryId: Int! @db(name: \\"category_id\\")
+  mediaId: Int! @db(name: \\"media_id\\")
 }
 
 type MediaMediasentence @db(name: \\"media_mediasentence\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_mediasentence_id_seq\\", initialValue: 1, allocationSize: 1)
   approved: Boolean!
-  created_by_id: Int
-  created_date: DateTime
-  learning_sentence_id: Int!
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  learningSentenceId: Int! @db(name: \\"learning_sentence_id\\")
   line: Int!
-  lyrics_sentence: String!
-  lyrics_translation: String!
-  lyrics_translation_chunks: String!
-  media_id: Int!
-  modified_date: DateTime
+  lyricsSentence: String! @db(name: \\"lyrics_sentence\\")
+  lyricsTranslation: String! @db(name: \\"lyrics_translation\\")
+  lyricsTranslationChunks: String! @db(name: \\"lyrics_translation_chunks\\")
+  mediaId: Int! @db(name: \\"media_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   multiple: Boolean!
   note: String!
   order: Int!
-  place_in_line: Int!
+  placeInLine: Int! @db(name: \\"place_in_line\\")
   repeat: Boolean!
-  repeat_of_line: Int!
-  repeated_in_line: String!
-  updated_by_id: Int
-  word_count: Int!
+  repeatedInLine: String! @db(name: \\"repeated_in_line\\")
+  repeatOfLine: Int! @db(name: \\"repeat_of_line\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
+  wordCount: Int! @db(name: \\"word_count\\")
 }
 
 type MediaRegion @db(name: \\"media_region\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_region_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
   region: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesCustomhint @db(name: \\"sentences_customhint\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_customhint_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   hint: String!
-  hint_type_id: Int!
-  modified_date: DateTime
+  hintTypeId: Int! @db(name: \\"hint_type_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  sentence_id: Int
-  updated_by_id: Int
+  sentenceId: Int @db(name: \\"sentence_id\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesEcast @db(name: \\"sentences_ecast\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_ecast_id_seq\\", initialValue: 1, allocationSize: 1)
-  action_id: Int!
-  character_id: Int!
-  created_by_id: Int
-  created_date: DateTime
+  actionId: Int! @db(name: \\"action_id\\")
+  characterId: Int! @db(name: \\"character_id\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   description: String!
-  emotion_id: Int!
-  modified_date: DateTime
+  emotionId: Int! @db(name: \\"emotion_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  sentence_id: Int!
-  setting_id: Int!
-  theme_id: Int
-  updated_by_id: Int
+  sentenceId: Int! @db(name: \\"sentence_id\\")
+  settingId: Int! @db(name: \\"setting_id\\")
+  themeId: Int @db(name: \\"theme_id\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesEcastaction @db(name: \\"sentences_ecastaction\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_ecastaction_id_seq\\", initialValue: 1, allocationSize: 1)
   action: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesEcastcharacter @db(name: \\"sentences_ecastcharacter\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_ecastcharacter_id_seq\\", initialValue: 1, allocationSize: 1)
   character: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesEcastemotion @db(name: \\"sentences_ecastemotion\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_ecastemotion_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   emotion: String!
-  modified_date: DateTime
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesEcastsetting @db(name: \\"sentences_ecastsetting\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_ecastsetting_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
   setting: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesEcasttheme @db(name: \\"sentences_ecasttheme\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_ecasttheme_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
   theme: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesHint @db(name: \\"sentences_hint\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_hint_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   hint: String!
-  hint_type_id: Int!
-  modified_date: DateTime
+  hintTypeId: Int! @db(name: \\"hint_type_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesHinttype @db(name: \\"sentences_hinttype\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_hinttype_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  type_name: String!
-  updated_by_id: Int
+  typeName: String! @db(name: \\"type_name\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesImagecategory @db(name: \\"sentences_imagecategory\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_imagecategory_id_seq\\", initialValue: 1, allocationSize: 1)
   category: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesImagetype @db(name: \\"sentences_imagetype\\") {
@@ -1230,169 +1230,169 @@ type SentencesImagetype @db(name: \\"sentences_imagetype\\") {
 
 type SentencesPosttranslationword @db(name: \\"sentences_posttranslationword\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_posttranslationword_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  language_id: Int
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  languageId: Int @db(name: \\"language_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
   post: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesPretranslationword @db(name: \\"sentences_pretranslationword\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_pretranslationword_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  language_id: Int
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  languageId: Int @db(name: \\"language_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
   pre: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesSentence @db(name: \\"sentences_sentence\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_sentence_id_seq\\", initialValue: 1, allocationSize: 1)
   approved: Boolean!
-  chunk_id: Int
-  created_by_id: Int
-  created_date: DateTime
-  english_sentence_punctuation_end: String!
-  english_sentence_punctuation_start: String!
-  fifth_chunk_id: Int
-  fifth_order: Boolean!
-  fifth_post_id: Int
-  fifth_pre_id: Int
-  fifth_underlined: Boolean!
-  first_chunk_id: Int
-  first_order: Boolean!
-  first_post_id: Int
-  first_pre_id: Int
-  first_underlined: Boolean!
-  fourth_chunk_id: Int
-  fourth_order: Boolean!
-  fourth_post_id: Int
-  fourth_pre_id: Int
-  fourth_underlined: Boolean!
-  learning_language_id: Int
-  learning_sentence_punctuation_end: String!
-  learning_sentence_punctuation_start: String!
-  modified_date: DateTime
+  chunkId: Int @db(name: \\"chunk_id\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  englishSentencePunctuationEnd: String! @db(name: \\"english_sentence_punctuation_end\\")
+  englishSentencePunctuationStart: String! @db(name: \\"english_sentence_punctuation_start\\")
+  fifthChunkId: Int @db(name: \\"fifth_chunk_id\\")
+  fifthOrder: Boolean! @db(name: \\"fifth_order\\")
+  fifthPostId: Int @db(name: \\"fifth_post_id\\")
+  fifthPreId: Int @db(name: \\"fifth_pre_id\\")
+  fifthUnderlined: Boolean! @db(name: \\"fifth_underlined\\")
+  firstChunkId: Int @db(name: \\"first_chunk_id\\")
+  firstOrder: Boolean! @db(name: \\"first_order\\")
+  firstPostId: Int @db(name: \\"first_post_id\\")
+  firstPreId: Int @db(name: \\"first_pre_id\\")
+  firstUnderlined: Boolean! @db(name: \\"first_underlined\\")
+  fourthChunkId: Int @db(name: \\"fourth_chunk_id\\")
+  fourthOrder: Boolean! @db(name: \\"fourth_order\\")
+  fourthPostId: Int @db(name: \\"fourth_post_id\\")
+  fourthPreId: Int @db(name: \\"fourth_pre_id\\")
+  fourthUnderlined: Boolean! @db(name: \\"fourth_underlined\\")
+  learningLanguageId: Int @db(name: \\"learning_language_id\\")
+  learningSentencePunctuationEnd: String! @db(name: \\"learning_sentence_punctuation_end\\")
+  learningSentencePunctuationStart: String! @db(name: \\"learning_sentence_punctuation_start\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String
-  second_chunk_id: Int
-  second_order: Boolean!
-  second_post_id: Int
-  second_pre_id: Int
-  second_underlined: Boolean!
-  sentence_audio_id: Int
-  sentence_category_id: Int
-  seventh_chunk_id: Int
-  seventh_order: Boolean!
-  seventh_post_id: Int
-  seventh_pre_id: Int
-  seventh_underlined: Boolean!
-  sixth_chunk_id: Int
-  sixth_order: Boolean!
-  sixth_post_id: Int
-  sixth_pre_id: Int
-  sixth_underlined: Boolean!
-  third_chunk_id: Int
-  third_order: Boolean!
-  third_post_id: Int
-  third_pre_id: Int
-  third_underlined: Boolean!
-  to_check: String
-  translation_language_id: Int
-  translation_sentence_punctuation_end: String!
-  translation_sentence_punctuation_start: String!
-  updated_by_id: Int
+  secondChunkId: Int @db(name: \\"second_chunk_id\\")
+  secondOrder: Boolean! @db(name: \\"second_order\\")
+  secondPostId: Int @db(name: \\"second_post_id\\")
+  secondPreId: Int @db(name: \\"second_pre_id\\")
+  secondUnderlined: Boolean! @db(name: \\"second_underlined\\")
+  sentenceAudioId: Int @db(name: \\"sentence_audio_id\\")
+  sentenceCategoryId: Int @db(name: \\"sentence_category_id\\")
+  seventhChunkId: Int @db(name: \\"seventh_chunk_id\\")
+  seventhOrder: Boolean! @db(name: \\"seventh_order\\")
+  seventhPostId: Int @db(name: \\"seventh_post_id\\")
+  seventhPreId: Int @db(name: \\"seventh_pre_id\\")
+  seventhUnderlined: Boolean! @db(name: \\"seventh_underlined\\")
+  sixthChunkId: Int @db(name: \\"sixth_chunk_id\\")
+  sixthOrder: Boolean! @db(name: \\"sixth_order\\")
+  sixthPostId: Int @db(name: \\"sixth_post_id\\")
+  sixthPreId: Int @db(name: \\"sixth_pre_id\\")
+  sixthUnderlined: Boolean! @db(name: \\"sixth_underlined\\")
+  thirdChunkId: Int @db(name: \\"third_chunk_id\\")
+  thirdOrder: Boolean! @db(name: \\"third_order\\")
+  thirdPostId: Int @db(name: \\"third_post_id\\")
+  thirdPreId: Int @db(name: \\"third_pre_id\\")
+  thirdUnderlined: Boolean! @db(name: \\"third_underlined\\")
+  toCheck: String @db(name: \\"to_check\\")
+  translationLanguageId: Int @db(name: \\"translation_language_id\\")
+  translationSentencePunctuationEnd: String! @db(name: \\"translation_sentence_punctuation_end\\")
+  translationSentencePunctuationStart: String! @db(name: \\"translation_sentence_punctuation_start\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesSentenceHint @db(name: \\"sentences_sentence_hints\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_sentence_hints_id_seq\\", initialValue: 1, allocationSize: 1)
-  hint_id: Int!
-  sentence_id: Int!
+  hintId: Int! @db(name: \\"hint_id\\")
+  sentenceId: Int! @db(name: \\"sentence_id\\")
 }
 
 type SentencesSentenceaudio @db(name: \\"sentences_sentenceaudio\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_sentenceaudio_id_seq\\", initialValue: 1, allocationSize: 1)
-  audio_file: String
-  audio_language_id: Int!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  audioFile: String @db(name: \\"audio_file\\")
+  audioLanguageId: Int! @db(name: \\"audio_language_id\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  sentence_in_audio: String!
-  updated_by_id: Int
+  sentenceInAudio: String! @db(name: \\"sentence_in_audio\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesSentencecategory @db(name: \\"sentences_sentencecategory\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_sentencecategory_id_seq\\", initialValue: 1, allocationSize: 1)
-  category_type: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  categoryType: String! @db(name: \\"category_type\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesSentencegluer @db(name: \\"sentences_sentencegluer\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_sentencegluer_id_seq\\", initialValue: 1, allocationSize: 1)
-  learning_sentence_id: Int!
-  translation_sentence_id: Int!
+  learningSentenceId: Int! @db(name: \\"learning_sentence_id\\")
+  translationSentenceId: Int! @db(name: \\"translation_sentence_id\\")
 }
 
 type SentencesSentenceimage @db(name: \\"sentences_sentenceimage\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_sentenceimage_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   description: String!
   file: String
-  image_category_id: Int!
-  image_text_language_id: Int
-  modified_date: DateTime
+  imageCategoryId: Int! @db(name: \\"image_category_id\\")
+  imageTextLanguageId: Int @db(name: \\"image_text_language_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  sentence_id: Int
-  updated_by_id: Int
+  sentenceId: Int @db(name: \\"sentence_id\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SentencesSentencevideo @db(name: \\"sentences_sentencevideo\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_sentencevideo_id_seq\\", initialValue: 1, allocationSize: 1)
-  audio_language_id: Int!
-  created_by_id: Int
-  created_date: DateTime
+  audioLanguageId: Int! @db(name: \\"audio_language_id\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   description: String!
   file: String
-  modified_date: DateTime
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  sentence_id: Int
-  updated_by_id: Int
-  video_category_id: Int!
-  video_thumbnail: String
+  sentenceId: Int @db(name: \\"sentence_id\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
+  videoCategoryId: Int! @db(name: \\"video_category_id\\")
+  videoThumbnail: String @db(name: \\"video_thumbnail\\")
 }
 
 type SentencesVideocategory @db(name: \\"sentences_videocategory\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sentences_videocategory_id_seq\\", initialValue: 1, allocationSize: 1)
   category: String!
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type SocialaccountSocialaccount @db(name: \\"socialaccount_socialaccount\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"socialaccount_socialaccount_id_seq\\", initialValue: 1, allocationSize: 1)
-  date_joined: DateTime!
-  extra_data: String!
-  last_login: DateTime!
+  dateJoined: DateTime! @db(name: \\"date_joined\\")
+  extraData: String! @db(name: \\"extra_data\\")
+  lastLogin: DateTime! @db(name: \\"last_login\\")
   provider: String!
   uid: String!
-  user_id: Int!
+  userId: Int! @db(name: \\"user_id\\")
 }
 
 type SocialaccountSocialapp @db(name: \\"socialaccount_socialapp\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"socialaccount_socialapp_id_seq\\", initialValue: 1, allocationSize: 1)
-  client_id: String!
+  clientId: String! @db(name: \\"client_id\\")
   key: String!
   name: String!
   provider: String!
@@ -1401,59 +1401,59 @@ type SocialaccountSocialapp @db(name: \\"socialaccount_socialapp\\") {
 
 type SocialaccountSocialappSite @db(name: \\"socialaccount_socialapp_sites\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"socialaccount_socialapp_sites_id_seq\\", initialValue: 1, allocationSize: 1)
-  site_id: Int!
-  socialapp_id: Int!
+  siteId: Int! @db(name: \\"site_id\\")
+  socialappId: Int! @db(name: \\"socialapp_id\\")
 }
 
 type SocialaccountSocialtoken @db(name: \\"socialaccount_socialtoken\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"socialaccount_socialtoken_id_seq\\", initialValue: 1, allocationSize: 1)
-  account_id: Int!
-  app_id: Int!
-  expires_at: DateTime
+  accountId: Int! @db(name: \\"account_id\\")
+  appId: Int! @db(name: \\"app_id\\")
+  expiresAt: DateTime @db(name: \\"expires_at\\")
   token: String!
-  token_secret: String!
+  tokenSecret: String! @db(name: \\"token_secret\\")
 }
 
 type UsersEmailnotification @db(name: \\"users_emailnotifications\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_emailnotifications_id_seq\\", initialValue: 1, allocationSize: 1)
   events: Boolean!
-  new_features: Boolean!
+  newFeatures: Boolean! @db(name: \\"new_features\\")
   news: Boolean!
   progress: Boolean!
   promotions: Boolean!
-  user_id: Int!
+  userId: Int! @db(name: \\"user_id\\")
 }
 
 type UsersProfile @db(name: \\"users_profile\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_profile_id_seq\\", initialValue: 1, allocationSize: 1)
-  censored_content: Boolean!
+  censoredContent: Boolean! @db(name: \\"censored_content\\")
   country: String!
-  date_of_birth: DateTime
+  dateOfBirth: DateTime @db(name: \\"date_of_birth\\")
   gender: String!
-  learning_language_id: Int
-  profile_picture: String!
-  speaking_language_id: Int
+  learningLanguageId: Int @db(name: \\"learning_language_id\\")
+  profilePicture: String! @db(name: \\"profile_picture\\")
+  speakingLanguageId: Int @db(name: \\"speaking_language_id\\")
 }
 
 type UsersSpotssetting @db(name: \\"users_spotssettings\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_spotssettings_id_seq\\", initialValue: 1, allocationSize: 1)
-  autoplay_sentence_audio: Boolean!
-  autoplay_word_audio: Boolean!
-  next_word_seconds: Int!
-  play_videos: Boolean!
-  reveal_seconds: Int!
-  show_keyboard_shortcuts: Boolean!
-  show_main_images: Boolean!
-  show_submitted_images: Boolean!
-  spots_page_auto: Boolean!
-  user_id: Int!
+  autoplaySentenceAudio: Boolean! @db(name: \\"autoplay_sentence_audio\\")
+  autoplayWordAudio: Boolean! @db(name: \\"autoplay_word_audio\\")
+  nextWordSeconds: Int! @db(name: \\"next_word_seconds\\")
+  playVideos: Boolean! @db(name: \\"play_videos\\")
+  revealSeconds: Int! @db(name: \\"reveal_seconds\\")
+  showKeyboardShortcuts: Boolean! @db(name: \\"show_keyboard_shortcuts\\")
+  showMainImages: Boolean! @db(name: \\"show_main_images\\")
+  showSubmittedImages: Boolean! @db(name: \\"show_submitted_images\\")
+  spotsPageAuto: Boolean! @db(name: \\"spots_page_auto\\")
+  userId: Int! @db(name: \\"user_id\\")
 }
 
 type UsersSubscription @db(name: \\"users_subscription\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_subscription_id_seq\\", initialValue: 1, allocationSize: 1)
-  expiration_date: DateTime!
+  expirationDate: DateTime! @db(name: \\"expiration_date\\")
   expired: Boolean!
-  subscription_type_id: Int!
+  subscriptionTypeId: Int! @db(name: \\"subscription_type_id\\")
 }
 
 type UsersSubscriptiontype @db(name: \\"users_subscriptiontype\\") {
@@ -1464,164 +1464,164 @@ type UsersSubscriptiontype @db(name: \\"users_subscriptiontype\\") {
 
 type UsersUser @db(name: \\"users_user\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_user_id_seq\\", initialValue: 1, allocationSize: 1)
-  date_joined: DateTime!
+  dateJoined: DateTime! @db(name: \\"date_joined\\")
   email: String!
-  first_name: String!
-  first_time: Boolean!
-  free_account: Boolean!
-  is_active: Boolean!
-  is_staff: Boolean!
-  is_superuser: Boolean!
-  last_login: DateTime
-  last_name: String!
+  firstName: String! @db(name: \\"first_name\\")
+  firstTime: Boolean! @db(name: \\"first_time\\")
+  freeAccount: Boolean! @db(name: \\"free_account\\")
+  isActive: Boolean! @db(name: \\"is_active\\")
+  isStaff: Boolean! @db(name: \\"is_staff\\")
+  isSuperuser: Boolean! @db(name: \\"is_superuser\\")
+  lastLogin: DateTime @db(name: \\"last_login\\")
+  lastName: String! @db(name: \\"last_name\\")
   password: String!
-  profile_id: Int
+  profileId: Int @db(name: \\"profile_id\\")
   username: String!
 }
 
 type UsersUserGroup @db(name: \\"users_user_groups\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_user_groups_id_seq\\", initialValue: 1, allocationSize: 1)
-  group_id: Int!
-  user_id: Int!
+  groupId: Int! @db(name: \\"group_id\\")
+  userId: Int! @db(name: \\"user_id\\")
 }
 
 type UsersUserUserPermission @db(name: \\"users_user_user_permissions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_user_user_permissions_id_seq\\", initialValue: 1, allocationSize: 1)
-  permission_id: Int!
-  user_id: Int!
+  permissionId: Int! @db(name: \\"permission_id\\")
+  userId: Int! @db(name: \\"user_id\\")
 }
 
 type UsersVocabularysetting @db(name: \\"users_vocabularysettings\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_vocabularysettings_id_seq\\", initialValue: 1, allocationSize: 1)
-  sentence_audio_play_click: Boolean!
-  show_keyboard_shortcuts: Boolean!
-  user_id: Int!
-  word_audio_play_click: Boolean!
+  sentenceAudioPlayClick: Boolean! @db(name: \\"sentence_audio_play_click\\")
+  showKeyboardShortcuts: Boolean! @db(name: \\"show_keyboard_shortcuts\\")
+  userId: Int! @db(name: \\"user_id\\")
+  wordAudioPlayClick: Boolean! @db(name: \\"word_audio_play_click\\")
 }
 
 type WordsChunk @db(name: \\"words_chunk\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_chunk_id_seq\\", initialValue: 1, allocationSize: 1)
-  chunk_type_id: Int
-  created_by_id: Int
-  created_date: DateTime
-  learning_word_id: Int!
-  modified_date: DateTime
+  chunkTypeId: Int @db(name: \\"chunk_type_id\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  learningWordId: Int! @db(name: \\"learning_word_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  translation_word_id: Int!
-  updated_by_id: Int
+  translationWordId: Int! @db(name: \\"translation_word_id\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
   vocab: Boolean!
 }
 
 type WordsChunktype @db(name: \\"words_chunktype\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_chunktype_id_seq\\", initialValue: 1, allocationSize: 1)
-  chunk_type: String
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  chunkType: String @db(name: \\"chunk_type\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type WordsEnglishword @db(name: \\"words_englishword\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_englishword_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   definition: String!
-  english_word_note: String!
-  example_sentence: String!
-  grammar_id: Int!
-  modified_date: DateTime
-  updated_by_id: Int
-  word_in_english: String!
+  englishWordNote: String! @db(name: \\"english_word_note\\")
+  exampleSentence: String! @db(name: \\"example_sentence\\")
+  grammarId: Int! @db(name: \\"grammar_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
+  wordInEnglish: String! @db(name: \\"word_in_english\\")
 }
 
 type WordsGender @db(name: \\"words_gender\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_gender_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   gender: String!
-  modified_date: DateTime
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type WordsGrammar @db(name: \\"words_grammar\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_grammar_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
   examples: String!
-  grammar_group: String!
-  grammar_note: String!
-  modified_date: DateTime
+  grammarGroup: String! @db(name: \\"grammar_group\\")
+  grammarNote: String! @db(name: \\"grammar_note\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   name: String!
   syntax: String!
-  tense_type_id: Int
-  updated_by_id: Int
-  user_grammar: String!
+  tenseTypeId: Int @db(name: \\"tense_type_id\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
+  userGrammar: String! @db(name: \\"user_grammar\\")
 }
 
 type WordsKnownword @db(name: \\"words_knownword\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_knownword_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_at: DateTime!
-  user_id: Int!
-  word_id: Int!
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  userId: Int! @db(name: \\"user_id\\")
+  wordId: Int! @db(name: \\"word_id\\")
 }
 
 type WordsMasteredword @db(name: \\"words_masteredword\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_masteredword_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_at: DateTime!
-  user_id: Int!
-  word_id: Int!
+  createdAt: DateTime! @db(name: \\"created_at\\")
+  userId: Int! @db(name: \\"user_id\\")
+  wordId: Int! @db(name: \\"word_id\\")
 }
 
 type WordsPerson @db(name: \\"words_person\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_person_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
   person: String!
-  updated_by_id: Int
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type WordsTensetype @db(name: \\"words_tensetype\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_tensetype_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  tense_type: String!
-  updated_by_id: Int
+  tenseType: String! @db(name: \\"tense_type\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
 }
 
 type WordsWord @db(name: \\"words_word\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_word_id_seq\\", initialValue: 1, allocationSize: 1)
-  created_by_id: Int
-  created_date: DateTime
-  gender_id: Int
-  modified_date: DateTime
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  genderId: Int @db(name: \\"gender_id\\")
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
   number: String
-  person_id: Int
-  updated_by_id: Int
+  personId: Int @db(name: \\"person_id\\")
+  updatedById: Int @db(name: \\"updated_by_id\\")
   word: String!
-  word_audio_id: Int
-  word_grammar_id: Int
-  word_in_english_id: Int!
-  word_language_id: Int!
+  wordAudioId: Int @db(name: \\"word_audio_id\\")
+  wordGrammarId: Int @db(name: \\"word_grammar_id\\")
+  wordInEnglishId: Int! @db(name: \\"word_in_english_id\\")
+  wordLanguageId: Int! @db(name: \\"word_language_id\\")
 }
 
 type WordsWordaudio @db(name: \\"words_wordaudio\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"words_wordaudio_id_seq\\", initialValue: 1, allocationSize: 1)
-  audio_file: String
-  audio_language_id: Int!
-  created_by_id: Int
-  created_date: DateTime
-  example_sentence: String!
+  audioFile: String @db(name: \\"audio_file\\")
+  audioLanguageId: Int! @db(name: \\"audio_language_id\\")
+  createdById: Int @db(name: \\"created_by_id\\")
+  createdDate: DateTime @db(name: \\"created_date\\")
+  exampleSentence: String! @db(name: \\"example_sentence\\")
   ipa: String!
-  modified_date: DateTime
+  modifiedDate: DateTime @db(name: \\"modified_date\\")
   note: String!
-  updated_by_id: Int
-  word_in_audio: String!
+  updatedById: Int @db(name: \\"updated_by_id\\")
+  wordInAudio: String! @db(name: \\"word_in_audio\\")
 }"
 `;

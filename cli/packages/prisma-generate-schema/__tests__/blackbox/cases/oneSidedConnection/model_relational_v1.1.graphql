@@ -1,0 +1,61 @@
+type TypeWithId {
+  id: ID! @id
+  field: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type TypeWithoutId {
+  id: ID! @id
+  field: String!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type A {
+  id: ID! @id
+  x: TypeWithId! @relation(link: TABLE)
+  y: TypeWithoutId! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type B {
+  id: ID! @id
+  x: TypeWithId @relation(link: TABLE)
+  y: TypeWithoutId @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type C {
+  id: ID! @id
+  x: [TypeWithId]
+  y: [TypeWithoutId]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type D {
+  id: ID! @id
+  x: TypeWithId! @relation(link: TABLE)
+  y: TypeWithoutId! @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type E {
+  id: ID! @id
+  x: TypeWithId @relation(link: TABLE)
+  y: TypeWithoutId @relation(link: TABLE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type F {
+  id: ID! @id
+  x: [TypeWithId]
+  y: [TypeWithoutId]
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

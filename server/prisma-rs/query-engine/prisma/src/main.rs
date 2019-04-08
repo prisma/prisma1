@@ -1,9 +1,12 @@
+#[macro_use]
+extern crate log;
+
 mod context;
 mod error;
 mod req_handlers;
 mod schema;
+mod utilities;
 
-#[cfg(feature = "newjson")]
 mod serializer;
 
 use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
@@ -11,7 +14,6 @@ use context::PrismaContext;
 use error::PrismaError;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
-use std::env;
 use std::sync::Arc;
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
@@ -23,15 +25,14 @@ struct HttpHandler {
 
 #[allow(unused_variables)]
 fn main() {
+    env_logger::init();
+
+    let context = PrismaContext::new().unwrap();
     let http_handler = HttpHandler {
-        context: PrismaContext::new(),
+        context: context,
         graphql_request_handler: GraphQlRequestHandler,
     };
     let http_handler_arc = Arc::new(http_handler);
-
-    env::set_var("RUST_LOG", "actix_web=debug");
-    env::set_var("RUST_BACKTRACE", "1");
-    env_logger::init();
 
     let sys = actix::System::new("prisma");
     let address = "127.0.0.1:8000";
@@ -73,5 +74,5 @@ fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
 }
 
 fn playground<T>(_: HttpRequest<T>) -> impl Responder {
-    fs::NamedFile::open("playground.html")
+    fs::NamedFile::open("prisma-rs/playground.html")
 }

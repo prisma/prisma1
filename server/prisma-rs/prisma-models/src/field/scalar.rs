@@ -135,7 +135,7 @@ impl ScalarField {
     }
 
     pub fn as_column(&self) -> Column {
-        (self.schema().db_name.as_str(), self.model().db_name(), self.db_name()).into()
+        ((self.schema().db_name.as_str(), self.model().db_name()), self.db_name()).into()
     }
 
     pub fn id_behaviour_clone(&self) -> Option<FieldBehaviour> {

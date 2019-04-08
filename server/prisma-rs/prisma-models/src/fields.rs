@@ -156,11 +156,11 @@ impl Fields {
             })
     }
 
-    pub fn find_from_relation(&self, name: &str) -> DomainResult<Arc<RelationField>> {
+    pub fn find_from_relation(&self, name: &str, side: RelationSide) -> DomainResult<Arc<RelationField>> {
         self.relation_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
-            .find(|field| field.relation().name == name)
+            .find(|field| field.relation().name == name && field.relation_side == side)
             .ok_or_else(|| DomainError::FieldForRelationNotFound {
                 relation: name.to_string(),
                 model: self.model().name.clone(),

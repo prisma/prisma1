@@ -24,7 +24,7 @@ export class RemoveBackRelation implements INormalizer {
 
         if (refField.type.name !== field.type.name) continue
 
-        // If the reference field has no related field  we drop it.
+        // If the reference field has no related field we drop it.
         if (refField.relatedField === null) {
           const relatedType = field.type as IGQLType
           relatedType.fields = relatedType.fields.filter(

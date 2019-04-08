@@ -21,6 +21,7 @@ type AConnection {
 
 input ACreateInput {
   c: String!
+  removeThisIdd: ID
   d: String
 }
 
@@ -517,6 +518,7 @@ type AWithIdConnection {
 }
 
 input AWithIdCreateInput {
+  id: ID
   c: String!
   d: String
   b2: BCreateOneWithoutA2Input!
@@ -528,6 +530,7 @@ input AWithIdCreateOneWithoutB2Input {
 }
 
 input AWithIdCreateWithoutB2Input {
+  id: ID
   c: String!
   d: String
 }
@@ -823,6 +826,7 @@ type BConnection {
 }
 
 input BCreateInput {
+  id: ID
   a: ACreateManyInput
   a2: AWithIdCreateOneWithoutB2Input
 }
@@ -833,6 +837,7 @@ input BCreateOneWithoutA2Input {
 }
 
 input BCreateWithoutA2Input {
+  id: ID
   a: ACreateManyInput
 }
 

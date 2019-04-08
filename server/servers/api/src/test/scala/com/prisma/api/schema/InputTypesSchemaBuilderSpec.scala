@@ -173,7 +173,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val inputTypes =
       """
         |input BCreateInput {
-        |  id: ID
         |  rel: UserCreateOneInput
         |  c: CCreateOneWithoutBInput
         |}
@@ -184,7 +183,6 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |input BCreateWithoutCInput {
-        |  id: ID
         |  rel: UserCreateOneInput
         |}
         |
@@ -733,7 +731,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
-    schema should containInputType("BCreateOneWithoutAInput")
+    schema should not(containInputType("BCreateOneWithoutAInput"))
   }
 
   "Sample schema with relation and relation strategy NONE" should "be generated correctly" in {

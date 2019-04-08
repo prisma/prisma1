@@ -47,11 +47,13 @@ type MultiSelfReferencingBWithId {
 }
 
 type MultiSelfReferencingC {
+  id: ID! @unique
   a: [MultiSelfReferencingC] @relation(name: "AToA")
   b: [MultiSelfReferencingC] @relation(name: "AToA")
 }
 
 type MultiSelfReferencingB {
+  id: ID! @unique
   a: MultiSelfReferencingB @relation(name: "AToA2")
   b: MultiSelfReferencingB @relation(name: "AToA2")
 }
