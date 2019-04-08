@@ -4,49 +4,23 @@ import {
   ISDL,
   TypeIdentifiers,
   IdStrategy,
-  cloneType,
 } from 'prisma-datamodel'
 
 import ModelNameNormalizer from './modelNameNormalizer'
 
 export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer {
-  private baseModel: ISDL | null
-  private baseType: IGQLType | null
-
   constructor(baseModel: ISDL | null) {
-    super()
-    this.baseModel = baseModel
-    this.baseType = null
+    super(baseModel)
   }
 
-  // https://github.com/prisma/prisma/issues/3725
-  public normalize(model: ISDL) {
-    super.normalize(model)
-  }
-
-  private findBaseByName<T extends IGQLField | IGQLType>(
-    baseObjs: Array<T>,
-    obj: T,
-  ) {
-    const [baseCandidate] = baseObjs.filter(base => {
-      if (base.databaseName) {
-        return base.databaseName === obj.name
-      } else {
-        return base.name === obj.name
-      }
-    })
-
-    return baseCandidate || null
-  }
-
-  private findBaseByRelation(baseObjs: Array<IGQLField>, obj: IGQLField) {
-    if (typeof obj.type === 'string') {
+  private findAndSetBaseByRelation(obj: IGQLField) {
+    if (this.baseFields === null || typeof obj.type === 'string') {
       return null
     }
 
     const fieldType = obj.type
 
-    const [baseCandidate] = baseObjs.filter(base => {
+    const [baseCandidate] = this.baseFields.filter(base => {
       return (
         typeof base.type !== 'string' &&
         base.type.name === fieldType.name &&
@@ -57,19 +31,32 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
       )
     })
 
-    return baseCandidate || null
+    if (baseCandidate !== undefined) {
+      // Use each base field only once, see base class.
+      this.baseField = baseCandidate
+      this.baseFields = this.baseFields.filter(f => this.baseField !== f)
+      return this.baseField
+    } else {
+      return null
+    }
   }
 
-  private findBaseById(baseObjs: IGQLField[], obj: IGQLField) {
-    const [baseCandidate] = baseObjs.filter(baseObj => baseObj.isId && obj.isId)
+  private findAndSetBaseById(obj: IGQLField) {
+    if (this.baseFields === null) {
+      return null
+    }
 
-    return baseCandidate || null
-  }
+    const [baseCandidate] = this.baseFields.filter(
+      baseObj => baseObj.isId && obj.isId,
+    )
 
-  private assignProperties<T extends IGQLField | IGQLType>(baseObj: T, obj: T) {
-    if (baseObj.databaseName) {
-      obj.name = baseObj.name
-      obj.databaseName = baseObj.databaseName
+    if (baseCandidate !== undefined) {
+      // Use each base field only once, see base class.
+      this.baseField = baseCandidate
+      this.baseFields = this.baseFields.filter(f => this.baseField !== f)
+      return this.baseField
+    } else {
+      return null
     }
   }
 
@@ -77,9 +64,20 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
     if (baseObj === null) {
       return
     }
-    this.assignProperties(baseObj, obj)
+
+    if (baseObj.databaseName) {
+      obj.name = baseObj.name
+      obj.databaseName = baseObj.databaseName
+    }
   }
 
+  /**
+   * Assigns all properties from a base model field
+   * to the current field, handling several special cases.
+   * @param baseObj The base (reference) field.
+   * @param obj The current field.
+   * @param parentModel The whole model, for finding enums.
+   */
   private assignFieldProperties(
     baseObj: IGQLField | null,
     obj: IGQLField,
@@ -88,9 +86,17 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
     if (baseObj === null) {
       return
     }
-    this.assignProperties(baseObj, obj)
 
     obj.isId = obj.isId || baseObj.isId
+
+    // In case the field is an ID field, we rename
+    // even if there is no database name. This case
+    // can happen with mongo, and prisma will be able to remap it.
+    if (baseObj.databaseName || obj.isId) {
+      obj.name = baseObj.name
+      obj.databaseName = baseObj.databaseName
+    }
+
     obj.isCreatedAt = obj.isCreatedAt || baseObj.isCreatedAt
     obj.isUpdatedAt = obj.isUpdatedAt || baseObj.isUpdatedAt
     obj.defaultValue = obj.defaultValue || baseObj.defaultValue
@@ -134,88 +140,66 @@ export default class ModelNameAndDirectiveNormalizer extends ModelNameNormalizer
   }
 
   protected normalizeType(type: IGQLType, parentModel: ISDL) {
-    if (this.baseModel === null) {
-      this.baseType === null
-    } else {
-      this.baseType = this.findBaseByName(this.baseModel.types, type)
-      // We mutate the base type in the normalizeType call,
-      // therefore we need to clone here.
-      if (this.baseType !== null) {
-        this.baseType = cloneType(this.baseType)
-      }
-    }
     this.assignTypeProperties(this.baseType, type)
     super.normalizeType(type, parentModel, this.baseType !== null)
   }
 
-  // TODO: This method could use some refactoring.
+  /**
+   * Normalizes a field, handling several special cases.
+   * @param baseObj The base (reference) field.
+   * @param obj The current field.
+   * @param parentModel The whole model, for finding enums.
+   */
   protected normalizeField(
     field: IGQLField,
     parentType: IGQLType,
     parentModel: ISDL,
   ) {
-    let baseField: IGQLField | null = null
-    if (this.baseType !== null) {
-      baseField = this.findBaseByName(this.baseType.fields, field)
-
-      if (baseField !== null) {
-        // Only use this base field once.
-        this.baseType.fields = this.baseType.fields.filter(f => f !== baseField)
-        this.assignName(field, baseField.name)
-        this.assignFieldProperties(baseField, field, parentModel)
+    if (this.baseField !== null) {
+      // Base case, we identified a field by name.
+      this.assignName(field, this.baseField.name)
+      this.assignFieldProperties(this.baseField, field, parentModel)
+    } else {
+      // Fallback to finding a base field by ID.
+      this.baseField = this.findAndSetBaseById(field)
+      if (this.baseField !== null) {
+        this.assignFieldProperties(this.baseField, field, parentModel)
       } else {
-        // Fallback to ID.
-        baseField = this.findBaseById(this.baseType.fields, field)
-
-        if (baseField !== null) {
-          // Only use this base field once.
-          this.baseType.fields = this.baseType.fields.filter(
-            f => f !== baseField,
-          )
-          this.assignFieldProperties(baseField, field, parentModel)
-        } else {
-          // Fallback to relation.
-          baseField = this.findBaseByRelation(this.baseType.fields, field)
-          if (baseField !== null) {
-            // Only use this base field once.
-            this.baseType.fields = this.baseType.fields.filter(
-              f => f !== baseField,
-            )
-
-            // Hard-override name. Relation names are usually auto-generated.
-            field.name = baseField.name
-            field.databaseName = baseField.databaseName
-            if (
-              baseField.relationName === null ||
-              field.relationName === null
-            ) {
-              // Remove relation name if it is unset in ref model,
-              // Set relation name if set on ref model but not for us.
-              field.relationName = baseField.relationName
-            }
-
-            // If this is a self-referencing field with a back connection on the same type, we copy
-            // the name of the related field as well. Otherwise, we always
-            // end up overwriting or name with the first ocurrence in the reference.
-            if (
-              field.type == parentType &&
-              baseField.relatedField !== null &&
-              field.relatedField !== null
-            ) {
-              field.relatedField.name = baseField.relatedField.name
-              field.relatedField.relationName =
-                baseField.relatedField.relationName
-            }
-            this.assignFieldProperties(baseField, field, parentModel)
+        // Fallback to finding a base field by relation type
+        // Here, we have a few special cases when overwriting properties.
+        this.baseField = this.findAndSetBaseByRelation(field)
+        if (this.baseField !== null) {
+          // Hard-override name. Relation names are usually auto-generated.
+          field.name = this.baseField.name
+          field.databaseName = this.baseField.databaseName
+          if (
+            this.baseField.relationName === null ||
+            field.relationName === null
+          ) {
+            // Remove relation name if it is unset in ref model,
+            // Set relation name if set on ref model but not for us.
+            field.relationName = this.baseField.relationName
           }
+
+          // If this is a self-referencing field with a back connection on the same type, we copy
+          // the name of the related field as well. Otherwise, we always
+          // end up overwriting our name with the name of the
+          // first field of same type in the reference model.
+          if (
+            field.type == parentType &&
+            this.baseField.relatedField !== null &&
+            field.relatedField !== null
+          ) {
+            field.relatedField.name = this.baseField.relatedField.name
+            field.relatedField.relationName = this.baseField.relatedField.relationName
+          }
+          this.assignFieldProperties(this.baseField, field, parentModel)
+        } else {
+          // If there is absolutely no base field,
+          // Use our name normalization.
+          super.normalizeField(field, parentType, parentModel)
         }
       }
-
-      if (baseField !== null) {
-        this.assignName(field, baseField.name)
-        this.assignFieldProperties(baseField, field, parentModel)
-      }
     }
-    super.normalizeField(field, parentType, parentModel)
   }
 }

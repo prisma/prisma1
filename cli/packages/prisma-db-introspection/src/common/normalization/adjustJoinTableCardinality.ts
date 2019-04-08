@@ -42,11 +42,6 @@ export class AdjustJoinTableCardinality implements INormalizer {
             continue
           }
           field.directives.push(this.createLinkTableDirective(field))
-          // if (field.relatedField !== null) {
-          //   field.relatedField.directives.push(
-          //     this.createLinkTableDirective(field.relatedField),
-          //   )
-          // }
         }
       }
     }

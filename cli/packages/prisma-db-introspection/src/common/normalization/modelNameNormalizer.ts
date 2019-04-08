@@ -9,17 +9,15 @@ import {
   isTypeIdentifier,
   camelCase,
 } from 'prisma-datamodel'
-import { INormalizer } from './normalizer'
+import { INormalizer, Normalizer } from './normalizer'
 import { groupBy, uniqBy } from 'lodash'
 
-export default class ModelNameNormalizer implements INormalizer {
+export default class ModelNameNormalizer extends Normalizer {
   public normalize(model: ISDL) {
     // We need to sort types according to topological order for name normalization.
     // Otherwise embedded type naming might break as embedded types depend on
     // their parent type.
-    for (const type of toposort(model.types)) {
-      this.normalizeType(type, model)
-    }
+    this.normalizeTypes(toposort(model.types), model)
   }
 
   protected assignName(obj: IGQLType | IGQLField, newName: string) {
@@ -62,9 +60,7 @@ export default class ModelNameNormalizer implements INormalizer {
       this.assignName(type, this.getNormalizedTypeName(type.name, model))
     }
 
-    for (const field of type.fields) {
-      this.normalizeField(field, type, model)
-    }
+    super.normalizeType(type, model)
   }
 
   protected getNormalizedFieldName(
@@ -86,7 +82,10 @@ export default class ModelNameNormalizer implements INormalizer {
     const normalizedName = camelCase(name)
 
     // If there is already a field in this type for the normalized name, don't rename.
-    if (parentType.fields.some(f => f.name === normalizedName && f !== field)) {
+    const conflictingField = parentType.fields.find(
+      f => f.name === normalizedName && f !== field,
+    )
+    if (conflictingField) {
       return null
     }
 
