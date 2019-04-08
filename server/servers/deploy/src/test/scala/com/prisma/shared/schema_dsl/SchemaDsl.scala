@@ -47,6 +47,20 @@ object SchemaDsl extends AwaitUtils {
     }
   }
 
+  def fromStringV11ForExistingDatabase(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector): Project = {
+    val actualCapas    = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
+    val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
+    val project = fromString(
+      id = id,
+      inferredTables = inferredTables,
+      fieldRequirements = deployConnector.fieldRequirements,
+      capabilities = ConnectorCapabilities(actualCapas),
+      dataModelValidator = DataModelValidatorImpl,
+      emptyBaseSchema = Schema.empty
+    )(sdlString)
+    project.copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
+  }
+
   def fromStringV11(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     fromString(
@@ -58,27 +72,12 @@ object SchemaDsl extends AwaitUtils {
       emptyBaseSchema = Schema.emptyV11
     )(sdlString.stripMargin)
   }
+
   private def projectId(suite: Suite): String = {
     // GetFieldFromSQLUniqueException blows up if we generate longer names, since we then exceed the postgres limits for constraint names
     // todo: actually fix GetFieldFromSQLUniqueException instead
     val nameThatMightBeTooLong = suite.getClass.getSimpleName
     nameThatMightBeTooLong.substring(0, Math.min(32, nameThatMightBeTooLong.length))
-  }
-
-  def fromPassiveConnectorSdl(
-      deployConnector: DeployConnector,
-      id: String = TestIds.testProjectId
-  )(sdlString: String): Project = {
-    val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
-    val project = fromString(
-      id = id,
-      inferredTables = inferredTables,
-      fieldRequirements = deployConnector.fieldRequirements,
-      capabilities = deployConnector.capabilities,
-      dataModelValidator = DataModelValidatorImpl,
-      emptyBaseSchema = Schema.empty
-    )(sdlString)
-    project.copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
   }
 
   private def fromString(
