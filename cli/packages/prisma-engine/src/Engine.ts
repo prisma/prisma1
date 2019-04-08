@@ -3,6 +3,7 @@ import { request } from 'graphql-request'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as net from 'net'
+import { safeLoad } from 'js-yaml'
 
 interface EngineConfig {
   prismaConfig?: string
@@ -69,6 +70,11 @@ export class Engine {
     return fs.readFileSync(prismaYmlPath, 'utf-8')
   }
 
+  getDatamodelPath() {
+    const yml = safeLoad(this.prismaConfig)
+    return path.resolve(yml.datamodel)
+  }
+
   /**
    * Resolve the prisma.yml path
    */
@@ -113,6 +119,7 @@ export class Engine {
     this.child = spawn(path.join(__dirname, '../prisma'), [], {
       env: {
         PRISMA_CONFIG,
+        PRISMA_SCHEMA_PATH: this.getDatamodelPath(),
       },
       detached: false,
       stdio: this.debug ? 'inherit' : 'pipe',
