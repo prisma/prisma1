@@ -137,8 +137,9 @@ export class Command {
     const cmd = new this({ config })
 
     try {
+      await cmd.init(config)
+      
       if (this.printVersionSyncWarning) {
-        await cmd.init(config)
         const { inSync, serverVersion } = await cmd.areServerAndCLIInSync(cmd)
         if (!inSync) {
           cmd.out.log(`${cmd.printVersionSyncWarningMessage()}
