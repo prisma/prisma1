@@ -6,7 +6,7 @@ import com.prisma.ConnectorAwareTest
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
 import com.prisma.config.PrismaConfig
-import com.prisma.shared.models.ConnectorCapability.RelationLinkListCapability
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, RelationLinkListCapability}
 import com.prisma.shared.models.Project
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -60,6 +60,12 @@ trait ApiSpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Before
 
   val listInlineArgument = if (capabilities.has(RelationLinkListCapability)) {
     "link: INLINE"
+  } else {
+    ""
+  }
+
+  val scalarListDirective = if (capabilities.hasNot(EmbeddedScalarListsCapability)) {
+    "@scalarList(strategy: RELATION)"
   } else {
     ""
   }

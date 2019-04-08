@@ -1,6 +1,5 @@
 package com.prisma.api.mutations
 
-import com.prisma.{IgnoreMongo, IgnoreMySql}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.UuidIdCapability
 import com.prisma.shared.models.Project
@@ -9,8 +8,13 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    schema.model("Todo").field_!("title", _.String, isUnique = true)
+  val project = SchemaDsl.fromStringV11() {
+    """
+      |type Todo {
+      |  id: ID! @id
+      |  title: String! @unique
+      |}
+    """.stripMargin
   }
 
   "The delete mutation" should "delete the item matching the where clause" in {
