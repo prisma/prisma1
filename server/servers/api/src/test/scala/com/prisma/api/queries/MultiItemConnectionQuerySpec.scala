@@ -5,12 +5,15 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
+  val project = SchemaDsl.fromStringV11() {
+    """type Todo {
+      |  id: ID! @id
+      |  title: String!
+      |}
+    """.stripMargin
+  }
 
   "the connection query" should "return empty edges" in {
-
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
-    }
     database.setup(project)
 
     val result = server.query(
@@ -30,9 +33,6 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
   }
 
   "the connection query" should "return single node" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
-    }
     database.setup(project)
 
     val title = "Hello World!"
@@ -64,9 +64,6 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
   }
 
   "the connection query" should "filter by any field" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
-    }
     database.setup(project)
 
     val title = "Hello World!"
