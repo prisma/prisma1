@@ -77,8 +77,14 @@ export abstract class Normalizer {
     obj: T,
   ) {
     const [baseCandidate] = baseObjs.filter(base => {
-      if (base.databaseName) {
+      // We always look up by database name, if possible.
+      // Otherwise we might do a wrong lookup.
+      if (base.databaseName && obj.databaseName) {
+        return base.databaseName === obj.databaseName
+      } else if (base.databaseName) {
         return base.databaseName === obj.name
+      } else if (obj.databaseName) {
+        return base.name === obj.databaseName
       } else {
         return base.name === obj.name
       }

@@ -123,13 +123,13 @@ type Tag @pgTable(name: \\"tags\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TagRelation.parent.
-  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
+  # It references TagRelation.child.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationChild\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TagRelation.child.
-  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationChild\\")
+  # It references TagRelation.parent.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
 }
 
 type TagRelation @linkTable @pgTable(name: \\"tag_relations\\") {
@@ -156,13 +156,13 @@ type User @pgTable(name: \\"users\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Question.asker.
-  # questions: [Question] @relation(name: \\"QuestionAskerToUserQuestions\\")
+  # It references Question.answerer.
+  # questions: [Question] @relation(name: \\"QuestionAnswererToUserQuestions\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Question.answerer.
-  # questions: [Question] @relation(name: \\"QuestionAnswererToUserQuestions\\")
+  # It references Question.asker.
+  # questions: [Question] @relation(name: \\"QuestionAskerToUserQuestions\\")
   sessionSeriesTas: [SessionSeriesTa]
   sessionTas: [SessionTa]
 }"
@@ -291,13 +291,13 @@ type Tag @db(name: \\"tags\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TagRelation.parent.
-  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
+  # It references TagRelation.child.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationChild\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TagRelation.child.
-  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationChild\\")
+  # It references TagRelation.parent.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
 }
 
 type TagRelation @db(name: \\"tag_relations\\") @linkTable {
@@ -324,13 +324,13 @@ type User @db(name: \\"users\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Question.asker.
-  # questions: [Question] @relation(name: \\"QuestionAskerToUserQuestions\\")
+  # It references Question.answerer.
+  # questions: [Question] @relation(name: \\"QuestionAnswererToUserQuestions\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Question.answerer.
-  # questions: [Question] @relation(name: \\"QuestionAnswererToUserQuestions\\")
+  # It references Question.asker.
+  # questions: [Question] @relation(name: \\"QuestionAskerToUserQuestions\\")
   sessionSeriesTas: [SessionSeriesTa]
   sessionTas: [SessionTa]
 }"
