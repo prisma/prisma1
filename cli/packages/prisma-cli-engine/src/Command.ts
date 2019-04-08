@@ -137,15 +137,17 @@ export class Command {
     const cmd = new this({ config })
 
     try {
-      await cmd.init(config)
-      const { inSync, serverVersion } = await cmd.areServerAndCLIInSync(cmd)
-      if (this.printVersionSyncWarning && !inSync) {
-        cmd.out.log(`${cmd.printVersionSyncWarningMessage()}
-
-${cmd.printCLIVersion()}${cmd.printServerVersion(serverVersion)}
-
-For further information, please read: http://bit.ly/prisma-cli-server-sync
-`)
+      if (this.printVersionSyncWarning) {
+        await cmd.init(config)
+        const { inSync, serverVersion } = await cmd.areServerAndCLIInSync(cmd)
+        if (!inSync) {
+          cmd.out.log(`${cmd.printVersionSyncWarningMessage()}
+  
+  ${cmd.printCLIVersion()}${cmd.printServerVersion(serverVersion)}
+  
+  For further information, please read: http://bit.ly/prisma-cli-server-sync
+  `)
+        }
       }
 
       await cmd.run()
