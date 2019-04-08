@@ -23,6 +23,7 @@ mod sqlite;
 
 pub use database_executor::*;
 pub use database_readwrite::*;
+pub use filter_conversion::*;
 pub use mutaction::*;
 pub use query_builder::SelectDefinition;
 pub use sqlite::*;

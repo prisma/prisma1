@@ -1,4 +1,4 @@
-use crate::NodeSelector;
+use crate::{NodeSelector, RelationCompare, ScalarCompare};
 use prisma_models::{PrismaValue, RelationField, ScalarField};
 use std::sync::Arc;
 
@@ -97,6 +97,7 @@ pub enum ScalarListCondition {
 pub struct OneRelationIsNullFilter {
     pub field: Arc<RelationField>,
 }
+
 #[derive(Debug, Clone)]
 pub struct ScalarListFilter {
     pub field: Arc<ScalarField>,
@@ -121,7 +122,7 @@ pub enum RelationCondition {
     EveryRelatedNode,
     AtLeastOneRelatedNode,
     NoRelatedNode,
-    ToOneRelatedNode,
+    ToOneRelatedNode, // TODO: This is needed for Mongo and should be discussed with Matthias
 }
 
 impl RelationCondition {
@@ -130,5 +131,585 @@ impl RelationCondition {
             RelationCondition::EveryRelatedNode => true,
             _ => false,
         }
+    }
+}
+
+impl ScalarCompare for Arc<ScalarField> {
+    /// Field equals the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("name").unwrap();
+    /// let filter = field.equals("foo");
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::Equals(val) }) => {
+    ///         assert_eq!(PrismaValue::from("foo"), val);
+    ///         assert_eq!(String::from("name"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn equals<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::Equals(val.into()),
+        })
+    }
+
+    /// Field does not equal the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("name").unwrap();
+    /// let filter = field.not_equals(false);
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::NotEquals(val) }) => {
+    ///         assert_eq!(PrismaValue::from(false), val);
+    ///         assert_eq!(String::from("name"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn not_equals<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::NotEquals(val.into()),
+        })
+    }
+
+    /// Field contains the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("name").unwrap();
+    /// let filter = field.contains("asdf");
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::Contains(val) }) => {
+    ///         assert_eq!(PrismaValue::from("asdf"), val);
+    ///         assert_eq!(String::from("name"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn contains<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::Contains(val.into()),
+        })
+    }
+
+    /// Field does not contain the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("name").unwrap();
+    /// let filter = field.not_contains("asdf");
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::NotContains(val) }) => {
+    ///         assert_eq!(PrismaValue::from("asdf"), val);
+    ///         assert_eq!(String::from("name"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn not_contains<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::NotContains(val.into()),
+        })
+    }
+
+    /// Field starts with the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("name").unwrap();
+    /// let filter = field.starts_with("qwert");
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::StartsWith(val) }) => {
+    ///         assert_eq!(PrismaValue::from("qwert"), val);
+    ///         assert_eq!(String::from("name"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn starts_with<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::StartsWith(val.into()),
+        })
+    }
+
+    /// Field does not start with the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("name").unwrap();
+    /// let filter = field.not_starts_with("qwert");
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::NotStartsWith(val) }) => {
+    ///         assert_eq!(PrismaValue::from("qwert"), val);
+    ///         assert_eq!(String::from("name"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn not_starts_with<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::NotStartsWith(val.into()),
+        })
+    }
+
+    /// Field ends with the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("name").unwrap();
+    /// let filter = field.ends_with("musti");
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::EndsWith(val) }) => {
+    ///         assert_eq!(PrismaValue::from("musti"), val);
+    ///         assert_eq!(String::from("name"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn ends_with<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::EndsWith(val.into()),
+        })
+    }
+
+    /// Field does not end with the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("name").unwrap();
+    /// let filter = field.not_ends_with("naukio");
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::NotEndsWith(val) }) => {
+    ///         assert_eq!(PrismaValue::from("naukio"), val);
+    ///         assert_eq!(String::from("name"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn not_ends_with<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::NotEndsWith(val.into()),
+        })
+    }
+
+    /// Field is less than the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("id").unwrap();
+    /// let filter = field.less_than(10);
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::LessThan(val) }) => {
+    ///         assert_eq!(PrismaValue::from(10), val);
+    ///         assert_eq!(String::from("id"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn less_than<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::LessThan(val.into()),
+        })
+    }
+
+    /// Field is less than or equals the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("id").unwrap();
+    /// let filter = field.less_than_or_equals(10);
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::LessThanOrEquals(val) }) => {
+    ///         assert_eq!(PrismaValue::from(10), val);
+    ///         assert_eq!(String::from("id"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn less_than_or_equals<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::LessThanOrEquals(val.into()),
+        })
+    }
+
+    /// Field is greater than the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("id").unwrap();
+    /// let filter = field.greater_than(10);
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::GreaterThan(val) }) => {
+    ///         assert_eq!(PrismaValue::from(10), val);
+    ///         assert_eq!(String::from("id"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn greater_than<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::GreaterThan(val.into()),
+        })
+    }
+
+    /// Field is greater than or equals the given value.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let model = schema.find_model("User").unwrap();
+    /// #
+    /// let field = model.fields().find_from_scalar("id").unwrap();
+    /// let filter = field.greater_than_or_equals(10);
+    ///
+    /// match filter {
+    ///     Filter::Scalar(ScalarFilter { field: field, condition: ScalarCondition::GreaterThanOrEquals(val) }) => {
+    ///         assert_eq!(PrismaValue::from(10), val);
+    ///         assert_eq!(String::from("id"), field.name);
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn greater_than_or_equals<T>(&self, val: T) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::GreaterThanOrEquals(val.into()),
+        })
+    }
+}
+
+impl RelationCompare for Arc<RelationField> {
+    /// Every related record matches the filter.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let user = schema.find_model("User").unwrap();
+    /// # let site = schema.find_model("Site").unwrap();
+    /// #
+    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
+    /// let site_name = site.fields().find_from_scalar("name").unwrap();
+    /// let filter = rel_field.every_related(site_name.equals("Blog"));
+    ///
+    /// match filter {
+    ///     Filter::Relation(RelationFilter {
+    ///         field: relation_field,
+    ///         nested_filter: nested,
+    ///         condition: condition,
+    ///     }) => {
+    ///         assert_eq!(String::from("sites"), relation_field.name);
+    ///         assert_eq!(RelationCondition::EveryRelatedNode, condition);
+    ///
+    ///         match *nested {
+    ///             Filter::Scalar(ScalarFilter {
+    ///                 field: scalar_field,
+    ///                 condition: ScalarCondition::Equals(scalar_val),
+    ///             }) => {
+    ///                 assert_eq!(String::from("name"), scalar_field.name);
+    ///                 assert_eq!(PrismaValue::from("Blog"), scalar_val);
+    ///             }
+    ///             _ => unreachable!()
+    ///         }
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn every_related<T>(&self, filter: T) -> Filter
+    where
+        T: Into<Filter>,
+    {
+        Filter::from(RelationFilter {
+            field: Arc::clone(self),
+            nested_filter: Box::new(filter.into()),
+            condition: RelationCondition::EveryRelatedNode,
+        })
+    }
+
+    /// At least one related record matches the filter.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let user = schema.find_model("User").unwrap();
+    /// # let site = schema.find_model("Site").unwrap();
+    /// #
+    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
+    /// let site_name = site.fields().find_from_scalar("name").unwrap();
+    /// let filter = rel_field.at_least_one_related(site_name.equals("Blog"));
+    ///
+    /// match filter {
+    ///     Filter::Relation(RelationFilter {
+    ///         field: relation_field,
+    ///         nested_filter: nested,
+    ///         condition: condition,
+    ///     }) => {
+    ///         assert_eq!(String::from("sites"), relation_field.name);
+    ///         assert_eq!(RelationCondition::AtLeastOneRelatedNode, condition);
+    ///
+    ///         match *nested {
+    ///             Filter::Scalar(ScalarFilter {
+    ///                 field: scalar_field,
+    ///                 condition: ScalarCondition::Equals(scalar_val),
+    ///             }) => {
+    ///                 assert_eq!(String::from("name"), scalar_field.name);
+    ///                 assert_eq!(PrismaValue::from("Blog"), scalar_val);
+    ///             }
+    ///             _ => unreachable!()
+    ///         }
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn at_least_one_related<T>(&self, filter: T) -> Filter
+    where
+        T: Into<Filter>,
+    {
+        Filter::from(RelationFilter {
+            field: Arc::clone(self),
+            nested_filter: Box::new(filter.into()),
+            condition: RelationCondition::AtLeastOneRelatedNode,
+        })
+    }
+
+    /// None of the related records matches the filter.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let user = schema.find_model("User").unwrap();
+    /// # let site = schema.find_model("Site").unwrap();
+    /// #
+    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
+    /// let site_name = site.fields().find_from_scalar("name").unwrap();
+    /// let filter = rel_field.no_related(site_name.equals("Blog"));
+    ///
+    /// match filter {
+    ///     Filter::Relation(RelationFilter {
+    ///         field: relation_field,
+    ///         nested_filter: nested,
+    ///         condition: condition,
+    ///     }) => {
+    ///         assert_eq!(String::from("sites"), relation_field.name);
+    ///         assert_eq!(RelationCondition::NoRelatedNode, condition);
+    ///
+    ///         match *nested {
+    ///             Filter::Scalar(ScalarFilter {
+    ///                 field: scalar_field,
+    ///                 condition: ScalarCondition::Equals(scalar_val),
+    ///             }) => {
+    ///                 assert_eq!(String::from("name"), scalar_field.name);
+    ///                 assert_eq!(PrismaValue::from("Blog"), scalar_val);
+    ///             }
+    ///             _ => unreachable!()
+    ///         }
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn no_related<T>(&self, filter: T) -> Filter
+    where
+        T: Into<Filter>,
+    {
+        Filter::from(RelationFilter {
+            field: Arc::clone(self),
+            nested_filter: Box::new(filter.into()),
+            condition: RelationCondition::NoRelatedNode,
+        })
+    }
+
+    /// One of the relations is `Null`.
+    /// ```rust
+    /// # use connector::*;
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let user = schema.find_model("User").unwrap();
+    /// #
+    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
+    /// let filter = rel_field.one_relation_is_null();
+    ///
+    /// match filter {
+    ///     Filter::OneRelationIsNull(OneRelationIsNullFilter { field }) =>
+    ///         assert_eq!(String::from("sites"), field.name),
+    ///     _ => unreachable!()
+    /// };
+    /// ```
+    fn one_relation_is_null(&self) -> Filter {
+        Filter::from(OneRelationIsNullFilter {
+            field: Arc::clone(self),
+        })
     }
 }

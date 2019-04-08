@@ -2,6 +2,7 @@
 #![macro_use]
 extern crate failure_derive;
 
+mod compare;
 mod data_resolver;
 mod database_mutaction_executor;
 mod error;
@@ -10,6 +11,7 @@ mod mutaction;
 mod node_selector;
 mod query_arguments;
 
+pub use compare::*;
 pub use data_resolver::*;
 pub use database_mutaction_executor::*;
 pub use error::*;
