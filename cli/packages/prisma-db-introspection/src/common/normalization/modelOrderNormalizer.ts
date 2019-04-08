@@ -82,11 +82,20 @@ export default class ModelOrderNormalizer extends Normalizer {
       const aName = a.name.toLowerCase()
       const bName = b.name.toLowerCase()
       if (aName === bName) {
-        // This is to avoid flaky tests. The sort algorithm is
-        // not stable and equality would swap fields back and forth
-        // randomly. We simply sort by index in the equal case
-        // to make the sort algo stable.
-        return aIndex < bIndex ? -1 : 1
+        if (a.relatedField !== null && b.relatedField !== null) {
+          // This is to avoid flaky tests. The sort algorithm is
+          // not stable and equality would swap fields back and forth
+          // randomly, which causes trouble with related fields.
+          return a.relatedField.name.toLowerCase() <
+            b.relatedField.name.toLowerCase()
+            ? -1
+            : 1
+        } else {
+          // If everything else seems equal,
+          // we utilize the zipped index to force
+          // stable ordering.
+          return aIndex < bIndex ? -1 : 1
+        }
       } else {
         return aName < bName ? -1 : 1
       }

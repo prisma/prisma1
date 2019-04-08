@@ -27,13 +27,13 @@ type Affiliation @pgTable(name: \\"affiliations\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references AffiliationPhase.ancestorAffiliation.
-  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAncestorAffiliation\\")
+  # It references AffiliationPhase.affiliation.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAffiliation\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references AffiliationPhase.affiliation.
-  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAffiliation\\")
+  # It references AffiliationPhase.ancestorAffiliation.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAncestorAffiliation\\")
   affiliationsDocuments: [AffiliationsDocument]
   affiliationsEvents: [AffiliationsEvent]
   affiliationsMedia: [AffiliationsMedia]
@@ -826,13 +826,8 @@ type Location @pgTable(name: \\"locations\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Person.residenceLocation.
-  # persons: [Person] @relation(name: \\"LocationPersonsToPersonResidenceLocation\\")
-  # Field name normalization failed because of a conflicting field name.
-  # Could not auto-generate backwards relation field, field name would be ambiguous.
-  # Please specify the name of this field and the name of the relation manually.
-  # It references Person.hometownLocation.
-  # persons: [Person] @relation(name: \\"LocationPersonsToPersonHometownLocation\\")
+  # It references Person.birthLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
@@ -841,8 +836,13 @@ type Location @pgTable(name: \\"locations\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Person.birthLocation.
-  # persons: [Person] @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
+  # It references Person.hometownLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonHometownLocation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.residenceLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonResidenceLocation\\")
   sites: [Site]
   timezone: String
 }
@@ -999,24 +999,24 @@ type Person @pgTable(name: \\"persons\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballActionSubstitution.personReplacing.
-  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingToPersonBaseballActionSubstitutions\\")
+  # It references BaseballActionSubstitution.personOriginal.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalToPersonBaseballActionSubstitutions\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballActionSubstitution.personOriginal.
-  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalToPersonBaseballActionSubstitutions\\")
+  # It references BaseballActionSubstitution.personReplacing.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingToPersonBaseballActionSubstitutions\\")
   baseballDefensivePlayers: [BaseballDefensivePlayer]
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballEventState.runner_on_third_id.
-  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_third_idToPersonBaseballEventStates\\")
+  # It references BaseballEventState.batter.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateBatterToPersonBaseballEventStates\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballEventState.runner_on_second_id.
-  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_second_idToPersonBaseballEventStates\\")
+  # It references BaseballEventState.pitcher.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStatePitcherToPersonBaseballEventStates\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
@@ -1025,10 +1025,10 @@ type Person @pgTable(name: \\"persons\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballEventState.pitcher.
-  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStatePitcherToPersonBaseballEventStates\\")
+  # It references BaseballEventState.runner_on_second_id.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_second_idToPersonBaseballEventStates\\")
   # Field name normalization failed because of a conflicting field name.
-  baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateBatterToPersonBaseballEventStates\\")
+  baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_third_idToPersonBaseballEventStates\\")
   birthDate: String @pgColumn(name: \\"birth_date\\")
   birthLocation: Location @pgColumn(name: \\"birth_location_id\\") @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
   deathDate: String @pgColumn(name: \\"death_date\\")
@@ -1102,13 +1102,13 @@ type Position @pgTable(name: \\"positions\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballActionSubstitution.personReplacingPosition.
-  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingPositionToPositionBaseballActionSubstitutions\\")
+  # It references BaseballActionSubstitution.personOriginalPosition.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalPositionToPositionBaseballActionSubstitutions\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballActionSubstitution.personOriginalPosition.
-  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalPositionToPositionBaseballActionSubstitutions\\")
+  # It references BaseballActionSubstitution.personReplacingPosition.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingPositionToPositionBaseballActionSubstitutions\\")
   baseballDefensivePlayers: [BaseballDefensivePlayer]
   corePersonStats: [CorePersonStat]
   personEventMetadata: [PersonEventMetadatum]
@@ -1123,13 +1123,13 @@ type Publisher @pgTable(name: \\"publishers\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Document.source.
-  # documents: [Document] @relation(name: \\"DocumentSourceToPublisherDocuments\\")
+  # It references Document.publisher.
+  # documents: [Document] @relation(name: \\"DocumentPublisherToPublisherDocuments\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Document.publisher.
-  # documents: [Document] @relation(name: \\"DocumentPublisherToPublisherDocuments\\")
+  # It references Document.source.
+  # documents: [Document] @relation(name: \\"DocumentSourceToPublisherDocuments\\")
   events: [Event]
   media: [Media]
   persons: [Person]
@@ -1169,13 +1169,13 @@ type Season @pgTable(name: \\"seasons\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references PersonPhase.startSeason.
-  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseStartSeasonToSeasonPersonPhases\\")
+  # It references PersonPhase.endSeason.
+  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseEndSeasonToSeasonPersonPhases\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references PersonPhase.endSeason.
-  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseEndSeasonToSeasonPersonPhases\\")
+  # It references PersonPhase.startSeason.
+  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseStartSeasonToSeasonPersonPhases\\")
   publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
   seasonKey: Int! @pgColumn(name: \\"season_key\\")
   startDateTime: DateTime @pgColumn(name: \\"start_date_time\\")
@@ -1183,13 +1183,13 @@ type Season @pgTable(name: \\"seasons\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TeamPhase.startSeason.
-  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseStartSeason\\")
+  # It references TeamPhase.endSeason.
+  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseEndSeason\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TeamPhase.endSeason.
-  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseEndSeason\\")
+  # It references TeamPhase.startSeason.
+  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseStartSeason\\")
 }
 
 type Site @pgTable(name: \\"sites\\") {
@@ -1558,13 +1558,13 @@ type Affiliation @db(name: \\"affiliations\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references AffiliationPhase.ancestorAffiliation.
-  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAncestorAffiliation\\")
+  # It references AffiliationPhase.affiliation.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAffiliation\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references AffiliationPhase.affiliation.
-  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAffiliation\\")
+  # It references AffiliationPhase.ancestorAffiliation.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAncestorAffiliation\\")
   affiliationsDocuments: [AffiliationsDocument]
   affiliationsEvents: [AffiliationsEvent]
   affiliationsMedia: [AffiliationsMedia]
@@ -2357,13 +2357,8 @@ type Location @db(name: \\"locations\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Person.residenceLocation.
-  # persons: [Person] @relation(name: \\"LocationPersonsToPersonResidenceLocation\\")
-  # Field name normalization failed because of a conflicting field name.
-  # Could not auto-generate backwards relation field, field name would be ambiguous.
-  # Please specify the name of this field and the name of the relation manually.
-  # It references Person.hometownLocation.
-  # persons: [Person] @relation(name: \\"LocationPersonsToPersonHometownLocation\\")
+  # It references Person.birthLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
@@ -2372,8 +2367,13 @@ type Location @db(name: \\"locations\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Person.birthLocation.
-  # persons: [Person] @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
+  # It references Person.hometownLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonHometownLocation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.residenceLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonResidenceLocation\\")
   sites: [Site]
   timezone: String
 }
@@ -2530,24 +2530,24 @@ type Person @db(name: \\"persons\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballActionSubstitution.personReplacing.
-  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingToPersonBaseballActionSubstitutions\\")
+  # It references BaseballActionSubstitution.personOriginal.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalToPersonBaseballActionSubstitutions\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballActionSubstitution.personOriginal.
-  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalToPersonBaseballActionSubstitutions\\")
+  # It references BaseballActionSubstitution.personReplacing.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingToPersonBaseballActionSubstitutions\\")
   baseballDefensivePlayers: [BaseballDefensivePlayer]
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballEventState.runner_on_third_id.
-  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_third_idToPersonBaseballEventStates\\")
+  # It references BaseballEventState.batter.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateBatterToPersonBaseballEventStates\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballEventState.runner_on_second_id.
-  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_second_idToPersonBaseballEventStates\\")
+  # It references BaseballEventState.pitcher.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStatePitcherToPersonBaseballEventStates\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
@@ -2556,10 +2556,10 @@ type Person @db(name: \\"persons\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballEventState.pitcher.
-  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStatePitcherToPersonBaseballEventStates\\")
+  # It references BaseballEventState.runner_on_second_id.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_second_idToPersonBaseballEventStates\\")
   # Field name normalization failed because of a conflicting field name.
-  baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateBatterToPersonBaseballEventStates\\")
+  baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_third_idToPersonBaseballEventStates\\")
   birthDate: String @db(name: \\"birth_date\\")
   birthLocation: Location @db(name: \\"birth_location_id\\") @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
   deathDate: String @db(name: \\"death_date\\")
@@ -2633,13 +2633,13 @@ type Position @db(name: \\"positions\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballActionSubstitution.personReplacingPosition.
-  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingPositionToPositionBaseballActionSubstitutions\\")
+  # It references BaseballActionSubstitution.personOriginalPosition.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalPositionToPositionBaseballActionSubstitutions\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references BaseballActionSubstitution.personOriginalPosition.
-  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalPositionToPositionBaseballActionSubstitutions\\")
+  # It references BaseballActionSubstitution.personReplacingPosition.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingPositionToPositionBaseballActionSubstitutions\\")
   baseballDefensivePlayers: [BaseballDefensivePlayer]
   corePersonStats: [CorePersonStat]
   personEventMetadata: [PersonEventMetadatum]
@@ -2654,13 +2654,13 @@ type Publisher @db(name: \\"publishers\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Document.source.
-  # documents: [Document] @relation(name: \\"DocumentSourceToPublisherDocuments\\")
+  # It references Document.publisher.
+  # documents: [Document] @relation(name: \\"DocumentPublisherToPublisherDocuments\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Document.publisher.
-  # documents: [Document] @relation(name: \\"DocumentPublisherToPublisherDocuments\\")
+  # It references Document.source.
+  # documents: [Document] @relation(name: \\"DocumentSourceToPublisherDocuments\\")
   events: [Event]
   media: [Media]
   persons: [Person]
@@ -2700,13 +2700,13 @@ type Season @db(name: \\"seasons\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references PersonPhase.startSeason.
-  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseStartSeasonToSeasonPersonPhases\\")
+  # It references PersonPhase.endSeason.
+  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseEndSeasonToSeasonPersonPhases\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references PersonPhase.endSeason.
-  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseEndSeasonToSeasonPersonPhases\\")
+  # It references PersonPhase.startSeason.
+  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseStartSeasonToSeasonPersonPhases\\")
   publisher: Publisher! @db(name: \\"publisher_id\\")
   seasonKey: Int! @db(name: \\"season_key\\")
   startDateTime: DateTime @db(name: \\"start_date_time\\")
@@ -2714,13 +2714,13 @@ type Season @db(name: \\"seasons\\") {
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TeamPhase.startSeason.
-  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseStartSeason\\")
+  # It references TeamPhase.endSeason.
+  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseEndSeason\\")
   # Field name normalization failed because of a conflicting field name.
   # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TeamPhase.endSeason.
-  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseEndSeason\\")
+  # It references TeamPhase.startSeason.
+  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseStartSeason\\")
 }
 
 type Site @db(name: \\"sites\\") {
