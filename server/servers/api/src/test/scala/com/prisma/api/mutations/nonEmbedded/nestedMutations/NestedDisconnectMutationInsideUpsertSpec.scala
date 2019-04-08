@@ -684,7 +684,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   "A PM CM self relation" should "be disconnectable by unique through a nested mutation" in {
     val project = SchemaDsl.fromStringV11() { s"""|type User {
                                               |  id: ID! @id
-                                              |  banned: Boolean! @default(value: "false")
+                                              |  banned: Boolean! @default(value: false)
                                               |  username: String! @unique
                                               |  password: String!
                                               |  salt: String!
@@ -757,7 +757,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
   "A PM CM self relation" should "should throw a correct error for disconnect on invalid unique" in {
     val project = SchemaDsl.fromStringV11() { s"""|type User {
                                               |  id: ID! @id
-                                              |  banned: Boolean! @default(value: "false")
+                                              |  banned: Boolean! @default(value: false)
                                               |  username: String! @unique
                                               |  password: String!
                                               |  salt: String!

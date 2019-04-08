@@ -11,17 +11,6 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def doNotRun               = true // we don't run this suite as it takes ages. We rather run it manually.
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val inlineArgument = if (capabilities.has(RelationLinkListCapability)) {
-    "link: INLINE"
-  } else {
-    ""
-  }
-  val inlineRelationDirective = if (capabilities.has(RelationLinkListCapability)) {
-    "@relation(link: INLINE)"
-  } else {
-    ""
-  }
-
   //Postgres has a limit of 32678 parameters to a query
 
   "The delete many Mutation" should "delete the items matching the where clause" in {
@@ -30,7 +19,7 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
       |type Top {
       |   id: ID! @id
       |   int: Int!
-      |   middles:[Middle] $inlineRelationDirective
+      |   middles:[Middle] $listInlineDirective
       |}
       |
       |type Middle {
@@ -110,14 +99,14 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Top {
         |   id: ID! @id
         |   int: Int @unique
-        |   middles:[Middle] @relation(name: "TopToMiddle", onDelete: CASCADE, $inlineArgument)
+        |   middles:[Middle] @relation(name: "TopToMiddle", onDelete: CASCADE, $listInlineArgument)
         |}
         |
         |type Middle {
         |   id: ID! @id
         |   int: Int! @unique
         |   top: Top @relation(name: "TopToMiddle")
-        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE, $inlineArgument)
+        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE, $listInlineArgument)
         |}
         |
         |type Bottom {
@@ -180,25 +169,25 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
         |type Top{
         |   id: ID! @id
         |   int: Int @unique
-        |   as: [A] @relation(name: "Top" onDelete: CASCADE $inlineArgument)
+        |   as: [A] @relation(name: "Top" onDelete: CASCADE $listInlineArgument)
         |}
         |
         |type A {
         |   id: ID! @id
         |   int: Int @unique
-        |   bs:[B]  @relation(name: "A" onDelete: CASCADE $inlineArgument)
+        |   bs:[B]  @relation(name: "A" onDelete: CASCADE $listInlineArgument)
         |}
         |
         |type B {
         |   id: ID! @id
         |   int: Int
-        |   cs: [C] @relation(name: "B" onDelete: CASCADE $inlineArgument)
+        |   cs: [C] @relation(name: "B" onDelete: CASCADE $listInlineArgument)
         |}
         |
         |type C {
         |   id: ID! @id
         |   int: Int
-        |   ds: [D] @relation(name: "C" onDelete: CASCADE $inlineArgument)
+        |   ds: [D] @relation(name: "C" onDelete: CASCADE $listInlineArgument)
         |}
         |
         |type D {

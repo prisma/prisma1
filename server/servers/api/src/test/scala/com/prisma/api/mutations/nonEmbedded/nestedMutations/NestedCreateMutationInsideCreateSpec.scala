@@ -284,7 +284,7 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
     val project = SchemaDsl.fromStringV11() {
       s"""type Todo{
         |   id: ID! @id
-        |   comments: [Comment] $inlineDirectiveForListField
+        |   comments: [Comment] $listInlineDirective
         |}
         |
         |type Comment{
@@ -359,7 +359,7 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
       s"""type Todo{
         |   id: ID! @id
         |   title: String!
-        |   tags: [Tag] $inlineDirectiveForListField
+        |   tags: [Tag] $listInlineDirective
         |}
         |
         |type Tag{
@@ -531,7 +531,7 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
       s"""type List{
         |   id: ID! @id
         |   name: String!
-        |   todos: [Todo] $inlineDirectiveForListField
+        |   todos: [Todo] $listInlineDirective
         |}
         |
         |type Todo{
@@ -855,11 +855,5 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
     )
 
     result.toString should be("""{"data":{"users":[{"nick":"marcus","memberships":[{"list":{"name":"Personal Inbox"}}]}]}}""")
-  }
-
-  val inlineDirectiveForListField = if (capabilities.has(RelationLinkListCapability)) {
-    "@relation(link: INLINE)"
-  } else {
-    ""
   }
 }
