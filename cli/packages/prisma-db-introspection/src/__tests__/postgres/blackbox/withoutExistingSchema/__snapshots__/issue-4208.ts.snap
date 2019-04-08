@@ -62,44 +62,44 @@ type Project {
 
 type Question @pgTable(name: \\"questions\\") {
   id: Int! @pgColumn(name: \\"question_id\\") @unique
-  answererId: User @pgColumn(name: \\"answerer_id\\")
-  askerId: User! @pgColumn(name: \\"asker_id\\")
+  answerer: User @pgColumn(name: \\"answerer_id\\") @relation(name: \\"QuestionAnswererToUserQuestions\\")
+  asker: User! @pgColumn(name: \\"asker_id\\") @relation(name: \\"QuestionAskerToUserQuestions\\")
   content: String!
   location: String
   questionTags: [QuestionTag]
-  sessionId: Session! @pgColumn(name: \\"session_id\\")
+  session: Session! @pgColumn(name: \\"session_id\\")
   status: String!
   timeAddressed: DateTime @pgColumn(name: \\"time_addressed\\")
   timeEntered: DateTime! @pgColumn(name: \\"time_entered\\")
 }
 
 type QuestionTag @linkTable @pgTable(name: \\"question_tags\\") {
-  questionId: Question! @pgColumn(name: \\"question_id\\")
-  tagId: Tag! @pgColumn(name: \\"tag_id\\")
+  question: Question! @pgColumn(name: \\"question_id\\")
+  tag: Tag! @pgColumn(name: \\"tag_id\\")
 }
 
 type Session @pgTable(name: \\"sessions\\") {
   id: Int! @pgColumn(name: \\"session_id\\") @unique
   building: String!
-  courseId: Course! @pgColumn(name: \\"course_id\\")
+  course: Course! @pgColumn(name: \\"course_id\\")
   endTime: DateTime! @pgColumn(name: \\"end_time\\")
   questions: [Question]
   room: String!
-  sessionSeriesId: SessionSery @pgColumn(name: \\"session_series_id\\")
+  sessionSeries: SessionSery @pgColumn(name: \\"session_series_id\\")
   sessionTas: [SessionTa]
   startTime: DateTime! @pgColumn(name: \\"start_time\\")
   title: String
 }
 
 type SessionSeriesTa @linkTable @pgTable(name: \\"session_series_tas\\") {
-  sessionSeriesId: SessionSery! @pgColumn(name: \\"session_series_id\\")
-  userId: User! @pgColumn(name: \\"user_id\\")
+  sessionSeries: SessionSery! @pgColumn(name: \\"session_series_id\\")
+  user: User! @pgColumn(name: \\"user_id\\")
 }
 
 type SessionSery @pgTable(name: \\"session_series\\") {
   id: Int! @pgColumn(name: \\"session_series_id\\") @unique
   building: String!
-  courseId: Course! @pgColumn(name: \\"course_id\\")
+  course: Course! @pgColumn(name: \\"course_id\\")
   endTime: DateTime! @pgColumn(name: \\"end_time\\")
   room: String!
   sessions: [Session]
@@ -109,30 +109,32 @@ type SessionSery @pgTable(name: \\"session_series\\") {
 }
 
 type SessionTa @linkTable @pgTable(name: \\"session_tas\\") {
-  sessionId: Session! @pgColumn(name: \\"session_id\\")
-  userId: User! @pgColumn(name: \\"user_id\\")
+  session: Session! @pgColumn(name: \\"session_id\\")
+  user: User! @pgColumn(name: \\"user_id\\")
 }
 
 type Tag @pgTable(name: \\"tags\\") {
   id: Int! @pgColumn(name: \\"tag_id\\") @unique
   activated: Boolean! @default(value: true)
-  courseId: Course! @pgColumn(name: \\"course_id\\")
+  course: Course! @pgColumn(name: \\"course_id\\")
   level: Int!
   name: String!
   questionTags: [QuestionTag]
-  # Could not auto-generate backwards relation field, name would be ambigous.
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TagRelation.parentId.
-  # tagRelations: [TagRelation]
-  # Could not auto-generate backwards relation field, name would be ambigous.
+  # It references TagRelation.parent.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TagRelation.childId.
-  # tagRelations: [TagRelation]
+  # It references TagRelation.child.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationChild\\")
 }
 
 type TagRelation @linkTable @pgTable(name: \\"tag_relations\\") {
-  childId: Tag! @pgColumn(name: \\"child_id\\")
-  parentId: Tag! @pgColumn(name: \\"parent_id\\")
+  child: Tag! @pgColumn(name: \\"child_id\\") @relation(name: \\"TagTagRelationsToTagRelationChild\\")
+  parent: Tag! @pgColumn(name: \\"parent_id\\") @relation(name: \\"TagTagRelationsToTagRelationParent\\")
 }
 
 type TelemetryInfo {
@@ -151,14 +153,16 @@ type User @pgTable(name: \\"users\\") {
   lastActivityAt: DateTime @pgColumn(name: \\"last_activity_at\\")
   lastName: String @pgColumn(name: \\"last_name\\")
   photoUrl: String @pgColumn(name: \\"photo_url\\")
-  # Could not auto-generate backwards relation field, name would be ambigous.
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Question.askerId.
-  # questions: [Question]
-  # Could not auto-generate backwards relation field, name would be ambigous.
+  # It references Question.asker.
+  # questions: [Question] @relation(name: \\"QuestionAskerToUserQuestions\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Question.answererId.
-  # questions: [Question]
+  # It references Question.answerer.
+  # questions: [Question] @relation(name: \\"QuestionAnswererToUserQuestions\\")
   sessionSeriesTas: [SessionSeriesTa]
   sessionTas: [SessionTa]
 }"
@@ -226,44 +230,44 @@ type Project {
 
 type Question @db(name: \\"questions\\") {
   question_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"questions_question_id_seq\\", initialValue: 1, allocationSize: 1)
-  answererId: User @db(name: \\"answerer_id\\")
-  askerId: User! @db(name: \\"asker_id\\")
+  answerer: User @db(name: \\"answerer_id\\") @relation(name: \\"QuestionAnswererToUserQuestions\\")
+  asker: User! @db(name: \\"asker_id\\") @relation(name: \\"QuestionAskerToUserQuestions\\")
   content: String!
   location: String
   questionTags: [QuestionTag]
-  sessionId: Session! @db(name: \\"session_id\\")
+  session: Session! @db(name: \\"session_id\\")
   status: String!
   timeAddressed: DateTime @db(name: \\"time_addressed\\")
   timeEntered: DateTime! @db(name: \\"time_entered\\")
 }
 
 type QuestionTag @db(name: \\"question_tags\\") @linkTable {
-  questionId: Question! @db(name: \\"question_id\\")
-  tagId: Tag! @db(name: \\"tag_id\\")
+  question: Question! @db(name: \\"question_id\\")
+  tag: Tag! @db(name: \\"tag_id\\")
 }
 
 type Session @db(name: \\"sessions\\") {
   session_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sessions_session_id_seq\\", initialValue: 1, allocationSize: 1)
   building: String!
-  courseId: Course! @db(name: \\"course_id\\")
+  course: Course! @db(name: \\"course_id\\")
   endTime: DateTime! @db(name: \\"end_time\\")
   questions: [Question]
   room: String!
-  sessionSeriesId: SessionSery @db(name: \\"session_series_id\\")
+  sessionSeries: SessionSery @db(name: \\"session_series_id\\")
   sessionTas: [SessionTa]
   startTime: DateTime! @db(name: \\"start_time\\")
   title: String
 }
 
 type SessionSeriesTa @db(name: \\"session_series_tas\\") @linkTable {
-  sessionSeriesId: SessionSery! @db(name: \\"session_series_id\\")
-  userId: User! @db(name: \\"user_id\\")
+  sessionSeries: SessionSery! @db(name: \\"session_series_id\\")
+  user: User! @db(name: \\"user_id\\")
 }
 
 type SessionSery @db(name: \\"session_series\\") {
   session_series_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"session_series_session_series_id_seq\\", initialValue: 1, allocationSize: 1)
   building: String!
-  courseId: Course! @db(name: \\"course_id\\")
+  course: Course! @db(name: \\"course_id\\")
   endTime: DateTime! @db(name: \\"end_time\\")
   room: String!
   sessions: [Session]
@@ -273,30 +277,32 @@ type SessionSery @db(name: \\"session_series\\") {
 }
 
 type SessionTa @db(name: \\"session_tas\\") @linkTable {
-  sessionId: Session! @db(name: \\"session_id\\")
-  userId: User! @db(name: \\"user_id\\")
+  session: Session! @db(name: \\"session_id\\")
+  user: User! @db(name: \\"user_id\\")
 }
 
 type Tag @db(name: \\"tags\\") {
   tag_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"tags_tag_id_seq\\", initialValue: 1, allocationSize: 1)
   activated: Boolean! @default(value: true)
-  courseId: Course! @db(name: \\"course_id\\")
+  course: Course! @db(name: \\"course_id\\")
   level: Int!
   name: String!
   questionTags: [QuestionTag]
-  # Could not auto-generate backwards relation field, name would be ambigous.
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TagRelation.parentId.
-  # tagRelations: [TagRelation]
-  # Could not auto-generate backwards relation field, name would be ambigous.
+  # It references TagRelation.parent.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references TagRelation.childId.
-  # tagRelations: [TagRelation]
+  # It references TagRelation.child.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationChild\\")
 }
 
 type TagRelation @db(name: \\"tag_relations\\") @linkTable {
-  childId: Tag! @db(name: \\"child_id\\")
-  parentId: Tag! @db(name: \\"parent_id\\")
+  child: Tag! @db(name: \\"child_id\\") @relation(name: \\"TagTagRelationsToTagRelationChild\\")
+  parent: Tag! @db(name: \\"parent_id\\") @relation(name: \\"TagTagRelationsToTagRelationParent\\")
 }
 
 type TelemetryInfo {
@@ -315,14 +321,16 @@ type User @db(name: \\"users\\") {
   lastActivityAt: DateTime @db(name: \\"last_activity_at\\")
   lastName: String @db(name: \\"last_name\\")
   photoUrl: String @db(name: \\"photo_url\\")
-  # Could not auto-generate backwards relation field, name would be ambigous.
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Question.askerId.
-  # questions: [Question]
-  # Could not auto-generate backwards relation field, name would be ambigous.
+  # It references Question.asker.
+  # questions: [Question] @relation(name: \\"QuestionAskerToUserQuestions\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
   # Please specify the name of this field and the name of the relation manually.
-  # It references Question.answererId.
-  # questions: [Question]
+  # It references Question.answerer.
+  # questions: [Question] @relation(name: \\"QuestionAnswererToUserQuestions\\")
   sessionSeriesTas: [SessionSeriesTa]
   sessionTas: [SessionTa]
 }"

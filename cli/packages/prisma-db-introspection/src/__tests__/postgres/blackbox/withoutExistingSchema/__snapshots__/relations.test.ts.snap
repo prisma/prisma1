@@ -4,7 +4,7 @@ exports[`Introspector relation with inline relation column 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   id: Int! @unique
   bill: String!
-  productId: Product @pgColumn(name: \\"product_id\\")
+  product: Product @pgColumn(name: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
@@ -18,7 +18,7 @@ exports[`Introspector relation with inline relation column 2`] = `
 "type Bill @db(name: \\"bill\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bill_id_seq\\", initialValue: 1, allocationSize: 1)
   bill: String!
-  productId: Product @db(name: \\"product_id\\")
+  product: Product @db(name: \\"product_id\\")
 }
 
 type Product @db(name: \\"product\\") {
@@ -32,7 +32,7 @@ exports[`Introspector relation with inline relation column NOT NULL 1`] = `
 "type Bill @pgTable(name: \\"bill\\") {
   id: Int! @unique
   bill: String!
-  productId: Product! @pgColumn(name: \\"product_id\\")
+  product: Product! @pgColumn(name: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
@@ -46,7 +46,7 @@ exports[`Introspector relation with inline relation column NOT NULL 2`] = `
 "type Bill @db(name: \\"bill\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bill_id_seq\\", initialValue: 1, allocationSize: 1)
   bill: String!
-  productId: Product! @db(name: \\"product_id\\")
+  product: Product! @db(name: \\"product_id\\")
 }
 
 type Product @db(name: \\"product\\") {
@@ -64,8 +64,8 @@ exports[`Introspector relation with relation table 1`] = `
 }
 
 type BillProduct @linkTable @pgTable(name: \\"bill_product\\") {
-  billId: Bill @pgColumn(name: \\"bill_id\\")
-  productId: Product @pgColumn(name: \\"product_id\\")
+  bill: Bill @pgColumn(name: \\"bill_id\\")
+  product: Product @pgColumn(name: \\"product_id\\")
 }
 
 type Product @pgTable(name: \\"product\\") {
@@ -83,8 +83,8 @@ exports[`Introspector relation with relation table 2`] = `
 }
 
 type BillProduct @db(name: \\"bill_product\\") @linkTable {
-  billId: Bill @db(name: \\"bill_id\\")
-  productId: Product @db(name: \\"product_id\\")
+  bill: Bill @db(name: \\"bill_id\\")
+  product: Product @db(name: \\"product_id\\")
 }
 
 type Product @db(name: \\"product\\") {
@@ -102,8 +102,8 @@ exports[`Introspector relation with relation table with extra column 1`] = `
 }
 
 type BillProduct @pgTable(name: \\"bill_product\\") {
-  billId: Bill @pgColumn(name: \\"bill_id\\")
-  productId: Product @pgColumn(name: \\"product_id\\")
+  bill: Bill @pgColumn(name: \\"bill_id\\")
+  product: Product @pgColumn(name: \\"product_id\\")
   someOtherColumn: String! @pgColumn(name: \\"some_other_column\\")
 }
 
@@ -122,8 +122,8 @@ exports[`Introspector relation with relation table with extra column 2`] = `
 }
 
 type BillProduct @db(name: \\"bill_product\\") {
-  billId: Bill @db(name: \\"bill_id\\")
-  productId: Product @db(name: \\"product_id\\")
+  bill: Bill @db(name: \\"bill_id\\")
+  product: Product @db(name: \\"product_id\\")
   someOtherColumn: String! @db(name: \\"some_other_column\\")
 }
 

@@ -160,7 +160,7 @@ describe('Schema normalization from existing mongo schema', () => {
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
 
-  it('Should remove ambigous relation names.', () => {
+  it('Should remove ambiguous relation names.', () => {
     const schemaFromDb = `
       type User {
         email: String! @id
@@ -192,7 +192,7 @@ describe('Schema normalization from existing mongo schema', () => {
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
 
-  it('Should not remove non-ambigous relation names.', () => {
+  it('Should not remove non-ambiguous relation names.', () => {
     const schemaFromDb = `
       type User {
         email: String! @id
@@ -226,7 +226,7 @@ describe('Schema normalization from existing mongo schema', () => {
     testWithExisting(schemaFromDb, existingSchema, expectedResultSchema)
   })
 
-  it('Should not remove ambigous relation names when they are explicitely named in the existing schema.', () => {
+  it('Should not remove ambiguous relation names when they are explicitely named in the existing schema.', () => {
     const schemaFromDb = `
       type User {
         email: String! @id

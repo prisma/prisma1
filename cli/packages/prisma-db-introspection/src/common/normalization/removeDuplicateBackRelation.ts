@@ -21,7 +21,7 @@ export class RemoveDuplicateBackRelation implements INormalizer {
             // Mark both as error'd.
             other.comments.push({
               isError: true,
-              text: `Could not auto-generate backwards relation field, name would be ambigous.`,
+              text: `Could not auto-generate backwards relation field, field name would be ambiguous.`,
             })
 
             other.comments.push({
@@ -38,7 +38,7 @@ export class RemoveDuplicateBackRelation implements INormalizer {
 
             field.comments.push({
               isError: true,
-              text: `Could not auto-generate backwards relation field, name would be ambigous.`,
+              text: `Could not auto-generate backwards relation field, field name would be ambiguous.`,
             })
 
             field.comments.push({

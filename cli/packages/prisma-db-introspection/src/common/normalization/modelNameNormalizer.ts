@@ -67,16 +67,27 @@ export default class ModelNameNormalizer implements INormalizer {
     }
   }
 
-  protected getNormalizedFieldName(name: string, type: IGQLType) {
+  protected getNormalizedFieldName(
+    name: string,
+    parentType: IGQLType,
+    field: IGQLField,
+  ) {
+    // For all-uppercase field names, we do not normalize.
     if (name.toUpperCase() === name) {
       return name.toLowerCase()
     }
 
+    // Trim _id from related fields.
+    if (typeof field.type !== 'string' && name.toLowerCase().endsWith('_id')) {
+      name = name.substring(0, name.length - 3)
+    }
+
+    // Follow prisma conventions.
     const normalizedName = camelCase(name)
 
-    // if there is already a field of in this type for the normalized name, don't rename.
-    if (type.fields.some(t => t.name === normalizedName)) {
-      return name
+    // If there is already a field in this type for the normalized name, don't rename.
+    if (parentType.fields.some(f => f.name === normalizedName && f !== field)) {
+      return null
     }
 
     return normalizedName
@@ -89,8 +100,20 @@ export default class ModelNameNormalizer implements INormalizer {
   ) {
     // Make field names pretty
     if (!parentType.isEnum && !field.isId) {
-      const normalizedName = this.getNormalizedFieldName(field.name, parentType)
-      this.assignName(field, normalizedName)
+      let normalizedName = this.getNormalizedFieldName(
+        field.name,
+        parentType,
+        field,
+      )
+      if (normalizedName === null) {
+        field.comments.push({
+          isError: false,
+          text:
+            'Field name normalization failed because of a conflicting field name.',
+        })
+      } else {
+        this.assignName(field, normalizedName)
+      }
     }
 
     // Make embedded type names pretty
