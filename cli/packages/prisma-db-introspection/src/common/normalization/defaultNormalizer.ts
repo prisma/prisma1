@@ -25,7 +25,7 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null),
         new ModelOrderNormalizer(null),
-        new RemoveDuplicateBackRelation(),
+        new RemoveDuplicateBackRelation(null),
         new NameAmbiguousBackRelation(null),
       ])
     } else {
@@ -34,7 +34,7 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null),
         new ModelOrderNormalizer(null),
-        new RemoveDuplicateBackRelation(),
+        new RemoveDuplicateBackRelation(null),
         new NameAmbiguousBackRelation(null),
       ])
     }
@@ -52,7 +52,7 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
         new RemoveBackRelation(baseModel),
-        new RemoveDuplicateBackRelation(),
+        new RemoveDuplicateBackRelation(null),
         new NameAmbiguousBackRelation(null),
       ])
     } else {
@@ -64,7 +64,7 @@ export default abstract class DefaultNormalizer {
         new ModelOrderNormalizer(baseModel),
         new AdjustJoinTableCardinality(baseModel),
         new RemoveBackRelation(baseModel),
-        new RemoveDuplicateBackRelation(),
+        new RemoveDuplicateBackRelation(null),
         new NameAmbiguousBackRelation(null),
       ])
     }
