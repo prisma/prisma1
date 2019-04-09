@@ -179,7 +179,7 @@ impl AliasedCondition for ScalarFilter {
     /// ```rust
     /// # use sqlite_connector::*;
     /// # use prisma_models::*;
-    /// # use connector::*;
+    /// # use connector::{*, filter::*};
     /// # use prisma_query::ast::*;
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};

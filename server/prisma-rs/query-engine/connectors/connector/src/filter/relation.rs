@@ -1,5 +1,5 @@
-use super::Filter;
 use crate::compare::RelationCompare;
+use crate::filter::Filter;
 use prisma_models::RelationField;
 use std::sync::Arc;
 
@@ -35,7 +35,7 @@ impl RelationCondition {
 impl RelationCompare for Arc<RelationField> {
     /// Every related record matches the filter.
     /// ```rust
-    /// # use connector::*;
+    /// # use connector::{*, filter::*};
     /// # use prisma_models::*;
     /// # use prisma_query::ast::*;
     /// # use serde_json;
@@ -86,7 +86,7 @@ impl RelationCompare for Arc<RelationField> {
 
     /// At least one related record matches the filter.
     /// ```rust
-    /// # use connector::*;
+    /// # use connector::{*, filter::*};
     /// # use prisma_models::*;
     /// # use prisma_query::ast::*;
     /// # use serde_json;
@@ -137,7 +137,7 @@ impl RelationCompare for Arc<RelationField> {
 
     /// None of the related records matches the filter.
     /// ```rust
-    /// # use connector::*;
+    /// # use connector::{*, filter::*};
     /// # use prisma_models::*;
     /// # use prisma_query::ast::*;
     /// # use serde_json;
@@ -188,7 +188,7 @@ impl RelationCompare for Arc<RelationField> {
 
     /// One of the relations is `Null`.
     /// ```rust
-    /// # use connector::*;
+    /// # use connector::{*, filter::*};
     /// # use prisma_models::*;
     /// # use prisma_query::ast::*;
     /// # use serde_json;
