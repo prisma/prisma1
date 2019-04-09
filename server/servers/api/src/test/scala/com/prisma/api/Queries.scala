@@ -48,7 +48,7 @@ class Queries extends FlatSpec with Matchers with ApiSpecBase {
         |  updatedAt: DateTime! @updatedAt
         |  wheelCount: Int
         |  name: String!
-        |  wheels: [Wheel] $listInlineArgument
+        |  wheels: [Wheel] $listInlineDirective
         |}
         |
         |type Wheel {

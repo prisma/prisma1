@@ -12,12 +12,12 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
 
   "the update Mutation for a many to many relation with an optional backrelation" should "be generated correctly" in {
     val project = SchemaDsl.fromStringV11() {
-      """
+      s"""
         |type List {
         |  id: ID! @id
         |  listUnique: String! @unique
         |  optList: String
-        |  todoes: [Todo]
+        |  todoes: [Todo] $listInlineDirective
         |}
         |
         |type Todo {
@@ -77,7 +77,7 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
         |  id: ID! @id
         |  listUnique: String! @unique
         |  optList: String
-        |  todo: Todo
+        |  todo: Todo @relation(link: INLINE)
         |}
         |
         |type Todo {

@@ -29,12 +29,12 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
 
   "the create Mutation for a model with relations" should "be generated correctly" in {
     val project = SchemaDsl.fromStringV11() {
-      """
+      s"""
         |type Todo {
         |  id: ID! @id
         |  title: String!
         |  tag: String
-        |  comments: [Comment] @relation(name:"TodoComments")
+        |  comments: [Comment] @relation(name:"TodoComments" $listInlineArgument)
         |  topComment: Comment! @relation(link: INLINE, name: "TopComments")
         |}
         |
@@ -119,12 +119,12 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
 
   "the update Mutation for a model with a optional backrelation" should "be generated correctly" in {
     val project = SchemaDsl.fromStringV11() {
-      """
+      s"""
         |type List {
         |  id: ID! @id
         |  listUnique: String! @unique
         |  optList: String
-        |  todoes: [Todo]
+        |  todoes: [Todo] $listInlineDirective
         |}
         |
         |type Todo {
@@ -180,12 +180,12 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   "the update Mutation for a model with relations" should "be generated correctly" in {
 
     val project = SchemaDsl.fromStringV11() {
-      """
+      s"""
         |type Todo {
         |  id: ID! @id
         |  title: String!
         |  tag: String
-        |  comments: [Comment]
+        |  comments: [Comment] $listInlineDirective
         |}
         |
         |type Comment {
@@ -278,12 +278,12 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
 
   "the update and upsert Mutation for a model with omitted back relation" should "be generated correctly" in {
     val project = SchemaDsl.fromStringV11() {
-      """
+      s"""
         |type Todo {
         |  id: ID! @id
         |  title: String!
         |  tag: String
-        |  comments: [Comment]
+        |  comments: [Comment] $listInlineDirective
         |}
         |
         |type Comment {

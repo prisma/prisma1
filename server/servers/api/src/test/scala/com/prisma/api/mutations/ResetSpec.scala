@@ -2,13 +2,21 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.import_export.BulkImport
-import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
+import com.prisma.shared.models.ConnectorCapability.{ImportExportCapability, RelationLinkTableCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
 
 class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
+
+  val linkArgument = if (capabilities.has(RelationLinkTableCapability)) {
+    "link: TABLE"
+  } else {
+    "link: INLINE"
+  }
+
+  val linkStrategy = s"@relation($linkArgument)"
 
   val project = SchemaDsl.fromStringV11() {
     s"""
@@ -19,7 +27,7 @@ class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils 
       |  a: String
       |  b: Int
       |  model1: Model1
-      |  relation0top: Model0 @relation(name:"Relation0", link: TABLE)
+      |  relation0top: Model0 @relation(name:"Relation0", $linkArgument)
       |  relation0bottom: Model0 @relation(name:"Relation0")
       |}
       |
@@ -30,8 +38,8 @@ class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils 
       |  a: String
       |  b: Int
       |  listField: [Int] $scalarListDirective
-      |  model0: Model0 @relation(link: TABLE)
-      |  model2: Model2 @relation(link: TABLE)
+      |  model0: Model0 $linkStrategy
+      |  model2: Model2 $linkStrategy
       |}
       |
       |type Model2 {

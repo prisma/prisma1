@@ -11,16 +11,16 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(ScalarListsCapability)
 
   val project = SchemaDsl.fromStringV11() {
-    """
+    s"""
       |type ScalarModel {
       |  id: ID! @id
-      |  optStrings: [String] @scalarList(strategy: RELATION)
-      |  optInts: [Int] @scalarList(strategy: RELATION)
-      |  optFloats: [Float] @scalarList(strategy: RELATION)
-      |  optBooleans: [Boolean] @scalarList(strategy: RELATION)
-      |  optEnums: [MyEnum] @scalarList(strategy: RELATION)
-      |  optDateTimes: [DateTime] @scalarList(strategy: RELATION)
-      |  optJsons: [Json] @scalarList(strategy: RELATION)
+      |  optStrings: [String] $scalarListDirective
+      |  optInts: [Int] $scalarListDirective
+      |  optFloats: [Float] $scalarListDirective
+      |  optBooleans: [Boolean] $scalarListDirective
+      |  optEnums: [MyEnum] $scalarListDirective
+      |  optDateTimes: [DateTime] $scalarListDirective
+      |  optJsons: [Json] $scalarListDirective
       |}
       |
       |enum MyEnum {
