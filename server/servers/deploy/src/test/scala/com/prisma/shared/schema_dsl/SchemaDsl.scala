@@ -18,35 +18,6 @@ object SchemaDsl extends AwaitUtils {
 
   import scala.collection.mutable.Buffer
 
-  def fromBuilder(fn: SchemaBuilder => Unit)(implicit deployConnector: DeployConnector, suite: Suite) = {
-    val schemaBuilder = SchemaBuilder()
-    fn(schemaBuilder)
-    val project = schemaBuilder.build(id = projectId(suite))
-
-    if (!deployConnector.isActive) {
-      addIdFields(addManifestations(project, deployConnector))
-    } else {
-      addIdFields(project)
-    }
-  }
-
-  def fromString(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val project = fromString(
-      id = projectId(suite),
-      inferredTables = InferredTables.empty,
-      fieldRequirements = deployConnector.fieldRequirements,
-      capabilities = deployConnector.capabilities,
-      dataModelValidator = LegacyDataModelValidator,
-      emptyBaseSchema = Schema.empty
-    )(sdlString.stripMargin)
-
-    if (!deployConnector.isActive || deployConnector.capabilities.has(RelationLinkListCapability)) {
-      addManifestations(project, deployConnector)
-    } else {
-      project
-    }
-  }
-
   def fromStringV11ForExistingDatabase(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector): Project = {
     val actualCapas    = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
@@ -121,50 +92,6 @@ object SchemaDsl extends AwaitUtils {
       case y                    => ProjectManifestation(database = Some(id + "_DB"), schema = None, y)
     }
     TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
-  }
-
-  private def addManifestations(project: Project, deployConnector: DeployConnector): Project = {
-    val schema = project.schema
-    val newRelations = project.relations.map { relation =>
-      if ((relation.isManyToMany && deployConnector.capabilities.hasNot(RelationLinkListCapability)) || relation.modelA.isEmbedded || relation.modelB.isEmbedded) {
-        relation.template
-      } else {
-        val relationFields = Vector(relation.modelAField, relation.modelBField)
-        val fieldToRepresentAsInlineRelation = relationFields.find(_.isList) match {
-          case Some(field) => field
-          case None        => relationFields.head // happens for one to one relations
-        }
-        val modelToLinkTo          = fieldToRepresentAsInlineRelation.model
-        val modelToPutRelationInto = fieldToRepresentAsInlineRelation.relatedModel_!
-        val manifestation = EmbeddedRelationLink(
-          inTableOfModelName = modelToPutRelationInto.name,
-          referencingColumn = s"${relation.name}_${modelToLinkTo.name.toLowerCase}_id"
-        )
-        relation.template.copy(manifestation = Some(manifestation))
-      }
-    }
-    val newModels = project.models.map { model =>
-      val newFields = model.fields.map { field =>
-        val newRelation = field.relationOpt.flatMap(relation => newRelations.find(_.name == relation.name))
-        field.template.copy(relationName = newRelation.map(_.name), manifestation = Some(FieldManifestation(field.name + "_column")))
-      }
-
-      model.copy(fieldTemplates = newFields, manifestation = Some(ModelManifestation(model.name + "_Table")))
-    }
-    project.copy(schema = schema.copy(relationTemplates = newRelations, modelTemplates = newModels))
-  }
-
-  private def addIdFields(project: Project): Project = {
-    val newModels = project.models.map { model =>
-      val modelContainsAlreadyAnIdField = model.idField.isDefined
-      if (modelContainsAlreadyAnIdField) {
-        model.copy()
-      } else {
-        val newFields = model.fields.map(_.template) :+ cuidField
-        model.copy(fieldTemplates = newFields)
-      }
-    }
-    project.copy(schema = project.schema.copy(modelTemplates = newModels))
   }
 
   case class SchemaBuilder(
