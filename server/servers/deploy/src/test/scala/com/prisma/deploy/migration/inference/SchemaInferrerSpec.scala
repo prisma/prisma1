@@ -156,10 +156,10 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
 
   "if a given relation does already exist, the inferer" should {
     val project = SchemaDsl.fromStringV11() {
-      """
+      s"""
         |type Todo {
         |  id: ID! @id
-        |  comments: [Comment] @relation(name: "CommentToTodo")
+        |  comments: [Comment] @relation(name: "CommentToTodo" $listInlineArgument)
         |}
         |
         |type Comment {
