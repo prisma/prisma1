@@ -68,32 +68,46 @@ def native_image(context, target, version_str)
   end
 end
 
-def rust_binary(context)
-  os = context.os
-  artifact_s3_paths = ["s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/#{context.commit}/#{os}"]
+def artifact_paths_for(context, target_name)
+  artifact_s3_paths = ["s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/#{context.commit}/#{target_name}"]
 
   if context.branch == "alpha" || context.branch == "beta"
-    artifact_s3_paths.push "s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/latest/#{os}"
+    artifact_s3_paths.push "s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/latest/#{target_name}"
   end
 
-  if context.os == :linux
+  artifact_s3_paths
+end
+
+def rust_binary(context, platform)
+  artifact_paths = []
+  if platform == "alpine"
+    artifact_paths.push(artifact_paths_for(context, "linux-musl"))
+    DockerCommands.rust_binary_musl(context)
+    Dir.chdir("#{context.server_root_path}/prisma-rs/target/x86_64-unknown-linux-musl/release") # Necessary to keep the buildkite agent from prefixing the binary when uploading
+
+  elsif platform == "debian"
+    artifact_paths.push(artifact_paths_for(context, "linux-glibc"))
     DockerCommands.rust_binary(context)
-  else
+    Dir.chdir("#{context.server_root_path}/prisma-rs/target/release") # Necessary to keep the buildkite agent from prefixing the binary when uploading
+
+  elsif platform == "native"
+    artifact_paths.push(artifact_paths_for(context, "darwin"))
     Command.new('cargo', 'build', "--manifest-path=#{context.server_root_path}/prisma-rs/Cargo.toml", "--release").with_env({
       "RUSTC_WRAPPER" => "sccache"
     }).puts!.run!.raise!
+    Dir.chdir("#{context.server_root_path}/prisma-rs/target/release") # Necessary to keep the buildkite agent from prefixing the binary when uploading
+
+  else
+    raise "Unsupported platform #{platform}"
   end
 
-  Dir.chdir("#{context.server_root_path}/prisma-rs/target/release") # Necessary to keep the buildkite agent from prefixing the binary when uploading
-
-  artifact_s3_paths.each do |path|
+  artifact_s3_paths.flatten.each do |path|
     Command.new("buildkite-agent", "artifact", "upload", "prisma").with_env({
       "BUILDKITE_S3_DEFAULT_REGION" => "eu-west-1",
       "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION" => path
     }).puts!.run!.raise!
   end
 end
-
 
 def trigger_dependent_pipeline(channel, tags)
   pipeline_input = <<~EOS
