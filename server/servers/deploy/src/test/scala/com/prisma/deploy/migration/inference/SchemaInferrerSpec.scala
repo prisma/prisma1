@@ -155,9 +155,18 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
   }
 
   "if a given relation does already exist, the inferer" should {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment")
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment, relationName = Some("CommentToTodo"))
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  comments: [Comment] @relation(name: "CommentToTodo")
+        |}
+        |
+        |type Comment {
+        |  id: ID! @id
+        |  todo: Todo @relation(name: "CommentToTodo")
+        |}
+      """.stripMargin
     }
 
     "infer the existing relation and update it accordingly when the type names change" in {
@@ -185,8 +194,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
-      relation.modelAName should be("TodoNew")
-      relation.modelBName should be("CommentNew")
+      relation.modelAName should be("CommentNew")
+      relation.modelBName should be("TodoNew")
 
       val field1 = newSchema.getModelByName_!("TodoNew").getRelationFieldByName_!("comments")
       field1.isList should be(true)
@@ -226,8 +235,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
-      relation.modelAName should be("TodoNew")
-      relation.modelBName should be("CommentNew")
+      relation.modelAName should be("CommentNew")
+      relation.modelBName should be("TodoNew")
 
       val field1 = newSchema.getModelByName_!("TodoNew").getRelationFieldByName_!("commentsNew")
       field1.isList should be(true)
@@ -241,8 +250,13 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
 
   "if a model already exists and it gets renamed, the inferrer" should {
     "infer the next model with the stable identifier of the existing model" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("Todo").field("title", _.String)
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  title: String
+          |}
+        """.stripMargin
       }
       val types =
         """
