@@ -101,7 +101,7 @@ def rust_binary(context, platform)
     raise "Unsupported platform #{platform}"
   end
 
-  artifact_s3_paths.flatten.each do |path|
+  artifact_paths.flatten.each do |path|
     Command.new("buildkite-agent", "artifact", "upload", "prisma").with_env({
       "BUILDKITE_S3_DEFAULT_REGION" => "eu-west-1",
       "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION" => path
