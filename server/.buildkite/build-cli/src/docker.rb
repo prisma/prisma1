@@ -91,6 +91,7 @@ class DockerCommands
       '-v', "#{File.expand_path('~')}/.ivy2:/root/.ivy2",
       '-v', "#{File.expand_path('~')}/.coursier:/root/.coursier",
       '-v', '/var/run/docker.sock:/var/run/docker.sock',
+      '-v', "#{File.expand_path('~')}/cargo_cache:/root/cargo_cache",
       "prismagraphql/build-image:debian",
       'cargo', 'build', "--manifest-path=prisma-rs/Cargo.toml", "--release").puts!.run!.raise!
   end

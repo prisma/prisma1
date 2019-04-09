@@ -1,4 +1,4 @@
-use connector::{ConnectorError, ConnectorResult, NestedCreateNode};
+use connector::{error::ConnectorError, mutaction::NestedCreateNode, ConnectorResult};
 use prisma_models::*;
 use prisma_query::ast::*;
 

@@ -7,6 +7,7 @@ import { RemoveBackRelation } from './removeBackRelations'
 import { AdjustJoinTableCardinality } from './adjustJoinTableCardinality'
 import { RemoveDuplicateBackRelation } from './removeDuplicateBackRelation'
 import { CopyEnums } from './copyEnums'
+import { NameAmbiguousBackRelation } from './nameAmbiguousRelations'
 
 export default abstract class DefaultNormalizer {
   public static create(databaseType: DatabaseType, baseModel: ISDL | null) {
@@ -24,7 +25,8 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null),
         new ModelOrderNormalizer(null),
-        new RemoveDuplicateBackRelation(),
+        new RemoveDuplicateBackRelation(null),
+        new NameAmbiguousBackRelation(null),
       ])
     } else {
       // Relational normalization
@@ -32,7 +34,8 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(null),
         new RemoveRelationName(null),
         new ModelOrderNormalizer(null),
-        new RemoveDuplicateBackRelation(),
+        new RemoveDuplicateBackRelation(null),
+        new NameAmbiguousBackRelation(null),
       ])
     }
   }
@@ -49,7 +52,8 @@ export default abstract class DefaultNormalizer {
         new ModelNameAndDirectiveNormalizer(baseModel),
         new ModelOrderNormalizer(baseModel),
         new RemoveBackRelation(baseModel),
-        new RemoveDuplicateBackRelation(),
+        new RemoveDuplicateBackRelation(null),
+        new NameAmbiguousBackRelation(null),
       ])
     } else {
       // Relational normalization with base model
@@ -60,7 +64,8 @@ export default abstract class DefaultNormalizer {
         new ModelOrderNormalizer(baseModel),
         new AdjustJoinTableCardinality(baseModel),
         new RemoveBackRelation(baseModel),
-        new RemoveDuplicateBackRelation(),
+        new RemoveDuplicateBackRelation(null),
+        new NameAmbiguousBackRelation(null),
       ])
     }
   }

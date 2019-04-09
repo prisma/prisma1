@@ -1,5 +1,5 @@
 use crate::{query_builder::QueryBuilder, DatabaseExecutor, Sqlite};
-use connector::*;
+use connector::{filter::NodeSelector, *};
 use itertools::Itertools;
 use prisma_models::*;
 

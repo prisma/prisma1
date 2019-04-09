@@ -17,7 +17,7 @@ use graphql_parser::query::{Field, Selection, Value};
 use inflector::Inflector;
 
 use crate::{CoreError, CoreResult, PrismaQuery};
-use connector::{NodeSelector, QueryArguments};
+use connector::{filter::NodeSelector, QueryArguments};
 use prisma_models::{
     Field as ModelField, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField, SelectedFields,
     SelectedScalarField, SortOrder,

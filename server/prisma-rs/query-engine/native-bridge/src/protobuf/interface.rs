@@ -3,7 +3,7 @@ use crate::{
     protobuf::{mutaction::*, prelude::*, InputValidation},
     BridgeError, BridgeResult, ExternalInterface,
 };
-use connector::*;
+use connector::{error::ConnectorError, filter::NodeSelector, mutaction::*, DataResolver, DatabaseMutactionExecutor};
 use prisma_common::{config::WithMigrations, config::*};
 use prisma_models::prelude::*;
 use prost::Message;
@@ -18,7 +18,9 @@ pub struct ProtoBufInterface {
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
         let connector = match config.databases.get("default") {
-            Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" || config.connector == "native-integration-tests" => {
+            Some(PrismaDatabase::Explicit(ref config))
+                if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
+            {
                 // FIXME: figure out the right way to do it
                 // we are passing is_active as test_mode parameter
                 // this requires us to put `active: true` in all sqlite-native configs used in tests

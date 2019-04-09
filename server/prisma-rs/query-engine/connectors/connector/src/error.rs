@@ -1,4 +1,4 @@
-use crate::NodeSelector;
+use crate::filter::NodeSelector;
 use failure::{Error, Fail};
 use libsqlite3_sys as ffi;
 use prisma_models::prelude::{DomainError, PrismaValue};

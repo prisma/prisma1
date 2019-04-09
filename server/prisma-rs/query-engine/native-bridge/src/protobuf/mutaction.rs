@@ -1,5 +1,5 @@
 use super::filter::IntoFilter;
-use connector::*;
+use connector::{filter::NodeSelector, mutaction::*};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 

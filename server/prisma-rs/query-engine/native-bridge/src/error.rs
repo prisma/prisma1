@@ -1,5 +1,5 @@
 use crate::protobuf;
-use connector::{ConnectorError, NodeSelectorInfo};
+use connector::error::{ConnectorError, NodeSelectorInfo};
 use failure::{Error, Fail};
 use prisma_models::DomainError;
 use prost::DecodeError;

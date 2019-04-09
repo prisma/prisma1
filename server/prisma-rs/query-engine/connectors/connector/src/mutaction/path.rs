@@ -1,5 +1,5 @@
+use crate::filter::{Filter, NodeSelector};
 use prisma_models::prelude::*;
-use crate::{NodeSelector, Filter};
 
 pub struct Path {
     segments: Vec<PathSegment>,

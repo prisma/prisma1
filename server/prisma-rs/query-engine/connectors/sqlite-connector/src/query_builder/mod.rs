@@ -1,7 +1,10 @@
 mod related_nodes;
 
 use crate::{cursor_condition::CursorCondition, filter_conversion::AliasedCondition, ordering::Ordering};
-use connector::{Filter, NodeSelector, QueryArguments};
+use connector::{
+    filter::{Filter, NodeSelector},
+    QueryArguments,
+};
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 use related_nodes::RelatedNodesQueryBuilder;

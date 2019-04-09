@@ -76,16 +76,19 @@ def rust_binary(context)
     artifact_s3_paths.push "s3://#{ENV["RUST_ARTIFACT_BUCKET"]}/#{context.branch}/latest/#{os}"
   end
 
-  if @context.os == :linux
+  if context.os == :linux
     DockerCommands.rust_binary(context)
   else
-    Command.new('cargo', 'build', "--manifest-path=prisma-rs/Cargo.toml", "--release").puts!.run!.raise!
+    Command.new('cargo', 'build', "--manifest-path=#{context.server_root_path}/prisma-rs/Cargo.toml", "--release").with_env({
+      "RUSTC_WRAPPER" => "sccache"
+    }).puts!.run!.raise!
   end
 
   Dir.chdir("#{context.server_root_path}/prisma-rs/target/release") # Necessary to keep the buildkite agent from prefixing the binary when uploading
 
   artifact_s3_paths.each do |path|
     Command.new("buildkite-agent", "artifact", "upload", "prisma").with_env({
+      "BUILDKITE_S3_DEFAULT_REGION" => "eu-west-1",
       "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION" => path
     }).puts!.run!.raise!
   end

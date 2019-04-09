@@ -1,5 +1,5 @@
 use super::prisma as pb;
-use connector::*;
+use connector::filter::*;
 use prisma_models::prelude::*;
 
 pub trait IntoFilter {

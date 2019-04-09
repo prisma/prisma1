@@ -1,7 +1,7 @@
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
-use connector::{ConnectorError, ConnectorResult};
+use connector::{error::ConnectorError, ConnectorResult};
 
 pub struct MutationBuilder;
 

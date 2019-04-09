@@ -1,5 +1,5 @@
 use crate::SelectDefinition;
-use connector::*;
+use connector::{filter::NodeSelector, mutaction::*, ConnectorResult};
 use prisma_models::*;
 use prisma_query::ast::*;
 use rusqlite::{Row, Transaction};
@@ -92,7 +92,7 @@ pub trait DatabaseRead {
     /// # use prisma_models::*;
     /// # use rusqlite::{Connection, NO_PARAMS};
     /// # use sqlite_connector::*;
-    /// # use connector::*;
+    /// # use connector::{*, filter::{ScalarCondition, ScalarFilter, Filter}};
     /// # use prisma_query::ast::*;
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
@@ -143,7 +143,7 @@ pub trait DatabaseRead {
     /// # use prisma_models::*;
     /// # use rusqlite::{Connection, NO_PARAMS};
     /// # use sqlite_connector::*;
-    /// # use connector::*;
+    /// # use connector::{*, filter::NodeSelector};
     /// # use prisma_query::ast::*;
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
@@ -177,7 +177,7 @@ pub trait DatabaseRead {
     /// # use prisma_models::*;
     /// # use rusqlite::{Connection, NO_PARAMS};
     /// # use sqlite_connector::*;
-    /// # use connector::*;
+    /// # use connector::{*, filter::NodeSelector};
     /// # use prisma_query::ast::*;
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};

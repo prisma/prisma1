@@ -1,4 +1,4 @@
-use connector::ConnectorError;
+use connector::error::ConnectorError;
 use failure::Fail;
 use prisma_models::DomainError;
 

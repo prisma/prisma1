@@ -9,7 +9,7 @@ exports[`Introspector Type with scalar lists and existing schema 1`] = `
 
 type Question @linkTable @pgTable(name: \\"questions\\") {
   id: Int! @unique
-  asker: User! @pgColumn(name: \\"asker_id\\")
-  answerer: User @pgColumn(name: \\"answerer_id\\")
+  asker: User! @pgColumn(name: \\"asker_id\\") @relation(name: \\"question_asked\\")
+  answerer: User @pgColumn(name: \\"answerer_id\\") @relation(name: \\"question_answer\\")
 }"
 `;

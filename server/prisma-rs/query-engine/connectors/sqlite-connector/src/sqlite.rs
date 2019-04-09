@@ -142,7 +142,7 @@ impl Sqlite {
     /// used if atomicity is not needed.
     /// ```rust
     /// # use rusqlite::{Connection, NO_PARAMS};
-    /// # use connector::{ConnectorError, ConnectorResult};
+    /// # use connector::{error::ConnectorError, ConnectorResult};
     /// # use sqlite_connector::*;
     /// # use prisma_query::ast::*;
     /// # let sqlite = Sqlite::new(1, false).unwrap();

@@ -1,3 +1,4 @@
+//! Combined mutation executions
 mod create_node;
 mod delete_node;
 mod node_address;
@@ -16,7 +17,7 @@ pub use result::*;
 pub use update_node::*;
 pub use upsert_node::*;
 
-use super::{Filter, NodeSelector};
+use super::filter::{Filter, NodeSelector};
 use prisma_models::prelude::*;
 use std::sync::Arc;
 
