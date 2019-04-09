@@ -13,31 +13,26 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
   "the single item query for a model" must {
     "be generated correctly" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("Todo")
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |}
+        """.stripMargin
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
       schema should containQuery("todo(where: TodoWhereUniqueInput!): Todo")
     }
 
-    "not be present if there is no visible unique field" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        val testSchema = schema.model("Todo")
-        testSchema.fields.clear()
-        testSchema.field("id", _.Cuid, isUnique = true, isHidden = true)
-      }
-
-      val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-      schema shouldNot containQuery("todo")
-    }
-
     "be present if there is a unique field other than ID" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        val testSchema = schema.model("Todo")
-        testSchema.fields.clear()
-        testSchema.field("id", _.Cuid, isUnique = true, isHidden = true)
-        testSchema.field("test", _.String, isUnique = true)
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  test: String @unique
+          |}
+        """.stripMargin
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -47,8 +42,12 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
   "the multi item query for a model" must {
     "be generated correctly" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("Todo")
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |}
+        """.stripMargin
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -60,8 +59,12 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
   "the many item connection query for a model" must {
     "be generated correctly" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("Todo")
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |}
+        """.stripMargin
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -77,8 +80,12 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
 
   "the node query for a model" must {
     "be present if the connector has the capability" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("Todo")
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |}
+        """.stripMargin
       }
 
       val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(NodeQueryCapability))(testDependencies)
@@ -88,8 +95,12 @@ class QueriesSchemaBuilderSpec extends WordSpec with Matchers with ApiSpecBase w
     }
 
     "not be present if the connector doesn't have the capability" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("Todo")
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |}
+        """.stripMargin
       }
 
       val schemaBuilder = SchemaBuilderImpl(project)(testDependencies)
