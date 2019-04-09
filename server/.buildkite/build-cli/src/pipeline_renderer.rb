@@ -91,36 +91,34 @@ class PipelineRenderer
   end
 
   def test_steps
-    []
-    # @@test_rules.map do |service, rule|
-    #   rule[:connectors].map do |connector|
-    #     case connector
-    #     when :all
-    #       @context.connectors.map do |registered_connector|
-    #         PipelineStep.new
-    #           .label("#{rule[:label]} [#{registered_connector}]")
-    #           .command("./server/.buildkite/pipeline.sh test #{service} #{registered_connector}")
-    #       end
+    @@test_rules.map do |service, rule|
+      rule[:connectors].map do |connector|
+        case connector
+        when :all
+          @context.connectors.map do |registered_connector|
+            PipelineStep.new
+              .label("#{rule[:label]} [#{registered_connector}]")
+              .command("./server/.buildkite/pipeline.sh test #{service} #{registered_connector}")
+          end
 
-    #     when :none
-    #       PipelineStep.new
-    #         .label(rule[:label])
-    #         .command("./server/.buildkite/pipeline.sh test #{service}")
+        when :none
+          PipelineStep.new
+            .label(rule[:label])
+            .command("./server/.buildkite/pipeline.sh test #{service}")
 
-    #     else
-    #       PipelineStep.new
-    #         .label(rule[:connectors].length > 1 ? "#{rule[:label]} [#{connector}]" : rule[:label])
-    #         .command("./server/.buildkite/pipeline.sh test #{service} #{connector == :none ? "" : connector}")
-    #     end
-    #   end
-    # end.flatten
+        else
+          PipelineStep.new
+            .label(rule[:connectors].length > 1 ? "#{rule[:label]} [#{connector}]" : rule[:label])
+            .command("./server/.buildkite/pipeline.sh test #{service} #{connector == :none ? "" : connector}")
+        end
+      end
+    end.flatten
   end
 
   def rust_tests
-      # PipelineStep.new
-      #   .label(":rust: Cargo test prisma-rs")
-      #   .command("./server/.buildkite/pipeline.sh test-rust")
-      []
+      PipelineStep.new
+        .label(":rust: Cargo test prisma-rs")
+        .command("./server/.buildkite/pipeline.sh test-rust")
   end
 
   def release_rust_artifacts
