@@ -11,17 +11,29 @@ import play.api.libs.json.{JsString, Json}
 
 class SubscriptionFilterSpec extends FlatSpec with Matchers with SubscriptionSpecBase with AwaitUtils {
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val statusEnum: Enum                = schema.enum("Status", Vector("Active", "Done"))
-    val comment: SchemaDsl.ModelBuilder = schema.model("Comment").field("text", _.String)
-    val todo: SchemaDsl.ModelBuilder = schema
-      .model("Todo")
-      .field("text", _.String)
-      .field("tags", _.String, isList = true)
-      .field("status", _.Enum, enum = Some(statusEnum))
-      .oneToManyRelation("comments", "todo", comment)
-
+  val project = SchemaDsl.fromStringV11() {
+    s"""
+      |type Todo {
+      |  id: ID! @id
+      |  text: String
+      |  tags: [String] $scalarListDirective
+      |  status: Status
+      |  comments: [Comment] $listInlineDirective
+      |}
+      |
+      |type Comment {
+      |  id: ID! @id
+      |  text: String
+      |  todo: Todo
+      |}
+      |
+      |enum Status {
+      |  Active
+      |  Done
+      |}
+    """.stripMargin
   }
+
   val model: Model = project.schema.getModelByName_!("Todo")
 
   var testNodeId, importantTestNodeId: String = null
