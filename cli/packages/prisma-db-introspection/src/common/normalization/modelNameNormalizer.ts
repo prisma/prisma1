@@ -9,17 +9,15 @@ import {
   isTypeIdentifier,
   camelCase,
 } from 'prisma-datamodel'
-import { INormalizer } from './normalizer'
+import { INormalizer, Normalizer } from './normalizer'
 import { groupBy, uniqBy } from 'lodash'
 
-export default class ModelNameNormalizer implements INormalizer {
+export default class ModelNameNormalizer extends Normalizer {
   public normalize(model: ISDL) {
     // We need to sort types according to topological order for name normalization.
     // Otherwise embedded type naming might break as embedded types depend on
     // their parent type.
-    for (const type of toposort(model.types)) {
-      this.normalizeType(type, model)
-    }
+    this.normalizeTypes(toposort(model.types), model)
   }
 
   protected assignName(obj: IGQLType | IGQLField, newName: string) {
@@ -62,21 +60,33 @@ export default class ModelNameNormalizer implements INormalizer {
       this.assignName(type, this.getNormalizedTypeName(type.name, model))
     }
 
-    for (const field of type.fields) {
-      this.normalizeField(field, type, model)
-    }
+    super.normalizeType(type, model)
   }
 
-  protected getNormalizedFieldName(name: string, type: IGQLType) {
+  protected getNormalizedFieldName(
+    name: string,
+    parentType: IGQLType,
+    field: IGQLField,
+  ) {
+    // For all-uppercase field names, we do not normalize.
     if (name.toUpperCase() === name) {
       return name.toLowerCase()
     }
 
+    // Trim _id from related fields.
+    if (typeof field.type !== 'string' && name.toLowerCase().endsWith('_id')) {
+      name = name.substring(0, name.length - 3)
+    }
+
+    // Follow prisma conventions.
     const normalizedName = camelCase(name)
 
-    // if there is already a field of in this type for the normalized name, don't rename.
-    if (type.fields.some(t => t.name === normalizedName)) {
-      return name
+    // If there is already a field in this type for the normalized name, don't rename.
+    const conflictingField = parentType.fields.find(
+      f => f.name === normalizedName && f !== field,
+    )
+    if (conflictingField) {
+      return null
     }
 
     return normalizedName
@@ -89,8 +99,20 @@ export default class ModelNameNormalizer implements INormalizer {
   ) {
     // Make field names pretty
     if (!parentType.isEnum && !field.isId) {
-      const normalizedName = this.getNormalizedFieldName(field.name, parentType)
-      this.assignName(field, normalizedName)
+      let normalizedName = this.getNormalizedFieldName(
+        field.name,
+        parentType,
+        field,
+      )
+      if (normalizedName === null) {
+        field.comments.push({
+          isError: false,
+          text:
+            'Field name normalization failed because of a conflicting field name.',
+        })
+      } else {
+        this.assignName(field, normalizedName)
+      }
     }
 
     // Make embedded type names pretty
