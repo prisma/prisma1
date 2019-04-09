@@ -13,7 +13,7 @@ import play.api.libs.json.JsArray
 class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project = SchemaDsl.fromStringV11() {
+  lazy val project = SchemaDsl.fromStringV11() {
     s"""
       |type Model0 {
       |  id: ID! @id
@@ -56,9 +56,9 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  lazy val importer                   = new BulkImport(project)
+  lazy val exporter                   = new BulkExport(project)
+  lazy val dataResolver: DataResolver = this.dataResolver(project)
 
   "Exporting nodes" should "work (with filesize limit set to 1000 for test)" in {
 

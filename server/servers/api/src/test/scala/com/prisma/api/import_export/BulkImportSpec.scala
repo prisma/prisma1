@@ -10,7 +10,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project = SchemaDsl.fromStringV11() {
+  lazy val project = SchemaDsl.fromStringV11() {
     s"""
        |type Model0 {
        |  id: ID! @id
@@ -52,7 +52,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  val importer = new BulkImport(project)
+  lazy val importer = new BulkImport(project)
 
   "Combining the data from the three files" should "work" in {
 

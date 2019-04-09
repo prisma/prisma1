@@ -14,7 +14,7 @@ import play.api.libs.json.JsArray
 class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project = SchemaDsl.fromStringV11() {
+  lazy val project = SchemaDsl.fromStringV11() {
     """
       |type Model0 {
       |  id: ID! @id
@@ -37,9 +37,9 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  lazy val importer                   = new BulkImport(project)
+  lazy val exporter                   = new BulkExport(project)
+  lazy val dataResolver: DataResolver = this.dataResolver(project)
 
   "Relations without back relation" should "be able to be imported if one fieldName is null" in {
 

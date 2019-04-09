@@ -9,7 +9,7 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  val project = SchemaDsl.fromStringV11() {
+  lazy val project = SchemaDsl.fromStringV11() {
     """
       |type Model0 {
       |  id: ID! @id
@@ -32,9 +32,9 @@ class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiSpe
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  lazy val importer                   = new BulkImport(project)
+  lazy val exporter                   = new BulkExport(project)
+  lazy val dataResolver: DataResolver = this.dataResolver(project)
 
   // todo postgres can't do partial success of batches
   "Importing relations between non-existing models" should "return a proper error" ignore {
