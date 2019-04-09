@@ -5,7 +5,6 @@ import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, JsonBundle, ResultFormat}
 import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
-import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
@@ -17,18 +16,23 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiSpecBase
   val emptyResult = ResultFormat(JsonBundle(Vector.empty, 0), Cursor(-1, -1), isFull = false)
 
   "Exporting nodes" should "be able to handle null in lists or nodes" in {
-    val project: Project = SchemaDsl.fromBuilder { schema =>
-      val model1 = schema
-        .model("Model1")
-        .field("test", _.String)
-        .field("isNull", _.String)
-
-      val model0 = schema
-        .model("Model0")
-        .manyToManyRelation("bla", "bla2", model1)
-        .field("nonList", _.String)
-        .field("testList", _.String, isList = true)
-        .field("isNull", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+        |type Model0 {
+        |  id: ID! @id
+        |  nonList: String
+        |  testList: [String] $scalarListDirective
+        |  isNull: String
+        |  bla: [Model1]
+        |}
+        |
+        |type Model1 {
+        |  id: ID! @id
+        |  test: String
+        |  isNull: String
+        |  bla2: [Model0]
+        |}
+      """.stripMargin
     }
 
     database.setup(project)
@@ -52,15 +56,20 @@ class BulkExportNullHandlingSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "Exporting nodes" should "be able to handle null in lists or nodes 2" in {
-    val project: Project = SchemaDsl.fromBuilder { schema =>
-      val model1 = schema
-        .model("Model1")
-        .field("test", _.String)
-
-      val model0 = schema
-        .model("Model0")
-        .oneToManyRelation("bla1", "bla", model1)
-        .field("test", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+         |type Model0 {
+         |  id: ID! @id
+         |  test: String
+         |  bla1: Model1
+         |}
+         |
+         |type Model1 {
+         |  id: ID! @id
+         |  test: String
+         |  bla1: [Model0] @relation(link: TABLE)
+         |}
+      """.stripMargin
     }
 
     database.setup(project)

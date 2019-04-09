@@ -14,20 +14,26 @@ import play.api.libs.json.JsArray
 class SingleValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    val enum = schema.enum("Enum", Vector("HA", "HO"))
-
-    schema
-      .model("Model0")
-      .field("string", _.String)
-      .field("int", _.Int)
-      .field("float", _.Float)
-      .field("boolean", _.Boolean)
-      .field("datetime", _.DateTime)
-      .field("enum", _.Enum, enum = Some(enum))
-      .field("json", _.Json)
-      .field("createdAt", _.DateTime)
-      .field("updatedAt", _.DateTime)
+  val project = SchemaDsl.fromStringV11() {
+    """
+      |type Model0 {
+      |  id: ID! @id
+      |  createdAt: DateTime
+      |  updatedAt: DateTime
+      |  string: String
+      |  int: Int
+      |  float: Float
+      |  boolean: Boolean
+      |  datetime: DateTime
+      |  enum: Enum
+      |  json: Json
+      |}
+      |
+      |enum Enum {
+      |  HA
+      |  HO
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {

@@ -18,12 +18,15 @@ import play.api.libs.json.JsArray
 class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    schema
-      .model("Model3")
-      .field("createdAt", _.DateTime)
-      .field("updatedAt", _.DateTime)
-      .field("a", _.String)
+  val project = SchemaDsl.fromStringV11() {
+    """
+      |type Model3 {
+      |  id: ID! @id
+      |  createdAt: DateTime @createdAt
+      |  updatedAt: DateTime @updatedAt
+      |  a: String
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {
@@ -71,13 +74,16 @@ class DateTimeImportExportSpec extends FlatSpec with Matchers with ApiSpecBase w
   }
 
   "Exporting nodes" should "produce the correct ISO 8601 DateTime Format" in {
-    val project: Project = SchemaDsl.fromBuilder { schema =>
-      val model1 = schema
-        .model("Model0")
-        .field("a", _.String)
-        .field("b", _.Int)
-        .field("createdAt", _.DateTime)
-        .field("updatedAt", _.DateTime)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Model0 {
+        |  id: ID! @id
+        |  createdAt: DateTime
+        |  updatedAt: DateTime
+        |  a: String
+        |  b: Int
+        |}
+      """.stripMargin
     }
 
     database.setup(project)

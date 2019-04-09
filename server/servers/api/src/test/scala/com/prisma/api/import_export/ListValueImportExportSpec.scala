@@ -14,7 +14,7 @@ import play.api.libs.json._
 class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
+  val project2: Project = SchemaDsl.fromBuilder { schema =>
     val enum = schema.enum("Enum", Vector("AB", "CD", "\uD83D\uDE0B", "\uD83D\uDCA9"))
 
     schema
@@ -32,6 +32,51 @@ class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase 
       .field("datetimeList", _.DateTime, isList = true)
       .field("jsonList", _.Json, isList = true)
   }
+
+  val baseProject = SchemaDsl.fromStringV11() {
+    s"""
+      |type Model0 {
+      |  id: ID! @id
+      |  a: String
+      |  stringList: [String] $scalarListDirective 
+      |  intList: [Int] $scalarListDirective
+      |  floatList: [Float] $scalarListDirective
+      |  booleanList: [Boolean] $scalarListDirective
+      |}
+      |
+      |type Model1 {
+      |  id: ID! @id
+      |  a: String
+      |  enumList: [Enum] $scalarListDirective
+      |  datetimeList: [DateTime] $scalarListDirective
+      |  jsonList: [Json] $scalarListDirective
+      |}
+      |
+      |enum Enum {
+      |  AB
+      |  CD
+      |}
+    """.stripMargin
+  }
+
+  // work around to allow emojis in enum values
+  val enum        = baseProject.schema.enums.head
+  val emojiedEnum = enum.copy(values = enum.values ++ Vector("\uD83D\uDE0B", "\uD83D\uDCA9"))
+  val project = baseProject.copy(
+    schema = baseProject.schema.copy(
+      enums = List(emojiedEnum),
+      modelTemplates = baseProject.schema.modelTemplates.map { model =>
+        model.copy(
+          fieldTemplates = model.fieldTemplates.map { field =>
+            field.enum match {
+              case Some(_) => field.copy(enum = Some(emojiedEnum))
+              case None    => field
+            }
+          }
+        )
+      }
+    )
+  )
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
