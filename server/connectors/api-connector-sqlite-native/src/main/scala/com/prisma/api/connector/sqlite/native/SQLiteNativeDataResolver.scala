@@ -66,10 +66,6 @@ case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: Executi
       selectedFields = toPrismaSelectedFields(selectedFields)
     )
 
-    println(fromField.model.name)
-    println(fromField.name)
-    println("toPrismaSelectedFields(selectedFields)", toPrismaSelectedFields(selectedFields))
-
     val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
     val nodes                                      = nodeResult._1
     val columnNames                                = nodeResult._2

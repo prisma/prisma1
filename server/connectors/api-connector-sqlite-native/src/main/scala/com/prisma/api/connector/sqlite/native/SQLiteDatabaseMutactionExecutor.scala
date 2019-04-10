@@ -90,8 +90,13 @@ case class SQLiteDatabaseMutactionExecutor(
       case m: UpsertNode =>
         for {
           result <- interpreterFor(m, parentId).dbioActionWithErrorMapped(mutationBuilder, parentId)
-          childResults <- executeNestedMutaction(result.asInstanceOf[UpsertNodeResult].result.asInstanceOf[NestedDatabaseMutaction], parentId, mutationBuilder)
-                           .map(Vector(_))
+          childResults <- result match {
+                            case result: CreateNodeResult =>
+                              DBIO.sequence(m.create.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+                            case result: UpdateNodeResult =>
+                              DBIO.sequence(m.update.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+                            case _ => DBIO.successful(Vector.empty)
+                          }
         } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FurtherNestedMutaction =>
@@ -231,7 +236,7 @@ case class SQLiteDatabaseMutactionExecutor(
 
         nested_mutaction_interpreter(envelope, m, errorHandler)
 
-      case m: NestedUpsertNode if DO_NOT_FORWARD_THIS_ONE =>
+      case m: NestedUpsertNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedUpsert(
           nestedUpsertToProtocol(m)
         )
@@ -280,7 +285,6 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, Some(prismaId), protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
-      case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
       case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
       case m: NestedConnect     => NestedConnectInterpreter(m)
       case m: NestedSet         => NestedSetInterpreter(m)
