@@ -28,14 +28,15 @@ fn main() {
     env_logger::init();
 
     let context = PrismaContext::new().unwrap();
+    let port = context.config.port;
     let http_handler = HttpHandler {
         context: context,
         graphql_request_handler: GraphQlRequestHandler,
     };
-    let http_handler_arc = Arc::new(http_handler);
 
+    let http_handler_arc = Arc::new(http_handler);
     let sys = actix::System::new("prisma");
-    let address = "127.0.0.1:8000";
+    let address = ("0.0.0.0", port);
 
     server::new(move || {
         App::with_state(Arc::clone(&http_handler_arc))
@@ -49,7 +50,7 @@ fn main() {
     .unwrap()
     .start();
 
-    println!("Started http server: {}", address);
+    println!("Started http server: {}:{}", address.0, address.1);
     let _ = sys.run();
 }
 

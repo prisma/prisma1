@@ -52,7 +52,7 @@ impl PrismaDatabase {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct PrismaConfig {
-    pub port: Option<i16>,
+    pub port: u16,
     pub management_api_secret: Option<String>,
     pub cluster_address: Option<String>,
     pub rabbit_uri: Option<String>,
