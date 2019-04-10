@@ -73,8 +73,7 @@ class CascadingDeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
   }
 
-  // FIXME: marcus and do4gr must discuss this test description
-  "PM-CM relation deleting the parent" should "error if both sides are marked cascading since it would be a circle" in {
+  "PM-CM relation deleting the parent" should "succeed if both sides are marked cascading although that is a circle" in {
     //         P-C
     val project = SchemaDsl.fromStringV11() {
       """

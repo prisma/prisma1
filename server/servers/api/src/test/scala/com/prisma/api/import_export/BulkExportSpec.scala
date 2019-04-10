@@ -134,7 +134,6 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
     thirdChunk.cursor.row should be(-1)
   }
 
-  // TODO: this must be validated by do4gr
   "Exporting relationData with Postgres" should "work (filesizelimit set to 1000)" in {
     val nodes =
       """{ "valueType": "nodes", "values": [

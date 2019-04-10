@@ -719,8 +719,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
 
-  // FIXME: do4gr and marcus should talk about whether this test case still makes sense in v11. The old case did not have an id field for B.
-  "Nested Create types" should "not be omitted anymore since we now have bring your own id" ignore {
+  "Nested Create types" should "with only id and relation should still be there because of bring your own id" in {
     val project = SchemaDsl.fromStringV11() {
       """type A {
         |    id: ID! @id
@@ -734,7 +733,10 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
-    schema should not(containInputType("BCreateOneWithoutAInput"))
+    schema should containInputType(
+      name = "BCreateWithoutAInput",
+      fields = Vector("id: ID")
+    )
   }
 
   "Sample schema with relation and id strategy NONE" should "be generated correctly" in {
