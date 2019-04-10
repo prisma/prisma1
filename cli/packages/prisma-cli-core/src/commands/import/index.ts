@@ -35,7 +35,7 @@ export default class Import extends Command {
       this.definition.definition!.databaseType &&
       this.definition.definition!.databaseType === 'document'
       ) {
-        throw new Error(`Import is not yet supported for document stores. Please use the native export features of your database. 
+        throw new Error(`Import is not yet supported for document stores. Please use the native import features of your database. 
         
         More info here: https://docs.mongodb.com/manual/reference/program/mongorestore/`)
       } else {
