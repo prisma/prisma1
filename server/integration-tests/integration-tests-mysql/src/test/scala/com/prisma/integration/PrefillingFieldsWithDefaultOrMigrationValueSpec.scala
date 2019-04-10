@@ -61,6 +61,31 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
+  "Creating a required Field of type UUID" should "not error when there is no defaultValue" taggedAs (IgnoreMongo, IgnoreMySql) in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createA(data:{name: "test"}){name}}""", project)
+
+    val schema1 =
+      """type A {
+        | name: String! @unique
+        | test: UUID!
+        |}""".stripMargin
+
+    val res = deployServer.deploySchemaThatMustWarn(project, schema1, true)
+    res.toString should include("""The fields will be pre-filled with the value `550e8400-e29b-11d4-a716-446655440000`.""")
+
+    val updatedProject = deployServer.deploySchema(project, schema1)
+    apiServer.query("query{as{name, test}}", updatedProject).toString should be(
+      """{"data":{"as":[{"name":"test","test":"550e8400-e29b-11d4-a716-446655440000"}]}}""")
+  }
+
   "Adding a required field without default value" should "set the internal migration value" in {
 
     val schema =
