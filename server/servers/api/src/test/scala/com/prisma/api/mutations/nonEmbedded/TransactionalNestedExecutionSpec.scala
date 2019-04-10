@@ -16,120 +16,109 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
 
   // - put a catch all handling on it in the end?
   //Test the parsing of the exception for different datatypes -> DateTime, Json problematic
+  def projectFn(tpe: String) = SchemaDsl.fromStringV11() {
+    s"""
+        |type Todo {
+        |  id: ID! @id
+        |  innerString: String!
+        |  innerUnique: $tpe @unique
+        |  notes: [Note]
+        |}
+        |
+        |type Note {
+        |  id: ID! @id
+        |  outerString: String
+        |  outerUnique: $tpe @unique
+        |  todos: [Todo]
+        |}
+        |
+        |enum SomeEnum {
+        |  A
+        |  B
+        |  C
+        |}
+      """.stripMargin
+  }
 
   "a many to many relation" should "fail gracefully on wrong STRING where and assign error correctly and not execute partially" in {
-
     val outerWhere        = """"Outer Unique""""
     val innerWhere        = """"Inner Unique""""
     val falseWhere        = """"False  Where""""
     val falseWhereInError = """False  Where"""
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.String, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.String, isUnique = true).manyToManyRelation("note", "todo", note)
-    }
+    val project = projectFn("String")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
   "a many to many relation" should "fail gracefully on wrong INT where and assign error correctly and not execute partially" in {
-
     val outerWhere        = 1
     val innerWhere        = 2
     val falseWhere        = 3
     val falseWhereInError = 3
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Int, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Int, isUnique = true).manyToManyRelation("note", "todo", note)
-    }
+    val project = projectFn("Int")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
   "a many to many relation" should "fail gracefully on wrong FLOAT where and assign error correctly and not execute partially" in {
-
     val outerWhere        = 1.0
     val innerWhere        = 2.0
     val falseWhere        = 3.0
     val falseWhereInError = 3.0
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Float, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Float, isUnique = true).manyToManyRelation("note", "todo", note)
-    }
+    val project = projectFn("Float")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
   "a many to many relation" should "fail gracefully on wrong BOOLEAN = FALSE where and assign error correctly and not execute partially" in {
-
     val outerWhere        = true
     val innerWhere        = true
     val falseWhere        = false
     val falseWhereInError = false
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Boolean, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Boolean, isUnique = true).manyToManyRelation("note", "todo", note)
-    }
+    val project = projectFn("Boolean")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
   "a many to many relation" should "fail gracefully on wrong BOOLEAN = TRUE where and assign error correctly and not execute partially" in {
-
     val outerWhere        = false
     val innerWhere        = false
     val falseWhere        = true
     val falseWhereInError = true
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Boolean, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Boolean, isUnique = true).manyToManyRelation("note", "todo", note)
-    }
+    val project = projectFn("Boolean")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
   "a many to many relation" should "fail gracefully on wrong GRAPHQLID where and assign error correctly and not execute partially" in {
-
     val outerWhere        = """"Some Outer ID""""
     val innerWhere        = """"Some Inner ID""""
     val falseWhere        = """"Some False ID""""
     val falseWhereInError = "Some False ID"
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("note", "todo", note)
-    }
+    val project = projectFn("ID")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
   "a many to many relation" should "fail gracefully on wrong ENUM where and assign error correctly and not execute partially" in {
-
     val outerWhere        = "A"
     val innerWhere        = "B"
     val falseWhere        = "C"
     val falseWhereInError = "C"
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val enum = schema.enum("SomeEnum", Vector("A", "B", "C"))
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Enum, enum = Some(enum), isUnique = true)
-      schema
-        .model("Todo")
-        .field_!("innerString", _.String)
-        .field("innerUnique", _.Enum, enum = Some(enum), isUnique = true)
-        .manyToManyRelation("note", "todo", note)
-
-    }
+    val project = projectFn("SomeEnum")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
@@ -141,35 +130,25 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhere        = """"2020""""
     val falseWhereInError = new DateTime("2020", DateTimeZone.UTC)
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.DateTime, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.DateTime, isUnique = true).manyToManyRelation("note", "todo", note)
-
-    }
+    val project = projectFn("DateTime")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
   "a many to many relation" should "fail gracefully on wrong JSON where and assign error correctly and not execute partially" in {
-
     val outerWhere        = """"{\"a\":\"a\"}""""
     val innerWhere        = """"{\"a\":\"b\"}""""
     val falseWhere        = """"{\"a\":\"c\"}""""
     val falseWhereInError = """{\"a\":\"c\"}"""
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Json, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Json, isUnique = true).manyToManyRelation("note", "todo", note)
-
-    }
+    val project = projectFn("Json")
     database.setup(project)
 
     verifyTransactionalExecutionAndErrorMessage(outerWhere, innerWhere, falseWhere, falseWhereInError, project)
   }
 
   "a many2many relation" should "fail gracefully on wrong GRAPHQLID for multiple nested wheres" in {
-
     val outerWhere         = """"Some Outer ID""""
     val innerWhere         = """"Some Inner ID""""
     val innerWhere2        = """"Some Inner ID2""""
@@ -178,10 +157,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
     val falseWhereInError  = "Some False ID"
     val falseWhereInError2 = "Some False ID2"
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("notes", "todos", note)
-    }
+    val project = projectFn("ID")
     database.setup(project)
 
     val createResult = server.query(
@@ -262,15 +238,11 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
   }
 
   "a many2many relation" should "fail gracefully on wrong GRAPHQLID for multiple nested updates where one of them is not connected" in {
-
     val outerWhere  = """"Some Outer ID""""
     val innerWhere  = """"Some Inner ID""""
     val innerWhere2 = """"Some Inner ID2""""
 
-    val project = SchemaDsl.fromBuilder { schema =>
-      val note = schema.model("Note").field("outerString", _.String).field("outerUnique", _.Cuid, isUnique = true)
-      schema.model("Todo").field_!("innerString", _.String).field("innerUnique", _.Cuid, isUnique = true).manyToManyRelation("notes", "todos", note)
-    }
+    val project = projectFn("ID")
     database.setup(project)
 
     server.query(
@@ -281,7 +253,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
          |      outerUnique: $outerWhere
          |      todos: {
          |        create: [
-         |        {innerString: "Inner String", innerUnique: $innerWhere}
+         |          { innerString: "Inner String", innerUnique: $innerWhere }
          |        ]
          |      }
          |    }
@@ -303,8 +275,8 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
          |      outerString: "Changed Outer String"
          |      todos: {
          |        update: [
-         |        {where: { innerUnique: $innerWhere },data:{ innerString: "Changed Inner String"}},
-         |        {where: { innerUnique: $innerWhere2 },data:{ innerString: "Changed Inner String"}}
+         |          { where: { innerUnique: $innerWhere }, data:{ innerString: "Changed Inner String" } },
+         |          { where: { innerUnique: $innerWhere2 },data:{ innerString: "Changed Inner String" } }
          |        ]
          |      }
          |    }
@@ -316,7 +288,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
       project,
       errorCode = 3041,
       errorContains =
-        s"The relation TodoToNote has no node for the model Note connected to a Node for the model Todo with the value 'Some Inner ID2' for the field 'innerUnique' on your mutation path."
+        s"The relation NoteToTodo has no node for the model Note connected to a Node for the model Todo with the value 'Some Inner ID2' for the field 'innerUnique' on your mutation path."
     )
 
     server.query(s"""query{note(where:{outerUnique:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Outer String"}}""")
@@ -331,11 +303,11 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
          |    data: {
          |      outerString: "Outer String"
          |      outerUnique: $outerWhere
-         |      todo: {
+         |      todos: {
          |        create: {
          |         innerString: "Inner String"
          |         innerUnique: $innerWhere
-         |         }
+         |        }
          |      }
          |    }
          |  ){
@@ -352,7 +324,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
          |    where: { outerUnique: $outerWhere }
          |    data: {
          |      outerString: "Changed Outer String"
-         |      todo: {
+         |      todos: {
          |        update: {
          |          where: { innerUnique: $falseWhere },
          |          data:{ innerString: "Changed Inner String" }
@@ -379,7 +351,7 @@ class TransactionalNestedExecutionSpec extends FlatSpec with Matchers with ApiSp
          |    where: { outerUnique: $falseWhere }
          |    data: {
          |      outerString: "Changed Outer String"
-         |      todo: {
+         |      todos: {
          |        update: {
          |          where: { innerUnique: $innerWhere },
          |          data:{ innerString: "Changed Inner String" }

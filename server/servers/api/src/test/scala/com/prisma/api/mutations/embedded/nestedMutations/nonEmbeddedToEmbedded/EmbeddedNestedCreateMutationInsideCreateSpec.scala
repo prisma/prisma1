@@ -120,9 +120,22 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" ignore {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val user = schema.model("User").field_!("name", _.String).field("unique", _.String, isUnique = true)
-      schema.model("Post").field_!("title", _.String).field("uniquePost", _.String, isUnique = true).oneToOneRelation("user", "post", user)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type User {
+        |  id: ID! @id
+        |  name: String!
+        |  unique: String @unique
+        |  post: Post
+        |}
+        |
+        |type Post {
+        |  id: ID! @id
+        |  title: String!
+        |  uniquePost: String @unique
+        |  user: User
+        |}
+      """.stripMargin
     }
     database.setup(project)
 

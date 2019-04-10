@@ -5,7 +5,6 @@ import com.prisma.api.connector.DataResolver
 import com.prisma.api.import_export.ImportExport.MyJsonProtocol._
 import com.prisma.api.import_export.ImportExport.{Cursor, ExportRequest, ResultFormat}
 import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
-import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
@@ -15,13 +14,16 @@ class ImportJsonFormatSpec extends FlatSpec with Matchers with ApiSpecBase with 
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
   "Import json nodes" should "work" in {
-    val project: Project = SchemaDsl.fromBuilder { schema =>
-      val model1 = schema
-        .model("Model0")
-        .field("a", _.String)
-        .field("b", _.Json)
-        .field("updatedAt", _.DateTime)
-        .field("createdAt", _.DateTime)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Model0 {
+        |  id: ID! @id
+        |  createdAt: DateTime
+        |  updatedAt: DateTime
+        |  a: String
+        |  b: Json
+        |}
+      """.stripMargin
     }
 
     database.setup(project)

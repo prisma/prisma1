@@ -74,7 +74,10 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val fieldName    = jsObject.value.filterKeys(k => k != "_typeName" && k != "id").keys.head
     val field        = model.getScalarFieldByName_!(fieldName)
     val jsonForField = jsObject.value(fieldName)
-    val gcValue      = GCValueJsonFormatter.readListGCValue(field)(jsonForField).get
+    val gcValue =
+      GCValueJsonFormatter
+        .readListGCValue(field)(jsonForField)
+        .getOrElse(sys.error(s"conversion to GcValue for ${field.name} and value $jsonForField failed"))
     ImportList(ImportIdentifier(typeName, id), field, gcValue)
   }
 

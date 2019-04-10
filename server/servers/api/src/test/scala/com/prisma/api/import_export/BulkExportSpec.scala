@@ -13,33 +13,40 @@ import play.api.libs.json.JsArray
 class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val model0: SchemaDsl.ModelBuilder = schema
-      .model("Model0")
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("createdAt", _.DateTime)
-      .field("updatedAt", _.DateTime)
-
-    val model1: SchemaDsl.ModelBuilder = schema
-      .model("Model1")
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("listField", _.Int, isList = true)
-      .field("createdAt", _.DateTime)
-      .field("updatedAt", _.DateTime)
-
-    val model2: SchemaDsl.ModelBuilder = schema
-      .model("Model2")
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("name", _.String)
-      .field("createdAt", _.DateTime)
-      .field("updatedAt", _.DateTime)
-
-    model0.manyToManyRelation("relation0top", "relation0bottom", model0, Some("Relation0"))
-    model0.manyToManyRelation("model1", "model0", model1, Some("Relation1"))
-    model2.manyToManyRelation("model1", "model2", model1, Some("Relation2"))
+  lazy val project = SchemaDsl.fromStringV11() {
+    s"""
+      |type Model0 {
+      |  id: ID! @id
+      |  createdAt: DateTime! @createdAt
+      |  updatedAt: DateTime! @updatedAt
+      |  a: String
+      |  b: Int
+      |  relation0top: [Model0] @relation(name: "MyRelation")
+      |  relation0bottom: [Model0] @relation(name: "MyRelation")
+      |  model1: [Model1]
+      |}
+      |
+      |type Model1 {
+      |  id: ID! @id
+      |  createdAt: DateTime! @createdAt
+      |  updatedAt: DateTime! @updatedAt
+      |  a: String
+      |  b: Int
+      |  listField: [Int] $scalarListDirective
+      |  model0: [Model0]
+      |  model2: [Model2]
+      |}
+      |
+      |type Model2 {
+      |  id: ID! @id
+      |  createdAt: DateTime! @createdAt
+      |  updatedAt: DateTime! @updatedAt
+      |  a: String
+      |  b: Int
+      |  name: String
+      |  model1: [Model1]
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {
@@ -49,9 +56,9 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  lazy val importer                   = new BulkImport(project)
+  lazy val exporter                   = new BulkExport(project)
+  lazy val dataResolver: DataResolver = this.dataResolver(project)
 
   "Exporting nodes" should "work (with filesize limit set to 1000 for test)" in {
 
@@ -161,24 +168,24 @@ class BulkExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
 
     firstChunk.out.jsonElements should have(size(8))
     firstChunk.out.jsonElements should contain theSameElementsAs Vector(
-      """[{"_typeName":"Model0","id":"0","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}]""".parseJson,
-      """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}]""".parseJson,
-      """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"4","fieldName":"relation0top"}]""".parseJson,
-      """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"3","fieldName":"relation0top"}]""".parseJson,
-      """[{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}]""".parseJson,
-      """[{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"},{"_typeName":"Model0","id":"0","fieldName":"relation0top"}]""".parseJson,
-      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"0","fieldName":"model1"}]""".parseJson,
-      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"3","fieldName":"model1"}]""".parseJson
+      """[{"_typeName":"Model2","id":"2","fieldName":"model1"},{"_typeName":"Model1","id":"1","fieldName":"model2"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"0","fieldName":"relation0top"},{"_typeName":"Model0","id":"0","fieldName":"relation0bottom"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"3","fieldName":"relation0top"},{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"0","fieldName":"relation0top"},{"_typeName":"Model0","id":"3","fieldName":"relation0bottom"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"4","fieldName":"relation0top"},{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"3","fieldName":"relation0top"},{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"}]""".parseJson,
+      """[{"_typeName":"Model0","id":"0","fieldName":"relation0top"},{"_typeName":"Model0","id":"4","fieldName":"relation0bottom"}]""".parseJson,
+      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"0","fieldName":"model1"}]""".parseJson
     )
-    firstChunk.cursor.table should be(1)
-    firstChunk.cursor.row should be(2)
+    firstChunk.cursor.table should be(2)
+    firstChunk.cursor.row should be(1)
 
     val request2    = request.copy(cursor = firstChunk.cursor)
     val secondChunk = exporter.executeExport(dataResolver, request2).await(5).as[ResultFormat]
     secondChunk.out.jsonElements should have(size(2))
     secondChunk.out.jsonElements should contain theSameElementsAs Vector(
-      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"4","fieldName":"model1"}]""".parseJson,
-      """[{"_typeName":"Model1","id":"1","fieldName":"model2"},{"_typeName":"Model2","id":"2","fieldName":"model1"}]""".parseJson
+      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"3","fieldName":"model1"}]""".parseJson,
+      """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"4","fieldName":"model1"}]""".parseJson
     )
 
     secondChunk.cursor.table should be(-1)

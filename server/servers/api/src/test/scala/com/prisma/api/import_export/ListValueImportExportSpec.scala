@@ -14,34 +14,60 @@ import play.api.libs.json._
 class ListValueImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    val enum = schema.enum("Enum", Vector("AB", "CD", "\uD83D\uDE0B", "\uD83D\uDCA9"))
-
-    schema
-      .model("Model0")
-      .field("a", _.String)
-      .field("stringList", _.String, isList = true)
-      .field("intList", _.Int, isList = true)
-      .field("floatList", _.Float, isList = true)
-      .field("booleanList", _.Boolean, isList = true)
-
-    schema
-      .model("Model1")
-      .field("a", _.String)
-      .field("enumList", _.Enum, isList = true, enum = Some(enum))
-      .field("datetimeList", _.DateTime, isList = true)
-      .field("jsonList", _.Json, isList = true)
+  lazy val baseProject = SchemaDsl.fromStringV11() {
+    s"""
+      |type Model0 {
+      |  id: ID! @id
+      |  a: String
+      |  stringList: [String] $scalarListDirective 
+      |  intList: [Int] $scalarListDirective
+      |  floatList: [Float] $scalarListDirective
+      |  booleanList: [Boolean] $scalarListDirective
+      |}
+      |
+      |type Model1 {
+      |  id: ID! @id
+      |  a: String
+      |  enumList: [Enum] $scalarListDirective
+      |  datetimeList: [DateTime] $scalarListDirective
+      |  jsonList: [Json] $scalarListDirective
+      |}
+      |
+      |enum Enum {
+      |  AB
+      |  CD
+      |}
+    """.stripMargin
   }
+
+  // work around to allow emojis in enum values
+  lazy val enum        = baseProject.schema.enums.head
+  lazy val emojiedEnum = enum.copy(values = enum.values ++ Vector("\uD83D\uDE0B", "\uD83D\uDCA9"))
+  lazy val project = baseProject.copy(
+    schema = baseProject.schema.copy(
+      enums = List(emojiedEnum),
+      modelTemplates = baseProject.schema.modelTemplates.map { model =>
+        model.copy(
+          fieldTemplates = model.fieldTemplates.map { field =>
+            field.enum match {
+              case Some(_) => field.copy(enum = Some(emojiedEnum))
+              case None    => field
+            }
+          }
+        )
+      }
+    )
+  )
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
     database.setup(project)
   }
 
-  override def beforeEach(): Unit = database.truncateProjectTables(project)
-  val importer                    = new BulkImport(project)
-  val exporter                    = new BulkExport(project)
-  val dataResolver: DataResolver  = this.dataResolver(project)
+  override def beforeEach(): Unit     = database.truncateProjectTables(project)
+  lazy val importer                   = new BulkImport(project)
+  lazy val exporter                   = new BulkExport(project)
+  lazy val dataResolver: DataResolver = this.dataResolver(project)
 
   "Importing ListValues for a wrong Id" should "fail" in {
 

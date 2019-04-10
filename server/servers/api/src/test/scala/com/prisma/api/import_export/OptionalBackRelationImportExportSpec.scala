@@ -14,23 +14,20 @@ import play.api.libs.json.JsArray
 class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    val model0: SchemaDsl.ModelBuilder = schema
-      .model("Model0")
-      .field("a", _.String)
-
-    schema
-      .model("Model1")
-      .field("a", _.String)
-      .oneToOneRelation(
-        fieldAName = "model0",
-        fieldBName = "doesn't matter",
-        modelB = model0,
-        relationName = Some("Relation0to1"),
-        includeFieldB = false
-      )
-
-    model0.oneToOneRelation("model0self", "doesn't matter", model0, Some("Relation0to0"), includeFieldB = false)
+  lazy val project = SchemaDsl.fromStringV11() {
+    """
+      |type Model0 {
+      |  id: ID! @id
+      |  a: String
+      |  model0self: Model0 @relation(link: TABLE)
+      |}
+      |
+      |type Model1 {
+      |  id: ID! @id
+      |  a: String
+      |  model0: Model0 @relation(link: TABLE)
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {
@@ -40,9 +37,9 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  lazy val importer                   = new BulkImport(project)
+  lazy val exporter                   = new BulkExport(project)
+  lazy val dataResolver: DataResolver = this.dataResolver(project)
 
   "Relations without back relation" should "be able to be imported if one fieldName is null" in {
 
@@ -162,9 +159,9 @@ class OptionalBackRelationImportExportSpec extends FlatSpec with Matchers with A
 
     JsArray(firstChunk.out.jsonElements).toString should be(
       """[""" concat
+        """[{"_typeName":"Model1","id":"1","fieldName":"model0"},{"_typeName":"Model0","id":"0"}],""" concat
         """[{"_typeName":"Model0","id":"4"},{"_typeName":"Model0","id":"3","fieldName":"model0self"}],""" concat
-        """[{"_typeName":"Model0","id":"6"},{"_typeName":"Model0","id":"5","fieldName":"model0self"}],""" concat
-        """[{"_typeName":"Model0","id":"0"},{"_typeName":"Model1","id":"1","fieldName":"model0"}]""" concat "]")
+        """[{"_typeName":"Model0","id":"6"},{"_typeName":"Model0","id":"5","fieldName":"model0self"}]""" concat "]")
     firstChunk.cursor.table should be(-1)
     firstChunk.cursor.row should be(-1)
   }

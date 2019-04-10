@@ -6,8 +6,14 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateManySpec extends FlatSpec with Matchers with ApiSpecBase {
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    schema.model("Todo").field_!("title", _.String).field("opt", _.String)
+
+  val project = SchemaDsl.fromStringV11() {
+    """type Todo {
+      |  id: ID! @id
+      |  title: String!
+      |  opt: String
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {

@@ -1,15 +1,19 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A Create Mutation on a non-list field" should "utilize the defaultValue" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("ScalarModel").field_!("reqString", _.String, defaultValue = Some(StringGCValue("default")))
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type ScalarModel {
+        |  id: ID! @id
+        |  reqString: String! @default(value: "default")
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
