@@ -17,6 +17,7 @@ use std::collections::BTreeMap;
 /// A set of responses to provided queries
 pub type Responses = Vec<IrResponse>;
 
+#[allow(dead_code)]
 pub enum IrResponse {
     Data(Item),
     Error(String), // TODO: Get a better error kind?
@@ -102,12 +103,11 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
 
     result.nested.iter().zip(&mut vec).for_each(|(nested, map)| {
         match map {
-            Item::Map(ref mut map) =>
-                match nested {
-                    PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
-                    PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
-                },
-            _ => unreachable!()
+            Item::Map(ref mut map) => match nested {
+                PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
+                PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+            },
+            _ => unreachable!(),
         };
     });
 

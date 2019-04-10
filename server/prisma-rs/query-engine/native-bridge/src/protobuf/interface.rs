@@ -3,7 +3,7 @@ use crate::{
     protobuf::{mutaction::*, prelude::*, InputValidation},
     BridgeError, BridgeResult, ExternalInterface,
 };
-use connector::{error::ConnectorError, filter::NodeSelector, mutaction::*, DataResolver, DatabaseMutactionExecutor};
+use connector::{error::ConnectorError, filter::NodeSelector, DataResolver, DatabaseMutactionExecutor};
 use prisma_common::{config::WithMigrations, config::*};
 use prisma_models::prelude::*;
 use prost::Message;
@@ -274,15 +274,9 @@ impl ExternalInterface for ProtoBufInterface {
             let mutaction = convert_mutaction(input, Arc::clone(&project));
             let db_name = project.schema().db_name.to_string();
 
-            let mut results = match mutaction {
-                DatabaseMutaction::TopLevel(tlm) => self.database_mutaction_executor.execute_toplevel(db_name, tlm)?,
-
-                DatabaseMutaction::Nested(catcatmeow) => {
-                    self.database_mutaction_executor
-                        .execute_nested(db_name, catcatmeow, parent_id.unwrap())?
-                }
-            };
-
+            let mut results = self
+                .database_mutaction_executor
+                .execute(db_name, mutaction, parent_id)?;
             let result = results.pop().expect("no mutaction results returned");
 
             let response = RpcResponse::ok_mutaction(convert_mutaction_result(result));

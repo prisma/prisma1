@@ -62,7 +62,8 @@ impl DatabaseRead for Sqlite {
         Ok(ids)
     }
 
-    fn id_for(conn: &Transaction, model: ModelRef, node_selector: &NodeSelector) -> ConnectorResult<GraphqlId> {
+    fn id_for(conn: &Transaction, node_selector: &NodeSelector) -> ConnectorResult<GraphqlId> {
+        let model = node_selector.field.model();
         let opt_id = Self::ids_for(conn, model, node_selector.clone())?.into_iter().next();
 
         opt_id.ok_or_else(|| ConnectorError::NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)))
@@ -71,7 +72,7 @@ impl DatabaseRead for Sqlite {
     fn get_ids_by_parents(
         conn: &Transaction,
         parent_field: RelationFieldRef,
-        parent_ids: Vec<GraphqlId>,
+        parent_ids: Vec<&GraphqlId>,
         selector: &Option<NodeSelector>,
     ) -> ConnectorResult<Vec<GraphqlId>> {
         let related_model = parent_field.related_model();

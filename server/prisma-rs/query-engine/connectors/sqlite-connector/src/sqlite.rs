@@ -1,9 +1,9 @@
-mod executor;
 mod mutaction_executor;
 mod read;
 mod resolver;
 mod write;
 
+use crate::{Connection, TransactionalExecutor};
 use chrono::{DateTime, Utc};
 use connector::*;
 use prisma_models::prelude::*;
@@ -12,12 +12,45 @@ use rusqlite::{Row, Transaction, NO_PARAMS};
 use std::{collections::HashSet, env};
 use uuid::Uuid;
 
-type Connection = r2d2::PooledConnection<SqliteConnectionManager>;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
 
 pub struct Sqlite {
     pool: Pool,
     test_mode: bool,
+}
+
+impl TransactionalExecutor for Sqlite {
+    fn with_connection<'a, F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
+    where
+        F: FnOnce(&mut Connection) -> ConnectorResult<T>,
+    {
+        let mut conn = self.pool.get()?;
+        Self::attach_database(&mut conn, db_name)?;
+
+        let result = f(&mut conn);
+
+        if self.test_mode {
+            dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
+        }
+
+        result
+    }
+
+    fn with_transaction<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
+    where
+        F: FnOnce(&Transaction) -> ConnectorResult<T>,
+    {
+        self.with_connection(db_name, |conn| {
+            let tx = conn.transaction()?;
+            let result = f(&tx);
+
+            if result.is_ok() {
+                tx.commit()?;
+            }
+
+            result
+        })
+    }
 }
 
 impl Sqlite {
@@ -113,84 +146,5 @@ impl Sqlite {
             Ok(pv) => Ok(pv),
             Err(e) => Err(e.into()),
         }
-    }
-
-    /// Takes a new connection and if needed attaches the database if needed.
-    ///
-    /// [with_transaction](struct.Sqlite.html#method.with_transaction) should be
-    /// used if atomicity is needed.
-    pub fn with_connection<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
-    where
-        F: FnOnce(&mut Connection) -> ConnectorResult<T>,
-    {
-        let mut conn = self.pool.get()?;
-        Self::attach_database(&mut conn, db_name)?;
-
-        let result = f(&mut conn);
-
-        if self.test_mode {
-            dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
-        }
-
-        result
-    }
-
-    /// Takes a new connection and starts a transaction, that is commited if the
-    /// given `F` was successful. Attaches any databases, if not yet in memory.
-    ///
-    /// [with_connection](struct.Sqlite.html#methid.with_connection) should be
-    /// used if atomicity is not needed.
-    /// ```rust
-    /// # use rusqlite::{Connection, NO_PARAMS};
-    /// # use connector::{error::ConnectorError, ConnectorResult};
-    /// # use sqlite_connector::*;
-    /// # use prisma_query::ast::*;
-    /// # let sqlite = Sqlite::new(1, false).unwrap();
-    /// let _ = sqlite.with_transaction("test", |trans| {
-    ///     trans.execute(
-    ///         "CREATE TABLE IF NOT EXISTS test.users (id Text, name Text);",
-    ///         NO_PARAMS
-    ///     ).unwrap();
-    ///
-    ///     Ok(())
-    /// });
-    ///
-    /// let _: ConnectorResult<()> = sqlite.with_transaction("test", |trans| {
-    ///     trans.execute(
-    ///         "INSERT INTO test.users (id, name) VALUES ('id1', 'John')",
-    ///         NO_PARAMS,
-    ///     ).unwrap();
-    ///
-    ///     Err(ConnectorError::RelationViolation {
-    ///         relation_name: String::from("Cats"),
-    ///         model_a_name: String::from("A"),
-    ///         model_b_name: String::from("B"),
-    ///     })
-    /// });
-    ///
-    /// let count: i64 = sqlite.with_connection("test", |conn| {
-    ///     let res = conn.query_row("SELECT COUNT(id) FROM test.users", NO_PARAMS, |row| {
-    ///         row.get_checked(0).unwrap_or(0)
-    ///     })?;
-    ///
-    ///     Ok(res)
-    /// }).unwrap();
-    ///
-    /// assert_eq!(0, count);
-    /// ```
-    pub fn with_transaction<F, T>(&self, db_name: &str, f: F) -> ConnectorResult<T>
-    where
-        F: FnOnce(&Transaction) -> ConnectorResult<T>,
-    {
-        self.with_connection(db_name, |conn| {
-            let tx = conn.transaction()?;
-            let result = f(&tx);
-
-            if result.is_ok() {
-                tx.commit()?;
-            }
-
-            result
-        })
     }
 }

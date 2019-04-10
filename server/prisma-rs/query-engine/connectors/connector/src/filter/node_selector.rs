@@ -7,6 +7,18 @@ pub struct NodeSelector {
     pub value: PrismaValue,
 }
 
+impl<T> From<(Arc<ScalarField>, T)> for NodeSelector
+where
+    T: Into<PrismaValue>,
+{
+    fn from(tup: (Arc<ScalarField>, T)) -> NodeSelector {
+        NodeSelector {
+            field: tup.0,
+            value: tup.1.into(),
+        }
+    }
+}
+
 impl NodeSelector {
     pub fn new<T>(field: Arc<ScalarField>, value: T) -> Self
     where
