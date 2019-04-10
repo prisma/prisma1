@@ -3,4 +3,4 @@
 	url = https://github.com/prisma/prisma-query.git
 [submodule "server/.buildkite/build-cli"]
 	path = server/.buildkite/build-cli
-	url = git@github.com:prisma/build-cli.git
+	url = https://github.com/prisma/build-cli.git
