@@ -1653,3 +1653,51 @@ type TypeWithoutId {
   updatedAt: DateTime! @updatedAt
 }"
 `;
+
+exports[`Introspects withoutCreatedAt/mysql correctly: withoutCreatedAt - legacy datamodel 1`] = `
+"type MultiRefToUsers {
+  id: ID! @unique
+  name: String
+  users: [User]
+}
+
+type Post {
+  author: User!
+  content: String
+  id: ID! @unique
+  published: Boolean! @default(value: false)
+  title: String!
+}
+
+type User {
+  email: String! @unique
+  id: ID! @unique
+  name: String
+  posts: [Post]
+  createdAt: DateTime! @pgColumn(name: \\"signUpDate\\")
+}"
+`;
+
+exports[`Introspects withoutCreatedAt/mysql correctly: withoutCreatedAt - v1.1 datamodel 1`] = `
+"type MultiRefToUsers {
+  id: ID! @id
+  name: String
+  users: [User]
+}
+
+type Post {
+  author: User! @relation(link: TABLE)
+  content: String
+  id: ID! @id
+  published: Boolean! @default(value: false)
+  title: String!
+}
+
+type User {
+  email: String! @unique
+  id: ID! @id
+  name: String
+  posts: [Post]
+  signUpDate: DateTime! @createdAt
+}"
+`;
