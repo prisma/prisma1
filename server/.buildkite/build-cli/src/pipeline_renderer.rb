@@ -124,11 +124,14 @@ class PipelineRenderer
   def release_rust_artifacts
     [
       PipelineStep.new
-        .label(":rust: Build & Publish :linux:")
-        .command("./server/.buildkite/pipeline.sh rust-binary"),
+        .label(":rust: Build & Publish :linux: glibc")
+        .command("./server/.buildkite/pipeline.sh rust-binary debian"),
+      PipelineStep.new
+        .label(":rust: Build & Publish :linux: musl")
+        .command("./server/.buildkite/pipeline.sh rust-binary alpine"),
       PipelineStep.new
         .label(":rust: Build & Publish :darwin:")
-        .command("./server/.buildkite/pipeline.sh rust-binary")
+        .command("./server/.buildkite/pipeline.sh rust-binary native")
         .queue("macos")
     ]
   end

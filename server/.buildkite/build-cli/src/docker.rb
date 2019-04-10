@@ -84,12 +84,19 @@ class DockerCommands
       'sbt', 'project prisma-native', "prisma-native-image:packageBin").puts!.run!.raise!
   end
 
+  def self.rust_binary_musl(context)
+    Command.new("docker", "run",
+      '-w', '/root/build',
+      '-e', 'CC=gcc',
+      '-v', "#{context.server_root_path}:/root/build",
+      'prismagraphql/build-image:alpine',
+      'cargo', 'build', "--target=x86_64-unknown-linux-musl", "--manifest-path=prisma-rs/query-engine/prisma/Cargo.toml", "--release").puts!.run!.raise!
+  end
+
   def self.rust_binary(context)
     Command.new("docker", "run",
       '-w', '/root/build',
       '-v', "#{context.server_root_path}:/root/build",
-      '-v', "#{File.expand_path('~')}/.ivy2:/root/.ivy2",
-      '-v', "#{File.expand_path('~')}/.coursier:/root/.coursier",
       '-v', '/var/run/docker.sock:/var/run/docker.sock',
       '-v', "#{File.expand_path('~')}/cargo_cache:/root/cargo_cache",
       "prismagraphql/build-image:debian",
