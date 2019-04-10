@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -121,7 +121,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."TypeWithoutId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_AToTypeWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -132,7 +131,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_AToTypeWithId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_AToTypeWithoutId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -143,7 +141,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_AToTypeWithoutId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_BToTypeWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -154,7 +151,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_BToTypeWithId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_BToTypeWithoutId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -165,7 +161,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_BToTypeWithoutId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_CToTypeWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -176,7 +171,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_CToTypeWithId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_CToTypeWithoutId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -187,7 +181,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_CToTypeWithoutId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_DToTypeWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -198,7 +191,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_DToTypeWithId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_DToTypeWithoutId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -209,7 +201,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_DToTypeWithoutId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_EToTypeWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -220,7 +211,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_EToTypeWithId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_EToTypeWithoutId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -231,7 +221,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_EToTypeWithoutId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_FToTypeWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -242,7 +231,6 @@ CREATE TABLE "schema-generator$oneSidedConnection"."_FToTypeWithId" (
 --
 
 CREATE TABLE "schema-generator$oneSidedConnection"."_FToTypeWithoutId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -320,102 +308,6 @@ ALTER TABLE ONLY "schema-generator$oneSidedConnection"."TypeWithId"
 
 ALTER TABLE ONLY "schema-generator$oneSidedConnection"."TypeWithoutId"
     ADD CONSTRAINT "TypeWithoutId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToTypeWithId _AToTypeWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_AToTypeWithId"
-    ADD CONSTRAINT "_AToTypeWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToTypeWithoutId _AToTypeWithoutId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_AToTypeWithoutId"
-    ADD CONSTRAINT "_AToTypeWithoutId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BToTypeWithId _BToTypeWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_BToTypeWithId"
-    ADD CONSTRAINT "_BToTypeWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BToTypeWithoutId _BToTypeWithoutId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_BToTypeWithoutId"
-    ADD CONSTRAINT "_BToTypeWithoutId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CToTypeWithId _CToTypeWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_CToTypeWithId"
-    ADD CONSTRAINT "_CToTypeWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CToTypeWithoutId _CToTypeWithoutId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_CToTypeWithoutId"
-    ADD CONSTRAINT "_CToTypeWithoutId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _DToTypeWithId _DToTypeWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_DToTypeWithId"
-    ADD CONSTRAINT "_DToTypeWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _DToTypeWithoutId _DToTypeWithoutId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_DToTypeWithoutId"
-    ADD CONSTRAINT "_DToTypeWithoutId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _EToTypeWithId _EToTypeWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_EToTypeWithId"
-    ADD CONSTRAINT "_EToTypeWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _EToTypeWithoutId _EToTypeWithoutId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_EToTypeWithoutId"
-    ADD CONSTRAINT "_EToTypeWithoutId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FToTypeWithId _FToTypeWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_FToTypeWithId"
-    ADD CONSTRAINT "_FToTypeWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FToTypeWithoutId _FToTypeWithoutId_pkey; Type: CONSTRAINT; Schema: schema-generator$oneSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$oneSidedConnection"."_FToTypeWithoutId"
-    ADD CONSTRAINT "_FToTypeWithoutId_pkey" PRIMARY KEY (id);
 
 
 --

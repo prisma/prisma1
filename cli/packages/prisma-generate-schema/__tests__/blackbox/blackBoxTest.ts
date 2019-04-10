@@ -8,14 +8,13 @@ import * as path from 'path'
 export default function blackBoxTest(
   name: string,
   databaseType: DatabaseType,
-  filePrefix: string,
-  v11?: boolean,
+  filePrefix: string
 ) {
   const generator = Generator.create(databaseType)
 
   const modelPath = path.join(
     __dirname,
-    `cases/${name}/model_${filePrefix}${v11 ? '_v1.1' : ''}.graphql`,
+    `cases/${name}/model_${filePrefix}.graphql`,
   )
   const prismaPath = path.join(__dirname, `cases/${name}/${filePrefix}.graphql`)
 
@@ -54,7 +53,7 @@ const testNames = fs.readdirSync(path.join(__dirname, 'cases'))
 
 for (const testName of testNames) {
   test(`Generates schema for ${testName}/relational correctly`, () => {
-    blackBoxTest(testName, DatabaseType.postgres, 'relational', true)
+    blackBoxTest(testName, DatabaseType.postgres, 'relational_v1.1')
   })
   test(`Generates schema for ${testName}/document correctly`, () => {
     blackBoxTest(testName, DatabaseType.mongo, 'document')

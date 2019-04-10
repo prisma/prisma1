@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -117,7 +117,6 @@ CREATE TABLE "schema-generator$relations"."User" (
 --
 
 CREATE TABLE "schema-generator$relations"."_BillingInfoToUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -128,7 +127,6 @@ CREATE TABLE "schema-generator$relations"."_BillingInfoToUser" (
 --
 
 CREATE TABLE "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -139,7 +137,6 @@ CREATE TABLE "schema-generator$relations"."_BillingInfoWithoutConnectionToUser" 
 --
 
 CREATE TABLE "schema-generator$relations"."_LikesByUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -150,7 +147,6 @@ CREATE TABLE "schema-generator$relations"."_LikesByUser" (
 --
 
 CREATE TABLE "schema-generator$relations"."_OptionalDetailsToUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -161,7 +157,6 @@ CREATE TABLE "schema-generator$relations"."_OptionalDetailsToUser" (
 --
 
 CREATE TABLE "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -172,7 +167,6 @@ CREATE TABLE "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUs
 --
 
 CREATE TABLE "schema-generator$relations"."_PostWithoutConnectionToUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -183,7 +177,6 @@ CREATE TABLE "schema-generator$relations"."_PostWithoutConnectionToUser" (
 --
 
 CREATE TABLE "schema-generator$relations"."_PostsByUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -253,62 +246,6 @@ ALTER TABLE ONLY "schema-generator$relations"."Post"
 
 ALTER TABLE ONLY "schema-generator$relations"."User"
     ADD CONSTRAINT "User_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BillingInfoToUser _BillingInfoToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoToUser"
-    ADD CONSTRAINT "_BillingInfoToUser_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BillingInfoWithoutConnectionToUser _BillingInfoWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relations"."_BillingInfoWithoutConnectionToUser"
-    ADD CONSTRAINT "_BillingInfoWithoutConnectionToUser_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _LikesByUser _LikesByUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relations"."_LikesByUser"
-    ADD CONSTRAINT "_LikesByUser_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _OptionalDetailsToUser _OptionalDetailsToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsToUser"
-    ADD CONSTRAINT "_OptionalDetailsToUser_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _OptionalDetailsWithoutConnectionToUser _OptionalDetailsWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relations"."_OptionalDetailsWithoutConnectionToUser"
-    ADD CONSTRAINT "_OptionalDetailsWithoutConnectionToUser_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _PostWithoutConnectionToUser _PostWithoutConnectionToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relations"."_PostWithoutConnectionToUser"
-    ADD CONSTRAINT "_PostWithoutConnectionToUser_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _PostsByUser _PostsByUser_pkey; Type: CONSTRAINT; Schema: schema-generator$relations; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relations"."_PostsByUser"
-    ADD CONSTRAINT "_PostsByUser_pkey" PRIMARY KEY (id);
 
 
 --

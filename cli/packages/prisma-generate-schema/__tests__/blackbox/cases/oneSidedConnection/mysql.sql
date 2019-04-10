@@ -117,11 +117,8 @@ CREATE TABLE `TypeWithoutId` (
 
 DROP TABLE IF EXISTS `_AToTypeWithId`;
 CREATE TABLE `_AToTypeWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -135,11 +132,8 @@ CREATE TABLE `_AToTypeWithId` (
 
 DROP TABLE IF EXISTS `_AToTypeWithoutId`;
 CREATE TABLE `_AToTypeWithoutId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -153,11 +147,8 @@ CREATE TABLE `_AToTypeWithoutId` (
 
 DROP TABLE IF EXISTS `_BToTypeWithId`;
 CREATE TABLE `_BToTypeWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -171,11 +162,8 @@ CREATE TABLE `_BToTypeWithId` (
 
 DROP TABLE IF EXISTS `_BToTypeWithoutId`;
 CREATE TABLE `_BToTypeWithoutId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -189,11 +177,8 @@ CREATE TABLE `_BToTypeWithoutId` (
 
 DROP TABLE IF EXISTS `_CToTypeWithId`;
 CREATE TABLE `_CToTypeWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -207,11 +192,8 @@ CREATE TABLE `_CToTypeWithId` (
 
 DROP TABLE IF EXISTS `_CToTypeWithoutId`;
 CREATE TABLE `_CToTypeWithoutId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -225,11 +207,8 @@ CREATE TABLE `_CToTypeWithoutId` (
 
 DROP TABLE IF EXISTS `_DToTypeWithId`;
 CREATE TABLE `_DToTypeWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -243,11 +222,8 @@ CREATE TABLE `_DToTypeWithId` (
 
 DROP TABLE IF EXISTS `_DToTypeWithoutId`;
 CREATE TABLE `_DToTypeWithoutId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -261,11 +237,8 @@ CREATE TABLE `_DToTypeWithoutId` (
 
 DROP TABLE IF EXISTS `_EToTypeWithId`;
 CREATE TABLE `_EToTypeWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -279,11 +252,8 @@ CREATE TABLE `_EToTypeWithId` (
 
 DROP TABLE IF EXISTS `_EToTypeWithoutId`;
 CREATE TABLE `_EToTypeWithoutId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -297,11 +267,8 @@ CREATE TABLE `_EToTypeWithoutId` (
 
 DROP TABLE IF EXISTS `_FToTypeWithId`;
 CREATE TABLE `_FToTypeWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -315,11 +282,8 @@ CREATE TABLE `_FToTypeWithId` (
 
 DROP TABLE IF EXISTS `_FToTypeWithoutId`;
 CREATE TABLE `_FToTypeWithoutId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -340,4 +304,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

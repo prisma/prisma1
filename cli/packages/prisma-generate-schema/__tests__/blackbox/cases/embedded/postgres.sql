@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -80,7 +80,6 @@ CREATE TABLE "schema-generator$embedded"."Parent" (
 --
 
 CREATE TABLE "schema-generator$embedded"."_ChildToFriend" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -91,7 +90,6 @@ CREATE TABLE "schema-generator$embedded"."_ChildToFriend" (
 --
 
 CREATE TABLE "schema-generator$embedded"."_ChildToJoint" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -102,7 +100,6 @@ CREATE TABLE "schema-generator$embedded"."_ChildToJoint" (
 --
 
 CREATE TABLE "schema-generator$embedded"."_ChildToParent" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -113,7 +110,6 @@ CREATE TABLE "schema-generator$embedded"."_ChildToParent" (
 --
 
 CREATE TABLE "schema-generator$embedded"."_JointToParent" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -159,38 +155,6 @@ ALTER TABLE ONLY "schema-generator$embedded"."Joint"
 
 ALTER TABLE ONLY "schema-generator$embedded"."Parent"
     ADD CONSTRAINT "Parent_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _ChildToFriend _ChildToFriend_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$embedded"."_ChildToFriend"
-    ADD CONSTRAINT "_ChildToFriend_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _ChildToJoint _ChildToJoint_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$embedded"."_ChildToJoint"
-    ADD CONSTRAINT "_ChildToJoint_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _ChildToParent _ChildToParent_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$embedded"."_ChildToParent"
-    ADD CONSTRAINT "_ChildToParent_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _JointToParent _JointToParent_pkey; Type: CONSTRAINT; Schema: schema-generator$embedded; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$embedded"."_JointToParent"
-    ADD CONSTRAINT "_JointToParent_pkey" PRIMARY KEY (id);
 
 
 --
