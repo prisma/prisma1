@@ -102,7 +102,7 @@ volumes:
   mysql:
     image: mysql:5.7
     restart: always
-    # Uncomment the next line to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # Uncomment the next line to connect to your your database from outside the Docker environment, e.g. using a database GUI like Workbench
     # ports:
     # - "3306:3306"
     environment:
@@ -116,7 +116,7 @@ volumes:
   mongo:
     image: mongo:3.6
     restart: always
-    # Uncomment the next line to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # Uncomment the next line to connect to your your database from outside the Docker environment, e.g. using a database GUI like Compass
     # ports:
     # - "27017:27017"
     environment:
