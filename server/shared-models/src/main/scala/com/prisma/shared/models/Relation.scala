@@ -29,9 +29,9 @@ object Relation {
   implicit def asRelationTemplate(relation: Relation): RelationTemplate = relation.template
 }
 
-class Relation(
-    val template: RelationTemplate,
-    val schema: Schema
+case class Relation(
+    template: RelationTemplate,
+    schema: Schema
 ) {
   import template._
 

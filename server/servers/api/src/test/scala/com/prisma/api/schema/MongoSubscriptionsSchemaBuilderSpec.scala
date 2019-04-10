@@ -15,8 +15,12 @@ class MongoSubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with Ap
 
   "the single item query for a model" must {
     "be generated correctly" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("Todo")
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |}
+        """.stripMargin
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -24,8 +28,12 @@ class MongoSubscriptionsSchemaBuilderSpec extends WordSpec with Matchers with Ap
     }
 
     "have correct payload" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        val testSchema = schema.model("Todo")
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |}
+        """.stripMargin
       }
 
       val schema = SchemaRenderer.renderSchema(schemaBuilder(project))

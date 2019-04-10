@@ -9,17 +9,20 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    val model0: SchemaDsl.ModelBuilder = schema
-      .model("Model0")
-      .field("a", _.String)
-
-    schema
-      .model("Model1")
-      .field("a", _.String)
-      .oneToOneRelation("model0", "doesn't matter", model0, Some("Relation0to1"), includeFieldB = false)
-
-    model0.oneToOneRelation("model0self", "doesn't matter", model0, Some("Relation0to0"), includeFieldB = false)
+  lazy val project = SchemaDsl.fromStringV11() {
+    """
+      |type Model0 {
+      |  id: ID! @id
+      |  a: String
+      |  model0self: Model0 @relation(link: TABLE)
+      |}
+      |
+      |type Model1 {
+      |  id: ID! @id
+      |  a: String
+      |  model0: Model0 @relation(link: TABLE)
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {
@@ -29,9 +32,9 @@ class RelationImportErrorHandlingSpec extends FlatSpec with Matchers with ApiSpe
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  val importer                   = new BulkImport(project)
-  val exporter                   = new BulkExport(project)
-  val dataResolver: DataResolver = this.dataResolver(project)
+  lazy val importer                   = new BulkImport(project)
+  lazy val exporter                   = new BulkExport(project)
+  lazy val dataResolver: DataResolver = this.dataResolver(project)
 
   // todo postgres can't do partial success of batches
   "Importing relations between non-existing models" should "return a proper error" ignore {

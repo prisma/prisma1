@@ -12,7 +12,7 @@ import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations._
-import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, MigrationsCapability, RelationLinkListCapability}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -72,6 +72,24 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 
   def formatSchema(schema: String): String = JsString(schema).toString()
   def escapeString(str: String): String    = JsString(str).toString()
+
+  val listInlineDirective = if (capabilities.has(RelationLinkListCapability)) {
+    "@relation(link: INLINE)"
+  } else {
+    ""
+  }
+
+  val listInlineArgument = if (capabilities.has(RelationLinkListCapability)) {
+    "link: INLINE"
+  } else {
+    ""
+  }
+
+  val scalarListDirective = if (capabilities.hasNot(EmbeddedScalarListsCapability)) {
+    "@scalarList(strategy: RELATION)"
+  } else {
+    ""
+  }
 }
 
 trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>

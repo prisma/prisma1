@@ -5,6 +5,7 @@ import akka.http.scaladsl.testkit.{ScalatestRouteTest, TestFrameworkInterface, W
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.api.ApiTestDatabase
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, RelationLinkListCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.subscriptions._
 import com.prisma.utils.await.AwaitUtils
@@ -177,4 +178,21 @@ trait SubscriptionSpecBase
       .toString
   }
 
+  val listInlineDirective = if (capabilities.has(RelationLinkListCapability)) {
+    "@relation(link: INLINE)"
+  } else {
+    ""
+  }
+
+  val listInlineArgument = if (capabilities.has(RelationLinkListCapability)) {
+    "link: INLINE"
+  } else {
+    ""
+  }
+
+  val scalarListDirective = if (capabilities.hasNot(EmbeddedScalarListsCapability)) {
+    "@scalarList(strategy: RELATION)"
+  } else {
+    ""
+  }
 }

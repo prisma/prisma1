@@ -1,17 +1,19 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeleteMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    schema
-      .model("ScalarModel")
-      .field("string", _.String)
-      .field("unicorn", _.String, isUnique = true)
+  val project = SchemaDsl.fromStringV11() {
+    """
+      |type ScalarModel {
+      |  id: ID! @id
+      |  string: String
+      |  unicorn: String @unique
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {

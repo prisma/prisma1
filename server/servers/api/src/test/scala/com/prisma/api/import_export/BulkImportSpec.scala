@@ -10,30 +10,39 @@ import org.scalatest.{FlatSpec, Matchers}
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    val model1: SchemaDsl.ModelBuilder = schema
-      .model("Model1")
-      .field("createdAt", _.DateTime)
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("listField", _.Int, isList = true)
-
-    val model0: SchemaDsl.ModelBuilder = schema
-      .model("Model0")
-      .field("createdAt", _.DateTime)
-      .field("a", _.String)
-      .field("b", _.Int)
-      .oneToOneRelation("model1", "model0", model1, Some("Relation1"))
-
-    model0.oneToOneRelation("relation0top", "relation0bottom", model0, Some("Relation0"))
-
-    val model2: SchemaDsl.ModelBuilder = schema
-      .model("Model2")
-      .field("createdAt", _.DateTime)
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("name", _.String)
-      .oneToOneRelation("model1", "model2", model1, Some("Relation2"))
+  lazy val project = SchemaDsl.fromStringV11() {
+    s"""
+       |type Model0 {
+       |  id: ID! @id
+       |  createdAt: DateTime! @createdAt
+       |  a: String
+       |  b: Int
+       |  relation0top: Model0 @relation(name: "MyRelation", link: TABLE)
+       |  relation0bottom: Model0 @relation(name: "MyRelation")
+       |  model1: Model1 @relation(link: TABLE)
+       |}
+       |
+       |type Model1 {
+       |  id: ID! @id
+       |  createdAt: DateTime! @createdAt
+       |  updatedAt: DateTime! @updatedAt
+       |  a: String
+       |  b: Int
+       |  listField: [Int] $scalarListDirective
+       |  model0: Model0
+       |  model2: Model2 @relation(link: TABLE)
+       |}
+       |
+       |type Model2 {
+       |  id: ID! @id
+       |  createdAt: DateTime! @createdAt
+       |  updatedAt: DateTime! @updatedAt
+       |  a: String
+       |  b: Int
+       |  name: String
+       |  model1: Model1
+       |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {
@@ -43,7 +52,7 @@ class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitU
 
   override def beforeEach(): Unit = database.truncateProjectTables(project)
 
-  val importer = new BulkImport(project)
+  lazy val importer = new BulkImport(project)
 
   "Combining the data from the three files" should "work" in {
 

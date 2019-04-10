@@ -18,9 +18,15 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
 
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability, RawAccessCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    schema.model("Todo").field("title", _.String)
+  val project = SchemaDsl.fromStringV11() {
+    """
+      |type Todo {
+      |  id: ID! @id
+      |  title: String
+      |}
+    """.stripMargin
   }
+
   val schemaName = project.dbName
   val model      = project.schema.getModelByName_!("Todo")
 

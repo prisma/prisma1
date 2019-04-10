@@ -10,23 +10,24 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def runOnlyForCapabilities = Set(ScalarListsCapability)
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val enum = schema.enum(
-      name = "MyEnum",
-      values = Vector(
-        "A",
-        "ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJ"
-      )
-    )
-    schema
-      .model("ScalarModel")
-      .field("optStrings", _.String, isList = true)
-      .field("optInts", _.Int, isList = true)
-      .field("optFloats", _.Float, isList = true)
-      .field("optBooleans", _.Boolean, isList = true)
-      .field("optEnums", _.Enum, enum = Some(enum), isList = true)
-      .field("optDateTimes", _.DateTime, isList = true)
-      .field("optJsons", _.Json, isList = true)
+  val project = SchemaDsl.fromStringV11() {
+    s"""
+      |type ScalarModel {
+      |  id: ID! @id
+      |  optStrings: [String] $scalarListDirective
+      |  optInts: [Int] $scalarListDirective
+      |  optFloats: [Float] $scalarListDirective
+      |  optBooleans: [Boolean] $scalarListDirective
+      |  optEnums: [MyEnum] $scalarListDirective
+      |  optDateTimes: [DateTime] $scalarListDirective
+      |  optJsons: [Json] $scalarListDirective
+      |}
+      |
+      |enum MyEnum {
+      |  A
+      |  ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJA
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {
