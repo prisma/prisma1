@@ -1,30 +1,11 @@
 package com.prisma.integration
 
-import com.prisma.ConnectorTag
+import com.prisma.{ConnectorTag, IgnoreMongo, IgnoreMySql}
 import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag}
 import org.scalatest.{FlatSpec, Matchers}
 
 class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
   override def runOnlyForConnectors: Set[ConnectorTag] = Set(MySqlConnectorTag, PostgresConnectorTag)
-
-  //Affected Deploy Actions
-  // creating new required field                 -> set column to default/migValue for all  rows                  -> createColumn
-  // making field required                       -> set column to default/migValue for all rows where it is null  -> updateColumn
-  // changing type of a (newly) required field   -> set column to default/migValue for all  rows                  -> createColumn
-
-  //Necessary changes
-  // Keep validations, create message that MV was used      -> Done
-  // Downgrade errors to warnings                           -> Done
-  // Create shared MigvalueMatcher                          -> Done
-  // Add tests                                              -> Done
-  // Change queries to insert default/migration value
-  // Fix broken tests
-  // find locations for MigrationValueGenerator and SetParameter
-
-  //Postgres                                                -> Done
-  //MySql                                                   -> Done
-  //Sqlite                                                  -> No Changes
-  //Mongo                                                   -> Keep Errors
 
   "Creating a required Field" should "not error when there is no defaultValue but there are no nodes yet" in {
 
@@ -39,6 +20,42 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
       """type A {
         | name: String! @unique
         | value: Int!
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
+  }
+
+  "Creating a required Field of type ID" should "not error when there is no defaultValue but there are no nodes yet" in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | test: ID!
+        |}""".stripMargin
+
+    deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
+  }
+
+  "Creating a required Field of type UUID" should "not error when there is no defaultValue but there are no nodes yet" taggedAs (IgnoreMongo, IgnoreMySql) in {
+
+    val schema =
+      """type A {
+        | name: String! @unique
+        |}""".stripMargin
+
+    val (project, _) = setupProject(schema)
+
+    val schema2 =
+      """type A {
+        | name: String! @unique
+        | test: UUID!
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)

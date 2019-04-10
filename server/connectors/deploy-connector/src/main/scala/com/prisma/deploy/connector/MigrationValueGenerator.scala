@@ -15,6 +15,7 @@ trait MigrationValueGenerator {
     case TypeIdentifier.DateTime           => DateTimeGCValue(new DateTime("1970-01-01T00:00:00Z"))
     case TypeIdentifier.Json               => JsonGCValue(Json.parse("{}"))
     case TypeIdentifier.Enum               => EnumGCValue(field.enum.get.values.head)
-    case _                                 => sys.error("MigrationValue method should only be called on scalar fields.")
+    case TypeIdentifier.Cuid               => StringIdGCValue("DefaultCUIDMigrationValue")
+    case TypeIdentifier.UUID               => UuidGCValue.parse_!("550e8400-e29b-11d4-a716-446655440000")
   }
 }
