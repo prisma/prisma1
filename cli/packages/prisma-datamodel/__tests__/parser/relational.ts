@@ -23,7 +23,7 @@ describe(`Relational parser specific tests`, () => {
       type User {
         id: ID! @id
         anotherInt: Int! @default(value: 10)
-        createdAt: Date!
+        signedUp: Date! @createdAt
         updatedAt: Date!
       }
     `
@@ -34,7 +34,7 @@ describe(`Relational parser specific tests`, () => {
     SdlExpect.field(userType, 'id', true, false, 'ID', true, true, null)
     SdlExpect.field(
       userType,
-      'createdAt',
+      'signedUp',
       true,
       false,
       'Date',
