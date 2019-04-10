@@ -87,6 +87,9 @@ const databaseServiceDefinitions = {
   postgres:
     image: postgres
     restart: always
+    # Uncomment the next line to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # ports:
+    # - "5432:5432"
     environment:
       POSTGRES_USER: prisma
       POSTGRES_PASSWORD: prisma
@@ -99,6 +102,9 @@ volumes:
   mysql:
     image: mysql:5.7
     restart: always
+    # Uncomment the next line to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # ports:
+    # - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: prisma
     volumes:
@@ -110,6 +116,9 @@ volumes:
   mongo:
     image: mongo:3.6
     restart: always
+    # Uncomment the next line to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # ports:
+    # - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: prisma
       MONGO_INITDB_ROOT_PASSWORD: prisma
@@ -439,7 +448,7 @@ export class EndpointDialog {
         cluster = new Cluster(this.out, 'custom', 'http://localhost:4466')
         break
       }
-      case 'Demo server': {
+      case 'Demo server + MySQL database': {
         writeDockerComposeYml = false
 
         const demoCluster = await this.getDemoCluster()
@@ -706,8 +715,10 @@ export class EndpointDialog {
   ) {
     const sandboxChoices = [
       [
-        'Demo server',
-        'Hosted demo environment incl. database (requires login)',
+        'Demo server + MySQL database',
+        `Free demo environment hosted in Prisma Cloud ${
+          !isAuthenticated ? ` (requires login)` : ``
+        }`,
       ],
       [
         'Use other server',
@@ -754,8 +765,8 @@ export class EndpointDialog {
         ['Create new database', 'Set up a local database using Docker'],
         ...clusterChoices,
         [
-          'Demo server',
-          `Hosted demo environment incl. database${
+          'Demo server + MySQL database',
+          `Free development environment hosted in Prisma Cloud${
             !isAuthenticated ? ` (requires login)` : ``
           }`,
         ],
@@ -846,7 +857,7 @@ export class EndpointDialog {
 
   private getClusterDescription(c: Cluster) {
     if (c.shared) {
-      return 'Free development server on Prisma Cloud (incl. database)'
+      return 'Free development environment hosted in Prisma Cloud'
     }
 
     return `Production Prisma cluster`
