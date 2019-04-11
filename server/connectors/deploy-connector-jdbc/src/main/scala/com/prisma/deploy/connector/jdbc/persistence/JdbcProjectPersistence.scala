@@ -35,7 +35,7 @@ case class JdbcProjectPersistence(slickDatabase: SlickDatabase, dbConfig: Databa
 
   override def load(id: String): Future[Option[Project]] = {
     val query = sql
-      .select(pt.id, pt.secrets, pt.allowQueries, pt.allowMutations, mt.schema, mt.functions, mt.revision)
+      .select(pt.id, pt.secrets, pt.allowQueries, pt.allowMutations, mt.schema, mt.functions, mt.revision, mt.dataModel)
       .from(pt.t)
       .join(mt.t)
       .on(mt.projectId.equal(pt.id))
@@ -74,7 +74,7 @@ case class JdbcProjectPersistence(slickDatabase: SlickDatabase, dbConfig: Databa
       .from(mt.t.as("outer"))
 
     val query = sql
-      .select(pt.id, pt.secrets, pt.allowQueries, pt.allowMutations, mt.schema, mt.functions, mt.revision)
+      .select(pt.id, pt.secrets, pt.allowQueries, pt.allowMutations, mt.schema, mt.functions, mt.revision, mt.dataModel)
       .from(pt.t)
       .join(revisionQuery.asTable("jt"))
       .on(field(name("jt", "projectId")).equal(pt.id))
@@ -164,7 +164,8 @@ case class JdbcProjectPersistence(slickDatabase: SlickDatabase, dbConfig: Databa
       allowQueries = rs.getBoolean(pt.allowQueries.getName),
       allowMutations = rs.getBoolean(pt.allowMutations.getName),
       functions = functions,
-      manifestation = projectManifestation
+      manifestation = projectManifestation,
+      rawDataModel = rs.getString(mt.dataModel.getName)
     )
   }
 }
