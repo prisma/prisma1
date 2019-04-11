@@ -56,7 +56,7 @@ impl MutationBuilder {
 
                 let update_condition = match field.relation_is_inlined_in_parent() {
                     true => field.model().fields().id().as_column().equals(update_id),
-                    false => field.related_model().fields().id().as_column().equals(link_id),
+                    false => field.related_model().fields().id().as_column().equals(update_id),
                 };
 
                 Update::table(relation.relation_table())
