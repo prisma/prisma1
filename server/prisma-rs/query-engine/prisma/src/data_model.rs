@@ -52,8 +52,8 @@ pub fn load_from_env() -> PrismaResult<String> {
     utilities::get_env("PRISMA_INTERNAL_DATA_MODEL_JSON").and_then(|schema| {
         let bytes = base64::decode(&schema)?;
         let schema_json = String::from_utf8(bytes)?;
-        debug!("Loaded schema from env.");
 
+        debug!("Loaded schema from env.");
         Ok(schema_json)
     })
 }

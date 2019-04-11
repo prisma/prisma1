@@ -89,9 +89,5 @@ fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
 
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {
     let index_html = StaticFiles::get("playground.html").unwrap();
-    let resp = HttpResponse::Ok().content_type("text/html").body(index_html);
-
-    // String::from_utf8(index_html.as_ref().into()).unwrap()
-
-    resp
+    HttpResponse::Ok().content_type("text/html").body(index_html)
 }

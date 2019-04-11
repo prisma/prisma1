@@ -3,7 +3,7 @@ prototype: true
 databases:
   default:
     connector: sqlite-native
-    databaseFile: "${SERVER_ROOT}/db/default_default"
+    databaseFile: ${SERVER_ROOT}/db/default_default
     migrations: true
     active: true
     rawAccess: true
