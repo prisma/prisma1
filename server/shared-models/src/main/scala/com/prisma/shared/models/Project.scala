@@ -10,7 +10,8 @@ case class Project(
     allowQueries: Boolean = true,
     allowMutations: Boolean = true,
     functions: List[Function] = List.empty,
-    manifestation: ProjectManifestation = ProjectManifestation.empty
+    manifestation: ProjectManifestation = ProjectManifestation.empty,
+    rawDataModel: String = ""
 ) {
   def models            = schema.models
   def relations         = schema.relations
