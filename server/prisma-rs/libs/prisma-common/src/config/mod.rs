@@ -8,7 +8,13 @@ pub use explicit::ExplicitConfig;
 pub use file::FileConfig;
 
 use serde_yaml;
-use std::{collections::BTreeMap, env, fs::File, io::prelude::*, path::PathBuf};
+use std::{
+    collections::{BTreeMap, HashMap},
+    env,
+    fs::File,
+    io::prelude::*,
+    path::PathBuf,
+};
 
 pub trait ConnectionLimit {
     fn connection_limit(&self) -> Option<u32>;
@@ -62,10 +68,11 @@ pub fn load() -> Result<PrismaConfig, CommonError> {
                 f.read_to_string(&mut contents)?;
                 contents
             }
-            None => return Err(CommonError::ConfigurationError),
+            None => return Err(CommonError::ConfigurationError("Unable to find Prisma config".into())),
         },
     };
 
+    let config = substitute_env_vars(config)?;
     Ok(serde_yaml::from_str(&config).expect("Unable to parse YML config."))
 }
 
@@ -84,4 +91,45 @@ pub fn find_config_path() -> Option<PathBuf> {
             }
         }
     }
+}
+
+fn substitute_env_vars(cfg_string: String) -> Result<String, CommonError> {
+    let matcher = regex::Regex::new(r"\$\{(.*)\}").unwrap();
+
+    // Collect all env vars first.
+    let matches: Vec<String> = matcher
+        .captures_iter(cfg_string.as_ref())
+        .map(|capture| capture[1].into())
+        .collect();
+
+    // Resolve all env vars, unresolved ones will be None in the map
+    let resolved_env: HashMap<String, Option<String>> = matches
+        .into_iter()
+        .map(|m| {
+            let val = std::env::var(&m).ok();
+            (m, val)
+        })
+        .collect();
+
+    // Collect all unresolved env vars
+    let unresolved_env: Vec<&str> = resolved_env
+        .iter()
+        .filter_map(|m| if let None = m.1 { Some(m.0.as_ref()) } else { None })
+        .collect();
+
+    // Validate that all env vars can be resolved
+    if !unresolved_env.is_empty() {
+        return Err(CommonError::ConfigurationError(format!(
+            "Unresolved env vars in configuration: {}",
+            unresolved_env.join(", ")
+        )));
+    }
+
+    // Replace all occurrences in the config. We can safely unwrap here as we validated already.
+    let result = matcher.replace(cfg_string.as_ref(), |caps: &regex::Captures| {
+        let env_key = &caps[1];
+        resolved_env.get(env_key).unwrap().as_ref().unwrap()
+    });
+
+    Ok(result.into())
 }
