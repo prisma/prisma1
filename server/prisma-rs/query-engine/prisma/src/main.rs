@@ -8,14 +8,13 @@ extern crate rust_embed;
 extern crate debug_stub_derive;
 
 mod context;
+mod data_model;
 mod error;
 mod req_handlers;
-mod schema;
+mod serializer;
 mod utilities;
 
-mod serializer;
-
-use actix_web::{http::Method, server, App, HttpRequest, Json, Responder};
+use actix_web::{http::Method, server, App, HttpRequest, HttpResponse, Json, Responder};
 use context::PrismaContext;
 use error::PrismaError;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
@@ -41,9 +40,6 @@ fn main() {
     env_logger::init();
 
     let context = PrismaContext::new().unwrap();
-
-    dbg!(&context);
-
     let port = context.config.port;
     let request_context = Arc::new(RequestContext {
         context: context,
@@ -88,10 +84,14 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
 }
 
 fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
-    schema::load_datamodel_file().unwrap()
+    data_model::load_string().unwrap()
 }
 
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {
     let index_html = StaticFiles::get("playground.html").unwrap();
-    String::from_utf8(index_html.as_ref().into()).unwrap()
+    let resp = HttpResponse::Ok().content_type("text/html").body(index_html);
+
+    // String::from_utf8(index_html.as_ref().into()).unwrap()
+
+    resp
 }

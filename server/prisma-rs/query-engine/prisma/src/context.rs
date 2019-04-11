@@ -1,4 +1,4 @@
-use crate::{schema, PrismaResult};
+use crate::{data_model, PrismaResult};
 use core::QueryExecutor;
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
 use prisma_models::SchemaRef;
@@ -34,7 +34,7 @@ impl PrismaContext {
             .db_name()
             .expect("database was not set");
 
-        let schema = schema::load_schema(db_name)?;
+        let schema = data_model::load(db_name)?;
         Ok(Self {
             config: config,
             schema: schema,

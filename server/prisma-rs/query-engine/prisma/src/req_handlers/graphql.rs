@@ -1,5 +1,5 @@
 use super::{PrismaRequest, RequestHandler};
-use crate::{context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
+use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
 use core::{PrismaQuery, PrismaQueryResult, RootQueryBuilder};
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
