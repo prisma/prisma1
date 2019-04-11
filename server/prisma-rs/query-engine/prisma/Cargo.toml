@@ -24,6 +24,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 base64 = "0.10"
 log = "0.4"
-
+rust-embed = { version = "4.3", features = ["debug-embed"] }
 failure = "0.1"
 failure_derive = "0.1"
+debug_stub_derive = "0.3"

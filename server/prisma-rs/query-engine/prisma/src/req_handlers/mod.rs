@@ -2,7 +2,7 @@ mod graphql;
 use crate::context::PrismaContext;
 pub use graphql::{GraphQlBody, GraphQlRequestHandler};
 
-use super::HttpHandler;
+use crate::RequestContext;
 use actix_web::HttpRequest;
 use serde_json;
 use std::collections::HashMap;
@@ -20,8 +20,8 @@ pub struct PrismaRequest<T> {
     pub path: String,
 }
 
-impl From<(GraphQlBody, HttpRequest<Arc<HttpHandler>>)> for PrismaRequest<GraphQlBody> {
-    fn from((gql, req): (GraphQlBody, HttpRequest<Arc<HttpHandler>>)) -> Self {
+impl From<(GraphQlBody, HttpRequest<Arc<RequestContext>>)> for PrismaRequest<GraphQlBody> {
+    fn from((gql, req): (GraphQlBody, HttpRequest<Arc<RequestContext>>)) -> Self {
         PrismaRequest {
             body: gql,
             path: req.path().into(),

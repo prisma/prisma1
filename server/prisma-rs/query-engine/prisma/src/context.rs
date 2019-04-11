@@ -5,9 +5,12 @@ use prisma_models::SchemaRef;
 use sqlite_connector::Sqlite;
 use std::sync::Arc;
 
+#[derive(DebugStub)]
 pub struct PrismaContext {
     pub config: PrismaConfig,
     pub schema: SchemaRef,
+
+    #[debug_stub = "#QueryExecutor#"]
     pub query_executor: QueryExecutor,
 }
 
@@ -15,10 +18,9 @@ impl PrismaContext {
     pub fn new() -> PrismaResult<Self> {
         let config = config::load().unwrap();
         let data_resolver = match config.databases.get("default") {
-            Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
-                let test_mode = false;
-                let sqlite = Sqlite::new(config.limit(), test_mode).unwrap();
-                Arc::new(sqlite)
+            Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => {
+                let sqlite = Sqlite::new(config.limit(), false).unwrap();
+                Arc::new(sqlite) // FIXME: active is misused here
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
