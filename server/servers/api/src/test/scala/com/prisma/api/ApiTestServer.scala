@@ -92,12 +92,32 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
   implicit val system       = dependencies.system
   implicit val materializer = dependencies.materializer
 
-  val prismaBinaryPath: String       = sys.env.getOrElse("PRISMA_BINARY_PATH", sys.error("Required PRISMA_BINARY_PATH env var not found"))
-  val prismaBinaryConfigPath: String = sys.env.getOrElse("PRISMA_BINARY_CONFIG_PATH", sys.error("Required PRISMA_BINARY_CONFIG_PATH env var not found"))
-  val gqlClient                      = GraphQlClient("http://127.0.0.1:8000") // todo rust code currently ignores port in config
+  val prismaBinaryPath: String = sys.env.getOrElse("PRISMA_BINARY_PATH", sys.error("Required PRISMA_BINARY_PATH env var not found"))
+  val gqlClient                = GraphQlClient("http://127.0.0.1:4466")
+  val server_root = sys.env
+    .get("SERVER_ROOT")
+    .orElse(sys.env.get("BUILDKITE_BUILD_CHECKOUT_PATH").map(path => s"$path/server"))
+    .getOrElse(sys.error("Unable to resolve server root path"))
+
+  val prismaConfigTemplate =
+    """
+      |port: 4466
+      |prototype: true
+      |databases:
+      |  default:
+      |    connector: sqlite-native
+      |    databaseFile: $DB_FILE
+      |    migrations: true
+      |    active: true
+      |    rawAccess: true
+    """.stripMargin
+
+  def renderConfig(dbName: String): String = {
+    prismaConfigTemplate.replaceAllLiterally("$DB_FILE", s"$server_root/db/${dbName}_DB.db")
+  }
 
   def queryPrismaProcess(query: String): GraphQlResponse = {
-    val url = new URL("http://127.0.0.1:8000")
+    val url = new URL("http://127.0.0.1:4466")
     val con = url.openConnection().asInstanceOf[HttpURLConnection]
 
     con.setDoOutput(true)
@@ -126,26 +146,27 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
     GraphQlResponse(status, buffer.toString)
   }
 
-  def startPrismaProcess(schema: SchemaModel): java.lang.Process = {
+  def startPrismaProcess(project: Project): java.lang.Process = {
     import java.lang.ProcessBuilder.Redirect
 
     val pb         = new java.lang.ProcessBuilder(prismaBinaryPath)
     val workingDir = new java.io.File(".")
 
     // Important: Rust requires UTF-8 encoding (encodeToString uses Latin-1)
-    val encoded   = Base64.getEncoder.encode(Json.toJson(schema).toString().getBytes(StandardCharsets.UTF_8))
+    val encoded   = Base64.getEncoder.encode(Json.toJson(project.schema).toString().getBytes(StandardCharsets.UTF_8))
     val schemaEnv = new String(encoded, StandardCharsets.UTF_8)
+    val config    = renderConfig(project.id)
+    val env       = pb.environment
 
-    val env = pb.environment
-    env.put("PRISMA_CONFIG_PATH", prismaBinaryConfigPath)
-    env.put("PRISMA_SCHEMA_JSON", schemaEnv)
+    env.put("PRISMA_CONFIG", config)
+    env.put("PRISMA_INTERNAL_DATA_MODEL_JSON", schemaEnv)
 
     pb.directory(workingDir)
     pb.redirectErrorStream(true)
     pb.redirectOutput(Redirect.INHERIT)
 
     val p = pb.start
-    Thread.sleep(50)
+    Thread.sleep(50) // Offsets process startup latency
     p
   }
 
@@ -188,7 +209,7 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
       """.stripMargin))
       result
     } else {
-      val prismaProcess = startPrismaProcess(project.schema)
+      val prismaProcess = startPrismaProcess(project)
 
       Future {
         println(prismaProcess.isAlive)

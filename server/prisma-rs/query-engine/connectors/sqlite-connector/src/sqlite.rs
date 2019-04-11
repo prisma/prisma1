@@ -9,12 +9,13 @@ use connector::*;
 use prisma_models::prelude::*;
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Row, Transaction, NO_PARAMS};
-use std::{collections::HashSet, env};
+use std::collections::HashSet;
 use uuid::Uuid;
 
 type Pool = r2d2::Pool<SqliteConnectionManager>;
 
 pub struct Sqlite {
+    database_file_path: String,
     pool: Pool,
     test_mode: bool,
 }
@@ -25,7 +26,7 @@ impl TransactionalExecutor for Sqlite {
         F: FnOnce(&mut Connection) -> ConnectorResult<T>,
     {
         let mut conn = self.pool.get()?;
-        Self::attach_database(&mut conn, db_name)?;
+        self.attach_database(&mut conn, db_name)?;
 
         let result = f(&mut conn);
 
@@ -55,19 +56,23 @@ impl TransactionalExecutor for Sqlite {
 
 impl Sqlite {
     /// Creates a new SQLite pool connected into local memory.
-    pub fn new(connection_limit: u32, test_mode: bool) -> ConnectorResult<Sqlite> {
+    pub fn new(database_file_path: String, connection_limit: u32, test_mode: bool) -> ConnectorResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
 
-        Ok(Sqlite { pool, test_mode })
+        Ok(Sqlite {
+            database_file_path,
+            pool,
+            test_mode,
+        })
     }
 
     /// When querying and we haven't yet loaded the database, it'll be loaded on
-    /// or created to `$SERVER_ROOT/db/{db_name}.db`.
+    /// or created to the configured database file.
     ///
     /// The database is then attached to the memory with an alias of `{db_name}`.
-    fn attach_database(conn: &mut Connection, db_name: &str) -> ConnectorResult<()> {
+    fn attach_database(&self, conn: &mut Connection, db_name: &str) -> ConnectorResult<()> {
         let mut stmt = conn.prepare("PRAGMA database_list")?;
 
         let databases: HashSet<String> = stmt
@@ -78,16 +83,11 @@ impl Sqlite {
             .map(|res| res.unwrap())
             .collect();
 
-        // FIXME(Dom): Correct config for sqlite
-        let server_root = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
-
         if !databases.contains(db_name) {
-            let path = dbg!(format!("{}/db/{}.db", server_root, db_name));
-            conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?;
+            conn.execute("ATTACH DATABASE ? AS ?", &[self.database_file_path.as_ref(), db_name])?;
         }
 
         conn.execute("PRAGMA foreign_keys = ON", NO_PARAMS)?;
-
         Ok(())
     }
 

@@ -17,12 +17,13 @@ pub struct ProtoBufInterface {
 
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
+        dbg!(config);
         let connector = match config.databases.get("default") {
-            Some(PrismaDatabase::Explicit(ref config))
+            Some(PrismaDatabase::File(ref config))
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
             {
                 let test_mode = true;
-                let sqlite = Sqlite::new(config.limit(), test_mode).unwrap();
+                let sqlite = Sqlite::new(config.database_file.clone(), config.limit(), test_mode).unwrap();
 
                 Arc::new(sqlite)
             }
