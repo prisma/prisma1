@@ -214,12 +214,26 @@ impl DatabaseWrite for Sqlite {
                     }
                 }
             }
-            NestedDatabaseMutaction::DeleteNode(_) => unimplemented!(),
-            NestedDatabaseMutaction::Connect(_) => unimplemented!(),
+            NestedDatabaseMutaction::Connect(ref connect) => {
+                Self::execute_connect(
+                    conn,
+                    &parent_id,
+                    connect,
+                    &connect.where_,
+                    Arc::clone(&connect.relation_field),
+                )?;
+
+                results.push(DatabaseMutactionResult {
+                    identifier: Identifier::None,
+                    typ: DatabaseMutactionResultType::Unit,
+                    mutaction: DatabaseMutaction::Nested(mutaction),
+                });
+            }
             NestedDatabaseMutaction::Disconnect(_) => unimplemented!(),
             NestedDatabaseMutaction::Set(_) => unimplemented!(),
             NestedDatabaseMutaction::UpdateNodes(_) => unimplemented!(),
             NestedDatabaseMutaction::DeleteNodes(_) => unimplemented!(),
+            NestedDatabaseMutaction::DeleteNode(_) => unimplemented!(),
         }
 
         Ok(results)
@@ -297,24 +311,16 @@ impl DatabaseWrite for Sqlite {
         non_list_args: &PrismaArgs,
         list_args: &[(String, PrismaListValue)],
     ) -> ConnectorResult<GraphqlId> {
-        if let Some(Query::Select(select)) = actions.required_check(parent_id)? {
+        if let Some((Query::Select(select), check)) = actions.required_check(parent_id)? {
             let ids = Self::query(conn, select, |row| {
                 let id: GraphqlId = row.get(0);
                 Ok(id)
             })?;
 
-            if ids.into_iter().next().is_some() {
-                let relation = relation_field.relation();
-
-                return Err(ConnectorError::RelationViolation {
-                    relation_name: relation.name.clone(),
-                    model_a_name: relation.model_a().name.clone(),
-                    model_b_name: relation.model_b().name.clone(),
-                });
-            }
+            check.call_box(ids.into_iter().next())?
         };
 
-        if let Some(query) = actions.removal_action(parent_id) {
+        if let Some(query) = actions.parent_removal(parent_id) {
             Self::execute_one(conn, query)?;
         }
 
@@ -330,6 +336,7 @@ impl DatabaseWrite for Sqlite {
             let relation_query = MutationBuilder::create_relation(relation_field, parent_id, &id);
 
             Self::execute_one(conn, relation_query)?;
+
             Ok(id)
         }
     }
@@ -368,5 +375,37 @@ impl DatabaseWrite for Sqlite {
                 child_where: node_selector.as_ref().map(NodeSelectorInfo::from),
             }),
         }
+    }
+
+    fn execute_connect(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        actions: &NestedActions,
+        node_selector: &NodeSelector,
+        relation_field: RelationFieldRef,
+    ) -> ConnectorResult<()> {
+        if let Some((Query::Select(select), check)) = actions.required_check(parent_id)? {
+            let ids = Self::query(conn, select, |row| {
+                let id: GraphqlId = row.get(0);
+                Ok(id)
+            })?;
+
+            check.call_box(ids.into_iter().next())?
+        }
+
+        let child_id = Self::id_for(conn, node_selector)?;
+
+        if let Some(query) = actions.parent_removal(parent_id) {
+            Self::execute_one(conn, query)?;
+        }
+
+        if let Some(query) = actions.child_removal(&child_id) {
+            Self::execute_one(conn, query)?;
+        }
+
+        let relation_query = MutationBuilder::create_relation(relation_field, parent_id, &child_id);
+        Self::execute_one(conn, relation_query)?;
+
+        Ok(())
     }
 }
