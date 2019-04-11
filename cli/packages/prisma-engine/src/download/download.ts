@@ -83,6 +83,7 @@ async function download() {
     50,
   )
   showProgress(100)
+  disableProgress()
 
   /**
    * Cache the result only on Mac for better dev experience
@@ -136,11 +137,11 @@ async function downloadFile(url: string, target: string, progressOffset = 0) {
           })
         })
       } finally {
-        disableProgress()
+        //
       }
     },
     {
-      retries: 10,
+      retries: 1,
       onRetry: err => console.error(err),
     },
   )
@@ -166,12 +167,11 @@ async function getPlatform() {
 }
 
 function getDownloadUrl(platform, file = 'prisma') {
-  return `https://s3-eu-west-1.amazonaws.com/curl-linux/prisma-native/${platform}/${file}.gz`
+  return `https://s3-eu-west-1.amazonaws.com/curl-linux/prisma-native/${platform}/${file}2.gz`
 }
 
 async function main() {
   await download()
-
   plusxSync(prismaBinPath)
   plusxSync(schemaInferrerBinPath)
 }

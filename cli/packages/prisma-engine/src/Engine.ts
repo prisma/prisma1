@@ -2,8 +2,9 @@ import { spawn, ChildProcess } from 'child_process'
 import { request } from 'graphql-request'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as net from 'net'
 import { safeLoad } from 'js-yaml'
+import * as getPort from 'get-port'
+import fetch from 'node-fetch'
 
 interface EngineConfig {
   prismaConfig?: string
@@ -33,33 +34,6 @@ export class Engine {
     this.prismaConfig = prismaConfig || this.getPrismaYml()
     this.debug = debug || false
     this.managementApiEnabled = managementApiEnabled || false
-  }
-
-  /**
-   * Use the port 0 trick to get a new port
-   */
-  getFreePort(): Promise<number> {
-    return new Promise((resolve, reject) => {
-      const server = net.createServer(s => s.end(''))
-      server.listen(0, () => {
-        const address = server.address()
-        if (!address) {
-          throw new Error(
-            'Could not find free port. Please contact the Prisma team',
-          )
-        }
-        const port =
-          typeof address === 'string'
-            ? parseInt(address.split(':').slice(-1)[0], 10)
-            : address.port
-        server.close(e => {
-          if (e) {
-            throw e
-          }
-          resolve(port)
-        })
-      })
-    })
   }
 
   /**
@@ -109,10 +83,11 @@ export class Engine {
    * Starts the engine
    */
   async start() {
-    this.port = await this.getFreePort()
+    // this.port = await getPort({ port: [4467, 4468, 4469, 4470, 4471] })
+    this.port = 8000
     const PRISMA_CONFIG = this.generatePrismaConfig()
     if (this.debug) {
-      console.log('PRISMA_CONFIG')
+      console.log('PRISMA_CONFIG:\n')
       console.log(PRISMA_CONFIG)
       console.log('\n')
     }
@@ -120,6 +95,7 @@ export class Engine {
       env: {
         PRISMA_CONFIG,
         PRISMA_SCHEMA_PATH: this.getDatamodelPath(),
+        SCHEMA_INFERRER_PATH: path.join(__dirname, '../schema-inferrer-bin'),
       },
       detached: false,
       stdio: this.debug ? 'inherit' : 'pipe',
@@ -135,7 +111,7 @@ export class Engine {
         throw new Error(`Child exited with code ${code}${debugString}`)
       }
     })
-    await new Promise(r => setTimeout(r, 500))
+    await new Promise(r => setTimeout(r, 150))
   }
 
   /**
@@ -155,6 +131,27 @@ export class Engine {
    * @param variables optional: variables
    */
   async request(query, variables?: any, url = '') {
-    return request(`http://localhost:${this.port}${url}`, query, variables)
+    // return request(`http://localhost:${this.port}${url}`, query, variables)
+    const result = await fetch(`http://localhost:${this.port}${url}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        variables: variables || {},
+        operationName: '',
+      }),
+    }).then(res => {
+      if (!res.ok) {
+        return res.text()
+      } else {
+        return res.json()
+      }
+    })
+    if (typeof result === 'string' || result.error) {
+      throw new Error(JSON.stringify(result))
+    }
+    return result.data
   }
 }
