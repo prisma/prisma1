@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -231,7 +231,6 @@ CREATE TABLE "schema-generator$financial"."User" (
 --
 
 CREATE TABLE "schema-generator$financial"."_CampusToFinancialAccount" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -242,7 +241,6 @@ CREATE TABLE "schema-generator$financial"."_CampusToFinancialAccount" (
 --
 
 CREATE TABLE "schema-generator$financial"."_CampusToGroup" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -253,7 +251,6 @@ CREATE TABLE "schema-generator$financial"."_CampusToGroup" (
 --
 
 CREATE TABLE "schema-generator$financial"."_CampusToLocation" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -264,7 +261,6 @@ CREATE TABLE "schema-generator$financial"."_CampusToLocation" (
 --
 
 CREATE TABLE "schema-generator$financial"."_CampusToPhoneNumber" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -275,7 +271,6 @@ CREATE TABLE "schema-generator$financial"."_CampusToPhoneNumber" (
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialAccountToFinancialScheduledTransaction" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -286,7 +281,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialAccountToFinancialScheduled
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialAccountToFinancialTransaction" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -297,7 +291,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialAccountToFinancialTransacti
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialPaymentDetailToFinancialScheduledTransaction" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -308,7 +301,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialPaymentDetailToFinancialSch
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialPaymentDetailToFinancialTransaction" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -319,7 +311,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialPaymentDetailToFinancialTra
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialPaymentDetailToLocation" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -330,7 +321,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialPaymentDetailToLocation" (
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialScheduledTransactionToFinancialTransaction" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -341,7 +331,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialScheduledTransactionToFinan
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialScheduledTransactionToPerson" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -352,7 +341,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialScheduledTransactionToPerso
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialTransactionToGroup" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -363,7 +351,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialTransactionToGroup" (
 --
 
 CREATE TABLE "schema-generator$financial"."_FinancialTransactionToPerson" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -374,7 +361,6 @@ CREATE TABLE "schema-generator$financial"."_FinancialTransactionToPerson" (
 --
 
 CREATE TABLE "schema-generator$financial"."_GroupInviteToGroupRole" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -385,7 +371,6 @@ CREATE TABLE "schema-generator$financial"."_GroupInviteToGroupRole" (
 --
 
 CREATE TABLE "schema-generator$financial"."_GroupMemberToGroupRole" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -396,7 +381,6 @@ CREATE TABLE "schema-generator$financial"."_GroupMemberToGroupRole" (
 --
 
 CREATE TABLE "schema-generator$financial"."_GroupMemberToPerson" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -407,7 +391,6 @@ CREATE TABLE "schema-generator$financial"."_GroupMemberToPerson" (
 --
 
 CREATE TABLE "schema-generator$financial"."_GroupRoleToGroupType" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -418,7 +401,6 @@ CREATE TABLE "schema-generator$financial"."_GroupRoleToGroupType" (
 --
 
 CREATE TABLE "schema-generator$financial"."_GroupToGroup" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -429,7 +411,6 @@ CREATE TABLE "schema-generator$financial"."_GroupToGroup" (
 --
 
 CREATE TABLE "schema-generator$financial"."_GroupToGroupInvite" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -440,7 +421,6 @@ CREATE TABLE "schema-generator$financial"."_GroupToGroupInvite" (
 --
 
 CREATE TABLE "schema-generator$financial"."_GroupToGroupMember" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -451,7 +431,6 @@ CREATE TABLE "schema-generator$financial"."_GroupToGroupMember" (
 --
 
 CREATE TABLE "schema-generator$financial"."_GroupToGroupType" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -462,7 +441,6 @@ CREATE TABLE "schema-generator$financial"."_GroupToGroupType" (
 --
 
 CREATE TABLE "schema-generator$financial"."_PersonToPhoneNumber" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -473,7 +451,6 @@ CREATE TABLE "schema-generator$financial"."_PersonToPhoneNumber" (
 --
 
 CREATE TABLE "schema-generator$financial"."_PersonToUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -599,190 +576,6 @@ ALTER TABLE ONLY "schema-generator$financial"."PhoneNumber"
 
 ALTER TABLE ONLY "schema-generator$financial"."User"
     ADD CONSTRAINT "User_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CampusToFinancialAccount _CampusToFinancialAccount_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_CampusToFinancialAccount"
-    ADD CONSTRAINT "_CampusToFinancialAccount_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CampusToGroup _CampusToGroup_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_CampusToGroup"
-    ADD CONSTRAINT "_CampusToGroup_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CampusToLocation _CampusToLocation_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_CampusToLocation"
-    ADD CONSTRAINT "_CampusToLocation_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CampusToPhoneNumber _CampusToPhoneNumber_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_CampusToPhoneNumber"
-    ADD CONSTRAINT "_CampusToPhoneNumber_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialAccountToFinancialScheduledTransaction _FinancialAccountToFinancialScheduledTransaction_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialAccountToFinancialScheduledTransaction"
-    ADD CONSTRAINT "_FinancialAccountToFinancialScheduledTransaction_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialAccountToFinancialTransaction _FinancialAccountToFinancialTransaction_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialAccountToFinancialTransaction"
-    ADD CONSTRAINT "_FinancialAccountToFinancialTransaction_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialPaymentDetailToFinancialScheduledTransaction _FinancialPaymentDetailToFinancialScheduledTransaction_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialPaymentDetailToFinancialScheduledTransaction"
-    ADD CONSTRAINT "_FinancialPaymentDetailToFinancialScheduledTransaction_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialPaymentDetailToFinancialTransaction _FinancialPaymentDetailToFinancialTransaction_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialPaymentDetailToFinancialTransaction"
-    ADD CONSTRAINT "_FinancialPaymentDetailToFinancialTransaction_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialPaymentDetailToLocation _FinancialPaymentDetailToLocation_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialPaymentDetailToLocation"
-    ADD CONSTRAINT "_FinancialPaymentDetailToLocation_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialScheduledTransactionToFinancialTransaction _FinancialScheduledTransactionToFinancialTransaction_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialScheduledTransactionToFinancialTransaction"
-    ADD CONSTRAINT "_FinancialScheduledTransactionToFinancialTransaction_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialScheduledTransactionToPerson _FinancialScheduledTransactionToPerson_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialScheduledTransactionToPerson"
-    ADD CONSTRAINT "_FinancialScheduledTransactionToPerson_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialTransactionToGroup _FinancialTransactionToGroup_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialTransactionToGroup"
-    ADD CONSTRAINT "_FinancialTransactionToGroup_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _FinancialTransactionToPerson _FinancialTransactionToPerson_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_FinancialTransactionToPerson"
-    ADD CONSTRAINT "_FinancialTransactionToPerson_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _GroupInviteToGroupRole _GroupInviteToGroupRole_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_GroupInviteToGroupRole"
-    ADD CONSTRAINT "_GroupInviteToGroupRole_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _GroupMemberToGroupRole _GroupMemberToGroupRole_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_GroupMemberToGroupRole"
-    ADD CONSTRAINT "_GroupMemberToGroupRole_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _GroupMemberToPerson _GroupMemberToPerson_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_GroupMemberToPerson"
-    ADD CONSTRAINT "_GroupMemberToPerson_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _GroupRoleToGroupType _GroupRoleToGroupType_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_GroupRoleToGroupType"
-    ADD CONSTRAINT "_GroupRoleToGroupType_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _GroupToGroupInvite _GroupToGroupInvite_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_GroupToGroupInvite"
-    ADD CONSTRAINT "_GroupToGroupInvite_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _GroupToGroupMember _GroupToGroupMember_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_GroupToGroupMember"
-    ADD CONSTRAINT "_GroupToGroupMember_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _GroupToGroupType _GroupToGroupType_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_GroupToGroupType"
-    ADD CONSTRAINT "_GroupToGroupType_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _GroupToGroup _GroupToGroup_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_GroupToGroup"
-    ADD CONSTRAINT "_GroupToGroup_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _PersonToPhoneNumber _PersonToPhoneNumber_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_PersonToPhoneNumber"
-    ADD CONSTRAINT "_PersonToPhoneNumber_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _PersonToUser _PersonToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$financial; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$financial"."_PersonToUser"
-    ADD CONSTRAINT "_PersonToUser_pkey" PRIMARY KEY (id);
 
 
 --

@@ -1517,56 +1517,56 @@ type Mutation {
   createMultiSelfReferencingBWithId(data: MultiSelfReferencingBWithIdCreateInput!): MultiSelfReferencingBWithId!
   createMultiSelfReferencingC(data: MultiSelfReferencingCCreateInput!): MultiSelfReferencingC!
   createMultiSelfReferencingB(data: MultiSelfReferencingBCreateInput!): MultiSelfReferencingB!
-  createSelfReferencingB(data: SelfReferencingBCreateInput!): SelfReferencingB!
+  createSelfReferencingC(data: SelfReferencingCCreateInput!): SelfReferencingC!
   createSelfReferencingBWithId(data: SelfReferencingBWithIdCreateInput!): SelfReferencingBWithId!
   createSelfReferencingAWithId(data: SelfReferencingAWithIdCreateInput!): SelfReferencingAWithId!
-  createSelfReferencingC(data: SelfReferencingCCreateInput!): SelfReferencingC!
+  createSelfReferencingB(data: SelfReferencingBCreateInput!): SelfReferencingB!
   updateSelfReferencingCWithId(data: SelfReferencingCWithIdUpdateInput!, where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
   updateSelfReferencingA(data: SelfReferencingAUpdateInput!, where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
   updateMultiSelfReferencingCWithId(data: MultiSelfReferencingCWithIdUpdateInput!, where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
   updateMultiSelfReferencingBWithId(data: MultiSelfReferencingBWithIdUpdateInput!, where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
   updateMultiSelfReferencingC(data: MultiSelfReferencingCUpdateInput!, where: MultiSelfReferencingCWhereUniqueInput!): MultiSelfReferencingC
   updateMultiSelfReferencingB(data: MultiSelfReferencingBUpdateInput!, where: MultiSelfReferencingBWhereUniqueInput!): MultiSelfReferencingB
-  updateSelfReferencingB(data: SelfReferencingBUpdateInput!, where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
+  updateSelfReferencingC(data: SelfReferencingCUpdateInput!, where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
   updateSelfReferencingBWithId(data: SelfReferencingBWithIdUpdateInput!, where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
   updateSelfReferencingAWithId(data: SelfReferencingAWithIdUpdateInput!, where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
-  updateSelfReferencingC(data: SelfReferencingCUpdateInput!, where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
+  updateSelfReferencingB(data: SelfReferencingBUpdateInput!, where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
   deleteSelfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
   deleteSelfReferencingA(where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
   deleteMultiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
   deleteMultiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
   deleteMultiSelfReferencingC(where: MultiSelfReferencingCWhereUniqueInput!): MultiSelfReferencingC
   deleteMultiSelfReferencingB(where: MultiSelfReferencingBWhereUniqueInput!): MultiSelfReferencingB
-  deleteSelfReferencingB(where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
+  deleteSelfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
   deleteSelfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
   deleteSelfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
-  deleteSelfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
+  deleteSelfReferencingB(where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
   upsertSelfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!, create: SelfReferencingCWithIdCreateInput!, update: SelfReferencingCWithIdUpdateInput!): SelfReferencingCWithId!
   upsertSelfReferencingA(where: SelfReferencingAWhereUniqueInput!, create: SelfReferencingACreateInput!, update: SelfReferencingAUpdateInput!): SelfReferencingA!
   upsertMultiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!, create: MultiSelfReferencingCWithIdCreateInput!, update: MultiSelfReferencingCWithIdUpdateInput!): MultiSelfReferencingCWithId!
   upsertMultiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!, create: MultiSelfReferencingBWithIdCreateInput!, update: MultiSelfReferencingBWithIdUpdateInput!): MultiSelfReferencingBWithId!
   upsertMultiSelfReferencingC(where: MultiSelfReferencingCWhereUniqueInput!, create: MultiSelfReferencingCCreateInput!, update: MultiSelfReferencingCUpdateInput!): MultiSelfReferencingC!
   upsertMultiSelfReferencingB(where: MultiSelfReferencingBWhereUniqueInput!, create: MultiSelfReferencingBCreateInput!, update: MultiSelfReferencingBUpdateInput!): MultiSelfReferencingB!
-  upsertSelfReferencingB(where: SelfReferencingBWhereUniqueInput!, create: SelfReferencingBCreateInput!, update: SelfReferencingBUpdateInput!): SelfReferencingB!
+  upsertSelfReferencingC(where: SelfReferencingCWhereUniqueInput!, create: SelfReferencingCCreateInput!, update: SelfReferencingCUpdateInput!): SelfReferencingC!
   upsertSelfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!, create: SelfReferencingBWithIdCreateInput!, update: SelfReferencingBWithIdUpdateInput!): SelfReferencingBWithId!
   upsertSelfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!, create: SelfReferencingAWithIdCreateInput!, update: SelfReferencingAWithIdUpdateInput!): SelfReferencingAWithId!
-  upsertSelfReferencingC(where: SelfReferencingCWhereUniqueInput!, create: SelfReferencingCCreateInput!, update: SelfReferencingCUpdateInput!): SelfReferencingC!
+  upsertSelfReferencingB(where: SelfReferencingBWhereUniqueInput!, create: SelfReferencingBCreateInput!, update: SelfReferencingBUpdateInput!): SelfReferencingB!
   updateManySelfReferencingCWithIds(data: SelfReferencingCWithIdUpdateManyMutationInput!, where: SelfReferencingCWithIdWhereInput): BatchPayload!
   updateManySelfReferencingAs(data: SelfReferencingAUpdateManyMutationInput!, where: SelfReferencingAWhereInput): BatchPayload!
-  updateManySelfReferencingBs(data: SelfReferencingBUpdateManyMutationInput!, where: SelfReferencingBWhereInput): BatchPayload!
+  updateManySelfReferencingCs(data: SelfReferencingCUpdateManyMutationInput!, where: SelfReferencingCWhereInput): BatchPayload!
   updateManySelfReferencingBWithIds(data: SelfReferencingBWithIdUpdateManyMutationInput!, where: SelfReferencingBWithIdWhereInput): BatchPayload!
   updateManySelfReferencingAWithIds(data: SelfReferencingAWithIdUpdateManyMutationInput!, where: SelfReferencingAWithIdWhereInput): BatchPayload!
-  updateManySelfReferencingCs(data: SelfReferencingCUpdateManyMutationInput!, where: SelfReferencingCWhereInput): BatchPayload!
+  updateManySelfReferencingBs(data: SelfReferencingBUpdateManyMutationInput!, where: SelfReferencingBWhereInput): BatchPayload!
   deleteManySelfReferencingCWithIds(where: SelfReferencingCWithIdWhereInput): BatchPayload!
   deleteManySelfReferencingAs(where: SelfReferencingAWhereInput): BatchPayload!
   deleteManyMultiSelfReferencingCWithIds(where: MultiSelfReferencingCWithIdWhereInput): BatchPayload!
   deleteManyMultiSelfReferencingBWithIds(where: MultiSelfReferencingBWithIdWhereInput): BatchPayload!
   deleteManyMultiSelfReferencingCs(where: MultiSelfReferencingCWhereInput): BatchPayload!
   deleteManyMultiSelfReferencingBs(where: MultiSelfReferencingBWhereInput): BatchPayload!
-  deleteManySelfReferencingBs(where: SelfReferencingBWhereInput): BatchPayload!
+  deleteManySelfReferencingCs(where: SelfReferencingCWhereInput): BatchPayload!
   deleteManySelfReferencingBWithIds(where: SelfReferencingBWithIdWhereInput): BatchPayload!
   deleteManySelfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput): BatchPayload!
-  deleteManySelfReferencingCs(where: SelfReferencingCWhereInput): BatchPayload!
+  deleteManySelfReferencingBs(where: SelfReferencingBWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -1614,30 +1614,30 @@ type Query {
   multiSelfReferencingBWithIds(where: MultiSelfReferencingBWithIdWhereInput, orderBy: MultiSelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingBWithId]!
   multiSelfReferencingCs(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingC]!
   multiSelfReferencingBs(where: MultiSelfReferencingBWhereInput, orderBy: MultiSelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [MultiSelfReferencingB]!
-  selfReferencingBs(where: SelfReferencingBWhereInput, orderBy: SelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingB]!
+  selfReferencingCs(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC]!
   selfReferencingBWithIds(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingBWithId]!
   selfReferencingAWithIds(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingAWithId]!
-  selfReferencingCs(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingC]!
+  selfReferencingBs(where: SelfReferencingBWhereInput, orderBy: SelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [SelfReferencingB]!
   selfReferencingCWithId(where: SelfReferencingCWithIdWhereUniqueInput!): SelfReferencingCWithId
   selfReferencingA(where: SelfReferencingAWhereUniqueInput!): SelfReferencingA
   multiSelfReferencingCWithId(where: MultiSelfReferencingCWithIdWhereUniqueInput!): MultiSelfReferencingCWithId
   multiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdWhereUniqueInput!): MultiSelfReferencingBWithId
   multiSelfReferencingC(where: MultiSelfReferencingCWhereUniqueInput!): MultiSelfReferencingC
   multiSelfReferencingB(where: MultiSelfReferencingBWhereUniqueInput!): MultiSelfReferencingB
-  selfReferencingB(where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
+  selfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
   selfReferencingBWithId(where: SelfReferencingBWithIdWhereUniqueInput!): SelfReferencingBWithId
   selfReferencingAWithId(where: SelfReferencingAWithIdWhereUniqueInput!): SelfReferencingAWithId
-  selfReferencingC(where: SelfReferencingCWhereUniqueInput!): SelfReferencingC
+  selfReferencingB(where: SelfReferencingBWhereUniqueInput!): SelfReferencingB
   selfReferencingCWithIdsConnection(where: SelfReferencingCWithIdWhereInput, orderBy: SelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCWithIdConnection!
   selfReferencingAsConnection(where: SelfReferencingAWhereInput, orderBy: SelfReferencingAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingAConnection!
   multiSelfReferencingCWithIdsConnection(where: MultiSelfReferencingCWithIdWhereInput, orderBy: MultiSelfReferencingCWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingCWithIdConnection!
   multiSelfReferencingBWithIdsConnection(where: MultiSelfReferencingBWithIdWhereInput, orderBy: MultiSelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingBWithIdConnection!
   multiSelfReferencingCsConnection(where: MultiSelfReferencingCWhereInput, orderBy: MultiSelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingCConnection!
   multiSelfReferencingBsConnection(where: MultiSelfReferencingBWhereInput, orderBy: MultiSelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): MultiSelfReferencingBConnection!
-  selfReferencingBsConnection(where: SelfReferencingBWhereInput, orderBy: SelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingBConnection!
+  selfReferencingCsConnection(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCConnection!
   selfReferencingBWithIdsConnection(where: SelfReferencingBWithIdWhereInput, orderBy: SelfReferencingBWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingBWithIdConnection!
   selfReferencingAWithIdsConnection(where: SelfReferencingAWithIdWhereInput, orderBy: SelfReferencingAWithIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingAWithIdConnection!
-  selfReferencingCsConnection(where: SelfReferencingCWhereInput, orderBy: SelfReferencingCOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingCConnection!
+  selfReferencingBsConnection(where: SelfReferencingBWhereInput, orderBy: SelfReferencingBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): SelfReferencingBConnection!
   """
   Fetches an object given its ID
   """
@@ -3733,9 +3733,9 @@ type Subscription {
   multiSelfReferencingBWithId(where: MultiSelfReferencingBWithIdSubscriptionWhereInput): MultiSelfReferencingBWithIdSubscriptionPayload
   multiSelfReferencingC(where: MultiSelfReferencingCSubscriptionWhereInput): MultiSelfReferencingCSubscriptionPayload
   multiSelfReferencingB(where: MultiSelfReferencingBSubscriptionWhereInput): MultiSelfReferencingBSubscriptionPayload
-  selfReferencingB(where: SelfReferencingBSubscriptionWhereInput): SelfReferencingBSubscriptionPayload
+  selfReferencingC(where: SelfReferencingCSubscriptionWhereInput): SelfReferencingCSubscriptionPayload
   selfReferencingBWithId(where: SelfReferencingBWithIdSubscriptionWhereInput): SelfReferencingBWithIdSubscriptionPayload
   selfReferencingAWithId(where: SelfReferencingAWithIdSubscriptionWhereInput): SelfReferencingAWithIdSubscriptionPayload
-  selfReferencingC(where: SelfReferencingCSubscriptionWhereInput): SelfReferencingCSubscriptionPayload
+  selfReferencingB(where: SelfReferencingBSubscriptionWhereInput): SelfReferencingBSubscriptionPayload
 }
 

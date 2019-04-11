@@ -111,11 +111,8 @@ CREATE TABLE `User` (
 
 DROP TABLE IF EXISTS `_BillingInfoToUser`;
 CREATE TABLE `_BillingInfoToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -129,11 +126,8 @@ CREATE TABLE `_BillingInfoToUser` (
 
 DROP TABLE IF EXISTS `_BillingInfoWithoutConnectionToUser`;
 CREATE TABLE `_BillingInfoWithoutConnectionToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -147,11 +141,8 @@ CREATE TABLE `_BillingInfoWithoutConnectionToUser` (
 
 DROP TABLE IF EXISTS `_LikesByUser`;
 CREATE TABLE `_LikesByUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -165,11 +156,8 @@ CREATE TABLE `_LikesByUser` (
 
 DROP TABLE IF EXISTS `_OptionalDetailsToUser`;
 CREATE TABLE `_OptionalDetailsToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -183,11 +171,8 @@ CREATE TABLE `_OptionalDetailsToUser` (
 
 DROP TABLE IF EXISTS `_OptionalDetailsWithoutConnectionToUser`;
 CREATE TABLE `_OptionalDetailsWithoutConnectionToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -201,11 +186,8 @@ CREATE TABLE `_OptionalDetailsWithoutConnectionToUser` (
 
 DROP TABLE IF EXISTS `_PostWithoutConnectionToUser`;
 CREATE TABLE `_PostWithoutConnectionToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -219,11 +201,8 @@ CREATE TABLE `_PostWithoutConnectionToUser` (
 
 DROP TABLE IF EXISTS `_PostsByUser`;
 CREATE TABLE `_PostsByUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -244,4 +223,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

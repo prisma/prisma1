@@ -2263,35 +2263,35 @@ scalar Long
 
 type Mutation {
   createE(data: ECreateInput!): E!
-  createD(data: DCreateInput!): D!
+  createB(data: BCreateInput!): B!
   createA(data: ACreateInput!): A!
   createC(data: CCreateInput!): C!
-  createB(data: BCreateInput!): B!
+  createD(data: DCreateInput!): D!
   updateE(data: EUpdateInput!, where: EWhereUniqueInput!): E
-  updateD(data: DUpdateInput!, where: DWhereUniqueInput!): D
+  updateB(data: BUpdateInput!, where: BWhereUniqueInput!): B
   updateA(data: AUpdateInput!, where: AWhereUniqueInput!): A
   updateC(data: CUpdateInput!, where: CWhereUniqueInput!): C
-  updateB(data: BUpdateInput!, where: BWhereUniqueInput!): B
+  updateD(data: DUpdateInput!, where: DWhereUniqueInput!): D
   deleteE(where: EWhereUniqueInput!): E
-  deleteD(where: DWhereUniqueInput!): D
+  deleteB(where: BWhereUniqueInput!): B
   deleteA(where: AWhereUniqueInput!): A
   deleteC(where: CWhereUniqueInput!): C
-  deleteB(where: BWhereUniqueInput!): B
+  deleteD(where: DWhereUniqueInput!): D
   upsertE(where: EWhereUniqueInput!, create: ECreateInput!, update: EUpdateInput!): E!
-  upsertD(where: DWhereUniqueInput!, create: DCreateInput!, update: DUpdateInput!): D!
+  upsertB(where: BWhereUniqueInput!, create: BCreateInput!, update: BUpdateInput!): B!
   upsertA(where: AWhereUniqueInput!, create: ACreateInput!, update: AUpdateInput!): A!
   upsertC(where: CWhereUniqueInput!, create: CCreateInput!, update: CUpdateInput!): C!
-  upsertB(where: BWhereUniqueInput!, create: BCreateInput!, update: BUpdateInput!): B!
+  upsertD(where: DWhereUniqueInput!, create: DCreateInput!, update: DUpdateInput!): D!
   updateManyEs(data: EUpdateManyMutationInput!, where: EWhereInput): BatchPayload!
-  updateManyDs(data: DUpdateManyMutationInput!, where: DWhereInput): BatchPayload!
+  updateManyBs(data: BUpdateManyMutationInput!, where: BWhereInput): BatchPayload!
   updateManyAs(data: AUpdateManyMutationInput!, where: AWhereInput): BatchPayload!
   updateManyCs(data: CUpdateManyMutationInput!, where: CWhereInput): BatchPayload!
-  updateManyBs(data: BUpdateManyMutationInput!, where: BWhereInput): BatchPayload!
+  updateManyDs(data: DUpdateManyMutationInput!, where: DWhereInput): BatchPayload!
   deleteManyEs(where: EWhereInput): BatchPayload!
-  deleteManyDs(where: DWhereInput): BatchPayload!
+  deleteManyBs(where: BWhereInput): BatchPayload!
   deleteManyAs(where: AWhereInput): BatchPayload!
   deleteManyCs(where: CWhereInput): BatchPayload!
-  deleteManyBs(where: BWhereInput): BatchPayload!
+  deleteManyDs(where: DWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -2334,20 +2334,20 @@ type PageInfo {
 
 type Query {
   es(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [E]!
-  ds(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D]!
+  bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
   as(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [A]!
   cs(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [C]!
-  bs(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [B]!
+  ds(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [D]!
   e(where: EWhereUniqueInput!): E
-  d(where: DWhereUniqueInput!): D
+  b(where: BWhereUniqueInput!): B
   a(where: AWhereUniqueInput!): A
   c(where: CWhereUniqueInput!): C
-  b(where: BWhereUniqueInput!): B
+  d(where: DWhereUniqueInput!): D
   esConnection(where: EWhereInput, orderBy: EOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): EConnection!
-  dsConnection(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): DConnection!
+  bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
   asConnection(where: AWhereInput, orderBy: AOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): AConnection!
   csConnection(where: CWhereInput, orderBy: COrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CConnection!
-  bsConnection(where: BWhereInput, orderBy: BOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BConnection!
+  dsConnection(where: DWhereInput, orderBy: DOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): DConnection!
   """
   Fetches an object given its ID
   """
@@ -2361,9 +2361,9 @@ type Query {
 
 type Subscription {
   e(where: ESubscriptionWhereInput): ESubscriptionPayload
-  d(where: DSubscriptionWhereInput): DSubscriptionPayload
+  b(where: BSubscriptionWhereInput): BSubscriptionPayload
   a(where: ASubscriptionWhereInput): ASubscriptionPayload
   c(where: CSubscriptionWhereInput): CSubscriptionPayload
-  b(where: BSubscriptionWhereInput): BSubscriptionPayload
+  d(where: DSubscriptionWhereInput): DSubscriptionPayload
 }
 

@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -108,7 +108,6 @@ CREATE TABLE "schema-generator$emptyTypes"."OnlyRelationB" (
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -119,7 +118,6 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation" (
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -130,7 +128,6 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation" (
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -141,7 +138,6 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2" (
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -152,7 +148,6 @@ CREATE TABLE "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA" (
 --
 
 CREATE TABLE "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -222,46 +217,6 @@ ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyRelationB"
 
 ALTER TABLE ONLY "schema-generator$emptyTypes"."OnlyRelation"
     ADD CONSTRAINT "OnlyRelation_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _OnlyDateToOnlyRelation _OnlyDateToOnlyRelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyDateToOnlyRelation"
-    ADD CONSTRAINT "_OnlyDateToOnlyRelation_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _OnlyIdToOnlyIdAndARelation2 _OnlyIdToOnlyIdAndARelation2_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation2"
-    ADD CONSTRAINT "_OnlyIdToOnlyIdAndARelation2_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _OnlyIdToOnlyIdAndARelation _OnlyIdToOnlyIdAndARelation_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyIdToOnlyIdAndARelation"
-    ADD CONSTRAINT "_OnlyIdToOnlyIdAndARelation_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _OnlyRelationAToOnlyRelationA _OnlyRelationAToOnlyRelationA_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationAToOnlyRelationA"
-    ADD CONSTRAINT "_OnlyRelationAToOnlyRelationA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _OnlyRelationBToOnlyRelationB _OnlyRelationBToOnlyRelationB_pkey; Type: CONSTRAINT; Schema: schema-generator$emptyTypes; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$emptyTypes"."_OnlyRelationBToOnlyRelationB"
-    ADD CONSTRAINT "_OnlyRelationBToOnlyRelationB_pkey" PRIMARY KEY (id);
 
 
 --
