@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -72,7 +72,6 @@ CREATE TABLE "schema-generator$defaultValue"."B" (
 --
 
 CREATE TABLE "schema-generator$defaultValue"."_AToB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -83,7 +82,6 @@ CREATE TABLE "schema-generator$defaultValue"."_AToB" (
 --
 
 CREATE TABLE "schema-generator$defaultValue"."_AWithIdToB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -121,22 +119,6 @@ ALTER TABLE ONLY "schema-generator$defaultValue"."A"
 
 ALTER TABLE ONLY "schema-generator$defaultValue"."B"
     ADD CONSTRAINT "B_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToB _AToB_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$defaultValue"."_AToB"
-    ADD CONSTRAINT "_AToB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithIdToB _AWithIdToB_pkey; Type: CONSTRAINT; Schema: schema-generator$defaultValue; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$defaultValue"."_AWithIdToB"
-    ADD CONSTRAINT "_AWithIdToB_pkey" PRIMARY KEY (id);
 
 
 --

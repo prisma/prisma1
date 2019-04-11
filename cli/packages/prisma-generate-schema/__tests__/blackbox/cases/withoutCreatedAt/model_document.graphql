@@ -3,14 +3,19 @@ type User {
   email: String! @unique
   name: String
   posts: [Post!]! @relation(link: INLINE)
+  signUpDate: DateTime! @createdAt
 }
 
 type Post {
   id: ID! @id
-  createdAt: DateTime! @createdAt
-  updatedAt: DateTime! @updatedAt
   published: Boolean! @default(value: false)
   title: String!
   content: String
   author: User!
+}
+
+type MultiRefToUsers {
+  id: ID! @id
+  name: String
+  users: [User] @relation(link: INLINE)
 }

@@ -50,10 +50,10 @@ type Mutation {
   createOnlyIdAndARelation(data: OnlyIdAndARelationCreateInput!): OnlyIdAndARelation!
   createOnlyIdAndARelation2(data: OnlyIdAndARelation2CreateInput!): OnlyIdAndARelation2!
   createOnlyRelation(data: OnlyRelationCreateInput!): OnlyRelation!
-  createOnlyRelationA(data: OnlyRelationACreateInput!): OnlyRelationA!
   createOnlyDate(data: OnlyDateCreateInput!): OnlyDate!
-  createOnlyRelationB(data: OnlyRelationBCreateInput!): OnlyRelationB!
+  createOnlyRelationA(data: OnlyRelationACreateInput!): OnlyRelationA!
   createOnlyId(data: OnlyIdCreateInput!): OnlyId!
+  createOnlyRelationB(data: OnlyRelationBCreateInput!): OnlyRelationB!
   updateOnlyIdAndARelation(data: OnlyIdAndARelationUpdateInput!, where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
   updateOnlyIdAndARelation2(data: OnlyIdAndARelation2UpdateInput!, where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
   updateOnlyRelation(data: OnlyRelationUpdateInput!, where: OnlyRelationWhereUniqueInput!): OnlyRelation
@@ -62,10 +62,10 @@ type Mutation {
   deleteOnlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
   deleteOnlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
   deleteOnlyRelation(where: OnlyRelationWhereUniqueInput!): OnlyRelation
-  deleteOnlyRelationA(where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
   deleteOnlyDate(where: OnlyDateWhereUniqueInput!): OnlyDate
-  deleteOnlyRelationB(where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
+  deleteOnlyRelationA(where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
   deleteOnlyId(where: OnlyIdWhereUniqueInput!): OnlyId
+  deleteOnlyRelationB(where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
   upsertOnlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!, create: OnlyIdAndARelationCreateInput!, update: OnlyIdAndARelationUpdateInput!): OnlyIdAndARelation!
   upsertOnlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!, create: OnlyIdAndARelation2CreateInput!, update: OnlyIdAndARelation2UpdateInput!): OnlyIdAndARelation2!
   upsertOnlyRelation(where: OnlyRelationWhereUniqueInput!, create: OnlyRelationCreateInput!, update: OnlyRelationUpdateInput!): OnlyRelation!
@@ -74,10 +74,10 @@ type Mutation {
   deleteManyOnlyIdAndARelations(where: OnlyIdAndARelationWhereInput): BatchPayload!
   deleteManyOnlyIdAndARelation2s(where: OnlyIdAndARelation2WhereInput): BatchPayload!
   deleteManyOnlyRelations(where: OnlyRelationWhereInput): BatchPayload!
-  deleteManyOnlyRelationAs(where: OnlyRelationAWhereInput): BatchPayload!
   deleteManyOnlyDates(where: OnlyDateWhereInput): BatchPayload!
-  deleteManyOnlyRelationBs(where: OnlyRelationBWhereInput): BatchPayload!
+  deleteManyOnlyRelationAs(where: OnlyRelationAWhereInput): BatchPayload!
   deleteManyOnlyIds(where: OnlyIdWhereInput): BatchPayload!
+  deleteManyOnlyRelationBs(where: OnlyRelationBWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -1921,24 +1921,24 @@ type Query {
   onlyIdAndARelations(where: OnlyIdAndARelationWhereInput, orderBy: OnlyIdAndARelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyIdAndARelation]!
   onlyIdAndARelation2s(where: OnlyIdAndARelation2WhereInput, orderBy: OnlyIdAndARelation2OrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyIdAndARelation2]!
   onlyRelations(where: OnlyRelationWhereInput, orderBy: OnlyRelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelation]!
-  onlyRelationAs(where: OnlyRelationAWhereInput, orderBy: OnlyRelationAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelationA]!
   onlyDates(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyDate]!
-  onlyRelationBs(where: OnlyRelationBWhereInput, orderBy: OnlyRelationBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelationB]!
+  onlyRelationAs(where: OnlyRelationAWhereInput, orderBy: OnlyRelationAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelationA]!
   onlyIds(where: OnlyIdWhereInput, orderBy: OnlyIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyId]!
+  onlyRelationBs(where: OnlyRelationBWhereInput, orderBy: OnlyRelationBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelationB]!
   onlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
   onlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
   onlyRelation(where: OnlyRelationWhereUniqueInput!): OnlyRelation
-  onlyRelationA(where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
   onlyDate(where: OnlyDateWhereUniqueInput!): OnlyDate
-  onlyRelationB(where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
+  onlyRelationA(where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
   onlyId(where: OnlyIdWhereUniqueInput!): OnlyId
+  onlyRelationB(where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
   onlyIdAndARelationsConnection(where: OnlyIdAndARelationWhereInput, orderBy: OnlyIdAndARelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdAndARelationConnection!
   onlyIdAndARelation2sConnection(where: OnlyIdAndARelation2WhereInput, orderBy: OnlyIdAndARelation2OrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdAndARelation2Connection!
   onlyRelationsConnection(where: OnlyRelationWhereInput, orderBy: OnlyRelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationConnection!
-  onlyRelationAsConnection(where: OnlyRelationAWhereInput, orderBy: OnlyRelationAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationAConnection!
   onlyDatesConnection(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyDateConnection!
-  onlyRelationBsConnection(where: OnlyRelationBWhereInput, orderBy: OnlyRelationBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationBConnection!
+  onlyRelationAsConnection(where: OnlyRelationAWhereInput, orderBy: OnlyRelationAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationAConnection!
   onlyIdsConnection(where: OnlyIdWhereInput, orderBy: OnlyIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdConnection!
+  onlyRelationBsConnection(where: OnlyRelationBWhereInput, orderBy: OnlyRelationBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationBConnection!
   """
   Fetches an object given its ID
   """
@@ -1954,9 +1954,9 @@ type Subscription {
   onlyIdAndARelation(where: OnlyIdAndARelationSubscriptionWhereInput): OnlyIdAndARelationSubscriptionPayload
   onlyIdAndARelation2(where: OnlyIdAndARelation2SubscriptionWhereInput): OnlyIdAndARelation2SubscriptionPayload
   onlyRelation(where: OnlyRelationSubscriptionWhereInput): OnlyRelationSubscriptionPayload
-  onlyRelationA(where: OnlyRelationASubscriptionWhereInput): OnlyRelationASubscriptionPayload
   onlyDate(where: OnlyDateSubscriptionWhereInput): OnlyDateSubscriptionPayload
-  onlyRelationB(where: OnlyRelationBSubscriptionWhereInput): OnlyRelationBSubscriptionPayload
+  onlyRelationA(where: OnlyRelationASubscriptionWhereInput): OnlyRelationASubscriptionPayload
   onlyId(where: OnlyIdSubscriptionWhereInput): OnlyIdSubscriptionPayload
+  onlyRelationB(where: OnlyRelationBSubscriptionWhereInput): OnlyRelationBSubscriptionPayload
 }
 

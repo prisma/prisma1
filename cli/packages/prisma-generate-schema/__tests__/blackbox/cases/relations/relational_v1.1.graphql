@@ -681,43 +681,43 @@ type Mutation {
   createBillingInfo(data: BillingInfoCreateInput!): BillingInfo!
   createOptionalDetails(data: OptionalDetailsCreateInput!): OptionalDetails!
   createOptionalDetailsWithoutConnection(data: OptionalDetailsWithoutConnectionCreateInput!): OptionalDetailsWithoutConnection!
-  createPostWithoutConnection(data: PostWithoutConnectionCreateInput!): PostWithoutConnection!
   createBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionCreateInput!): BillingInfoWithoutConnection!
+  createPostWithoutConnection(data: PostWithoutConnectionCreateInput!): PostWithoutConnection!
   updateUser(data: UserUpdateInput!, where: UserWhereUniqueInput!): User
   updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post
   updateBillingInfo(data: BillingInfoUpdateInput!, where: BillingInfoWhereUniqueInput!): BillingInfo
   updateOptionalDetails(data: OptionalDetailsUpdateInput!, where: OptionalDetailsWhereUniqueInput!): OptionalDetails
   updateOptionalDetailsWithoutConnection(data: OptionalDetailsWithoutConnectionUpdateInput!, where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
-  updatePostWithoutConnection(data: PostWithoutConnectionUpdateInput!, where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   updateBillingInfoWithoutConnection(data: BillingInfoWithoutConnectionUpdateInput!, where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
+  updatePostWithoutConnection(data: PostWithoutConnectionUpdateInput!, where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   deleteUser(where: UserWhereUniqueInput!): User
   deletePost(where: PostWhereUniqueInput!): Post
   deleteBillingInfo(where: BillingInfoWhereUniqueInput!): BillingInfo
   deleteOptionalDetails(where: OptionalDetailsWhereUniqueInput!): OptionalDetails
   deleteOptionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
-  deletePostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   deleteBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
+  deletePostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   upsertUser(where: UserWhereUniqueInput!, create: UserCreateInput!, update: UserUpdateInput!): User!
   upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
   upsertBillingInfo(where: BillingInfoWhereUniqueInput!, create: BillingInfoCreateInput!, update: BillingInfoUpdateInput!): BillingInfo!
   upsertOptionalDetails(where: OptionalDetailsWhereUniqueInput!, create: OptionalDetailsCreateInput!, update: OptionalDetailsUpdateInput!): OptionalDetails!
   upsertOptionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!, create: OptionalDetailsWithoutConnectionCreateInput!, update: OptionalDetailsWithoutConnectionUpdateInput!): OptionalDetailsWithoutConnection!
-  upsertPostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!, create: PostWithoutConnectionCreateInput!, update: PostWithoutConnectionUpdateInput!): PostWithoutConnection!
   upsertBillingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!, create: BillingInfoWithoutConnectionCreateInput!, update: BillingInfoWithoutConnectionUpdateInput!): BillingInfoWithoutConnection!
+  upsertPostWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!, create: PostWithoutConnectionCreateInput!, update: PostWithoutConnectionUpdateInput!): PostWithoutConnection!
   updateManyUsers(data: UserUpdateManyMutationInput!, where: UserWhereInput): BatchPayload!
   updateManyPosts(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload!
   updateManyBillingInfoes(data: BillingInfoUpdateManyMutationInput!, where: BillingInfoWhereInput): BatchPayload!
   updateManyOptionalDetailses(data: OptionalDetailsUpdateManyMutationInput!, where: OptionalDetailsWhereInput): BatchPayload!
   updateManyOptionalDetailsWithoutConnections(data: OptionalDetailsWithoutConnectionUpdateManyMutationInput!, where: OptionalDetailsWithoutConnectionWhereInput): BatchPayload!
-  updateManyPostWithoutConnections(data: PostWithoutConnectionUpdateManyMutationInput!, where: PostWithoutConnectionWhereInput): BatchPayload!
   updateManyBillingInfoWithoutConnections(data: BillingInfoWithoutConnectionUpdateManyMutationInput!, where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
+  updateManyPostWithoutConnections(data: PostWithoutConnectionUpdateManyMutationInput!, where: PostWithoutConnectionWhereInput): BatchPayload!
   deleteManyUsers(where: UserWhereInput): BatchPayload!
   deleteManyPosts(where: PostWhereInput): BatchPayload!
   deleteManyBillingInfoes(where: BillingInfoWhereInput): BatchPayload!
   deleteManyOptionalDetailses(where: OptionalDetailsWhereInput): BatchPayload!
   deleteManyOptionalDetailsWithoutConnections(where: OptionalDetailsWithoutConnectionWhereInput): BatchPayload!
-  deleteManyPostWithoutConnections(where: PostWithoutConnectionWhereInput): BatchPayload!
   deleteManyBillingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput): BatchPayload!
+  deleteManyPostWithoutConnections(where: PostWithoutConnectionWhereInput): BatchPayload!
 }
 
 enum MutationType {
@@ -2608,22 +2608,22 @@ type Query {
   billingInfoes(where: BillingInfoWhereInput, orderBy: BillingInfoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BillingInfo]!
   optionalDetailses(where: OptionalDetailsWhereInput, orderBy: OptionalDetailsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OptionalDetails]!
   optionalDetailsWithoutConnections(where: OptionalDetailsWithoutConnectionWhereInput, orderBy: OptionalDetailsWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OptionalDetailsWithoutConnection]!
-  postWithoutConnections(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PostWithoutConnection]!
   billingInfoWithoutConnections(where: BillingInfoWithoutConnectionWhereInput, orderBy: BillingInfoWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [BillingInfoWithoutConnection]!
+  postWithoutConnections(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [PostWithoutConnection]!
   user(where: UserWhereUniqueInput!): User
   post(where: PostWhereUniqueInput!): Post
   billingInfo(where: BillingInfoWhereUniqueInput!): BillingInfo
   optionalDetails(where: OptionalDetailsWhereUniqueInput!): OptionalDetails
   optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionWhereUniqueInput!): OptionalDetailsWithoutConnection
-  postWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   billingInfoWithoutConnection(where: BillingInfoWithoutConnectionWhereUniqueInput!): BillingInfoWithoutConnection
+  postWithoutConnection(where: PostWithoutConnectionWhereUniqueInput!): PostWithoutConnection
   usersConnection(where: UserWhereInput, orderBy: UserOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): UserConnection!
   postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
   billingInfoesConnection(where: BillingInfoWhereInput, orderBy: BillingInfoOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BillingInfoConnection!
   optionalDetailsesConnection(where: OptionalDetailsWhereInput, orderBy: OptionalDetailsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OptionalDetailsConnection!
   optionalDetailsWithoutConnectionsConnection(where: OptionalDetailsWithoutConnectionWhereInput, orderBy: OptionalDetailsWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OptionalDetailsWithoutConnectionConnection!
-  postWithoutConnectionsConnection(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostWithoutConnectionConnection!
   billingInfoWithoutConnectionsConnection(where: BillingInfoWithoutConnectionWhereInput, orderBy: BillingInfoWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): BillingInfoWithoutConnectionConnection!
+  postWithoutConnectionsConnection(where: PostWithoutConnectionWhereInput, orderBy: PostWithoutConnectionOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostWithoutConnectionConnection!
   """
   Fetches an object given its ID
   """
@@ -2641,8 +2641,8 @@ type Subscription {
   billingInfo(where: BillingInfoSubscriptionWhereInput): BillingInfoSubscriptionPayload
   optionalDetails(where: OptionalDetailsSubscriptionWhereInput): OptionalDetailsSubscriptionPayload
   optionalDetailsWithoutConnection(where: OptionalDetailsWithoutConnectionSubscriptionWhereInput): OptionalDetailsWithoutConnectionSubscriptionPayload
-  postWithoutConnection(where: PostWithoutConnectionSubscriptionWhereInput): PostWithoutConnectionSubscriptionPayload
   billingInfoWithoutConnection(where: BillingInfoWithoutConnectionSubscriptionWhereInput): BillingInfoWithoutConnectionSubscriptionPayload
+  postWithoutConnection(where: PostWithoutConnectionSubscriptionWhereInput): PostWithoutConnectionSubscriptionPayload
 }
 
 type User implements Node {

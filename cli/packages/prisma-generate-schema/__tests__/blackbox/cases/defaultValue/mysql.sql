@@ -62,11 +62,8 @@ CREATE TABLE `B` (
 
 DROP TABLE IF EXISTS `_AToB`;
 CREATE TABLE `_AToB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -80,11 +77,8 @@ CREATE TABLE `_AToB` (
 
 DROP TABLE IF EXISTS `_AWithIdToB`;
 CREATE TABLE `_AWithIdToB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -105,4 +99,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

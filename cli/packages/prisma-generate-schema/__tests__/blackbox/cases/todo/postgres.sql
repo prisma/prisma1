@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -66,7 +66,6 @@ CREATE TABLE "schema-generator$todo"."_RelayId" (
 --
 
 CREATE TABLE "schema-generator$todo"."_TodoToUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -86,14 +85,6 @@ ALTER TABLE ONLY "schema-generator$todo"."Todo"
 
 ALTER TABLE ONLY "schema-generator$todo"."User"
     ADD CONSTRAINT "User_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _TodoToUser _TodoToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$todo; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$todo"."_TodoToUser"
-    ADD CONSTRAINT "_TodoToUser_pkey" PRIMARY KEY (id);
 
 
 --

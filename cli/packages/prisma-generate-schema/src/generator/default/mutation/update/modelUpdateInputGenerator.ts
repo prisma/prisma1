@@ -12,7 +12,7 @@ export default class ModelUpdateInputGenerator extends RelatedModelInputObjectTy
     field: IGQLField,
     generators: IGenerators,
   ) {
-    if (field.isReadOnly) {
+    if (field.isReadOnly || field.isCreatedAt || field.isUpdatedAt) {
       return null
     }
 

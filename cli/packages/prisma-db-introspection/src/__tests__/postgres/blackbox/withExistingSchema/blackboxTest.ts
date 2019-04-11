@@ -15,7 +15,7 @@ const relativeTestCaseDir = path.join(
 export default async function blackBoxTest(name: string) {
   const modelPath = path.join(
     relativeTestCaseDir,
-    `${name}/model_relational.graphql`,
+    `${name}/model_relational_v1.1.graphql`,
   )
   const sqlDumpPath = path.join(relativeTestCaseDir, `${name}/postgres.sql`)
 

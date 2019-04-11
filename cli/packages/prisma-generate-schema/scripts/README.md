@@ -6,6 +6,13 @@ These scripts re-generate the ground-truth schema for all unit tests from an exi
 
 Workfow for re-generating tests using these scripts. Please make sure you are in the correct working directory when executing them.
 
+#### Automated
+
+0. Start in this directory
+1. `./refreshAll.sh`
+
+#### Manual
+
 0. Start in this directory.
 1. `cd mongodb` or `cd mysql`.
 1. (optional) docker-compose up (if you want to run this locally).
