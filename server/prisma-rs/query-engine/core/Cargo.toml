@@ -11,3 +11,4 @@ connector = { path = "../connectors/connector" }
 failure = "0.1"
 failure_derive = "0.1"
 Inflector = "0.11"
+lazy_static = "1.3"

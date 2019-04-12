@@ -8,16 +8,16 @@ macro_rules! opt {
     };
 }
 
+mod inflector;
 mod many_rel;
 mod multi;
 mod one_rel;
 mod single;
 
-use graphql_parser::query::{Field, Selection, Value};
-use inflector::Inflector;
-
+use self::inflector::Inflector;
 use crate::{CoreError, CoreResult, PrismaQuery};
 use connector::{filter::NodeSelector, QueryArguments};
+use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
     Field as ModelField, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField, SelectedFields,
     SelectedScalarField, SortOrder,
@@ -43,9 +43,9 @@ impl<'a> Builder<'a> {
                 Some(Builder::Rel(one_rel::Builder::new()))
             }
         } else {
-            if model.name.to_camel_case().to_singular() == field.name {
+            if Inflector::singularize(&model.name) == field.name {
                 Some(Builder::Single(single::Builder::new()))
-            } else if model.name.to_camel_case().to_plural() == field.name {
+            } else if Inflector::pluralize(&model.name) == field.name {
                 Some(Builder::Multi(multi::Builder::new()))
             } else {
                 None
