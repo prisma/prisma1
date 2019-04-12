@@ -1,6 +1,5 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.schema.RelationNameNeeded
 import com.prisma.deploy.specutils.DeploySpecBase
@@ -300,7 +299,7 @@ class LegacyInfererIntegrationSpec extends FlatSpec with Matchers with DeploySpe
 
     val prismaSdl = validator.generateSDL
 
-    val nextSchema = SchemaInferrer(capabilities).infer(previous, SchemaMapping.empty, prismaSdl, InferredTables.empty)
+    val nextSchema = SchemaInferrer(capabilities).infer(previous, SchemaMapping.empty, prismaSdl)
 
 //    println(s"Relations of infered schema:\n  " + nextSchema.relations)
     nextSchema

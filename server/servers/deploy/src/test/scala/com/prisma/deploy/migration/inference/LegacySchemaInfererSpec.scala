@@ -1,6 +1,5 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
@@ -474,7 +473,7 @@ class LegacySchemaInfererSpec extends WordSpec with Matchers with DeploySpecBase
 
     val prismaSdl = validator.generateSDL
 
-    SchemaInferrer(actualCapabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
+    SchemaInferrer(actualCapabilities).infer(schema, mapping, prismaSdl)
 
   }
 }

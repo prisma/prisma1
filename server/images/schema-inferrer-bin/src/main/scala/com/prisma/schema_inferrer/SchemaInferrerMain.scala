@@ -1,5 +1,5 @@
 package com.prisma.schema_inferrer
-import com.prisma.deploy.connector.{FieldRequirementsInterface, InferredTables}
+import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.shared.models.{ConnectorCapabilities, Schema}
@@ -21,7 +21,7 @@ object SchemaInferrerMain {
 
     val (capabilities, emptySchema) = (ConnectorCapabilities.mysqlPrototype, Schema.emptyV11)
     val validationResult            = DataModelValidatorImpl.validate(input.dataModel, FieldRequirementsInterface.empty, capabilities)
-    val schema                      = SchemaInferrer(capabilities).infer(emptySchema, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
+    val schema                      = SchemaInferrer(capabilities).infer(emptySchema, SchemaMapping.empty, validationResult.get.dataModel)
 
     println(Json.toJson(schema))
   }

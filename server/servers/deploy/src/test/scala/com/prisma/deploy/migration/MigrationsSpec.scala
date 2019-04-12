@@ -3,13 +3,13 @@ package com.prisma.deploy.migration
 import com.prisma.ConnectorTag
 import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
-import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey}
+import com.prisma.deploy.connector.{DatabaseSchema, FieldRequirementsInterface, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability._
-import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {

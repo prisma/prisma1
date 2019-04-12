@@ -1,6 +1,5 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
@@ -180,6 +179,6 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
 
     val prismaSdl = validator.generateSDL
 
-    inferer.infer(schema, SchemaMapping.empty, prismaSdl, InferredTables.empty)
+    inferer.infer(schema, SchemaMapping.empty, prismaSdl)
   }
 }
