@@ -458,3 +458,22 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     (lefts, rights)
   }
 }
+
+case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition) {
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
+
+  def isSelfRelation: Boolean = fieldDef.typeName == objectType.name
+
+  def relationCount(doc: Document): Int = {
+    def fieldsWithType(objectType: ObjectTypeDefinition, typeName: String): Seq[FieldDefinition] = objectType.fields.filter(_.typeName == typeName)
+
+    val oppositeObjectType = doc.objectType_!(fieldDef.typeName)
+    val fieldsOnTypeA      = fieldsWithType(objectType, fieldDef.typeName)
+    val fieldsOnTypeB      = fieldsWithType(oppositeObjectType, objectType.name)
+
+    isSelfRelation match {
+      case true  => fieldsOnTypeB.count(_.relationName == fieldDef.relationName)
+      case false => (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldDef.relationName)
+    }
+  }
+}
