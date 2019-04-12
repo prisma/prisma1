@@ -274,7 +274,7 @@ case class SQLiteDatabaseMutactionExecutor(
 
         nested_mutaction_interpreter(envelope, m)
 
-      case m: NestedSet if DO_NOT_FORWARD_THIS_ONE =>
+      case m: NestedSet =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedSet(
           nestedSetToProtocol(m)
         )
@@ -303,7 +303,6 @@ case class SQLiteDatabaseMutactionExecutor(
         nested_mutaction_interpreter(envelope, m)
 
       case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
-      case m: NestedSet         => NestedSetInterpreter(m)
       case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
       case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
     }

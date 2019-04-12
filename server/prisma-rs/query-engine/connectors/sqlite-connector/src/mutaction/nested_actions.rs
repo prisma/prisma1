@@ -1,10 +1,12 @@
 mod nested_connect;
 mod nested_create_node;
 mod nested_disconnect;
+mod nested_set;
 
 pub use nested_connect::*;
 pub use nested_create_node::*;
 pub use nested_disconnect::*;
+pub use nested_set::*;
 
 use crate::query_builder::QueryBuilder;
 use connector::{error::*, filter::NodeSelector, ConnectorResult};
