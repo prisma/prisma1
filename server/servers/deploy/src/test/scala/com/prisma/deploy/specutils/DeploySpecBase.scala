@@ -39,7 +39,7 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   val basicTypesGql =
     """
       |type TestModel {
-      |  id: ID! @unique
+      |  id: ID! @id
       |}
     """.stripMargin
 
