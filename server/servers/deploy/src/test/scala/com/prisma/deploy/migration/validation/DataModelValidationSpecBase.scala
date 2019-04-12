@@ -1,6 +1,5 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability}
 import org.scalactic.{Bad, Good, Or}
 

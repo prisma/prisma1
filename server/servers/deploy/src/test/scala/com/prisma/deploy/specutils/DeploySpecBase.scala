@@ -3,11 +3,11 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
+import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.connector.sqlite.SQLiteDeployConnector
-import com.prisma.deploy.connector.{DatabaseSchema, FieldRequirementsInterface}
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.validation.DeployError

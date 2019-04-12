@@ -3,7 +3,7 @@ package com.prisma.deploy.migration
 import com.prisma.ConnectorTag
 import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
-import com.prisma.deploy.connector.{DatabaseSchema, FieldRequirementsInterface, ForeignKey}
+import com.prisma.deploy.connector.{DatabaseSchema, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations._

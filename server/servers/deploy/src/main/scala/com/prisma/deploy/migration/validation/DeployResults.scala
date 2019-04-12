@@ -1,6 +1,5 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.deploy.connector.FieldRequirement
 import com.prisma.gc_values.GCValue
 import sangria.ast.{EnumTypeDefinition, FieldDefinition, ObjectTypeDefinition, TypeDefinition}
 
@@ -188,38 +187,6 @@ object DeployErrors {
       fieldDef,
       s"The field `${fieldDef.name}` has the type `${fieldDef.typeString}` but there's no type or enum declaration with that name."
     )
-  }
-
-  def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement): DeployError = {
-    error(
-      fieldAndType,
-      s"The field `${fieldAndType.fieldDef.name}` is reserved and has to have the format: ${requirementMessage(requirement)}."
-    )
-  }
-
-  def missingReservedField(objectType: ObjectTypeDefinition, fieldName: String, requirement: FieldRequirement): DeployError = {
-    DeployError(
-      objectType.name,
-      fieldName,
-      s"The required field `$fieldName` is missing and has to have the format: ${requirementMessage(requirement)}."
-    )
-  }
-
-  // Brain kaputt, todo find a better solution
-  def requirementMessage(requirement: FieldRequirement): String = {
-    val requiredTypeMessages = requirement.validTypes.map { typeName =>
-      requirement match {
-        case x @ FieldRequirement(name, _, true, false, false)  => s"$name: $typeName!"
-        case x @ FieldRequirement(name, _, true, true, false)   => s"$name: $typeName! @unique"
-        case x @ FieldRequirement(name, _, true, true, true)    => s"$name: [$typeName!]! @unique" // is that even possible? Prob. not.
-        case x @ FieldRequirement(name, _, true, false, true)   => s"$name: [$typeName!]!"
-        case x @ FieldRequirement(name, _, false, true, false)  => s"$name: $typeName @unique"
-        case x @ FieldRequirement(name, _, false, true, true)   => s"$name: [$typeName!] @unique"
-        case x @ FieldRequirement(name, _, false, false, true)  => s"$name: [$typeName!]"
-        case x @ FieldRequirement(name, _, false, false, false) => s"$name: $typeName"
-      }
-    }
-    requiredTypeMessages.mkString(" or ")
   }
 
   def atNodeIsDeprecated(fieldAndType: FieldAndType) = {

@@ -1,5 +1,4 @@
 package com.prisma.schema_inferrer
-import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.shared.models.{ConnectorCapabilities, Schema}
