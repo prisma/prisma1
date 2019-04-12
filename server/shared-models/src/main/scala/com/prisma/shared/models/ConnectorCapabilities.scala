@@ -24,7 +24,6 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 
   object SupportsExistingDatabasesCapability extends ConnectorCapability
   object MigrationsCapability                extends ConnectorCapability
-  object LegacyDataModelCapability           extends ConnectorCapability
   object RawAccessCapability                 extends ConnectorCapability
   object IntrospectionCapability             extends ConnectorCapability
   object JoinRelationLinksCapability         extends ConnectorCapability // the ability to join using relation links
@@ -49,8 +48,7 @@ case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
 
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
 
-  def isDataModelV11: Boolean = !capabilities.contains(LegacyDataModelCapability)
-  def isMongo: Boolean        = has(EmbeddedTypesCapability)
+  def isMongo: Boolean = has(EmbeddedTypesCapability)
 }
 
 object ConnectorCapabilities extends BooleanUtils {
@@ -61,7 +59,6 @@ object ConnectorCapabilities extends BooleanUtils {
 
   lazy val sqlite: ConnectorCapabilities = {
     val capas = Set(
-      LegacyDataModelCapability,
       TransactionalExecutionCapability,
       JoinRelationsFilterCapability,
       JoinRelationLinksCapability,

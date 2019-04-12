@@ -4,7 +4,6 @@ import com.prisma.config.ConfigLoader
 import com.prisma.deploy.connector.{DeployConnector, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.{DataModelValidator, DataModelValidatorImpl}
-import com.prisma.shared.models.ConnectorCapability.LegacyDataModelCapability
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import org.scalactic.{Bad, Good}
@@ -13,10 +12,9 @@ import org.scalatest.Suite
 object SchemaDsl extends AwaitUtils {
 
   def fromStringV11ForExistingDatabase(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector): Project = {
-    val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     val project = fromString(
       id = id,
-      capabilities = ConnectorCapabilities(actualCapas),
+      capabilities = deployConnector.capabilities,
       dataModelValidator = DataModelValidatorImpl,
       emptyBaseSchema = Schema.empty
     )(sdlString)
@@ -24,10 +22,9 @@ object SchemaDsl extends AwaitUtils {
   }
 
   def fromStringV11(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     fromString(
       id = projectId(suite),
-      capabilities = ConnectorCapabilities(actualCapas),
+      capabilities = deployConnector.capabilities,
       dataModelValidator = DataModelValidatorImpl,
       emptyBaseSchema = Schema.emptyV11
     )(sdlString.stripMargin)

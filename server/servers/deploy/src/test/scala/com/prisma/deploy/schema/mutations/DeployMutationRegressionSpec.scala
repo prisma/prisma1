@@ -2,13 +2,13 @@ package com.prisma.deploy.schema.mutations
 
 import com.prisma.IgnoreSQLite
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
-import com.prisma.shared.models.ConnectorCapability.LegacyDataModelCapability
-import com.prisma.shared.models.{ConnectorCapability, MigrationId, MigrationStatus}
+import com.prisma.shared.models.{MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
-  override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(LegacyDataModelCapability)
+  // FIXME: This used to run only for Datamodel v1. do4gr should check whether we should migrate those test cases to v1.1
+  override def doNotRun: Boolean = true
 
   val projectPersistence   = testDependencies.projectPersistence
   val migrationPersistence = testDependencies.migrationPersistence

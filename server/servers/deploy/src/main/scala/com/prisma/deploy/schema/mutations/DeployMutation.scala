@@ -11,7 +11,7 @@ import com.prisma.deploy.schema.types.MigrationStepType.MigrationStepAndSchema
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.ConnectorCapability.{IntrospectionCapability, LegacyDataModelCapability}
+import com.prisma.shared.models.ConnectorCapability.IntrospectionCapability
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.boolean.BooleanUtils
