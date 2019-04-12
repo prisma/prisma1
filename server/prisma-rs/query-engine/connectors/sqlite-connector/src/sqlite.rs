@@ -97,6 +97,10 @@ impl Sqlite {
         row.get_checked(0).unwrap_or(0)
     }
 
+    pub fn fetch_id(row: &Row) -> ConnectorResult<GraphqlId> {
+        Ok(row.get_checked(0)?)
+    }
+
     /// Read and cast a `Row` into a `Record`, casting the columns from the
     /// `DataModel` definitions.
     pub fn read_row(row: &Row, selected_fields: &SelectedFields) -> ConnectorResult<Node> {

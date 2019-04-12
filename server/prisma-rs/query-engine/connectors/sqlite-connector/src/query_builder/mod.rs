@@ -28,6 +28,12 @@ impl SelectDefinition for NodeSelector {
     }
 }
 
+impl SelectDefinition for &NodeSelector {
+    fn into_select(self, model: ModelRef) -> Select {
+        self.clone().into_select(model)
+    }
+}
+
 impl SelectDefinition for Select {
     fn into_select(self, _: ModelRef) -> Select {
         self

@@ -1,7 +1,7 @@
 use crate::filter::NodeSelector;
 use failure::{Error, Fail};
 use libsqlite3_sys as ffi;
-use prisma_models::prelude::{DomainError, PrismaValue};
+use prisma_models::prelude::{DomainError, GraphqlId, ModelRef, PrismaValue};
 use rusqlite;
 use std::fmt;
 
@@ -10,6 +10,16 @@ pub struct NodeSelectorInfo {
     pub model: String,
     pub field: String,
     pub value: PrismaValue,
+}
+
+impl NodeSelectorInfo {
+    pub fn for_id(model: ModelRef, value: &GraphqlId) -> Self {
+        Self {
+            model: model.name.clone(),
+            field: model.fields().id().name.clone(),
+            value: PrismaValue::from(value.clone()),
+        }
+    }
 }
 
 impl fmt::Display for NodeSelectorInfo {
