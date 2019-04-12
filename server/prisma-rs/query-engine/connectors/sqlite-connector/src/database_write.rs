@@ -87,4 +87,12 @@ pub trait DatabaseWrite {
         actions: &NestedActions,
         node_selector: &Option<NodeSelector>,
     ) -> ConnectorResult<()>;
+
+    fn execute_set(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        actions: &NestedActions,
+        node_selectors: &Vec<NodeSelector>,
+        relation_field: RelationFieldRef,
+    ) -> ConnectorResult<()>;
 }
