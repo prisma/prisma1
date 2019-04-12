@@ -79,42 +79,6 @@ object ConnectorCapabilities extends BooleanUtils {
     ConnectorCapabilities(filteredCapas)
   }
 
-  lazy val mysql: ConnectorCapabilities = {
-    val capas = Set(
-      LegacyDataModelCapability,
-      TransactionalExecutionCapability,
-      JoinRelationsFilterCapability,
-      JoinRelationLinksCapability,
-      RelationLinkTableCapability,
-      MigrationsCapability,
-      NonEmbeddedScalarListCapability,
-      NodeQueryCapability,
-      ImportExportCapability,
-      RawAccessCapability
-    )
-    ConnectorCapabilities(capas)
-  }
-
-  def postgres(isActive: Boolean): ConnectorCapabilities = {
-    val common = Set(
-      LegacyDataModelCapability,
-      TransactionalExecutionCapability,
-      JoinRelationsFilterCapability,
-      JoinRelationLinksCapability,
-      RelationLinkTableCapability,
-      IntrospectionCapability,
-      IntIdCapability,
-      UuidIdCapability,
-      RawAccessCapability
-    )
-    val capas = if (isActive) {
-      common ++ Set(MigrationsCapability, NonEmbeddedScalarListCapability, NodeQueryCapability, ImportExportCapability)
-    } else {
-      common ++ Set(SupportsExistingDatabasesCapability)
-    }
-    ConnectorCapabilities(capas)
-  }
-
   lazy val postgresPrototype: ConnectorCapabilities = {
     val capas = sqlPrototype ++ Set(UuidIdCapability)
     ConnectorCapabilities(capas)
