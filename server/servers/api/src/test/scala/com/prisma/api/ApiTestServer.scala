@@ -128,22 +128,24 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
     con.setRequestProperty("Content-Length", Integer.toString(body.length))
     con.getOutputStream.write(body.getBytes(StandardCharsets.UTF_8))
 
-    val status = con.getResponseCode
-    val streamReader = if (status > 299) {
-      new InputStreamReader(con.getErrorStream)
-    } else {
-      new InputStreamReader(con.getInputStream)
-    }
-
-    val in     = new BufferedReader(streamReader)
-    val buffer = new StringBuffer
     try {
+      val status = con.getResponseCode
+      val streamReader = if (status > 299) {
+        new InputStreamReader(con.getErrorStream)
+      } else {
+        new InputStreamReader(con.getInputStream)
+      }
+
+      val in     = new BufferedReader(streamReader)
+      val buffer = new StringBuffer
+
       Stream.continually(in.readLine()).takeWhile(_ != null).foreach(buffer.append)
-    } finally { _: Throwable =>
+      GraphQlResponse(status, buffer.toString)
+    } catch {
+      case e: Throwable => GraphQlResponse(999, s"""{"errors": [{"message": "Connection error: $e"}]}""")
+    } finally {
       con.disconnect()
     }
-
-    GraphQlResponse(status, buffer.toString)
   }
 
   def startPrismaProcess(project: Project): java.lang.Process = {

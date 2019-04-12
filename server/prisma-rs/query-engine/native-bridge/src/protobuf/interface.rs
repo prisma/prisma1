@@ -19,11 +19,11 @@ impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
         dbg!(config);
         let connector = match config.databases.get("default") {
-            Some(PrismaDatabase::File(ref config))
+            Some(PrismaDatabase::Explicit(ref config))
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
             {
-                let test_mode = true;
-                let sqlite = Sqlite::new(config.database_file.clone(), config.limit(), test_mode).unwrap();
+                let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+                let sqlite = Sqlite::new(format!("{}/db", server_root).into(), config.limit(), true).unwrap();
 
                 Arc::new(sqlite)
             }

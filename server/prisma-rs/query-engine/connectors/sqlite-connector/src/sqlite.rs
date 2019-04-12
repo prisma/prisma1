@@ -15,7 +15,7 @@ use uuid::Uuid;
 type Pool = r2d2::Pool<SqliteConnectionManager>;
 
 pub struct Sqlite {
-    database_file_path: String,
+    databases_folder_path: String,
     pool: Pool,
     test_mode: bool,
 }
@@ -56,13 +56,13 @@ impl TransactionalExecutor for Sqlite {
 
 impl Sqlite {
     /// Creates a new SQLite pool connected into local memory.
-    pub fn new(database_file_path: String, connection_limit: u32, test_mode: bool) -> ConnectorResult<Sqlite> {
+    pub fn new(databases_folder_path: String, connection_limit: u32, test_mode: bool) -> ConnectorResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
 
         Ok(Sqlite {
-            database_file_path,
+            databases_folder_path,
             pool,
             test_mode,
         })
@@ -84,7 +84,10 @@ impl Sqlite {
             .collect();
 
         if !databases.contains(db_name) {
-            conn.execute("ATTACH DATABASE ? AS ?", &[self.database_file_path.as_ref(), db_name])?;
+            // This is basically hacked until we have a full rust stack with a migration engine.
+            // Currently, the scala tests use the JNA library to write to the database. This
+            let database_file_path = format!("{}/{}.db", self.databases_folder_path, db_name);
+            conn.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), db_name])?;
         }
 
         conn.execute("PRAGMA foreign_keys = ON", NO_PARAMS)?;
