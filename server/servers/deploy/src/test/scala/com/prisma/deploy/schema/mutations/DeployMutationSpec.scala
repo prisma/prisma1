@@ -2,6 +2,7 @@ package com.prisma.deploy.schema.mutations
 
 import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
+import com.prisma.shared.models.ConnectorCapability.UuidIdCapability
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -614,17 +615,19 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
   }
 
   "DeployMutation" should "succeed with id fields of type UUID" taggedAs (IgnoreMongo) in {
-    val (project, _) = setupProject(basicTypesGql)
-    val schema =
-      """
-        |type A {
-        | id: UUID! @id
-        |}
-      """.stripMargin
+    if (capabilities.has(UuidIdCapability)) {
+      val (project, _) = setupProject(basicTypesGql)
+      val schema =
+        """
+          |type A {
+          | id: UUID! @id
+          |}
+        """.stripMargin
 
-    val updatedProject = server.deploySchema(project, schema)
-    val idField        = updatedProject.schema.getModelByName_!("A").idField_!
-    idField.typeIdentifier should be(TypeIdentifier.UUID)
+      val updatedProject = server.deploySchema(project, schema)
+      val idField        = updatedProject.schema.getModelByName_!("A").idField_!
+      idField.typeIdentifier should be(TypeIdentifier.UUID)
+    }
   }
 
   private def formatFunctions(functions: Vector[FunctionInput]) = {
