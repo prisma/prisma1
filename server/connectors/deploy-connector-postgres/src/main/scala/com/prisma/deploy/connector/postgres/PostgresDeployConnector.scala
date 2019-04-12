@@ -45,7 +45,7 @@ case class PostgresDeployConnector(
   override lazy val databaseInspector: DatabaseInspector             = PostgresDatabaseInspector(projectDatabases.primary)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createDatabaseForProject(id = id, !capabilities.isDataModelV11)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 

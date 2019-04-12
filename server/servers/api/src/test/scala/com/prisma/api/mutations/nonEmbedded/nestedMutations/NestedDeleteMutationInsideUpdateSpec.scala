@@ -975,7 +975,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val query = server.query("""{ comments { text }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[{"text":"otherComment"}]}}""")
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(2) }
+
   }
 
   "a one to many relation" should "be deletable by any unique argument through a nested mutation" in {
@@ -1039,7 +1039,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     val query = server.query("""{ comments { id }}""", project)
     mustBeEqual(query.toString, """{"data":{"comments":[]}}""")
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(1) }
+
   }
 
   "a many to one relation" should "be deletable by id through a nested mutation" in {

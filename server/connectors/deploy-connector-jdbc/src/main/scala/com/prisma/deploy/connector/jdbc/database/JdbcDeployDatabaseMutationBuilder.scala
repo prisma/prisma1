@@ -54,18 +54,8 @@ trait JdbcDeployDatabaseMutationBuilder extends JdbcBase {
     DBIO.sequence(all)
   }
 
-  def createDatabaseForProject(id: String, shouldCreateRelayTable: Boolean) = {
-    val schema = createSchema(id)
-    val table = if (shouldCreateRelayTable) {
-      changeDatabaseQueryToDBIO(
-        sql
-          .createTableIfNotExists(name(id, "_RelayId"))
-          .column("id", SQLDataType.VARCHAR(36).nullable(false))
-          .column("stableModelIdentifier", SQLDataType.VARCHAR(25).nullable(false))
-          .constraint(constraint("pk_RelayId").primaryKey(name(id, "_RelayId", "id"))))()
-    } else { DBIO.successful(()) }
-
-    DBIO.seq(schema, table).withPinnedSession
+  def createDatabaseForProject(id: String) = {
+    DBIO.seq(createSchema(id)).withPinnedSession
   }
 
   def dropTable(project: Project, tableName: String) = {

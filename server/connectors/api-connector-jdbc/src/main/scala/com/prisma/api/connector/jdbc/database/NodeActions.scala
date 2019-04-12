@@ -8,7 +8,7 @@ import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 
 import scala.concurrent.ExecutionContext
 
-trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarListActions with RelayIdActions {
+trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarListActions {
   import slickDatabase.profile.api._
 
   def createNode(model: Model, args: PrismaArgs): DBIO[IdGCValue] = {

@@ -25,7 +25,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
   "The delete many Mutation" should "delete the items matching the where clause" in {
     createTodo("title1")
     createTodo("title2")
-    todoAndRelayCountShouldBe(2)
+    todoCountShouldBe(2)
 
     val result = server.query(
       """mutation {
@@ -40,14 +40,14 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(1)
 
-    todoAndRelayCountShouldBe(1)
+    todoCountShouldBe(1)
   }
 
   "The delete many Mutation" should "delete all items if the where clause is empty" in {
     createTodo("title1")
     createTodo("title2")
     createTodo("title3")
-    todoAndRelayCountShouldBe(3)
+    todoCountShouldBe(3)
 
     val result = server.query(
       """mutation {
@@ -62,7 +62,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(3)
 
-    todoAndRelayCountShouldBe(0)
+    todoCountShouldBe(0)
   }
 
   "The delete many Mutation" should "delete all items using in" in {
@@ -83,7 +83,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(2)
 
-    todoAndRelayCountShouldBe(1)
+    todoCountShouldBe(1)
 
   }
 
@@ -105,7 +105,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(3)
 
-    todoAndRelayCountShouldBe(0)
+    todoCountShouldBe(0)
   }
 
   "The delete many Mutation" should "delete items using  OR" taggedAs (IgnoreMongo) in {
@@ -140,7 +140,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(2)
 
-    todoAndRelayCountShouldBe(1)
+    todoCountShouldBe(1)
   }
 
   "The delete many Mutation" should "delete items using  AND" in {
@@ -175,7 +175,7 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
     result.pathAsLong("data.deleteManyTodoes.count") should equal(0)
 
-    todoAndRelayCountShouldBe(3)
+    todoCountShouldBe(3)
   }
 
   "DeleteMany" should "work" in {
@@ -242,14 +242,13 @@ class DeleteManySpec extends FlatSpec with Matchers with ApiSpecBase {
     result.pathAsSeq("data.todoes").size
   }
 
-  def todoAndRelayCountShouldBe(int: Int) = {
+  def todoCountShouldBe(int: Int) = {
     val result = server.query(
       "{ todoes { id } }",
       project
     )
     result.pathAsSeq("data.todoes").size should be(int)
 
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(int) }
   }
 
   def createTodo(title: String): Unit = {

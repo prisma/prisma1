@@ -21,7 +21,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     database.setup(project)
     createTodo(project, "title1")
     createTodo(project, "title2")
-    todoAndRelayCountShouldBe(project, 2)
+    todoCountShouldBe(project, 2)
 
     server.query(
       """mutation {
@@ -35,7 +35,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       project
     )
 
-    todoAndRelayCountShouldBe(project, 1)
+    todoCountShouldBe(project, 1)
   }
 
   "The delete  mutation" should "error if the where clause misses" in {
@@ -43,7 +43,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
     createTodo(project, "title1")
     createTodo(project, "title2")
     createTodo(project, "title3")
-    todoAndRelayCountShouldBe(project, 3)
+    todoCountShouldBe(project, 3)
 
     server.queryThatMustFail(
       """mutation {
@@ -59,7 +59,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       errorContains = """No Node for the model Todo with value does not exist for title found."""
     )
 
-    todoAndRelayCountShouldBe(project, 3)
+    todoCountShouldBe(project, 3)
   }
 
   "the delete mutation" should "work when node ids are UUIDs" in {
@@ -74,7 +74,7 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       database.setup(project)
 
       val id = createTodo(project, "1")
-      todoAndRelayCountShouldBe(project, 1)
+      todoCountShouldBe(project, 1)
 
       server.query(
         s"""mutation {
@@ -85,18 +85,17 @@ class DeleteSpec extends FlatSpec with Matchers with ApiSpecBase {
       """.stripMargin,
         project
       )
-      todoAndRelayCountShouldBe(project, 0)
+      todoCountShouldBe(project, 0)
     }
   }
 
-  def todoAndRelayCountShouldBe(project: Project, int: Int) = {
+  def todoCountShouldBe(project: Project, int: Int) = {
     val result = server.query(
       "{ todoes { id } }",
       project
     )
     result.pathAsSeq("data.todoes").size should be(int)
 
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(int) }
   }
 
   def createTodo(project: Project, title: String) = {

@@ -37,7 +37,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" }
     }
 
-    val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
+    val tables = project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
     val queries = tables.map(tableName => {
       changeDatabaseQueryToDBIO(sql.truncate(DSL.name(project.dbName, tableName)).cascade())()
     })

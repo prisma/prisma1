@@ -9,7 +9,6 @@ trait AllActions
     with RelationActions
     with ScalarListActions
     with ValidationActions
-    with RelayIdActions
     with ImportActions
     with MiscActions
 
