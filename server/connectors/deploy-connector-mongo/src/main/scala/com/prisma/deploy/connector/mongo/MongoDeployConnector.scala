@@ -24,7 +24,7 @@ case class MongoDeployConnector(config: DatabaseConfig, isTest: Boolean)(implici
   override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
   override val databaseInspector: DatabaseInspector             = DatabaseInspector.empty
-  override def capabilities: ConnectorCapabilities              = ConnectorCapabilities.mongo(isTest = isTest)
+  override def capabilities: ConnectorCapabilities              = ConnectorCapabilities.mongo
 
   override def clientDBQueries(project: Project): ClientDbQueries = MongoClientDbQueries(project, mongoClient)
 

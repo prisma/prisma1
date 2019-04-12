@@ -107,7 +107,7 @@ object ConnectorCapabilities extends BooleanUtils {
     )
   }
 
-  def mongo(isTest: Boolean): ConnectorCapabilities = {
+  val mongo: ConnectorCapabilities = {
     val common = Set(
       NodeQueryCapability,
       EmbeddedScalarListsCapability,
@@ -118,8 +118,7 @@ object ConnectorCapabilities extends BooleanUtils {
       EmbeddedTypesCapability,
       SupportsExistingDatabasesCapability
     )
-    val dataModelCapability = isTest.toOption(LegacyDataModelCapability)
 
-    ConnectorCapabilities(common ++ dataModelCapability)
+    ConnectorCapabilities(common)
   }
 }
