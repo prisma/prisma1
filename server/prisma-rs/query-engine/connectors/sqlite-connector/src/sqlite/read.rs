@@ -1,5 +1,9 @@
-use crate::{query_builder::QueryBuilder, DatabaseRead, SelectDefinition, Sqlite};
-use connector::{error::*, filter::NodeSelector, ConnectorResult};
+use crate::{query_builder::QueryBuilder, AliasedCondition, DatabaseRead, SelectDefinition, Sqlite};
+use connector::{
+    error::*,
+    filter::{Filter, NodeSelector},
+    ConnectorResult,
+};
 use prisma_models::*;
 use prisma_query::{
     ast::*,
@@ -69,12 +73,15 @@ impl DatabaseRead for Sqlite {
         opt_id.ok_or_else(|| ConnectorError::NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)))
     }
 
-    fn get_ids_by_parents(
+    fn get_ids_by_parents<T>(
         conn: &Transaction,
         parent_field: RelationFieldRef,
         parent_ids: Vec<&GraphqlId>,
-        selector: &Option<NodeSelector>,
-    ) -> ConnectorResult<Vec<GraphqlId>> {
+        selector: Option<T>,
+    ) -> ConnectorResult<Vec<GraphqlId>>
+    where
+        T: Into<Filter>,
+    {
         let related_model = parent_field.related_model();
         let relation = parent_field.relation();
         let child_id_field = relation.column_for_relation_side(parent_field.relation_side.opposite());
@@ -87,8 +94,9 @@ impl DatabaseRead for Sqlite {
         let conditions = related_model.fields().id().db_name().in_selection(subselect);
 
         let conditions = match selector {
-            Some(ref node_selector) => {
-                conditions.and(node_selector.field.as_column().equals(node_selector.value.clone()))
+            Some(into_cond) => {
+                let filter: Filter = into_cond.into();
+                conditions.and(filter.aliased_cond(None))
             }
             None => conditions.into(),
         };

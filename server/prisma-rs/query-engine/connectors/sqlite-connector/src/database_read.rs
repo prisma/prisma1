@@ -1,5 +1,8 @@
 use crate::SelectDefinition;
-use connector::{filter::NodeSelector, ConnectorResult};
+use connector::{
+    filter::{Filter, NodeSelector},
+    ConnectorResult,
+};
 use prisma_models::*;
 use prisma_query::ast::*;
 use rusqlite::{Row, Transaction};
@@ -177,7 +180,7 @@ pub trait DatabaseRead {
     /// # use prisma_models::*;
     /// # use rusqlite::{Connection, NO_PARAMS};
     /// # use sqlite_connector::*;
-    /// # use connector::{*, filter::NodeSelector};
+    /// # use connector::{*, filter::Filter};
     /// # use prisma_query::ast::*;
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
@@ -218,7 +221,6 @@ pub trait DatabaseRead {
     /// let model = schema.find_model("Site").unwrap();
     /// let rel_model = schema.find_model("User").unwrap();
     /// let name_field = model.fields().find_from_scalar("name").unwrap();
-    /// let find_cats = NodeSelector::new(Arc::clone(&name_field), "Cats");
     ///
     /// let rf = rel_model.fields().find_from_relation_fields("sites").unwrap();
     ///
@@ -226,7 +228,7 @@ pub trait DatabaseRead {
     ///     &trans,
     ///     rf,
     ///     vec![&GraphqlId::from("user1")],
-    ///     &Some(find_cats),
+    ///     Some(name_field.equals("Cats")),
     /// ).unwrap();
     ///
     /// assert_eq!(
@@ -234,10 +236,12 @@ pub trait DatabaseRead {
     ///     ids,
     /// );
     /// ```
-    fn get_ids_by_parents(
+    fn get_ids_by_parents<T>(
         conn: &Transaction,
         parent_field: RelationFieldRef,
         parent_id: Vec<&GraphqlId>,
-        selector: &Option<NodeSelector>,
-    ) -> ConnectorResult<Vec<GraphqlId>>;
+        selector: Option<T>,
+    ) -> ConnectorResult<Vec<GraphqlId>>
+    where
+        T: Into<Filter>;
 }
