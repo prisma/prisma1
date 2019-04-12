@@ -229,7 +229,15 @@ impl DatabaseWrite for Sqlite {
                     mutaction: DatabaseMutaction::Nested(mutaction),
                 });
             }
-            NestedDatabaseMutaction::Disconnect(_) => unimplemented!(),
+            NestedDatabaseMutaction::Disconnect(ref disconnect) => {
+                Self::execute_disconnect(conn, &parent_id, disconnect, &disconnect.where_)?;
+
+                results.push(DatabaseMutactionResult {
+                    identifier: Identifier::None,
+                    typ: DatabaseMutactionResultType::Unit,
+                    mutaction: DatabaseMutaction::Nested(mutaction),
+                });
+            }
             NestedDatabaseMutaction::Set(_) => unimplemented!(),
             NestedDatabaseMutaction::UpdateNodes(_) => unimplemented!(),
             NestedDatabaseMutaction::DeleteNodes(_) => unimplemented!(),
@@ -311,12 +319,8 @@ impl DatabaseWrite for Sqlite {
         non_list_args: &PrismaArgs,
         list_args: &[(String, PrismaListValue)],
     ) -> ConnectorResult<GraphqlId> {
-        if let Some((Query::Select(select), check)) = actions.required_check(parent_id)? {
-            let ids = Self::query(conn, select, |row| {
-                let id: GraphqlId = row.get(0);
-                Ok(id)
-            })?;
-
+        if let Some((select, check)) = actions.required_check(parent_id)? {
+            let ids = Self::query(conn, select, Self::fetch_id)?;
             check.call_box(ids.into_iter().next())?
         };
 
@@ -384,12 +388,8 @@ impl DatabaseWrite for Sqlite {
         node_selector: &NodeSelector,
         relation_field: RelationFieldRef,
     ) -> ConnectorResult<()> {
-        if let Some((Query::Select(select), check)) = actions.required_check(parent_id)? {
-            let ids = Self::query(conn, select, |row| {
-                let id: GraphqlId = row.get(0);
-                Ok(id)
-            })?;
-
+        if let Some((select, check)) = actions.required_check(parent_id)? {
+            let ids = Self::query(conn, select, Self::fetch_id)?;
             check.call_box(ids.into_iter().next())?
         }
 
@@ -407,5 +407,37 @@ impl DatabaseWrite for Sqlite {
         Self::execute_one(conn, relation_query)?;
 
         Ok(())
+    }
+
+    fn execute_disconnect(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        actions: &NestedActions,
+        node_selector: &Option<NodeSelector>,
+    ) -> ConnectorResult<()> {
+        if let Some((select, check)) = actions.required_check(parent_id)? {
+            let ids = Self::query(conn, select, Self::fetch_id)?;
+            check.call_box(ids.into_iter().next())?
+        }
+
+        match node_selector {
+            None => {
+                let (select, check) = actions.ensure_parent_is_connected(parent_id);
+
+                let ids = Self::query(conn, select, Self::fetch_id)?;
+                check.call_box(ids.into_iter().next())?;
+
+                Self::execute_one(conn, actions.removal_by_parent(parent_id))
+            }
+            Some(ref selector) => {
+                let child_id = Self::id_for(conn, selector)?;
+                let (select, check) = actions.ensure_connected(parent_id, &child_id);
+
+                let ids = Self::query(conn, select, Self::fetch_id)?;
+                check.call_box(ids.into_iter().next())?;
+
+                Self::execute_one(conn, actions.removal_by_parent_and_child(parent_id, &child_id))
+            }
+        }
     }
 }

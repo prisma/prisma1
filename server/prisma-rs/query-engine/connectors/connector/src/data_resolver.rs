@@ -5,7 +5,7 @@ use prisma_models::ScalarFieldRef;
 pub trait DataResolver {
     fn get_node_by_where(
         &self,
-        node_selector: NodeSelector,
+        node_selector: &NodeSelector,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<Option<SingleNode>>;
 

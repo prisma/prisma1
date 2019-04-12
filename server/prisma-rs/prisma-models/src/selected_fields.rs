@@ -85,6 +85,10 @@ impl SelectedFields {
         }
     }
 
+    pub fn id(model: ModelRef) -> Self {
+        Self::from(model.fields().id())
+    }
+
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.scalar.iter().filter(|sf| sf.implicit).collect()
     }

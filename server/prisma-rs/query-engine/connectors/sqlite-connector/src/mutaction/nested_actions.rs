@@ -1,13 +1,15 @@
+mod nested_connect;
+mod nested_create_node;
+mod nested_disconnect;
+
+pub use nested_connect::*;
+pub use nested_create_node::*;
+pub use nested_disconnect::*;
+
 use crate::query_builder::QueryBuilder;
-use connector::{
-    error::*,
-    filter::NodeSelector,
-    mutaction::{NestedConnect, NestedCreateNode},
-    ConnectorResult,
-};
+use connector::{error::*, filter::NodeSelector, ConnectorResult};
 use prisma_models::*;
 use prisma_query::ast::*;
-use std::sync::Arc;
 
 // TODO: Replace me with FnBox from std when it's stabilized in 1.35.
 // https://doc.rust-lang.org/std/boxed/trait.FnBox.html
@@ -29,7 +31,7 @@ where
 pub type ResultCheck = Box<FnBox + Send + Sync + 'static>;
 
 pub trait NestedActions {
-    fn required_check(&self, parent_id: &GraphqlId) -> ConnectorResult<Option<(Query, ResultCheck)>>;
+    fn required_check(&self, parent_id: &GraphqlId) -> ConnectorResult<Option<(Select, ResultCheck)>>;
 
     fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query>;
     fn child_removal(&self, child_id: &GraphqlId) -> Option<Query>;
@@ -44,6 +46,21 @@ pub trait NestedActions {
             relation_name: relation.name.clone(),
             model_a_name: relation.model_a().name.clone(),
             model_b_name: relation.model_b().name.clone(),
+        }
+    }
+
+    fn nodes_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> ConnectorError {
+        let rf = self.relation_field();
+
+        let parent_where = parent_id.map(|parent_id| NodeSelectorInfo::for_id(rf.model(), &parent_id));
+        let child_where = child_id.map(|child_id| NodeSelectorInfo::for_id(rf.model(), &child_id));
+
+        ConnectorError::NodesNotConnected {
+            relation_name: rf.relation().name.clone(),
+            parent_name: rf.model().name.clone(),
+            parent_where,
+            child_name: rf.related_model().name.clone(),
+            child_where,
         }
     }
 
@@ -82,7 +99,25 @@ pub trait NestedActions {
         }
     }
 
-    fn check_for_old_child(&self, id: &GraphqlId) -> (Query, ResultCheck) {
+    fn removal_by_parent_and_child(&self, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query {
+        let relation = self.relation();
+        let rf = self.relation_field();
+
+        let is_child = rf.opposite_column().equals(child_id.clone());
+        let is_parent = rf.relation_column().equals(parent_id.clone());
+
+        let table = relation.relation_table();
+
+        match relation.inline_relation_column() {
+            Some(column) => Update::table(table)
+                .set(column.name.as_ref(), PrismaValue::Null)
+                .so_that(is_child.and(is_parent))
+                .into(),
+            None => Delete::from_table(table).so_that(is_child.and(is_parent)).into(),
+        }
+    }
+
+    fn check_for_old_child(&self, id: &GraphqlId) -> (Select, ResultCheck) {
         let relation = self.relation();
         let rf = self.relation_field().related_field();
 
@@ -91,8 +126,7 @@ pub trait NestedActions {
 
         let query = Select::from_table(relation.relation_table())
             .column(opposite_column.clone())
-            .so_that(opposite_column.equals(id.clone()).and(relation_column.is_not_null()))
-            .into();
+            .so_that(opposite_column.equals(id.clone()).and(relation_column.is_not_null()));
 
         let error = self.relation_violation();
 
@@ -107,7 +141,7 @@ pub trait NestedActions {
         (query, Box::new(check))
     }
 
-    fn check_for_old_parent_by_child(&self, node_selector: &NodeSelector) -> (Query, ResultCheck) {
+    fn check_for_old_parent_by_child(&self, node_selector: &NodeSelector) -> (Select, ResultCheck) {
         let relation = self.relation();
         let rf = self.relation_field().related_field();
 
@@ -127,8 +161,7 @@ pub trait NestedActions {
 
         let query = Select::from_table(relation.relation_table())
             .column(opposite_column)
-            .so_that(condition)
-            .into();
+            .so_that(condition);
 
         let error = self.relation_violation();
 
@@ -142,141 +175,54 @@ pub trait NestedActions {
 
         (query, Box::new(check))
     }
-}
 
-impl NestedActions for NestedConnect {
-    fn relation_field(&self) -> RelationFieldRef {
-        self.relation_field.clone()
-    }
+    fn ensure_parent_is_connected(&self, parent_id: &GraphqlId) -> (Select, ResultCheck) {
+        let relation = self.relation();
+        let rf = self.relation_field();
 
-    fn relation(&self) -> RelationRef {
-        self.relation_field().relation()
-    }
+        let is_parent = rf.relation_column().equals(parent_id);
+        let child_exists = rf.opposite_column().is_not_null();
 
-    fn required_check(&self, parent_id: &GraphqlId) -> ConnectorResult<Option<(Query, ResultCheck)>> {
-        let p = Arc::clone(&self.relation_field);
-        let c = p.related_field();
+        let query = Select::from_table(relation.relation_table())
+            .column(rf.relation_column())
+            .so_that(is_parent.and(child_exists));
 
-        if self.top_is_create {
-            match (p.is_list, p.is_required, c.is_list, c.is_required) {
-                (false, true, false, true) => Err(self.relation_violation()),
-                (false, true, false, false) => Ok(Some(self.check_for_old_parent_by_child(&self.where_))),
-                (false, false, false, true) => Ok(None),
-                (false, false, false, false) => Ok(None),
-                (true, false, false, true) => Ok(None),
-                (true, false, false, false) => Ok(None),
-                (false, true, true, false) => Ok(None),
-                (false, false, true, false) => Ok(None),
-                (true, false, true, false) => Ok(None),
-                _ => unreachable!(),
+        let error = self.nodes_not_connected(Some(parent_id.clone()), None);
+
+        let check = |row_opt: Option<GraphqlId>| {
+            if row_opt.is_none() {
+                Err(error)
+            } else {
+                Ok(())
             }
-        } else {
-            match (p.is_list, p.is_required, c.is_list, c.is_required) {
-                (false, true, false, true) => Err(self.relation_violation()),
-                (false, true, false, false) => Ok(Some(self.check_for_old_parent_by_child(&self.where_))),
-                (false, false, false, true) => Ok(Some(self.check_for_old_child(parent_id))),
-                (false, false, false, false) => Ok(None),
-                (true, false, false, true) => Ok(None),
-                (true, false, false, false) => Ok(None),
-                (false, true, true, false) => Ok(None),
-                (false, false, true, false) => Ok(None),
-                (true, false, true, false) => Ok(None),
-                _ => unreachable!(),
+        };
+
+        (query, Box::new(check))
+    }
+
+    fn ensure_connected(&self, child_id: &GraphqlId, parent_id: &GraphqlId) -> (Select, ResultCheck) {
+        let relation = self.relation();
+        let rf = self.relation_field();
+
+        let condition = rf
+            .opposite_column()
+            .equals(parent_id)
+            .and(rf.relation_column().equals(child_id));
+
+        let query = Select::from_table(relation.relation_table())
+            .column(rf.opposite_column())
+            .so_that(condition);
+
+        let error = self.nodes_not_connected(Some(parent_id.clone()), Some(child_id.clone()));
+
+        let check = |row_opt: Option<GraphqlId>| {
+            if row_opt.is_none() {
+                Err(error)
+            } else {
+                Ok(())
             }
-        }
-    }
+        };
 
-    fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query> {
-        let p = self.relation_field.clone();
-        let c = p.related_field();
-
-        if self.top_is_create {
-            match (p.is_list, c.is_list) {
-                (false, false) => Some(self.removal_by_parent(parent_id)),
-                (true, false) => None,
-                (false, true) => None,
-                (true, true) => None,
-            }
-        } else {
-            match (p.is_list, c.is_list) {
-                (false, false) => Some(self.removal_by_parent(parent_id)),
-                (true, false) => None,
-                (false, true) => Some(self.removal_by_parent(parent_id)),
-                (true, true) => None,
-            }
-        }
-    }
-
-    fn child_removal(&self, child_id: &GraphqlId) -> Option<Query> {
-        let p = self.relation_field.clone();
-        let c = p.related_field();
-
-        if self.top_is_create {
-            match (p.is_list, c.is_list) {
-                (false, false) => None,
-                (true, false) => Some(self.removal_by_child(child_id)),
-                (false, true) => None,
-                (true, true) => None,
-            }
-        } else {
-            match (p.is_list, c.is_list) {
-                (false, false) => Some(self.removal_by_child(child_id)),
-                (true, false) => Some(self.removal_by_child(child_id)),
-                (false, true) => None,
-                (true, true) => None,
-            }
-        }
-    }
-}
-
-impl NestedActions for NestedCreateNode {
-    fn relation_field(&self) -> RelationFieldRef {
-        self.relation_field.clone()
-    }
-
-    fn relation(&self) -> RelationRef {
-        self.relation_field().relation()
-    }
-
-    fn required_check(&self, parent_id: &GraphqlId) -> ConnectorResult<Option<(Query, ResultCheck)>> {
-        if self.top_is_create {
-            return Ok(None);
-        }
-
-        let p = Arc::clone(&self.relation_field);
-        let c = p.related_field();
-
-        match (p.is_list, p.is_required, c.is_list, c.is_required) {
-            (false, true, false, true) => Err(self.relation_violation()),
-            (false, true, false, false) => Ok(None),
-            (false, false, false, true) => Ok(Some(self.check_for_old_child(parent_id))),
-            (false, false, false, false) => Ok(None),
-            (true, false, false, true) => Ok(None),
-            (true, false, false, false) => Ok(None),
-            (false, true, true, false) => Ok(None),
-            (false, false, true, false) => Ok(None),
-            (true, false, true, false) => Ok(None),
-            _ => unreachable!(),
-        }
-    }
-
-    fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query> {
-        if self.top_is_create {
-            return None;
-        }
-
-        let p = self.relation_field.clone();
-        let c = p.related_field();
-
-        match (p.is_list, c.is_list) {
-            (false, false) => Some(self.removal_by_parent(parent_id)),
-            (true, false) => None,
-            (false, true) => Some(self.removal_by_parent(parent_id)),
-            (true, true) => None,
-        }
-    }
-
-    fn child_removal(&self, _: &GraphqlId) -> Option<Query> {
-        None
+        (query, Box::new(check))
     }
 }

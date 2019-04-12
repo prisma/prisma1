@@ -1,5 +1,4 @@
 //! Combined mutation executions
-mod connect;
 mod create_node;
 mod delete_node;
 mod node_address;
@@ -9,7 +8,6 @@ mod result;
 mod update_node;
 mod upsert_node;
 
-pub use connect::*;
 pub use create_node::*;
 pub use delete_node::*;
 pub use node_address::*;
@@ -81,6 +79,15 @@ pub struct NestedMutactions {
 pub struct NestedSet {
     pub relation_field: Arc<RelationField>,
     pub wheres: Vec<NodeSelector>,
+}
+
+// CONNECT
+
+#[derive(Debug, Clone)]
+pub struct NestedConnect {
+    pub relation_field: RelationFieldRef,
+    pub where_: NodeSelector,
+    pub top_is_create: bool,
 }
 
 // DISCONNECT

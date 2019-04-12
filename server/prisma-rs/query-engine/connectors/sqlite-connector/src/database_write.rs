@@ -80,4 +80,11 @@ pub trait DatabaseWrite {
         node_selector: &NodeSelector,
         relation_field: RelationFieldRef,
     ) -> ConnectorResult<()>;
+
+    fn execute_disconnect(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        actions: &NestedActions,
+        node_selector: &Option<NodeSelector>,
+    ) -> ConnectorResult<()>;
 }
