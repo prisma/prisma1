@@ -37,9 +37,7 @@ case class DeployMutation(
     invalidationPublisher: PubSubPublisher[String],
     capabilities: ConnectorCapabilities,
     clientDbQueries: ClientDbQueries,
-    databaseIntrospectionInferrer: DatabaseIntrospectionInferrer,
     fieldRequirements: FieldRequirementsInterface,
-    isActive: Boolean,
     deployConnector: DeployConnector
 )(
     implicit ec: ExecutionContext
@@ -49,11 +47,9 @@ case class DeployMutation(
 
   val databaseInspector = deployConnector.databaseInspector
 
-  val actsAsActive = if (capabilities.isDataModelV11) {
+  val actsAsActive = {
     val noMigration = args.noMigration.getOrElse(false)
     !noMigration
-  } else {
-    isActive
   }
   val actsAsPassive = !actsAsActive
   val isNotDryRun   = !args.dryRun.getOrElse(false)
@@ -70,16 +66,11 @@ case class DeployMutation(
 
   private def internalExecute: Future[DeployMutationPayload Or Vector[DeployError]] = {
     val x = for {
-      validationResult   <- FutureOr(validateSyntax)
-      schemaMapping      = schemaMapper.createMapping(graphQlSdl)
-      inferredTables     <- FutureOr(inferTables) // TODO: remove once fully switched to v1.1 datamodel
-      newDatabaseSchema  <- FutureOr(introspectDatabaseSchema)
-      inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
-      _ <- if (capabilities.isDataModelV11) { // TODO: remove if once fully switched to v1.1 datamodel
-            FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, newDatabaseSchema))
-          } else {
-            FutureOr(checkProjectSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
-          }
+      validationResult       <- FutureOr(validateSyntax)
+      schemaMapping          = schemaMapper.createMapping(graphQlSdl)
+      newDatabaseSchema      <- FutureOr(introspectDatabaseSchema)
+      inferredNextSchema     = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, InferredTables.empty) // TODO: remove InferredTables from this interface
+      _                      <- FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, newDatabaseSchema))
       functions              <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
       steps                  <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       destructiveWarnings    <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
@@ -119,10 +110,6 @@ case class DeployMutation(
   }
 
   private def introspectDatabaseSchema: Future[DatabaseSchema Or Vector[DeployError]] = databaseInspector.inspect(project.dbName).map(Good(_))
-
-  private def inferTables: Future[InferredTables Or Vector[DeployError]] = {
-    databaseIntrospectionInferrer.infer().map(Good(_))
-  }
 
   private def checkProjectSchemaAgainstDatabaseSchema(nextSchema: Schema, databaseSchema: DatabaseSchema): Future[Unit Or Vector[DeployError]] = {
     if (actsAsPassive && capabilities.has(IntrospectionCapability)) {

@@ -7,14 +7,12 @@ import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.IdGCValue
 import com.prisma.shared.models.Project
 import play.api.libs.json.JsValue
-import slick.dbio.DBIO._
 import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcDatabaseMutactionExecutor(
-    slickDatabase: SlickDatabase,
-    manageRelayIds: Boolean
+    slickDatabase: SlickDatabase
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
   import slickDatabase.profile.api._
@@ -100,28 +98,28 @@ case class JdbcDatabaseMutactionExecutor(
   }
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
-    case m: TopLevelCreateNode  => CreateNodeInterpreter(mutaction = m, includeRelayRow = manageRelayIds)
+    case m: TopLevelCreateNode  => CreateNodeInterpreter(m)
     case m: TopLevelUpdateNode  => UpdateNodeInterpreter(m)
     case m: TopLevelUpsertNode  => UpsertNodeInterpreter(m)
-    case m: TopLevelDeleteNode  => DeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+    case m: TopLevelDeleteNode  => DeleteNodeInterpreter(m)
     case m: TopLevelUpdateNodes => UpdateNodesInterpreter(m)
-    case m: TopLevelDeleteNodes => DeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+    case m: TopLevelDeleteNodes => DeleteNodesInterpreter(m)
     case m: ResetData           => ResetDataInterpreter(m)
-    case m: ImportNodes         => ImportNodesInterpreter(m, shouldCreateRelayIds = manageRelayIds)
+    case m: ImportNodes         => ImportNodesInterpreter(m)
     case m: ImportRelations     => ImportRelationsInterpreter(m)
     case m: ImportScalarLists   => ImportScalarListsInterpreter(m)
   }
 
   def interpreterFor(mutaction: NestedDatabaseMutaction): NestedDatabaseMutactionInterpreter = mutaction match {
-    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m, includeRelayRow = manageRelayIds)
+    case m: NestedCreateNode  => NestedCreateNodeInterpreter(m)
     case m: NestedUpdateNode  => NestedUpdateNodeInterpreter(m)
     case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(m)
-    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+    case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m)
     case m: NestedConnect     => NestedConnectInterpreter(m)
     case m: NestedSet         => NestedSetInterpreter(m)
     case m: NestedDisconnect  => NestedDisconnectInterpreter(m)
     case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(m)
-    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m, shouldDeleteRelayIds = manageRelayIds)
+    case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m)
   }
 
   private def runAttached[T](project: Project, query: DBIO[T]) = {

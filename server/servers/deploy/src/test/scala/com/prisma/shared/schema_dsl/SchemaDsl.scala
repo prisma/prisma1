@@ -13,11 +13,9 @@ import org.scalatest.Suite
 object SchemaDsl extends AwaitUtils {
 
   def fromStringV11ForExistingDatabase(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector): Project = {
-    val actualCapas    = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
-    val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
+    val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     val project = fromString(
       id = id,
-      inferredTables = inferredTables,
       fieldRequirements = deployConnector.fieldRequirements,
       capabilities = ConnectorCapabilities(actualCapas),
       dataModelValidator = DataModelValidatorImpl,
@@ -30,7 +28,6 @@ object SchemaDsl extends AwaitUtils {
     val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     fromString(
       id = projectId(suite),
-      inferredTables = InferredTables.empty,
       fieldRequirements = deployConnector.fieldRequirements,
       capabilities = ConnectorCapabilities(actualCapas),
       dataModelValidator = DataModelValidatorImpl,
@@ -43,7 +40,6 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String)(implicit suite: Suite): Project = {
     fromString(
       id = projectId(suite),
-      inferredTables = InferredTables.empty,
       fieldRequirements = FieldRequirementsInterface.empty,
       capabilities = ConnectorCapabilities(capabilities),
       dataModelValidator = DataModelValidatorImpl,
@@ -60,7 +56,6 @@ object SchemaDsl extends AwaitUtils {
 
   private def fromString(
       id: String,
-      inferredTables: InferredTables,
       fieldRequirements: FieldRequirementsInterface,
       capabilities: ConnectorCapabilities,
       dataModelValidator: DataModelValidator,
@@ -79,7 +74,7 @@ object SchemaDsl extends AwaitUtils {
         )
     }
 
-    val schema                 = SchemaInferrer(capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
+    val schema                 = SchemaInferrer(capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, InferredTables.empty)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
     val manifestation = ConfigLoader.load().databases.head.connector match {
       case x if x == "postgres" => ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"), x)

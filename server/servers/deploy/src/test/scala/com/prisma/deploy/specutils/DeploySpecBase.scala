@@ -239,9 +239,7 @@ trait DataModelV11Base { self: PassiveDeploySpecBase =>
       invalidationPublisher = testDependencies.invalidationPublisher,
       capabilities = capabilities,
       clientDbQueries = deployConnector.clientDBQueries(project),
-      databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
       fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true,
       deployConnector = deployConnector
     )
 

@@ -1,17 +1,17 @@
 package com.prisma.api.connector.jdbc.impl
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
+import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.schema.APIErrors
 import com.prisma.api.schema.APIErrors.NodesNotConnectedError
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.{Model, Project, RelationField, Schema}
+import com.prisma.shared.models.{Model, Project, RelationField}
 import slick.dbio._
 
 import scala.concurrent.ExecutionContext
 
-case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode, shouldDeleteRelayIds: Boolean)(implicit val ec: ExecutionContext)
+case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
@@ -23,7 +23,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode, shouldDeleteRela
                  for {
                    _ <- performCascadingDelete(mutationBuilder, mutaction.where.model, Vector(node.id))
                    _ <- SharedDelete.checkForRequiredRelationsViolations(mutaction.project, mutaction.model, mutationBuilder, Vector(node.id))
-                   _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id, shouldDeleteRelayIds)
+                   _ <- mutationBuilder.deleteNodeById(mutaction.where.model, node.id)
                  } yield node
                case None =>
                  DBIO.failed(APIErrors.NodeNotFoundForWhereError(mutaction.where))
@@ -32,7 +32,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode, shouldDeleteRela
   }
 }
 
-case class DeleteNodesInterpreter(mutaction: TopLevelDeleteNodes, shouldDeleteRelayIds: Boolean)(implicit val ec: ExecutionContext)
+case class DeleteNodesInterpreter(mutaction: TopLevelDeleteNodes)(implicit val ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
@@ -42,11 +42,11 @@ case class DeleteNodesInterpreter(mutaction: TopLevelDeleteNodes, shouldDeleteRe
       groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
       _          <- DBIO.seq(groupedIds.map(performCascadingDelete(mutationBuilder, mutaction.model, _)): _*)
       _          <- DBIO.seq(groupedIds.map(SharedDelete.checkForRequiredRelationsViolations(mutaction.project, mutaction.model, mutationBuilder, _)): _*)
-      _          <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(mutaction.model, _, shouldDeleteRelayIds)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(mutaction.model, _)): _*)
     } yield ManyNodesResult(mutaction, ids.size)
 }
 
-case class NestedDeleteNodesInterpreter(mutaction: NestedDeleteNodes, shouldDeleteRelayIds: Boolean)(implicit val ec: ExecutionContext)
+case class NestedDeleteNodesInterpreter(mutaction: NestedDeleteNodes)(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
@@ -56,11 +56,11 @@ case class NestedDeleteNodesInterpreter(mutaction: NestedDeleteNodes, shouldDele
       groupedIds = ids.grouped(ParameterLimit.groupSize).toVector
       _          <- DBIO.seq(groupedIds.map(performCascadingDelete(mutationBuilder, mutaction.model, _)): _*)
       _          <- DBIO.seq(groupedIds.map(SharedDelete.checkForRequiredRelationsViolations(mutaction.project, mutaction.model, mutationBuilder, _)): _*)
-      _          <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(mutaction.model, _, shouldDeleteRelayIds)): _*)
+      _          <- DBIO.seq(groupedIds.map(mutationBuilder.deleteNodes(mutaction.model, _)): _*)
     } yield ManyNodesResult(mutaction, ids.size)
 }
 
-case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode, shouldDeleteRelayIds: Boolean)(implicit val ec: ExecutionContext)
+case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode)(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with CascadingDeleteSharedStuff {
 
@@ -74,7 +74,7 @@ case class NestedDeleteNodeInterpreter(mutaction: NestedDeleteNode, shouldDelete
       _       <- mutationBuilder.ensureThatNodesAreConnected(parentField, childId, parentId)
       _       <- performCascadingDelete(mutationBuilder, child, Vector(childId))
       _       <- SharedDelete.checkForRequiredRelationsViolations(mutaction.project, mutaction.relationField.relatedModel_!, mutationBuilder, Vector(childId))
-      _       <- mutationBuilder.deleteNodeById(child, childId, shouldDeleteRelayIds)
+      _       <- mutationBuilder.deleteNodeById(child, childId)
     } yield UnitDatabaseMutactionResult
   }
 
@@ -111,7 +111,6 @@ object SharedDelete {
 }
 
 trait CascadingDeleteSharedStuff {
-  def shouldDeleteRelayIds: Boolean
   implicit def ec: ExecutionContext
 
   def performCascadingDelete(mutationBuilder: JdbcActionsBuilder, model: Model, startingIds: Vector[IdGCValue]): DBIO[Unit] = {
@@ -156,7 +155,7 @@ trait CascadingDeleteSharedStuff {
           }
       //actions for this level
       _ <- DBIO.seq(childIdsGrouped.map(checkTheseOnes(mutationBuilder, parentField, _)): _*)
-      _ <- DBIO.seq(childIdsGrouped.map(mutationBuilder.deleteNodes(model, _, shouldDeleteRelayIds)): _*)
+      _ <- DBIO.seq(childIdsGrouped.map(mutationBuilder.deleteNodes(model, _)): _*)
     } yield ()
   }
 

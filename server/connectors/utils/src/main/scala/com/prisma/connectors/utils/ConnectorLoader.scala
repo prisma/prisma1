@@ -17,33 +17,27 @@ import scala.concurrent.ExecutionContext
 object ConnectorLoader {
   def loadApiConnector(config: PrismaConfig)(implicit ec: ExecutionContext, drivers: SupportedDrivers): ApiConnector = {
     val databaseConfig = config.databases.head
-
-    (databaseConfig.connector, databaseConfig.active) match {
-      case ("mysql", true)                 => MySqlApiConnector(databaseConfig, drivers(SupportedDrivers.MYSQL), config.isPrototype)
-      case ("mysql", false)                => sys.error("There is not passive mysql deploy connector yet!")
-      case ("postgres", isActive)          => PostgresApiConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES), isActive, config.isPrototype)
-      case ("sqlite-native", _)            => SQLiteApiConnectorNative(databaseConfig, config.isPrototype)
-      case ("native-integration-tests", _) => SQLiteApiConnectorNative(databaseConfig, config.isPrototype)
-      case ("sqlite", true)                => SQLiteApiConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = config.isPrototype)
-      case ("sqlite", false)               => sys.error("There is no passive sqlite deploy connector yet!")
-      case ("mongo", _)                    => MongoApiConnector(databaseConfig)
-      case (conn, _)                       => sys.error(s"Unknown connector $conn")
+    databaseConfig.connector match {
+      case "mysql"                    => MySqlApiConnector(databaseConfig, drivers(SupportedDrivers.MYSQL))
+      case "postgres"                 => PostgresApiConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
+      case "sqlite-native"            => SQLiteApiConnectorNative(databaseConfig)
+      case "native-integration-tests" => SQLiteApiConnectorNative(databaseConfig)
+      case "sqlite"                   => SQLiteApiConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
+      case "mongo"                    => MongoApiConnector(databaseConfig)
+      case conn                       => sys.error(s"Unknown connector $conn")
     }
   }
 
   def loadDeployConnector(config: PrismaConfig, isTest: Boolean = false)(implicit ec: ExecutionContext, drivers: SupportedDrivers): DeployConnector = {
     val databaseConfig = config.databases.head
-    (databaseConfig.connector, databaseConfig.active) match {
-      case ("mysql", _) if config.isPrototype => MySqlDeployConnector(databaseConfig, drivers(SupportedDrivers.MYSQL), config.isPrototype)
-      case ("mysql", true)                    => MySqlDeployConnector(databaseConfig, drivers(SupportedDrivers.MYSQL), config.isPrototype)
-      case ("mysql", false)                   => sys.error("There is not passive mysql deploy connector yet!")
-      case ("postgres", isActive)             => PostgresDeployConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES), isActive, config.isPrototype)
-      case ("mongo", isActive)                => MongoDeployConnector(databaseConfig, isActive = true, isTest = isTest)
-      case ("sqlite-native", _)               => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = true)
-      case ("native-integration-tests", _)    => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = true)
-      case ("sqlite", true)                   => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE), isPrototype = config.isPrototype)
-      case ("sqlite", false)                  => sys.error("There is no passive sqlite deploy connector yet!")
-      case (conn, _)                          => sys.error(s"Unknown connector $conn")
+    databaseConfig.connector match {
+      case "mysql"                    => MySqlDeployConnector(databaseConfig, drivers(SupportedDrivers.MYSQL))
+      case "postgres"                 => PostgresDeployConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
+      case "mongo"                    => MongoDeployConnector(databaseConfig, isTest = isTest)
+      case "sqlite-native"            => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
+      case "native-integration-tests" => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
+      case "sqlite"                   => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
+      case conn                       => sys.error(s"Unknown connector $conn")
     }
   }
 }
