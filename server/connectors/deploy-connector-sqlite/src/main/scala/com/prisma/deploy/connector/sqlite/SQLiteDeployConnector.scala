@@ -33,7 +33,7 @@ case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver)(implici
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
   override def databaseInspector: DatabaseInspector               = SQLiteDatabaseInspector(managementDatabase)
-  override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.sqlite
+  override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.sqlitePrototype
 
   override def createProjectDatabase(id: String): Future[Unit] = {
     val action = mutationBuilder.createDatabaseForProject(id = id)
