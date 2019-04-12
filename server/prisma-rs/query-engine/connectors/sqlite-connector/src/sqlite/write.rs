@@ -176,8 +176,12 @@ impl DatabaseWrite for Sqlite {
                 results.push(result);
             }
             NestedDatabaseMutaction::UpsertNode(ref ups) => {
-                let ids =
-                    Self::get_ids_by_parents(conn, Arc::clone(&ups.relation_field), vec![&parent_id], &ups.where_)?;
+                let ids = Self::get_ids_by_parents(
+                    conn,
+                    Arc::clone(&ups.relation_field),
+                    vec![&parent_id],
+                    ups.where_.clone(),
+                )?;
 
                 match ids.split_first() {
                     Some(_) => {
@@ -247,7 +251,24 @@ impl DatabaseWrite for Sqlite {
                     mutaction: DatabaseMutaction::Nested(mutaction),
                 });
             }
-            NestedDatabaseMutaction::UpdateNodes(_) => unimplemented!(),
+            NestedDatabaseMutaction::UpdateNodes(ref uns) => {
+                let count = Self::execute_nested_update_many(
+                    conn,
+                    &parent_id,
+                    &uns.filter,
+                    Arc::clone(&uns.relation_field),
+                    &uns.non_list_args,
+                    &uns.list_args,
+                )?;
+
+                let result = DatabaseMutactionResult {
+                    identifier: Identifier::Count(count),
+                    typ: DatabaseMutactionResultType::Many,
+                    mutaction: DatabaseMutaction::Nested(mutaction),
+                };
+
+                results.push(result);
+            }
             NestedDatabaseMutaction::DeleteNodes(_) => unimplemented!(),
             NestedDatabaseMutaction::DeleteNode(_) => unimplemented!(),
         }
@@ -371,7 +392,12 @@ impl DatabaseWrite for Sqlite {
             }
         };
 
-        let ids = Self::get_ids_by_parents(conn, Arc::clone(&relation_field), vec![parent_id], &node_selector)?;
+        let ids = Self::get_ids_by_parents(
+            conn,
+            Arc::clone(&relation_field),
+            vec![parent_id],
+            node_selector.clone(),
+        )?;
 
         match ids.into_iter().next() {
             Some(id) => {
@@ -387,6 +413,25 @@ impl DatabaseWrite for Sqlite {
                 child_where: node_selector.as_ref().map(NodeSelectorInfo::from),
             }),
         }
+    }
+
+    fn execute_nested_update_many(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        filter: &Option<Filter>,
+        relation_field: RelationFieldRef,
+        non_list_args: &PrismaArgs,
+        list_args: &[(String, PrismaListValue)],
+    ) -> ConnectorResult<usize> {
+        let ids = Self::get_ids_by_parents(conn, Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
+        let count = ids.len();
+
+        let updates = MutationBuilder::update_by_ids(relation_field.related_model(), non_list_args, ids.clone())?;
+
+        Self::execute_many(conn, updates)?;
+        Self::update_list_args(conn, ids, relation_field.model(), list_args.to_vec())?;
+
+        Ok(count)
     }
 
     fn execute_connect(
