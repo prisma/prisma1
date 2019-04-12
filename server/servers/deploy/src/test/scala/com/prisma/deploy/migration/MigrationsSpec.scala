@@ -1043,7 +1043,6 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       invalidationPublisher = testDependencies.invalidationPublisher,
       capabilities = capabilities,
       clientDbQueries = deployConnector.clientDBQueries(refreshedProjectV11),
-      fieldRequirements = FieldRequirementsInterface.empty,
       deployConnector = deployConnector
     )
 

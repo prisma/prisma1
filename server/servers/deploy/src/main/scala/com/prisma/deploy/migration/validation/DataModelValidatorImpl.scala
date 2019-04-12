@@ -1,11 +1,9 @@
 package com.prisma.deploy.migration.validation
-import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.directives._
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, ReservedFields, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapabilities, ReservedFields, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
@@ -16,20 +14,18 @@ import scala.util.{Failure, Success, Try}
 object DataModelValidatorImpl extends DataModelValidator {
   override def validate(
       dataModel: String,
-      fieldRequirements: FieldRequirementsInterface,
       capabilities: ConnectorCapabilities
   ): DataModelValidationResult Or Vector[DeployError] = {
-    DataModelValidatorImpl(dataModel, fieldRequirements, capabilities).validate
+    DataModelValidatorImpl(dataModel, capabilities).validate
   }
 }
 
 case class DataModelValidatorImpl(
     dataModel: String,
-    fieldRequirements: FieldRequirementsInterface,
     capabilities: ConnectorCapabilities
 ) {
-  import com.prisma.deploy.migration.DataSchemaAstExtensions._
   import BooleanUtils._
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   val result   = GraphQlSdlParser.parse(dataModel)
   lazy val doc = result.get

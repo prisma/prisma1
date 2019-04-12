@@ -20,7 +20,7 @@ object SchemaInferrerMain {
     val input       = inputAsJson.as[Input]
 
     val (capabilities, emptySchema) = (ConnectorCapabilities.mysqlPrototype, Schema.emptyV11)
-    val validationResult            = DataModelValidatorImpl.validate(input.dataModel, FieldRequirementsInterface.empty, capabilities)
+    val validationResult            = DataModelValidatorImpl.validate(input.dataModel, capabilities)
     val schema                      = SchemaInferrer(capabilities).infer(emptySchema, SchemaMapping.empty, validationResult.get.dataModel)
 
     println(Json.toJson(schema))

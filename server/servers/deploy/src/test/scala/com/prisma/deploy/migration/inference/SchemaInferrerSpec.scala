@@ -640,7 +640,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: ConnectorCapabilities): Schema = {
-    val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get.dataModel
+    val prismaSdl = DataModelValidatorImpl.validate(types, capabilities).get.dataModel
     SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl)
   }
 }

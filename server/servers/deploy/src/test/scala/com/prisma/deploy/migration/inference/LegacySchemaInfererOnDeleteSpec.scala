@@ -1,5 +1,6 @@
 package com.prisma.deploy.migration.inference
 
+import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.validation.LegacyDataModelValidator
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
@@ -173,7 +174,7 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
     val validator = LegacyDataModelValidator(
       types,
       LegacyDataModelValidator.directiveRequirements,
-      deployConnector.fieldRequirements,
+      FieldRequirementsInterface.empty,
       actualCapabilities
     )
 

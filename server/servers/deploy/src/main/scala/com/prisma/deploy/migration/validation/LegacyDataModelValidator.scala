@@ -80,8 +80,8 @@ object LegacyDataModelValidator extends DataModelValidator {
     )
   }
 
-  override def validate(dataModel: String, fieldRequirements: FieldRequirementsInterface, capabilities: ConnectorCapabilities) = {
-    apply(dataModel, fieldRequirements, capabilities).validateSyntax
+  override def validate(dataModel: String, capabilities: ConnectorCapabilities) = {
+    apply(dataModel, FieldRequirementsInterface.empty, capabilities).validateSyntax
   }
 }
 

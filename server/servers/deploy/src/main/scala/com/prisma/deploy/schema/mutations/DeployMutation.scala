@@ -37,7 +37,6 @@ case class DeployMutation(
     invalidationPublisher: PubSubPublisher[String],
     capabilities: ConnectorCapabilities,
     clientDbQueries: ClientDbQueries,
-    fieldRequirements: FieldRequirementsInterface,
     deployConnector: DeployConnector
 )(
     implicit ec: ExecutionContext
@@ -101,12 +100,7 @@ case class DeployMutation(
   }
 
   private def validateSyntax: Future[DataModelValidationResult Or Vector[DeployError]] = Future.successful {
-    val validator = if (capabilities.has(LegacyDataModelCapability)) {
-      LegacyDataModelValidator
-    } else {
-      DataModelValidatorImpl
-    }
-    validator.validate(args.types, fieldRequirements, capabilities)
+    DataModelValidatorImpl.validate(args.types, capabilities)
   }
 
   private def introspectDatabaseSchema: Future[DatabaseSchema Or Vector[DeployError]] = databaseInspector.inspect(project.dbName).map(Good(_))

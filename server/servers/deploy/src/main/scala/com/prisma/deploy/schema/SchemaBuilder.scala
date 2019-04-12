@@ -212,7 +212,6 @@ case class SchemaBuilderImpl(
                        invalidationPublisher = dependencies.invalidationPublisher,
                        capabilities = deployConnector.capabilities,
                        clientDbQueries = deployConnector.clientDBQueries(project),
-                       fieldRequirements = deployConnector.fieldRequirements,
                        deployConnector = deployConnector
                      ).execute
           } yield result

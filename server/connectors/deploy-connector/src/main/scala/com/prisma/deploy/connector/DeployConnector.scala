@@ -8,8 +8,6 @@ import org.joda.time.DateTime
 import scala.concurrent.Future
 
 trait DeployConnector {
-  def fieldRequirements: FieldRequirementsInterface
-
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
   def cloudSecretPersistence: CloudSecretPersistence

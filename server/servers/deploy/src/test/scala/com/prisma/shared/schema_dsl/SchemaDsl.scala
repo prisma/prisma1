@@ -1,7 +1,7 @@
 package com.prisma.shared.schema_dsl
 
 import com.prisma.config.ConfigLoader
-import com.prisma.deploy.connector.{DeployConnector, FieldRequirementsInterface, MissingBackRelations}
+import com.prisma.deploy.connector.{DeployConnector, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.{DataModelValidator, DataModelValidatorImpl}
 import com.prisma.shared.models.ConnectorCapability.LegacyDataModelCapability
@@ -16,7 +16,6 @@ object SchemaDsl extends AwaitUtils {
     val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     val project = fromString(
       id = id,
-      fieldRequirements = deployConnector.fieldRequirements,
       capabilities = ConnectorCapabilities(actualCapas),
       dataModelValidator = DataModelValidatorImpl,
       emptyBaseSchema = Schema.empty
@@ -28,7 +27,6 @@ object SchemaDsl extends AwaitUtils {
     val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
     fromString(
       id = projectId(suite),
-      fieldRequirements = deployConnector.fieldRequirements,
       capabilities = ConnectorCapabilities(actualCapas),
       dataModelValidator = DataModelValidatorImpl,
       emptyBaseSchema = Schema.emptyV11
@@ -40,7 +38,6 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String)(implicit suite: Suite): Project = {
     fromString(
       id = projectId(suite),
-      fieldRequirements = FieldRequirementsInterface.empty,
       capabilities = ConnectorCapabilities(capabilities),
       dataModelValidator = DataModelValidatorImpl,
       emptyBaseSchema = Schema.emptyV11
@@ -56,14 +53,13 @@ object SchemaDsl extends AwaitUtils {
 
   private def fromString(
       id: String,
-      fieldRequirements: FieldRequirementsInterface,
       capabilities: ConnectorCapabilities,
       dataModelValidator: DataModelValidator,
       emptyBaseSchema: Schema
   )(sdlString: String): Project = {
     val emptySchemaMapping = SchemaMapping.empty
 
-    val prismaSdl = dataModelValidator.validate(sdlString, fieldRequirements, capabilities) match {
+    val prismaSdl = dataModelValidator.validate(sdlString, capabilities) match {
       case Good(result) =>
         result.dataModel
       case Bad(errors) =>

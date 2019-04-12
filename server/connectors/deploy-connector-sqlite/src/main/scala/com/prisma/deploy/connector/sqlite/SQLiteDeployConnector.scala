@@ -19,8 +19,6 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementsInterface.empty
-
   lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config, driver)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases

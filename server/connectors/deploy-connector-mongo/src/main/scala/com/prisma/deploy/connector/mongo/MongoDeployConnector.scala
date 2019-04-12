@@ -11,8 +11,6 @@ import org.mongodb.scala.MongoClient
 import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoDeployConnector(config: DatabaseConfig, isTest: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def fieldRequirements: FieldRequirementsInterface = FieldRequirementsInterface.empty
-
   lazy val internalDatabaseDefs     = MongoInternalDatabaseDefs(config)
   lazy val mongoClient: MongoClient = internalDatabaseDefs.client
   lazy val internalDatabase         = mongoClient.getDatabase("prisma")
