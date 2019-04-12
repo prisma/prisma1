@@ -1,14 +1,13 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.{InferredTables, MissingBackRelations}
-import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
+import com.prisma.deploy.connector.MissingBackRelations
 import com.prisma.deploy.migration.validation._
 import com.prisma.deploy.schema.RelationNameNeeded
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
+import com.prisma.shared.models.ConnectorCapability.{MigrationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
 import com.prisma.shared.models.Manifestations._
-import com.prisma.shared.models.{OnDelete, RelationSide, ReservedFields, _}
+import com.prisma.shared.models.{OnDelete, RelationSide, _}
 import com.prisma.utils.await.AwaitUtils
 import cool.graph.cuid.Cuid
 import sangria.ast.{Field => _}
