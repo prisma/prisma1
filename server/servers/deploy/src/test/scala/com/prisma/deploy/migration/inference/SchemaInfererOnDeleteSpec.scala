@@ -1,16 +1,13 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.FieldRequirementsInterface
-import com.prisma.deploy.migration.validation.LegacyDataModelValidator
+import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ConnectorCapability.{LegacyDataModelCapability, MigrationsCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, OnDelete, Schema}
 import com.prisma.shared.schema_dsl.TestProject
+import org.scalactic.{Bad, Good}
 import org.scalatest.{Matchers, WordSpec}
 
-class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with DeploySpecBase {
-
-  val inferer      = SchemaInferrer(ConnectorCapabilities(MigrationsCapability, LegacyDataModelCapability))
+class SchemaInfererOnDeleteSpec extends WordSpec with Matchers with DeploySpecBase {
   val emptyProject = TestProject.empty
 
   "Inferring onDelete relationDirectives" should {
@@ -18,11 +15,13 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
+          |  id: ID! @id
           |  comments: [Comment] @relation(name:"MyRelationName" onDelete: CASCADE)
           |}
           |
           |type Comment {
-          |  todo: Todo!
+          |  id: ID! @id
+          |  todo: Todo! @relation(name:"MyRelationName")
           |}
         """.stripMargin.trim()
       val schema = infer(emptyProject.schema, types)
@@ -39,10 +38,12 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
+          |  id: ID! @id
           |  comments: [Comment] @relation(name:"MyRelationName" onDelete: CASCADE)
           |}
           |
           |type Comment {
+          |  id: ID! @id
           |  todo: Todo! @relation(name:"MyRelationName" onDelete: SET_NULL)
           |}
         """.stripMargin.trim()
@@ -60,10 +61,12 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
+          |  id: ID! @id
           |  comments: [Comment] @relation(name:"MyRelationName")
           |}
           |
           |type Comment {
+          |  id: ID! @id
           |  todo: Todo! @relation(name:"MyRelationName" onDelete: CASCADE)
           |}
         """.stripMargin.trim()
@@ -81,11 +84,13 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
+          |  id: ID! @id
           |  comments: [Comment] @relation(name:"MyRelationName")
           |  comments2: [Comment] @relation(name:"MyRelationName2" onDelete: CASCADE)
           |}
           |
           |type Comment {
+          |  id: ID! @id
           |  todo: Todo! @relation(name:"MyRelationName" onDelete: CASCADE)
           |  todo2: Todo! @relation(name:"MyRelationName2")
           |}
@@ -110,11 +115,13 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Todo {
+          |  id: ID! @id
           |  comments: [Comment] @relation(name:"MyRelationName", onDelete: CASCADE)
           |  comments2: [Comment] @relation(name:"MyRelationName2", onDelete: CASCADE)
           |}
           |
           |type Comment {
+          |  id: ID! @id
           |  todo: Todo! @relation(name:"MyRelationName", onDelete: CASCADE)
           |  todo2: Todo! @relation(name:"MyRelationName2",onDelete: CASCADE)
           |}
@@ -139,16 +146,19 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
       val types =
         """
           |type Parent {
-          |  child: Child! @relation(name:"ParentToChild", onDelete: CASCADE)
-          |  stepChild: StepChild! @relation(name:"ParentToStepChild", onDelete: CASCADE)
+          |  id: ID! @id
+          |  child: Child! @relation(name:"ParentToChild", onDelete: CASCADE, link: INLINE)
+          |  stepChild: StepChild! @relation(name:"ParentToStepChild", onDelete: CASCADE, link: INLINE)
           |}
           |
           |type Child {
-          |  parent: Parent!
+          |  id: ID! @id
+          |  parent: Parent! @relation(name:"ParentToChild")
           |}
           |
           |type StepChild {
-          |  parent: Parent!
+          |  id: ID! @id
+          |  parent: Parent! @relation(name:"ParentToStepChild")
           |}
         """.stripMargin.trim()
       val schema = infer(emptyProject.schema, types)
@@ -169,17 +179,21 @@ class LegacySchemaInfererOnDeleteSpec extends WordSpec with Matchers with Deploy
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty): Schema = {
-    val actualCapabilities = ConnectorCapabilities(capabilities.capabilities ++ Set(LegacyDataModelCapability))
+    val capabilities = ConnectorCapabilities()
+    val inferer      = SchemaInferrer(capabilities)
 
-    val validator = LegacyDataModelValidator(
+    val validator = DataModelValidatorImpl(
       types,
-      LegacyDataModelValidator.directiveRequirements,
-      FieldRequirementsInterface.empty,
-      actualCapabilities
+      capabilities
     )
 
-    val prismaSdl = validator.generateSDL
+    val dataModelAst = validator.validate match {
+      case Good(validationResult) =>
+        validationResult.dataModel
+      case Bad(errors) =>
+        sys.error(s"The validation of the Datamodel returned errors: ${errors.mkString("\n")}")
+    }
 
-    inferer.infer(schema, SchemaMapping.empty, prismaSdl)
+    inferer.infer(schema, SchemaMapping.empty, dataModelAst)
   }
 }
