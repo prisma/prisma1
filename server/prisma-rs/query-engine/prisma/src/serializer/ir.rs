@@ -10,27 +10,26 @@
 //! flexible formats.
 
 use core::{MultiPrismaQueryResult, PrismaQueryResult, SinglePrismaQueryResult};
+use indexmap::IndexMap;
 use prisma_models::PrismaValue;
-use serde::Serialize;
-use std::collections::BTreeMap;
+// use serde::Serialize;
 
 /// A set of responses to provided queries
 pub type Responses = Vec<IrResponse>;
 
 #[allow(dead_code)]
 pub enum IrResponse {
-    Data(Item),
+    Data(String, Item),
     Error(String), // TODO: Get a better error kind?
 }
 
 /// A key -> value map to an IR item
-pub type Map = BTreeMap<String, Item>;
+pub type Map = IndexMap<String, Item>;
 
 /// A list of IR items
 pub type List = Vec<Item>;
 
 /// An IR item that either expands to a subtype or leaf-node
-#[derive(Serialize)] // TODO: REMOVE AGAIN
 pub enum Item {
     Map(Map),
     List(List),
@@ -55,8 +54,8 @@ impl<'results> IrBuilder<'results> {
     pub fn build(self) -> Responses {
         self.0.into_iter().fold(vec![], |mut vec, res| {
             vec.push(match res {
-                PrismaQueryResult::Single(query) => IrResponse::Data(Item::Map(build_map(query))),
-                PrismaQueryResult::Multi(query) => IrResponse::Data(Item::List(build_list(query))),
+                PrismaQueryResult::Single(query) => IrResponse::Data(query.name.clone(), Item::Map(build_map(query))),
+                PrismaQueryResult::Multi(query) => IrResponse::Data(query.name.clone(), Item::List(build_list(query))),
             });
             vec
         })

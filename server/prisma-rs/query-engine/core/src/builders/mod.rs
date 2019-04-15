@@ -12,7 +12,14 @@ mod inflector;
 mod many_rel;
 mod multi;
 mod one_rel;
+mod root;
 mod single;
+
+pub use many_rel::*;
+pub use multi::*;
+pub use one_rel::*;
+pub use root::*;
+pub use single::*;
 
 use self::inflector::Inflector;
 use crate::{CoreError, CoreResult, PrismaQuery};
@@ -27,35 +34,59 @@ use std::sync::Arc;
 
 /// A common query-builder type
 pub enum Builder<'field> {
-    Single(single::Builder<'field>),
-    Multi(multi::Builder<'field>),
-    Rel(one_rel::Builder<'field>),
-    ManyRel(many_rel::Builder<'field>),
+    Single(SingleBuilder<'field>),
+    Multi(MultiBuilder<'field>),
+    OneRelation(OneRelationBuilder<'field>),
+    ManyRelation(ManyRelationBuilder<'field>),
 }
 
 impl<'a> Builder<'a> {
+    fn new(schema: SchemaRef, root_field: &'a Field) -> CoreResult<Self> {
+        // Find model for field - this is a temporary workaround before we have a data model definition (/ schema builder).
+        let builder: Option<Builder> = schema
+            .models()
+            .iter()
+            .filter_map(|model| Builder::infer(model, root_field, None))
+            .nth(0);
+
+        match builder {
+            Some(b) => Ok(b),
+            None => Err(CoreError::QueryValidationError(format!(
+                "Model not found for field {}",
+                root_field.alias.as_ref().unwrap_or(&root_field.name)
+            ))),
+        }
+    }
+
     /// Infer the type of builder that should be created
-    fn infer(model: &ModelRef, field: &Field, parent: Option<RelationFieldRef>) -> Option<Self> {
+    fn infer(model: &ModelRef, field: &'a Field, parent: Option<RelationFieldRef>) -> Option<Builder<'a>> {
         if let Some(ref parent) = parent {
             if parent.is_list {
-                Some(Builder::ManyRel(many_rel::Builder::new()))
+                Some(Builder::ManyRelation(ManyRelationBuilder::new()))
             } else {
-                Some(Builder::Rel(one_rel::Builder::new()))
+                Some(Builder::OneRelation(OneRelationBuilder::new()))
             }
         } else {
-            if Inflector::singularize(&model.name) == field.name {
-                Some(Builder::Single(single::Builder::new()))
-            } else if Inflector::pluralize(&model.name) == field.name {
-                Some(Builder::Multi(multi::Builder::new()))
+            let normalized = model.name.to_lowercase();
+            if Inflector::singularize(&field.name) == normalized {
+                Some(Builder::Multi(MultiBuilder::new().setup(Arc::clone(model), field)))
+            } else if field.name == normalized {
+                Some(Builder::Single(SingleBuilder::new().setup(Arc::clone(model), field)))
             } else {
                 None
             }
         }
     }
-}
 
-/// FIXME: Do we want or need this?!
-type BuilderResult<T> = Option<CoreResult<T>>;
+    fn build(self) -> CoreResult<PrismaQuery> {
+        match self {
+            Builder::Single(b) => Ok(PrismaQuery::RecordQuery(b.build()?)),
+            Builder::Multi(b) => Ok(PrismaQuery::MultiRecordQuery(b.build()?)),
+            Builder::OneRelation(b) => Ok(PrismaQuery::RelatedRecordQuery(b.build()?)),
+            Builder::ManyRelation(b) => Ok(PrismaQuery::MultiRelatedRecordQuery(b.build()?)),
+        }
+    }
+}
 
 /// A trait that describes a query builder
 pub trait BuilderExt {
@@ -212,11 +243,11 @@ pub trait BuilderExt {
                             let parent = Some(Arc::clone(&f));
 
                             match Builder::infer(&model, &ast_field, parent) {
-                                Some(Builder::Rel(b)) => {
-                                    Some(Ok(Builder::Rel(b.setup(model, ast_field, Arc::clone(f)))))
+                                Some(Builder::OneRelation(b)) => {
+                                    Some(Ok(Builder::OneRelation(b.setup(model, ast_field, Arc::clone(f)))))
                                 }
-                                Some(Builder::ManyRel(b)) => {
-                                    Some(Ok(Builder::ManyRel(b.setup(model, ast_field, Arc::clone(f)))))
+                                Some(Builder::ManyRelation(b)) => {
+                                    Some(Ok(Builder::ManyRelation(b.setup(model, ast_field, Arc::clone(f)))))
                                 }
                                 _ => None,
                             }
@@ -237,8 +268,8 @@ pub trait BuilderExt {
         builders
             .into_iter()
             .map(|b| match b {
-                Builder::Rel(builder) => unimplemented!(),
-                Builder::ManyRel(builder) => unimplemented!(),
+                Builder::OneRelation(builder) => unimplemented!(),
+                Builder::ManyRelation(builder) => unimplemented!(),
                 _ => unreachable!(),
             })
             .collect()

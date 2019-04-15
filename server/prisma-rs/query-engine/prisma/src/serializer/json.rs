@@ -1,29 +1,42 @@
 //! Json serialisation endpoint from IR
 
+use super::ir::{IrResponse, Item, Responses};
 use crate::{PrismaError, PrismaResult};
+use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 use serde_json::{Map, Number, Value};
-use std::collections::BTreeMap;
-
-use super::ir::{Responses, IrResponse, Item};
 
 type JsonMap = Map<String, Value>;
 type JsonVec = Vec<Value>;
 
+macro_rules! envelope {
+    ($name:ident, $producer:expr) => {{
+        let mut m = JsonMap::new();
+        m.insert($name, $producer);
+        Value::Object(m)
+    }};
+}
+
 pub fn serialize(resp: Responses) -> Value {
     let mut map = Map::new();
 
-    let vals: Vec<Value> = resp.into_iter().map(|res| match res {
-        IrResponse::Data(Item::List(list)) => Value::Array(serialize_list(list)),
-        IrResponse::Data(Item::Map(map)) => Value::Object(serialize_map(map)),
-        _ => unreachable!()
-    }).collect();
+    let vals: Vec<Value> = resp
+        .into_iter()
+        .map(|res| match res {
+            IrResponse::Data(name, Item::List(list)) => envelope!(name, Value::Array(serialize_list(list))),
+            IrResponse::Data(name, Item::Map(map)) => envelope!(name, Value::Object(serialize_map(map))),
+            _ => unreachable!(),
+        })
+        .collect();
 
-    map.insert("data".into(), if vals.len() == 1 {
-         vals.first().unwrap().clone()
-    } else {
-        Value::Array(vals)
-    });
+    map.insert(
+        "data".into(),
+        if vals.len() == 1 {
+            vals.first().unwrap().clone()
+        } else {
+            Value::Array(vals)
+        },
+    );
 
     Value::Object(map)
 }
@@ -39,7 +52,7 @@ macro_rules! match_serialize {
 }
 
 /// Recursively serialize query results
-fn serialize_map(map: BTreeMap<String, Item>) -> JsonMap {
+fn serialize_map(map: IndexMap<String, Item>) -> JsonMap {
     map.into_iter().fold(JsonMap::new(), |mut map, (k, v)| {
         map.insert(k, match_serialize!(v));
         map

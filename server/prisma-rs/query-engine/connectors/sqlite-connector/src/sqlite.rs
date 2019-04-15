@@ -29,7 +29,6 @@ impl TransactionalExecutor for Sqlite {
         self.attach_database(&mut conn, db_name)?;
 
         let result = f(&mut conn);
-
         if self.test_mode {
             dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
         }

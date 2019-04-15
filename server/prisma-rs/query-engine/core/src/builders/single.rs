@@ -6,26 +6,34 @@ use graphql_parser::query::Field;
 use prisma_models::{ModelRef, SelectedFields};
 use std::sync::Arc;
 
-pub struct Builder<'f> {
+#[derive(Debug)]
+pub struct SingleBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
-    selector: Option<NodeSelector>,
 }
 
-impl<'f> BuilderExt for Builder<'f> {
+impl<'f> SingleBuilder<'f> {
+    pub fn setup(self, model: ModelRef, field: &'f Field) -> Self {
+        Self {
+            model: Some(model),
+            field: Some(field),
+        }
+    }
+}
+
+impl<'f> BuilderExt for SingleBuilder<'f> {
     type Output = RecordQuery;
 
     fn new() -> Self {
         Self {
             model: None,
             field: None,
-            selector: None,
         }
     }
 
     fn build(mut self) -> CoreResult<Self::Output> {
-        let (model, field, selector) = match (&self.model, &self.field, &self.selector) {
-            (Some(m), Some(f), Some(s)) => Some((m, f, s)),
+        let (model, field) = match (&self.model, &self.field) {
+            (Some(m), Some(f)) => Some((m, f)),
             _ => None,
         }
         .expect("`RecordQuery` builder not properly initialised!");
@@ -43,15 +51,5 @@ impl<'f> BuilderExt for Builder<'f> {
             selected_fields,
             nested,
         })
-    }
-}
-
-impl<'f> Builder<'f> {
-    pub fn setup(self, model: ModelRef, field: &'f Field, selector: NodeSelector) -> Self {
-        Self {
-            model: Some(model),
-            field: Some(field),
-            selector: Some(selector),
-        }
     }
 }

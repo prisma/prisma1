@@ -32,7 +32,10 @@ impl FileConfig {
             .unwrap();
 
         match path.extension() {
-            Some(ext) => file_name.trim_end_matches(ext.to_str().unwrap()).to_owned(),
+            Some(ext) => file_name
+                .trim_end_matches(ext.to_str().unwrap())
+                .trim_end_matches(".")
+                .to_owned(),
             None => file_name,
         }
     }

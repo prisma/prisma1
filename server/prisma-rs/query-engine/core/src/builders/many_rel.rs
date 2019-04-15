@@ -6,13 +6,23 @@ use graphql_parser::query::Field;
 use prisma_models::{ModelRef, RelationFieldRef, SelectedFields};
 use std::sync::Arc;
 
-pub struct Builder<'f> {
+pub struct ManyRelationBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
     parent: Option<RelationFieldRef>,
 }
 
-impl<'f> BuilderExt for Builder<'f> {
+impl<'f> ManyRelationBuilder<'f> {
+    pub fn setup(self, model: ModelRef, field: &'f Field, parent: RelationFieldRef) -> Self {
+        Self {
+            model: Some(model),
+            field: Some(field),
+            parent: Some(parent),
+        }
+    }
+}
+
+impl<'f> BuilderExt for ManyRelationBuilder<'f> {
     type Output = MultiRelatedRecordQuery;
 
     fn new() -> Self {
@@ -41,15 +51,5 @@ impl<'f> BuilderExt for Builder<'f> {
             selected_fields,
             nested,
         })
-    }
-}
-
-impl<'f> Builder<'f> {
-    pub fn setup(self, model: ModelRef, field: &'f Field, parent: RelationFieldRef) -> Self {
-        Self {
-            model: Some(model),
-            field: Some(field),
-            parent: Some(parent),
-        }
     }
 }
