@@ -159,7 +159,7 @@ object DeployErrors {
     error(
       fieldAndType,
       s"You are trying to set the relation '$relationName' from `$nameA` to `$nameB` and are only providing a relation directive with a name on `$nameA`. " +
-        s"Please also provide the same named relation directive on the relation field on `$nameB` pointing towards `$nameA`. "
+        s"Please also provide the same named relation directive on the relation field on `$nameB` pointing towards `$nameA`."
     )
   }
 

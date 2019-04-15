@@ -8,18 +8,21 @@ class CreateModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}
         |
-        |type B{
-        | name: String
+        |type B {
+        |  id: ID! @id
+        |  name: String
         |}
         |""".stripMargin
 

@@ -8,10 +8,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
   "Updating an Enum to delete cases" should "not throw an error if there is no data yet" in {
 
     val schema =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
          |enum AB{
@@ -22,10 +23,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
     val (project, _) = setupProject(schema)
 
     val schema2 =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
          |enum AB{
@@ -38,10 +40,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
   "Updating an Enum to delete cases" should "not throw an error if there is already data but the remove enum value is not in use" in {
 
     val schema =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
          |enum AB{
@@ -54,10 +57,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
     apiServer.query("""mutation{createA(data:{name: "A", enum: A, enums: {set:[A, A]}}){name}}""", project)
 
     val schema2 =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
          |enum AB{
@@ -70,10 +74,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
   "Updating an Enum to delete cases" should "throw an error if there is already data and the removed enum value is in use on a list" in {
 
     val schema =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
          |enum AB{
@@ -86,10 +91,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
     apiServer.query("""mutation{createA(data:{name: "A", enum: A, enums: {set:[A, B]}}){name}}""", project)
 
     val schema2 =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
          |enum AB{
@@ -103,10 +109,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
   "Updating an Enum to delete cases" should "throw an error if there is already data and the removed enum value is in use on a non-list" in {
 
     val schema =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
          |enum AB{
@@ -119,13 +126,14 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
     apiServer.query("""mutation{createA(data:{name: "A", enum: B, enums: {set:[A, A]}}){name}}""", project)
 
     val schema2 =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
-         |enum AB{
+         |enum AB {
          |  A
          |}"""
 
@@ -136,10 +144,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
   "Updating an Enum to delete cases" should "throw multiple errors if several of the removed cases are in use" in {
 
     val schema =
-      """|type A {
-         | name: String! @unique
-         | enum: ABCD
-         | enums: [ABCD]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: ABCD
+         |  enums: [ABCD] $scalarListDirective
          |}
          |
          |enum ABCD{
@@ -154,13 +163,14 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
     apiServer.query("""mutation{createA(data:{name: "A", enum: D, enums: {set:[C,B,A]}}){name}}""", project)
 
     val schema2 =
-      """|type A {
-         | name: String! @unique
-         | enum: ABCD
-         | enums: [ABCD]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: ABCD
+         |  enums: [ABCD] $scalarListDirective
          |}
          |
-         |enum ABCD{
+         |enum ABCD {
          |  A
          |}"""
 
@@ -171,10 +181,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
   "Updating an Enum to rename it" should "succeed even if there is data" in {
 
     val schema =
-      """|type A {
-         | name: String! @unique
-         | enum: ABCD
-         | enums: [ABCD]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: ABCD
+         |  enums: [ABCD] $scalarListDirective
          |}
          |
          |enum ABCD{
@@ -189,10 +200,11 @@ class UpdateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
     apiServer.query("""mutation{createA(data:{name: "A", enum: D, enums: {set:[C,B,A]}}){name}}""", project)
 
     val schema2 =
-      """|type A {
-         | name: String! @unique
-         | enum: AB
-         | enums: [AB]
+      s"""|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
+         |  enums: [AB] $scalarListDirective
          |}
          |
          |enum AB @rename(oldName: "ABCD"){

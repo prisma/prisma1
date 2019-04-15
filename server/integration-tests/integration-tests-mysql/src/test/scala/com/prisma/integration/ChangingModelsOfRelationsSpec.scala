@@ -9,16 +9,19 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B @relation(name: "Relation")
+        |  b: B @relation(name: "Relation" link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}
         |
         |type C {
+        |  id: ID! @id
         |  c: String! @unique
         |}"""
 
@@ -29,15 +32,18 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: C @relation(name: "Relation")
+        |  b: C @relation(name: "Relation" link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}
         |
         |type C {
+        |  id: ID! @id
         |  c: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""
@@ -52,11 +58,13 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B @relation(name: "Relation")
+        |  b: B @relation(name: "Relation" link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""
@@ -67,11 +75,13 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: C @relation(name: "Relation")
+        |  b: C @relation(name: "Relation" link: INLINE)
         |}
         |
         |type C {
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""
@@ -86,11 +96,13 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B @relation(name: "Relation")
+        |  b: B @relation(name: "Relation" link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""
@@ -101,11 +113,13 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: C @relation(name: "Relation")
+        |  b: C @relation(name: "Relation" link: INLINE)
         |}
         |
         |type C @rename(oldName: "B"){
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""

@@ -8,6 +8,7 @@ import com.prisma.api.util.StringMatchers
 import com.prisma.api.{ApiTestServer, ExternalApiTestServer, InternalApiTestServer, TestApiDependenciesImpl}
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.specutils.{DeployTestServer, TestDeployDependencies}
+import com.prisma.shared.models.ConnectorCapability.EmbeddedScalarListsCapability
 import com.prisma.shared.models.{ConnectorCapabilities, Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -54,7 +55,7 @@ trait IntegrationBaseSpec
   val basicTypesGql =
     """
       |type TestModel {
-      |  id: ID! @unique
+      |  id: ID! @id
       |}
     """.stripMargin.trim()
 
@@ -88,4 +89,10 @@ trait IntegrationBaseSpec
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()
+
+  val scalarListDirective = if (capabilities.hasNot(EmbeddedScalarListsCapability)) {
+    "@scalarList(strategy: RELATION)"
+  } else {
+    ""
+  }
 }
