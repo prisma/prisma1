@@ -188,10 +188,18 @@ impl SelectedFields {
             .collect()
     }
 
-    fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
+    pub fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
         self.scalar
             .iter()
             .filter(|sf| !sf.field.is_list)
+            .map(|sf| sf.field.clone())
+            .collect()
+    }
+
+    pub fn scalar_lists(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar
+            .iter()
+            .filter(|sf| sf.field.is_list)
             .map(|sf| sf.field.clone())
             .collect()
     }

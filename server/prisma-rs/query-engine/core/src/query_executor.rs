@@ -1,5 +1,7 @@
+#![allow(warnings)]
+
 use crate::{query_ast, CoreResult};
-use connector::DataResolver;
+use connector::{ConnectorResult, DataResolver, ScalarListValues};
 use prisma_models::{GraphqlId, ManyNodes, SelectedFields, SingleNode};
 use query_ast::*;
 use std::sync::Arc;
@@ -15,6 +17,7 @@ pub struct SinglePrismaQueryResult {
     pub name: String,
     pub result: Option<SingleNode>,
     pub nested: Vec<PrismaQueryResult>,
+    pub list_results: Vec<ScalarListValues>,
 
     /// Used for filtering implicit fields in result node
     selected_fields: SelectedFields,
@@ -25,6 +28,7 @@ pub struct MultiPrismaQueryResult {
     pub name: String,
     pub result: ManyNodes,
     pub nested: Vec<PrismaQueryResult>,
+    pub list_results: Vec<ScalarListValues>,
 
     /// Used for filtering implicit fields in result nodes
     selected_fields: SelectedFields,
@@ -116,7 +120,6 @@ impl QueryExecutor {
         self.execute_internal(queries, vec![])
     }
 
-    #[allow(unused_variables)]
     fn execute_internal(
         &self,
         queries: &[PrismaQuery],
@@ -143,6 +146,7 @@ impl QueryExecutor {
                                 result,
                                 nested,
                                 selected_fields,
+                                list_results: vec![], //FIXME
                             };
                             results.push(PrismaQueryResult::Single(result));
                         }
@@ -151,14 +155,27 @@ impl QueryExecutor {
                 }
                 PrismaQuery::MultiRecordQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
-
                     let result =
                         self.data_resolver
                             .get_nodes(Arc::clone(&query.model), query.args.clone(), &selected_fields)?;
 
-                    // FIXME: Rewrite to not panic and also in a more functional way!
                     let ids = result.get_id_values(Arc::clone(&query.model))?;
-                    let nested = result.nodes.iter().fold(vec![], |mut vec, node| {
+                    let list_fields = selected_fields.scalar_lists();
+                    let list_results: Vec<_> = if !list_fields.is_empty() {
+                        list_fields
+                            .into_iter()
+                            .map(|list_field| {
+                                self.data_resolver
+                                    .get_scalar_list_values_by_node_ids(list_field, ids.clone())
+                            })
+                            .collect::<ConnectorResult<Vec<Vec<_>>>>()
+                            .map(|r| r.into_iter().flatten().collect())?
+                    } else {
+                        vec![]
+                    };
+
+                    // FIXME: Rewrite to not panic and also in a more functional way!
+                    let nested = result.nodes.iter().fold(vec![], |mut vec, _| {
                         vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
                         vec
                     });
@@ -168,6 +185,7 @@ impl QueryExecutor {
                         result,
                         nested,
                         selected_fields,
+                        list_results,
                     }));
                 }
                 PrismaQuery::RelatedRecordQuery(query) => {
@@ -189,6 +207,7 @@ impl QueryExecutor {
                             result: Some(node),
                             nested,
                             selected_fields,
+                            list_results: vec![], //FIXME
                         };
                         results.push(PrismaQueryResult::Single(result));
                     }
@@ -205,7 +224,7 @@ impl QueryExecutor {
 
                     // FIXME: Rewrite to not panic and also in a more functional way!
                     let ids = result.get_id_values(Arc::clone(&query.parent_field.related_model()))?;
-                    let nested = result.nodes.iter().fold(vec![], |mut vec, node| {
+                    let nested = result.nodes.iter().fold(vec![], |mut vec, _| {
                         vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
                         vec
                     });
@@ -215,6 +234,7 @@ impl QueryExecutor {
                         result,
                         nested,
                         selected_fields,
+                        list_results: vec![], //FIXME
                     }));
                 }
             }
