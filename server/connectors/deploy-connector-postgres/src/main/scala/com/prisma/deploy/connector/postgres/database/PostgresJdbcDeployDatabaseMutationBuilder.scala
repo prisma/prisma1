@@ -153,7 +153,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
     case (DateTimeGCValue(dateTime), params) => params.setTimestamp(jodaDateTimeToSqlTimestampUTC(dateTime))
     case (EnumGCValue(enum), params)         => params.setString(enum)
     case (JsonGCValue(json), params)         => params.setString(json.toString())
-    case (UuidGCValue(uuid), params)         => sys.error("")
+    case (UuidGCValue(uuid), params)         => params.setObject(uuid, -2)
     case _                                   => sys.error("")
   }
 

@@ -1,6 +1,6 @@
 package com.prisma.subscriptions.protocol
 
-import akka.actor.{Actor, ActorRef, Stash}
+import akka.actor.{Actor, ActorRef, PoisonPill, Stash}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import com.prisma.api.ApiMetrics
 import com.prisma.jwt.Auth
@@ -107,6 +107,9 @@ case class SubscriptionSessionActor(
 
     case GqlStop(id) =>
       subscriptionsManager ! EndSubscription(id, sessionId, projectId)
+
+    case GqlConnectionTerminate =>
+      context.parent ! PoisonPill
 
     case _: CreateSubscriptionSucceeded =>
     // NOOP

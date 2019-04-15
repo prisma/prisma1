@@ -74,6 +74,11 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
             sys.error(s"The connector is missing the import / export capability.")
           }
         }
+      case Some("_datamodel") =>
+        verifyAuth(projectIdAsString, rawRequest) { project =>
+          val response = Response(Json.toJson(project.rawDataModel))
+          Future.successful(response)
+        }
 
       case _ =>
         requestThrottler.throttleCallIfNeeded(projectIdAsString, isManagementApiRequest = isManagementApiRequest(rawRequest)) {
@@ -175,7 +180,7 @@ case class SangriaHandlerImpl(managementApiEnabled: Boolean)(
   }
 
   private def splitReservedSegment(elements: List[String]): (List[String], Option[String]) = {
-    val reservedSegments = Set("private", "import", "export")
+    val reservedSegments = Set("private", "import", "export", "_datamodel")
     if (elements.nonEmpty && reservedSegments.contains(elements.last)) {
       (elements.dropRight(1), elements.lastOption)
     } else {
