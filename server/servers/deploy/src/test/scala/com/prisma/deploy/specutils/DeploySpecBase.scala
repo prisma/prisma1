@@ -181,7 +181,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV11Base { self:
 trait DataModelV11Base { self: PassiveDeploySpecBase =>
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val project = Project(id = projectId, schema = Schema.empty)
+  val project = Project(id = projectId, schema = Schema.emptyV11)
 
   def deployThatMustError(
       dataModel: String,

@@ -17,7 +17,7 @@ object SchemaDsl extends AwaitUtils {
       id = id,
       capabilities = deployConnector.capabilities,
       dataModelValidator = DataModelValidatorImpl,
-      emptyBaseSchema = Schema.empty
+      emptyBaseSchema = Schema.emptyV11
     )(sdlString)
     project.copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
   }

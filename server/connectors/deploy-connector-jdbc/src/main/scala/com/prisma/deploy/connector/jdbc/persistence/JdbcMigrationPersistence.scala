@@ -427,7 +427,7 @@ case class JdbcMigrationPersistence(slickDatabase: SlickDatabase)(implicit ec: E
       errors,
       startedAt,
       finishedAt,
-      previousSchema = Schema.empty
+      previousSchema = Schema.emptyV11
     )
   }
 }

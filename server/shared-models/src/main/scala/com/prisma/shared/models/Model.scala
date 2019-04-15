@@ -19,7 +19,7 @@ object Model {
 
   val empty: Model = new Model(
     template = ModelTemplate(name = "", stableIdentifier = "", isEmbedded = false, fieldTemplates = List.empty, manifestation = None),
-    schema = Schema.empty
+    schema = Schema.emptyV11
   )
 }
 class Model(

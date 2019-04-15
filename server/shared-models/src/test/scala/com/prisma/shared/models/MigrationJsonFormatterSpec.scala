@@ -76,7 +76,7 @@ class MigrationJsonFormatterSpec extends WordSpecLike with Matchers with JsonUti
     val migration = Migration(
       projectId = "projectId",
       revision = 1,
-      schema = Schema.empty,
+      schema = Schema.emptyV11,
       functions = Vector.empty,
       rawDataModel = "type User { id:ID }",
       status = MigrationStatus.Success,
@@ -86,7 +86,7 @@ class MigrationJsonFormatterSpec extends WordSpecLike with Matchers with JsonUti
       errors = Vector.empty,
       startedAt = None,
       finishedAt = None,
-      previousSchema = Schema.empty
+      previousSchema = Schema.emptyV11
     )
 
     val json = Json.toJson(migration)
