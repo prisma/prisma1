@@ -33,14 +33,6 @@ object DeployWarnings {
 object DeployErrors {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
-  def missingIdField(typeDefinition: TypeDefinition): DeployError = {
-    error(typeDefinition, "All models must specify the `id` field: `id: ID! @unique`")
-  }
-
-  def missingUniqueDirective(fieldAndType: FieldAndType): DeployError = {
-    error(fieldAndType, s"""All id fields must specify the `@unique` directive.""")
-  }
-
   def uniqueDisallowedOnEmbeddedTypes(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
     error(objectType, fieldDef, s"The field `${fieldDef.name}` is marked as unique but its type `${objectType.name}` is embedded. This is disallowed.")
   }
@@ -113,13 +105,6 @@ object DeployErrors {
     )
   }
 
-  def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {
-    DeployError(
-      tpe.name,
-      s"The type `${tpe.name}` does not specify a back relation field. It is referenced from the type `${relationField.tpe.name}` in the field `${relationField.name}`."
-    )
-  }
-
   def disallowedBackRelationFieldOnEmbeddedType(relationField: RelationalPrismaField): DeployError = {
     DeployError(
       relationField.tpe.name,
@@ -136,19 +121,6 @@ object DeployErrors {
     error(
       fieldAndType,
       s"""The field `${fieldAndType.fieldDef.name}` has an invalid name in the `@relation` directive. It can only have up to 54 characters and must have the shape [A-Z][a-zA-Z0-9]*"""
-    )
-  }
-
-  def ambiguousRelationSinceThereIsOnlyOneRelationDirective(fieldAndType: FieldAndType): DeployError = {
-    val relationName = fieldAndType.fieldDef.previousRelationName.get
-    val nameA        = fieldAndType.objectType.name
-    val nameB        = fieldAndType.fieldDef.fieldType.namedType.name
-    error(
-      fieldAndType,
-      s"You are trying to set the relation '$relationName' from `$nameA` to `$nameB` and are only providing a relation directive on `$nameA`. " +
-        s"Since there is also a relation field without a relation directive on `$nameB` pointing towards `$nameA` that is ambiguous. " +
-        s"Please provide the same relation directive on `$nameB` if this is supposed to be the same relation. " +
-        s"If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `$nameB`."
     )
   }
 
@@ -180,19 +152,11 @@ object DeployErrors {
     )
   }
 
-  def missingType(fieldAndType: FieldAndType): DeployError = missingType(fieldAndType.objectType, fieldAndType.fieldDef)
   def missingType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
     error(
       objectType,
       fieldDef,
       s"The field `${fieldDef.name}` has the type `${fieldDef.typeString}` but there's no type or enum declaration with that name."
-    )
-  }
-
-  def atNodeIsDeprecated(fieldAndType: FieldAndType) = {
-    error(
-      fieldAndType,
-      s"The model `${fieldAndType.objectType.name}` has the implements Node annotation. This is deprecated, please do not use an annotation."
     )
   }
 
@@ -217,6 +181,7 @@ object DeployErrors {
     )
   }
 
+  // todo: do4gr should check whether this is still needed
   def crossRenamedTypeName(objectTypeDefinition: ObjectTypeDefinition) = {
     error(
       objectTypeDefinition,
@@ -240,43 +205,6 @@ object DeployErrors {
     error(objectType, s"The type `${objectType.name}` specifies a directive more than once. Directives must appear exactly once on a type.")
   }
 
-  def manyRelationFieldsMustBeRequired(fieldAndType: FieldAndType) = {
-    error(fieldAndType, s"Many relation fields must be marked as required.")
-  }
-
-  def listFieldsCantHaveDefaultValues(fieldAndType: FieldAndType) = {
-    error(fieldAndType, s"List fields cannot have defaultValues.")
-  }
-
-  def invalidEnumValueInDefaultValue(fieldAndType: FieldAndType) = {
-    error(fieldAndType, s"The defaultValue contains an invalid enumValue.")
-  }
-
-  def invalidTypeForDefaultValue(fieldAndType: FieldAndType) = {
-    error(
-      fieldAndType,
-      s"Invalid value '${fieldAndType.fieldDef.directiveArgumentAsString("default", "value").get}' for type ${fieldAndType.fieldDef.fieldType.namedType.name}."
-    )
-  }
-
-  def invalidSyntaxForDefaultValue(fieldAndType: FieldAndType) = {
-    error(fieldAndType, s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
-  }
-
-  def invalidScalarNonListType(fieldAndType: FieldAndType)       = invalidScalarType(fieldAndType, listTypesAllowed = false)
-  def invalidScalarListOrNonListType(fieldAndType: FieldAndType) = invalidScalarType(fieldAndType, listTypesAllowed = true)
-
-  private def invalidScalarType(fieldAndType: FieldAndType, listTypesAllowed: Boolean): DeployError = {
-    val scalarType      = fieldAndType.fieldDef.fieldType.namedType.name
-    val nonListFormats  = s"`$scalarType`, `$scalarType!`"
-    val listFormats     = s", `[$scalarType!]` or `[$scalarType!]!"
-    val possibleFormats = if (listTypesAllowed) nonListFormats + listFormats else nonListFormats
-    error(
-      fieldAndType,
-      s"""The scalar field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: $possibleFormats"""
-    )
-  }
-
   def enumNamesMustBeUnique(enumType: EnumTypeDefinition) = {
     error(enumType, s"The enum type `${enumType.name}` is defined twice in the schema. Enum names must be unique.")
   }
@@ -287,24 +215,6 @@ object DeployErrors {
 
   def enumValuesMustBeValid(enumType: EnumTypeDefinition, enumValues: Seq[String]) = {
     error(enumType, s"The enum type `${enumType.name}` contains invalid enum values. Those are invalid: ${enumValues.map(v => s"`$v`").mkString(", ")}.")
-  }
-
-  def systemFieldCannotBeRemoved(theType: String, field: String) = {
-    DeployError(theType, field, s"The field `$field` is a system field and cannot be removed.")
-  }
-
-  def schemaFileHeaderIsMissing() = {
-    DeployError.global(s"""The schema must specify the project id and version as a front matter, e.g.:
-                          |# projectId: your-project-id
-                          |# version: 3
-                          |type MyType {
-                          |  myfield: String!
-                          |}
-       """.stripMargin)
-  }
-
-  def schemaFileHeaderIsReferencingWrongVersion(expected: Int) = {
-    DeployError.global(s"The schema is referencing the wrong project version. Expected version $expected.")
   }
 
   def embeddedTypesAreNotSupported(typeName: String) = {
@@ -337,15 +247,5 @@ object DeployErrors {
 
   def error(typeDef: TypeDefinition, description: String): DeployError = {
     DeployError(typeDef.name, description)
-  }
-
-  // note: the cli relies on the string "destructive changes" being present in this error message. Ugly but effective
-  def forceArgumentRequired: DeployError = {
-    DeployError.global(
-      "Your migration includes potentially destructive changes. Review using `graphcool deploy --dry-run` and continue using `graphcool deploy --force`.")
-  }
-
-  def invalidEnv(message: String) = {
-    DeployError.global(s"""the environment file is invalid: $message""")
   }
 }
