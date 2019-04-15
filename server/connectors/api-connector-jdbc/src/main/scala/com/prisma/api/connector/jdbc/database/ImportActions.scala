@@ -62,9 +62,8 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           Vector(s"Failure inserting ${model.dbName}. Cause: ${e.getCause.toString}")
       }
 
-      val res = nodeResult
       if (nodeResult.nonEmpty) throw new Exception(nodeResult.mkString("-@-"))
-      res
+      nodeResult
     }
   }
 

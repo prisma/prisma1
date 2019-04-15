@@ -111,7 +111,7 @@ case class DataModelValidatorImpl(
           )(_)
       }
 
-      // FIXME: it should not be needed that embedded types have a hidden id field
+      // FIXME: it should not be needed that embedded types have a hidden id field. do4gr should check whether this is still true.
       val extraField = typeDef.isEmbedded.toOption {
         ScalarPrismaField(
           name = ReservedFields.embeddedIdFieldName,

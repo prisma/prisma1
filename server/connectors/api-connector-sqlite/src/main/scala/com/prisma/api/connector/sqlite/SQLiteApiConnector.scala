@@ -30,6 +30,5 @@ case class SQLiteApiConnector(config: DatabaseConfig, driver: Driver)(implicit e
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 
-  // FIXME: what are the right capabilities here?
-  override val capabilities = ConnectorCapabilities.sqlitePrototype
+  override val capabilities = ConnectorCapabilities.sqliteJdbcPrototype
 }

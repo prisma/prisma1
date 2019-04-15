@@ -67,9 +67,9 @@ case class DeployMutation(
     val x = for {
       validationResult       <- FutureOr(validateSyntax)
       schemaMapping          = schemaMapper.createMapping(graphQlSdl)
-      newDatabaseSchema      <- FutureOr(introspectDatabaseSchema)
+      databaseSchema         <- FutureOr(introspectDatabaseSchema)
       inferredNextSchema     = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel)
-      _                      <- FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, newDatabaseSchema))
+      _                      <- FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, databaseSchema))
       functions              <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
       steps                  <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       destructiveWarnings    <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))

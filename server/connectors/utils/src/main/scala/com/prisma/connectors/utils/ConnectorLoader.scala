@@ -28,15 +28,15 @@ object ConnectorLoader {
     }
   }
 
-  def loadDeployConnector(config: PrismaConfig, isTest: Boolean = false)(implicit ec: ExecutionContext, drivers: SupportedDrivers): DeployConnector = {
+  def loadDeployConnector(config: PrismaConfig)(implicit ec: ExecutionContext, drivers: SupportedDrivers): DeployConnector = {
     val databaseConfig = config.databases.head
     databaseConfig.connector match {
       case "mysql"                    => MySqlDeployConnector(databaseConfig, drivers(SupportedDrivers.MYSQL))
       case "postgres"                 => PostgresDeployConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
-      case "mongo"                    => MongoDeployConnector(databaseConfig, isTest = isTest)
       case "sqlite-native"            => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
       case "native-integration-tests" => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
       case "sqlite"                   => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
+      case "mongo"                    => MongoDeployConnector(databaseConfig)
       case conn                       => sys.error(s"Unknown connector $conn")
     }
   }
