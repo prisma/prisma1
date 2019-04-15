@@ -181,15 +181,6 @@ object DeployErrors {
     )
   }
 
-  // todo: do4gr should check whether this is still needed
-  def crossRenamedTypeName(objectTypeDefinition: ObjectTypeDefinition) = {
-    error(
-      objectTypeDefinition,
-      s"The type `${objectTypeDefinition.name}` is being renamed. Another type is also being renamed and formerly had `${objectTypeDefinition.name}` new name." +
-        s"Please split cases where you do renames like type A -> type B and type B -> type A at the same time into two parts. "
-    )
-  }
-
   def directiveMissesRequiredArgument(fieldAndType: FieldAndType, directive: String, argument: String) = {
     error(
       fieldAndType,
