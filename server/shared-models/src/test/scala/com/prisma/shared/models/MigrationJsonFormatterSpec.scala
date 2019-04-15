@@ -100,7 +100,9 @@ class MigrationJsonFormatterSpec extends WordSpecLike with Matchers with JsonUti
              "relations":[],
              "enums":[],
              "version": "v2"
-           },"functions":[],"status":"SUCCESS",
+           },
+           "functions":[],
+           "status":"SUCCESS",
            "datamodel":"type User { id:ID }",
            "applied":2,
            "rolledBack":3,
