@@ -1,6 +1,5 @@
 package com.prisma.api.schema
 
-import com.prisma.{IgnoreMongo, IgnoreMySql, IgnorePostgres}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import com.prisma.util.GraphQLSchemaMatchers
@@ -398,7 +397,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the executeRaw mutation" should "be there if raw access is enabled" in {
-    val project       = TestProject()
+    val project       = TestProject.emptyV11
     val schemaBuilder = SchemaBuilderImpl(project, enableRawAccess = true)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
@@ -406,7 +405,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the executeRaw mutation" should "not be there if raw access is disabled" in {
-    val project       = TestProject()
+    val project       = TestProject.emptyV11
     val schemaBuilder = SchemaBuilderImpl(project, enableRawAccess = false)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 

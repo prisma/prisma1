@@ -10,8 +10,9 @@ import org.scalactic.{Bad, Good}
 import org.scalatest.Suite
 
 object SchemaDsl extends AwaitUtils {
+  val testProjectId = "default@default"
 
-  def fromStringV11ForExistingDatabase(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector): Project = {
+  def fromStringV11ForExistingDatabase(id: String = testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector): Project = {
     val project = fromString(
       id = id,
       capabilities = deployConnector.capabilities,
@@ -21,7 +22,7 @@ object SchemaDsl extends AwaitUtils {
     project.copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
   }
 
-  def fromStringV11(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
+  def fromStringV11(id: String = testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     fromString(
       id = projectId(suite),
       capabilities = deployConnector.capabilities,
@@ -73,6 +74,6 @@ object SchemaDsl extends AwaitUtils {
       case x if x == "postgres" => ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"), x)
       case y                    => ProjectManifestation(database = Some(id + "_DB"), schema = None, y)
     }
-    TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
+    TestProject.emptyV11.copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }
 }

@@ -8,7 +8,7 @@ import org.scalactic.{Bad, Good}
 import org.scalatest.{Matchers, WordSpec}
 
 class SchemaInfererOnDeleteSpec extends WordSpec with Matchers with DeploySpecBase {
-  val emptyProject = TestProject.empty
+  val emptyProject = TestProject.emptyV11
 
   "Inferring onDelete relationDirectives" should {
     "work if one side provides onDelete" in {
