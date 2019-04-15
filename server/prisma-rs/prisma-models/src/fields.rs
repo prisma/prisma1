@@ -62,8 +62,16 @@ impl Fields {
         })
     }
 
-    pub fn scalar(&self) -> Vec<Arc<ScalarField>> {
+    fn scalar(&self) -> Vec<Arc<ScalarField>> {
         self.scalar_weak().iter().map(|f| f.upgrade().unwrap()).collect()
+    }
+
+    pub fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar().into_iter().filter(|sf| !sf.is_list).collect()
+    }
+
+    pub fn scalar_list(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar().into_iter().filter(|sf| sf.is_list).collect()
     }
 
     fn scalar_weak(&self) -> &[Weak<ScalarField>] {

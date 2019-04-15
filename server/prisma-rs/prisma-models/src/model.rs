@@ -62,6 +62,12 @@ impl ModelTemplate {
     }
 }
 
+impl PartialEq for Model {
+    fn eq(&self, other: &Model) -> bool {
+        self.name == other.name
+    }
+}
+
 impl Model {
     pub fn generate_id(&self) -> GraphqlId {
         match self.fields().id().type_identifier {

@@ -400,7 +400,7 @@ pub fn convert_mutaction_result(result: DatabaseMutactionResult) -> crate::proto
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
         }
         DatabaseMutactionResultType::Delete => {
-            let result = crate::protobuf::prisma::IdResult { id: result.id().into() };
+            let result = crate::protobuf::prisma::NodeResult::from(result.node().clone());
             let typ = database_mutaction_result::Type::Delete(result);
 
             crate::protobuf::prisma::DatabaseMutactionResult { type_: Some(typ) }
