@@ -112,11 +112,11 @@ impl MutationBuilder {
         Some(result)
     }
 
-    pub fn update_by_id(model: ModelRef, id: GraphqlId, args: &PrismaArgs) -> ConnectorResult<Option<Update>> {
-        Self::update_by_ids(model, args, vec![id]).map(|updates| updates.into_iter().next())
+    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> ConnectorResult<Option<Update>> {
+        Self::update_many(model, &[id; 1], args).map(|updates| updates.into_iter().next())
     }
 
-    pub fn update_by_ids(model: ModelRef, args: &PrismaArgs, ids: Vec<GraphqlId>) -> ConnectorResult<Vec<Update>> {
+    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> ConnectorResult<Vec<Update>> {
         if args.args.is_empty() || ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -149,8 +149,25 @@ impl MutationBuilder {
         Ok(result)
     }
 
-    pub fn update_scalar_list_value_by_ids(
-        scalar_list_table: ScalarListTable,
+    pub fn delete_many(model: ModelRef, ids: &[&GraphqlId]) -> Vec<Delete> {
+        let mut deletes = Vec::new();
+
+        for chunk in ids.chunks(Self::PARAMETER_LIMIT).into_iter() {
+            for lf in model.fields().scalar_list() {
+                let scalar_list_table = lf.scalar_list_table();
+                let condition = scalar_list_table.node_id_column().in_selection(chunk.to_vec());
+                deletes.push(Delete::from_table(scalar_list_table.table()).so_that(condition));
+            }
+
+            let condition = model.fields().id().as_column().in_selection(chunk.to_vec());
+            deletes.push(Delete::from_table(model.table()).so_that(condition));
+        }
+
+        deletes
+    }
+
+    pub fn update_scalar_list_values(
+        scalar_list_table: &ScalarListTable,
         list_value: &PrismaListValue,
         ids: Vec<GraphqlId>,
     ) -> (Vec<Delete>, Vec<Insert>) {
@@ -158,14 +175,10 @@ impl MutationBuilder {
             return (Vec::new(), Vec::new());
         }
 
-        let deletes = ids
-            .chunks(Self::PARAMETER_LIMIT)
-            .into_iter()
-            .map(|ids| {
-                Delete::from_table(scalar_list_table.table())
-                    .so_that(ScalarListTable::NODE_ID_FIELD_NAME.in_selection(ids.to_vec()))
-            })
-            .collect();
+        let deletes = {
+            let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
+            Self::delete_scalar_list_values(scalar_list_table, ids.as_slice())
+        };
 
         let inserts = if list_value.is_empty() {
             Vec::new()
@@ -176,5 +189,21 @@ impl MutationBuilder {
         };
 
         (deletes, inserts)
+    }
+
+    pub fn delete_scalar_list_values(scalar_list_table: &ScalarListTable, ids: &[&GraphqlId]) -> Vec<Delete> {
+        Self::delete_in_chunks(scalar_list_table.table(), ids, |chunk| {
+            ScalarListTable::NODE_ID_FIELD_NAME.in_selection(chunk.to_vec())
+        })
+    }
+
+    fn delete_in_chunks<F>(table: Table, ids: &[&GraphqlId], conditions: F) -> Vec<Delete>
+    where
+        F: Fn(&[&GraphqlId]) -> Compare,
+    {
+        ids.chunks(Self::PARAMETER_LIMIT)
+            .into_iter()
+            .map(|chunk| Delete::from_table(table.clone()).so_that(conditions(chunk)))
+            .collect()
     }
 }

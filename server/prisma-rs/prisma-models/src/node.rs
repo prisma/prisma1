@@ -8,6 +8,10 @@ pub struct SingleNode {
 }
 
 impl SingleNode {
+    pub fn new(node: Node, field_names: Vec<String>) -> Self {
+        Self { node, field_names }
+    }
+
     pub fn get_id_value(&self, model: ModelRef) -> DomainResult<&GraphqlId> {
         self.node.get_id_value(&self.field_names, model)
     }

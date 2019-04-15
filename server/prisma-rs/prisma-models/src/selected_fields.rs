@@ -61,6 +61,19 @@ impl From<Vec<Arc<ScalarField>>> for SelectedFields {
     }
 }
 
+impl From<ModelRef> for SelectedFields {
+    fn from(model: ModelRef) -> SelectedFields {
+        let fields = model
+            .fields()
+            .scalar_non_list()
+            .into_iter()
+            .map(SelectedField::from)
+            .collect();
+
+        SelectedFields::new(fields, None)
+    }
+}
+
 impl SelectedFields {
     pub const RELATED_MODEL_ALIAS: &'static str = "__RelatedModel__";
     pub const PARENT_MODEL_ALIAS: &'static str = "__ParentModel__";

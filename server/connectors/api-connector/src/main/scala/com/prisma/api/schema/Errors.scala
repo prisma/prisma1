@@ -143,11 +143,11 @@ object APIErrors {
   def pathErrorMessageNative(relation: String, parent: String, parentWhere: Option[NodeSelectorInfo], child: String, childWhere: Option[NodeSelectorInfo]) = {
     (parentWhere, childWhere) match {
       case (Some(parentWhere), Some(childWhere)) =>
-        s"The relation ${relation} has no node for the model ${parent} with the value '${parentWhere.value}' for the field '${parentWhere.field}' connected to a node for the model ${child} with the value '${childWhere.value}' for the field '${childWhere.field}'"
+        s"The relation ${relation} has no node for the model ${parent} with the value '${parentWhere.value.value}' for the field '${parentWhere.field}' connected to a node for the model ${child} with the value '${childWhere.value.value}' for the field '${childWhere.field}'"
       case (Some(parentWhere), None) =>
-        s"The relation ${relation} has no node for the model ${parent} with the value '${parentWhere.value}' for the field '${parentWhere.field}' connected to a node for the model ${child} on your mutation path."
+        s"The relation ${relation} has no node for the model ${parent} with the value '${parentWhere.value.value}' for the field '${parentWhere.field}' connected to a node for the model ${child} on your mutation path."
       case (None, Some(childWhere)) =>
-        s"The relation ${relation} has no node for the model ${parent} connected to a Node for the model ${child} with the value '${childWhere.value}' for the field '${childWhere.field}' on your mutation path."
+        s"The relation ${relation} has no node for the model ${parent} connected to a Node for the model ${child} with the value '${childWhere.value.value}' for the field '${childWhere.field}' on your mutation path."
       case (None, None) =>
         s"The relation ${relation} has no node for the model ${parent} connected to a Node for the model ${child} on your mutation path."
     }

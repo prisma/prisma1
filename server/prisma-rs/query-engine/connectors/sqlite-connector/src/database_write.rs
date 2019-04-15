@@ -55,6 +55,9 @@ pub trait DatabaseWrite {
         list_args: &[(String, PrismaListValue)],
     ) -> ConnectorResult<usize>;
 
+    fn execute_delete(conn: &Transaction, mutaction: &DeleteNode) -> ConnectorResult<SingleNode>;
+    fn execute_delete_many(conn: &Transaction, mutaction: &DeleteNodes) -> ConnectorResult<usize>;
+
     fn execute_nested_create(
         conn: &Transaction,
         parent_id: &GraphqlId,
@@ -80,6 +83,18 @@ pub trait DatabaseWrite {
         relation_field: RelationFieldRef,
         non_list_args: &PrismaArgs,
         list_args: &[(String, PrismaListValue)],
+    ) -> ConnectorResult<usize>;
+
+    fn execute_nested_delete(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        mutaction: &NestedDeleteNode,
+    ) -> ConnectorResult<()>;
+
+    fn execute_nested_delete_many(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        mutaction: &NestedDeleteNodes,
     ) -> ConnectorResult<usize>;
 
     fn execute_connect(
