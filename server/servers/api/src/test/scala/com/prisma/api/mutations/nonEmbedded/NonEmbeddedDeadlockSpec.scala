@@ -11,8 +11,6 @@ import org.scalatest.{FlatSpec, Matchers, Retries}
 import scala.concurrent.Future
 
 class NonEmbeddedDeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
-  override def doNotRunForPrototypes: Boolean = true
-
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability, ScalarListsCapability)
   override def doNotRunForConnectors  = Set(ConnectorTag.SQLiteConnectorTag)
 

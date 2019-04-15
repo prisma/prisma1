@@ -1,12 +1,12 @@
 package com.prisma.integration.deploychecks
 
-import com.prisma.IgnoreSQLite
-import com.prisma.IgnoreMongo
+import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.integration.IntegrationBaseSpec
+import com.prisma.{ConnectorTag, IgnoreMongo, IgnoreSQLite}
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
-  override def doNotRunForPrototypes: Boolean = true
+  override def doNotRunForConnectors: Set[ConnectorTag] = Set(SQLiteConnectorTag)
 
   "Updating a field from scalar non-list to scalar list" should "throw a warning if there is already data" in {
 
