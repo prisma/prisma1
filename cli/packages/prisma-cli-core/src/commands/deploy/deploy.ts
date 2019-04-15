@@ -66,7 +66,7 @@ ${chalk.gray(
     'no-generate': flags.boolean({
       description: 'Disable implicit client generation',
     }),
-    'no-hook': flags.boolean({
+    'skip-hooks': flags.boolean({
       description: 'Disable hooks on deploy',
     }),
   }
@@ -81,7 +81,7 @@ ${chalk.gray(
     const dryRun = this.flags['dry-run']
     const noMigrate = this.flags['no-migrate']
     const noGenerate = this.flags['no-generate']
-    const noHook = this.flags['no-hook']
+    const noHook = this.flags['skip-hooks']
 
     if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
       await this.out.error(`--env-file path '${envFile}' does not exist`)
@@ -341,7 +341,7 @@ ${chalk.gray(
         }
       }
     } else {
-      debug('Hooks are disabled by the --no-hook flag')
+      debug('Hooks are disabled by the --skip-hooks flag')
     }
 
     if (
