@@ -3,7 +3,6 @@ prototype: true
 databases:
   default:
     connector: sqlite-native
-    migrations: true
     active: true
     host: 127.0.0.1
     port: 3306
