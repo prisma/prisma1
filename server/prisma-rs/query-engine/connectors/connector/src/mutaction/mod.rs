@@ -73,19 +73,21 @@ pub struct NestedMutactions {
     pub delete_manys: Vec<NestedDeleteNodes>,
 }
 
-#[derive(Debug, Clone)]
-pub struct NestedConnect {
-    pub relation_field: Arc<RelationField>,
-    pub where_: NodeSelector,
-    pub top_is_create: bool,
-}
-
 // SET
 
 #[derive(Debug, Clone)]
 pub struct NestedSet {
     pub relation_field: Arc<RelationField>,
     pub wheres: Vec<NodeSelector>,
+}
+
+// CONNECT
+
+#[derive(Debug, Clone)]
+pub struct NestedConnect {
+    pub relation_field: RelationFieldRef,
+    pub where_: NodeSelector,
+    pub top_is_create: bool,
 }
 
 // DISCONNECT

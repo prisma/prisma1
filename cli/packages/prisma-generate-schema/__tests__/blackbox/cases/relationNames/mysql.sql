@@ -50,11 +50,8 @@ CREATE TABLE `C` (
 
 DROP TABLE IF EXISTS `_AToC`;
 CREATE TABLE `_AToC` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -68,11 +65,8 @@ CREATE TABLE `_AToC` (
 
 DROP TABLE IF EXISTS `_BToC`;
 CREATE TABLE `_BToC` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -86,11 +80,8 @@ CREATE TABLE `_BToC` (
 
 DROP TABLE IF EXISTS `_RaToB`;
 CREATE TABLE `_RaToB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -104,11 +95,8 @@ CREATE TABLE `_RaToB` (
 
 DROP TABLE IF EXISTS `_RaToB2`;
 CREATE TABLE `_RaToB2` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -129,4 +117,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

@@ -380,11 +380,8 @@ CREATE TABLE `CWithoutIdWithC` (
 
 DROP TABLE IF EXISTS `_AWithAToAWithIdWithA`;
 CREATE TABLE `_AWithAToAWithIdWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -398,11 +395,8 @@ CREATE TABLE `_AWithAToAWithIdWithA` (
 
 DROP TABLE IF EXISTS `_AWithAToAWithoutIdWithA`;
 CREATE TABLE `_AWithAToAWithoutIdWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -416,11 +410,8 @@ CREATE TABLE `_AWithAToAWithoutIdWithA` (
 
 DROP TABLE IF EXISTS `_AWithBToBWithIdWithA`;
 CREATE TABLE `_AWithBToBWithIdWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -434,11 +425,8 @@ CREATE TABLE `_AWithBToBWithIdWithA` (
 
 DROP TABLE IF EXISTS `_AWithBToBWithoutIdWithA`;
 CREATE TABLE `_AWithBToBWithoutIdWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -452,11 +440,8 @@ CREATE TABLE `_AWithBToBWithoutIdWithA` (
 
 DROP TABLE IF EXISTS `_AWithCToCWithIdWithA`;
 CREATE TABLE `_AWithCToCWithIdWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -470,11 +455,8 @@ CREATE TABLE `_AWithCToCWithIdWithA` (
 
 DROP TABLE IF EXISTS `_AWithCToCWithoutIdWithA`;
 CREATE TABLE `_AWithCToCWithoutIdWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -488,11 +470,8 @@ CREATE TABLE `_AWithCToCWithoutIdWithA` (
 
 DROP TABLE IF EXISTS `_AWithIdWithBToBWithA`;
 CREATE TABLE `_AWithIdWithBToBWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -506,11 +485,8 @@ CREATE TABLE `_AWithIdWithBToBWithA` (
 
 DROP TABLE IF EXISTS `_AWithIdWithCToCWithA`;
 CREATE TABLE `_AWithIdWithCToCWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -524,11 +500,8 @@ CREATE TABLE `_AWithIdWithCToCWithA` (
 
 DROP TABLE IF EXISTS `_AWithoutIdWithBToBWithA`;
 CREATE TABLE `_AWithoutIdWithBToBWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -542,11 +515,8 @@ CREATE TABLE `_AWithoutIdWithBToBWithA` (
 
 DROP TABLE IF EXISTS `_AWithoutIdWithCToCWithA`;
 CREATE TABLE `_AWithoutIdWithCToCWithA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -560,11 +530,8 @@ CREATE TABLE `_AWithoutIdWithCToCWithA` (
 
 DROP TABLE IF EXISTS `_BWithBToBWithIdWithB`;
 CREATE TABLE `_BWithBToBWithIdWithB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -578,11 +545,8 @@ CREATE TABLE `_BWithBToBWithIdWithB` (
 
 DROP TABLE IF EXISTS `_BWithBToBWithoutIdWithB`;
 CREATE TABLE `_BWithBToBWithoutIdWithB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -596,11 +560,8 @@ CREATE TABLE `_BWithBToBWithoutIdWithB` (
 
 DROP TABLE IF EXISTS `_BWithCToCWithIdWithB`;
 CREATE TABLE `_BWithCToCWithIdWithB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -614,11 +575,8 @@ CREATE TABLE `_BWithCToCWithIdWithB` (
 
 DROP TABLE IF EXISTS `_BWithCToCWithoutIdWithB`;
 CREATE TABLE `_BWithCToCWithoutIdWithB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -632,11 +590,8 @@ CREATE TABLE `_BWithCToCWithoutIdWithB` (
 
 DROP TABLE IF EXISTS `_BWithIdWithCToCWithB`;
 CREATE TABLE `_BWithIdWithCToCWithB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -650,11 +605,8 @@ CREATE TABLE `_BWithIdWithCToCWithB` (
 
 DROP TABLE IF EXISTS `_BWithoutIdWithCToCWithB`;
 CREATE TABLE `_BWithoutIdWithCToCWithB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -668,11 +620,8 @@ CREATE TABLE `_BWithoutIdWithCToCWithB` (
 
 DROP TABLE IF EXISTS `_CWithCToCWithIdWithC`;
 CREATE TABLE `_CWithCToCWithIdWithC` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -686,11 +635,8 @@ CREATE TABLE `_CWithCToCWithIdWithC` (
 
 DROP TABLE IF EXISTS `_CWithCToCWithoutIdWithC`;
 CREATE TABLE `_CWithCToCWithoutIdWithC` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -711,4 +657,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

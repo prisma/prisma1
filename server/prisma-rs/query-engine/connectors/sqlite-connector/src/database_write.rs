@@ -72,4 +72,36 @@ pub trait DatabaseWrite {
         non_list_args: &PrismaArgs,
         list_args: &[(String, PrismaListValue)],
     ) -> ConnectorResult<GraphqlId>;
+
+    fn execute_nested_update_many(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        filter: &Option<Filter>,
+        relation_field: RelationFieldRef,
+        non_list_args: &PrismaArgs,
+        list_args: &[(String, PrismaListValue)],
+    ) -> ConnectorResult<usize>;
+
+    fn execute_connect(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        actions: &NestedActions,
+        node_selector: &NodeSelector,
+        relation_field: RelationFieldRef,
+    ) -> ConnectorResult<()>;
+
+    fn execute_disconnect(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        actions: &NestedActions,
+        node_selector: &Option<NodeSelector>,
+    ) -> ConnectorResult<()>;
+
+    fn execute_set(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        actions: &NestedActions,
+        node_selectors: &Vec<NodeSelector>,
+        relation_field: RelationFieldRef,
+    ) -> ConnectorResult<()>;
 }

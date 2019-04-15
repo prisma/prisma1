@@ -526,7 +526,7 @@ ${chalk.gray(
         )
       : ''
 
-    this.out.log(`\n${'Your Prisma GraphQL database endpoint is live:'}
+    this.out.log(`\n${'Your Prisma endpoint is live:'}
 
   ${'HTTP:'}  ${cluster.getApiEndpoint(serviceName, stageName, workspace)}
   ${'WS:'}    ${cluster.getWSEndpoint(

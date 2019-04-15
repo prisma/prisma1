@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -346,7 +346,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."CWithoutIdWithC" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithAToAWithIdWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -357,7 +356,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithAToAWithIdWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithAToAWithoutIdWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -368,7 +366,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithAToAWithoutIdWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithBToBWithIdWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -379,7 +376,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithBToBWithIdWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithBToBWithoutIdWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -390,7 +386,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithBToBWithoutIdWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithCToCWithIdWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -401,7 +396,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithCToCWithIdWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithCToCWithoutIdWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -412,7 +406,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithCToCWithoutIdWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithIdWithBToBWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -423,7 +416,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithIdWithBToBWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithIdWithCToCWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -434,7 +426,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithIdWithCToCWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithoutIdWithBToBWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -445,7 +436,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithoutIdWithBToBWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_AWithoutIdWithCToCWithA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -456,7 +446,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_AWithoutIdWithCToCWithA" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_BWithBToBWithIdWithB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -467,7 +456,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_BWithBToBWithIdWithB" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_BWithBToBWithoutIdWithB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -478,7 +466,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_BWithBToBWithoutIdWithB" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_BWithCToCWithIdWithB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -489,7 +476,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_BWithCToCWithIdWithB" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_BWithCToCWithoutIdWithB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -500,7 +486,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_BWithCToCWithoutIdWithB" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_BWithIdWithCToCWithB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -511,7 +496,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_BWithIdWithCToCWithB" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_BWithoutIdWithCToCWithB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -522,7 +506,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_BWithoutIdWithCToCWithB" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_CWithCToCWithIdWithC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -533,7 +516,6 @@ CREATE TABLE "schema-generator$twoSidedConnection"."_CWithCToCWithIdWithC" (
 --
 
 CREATE TABLE "schema-generator$twoSidedConnection"."_CWithCToCWithoutIdWithC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -763,150 +745,6 @@ ALTER TABLE ONLY "schema-generator$twoSidedConnection"."CWithoutIdWithB"
 
 ALTER TABLE ONLY "schema-generator$twoSidedConnection"."CWithoutIdWithC"
     ADD CONSTRAINT "CWithoutIdWithC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithAToAWithIdWithA _AWithAToAWithIdWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithAToAWithIdWithA"
-    ADD CONSTRAINT "_AWithAToAWithIdWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithAToAWithoutIdWithA _AWithAToAWithoutIdWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithAToAWithoutIdWithA"
-    ADD CONSTRAINT "_AWithAToAWithoutIdWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithBToBWithIdWithA _AWithBToBWithIdWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithBToBWithIdWithA"
-    ADD CONSTRAINT "_AWithBToBWithIdWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithBToBWithoutIdWithA _AWithBToBWithoutIdWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithBToBWithoutIdWithA"
-    ADD CONSTRAINT "_AWithBToBWithoutIdWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithCToCWithIdWithA _AWithCToCWithIdWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithCToCWithIdWithA"
-    ADD CONSTRAINT "_AWithCToCWithIdWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithCToCWithoutIdWithA _AWithCToCWithoutIdWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithCToCWithoutIdWithA"
-    ADD CONSTRAINT "_AWithCToCWithoutIdWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithIdWithBToBWithA _AWithIdWithBToBWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithIdWithBToBWithA"
-    ADD CONSTRAINT "_AWithIdWithBToBWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithIdWithCToCWithA _AWithIdWithCToCWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithIdWithCToCWithA"
-    ADD CONSTRAINT "_AWithIdWithCToCWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithoutIdWithBToBWithA _AWithoutIdWithBToBWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithoutIdWithBToBWithA"
-    ADD CONSTRAINT "_AWithoutIdWithBToBWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithoutIdWithCToCWithA _AWithoutIdWithCToCWithA_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_AWithoutIdWithCToCWithA"
-    ADD CONSTRAINT "_AWithoutIdWithCToCWithA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BWithBToBWithIdWithB _BWithBToBWithIdWithB_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_BWithBToBWithIdWithB"
-    ADD CONSTRAINT "_BWithBToBWithIdWithB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BWithBToBWithoutIdWithB _BWithBToBWithoutIdWithB_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_BWithBToBWithoutIdWithB"
-    ADD CONSTRAINT "_BWithBToBWithoutIdWithB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BWithCToCWithIdWithB _BWithCToCWithIdWithB_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_BWithCToCWithIdWithB"
-    ADD CONSTRAINT "_BWithCToCWithIdWithB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BWithCToCWithoutIdWithB _BWithCToCWithoutIdWithB_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_BWithCToCWithoutIdWithB"
-    ADD CONSTRAINT "_BWithCToCWithoutIdWithB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BWithIdWithCToCWithB _BWithIdWithCToCWithB_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_BWithIdWithCToCWithB"
-    ADD CONSTRAINT "_BWithIdWithCToCWithB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BWithoutIdWithCToCWithB _BWithoutIdWithCToCWithB_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_BWithoutIdWithCToCWithB"
-    ADD CONSTRAINT "_BWithoutIdWithCToCWithB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CWithCToCWithIdWithC _CWithCToCWithIdWithC_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_CWithCToCWithIdWithC"
-    ADD CONSTRAINT "_CWithCToCWithIdWithC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CWithCToCWithoutIdWithC _CWithCToCWithoutIdWithC_pkey; Type: CONSTRAINT; Schema: schema-generator$twoSidedConnection; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$twoSidedConnection"."_CWithCToCWithoutIdWithC"
-    ADD CONSTRAINT "_CWithCToCWithoutIdWithC_pkey" PRIMARY KEY (id);
 
 
 --

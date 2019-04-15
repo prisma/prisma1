@@ -3,6 +3,7 @@ package com.prisma.rs
 import com.prisma.gc_values._
 import com.prisma.rs.jna.{JnaRustBridge, ProtobufEnvelope}
 import com.sun.jna.{Memory, Native, Pointer}
+import org.joda.time.DateTime
 import play.api.libs.json.{JsValue, Json}
 import prisma.protocol._
 import scalapb.GeneratedMessage
@@ -128,6 +129,14 @@ object NativeBinding {
           case Error.Value.UniqueConstraintViolation(str)  => UniqueConstraintViolation(str)
           case Error.Value.InternalServerError(msg)        => new NativeError(msg)
           case Error.Value.Empty                           => sys.error("Empty RPC response error value")
+          case Error.Value.RelationViolation(err)          => RelationViolation(err.relationName, err.modelAName, err.modelBName)
+          case Error.Value.NodesNotConnected(err)          => NodesNotConnected(
+            err.relationName,
+            err.parentName,
+            err.parentWhere.map(w => NodeSelectorInfo(w.modelName, w.fieldName, toGcValue(w.value.prismaValue))),
+            err.childName,
+            err.childWhere.map(w => NodeSelectorInfo(w.modelName, w.fieldName, toGcValue(w.value.prismaValue)))
+          )
           case x                                           => sys.error(s"unhandled error: $x")
         }
 
@@ -135,6 +144,35 @@ object NativeBinding {
         throw exception
 
       case RpcResponse.Response.Empty => sys.error("Empty RPC response value")
+    }
+  }
+
+  def toGcValue(value: ValueContainer.PrismaValue): GCValue = {
+    value match {
+      case ValueContainer.PrismaValue.Empty                => NullGCValue
+      case ValueContainer.PrismaValue.Boolean(b: Boolean)  => BooleanGCValue(b)
+      case ValueContainer.PrismaValue.DateTime(dt: String) => DateTimeGCValue(DateTime.parse(dt))
+      case ValueContainer.PrismaValue.Enum(e: String)      => EnumGCValue(e)
+      case ValueContainer.PrismaValue.Float(f)             => FloatGCValue(f)
+      case ValueContainer.PrismaValue.GraphqlId(id)        => toIdGcValue(id)
+      case ValueContainer.PrismaValue.Int(i: Int)          => IntGCValue(i)
+      case ValueContainer.PrismaValue.Json(j: String)      => JsonGCValue(Json.parse(j))
+      case ValueContainer.PrismaValue.Null(_)              => NullGCValue
+      case ValueContainer.PrismaValue.Relation(r: Long)    => ??? // What are we supposed to do here?
+      case ValueContainer.PrismaValue.String(s: String)    => StringGCValue(s)
+      case ValueContainer.PrismaValue.Uuid(uuid: String)   => UuidGCValue.parse(uuid).get
+      case ValueContainer.PrismaValue.List(values) =>
+        val gcValues = values.values.map(x => toGcValue(x.prismaValue))
+        ListGCValue(gcValues.toVector)
+    }
+  }
+
+  def toIdGcValue(id: GraphqlId): IdGCValue = {
+    id.idValue match {
+      case GraphqlId.IdValue.String(s) => StringIdGCValue(s)
+      case GraphqlId.IdValue.Uuid(s)   => UuidGCValue.parse_!(s)
+      case GraphqlId.IdValue.Int(i)    => IntGCValue(i.toInt)
+      case _                 => sys.error("empty protobuf")
     }
   }
 

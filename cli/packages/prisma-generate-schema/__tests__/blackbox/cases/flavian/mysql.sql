@@ -41,10 +41,8 @@ CREATE TABLE `User` (
 
 DROP TABLE IF EXISTS `_PostToUser`;
 CREATE TABLE `_PostToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
   UNIQUE KEY `PostToUser_AB_unique` (`A`,`B`),
   KEY `B` (`B`),
   CONSTRAINT `_PostToUser_ibfk_1` FOREIGN KEY (`A`) REFERENCES `Post` (`id`) ON DELETE CASCADE,
@@ -63,4 +61,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

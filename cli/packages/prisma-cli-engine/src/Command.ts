@@ -73,12 +73,24 @@ export class Command {
     return `Prisma CLI version: ${this.config.userAgent}`
   }
 
-  getMinorVersion(v) {
+  getVersionTokens(v: string): {minorVersion: string, stage: string} {
     const tokens = v.split('.')
     if (tokens.length < 2) {
       throw new Error(`Unable to construct minor version from ${v}`)
     }
-    return `${tokens[0]}.${tokens[1]}`
+    let stage = 'master'
+    if (tokens.length >= 3) {
+      if (tokens[2].includes('beta')) {
+        stage = 'beta'
+      }
+      if (tokens[2].includes('alpha')) {
+        stage = 'alpha'
+      }
+    }
+    return {
+      minorVersion: `${tokens[0]}.${tokens[1]}`,
+      stage: stage
+    }
   }
 
   printVersionSyncWarningMessage() {
@@ -86,7 +98,9 @@ export class Command {
   }
 
   compareVersions(v1, v2) {
-    return this.getMinorVersion(v1) === this.getMinorVersion(v2)
+    const v1Tokens = this.getVersionTokens(v1)
+    const v2Tokens = this.getVersionTokens(v2)
+    return v1Tokens.minorVersion === v2Tokens.minorVersion && v1Tokens.stage === v2Tokens.stage
   }
 
   async areServerAndCLIInSync(cmd: Command): Promise<{
@@ -144,9 +158,9 @@ export class Command {
         if (!inSync) {
           cmd.out.log(`${cmd.printVersionSyncWarningMessage()}
   
-  ${cmd.printCLIVersion()}${cmd.printServerVersion(serverVersion)}
+${cmd.printCLIVersion()}${cmd.printServerVersion(serverVersion)}
   
-  For further information, please read: http://bit.ly/prisma-cli-server-sync
+For further information, please read: http://bit.ly/prisma-cli-server-sync
   `)
         }
       }

@@ -64,12 +64,17 @@ export class Client {
       const authenticationPayload = await this.isAuthenticated()
       if (!cluster.local && authenticationPayload.isAuthenticated && !cluster.shared) {
         // Added a check for login because we can only add a service to cloud when we are logged in
-        const serviceCreatedInCloud = await cluster.addServiceToCloudDBIfMissing(
-          serviceName,
-          workspaceSlug || undefined,
-          stageName
-        )
-        debug({ serviceCreatedInCloud })
+        try {
+          const serviceCreatedInCloud = await cluster.addServiceToCloudDBIfMissing(
+            serviceName,
+            workspaceSlug || undefined,
+            stageName
+          )
+          debug({ serviceCreatedInCloud })
+        } catch(e) {
+          debug('Failed to add service to cloud, most likely this server is not connected to Prisma cloud')
+          debug(e.toString())
+        }
       }
       const agent = getProxyAgent(cluster.getDeployEndpoint())
       this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {

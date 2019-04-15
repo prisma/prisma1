@@ -68,7 +68,7 @@ impl Sqlite {
     ///
     /// The database is then attached to the memory with an alias of `{db_name}`.
     fn attach_database(conn: &mut Connection, db_name: &str) -> ConnectorResult<()> {
-        let mut stmt = dbg!(conn.prepare("PRAGMA database_list")?);
+        let mut stmt = conn.prepare("PRAGMA database_list")?;
 
         let databases: HashSet<String> = stmt
             .query_map(NO_PARAMS, |row| {
@@ -83,10 +83,10 @@ impl Sqlite {
 
         if !databases.contains(db_name) {
             let path = dbg!(format!("{}/db/{}.db", server_root, db_name));
-            dbg!(conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?);
+            conn.execute("ATTACH DATABASE ? AS ?", &[path.as_ref(), db_name])?;
         }
 
-        dbg!(conn.execute("PRAGMA foreign_keys = ON", NO_PARAMS)?);
+        conn.execute("PRAGMA foreign_keys = ON", NO_PARAMS)?;
 
         Ok(())
     }
@@ -95,6 +95,10 @@ impl Sqlite {
     /// the first column with the default value being `0`.
     pub fn fetch_int(row: &Row) -> i64 {
         row.get_checked(0).unwrap_or(0)
+    }
+
+    pub fn fetch_id(row: &Row) -> ConnectorResult<GraphqlId> {
+        Ok(row.get_checked(0)?)
     }
 
     /// Read and cast a `Row` into a `Record`, casting the columns from the

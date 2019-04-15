@@ -101,8 +101,6 @@ type PostConnection {
 
 input PostCreateInput {
   id: ID
-  createdAt: DateTime!
-  updatedAt: DateTime!
   published: Boolean
   title: String!
   content: String
@@ -116,8 +114,6 @@ input PostCreateManyWithoutAuthorInput {
 
 input PostCreateWithoutAuthorInput {
   id: ID
-  createdAt: DateTime!
-  updatedAt: DateTime!
   published: Boolean
   title: String!
   content: String
@@ -430,8 +426,6 @@ input PostSubscriptionWhereInput {
 }
 
 input PostUpdateInput {
-  createdAt: DateTime
-  updatedAt: DateTime
   published: Boolean
   title: String
   content: String
@@ -439,16 +433,12 @@ input PostUpdateInput {
 }
 
 input PostUpdateManyDataInput {
-  createdAt: DateTime
-  updatedAt: DateTime
   published: Boolean
   title: String
   content: String
 }
 
 input PostUpdateManyMutationInput {
-  createdAt: DateTime
-  updatedAt: DateTime
   published: Boolean
   title: String
   content: String
@@ -472,8 +462,6 @@ input PostUpdateManyWithWhereNestedInput {
 }
 
 input PostUpdateWithoutAuthorDataInput {
-  createdAt: DateTime
-  updatedAt: DateTime
   published: Boolean
   title: String
   content: String

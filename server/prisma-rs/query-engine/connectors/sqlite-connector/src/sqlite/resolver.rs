@@ -6,7 +6,7 @@ use prisma_models::*;
 impl DataResolver for Sqlite {
     fn get_node_by_where(
         &self,
-        node_selector: NodeSelector,
+        node_selector: &NodeSelector,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<Option<SingleNode>> {
         let db_name = &node_selector.field.model().schema().db_name;

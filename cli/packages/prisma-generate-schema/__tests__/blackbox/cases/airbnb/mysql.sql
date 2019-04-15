@@ -442,11 +442,8 @@ CREATE TABLE `Views` (
 
 DROP TABLE IF EXISTS `_AmenitiesToPlace`;
 CREATE TABLE `_AmenitiesToPlace` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -460,11 +457,8 @@ CREATE TABLE `_AmenitiesToPlace` (
 
 DROP TABLE IF EXISTS `_BookingToPayment`;
 CREATE TABLE `_BookingToPayment` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -478,11 +472,8 @@ CREATE TABLE `_BookingToPayment` (
 
 DROP TABLE IF EXISTS `_BookingToPlace`;
 CREATE TABLE `_BookingToPlace` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -496,11 +487,8 @@ CREATE TABLE `_BookingToPlace` (
 
 DROP TABLE IF EXISTS `_BookingToUser`;
 CREATE TABLE `_BookingToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -514,11 +502,8 @@ CREATE TABLE `_BookingToUser` (
 
 DROP TABLE IF EXISTS `_CityToNeighbourhood`;
 CREATE TABLE `_CityToNeighbourhood` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -532,11 +517,8 @@ CREATE TABLE `_CityToNeighbourhood` (
 
 DROP TABLE IF EXISTS `_CreditCardInformationToPaymentAccount`;
 CREATE TABLE `_CreditCardInformationToPaymentAccount` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -550,11 +532,8 @@ CREATE TABLE `_CreditCardInformationToPaymentAccount` (
 
 DROP TABLE IF EXISTS `_ExperienceToExperienceCategory`;
 CREATE TABLE `_ExperienceToExperienceCategory` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -568,11 +547,8 @@ CREATE TABLE `_ExperienceToExperienceCategory` (
 
 DROP TABLE IF EXISTS `_ExperienceToLocation`;
 CREATE TABLE `_ExperienceToLocation` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -586,11 +562,8 @@ CREATE TABLE `_ExperienceToLocation` (
 
 DROP TABLE IF EXISTS `_ExperienceToPicture`;
 CREATE TABLE `_ExperienceToPicture` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -604,11 +577,8 @@ CREATE TABLE `_ExperienceToPicture` (
 
 DROP TABLE IF EXISTS `_ExperienceToReview`;
 CREATE TABLE `_ExperienceToReview` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -622,11 +592,8 @@ CREATE TABLE `_ExperienceToReview` (
 
 DROP TABLE IF EXISTS `_ExperienceToUser`;
 CREATE TABLE `_ExperienceToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -640,11 +607,8 @@ CREATE TABLE `_ExperienceToUser` (
 
 DROP TABLE IF EXISTS `_GuestRequirementsToPlace`;
 CREATE TABLE `_GuestRequirementsToPlace` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -658,11 +622,8 @@ CREATE TABLE `_GuestRequirementsToPlace` (
 
 DROP TABLE IF EXISTS `_HouseRulesToPlace`;
 CREATE TABLE `_HouseRulesToPlace` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -676,11 +637,8 @@ CREATE TABLE `_HouseRulesToPlace` (
 
 DROP TABLE IF EXISTS `_LocationToNeighbourhood`;
 CREATE TABLE `_LocationToNeighbourhood` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -694,11 +652,8 @@ CREATE TABLE `_LocationToNeighbourhood` (
 
 DROP TABLE IF EXISTS `_LocationToPlace`;
 CREATE TABLE `_LocationToPlace` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -712,11 +667,8 @@ CREATE TABLE `_LocationToPlace` (
 
 DROP TABLE IF EXISTS `_LocationToRestaurant`;
 CREATE TABLE `_LocationToRestaurant` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -730,11 +682,8 @@ CREATE TABLE `_LocationToRestaurant` (
 
 DROP TABLE IF EXISTS `_LocationToUser`;
 CREATE TABLE `_LocationToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -748,11 +697,8 @@ CREATE TABLE `_LocationToUser` (
 
 DROP TABLE IF EXISTS `_NeighbourhoodToPicture`;
 CREATE TABLE `_NeighbourhoodToPicture` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -766,11 +712,8 @@ CREATE TABLE `_NeighbourhoodToPicture` (
 
 DROP TABLE IF EXISTS `_NotificationToUser`;
 CREATE TABLE `_NotificationToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -784,11 +727,8 @@ CREATE TABLE `_NotificationToUser` (
 
 DROP TABLE IF EXISTS `_PaymentAccountToPaypalInformation`;
 CREATE TABLE `_PaymentAccountToPaypalInformation` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -802,11 +742,8 @@ CREATE TABLE `_PaymentAccountToPaypalInformation` (
 
 DROP TABLE IF EXISTS `_PaymentAccountToUser`;
 CREATE TABLE `_PaymentAccountToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -820,11 +757,8 @@ CREATE TABLE `_PaymentAccountToUser` (
 
 DROP TABLE IF EXISTS `_PaymentToPaymentAccount`;
 CREATE TABLE `_PaymentToPaymentAccount` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -838,11 +772,8 @@ CREATE TABLE `_PaymentToPaymentAccount` (
 
 DROP TABLE IF EXISTS `_PictureToPlace`;
 CREATE TABLE `_PictureToPlace` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -856,11 +787,8 @@ CREATE TABLE `_PictureToPlace` (
 
 DROP TABLE IF EXISTS `_PictureToRestaurant`;
 CREATE TABLE `_PictureToRestaurant` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -874,11 +802,8 @@ CREATE TABLE `_PictureToRestaurant` (
 
 DROP TABLE IF EXISTS `_PictureToUser`;
 CREATE TABLE `_PictureToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -892,11 +817,8 @@ CREATE TABLE `_PictureToUser` (
 
 DROP TABLE IF EXISTS `_PlaceToPolicies`;
 CREATE TABLE `_PlaceToPolicies` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -910,11 +832,8 @@ CREATE TABLE `_PlaceToPolicies` (
 
 DROP TABLE IF EXISTS `_PlaceToPricing`;
 CREATE TABLE `_PlaceToPricing` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -928,11 +847,8 @@ CREATE TABLE `_PlaceToPricing` (
 
 DROP TABLE IF EXISTS `_PlaceToReview`;
 CREATE TABLE `_PlaceToReview` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -946,11 +862,8 @@ CREATE TABLE `_PlaceToReview` (
 
 DROP TABLE IF EXISTS `_PlaceToUser`;
 CREATE TABLE `_PlaceToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -964,11 +877,8 @@ CREATE TABLE `_PlaceToUser` (
 
 DROP TABLE IF EXISTS `_PlaceToViews`;
 CREATE TABLE `_PlaceToViews` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -982,11 +892,8 @@ CREATE TABLE `_PlaceToViews` (
 
 DROP TABLE IF EXISTS `_ReceivedMessages`;
 CREATE TABLE `_ReceivedMessages` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -1012,11 +919,8 @@ CREATE TABLE `_RelayId` (
 
 DROP TABLE IF EXISTS `_SentMessages`;
 CREATE TABLE `_SentMessages` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -1025,4 +929,4 @@ CREATE TABLE `_SentMessages` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46
