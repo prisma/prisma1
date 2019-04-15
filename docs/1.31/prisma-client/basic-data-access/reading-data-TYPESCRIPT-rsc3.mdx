@@ -1,0 +1,1021 @@
+import Collapse from "components/Markdown/Collapse"
+import Code from "components/Markdown/Code"
+import Warning from "components/Markdown/Warning"
+import Info from "components/Markdown/Info"
+
+export const meta = {
+  title: 'Reading Data (TypeScript)',
+  position: 50,
+  technology: "typescript",
+  technologyOrder: 2,
+  articleGroup: "Reading Data",
+}
+
+## Overview
+
+The Prisma client is generated from your [datamodel](knul). Its API exposes CRUD and other operations for the models defined in the datamodel.
+
+For this page, we'll assume your Prisma project is based on the following datamodel:
+
+```graphql
+type Post {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  title: String!
+  published: Boolean! @default(value: false)
+  author: User
+  comments: [Comment!]!
+}
+
+type User {
+  id: ID! @id
+  name: String
+  email: String! @unique
+  role: Role! @default(value: USER)
+  posts: [Post!]!
+  comments: [Comment!]!
+}
+
+type Comment {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  text: String!
+  post: Post!
+  writtenBy: User!
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+```
+
+<Warning>
+
+The syntax of this datamodel is based on the datamodel v1. If you're using the [MongoDB connector](jgfm), you're already using the next version of the [datamodel v1.1](b6a7) which looks a bit different (learn more [here](knun)). The generated API operations will be the same with a few exceptions that are highlighted on this page.
+
+</Warning>
+
+Whenever a database record is queried using the Prisma client, all _scalar_ fields of that record are fetched. This is true no matter if a single record or a list of records is queried.
+
+For example, the following query returns all scalar fields of a single `User`:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const user: User = await prisma.user({ email: "ada@prisma.io" })
+```
+
+```js
+{
+  id: 'cjsviilie0g880b43twzd93li',
+  name: 'Ada',
+  email: 'ada@prisma.io',
+  role: 'ADMIN'
+}
+```
+
+</Code>
+
+In this case, the returned `user` record will have four properties (that correspond to the scalar fields of the `User` model): `id`, `name`, `email` and `role`. The `posts` and `comments` fields are both _relation_ fields and are therefore not included in the response.
+
+Here is an example of fetching a _list_ of `User` records:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const users: User[] = await prisma.users()
+```
+
+```js
+[{
+  id: 'cjsviilie0g880b43twzd93li',
+  name: 'Ada',
+  email: 'ada@prisma.io',
+  role: 'ADMIN'
+},
+{
+  id: 'cjsviiliz0g8t0b43zyu25usd',
+  name: 'Grace',
+  email: 'grace@prisma.io',
+  role: 'USER'
+},
+{
+  id: 'cjsviiljl0g9g0b43n0qac6cu',
+  name: 'Lynn',
+  email: 'lynn@prisma.io',
+  role: 'USER'
+}]
+```
+
+</Code>
+
+Similar to the previous request, each object inside the `users` array only has the scalar and no relation fields.
+
+## Fetching single records
+
+For each model in your [datamodel](knul), there is a method generated in the Prisma client API that allows to fetch single records of that model. 
+
+The method is named after the model but starts with a _lowercase_ character. For the sample datamodel from above, the three generated methods for fetching single records are:
+
+- `user(where: UserWhereUniqueUniqueInput): UserPromise` for `User`
+- `post(where: PostWhereUniqueUniqueInput): PostPromise` for `Post`
+- `comment(where: CommentWhereUniqueUniqueInput): CommentPromise` for `Comment`
+
+The `where` input argument for these methods is an object that has as properties all [unique](knul#unique-scalar-fields) fields of the model. This means, for all three methods, the `id` field is accepted (as the corresponding models each have an `id` field annotated as `@unique`). The input object for the `user` method additionaly has an `email` field.
+
+### Examples
+
+_Fetch a single post by its id_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const post: Post = await prisma.post({ id: "cjlgpyueg001o0a239d3i07ao" })
+```
+
+```js
+{
+  id: 'cjsviilik0g8b0b43yzez0t57',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  title: 'Building General-Purpose Computers'
+  published: true,
+}
+```
+
+</Code>
+
+_Fetch a single user by their email_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const user: User = await prisma.user({ email: "ada@prisma.io" })
+```
+
+```js
+{
+  id: 'cjsviilie0g880b43twzd93li',
+  name: 'Ada',
+  email: 'ada@prisma.io',
+  role: 'ADMIN'
+}
+```
+
+</Code>
+
+## Fetching lists
+
+For each model in your datamodel, there is a method generated in the Prisma client API that allows to fetch a list of the respective records. 
+
+The method is named after the model but starts with a _lowercase_ character and uses the _plural_ form. For the sample datamodel from above, the three generated methods for fetching lists are:
+
+- `users` for `User`:
+  ```ts
+  users: (
+    args?: {
+      where?: UserWhereInput;
+      orderBy?: UserOrderByInput;
+      skip?: Int;
+      after?: String;
+      before?: String;
+      first?: Int;
+      last?: Int;
+    }
+  ) => FragmentableArray<User>;
+  ```
+- `posts` for `Post`:
+  ```ts
+  posts: (
+    args?: {
+      where?: PostWhereInput;
+      orderBy?: PostOrderByInput;
+      skip?: Int;
+      after?: String;
+      before?: String;
+      first?: Int;
+      last?: Int;
+    }
+  ) => FragmentableArray<Post>;
+  ```
+- `comments` for `Comment`:
+  ```ts
+  comments: (
+    args?: {
+      where?: CommentWhereInput;
+      orderBy?: CommentOrderByInput;
+      skip?: Int;
+      after?: String;
+      before?: String;
+      first?: Int;
+      last?: Int;
+    }
+  ) => FragmentableArray<Comment>;
+  ```
+
+The input arugment for these functions is an object that has properties for:
+
+- [filtering](#basic-filters-for-lists): `where`
+- [ordering](#ordering): `orderBy`
+- [pagination](#pagination): `before`, `after`, `first`, `last`, `skip`
+
+### Examples
+
+_Fetch all comments_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const comments: Comment[] = await prisma.comments()
+```
+
+```js
+[{
+  id: 'cjsviilj90g900b434xinrr03',
+  createdAt: '2019-03-05T08:29:35.483Z',
+  text: 'Great work!'
+},
+{
+  id: 'cjsviilju0g9l0b43ndj5orn8',
+  createdAt: '2019-03-05T08:29:35.504Z',
+  text: 'I love this.'
+},
+{
+  id: 'cjsviiljx0g9o0b438jf37gvp',
+  createdAt: '2019-03-05T08:29:35.505Z',
+  text: 'Very interesting!'
+}]
+```
+
+</Code>
+
+_Fetch a list of users_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const users: User[] = await prisma.users()
+```
+
+```js
+[{
+  id: 'cjsviilie0g880b43twzd93li',
+  name: 'Ada',
+  email: 'ada@prisma.io',
+  role: 'ADMIN'
+},
+{
+  id: 'cjsviiliz0g8t0b43zyu25usd',
+  name: 'Grace',
+  email: 'grace@prisma.io',
+  role: 'USER'
+},
+{
+  id: 'cjsviiljl0g9g0b43n0qac6cu',
+  name: 'Lynn',
+  email: 'lynn@prisma.io',
+  role: 'USER'
+}]
+```
+
+</Code>
+
+## Relations
+
+Prisma client has a [fluent API](https://www.sitepoint.com/javascript-like-boss-understanding-fluent-apis/) to query relations in your database. Meaning you can simply _chain_ your method calls to navigate the relation properties of the returned records.
+
+<Warning>
+
+This is only possible when retrieving _single_ records, not for lists. Meaning you can not query relation fields of records that are returned in a list, e.g.:
+
+```ts
+// not possible
+const result = await prisma
+  .users()
+  .posts()
+```
+
+In this example, `users()` already returns a list, so it's not possible to query the `posts` relation of each user record inside the list.
+
+</Warning>
+
+If you're building a GraphQL server and are not sure how to implement your resolvers to resolve the relations in your GraphQL schema, check out [this](https://www.prisma.io/tutorials/a-guide-to-common-resolver-patterns-ct08/#scenario:-implementing-relations-with-prisma-client) tutorial.
+
+### Examples
+
+_Fetch all the posts of a single user_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const postsByUser: Post[] = await prisma
+  .user({ email: "ada@prisma.io" })
+  .posts()
+```
+
+```js
+[{
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  published: false,
+  id: 'cjsviilii0g890b43dgdjjy6e',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  title: 'Introducing the Analytical Engine'
+},
+{
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  published: true,
+  id: 'cjsviilik0g8b0b43yzez0t57',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  title: 'Building General-Purpose Computers'
+},
+{
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  published: false,
+  id: 'cjsviilim0g8d0b4375slhxtf',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  title: 'RESTful APIs Considered Harmful'
+},
+{
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  published: true,
+  id: 'cjsviilio0g8f0b430jbnyvi7',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  title: 'Why Algorithms are Awesome'
+}]
+```
+
+</Code>
+
+ _Fetch all the comments for a certain post_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const commentsForPost: Comment[] = await prisma
+  .post({ id: "cjsviilj60g8y0b43bme3x8ib" })
+  .comments()
+```
+
+```js
+[{
+  id: 'cjsviilj90g900b434xinrr03',
+  createdAt: '2019-03-05T08:29:35.483Z',
+  text: 'Great work!'
+}]
+```
+
+</Code>
+
+## Selecting fields
+
+Instead of querying all scalar fields of a record (which is the default behavior), you can specify which fields you'd like retrieve by using the `$fragment` API. This is useful to exclude large unneeded fields (like BLOB values or huge strings). It also lets you fetch arbitrary relations.
+
+> The next version of the Prisma client API will have an improved and type-safe API to select fields. Find more info [here](https://github.com/prisma/rfcs/blob/new-ts-client-rfc/text/0000-new-ts-client.md).
+
+### Examples
+
+_Fetch the `id`, `name` and `email` of the users as well the the `id` and `title` of their related post_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const fragment = `
+fragment UserWithPosts on User {
+  id
+  name
+  email
+  posts {
+    id
+    title
+  }
+}
+`
+
+const userWithPosts = await prisma.users().$fragment(fragment)
+```
+
+```js
+[
+  {
+    id: 'cjsviilie0g880b43twzd93li',
+    name: 'Ada',
+    email: 'ada@prisma.io',
+    posts: [
+      {
+        id: 'cjsviilii0g890b43dgdjjy6e',
+        title: 'Introducing the Analytical Engine'
+      },
+      {
+        id: 'cjsviilik0g8b0b43yzez0t57',
+        title: 'Building General-Purpose Computers'
+      },
+      {
+        id: 'cjsviilim0g8d0b4375slhxtf',
+        title: 'RESTful APIs Considered Harmful'
+      },
+      {
+        id: 'cjsviilio0g8f0b430jbnyvi7',
+        title: 'Why Algorithms are Awesome'
+      }
+    ]
+  },
+  {
+    id: 'cjsviiliz0g8t0b43zyu25usd',
+    name: 'Grace',
+    email: 'grace@prisma.io',
+    posts: [
+      {
+        id: 'cjsviilj20g8u0b434rujzkt5',
+        title: 'Five Things You Didn't Know About Compilers'
+      },
+      {
+        id: 'cjsviilj40g8w0b43qntvli9c',
+        title: 'GraphQL - The Query Language of the Future'
+      },
+      {
+        id: 'cjsviilj60g8y0b43bme3x8ib',
+        title: 'Progamming with English Words'
+      }
+    ]
+  },
+  {
+    id: 'cjsviiljl0g9g0b43n0qac6cu',
+    name: 'Lynn',
+    email: 'lynn@prisma.io',
+    posts: [
+      {
+        id: 'cjsviiljo0g9h0b43i943n4ni',
+        title: 'Working at Xerox PARC'
+      },
+      {
+        id: 'cjsviiljr0g9j0b43vntjbys1',
+        title: 'Introduction to VLSI Systems'
+      }
+    ]
+  }
+]
+```
+
+</Code>
+
+## Basic filters for lists
+
+_Basic_ filters let you specify certain criteria to constrain which records should be returned in a list. The filters are specified in the `where` object of the input argument which is accepted by any list query.
+
+The type of the `where` object depends on the model for which it was generated.
+
+It is also possible to _combine_ multiple filters using the `AND` and `OR` fields.
+
+### Examples
+
+_Fetch users that have an `A` in their names_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const usersWithAInName: User[] = await prisma
+  .users({ where: { name_contains: "A" } })
+```
+
+```js
+[{
+  id: 'cjsviilie0g880b43twzd93li',
+  name: 'Ada',
+  email: 'ada@prisma.io',
+  role: 'ADMIN'
+},
+{
+  id: 'cjsviiliz0g8t0b43zyu25usd',
+  name: 'Grace',
+  email: 'grace@prisma.io',
+  role: 'USER'
+}]
+```
+
+</Code>
+
+<Collapse title="Use auto-completion to explore the filter system">
+
+![](https://imgur.com/XwE5z9o.png)
+
+</Collapse>
+
+_Fetch users called `Ada` or `Grace`_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const usersCalledAdaOrGrace: User[] = await prisma
+  .users({
+    where: {
+      name_in: ["Ada", "Grace"]
+    }
+  })
+```
+
+```js
+[{
+  id: 'cjsviilie0g880b43twzd93li',
+  name: 'Ada',
+  email: 'ada@prisma.io',
+  role: 'ADMIN'
+},
+{
+  id: 'cjsviiliz0g8t0b43zyu25usd',
+  name: 'Grace',
+  email: 'grace@prisma.io',
+  role: 'USER'
+}]
+```
+
+</Code>
+
+_Fetch comments created before December 24, 2019_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const commentsBeforeChristmas: Comment[] = await prisma
+  .comments({
+    where: { createdAt_lt: "2019-12-24" }
+  })
+```
+
+```js
+[{
+  id: 'cjsviilj90g900b434xinrr03',
+  createdAt: '2019-03-05T08:29:35.483Z',
+  text: 'Great work!'
+},
+{
+  id: 'cjsviilju0g9l0b43ndj5orn8',
+  createdAt: '2019-03-05T08:29:35.504Z',
+  text: 'I love this.'
+},
+{
+  id: 'cjsviiljx0g9o0b438jf37gvp',
+  createdAt: '2019-03-05T08:29:35.505Z',
+  text: 'Very interesting!'
+}]
+```
+
+</Code>
+
+> Dates and times in the Prisma client API follow the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) standard which generally is of the form: `YYYY-MM-DDThh:mm:ss`. [Learn more](knul#datetime).
+
+_Fetch posts that have `prisma` **or** `graphql` in their title **and** were created in 2019_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const filteredPosts: Post[] = await prisma
+  .posts({
+    where: {
+      AND: [
+        {
+          OR: [{
+            description_contains: "graphql",
+          }, {
+            description_contains: "prisma",
+          }]
+        }, 
+        {
+          AND: [{
+            createdAt_gt: "2017"
+          }, {
+            createdAt_lt: "2019"
+          }]
+        }
+      ],
+    }
+  })
+```
+
+```js
+[{
+  id: 'cjsviilj40g8w0b43qntvli9c',
+  createdAt: '2019-03-05T08:29:35.483Z',
+  updatedAt: '2019-03-05T08:29:35.483Z',
+  title: 'GraphQL - The Query Language of the Future',
+  published: true
+},
+{
+  id: 'cjsviiljr0g9j0b43vntjbys1',
+  createdAt: '2019-03-05T08:29:36.483Z',
+  updatedAt: '2019-03-05T08:29:36.483Z',
+  title: 'Prisma replaces traditional ORMs',
+  published: true
+}]
+```
+
+</Code>
+
+The `AND` filter can actually be omitted since multiple filter criteria are by default combined using a _logical and_. This means the above filter can also be expressed as follows:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const filteredPosts: Post[] = await prisma
+  .posts({
+    where: {
+      OR: [{
+        title_contains: "graphql",
+      }, {
+        title_contains: "prisma",
+      }],
+      createdAt_gt: "2018",
+      createdAt_lt: "2020"
+    }
+  })
+```
+
+```js
+[{
+  id: 'cjsviilj40g8w0b43qntvli9c',
+  createdAt: '2019-03-05T08:29:35.483Z',
+  updatedAt: '2019-03-05T08:29:35.483Z',
+  title: 'GraphQL - The Query Language of the Future',
+  published: true
+},
+{
+  id: 'cjsviiljr0g9j0b43vntjbys1',
+  createdAt: '2019-03-05T08:29:36.483Z',
+  updatedAt: '2019-03-05T08:29:36.483Z',
+  title: 'Prisma replaces traditional ORMs',
+  published: true
+}]
+```
+
+</Code>
+
+## Relational filters for lists
+
+Relational filters can be used to constrain the returned records on a relation list field. The types used for filtering are identical to basic filters, the only difference is that the filters are not applied on the root level of the method call but when querying a relation (via the fluent API) on a later level.
+
+### Examples
+
+_Fetch posts by a certain user that were created before christmas_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const postsByUserBeforeChristmas: Post[] = await prisma
+  .user({ email: "ada@prisma.io" })
+  .posts({
+    where: {
+      createdAt_lt: "2019-12-24" 
+    }
+  })
+```
+
+```js
+[{
+  id: 'cjsviilii0g890b43dgdjjy6e',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  title: 'Introducing the Analytical Engine',
+  published: false
+},
+{
+  id: 'cjsviilik0g8b0b43yzez0t57',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  title: 'Building General-Purpose Computers',
+  published: true
+},
+{
+  id: 'cjsviilim0g8d0b4375slhxtf',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  title: 'RESTful APIs Considered Harmful',
+  published: false
+},
+{
+  id: 'cjsviilio0g8f0b430jbnyvi7',
+  createdAt: '2019-03-05T08:29:35.462Z',
+  updatedAt: '2019-03-05T08:29:35.462Z',
+  title: 'Why Algorithms are Awesome',
+  published: true
+}]
+```
+
+</Code>
+
+## Ordering
+
+When querying a list of records, you can order (sort) the list by any scalar field of that model. Each generated method to query a list of records therefore accepts the `orderBy` field on its input object.
+
+The type of the `orderBy` field depends on the scalar fields of the model for which it was generated.
+
+Note that you can _always_ order by `createdAt` and `updatedAt`, even when the fields have not been added to your models.
+
+### Examples
+
+_Sort comments by their creation date (ascending)_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const sortedComments: Comment[] = await prisma
+  .comments({ orderBy: "createdAt_ASC" })
+```
+
+```js
+[{
+  id: 'cjsviilj90g900b434xinrr03',
+  createdAt: '2019-03-05T08:29:35.483Z',
+  text: 'Great work!'
+},
+{
+  id: 'cjsviilju0g9l0b43ndj5orn8',
+  createdAt: '2019-03-05T08:29:35.504Z',
+  text: 'I love this.'
+},
+{
+  id: 'cjsviiljx0g9o0b438jf37gvp',
+  createdAt: '2019-03-05T08:29:35.505Z',
+  text: 'Very interesting!'
+}]
+```
+
+</Code>
+
+_Sort users alphabetically by their names (descending)_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const sortedUsers: User[] = await prisma
+  .users({ orderBy: "name_DESC" })
+```
+
+```js
+[{
+  id: 'cjsviiljl0g9g0b43n0qac6cu',
+  name: 'Lynn',
+  email: 'lynn@prisma.io',
+  role: 'USER'
+},
+{
+  id: 'cjsviiliz0g8t0b43zyu25usd',
+  name: 'Grace',
+  email: 'grace@prisma.io',
+  role: 'USER'
+},
+{
+  id: 'cjsviilie0g880b43twzd93li',
+  name: 'Ada',
+  email: 'ada@prisma.io',
+  role: 'ADMIN'
+}]
+```
+
+</Code>
+
+## Pagination
+
+When querying a list of records, you can fetch certain parts (i.e. _pages_) of that list by supplying pagination arguments.
+
+### Seeking forward and backward with `first` and `last`
+
+You can seek forwards or backwards through the list and supply an optional starting point:
+
+- To seek **forward**, use `first`; specify the `id` of a starting record with `after`.
+- To seek **backward**, use `last`; specify the `id` of a starting record with `before`.
+
+You **cannot** combine `first` with `before` or `last` with `after`. If you do so, `before`/`after` will simply be ignored and only `first` or `last` is actually applied (at the very beginning or end of the list, depending on which you're using).
+
+Note that you can query for more records than actually exist in the database without an error message.
+
+### Skipping elements with `skip`
+
+You can also skip an arbitrary amount of records in whichever direction you are seeking by supplying the `skip` argument:
+
+- When using `first`, `skip` skips records at the beginning of the list.
+- When using `last`, `skip` skips records from the end of the list.
+
+### Examples
+
+For the following examples, we're assuming a list of exactly 30 records:
+
+![](https://i.imgur.com/Xh6Qjts.png)
+
+_Fetch the first 3 records (seeking forward)_:
+
+![](https://i.imgur.com/O1Jj3Z2.png)
+
+<Code languages={["TypeScript"]}>
+
+```ts
+const posts: Post[] = await prisma
+  .posts({ first: 3 })
+```
+
+</Code>
+
+_Fetch the records from position 6 to position 10 (seeking forward)_:
+
+![](https://i.imgur.com/PpI5X0X.png)
+
+<Code languages={["TypeScript"]}>
+
+```ts
+const posts: Post[] = await prisma
+  .posts({
+    first: 5, 
+    skip: 5
+  })
+```
+
+</Code>
+
+_Fetch the last 3 records (seeking backward)_:
+
+![](https://i.imgur.com/pkuYCrV.png)
+
+<Code languages={["TypeScript"]}>
+
+```ts
+const posts: Post[] = await prisma
+  .posts({ last: 3 })
+```
+
+</Code>
+
+_Fetch the records from position 21 to position 27 (seeking backward)_:
+
+![](https://i.imgur.com/iSl9Y07.png)
+
+<Code languages={["TypeScript"]}>
+
+```ts
+const posts: Post[] = await prisma
+  .posts({
+    last: 7,
+    skip: 3
+  })
+```
+
+</Code>
+
+_Fetch the first 3 records after the record with `cixnen24p33lo0143bexvr52n` as `id`_:
+
+![](https://i.imgur.com/InYSSkQ.png)
+
+<Code languages={["TypeScript"]}>
+
+```ts
+const posts: Post[] = await prisma
+  .posts({
+    first: 3,
+    after: "cixnen24p33lo0143bexvr52n"
+  })
+```
+
+</Code>
+
+_Fetch the first 5 records after the record with `cixnen24p33lo0143bexvr52n` as `id` and skipping 3 records_:
+
+![](https://i.imgur.com/u4WEAJv.png)
+
+<Code languages={["TypeScript"]}>
+
+```ts
+const posts: Post[] = await prisma
+  .posts({
+    first: 5,
+    after: "cixnen24p33lo0143bexvr52n",
+    skip: 3
+  })
+```
+
+</Code>
+
+_Fetch the last 5 records before the record with `cixnen24p33lo0143bexvr52n` as `id`_:
+
+![](https://i.imgur.com/306eghw.png)
+
+<Code languages={["TypeScript"]}>
+
+```ts
+const posts: Post[] = await prisma
+  .posts({
+    last: 5,
+    before: "cixnen24p33lo0143bexvr52n"
+  })
+```
+
+</Code>
+
+_Fetch the last 3 records before the record with `cixnen24p33lo0143bexvr52n` as `id` and skipping 5 records_:
+
+![](https://i.imgur.com/iZGUiHJ.png)
+
+<Code languages={["TypeScript"]}>
+
+```ts
+const post: Post[] = await prisma
+  .post({
+    last: 3,
+    before: "cixnen24p33lo0143bexvr52n",
+    skip: 5
+  })
+```
+
+</Code>
+
+## Aggregations
+
+You can submit aggregation queries via _connection queries_. The following aggregation functions are supported:
+
+- `count`: Counts the number of records in a list
+- `avg` (_coming soon_): Computes the average of a list of numbers.
+- `median` (_coming soon_): Computes the median of a list of numbers. 
+- `max` (_coming soon_): Returns the greatest element of a list of numbers.
+- `min` (_coming soon_): Returns the smallest element of a list of numbers.
+- `sum` (_coming soon_): Computes the sum of a list of numbers.
+
+> See [this](https://github.com/prisma/prisma/issues/1312) GitHub issue to learn more about the upcoming aggregation functions.
+
+### Examples
+
+_Count the number of post records_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const postCount: number = await prisma
+  .postsConnection()
+  .aggregate()
+  .count()
+```
+
+```js
+9
+```
+
+</Code>
+
+## GraphQL requests
+
+The Prisma client lets you send GraphQL queries and mutations directly to your Prisma service using the `$graphql` method:
+
+```ts
+$graphql: <T = any>(query: string, variables?: {[key: string]: any}) => Promise<T>;
+```
+
+As the GraphQL operation is passed untyped (as a regular string), the type of the returned promise is `any`.
+
+### Examples
+
+_Fetching a single user record_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const query = `
+  query  {
+    user(where: { id: "cjcdi63j80adw0146z7r59bn5" }) {
+      id
+      name
+    }
+  }`
+
+const result: any = await prisma.$graphql(query)
+```
+
+```js
+{ user: { id: 'cjsviilie0g880b43twzd93li', name: 'Ada' } }
+```
+
+</Code>
+
+_Fetching a single user using variables_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```ts
+const query = `
+  query ($id: ID!){
+    user(where: { id: $id }) {
+      id
+      name
+    }
+  }
+`
+const variables: UserWhereUniqueInput = { id: 'cjsviilie0g880b43twzd93li' }
+const result: any = prisma.$graphql(query, variables)
+```
+
+```js
+{ 
+  user: { 
+    id: 'cjsviilie0g880b43twzd93li', 
+    name: 'Ada' 
+  } 
+}
+```
+
+</Code>

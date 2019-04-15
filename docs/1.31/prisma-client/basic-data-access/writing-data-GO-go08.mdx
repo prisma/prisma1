@@ -1,0 +1,471 @@
+import Collapse from 'components/Markdown/Collapse'
+import Code from "components/Markdown/Code"
+import Warning from "components/Markdown/Warning"
+
+export const meta = {
+  title: 'Writing Data (Go)',
+  position: 60,
+  technology: "go",
+  technologyOrder: 3,
+  articleGroup: "Writing Data",
+}
+
+## Overview
+
+The Prisma client is generated from your [datamodel](knul). Its API exposes CRUD and other operations for the models defined in the datamodel.
+
+For this page, we'll assume your Prisma project is based on the following datamodel:
+
+```graphql
+type Post {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  title: String!
+  published: Boolean! @default(value: false)
+  author: User
+  comments: [Comment!]!
+}
+
+type User {
+  id: ID! @id
+  name: String
+  email: String! @unique
+  role: Role! @default(value: "USER")
+  posts: [Post!]!
+  comments: [Comment!]!
+}
+
+type Comment {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  text: String!
+  post: Post!
+  writtenBy: User!
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+```
+
+<Warning>
+
+The syntax of this datamodel is based on the datamodel v1. If you're using the [MongoDB connector](jgfm), you're already using the next version of the [datamodel v1.1](b6a7) which looks a bit different (learn more [here](knun)). The generated API operations will be the same with a few exceptions that are highlighted on this page.
+
+</Warning>
+
+For each model type in your datamodel, six methods for writing data are generated. For example, for the `User` model the following operations are available:
+
+- `CreateUser`: Creates a new `User` record in the database 
+- `UpdateUser`: Updates an existing `User` record in the database
+- `DeleteUser`: Deletes an existing `User` record from the database
+- `UpsertUser`: Updates an existing or create a new `User` record in the database
+- `UpdateManyUsers`: Updates many existing `User` records in the database at once. 
+- `DeleteManyUsers`: Deletes many existing `User` records from the database at once.
+
+## Creating records
+
+When creating new records in the database, the `Create`-method takes one input object which wraps all the scalar fields of the record to be created. It also provides a way to create relational data for the model, this can be supplied using [nested object writes](#nested-object-writes).
+
+Each method call returns an object that contains all the scalar fields of the model that was just created.
+
+
+### Examples
+
+_Create a new user_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+email := "alice@prisma.io"
+name := "Alice"
+user, err := client.CreateUser(prisma.UserCreateInput{
+  Email: email,
+  Name:  &name,
+}).Exec(ctx)
+```
+
+```go
+&prisma.User{
+	ID:"cjsyyj97x003m0982pvpn0ci0", 
+	Name:(*string)(0xc000126140), // Alice
+	Email:"alice@prisma.io"
+}
+```
+
+</Code>
+
+_Create a new post and set `alice@prisma.io` as the author_:
+
+> When using the **MySQL** or **Postgres** databases connectors, the following call is executed as a single database transaction. The **MongoDB** connector [doesn't support transactions yet](https://github.com/prisma/prisma/issues/3785). Learn more in the [Declarative nest writes](#declarative-nested-writes) section.
+
+<Code languages={["Go", "Result"]}>
+
+```go
+email := "alice@prisma.io"
+title := "Join us for GraphQL Conf in 2019"
+post, err := client.CreatePost(prisma.PostCreateInput{
+  Title: title,
+  Author: &prisma.UserCreateOneWithoutPostsInput{
+    Connect: &prisma.UserWhereUniqueInput{
+      Email: &email,
+    },
+  },
+}).Exec(ctx)
+```
+
+```go
+&prisma.Post{
+	ID:"cjsyyoyjk003s0982o6e2abxn", 
+	CreatedAt:"2019-03-07T18:25:44.672Z", 
+	UpdatedAt:"2019-03-07T18:25:44.672Z", 
+	Title:"Join us for GraphQL Conf in 2019", 
+	Published:false
+}
+```
+
+</Code>
+
+_Create a new user with two new posts_:
+
+> When using the **MySQL** or **Postgres** databases connectors, the following call is executed as a single database transaction. The **MongoDB** connector [doesn't support transactions yet](https://github.com/prisma/prisma/issues/3785).
+
+<Code languages={["Go", "Result"]}>
+
+```go
+name := "Bob"
+email := "bob@prisma.io"
+title1 := "Follow @prisma on Twitter"
+title2 := "Join us for GraphQL Conf"
+user, err := client.CreateUser(prisma.UserCreateInput{
+	Email: email,
+	Name:  &name,
+	Posts: &prisma.PostCreateManyWithoutAuthorInput{
+		Create: []prisma.PostCreateWithoutAuthorInput{
+			prisma.PostCreateWithoutAuthorInput{
+				Title: title1,
+			},
+			prisma.PostCreateWithoutAuthorInput{
+				Title: title2,
+			},
+		},
+	},
+}).Exec(ctx)
+```
+
+```go
+&prisma.User{
+  ID:"cjsyytzn0004d0982gbyeqep7", 
+  Name:(*string)(0xc000010140), // "Bob" 
+  Email:"bob@prisma.io"
+}
+```
+
+</Code>
+
+## Updating records
+
+When updating existing records in the database, the `Update`-method receives one input object with two fields:
+
+- `Data`: This is similar to the input object you provide to a `Create`-method. It wraps scalar fields of the model to be updated and lets you provide relational data via [nested object writes](#nested-object-writes).
+- `Where`: This is used to select the record that should be updated. You can use any [unique](knul#unique-scalar-fields) field to identify the record. For the example datamodel above, this means that for `User`, `Post` and `Comment` it has an `id` property. For `User` it additionally accepts the `email` field.
+
+Each method call returns an object that contains all the scalar fields of the model that was just updated.
+
+### Examples
+
+_Update the role of an existing user_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+id := "cjsyytzn0004d0982gbyeqep7"
+role := prisma.RoleAdmin
+user, err := client.UpdateUser(prisma.UserUpdateParams{
+  Where: prisma.UserWhereUniqueInput{
+    ID: &id,
+  },
+  Data: prisma.UserUpdateInput{
+    Role: &role,
+  },
+}).Exec(ctx)
+```
+
+```go
+&prisma.User{
+  ID:"cjsyysx3s004009829vh893vq", 
+  Name:(*string)(0xc000010140), // "Bob" 
+  Email:"bob@prisma.io"
+}
+```
+
+</Code>
+
+_Update the author of a post_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+id := "cjsx2j8bw02920b25rl806l07"
+email := "bob@prisma.io"
+post, err := client.UpdatePost(prisma.PostUpdateParams{
+	Where: prisma.PostWhereUniqueInput{
+		ID: &id,
+	},
+	Data: prisma.PostUpdateInput{
+		Author: &prisma.UserUpdateOneWithoutPostsInput{
+			Connect: &prisma.UserWhereUniqueInput{
+				Email: &email,
+			},
+		},
+	},
+}).Exec(ctx)
+```
+
+```go
+&prisma.Post{
+	ID:"cjsx2j8bw02920b25rl806l07", 
+	CreatedAt:"2019-03-07T18:25:44.672Z", 
+	UpdatedAt:"2019-03-07T18:25:44.672Z", 
+	Title:"Join us for GraphQL Conf in 2019", 
+	Published:false
+}
+```
+
+</Code>
+
+## Deleting records
+
+When deleting records from the database, the `Delete`-method receives one input object that specifies which record is to be deleted. The type of this input object is similar to the `Where` object in `Update`-methods.
+
+The properties of that object correspond to those fields of the model that are marked as [unique](knul#unique-scalar-fields). For the example datamodel above, this means that for `User`, `Post` and `Comment` it has an `id` property. For `User` it additionally accepts the `email` field.
+
+Each method call returns an object that contains all the scalar fields of the model that was just deleted.
+
+### Examples
+
+_Delete a post by its id_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+id := "cjsyqxwqo000j0982da8cvw7o"
+post, err := client.DeletePost(prisma.PostWhereUniqueInput{
+	ID: &id,
+}).Exec(ctx)
+```
+
+```go
+&prisma.Post{
+  ID:"cjsyqxwqo000j0982da8cvw7o", 
+  CreatedAt:"2019-03-07T14:48:45.280Z", 
+  UpdatedAt:"2019-03-07T14:48:45.280Z", 
+  Title:"Introducing the Analytical Engine", 
+  Published:false
+}
+```
+
+</Code>
+
+_Delete a user by their email_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+email := "bob@prisma.io"
+user, err := client.DeleteUser(prisma.UserWhereUniqueInput{
+  Email: &email,
+}).Exec(ctx)
+```
+
+```go
+&prisma.User{
+  ID:"cjsyytzn0004d0982gbyeqep7", 
+  Name:(*string)(0xc0001361e0), // "Bob" 
+  Email:"bob@prisma.io"
+}
+```
+
+</Code>
+
+
+## Creating or updating objects (upserts)
+
+Upsert operations allow you to _try_ to update an existing record. If that record actually does not exist yet, it will be created. The `Upsert`-methods are a mix of `Create`- and `Update`-methods, meaning they receive an input argument that has three fields:
+
+- `Where`: Identical to the `Where` field provided in `Update`-methods
+- `Update`: Identical to the `Data` field provided in `Update`-methods
+- `Create`: Identical to the input object provided in `Create`-methods
+
+### Examples
+
+_Update the role of a user. If the user doesn't exist yet, create a new one_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+name := "Alice"
+role := prisma.RoleAdmin
+email := "alice@prisma.io"
+user, err := client.UpsertUser(prisma.UserUpsertParams{
+	Where: prisma.UserWhereUniqueInput{
+		Email: &email,
+	},
+	Update: prisma.UserUpdateInput{
+		Role: &role,
+	},
+	Create: prisma.UserCreateInput{
+		Email: email,
+		Role:  &role,
+		Name:  &name,
+	},
+}).Exec(ctx)
+```
+
+```go
+&prisma.User{
+  ID:"cjsyyj97x003m0982pvpn0ci0", 
+  Name:(*string)(0xc00016e120), // "Alice" 
+  Email:"alice@prisma.io"
+}
+```
+
+</Code>
+
+
+## Updating and deleting many records in bulk
+
+The Prisma client API offers special methods to update or delete many records at once. Each `UpdateMany`- and `DeleteMany`-method returns the _number_ of records that ultimately have been affected by the operation.
+
+### Examples
+
+_Unpublish three posts by their IDs_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+ids := []string{"cjsyqxwqv000l0982p5qdq34p", "cjsyqxwqo000j0982da8cvw7o", "cjsyqxwr0000n0982cke8i5sc"}
+published := true
+updatedPostsCount, err := client.UpdateManyPosts(prisma.PostUpdateManyParams{
+  Where: &prisma.PostWhereInput{
+    IDIn: ids,
+  },
+  Data: prisma.PostUpdateManyMutationInput{
+    Published: &published,
+  },
+}).Exec(ctx)
+```
+
+```go
+prisma.BatchPayload{Count:2}
+```
+
+</Code>
+
+<Warning>
+
+If one of more of the provided IDs does not actually exist in the database, the operation will **not** return an error. The returned `count` indicates how many records actually were updated.
+
+</Warning>
+
+_Update all posts where the description contains the string `prisma` and publish them_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+filter := "prisma"
+published := true
+updatedPostsCount, err := client.UpdateManyPosts(prisma.PostUpdateManyParams{
+  Where: &prisma.PostWhereInput{
+    TitleContains: &filter,
+  },
+  Data: prisma.PostUpdateManyMutationInput{
+    Published: &published,
+  },
+}).Exec(ctx)
+```
+
+```go
+prisma.BatchPayload{Count:1}
+```
+
+</Code>
+
+
+_Delete all posts that were created before 2018_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+christmas := "2019-12-24"
+deletePostsCount, err := client.DeleteManyPosts(&prisma.PostWhereInput{
+  CreatedAtGt: &christmas,
+}).Exec(ctx)
+```
+
+```go
+42
+```
+
+</Code>
+
+## Nested object writes
+
+Nested object writes let you modify multiple database records across relations in a single transaction. Nested object writes are available for `Create`- and `Update`-methods.
+
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
+
+Because the model `User` has a relation to `Post` via the `author` field, you can create/update/delete `Post` records through `CreateUser` and `UpdateUser` operations. In these cases, the `Author` field in the `Data` object for `CreateUser` and `UpdateUser` operations can contain one or more of the following keywords: 
+
+- `Create`: Creates a new `Post` record and connects it via the `author` field to the `User` record.
+- `Update`: Updates a `Post` record that is connected to a `User` record via the `author` field.
+- `Upsert`: Updates a `Post` record that is connected to a `User` record via the `author` field or creates a new `Post` record and connects it via the `author` field to the `User` record.
+- `Delete`: Deletes a `Post` record that is connected to a `User` record via the `author` field.
+- `Connect`: Connects a `Post` record to a `User` record via the `author` field.
+- `Disconnect`: Disconnects a `Post` record from a `User` record.
+- `Set`:  Connects a `Post` record to a `User` record via the `author` field. If the `Post` record was connected to a different `User` record before, it is disconnected from that one (`Set` effecitvely executes `connect` and `disconnect` operations under the hood).
+
+<Code languages={["Go", "Result"]}>
+
+```go
+id := "cjsyqxwqo000j0982da8cvw7o"
+name := "Bob"
+email := "bob@prisma.io"
+title1 := "Follow @prisma on Twitter"
+title2 := "Join us for GraphQL Conf"
+user, err := client.CreateUser(prisma.UserCreateInput{
+  Email: email,
+  Name:  &name,
+  Posts: &prisma.PostCreateManyWithoutAuthorInput{
+    Create: []prisma.PostCreateWithoutAuthorInput{
+      prisma.PostCreateWithoutAuthorInput{
+        Title: title1,
+      },
+      prisma.PostCreateWithoutAuthorInput{
+        Title: title2,
+      },
+    },
+    Connect: []prisma.PostWhereUniqueInput{
+      prisma.PostWhereUniqueInput{
+        ID: &id,
+      },
+    },
+  },
+}).Exec(ctx)
+```
+
+```go
+&prisma.User{
+  ID:"cjsyytzn0004d0982gbyeqep7", 
+  Name:(*string)(0xc000010140), // "Bob" 
+  Email:"bob@prisma.io"
+}
+```
+
+</Code>

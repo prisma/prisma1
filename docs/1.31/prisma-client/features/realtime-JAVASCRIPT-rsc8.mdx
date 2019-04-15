@@ -1,0 +1,44 @@
+import Collapse from "components/Markdown/Collapse"
+import Code from "components/Markdown/Code"
+import Warning from "components/Markdown/Warning"
+
+export const meta = {
+  title: "Realtime (JavaScript)",
+  position: 90,
+  technology: "node",
+  technologyOrder: 1,
+  articleGroup: "Realtime",
+}
+
+## Overview
+
+The Prisma client lets you subscribe to database events and receive updates in realtime using the `$subscribe` property. For each model type in your [datamodel](knul), the Prisma client exposes one function on this property named after the model (but lowercased). Subscribing to this function means you're interested in [write](rsc6)-events (i.e. _create_, _update_, _delete_) for that model. You can provide a filter object that lets you further constrain the kind of events you want to receive updates for. The function returns an [async iterator](https://github.com/tc39/proposal-async-iteration) that emits an event any time one of the specified database event happens.
+
+The `$subscribe` API is based on [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API).
+
+### Examples
+
+_Subscribe to "create" and "update" events for the `User` mode_:
+
+```js
+const createdAndUpdatedUserIterator = await db.$subscribe.user({
+  mutation_in: ['CREATED', 'UPDATED']
+}).node()
+```
+
+ _Subscribe to any write event for `User` models where the user has a an email-address that contains the string `gmail`_:
+
+ ```js
+const userIterator = await db.$subscribe.user({
+  email_contains: `gmail` 
+}).node()
+```
+
+## Limitations
+
+Prisma's realtime API currently has a few limitations:
+
+- [Aggregrations are not yet supported](https://github.com/prisma/prisma/issues/3937)
+- [Scalability limitations](https://github.com/prisma/prisma/issues/3852)
+- [Subscriptions are not supported for batch operations](https://github.com/prisma/prisma/issues/2327)
+- [OR-filters are not working](https://github.com/prisma/prisma/issues/3932)
