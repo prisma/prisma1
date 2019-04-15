@@ -23,6 +23,7 @@ pub use single::*;
 
 use self::inflector::Inflector;
 use crate::{CoreError, CoreResult, PrismaQuery};
+use ::inflector::Inflector as RustInflector;
 use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
@@ -67,7 +68,7 @@ impl<'a> Builder<'a> {
                 Some(Builder::OneRelation(OneRelationBuilder::new()))
             }
         } else {
-            let normalized = model.name.to_lowercase();
+            let normalized = model.name.to_camel_case();
             if Inflector::singularize(&field.name) == normalized {
                 Some(Builder::Multi(MultiBuilder::new().setup(Arc::clone(model), field)))
             } else if field.name == normalized {
