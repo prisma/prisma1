@@ -27,11 +27,10 @@ This page is only relevant if you started with a [new database](j002) or a [Demo
 
 </Warning>
 
+
 ## Adjust your datamodel
 
 Update the datamodel in `datamodel.prisma` as follows:
-
-<Code languages={["SQL", "MongoDB"]}>
 
 ```graphql copy
 type User {
@@ -45,27 +44,9 @@ type Post {
   id: ID! @id
   title: String!
   published: Boolean! @default(value: false)
-  author: User
+  author: User @relation(link: INLINE)
 }
 ```
-
-```graphql copy
-type User {
-  id: ID! @id
-  email: String @unique
-  name: String!
-  posts: [Post!]! @relation(link: INLINE)
-}
-
-type Post {
-  id: ID! @id
-  title: String!
-  published: Boolean! @default(value: false)
-  author: User
-}
-```
-
-</Code>
 
 Here's what changed:
 

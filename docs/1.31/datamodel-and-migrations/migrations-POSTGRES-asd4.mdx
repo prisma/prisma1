@@ -11,176 +11,22 @@ export const meta = {
 
 ## Overview
 
-You can configure Prisma with your PostgreSQL database in either of two ways:
+There are two ways to migrate your database with Prisma:
 
-- **Enable database migrations through Prisma**: This means _all_ changes to your database schema must be made through Prisma (by adjusting your [datamodel](knum) and using the [`prisma deploy`](xcv9) command). You can achieve this by setting the `migrations` flag in the [`PRISMA_CONFIG`](rty1#prisma_config-reference) variable of your Prisma server to `true`.
-- **Disable database migrations through Prisma**: This means _none_ of the changes to your database schema can be made by Prisma, all migrations must be performed manually and directly against the database. You can achieve this by setting the `migrations` flag in the [`PRISMA_CONFIG`](rty1#prisma_config-reference) variable of your Prisma server to `false`.
+- Using the Prisma CLI
+- Performing a manual DB migration with plain SQL
 
-> Note that the `migrations` flag will be removed at some point and Prisma's migration model will become more flexible. This means you can either use the Prisma CLI to perform migrations with [`prisma deploy`](xcv9) or perform your migrations manually. Learn more in [this](https://github.com/prisma/prisma/issues/3022) GitHub issue or explore the [spec](https://github.com/prisma/prisma/issues/3408) for the upcoming Prisma version.
+> Learn more about our upcoming migration system [here](https://github.com/prisma/rfcs/blob/migrations2/text/0000-migrations.md).
 
-## Enabling database migrations
+## Migrations with the Prisma CLI
 
-To enable database migrations, set the `migrations` property to `true`:
+When using Prisma with a PostgreSQL database, you can perform your database migrations using the [`prisma deploy`](xcv9) command of the Prisma CLI.
 
-<Code hideCopy={true} lines={'7'}>
+There are two steps to every database migration:
 
-```yml
-PRISMA_CONFIG: |
-  managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
-  port: 4466
-  databases:
-    default:
-      connector: postgres
-      migrations: true
-      host: __YOUR_DATABASE_HOST__
-      port: __YOUR_DATABASE_PORT__
-      user: __YOUR_DATABASE_USER__
-      password: __YOUR_DATABASE_PASSWORD__
-      connectionLimit: __YOUR_CONNECTION_LIMIT__
-```
-
-</Code>
-
-If database migrations are enabled, you use SDL to define and migrate your database schema. There are two steps to every migration:
-
-1. Adjust the [datamodel](knum) file to reflect the new desired schema
+1. Adjust the [datamodel](knul) file to reflect the new desired schema
 1. Run `prisma deploy` to apply the changes and perform the migration of the underlying database
 
-### Migration operations
+## Manual migrations with SQL
 
-Prisma uses [temporary directives](asd4#temporary-directives) to perform one-time migration operations. After deploying a service that contain a temporary directive, **a temporary directive needs to be manually removed from the datamodel file**.
-
-#### Renaming
-
-The temporary directive `@rename(oldName: String!)` is used to rename a _type_ or a _field of a type_.
-
-<Warning>
-
-If the `@rename` directive is not used, Prisma deletes old type/field before creating the new one, resulting in loss of data!
-
-</Warning>
-
-**Renaming a type**
-
-Here is an example scenario:
-
-##### 1) Before migration
-
-```graphql
-type Post {
-  text: String
-}
-```
-
-##### 2) Goal
-
-Rename the `Post` type to `Story`
-
-##### 3) Adding the `@rename` directive
-
-```graphql
-# renaming the `Post` type to `Story`
-type Story @rename(oldName: "Post") {
-  text: String
-}
-```
-
-##### 4) Migrating the database with `prisma deploy`
-
-After having the saved the datamodel file with these changes, you need to run:
-
-```
-prisma deploy
-```
-
-##### 5) Removing the `@rename` directive manually
-
-```graphql
-type Story {
-  text: String
-}
-```
-
-**Renaming a field**
-
-Here is an example scenario:
-
-##### 1) Before migration
-
-```graphql
-type Post {
-  text: String
-}
-```
-
-##### 2) Goal
-
-Rename the `text` field to `content`
-
-##### 3) Adding the `@rename` directive
-
-```graphql
-# renaming the `text` field to `content`
-type Post {
-  content: String @rename(oldName: "text")
-}
-```
-
-##### 4) Migrating the database with `prisma deploy`
-
-After having the saved the datamodel file with these changes, you need to run:
-
-```
-prisma deploy
-```
-
-##### 5) Removing the `@rename` directive manually
-
-```graphql
-type Post {
-  content: String
-}
-```
-
-### Limitations
-
-- It is currently not possible to rename relations that are specified via the `@relation` directive.
-
-## Disabling database migrations
-
-To disable database migrations, set the `migrations` property to `false`:
-
-<Code hideCopy={true} lines={'7'}>
-
-```yml
-PRISMA_CONFIG: |
-  managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
-  port: 4466
-  databases:
-    default:
-      connector: postgres
-      migrations: false
-      host: __YOUR_DATABASE_HOST__
-      port: __YOUR_DATABASE_PORT__
-      user: __YOUR_DATABASE_USER__
-      password: __YOUR_DATABASE_PASSWORD__
-      connectionLimit: __YOUR_CONNECTION_LIMIT__
-```
-
-</Code>
-
-When migrations are disabled, you need to manually ensure that your datamodel is in sync with the unterlying database schema, otherwise the Prisma API might exhibit undefined behaviour! 
-
-This means you need to ensure that:
-
-- Every type in your datamodel is mapped to a database table using the `@pgTable` directive
-- Every field on any type of your datamodel is also present as a column on the corresponding database table
-- Every relation in your datamodel needs to be annotated with the `@pgRelation` directive
-
-Note that you can exlude tables and/or fields from your database in the datamodel. For example, if you have a `user` table with a `password` column, you don't need to include the `password` field in your datamodel, or you can leave out the `user` type altogether. In that case, the structues that are not defined in the datamodel will not be exposed by Prisma. 
-
-You can use the [`prisma introspect`](xcv3) command to generate a datamodel based on your current database schema. Learn more about database introspection with PostgreSQL [here](soi1).
-
-The `prisma introspect` command introspects your database schema and creates a datamodel file based on that. The name of the datamodel file will include a timestamp so that the generated datamodel doesn't conflict with your existing one, e.g. `datamodel-1547547645423.prisma`.
-
-`prisma introspect` does **not** change your database schema. It only generates the temporary datamodel file that reflects the current database schema. You can use this temporary file as a helper to adjust your _actual_ datamodel by copying and pasting the new types and fields into it. Once you're happy with the adjusted datamodel, you need to run `prisma deploy` to actually apply the changes and update the Prisma API.
+When migrating your database manually, you need to ensure that the Prisma datamodel matches the database schema after the migration. The easiest way to do so is by using the `prisma introspect` command to generate a datamodel file based on your migrated database schema and then use this new datamodel file as the new foundation for your Prisma project.

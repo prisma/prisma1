@@ -25,12 +25,6 @@ On this page, you will learn how to:
 - Generate a Prisma client
 - Read and write data using the Prisma client
 
-<Warning>
-
-Using your existing database with Prisma currently only works when using **PostgreSQL** or **MongoDB** databases. It is [not yet]((https://github.com/prisma/prisma/issues/2506)) supported for **MySQL**.
-
-</Warning>
-
 ## Install the Prisma CLI
 
 The [Prisma CLI](alx4) is used for various Prisma workflows. You can install it using [Homebrew](https://brew.sh/) or [NPM](https://www.npmjs.com/):
@@ -63,18 +57,18 @@ prisma init hello-world
 This launches an interactive wizard. Here's what you need to do:
 
 1. Select **Use existing database**
-1. Select your database, either **PostgreSQL** or **MongoDB**
+1. Select your database, either **MySQL**, **PostgreSQL** or **MongoDB**
 1. Provide the **connection details** for your database (see below for more info)
 1. Select the **Prisma JavaScript client**
 
-<Collapse title="Connection details for PostgreSQL">
+<Collapse title="Connection details for MySQL & PostgreSQL">
 
-- The host of your Postgres server, e.g. `localhost`. (When connecting to a local database, you might need to use `host.docker.internal`.)
-- The port where your Postgres server listens, e.g. `5432`.
-- The name of your Postgres database.
-- The name of your Postgres schema, e.g. `public`.
-- The database user.
-- The password for the database user.
+- The host of your DB server, e.g. `localhost`. (When connecting to a local database, you might need to use `host.docker.internal`.)
+- The port where your DB server listens, e.g. `5432` (PostgreSQL) or `3306` (MySQL).
+- The name of your database.
+- Only PostgreSQL: The name of your PostgreSQL _schema_, e.g. `public`.
+- The DB user.
+- The password for the DB user.
 - Whether your database server uses SSL, possible values are `true` and `false`.
 
 </Collapse>

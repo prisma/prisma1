@@ -505,10 +505,10 @@ The command `prisma deploy` got enhanced. From now on, there will be two modes t
 
 ### `prisma introspect`
 
-The command `prisma introspect` has been adapted to output the new datamodel format when using it with the `--prototype` flag: 
+The command `prisma introspect` has been adapted to output the new datamodel format: 
 
 ```
-prisma introspect --prototype
+prisma introspect
 ```
 
 The command has been improved so that it will pay respect to existing datamodel files. This way you can use it to translate your database schema into a datamodel while the introspection will preserve the ordering of types and fields of your existing datamodel file.
@@ -518,44 +518,26 @@ The command has been improved so that it will pay respect to existing datamodel 
 You can fluently switch between those two commands however you like. For instance you could use `prisma deploy` for most of your migration needs. When you hit an advanced use case where the Prisma migration system is not yet powerful enough, you can:
 
 1. Migrate the database manually 
-1. Use `prisma introspect --prototype` to update your datamodel with those changes from the database
+1. Use `prisma introspect` to update your datamodel with those changes from the database
 1. Use `prisma deploy --no-migrate` to let the Prisma server know about that
 
 ## Prerequisites & Installation
 
-The datamodel v1.1 is available in the [latest beta](b5op/) version of Prisma.
+The datamodel v1.1 is available in the latest Prisma version.
 
 ### 1. Install the latest beta of the Prisma CLI
 
 ```
-npm install -g prisma@beta
+npm install -g prisma
 ```
 
 ### 2. Use the latest beta Prisma Docker image
 
-In the Docker Compose file for your Prisma server, make sure to use the latest beta Docker image:
+In the Docker Compose file for your Prisma server, make sure to use the latest Docker image:
 
 ```yml
-prismagraphql/prisma:1.32-beta
+prismagraphql/prisma:1.31
 ```
-
-### 3. Set the `prototype` flag to `true` in `PRISMA_CONFIG`
-
-Enable the datamodel v1.1 by adding the `prototype` flag in your [`PRISMA_CONFIG`](rty1/#prisma_config-reference):
-
-```yml
-port: 4466
-prototype: true
-databases:
-  default:
-    connector: postgres # or mysql
-    host: 127.0.0.1
-    port: 5432
-    user: prisma
-    password: prisma
-```
-
-> Note that you might need to adjust the database connection details to match your setup. Check out the [`example`](./example) folder for a ready-to-use setup.
 
 ## Get started from scratch
 
@@ -567,14 +549,13 @@ Create a new file callled `docker-compose.yml` and add the following code to it:
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.32-beta
+    image: prismagraphql/prisma:1.31
     restart: always
     ports:
     - "4466:4466"
     environment:
       PRISMA_CONFIG: |
         port: 4466
-        prototype: true
         databases:
           default:
             connector: postgres
@@ -811,13 +792,13 @@ If you have a database that already contains some data, you can get started by i
 To get started, run:
 
 ```
-prisma init --prototype
+prisma init
 ```
 
 This launches an interactive wizard that guides you through the process of connecting to your existing database. The following interaction shows how to connect to a local PostgreSQL database:
 
 ```
-$ prisma init myapp --prototype
+$ prisma init myapp
 ? Set up a new Prisma server or deploy to an existing server? Use existing database
 ? What kind of database do you want to deploy to? PostgreSQL
 ? Does your database contain existing data? Yes
@@ -851,20 +832,6 @@ Once the process has terminated, the Prisma CLI will have generated the followin
 - `docker-compose.yml`: The Docker Compose file that specifies your Prisma server and its database connection.
 - `prisma.yml`: The root configuration file for your Prisma project.
 - `datamodel.prisma`: Your database schema represented in datamodel v1.1 syntax.
-
-**IMPORTANT**: You need to manually [add the `prototype: true` flag](#3-set-the-prototype-flag-to-true-in-prisma_config) to `docker-compose.yml`:
-
-```yml
-port: 4466
-prototype: true
-databases:
-  default:
-    connector: postgres # or mysql
-    host: 127.0.0.1
-    port: 5432
-    user: prisma
-    password: prisma
-```
 
 ### 2. Deploy Prisma setup
 
@@ -942,10 +909,7 @@ Each relation is represented via a relation table and the `_RelayId` table to be
 
 ### 2. Enable datamodel v1.1
 
-To enable the datamodel v1.1, you need to:
-
-- Use the [latest beta](https://www.prisma.io/docs/releases-and-maintenance/releases-and-beta-access/installing-the-beta-b5op/) of Prisma (Prisma server _and_ CLI)
-- Manually [add the `prototype: true` flag](#3-set-the-prototype-flag-to-true-in-prisma_config) to your Docker Compose file
+To enable the datamodel v1.1, you need to upgrade to the latest Prisma version (Prisma server _and_ CLI).
 
 For example, if you have are connecting to a local PostgreSQL database, your updated `docker-compose.yml` might look as follows:
 
@@ -953,9 +917,8 @@ For example, if you have are connecting to a local PostgreSQL database, your upd
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.32-beta
+    image: prismagraphql/prisma:1.31
     restart: always
-    prototype: true
     ports:
     - "4466:4466"
     environment:
@@ -970,16 +933,16 @@ services:
             port: '5432'    
 ```
 
-Once you have specified the `prismagraphql/prisma:1.32-beta` image and introduced the `prototype: true` flag, you can redeploy your Prisma server:
+Once you have specified the `prismagraphql/prisma:1.31` image, you can redeploy your Prisma server:
 
 ```
 docker-compose up -d
 ```
 
-Now you can install the latest CLI beta, e.g. with npm:
+Now you can install the latest CLI version, e.g. with npm:
 
 ```
-npm install -g prisma@beta
+npm install -g prisma
 ```
 
 At this point, you can already try to redeploy your Prisma datamodel. It won't work and the CLI will show some errors:
@@ -1013,10 +976,10 @@ Read more about deployment errors here: https://bit.ly/prisma-force-flag
 To update your datamodel and get rid of the previous errors, you can use the `prisma introspect` command. Inside your project directory, run:
 
 ```
-prisma introspect --prototype
+prisma introspect
 ```
 
-This introspects your database schema and generates a new datamodel file that uses v1.1 syntax. The new file is called `datamodel-prototype-TIMESTAMP.prisma`, e.g. `datamodel-prototype-1554394432089.prisma`. For the example from above, the following datamodel is generated:
+This introspects your database schema and generates a new datamodel file that uses v1.1 syntax. The new file is called `datamodel-TIMESTAMP.prisma`, e.g. `datamodel-1554394432089.prisma`. For the example from above, the following datamodel is generated:
 
 ```graphql
 type User {

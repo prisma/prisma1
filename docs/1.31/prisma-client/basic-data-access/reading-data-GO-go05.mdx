@@ -51,12 +51,6 @@ enum Role {
 }
 ```
 
-<Warning>
-
-The syntax of this datamodel is based on the datamodel v1. If you're using the [MongoDB connector](jgfm), you're already using the next version of the [datamodel v1.1](b6a7) which looks a bit different (learn more [here](knun)). The generated API operations will be the same with a few exceptions that are highlighted on this page.
-
-</Warning>
-
 Whenever a database record is queried using the Prisma client, all _scalar_ fields of that record are fetched. This is true no matter if a single record or a list of records is queried.
 
 For example, the following query returns all scalar fields of a single `User`:

@@ -87,7 +87,6 @@ services:
             port: 3306
             user: root
             password: prisma
-            migrations: true
   mysql:
     image: mysql:5.7
     restart: always
@@ -117,7 +116,6 @@ services:
             port: 5432
             user: prisma
             password: prisma
-            migrations: true
   postgres:
     image: postgres:10.3
     restart: always

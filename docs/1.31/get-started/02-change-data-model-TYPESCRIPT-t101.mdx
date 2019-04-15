@@ -31,8 +31,6 @@ This page is only relevant if you started with a [new database](t002) or a [Demo
 
 Update the datamodel in `datamodel.prisma` as follows:
 
-<Code languages={["SQL", "MongoDB"]}>
-
 ```graphql copy
 type User {
   id: ID! @id
@@ -45,32 +43,14 @@ type Post {
   id: ID! @id
   title: String!
   published: Boolean! @default(value: false)
-  author: User
+  author: User @relation(link: INLINE)
 }
 ```
-
-```graphql copy
-type User {
-  id: ID! @id
-  email: String @unique
-  name: String!
-  posts: [Post!]! @relation(link: INLINE)
-}
-
-type Post {
-  id: ID! @id
-  title: String!
-  published: Boolean! @default(value: false)
-  author: User
-}
-```
-
-</Code>
 
 Here's what changed:
 
-- You added a new `email` field to the `User` type.
-- You added a new `Post` type to the datamodel.
+- You added a new `email` field to the `User` model.
+- You added a new `Post` model to the datamodel.
 - You added a _relation_ between `User` and `Post` (via the `posts` and `author` fields).
 
 ## Redeploy your Prisma API

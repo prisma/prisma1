@@ -35,7 +35,6 @@ services:
         databases:
           default:
             connector: mysql
-            migrations: true
             host: mysql-db
             port: 3306
             user: root
@@ -79,7 +78,6 @@ services:
             port: 5432
             user: prisma
             password: prisma
-            migrations: true
   postgres-db:
     image: postgres:10.3
     restart: always

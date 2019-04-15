@@ -31,7 +31,6 @@ PRISMA_CONFIG: |
   databases:
     default:
       connector: postgres
-      migrations: __ENABLE_DB_MIGRATIONS__
       host: __YOUR_DATABASE_HOST__
       port: __YOUR_DATABASE_PORT__
       user: __YOUR_DATABASE_USER__
@@ -40,38 +39,6 @@ PRISMA_CONFIG: |
 ```
 
 </Code>
-
-## Migrations
-
-The `migrations` property in the `PRISMA_CONFIG` environment variable specifies whether the database connector is able to make changes to the underlying _database schema_.
-
-For existing databases (that might already be powering production applications), it is useful to configure the Prisma server to not migrate the connected database. This ensures you're not accidentally introducing unwanted schema changes or lose data.
-
-<Code lines="7">
-
-```yml
-PRISMA_CONFIG: |
-  managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
-  port: 4466
-  databases:
-    default:
-      connector: postgres
-      migrations: __ENABLE_DB_MIGRATIONS__
-      host: __YOUR_DATABASE_HOST__
-      port: __YOUR_DATABASE_PORT__
-      user: __YOUR_DATABASE_USER__
-      password: __YOUR_DATABASE_PASSWORD__
-      connectionLimit: __YOUR_CONNECTION_LIMIT__
-```
-
-</Code>
-
-
-### Enabling and disabling database migrations
-
-If `migrations` is set to `true`, deploying a Prisma service migrates the structure of the connected database. In these cases, the Prisma CLI will be the main interface to govern the structure of the database based on the datamodel of your Prisma services.
-
-If `migrations` is set to `false`, the database schema is "locked" and Prisma won't perform any changes on it.
 
 ## Managing database connections
 

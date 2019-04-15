@@ -50,18 +50,12 @@ enum Role {
 }
 ```
 
-<Warning>
-
-The syntax of this datamodel is based on the datamodel v1. If you're using the [MongoDB connector](jgfm), you're already using the next version of the [datamodel v1.1](b6a7) which looks a bit different (learn more [here](knun)). The generated API operations will be the same with a few exceptions that are highlighted on this page.
-
-</Warning>
-
 For each model type in your datamodel, six methods for writing data are generated. For example, for the `User` model the following operations are available:
 
-- `createUser`: Creates a new `User` record in the database 
-- `updateUser`: Updates an existing `User` record in the database
-- `deleteUser`: Deletes an existing `User` record from the database
-- `upsertUser`: Updates an existing or create a new `User` record in the database
+- `createUser`: Creates a new `User` record in the database.
+- `updateUser`: Updates an existing `User` record in the database.
+- `deleteUser`: Deletes an existing `User` record from the database.
+- `upsertUser`: Updates an existing or create a new `User` record in the database.
 - `updateManyUsers`: Updates many existing `User` records in the database at once. 
 - `deleteManyUsers`: Deletes many existing `User` records from the database at once.
 
