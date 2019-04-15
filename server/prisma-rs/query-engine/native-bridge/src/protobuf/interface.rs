@@ -4,7 +4,7 @@ use crate::{
     BridgeError, BridgeResult, ExternalInterface,
 };
 use connector::{error::ConnectorError, filter::NodeSelector, DataResolver, DatabaseMutactionExecutor};
-use prisma_common::{config::WithMigrations, config::*};
+use prisma_common::config::*;
 use prisma_models::prelude::*;
 use prost::Message;
 use sqlite_connector::Sqlite;
@@ -24,7 +24,7 @@ impl ProtoBufInterface {
                 // FIXME: figure out the right way to do it
                 // we are passing is_active as test_mode parameter
                 // this requires us to put `active: true` in all sqlite-native configs used in tests
-                let sqlite = Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap();
+                let sqlite = Sqlite::new(config.limit(), true).unwrap();
 
                 Arc::new(sqlite)
             }
