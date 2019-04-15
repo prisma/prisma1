@@ -7,6 +7,7 @@ import com.prisma.shared.models.ConnectorCapability.SupportsExistingDatabasesCap
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
+// TODO: maybe do4gr can extend those to MySQL, SQLite as well
 trait PassiveConnectorSpec extends FlatSpec with Matchers with ApiSpecBase {
   val schema = "passive_test"
 
