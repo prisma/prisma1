@@ -29,7 +29,7 @@ const createdAndUpdatedUserIterator = await db.$subscribe.user({
 _Subscribe to "create" events for a specific `User` that has an `email` address corresponding to `alice@prisma.io`_: 
 
 ```js
-const userCreatedUserIterator = await db.$subscribe.user({
+const createdUserIterator = await db.$subscribe.user({
   mutation_in: ['CREATED'],
   node: {
     email_contains: `alice@prisma.io`,
