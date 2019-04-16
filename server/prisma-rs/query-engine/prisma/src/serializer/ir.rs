@@ -127,8 +127,8 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
         };
     });
 
-    vec = vec.into_iter().fold(vec![], |vec, mut item| {
-        if let Item::Map(ref mut map) = item {
+    vec = vec.into_iter().fold(vec![], |mut vec, item| {
+        if let Item::Map(mut map) = item {
             result.list_results.values.iter().for_each(|values| {
                 values
                     .iter()
@@ -140,6 +140,8 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
                         );
                     })
             });
+
+            vec.push(Item::Map(map));
         }
 
         vec
