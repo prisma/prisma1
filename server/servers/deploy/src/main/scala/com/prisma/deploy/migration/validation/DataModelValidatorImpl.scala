@@ -77,7 +77,6 @@ case class DataModelValidatorImpl(
           RelationalPrismaField(
             name = x.name,
             columnName = x.dbName,
-            relationDbDirective = x.relationDBDirective,
             strategy = relationDirective.strategy,
             isList = x.isList,
             isRequired = x.isRequired,
