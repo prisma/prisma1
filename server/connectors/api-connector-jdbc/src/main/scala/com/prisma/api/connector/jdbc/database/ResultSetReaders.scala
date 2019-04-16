@@ -38,6 +38,7 @@ trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   }
 
   def readRelation(relation: Relation): ReadsResultSet[RelationNode] = ReadsResultSet { resultSet =>
+//Fixme needs to be able to read from table and from inline
     RelationNode(
       a = resultSet.getAsID("A", relation.modelA.idField_!.typeIdentifier),
       b = resultSet.getAsID("B", relation.modelB.idField_!.typeIdentifier)

@@ -12,6 +12,8 @@ trait RelationQueries extends BuilderBase with FilterConditionBuilder with Order
       args: QueryArguments
   ): DBIO[ResolverResult[RelationNode]] = {
 
+    //needs special case for inline relations. then only the ones without null entries should be retrieved
+
     lazy val query = {
       val aliasedTable = relationTable(relation).as(topLevelAlias)
       val condition    = buildConditionForFilter(args.filter)

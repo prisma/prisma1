@@ -2,9 +2,9 @@ package com.prisma.api.connector.jdbc.database
 
 import java.sql.{PreparedStatement, Statement}
 
-import com.prisma.api.connector.{ImportNodes, ImportRelations, ImportScalarLists}
+import com.prisma.api.connector._
 import com.prisma.connector.shared.jdbc.SharedJdbcExtensions
-import com.prisma.gc_values.{GCValue, IdGCValue, ListGCValue, NullGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models.ScalarField
 import com.prisma.slick.ReadsResultSet
 import cool.graph.cuid.Cuid
@@ -102,7 +102,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           }
           relationInsert.executeBatch()
 
-        } else {
+        } else if (relation.isRelationTable) {
           val query = sql
             .insertInto(relationTable(relation))
             .columns(
@@ -110,6 +110,34 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
               relationColumn(relation, relation.modelBField.relationSide)
             )
             .values(placeHolder, placeHolder)
+
+          val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
+          mutaction.args.foreach { arg =>
+            relationInsert.setGcValue(1, arg._1)
+            relationInsert.setGcValue(2, arg._2)
+            relationInsert.addBatch()
+          }
+          relationInsert.executeBatch()
+        } else if (relation.modelAField.relationIsInlinedInParent) {
+
+          val query = sql
+            .update(relationTable(relation))
+            .set(modelColumn(relation.modelAField), placeHolder)
+            .where(idField(relation.modelA).equal(placeHolder))
+
+          val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
+          mutaction.args.foreach { arg =>
+            relationInsert.setGcValue(2, arg._1)
+            relationInsert.setGcValue(1, arg._2)
+            relationInsert.addBatch()
+          }
+          relationInsert.executeBatch()
+        } else if (relation.modelBField.relationIsInlinedInParent) {
+
+          val query = sql
+            .update(relationTable(relation))
+            .set(modelColumn(relation.modelBField), placeHolder)
+            .where(idField(relation.modelB).equal(placeHolder))
 
           val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
           mutaction.args.foreach { arg =>
