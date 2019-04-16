@@ -11,8 +11,7 @@ trait MiscActions extends BuilderBase with BooleanUtils {
     val modelTables    = project.models.map(modelTable)
     val listTables     = project.models.flatMap(model => model.scalarListFields.map(scalarListTable))
 
-    val relayTableOption = project.schema.isLegacy.toOption(relayTable) // only legacy projects have this table
-    val actions = (relationTables ++ listTables ++ relayTableOption ++ modelTables).map {
+    val actions = (relationTables ++ listTables ++ modelTables).map {
       case table if isMySql => truncateToDBIO(sql.truncate(table))
       case table            => truncateToDBIO(sql.truncate(table).cascade())
     }

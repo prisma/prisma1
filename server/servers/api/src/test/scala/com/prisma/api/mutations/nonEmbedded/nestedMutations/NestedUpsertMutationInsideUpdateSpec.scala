@@ -63,7 +63,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
       dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+
     }
   }
 
@@ -116,7 +116,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
       dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(1)
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
-      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(2) }
+
     }
   }
 
@@ -170,7 +170,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
       dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
-      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
+
     }
   }
 
@@ -224,7 +224,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
       dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+
     }
   }
 
@@ -280,7 +280,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
       dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(2)
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
-      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(3) }
+
     }
   }
 
@@ -336,7 +336,7 @@ class NestedUpsertMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       dataResolver(project).countByTable(project.schema.getModelByName_!("Parent").dbName).await should be(1)
       dataResolver(project).countByTable(project.schema.getModelByName_!("Child").dbName).await should be(3)
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(3) }
-      ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(4) }
+
     }
   }
 

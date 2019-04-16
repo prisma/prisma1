@@ -24,7 +24,6 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 
   object SupportsExistingDatabasesCapability extends ConnectorCapability
   object MigrationsCapability                extends ConnectorCapability
-  object LegacyDataModelCapability           extends ConnectorCapability
   object RawAccessCapability                 extends ConnectorCapability
   object IntrospectionCapability             extends ConnectorCapability
   object JoinRelationLinksCapability         extends ConnectorCapability // the ability to join using relation links
@@ -49,8 +48,7 @@ case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
 
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
 
-  def isDataModelV11: Boolean = !capabilities.contains(LegacyDataModelCapability)
-  def isMongo: Boolean        = has(EmbeddedTypesCapability)
+  def isMongo: Boolean = has(EmbeddedTypesCapability)
 }
 
 object ConnectorCapabilities extends BooleanUtils {
@@ -59,60 +57,14 @@ object ConnectorCapabilities extends BooleanUtils {
   val empty: ConnectorCapabilities                                     = ConnectorCapabilities(Set.empty[ConnectorCapability])
   def apply(capabilities: ConnectorCapability*): ConnectorCapabilities = ConnectorCapabilities(Set(capabilities: _*))
 
-  lazy val sqlite: ConnectorCapabilities = {
-    val capas = Set(
-      LegacyDataModelCapability,
-      TransactionalExecutionCapability,
-      JoinRelationsFilterCapability,
-      JoinRelationLinksCapability,
-      RelationLinkTableCapability,
-      NonEmbeddedScalarListCapability,
-      NodeQueryCapability,
-      RawAccessCapability,
-      MigrationsCapability
-    )
-    ConnectorCapabilities(capas)
-  }
-
   lazy val sqliteNative: ConnectorCapabilities = {
-    val filteredCapas = sqlite.capabilities.filter(_ != TransactionalExecutionCapability)
+    val filteredCapas = sqliteJdbcPrototype.capabilities.filter(_ != TransactionalExecutionCapability)
     ConnectorCapabilities(filteredCapas)
   }
 
-  lazy val mysql: ConnectorCapabilities = {
-    val capas = Set(
-      LegacyDataModelCapability,
-      TransactionalExecutionCapability,
-      JoinRelationsFilterCapability,
-      JoinRelationLinksCapability,
-      RelationLinkTableCapability,
-      MigrationsCapability,
-      NonEmbeddedScalarListCapability,
-      NodeQueryCapability,
-      ImportExportCapability,
-      RawAccessCapability
-    )
-    ConnectorCapabilities(capas)
-  }
-
-  def postgres(isActive: Boolean): ConnectorCapabilities = {
-    val common = Set(
-      LegacyDataModelCapability,
-      TransactionalExecutionCapability,
-      JoinRelationsFilterCapability,
-      JoinRelationLinksCapability,
-      RelationLinkTableCapability,
-      IntrospectionCapability,
-      IntIdCapability,
-      UuidIdCapability,
-      RawAccessCapability
-    )
-    val capas = if (isActive) {
-      common ++ Set(MigrationsCapability, NonEmbeddedScalarListCapability, NodeQueryCapability, ImportExportCapability)
-    } else {
-      common ++ Set(SupportsExistingDatabasesCapability)
-    }
-    ConnectorCapabilities(capas)
+  lazy val sqliteJdbcPrototype: ConnectorCapabilities = {
+    val actualCapas = sqlPrototype.filter(_ != ImportExportCapability)
+    ConnectorCapabilities(actualCapas)
   }
 
   lazy val postgresPrototype: ConnectorCapabilities = {
@@ -143,7 +95,7 @@ object ConnectorCapabilities extends BooleanUtils {
     )
   }
 
-  def mongo(isTest: Boolean): ConnectorCapabilities = {
+  val mongo: ConnectorCapabilities = {
     val common = Set(
       NodeQueryCapability,
       EmbeddedScalarListsCapability,
@@ -154,8 +106,7 @@ object ConnectorCapabilities extends BooleanUtils {
       EmbeddedTypesCapability,
       SupportsExistingDatabasesCapability
     )
-    val dataModelCapability = isTest.toOption(LegacyDataModelCapability)
 
-    ConnectorCapabilities(common ++ dataModelCapability)
+    ConnectorCapabilities(common)
   }
 }

@@ -47,7 +47,7 @@ case class TestDeployDependencies()(implicit val system: ActorSystem, val materi
 
   override val auth = JnaAuth(Algorithm.HS256)
 
-  def deployConnector = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))), isTest = true)
+  def deployConnector = ConnectorLoader.loadDeployConnector(config.copy(databases = config.databases.map(_.copy(pooled = false))))
 
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
 

@@ -15,7 +15,7 @@ import scala.concurrent.ExecutionContext
 trait ImportActions extends BuilderBase with SharedJdbcExtensions {
   import slickDatabase.profile.api._
 
-  def importNodes(mutaction: ImportNodes, shouldCreateRelayIds: Boolean): SimpleDBIO[Vector[String]] = {
+  def importNodes(mutaction: ImportNodes): SimpleDBIO[Vector[String]] = {
 
     SimpleDBIO[Vector[String]] { jdbcActionContext =>
       val model         = mutaction.model
@@ -62,44 +62,8 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           Vector(s"Failure inserting ${model.dbName}. Cause: ${e.getCause.toString}")
       }
 
-      val relayResult: Vector[String] =
-        if (shouldCreateRelayIds) {
-
-          try {
-            val query = sql
-              .insertInto(relayTable)
-              .columns(relayIdColumn, relayStableIdentifierColumn)
-              .values(placeHolder, placeHolder)
-
-            val relayInsert: PreparedStatement = jdbcActionContext.connection.prepareStatement(query.getSQL)
-
-            mutaction.args.foreach { arg =>
-              relayInsert.setGcValue(1, arg.rootGC.idField)
-              relayInsert.setString(2, model.stableIdentifier)
-              relayInsert.addBatch()
-            }
-            relayInsert.executeBatch()
-
-            Vector.empty
-          } catch {
-            case e: java.sql.BatchUpdateException =>
-              e.getUpdateCounts.zipWithIndex
-                .filter(element => element._1 == Statement.EXECUTE_FAILED)
-                .map { failed =>
-                  val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idField.value
-                  s"Failure inserting RelayRow with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause())}"
-                }
-                .toVector
-
-            case e: Exception =>
-              Vector(s"Failure inserting RelayRow. Cause: ${e.getMessage}")
-          }
-
-        } else { Vector.empty }
-
-      val res = nodeResult ++ relayResult
-      if (res.nonEmpty) throw new Exception(res.mkString("-@-"))
-      res
+      if (nodeResult.nonEmpty) throw new Exception(nodeResult.mkString("-@-"))
+      nodeResult
     }
   }
 

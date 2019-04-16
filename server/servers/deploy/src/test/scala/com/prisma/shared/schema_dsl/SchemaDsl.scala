@@ -1,38 +1,31 @@
 package com.prisma.shared.schema_dsl
 
 import com.prisma.config.ConfigLoader
-import com.prisma.deploy.connector.{DeployConnector, FieldRequirementsInterface, InferredTables, MissingBackRelations}
+import com.prisma.deploy.connector.{DeployConnector, MissingBackRelations}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.{DataModelValidator, DataModelValidatorImpl}
-import com.prisma.shared.models.ConnectorCapability.LegacyDataModelCapability
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import org.scalactic.{Bad, Good}
 import org.scalatest.Suite
 
 object SchemaDsl extends AwaitUtils {
+  val testProjectId = "default@default"
 
-  def fromStringV11ForExistingDatabase(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector): Project = {
-    val actualCapas    = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
-    val inferredTables = deployConnector.databaseIntrospectionInferrer(id).infer().await()
+  def fromStringV11ForExistingDatabase(id: String = testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector): Project = {
     val project = fromString(
       id = id,
-      inferredTables = inferredTables,
-      fieldRequirements = deployConnector.fieldRequirements,
-      capabilities = ConnectorCapabilities(actualCapas),
+      capabilities = deployConnector.capabilities,
       dataModelValidator = DataModelValidatorImpl,
-      emptyBaseSchema = Schema.empty
+      emptyBaseSchema = Schema.emptyV11
     )(sdlString)
     project.copy(manifestation = ProjectManifestation.empty) // we don't want the altered manifestation here
   }
 
-  def fromStringV11(id: String = TestIds.testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
-    val actualCapas = deployConnector.capabilities.capabilities.filter(_ != LegacyDataModelCapability)
+  def fromStringV11(id: String = testProjectId)(sdlString: String)(implicit deployConnector: DeployConnector, suite: Suite): Project = {
     fromString(
       id = projectId(suite),
-      inferredTables = InferredTables.empty,
-      fieldRequirements = deployConnector.fieldRequirements,
-      capabilities = ConnectorCapabilities(actualCapas),
+      capabilities = deployConnector.capabilities,
       dataModelValidator = DataModelValidatorImpl,
       emptyBaseSchema = Schema.emptyV11
     )(sdlString.stripMargin)
@@ -43,8 +36,6 @@ object SchemaDsl extends AwaitUtils {
   )(sdlString: String)(implicit suite: Suite): Project = {
     fromString(
       id = projectId(suite),
-      inferredTables = InferredTables.empty,
-      fieldRequirements = FieldRequirementsInterface.empty,
       capabilities = ConnectorCapabilities(capabilities),
       dataModelValidator = DataModelValidatorImpl,
       emptyBaseSchema = Schema.emptyV11
@@ -60,15 +51,13 @@ object SchemaDsl extends AwaitUtils {
 
   private def fromString(
       id: String,
-      inferredTables: InferredTables,
-      fieldRequirements: FieldRequirementsInterface,
       capabilities: ConnectorCapabilities,
       dataModelValidator: DataModelValidator,
       emptyBaseSchema: Schema
   )(sdlString: String): Project = {
     val emptySchemaMapping = SchemaMapping.empty
 
-    val prismaSdl = dataModelValidator.validate(sdlString, fieldRequirements, capabilities) match {
+    val prismaSdl = dataModelValidator.validate(sdlString, capabilities) match {
       case Good(result) =>
         result.dataModel
       case Bad(errors) =>
@@ -79,12 +68,12 @@ object SchemaDsl extends AwaitUtils {
         )
     }
 
-    val schema                 = SchemaInferrer(capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl, inferredTables)
+    val schema                 = SchemaInferrer(capabilities).infer(emptyBaseSchema, emptySchemaMapping, prismaSdl)
     val withBackRelationsAdded = MissingBackRelations.add(schema)
     val manifestation = ConfigLoader.load().databases.head.connector match {
       case x if x == "postgres" => ProjectManifestation(database = Some(id + "_DB"), schema = Some(id + "_S"), x)
       case y                    => ProjectManifestation(database = Some(id + "_DB"), schema = None, y)
     }
-    TestProject().copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
+    TestProject.emptyV11.copy(id = id, schema = withBackRelationsAdded, manifestation = manifestation)
   }
 }

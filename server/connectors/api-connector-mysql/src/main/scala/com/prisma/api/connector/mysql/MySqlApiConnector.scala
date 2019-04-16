@@ -9,7 +9,7 @@ import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncode
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MySqlApiConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
+case class MySqlApiConnector(config: DatabaseConfig, driver: Driver)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val databases = MySqlDatabasesFactory.initialize(config, driver)
 
   override def initialize() = {
@@ -24,18 +24,12 @@ case class MySqlApiConnector(config: DatabaseConfig, driver: Driver, isPrototype
     } yield ()
   }
 
-  override def databaseMutactionExecutor            = JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds = !isPrototype)
+  override def databaseMutactionExecutor            = JdbcDatabaseMutactionExecutor(databases.primary)
   override def dataResolver(project: Project)       = JdbcDataResolver(project, databases.replica)(ec)
   override def masterDataResolver(project: Project) = JdbcDataResolver(project, databases.primary)(ec)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('@')
 
-  override val capabilities = {
-    if (isPrototype) {
-      ConnectorCapabilities.mysqlPrototype
-    } else {
-      ConnectorCapabilities.mysql
-    }
-  }
+  override val capabilities = ConnectorCapabilities.mysqlPrototype
 
 }

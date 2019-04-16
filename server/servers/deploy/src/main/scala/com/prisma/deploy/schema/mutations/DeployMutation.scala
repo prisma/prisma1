@@ -11,7 +11,7 @@ import com.prisma.deploy.schema.types.MigrationStepType.MigrationStepAndSchema
 import com.prisma.deploy.validation.DestructiveChanges
 import com.prisma.messagebus.PubSubPublisher
 import com.prisma.messagebus.pubsub.Only
-import com.prisma.shared.models.ConnectorCapability.{IntrospectionCapability, LegacyDataModelCapability}
+import com.prisma.shared.models.ConnectorCapability.IntrospectionCapability
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.boolean.BooleanUtils
@@ -37,9 +37,6 @@ case class DeployMutation(
     invalidationPublisher: PubSubPublisher[String],
     capabilities: ConnectorCapabilities,
     clientDbQueries: ClientDbQueries,
-    databaseIntrospectionInferrer: DatabaseIntrospectionInferrer,
-    fieldRequirements: FieldRequirementsInterface,
-    isActive: Boolean,
     deployConnector: DeployConnector
 )(
     implicit ec: ExecutionContext
@@ -49,11 +46,9 @@ case class DeployMutation(
 
   val databaseInspector = deployConnector.databaseInspector
 
-  val actsAsActive = if (capabilities.isDataModelV11) {
+  val actsAsActive = {
     val noMigration = args.noMigration.getOrElse(false)
     !noMigration
-  } else {
-    isActive
   }
   val actsAsPassive = !actsAsActive
   val isNotDryRun   = !args.dryRun.getOrElse(false)
@@ -70,16 +65,11 @@ case class DeployMutation(
 
   private def internalExecute: Future[DeployMutationPayload Or Vector[DeployError]] = {
     val x = for {
-      validationResult   <- FutureOr(validateSyntax)
-      schemaMapping      = schemaMapper.createMapping(graphQlSdl)
-      inferredTables     <- FutureOr(inferTables) // TODO: remove once fully switched to v1.1 datamodel
-      newDatabaseSchema  <- FutureOr(introspectDatabaseSchema)
-      inferredNextSchema = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel, inferredTables)
-      _ <- if (capabilities.isDataModelV11) { // TODO: remove if once fully switched to v1.1 datamodel
-            FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, newDatabaseSchema))
-          } else {
-            FutureOr(checkProjectSchemaAgainstInferredTables(inferredNextSchema, inferredTables))
-          }
+      validationResult       <- FutureOr(validateSyntax)
+      schemaMapping          = schemaMapper.createMapping(graphQlSdl)
+      databaseSchema         <- FutureOr(introspectDatabaseSchema)
+      inferredNextSchema     = schemaInferrer.infer(project.schema, schemaMapping, validationResult.dataModel)
+      _                      <- FutureOr(checkProjectSchemaAgainstDatabaseSchema(inferredNextSchema, databaseSchema))
       functions              <- FutureOr(getFunctionModels(inferredNextSchema, args.functions))
       steps                  <- FutureOr(inferMigrationSteps(inferredNextSchema, schemaMapping))
       destructiveWarnings    <- FutureOr(checkForDestructiveChanges(inferredNextSchema, steps))
@@ -110,19 +100,10 @@ case class DeployMutation(
   }
 
   private def validateSyntax: Future[DataModelValidationResult Or Vector[DeployError]] = Future.successful {
-    val validator = if (capabilities.has(LegacyDataModelCapability)) {
-      LegacyDataModelValidator
-    } else {
-      DataModelValidatorImpl
-    }
-    validator.validate(args.types, fieldRequirements, capabilities)
+    DataModelValidatorImpl.validate(args.types, capabilities)
   }
 
   private def introspectDatabaseSchema: Future[DatabaseSchema Or Vector[DeployError]] = databaseInspector.inspect(project.dbName).map(Good(_))
-
-  private def inferTables: Future[InferredTables Or Vector[DeployError]] = {
-    databaseIntrospectionInferrer.infer().map(Good(_))
-  }
 
   private def checkProjectSchemaAgainstDatabaseSchema(nextSchema: Schema, databaseSchema: DatabaseSchema): Future[Unit Or Vector[DeployError]] = {
     if (actsAsPassive && capabilities.has(IntrospectionCapability)) {
@@ -131,19 +112,6 @@ case class DeployMutation(
         Future.successful(Good(()))
       } else {
         Future.successful(Bad(errors))
-      }
-    } else {
-      Future.successful(Good(()))
-    }
-  }
-
-  private def checkProjectSchemaAgainstInferredTables(nextSchema: Schema, inferredTables: InferredTables): Future[Unit Or Vector[DeployError]] = {
-    if (actsAsPassive && capabilities.has(IntrospectionCapability)) {
-      val errors = InferredTablesValidator.checkRelationsAgainstInferredTables(nextSchema, inferredTables)
-      if (errors.isEmpty) {
-        Future.successful(Good(()))
-      } else {
-        Future.successful(Bad(errors.toVector))
       }
     } else {
       Future.successful(Good(()))

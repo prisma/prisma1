@@ -3,9 +3,9 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
+import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
-import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface}
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.connector.sqlite.SQLiteDeployConnector
 import com.prisma.deploy.migration.SchemaMapper
@@ -39,7 +39,7 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   val basicTypesGql =
     """
       |type TestModel {
-      |  id: ID! @unique
+      |  id: ID! @id
       |}
     """.stripMargin
 
@@ -181,7 +181,7 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV11Base { self:
 trait DataModelV11Base { self: PassiveDeploySpecBase =>
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val project = Project(id = projectId, schema = Schema.empty)
+  val project = Project(id = projectId, schema = Schema.emptyV11)
 
   def deployThatMustError(
       dataModel: String,
@@ -239,9 +239,6 @@ trait DataModelV11Base { self: PassiveDeploySpecBase =>
       invalidationPublisher = testDependencies.invalidationPublisher,
       capabilities = capabilities,
       clientDbQueries = deployConnector.clientDBQueries(project),
-      databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
-      fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true,
       deployConnector = deployConnector
     )
 

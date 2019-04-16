@@ -10,13 +10,13 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B 
+        |  b1: B @relation(link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A
         |}"""
@@ -28,13 +28,13 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
+        |  b1: B @relation(name: "AB1", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         |}"""
@@ -49,15 +49,15 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  # b1: B @relation(name: "AB1")
-        |  # b2: B @relation(name: "AB2")
-        |  # b3: B @relation(name: "AB3")
+        |  # b1: B @relation(name: "AB1", link: INLINE)
+        |  # b2: B @relation(name: "AB2", link: INLINE)
+        |  # b3: B @relation(name: "AB3", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  # a1: A @relation(name: "AB1")
         |  # a2: A @relation(name: "AB2")
@@ -70,15 +70,15 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
-        |  b2: B @relation(name: "AB2")
-        |  # b3: B @relation(name: "AB3")
+        |  b1: B @relation(name: "AB1", link: INLINE)
+        |  b2: B @relation(name: "AB2", link: INLINE)
+        |  # b3: B @relation(name: "AB3", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         |  a2: A @relation(name: "AB2")
@@ -93,15 +93,15 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema2 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
-        |  b2: B @relation(name: "AB2")
-        |  b3: B @relation(name: "AB3")
+        |  b1: B @relation(name: "AB1", link: INLINE)
+        |  b2: B @relation(name: "AB2", link: INLINE)
+        |  b3: B @relation(name: "AB3", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         |  a2: A @relation(name: "AB2")
@@ -120,13 +120,13 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
+        |  b1: B @relation(name: "AB1", link: INLINE)
         | }
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         | }"""
@@ -138,14 +138,14 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(oldName: "AB1", name: "NewName")
+        |  b1: B @relation(oldName: "AB1", name: "NewName", link: INLINE)
         |}
         |
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(oldName: "AB1", name: "NewName")
         |}"""

@@ -2,6 +2,7 @@ package com.prisma.deploy.schema.mutations
 
 import com.prisma.{IgnoreMongo, IgnoreSQLite}
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
+import com.prisma.shared.models.ConnectorCapability.UuidIdCapability
 import com.prisma.shared.models._
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -15,56 +16,56 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
 
     // Full feature set deploy
     val schema = basicTypesGql +
-      """
+      s"""
         |type TestModel2 {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  stringField: String @default(value: "MuchDefaultWow")
         |  requiredStringField: String!
-        |  stringListField: [String]
-        |  requiredStringListField: [String]
+        |  stringListField: [String] $scalarListDirective
+        |  requiredStringListField: [String] $scalarListDirective
         |  boolField: Boolean
         |  requiredBoolField: Boolean!
-        |  boolListField: [Boolean]
-        |  requiredBoolListField: [Boolean]
+        |  boolListField: [Boolean] $scalarListDirective
+        |  requiredBoolListField: [Boolean] $scalarListDirective
         |  dateTimeField: DateTime
         |  requiredDateTimeField: DateTime!
-        |  dateTimeListField: [DateTime]
-        |  requiredDateTimeListField: [DateTime]
+        |  dateTimeListField: [DateTime] $scalarListDirective
+        |  requiredDateTimeListField: [DateTime] $scalarListDirective
         |  intField: Int
         |  requiredIntField: Int!
-        |  intListField: [Int]
-        |  requiredIntListField: [Int]
+        |  intListField: [Int] $scalarListDirective
+        |  requiredIntListField: [Int] $scalarListDirective
         |  floatField: Float
         |  requiredFloatField: Float!
-        |  floatListField: [Float]
-        |  requiredFloatListField: [Float]
-        |  oneRelation: TestModel3 @relation(name: "Test2OnTest3")
-        |  requiredOneRelation: TestModel4! @relation(name: "Test2OnTest4")
-        |  multiRelation: [TestModel5] @relation(name: "Test2OnTest5")
-        |  requiredMultiRelation: [TestModel6] @relation(name: "Test2OnTest6")
+        |  floatListField: [Float] $scalarListDirective
+        |  requiredFloatListField: [Float] $scalarListDirective
+        |  oneRelation: TestModel3 @relation(name: "Test2OnTest3", link: INLINE)
+        |  requiredOneRelation: TestModel4! @relation(name: "Test2OnTest4", link: INLINE)
+        |  multiRelation: [TestModel5] @relation(name: "Test2OnTest5" $listInlineArgument)
+        |  requiredMultiRelation: [TestModel6] @relation(name: "Test2OnTest6" $listInlineArgument)
         |  enumField: Testnum
         |  requiredEnumField: Testnum!
-        |  enumListField: [Testnum]
-        |  requiredEnumListField: [Testnum]
+        |  enumListField: [Testnum] $scalarListDirective
+        |  requiredEnumListField: [Testnum] $scalarListDirective
         |}
         |
         |type TestModel3 {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  back: TestModel2 @relation(name: "Test2OnTest3")
         |}
         |
         |type TestModel4 {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  back: TestModel2! @relation(name: "Test2OnTest4")
         |}
         |
         |type TestModel5 {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  back: TestModel2 @relation(name: "Test2OnTest5")
         |}
         |
         |type TestModel6 {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  back: TestModel2! @relation(name: "Test2OnTest6")
         |}
         |
@@ -86,26 +87,26 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val (project, _) = setupProject(basicTypesGql)
 
     val schema1 =
-      """
+      s"""
         |type TestModel {
-        |  id: ID! @unique
-        |  stringListField: [String]
+        |  id: ID! @id
+        |  stringListField: [String] $scalarListDirective
         |}
       """
 
     val schema2 =
-      """
+      s"""
         |type TestModel {
-        |  id: ID! @unique
-        |  stringListField: [Int]
+        |  id: ID! @id
+        |  stringListField: [Int] $scalarListDirective
         |}
       """
 
     val schema3 =
-      """
+      s"""
         |type TestModel {
-        |  id: ID! @unique
-        |  intListField: [Int]
+        |  id: ID! @id
+        |  intListField: [Int] $scalarListDirective
         |}
       """
 
@@ -117,98 +118,6 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     migrations should have(size(5))
     migrations.exists(x => x.status != MigrationStatus.Success) shouldEqual false
     migrations.head.revision shouldEqual 5 // order is DESC
-  }
-
-  "DeployMutation" should "fail if reserved fields are malformed" in {
-    val (project, _) = setupProject(basicTypesGql)
-    val nameAndStage = testDependencies.projectIdEncoder.fromEncodedString(project.id)
-
-    def tryDeploy(field: String) = {
-      val schema = basicTypesGql +
-        s"""
-          |type TestModel2 {
-          |  $field
-          |  test: String
-          |}
-        """.stripMargin
-
-      val result = server.query(
-        s"""
-         |mutation {
-         |  deploy(input:{name: "${nameAndStage.name}", stage: "${nameAndStage.stage}", types: ${formatSchema(schema)}}){
-         |    migration {
-         |      applied
-         |    }
-         |    errors {
-         |      description
-         |    }
-         |  }
-         |}
-        """
-      )
-
-      // Query must fail
-      result.pathExists("data.deploy.errors") shouldEqual true
-    }
-
-    tryDeploy("id: String! @unique")
-    tryDeploy("id: ID!")
-    tryDeploy("id: ID @unique")
-    tryDeploy("""id: ID! @default(value: "Woot")""")
-
-    tryDeploy("updatedAt: String! @unique")
-    tryDeploy("updatedAt: DateTime!")
-    tryDeploy("updatedAt: DateTime @unique")
-    tryDeploy("""updatedAt: DateTime! @default(value: "Woot")""")
-  }
-
-  "DeployMutation" should "create hidden reserved fields if they are not specified in the types" in {
-    val schema = """
-                   |type TestModel {
-                   |  test: String
-                   |}
-                 """
-
-    val (project, _)  = setupProject(schema)
-    val loadedProject = projectPersistence.load(project.id).await.get
-
-    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("id").isHidden shouldEqual true
-    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("createdAt").isHidden shouldEqual true
-    loadedProject.schema.getModelByName_!("TestModel").getFieldByName_!("updatedAt").isHidden shouldEqual true
-  }
-
-  "DeployMutation" should "hide reserved fields instead of deleting them and reveal them instead of creating them" in {
-    val schema = """
-                   |type TestModel {
-                   |  id: ID! @unique
-                   |  test: String
-                   |}
-                 """
-
-    val (project, _)  = setupProject(schema)
-    val loadedProject = projectPersistence.load(project.id).await.get
-
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
-
-    val updatedSchema = """
-                          |type TestModel {
-                          |  test: String
-                          |  createdAt: DateTime!
-                          |  updatedAt: DateTime!
-                          |}
-                        """
-
-    server.deploySchema(project, updatedSchema)
-
-    val reloadedProject = projectPersistence.load(project.id).await.get
-
-    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual false
-    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual false
-    reloadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual false
-
-    // todo assert client db cols?
   }
 
   "DeployMutation" should "should not blow up on consecutive deploys" ignore {
@@ -238,7 +147,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
   "DeployMutation" should "return an error if a subscription query is invalid" in {
     val schema = """
                    |type TestModel {
-                   |  id: ID! @unique
+                   |  id: ID! @id
                    |  test: String
                    |}
                  """.stripMargin
@@ -255,7 +164,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
   "DeployMutation" should "create a server side subscription if the subscription query is valid" in {
     val schema = """
                    |type TestModel {
-                   |  id: ID! @unique
+                   |  id: ID! @id
                    |  test: String
                    |}
                  """.stripMargin
@@ -302,28 +211,25 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
   "DeployMutation" should "error on a relationName that are too long (>54 chars)" in {
     val schema = """
                    |type TestModel {
-                   |  id: ID! @unique
+                   |  id: ID! @id
                    |  test: String
                    |}
                  """.stripMargin
 
     val (project, _)  = setupProject(schema)
-    val nameAndStage  = testDependencies.projectIdEncoder.fromEncodedString(project.id)
     val loadedProject = projectPersistence.load(project.id).await.get
 
     loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
 
     val updatedSchema = """
                           |type TestModel {
-                          |  id: ID! @unique
+                          |  id: ID! @id
                           |  test: String
                           |  t2: TestModel2 @relation(name: "ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJ")
                           |}
                           |
                           |type TestModel2 {
-                          |  id: ID! @unique
+                          |  id: ID! @id
                           |  test: String
                           |}
                         """.stripMargin
@@ -338,7 +244,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
   "DeployMutation" should "shorten autogenerated relationNames to a maximum of 54 characters" in {
     val schema = """
                    |type TestModel {
-                   |  id: ID! @unique
+                   |  id: ID! @id
                    |  test: String
                    |}
                  """.stripMargin
@@ -347,18 +253,16 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val loadedProject = projectPersistence.load(project.id).await.get
 
     loadedProject.schema.getModelByName("TestModel").get.getFieldByName("id").get.isVisible shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("createdAt").get.isHidden shouldEqual true
-    loadedProject.schema.getModelByName("TestModel").get.getFieldByName("updatedAt").get.isHidden shouldEqual true
 
     val updatedSchema = """
                           |type TestModelWithAVeryLongName {
-                          |  id: ID! @unique
+                          |  id: ID! @id
                           |  test: String
-                          |  t2: TestModel2WhichAlsoHappensToHaveAVeryLongName
+                          |  t2: TestModel2WhichAlsoHappensToHaveAVeryLongName @relation(link: INLINE)
                           |}
                           |
                           |type TestModel2WhichAlsoHappensToHaveAVeryLongName {
-                          |  id: ID! @unique
+                          |  id: ID! @id
                           |  test: String
                           |  t1: TestModelWithAVeryLongName
                           |}
@@ -377,8 +281,8 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema =
       """
         |type TestModel {
-        |  id: ID! @unique
-        |  requiredIntList: [Int] @default(value: "[1,2]") 
+        |  id: ID! @id
+        |  requiredIntList: [Int] @default(value: [1,2])
         |}
       """.stripMargin
 
@@ -395,7 +299,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
                                   |}
       """.stripMargin)
 
-    result1.pathAsSeq("data.deploy.errors").head.toString should include("List fields cannot have defaultValues.")
+    result1.pathAsSeq("data.deploy.errors").head.toString should include("The `@default` directive must only be placed on scalar fields that are not lists.")
   }
 
   "DeployMutation" should "throw a correct error for an invalid query" in {
@@ -404,7 +308,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema =
       """
         |{
-        |  id: ID! @unique
+        |  id: ID! @id
         |}
       """.stripMargin
 
@@ -430,7 +334,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema =
       """
         |type Comment{
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  comments: [Comment] @relation(name: "RelatedComments")
         |  parent: Comment @relation(name: "RelatedComments")
@@ -450,13 +354,13 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema =
       """
         |type Author{
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |  comments: [Comment] @relation(name: "AuthorComments" onDelete: CASCADE)
         |}
         |
         |type Comment{
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  author: Author! @relation(name: "AuthorComments" onDelete: SET_NULL)
         |}
@@ -527,7 +431,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema =
       """
         |{
-        |  id: ID! @unique
+        |  id: ID! @id
         |}
       """.stripMargin
 
@@ -560,12 +464,14 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema =
       """
         |type Note {
+        | id: ID! @id
         | name: String! @unique
         | # creator: User!
         | members: [User]
         |}
         |
         |type User {
+        | id: ID! @id
         | name: String! @unique
         |}
       """.stripMargin
@@ -580,12 +486,14 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema2 =
       """
         |type Note {
+        | id: ID! @id
         | name: String! @unique
         | creator: User! @relation(name: "Creator")
         | members: [User] @relation(name: "MemberOf")
         |}
         |
         |type User {
+        | id: ID! @id
         | name: String! @unique
         | Notes: [Note] @relation(name: "Creator")
         | memberOf: [Note] @relation(name: "MemberOf")
@@ -617,12 +525,14 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema =
       """
         |type Note {
+        | id: ID! @id
         | name: String! @unique
         | creator: User! @relation(name: "Creator")
         | members: [User] @relation(name: "MemberOf")
         |}
         |
         |type User {
+        | id: ID! @id
         | name: String! @unique
         | Notes: [Note] @relation(name: "Creator")
         | memberOf: [Note] @relation(name: "MemberOf")
@@ -639,12 +549,14 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema2 =
       """
         |type Note {
+        | id: ID! @id
         | name: String! @unique
         | # creator: User!
         | members: [User]
         |}
         |
         |type User {
+        | id: ID! @id
         | name: String! @unique
         |}
       """.stripMargin
@@ -672,6 +584,7 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     val schema =
       """
         |type A {
+        | id: ID! @id
         | name: String! @unique
         | value: Int
         |}
@@ -685,10 +598,11 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
     migrations.head.revision shouldEqual 3 // order is DESC
 
     val schema2 =
-      """
+      s"""
         |type A {
+        | id: ID! @id
         | name: String! @unique
-        | value: [Int]
+        | value: [Int] $scalarListDirective
         |}
       """.stripMargin
 
@@ -701,17 +615,19 @@ class DeployMutationSpec extends FlatSpec with Matchers with ActiveDeploySpecBas
   }
 
   "DeployMutation" should "succeed with id fields of type UUID" taggedAs (IgnoreMongo) in {
-    val (project, _) = setupProject(basicTypesGql)
-    val schema =
-      """
-        |type A {
-        | id: UUID! @unique
-        |}
-      """.stripMargin
+    if (capabilities.has(UuidIdCapability)) {
+      val (project, _) = setupProject(basicTypesGql)
+      val schema =
+        """
+          |type A {
+          | id: UUID! @id
+          |}
+        """.stripMargin
 
-    val updatedProject = server.deploySchema(project, schema)
-    val idField        = updatedProject.schema.getModelByName_!("A").idField_!
-    idField.typeIdentifier should be(TypeIdentifier.UUID)
+      val updatedProject = server.deploySchema(project, schema)
+      val idField        = updatedProject.schema.getModelByName_!("A").idField_!
+      idField.typeIdentifier should be(TypeIdentifier.UUID)
+    }
   }
 
   private def formatFunctions(functions: Vector[FunctionInput]) = {

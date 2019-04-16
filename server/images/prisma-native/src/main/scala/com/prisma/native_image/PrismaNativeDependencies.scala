@@ -91,9 +91,9 @@ case class PrismaNativeDependencies()(implicit val system: ActorSystem, val mate
   override lazy val auth             = GraalAuth(Algorithm.HS256)
 
   lazy val databaseConfig                         = config.databases.head
-  override lazy val deployConnector               = PostgresDeployConnector(databaseConfig, supportedDrivers(SupportedDrivers.POSTGRES), isActive = true, config.isPrototype)
+  override lazy val deployConnector               = PostgresDeployConnector(databaseConfig, supportedDrivers(SupportedDrivers.POSTGRES))
   override def projectIdEncoder: ProjectIdEncoder = deployConnector.projectIdEncoder
-  override lazy val apiConnector                  = PostgresApiConnector(databaseConfig, supportedDrivers(SupportedDrivers.POSTGRES), isActive = true, config.isPrototype)
+  override lazy val apiConnector                  = PostgresApiConnector(databaseConfig, supportedDrivers(SupportedDrivers.POSTGRES))
 
   override lazy val functionValidator                = FunctionValidatorImpl()
   override lazy val sideEffectMutactionExecutor      = SideEffectMutactionExecutorImpl()

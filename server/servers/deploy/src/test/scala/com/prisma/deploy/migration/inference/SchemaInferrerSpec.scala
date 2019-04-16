@@ -1,11 +1,10 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, MigrationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, FieldManifestation, ModelManifestation, RelationTable}
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, RelationSide, Schema}
+import com.prisma.shared.models.{ConnectorCapabilities, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
 
@@ -641,7 +640,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: ConnectorCapabilities): Schema = {
-    val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get.dataModel
-    SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
+    val prismaSdl = DataModelValidatorImpl.validate(types, capabilities).get.dataModel
+    SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl)
   }
 }

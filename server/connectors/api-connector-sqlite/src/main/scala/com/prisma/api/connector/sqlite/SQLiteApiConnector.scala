@@ -9,7 +9,7 @@ import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncode
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SQLiteApiConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
+case class SQLiteApiConnector(config: DatabaseConfig, driver: Driver)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val databases = SQLiteDatabasesFactory.initialize(config, driver)
 
   override def initialize(): Future[Unit] = {
@@ -24,11 +24,11 @@ case class SQLiteApiConnector(config: DatabaseConfig, driver: Driver, isPrototyp
     } yield ()
   }
 
-  override def databaseMutactionExecutor: JdbcDatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds = true)
+  override def databaseMutactionExecutor: JdbcDatabaseMutactionExecutor = JdbcDatabaseMutactionExecutor(databases.primary)
   override def dataResolver(project: Project)                           = JdbcDataResolver(project, databases.replica)(ec)
   override def masterDataResolver(project: Project)                     = JdbcDataResolver(project, databases.primary)(ec)
 
   override def projectIdEncoder: ProjectIdEncoder = ProjectIdEncoder('_')
 
-  override val capabilities = ConnectorCapabilities.sqlite
+  override val capabilities = ConnectorCapabilities.sqliteJdbcPrototype
 }

@@ -63,8 +63,7 @@ case class TestApiDependenciesImpl()(implicit val system: ActorSystem, val mater
   override lazy val mutactionVerifier           = DatabaseMutactionVerifierImpl
 
   lazy val deployConnector = ConnectorLoader.loadDeployConnector(
-    config = config.copy(databases = config.databases.map(_.copy(pooled = false))),
-    isTest = true
+    config = config.copy(databases = config.databases.map(_.copy(pooled = false)))
   )
 
   override def projectIdEncoder: ProjectIdEncoder    = deployConnector.projectIdEncoder

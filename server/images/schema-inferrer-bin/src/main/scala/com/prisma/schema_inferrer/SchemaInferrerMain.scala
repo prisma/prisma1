@@ -1,5 +1,4 @@
 package com.prisma.schema_inferrer
-import com.prisma.deploy.connector.{FieldRequirementsInterface, InferredTables}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.shared.models.{ConnectorCapabilities, Schema}
@@ -19,15 +18,9 @@ object SchemaInferrerMain {
     val inputAsJson = Json.parse(line)
     val input       = inputAsJson.as[Input]
 
-    val (capabilities, emptySchema) =
-      if (line.contains("@id")) { // todo doesn't work as intended,
-        (ConnectorCapabilities.mysqlPrototype, Schema.emptyV11)
-      } else {
-        (ConnectorCapabilities.mysql, Schema.empty)
-      }
-
-    val validationResult = DataModelValidatorImpl.validate(input.dataModel, FieldRequirementsInterface.empty, capabilities)
-    val schema           = SchemaInferrer(capabilities).infer(emptySchema, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
+    val (capabilities, emptySchema) = (ConnectorCapabilities.mysqlPrototype, Schema.emptyV11)
+    val validationResult            = DataModelValidatorImpl.validate(input.dataModel, capabilities)
+    val schema                      = SchemaInferrer(capabilities).infer(emptySchema, SchemaMapping.empty, validationResult.get.dataModel)
 
     println(Json.toJson(schema))
   }

@@ -19,8 +19,7 @@ import slick.jdbc.TransactionIsolation
 import scala.concurrent.{ExecutionContext, Future}
 
 case class SQLiteDatabaseMutactionExecutor(
-    slickDatabaseArg: SlickDatabase,
-    manageRelayIds: Boolean
+    slickDatabaseArg: SlickDatabase
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {
 
@@ -91,12 +90,12 @@ case class SQLiteDatabaseMutactionExecutor(
         for {
           result <- interpreterFor(m, parentId).dbioActionWithErrorMapped(mutationBuilder, parentId)
           childResults <- result match {
-                            case result: CreateNodeResult =>
-                              DBIO.sequence(m.create.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
-                            case result: UpdateNodeResult =>
-                              DBIO.sequence(m.update.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
-                            case _ => DBIO.successful(Vector.empty)
-                          }
+                           case result: CreateNodeResult =>
+                             DBIO.sequence(m.create.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+                           case result: UpdateNodeResult =>
+                             DBIO.sequence(m.update.allNestedMutactions.map(executeNestedMutaction(_, result.id, mutationBuilder)))
+                           case _ => DBIO.successful(Vector.empty)
+                         }
         } yield MutactionResults(result +: childResults.flatMap(_.results))
 
       case m: FurtherNestedMutaction =>
@@ -189,9 +188,9 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope       = prisma.protocol.DatabaseMutaction(projectJson, None, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
-      case m: ImportNodes         => ImportNodesInterpreter(m, shouldCreateRelayIds = manageRelayIds)
-      case m: ImportRelations     => ImportRelationsInterpreter(m)
-      case m: ImportScalarLists   => ImportScalarListsInterpreter(m)
+      case m: ImportNodes       => ImportNodesInterpreter(m)
+      case m: ImportRelations   => ImportRelationsInterpreter(m)
+      case m: ImportScalarLists => ImportScalarListsInterpreter(m)
     }
   }
 
@@ -199,7 +198,7 @@ case class SQLiteDatabaseMutactionExecutor(
     import com.prisma.shared.models.ProjectJsonFormatter._
     val projectJson = ByteString.copyFromUtf8(Json.toJson(mutaction.project).toString())
     val headerName  = mutaction.getClass.getSimpleName
-    val prismaId = toPrismaId(parentId)
+    val prismaId    = toPrismaId(parentId)
 
     mutaction match {
       case m: NestedCreateNode =>
@@ -209,7 +208,7 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, Some(prismaId), protoMutaction)
 
         val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
-          case Error.Value.RelationViolation(rv)    => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
+          case Error.Value.RelationViolation(rv) => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
         }
 
         nested_mutaction_interpreter(envelope, m, errorHandler)
@@ -225,7 +224,7 @@ case class SQLiteDatabaseMutactionExecutor(
         }
 
         val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
-          case Error.Value.NodesNotConnected(rv)    =>
+          case Error.Value.NodesNotConnected(rv) =>
             throw NodesNotConnected(rv.relationName, rv.parentName, rv.parentWhere.map(mapNodeSelector), rv.childName, rv.childWhere.map(mapNodeSelector))
         }
 
@@ -245,8 +244,8 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, Some(prismaId), protoMutaction)
 
         val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
-          case Error.Value.NodeNotFoundForWhere(_)  => throw NodeNotFoundForWhereError(m.where)
-          case Error.Value.RelationViolation(rv)    => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
+          case Error.Value.NodeNotFoundForWhere(_) => throw NodeNotFoundForWhereError(m.where)
+          case Error.Value.RelationViolation(rv)   => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
         }
 
         nested_mutaction_interpreter(envelope, m, errorHandler)
@@ -262,9 +261,9 @@ case class SQLiteDatabaseMutactionExecutor(
         }
 
         val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
-          case Error.Value.NodesNotConnected(rv)    =>
+          case Error.Value.NodesNotConnected(rv) =>
             throw NodesNotConnected(rv.relationName, rv.parentName, rv.parentWhere.map(mapNodeSelector), rv.childName, rv.childWhere.map(mapNodeSelector))
-          case Error.Value.RelationViolation(rv)    => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
+          case Error.Value.RelationViolation(rv) => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
         }
 
         nested_mutaction_interpreter(envelope, m, errorHandler)
@@ -293,9 +292,9 @@ case class SQLiteDatabaseMutactionExecutor(
         }
 
         val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
-          case Error.Value.NodesNotConnected(rv)    =>
+          case Error.Value.NodesNotConnected(rv) =>
             throw NodesNotConnected(rv.relationName, rv.parentName, rv.parentWhere.map(mapNodeSelector), rv.childName, rv.childWhere.map(mapNodeSelector))
-          case Error.Value.RelationViolation(rv)    => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
+          case Error.Value.RelationViolation(rv) => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
         }
 
         nested_mutaction_interpreter(envelope, m, errorHandler)
@@ -311,9 +310,9 @@ case class SQLiteDatabaseMutactionExecutor(
         }
 
         val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
-          case Error.Value.NodesNotConnected(rv)    =>
+          case Error.Value.NodesNotConnected(rv) =>
             throw NodesNotConnected(rv.relationName, rv.parentName, rv.parentWhere.map(mapNodeSelector), rv.childName, rv.childWhere.map(mapNodeSelector))
-          case Error.Value.RelationViolation(rv)    => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
+          case Error.Value.RelationViolation(rv) => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
         }
 
         nested_mutaction_interpreter(envelope, m, errorHandler)

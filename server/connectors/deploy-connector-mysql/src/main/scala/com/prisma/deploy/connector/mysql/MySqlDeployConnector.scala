@@ -7,7 +7,7 @@ import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.jdbc.MySqlDatabaseInspector
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
-import com.prisma.deploy.connector.mysql.database.{MySqlFieldRequirement, MySqlInternalDatabaseSchema, MySqlJdbcDeployDatabaseMutationBuilder, MySqlTypeMapper}
+import com.prisma.deploy.connector.mysql.database.{MySqlInternalDatabaseSchema, MySqlJdbcDeployDatabaseMutationBuilder, MySqlTypeMapper}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
@@ -19,10 +19,7 @@ import slick.jdbc.meta.MTable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def isActive                                      = true
-  override def fieldRequirements: FieldRequirementsInterface = MySqlFieldRequirement(isActive)
-
+case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver)(implicit ec: ExecutionContext) extends DeployConnector {
   lazy val internalDatabaseDefs = MySqlInternalDatabaseDefs(config, driver)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases
@@ -38,10 +35,10 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
   override def databaseInspector: DatabaseInspector               = MySqlDatabaseInspector(managementDatabase)
 
-  override def capabilities = if (isPrototype) ConnectorCapabilities.mysqlPrototype else ConnectorCapabilities.mysql
+  override def capabilities = ConnectorCapabilities.mysqlPrototype
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createDatabaseForProject(id = id, !capabilities.isDataModelV11)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 
@@ -77,8 +74,6 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver, isProtot
   override def reset(): Future[Unit] = truncateTablesInDatabase(managementDatabase.database)
 
   override def shutdown() = databases.shutdown
-
-  override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
 
   override def managementLock(): Future[Unit] = {
     managementDatabase.database.run(sql"SELECT GET_LOCK('deploy_privileges', -1);".as[Int].head.withPinnedSession).transformWith {
