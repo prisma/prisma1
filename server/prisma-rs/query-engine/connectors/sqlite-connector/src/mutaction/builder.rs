@@ -197,6 +197,45 @@ impl MutationBuilder {
         })
     }
 
+    pub fn truncate_tables(project: ProjectRef) -> Vec<Delete> {
+        let models = project.schema().models();
+        let mut deletes = Vec::new();
+
+        deletes = project
+            .schema()
+            .relations()
+            .iter()
+            .map(|r| r.relation_table())
+            .fold(deletes, |mut acc, table| {
+                acc.push(Delete::from_table(table));
+                acc
+            });
+
+        deletes = models.iter().map(|m| m.table()).fold(deletes, |mut acc, table| {
+            acc.push(Delete::from_table(table));
+            acc
+        });
+
+        deletes = models
+            .iter()
+            .flat_map(|m| {
+                let tables: Vec<Table> = m
+                    .fields()
+                    .scalar_list()
+                    .iter()
+                    .map(|slf| slf.scalar_list_table().table())
+                    .collect();
+
+                tables
+            })
+            .fold(deletes, |mut acc, table| {
+                acc.push(Delete::from_table(table));
+                acc
+            });
+
+        deletes
+    }
+
     fn delete_in_chunks<F>(table: Table, ids: &[&GraphqlId], conditions: F) -> Vec<Delete>
     where
         F: Fn(&[&GraphqlId]) -> Compare,

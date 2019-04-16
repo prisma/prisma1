@@ -16,12 +16,12 @@ pub struct SchemaTemplate {
 
 #[derive(DebugStub)]
 pub struct Schema {
-    pub models: OnceCell<Vec<ModelRef>>,
-    pub relations: OnceCell<Vec<RelationRef>>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
     pub db_name: String,
 
+    models: OnceCell<Vec<ModelRef>>,
+    relations: OnceCell<Vec<RelationRef>>,
     relation_fields: OnceCell<Vec<RelationFieldRef>>,
 }
 
@@ -65,6 +65,10 @@ impl SchemaTemplate {
 impl Schema {
     pub fn models(&self) -> &[ModelRef] {
         self.models.get().unwrap()
+    }
+
+    pub fn relations(&self) -> &[RelationRef] {
+        self.relations.get().unwrap().as_slice()
     }
 
     pub fn find_model(&self, name: &str) -> DomainResult<ModelRef> {

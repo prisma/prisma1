@@ -119,4 +119,6 @@ pub trait DatabaseWrite {
         node_selectors: &Vec<NodeSelector>,
         relation_field: RelationFieldRef,
     ) -> ConnectorResult<()>;
+
+    fn execute_reset_data(conn: &Transaction, project: ProjectRef) -> ConnectorResult<()>;
 }
