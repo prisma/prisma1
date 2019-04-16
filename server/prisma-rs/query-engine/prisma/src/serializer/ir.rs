@@ -64,7 +64,7 @@ impl<'results> IrBuilder<'results> {
 
 fn build_map(result: &SinglePrismaQueryResult) -> Map {
     // Build selected fields first
-    let outer = match &result.result {
+    let mut outer = match &result.result {
         Some(single) => single
             .field_names
             .iter()
@@ -77,12 +77,17 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
     };
 
     // Then add nested selected fields
-    result.nested.iter().fold(outer, |mut map, query| {
+    outer = result.nested.iter().fold(outer, |mut map, query| {
         match query {
             PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
             PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
         };
 
+        map
+    });
+
+    result.fields.iter().fold(Map::new(), |mut map, field| {
+        map.insert(field.clone(), outer.remove(field).expect("Missing required field"));
         map
     })
 }
@@ -110,5 +115,19 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
         };
     });
 
-    vec
+    vec.into_iter()
+        .fold(vec![], |mut vec, mut item| {
+            if let Item::Map(ref mut map) = item {
+                vec.push(result.fields.iter().fold(Map::new(), |mut new, field| {
+                    let item = map.remove(field).expect("Missing required field");
+                    new.insert(field.clone(), item);
+                    new
+                }));
+            }
+
+            vec
+        })
+        .into_iter()
+        .map(|i| Item::Map(i))
+        .collect()
 }

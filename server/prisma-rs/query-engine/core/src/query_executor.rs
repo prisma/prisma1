@@ -13,6 +13,7 @@ pub enum PrismaQueryResult {
 #[derive(Debug)]
 pub struct SinglePrismaQueryResult {
     pub name: String,
+    pub fields: Vec<String>,
     pub result: Option<SingleNode>,
     pub nested: Vec<PrismaQueryResult>,
 
@@ -26,6 +27,7 @@ pub struct SinglePrismaQueryResult {
 #[derive(Debug)]
 pub struct MultiPrismaQueryResult {
     pub name: String,
+    pub fields: Vec<String>,
     pub result: ManyNodes,
     pub nested: Vec<PrismaQueryResult>,
 
@@ -128,6 +130,7 @@ impl QueryExecutor {
         parent_ids: Vec<GraphqlId>,
     ) -> CoreResult<Vec<PrismaQueryResult>> {
         let mut results = vec![];
+
         for query in queries {
             match query {
                 PrismaQuery::RecordQuery(query) => {
@@ -146,6 +149,7 @@ impl QueryExecutor {
                             let nested = self.execute_internal(&query.nested, ids)?;
                             let result = SinglePrismaQueryResult {
                                 name: query.name.clone(),
+                                fields: query.fields.clone(),
                                 result,
                                 nested,
                                 selected_fields,
@@ -174,6 +178,7 @@ impl QueryExecutor {
 
                     results.push(PrismaQueryResult::Multi(MultiPrismaQueryResult {
                         name: query.name.clone(),
+                        fields: query.fields.clone(),
                         result,
                         nested,
                         selected_fields,
@@ -198,6 +203,7 @@ impl QueryExecutor {
                         let nested = self.execute_internal(&query.nested, ids)?;
                         let result = SinglePrismaQueryResult {
                             name: query.name.clone(),
+                            fields: query.fields.clone(),
                             result: Some(node),
                             nested,
                             selected_fields,
@@ -227,6 +233,7 @@ impl QueryExecutor {
 
                     results.push(PrismaQueryResult::Multi(MultiPrismaQueryResult {
                         name: query.name.clone(),
+                        fields: query.fields.clone(),
                         result,
                         nested,
                         selected_fields,
