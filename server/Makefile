@@ -6,7 +6,7 @@ dev-mysql:
 
 dev-postgres:
 	docker-compose -f docker-compose/postgres/dev-postgres.yml up -d --remove-orphans
-	cp ./docker-compose/postgres/prisma_active.yml ./prisma.yml
+	cp ./docker-compose/postgres/prisma.yml ./prisma.yml
 
 dev-mongo:
 	docker-compose -f docker-compose/mongo/dev-mongo.yml up -d --remove-orphans
