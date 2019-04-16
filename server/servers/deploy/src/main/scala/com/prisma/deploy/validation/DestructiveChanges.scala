@@ -358,8 +358,15 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
       case (_: RelationTable, _: EmbeddedRelationLink) =>
         dataLossForRelationValidation(previousRelation)
 
-      case (_: EmbeddedRelationLink, _: EmbeddedRelationLink) =>
-        validationSuccessful // TODO: figure out when this is actually destructive
+      case (p: EmbeddedRelationLink, n: EmbeddedRelationLink) =>
+        val previousModel  = previousSchema.getModelByName_!(p.inTableOfModelName)
+        val nextModel      = nextSchema.getModelByName_!(n.inTableOfModelName)
+        val modelDidChange = previousModel.stableIdentifier != nextModel.stableIdentifier
+        if (modelDidChange) {
+          dataLossForRelationValidation(previousRelation)
+        } else {
+          validationSuccessful
+        }
     }
   }
 
