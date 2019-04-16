@@ -91,6 +91,16 @@ impl Sqlite {
         Ok(())
     }
 
+    pub fn without_foreign_key_checks<F, T>(conn: &Transaction, f: F) -> ConnectorResult<T>
+    where
+        F: FnOnce() -> ConnectorResult<T>,
+    {
+        conn.execute("PRAGMA foreign_keys = OFF", NO_PARAMS)?;
+        let res = f()?;
+        conn.execute("PRAGMA foreign_keys = ON", NO_PARAMS)?;
+        Ok(res)
+    }
+
     /// If querying a single integer, such as a `COUNT()`, the function will get
     /// the first column with the default value being `0`.
     pub fn fetch_int(row: &Row) -> i64 {
