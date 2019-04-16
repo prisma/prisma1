@@ -1,10 +1,12 @@
 mod nested_connect;
 mod nested_create_node;
+mod nested_delete_node;
 mod nested_disconnect;
 mod nested_set;
 
 pub use nested_connect::*;
 pub use nested_create_node::*;
+pub use nested_delete_node::*;
 pub use nested_disconnect::*;
 pub use nested_set::*;
 
@@ -54,8 +56,8 @@ pub trait NestedActions {
     fn nodes_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> ConnectorError {
         let rf = self.relation_field();
 
-        let parent_where = parent_id.map(|parent_id| NodeSelectorInfo::for_id(rf.model(), &parent_id));
-        let child_where = child_id.map(|child_id| NodeSelectorInfo::for_id(rf.model(), &child_id));
+        let parent_where = dbg!(parent_id).map(|parent_id| NodeSelectorInfo::for_id(rf.model(), &parent_id));
+        let child_where = dbg!(child_id).map(|child_id| NodeSelectorInfo::for_id(rf.model(), &child_id));
 
         ConnectorError::NodesNotConnected {
             relation_name: rf.relation().name.clone(),

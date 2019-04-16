@@ -230,6 +230,15 @@ impl From<Node> for prisma::Node {
     }
 }
 
+impl From<SingleNode> for prisma::NodeResult {
+    fn from(node: SingleNode) -> prisma::NodeResult {
+        prisma::NodeResult {
+            node: prisma::Node::from(node.node),
+            fields: node.field_names,
+        }
+    }
+}
+
 impl IntoSelectedFields for prisma::SelectedFields {
     fn into_selected_fields(self, model: ModelRef, from_field: Option<Arc<RelationField>>) -> SelectedFields {
         let fields = self.fields.into_iter().fold(Vec::new(), |mut acc, sf| {

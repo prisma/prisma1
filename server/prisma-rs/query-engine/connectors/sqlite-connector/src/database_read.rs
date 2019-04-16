@@ -140,7 +140,7 @@ pub trait DatabaseRead {
     where
         T: SelectDefinition;
 
-    /// Find all ids from the `Model` with the filter being true.
+    /// Find the id for the given selector.
     ///
     /// ```rust
     /// # use prisma_models::*;
@@ -173,8 +173,60 @@ pub trait DatabaseRead {
     /// ```
     fn id_for(conn: &Transaction, node_selector: &NodeSelector) -> ConnectorResult<GraphqlId>;
 
+    /// Find the node for the given selector, selecting all scalar fields.
+    ///
+    /// ```rust
+    /// # use prisma_models::*;
+    /// # use rusqlite::{Connection, NO_PARAMS};
+    /// # use sqlite_connector::*;
+    /// # use connector::{*, filter::NodeSelector};
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// # let mut conn = Connection::open_in_memory().unwrap();
+    /// #
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let trans = conn.transaction().unwrap();
+    /// # trans.execute("ATTACH DATABASE './test.db' AS 'test'", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User (id Text, name Text);", NO_PARAMS).unwrap();
+    /// trans.execute(
+    ///     "INSERT INTO test.User (id, name) VALUES ('id1', 'Bob');",
+    ///     NO_PARAMS
+    /// ).unwrap();
+    ///
+    /// let model = schema.find_model("User").unwrap();
+    /// let name_field = model.fields().find_from_scalar("name").unwrap();
+    ///
+    /// let find_bob = NodeSelector::new(Arc::clone(&name_field), "Bob");
+    /// let single_node = Sqlite::find_node(&trans, &find_bob).unwrap();
+    ///
+    /// assert_eq!(
+    ///     vec![String::from("id"), String::from("name")],
+    ///     single_node.field_names,
+    /// );
+    ///
+    /// let expected_id = PrismaValue::from(GraphqlId::from("id1"));
+    /// let expected_name = PrismaValue::from("Bob");
+    ///
+    /// assert_eq!(
+    ///     vec![expected_id, expected_name],
+    ///     single_node.node.values,
+    /// );
+    /// ```
+    fn find_node(conn: &Transaction, node_selector: &NodeSelector) -> ConnectorResult<SingleNode>;
+
+    /// Find a child of a parent. Will return an error if no child found with
+    /// the given parameters. A more restrictive version of `get_ids_by_parents`.
+    fn get_id_by_parent(
+        conn: &Transaction,
+        parent_field: RelationFieldRef,
+        parent_id: &GraphqlId,
+        selector: &Option<NodeSelector>,
+    ) -> ConnectorResult<GraphqlId>;
+
     /// Find all children node id's with the given parent id's, optionally given
-    /// a `NodeSelector` block for extra filtering.
+    /// a `Filter` for extra filtering.
     ///
     /// ```rust
     /// # use prisma_models::*;

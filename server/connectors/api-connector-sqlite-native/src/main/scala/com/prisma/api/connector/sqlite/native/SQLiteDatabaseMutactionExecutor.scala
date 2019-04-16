@@ -164,7 +164,7 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, None, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
-      case m: TopLevelDeleteNode if DO_NOT_FORWARD_THIS_ONE =>
+      case m: TopLevelDeleteNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Delete(
           prisma.protocol.DeleteNode(
             header = prisma.protocol.Header(headerName),
@@ -173,7 +173,7 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, None, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
-      case m: TopLevelDeleteNodes if DO_NOT_FORWARD_THIS_ONE =>
+      case m: TopLevelDeleteNodes =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.DeleteNodes(
           prisma.protocol.DeleteNodes(
             header = prisma.protocol.Header(headerName),
@@ -188,8 +188,6 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope       = prisma.protocol.DatabaseMutaction(projectJson, None, protoMutaction)
         top_level_mutaction_interpreter(envelope, m)
 
-      case m: TopLevelDeleteNode  => DeleteNodeInterpreter(m)
-      case m: TopLevelDeleteNodes => DeleteNodesInterpreter(m)
       case m: ResetData           => ResetDataInterpreter(m)
       case m: ImportNodes         => ImportNodesInterpreter(m)
       case m: ImportRelations     => ImportRelationsInterpreter(m)
@@ -202,8 +200,6 @@ case class SQLiteDatabaseMutactionExecutor(
     val projectJson = ByteString.copyFromUtf8(Json.toJson(mutaction.project).toString())
     val headerName  = mutaction.getClass.getSimpleName
     val prismaId    = toPrismaId(parentId)
-
-    val DO_NOT_FORWARD_THIS_ONE = false
 
     mutaction match {
       case m: NestedCreateNode =>
@@ -271,7 +267,7 @@ case class SQLiteDatabaseMutactionExecutor(
           case Error.Value.RelationViolation(rv)    => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
         }
 
-        nested_mutaction_interpreter(envelope, m)
+        nested_mutaction_interpreter(envelope, m, errorHandler)
 
       case m: NestedSet =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedSet(
@@ -287,22 +283,40 @@ case class SQLiteDatabaseMutactionExecutor(
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, Some(prismaId), protoMutaction)
         nested_mutaction_interpreter(envelope, m)
 
-      case m: NestedDeleteNodes if DO_NOT_FORWARD_THIS_ONE =>
+      case m: NestedDeleteNodes =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedDeleteNodes(
           nestedDeleteManyToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, Some(prismaId), protoMutaction)
-        nested_mutaction_interpreter(envelope, m)
+        val mapNodeSelector = (ns: protocol.NodeSelector) => {
+          NodeSelectorInfo(ns.modelName, ns.fieldName, toGcValue(ns.value.prismaValue))
+        }
 
-      case m: NestedDeleteNode if DO_NOT_FORWARD_THIS_ONE =>
+        val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
+          case Error.Value.NodesNotConnected(rv)    =>
+            throw NodesNotConnected(rv.relationName, rv.parentName, rv.parentWhere.map(mapNodeSelector), rv.childName, rv.childWhere.map(mapNodeSelector))
+          case Error.Value.RelationViolation(rv)    => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
+        }
+
+        nested_mutaction_interpreter(envelope, m, errorHandler)
+
+      case m: NestedDeleteNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.NestedDelete(
           nestedDeleteToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, Some(prismaId), protoMutaction)
-        nested_mutaction_interpreter(envelope, m)
 
-      case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(m)
-      case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(m)
+        val mapNodeSelector = (ns: protocol.NodeSelector) => {
+          NodeSelectorInfo(ns.modelName, ns.fieldName, toGcValue(ns.value.prismaValue))
+        }
+
+        val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
+          case Error.Value.NodesNotConnected(rv)    =>
+            throw NodesNotConnected(rv.relationName, rv.parentName, rv.parentWhere.map(mapNodeSelector), rv.childName, rv.childWhere.map(mapNodeSelector))
+          case Error.Value.RelationViolation(rv)    => throw RelationViolation(rv.relationName, rv.modelAName, rv.modelBName)
+        }
+
+        nested_mutaction_interpreter(envelope, m, errorHandler)
     }
   }
 

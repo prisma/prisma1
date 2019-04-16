@@ -455,7 +455,7 @@ message DatabaseMutactionResult {
   oneof type {
     IdResult         create = 1;
     IdResult         update = 2;
-    IdResult         delete = 3;
+    NodeResult       delete = 3;
     Unit             unit   = 4;
     ManyNodesResult  many   = 5;
   }
@@ -465,6 +465,11 @@ message Unit {}
 
 message IdResult {
   required GraphqlId id = 1;
+}
+
+message NodeResult {
+  required Node   node   = 1;
+  repeated string fields = 2;
 }
 
 message ManyNodesResult {

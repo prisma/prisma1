@@ -10,6 +10,7 @@ use prisma_query::{
     visitor::{self, *},
 };
 use rusqlite::{Row, Transaction};
+use std::sync::Arc;
 
 impl DatabaseRead for Sqlite {
     fn query<F, T, S>(conn: &Transaction, query: S, mut f: F) -> ConnectorResult<Vec<T>>
@@ -71,6 +72,42 @@ impl DatabaseRead for Sqlite {
         let opt_id = Self::ids_for(conn, model, node_selector.clone())?.into_iter().next();
 
         opt_id.ok_or_else(|| ConnectorError::NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)))
+    }
+
+    fn find_node(conn: &Transaction, node_selector: &NodeSelector) -> ConnectorResult<SingleNode> {
+        let model = node_selector.field.model();
+        let selected_fields = SelectedFields::from(Arc::clone(&model));
+
+        let select = QueryBuilder::get_nodes(model, &selected_fields, node_selector);
+
+        let node = Self::query(conn, select, |row| Self::read_row(row, &selected_fields))?
+            .into_iter()
+            .next()
+            .ok_or_else(|| ConnectorError::NodeNotFoundForWhere(NodeSelectorInfo::from(node_selector)))?;
+
+        Ok(SingleNode::new(node, selected_fields.names()))
+    }
+
+    fn get_id_by_parent(
+        conn: &Transaction,
+        parent_field: RelationFieldRef,
+        parent_id: &GraphqlId,
+        selector: &Option<NodeSelector>,
+    ) -> ConnectorResult<GraphqlId> {
+        let ids = Self::get_ids_by_parents(conn, Arc::clone(&parent_field), vec![parent_id], selector.clone())?;
+
+        let id = ids
+            .into_iter()
+            .next()
+            .ok_or_else(|| ConnectorError::NodesNotConnected {
+                relation_name: parent_field.relation().name.clone(),
+                parent_name: parent_field.model().name.clone(),
+                parent_where: None,
+                child_name: parent_field.related_model().name.clone(),
+                child_where: selector.as_ref().map(NodeSelectorInfo::from),
+            })?;
+
+        Ok(id)
     }
 
     fn get_ids_by_parents<T>(
