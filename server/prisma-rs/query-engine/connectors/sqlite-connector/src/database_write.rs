@@ -15,13 +15,6 @@ pub trait DatabaseWrite {
     where
         T: Into<Query>;
 
-    fn update_list_args(
-        conn: &Transaction,
-        ids: Vec<GraphqlId>,
-        model: ModelRef,
-        list_args: Vec<(String, PrismaListValue)>,
-    ) -> ConnectorResult<()>;
-
     fn execute_toplevel(
         conn: &Transaction,
         mutaction: TopLevelDatabaseMutaction,
@@ -33,6 +26,10 @@ pub trait DatabaseWrite {
         parent_id: GraphqlId,
     ) -> ConnectorResult<DatabaseMutactionResults>;
 
+    fn execute_reset_data(conn: &Transaction, project: ProjectRef) -> ConnectorResult<()>;
+}
+
+pub trait DatabaseCreate {
     fn execute_create(
         conn: &Transaction,
         model: ModelRef,
@@ -40,6 +37,17 @@ pub trait DatabaseWrite {
         list_args: &[(String, PrismaListValue)],
     ) -> ConnectorResult<GraphqlId>;
 
+    fn execute_nested_create(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        actions: &NestedActions,
+        relation_field: RelationFieldRef,
+        non_list_args: &PrismaArgs,
+        list_args: &[(String, PrismaListValue)],
+    ) -> ConnectorResult<GraphqlId>;
+}
+
+pub trait DatabaseUpdate {
     fn execute_update(
         conn: &Transaction,
         node_selector: &NodeSelector,
@@ -54,18 +62,6 @@ pub trait DatabaseWrite {
         non_list_args: &PrismaArgs,
         list_args: &[(String, PrismaListValue)],
     ) -> ConnectorResult<usize>;
-
-    fn execute_delete(conn: &Transaction, mutaction: &DeleteNode) -> ConnectorResult<SingleNode>;
-    fn execute_delete_many(conn: &Transaction, mutaction: &DeleteNodes) -> ConnectorResult<usize>;
-
-    fn execute_nested_create(
-        conn: &Transaction,
-        parent_id: &GraphqlId,
-        actions: &NestedActions,
-        relation_field: RelationFieldRef,
-        non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<GraphqlId>;
 
     fn execute_nested_update(
         conn: &Transaction,
@@ -85,18 +81,15 @@ pub trait DatabaseWrite {
         list_args: &[(String, PrismaListValue)],
     ) -> ConnectorResult<usize>;
 
-    fn execute_nested_delete(
+    fn update_list_args(
         conn: &Transaction,
-        parent_id: &GraphqlId,
-        mutaction: &NestedDeleteNode,
+        ids: Vec<GraphqlId>,
+        model: ModelRef,
+        list_args: Vec<(String, PrismaListValue)>,
     ) -> ConnectorResult<()>;
+}
 
-    fn execute_nested_delete_many(
-        conn: &Transaction,
-        parent_id: &GraphqlId,
-        mutaction: &NestedDeleteNodes,
-    ) -> ConnectorResult<usize>;
-
+pub trait DatabaseRelation {
     fn execute_connect(
         conn: &Transaction,
         parent_id: &GraphqlId,
@@ -119,6 +112,24 @@ pub trait DatabaseWrite {
         node_selectors: &Vec<NodeSelector>,
         relation_field: RelationFieldRef,
     ) -> ConnectorResult<()>;
+}
 
-    fn execute_reset_data(conn: &Transaction, project: ProjectRef) -> ConnectorResult<()>;
+pub trait DatabaseDelete {
+    fn execute_delete(conn: &Transaction, node_selector: &NodeSelector) -> ConnectorResult<SingleNode>;
+    fn execute_delete_many(conn: &Transaction, model: ModelRef, filter: &Filter) -> ConnectorResult<usize>;
+
+    fn execute_nested_delete(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        nested_actions: &NestedActions,
+        node_selector: &Option<NodeSelector>,
+        relation_field: RelationFieldRef,
+    ) -> ConnectorResult<()>;
+
+    fn execute_nested_delete_many(
+        conn: &Transaction,
+        parent_id: &GraphqlId,
+        filter: &Option<Filter>,
+        relation_field: RelationFieldRef,
+    ) -> ConnectorResult<usize>;
 }
