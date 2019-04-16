@@ -114,9 +114,14 @@ pub trait DatabaseDelete {
     fn execute_delete_many(conn: &Transaction, model: ModelRef, filter: &Filter) -> ConnectorResult<usize>;
 
     /// A nested delete that removes one item related to the given `parent_id`.
-    /// Violating any relations other than the parent, trying to delete a record
-    /// not connected to the parent or deleting a non-existing record will cause
-    /// an error.
+    /// If no `RecordFinder` is given, will delete the first item from the
+    /// table.
+    ///
+    /// Errors thrown from domain violations:
+    ///
+    /// - Violating any relations where the deleted record is required
+    /// - If the deleted record is not connected to the parent
+    /// - The record does not exist
     /// ```rust
     /// # use prisma_models::*;
     /// # use rusqlite::{Connection, NO_PARAMS};
@@ -179,7 +184,7 @@ pub trait DatabaseDelete {
     /// assert_eq!(2, Sqlite::count(&trans, "Site", ConditionTree::NoCondition).unwrap());
     ///
     /// let name_field = site.fields().find_from_scalar("name").unwrap();
-    /// let selector = NodeSelector::from((name_field, "A Cat Blog"));
+    /// let selector = NodeSelector::from((name_field, "A Car Blog"));
     ///
     /// let delete_actions = NestedDeleteNode {
     ///    relation_field: Arc::clone(&relation_field),
@@ -204,6 +209,82 @@ pub trait DatabaseDelete {
         relation_field: RelationFieldRef,
     ) -> ConnectorResult<()>;
 
+    /// Removes nested items matching to filter, or if no filter is given, all
+    /// nested items related to the given `parent_id`. An error will be thrown
+    /// if any deleted record is required in a model.
+    /// ```rust
+    /// # use prisma_models::*;
+    /// # use rusqlite::{Connection, NO_PARAMS};
+    /// # use sqlite_connector::*;
+    /// # use connector::{*, filter::*, mutaction::*};
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let mut conn = Connection::open_in_memory().unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let trans = conn.transaction().unwrap();
+    /// #
+    /// # trans.execute("ATTACH DATABASE './test.db' AS 'test'", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User (id Text, name Text);", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.Site (id Text, name Text, user Text);", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test._UserToSites (A Text, B Text, id Text);", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User_cats (nodeId Text, position Integer, value Text);", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.Site_tags (nodeId Text, position Integer, value Text);", NO_PARAMS).unwrap();
+    /// # let user = schema.find_model("User").unwrap();
+    /// # let site = schema.find_model("Site").unwrap();
+    /// #
+    /// # let mut args = PrismaArgs::new();
+    /// # args.insert("id", GraphqlId::from("id1"));
+    /// # args.insert("name", "Bob");
+    /// #
+    /// # let user_id = Sqlite::execute_create(
+    /// #     &trans,
+    /// #     Arc::clone(&user),
+    /// #     &args,
+    /// #     &[],
+    /// # ).unwrap();
+    /// #
+    /// let relation_field = user.fields().find_from_relation_fields("sites").unwrap();
+    /// let mut args = PrismaArgs::new();
+    ///
+    /// for arg in ["A Cat Blog", "A Car Blog", "A Shoe Blog"].into_iter() {
+    ///     args.insert("id", GraphqlId::from(format!("id_{}", *arg)));
+    ///     args.insert("name", *arg);
+    ///
+    ///     let create_actions = NestedCreateNode {
+    ///        relation_field: Arc::clone(&relation_field),
+    ///        non_list_args: args.clone(),
+    ///        list_args: Vec::new(),
+    ///        top_is_create: true,
+    ///        nested_mutactions: NestedMutactions::default(),
+    ///     };
+    ///
+    ///     Sqlite::execute_nested_create(
+    ///         &trans,
+    ///         &user_id,
+    ///         &create_actions,
+    ///         Arc::clone(&relation_field),
+    ///         &args,
+    ///         &[],
+    ///     ).unwrap();
+    /// }
+    ///
+    /// assert_eq!(3, Sqlite::count(&trans, "Site", ConditionTree::NoCondition).unwrap());
+    ///
+    /// let name_field = site.fields().find_from_scalar("name").unwrap();
+    /// let filter = name_field.starts_with("A Ca");
+    ///
+    /// Sqlite::execute_nested_delete_many(
+    ///     &trans,
+    ///     &user_id,
+    ///     &Some(filter),
+    ///     relation_field,
+    /// ).unwrap();
+    ///
+    /// assert_eq!(1, Sqlite::count(&trans, "Site", ConditionTree::NoCondition).unwrap());
+    /// ```
     fn execute_nested_delete_many(
         conn: &Transaction,
         parent_id: &GraphqlId,
@@ -211,5 +292,6 @@ pub trait DatabaseDelete {
         relation_field: RelationFieldRef,
     ) -> ConnectorResult<usize>;
 
+    /// Truncates all tables from the project.
     fn execute_reset_data(conn: &Transaction, project: ProjectRef) -> ConnectorResult<()>;
 }
