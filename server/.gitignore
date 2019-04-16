@@ -49,4 +49,3 @@ out
 db/*.db
 db/*.sqlite
 
-prisma-rs/build/
