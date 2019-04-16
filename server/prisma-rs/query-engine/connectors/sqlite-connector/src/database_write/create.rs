@@ -90,6 +90,7 @@ pub trait DatabaseCreate {
     /// #     &args,
     /// #     &[],
     /// # ).unwrap();
+    /// #
     /// let relation_field = user.fields().find_from_relation_fields("sites").unwrap();
     ///
     /// let mut args = PrismaArgs::new();
