@@ -9,45 +9,6 @@ use rusqlite::Transaction;
 use std::sync::Arc;
 
 impl DatabaseWrite for Sqlite {
-    fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>
-    where
-        T: Into<Query>,
-    {
-        let (sql, params) = dbg!(visitor::Sqlite::build(query));
-        conn.prepare(&sql)?.execute(&params)?;
-
-        Ok(())
-    }
-
-    fn execute_many<T>(conn: &Transaction, queries: Vec<T>) -> ConnectorResult<()>
-    where
-        T: Into<Query>,
-    {
-        for query in queries {
-            Self::execute_one(conn, query)?;
-        }
-
-        Ok(())
-    }
-
-    fn update_list_args(
-        conn: &Transaction,
-        ids: Vec<GraphqlId>,
-        model: ModelRef,
-        list_args: Vec<(String, PrismaListValue)>,
-    ) -> ConnectorResult<()> {
-        for (field_name, list_value) in list_args {
-            let field = model.fields().find_from_scalar(&field_name).unwrap();
-            let table = field.scalar_list_table();
-            let (deletes, inserts) = MutationBuilder::update_scalar_list_values(&table, &list_value, ids.to_vec());
-
-            Self::execute_many(conn, deletes)?;
-            Self::execute_many(conn, inserts)?;
-        }
-
-        Ok(())
-    }
-
     fn execute_toplevel(
         conn: &Transaction,
         mutaction: TopLevelDatabaseMutaction,
@@ -141,7 +102,15 @@ impl DatabaseWrite for Sqlite {
                     mutaction: DatabaseMutaction::TopLevel(mutaction),
                 });
             }
-            TopLevelDatabaseMutaction::ResetData(_) => unimplemented!(),
+            TopLevelDatabaseMutaction::ResetData(ref rd) => {
+                Self::execute_reset_data(conn, Arc::clone(&rd.project))?;
+
+                results.push(DatabaseMutactionResult {
+                    identifier: Identifier::None,
+                    typ: DatabaseMutactionResultType::Unit,
+                    mutaction: DatabaseMutaction::TopLevel(mutaction),
+                });
+            }
         };
 
         Ok(results)
@@ -646,6 +615,55 @@ impl DatabaseWrite for Sqlite {
             let relation_query = MutationBuilder::create_relation(Arc::clone(&relation_field), parent_id, &child_id);
             Self::execute_one(conn, relation_query)?;
         }
+
+        Ok(())
+    }
+
+    fn execute_one<T>(conn: &Transaction, query: T) -> ConnectorResult<()>
+    where
+        T: Into<Query>,
+    {
+        let (sql, params) = dbg!(visitor::Sqlite::build(query));
+        conn.prepare(&sql)?.execute(&params)?;
+
+        Ok(())
+    }
+
+    fn execute_many<T>(conn: &Transaction, queries: Vec<T>) -> ConnectorResult<()>
+    where
+        T: Into<Query>,
+    {
+        for query in queries {
+            Self::execute_one(conn, query)?;
+        }
+
+        Ok(())
+    }
+
+    fn update_list_args(
+        conn: &Transaction,
+        ids: Vec<GraphqlId>,
+        model: ModelRef,
+        list_args: Vec<(String, PrismaListValue)>,
+    ) -> ConnectorResult<()> {
+        for (field_name, list_value) in list_args {
+            let field = model.fields().find_from_scalar(&field_name).unwrap();
+            let table = field.scalar_list_table();
+            let (deletes, inserts) = MutationBuilder::update_scalar_list_values(&table, &list_value, ids.to_vec());
+
+            Self::execute_many(conn, deletes)?;
+            Self::execute_many(conn, inserts)?;
+        }
+
+        Ok(())
+    }
+
+    fn execute_reset_data(conn: &Transaction, project: ProjectRef) -> ConnectorResult<()> {
+        Self::without_foreign_key_checks(conn, || {
+            let deletes = MutationBuilder::truncate_tables(project);
+
+            Self::execute_many(conn, deletes)
+        })?;
 
         Ok(())
     }
