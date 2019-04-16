@@ -1,4 +1,4 @@
-use super::{ConnectionLimit, WithMigrations};
+use super::ConnectionLimit;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -20,16 +20,6 @@ pub struct ExplicitConfig {
     connection_limit: Option<u32>,
     migrations: Option<bool>,
     active: Option<bool>,
-}
-
-impl WithMigrations for ExplicitConfig {
-    fn migrations(&self) -> Option<bool> {
-        self.migrations
-    }
-
-    fn is_active(&self) -> Option<bool> {
-        self.active
-    }
 }
 
 impl ConnectionLimit for ExplicitConfig {

@@ -21,10 +21,8 @@ impl ProtoBufInterface {
             Some(PrismaDatabase::Explicit(ref config))
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
             {
-                // FIXME: figure out the right way to do it
-                // we are passing is_active as test_mode parameter
-                // this requires us to put `active: true` in all sqlite-native configs used in tests
-                let sqlite = Sqlite::new(config.limit(), true).unwrap();
+                let test_mode = true;
+                let sqlite = Sqlite::new(config.limit(), test_mode).unwrap();
 
                 Arc::new(sqlite)
             }

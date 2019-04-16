@@ -10,15 +10,6 @@ pub use file::FileConfig;
 use serde_yaml;
 use std::{collections::BTreeMap, env, fs::File, io::prelude::*, path::PathBuf};
 
-pub trait WithMigrations {
-    fn migrations(&self) -> Option<bool>;
-    fn is_active(&self) -> Option<bool>;
-
-    fn with_migrations(&self) -> bool {
-        self.migrations().or_else(|| self.is_active()).unwrap_or(false)
-    }
-}
-
 pub trait ConnectionLimit {
     fn connection_limit(&self) -> Option<u32>;
     fn pooled(&self) -> Option<bool>;

@@ -1,4 +1,4 @@
-use super::{ConnectionLimit, WithMigrations};
+use super::ConnectionLimit;
 use url::Url;
 
 #[derive(Deserialize, Debug)]
@@ -15,16 +15,6 @@ pub struct ConnectionStringConfig {
 
     migrations: Option<bool>,
     active: Option<bool>,
-}
-
-impl WithMigrations for ConnectionStringConfig {
-    fn migrations(&self) -> Option<bool> {
-        self.migrations
-    }
-
-    fn is_active(&self) -> Option<bool> {
-        self.active
-    }
 }
 
 impl ConnectionLimit for ConnectionStringConfig {

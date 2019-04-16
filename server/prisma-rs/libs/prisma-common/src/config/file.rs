@@ -1,4 +1,4 @@
-use super::{ConnectionLimit, WithMigrations};
+use super::ConnectionLimit;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -16,16 +16,6 @@ pub struct FileConfig {
 
     migrations: Option<bool>,
     active: Option<bool>,
-}
-
-impl WithMigrations for FileConfig {
-    fn migrations(&self) -> Option<bool> {
-        self.migrations
-    }
-
-    fn is_active(&self) -> Option<bool> {
-        self.active
-    }
 }
 
 impl ConnectionLimit for FileConfig {
