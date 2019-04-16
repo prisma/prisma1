@@ -220,7 +220,7 @@ pub trait BuilderExt {
     fn collect_nested_queries<'field>(
         model: ModelRef,
         ast_field: &'field Field,
-        schema: SchemaRef,
+        _schema: SchemaRef,
     ) -> CoreResult<Vec<Builder<'field>>> {
         ast_field
             .selection_set
@@ -261,9 +261,24 @@ pub trait BuilderExt {
         builders
             .into_iter()
             .map(|b| match b {
-                Builder::OneRelation(builder) => unimplemented!(),
-                Builder::ManyRelation(builder) => unimplemented!(),
+                Builder::OneRelation(b) => Ok(PrismaQuery::RelatedRecordQuery(b.build()?)),
+                Builder::ManyRelation(b) => Ok(PrismaQuery::MultiRelatedRecordQuery(b.build()?)),
                 _ => unreachable!(),
+            })
+            .collect()
+    }
+
+    fn collect_selection_order(field: &Field) -> Vec<String> {
+        field
+            .selection_set
+            .items
+            .iter()
+            .filter_map(|select| {
+                if let Selection::Field(field) = select {
+                    Some(field.alias.clone().unwrap_or_else(|| field.name.clone()))
+                } else {
+                    None
+                }
             })
             .collect()
     }

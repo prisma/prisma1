@@ -17,6 +17,8 @@ pub struct RecordQuery {
     pub selector: NodeSelector,
     pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
+    // TODO: rename to something more obvious maybe?
+    pub fields: Vec<String>
 }
 
 #[derive(Debug, Clone)]
@@ -26,6 +28,8 @@ pub struct MultiRecordQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
+    // TODO: rename to something more obvious maybe?
+    pub fields: Vec<String>
 }
 
 #[derive(Debug, Clone)]
@@ -35,6 +39,8 @@ pub struct RelatedRecordQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
+    // TODO: rename to something more obvious maybe?
+    pub fields: Vec<String>
 }
 
 #[derive(Debug, Clone)]
@@ -44,4 +50,6 @@ pub struct MultiRelatedRecordQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<PrismaQuery>,
+    // TODO: rename to something more obvious maybe?
+    pub fields: Vec<String>
 }

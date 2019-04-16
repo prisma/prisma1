@@ -30,7 +30,7 @@ impl<'f> BuilderExt for SingleBuilder<'f> {
         }
     }
 
-    fn build(mut self) -> CoreResult<Self::Output> {
+    fn build(self) -> CoreResult<Self::Output> {
         let (model, field) = match (&self.model, &self.field) {
             (Some(m), Some(f)) => Some((m, f)),
             _ => None,
@@ -43,12 +43,14 @@ impl<'f> BuilderExt for SingleBuilder<'f> {
         let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, None)?;
         let selector = Self::extract_node_selector(&field, Arc::clone(&model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
+        let fields = Self::collect_selection_order(&field);
 
         Ok(RecordQuery {
             name,
             selector,
             selected_fields,
             nested,
+            fields,
         })
     }
 }

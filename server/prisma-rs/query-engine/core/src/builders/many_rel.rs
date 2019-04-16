@@ -42,6 +42,7 @@ impl<'f> BuilderExt for ManyRelationBuilder<'f> {
         let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, Arc::clone(&parent))?;
         let args = Self::extract_query_args(field, Arc::clone(&model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
+        let fields = Self::collect_selection_order(&field);
 
         Ok(MultiRelatedRecordQuery {
             name,
@@ -49,6 +50,7 @@ impl<'f> BuilderExt for ManyRelationBuilder<'f> {
             args,
             selected_fields,
             nested,
+            fields,
         })
     }
 }
