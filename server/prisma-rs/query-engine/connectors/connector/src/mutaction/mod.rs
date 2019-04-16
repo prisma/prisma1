@@ -60,7 +60,7 @@ pub enum NestedDatabaseMutaction {
     DeleteNodes(NestedDeleteNodes),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct NestedMutactions {
     pub creates: Vec<NestedCreateNode>,
     pub updates: Vec<NestedUpdateNode>,
