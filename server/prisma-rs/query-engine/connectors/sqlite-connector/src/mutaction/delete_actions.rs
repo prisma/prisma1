@@ -1,21 +1,14 @@
-use connector::{
-    error::ConnectorError,
-    mutaction::{DeleteNode, DeleteNodes, NestedDeleteNode, NestedDeleteNodes},
-    ConnectorResult,
-};
+use connector::{error::ConnectorError, ConnectorResult};
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
-use std::sync::Arc;
 
-pub trait DeleteActions {
-    fn model(&self) -> ModelRef;
+pub struct DeleteActions;
 
-    fn check_relation_violations<F>(&self, ids: &[&GraphqlId], f: F) -> ConnectorResult<()>
+impl DeleteActions {
+    pub fn check_relation_violations<F>(model: ModelRef, ids: &[&GraphqlId], f: F) -> ConnectorResult<()>
     where
         F: Fn(Select) -> ConnectorResult<Option<GraphqlId>>,
     {
-        let model = self.model();
-
         for rf in model.schema().fields_requiring_model(model) {
             let relation = rf.relation();
 
@@ -38,29 +31,5 @@ pub trait DeleteActions {
         }
 
         Ok(())
-    }
-}
-
-impl DeleteActions for NestedDeleteNode {
-    fn model(&self) -> ModelRef {
-        self.relation_field.related_model()
-    }
-}
-
-impl DeleteActions for NestedDeleteNodes {
-    fn model(&self) -> ModelRef {
-        self.relation_field.model()
-    }
-}
-
-impl DeleteActions for DeleteNode {
-    fn model(&self) -> ModelRef {
-        self.where_.field.model()
-    }
-}
-
-impl DeleteActions for DeleteNodes {
-    fn model(&self) -> ModelRef {
-        Arc::clone(&self.model)
     }
 }

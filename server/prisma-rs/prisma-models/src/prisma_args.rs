@@ -7,9 +7,15 @@ pub struct PrismaArgs {
     pub args: BTreeMap<String, PrismaValue>,
 }
 
-impl PrismaArgs {
-    pub fn new(args: BTreeMap<String, PrismaValue>) -> Self {
+impl From<BTreeMap<String, PrismaValue>> for PrismaArgs {
+    fn from(args: BTreeMap<String, PrismaValue>) -> Self {
         Self { args }
+    }
+}
+
+impl PrismaArgs {
+    pub fn new() -> Self {
+        Self { args: BTreeMap::new() }
     }
 
     pub fn insert<T, V>(&mut self, key: T, arg: V)

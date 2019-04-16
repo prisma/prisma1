@@ -28,7 +28,7 @@
         {
           "name": "sites",
           "typeIdentifier": "Relation",
-          "isRequired": true,
+          "isRequired": false,
           "isList": false,
           "isUnique": false,
           "isHidden": false,
@@ -77,7 +77,7 @@
         {
           "name": "user",
           "typeIdentifier": "Relation",
-          "isRequired": true,
+          "isRequired": false,
           "isList": false,
           "isUnique": false,
           "isHidden": false,
