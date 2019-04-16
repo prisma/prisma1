@@ -55,9 +55,17 @@ impl<'a> Builder<'a> {
     fn infer(model: &ModelRef, field: &'a Field, parent: Option<RelationFieldRef>) -> Option<Builder<'a>> {
         if let Some(ref parent) = parent {
             if parent.is_list {
-                Some(Builder::ManyRelation(ManyRelationBuilder::new()))
+                Some(Builder::ManyRelation(ManyRelationBuilder::new().setup(
+                    Arc::clone(&model),
+                    field,
+                    Arc::clone(&parent),
+                )))
             } else {
-                Some(Builder::OneRelation(OneRelationBuilder::new()))
+                Some(Builder::OneRelation(OneRelationBuilder::new().setup(
+                    Arc::clone(&model),
+                    field,
+                    Arc::clone(&parent),
+                )))
             }
         } else {
             let normalized = model.name.to_camel_case();
@@ -227,27 +235,19 @@ pub trait BuilderExt {
             .items
             .iter()
             .filter_map(|i| {
-                if let Selection::Field(f) = i {
-                    let field = model.fields().find_from_all(&f.name);
-                    match field {
+                if let Selection::Field(x) = i {
+                    let field = dbg!(&model).fields().find_from_all(&x.name);
+                    match dbg!(&field) {
                         Ok(ModelField::Scalar(_f)) => None,
                         Ok(ModelField::Relation(f)) => {
                             let model = f.related_model();
                             let parent = Some(Arc::clone(&f));
 
-                            match Builder::infer(&model, &ast_field, parent) {
-                                Some(Builder::OneRelation(b)) => {
-                                    Some(Ok(Builder::OneRelation(b.setup(model, ast_field, Arc::clone(f)))))
-                                }
-                                Some(Builder::ManyRelation(b)) => {
-                                    Some(Ok(Builder::ManyRelation(b.setup(model, ast_field, Arc::clone(f)))))
-                                }
-                                _ => None,
-                            }
+                            Builder::infer(&model, x, parent).map(|r| Ok(r))
                         }
                         _ => Some(Err(CoreError::QueryValidationError(format!(
                             "Selected field {} not found on model {}",
-                            f.name, model.name,
+                            x.name, model.name,
                         )))),
                     }
                 } else {

@@ -35,7 +35,6 @@ struct RequestContext {
     graphql_request_handler: GraphQlRequestHandler,
 }
 
-#[allow(unused_variables)]
 fn main() {
     env_logger::init();
 
