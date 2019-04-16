@@ -86,6 +86,18 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
         map
     });
 
+    result.list_results.values.iter().for_each(|values| {
+        values
+            .iter()
+            .zip(&result.list_results.field_names)
+            .for_each(|(list, field_name)| {
+                outer.insert(
+                    field_name.clone(),
+                    Item::List(list.iter().map(|pv| Item::Value(pv.clone())).collect()),
+                );
+            })
+    });
+
     result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(field.clone(), outer.remove(field).expect("Missing required field"));
         map
@@ -113,6 +125,24 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
             },
             _ => unreachable!(),
         };
+    });
+
+    vec = vec.into_iter().fold(vec![], |vec, mut item| {
+        if let Item::Map(ref mut map) = item {
+            result.list_results.values.iter().for_each(|values| {
+                values
+                    .iter()
+                    .zip(&result.list_results.field_names)
+                    .for_each(|(list, field_name)| {
+                        map.insert(
+                            field_name.clone(),
+                            Item::List(list.iter().map(|pv| Item::Value(pv.clone())).collect()),
+                        );
+                    })
+            });
+        }
+
+        vec
     });
 
     vec.into_iter()
