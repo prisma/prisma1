@@ -1,9 +1,8 @@
-use super::{Builder as SuperBuilder, BuilderExt};
-use crate::{query_ast::MultiRelatedRecordQuery, CoreError, CoreResult};
+use super::BuilderExt;
+use crate::{query_ast::MultiRelatedRecordQuery, CoreResult};
 
-use connector::filter::NodeSelector;
 use graphql_parser::query::Field;
-use prisma_models::{ModelRef, RelationFieldRef, SelectedFields};
+use prisma_models::{ModelRef, RelationFieldRef};
 use std::sync::Arc;
 
 pub struct ManyRelationBuilder<'f> {
@@ -34,7 +33,7 @@ impl<'f> BuilderExt for ManyRelationBuilder<'f> {
             (Some(m), Some(f), Some(p)) => Some((m, f, p)),
             _ => None,
         }
-        .expect("`RelatedRecordQuery` builder not properly initialised!");
+        .expect("`MultiRelatedRecordQuery` builder not properly initialised!");
 
         let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.schema())?;
         let nested = Self::build_nested_queries(nested_builders)?;

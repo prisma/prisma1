@@ -1,12 +1,4 @@
 //! Query execution builders module
-#![allow(warnings)]
-
-/// I got sick of typing `Option<...>` over and over
-macro_rules! opt {
-    ($x:ty) => {
-        Option<$x>
-    };
-}
 
 mod inflector;
 mod many_rel;

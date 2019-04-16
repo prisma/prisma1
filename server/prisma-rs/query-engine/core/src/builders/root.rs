@@ -1,8 +1,7 @@
-use super::{Builder, BuilderExt};
-use crate::{CoreError, CoreResult, PrismaQuery};
+use super::Builder;
+use crate::{CoreResult, PrismaQuery};
 use graphql_parser::query::*;
-use inflector::Inflector;
-use prisma_models::{Field as ModelField, *};
+use prisma_models::SchemaRef;
 use std::sync::Arc;
 
 pub struct RootBuilder {

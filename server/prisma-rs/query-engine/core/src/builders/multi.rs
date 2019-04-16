@@ -1,9 +1,8 @@
-use super::{Builder as SuperBuilder, BuilderExt};
-use crate::{query_ast::MultiRecordQuery, CoreError, CoreResult};
+use super::BuilderExt;
+use crate::{query_ast::MultiRecordQuery, CoreResult};
 
-use connector::filter::NodeSelector;
 use graphql_parser::query::Field;
-use prisma_models::{ModelRef, RelationFieldRef, SelectedFields};
+use prisma_models::ModelRef;
 use std::sync::Arc;
 
 pub struct MultiBuilder<'f> {

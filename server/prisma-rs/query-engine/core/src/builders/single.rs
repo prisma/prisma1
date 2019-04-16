@@ -1,9 +1,8 @@
-use super::{Builder as SuperBuilder, BuilderExt};
-use crate::{query_ast::RecordQuery, CoreError, CoreResult};
+use super::BuilderExt;
+use crate::{query_ast::RecordQuery, CoreResult};
 
-use connector::filter::NodeSelector;
 use graphql_parser::query::Field;
-use prisma_models::{ModelRef, SelectedFields};
+use prisma_models::ModelRef;
 use std::sync::Arc;
 
 #[derive(Debug)]

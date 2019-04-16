@@ -1,9 +1,8 @@
-use super::{Builder as SuperBuilder, BuilderExt};
-use crate::{query_ast::RelatedRecordQuery, CoreError, CoreResult};
+use super::BuilderExt;
+use crate::{query_ast::RelatedRecordQuery, CoreResult};
 
-use connector::filter::NodeSelector;
 use graphql_parser::query::Field;
-use prisma_models::{ModelRef, RelationFieldRef, SelectedFields};
+use prisma_models::{ModelRef, RelationFieldRef};
 use std::sync::Arc;
 
 pub struct OneRelationBuilder<'f> {

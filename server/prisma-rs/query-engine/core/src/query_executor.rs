@@ -1,5 +1,3 @@
-#![allow(warnings)]
-
 use crate::{query_ast, CoreResult};
 use connector::{ConnectorResult, DataResolver, ScalarListValues};
 use prisma_models::{GraphqlId, ManyNodes, ScalarField, SelectedFields, SingleNode};
