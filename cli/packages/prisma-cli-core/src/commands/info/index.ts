@@ -23,6 +23,7 @@ export default class InfoCommand extends Command {
   static topic = 'info'
   static description = 'Display service information (endpoints, cluster, ...)'
   static group = 'general'
+  static printVersionSyncWarning = true
   static flags: Flags = {
     json: flags.boolean({
       char: 'j',

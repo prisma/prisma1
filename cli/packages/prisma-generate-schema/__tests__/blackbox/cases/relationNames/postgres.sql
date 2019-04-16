@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -64,7 +64,6 @@ CREATE TABLE "schema-generator$relationNames"."C" (
 --
 
 CREATE TABLE "schema-generator$relationNames"."_AToC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -75,7 +74,6 @@ CREATE TABLE "schema-generator$relationNames"."_AToC" (
 --
 
 CREATE TABLE "schema-generator$relationNames"."_BToC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -86,7 +84,6 @@ CREATE TABLE "schema-generator$relationNames"."_BToC" (
 --
 
 CREATE TABLE "schema-generator$relationNames"."_RaToB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -97,7 +94,6 @@ CREATE TABLE "schema-generator$relationNames"."_RaToB" (
 --
 
 CREATE TABLE "schema-generator$relationNames"."_RaToB2" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -135,38 +131,6 @@ ALTER TABLE ONLY "schema-generator$relationNames"."B"
 
 ALTER TABLE ONLY "schema-generator$relationNames"."C"
     ADD CONSTRAINT "C_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToC _AToC_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relationNames"."_AToC"
-    ADD CONSTRAINT "_AToC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BToC _BToC_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relationNames"."_BToC"
-    ADD CONSTRAINT "_BToC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _RaToB2 _RaToB2_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB2"
-    ADD CONSTRAINT "_RaToB2_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _RaToB _RaToB_pkey; Type: CONSTRAINT; Schema: schema-generator$relationNames; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$relationNames"."_RaToB"
-    ADD CONSTRAINT "_RaToB_pkey" PRIMARY KEY (id);
 
 
 --

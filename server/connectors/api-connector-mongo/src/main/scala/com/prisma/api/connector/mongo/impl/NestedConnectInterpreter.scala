@@ -25,7 +25,7 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
         case (false, false, false, true)  => checkForOldChild(parent)
         case (false, false, false, false) => noCheckRequired
         case (true, false, false, true)   => noCheckRequired
-        case (true, false, false, false)  => noCheckRequired
+        case (true, false, false, false)  => noCheckRequired // here
         case (false, true, true, false)   => noCheckRequired
         case (false, false, true, false)  => noCheckRequired
         case (true, false, true, false)   => noCheckRequired
@@ -50,7 +50,7 @@ case class NestedConnectInterpreter(mutaction: NestedConnect)(implicit val ec: E
     case false =>
       (p.isList, c.isList) match {
         case (false, false) => SequenceAction(Vector(removalByParent(parent), removalByChild))
-        case (true, false)  => removalByChild
+        case (true, false)  => removalByChild // here
         case (false, true)  => removalByParent(parent)
         case (true, true)   => noActionRequired
       }

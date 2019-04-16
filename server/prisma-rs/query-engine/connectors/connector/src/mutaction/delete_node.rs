@@ -23,5 +23,4 @@ pub struct DeleteNodes {
 pub struct NestedDeleteNodes {
     pub relation_field: Arc<RelationField>,
     pub filter: Option<Filter>,
-
 }

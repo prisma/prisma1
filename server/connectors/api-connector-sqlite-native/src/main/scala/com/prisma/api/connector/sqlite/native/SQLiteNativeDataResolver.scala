@@ -20,8 +20,6 @@ case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: Executi
 
   override def project: Project = delegate.project
 
-  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = delegate.getModelForGlobalId(globalId)
-
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = Future {
     val projectJson = Json.toJson(project)
     val input = prisma.protocol.GetNodeByWhereInput(
@@ -65,10 +63,6 @@ case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: Executi
       queryArguments = toPrismaArguments(queryArguments),
       selectedFields = toPrismaSelectedFields(selectedFields)
     )
-
-    println(fromField.model.name)
-    println(fromField.name)
-    println("toPrismaSelectedFields(selectedFields)", toPrismaSelectedFields(selectedFields))
 
     val nodeResult: (Vector[Node], Vector[String]) = NativeBinding.get_related_nodes(input)
     val nodes                                      = nodeResult._1
@@ -140,12 +134,12 @@ case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: Executi
       toPrismaArguments(queryArguments)
     )
 
-    val count = NativeBinding.count_by_model(input)
+    val count                  = NativeBinding.count_by_model(input)
     val SkipAndLimit(_, limit) = skipAndLimitValues(queryArguments)
 
     val result = limit match {
       case Some(lim) => if (count > (lim - 1)) count - 1 else count
-      case None => count
+      case None      => count
     }
 
     Math.max(result, 0)

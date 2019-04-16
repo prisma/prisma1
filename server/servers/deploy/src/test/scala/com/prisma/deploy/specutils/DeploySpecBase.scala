@@ -3,16 +3,16 @@ package com.prisma.deploy.specutils
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
+import com.prisma.deploy.connector.DatabaseSchema
 import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
 import com.prisma.deploy.connector.mysql.MySqlDeployConnector
-import com.prisma.deploy.connector.{DatabaseSchema, EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface}
 import com.prisma.deploy.connector.postgres.PostgresDeployConnector
 import com.prisma.deploy.connector.sqlite.SQLiteDeployConnector
 import com.prisma.deploy.migration.SchemaMapper
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
 import com.prisma.deploy.migration.validation.DeployError
 import com.prisma.deploy.schema.mutations._
-import com.prisma.shared.models.ConnectorCapability.MigrationsCapability
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, MigrationsCapability, RelationLinkListCapability}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -39,7 +39,7 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
   val basicTypesGql =
     """
       |type TestModel {
-      |  id: ID! @unique
+      |  id: ID! @id
       |}
     """.stripMargin
 
@@ -72,13 +72,31 @@ trait DeploySpecBase extends ConnectorAwareTest with BeforeAndAfterEach with Bef
 
   def formatSchema(schema: String): String = JsString(schema).toString()
   def escapeString(str: String): String    = JsString(str).toString()
+
+  val listInlineDirective = if (capabilities.has(RelationLinkListCapability)) {
+    "@relation(link: INLINE)"
+  } else {
+    ""
+  }
+
+  val listInlineArgument = if (capabilities.has(RelationLinkListCapability)) {
+    "link: INLINE"
+  } else {
+    ""
+  }
+
+  val scalarListDirective = if (capabilities.hasNot(EmbeddedScalarListsCapability)) {
+    "@scalarList(strategy: RELATION)"
+  } else {
+    ""
+  }
 }
 
 trait ActiveDeploySpecBase extends DeploySpecBase { self: Suite =>
   override def runOnlyForCapabilities = Set(MigrationsCapability)
 }
 
-trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: Suite =>
+trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV11Base { self: Suite =>
   private val stageSeparator           = this.deployConnector.projectIdEncoder.stageSeparator
   val projectName                      = this.getClass.getSimpleName
   val projectStage                     = "default"
@@ -160,10 +178,10 @@ trait PassiveDeploySpecBase extends DeploySpecBase with DataModelV2Base { self: 
   }
 }
 
-trait DataModelV2Base { self: PassiveDeploySpecBase =>
+trait DataModelV11Base { self: PassiveDeploySpecBase =>
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val project = Project(id = projectId, schema = Schema.empty)
+  val project = Project(id = projectId, schema = Schema.emptyV11)
 
   def deployThatMustError(
       dataModel: String,
@@ -221,9 +239,6 @@ trait DataModelV2Base { self: PassiveDeploySpecBase =>
       invalidationPublisher = testDependencies.invalidationPublisher,
       capabilities = capabilities,
       clientDbQueries = deployConnector.clientDBQueries(project),
-      databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
-      fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true,
       deployConnector = deployConnector
     )
 

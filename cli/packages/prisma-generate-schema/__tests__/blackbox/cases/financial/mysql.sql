@@ -243,11 +243,8 @@ CREATE TABLE `User` (
 
 DROP TABLE IF EXISTS `_CampusToFinancialAccount`;
 CREATE TABLE `_CampusToFinancialAccount` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -261,11 +258,8 @@ CREATE TABLE `_CampusToFinancialAccount` (
 
 DROP TABLE IF EXISTS `_CampusToGroup`;
 CREATE TABLE `_CampusToGroup` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -279,11 +273,8 @@ CREATE TABLE `_CampusToGroup` (
 
 DROP TABLE IF EXISTS `_CampusToLocation`;
 CREATE TABLE `_CampusToLocation` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -297,11 +288,8 @@ CREATE TABLE `_CampusToLocation` (
 
 DROP TABLE IF EXISTS `_CampusToPhoneNumber`;
 CREATE TABLE `_CampusToPhoneNumber` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -315,11 +303,8 @@ CREATE TABLE `_CampusToPhoneNumber` (
 
 DROP TABLE IF EXISTS `_FinancialAccountToFinancialScheduledTransaction`;
 CREATE TABLE `_FinancialAccountToFinancialScheduledTransaction` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -333,11 +318,8 @@ CREATE TABLE `_FinancialAccountToFinancialScheduledTransaction` (
 
 DROP TABLE IF EXISTS `_FinancialAccountToFinancialTransaction`;
 CREATE TABLE `_FinancialAccountToFinancialTransaction` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -351,11 +333,8 @@ CREATE TABLE `_FinancialAccountToFinancialTransaction` (
 
 DROP TABLE IF EXISTS `_FinancialPaymentDetailToFinancialScheduledTransaction`;
 CREATE TABLE `_FinancialPaymentDetailToFinancialScheduledTransaction` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -369,11 +348,8 @@ CREATE TABLE `_FinancialPaymentDetailToFinancialScheduledTransaction` (
 
 DROP TABLE IF EXISTS `_FinancialPaymentDetailToFinancialTransaction`;
 CREATE TABLE `_FinancialPaymentDetailToFinancialTransaction` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -387,11 +363,8 @@ CREATE TABLE `_FinancialPaymentDetailToFinancialTransaction` (
 
 DROP TABLE IF EXISTS `_FinancialPaymentDetailToLocation`;
 CREATE TABLE `_FinancialPaymentDetailToLocation` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -405,11 +378,8 @@ CREATE TABLE `_FinancialPaymentDetailToLocation` (
 
 DROP TABLE IF EXISTS `_FinancialScheduledTransactionToFinancialTransaction`;
 CREATE TABLE `_FinancialScheduledTransactionToFinancialTransaction` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -423,11 +393,8 @@ CREATE TABLE `_FinancialScheduledTransactionToFinancialTransaction` (
 
 DROP TABLE IF EXISTS `_FinancialScheduledTransactionToPerson`;
 CREATE TABLE `_FinancialScheduledTransactionToPerson` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -441,11 +408,8 @@ CREATE TABLE `_FinancialScheduledTransactionToPerson` (
 
 DROP TABLE IF EXISTS `_FinancialTransactionToGroup`;
 CREATE TABLE `_FinancialTransactionToGroup` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -459,11 +423,8 @@ CREATE TABLE `_FinancialTransactionToGroup` (
 
 DROP TABLE IF EXISTS `_FinancialTransactionToPerson`;
 CREATE TABLE `_FinancialTransactionToPerson` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -477,11 +438,8 @@ CREATE TABLE `_FinancialTransactionToPerson` (
 
 DROP TABLE IF EXISTS `_GroupInviteToGroupRole`;
 CREATE TABLE `_GroupInviteToGroupRole` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -495,11 +453,8 @@ CREATE TABLE `_GroupInviteToGroupRole` (
 
 DROP TABLE IF EXISTS `_GroupMemberToGroupRole`;
 CREATE TABLE `_GroupMemberToGroupRole` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -513,11 +468,8 @@ CREATE TABLE `_GroupMemberToGroupRole` (
 
 DROP TABLE IF EXISTS `_GroupMemberToPerson`;
 CREATE TABLE `_GroupMemberToPerson` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -531,11 +483,8 @@ CREATE TABLE `_GroupMemberToPerson` (
 
 DROP TABLE IF EXISTS `_GroupRoleToGroupType`;
 CREATE TABLE `_GroupRoleToGroupType` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -549,11 +498,8 @@ CREATE TABLE `_GroupRoleToGroupType` (
 
 DROP TABLE IF EXISTS `_GroupToGroup`;
 CREATE TABLE `_GroupToGroup` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -567,11 +513,8 @@ CREATE TABLE `_GroupToGroup` (
 
 DROP TABLE IF EXISTS `_GroupToGroupInvite`;
 CREATE TABLE `_GroupToGroupInvite` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -585,11 +528,8 @@ CREATE TABLE `_GroupToGroupInvite` (
 
 DROP TABLE IF EXISTS `_GroupToGroupMember`;
 CREATE TABLE `_GroupToGroupMember` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -603,11 +543,8 @@ CREATE TABLE `_GroupToGroupMember` (
 
 DROP TABLE IF EXISTS `_GroupToGroupType`;
 CREATE TABLE `_GroupToGroupType` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -621,11 +558,8 @@ CREATE TABLE `_GroupToGroupType` (
 
 DROP TABLE IF EXISTS `_PersonToPhoneNumber`;
 CREATE TABLE `_PersonToPhoneNumber` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -639,11 +573,8 @@ CREATE TABLE `_PersonToPhoneNumber` (
 
 DROP TABLE IF EXISTS `_PersonToUser`;
 CREATE TABLE `_PersonToUser` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -664,4 +595,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

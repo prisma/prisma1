@@ -1,16 +1,19 @@
-#![deny(warnings)]
+#[macro_use]
+extern crate log;
 
 mod context;
 mod error;
 mod req_handlers;
 mod schema;
+mod utilities;
+
+mod serializer;
 
 use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
 use context::PrismaContext;
 use error::PrismaError;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
-use std::env;
 use std::sync::Arc;
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
@@ -22,18 +25,18 @@ struct HttpHandler {
 
 #[allow(unused_variables)]
 fn main() {
-    let http_handler = HttpHandler {
-        context: PrismaContext::new(),
-        graphql_request_handler: GraphQlRequestHandler,
-    };
-    let http_handler_arc = Arc::new(http_handler);
-
-    env::set_var("RUST_LOG", "actix_web=debug");
-    env::set_var("RUST_BACKTRACE", "1");
     env_logger::init();
 
+    let context = PrismaContext::new().unwrap();
+    let port = context.config.port;
+    let http_handler = HttpHandler {
+        context: context,
+        graphql_request_handler: GraphQlRequestHandler,
+    };
+
+    let http_handler_arc = Arc::new(http_handler);
     let sys = actix::System::new("prisma");
-    let address = "127.0.0.1:8000";
+    let address = ("0.0.0.0", port);
 
     server::new(move || {
         App::with_state(Arc::clone(&http_handler_arc))
@@ -47,7 +50,7 @@ fn main() {
     .unwrap()
     .start();
 
-    println!("Started http server: {}", address);
+    println!("Started http server: {}:{}", address.0, address.1);
     let _ = sys.run();
 }
 
@@ -72,5 +75,5 @@ fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
 }
 
 fn playground<T>(_: HttpRequest<T>) -> impl Responder {
-    fs::NamedFile::open("playground.html")
+    fs::NamedFile::open("prisma-rs/playground.html")
 }

@@ -46,11 +46,6 @@ case class JdbcDataResolver(
     }
   }
 
-  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = {
-    val query = queryBuilder.getModelForGlobalId(project.schema, globalId)
-    performWithTiming("getModelForGlobalId", runAttached(query))
-  }
-
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
     performWithTiming("getNodeByWhere", runAttached(queryBuilder.getNodeByWhere(where, selectedFields)))
   }

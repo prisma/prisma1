@@ -1,4 +1,4 @@
-use crate::{node_selector::NodeSelector, query_arguments::QueryArguments, ConnectorResult};
+use crate::{filter::NodeSelector, query_arguments::QueryArguments, ConnectorResult};
 use prisma_models::prelude::*;
 use prisma_models::ScalarFieldRef;
 
@@ -13,7 +13,7 @@ pub trait DataResolver {
         &self,
         model: ModelRef,
         query_arguments: QueryArguments,
-        selected_fields: SelectedFields,
+        selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes>;
 
     fn get_related_nodes(

@@ -15,7 +15,7 @@ const relativeTestCaseDir = path.join(
 export default async function blackBoxTest(name: string) {
   const modelPath = path.join(
     relativeTestCaseDir,
-    `${name}/model_relational.graphql`,
+    `${name}/model_relational_v1.1.graphql`,
   )
   const sqlDumpPath = path.join(relativeTestCaseDir, `${name}/postgres.sql`)
 
@@ -50,17 +50,18 @@ export default async function blackBoxTest(name: string) {
     refModel,
   )
 
-  // Backwards compatible (v1) rendering
+  // Correctly introduces id, createdAt, updatedAt when needed
   const legacyRenderer = DefaultRenderer.create(DatabaseType.postgres)
   const legacyRenderedWithReference = legacyRenderer.render(
     normalizedWithReference,
+    true,
   )
 
-  expect(legacyRenderedWithReference).toEqual(model)
+  expect(legacyRenderedWithReference).toMatchSnapshot()
 
   // V2 rendering
   const renderer = DefaultRenderer.create(DatabaseType.postgres, true)
-  const renderedWithReference = renderer.render(normalizedWithReference)
+  const renderedWithReference = renderer.render(normalizedWithReference, true)
 
   expect(renderedWithReference).toMatchSnapshot()
 
@@ -89,10 +90,25 @@ export default async function blackBoxTest(name: string) {
   */
 }
 
-const testNames = fs.readdirSync(relativeTestCaseDir)
+const testNames = fs
+  .readdirSync(relativeTestCaseDir)
+  .filter(
+    t =>
+      ![
+        'selfReferencing',
+        'relations',
+        'relationNames',
+        'meshRelation',
+        'airbnb',
+      ].includes(t),
+  )
 
 for (const testName of testNames) {
-  test(`Introspects ${testName}/relational correctly`, async () => {
-    await blackBoxTest(testName)
-  }, 20000)
+  test(
+    `Introspects ${testName}/relational correctly`,
+    async () => {
+      await blackBoxTest(testName)
+    },
+    20000,
+  )
 }

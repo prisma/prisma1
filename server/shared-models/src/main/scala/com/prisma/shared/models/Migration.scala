@@ -63,10 +63,10 @@ object Migration {
     rolledBack = 0,
     steps,
     errors = Vector.empty,
-    previousSchema = Schema.empty
+    previousSchema = Schema.emptyV11
   )
 
-  def empty(projectId: String) = apply(projectId, Schema.empty, Vector.empty, Vector.empty, "")
+  def empty(projectId: String) = apply(projectId, Schema.emptyV11, Vector.empty, Vector.empty, "")
 }
 
 sealed trait MigrationStep

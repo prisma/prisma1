@@ -153,7 +153,7 @@ class SubscriptionSessionProtocolV07Spec extends TestKit(ActorSystem("subscripti
   def subscriptionSessionActor(subscriptionsManager: ActorRef) = new SubscriptionSessionActor("sessionId", "projectId", subscriptionsManager)
 
   def withProjectFetcherStub[T](projectId: String)(fn: => T) = {
-    val project = TestProject().copy(id = projectId)
+    val project = TestProject.emptyV11.copy(id = projectId)
     dependencies.projectFetcher.put(projectId, project)
     fn
   }

@@ -14,5 +14,4 @@ trait QueryBuilderConstants {
   val positionFieldName   = "position"
   val valueFieldName      = "value"
   val placeHolder         = "?"
-  val relayTableName      = "_RelayId"
 }

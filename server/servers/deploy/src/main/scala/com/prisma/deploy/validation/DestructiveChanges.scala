@@ -16,17 +16,17 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
                               steps: Vector[MigrationStep],
                               deployConnector: DeployConnector)
     extends MigrationValueGenerator {
-  val previousSchema        = project.schema
-  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
-  val isMongo               = deployConnector.capabilities.isMongo
+  val previousSchema         = project.schema
+  val isMigrationFromV1ToV11 = previousSchema.isLegacy && nextSchema.isV11
+  val isMongo                = deployConnector.capabilities.isMongo
 
   def check: Future[Vector[DeployWarning] Or Vector[DeployError]] = {
-    checkAgainstExistingData.map { results =>
-      val destructiveWarnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
-      val inconsistencyErrors: Vector[DeployError]   = results.collect { case error: DeployError => error }
-      val errors                                     = inconsistencyErrors ++ missingCreatedAtOrUpdatedAtDirectives
+    checkAgainstExistingData.map { existingDataResults =>
+      val results                         = existingDataResults ++ missingCreatedAtOrUpdatedAtDirectives
+      val warnings: Vector[DeployWarning] = results.collect { case warning: DeployWarning => warning }
+      val errors: Vector[DeployError]     = results.collect { case error: DeployError => error }
       if (errors.isEmpty) {
-        Good(destructiveWarnings)
+        Good(warnings)
       } else {
         Bad(errors)
       }
@@ -37,19 +37,41 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     def errorMessage(fieldName: String) = {
       s"You are migrating to the new datamodel with the field `$fieldName` but is missing the directive `@$fieldName`. Please specify the field as `$fieldName: DateTime! @$fieldName` to keep its original behaviour."
     }
-    for {
-      model <- nextSchema.models
-      field <- model.scalarFields
-      if isMigrationFromV1ToV2
-      error <- field.name match {
-                case ReservedFields.createdAtFieldName if !field.behaviour.contains(CreatedAtBehaviour) =>
-                  Some(DeployError(model.name, field.name, errorMessage(ReservedFields.createdAtFieldName)))
-                case ReservedFields.updatedAtFieldName if !field.behaviour.contains(UpdatedAtBehaviour) =>
-                  Some(DeployError(model.name, field.name, errorMessage(ReservedFields.updatedAtFieldName)))
-                case _ =>
-                  None
-              }
-    } yield error
+    def warningMessage(fieldName: String, changeVerb: String) = {
+      s"You are adding the field `$fieldName` but is missing the directive `@$fieldName`. Please specify the field as `$fieldName: DateTime! @$fieldName` if you want to track the times for when a record was $changeVerb. Or deploy with `--force` to ignore this."
+    }
+    // Not specifying `@createdAt` or `@updatedAt` is an error when migrating from v1 to v11.
+    // It is just a one time warning when new fields are created when completely in v11 mode.
+    if (isMigrationFromV1ToV11) {
+      for {
+        model <- nextSchema.models
+        field <- model.scalarFields
+        error <- field.name match {
+                  case ReservedFields.createdAtFieldName if !field.behaviour.contains(CreatedAtBehaviour) =>
+                    Some(DeployError(model.name, field.name, errorMessage(ReservedFields.createdAtFieldName)))
+                  case ReservedFields.updatedAtFieldName if !field.behaviour.contains(UpdatedAtBehaviour) =>
+                    Some(DeployError(model.name, field.name, errorMessage(ReservedFields.updatedAtFieldName)))
+                  case _ =>
+                    None
+                }
+      } yield error
+
+    } else if (nextSchema.isV11) {
+      for {
+        createField <- steps.collect { case x: CreateField => x }
+        field       = nextSchema.getFieldByName_!(createField.model, createField.name)
+        warning <- field.name match {
+                    case ReservedFields.createdAtFieldName if !field.behaviour.contains(CreatedAtBehaviour) =>
+                      Some(DeployWarning(field.model.name, field.name, warningMessage(ReservedFields.createdAtFieldName, "created")))
+                    case ReservedFields.updatedAtFieldName if !field.behaviour.contains(UpdatedAtBehaviour) =>
+                      Some(DeployWarning(field.model.name, field.name, warningMessage(ReservedFields.updatedAtFieldName, "updated")))
+                    case _ =>
+                      None
+                  }
+      } yield warning
+    } else {
+      Vector.empty
+    }
   }
 
   private def checkAgainstExistingData: Future[Vector[DeployResult]] = {
@@ -140,14 +162,14 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     val field = model.getFieldByName_!(x.name)
 
     val accidentalRemovalError = field match {
-      case f if isMigrationFromV1ToV2 && f.name == ReservedFields.createdAtFieldName =>
+      case f if isMigrationFromV1ToV11 && f.name == ReservedFields.createdAtFieldName =>
         Some(
           DeployError(
             model.name,
             field.name,
             s"You are removing the field `${ReservedFields.createdAtFieldName}` while migrating to the new datamodel. Add the field `createdAt: DateTime! @createdAt` explicitly to your model to keep this functionality."
           ))
-      case f if isMigrationFromV1ToV2 && f.name == ReservedFields.updatedAtFieldName =>
+      case f if isMigrationFromV1ToV11 && f.name == ReservedFields.updatedAtFieldName =>
         Some(
           DeployError(
             model.name,
@@ -180,6 +202,7 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     val goesFromRelationToScalar = oldField.isRelation && newField.isScalar
     val becomesRequired          = !oldField.isRequired && newField.isRequired
     val becomesUnique            = !oldField.isUnique && newField.isUnique
+    def isIdTypeChange: Boolean  = oldField.isScalar && newField.isScalar && oldField.asScalarField_!.isId && newField.asScalarField_!.isId && typeChanges
 
     def warnings: Future[Vector[DeployWarning]] = () match {
       case _ if cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation =>
@@ -234,12 +257,23 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
         validationSuccessful
     }
 
+    def idTypeChangeError: Future[Option[DeployError]] = isIdTypeChange match {
+      case true =>
+        clientDbQueries.existsByModel(model).map {
+          case true  => Option(DeployErrors.changingTypeOfIdField(`type` = model.name, field = oldField.name))
+          case false => None
+        }
+      case false =>
+        validationSuccessfulOpt
+    }
+
     for {
-      warnings: Vector[DeployWarning]      <- warnings
-      resultsForNull: Vector[DeployResult] <- resultsForNull
-      uniqueError: Vector[DeployError]     <- uniqueErrors
+      warnings          <- warnings
+      resultsForNull    <- resultsForNull
+      uniqueError       <- uniqueErrors
+      idTypeChangeError <- idTypeChangeError
     } yield {
-      warnings ++ resultsForNull ++ uniqueError
+      warnings ++ resultsForNull ++ uniqueError ++ idTypeChangeError
     }
   }
 
@@ -324,8 +358,15 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
       case (_: RelationTable, _: EmbeddedRelationLink) =>
         dataLossForRelationValidation(previousRelation)
 
-      case (_: EmbeddedRelationLink, _: EmbeddedRelationLink) =>
-        validationSuccessful // TODO: figure out when this is actually destructive
+      case (p: EmbeddedRelationLink, n: EmbeddedRelationLink) =>
+        val previousModel  = previousSchema.getModelByName_!(p.inTableOfModelName)
+        val nextModel      = nextSchema.getModelByName_!(n.inTableOfModelName)
+        val modelDidChange = previousModel.stableIdentifier != nextModel.stableIdentifier
+        if (modelDidChange) {
+          dataLossForRelationValidation(previousRelation)
+        } else {
+          validationSuccessful
+        }
     }
   }
 
@@ -336,5 +377,6 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     }
   }
 
-  private def validationSuccessful = Future.successful(Vector.empty)
+  private def validationSuccessful    = Future.successful(Vector.empty)
+  private def validationSuccessfulOpt = Future.successful(Option.empty)
 }

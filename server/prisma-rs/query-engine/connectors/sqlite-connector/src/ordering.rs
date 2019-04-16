@@ -7,7 +7,7 @@ pub struct Ordering;
 
 /// Tooling for generating orderings for different query types.
 impl Ordering {
-    pub fn for_model(model: &Model, order_by: Option<&OrderBy>, reverse: bool) -> OrderVec {
+    pub fn for_model(model: ModelRef, order_by: Option<&OrderBy>, reverse: bool) -> OrderVec {
         Self::by_fields(
             order_by.map(|oby| oby.field.as_column()),
             model.fields().id().as_column(),

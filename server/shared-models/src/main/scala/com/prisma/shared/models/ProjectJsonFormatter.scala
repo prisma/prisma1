@@ -382,7 +382,7 @@ object ProjectJsonFormatter {
       errors = errors,
       startedAt = startedAt,
       finishedAt = finishedAt,
-      previousSchema = Schema.empty
+      previousSchema = Schema.emptyV11
     )
   }
 

@@ -7,15 +7,15 @@ import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncode
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SQLiteApiConnectorNative(config: DatabaseConfig, isPrototype: Boolean)(implicit ec: ExecutionContext) extends ApiConnector {
-  lazy val base = SQLiteApiConnector(config, new org.sqlite.JDBC, isPrototype)
+case class SQLiteApiConnectorNative(config: DatabaseConfig)(implicit ec: ExecutionContext) extends ApiConnector {
+  lazy val base = SQLiteApiConnector(config, new org.sqlite.JDBC)
 
   override def initialize() = Future.unit
   override def shutdown()   = Future.unit
 
   override def databaseMutactionExecutor: DatabaseMutactionExecutor = {
     val exe = base.databaseMutactionExecutor
-    new SQLiteDatabaseMutactionExecutor2(exe.slickDatabase, exe.manageRelayIds)
+    new SQLiteDatabaseMutactionExecutor(exe.slickDatabase)
   }
   override def dataResolver(project: Project): DataResolver       = SQLiteNativeDataResolver(base.dataResolver(project))
   override def masterDataResolver(project: Project): DataResolver = SQLiteNativeDataResolver(base.dataResolver(project))

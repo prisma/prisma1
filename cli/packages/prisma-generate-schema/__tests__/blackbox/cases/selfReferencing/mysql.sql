@@ -147,11 +147,8 @@ CREATE TABLE `SelfReferencingCWithId` (
 
 DROP TABLE IF EXISTS `_AToA`;
 CREATE TABLE `_AToA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -165,11 +162,8 @@ CREATE TABLE `_AToA` (
 
 DROP TABLE IF EXISTS `_AToA2`;
 CREATE TABLE `_AToA2` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -195,11 +189,8 @@ CREATE TABLE `_RelayId` (
 
 DROP TABLE IF EXISTS `_SelfReferencingAToSelfReferencingAWithId`;
 CREATE TABLE `_SelfReferencingAToSelfReferencingAWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -213,11 +204,8 @@ CREATE TABLE `_SelfReferencingAToSelfReferencingAWithId` (
 
 DROP TABLE IF EXISTS `_SelfReferencingAWithIdToSelfReferencingAWithId`;
 CREATE TABLE `_SelfReferencingAWithIdToSelfReferencingAWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -231,11 +219,8 @@ CREATE TABLE `_SelfReferencingAWithIdToSelfReferencingAWithId` (
 
 DROP TABLE IF EXISTS `_SelfReferencingBToSelfReferencingB`;
 CREATE TABLE `_SelfReferencingBToSelfReferencingB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -249,11 +234,8 @@ CREATE TABLE `_SelfReferencingBToSelfReferencingB` (
 
 DROP TABLE IF EXISTS `_SelfReferencingBWithIdToSelfReferencingBWithId`;
 CREATE TABLE `_SelfReferencingBWithIdToSelfReferencingBWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -267,11 +249,8 @@ CREATE TABLE `_SelfReferencingBWithIdToSelfReferencingBWithId` (
 
 DROP TABLE IF EXISTS `_SelfReferencingBWithIdToSelfReferencingCWithId`;
 CREATE TABLE `_SelfReferencingBWithIdToSelfReferencingCWithId` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -285,11 +264,8 @@ CREATE TABLE `_SelfReferencingBWithIdToSelfReferencingCWithId` (
 
 DROP TABLE IF EXISTS `_SelfReferencingCToSelfReferencingC`;
 CREATE TABLE `_SelfReferencingCToSelfReferencingC` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -303,11 +279,8 @@ CREATE TABLE `_SelfReferencingCToSelfReferencingC` (
 
 DROP TABLE IF EXISTS `_WithIdAToA`;
 CREATE TABLE `_WithIdAToA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -321,11 +294,8 @@ CREATE TABLE `_WithIdAToA` (
 
 DROP TABLE IF EXISTS `_WithIdAToA2`;
 CREATE TABLE `_WithIdAToA2` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -334,4 +304,4 @@ CREATE TABLE `_WithIdAToA2` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

@@ -7,8 +7,12 @@ import org.scalatest.{FlatSpec, Matchers, WordSpecLike}
 class SingleItemQuerySpec extends WordSpecLike with Matchers with ApiSpecBase {
 
   "should return null if the id does not exist" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      """type Todo {
+      |  id: ID! @id
+      |  title: String!
+      |}
+    """.stripMargin
     }
     database.setup(project)
 
@@ -31,8 +35,12 @@ class SingleItemQuerySpec extends WordSpecLike with Matchers with ApiSpecBase {
   }
 
   "should work by id" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      """type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -58,8 +66,13 @@ class SingleItemQuerySpec extends WordSpecLike with Matchers with ApiSpecBase {
   }
 
   "should work by any unique field" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true)
+    val project = SchemaDsl.fromStringV11() {
+      """type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  alias: String! @unique
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -88,11 +101,11 @@ class SingleItemQuerySpec extends WordSpecLike with Matchers with ApiSpecBase {
   }
 
   "should respect custom db names" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
-        |type Todo @pgTable(name: "my_table") {
-        |  id: ID! @unique
-        |  title: String @pgColumn(name: "my_column")
+        |type Todo @db(name: "my_table") {
+        |  id: ID! @id
+        |  title: String @db(name: "my_column")
         |}
       """.stripMargin
     }

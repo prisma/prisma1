@@ -22,10 +22,6 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   val isSQLite   = slickDatabase.isSQLite
   val sql        = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
 
-  private val relayIdTableName                                               = "_RelayId"
-  val relayIdColumn                                                          = field(name(project.dbName, relayIdTableName, "id"))
-  val relayStableIdentifierColumn                                            = field(name(project.dbName, relayIdTableName, "stableModelIdentifier"))
-  val relayTable                                                             = table(name(project.dbName, relayIdTableName))
   def idField(model: Model)                                                  = field(name(project.dbName, model.dbName, model.dbNameOfIdField_!))
   def modelTable(model: Model)                                               = table(name(project.dbName, model.dbName))
   def relationTable(relation: Relation)                                      = table(name(project.dbName, relation.relationTableName))

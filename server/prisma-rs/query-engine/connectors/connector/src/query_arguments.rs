@@ -1,5 +1,5 @@
-use crate::filter::Filter;
-use prisma_models::prelude::*;
+use crate::filter::{Filter, NodeSelector};
+use prisma_models::*;
 
 #[derive(Debug, Default, Clone)]
 pub struct QueryArguments {
@@ -24,5 +24,19 @@ impl QueryArguments {
             Some(limited_count) => (skip, limited_count + skip),
             None => (skip, 100000000),
         }
+    }
+}
+
+impl From<NodeSelector> for QueryArguments {
+    fn from(node_selector: NodeSelector) -> Self {
+        QueryArguments::from(Filter::from(node_selector))
+    }
+}
+
+impl From<Filter> for QueryArguments {
+    fn from(filter: Filter) -> Self {
+        let mut query_arguments = Self::default();
+        query_arguments.filter = Some(filter);
+        query_arguments
     }
 }

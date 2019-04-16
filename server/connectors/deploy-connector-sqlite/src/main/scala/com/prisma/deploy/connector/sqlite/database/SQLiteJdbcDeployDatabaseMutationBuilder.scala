@@ -5,6 +5,7 @@ import java.io.File
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.deploy.connector.jdbc.database.{JdbcDeployDatabaseMutationBuilder, TypeMapper}
 import com.prisma.gc_values.GCValue
+import com.prisma.shared.models.Manifestations.RelationTable
 import com.prisma.shared.models.TypeIdentifier.{ScalarTypeIdentifier, TypeIdentifier}
 import com.prisma.shared.models._
 import com.prisma.utils.boolean.BooleanUtils
@@ -41,7 +42,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
       model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" }
     }
 
-    val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
+    val tables = project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
     val queries = tables.map(tableName => {
       changeDatabaseQueryToDBIO(sql.deleteFrom(DSL.table(s"""${qualify(project.dbName, tableName)}""")))()
     })
@@ -95,14 +96,14 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createRelationTable(project: Project, relation: Relation): DBIO[_] = {
-    val relationTableName = relation.relationTableName
-    val modelA            = relation.modelA
-    val modelB            = relation.modelB
-    val modelAColumn      = relation.modelAColumn
-    val modelBColumn      = relation.modelBColumn
-    val aColSql           = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, modelA.idField_!.typeIdentifier)
-    val bColSql           = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, modelB.idField_!.typeIdentifier)
-    val tableCreate       = sqlu"""
+    val relationTableName                   = relation.relationTableName
+    val modelA                              = relation.modelA
+    val modelB                              = relation.modelB
+    val modelAColumn                        = relation.modelAColumn
+    val modelBColumn                        = relation.modelBColumn
+    val aColSql                             = typeMapper.rawSQLFromParts(modelAColumn, isRequired = true, modelA.idField_!.typeIdentifier)
+    val bColSql                             = typeMapper.rawSQLFromParts(modelBColumn, isRequired = true, modelB.idField_!.typeIdentifier)
+    def legacyTableCreate(idColumn: String) = sqlu"""
                         CREATE TABLE #${qualify(project.dbName, relationTableName)} (
                             "id" CHAR(25) NOT NULL,
                             #$aColSql,
@@ -111,6 +112,19 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
                             FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
                             FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
                         );"""
+
+    val modernTableCreate = sqlu"""
+                        CREATE TABLE #${qualify(project.dbName, relationTableName)} (
+                            #$aColSql,
+                            #$bColSql,
+                            FOREIGN KEY (#$modelAColumn) REFERENCES #${qualify(modelA.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE,
+                            FOREIGN KEY (#$modelBColumn) REFERENCES #${qualify(modelB.dbName)} (#${qualify(modelA.dbNameOfIdField_!)}) ON DELETE CASCADE
+                        );"""
+
+    val tableCreate = relation.manifestation match {
+      case RelationTable(_, _, _, Some(idColumn)) => legacyTableCreate(idColumn)
+      case _                                      => modernTableCreate
+    }
 
     val indexCreate =
       sqlu"""CREATE UNIQUE INDEX #${qualify(project.dbName, s"${relationTableName}_AB_unique")} on #$relationTableName ("#$modelAColumn" ASC, "#$modelBColumn" ASC)"""
@@ -122,8 +136,7 @@ case class SQLiteJdbcDeployDatabaseMutationBuilder(
   override def createRelationColumn(project: Project, model: Model, references: Model, column: String): DBIO[_] = {
     val colSql = typeMapper.rawSQLFromParts(column, isRequired = false, references.idField_!.typeIdentifier)
     sqlu"""ALTER TABLE #${qualify(project.dbName, model.dbName)}
-          ADD COLUMN #$colSql,
-          ADD FOREIGN KEY (#${qualify(column)}) REFERENCES #${qualify(project.dbName, references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE CASCADE;
+          ADD COLUMN #$colSql REFERENCES #${qualify(references.dbName)}(#${qualify(references.idField_!.dbName)}) ON DELETE SET NULL;
         """
   }
 

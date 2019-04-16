@@ -2,6 +2,7 @@ mod envelope;
 mod filter;
 mod input;
 mod interface;
+mod mutaction;
 mod order_by;
 mod query_arguments;
 
@@ -10,6 +11,7 @@ pub use envelope::ProtoBufEnvelope;
 pub use filter::*;
 pub use input::*;
 pub use interface::ProtoBufInterface;
+pub use mutaction::*;
 
 use crate::{BridgeError, BridgeResult};
 use chrono::prelude::*;
@@ -228,14 +230,22 @@ impl From<Node> for prisma::Node {
     }
 }
 
+impl From<SingleNode> for prisma::NodeResult {
+    fn from(node: SingleNode) -> prisma::NodeResult {
+        prisma::NodeResult {
+            node: prisma::Node::from(node.node),
+            fields: node.field_names,
+        }
+    }
+}
+
 impl IntoSelectedFields for prisma::SelectedFields {
     fn into_selected_fields(self, model: ModelRef, from_field: Option<Arc<RelationField>>) -> SelectedFields {
         let fields = self.fields.into_iter().fold(Vec::new(), |mut acc, sf| {
             match sf.field.unwrap() {
                 prisma::selected_field::Field::Scalar(field_name) => {
                     let field = model.fields().find_from_scalar(&field_name).unwrap();
-
-                    acc.push(SelectedField::Scalar(SelectedScalarField { field }));
+                    acc.push(SelectedField::Scalar(SelectedScalarField { field, implicit: false }));
                 }
                 prisma::selected_field::Field::Relational(rf) => {
                     let field = model.fields().find_from_relation_fields(&rf.field).unwrap();

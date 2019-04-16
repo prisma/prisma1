@@ -6,17 +6,23 @@ exports[`Introspector Type with scalar lists and existing schema 1`] = `
   name355: String!
   car: Car
   houses: [House]
+  createdAt: DateTime!
   scalarIntList: [Int]
   scalarStringList: [String]
+  updatedAt: DateTime!
 }
 
 type Car {
   id: ID! @unique
+  createdAt: DateTime!
   name: String!
+  updatedAt: DateTime!
 }
 
 type House {
   id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
   windows: Int!
 }"
 `;

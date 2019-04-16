@@ -46,9 +46,14 @@ class SubscriptionsManagerForModelSpec
                                       |}
                                     """.stripMargin).get
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val todo = schema.model("Todo").field("text", _.String)
-
+  val project = SchemaDsl.fromStringV11() {
+    """
+      |type Todo {
+      |  id: ID! @id
+      |  text: String
+      |}
+      |
+    """.stripMargin
   }
   val todoModel = project.models.find(_.name == "Todo").get
 

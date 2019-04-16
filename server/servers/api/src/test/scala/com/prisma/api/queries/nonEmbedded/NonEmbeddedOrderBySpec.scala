@@ -1,39 +1,53 @@
 package com.prisma.api.queries.nonEmbedded
 
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedOrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val project = SchemaDsl.fromString() {
+  val testDataModels = {
+    val s1 = """
+      type List {
+        id: ID! @id
+        name: String! @unique
+        todos: [Todo] @relation(link: INLINE)
+      }
+      
+      type Todo {
+        id: ID! @id
+        title: String! @unique
+        lists: [List]
+      }
     """
-      |type List {
-      |  id: ID! @unique
-      |  name: String! @unique
-      |  todos: [Todo]
-      |}
-      |
-      |type Todo {
-      |  id: ID! @unique
-      |  title: String! @unique
-      |  lists: [List]
-      |}
-    """
-  }
 
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-    database.setup(project)
-    createLists()
-    createTodos()
+    val s2 = """
+      type List {
+        id: ID! @id
+        name: String! @unique
+        todos: [Todo]
+      }
+      
+      type Todo {
+        id: ID! @id
+        title: String! @unique
+        lists: [List]
+      }
+    """
+
+    TestDataModels(mongo = Vector(s1), sql = Vector(s2))
   }
 
   "The order when not using order by" should "be the same no matter if pagination is used or not" in {
-    val result1 = server.query(
-      """
+    testDataModels.testV11 { project =>
+      createLists(project)
+      createTodos(project)
+
+      val result1 = server.query(
+        """
         |{
         |  list(where: {name: "1"}) {
         |    name
@@ -43,11 +57,11 @@ class NonEmbeddedOrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
         |  }
         |}
       """,
-      project
-    )
+        project
+      )
 
-    val result2 = server.query(
-      """
+      val result2 = server.query(
+        """
         |{
         |  list(where: {name: "1"}) {
         |    name
@@ -57,13 +71,13 @@ class NonEmbeddedOrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
         |  }
         |}
       """,
-      project
-    )
+        project
+      )
 
-    result1 should be(result2)
+      result1 should be(result2)
 
-    val result3 = server.query(
-      """
+      val result3 = server.query(
+        """
         |{
         |  todo(where: {title: "1"}) {
         |    title
@@ -73,11 +87,11 @@ class NonEmbeddedOrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
         |  }
         |}
       """,
-      project
-    )
+        project
+      )
 
-    val result4 = server.query(
-      """
+      val result4 = server.query(
+        """
         |{
         |  todo(where: {title: "1"}) {
         |    title
@@ -87,13 +101,14 @@ class NonEmbeddedOrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
         |  }
         |}
       """,
-      project
-    )
+        project
+      )
 
-    result3 should be(result4)
+      result3 should be(result4)
+    }
   }
 
-  private def createLists(): Unit = {
+  private def createLists(project: Project): Unit = {
     server.query(
       """
         |mutation {
@@ -110,7 +125,7 @@ class NonEmbeddedOrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
   }
 
-  private def createTodos(): Unit = {
+  private def createTodos(project: Project): Unit = {
     server.query(
       """
         |mutation {

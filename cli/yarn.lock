@@ -412,7 +412,7 @@
     "@types/node" "*"
     "@types/pg-types" "*"
 
-"@types/prettier@^1.16.1":
+"@types/prettier@^1.13.2":
   version "1.16.1"
   resolved "https://registry.yarnpkg.com/@types/prettier/-/prettier-1.16.1.tgz#328d1c9b54402e44119398bcb6a31b7bbd606d59"
   integrity sha512-db6pZL5QY3JrlCHBhYQzYDci0xnoDuxfseUuguLRr3JNk+bnCfpkK6p8quiUDyO8A0vbpBKkk59Fw125etrNeA==

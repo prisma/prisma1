@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -14,16 +14,16 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
   //Postgres has a limit of 32678 parameters to a query
 
   "The delete many Mutation" should "delete the items matching the where clause" in {
-    val project: Project = SchemaDsl.fromString() {
-      """
+    val project: Project = SchemaDsl.fromStringV11() {
+      s"""
       |type Top {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   int: Int!
-      |   middles:[Middle]
+      |   middles:[Middle] $listInlineDirective
       |}
       |
       |type Middle {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   int: Int!
       |}
     """
@@ -94,23 +94,23 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A cascading delete" should "not hit the parameter limit" in {
 
-    val project: Project = SchemaDsl.fromString() {
-      """
+    val project: Project = SchemaDsl.fromStringV11() {
+      s"""
         |type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int @unique
-        |   middles:[Middle]   @relation(name: "TopToMiddle", onDelete: CASCADE)
+        |   middles:[Middle] @relation(name: "TopToMiddle", onDelete: CASCADE, $listInlineArgument)
         |}
         |
         |type Middle {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int! @unique
         |   top: Top @relation(name: "TopToMiddle")
-        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE)
+        |   bottom: [Bottom] @relation(name: "MiddleToBottom", onDelete: CASCADE, $listInlineArgument)
         |}
         |
         |type Bottom {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   middle: Middle @relation(name: "MiddleToBottom")
         |   int: Int!
         |}
@@ -164,34 +164,34 @@ class VeryManyMutationsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A cascading delete" should "not hit the parameter limit 2" in {
 
-    val project: Project = SchemaDsl.fromString() {
-      """
+    val project: Project = SchemaDsl.fromStringV11() {
+      s"""
         |type Top{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int @unique
-        |   as: [A] @relation(name: "Top" onDelete: CASCADE)
+        |   as: [A] @relation(name: "Top" onDelete: CASCADE $listInlineArgument)
         |}
         |
         |type A {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int @unique
-        |   bs:[B]  @relation(name: "A" onDelete: CASCADE)
+        |   bs:[B]  @relation(name: "A" onDelete: CASCADE $listInlineArgument)
         |}
         |
         |type B {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int
-        |   cs: [C] @relation(name: "B" onDelete: CASCADE)
+        |   cs: [C] @relation(name: "B" onDelete: CASCADE $listInlineArgument)
         |}
         |
         |type C {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int
-        |   ds: [D] @relation(name: "C" onDelete: CASCADE)
+        |   ds: [D] @relation(name: "C" onDelete: CASCADE $listInlineArgument)
         |}
         |
         |type D {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   int: Int
         |}
       """

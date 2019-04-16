@@ -8,9 +8,9 @@ class WhereAndUpdateSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Updating the unique value used to find an item" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Test {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |}"""

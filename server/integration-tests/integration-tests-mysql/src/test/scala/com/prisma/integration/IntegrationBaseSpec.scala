@@ -5,9 +5,10 @@ import akka.stream.ActorMaterializer
 import com.prisma.ConnectorAwareTest
 import com.prisma.api.connector.DataResolver
 import com.prisma.api.util.StringMatchers
-import com.prisma.api.{ApiTestServer, TestApiDependenciesImpl}
+import com.prisma.api.{ApiTestServer, ExternalApiTestServer, InternalApiTestServer, TestApiDependenciesImpl}
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.specutils.{DeployTestServer, TestDeployDependencies}
+import com.prisma.shared.models.ConnectorCapability.EmbeddedScalarListsCapability
 import com.prisma.shared.models.{ConnectorCapabilities, Migration, Project}
 import com.prisma.utils.await.AwaitUtils
 import com.prisma.utils.json.PlayJsonExtensions
@@ -35,17 +36,16 @@ trait IntegrationBaseSpec
   }
 
   // API
-
   implicit lazy val apiTestDependencies = new TestApiDependenciesImpl
-  val apiServer                         = ApiTestServer()
+  val apiServer                         = loadTestServer()
 
   def dataResolver(project: Project): DataResolver = apiTestDependencies.dataResolver(project)
 
   override def capabilities: ConnectorCapabilities = apiTestDependencies.apiConnector.capabilities
 
   override def prismaConfig: PrismaConfig = apiTestDependencies.config
-  // DEPLOY
 
+  // DEPLOY
   implicit lazy val deployTestDependencies: TestDeployDependencies = TestDeployDependencies()
 
   val deployServer      = DeployTestServer()
@@ -55,7 +55,7 @@ trait IntegrationBaseSpec
   val basicTypesGql =
     """
       |type TestModel {
-      |  id: ID! @unique
+      |  id: ID! @id
       |}
     """.stripMargin.trim()
 
@@ -67,6 +67,13 @@ trait IntegrationBaseSpec
   override protected def beforeEach(): Unit = {
     super.beforeEach()
     internalDB.reset().await
+  }
+
+  def loadTestServer(): ApiTestServer = {
+    prismaConfig.databases.head.connector match {
+      case "native-integration-tests" => ExternalApiTestServer()
+      case _                          => InternalApiTestServer()
+    }
   }
 
   def setupProject(
@@ -82,4 +89,10 @@ trait IntegrationBaseSpec
   }
 
   def formatSchema(schema: String): String = JsString(schema).toString()
+
+  val scalarListDirective = if (capabilities.hasNot(EmbeddedScalarListsCapability)) {
+    "@scalarList(strategy: RELATION)"
+  } else {
+    ""
+  }
 }

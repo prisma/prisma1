@@ -1,17 +1,17 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbeddedToNonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBaseV11 {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a FriendReq relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendReq }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendReq }
 
     database.setup(project)
 
@@ -27,6 +27,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendReq{
           |         f
@@ -38,7 +39,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendReq":{"f":"f1"}}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val create2 = server.query("""mutation { createFriend(data: {f: "f2"}){f}}""", project)
 
@@ -46,12 +47,12 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendReq:{connect:{f: "f2"}}
           |       }
@@ -75,7 +76,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
 
   "a FriendOpt relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendOpt }
 
     database.setup(project)
 
@@ -91,6 +92,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendOpt{
           |         f
@@ -102,7 +104,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendOpt":{"f":"f1"}}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val create2 = server.query("""mutation { createFriend(data: {f: "f2"}){f}}""", project)
 
@@ -110,12 +112,12 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendOpt:{connect:{f: "f2"}}
           |       }
@@ -139,7 +141,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
 
   "a FriendsOpt relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
 
     database.setup(project)
 
@@ -155,6 +157,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendsOpt{
           |         f
@@ -166,7 +169,7 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[{"f":"f1"}]}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val create2 = server.query("""mutation { createFriend(data: {f: "f2"}){f}}""", project)
 
@@ -174,12 +177,12 @@ class UpdateWithNestedConnectMutationInsideEmbeddedUpdateSpec extends FlatSpec w
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendsOpt:{connect:{f: "f2"}}
           |       }

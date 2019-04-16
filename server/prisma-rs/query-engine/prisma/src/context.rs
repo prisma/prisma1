@@ -1,9 +1,9 @@
-use crate::schema;
+use crate::{schema, PrismaResult};
 use core::QueryExecutor;
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase, WithMigrations};
 use prisma_models::SchemaRef;
-use sqlite_connector::{SqlResolver, Sqlite};
-use std::{boxed::Box, sync::Arc};
+use sqlite_connector::Sqlite;
+use std::sync::Arc;
 
 pub struct PrismaContext {
     pub config: PrismaConfig,
@@ -12,19 +12,17 @@ pub struct PrismaContext {
 }
 
 impl PrismaContext {
-    pub fn new() -> Self {
+    pub fn new() -> PrismaResult<Self> {
         let config = config::load().unwrap();
         let data_resolver = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
-                let sqlite = Arc::new(Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap());
-                SqlResolver::new(sqlite) // FIXME: active is misused here
+                let sqlite = Sqlite::new(config.limit(), config.is_active().unwrap()).unwrap();
+                Arc::new(sqlite) // FIXME: active is misused here
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
 
-        let query_executor: QueryExecutor = QueryExecutor {
-            data_resolver: Box::new(data_resolver),
-        };
+        let query_executor: QueryExecutor = QueryExecutor { data_resolver };
 
         let db_name = config
             .databases
@@ -33,10 +31,11 @@ impl PrismaContext {
             .db_name()
             .expect("database was not set");
 
-        Self {
+        let schema = schema::load_schema(db_name)?;
+        Ok(Self {
             config: config,
-            schema: dbg!(schema::load_schema(db_name).expect("schema loading failed")),
+            schema: schema,
             query_executor: query_executor,
-        }
+        })
     }
 }

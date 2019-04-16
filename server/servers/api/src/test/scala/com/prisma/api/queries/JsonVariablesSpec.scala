@@ -7,11 +7,10 @@ import play.api.libs.json._
 
 class JsonVariablesSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """
       | type MyRequiredJson {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   json: Json!
       | }
     """.stripMargin
@@ -48,6 +47,5 @@ class JsonVariablesSpec extends FlatSpec with Matchers with ApiSpecBase {
     val variables = Json.parse("""{"json": []}""")
     server.query(queryString, project, variables = variables)
   }
-
 
 }

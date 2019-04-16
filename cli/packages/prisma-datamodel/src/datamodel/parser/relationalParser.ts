@@ -1,21 +1,30 @@
 import Parser from './parser'
 import { IGQLField, IGQLType } from '../model'
 import { LegacyRelationalReservedFields } from '../legacyFields'
+import { DirectiveKeys } from '../directives'
 
 /**
  * Parser implementation for related models.
  */
 export default class RelationalParser extends Parser {
+  /**
+   * Postgres fallback for reserved field names.
+   */
   protected isIdField(field: any): boolean {
-    return field.name.value === LegacyRelationalReservedFields.idFieldName
+    return (
+      this.hasDirective(field, DirectiveKeys.isId) ||
+      field.name.value === LegacyRelationalReservedFields.idFieldName
+    )
   }
   protected isCreatedAtField(field: any): boolean {
     return (
+      this.hasDirective(field, DirectiveKeys.isCreatedAt) ||
       field.name.value === LegacyRelationalReservedFields.createdAtFieldName
     )
   }
   protected isUpdatedAtField(field: any): boolean {
     return (
+      this.hasDirective(field, DirectiveKeys.isUpdatedAt) ||
       field.name.value === LegacyRelationalReservedFields.updatedAtFieldName
     )
   }

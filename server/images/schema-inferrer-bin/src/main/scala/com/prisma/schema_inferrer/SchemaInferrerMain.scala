@@ -1,5 +1,4 @@
 package com.prisma.schema_inferrer
-import com.prisma.deploy.connector.{FieldRequirementsInterface, InferredTables}
 import com.prisma.deploy.migration.inference.{SchemaInferrer, SchemaMapping}
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.shared.models.{ConnectorCapabilities, Schema}
@@ -15,14 +14,14 @@ object SchemaInferrerMain {
   implicit lazy val inputReads: Reads[Input] = Json.reads[Input]
 
   def main(args: Array[String]): Unit = {
-    val inputAsJson = Json.parse(StdIn.readLine())
+    val line        = StdIn.readLine()
+    val inputAsJson = Json.parse(line)
     val input       = inputAsJson.as[Input]
 
-    val capabilities     = ConnectorCapabilities.mysqlPrototype
-    val validationResult = DataModelValidatorImpl.validate(input.dataModel, FieldRequirementsInterface.empty, capabilities)
-    val schema           = SchemaInferrer(capabilities).infer(Schema.emptyV11, SchemaMapping.empty, validationResult.get.dataModel, InferredTables.empty)
+    val (capabilities, emptySchema) = (ConnectorCapabilities.mysqlPrototype, Schema.emptyV11)
+    val validationResult            = DataModelValidatorImpl.validate(input.dataModel, capabilities)
+    val schema                      = SchemaInferrer(capabilities).infer(emptySchema, SchemaMapping.empty, validationResult.get.dataModel)
 
     println(Json.toJson(schema))
   }
-
 }

@@ -20,20 +20,11 @@ import scala.util.{Failure, Success}
 
 case class PostgresDeployConnector(
     dbConfig: DatabaseConfig,
-    driver: Driver,
-    isActive: Boolean,
-    isPrototype: Boolean
+    driver: Driver
 )(implicit ec: ExecutionContext)
     extends DeployConnector {
 
-  override def fieldRequirements: FieldRequirementsInterface = PostgresFieldRequirement(isActive)
-  override def capabilities: ConnectorCapabilities = {
-    if (isPrototype) {
-      ConnectorCapabilities.postgresPrototype
-    } else {
-      ConnectorCapabilities.postgres(isActive = isActive)
-    }
-  }
+  override def capabilities: ConnectorCapabilities = ConnectorCapabilities.postgresPrototype
 
   lazy val internalDatabases   = PostgresInternalDatabaseDefs(dbConfig, driver)
   lazy val setupDatabases      = internalDatabases.setupDatabase
@@ -54,7 +45,7 @@ case class PostgresDeployConnector(
   override lazy val databaseInspector: DatabaseInspector             = PostgresDatabaseInspector(projectDatabases.primary)
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createDatabaseForProject(id = id, !capabilities.isDataModelV2)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 
@@ -98,15 +89,6 @@ case class PostgresDeployConnector(
 
   override def shutdown() = {
     managementDatabases.shutdown
-  }
-
-  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = {
-    if (isActive) {
-      EmptyDatabaseIntrospectionInferrer
-    } else {
-      val schema = dbConfig.schema.getOrElse(projectId)
-      DatabaseIntrospectionInferrerImpl(projectDatabase, schema)
-    }
   }
 
   override def managementLock(): Future[Unit] = {

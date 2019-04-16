@@ -1,21 +1,14 @@
 package com.prisma.deploy.migration
 
-import com.prisma.deploy.migration.DirectiveTypes.{MongoInlineRelationDirective, PGInlineRelationDirective, RelationTableDirective}
-import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability}
-import com.prisma.shared.models.FieldBehaviour._
+import com.prisma.shared.models.TypeIdentifier
 import com.prisma.shared.models.TypeIdentifier.ScalarTypeIdentifier
-import com.prisma.shared.models.{ConnectorCapability, FieldBehaviour, OnDelete, TypeIdentifier}
 import sangria.ast._
 
 import scala.collection.Seq
 
 object DataSchemaAstExtensions {
   implicit class CoolDocument(val doc: Document) extends AnyVal {
-    def typeNames: Vector[String]         = objectTypes.map(_.name)
-    def previousTypeNames: Vector[String] = objectTypes.map(_.previousName)
-
-    def enumNames: Vector[String]         = enumTypes.map(_.name)
-    def previousEnumNames: Vector[String] = enumTypes.map(_.previousName)
+    def enumNames: Vector[String] = enumTypes.map(_.name)
 
     def isObjectOrEnumType(name: String): Boolean = isObjecType(name) || isEnumType(name)
     def isObjecType(name: String): Boolean        = objectType(name).isDefined
@@ -27,28 +20,6 @@ object DataSchemaAstExtensions {
 
     def enumType(name: String): Option[EnumTypeDefinition] = enumTypes.find(_.name == name)
     def enumTypes: Vector[EnumTypeDefinition]              = doc.definitions collect { case x: EnumTypeDefinition => x }
-
-    def relatedFieldOf(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): Option[FieldDefinition] = {
-      val otherFieldsOnOppositeModel = objectType_!(fieldDef.typeName) match {
-        case otherModel if otherModel.name == objectType.name => otherModel.fields.filter(_.typeName == objectType.name).filter(_.name != fieldDef.name)
-        case otherModel                                       => otherModel.fields.filter(_.typeName == objectType.name)
-      }
-      getOppositeField(fieldDef, otherFieldsOnOppositeModel)
-    }
-
-    private def getOppositeField(relationField: FieldDefinition, otherFieldsOnModelBRelatedToModelA: Vector[FieldDefinition]) = {
-      relationField.directive("relation") match {
-        case Some(directive) =>
-          otherFieldsOnModelBRelatedToModelA.find(field =>
-            field.directive("relation") match {
-              case Some(otherDirective) => directive.argument_!("name").value.renderCompact == otherDirective.argument_!("name").value.renderCompact
-              case None                 => false
-          })
-
-        case None =>
-          otherFieldsOnModelBRelatedToModelA.headOption
-      }
-    }
 
     def typeIdentifierForTypename(fieldType: Type): TypeIdentifier.Value = {
       val typeName = fieldType.namedType.name
@@ -64,8 +35,6 @@ object DataSchemaAstExtensions {
   }
 
   implicit class CoolObjectType(val objectType: ObjectTypeDefinition) extends AnyVal {
-    def hasNoIdField: Boolean = field("id").isEmpty
-
     def oldName: Option[String] = {
       for {
         directive <- objectType.directive("rename")
@@ -80,12 +49,9 @@ object DataSchemaAstExtensions {
 
     def description: Option[String] = objectType.directiveArgumentAsString("description", "text")
 
-    def tableName: String                  = tableNameDirective.getOrElse(objectType.name)
-    def tableNameDirective: Option[String] = objectType.directiveArgumentAsString("pgTable", "name")
-
     def dbName: Option[String] = objectType.directiveArgumentAsString("db", "name")
 
-    def isRelationTable: Boolean = objectType.hasDirective("linkTable")
+    def isRelationTable: Boolean = objectType.hasDirective("relationTable")
 
     def relationFields(doc: Document): Vector[FieldDefinition] = objectType.fields.filter(_.isRelationField(doc))
   }
@@ -110,8 +76,6 @@ object DataSchemaAstExtensions {
 
     def typeName: String = fieldDefinition.fieldType.namedType.name
 
-    def columnName: Option[String] = fieldDefinition.directiveArgumentAsString("pgColumn", "name")
-
     def dbName: Option[String] = fieldDefinition.directiveArgumentAsString("db", "name")
 
     def isUnique: Boolean = fieldDefinition.directive("unique").isDefined || fieldDefinition.directive("pqUnique").isDefined
@@ -135,30 +99,8 @@ object DataSchemaAstExtensions {
     }
 
     def hasRelationDirectiveWithNameArg: Boolean = relationName.isDefined
-    def hasDefaultValueDirective: Boolean        = defaultValue.isDefined
-    def hasOldDefaultValueDirective: Boolean     = oldDefaultValue.isDefined
-    def description: Option[String]              = fieldDefinition.directiveArgumentAsString("description", "text")
-    def defaultValue: Option[String] =
-      fieldDefinition.directiveArgumentAsString("default", "value").orElse(fieldDefinition.directiveArgumentAsString("pgDefault", "value"))
-    def oldDefaultValue: Option[String]      = fieldDefinition.directiveArgumentAsString("defaultValue", "value")
-    def relationName: Option[String]         = fieldDefinition.directiveArgumentAsString("relation", "name")
-    def previousRelationName: Option[String] = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
-
-    def relationDBDirective = relationTableDirective.orElse(pgInlineRelationDirective).orElse(mongoInlineRelationDirective)
-
-    def relationTableDirective: Option[RelationTableDirective] = {
-      for {
-        tableName   <- fieldDefinition.directiveArgumentAsString("pgRelationTable", "table")
-        thisColumn  = fieldDefinition.fieldDefinition.directiveArgumentAsString("pgRelationTable", "relationColumn")
-        otherColumn = fieldDefinition.directiveArgumentAsString("pgRelationTable", "targetColumn")
-      } yield RelationTableDirective(table = tableName, thisColumn = thisColumn, otherColumn = otherColumn)
-    }
-
-    def pgInlineRelationDirective: Option[PGInlineRelationDirective] =
-      fieldDefinition.directiveArgumentAsString("pgRelation", "column").map(value => PGInlineRelationDirective(value))
-
-    def mongoInlineRelationDirective: Option[MongoInlineRelationDirective] =
-      fieldDefinition.directiveArgumentAsString("mongoRelation", "field").map(value => MongoInlineRelationDirective(value))
+    def relationName: Option[String]             = fieldDefinition.directiveArgumentAsString("relation", "name")
+    def previousRelationName: Option[String]     = fieldDefinition.directiveArgumentAsString("relation", "oldName").orElse(relationName)
 
     def typeIdentifier(doc: Document) = doc.typeIdentifierForTypename(fieldDefinition.fieldType)
   }
@@ -172,14 +114,6 @@ object DataSchemaAstExtensions {
   }
 
   implicit class CoolWithDirectives(val withDirectives: WithDirectives) extends AnyVal {
-
-    def relationName = directiveArgumentAsString("relation", "name")
-    def onDelete = directiveArgumentAsString("relation", "onDelete") match {
-      case Some("SET_NULL") => OnDelete.SetNull
-      case Some("CASCADE")  => OnDelete.Cascade
-      case Some(x)          => sys.error(s"The SchemaSyntaxvalidator should catch this already: $x")
-      case None             => OnDelete.SetNull
-    }
 
     def directiveArgumentAsString(directiveName: String, argumentName: String): Option[String] = {
       for {
@@ -195,16 +129,6 @@ object DataSchemaAstExtensions {
   }
 
   implicit class CoolDirective(val directive: Directive) extends AnyVal {
-    import shapeless._
-    import syntax.typeable._
-
-    def containsArgument(name: String, mustBeAString: Boolean = false): Boolean = {
-      if (mustBeAString) {
-        directive.arguments.find(_.name == name).flatMap(_.value.cast[StringValue]).isDefined
-      } else {
-        directive.arguments.exists(_.name == name)
-      }
-    }
 
     def argumentValueAsString(name: String): Option[String] = {
       for {
@@ -259,12 +183,4 @@ object DataSchemaAstExtensions {
     }
   }
 
-}
-
-object DirectiveTypes {
-
-  sealed trait RelationDBDirective
-  case class RelationTableDirective(table: String, thisColumn: Option[String], otherColumn: Option[String]) extends RelationDBDirective
-  case class PGInlineRelationDirective(column: String)                                                      extends RelationDBDirective
-  case class MongoInlineRelationDirective(field: String)                                                    extends RelationDBDirective
 }

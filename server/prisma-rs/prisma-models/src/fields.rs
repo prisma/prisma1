@@ -62,8 +62,16 @@ impl Fields {
         })
     }
 
-    pub fn scalar(&self) -> Vec<Arc<ScalarField>> {
+    fn scalar(&self) -> Vec<Arc<ScalarField>> {
         self.scalar_weak().iter().map(|f| f.upgrade().unwrap()).collect()
+    }
+
+    pub fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar().into_iter().filter(|sf| !sf.is_list).collect()
+    }
+
+    pub fn scalar_list(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar().into_iter().filter(|sf| sf.is_list).collect()
     }
 
     fn scalar_weak(&self) -> &[Weak<ScalarField>] {
@@ -156,11 +164,11 @@ impl Fields {
             })
     }
 
-    pub fn find_from_relation(&self, name: &str) -> DomainResult<Arc<RelationField>> {
+    pub fn find_from_relation(&self, name: &str, side: RelationSide) -> DomainResult<Arc<RelationField>> {
         self.relation_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
-            .find(|field| field.relation().name == name)
+            .find(|field| field.relation().name == name && field.relation_side == side)
             .ok_or_else(|| DomainError::FieldForRelationNotFound {
                 relation: name.to_string(),
                 model: self.model().name.clone(),

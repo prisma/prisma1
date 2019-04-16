@@ -1,6 +1,5 @@
 package com.prisma.api.schema
 
-import com.prisma.{IgnoreMongo, IgnoreMySql, IgnorePostgres}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import com.prisma.util.GraphQLSchemaMatchers
@@ -11,8 +10,14 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the create Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String).field("tag", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  tag: String
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -22,14 +27,23 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the create Mutation for a model with relations" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("text", _.String)
-      schema
-        .model("Todo")
-        .field_!("title", _.String)
-        .field("tag", _.String)
-        .oneToManyRelation("comments", "todo", comment)
-        .oneToOneRelation_!("topComment", "topCommentFor", comment)
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  tag: String
+        |  comments: [Comment] @relation(name:"TodoComments" $listInlineArgument)
+        |  topComment: Comment! @relation(link: INLINE, name: "TopComments")
+        |}
+        |
+        |type Comment {
+        |  id: ID! @id
+        |  text: String!
+        |  todo: Todo @relation(name:"TodoComments")
+        |  topCommentFor: Todo! @relation(name:"TopComments")
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -42,7 +56,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
         "title: String!",
         "tag: String",
         "comments: CommentCreateManyWithoutTodoInput",
-        "topComment: CommentCreateOneWithoutTodoInput!"
+        "topComment: CommentCreateOneWithoutTopCommentForInput!"
       )
     )
 
@@ -75,8 +89,14 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  alias: String @unique
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -97,10 +117,21 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update Mutation for a model with a optional backrelation" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
-      val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
-      list.manyToManyRelation("todoes", "does not matter", todo, includeFieldBInSchema = false)
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+        |type List {
+        |  id: ID! @id
+        |  listUnique: String! @unique
+        |  optList: String
+        |  todoes: [Todo] $listInlineDirective
+        |}
+        |
+        |type Todo {
+        |  id: ID! @id
+        |  todoUnique: String! @unique
+        |  optString: String
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -145,48 +176,23 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
                                    ))
   }
 
-  "the many update Mutation for a model" should "not be generated for an empty model" taggedAs (IgnoreMongo) in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val model = schema.model("Todo")
-      model.fields.clear()
-      model.field_!("id", _.Cuid, isHidden = true)
-    }
-
-    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-    schema shouldNot containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
-    schema should containInputType("TodoWhereInput",
-                                   fields = Vector(
-                                     "AND: [TodoWhereInput!]",
-                                     "OR: [TodoWhereInput!]",
-                                     "NOT: [TodoWhereInput!]"
-                                   ))
-  }
-
-  "the many update Mutation for a model" should "not be generated for an empty model for Mongo" taggedAs (IgnoreMySql, IgnorePostgres) in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val model = schema.model("Todo")
-      model.fields.clear()
-      model.field_!("id", _.Cuid, isHidden = true)
-    }
-
-    val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
-
-    schema shouldNot containMutation("updateManyTodoes(data: TodoUpdateInput!, where: TodoWhereInput!): BatchPayload!")
-    schema should containInputType("TodoWhereInput",
-                                   fields = Vector(
-                                     "AND: [TodoWhereInput!]"
-                                   ))
-  }
-
   "the update Mutation for a model with relations" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("text", _.String)
-      schema
-        .model("Todo")
-        .field_!("title", _.String)
-        .field("tag", _.String)
-        .oneToManyRelation("comments", "todo", comment)
+
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  tag: String
+        |  comments: [Comment] $listInlineDirective
+        |}
+        |
+        |type Comment {
+        |  id: ID! @id
+        |  text: String!
+        |  todo: Todo
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -270,10 +276,20 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update and upsert Mutation for a model with omitted back relation" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment").field_!("text", _.String)
-      val todo    = schema.model("Todo").field_!("title", _.String).field("tag", _.String)
-      todo.oneToManyRelation("comments", "todo", comment, includeFieldB = false)
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  tag: String
+        |  comments: [Comment] $listInlineDirective
+        |}
+        |
+        |type Comment {
+        |  id: ID! @id
+        |  text: String!
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -292,17 +308,29 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the upsert Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |}
+      """.stripMargin
     }
+
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
 
     schema should containMutation("upsertTodo(where: TodoWhereUniqueInput!, create: TodoCreateInput!, update: TodoUpdateInput!): Todo!")
   }
 
   "the delete Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String).field("tag", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  tag: String
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -315,12 +343,15 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the delete Mutation for a model" should "be generated correctly and contain all non-list unique fields" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema
-        .model("Todo")
-        .field_!("title", _.String)
-        .field("tag", _.String)
-        .field("unique", _.Int, isUnique = true)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  tag: String
+        |  unique: Int @unique
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -333,10 +364,13 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
                                    ))
   }
   "the deleteMany Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema
-        .model("Todo")
-        .field_!("title", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -346,10 +380,13 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the updateMany Mutation for a model" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema
-        .model("Todo")
-        .field_!("title", _.String)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -360,7 +397,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the executeRaw mutation" should "be there if raw access is enabled" in {
-    val project       = TestProject()
+    val project       = TestProject.emptyV11
     val schemaBuilder = SchemaBuilderImpl(project, enableRawAccess = true)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
@@ -368,7 +405,7 @@ class MutationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the executeRaw mutation" should "not be there if raw access is disabled" in {
-    val project       = TestProject()
+    val project       = TestProject.emptyV11
     val schemaBuilder = SchemaBuilderImpl(project, enableRawAccess = false)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 

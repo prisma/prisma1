@@ -10,8 +10,9 @@ class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | enum: AB
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
          |}
          |
          |enum AB{
@@ -23,7 +24,8 @@ class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema2 =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -33,8 +35,9 @@ class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | enum: AB
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
          |}
          |
          |enum AB{
@@ -48,7 +51,8 @@ class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema2 =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}"""
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
@@ -59,8 +63,9 @@ class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | enum: AB
+         |  id: ID! @id
+         |  name: String! @unique
+         |  enum: AB
          |}
          |
          |enum AB{
@@ -74,7 +79,8 @@ class DeleteEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema2 =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}"""
 
     deployServer.deploySchemaThatMustWarn(project, schema2, force = true).toString should be(

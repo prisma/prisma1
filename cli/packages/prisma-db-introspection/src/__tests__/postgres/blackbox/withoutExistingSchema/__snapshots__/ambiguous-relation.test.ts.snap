@@ -3,15 +3,23 @@
 exports[`Introspector test schema - 2504 1`] = `
 "type DirectMessage @pgTable(name: \\"direct_messages\\") {
   id: Int! @unique
-  receiver_id: User
-  sender_id: User
+  receiver: User @pgColumn(name: \\"receiver_id\\") @relation(name: \\"DirectMessageReceiverToUserDirectMessages\\")
+  sender: User @pgColumn(name: \\"sender_id\\") @relation(name: \\"DirectMessageSenderToUserDirectMessages\\")
   text: String!
 }
 
 type User @pgTable(name: \\"users\\") {
   id: Int! @unique
-  direct_messages: [DirectMessage]
-  direct_messages: [DirectMessage]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references DirectMessage.receiver.
+  # directMessages: [DirectMessage] @relation(name: \\"DirectMessageReceiverToUserDirectMessages\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references DirectMessage.sender.
+  # directMessages: [DirectMessage] @relation(name: \\"DirectMessageSenderToUserDirectMessages\\")
   name: String!
 }"
 `;
@@ -19,15 +27,23 @@ type User @pgTable(name: \\"users\\") {
 exports[`Introspector test schema - 2504 2`] = `
 "type DirectMessage @db(name: \\"direct_messages\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"direct_messages_id_seq\\", initialValue: 1, allocationSize: 1)
-  receiver_id: User
-  sender_id: User
+  receiver: User @db(name: \\"receiver_id\\") @relation(name: \\"DirectMessageReceiverToUserDirectMessages\\")
+  sender: User @db(name: \\"sender_id\\") @relation(name: \\"DirectMessageSenderToUserDirectMessages\\")
   text: String!
 }
 
 type User @db(name: \\"users\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_id_seq\\", initialValue: 1, allocationSize: 1)
-  direct_messages: [DirectMessage]
-  direct_messages: [DirectMessage]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references DirectMessage.receiver.
+  # directMessages: [DirectMessage] @relation(name: \\"DirectMessageReceiverToUserDirectMessages\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references DirectMessage.sender.
+  # directMessages: [DirectMessage] @relation(name: \\"DirectMessageSenderToUserDirectMessages\\")
   name: String!
 }"
 `;

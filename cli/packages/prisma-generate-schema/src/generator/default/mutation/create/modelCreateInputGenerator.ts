@@ -6,7 +6,7 @@ import {
   TypeFromModelGenerator,
   RelatedModelInputObjectTypeGenerator,
 } from '../../../generator'
-import { IGQLType, IGQLField } from 'prisma-datamodel'
+import { IGQLType, IGQLField, IdStrategy } from 'prisma-datamodel'
 import {
   GraphQLObjectType,
   GraphQLFieldConfigMap,
@@ -14,6 +14,8 @@ import {
   GraphQLList,
   GraphQLInputObjectType,
   GraphQLString,
+  GraphQLInputFieldConfigMap,
+  GraphQLInputFieldConfig,
 } from 'graphql/type'
 
 export default class ModelCreateInputGenerator extends ModelInputObjectTypeGenerator {
@@ -96,7 +98,15 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
     field: IGQLField,
     generators: IGenerators,
   ) {
-    if (field.isReadOnly) {
+    if (
+      (field.isReadOnly &&
+        !(
+          field.idStrategy === IdStrategy.Auto ||
+          field.idStrategy === IdStrategy.None
+        )) ||
+      field.isCreatedAt ||
+      field.isUpdatedAt
+    ) {
       return null
     } else {
       if (field.isList) {
@@ -111,7 +121,7 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
 
   public wouldBeEmpty(model: IGQLType, args: {}) {
     return (
-      !this.hasWriteableFields(this.getScalarFields(model.fields)) &&
+      !this.hasCreateInputFields(this.getScalarFields(model.fields)) &&
       this.getRelationFields(model.fields).every(field =>
         ModelCreateInputGenerator.relationWouldBeEmpty(
           model,
@@ -124,6 +134,29 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
 
   public getTypeName(input: IGQLType, args: {}) {
     return `${input.name}CreateInput`
+  }
+
+  /**
+   * Generates all fields of this type.
+   * @param model
+   * @param args
+   */
+  protected generateFields(model: IGQLType, args: {}) {
+    const fields = {} as GraphQLInputFieldConfigMap
+
+    const fieldList = this.getCreateInputFields(model.fields)
+    for (const field of fieldList) {
+      const isScalar = this.generators.scalarTypeGenerator.isScalarField(field)
+      const fieldSchema: GraphQLInputFieldConfig | null = isScalar
+        ? this.generateScalarField(model, args, field)
+        : this.generateRelationField(model, args, field)
+
+      if (fieldSchema !== null) {
+        fields[field.name] = fieldSchema
+      }
+    }
+
+    return fields
   }
 
   protected generateRelationFieldType(

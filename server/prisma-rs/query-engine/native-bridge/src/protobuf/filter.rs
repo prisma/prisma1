@@ -1,5 +1,5 @@
 use super::prisma as pb;
-use connector::*;
+use connector::filter::*;
 use prisma_models::prelude::*;
 
 pub trait IntoFilter {
@@ -9,18 +9,30 @@ pub trait IntoFilter {
 impl IntoFilter for pb::Filter {
     fn into_filter(self, model: ModelRef) -> Filter {
         match self.type_.unwrap() {
-            pb::filter::Type::And(and) => Filter::And(
-                and.filters
-                    .into_iter()
-                    .map(|filter| Box::new(filter.into_filter(model.clone())))
-                    .collect(),
-            ),
-            pb::filter::Type::Or(or) => Filter::Or(
-                or.filters
-                    .into_iter()
-                    .map(|filter| Box::new(filter.into_filter(model.clone())))
-                    .collect(),
-            ),
+            pb::filter::Type::And(mut and) => match and.filters.len() {
+                1 => and.filters.pop().unwrap().into_filter(model),
+                _ => {
+                    let filters = and
+                        .filters
+                        .into_iter()
+                        .map(|filter| Box::new(filter.into_filter(model.clone())))
+                        .collect();
+
+                    Filter::And(filters)
+                }
+            },
+            pb::filter::Type::Or(mut or) => match or.filters.len() {
+                1 => or.filters.pop().unwrap().into_filter(model),
+                _ => {
+                    let filters = or
+                        .filters
+                        .into_iter()
+                        .map(|filter| Box::new(filter.into_filter(model.clone())))
+                        .collect();
+
+                    Filter::Or(filters)
+                }
+            },
             pb::filter::Type::Not(not) => Filter::Not(
                 not.filters
                     .into_iter()
@@ -48,7 +60,7 @@ impl IntoFilter for pb::ScalarFilter {
     fn into_filter(self, model: ModelRef) -> Filter {
         use pb::scalar_filter::Condition::*;
 
-        let field = dbg!(model.fields()).find_from_scalar(self.field.as_ref()).unwrap();
+        let field = model.fields().find_from_scalar(self.field.as_ref()).unwrap();
 
         let condition = match self.condition.unwrap() {
             Equals(value) => ScalarCondition::Equals(value.into()),

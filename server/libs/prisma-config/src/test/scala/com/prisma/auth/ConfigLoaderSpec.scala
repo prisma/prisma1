@@ -13,7 +13,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: postgres
-                          |    migrations: true
                           |    host: localhost
                           |    port: 5432
                           |    user: root
@@ -33,7 +32,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "postgres"
-      database.active shouldBe true
       database.port shouldBe 5432
       database.user shouldBe "root"
       database.password shouldBe Some("prisma")
@@ -65,7 +63,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "mysql"
-      database.active shouldBe true
       database.port shouldBe 3306
       database.user shouldBe "root"
       database.password shouldBe Some("prisma")
@@ -82,7 +79,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: mysql
-                          |    migrations: true
                           |    host: localhost
                           |    port: 3306
                           |    user: root
@@ -100,7 +96,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "mysql"
-      database.active shouldBe true
       database.port shouldBe 3306
       database.user shouldBe "root"
       database.password shouldBe Some("prisma")
@@ -116,7 +111,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
           |databases:
           |  default:
           |    connector: postgres
-          |    migrations: true
           |    uri: postgres://user:password@host:5432/database?ssl=1
         """.stripMargin
 
@@ -128,7 +122,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "postgres"
-      database.active shouldBe true
       database.port shouldBe 5432
       database.user shouldBe "user"
       database.password shouldBe Some("password")
@@ -146,7 +139,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |databases:
                             |  default:
                             |    connector: mysql
-                            |    migrations: true
                             |    host: localhost
                             |    port: 3306
                             |    user: root
@@ -167,7 +159,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                               |databases:
                               |  default:
                               |    connector: mysql
-                              |    migrations: true
                               |    host: localhost
                               |    port: 3306
                               |    user: root
@@ -193,7 +184,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |databases:
                             |  default:
                             |    connector: mysql
-                            |    migrations: true
                             |    host: localhost
                             |    port: 3306
                             |    user: root
@@ -218,7 +208,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |databases:
                             |  default:
                             |    connector: postgres
-                            |    migrations: true
                             |    host: localhost
                             |    port: 5432
                             |    user: root

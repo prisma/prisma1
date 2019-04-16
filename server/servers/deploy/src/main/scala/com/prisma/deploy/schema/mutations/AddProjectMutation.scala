@@ -27,11 +27,7 @@ case class AddProjectMutation(
   override def execute: Future[MutationResult[AddProjectMutationPayload]] = {
     validate()
 
-    val schema = if (connectorCapabilities.isDataModelV2) {
-      Schema.empty.copy(version = Some(Schema.version.v2))
-    } else {
-      Schema.empty
-    }
+    val schema = Schema.emptyV11
 
     val newProject = Project(
       id = projectId,
@@ -54,15 +50,10 @@ case class AddProjectMutation(
     )
 
     for {
-      _ <- projectPersistence.create(newProject)
-      _ <- migrationPersistence.create(migration)
-//      _ <- if (deployConnector.isActive) deployConnector.createProjectDatabase(newProject.id) else Future.unit
+      _             <- projectPersistence.create(newProject)
+      _             <- migrationPersistence.create(migration)
       loadedProject <- projectPersistence.load(newProject.id)
-      _ <- if (connectorCapabilities.isDataModelV2) {
-            deployConnector.createProjectDatabase(loadedProject.get.dbName)
-          } else {
-            if (deployConnector.isActive) deployConnector.createProjectDatabase(loadedProject.get.dbName) else Future.unit
-          }
+      _             <- deployConnector.createProjectDatabase(loadedProject.get.dbName)
     } yield MutationSuccess(AddProjectMutationPayload(args.clientMutationId, loadedProject.get))
   }
 

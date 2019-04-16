@@ -17,6 +17,7 @@ export default class Deploy extends Command {
   static topic = 'deploy'
   static description = 'Deploy service changes (or new service)'
   static group = 'general'
+  static printVersionSyncWarning = true
   static help = `
   
   ${chalk.green.bold('Examples:')}
@@ -65,6 +66,9 @@ ${chalk.gray(
     'no-generate': flags.boolean({
       description: 'Disable implicit client generation',
     }),
+    'skip-hooks': flags.boolean({
+      description: 'Disable hooks on deploy',
+    }),
   }
   private showedHooks: boolean = false
   async run() {
@@ -77,6 +81,7 @@ ${chalk.gray(
     const dryRun = this.flags['dry-run']
     const noMigrate = this.flags['no-migrate']
     const noGenerate = this.flags['no-generate']
+    const noHook = this.flags['skip-hooks']
 
     if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
       await this.out.error(`--env-file path '${envFile}' does not exist`)
@@ -184,6 +189,7 @@ ${chalk.gray(
       workspace!,
       noMigrate,
       noGenerate,
+      noHook
     )
   }
 
@@ -231,6 +237,7 @@ ${chalk.gray(
     workspace: string | null,
     noMigrate: boolean,
     noGenerate: boolean,
+    noHook: boolean,
   ): Promise<void> {
     let before = Date.now()
 
@@ -304,33 +311,37 @@ ${chalk.gray(
     }
 
     const hooks = this.definition.getHooks('post-deploy')
-    if (hooks.length > 0) {
-      this.out.log(`\n${chalk.bold('post-deploy')}:`)
-    }
-    for (const hook of hooks) {
-      const splittedHook = hook.split(' ')
-      this.out.action.start(`Running ${chalk.cyan(hook)}`)
-      const isPackaged = fs.existsSync('/snapshot')
-      debug({ isPackaged })
-      const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
-      const child = spawnPath(splittedHook[0], splittedHook.slice(1))
-      const stderr = child.stderr && child.stderr.toString()
-      if (stderr && stderr.length > 0) {
-        this.out.log(chalk.red(stderr))
+    if (!noHook) {
+      if (hooks.length > 0) {
+        this.out.log(`\n${chalk.bold('post-deploy')}:`)
       }
-      const stdout = child.stdout && child.stdout.toString()
-      if (stdout && stdout.length > 0) {
-        this.out.log(stdout)
-      }
-      const { status, error } = child
-      if (error || status !== 0) {
-        if (error) {
-          this.out.log(chalk.red(error.message))
+      for (const hook of hooks) {
+        const splittedHook = hook.split(' ')
+        this.out.action.start(`Running ${chalk.cyan(hook)}`)
+        const isPackaged = fs.existsSync('/snapshot')
+        debug({ isPackaged })
+        const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
+        const child = spawnPath(splittedHook[0], splittedHook.slice(1))
+        const stderr = child.stderr && child.stderr.toString()
+        if (stderr && stderr.length > 0) {
+          this.out.log(chalk.red(stderr))
         }
-        this.out.action.stop(chalk.red(figures.cross))
-      } else {
-        this.out.action.stop()
+        const stdout = child.stdout && child.stdout.toString()
+        if (stdout && stdout.length > 0) {
+          this.out.log(stdout)
+        }
+        const { status, error } = child
+        if (error || status !== 0) {
+          if (error) {
+            this.out.log(chalk.red(error.message))
+          }
+          this.out.action.stop(chalk.red(figures.cross))
+        } else {
+          this.out.action.stop()
+        }
       }
+    } else {
+      debug('Hooks are disabled by the --skip-hooks flag')
     }
 
     if (
@@ -356,7 +367,7 @@ ${chalk.gray(
           const isGenerateHookPresent = hooks.some(
             hook => hook.includes('prisma') && hook.includes('generate'),
           )
-          if (isGenerateHookPresent) {
+          if (!noHook && isGenerateHookPresent) {
             this.out.log(
               chalk.yellow(
                 `Warning: The \`prisma generate\` command was executed twice. Since Prisma 1.31, the Prisma client is generated automatically after running \`prisma deploy\`. It is not necessary to generate it via a \`post-deploy\` hook any more, you can therefore remove the hook if you do not need it otherwise.`,
@@ -382,7 +393,9 @@ ${chalk.gray(
         !this.flags['no-seed'] &&
         projectNew
       ) {
-        this.printHooks()
+        if (!noHook) {
+          this.printHooks()
+        }
         await this.seed(
           cluster,
           projectNew,
@@ -513,7 +526,7 @@ ${chalk.gray(
         )
       : ''
 
-    this.out.log(`\n${'Your Prisma GraphQL database endpoint is live:'}
+    this.out.log(`\n${'Your Prisma endpoint is live:'}
 
   ${'HTTP:'}  ${cluster.getApiEndpoint(serviceName, stageName, workspace)}
   ${'WS:'}    ${cluster.getWSEndpoint(

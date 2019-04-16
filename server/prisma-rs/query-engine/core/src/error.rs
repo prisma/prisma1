@@ -1,14 +1,16 @@
-use connector::ConnectorError;
+use connector::error::ConnectorError;
 use failure::Fail;
 use prisma_models::DomainError;
 
 #[derive(Debug, Fail)]
 pub enum CoreError {
-    #[fail(display = "Error in connector.")]
+    #[fail(display = "Error in connector: {}", _0)]
     ConnectorError(ConnectorError),
-    #[fail(display = "Error in domain logic.")]
+
+    #[fail(display = "Error in domain logic: {}", _0)]
     DomainError(DomainError),
-    #[fail(display = "{}", _0)]
+
+    #[fail(display = "Query validation error: {}", _0)]
     QueryValidationError(String),
 }
 

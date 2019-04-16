@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -147,7 +147,6 @@ CREATE TABLE "schema-generator$enum"."E" (
 --
 
 CREATE TABLE "schema-generator$enum"."_AToB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -158,7 +157,6 @@ CREATE TABLE "schema-generator$enum"."_AToB" (
 --
 
 CREATE TABLE "schema-generator$enum"."_AToE" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -169,7 +167,6 @@ CREATE TABLE "schema-generator$enum"."_AToE" (
 --
 
 CREATE TABLE "schema-generator$enum"."_AWithIdToC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -180,7 +177,6 @@ CREATE TABLE "schema-generator$enum"."_AWithIdToC" (
 --
 
 CREATE TABLE "schema-generator$enum"."_AWithIdToD" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -274,38 +270,6 @@ ALTER TABLE ONLY "schema-generator$enum"."D"
 
 ALTER TABLE ONLY "schema-generator$enum"."E"
     ADD CONSTRAINT "E_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToB _AToB_pkey; Type: CONSTRAINT; Schema: schema-generator$enum; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$enum"."_AToB"
-    ADD CONSTRAINT "_AToB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToE _AToE_pkey; Type: CONSTRAINT; Schema: schema-generator$enum; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$enum"."_AToE"
-    ADD CONSTRAINT "_AToE_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithIdToC _AWithIdToC_pkey; Type: CONSTRAINT; Schema: schema-generator$enum; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$enum"."_AWithIdToC"
-    ADD CONSTRAINT "_AWithIdToC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AWithIdToD _AWithIdToD_pkey; Type: CONSTRAINT; Schema: schema-generator$enum; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$enum"."_AWithIdToD"
-    ADD CONSTRAINT "_AWithIdToD_pkey" PRIMARY KEY (id);
 
 
 --

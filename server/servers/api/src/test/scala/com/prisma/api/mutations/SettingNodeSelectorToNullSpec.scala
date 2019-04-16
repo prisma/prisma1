@@ -7,10 +7,10 @@ import org.scalatest.{FlatSpec, Matchers}
 class SettingNodeSelectorToNullSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Setting a where value to null " should " work when there is no further nesting " in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  b: String @unique
         |  key: String! @unique
         |}

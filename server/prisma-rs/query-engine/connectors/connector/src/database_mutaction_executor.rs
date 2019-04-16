@@ -1,68 +1,17 @@
-use crate::{mutaction::*, ConnectorResult};
-use prisma_models::{GraphqlId, SingleNode};
+use crate::{
+    mutaction::{DatabaseMutaction, DatabaseMutactionResults},
+    ConnectorResult,
+};
+use prisma_models::*;
 use serde_json::Value;
 
 pub trait DatabaseMutactionExecutor {
-    fn execute(&self, db_name: String, mutaction: DatabaseMutaction) -> ConnectorResult<DatabaseMutactionResults> {
-        let mut results = DatabaseMutactionResults::default();
+    fn execute_raw(&self, _query: String) -> ConnectorResult<Value>;
 
-        match mutaction {
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::CreateNode(ref cn)) => {
-                let result = DatabaseMutactionResult {
-                    identifier: Identifier::Id(self.execute_create(db_name, cn)?),
-                    typ: DatabaseMutactionResultType::Create,
-                    mutaction,
-                };
-
-                results.push(result);
-            }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNode(ref un)) => {
-                let result = DatabaseMutactionResult {
-                    identifier: Identifier::Id(self.execute_update(db_name, un)?),
-                    typ: DatabaseMutactionResultType::Update,
-                    mutaction,
-                };
-
-                results.push(result);
-            }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpsertNode(ref us)) => {
-                let (id, typ) = self.execute_upsert(db_name, us)?;
-
-                let result = DatabaseMutactionResult {
-                    identifier: Identifier::Id(id),
-                    typ,
-                    mutaction,
-                };
-
-                results.push(result);
-            }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNode(ref dn)) => {
-                let result = DatabaseMutactionResult {
-                    identifier: Identifier::Node(self.execute_delete(db_name, dn)?),
-                    typ: DatabaseMutactionResultType::Delete,
-                    mutaction,
-                };
-
-                results.push(result);
-            }
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::UpdateNodes(_)) => unimplemented!(),
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::DeleteNodes(_)) => unimplemented!(),
-            DatabaseMutaction::TopLevel(TopLevelDatabaseMutaction::ResetData(_)) => unimplemented!(),
-            DatabaseMutaction::Nested(_) => panic!("this nested mutaction is not supported yet!"),
-        };
-
-        Ok(results)
-    }
-
-    fn execute_raw(&self, query: String) -> ConnectorResult<Value>;
-
-    fn execute_create(&self, db_name: String, mutaction: &CreateNode) -> ConnectorResult<GraphqlId>;
-    fn execute_update(&self, db_name: String, mutaction: &UpdateNode) -> ConnectorResult<GraphqlId>;
-    fn execute_delete(&self, db_name: String, mutaction: &DeleteNode) -> ConnectorResult<SingleNode>;
-
-    fn execute_upsert(
+    fn execute(
         &self,
         db_name: String,
-        mutaction: &UpsertNode,
-    ) -> ConnectorResult<(GraphqlId, DatabaseMutactionResultType)>;
+        mutaction: DatabaseMutaction,
+        parent_id: Option<GraphqlId>, // TODO: we don't need this when we handle the whole mutaction in here.
+    ) -> ConnectorResult<DatabaseMutactionResults>;
 }

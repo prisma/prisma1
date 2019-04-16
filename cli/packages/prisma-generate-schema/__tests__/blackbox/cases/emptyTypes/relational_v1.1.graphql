@@ -1,0 +1,1962 @@
+type AggregateOnlyDate {
+  count: Int!
+}
+
+type AggregateOnlyId {
+  count: Int!
+}
+
+type AggregateOnlyIdAndARelation {
+  count: Int!
+}
+
+type AggregateOnlyIdAndARelation2 {
+  count: Int!
+}
+
+type AggregateOnlyRelation {
+  count: Int!
+}
+
+type AggregateOnlyRelationA {
+  count: Int!
+}
+
+type AggregateOnlyRelationB {
+  count: Int!
+}
+
+type BatchPayload {
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
+  count: Long!
+}
+
+scalar DateTime
+
+"""
+Raw JSON value
+"""
+scalar Json
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type Mutation {
+  createOnlyIdAndARelation(data: OnlyIdAndARelationCreateInput!): OnlyIdAndARelation!
+  createOnlyIdAndARelation2(data: OnlyIdAndARelation2CreateInput!): OnlyIdAndARelation2!
+  createOnlyRelation(data: OnlyRelationCreateInput!): OnlyRelation!
+  createOnlyDate(data: OnlyDateCreateInput!): OnlyDate!
+  createOnlyRelationA(data: OnlyRelationACreateInput!): OnlyRelationA!
+  createOnlyId(data: OnlyIdCreateInput!): OnlyId!
+  createOnlyRelationB(data: OnlyRelationBCreateInput!): OnlyRelationB!
+  updateOnlyIdAndARelation(data: OnlyIdAndARelationUpdateInput!, where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
+  updateOnlyIdAndARelation2(data: OnlyIdAndARelation2UpdateInput!, where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
+  updateOnlyRelation(data: OnlyRelationUpdateInput!, where: OnlyRelationWhereUniqueInput!): OnlyRelation
+  updateOnlyRelationA(data: OnlyRelationAUpdateInput!, where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
+  updateOnlyRelationB(data: OnlyRelationBUpdateInput!, where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
+  deleteOnlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
+  deleteOnlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
+  deleteOnlyRelation(where: OnlyRelationWhereUniqueInput!): OnlyRelation
+  deleteOnlyDate(where: OnlyDateWhereUniqueInput!): OnlyDate
+  deleteOnlyRelationA(where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
+  deleteOnlyId(where: OnlyIdWhereUniqueInput!): OnlyId
+  deleteOnlyRelationB(where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
+  upsertOnlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!, create: OnlyIdAndARelationCreateInput!, update: OnlyIdAndARelationUpdateInput!): OnlyIdAndARelation!
+  upsertOnlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!, create: OnlyIdAndARelation2CreateInput!, update: OnlyIdAndARelation2UpdateInput!): OnlyIdAndARelation2!
+  upsertOnlyRelation(where: OnlyRelationWhereUniqueInput!, create: OnlyRelationCreateInput!, update: OnlyRelationUpdateInput!): OnlyRelation!
+  upsertOnlyRelationA(where: OnlyRelationAWhereUniqueInput!, create: OnlyRelationACreateInput!, update: OnlyRelationAUpdateInput!): OnlyRelationA!
+  upsertOnlyRelationB(where: OnlyRelationBWhereUniqueInput!, create: OnlyRelationBCreateInput!, update: OnlyRelationBUpdateInput!): OnlyRelationB!
+  deleteManyOnlyIdAndARelations(where: OnlyIdAndARelationWhereInput): BatchPayload!
+  deleteManyOnlyIdAndARelation2s(where: OnlyIdAndARelation2WhereInput): BatchPayload!
+  deleteManyOnlyRelations(where: OnlyRelationWhereInput): BatchPayload!
+  deleteManyOnlyDates(where: OnlyDateWhereInput): BatchPayload!
+  deleteManyOnlyRelationAs(where: OnlyRelationAWhereInput): BatchPayload!
+  deleteManyOnlyIds(where: OnlyIdWhereInput): BatchPayload!
+  deleteManyOnlyRelationBs(where: OnlyRelationBWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""
+An object with an ID
+"""
+interface Node {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+
+type OnlyDate implements Node {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type OnlyDateConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [OnlyDateEdge]!
+  aggregate: AggregateOnlyDate!
+}
+
+input OnlyDateCreateInput {
+  id: ID
+}
+
+input OnlyDateCreateManyInput {
+  create: [OnlyDateCreateInput!]
+  connect: [OnlyDateWhereUniqueInput!]
+}
+
+"""
+An edge in a connection.
+"""
+type OnlyDateEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: OnlyDate!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum OnlyDateOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type OnlyDatePreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input OnlyDateScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyDateScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyDateScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyDateScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+type OnlyDateSubscriptionPayload {
+  mutation: MutationType!
+  node: OnlyDate
+  updatedFields: [String!]
+  previousValues: OnlyDatePreviousValues
+}
+
+input OnlyDateSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyDateSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyDateSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyDateSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: OnlyDateWhereInput
+}
+
+input OnlyDateUpdateManyInput {
+  create: [OnlyDateCreateInput!]
+  connect: [OnlyDateWhereUniqueInput!]
+  set: [OnlyDateWhereUniqueInput!]
+  disconnect: [OnlyDateWhereUniqueInput!]
+  delete: [OnlyDateWhereUniqueInput!]
+  deleteMany: [OnlyDateScalarWhereInput!]
+}
+
+input OnlyDateWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyDateWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyDateWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyDateWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input OnlyDateWhereUniqueInput {
+  id: ID
+}
+
+type OnlyId implements Node {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyIdAndARelation implements Node {
+  id: ID!
+  ref: OnlyId!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyIdAndARelation2 implements Node {
+  id: ID!
+  ref: OnlyId
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type OnlyIdAndARelation2Connection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [OnlyIdAndARelation2Edge]!
+  aggregate: AggregateOnlyIdAndARelation2!
+}
+
+input OnlyIdAndARelation2CreateInput {
+  id: ID
+  ref: OnlyIdCreateOneInput
+}
+
+"""
+An edge in a connection.
+"""
+type OnlyIdAndARelation2Edge {
+  """
+  The item at the end of the edge.
+  """
+  node: OnlyIdAndARelation2!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum OnlyIdAndARelation2OrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type OnlyIdAndARelation2PreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyIdAndARelation2SubscriptionPayload {
+  mutation: MutationType!
+  node: OnlyIdAndARelation2
+  updatedFields: [String!]
+  previousValues: OnlyIdAndARelation2PreviousValues
+}
+
+input OnlyIdAndARelation2SubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyIdAndARelation2SubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdAndARelation2SubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdAndARelation2SubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: OnlyIdAndARelation2WhereInput
+}
+
+input OnlyIdAndARelation2UpdateInput {
+  ref: OnlyIdUpdateOneInput
+}
+
+input OnlyIdAndARelation2WhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyIdAndARelation2WhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdAndARelation2WhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdAndARelation2WhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  ref: OnlyIdWhereInput
+}
+
+input OnlyIdAndARelation2WhereUniqueInput {
+  id: ID
+}
+
+"""
+A connection to a list of items.
+"""
+type OnlyIdAndARelationConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [OnlyIdAndARelationEdge]!
+  aggregate: AggregateOnlyIdAndARelation!
+}
+
+input OnlyIdAndARelationCreateInput {
+  id: ID
+  ref: OnlyIdCreateOneInput!
+}
+
+"""
+An edge in a connection.
+"""
+type OnlyIdAndARelationEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: OnlyIdAndARelation!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum OnlyIdAndARelationOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type OnlyIdAndARelationPreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyIdAndARelationSubscriptionPayload {
+  mutation: MutationType!
+  node: OnlyIdAndARelation
+  updatedFields: [String!]
+  previousValues: OnlyIdAndARelationPreviousValues
+}
+
+input OnlyIdAndARelationSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyIdAndARelationSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdAndARelationSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdAndARelationSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: OnlyIdAndARelationWhereInput
+}
+
+input OnlyIdAndARelationUpdateInput {
+  ref: OnlyIdUpdateOneRequiredInput
+}
+
+input OnlyIdAndARelationWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyIdAndARelationWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdAndARelationWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdAndARelationWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  ref: OnlyIdWhereInput
+}
+
+input OnlyIdAndARelationWhereUniqueInput {
+  id: ID
+}
+
+"""
+A connection to a list of items.
+"""
+type OnlyIdConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [OnlyIdEdge]!
+  aggregate: AggregateOnlyId!
+}
+
+input OnlyIdCreateInput {
+  id: ID
+}
+
+input OnlyIdCreateOneInput {
+  create: OnlyIdCreateInput
+  connect: OnlyIdWhereUniqueInput
+}
+
+"""
+An edge in a connection.
+"""
+type OnlyIdEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: OnlyId!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum OnlyIdOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type OnlyIdPreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyIdSubscriptionPayload {
+  mutation: MutationType!
+  node: OnlyId
+  updatedFields: [String!]
+  previousValues: OnlyIdPreviousValues
+}
+
+input OnlyIdSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyIdSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: OnlyIdWhereInput
+}
+
+input OnlyIdUpdateOneInput {
+  create: OnlyIdCreateInput
+  connect: OnlyIdWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+}
+
+input OnlyIdUpdateOneRequiredInput {
+  create: OnlyIdCreateInput
+  connect: OnlyIdWhereUniqueInput
+}
+
+input OnlyIdWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyIdWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyIdWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyIdWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input OnlyIdWhereUniqueInput {
+  id: ID
+}
+
+type OnlyRelation implements Node {
+  id: ID!
+  ref(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyDate!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyRelationA implements Node {
+  id: ID!
+  ref: OnlyRelationA!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type OnlyRelationAConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [OnlyRelationAEdge]!
+  aggregate: AggregateOnlyRelationA!
+}
+
+input OnlyRelationACreateInput {
+  id: ID
+  ref: OnlyRelationACreateOneInput!
+}
+
+input OnlyRelationACreateOneInput {
+  create: OnlyRelationACreateInput
+  connect: OnlyRelationAWhereUniqueInput
+}
+
+"""
+An edge in a connection.
+"""
+type OnlyRelationAEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: OnlyRelationA!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum OnlyRelationAOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type OnlyRelationAPreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyRelationASubscriptionPayload {
+  mutation: MutationType!
+  node: OnlyRelationA
+  updatedFields: [String!]
+  previousValues: OnlyRelationAPreviousValues
+}
+
+input OnlyRelationASubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyRelationASubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationASubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationASubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: OnlyRelationAWhereInput
+}
+
+input OnlyRelationAUpdateDataInput {
+  ref: OnlyRelationAUpdateOneRequiredInput
+}
+
+input OnlyRelationAUpdateInput {
+  ref: OnlyRelationAUpdateOneRequiredInput
+}
+
+input OnlyRelationAUpdateOneRequiredInput {
+  create: OnlyRelationACreateInput
+  connect: OnlyRelationAWhereUniqueInput
+  update: OnlyRelationAUpdateDataInput
+  upsert: OnlyRelationAUpsertNestedInput
+}
+
+input OnlyRelationAUpsertNestedInput {
+  update: OnlyRelationAUpdateDataInput!
+  create: OnlyRelationACreateInput!
+}
+
+input OnlyRelationAWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyRelationAWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationAWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationAWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  ref: OnlyRelationAWhereInput
+}
+
+input OnlyRelationAWhereUniqueInput {
+  id: ID
+}
+
+type OnlyRelationB implements Node {
+  id: ID!
+  ref: OnlyRelationB
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type OnlyRelationBConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [OnlyRelationBEdge]!
+  aggregate: AggregateOnlyRelationB!
+}
+
+input OnlyRelationBCreateInput {
+  id: ID
+  ref: OnlyRelationBCreateOneInput
+}
+
+input OnlyRelationBCreateOneInput {
+  create: OnlyRelationBCreateInput
+  connect: OnlyRelationBWhereUniqueInput
+}
+
+"""
+An edge in a connection.
+"""
+type OnlyRelationBEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: OnlyRelationB!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum OnlyRelationBOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type OnlyRelationBPreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyRelationBSubscriptionPayload {
+  mutation: MutationType!
+  node: OnlyRelationB
+  updatedFields: [String!]
+  previousValues: OnlyRelationBPreviousValues
+}
+
+input OnlyRelationBSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyRelationBSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationBSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationBSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: OnlyRelationBWhereInput
+}
+
+input OnlyRelationBUpdateDataInput {
+  ref: OnlyRelationBUpdateOneInput
+}
+
+input OnlyRelationBUpdateInput {
+  ref: OnlyRelationBUpdateOneInput
+}
+
+input OnlyRelationBUpdateOneInput {
+  create: OnlyRelationBCreateInput
+  connect: OnlyRelationBWhereUniqueInput
+  disconnect: Boolean
+  delete: Boolean
+  update: OnlyRelationBUpdateDataInput
+  upsert: OnlyRelationBUpsertNestedInput
+}
+
+input OnlyRelationBUpsertNestedInput {
+  update: OnlyRelationBUpdateDataInput!
+  create: OnlyRelationBCreateInput!
+}
+
+input OnlyRelationBWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyRelationBWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationBWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationBWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  ref: OnlyRelationBWhereInput
+}
+
+input OnlyRelationBWhereUniqueInput {
+  id: ID
+}
+
+"""
+A connection to a list of items.
+"""
+type OnlyRelationConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [OnlyRelationEdge]!
+  aggregate: AggregateOnlyRelation!
+}
+
+input OnlyRelationCreateInput {
+  id: ID
+  ref: OnlyDateCreateManyInput
+}
+
+"""
+An edge in a connection.
+"""
+type OnlyRelationEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: OnlyRelation!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum OnlyRelationOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type OnlyRelationPreviousValues {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type OnlyRelationSubscriptionPayload {
+  mutation: MutationType!
+  node: OnlyRelation
+  updatedFields: [String!]
+  previousValues: OnlyRelationPreviousValues
+}
+
+input OnlyRelationSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyRelationSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: OnlyRelationWhereInput
+}
+
+input OnlyRelationUpdateInput {
+  ref: OnlyDateUpdateManyInput
+}
+
+input OnlyRelationWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [OnlyRelationWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [OnlyRelationWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [OnlyRelationWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  ref_every: OnlyDateWhereInput
+  ref_some: OnlyDateWhereInput
+  ref_none: OnlyDateWhereInput
+}
+
+input OnlyRelationWhereUniqueInput {
+  id: ID
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Query {
+  onlyIdAndARelations(where: OnlyIdAndARelationWhereInput, orderBy: OnlyIdAndARelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyIdAndARelation]!
+  onlyIdAndARelation2s(where: OnlyIdAndARelation2WhereInput, orderBy: OnlyIdAndARelation2OrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyIdAndARelation2]!
+  onlyRelations(where: OnlyRelationWhereInput, orderBy: OnlyRelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelation]!
+  onlyDates(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyDate]!
+  onlyRelationAs(where: OnlyRelationAWhereInput, orderBy: OnlyRelationAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelationA]!
+  onlyIds(where: OnlyIdWhereInput, orderBy: OnlyIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyId]!
+  onlyRelationBs(where: OnlyRelationBWhereInput, orderBy: OnlyRelationBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [OnlyRelationB]!
+  onlyIdAndARelation(where: OnlyIdAndARelationWhereUniqueInput!): OnlyIdAndARelation
+  onlyIdAndARelation2(where: OnlyIdAndARelation2WhereUniqueInput!): OnlyIdAndARelation2
+  onlyRelation(where: OnlyRelationWhereUniqueInput!): OnlyRelation
+  onlyDate(where: OnlyDateWhereUniqueInput!): OnlyDate
+  onlyRelationA(where: OnlyRelationAWhereUniqueInput!): OnlyRelationA
+  onlyId(where: OnlyIdWhereUniqueInput!): OnlyId
+  onlyRelationB(where: OnlyRelationBWhereUniqueInput!): OnlyRelationB
+  onlyIdAndARelationsConnection(where: OnlyIdAndARelationWhereInput, orderBy: OnlyIdAndARelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdAndARelationConnection!
+  onlyIdAndARelation2sConnection(where: OnlyIdAndARelation2WhereInput, orderBy: OnlyIdAndARelation2OrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdAndARelation2Connection!
+  onlyRelationsConnection(where: OnlyRelationWhereInput, orderBy: OnlyRelationOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationConnection!
+  onlyDatesConnection(where: OnlyDateWhereInput, orderBy: OnlyDateOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyDateConnection!
+  onlyRelationAsConnection(where: OnlyRelationAWhereInput, orderBy: OnlyRelationAOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationAConnection!
+  onlyIdsConnection(where: OnlyIdWhereInput, orderBy: OnlyIdOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyIdConnection!
+  onlyRelationBsConnection(where: OnlyRelationBWhereInput, orderBy: OnlyRelationBOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): OnlyRelationBConnection!
+  """
+  Fetches an object given its ID
+  """
+  node(
+    """
+    The ID of an object
+    """
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  onlyIdAndARelation(where: OnlyIdAndARelationSubscriptionWhereInput): OnlyIdAndARelationSubscriptionPayload
+  onlyIdAndARelation2(where: OnlyIdAndARelation2SubscriptionWhereInput): OnlyIdAndARelation2SubscriptionPayload
+  onlyRelation(where: OnlyRelationSubscriptionWhereInput): OnlyRelationSubscriptionPayload
+  onlyDate(where: OnlyDateSubscriptionWhereInput): OnlyDateSubscriptionPayload
+  onlyRelationA(where: OnlyRelationASubscriptionWhereInput): OnlyRelationASubscriptionPayload
+  onlyId(where: OnlyIdSubscriptionWhereInput): OnlyIdSubscriptionPayload
+  onlyRelationB(where: OnlyRelationBSubscriptionWhereInput): OnlyRelationBSubscriptionPayload
+}
+

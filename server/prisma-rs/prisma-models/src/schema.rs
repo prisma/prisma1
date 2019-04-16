@@ -16,11 +16,13 @@ pub struct SchemaTemplate {
 
 #[derive(DebugStub)]
 pub struct Schema {
-    pub models: OnceCell<Vec<ModelRef>>,
-    pub relations: OnceCell<Vec<RelationRef>>,
     pub enums: Vec<PrismaEnum>,
     pub version: Option<String>,
     pub db_name: String,
+
+    models: OnceCell<Vec<ModelRef>>,
+    relations: OnceCell<Vec<RelationRef>>,
+    relation_fields: OnceCell<Vec<RelationFieldRef>>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -38,6 +40,7 @@ impl SchemaTemplate {
             enums: self.enums,
             version: self.version,
             db_name: db_name,
+            relation_fields: OnceCell::new(),
         });
 
         let models = self
@@ -64,6 +67,10 @@ impl Schema {
         self.models.get().unwrap()
     }
 
+    pub fn relations(&self) -> &[RelationRef] {
+        self.relations.get().unwrap().as_slice()
+    }
+
     pub fn find_model(&self, name: &str) -> DomainResult<ModelRef> {
         self.models
             .get()
@@ -82,5 +89,25 @@ impl Schema {
 
     pub fn is_legacy(&self) -> bool {
         self.version.is_none()
+    }
+
+    pub fn fields_requiring_model(&self, model: ModelRef) -> Vec<RelationFieldRef> {
+        self.relation_fields()
+            .into_iter()
+            .filter(|rf| rf.related_model() == model)
+            .filter(|f| f.is_required && !f.is_list)
+            .map(|f| Arc::clone(f))
+            .collect()
+    }
+
+    pub fn relation_fields(&self) -> &[RelationFieldRef] {
+        self.relation_fields
+            .get_or_init(|| {
+                self.models()
+                    .iter()
+                    .flat_map(|model| model.fields().relation())
+                    .collect()
+            })
+            .as_slice()
     }
 }

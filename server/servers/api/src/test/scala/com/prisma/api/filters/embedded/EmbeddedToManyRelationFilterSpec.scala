@@ -11,22 +11,22 @@ class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSp
 
   "Using a toMany relational filter with _some" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |}"""
     }
@@ -78,16 +78,16 @@ class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSp
 
   "Using a toMany relational filter with _every" should "work 2" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
-        |   unique: Int! @unique
+        |   id: ID! @id
+        |   unique: Int!
         |   name: String!
         |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |}"""
     }
@@ -162,16 +162,16 @@ class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSp
 
   "Using a toMany relational filter with _none" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
-        |   unique: Int! @unique
+        |   id: ID! @id
+        |   unique: Int!
         |   name: String!
         |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |}"""
     }
@@ -272,16 +272,16 @@ class EmbeddedToManyRelationFilterSpec extends FlatSpec with Matchers with ApiSp
 
   "Using a toMany relational filter with _every" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
-        |   unique: Int! @unique
+        |   id: ID! @id
+        |   unique: Int!
         |   name: String!
         |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |}"""
     }

@@ -8,12 +8,7 @@ import com.prisma.deploy.connector.jdbc.SQLiteDatabaseInspector
 import com.prisma.deploy.connector.jdbc.database.{JdbcClientDbQueries, JdbcDeployMutactionExecutor}
 import com.prisma.deploy.connector.jdbc.persistence.{JdbcCloudSecretPersistence, JdbcMigrationPersistence, JdbcProjectPersistence, JdbcTelemetryPersistence}
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence, TelemetryPersistence}
-import com.prisma.deploy.connector.sqlite.database.{
-  SQLiteFieldRequirement,
-  SQLiteInternalDatabaseSchema,
-  SQLiteJdbcDeployDatabaseMutationBuilder,
-  SQLiteTypeMapper
-}
+import com.prisma.deploy.connector.sqlite.database.{SQLiteInternalDatabaseSchema, SQLiteJdbcDeployDatabaseMutationBuilder, SQLiteTypeMapper}
 import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import slick.dbio.Effect.Read
@@ -22,12 +17,8 @@ import slick.jdbc.MySQLProfile.api._
 import slick.jdbc.meta.MTable
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
-case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver, isPrototype: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def isActive                                      = true
-  override def fieldRequirements: FieldRequirementsInterface = SQLiteFieldRequirement(isActive)
-
+case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver)(implicit ec: ExecutionContext) extends DeployConnector {
   lazy val internalDatabaseDefs = SQLiteInternalDatabaseDefs(config, driver)
   lazy val setupDatabase        = internalDatabaseDefs.setupDatabases
   lazy val databases            = internalDatabaseDefs.managementDatabases
@@ -42,10 +33,10 @@ case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver, isProto
   override val telemetryPersistence: TelemetryPersistence         = JdbcTelemetryPersistence(managementDatabase)
   override val deployMutactionExecutor: DeployMutactionExecutor   = JdbcDeployMutactionExecutor(mutationBuilder)
   override def databaseInspector: DatabaseInspector               = SQLiteDatabaseInspector(managementDatabase)
-  override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.sqlite
+  override def capabilities: ConnectorCapabilities                = ConnectorCapabilities.sqliteJdbcPrototype
 
   override def createProjectDatabase(id: String): Future[Unit] = {
-    val action = mutationBuilder.createDatabaseForProject(id = id, !capabilities.isDataModelV2)
+    val action = mutationBuilder.createDatabaseForProject(id = id)
     projectDatabase.run(action)
   }
 
@@ -78,10 +69,9 @@ case class SQLiteDeployConnector(config: DatabaseConfig, driver: Driver, isProto
       .flatMap(_ => internalDatabaseDefs.setupDatabases.shutdown)
   }
 
-  override def reset(): Future[Unit]                            = truncateTablesInDatabase(managementDatabase.database)
-  override def shutdown(): Future[Unit]                         = databases.shutdown
-  override def managementLock(): Future[Unit]                   = Future.unit
-  override def databaseIntrospectionInferrer(projectId: String) = EmptyDatabaseIntrospectionInferrer
+  override def reset(): Future[Unit]          = truncateTablesInDatabase(managementDatabase.database)
+  override def shutdown(): Future[Unit]       = databases.shutdown
+  override def managementLock(): Future[Unit] = Future.unit
 
   protected def truncateTablesInDatabase(database: Database)(implicit ec: ExecutionContext): Future[Unit] = {
     for {

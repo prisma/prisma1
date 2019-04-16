@@ -14,7 +14,7 @@ class EmbeddedMutationsSchemaBuilderSpec extends FlatSpec with Matchers with Api
   val schemaBuilder                   = testDependencies.apiSchemaBuilder
 
   "An embedded type" should "not produce mutations in the schema" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Embedded @embedded {
         |   name: String
@@ -29,9 +29,10 @@ class EmbeddedMutationsSchemaBuilderSpec extends FlatSpec with Matchers with Api
   }
 
   "An embedded type" should "not have disconnect and connect mutations when nested" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Top {
+        |   id: ID! @id
         |   name: String @unique
         |   embedded: Embedded
         |}

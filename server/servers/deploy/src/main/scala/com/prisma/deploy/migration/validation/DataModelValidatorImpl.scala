@@ -1,11 +1,9 @@
 package com.prisma.deploy.migration.validation
-import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.directives._
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, ReservedFields, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapabilities, ReservedFields, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
@@ -16,20 +14,18 @@ import scala.util.{Failure, Success, Try}
 object DataModelValidatorImpl extends DataModelValidator {
   override def validate(
       dataModel: String,
-      fieldRequirements: FieldRequirementsInterface,
       capabilities: ConnectorCapabilities
   ): DataModelValidationResult Or Vector[DeployError] = {
-    DataModelValidatorImpl(dataModel, fieldRequirements, capabilities).validate
+    DataModelValidatorImpl(dataModel, capabilities).validate
   }
 }
 
 case class DataModelValidatorImpl(
     dataModel: String,
-    fieldRequirements: FieldRequirementsInterface,
     capabilities: ConnectorCapabilities
 ) {
-  import com.prisma.deploy.migration.DataSchemaAstExtensions._
   import BooleanUtils._
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   val result   = GraphQlSdlParser.parse(dataModel)
   lazy val doc = result.get
@@ -81,7 +77,6 @@ case class DataModelValidatorImpl(
           RelationalPrismaField(
             name = x.name,
             columnName = x.dbName,
-            relationDbDirective = x.relationDBDirective,
             strategy = relationDirective.strategy,
             isList = x.isList,
             isRequired = x.isRequired,
@@ -115,7 +110,7 @@ case class DataModelValidatorImpl(
           )(_)
       }
 
-      // FIXME: it should not be needed that embedded types have a hidden id field
+      // FIXME: it should not be needed that embedded types have a hidden id field. do4gr should check whether this is still true.
       val extraField = typeDef.isEmbedded.toOption {
         ScalarPrismaField(
           name = ReservedFields.embeddedIdFieldName,
@@ -322,7 +317,8 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
       tryValidation(validateMissingTypes),
       tryValidation(requiredIdDirectiveValidation.toVector),
       tryValidation(validateRelationFields),
-      tryValidation(validateDuplicateFields)
+      tryValidation(validateDuplicateFields),
+      tryValidation(validateReservedTypeNames)
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -365,6 +361,13 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     } yield {
       DeployErrors.duplicateFieldName(FieldAndType(objectType, field))
     }
+  }
+
+  val invalidTypeNameList = List("Mutation", "Query", "Subscription", "Node", "PageInfo", "BatchPayload")
+
+  def validateReservedTypeNames = invalidTypeNameList.contains(objectType.name) match {
+    case false => Seq.empty
+    case true  => Seq(DeployErrors.reservedTypeName(objectType))
   }
 
   def validateRelationFields: Seq[DeployError] = {
@@ -452,5 +455,24 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     val lefts  = mapped.collect { case Left(x) => x }
     val rights = mapped.collect { case Right(x) => x }
     (lefts, rights)
+  }
+}
+
+case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition) {
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
+
+  def isSelfRelation: Boolean = fieldDef.typeName == objectType.name
+
+  def relationCount(doc: Document): Int = {
+    def fieldsWithType(objectType: ObjectTypeDefinition, typeName: String): Seq[FieldDefinition] = objectType.fields.filter(_.typeName == typeName)
+
+    val oppositeObjectType = doc.objectType_!(fieldDef.typeName)
+    val fieldsOnTypeA      = fieldsWithType(objectType, fieldDef.typeName)
+    val fieldsOnTypeB      = fieldsWithType(oppositeObjectType, objectType.name)
+
+    isSelfRelation match {
+      case true  => fieldsOnTypeB.count(_.relationName == fieldDef.relationName)
+      case false => (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldDef.relationName)
+    }
   }
 }

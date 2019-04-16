@@ -51,6 +51,14 @@ impl RelationSide {
             RelationSide::B => RelationSide::A,
         }
     }
+
+    pub fn is_a(&self) -> bool {
+        *self == RelationSide::A
+    }
+
+    pub fn is_b(&self) -> bool {
+        *self == RelationSide::B
+    }
 }
 
 impl RelationField {
@@ -113,11 +121,25 @@ impl RelationField {
         }
     }
 
+    pub fn opposite_column(&self) -> Column {
+        match self.relation_side {
+            RelationSide::A => self.relation().model_b_column(),
+            RelationSide::B => self.relation().model_a_column(),
+        }
+    }
+
+    pub fn relation_column(&self) -> Column {
+        match self.relation_side {
+            RelationSide::A => self.relation().model_a_column(),
+            RelationSide::B => self.relation().model_b_column(),
+        }
+    }
+
     pub fn as_column(&self) -> Column {
         let model = self.model();
         let schema = model.schema();
         let db_name = self.db_name();
-        let parts = (schema.db_name.as_ref(), model.db_name(), db_name.as_ref());
+        let parts = ((schema.db_name.as_ref(), model.db_name()), db_name.as_ref());
 
         parts.into()
     }

@@ -10,36 +10,40 @@ import org.scalatest.{FlatSpec, Matchers}
 class BulkImportSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  lazy val project: Project = SchemaDsl.fromStringv11() { """
-                                                      |type Model0 {
-                                                      |   id: ID! @id
-                                                      |   a: String
-                                                      |   b: Int
-                                                      |   createdAt: DateTime! @createdAt
-                                                      |   relation0top: Model0 @relation(name:"Relation0", link: TABLE)
-                                                      |   relation0bottom: Model0 @relation(name:"Relation0")
-                                                      |   model1: Model1 @relation(name:"Relation1", link: TABLE)
-                                                      |}
-                                                      |
-                                                      |type Model1 {
-                                                      |   id: ID! @id
-                                                      |   a: String
-                                                      |   b: Int
-                                                      |   createdAt: DateTime! @createdAt
-                                                      |   listField: [Int!]! @scalarList(strategy: RELATION)
-                                                      |   model0: Model0 @relation(name:"Relation1")
-                                                      |   model2: Model2 @relation(name:"Relation2", link: TABLE)
-                                                      |}
-                                                      |
-                                                      |type Model2 {
-                                                      |   id: ID! @id
-                                                      |   a: String
-                                                      |   b: Int
-                                                      |   createdAt: DateTime! @createdAt
-                                                      |   name: String
-                                                      |   model1: Model1 @relation(name:"Relation2")
-                                                      |}
-                                                      |""".stripMargin }
+  lazy val project = SchemaDsl.fromStringV11() {
+    s"""
+       |type Model0 {
+       |  id: ID! @id
+       |  createdAt: DateTime! @createdAt
+       |  a: String
+       |  b: Int
+       |  relation0top: Model0 @relation(name: "MyRelation", link: TABLE)
+       |  relation0bottom: Model0 @relation(name: "MyRelation")
+       |  model1: Model1 @relation(link: TABLE)
+       |}
+       |
+       |type Model1 {
+       |  id: ID! @id
+       |  createdAt: DateTime! @createdAt
+       |  updatedAt: DateTime! @updatedAt
+       |  a: String
+       |  b: Int
+       |  listField: [Int] $scalarListDirective
+       |  model0: Model0
+       |  model2: Model2 @relation(link: TABLE)
+       |}
+       |
+       |type Model2 {
+       |  id: ID! @id
+       |  createdAt: DateTime! @createdAt
+       |  updatedAt: DateTime! @updatedAt
+       |  a: String
+       |  b: Int
+       |  name: String
+       |  model1: Model1
+       |}
+    """.stripMargin
+  }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

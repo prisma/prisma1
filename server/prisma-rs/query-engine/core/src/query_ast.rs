@@ -1,7 +1,7 @@
 //! Prisma query AST module
 
 use crate::{CoreError, CoreResult};
-use connector::{NodeSelector, QueryArguments};
+use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::{self as gql, query::*};
 use inflector::Inflector;
 use prisma_models::{Field as ModelField, *};
@@ -256,25 +256,21 @@ impl<'a> QueryBuilder<'a> {
     fn map_selected_scalar_fields(mut self) -> Self {
         if let Some(Ok(ref qt)) = self.query_type {
             let model = qt.model();
-
-            // let sf = Self::to_selected_fields(&gql_field.selection_set, Arc::clone(&rf.related_model()));
-
             let selected_fields = self
                 .field
                 .selection_set
                 .items
                 .iter()
                 .filter_map(|i| {
-                    dbg!(&i);
                     if let Selection::Field(f) = i {
-                        dbg!(&model.fields());
-
                         // We have to make sure the selected field exists in some form.
                         let field = model.fields().find_from_all(&f.name);
                         match field {
                             Ok(ModelField::Scalar(field)) => Some(Ok(SelectedField::Scalar(SelectedScalarField {
                                 field: Arc::clone(&field),
+                                implicit: false,
                             }))),
+                            // Relation fields are not handled here, but in nested queries
                             Ok(ModelField::Relation(_field)) => None,
                             _ => Some(Err(CoreError::QueryValidationError(format!(
                                 "Selected field {} not found on model {}",
@@ -301,16 +297,6 @@ impl<'a> QueryBuilder<'a> {
         }
 
         self
-
-        // SelectedField::Relation(SelectedRelationField {
-        //                         field: Arc::clone(&field),
-        //                         selected_fields: SelectedFields::new(
-        //                             Self::to_selected_fields(&f.selection_set, Arc::clone(&model)),
-        //                             None,
-        //                         ),
-        //                     })
-
-        // SelectedFields::new(selected_fields, None)
     }
 
     // Todo: Maybe we can merge this with the map selected fields somehow, as the code looks fairly similar
@@ -359,10 +345,13 @@ impl<'a> QueryBuilder<'a> {
 
     // Q: Wouldn't it make more sense to just call that one from the outside and not the other ones?
     fn get(self) -> CoreResult<PrismaQuery> {
+        dbg!(&self);
         let name = self.field.alias.as_ref().unwrap_or(&self.field.name).clone();
         let selected_fields = self.selected_fields.unwrap_or(Err(CoreError::QueryValidationError(
             "Selected fields required but not found".into(),
         )))?;
+
+        // todo inject id field
 
         let nested_queries = self
             .nested
@@ -451,7 +440,6 @@ impl<'a> QueryBuilder<'a> {
 impl RootQueryBuilder {
     // FIXME: Find op name and only execute op!
     pub fn build(self) -> CoreResult<Vec<PrismaQuery>> {
-        dbg!(&self.query);
         self.query
             .definitions
             .iter()

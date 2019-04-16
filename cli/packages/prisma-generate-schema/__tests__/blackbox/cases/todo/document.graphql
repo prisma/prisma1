@@ -118,6 +118,7 @@ type TodoConnection {
 }
 
 input TodoCreateInput {
+  id: ID
   text: String!
   done: Boolean!
   user: UserCreateOneInput!
@@ -338,6 +339,7 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   name: String!
 }
 

@@ -8,6 +8,10 @@ pub struct SingleNode {
 }
 
 impl SingleNode {
+    pub fn new(node: Node, field_names: Vec<String>) -> Self {
+        Self { node, field_names }
+    }
+
     pub fn get_id_value(&self, model: ModelRef) -> DomainResult<&GraphqlId> {
         self.node.get_id_value(&self.field_names, model)
     }
@@ -57,7 +61,6 @@ impl ManyNodes {
 #[derive(Debug, Default, Clone)]
 pub struct Node {
     pub values: Vec<PrismaValue>,
-    pub related_id: Option<GraphqlId>,
     pub parent_id: Option<GraphqlId>,
 }
 
@@ -89,8 +92,30 @@ impl Node {
         })
     }
 
-    pub fn add_related_id(&mut self, related_id: GraphqlId) {
-        self.related_id = Some(related_id);
+    /// (WIP) Associate a nested selection-set with a set of parents
+    ///
+    /// - A parent is a `ManyNodes` which has selected fields and nested queries.
+    /// - Nested queries aren't associated to a parent, but have a `parent_id` and `related_id`
+    /// - This function takes the parent query and creates a set of `(String, PrismaValue)` for each query
+    /// - Returns a nested vector of tuples
+    ///   - List item for every query in parent
+    ///   - Then a vector of selected fields in each nested query
+    ///   - Actual association is made via `get_pairs` to `(String, PrismaValue)`
+    ///
+    pub fn get_parent_pairs(
+        &self,
+        parent: &ManyNodes,
+        selected_fields: &Vec<String>,
+    ) -> Vec<Vec<(String, PrismaValue)>> {
+        parent.nodes.iter().fold(Vec::new(), |mut vec, _parent| {
+            vec.push(
+                self.values
+                    .iter()
+                    .zip(selected_fields)
+                    .fold(Vec::new(), |vec, (_value, _field)| vec),
+            );
+            vec
+        })
     }
 
     pub fn add_parent_id(&mut self, parent_id: GraphqlId) {

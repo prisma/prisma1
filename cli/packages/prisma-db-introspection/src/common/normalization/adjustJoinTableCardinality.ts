@@ -5,60 +5,56 @@ import {
   IGQLType,
   DirectiveKeys,
 } from 'prisma-datamodel'
-import { INormalizer } from './normalizer'
+import { INormalizer, Normalizer } from './normalizer'
 
-export class AdjustJoinTableCardinality implements INormalizer {
-  protected baseModel: ISDL
+export class AdjustJoinTableCardinality extends Normalizer {
+  protected normalizeField(
+    field: IGQLField,
+    parentType: IGQLType,
+    parentModel: ISDL,
+  ) {
+    if (
+      typeof field.type === 'string' ||
+      !field.isList ||
+      this.baseField === null ||
+      typeof this.baseField.type === 'string' ||
+      this.baseField.type.name !== field.type.name
+    ) {
+      return
+    }
 
-  constructor(baseModel: ISDL) {
-    this.baseModel = baseModel
-  }
+    // If the reference is not a list. We restrict it to a non-list and add
+    // a link: TABLE directive (compatability mode).
+    if (!this.baseField.isList) {
+      field.isList = false
+      field.isRequired = this.baseField.isRequired
 
-  public normalizeType(type: IGQLType, ref: IGQLType) {
-    for (const field of type.fields) {
-      // Only look at n:n relations.
-      if (typeof field.type !== 'string' && field.isList) {
-        // TODO: Subclass
-        // Fid the reference field.
-        const refField = ref.fields.find(x => x.name === field.name)
+      const alreadyHasLinkDirective =
+        field.relatedField &&
+        field.relatedField.directives.some(
+          d => d.name === DirectiveKeys.relation && Boolean(d.arguments.link),
+        )
 
-        if (refField === undefined || typeof refField.type === 'string')
-          continue
-
-        if (refField.type.name !== field.type.name) continue
-
-        // If the reference is not a list. We restrict it to a non-list and add
-        // a link: TABLE directive (compatability mode).
-        if (!refField.isList) {
-          field.isList = false
-          field.isRequired = refField.isRequired
-          field.directives.push(this.createLinkTableDirective())
-          if (field.relatedField !== null) {
-            field.relatedField.directives.push(this.createLinkTableDirective())
-          }
-        }
+      if (alreadyHasLinkDirective) {
+        return
       }
+      field.directives.push(this.createLinkTableDirective(field))
     }
   }
 
-  public normalize(model: ISDL) {
-    for (const type of model.types) {
-      // TODO: We should move all tooling for finding types or fields into some common class.
-      const ref = this.baseModel.types.find(
-        x => x.name === type.name || x.databaseName === type.name,
-      )
-      if (ref !== undefined) {
-        this.normalizeType(type, ref)
-      }
-    }
-  }
-
-  private createLinkTableDirective(): IDirectiveInfo {
-    return {
+  private createLinkTableDirective(field: IGQLField): IDirectiveInfo {
+    // TODO: Find a way to do this without any
+    const directive: any = {
       name: DirectiveKeys.relation,
       arguments: {
         link: 'TABLE',
       },
     }
+
+    if (field.relationName) {
+      directive.arguments.name = `"${field.relationName}"`
+    }
+
+    return directive
   }
 }

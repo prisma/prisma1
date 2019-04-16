@@ -1,4 +1,4 @@
-mod builder;
+//! Combined mutation executions
 mod create_node;
 mod delete_node;
 mod node_address;
@@ -8,7 +8,6 @@ mod result;
 mod update_node;
 mod upsert_node;
 
-pub use builder::*;
 pub use create_node::*;
 pub use delete_node::*;
 pub use node_address::*;
@@ -18,13 +17,9 @@ pub use result::*;
 pub use update_node::*;
 pub use upsert_node::*;
 
-use super::{Filter, NodeSelector};
+use super::filter::{Filter, NodeSelector};
 use prisma_models::prelude::*;
 use std::sync::Arc;
-
-pub trait NestedMutaction {
-    fn nested_mutactions(&self) -> &[&DatabaseMutaction];
-}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DatabaseMutactionResultType {
@@ -65,26 +60,17 @@ pub enum NestedDatabaseMutaction {
     DeleteNodes(NestedDeleteNodes),
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
 pub struct NestedMutactions {
     pub creates: Vec<NestedCreateNode>,
     pub updates: Vec<NestedUpdateNode>,
     pub upserts: Vec<NestedUpsertNode>,
     pub deletes: Vec<NestedDeleteNode>,
+    pub connects: Vec<NestedConnect>,
+    pub disconnects: Vec<NestedDisconnect>,
+    pub sets: Vec<NestedSet>,
     pub update_manys: Vec<NestedUpdateNodes>,
     pub delete_manys: Vec<NestedDeleteNodes>,
-    /*
-    pub connects: Vec<NestedConnect>,
-    pub sets: Vec<NestedSet>,
-    pub disconnects: Vec<NestedDisconnect>,
-    */
-}
-
-#[derive(Debug, Clone)]
-pub struct NestedConnect {
-    pub relation_field: Arc<RelationField>,
-    pub where_: NodeSelector,
-    pub top_is_create: bool,
 }
 
 // SET
@@ -93,6 +79,15 @@ pub struct NestedConnect {
 pub struct NestedSet {
     pub relation_field: Arc<RelationField>,
     pub wheres: Vec<NodeSelector>,
+}
+
+// CONNECT
+
+#[derive(Debug, Clone)]
+pub struct NestedConnect {
+    pub relation_field: RelationFieldRef,
+    pub where_: NodeSelector,
+    pub top_is_create: bool,
 }
 
 // DISCONNECT

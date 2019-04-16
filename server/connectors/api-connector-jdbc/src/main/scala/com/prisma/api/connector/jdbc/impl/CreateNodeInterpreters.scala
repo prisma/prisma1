@@ -13,8 +13,7 @@ import slick.dbio._
 import scala.concurrent.ExecutionContext
 
 case class CreateNodeInterpreter(
-    mutaction: CreateNode,
-    includeRelayRow: Boolean
+    mutaction: CreateNode
 )(implicit ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter {
   val model = mutaction.model
@@ -23,7 +22,6 @@ case class CreateNodeInterpreter(
     for {
       id <- mutationBuilder.createNode(model, mutaction.nonListArgs)
       _  <- mutationBuilder.createScalarListValuesForNodeId(model, id, mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 
@@ -51,8 +49,7 @@ case class CreateNodeInterpreter(
 }
 
 case class NestedCreateNodeInterpreter(
-    mutaction: NestedCreateNode,
-    includeRelayRow: Boolean
+    mutaction: NestedCreateNode
 )(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with NestedRelationInterpreterBase {
@@ -66,7 +63,6 @@ case class NestedCreateNodeInterpreter(
       _  <- DBIO.seq(requiredCheck(parentId), removalAction(parentId))
       id <- createNodeAndConnectToParent(relationField, mutationBuilder, parentId)
       _  <- mutationBuilder.createScalarListValuesForNodeId(relatedModel, id, mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayId(relatedModel, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 

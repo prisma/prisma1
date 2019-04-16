@@ -2,8 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.import_export.BulkImport
-import com.prisma.shared.models.ConnectorCapability.ImportExportCapability
-import com.prisma.shared.models.Project
+import com.prisma.shared.models.ConnectorCapability.{ImportExportCapability, RelationLinkTableCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
@@ -11,33 +10,48 @@ import org.scalatest.{FlatSpec, Matchers}
 class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ImportExportCapability)
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    val model1: SchemaDsl.ModelBuilder = schema
-      .model("Model1")
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("listField", _.Int, isList = true)
-      .field("createdAt", _.DateTime)
-      .field("updatedAt", _.DateTime)
+  val linkArgument = if (capabilities.has(RelationLinkTableCapability)) {
+    "link: TABLE"
+  } else {
+    "link: INLINE"
+  }
 
-    val model0: SchemaDsl.ModelBuilder = schema
-      .model("Model0")
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("createdAt", _.DateTime)
-      .field("updatedAt", _.DateTime)
-      .oneToOneRelation("model1", "model0", model1, Some("Relation1"))
+  val linkStrategy = s"@relation($linkArgument)"
 
-    model0.oneToOneRelation("relation0top", "relation0bottom", model0, Some("Relation0"))
-
-    val model2: SchemaDsl.ModelBuilder = schema
-      .model("Model2")
-      .field("a", _.String)
-      .field("b", _.Int)
-      .field("name", _.String)
-      .field("createdAt", _.DateTime)
-      .field("updatedAt", _.DateTime)
-      .oneToOneRelation("model1", "model2", model1, Some("Relation2"))
+  val project = SchemaDsl.fromStringV11() {
+    s"""
+      |type Model0 {
+      |  id: ID! @id
+      |  createdAt: DateTime
+      |  updatedAt: DateTime
+      |  a: String
+      |  b: Int
+      |  model1: Model1
+      |  relation0top: Model0 @relation(name:"Relation0", $linkArgument)
+      |  relation0bottom: Model0 @relation(name:"Relation0")
+      |}
+      |
+      |type Model1 {
+      |  id: ID! @id
+      |  createdAt: DateTime
+      |  updatedAt: DateTime
+      |  a: String
+      |  b: Int
+      |  listField: [Int] $scalarListDirective
+      |  model0: Model0 $linkStrategy
+      |  model2: Model2 $linkStrategy
+      |}
+      |
+      |type Model2 {
+      |  id: ID! @id
+      |  createdAt: DateTime
+      |  updatedAt: DateTime
+      |  a: String
+      |  b: Int
+      |  name: String
+      |  model1: Model1
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {
@@ -72,9 +86,9 @@ class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils 
           |]}
           |""".stripMargin.parseJson
 
-    importer.executeImport(nodes).await(5)
-    importer.executeImport(lists).await(5)
-    importer.executeImport(relations).await(5)
+    println(importer.executeImport(nodes).await(5))
+    println(importer.executeImport(lists).await(5))
+    println(importer.executeImport(relations).await(5))
 
     val res0 = server.query("query{model0s{id, a, b}}", project).toString
     res0 should be("""{"data":{"model0s":[{"id":"0","a":"test","b":0},{"id":"3","a":"test","b":3}]}}""")
@@ -103,9 +117,6 @@ class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils 
     server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
 
     ifConnectorIsActive {
-      ifConnectorIsActiveAndNotSqliteNative {
-        dataResolver(project).countByTable("_RelayId").await should be(0)
-      }
       dataResolver(project).countByTable("_Relation0").await should be(0)
       dataResolver(project).countByTable("_Relation1").await should be(0)
       dataResolver(project).countByTable("_Relation2").await should be(0)
@@ -129,8 +140,6 @@ class ResetSpec extends FlatSpec with Matchers with ApiSpecBase with AwaitUtils 
     server.query("query{model0s{id}}", project, dataContains = """{"model0s":[]}""")
     server.query("query{model1s{id}}", project, dataContains = """{"model1s":[]}""")
     server.query("query{model2s{id}}", project, dataContains = """{"model2s":[]}""")
-
-    ifConnectorIsActiveAndNotSqliteNative { dataResolver(project).countByTable("_RelayId").await should be(0) }
 
     import slick.jdbc.PostgresProfile.api._
     val insert = sql"INSERT INTO `#${project.id}`.`_Relation1` VALUES ('someID', 'a', 'b')"

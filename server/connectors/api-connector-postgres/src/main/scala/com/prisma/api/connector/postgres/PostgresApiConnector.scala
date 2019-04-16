@@ -9,8 +9,7 @@ import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncode
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class PostgresApiConnector(config: DatabaseConfig, driver: Driver, isActive: Boolean, isPrototype: Boolean)(implicit ec: ExecutionContext)
-    extends ApiConnector {
+case class PostgresApiConnector(config: DatabaseConfig, driver: Driver)(implicit ec: ExecutionContext) extends ApiConnector {
   lazy val databases = PostgresDatabasesFactory.initialize(config, driver)
 
   override def initialize() = {
@@ -25,18 +24,9 @@ case class PostgresApiConnector(config: DatabaseConfig, driver: Driver, isActive
     } yield ()
   }
 
-  override val databaseMutactionExecutor = {
-    val manageRelayIds = if (isPrototype) false else isActive
-    JdbcDatabaseMutactionExecutor(databases.primary, manageRelayIds)
-  }
+  override val databaseMutactionExecutor            = JdbcDatabaseMutactionExecutor(databases.primary)
   override def dataResolver(project: Project)       = JdbcDataResolver(project, databases.primary)
   override def masterDataResolver(project: Project) = JdbcDataResolver(project, databases.primary)
   override def projectIdEncoder: ProjectIdEncoder   = ProjectIdEncoder('$')
-  override val capabilities = {
-    if (isPrototype) {
-      ConnectorCapabilities.postgresPrototype
-    } else {
-      ConnectorCapabilities.postgres(isActive = isActive)
-    }
-  }
+  override val capabilities                         = ConnectorCapabilities.postgresPrototype
 }

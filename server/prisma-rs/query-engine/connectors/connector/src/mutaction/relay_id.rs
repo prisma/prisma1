@@ -14,7 +14,9 @@ impl<'a> RelayId<'a> {
     }
 
     pub fn create(&self, stable_identifier: &str) -> Insert {
-        Insert::into(self.table()).value(self.stable_identifier_column(), stable_identifier)
+        Insert::single_into(self.table())
+            .value(self.stable_identifier_column(), stable_identifier)
+            .into()
     }
 
     pub fn id_column(&self) -> Column {
