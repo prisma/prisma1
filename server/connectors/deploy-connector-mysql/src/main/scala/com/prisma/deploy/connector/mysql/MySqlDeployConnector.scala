@@ -76,7 +76,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver)(implicit
   override def shutdown() = databases.shutdown
 
   override def managementLock(): Future[Unit] = {
-    managementDatabase.database.run(sql"SELECT GET_LOCK('deploy_privileges', -1);".as[Int].head.withPinnedSession).transformWith {
+    managementDatabase.database.run(sql"SELECT GET_LOCK('deploy_privileges', 2);".as[Int].head.withPinnedSession).transformWith {
       case Success(result) => if (result == 1) Future.successful(()) else managementLock()
       case Failure(err)    => Future.failed(err)
     }
