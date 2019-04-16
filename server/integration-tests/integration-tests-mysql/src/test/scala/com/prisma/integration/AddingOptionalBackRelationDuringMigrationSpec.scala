@@ -256,7 +256,7 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
   }
 
   "Adding a missing back-relation of non-list type" should "work when there are already multiple nodes but they are not in a relation" in {
-    // TODO: this only works with `link: TABLE` and not `link: INLINE`. Why is that?
+    // TODO: this only works with `link: TABLE` and not `link: INLINE`. Why is that? Maybe do4gr can check.
     val schema =
       """type Team {
         |  id: ID! @id
