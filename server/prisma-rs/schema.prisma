@@ -2,6 +2,7 @@ type Artist {
   id: ID! @id
   ArtistId: Int! @unique
   Name: String!
+  Aliases: [String!]! @scalarList(strategy: RELATION)
   Albums: [Album!]!
 }
 

@@ -63,12 +63,7 @@ pub fn load_from_env() -> PrismaResult<String> {
 /// which produces the internal data model JSON string.
 pub fn load_from_file() -> PrismaResult<String> {
     debug!("Trying to load data model from file...");
-
-    let path = utilities::get_env("PRISMA_DATA_MODEL_PATH")?;
-    let mut f = File::open(&path)?;
-    let mut data_model = String::new();
-
-    f.read_to_string(&mut data_model)?;
+    let data_model = load_sdl_string()?;
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
@@ -90,6 +85,18 @@ pub fn load_from_file() -> PrismaResult<String> {
     let output = child.wait_with_output()?;
     let inferred = String::from_utf8(output.stdout)?;
 
-    debug!("Loaded data model from file: {}.", path);
+    debug!(
+        "Loaded data model from file: {}.",
+        utilities::get_env("PRISMA_DATA_MODEL_PATH")?
+    );
     Ok(inferred)
+}
+
+pub fn load_sdl_string() -> PrismaResult<String> {
+    let path = utilities::get_env("PRISMA_DATA_MODEL_PATH")?;
+    let mut f = File::open(&path)?;
+    let mut data_model = String::new();
+
+    f.read_to_string(&mut data_model)?;
+    Ok(data_model)
 }

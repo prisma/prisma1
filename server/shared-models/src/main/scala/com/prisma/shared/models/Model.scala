@@ -48,6 +48,7 @@ class Model(
   lazy val hasUpdatedAtField: Boolean                    = scalarFields.exists(_.isUpdatedAt)
   lazy val hasCreatedAtField: Boolean                    = scalarFields.exists(_.isCreatedAt)
   lazy val hasVisibleIdField: Boolean                    = idField.exists(_.isVisible)
+
   def dummyField(rf: RelationField): ScalarField =
     idField_!.copy(name = rf.name,
                    isList = rf.isList,

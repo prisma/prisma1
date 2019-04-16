@@ -61,10 +61,10 @@ impl<'a> Builder<'a> {
             }
         } else {
             let normalized = model.name.to_camel_case();
-            if Inflector::singularize(&field.name) == normalized {
-                Some(Builder::Multi(MultiBuilder::new().setup(Arc::clone(model), field)))
-            } else if field.name == normalized {
+            if field.name == normalized {
                 Some(Builder::Single(SingleBuilder::new().setup(Arc::clone(model), field)))
+            } else if Inflector::singularize(&field.name) == normalized {
+                Some(Builder::Multi(MultiBuilder::new().setup(Arc::clone(model), field)))
             } else {
                 None
             }
