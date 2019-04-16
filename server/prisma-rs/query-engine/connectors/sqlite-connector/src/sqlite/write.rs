@@ -8,14 +8,12 @@ pub use delete::*;
 pub use relation::*;
 pub use update::*;
 
-use crate::{
-    mutaction::*, DatabaseCreate, DatabaseDelete, DatabaseRead, DatabaseRelation, DatabaseUpdate, DatabaseWrite, Sqlite,
-};
-use connector::{error::*, mutaction::*, ConnectorResult};
-use prisma_models::*;
+use crate::*;
+use connector::{error::ConnectorError, mutaction::*, ConnectorResult};
+use prisma_models::GraphqlId;
 use prisma_query::{
-    ast::*,
-    visitor::{self, *},
+    ast::Query,
+    visitor::{self, Visitor},
 };
 use rusqlite::Transaction;
 use std::sync::Arc;
@@ -307,16 +305,6 @@ impl DatabaseWrite for Sqlite {
         for query in queries {
             Self::execute_one(conn, query)?;
         }
-
-        Ok(())
-    }
-
-    fn execute_reset_data(conn: &Transaction, project: ProjectRef) -> ConnectorResult<()> {
-        Self::without_foreign_key_checks(conn, || {
-            let deletes = MutationBuilder::truncate_tables(project);
-
-            Self::execute_many(conn, deletes)
-        })?;
 
         Ok(())
     }

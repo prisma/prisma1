@@ -3,11 +3,11 @@ use crate::{
     DatabaseDelete, DatabaseRead, DatabaseWrite, Sqlite,
 };
 use connector::{
-    error::*,
+    error::{ConnectorError, NodeSelectorInfo},
     filter::{Filter, NodeSelector},
     ConnectorResult,
 };
-use prisma_models::*;
+use prisma_models::{GraphqlId, ModelRef, ProjectRef, RelationFieldRef, SingleNode};
 use rusqlite::Transaction;
 use std::sync::Arc;
 
@@ -121,5 +121,15 @@ impl DatabaseDelete for Sqlite {
         Self::execute_many(conn, deletes)?;
 
         Ok(count)
+    }
+
+    fn execute_reset_data(conn: &Transaction, project: ProjectRef) -> ConnectorResult<()> {
+        Self::without_foreign_key_checks(conn, || {
+            let deletes = MutationBuilder::truncate_tables(project);
+
+            Self::execute_many(conn, deletes)
+        })?;
+
+        Ok(())
     }
 }
