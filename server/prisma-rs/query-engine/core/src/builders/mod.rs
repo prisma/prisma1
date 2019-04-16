@@ -20,10 +20,11 @@ use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
     Field as ModelField, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField, SelectedFields,
-    SelectedScalarField, SortOrder,
+    SelectedScalarField, SortOrder, GraphqlId,
 };
 
 use std::sync::Arc;
+use uuid::Uuid;
 
 /// A common query-builder type
 pub enum Builder<'field> {
@@ -139,13 +140,13 @@ pub trait BuilderExt {
                             Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
                             None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
                         },
-                        //("after", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { after: Some(UuidString(s.clone()).into()), ..res }),
+                        ("after", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { after: Some(GraphqlId::UUID(s.as_uuid())), ..res }),
                         ("after", Value::String(s)) => Ok(QueryArguments { after: Some(s.clone().into()), ..res }),
                         ("after", Value::Int(num)) => match num.as_i64() {
                             Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
                             None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
                         },
-                        //("before", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { before: Some(UuidString(s.clone()).into()), ..res }),
+                        ("before", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { before: Some(GraphqlId::UUID(s.as_uuid())), ..res }),
                         ("before", Value::String(s)) => Ok(QueryArguments { before: Some(s.clone().into()), ..res }),
                         ("before", Value::Int(num)) => match num.as_i64() {
                             Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
@@ -281,5 +282,22 @@ pub trait BuilderExt {
                 }
             })
             .collect()
+    }
+}
+
+trait UuidString {
+    fn is_uuid(&self) -> bool;
+
+    /// This panics if not UUID
+    fn as_uuid(&self) -> Uuid;
+}
+
+impl UuidString for String {
+    fn is_uuid(&self) -> bool {
+        Uuid::parse_str(self.as_str()).map(|_| true).unwrap_or(false)
+    }
+
+    fn as_uuid(&self) -> Uuid {
+        Uuid::parse_str(self.as_str()).unwrap()
     }
 }
