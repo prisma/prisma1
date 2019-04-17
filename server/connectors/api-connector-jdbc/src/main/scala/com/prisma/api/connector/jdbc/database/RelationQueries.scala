@@ -1,9 +1,8 @@
 package com.prisma.api.connector.jdbc.database
 
-import com.prisma.api.connector.{QueryArguments, RelationNode, ResolverResult, ScalarFilter}
+import com.prisma.api.connector.{QueryArguments, RelationNode, ResolverResult}
 import com.prisma.api.helpers.LimitClauseHelper
 import com.prisma.shared.models.Relation
-import com.typesafe.sslconfig.ssl.NotEqual
 
 trait RelationQueries extends BuilderBase with FilterConditionBuilder with OrderByClauseBuilder with LimitClauseBuilder {
   import slickDatabase.profile.api._
@@ -13,9 +12,7 @@ trait RelationQueries extends BuilderBase with FilterConditionBuilder with Order
       args: QueryArguments
   ): DBIO[ResolverResult[RelationNode]] = {
 
-    //needs special case for inline relations. then only the ones without null entries should be retrieved
-
-    lazy val query = if (!relation.isInlineRelation) {
+    lazy val query = if (relation.isRelationTable) {
       val aliasedTable = relationTable(relation).as(topLevelAlias)
       val order        = orderByForRelation(relation, topLevelAlias, args)
       val skipAndLimit = LimitClauseHelper.skipAndLimitValues(args)
@@ -30,31 +27,21 @@ trait RelationQueries extends BuilderBase with FilterConditionBuilder with Order
         case Some(_) => base.limit(intDummy)
         case None    => base
       }
-    } else if (relation.modelAField.relationIsInlinedInParent) {
-      val aliasedTable = relationTable(relation).as(topLevelAlias)
-      val order        = orderByForRelation(relation, topLevelAlias, args)
-      val skipAndLimit = LimitClauseHelper.skipAndLimitValues(args)
-
-      val base = sql
-        .select(modelIdColumn(topLevelAlias, relation.modelA).as("A"), aliasColumn(relation.modelAField).as("B"))
-        .from(aliasedTable)
-        .where(aliasColumn(relation.modelAField).isNotNull)
-        .orderBy(order: _*)
-        .offset(intDummy)
-
-      skipAndLimit.limit match {
-        case Some(_) => base.limit(intDummy)
-        case None    => base
-      }
     } else {
-      val aliasedTable = relationTable(relation).as(topLevelAlias)
-      val order        = orderByForRelation(relation, topLevelAlias, args)
-      val skipAndLimit = LimitClauseHelper.skipAndLimitValues(args)
+      val aliasedTable      = relationTable(relation).as(topLevelAlias)
+      val order             = orderByForRelation(relation, topLevelAlias, args)
+      val skipAndLimit      = LimitClauseHelper.skipAndLimitValues(args)
+      val isInlinedInModelA = relation.modelAField.relationIsInlinedInParent
+
+      val conditionField = if (isInlinedInModelA) aliasColumn(relation.modelAField) else aliasColumn(relation.modelBField)
+
+      val fieldA = if (isInlinedInModelA) modelIdColumn(topLevelAlias, relation.modelA) else aliasColumn(relation.modelBField)
+      val fieldB = if (isInlinedInModelA) aliasColumn(relation.modelAField) else modelIdColumn(topLevelAlias, relation.modelB)
 
       val base = sql
-        .select(aliasColumn(relation.modelBField).as("A"), modelIdColumn(topLevelAlias, relation.modelB).as("B"))
+        .select(fieldA.as("A"), fieldB.as("B"))
         .from(aliasedTable)
-        .where(aliasColumn(relation.modelBField).isNotNull)
+        .where(conditionField.isNotNull)
         .orderBy(order: _*)
         .offset(intDummy)
 

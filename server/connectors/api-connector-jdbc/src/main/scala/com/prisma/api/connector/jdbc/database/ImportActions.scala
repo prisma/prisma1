@@ -118,31 +118,25 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             relationInsert.addBatch()
           }
           relationInsert.executeBatch()
-        } else if (relation.modelAField.relationIsInlinedInParent) {
+        } else if (relation.isInlineRelation) {
+          val referencingColumn    = relation.inlineManifestation.get.referencingColumn
+          val isInlinedInModelA    = relation.modelAField.relationIsInlinedInParent
+          val rowToUpdateCondition = if (isInlinedInModelA) idField(relation.modelA).equal(placeHolder) else idField(relation.modelB).equal(placeHolder)
 
           val query = sql
             .update(relationTable(relation))
-            .set(modelColumn(relation.modelAField), placeHolder)
-            .where(idField(relation.modelA).equal(placeHolder))
+            .setColumnsWithPlaceHolders(Vector(referencingColumn))
+            .where(rowToUpdateCondition)
 
           val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
           mutaction.args.foreach { arg =>
-            relationInsert.setGcValue(2, arg._1)
-            relationInsert.setGcValue(1, arg._2)
-            relationInsert.addBatch()
-          }
-          relationInsert.executeBatch()
-        } else if (relation.modelBField.relationIsInlinedInParent) {
-
-          val query = sql
-            .update(relationTable(relation))
-            .set(modelColumn(relation.modelBField), placeHolder)
-            .where(idField(relation.modelB).equal(placeHolder))
-
-          val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
-          mutaction.args.foreach { arg =>
-            relationInsert.setGcValue(1, arg._1)
-            relationInsert.setGcValue(2, arg._2)
+            if (isInlinedInModelA) {
+              relationInsert.setGcValue(1, arg._2)
+              relationInsert.setGcValue(2, arg._1)
+            } else {
+              relationInsert.setGcValue(1, arg._1)
+              relationInsert.setGcValue(2, arg._2)
+            }
             relationInsert.addBatch()
           }
           relationInsert.executeBatch()
