@@ -81,7 +81,7 @@ jobs:
       - run:
           name: Wait for Mongo to start
           # preinstalled in circleci/* docker image
-          command: dockerize -wait tcp://127.0.0.1:27017 -timeout 120s
+          command: dockerize -wait tcp://127.0.0.1:27017 -timeout 180s
       - run: ./cli/scripts/test_ci.sh
 
   # content deployment
