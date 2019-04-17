@@ -88,25 +88,25 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
         map
     });
 
-    // FIXME This does not execute as intended
-    result.list_results.values.iter().for_each(|values| {
-        values
-            .iter()
-            .zip(&result.list_results.field_names)
-            .for_each(|(list, field_name)| {
-                dbg!(&list);
-                dbg!(&field_name);
+    result
+        .list_results
+        .values
+        .iter()
+        .zip(&result.list_results.field_names)
+        .for_each(|(values, field_name)| {
+            outer.insert(
+                field_name.clone(),
+                Item::List(values.iter().fold(vec![], |_, list| {
+                    list.iter().map(|pv| Item::Value(pv.clone())).collect()
+                })),
+            );
+        });
 
-                outer.insert(
-                    field_name.clone(),
-                    Item::List(list.iter().map(|pv| Item::Value(pv.clone())).collect()),
-                );
-            })
-    });
-
-    dbg!(&outer);
     result.fields.iter().fold(Map::new(), |mut map, field| {
-        map.insert(field.clone(), outer.remove(field).expect("Missing required field"));
+        map.insert(
+            field.clone(),
+            outer.remove(field).expect("[Map]: Missing required field"),
+        );
         map
     })
 }
@@ -158,7 +158,7 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
         .fold(vec![], |mut vec, mut item| {
             if let Item::Map(ref mut map) = item {
                 vec.push(result.fields.iter().fold(Map::new(), |mut new, field| {
-                    let item = map.remove(field).expect("Missing required field");
+                    let item = map.remove(field).expect("[List]: Missing required field");
                     new.insert(field.clone(), item);
                     new
                 }));
