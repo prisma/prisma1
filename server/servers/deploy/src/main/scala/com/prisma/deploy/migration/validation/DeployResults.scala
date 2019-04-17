@@ -61,6 +61,15 @@ object DeployErrors {
     )
   }
 
+  def makingFieldRequiredMongo(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are updating the field `$field` to be required while also doing a change that should wipe the old contents. Since there are already nodes for the model" +
+        s" `${`type`}` they would violate the not-null constraint. Please first do the type change, then fill the field with migration values before making it required."
+    )
+  }
+
   def makingFieldUnique(`type`: String, field: String): DeployError = {
     DeployError(
       `type`,
