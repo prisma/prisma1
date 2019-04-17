@@ -40,43 +40,6 @@ pub struct MultiPrismaQueryResult {
     selected_fields: SelectedFields,
 }
 
-// #[derive(Debug)]
-// pub struct ListValues {
-//     pub field_names: Vec<String>,
-//     pub values: Vec<Vec<Vec<PrismaValue>>>,
-// }
-
-/// This function transforms list results into a presentation that eases the mapping of list results
-/// to their corresponding records on higher layers.
-/// This is mostly used for result serialization, where we have to combine results into their final representation.
-///
-/// ```
-/// [ // all records
-///     [ // one record
-///         [ List A ], // one list
-///         [ List B ],
-///     ],
-///     [ // one record
-///         [ List A ], // one list
-///         [ List B ],
-///     ],
-///     [ // one record
-///         [ List A ], // one list
-///         [ List B ],
-///     ]
-/// ]
-/// ```
-///
-// pub fn fold_list_result(list_results: Vec<(String, Vec<ScalarListValues>)>) -> ListValues {
-//     let field_names: Vec<_> = list_results.iter().map(|(a, _)| a.clone()).collect();
-
-//     let values: Vec<Vec<Vec<_>>> = list_results
-//         .into_iter()
-//         .map(|(_, vec)| vec.into_iter().map(|s| s.values).collect())
-//         .collect();
-
-//     ListValues { field_names, values }
-// }
 
 impl PrismaQueryResult {
     /// Filters implicitly selected fields from the result set.

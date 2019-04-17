@@ -1,7 +1,7 @@
 //! Process a record into an IR Map
 
+use super::{lists::build_list, utils, Item, Map};
 use crate::{PrismaQueryResult, SinglePrismaQueryResult};
-use super::{Map, Item, lists::build_list};
 
 pub fn build_map(result: &SinglePrismaQueryResult) -> Map {
     result.find_id();
@@ -27,6 +27,17 @@ pub fn build_map(result: &SinglePrismaQueryResult) -> Map {
         };
 
         map
+    });
+
+    let ids = result.find_id().expect("Failed to find record IDs!");
+    let scalar_values = utils::associate_list_results(vec![ids], &result.list_results);
+
+    scalar_values.into_iter().for_each(|item| {
+        if let Item::Map(map) = item {
+            map.into_iter().for_each(|(k, v)| {
+                outer.insert(k, v);
+            });
+        }
     });
 
     // Associate scalarlist values

@@ -11,6 +11,7 @@
 
 mod maps;
 mod lists;
+mod utils;
 
 use crate::PrismaQueryResult;
 use indexmap::IndexMap;
