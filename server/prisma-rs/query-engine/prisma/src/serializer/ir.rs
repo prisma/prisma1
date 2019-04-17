@@ -67,7 +67,6 @@ impl<'results> IrBuilder<'results> {
 }
 
 fn build_map(result: &SinglePrismaQueryResult) -> Map {
-    dbg!(&result);
     // Build selected fields first
     let mut outer = match &result.result {
         Some(single) => single

@@ -20,7 +20,7 @@ pub struct SinglePrismaQueryResult {
     /// Scalar list field names mapped to their results
     pub list_results: ListValues,
 
-    /// Used for filtering implicit fields in result node
+    /// Used for filtering implicit fields in result records
     selected_fields: SelectedFields,
 }
 
@@ -34,7 +34,7 @@ pub struct MultiPrismaQueryResult {
     /// Scalar list field names mapped to their results
     pub list_results: ListValues,
 
-    /// Used for filtering implicit fields in result nodes
+    /// Used for filtering implicit fields in result records
     selected_fields: SelectedFields,
 }
 
@@ -44,19 +44,21 @@ pub struct ListValues {
     pub values: Vec<Vec<Vec<PrismaValue>>>,
 }
 
-/// This function does a bit of magic
+/// This function transforms list results into a presentation that eases the mapping of list results
+/// to their corresponding records on higher layers.
+/// This is mostly used for result serialization, where we have to combine results into their final representation.
 ///
 /// ```
-/// [ // all nodes
-///     [ // one node
+/// [ // all records
+///     [ // one record
 ///         [ List A ], // one list
 ///         [ List B ],
 ///     ],
-///     [ // one node
+///     [ // one record
 ///         [ List A ], // one list
 ///         [ List B ],
 ///     ],
-///     [ // one node
+///     [ // one record
 ///         [ List A ], // one list
 ///         [ List B ],
 ///     ]
@@ -86,7 +88,7 @@ impl PrismaQueryResult {
 
 // Q: Best pattern here? Mix of in place mutation and recreating result
 impl SinglePrismaQueryResult {
-    /// Filters implicitly selected fields in-place in the result node and field names.
+    /// Filters implicitly selected fields in-place in the result record and field names.
     /// Traverses nested result tree.
     pub fn filter(self) -> Self {
         let implicit_fields = self.selected_fields.get_implicit_fields();
@@ -112,7 +114,7 @@ impl SinglePrismaQueryResult {
 }
 
 impl MultiPrismaQueryResult {
-    /// Filters implicitly selected fields in-place in the result nodes and field names.
+    /// Filters implicitly selected fields in-place in the result records and field names.
     /// Traverses nested result tree.
     pub fn filter(mut self) -> Self {
         let implicit_fields = self.selected_fields.get_implicit_fields();
@@ -130,20 +132,23 @@ impl MultiPrismaQueryResult {
             self.result.field_names.remove(p.clone());
         });
 
-        // Remove values on found positions from all nodes.
-        let nodes = self
+        // Remove values on found positions from all records.
+        let records = self
             .result
             .nodes
             .into_iter()
-            .map(|mut node| {
+            .map(|mut record| {
                 positions.iter().for_each(|p| {
-                    node.values.remove(p.clone());
+                    record.values.remove(p.clone());
                 });
-                node
+                record
             })
             .collect();
 
-        let result = ManyNodes { nodes, ..self.result };
+        let result = ManyNodes {
+            nodes: records,
+            ..self.result
+        };
         let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
 
         Self { result, nested, ..self }
@@ -177,9 +182,9 @@ impl QueryExecutor {
                         .get_node_by_where(&query.selector, &selected_fields)?;
 
                     match result {
-                        Some(ref node) => {
+                        Some(ref record) => {
                             let model = Arc::clone(&query.selector.field.model());
-                            let ids = vec![node.get_id_value(model)?.clone()];
+                            let ids = vec![record.get_id_value(model)?.clone()];
                             let list_fields = selected_fields.scalar_lists();
                             let list_results =
                                 fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
@@ -233,15 +238,15 @@ impl QueryExecutor {
                     )?;
 
                     // FIXME: Required fields need to return Errors, non-required can be ignored!
-                    if let Some(node) = result.into_single_node() {
-                        let ids = vec![node.get_id_value(query.parent_field.related_model())?.clone()];
+                    if let Some(record) = result.into_single_node() {
+                        let ids = vec![record.get_id_value(query.parent_field.related_model())?.clone()];
                         let list_fields = selected_fields.scalar_lists();
                         let list_results = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
                         let nested = self.execute_internal(&query.nested, ids)?;
                         let result = SinglePrismaQueryResult {
                             name: query.name.clone(),
                             fields: query.fields.clone(),
-                            result: Some(node),
+                            result: Some(record),
                             nested,
                             selected_fields,
                             list_results,
@@ -285,7 +290,7 @@ impl QueryExecutor {
 
     fn resolve_scalar_list_fields(
         &self,
-        node_ids: Vec<GraphqlId>,
+        record_ids: Vec<GraphqlId>,
         list_fields: Vec<Arc<ScalarField>>,
     ) -> ConnectorResult<Vec<(String, Vec<ScalarListValues>)>> {
         if !list_fields.is_empty() {
@@ -294,7 +299,7 @@ impl QueryExecutor {
                 .map(|list_field| {
                     let name = list_field.name.clone();
                     self.data_resolver
-                        .get_scalar_list_values_by_node_ids(list_field, node_ids.clone())
+                        .get_scalar_list_values_by_node_ids(list_field, record_ids.clone())
                         .map(|r| (name, r))
                 })
                 .collect::<ConnectorResult<Vec<(String, Vec<_>)>>>()
