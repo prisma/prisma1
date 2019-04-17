@@ -66,6 +66,8 @@ pub struct ListValues {
 /// ```
 ///
 pub fn fold_list_result(list_results: Vec<(String, Vec<ScalarListValues>)>) -> ListValues {
+    dbg!(&list_results);
+
     let field_names: Vec<_> = list_results.iter().map(|(a, _)| a.clone()).collect();
 
     let values: Vec<Vec<Vec<_>>> = list_results

@@ -4,6 +4,7 @@ mod builders;
 mod error;
 mod query_ast;
 mod query_executor;
+pub mod ir;
 
 pub use builders::*;
 pub use error::*;

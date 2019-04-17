@@ -1,7 +1,7 @@
 //! Json serialisation endpoint from IR
 
-use super::ir::{IrResponse, Item, Responses};
 use crate::{PrismaError, PrismaResult};
+use core::ir::{Item, Response, ResponseSet};
 use indexmap::IndexMap;
 use prisma_models::{GraphqlId, PrismaValue};
 use serde_json::{Map, Number, Value};
@@ -17,14 +17,14 @@ macro_rules! envelope {
     }};
 }
 
-pub fn serialize(resp: Responses) -> Value {
+pub fn serialize(resp: ResponseSet) -> Value {
     let mut map = Map::new();
 
     let vals: Vec<Value> = resp
         .into_iter()
         .map(|res| match res {
-            IrResponse::Data(name, Item::List(list)) => envelope!(name, Value::Array(serialize_list(list))),
-            IrResponse::Data(name, Item::Map(map)) => envelope!(name, Value::Object(serialize_map(map))),
+            Response::Data(name, Item::List(list)) => envelope!(name, Value::Array(serialize_list(list))),
+            Response::Data(name, Item::Map(map)) => envelope!(name, Value::Object(serialize_map(map))),
             _ => unreachable!(),
         })
         .collect();
