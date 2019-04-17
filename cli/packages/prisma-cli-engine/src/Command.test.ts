@@ -35,6 +35,18 @@ test('gets the version tokens correctly', async () => {
     minorVersion: '1.31',
     stage: 'alpha'
   })
+  expect(cmd.getVersionTokens('1.31-alpha.5')).toEqual({
+    minorVersion: '1.31',
+    stage: 'alpha'
+  })
+  expect(cmd.getVersionTokens('1.31.2-alpha.5')).toEqual({
+    minorVersion: '1.31',
+    stage: 'alpha'
+  })
+  expect(cmd.getVersionTokens('1.31-alpha-7')).toEqual({
+    minorVersion: '1.31',
+    stage: 'alpha'
+  })
 })
 
 test('compares the versions correctly', async () => {
@@ -47,6 +59,8 @@ test('compares the versions correctly', async () => {
   expect(cmd.compareVersions('1.30.2-alpha', '1.30.5-alpha')).toBe(true)
   expect(cmd.compareVersions('1.30.2-alpha', '1.31.0-alpha')).toBe(false)
   expect(cmd.compareVersions('1.30.2-alpha.5', '1.31.0-alpha.7')).toBe(false)
+  expect(cmd.compareVersions('1.31.2-alpha.5', '1.31-alpha.7')).toBe(true)
+  expect(cmd.compareVersions('1.31.2-alpha.5', '1.31-alpha-7')).toBe(true)
 })
 
 test('shows the ID', () => {
