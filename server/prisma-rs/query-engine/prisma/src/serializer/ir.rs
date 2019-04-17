@@ -9,7 +9,7 @@
 //! This IR fixes that issue, allowing us to serialize to various
 //! flexible formats.
 
-use core::{MultiPrismaQueryResult, PrismaQueryResult, SinglePrismaQueryResult};
+use core::{ManyReadQueryResults, ReadQueryResult, SingleReadQueryResult};
 use indexmap::IndexMap;
 use itertools::{
     EitherOrBoth::{Both, Left, Right},
@@ -32,7 +32,7 @@ pub type Map = IndexMap<String, Item>;
 /// A list of IR items
 pub type List = Vec<Item>;
 
-/// An IR item that either expands to a subtype or leaf-node
+/// An IR item that either expands to a subtype or leaf-record
 #[derive(Debug)]
 pub enum Item {
     Map(Map),
@@ -41,7 +41,7 @@ pub enum Item {
 }
 
 /// A serialization IR builder utility
-pub struct IrBuilder<'results>(Vec<&'results PrismaQueryResult>);
+pub struct IrBuilder<'results>(Vec<&'results ReadQueryResult>);
 
 impl<'results> IrBuilder<'results> {
     pub fn new() -> Self {
@@ -49,7 +49,7 @@ impl<'results> IrBuilder<'results> {
     }
 
     /// Add a single query result to the builder
-    pub fn add(mut self, q: &'results PrismaQueryResult) -> Self {
+    pub fn add(mut self, q: &'results ReadQueryResult) -> Self {
         self.0.push(q);
         self
     }
@@ -58,15 +58,15 @@ impl<'results> IrBuilder<'results> {
     pub fn build(self) -> Responses {
         self.0.into_iter().fold(vec![], |mut vec, res| {
             vec.push(match res {
-                PrismaQueryResult::Single(query) => IrResponse::Data(query.name.clone(), Item::Map(build_map(query))),
-                PrismaQueryResult::Multi(query) => IrResponse::Data(query.name.clone(), Item::List(build_list(query))),
+                ReadQueryResult::Single(query) => IrResponse::Data(query.name.clone(), Item::Map(build_map(query))),
+                ReadQueryResult::Many(query) => IrResponse::Data(query.name.clone(), Item::List(build_list(query))),
             });
             vec
         })
     }
 }
 
-fn build_map(result: &SinglePrismaQueryResult) -> Map {
+fn build_map(result: &SingleReadQueryResult) -> Map {
     // Build selected fields first
     let mut outer = match &result.result {
         Some(single) => single
@@ -83,8 +83,8 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
     // Then add nested selected fields
     outer = result.nested.iter().fold(outer, |mut map, query| {
         match query {
-            PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
-            PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+            ReadQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
+            ReadQueryResult::Many(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
         };
 
         map
@@ -113,7 +113,7 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
     })
 }
 
-fn build_list(result: &MultiPrismaQueryResult) -> List {
+fn build_list(result: &ManyReadQueryResults) -> List {
     let mut vec: Vec<Item> = result
         .result
         .as_pairs()
@@ -129,8 +129,8 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
     result.nested.iter().zip(&mut vec).for_each(|(nested, map)| {
         match map {
             Item::Map(ref mut map) => match nested {
-                PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
-                PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+                ReadQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
+                ReadQueryResult::Many(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
             },
             _ => unreachable!(),
         };
@@ -145,7 +145,6 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
     // was found". In case there's only list data but no record, we panic.
     vec.iter_mut().zip_longest(&result.list_results.values).for_each(|eob| {
         match eob {
-
             Both(item, values) => {
                 if let Item::Map(ref mut map) = item {
                     values
@@ -166,10 +165,9 @@ fn build_list(result: &MultiPrismaQueryResult) -> List {
                     })
                 }
             }
-            _ => unreachable!("Unexpected scalar-list values for missing record")
+            _ => unreachable!("Unexpected scalar-list values for missing record"),
         };
     });
-
 
     vec.into_iter()
         .fold(vec![], |mut vec, mut item| {

@@ -1,6 +1,6 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
-use core::{PrismaQuery, PrismaQueryResult, RootBuilder};
+use core::{ReadQuery, ReadQueryResult, RootBuilder};
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -59,8 +59,8 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         operation_name: req.body.operation_name,
     };
 
-    let queries: Vec<PrismaQuery> = rb.build()?;
-    let results: Vec<PrismaQueryResult> = dbg!(ctx.query_executor.execute(&queries))?
+    let queries: Vec<ReadQuery> = rb.build()?;
+    let results: Vec<ReadQueryResult> = dbg!(ctx.read_query_executor.execute(&queries))?
         .into_iter()
         .map(|r| r.filter())
         .collect();

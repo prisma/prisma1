@@ -1,5 +1,5 @@
 use super::BuilderExt;
-use crate::{query_ast::MultiRelatedRecordQuery, CoreResult};
+use crate::{query_ast::ManyRelatedRecordsQuery, CoreResult};
 
 use graphql_parser::query::Field;
 use prisma_models::{ModelRef, RelationFieldRef};
@@ -23,7 +23,7 @@ impl<'f> ManyRelationBuilder<'f> {
 }
 
 impl<'f> BuilderExt for ManyRelationBuilder<'f> {
-    type Output = MultiRelatedRecordQuery;
+    type Output = ManyRelatedRecordsQuery;
 
     fn new() -> Self {
         Default::default()
@@ -34,7 +34,7 @@ impl<'f> BuilderExt for ManyRelationBuilder<'f> {
             (Some(m), Some(f), Some(p)) => Some((m, f, p)),
             _ => None,
         }
-        .expect("`MultiRelatedRecordQuery` builder not properly initialised!");
+        .expect("`ManyRelatedRecordsQuery` builder not properly initialized!");
 
         let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.schema())?;
         let nested = Self::build_nested_queries(nested_builders)?;
@@ -45,7 +45,7 @@ impl<'f> BuilderExt for ManyRelationBuilder<'f> {
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
         let fields = Self::collect_selection_order(&field);
 
-        Ok(MultiRelatedRecordQuery {
+        Ok(ManyRelatedRecordsQuery {
             name,
             parent_field,
             args,

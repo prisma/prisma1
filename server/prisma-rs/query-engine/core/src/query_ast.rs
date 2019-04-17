@@ -1,14 +1,14 @@
-//! Prisma query AST module
+//! Prisma read query AST module
 
 use connector::{filter::NodeSelector, QueryArguments};
 use prisma_models::prelude::*;
 
 #[derive(Debug, Clone)]
-pub enum PrismaQuery {
+pub enum ReadQuery {
     RecordQuery(RecordQuery),
-    MultiRecordQuery(MultiRecordQuery),
+    ManyRecordsQuery(ManyRecordsQuery),
     RelatedRecordQuery(RelatedRecordQuery),
-    MultiRelatedRecordQuery(MultiRelatedRecordQuery),
+    ManyRelatedRecordsQuery(ManyRelatedRecordsQuery),
 }
 
 #[derive(Debug, Clone)]
@@ -16,20 +16,20 @@ pub struct RecordQuery {
     pub name: String,
     pub selector: NodeSelector,
     pub selected_fields: SelectedFields,
-    pub nested: Vec<PrismaQuery>,
+    pub nested: Vec<ReadQuery>,
     // TODO: rename to something more obvious maybe?
-    pub fields: Vec<String>
+    pub fields: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct MultiRecordQuery {
+pub struct ManyRecordsQuery {
     pub name: String,
     pub model: ModelRef,
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
-    pub nested: Vec<PrismaQuery>,
+    pub nested: Vec<ReadQuery>,
     // TODO: rename to something more obvious maybe?
-    pub fields: Vec<String>
+    pub fields: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -38,18 +38,18 @@ pub struct RelatedRecordQuery {
     pub parent_field: RelationFieldRef,
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
-    pub nested: Vec<PrismaQuery>,
+    pub nested: Vec<ReadQuery>,
     // TODO: rename to something more obvious maybe?
-    pub fields: Vec<String>
+    pub fields: Vec<String>,
 }
 
 #[derive(Debug, Clone)]
-pub struct MultiRelatedRecordQuery {
+pub struct ManyRelatedRecordsQuery {
     pub name: String,
     pub parent_field: RelationFieldRef,
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
-    pub nested: Vec<PrismaQuery>,
+    pub nested: Vec<ReadQuery>,
     // TODO: rename to something more obvious maybe?
-    pub fields: Vec<String>
+    pub fields: Vec<String>,
 }

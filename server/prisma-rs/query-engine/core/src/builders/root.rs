@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::{CoreResult, PrismaQuery};
+use crate::{CoreResult, ReadQuery};
 use graphql_parser::query::*;
 use prisma_models::SchemaRef;
 use std::sync::Arc;
@@ -12,7 +12,7 @@ pub struct RootBuilder {
 
 impl RootBuilder {
     // FIXME: Find op name and only execute op!
-    pub fn build(self) -> CoreResult<Vec<PrismaQuery>> {
+    pub fn build(self) -> CoreResult<Vec<ReadQuery>> {
         self.query
             .definitions
             .iter()
@@ -32,11 +32,11 @@ impl RootBuilder {
                 })) => self.build_query(&selection_set.items),
                 _ => unimplemented!(),
             })
-            .collect::<CoreResult<Vec<Vec<PrismaQuery>>>>() // Collect all the "query trees"
+            .collect::<CoreResult<Vec<Vec<ReadQuery>>>>() // Collect all the "query trees"
             .map(|v| v.into_iter().flatten().collect())
     }
 
-    fn build_query(&self, root_fields: &Vec<Selection>) -> CoreResult<Vec<PrismaQuery>> {
+    fn build_query(&self, root_fields: &Vec<Selection>) -> CoreResult<Vec<ReadQuery>> {
         root_fields
             .iter()
             .map(|item| {

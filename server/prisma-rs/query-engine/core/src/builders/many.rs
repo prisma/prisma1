@@ -1,16 +1,16 @@
 use super::BuilderExt;
-use crate::{query_ast::MultiRecordQuery, CoreResult};
+use crate::{query_ast::ManyRecordsQuery, CoreResult};
 
 use graphql_parser::query::Field;
 use prisma_models::ModelRef;
 use std::sync::Arc;
 
-pub struct MultiBuilder<'f> {
+pub struct ManyBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
 }
 
-impl<'f> MultiBuilder<'f> {
+impl<'f> ManyBuilder<'f> {
     pub fn setup(self, model: ModelRef, field: &'f Field) -> Self {
         Self {
             model: Some(model),
@@ -19,8 +19,8 @@ impl<'f> MultiBuilder<'f> {
     }
 }
 
-impl<'f> BuilderExt for MultiBuilder<'f> {
-    type Output = MultiRecordQuery;
+impl<'f> BuilderExt for ManyBuilder<'f> {
+    type Output = ManyRecordsQuery;
 
     fn new() -> Self {
         Self {
@@ -34,7 +34,7 @@ impl<'f> BuilderExt for MultiBuilder<'f> {
             (Some(m), Some(f)) => Some((m, f)),
             _ => None,
         }
-        .expect("`MultiQuery` builder not properly initialised!");
+        .expect("`ManyQuery` builder not properly initialised!");
 
         let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.schema())?;
         let nested = Self::build_nested_queries(nested_builders)?;
@@ -45,7 +45,7 @@ impl<'f> BuilderExt for MultiBuilder<'f> {
         let model = Arc::clone(model);
         let fields = Self::collect_selection_order(&field);
 
-        Ok(MultiRecordQuery {
+        Ok(ManyRecordsQuery {
             name,
             model,
             args,

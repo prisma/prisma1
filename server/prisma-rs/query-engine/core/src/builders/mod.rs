@@ -1,26 +1,26 @@
 //! Query execution builders module
 
 mod inflector;
+mod many;
 mod many_rel;
-mod multi;
 mod one_rel;
 mod root;
 mod single;
 
+pub use many::*;
 pub use many_rel::*;
-pub use multi::*;
 pub use one_rel::*;
 pub use root::*;
 pub use single::*;
 
 use self::inflector::Inflector;
-use crate::{CoreError, CoreResult, PrismaQuery};
+use crate::{CoreError, CoreResult, ReadQuery};
 use ::inflector::Inflector as RustInflector;
 use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
-    Field as ModelField, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField, SelectedFields,
-    SelectedScalarField, SortOrder, GraphqlId,
+    Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
+    SelectedFields, SelectedScalarField, SortOrder,
 };
 
 use std::sync::Arc;
@@ -29,7 +29,7 @@ use uuid::Uuid;
 /// A common query-builder type
 pub enum Builder<'field> {
     Single(SingleBuilder<'field>),
-    Multi(MultiBuilder<'field>),
+    Many(ManyBuilder<'field>),
     OneRelation(OneRelationBuilder<'field>),
     ManyRelation(ManyRelationBuilder<'field>),
 }
@@ -73,19 +73,19 @@ impl<'a> Builder<'a> {
             if field.name == normalized {
                 Some(Builder::Single(SingleBuilder::new().setup(Arc::clone(model), field)))
             } else if Inflector::singularize(&field.name) == normalized {
-                Some(Builder::Multi(MultiBuilder::new().setup(Arc::clone(model), field)))
+                Some(Builder::Many(ManyBuilder::new().setup(Arc::clone(model), field)))
             } else {
                 None
             }
         }
     }
 
-    fn build(self) -> CoreResult<PrismaQuery> {
+    fn build(self) -> CoreResult<ReadQuery> {
         match self {
-            Builder::Single(b) => Ok(PrismaQuery::RecordQuery(b.build()?)),
-            Builder::Multi(b) => Ok(PrismaQuery::MultiRecordQuery(b.build()?)),
-            Builder::OneRelation(b) => Ok(PrismaQuery::RelatedRecordQuery(b.build()?)),
-            Builder::ManyRelation(b) => Ok(PrismaQuery::MultiRelatedRecordQuery(b.build()?)),
+            Builder::Single(b) => Ok(ReadQuery::RecordQuery(b.build()?)),
+            Builder::Many(b) => Ok(ReadQuery::ManyRecordsQuery(b.build()?)),
+            Builder::OneRelation(b) => Ok(ReadQuery::RelatedRecordQuery(b.build()?)),
+            Builder::ManyRelation(b) => Ok(ReadQuery::ManyRelatedRecordsQuery(b.build()?)),
         }
     }
 }
@@ -258,12 +258,12 @@ pub trait BuilderExt {
             .collect()
     }
 
-    fn build_nested_queries(builders: Vec<Builder>) -> CoreResult<Vec<PrismaQuery>> {
+    fn build_nested_queries(builders: Vec<Builder>) -> CoreResult<Vec<ReadQuery>> {
         builders
             .into_iter()
             .map(|b| match b {
-                Builder::OneRelation(b) => Ok(PrismaQuery::RelatedRecordQuery(b.build()?)),
-                Builder::ManyRelation(b) => Ok(PrismaQuery::MultiRelatedRecordQuery(b.build()?)),
+                Builder::OneRelation(b) => Ok(ReadQuery::RelatedRecordQuery(b.build()?)),
+                Builder::ManyRelation(b) => Ok(ReadQuery::ManyRelatedRecordsQuery(b.build()?)),
                 _ => unreachable!(),
             })
             .collect()
