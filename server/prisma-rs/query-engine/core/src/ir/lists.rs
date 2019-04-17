@@ -5,7 +5,7 @@ use crate::{ManyReadQueryResults, ReadQueryResult};
 
 pub fn build_list(result: &ManyReadQueryResults) -> List {
     let mut vec: Vec<Item> = result
-        .result
+        .scalars
         .as_pairs()
         .iter()
         .map(|vec| {
@@ -28,7 +28,7 @@ pub fn build_list(result: &ManyReadQueryResults) -> List {
 
     // Explicitly handle scalar-list results
     let ids = result.find_ids().expect("Failed to find record IDs!");
-    let scalar_values = utils::associate_list_results(ids, &result.list_results);
+    let scalar_values = utils::associate_list_results(ids, &result.lists);
 
     // Then just merge the maps into the existing data
     vec = vec.into_iter().zip(scalar_values).fold(vec![], |mut vec, iter| {

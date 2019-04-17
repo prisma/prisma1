@@ -1,4 +1,4 @@
-use connector::ScalarListValues;
+use connector::{QueryArguments, ScalarListValues};
 use prisma_models::{GraphqlId, ManyNodes, PrismaValue, SelectedFields, SelectedScalarField, SingleNode};
 
 #[derive(Debug)]
@@ -11,11 +11,15 @@ pub enum ReadQueryResult {
 pub struct SingleReadQueryResult {
     pub name: String,
     pub fields: Vec<String>,
-    pub result: Option<SingleNode>,
+
+    /// Scalar field results
+    pub scalars: Option<SingleNode>,
+
+    /// Nested queries results
     pub nested: Vec<ReadQueryResult>,
 
-    /// Scalar list field names mapped to their results
-    pub list_results: Vec<(String, Vec<ScalarListValues>)>,
+    /// Scalar list results, field names mapped to their results
+    pub lists: Vec<(String, Vec<ScalarListValues>)>,
 
     /// Used for filtering implicit fields in result records
     pub selected_fields: SelectedFields,
@@ -25,11 +29,18 @@ pub struct SingleReadQueryResult {
 pub struct ManyReadQueryResults {
     pub name: String,
     pub fields: Vec<String>,
-    pub result: ManyNodes,
+
+    /// Scalar field results
+    pub scalars: ManyNodes,
+
+    /// Nested queries results
     pub nested: Vec<ReadQueryResult>,
 
-    /// Scalar list field names mapped to their results
-    pub list_results: Vec<(String, Vec<ScalarListValues>)>,
+    /// Scalar list results, field names mapped to their results
+    pub lists: Vec<(String, Vec<ScalarListValues>)>,
+
+    /// Required for result processing
+    pub query_arguments: QueryArguments,
 
     /// Used for filtering implicit fields in result records
     pub selected_fields: SelectedFields,
@@ -45,11 +56,11 @@ impl SingleReadQueryResult {
     /// Get the ID from a record
     pub fn find_id(&self) -> Option<&GraphqlId> {
         let id_position: usize = self
-            .result
+            .scalars
             .as_ref()
             .map_or(None, |r| r.field_names.iter().position(|name| name == "id"))?;
 
-        self.result.as_ref().map_or(None, |r| {
+        self.scalars.as_ref().map_or(None, |r| {
             r.node.values.get(id_position).map(|pv| match pv {
                 PrismaValue::GraphqlId(id) => Some(id),
                 _ => None,
@@ -66,8 +77,8 @@ impl ManyReadQueryResults {
 
     /// Get all IDs from a query result
     pub fn find_ids(&self) -> Option<Vec<&GraphqlId>> {
-        let id_position: usize = self.result.field_names.iter().position(|name| name == "id")?;
-        self.result
+        let id_position: usize = self.scalars.field_names.iter().position(|name| name == "id")?;
+        self.scalars
             .nodes
             .iter()
             .map(|node| node.values.get(id_position))
