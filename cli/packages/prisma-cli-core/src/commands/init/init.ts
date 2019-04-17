@@ -27,14 +27,6 @@ export default class Init extends Command {
       description: 'Initial service endpoint (optional)',
       required: false,
     }),
-
-    /**
-     * Temporary flag needed to test Datamodel v2
-     */
-    ['prototype']: flags.boolean({
-      description:
-        'Output Datamodel v2. Note: This is a temporary flag for debugging',
-    }),
   }
 
   async run() {
@@ -54,7 +46,7 @@ export default class Init extends Command {
     let files: string[] = []
     try {
       files = fs.readdirSync(this.config.definitionDir)
-    } catch(e) {
+    } catch (e) {
       debug(`prisma init workflow called without existing directory.`)
       debug(e.toString())
     }
@@ -147,7 +139,6 @@ ${endpointSteps.map((step, index) => `  ${index + 1}. ${step}`).join('\n')}`)
       config: this.config,
       definition: this.definition,
       shouldAskForGenerator: true,
-      prototype: this.flags.prototype,
     })
 
     const results = await endpointDialog.getEndpoint()

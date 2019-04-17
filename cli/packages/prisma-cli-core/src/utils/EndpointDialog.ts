@@ -137,7 +137,6 @@ export interface ConstructorArgs {
   config: Config
   definition: PrismaDefinitionClass
   shouldAskForGenerator: boolean
-  prototype?: boolean
 }
 
 export class EndpointDialog {
@@ -147,7 +146,6 @@ export class EndpointDialog {
   config: Config
   definition: PrismaDefinitionClass
   shouldAskForGenerator: boolean
-  prototype: boolean
   constructor({
     out,
     client,
@@ -155,7 +153,6 @@ export class EndpointDialog {
     config,
     definition,
     shouldAskForGenerator,
-    prototype = false,
   }: ConstructorArgs) {
     this.out = out
     this.client = client
@@ -163,7 +160,6 @@ export class EndpointDialog {
     this.config = config
     this.definition = definition
     this.shouldAskForGenerator = shouldAskForGenerator
-    this.prototype = prototype
   }
 
   async getEndpoint(): Promise<GetEndpointResult> {
@@ -235,7 +231,9 @@ export class EndpointDialog {
       user: credentials.user,
       password: credentials.password,
       uri: credentials.uri ? this.replaceLocalhost(credentials.uri) : undefined,
-      ...((credentials.type === DatabaseType.postgres) ? { ...{ ssl: credentials.ssl } } : {})
+      ...(credentials.type === DatabaseType.postgres
+        ? { ...{ ssl: credentials.ssl } }
+        : {}),
     }
     if (credentials.type !== DatabaseType.mongo) {
       data = {
@@ -409,7 +407,7 @@ export class EndpointDialog {
           const introspection = await connector.introspect(databaseName)
 
           const isdl = await introspection.getNormalizedDatamodel()
-          const renderer = DefaultRenderer.create(databaseType, this.prototype)
+          const renderer = DefaultRenderer.create(databaseType, true)
 
           datamodel = renderer.render(isdl)
           const tableName =
@@ -695,7 +693,7 @@ export class EndpointDialog {
   private listFiles() {
     try {
       return fs.readdirSync(this.config.definitionDir)
-    } catch(e) {
+    } catch (e) {
       debug(`EndpointDialog workflow called without existing directory.`)
       debug(e.toString())
       return []
