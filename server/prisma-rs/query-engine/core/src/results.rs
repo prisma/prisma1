@@ -1,5 +1,5 @@
 use connector::ScalarListValues;
-use prisma_models::{ManyNodes, PrismaValue, SelectedFields, SingleNode, GraphqlId};
+use prisma_models::{GraphqlId, ManyNodes, PrismaValue, SelectedFields, SelectedScalarField, SingleNode};
 
 #[derive(Debug)]
 pub enum ReadQueryResult {
@@ -37,6 +37,8 @@ pub struct ManyReadQueryResults {
 
 impl ReadQueryResult {
     /// Filters implicitly selected fields from the result set.
+    #[deprecated]
+    #[warn(warnings)]
     pub fn filter(self) -> Self {
         match self {
             ReadQueryResult::Single(s) => ReadQueryResult::Single(s.filter()),
@@ -47,8 +49,15 @@ impl ReadQueryResult {
 
 // Q: Best pattern here? Mix of in place mutation and recreating result
 impl SingleReadQueryResult {
+    /// Returns the implicitly added fields
+    pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
+        self.selected_fields.get_implicit_fields()
+    }
+
     /// Filters implicitly selected fields in-place in the result record and field names.
     /// Traverses nested result tree.
+    #[deprecated]
+    #[warn(warnings)]
     pub fn filter(self) -> Self {
         let implicit_fields = self.selected_fields.get_implicit_fields();
 
@@ -88,8 +97,15 @@ impl SingleReadQueryResult {
 }
 
 impl ManyReadQueryResults {
+    /// Returns the implicitly added fields
+    pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
+        self.selected_fields.get_implicit_fields()
+    }
+
     /// Filters implicitly selected fields in-place in the result records and field names.
     /// Traverses nested result tree.
+    #[deprecated]
+    #[warn(warnings)]
     pub fn filter(mut self) -> Self {
         let implicit_fields = self.selected_fields.get_implicit_fields();
         let positions: Vec<usize> = implicit_fields
