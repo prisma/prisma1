@@ -31,15 +31,17 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
 
     val schema =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | test: ID!
+        |  id: ID! @id
+        |  name: String! @unique
+        |  test: ID!
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -49,15 +51,17 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
 
     val schema =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | test: UUID!
+        |  id: ID! @id
+        |  name: String! @unique
+        |  test: UUID!
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -67,7 +71,8 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
 
     val schema =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -76,8 +81,9 @@ class PrefillingFieldsWithDefaultOrMigrationValueSpec extends FlatSpec with Matc
 
     val schema1 =
       """type A {
-        | name: String! @unique
-        | test: UUID!
+        |  id: ID! @id
+        |  name: String! @unique
+        |  test: UUID!
         |}""".stripMargin
 
     val res = deployServer.deploySchemaThatMustWarn(project, schema1, true)
