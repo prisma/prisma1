@@ -1,174 +1,25 @@
-#![warn(warnings)]
-
-use crate::{query_ast, CoreResult};
+use crate::{query_ast, results::*, CoreResult};
 use connector::{ConnectorResult, DataResolver, ScalarListValues};
-use prisma_models::{GraphqlId, ManyNodes, PrismaValue, ScalarField, SelectedFields, SelectedScalarField, SingleNode};
+use prisma_models::{GraphqlId, ScalarField, SelectedFields};
 use query_ast::*;
 use std::sync::Arc;
 
-#[derive(Debug)]
-pub enum PrismaQueryResult {
-    Single(SinglePrismaQueryResult),
-    Multi(MultiPrismaQueryResult),
-}
-
-#[derive(Debug)]
-pub struct SinglePrismaQueryResult {
-    pub name: String,
-    pub fields: Vec<String>,
-    pub result: Option<SingleNode>,
-    pub nested: Vec<PrismaQueryResult>,
-
-    /// Scalar list field names mapped to their results
-    pub list_results: Vec<(String, Vec<ScalarListValues>)>,
-
-    /// Used for filtering implicit fields in result records
-    selected_fields: SelectedFields,
-}
-
-#[derive(Debug)]
-pub struct MultiPrismaQueryResult {
-    pub name: String,
-    pub fields: Vec<String>,
-    pub result: ManyNodes,
-    pub nested: Vec<PrismaQueryResult>,
-
-    /// Scalar list field names mapped to their results
-    pub list_results: Vec<(String, Vec<ScalarListValues>)>,
-
-    /// Used for filtering implicit fields in result records
-    selected_fields: SelectedFields,
-}
-
-
-impl PrismaQueryResult {
-    /// Filters implicitly selected fields from the result set.
-    pub fn filter(self) -> Self {
-        match self {
-            PrismaQueryResult::Single(s) => PrismaQueryResult::Single(s.filter()),
-            PrismaQueryResult::Multi(m) => PrismaQueryResult::Multi(m.filter()),
-        }
-    }
-}
-
-// Q: Best pattern here? Mix of in place mutation and recreating result
-impl SinglePrismaQueryResult {
-    /// Filters implicitly selected fields in-place in the result record and field names.
-    /// Traverses nested result tree.
-    pub fn filter(self) -> Self {
-        let implicit_fields = self.selected_fields.get_implicit_fields();
-
-        let result = self.result.map(|mut r| {
-            let positions: Vec<usize> = implicit_fields
-                .into_iter()
-                .filter_map(|implicit| r.field_names.iter().position(|name| &implicit.field.name == name))
-                .collect();
-
-            positions.into_iter().for_each(|p| {
-                r.field_names.remove(p);
-                r.node.values.remove(p);
-            });
-
-            r
-        });
-
-        let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
-
-        Self { result, nested, ..self }
-    }
-
-    /// Get the ID from a record
-    pub fn find_id(&self) -> Option<&GraphqlId> {
-        let id_position: usize = self
-            .result
-            .as_ref()
-            .map_or(None, |r| r.field_names.iter().position(|name| name == "id"))?;
-
-        self.result.as_ref().map_or(None, |r| {
-            r.node.values.get(id_position).map(|pv| match pv {
-                PrismaValue::GraphqlId(id) => Some(id),
-                _ => None,
-            })?
-        })
-    }
-}
-
-impl MultiPrismaQueryResult {
-    /// Filters implicitly selected fields in-place in the result records and field names.
-    /// Traverses nested result tree.
-    pub fn filter(mut self) -> Self {
-        let implicit_fields = self.selected_fields.get_implicit_fields();
-        let positions: Vec<usize> = implicit_fields
-            .into_iter()
-            .filter_map(|implicit| {
-                self.result
-                    .field_names
-                    .iter()
-                    .position(|name| &implicit.field.name == name)
-            })
-            .collect();
-
-        positions.iter().for_each(|p| {
-            self.result.field_names.remove(p.clone());
-        });
-
-        // Remove values on found positions from all records.
-        let records = self
-            .result
-            .nodes
-            .into_iter()
-            .map(|mut record| {
-                positions.iter().for_each(|p| {
-                    record.values.remove(p.clone());
-                });
-                record
-            })
-            .collect();
-
-        let result = ManyNodes {
-            nodes: records,
-            ..self.result
-        };
-        let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
-
-        Self { result, nested, ..self }
-    }
-
-    /// Get all IDs from a query result
-    pub fn find_ids(&self) -> Option<Vec<&GraphqlId>> {
-        let id_position: usize = self.result.field_names.iter().position(|name| name == "id")?;
-        self.result
-            .nodes
-            .iter()
-            .map(|node| node.values.get(id_position))
-            .map(|pv| match pv {
-                Some(PrismaValue::GraphqlId(id)) => Some(id),
-                _ => None,
-            })
-            .collect()
-    }
-}
-
-pub struct QueryExecutor {
+pub struct ReadQueryExecutor {
     pub data_resolver: Arc<DataResolver + Send + Sync + 'static>,
 }
 
-impl QueryExecutor {
+impl ReadQueryExecutor {
     // WIP
-    pub fn execute(&self, queries: &[PrismaQuery]) -> CoreResult<Vec<PrismaQueryResult>> {
+    pub fn execute(&self, queries: &[ReadQuery]) -> CoreResult<Vec<ReadQueryResult>> {
         self.execute_internal(queries, vec![])
     }
 
-    fn execute_internal(
-        &self,
-        queries: &[PrismaQuery],
-        parent_ids: Vec<GraphqlId>,
-    ) -> CoreResult<Vec<PrismaQueryResult>> {
+    fn execute_internal(&self, queries: &[ReadQuery], parent_ids: Vec<GraphqlId>) -> CoreResult<Vec<ReadQueryResult>> {
         let mut results = vec![];
 
         for query in queries {
             match query {
-                PrismaQuery::RecordQuery(query) => {
+                ReadQuery::RecordQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
                     let result = self
@@ -182,7 +33,7 @@ impl QueryExecutor {
                             let list_fields = selected_fields.scalar_lists();
                             let list_results = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                             let nested = self.execute_internal(&query.nested, ids)?;
-                            let result = SinglePrismaQueryResult {
+                            let result = SingleReadQueryResult {
                                 name: query.name.clone(),
                                 fields: query.fields.clone(),
                                 result,
@@ -190,12 +41,12 @@ impl QueryExecutor {
                                 selected_fields,
                                 list_results,
                             };
-                            results.push(PrismaQueryResult::Single(result));
+                            results.push(ReadQueryResult::Single(result));
                         }
                         None => (),
                     }
                 }
-                PrismaQuery::MultiRecordQuery(query) => {
+                ReadQuery::ManyRecordsQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
                     let result =
                         self.data_resolver
@@ -211,7 +62,7 @@ impl QueryExecutor {
                         vec
                     });
 
-                    results.push(PrismaQueryResult::Multi(MultiPrismaQueryResult {
+                    results.push(ReadQueryResult::Many(ManyReadQueryResults {
                         name: query.name.clone(),
                         fields: query.fields.clone(),
                         result,
@@ -220,7 +71,7 @@ impl QueryExecutor {
                         list_results,
                     }));
                 }
-                PrismaQuery::RelatedRecordQuery(query) => {
+                ReadQuery::RelatedRecordQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
                     let result = self.data_resolver.get_related_nodes(
@@ -236,7 +87,7 @@ impl QueryExecutor {
                         let list_fields = selected_fields.scalar_lists();
                         let list_results = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                         let nested = self.execute_internal(&query.nested, ids)?;
-                        let result = SinglePrismaQueryResult {
+                        let result = SingleReadQueryResult {
                             name: query.name.clone(),
                             fields: query.fields.clone(),
                             result: Some(record),
@@ -244,10 +95,10 @@ impl QueryExecutor {
                             selected_fields,
                             list_results,
                         };
-                        results.push(PrismaQueryResult::Single(result));
+                        results.push(ReadQueryResult::Single(result));
                     }
                 }
-                PrismaQuery::MultiRelatedRecordQuery(query) => {
+                ReadQuery::ManyRelatedRecordsQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
                     let result = self.data_resolver.get_related_nodes(
@@ -266,7 +117,7 @@ impl QueryExecutor {
                         vec
                     });
 
-                    results.push(PrismaQueryResult::Multi(MultiPrismaQueryResult {
+                    results.push(ReadQueryResult::Many(ManyReadQueryResults {
                         name: query.name.clone(),
                         fields: query.fields.clone(),
                         result,

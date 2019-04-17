@@ -1,9 +1,9 @@
 //! Process a set of records into an IR List
 
 use super::{maps::build_map, utils, Item, List, Map};
-use crate::{MultiPrismaQueryResult, PrismaQueryResult};
+use crate::{ManyReadQueryResults, ReadQueryResult};
 
-pub fn build_list(result: &MultiPrismaQueryResult) -> List {
+pub fn build_list(result: &ManyReadQueryResults) -> List {
     let mut vec: Vec<Item> = result
         .result
         .as_pairs()
@@ -19,8 +19,8 @@ pub fn build_list(result: &MultiPrismaQueryResult) -> List {
     result.nested.iter().zip(&mut vec).for_each(|(nested, map)| {
         match map {
             Item::Map(ref mut map) => match nested {
-                PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
-                PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+                ReadQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
+                ReadQueryResult::Many(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
             },
             _ => unreachable!(),
         };

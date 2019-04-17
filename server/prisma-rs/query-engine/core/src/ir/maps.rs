@@ -1,9 +1,9 @@
 //! Process a record into an IR Map
 
 use super::{lists::build_list, utils, Item, Map};
-use crate::{PrismaQueryResult, SinglePrismaQueryResult};
+use crate::{ReadQueryResult, SingleReadQueryResult};
 
-pub fn build_map(result: &SinglePrismaQueryResult) -> Map {
+pub fn build_map(result: &SingleReadQueryResult) -> Map {
     result.find_id();
 
     // Build selected fields first
@@ -22,8 +22,8 @@ pub fn build_map(result: &SinglePrismaQueryResult) -> Map {
     // Then add nested selected fields
     outer = result.nested.iter().fold(outer, |mut map, query| {
         match query {
-            PrismaQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
-            PrismaQueryResult::Multi(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+            ReadQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
+            ReadQueryResult::Many(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
         };
 
         map
@@ -39,21 +39,6 @@ pub fn build_map(result: &SinglePrismaQueryResult) -> Map {
             });
         }
     });
-
-    // Associate scalarlist values
-    // result
-    //     .list_results
-    //     .values
-    //     .iter()
-    //     .zip(&result.list_results.field_names)
-    //     .for_each(|(values, field_name)| {
-    //         outer.insert(
-    //             field_name.clone(),
-    //             Item::List(values.iter().fold(vec![], |_, list| {
-    //                 list.iter().map(|pv| Item::Value(pv.clone())).collect()
-    //             })),
-    //         );
-    //     });
 
     result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(

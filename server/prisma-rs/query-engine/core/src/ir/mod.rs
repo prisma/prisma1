@@ -9,11 +9,11 @@
 //! processing and storage. It can also be easily serialised.
 #![warn(warnings)]
 
-mod maps;
 mod lists;
 mod utils;
+mod maps;
 
-use crate::PrismaQueryResult;
+use crate::ReadQueryResult;
 use indexmap::IndexMap;
 use prisma_models::PrismaValue;
 
@@ -34,7 +34,7 @@ pub type Map = IndexMap<String, Item>;
 /// A list of IR items
 pub type List = Vec<Item>;
 
-/// An IR item that either expands to a subtype or leaf-node
+/// An IR item that either expands to a subtype or leaf-record
 #[derive(Debug)]
 pub enum Item {
     Map(Map),
@@ -43,7 +43,7 @@ pub enum Item {
 }
 
 /// A serialization IR builder utility
-pub struct Builder(Vec<PrismaQueryResult>);
+pub struct Builder(Vec<ReadQueryResult>);
 
 impl Builder {
     pub fn new() -> Self {
@@ -51,7 +51,7 @@ impl Builder {
     }
 
     /// Add a single query result to the builder
-    pub fn add(mut self, q: PrismaQueryResult) -> Self {
+    pub fn add(mut self, q: ReadQueryResult) -> Self {
         self.0.push(q);
         self
     }
@@ -60,8 +60,12 @@ impl Builder {
     pub fn build(self) -> ResponseSet {
         self.0.into_iter().fold(vec![], |mut vec, res| {
             vec.push(match res {
-                PrismaQueryResult::Single(query) => Response::Data(query.name.clone(), Item::Map(maps::build_map(&query))),
-                PrismaQueryResult::Multi(query) => Response::Data(query.name.clone(), Item::List(lists::build_list(&query))),
+                ReadQueryResult::Single(query) => {
+                    Response::Data(query.name.clone(), Item::Map(maps::build_map(&query)))
+                }
+                ReadQueryResult::Many(query) => {
+                    Response::Data(query.name.clone(), Item::List(lists::build_list(&query)))
+                }
             });
             vec
         })

@@ -1,5 +1,5 @@
 use crate::{data_model, PrismaResult};
-use core::QueryExecutor;
+use core::ReadQueryExecutor;
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
 use prisma_models::SchemaRef;
 use sqlite_connector::Sqlite;
@@ -11,7 +11,7 @@ pub struct PrismaContext {
     pub schema: SchemaRef,
 
     #[debug_stub = "#QueryExecutor#"]
-    pub query_executor: QueryExecutor,
+    pub read_query_executor: ReadQueryExecutor,
 }
 
 impl PrismaContext {
@@ -33,7 +33,7 @@ impl PrismaContext {
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
 
-        let query_executor: QueryExecutor = QueryExecutor { data_resolver };
+        let read_query_executor: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
 
         let db_name = config
             .databases
@@ -46,7 +46,7 @@ impl PrismaContext {
         Ok(Self {
             config: config,
             schema: schema,
-            query_executor: query_executor,
+            read_query_executor,
         })
     }
 }
