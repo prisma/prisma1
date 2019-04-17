@@ -10,8 +10,8 @@
 #![warn(warnings)]
 
 mod lists;
-mod utils;
 mod maps;
+mod utils;
 
 use crate::ReadQueryResult;
 use indexmap::IndexMap;
@@ -63,7 +63,9 @@ impl Builder {
                 ReadQueryResult::Single(query) => {
                     Response::Data(query.name.clone(), Item::Map(maps::build_map(&query)))
                 }
-                ReadQueryResult::Many(query) => {
+                ReadQueryResult::Many(mut query) => {
+                    // WIP: This is most likely better for a constructor call to ManyReadQueryResults
+                    query.remove_excess_records();
                     Response::Data(query.name.clone(), Item::List(lists::build_list(&query)))
                 }
             });

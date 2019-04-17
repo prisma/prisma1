@@ -75,18 +75,22 @@ impl ManyReadQueryResults {
         self.selected_fields.get_implicit_fields()
     }
 
-    /// Note: At the moment, this is only to strip the excess records added to by the database query layer
-    pub fn add_pagination_info(self) -> () {
+    /// Removes the excess records added to by the database query layer based on the query arguments
+    pub fn remove_excess_records(&mut self) {
+        dbg!(&self.scalars);
         let reversed = self.query_arguments.last.is_some();
         if reversed {
             self.scalars.reverse();
         }
+        dbg!(&self.scalars);
 
-        // (queryArguments.first, queryArguments.last) match {
-        //   case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasPreviousPage = false, hasNextPage = true, parentModelId = parentModelId)
-        //   case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true, hasNextPage = false, parentModelId = parentModelId)
-        //   case _                              => ResolverResult(items, hasPreviousPage = false, hasNextPage = false, parentModelId = parentModelId)
-        // }
+        match (self.query_arguments.first, self.query_arguments.last) {
+            (Some(f), _) if self.scalars.nodes.len() > f as usize => self.scalars.drop_right(1),
+            (_, Some(l)) if self.scalars.nodes.len() > l as usize => self.scalars.drop_left(1),
+            _ => (),
+        };
+
+        dbg!(&self.scalars);
     }
 
     /// Get all IDs from a query result

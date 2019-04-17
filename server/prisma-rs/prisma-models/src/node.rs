@@ -57,9 +57,21 @@ impl ManyNodes {
             .collect()
     }
 
-    pub fn reverse(mut self) -> Self {
+    /// Reverses the wrapped records in place
+    pub fn reverse(&mut self) {
         self.nodes.reverse();
-        self
+    }
+
+    /// Drops x records on the end of the wrapped records in place.
+    pub fn drop_right(&mut self, x: u32) {
+        self.nodes.truncate(self.nodes.len() - x as usize);
+    }
+
+    /// Drops x records on the start of the wrapped records in place.
+    pub fn drop_left(&mut self, x: u32) {
+        self.reverse();
+        self.drop_right(x);
+        self.reverse();
     }
 }
 
