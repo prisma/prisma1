@@ -5,7 +5,7 @@ use graphql_parser::query::Field;
 use prisma_models::ModelRef;
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SingleBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
@@ -24,10 +24,7 @@ impl<'f> BuilderExt for SingleBuilder<'f> {
     type Output = RecordQuery;
 
     fn new() -> Self {
-        Self {
-            model: None,
-            field: None,
-        }
+        Default::default()
     }
 
     fn build(self) -> CoreResult<Self::Output> {

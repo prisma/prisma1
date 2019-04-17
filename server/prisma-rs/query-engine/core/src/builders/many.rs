@@ -5,6 +5,7 @@ use graphql_parser::query::Field;
 use prisma_models::ModelRef;
 use std::sync::Arc;
 
+#[derive(Default)]
 pub struct ManyBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
@@ -23,10 +24,7 @@ impl<'f> BuilderExt for ManyBuilder<'f> {
     type Output = ManyRecordsQuery;
 
     fn new() -> Self {
-        Self {
-            model: None,
-            field: None,
-        }
+        Default::default()
     }
 
     fn build(self) -> CoreResult<Self::Output> {
