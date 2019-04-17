@@ -64,7 +64,6 @@ impl<'results> IrBuilder<'results> {
 }
 
 fn build_map(result: &SinglePrismaQueryResult) -> Map {
-    dbg!(&result);
     // Build selected fields first
     let mut outer = match &result.result {
         Some(single) => single
@@ -88,15 +87,11 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
         map
     });
 
-    // FIXME This does not execute as intended
     result.list_results.values.iter().for_each(|values| {
         values
             .iter()
             .zip(&result.list_results.field_names)
             .for_each(|(list, field_name)| {
-                dbg!(&list);
-                dbg!(&field_name);
-
                 outer.insert(
                     field_name.clone(),
                     Item::List(list.iter().map(|pv| Item::Value(pv.clone())).collect()),
@@ -104,7 +99,6 @@ fn build_map(result: &SinglePrismaQueryResult) -> Map {
             })
     });
 
-    dbg!(&outer);
     result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(field.clone(), outer.remove(field).expect("Missing required field"));
         map
