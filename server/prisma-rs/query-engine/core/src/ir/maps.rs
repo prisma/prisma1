@@ -4,7 +4,6 @@ use super::{lists::build_list, utils, Item, Map};
 use crate::{ReadQueryResult, SingleReadQueryResult};
 
 pub fn build_map(result: &SingleReadQueryResult) -> Map {
-    result.find_id();
 
     // Build selected fields first
     let mut outer = match &result.scalars {
@@ -31,7 +30,6 @@ pub fn build_map(result: &SingleReadQueryResult) -> Map {
 
     let ids = result.find_id().expect("Failed to find record IDs!");
     let scalar_values = utils::associate_list_results(vec![ids], &result.lists);
-
     scalar_values.into_iter().for_each(|item| {
         if let Item::Map(map) = item {
             map.into_iter().for_each(|(k, v)| {
@@ -39,6 +37,10 @@ pub fn build_map(result: &SingleReadQueryResult) -> Map {
             });
         }
     });
+
+    // Strip implicit fields
+    let implicits = result.get_implicit_fields();
+    outer = utils::remove_implicit_fields(&implicits, outer);
 
     result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(

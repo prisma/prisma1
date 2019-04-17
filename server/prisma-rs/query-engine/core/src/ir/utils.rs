@@ -2,7 +2,7 @@
 
 use super::{Item, List, Map};
 use connector::ScalarListValues;
-use prisma_models::GraphqlId;
+use prisma_models::{GraphqlId, SelectedScalarField};
 
 /// This function transforms list results into a presentation that eases the mapping of list results
 /// to their corresponding records on higher layers.
@@ -51,13 +51,46 @@ pub fn associate_list_results(ids: Vec<&GraphqlId>, list_results: &Vec<(String, 
     })
 }
 
-// pub fn fold_list_result(list_results: Vec<(String, Vec<ScalarListValues>)>) -> ListValues {
-//     let field_names: Vec<_> = list_results.iter().map(|(a, _)| a.clone()).collect();
-
-//     let values: Vec<Vec<Vec<_>>> = list_results
-//         .into_iter()
-//         .map(|(_, vec)| vec.into_iter().map(|s| s.values).collect())
-//         .collect();
-
-//     ListValues { field_names, values }
-// }
+/// Given a collection, it removes all implicitly added fields from it again
+pub fn remove_implicit_fields(implicits: &Vec<&SelectedScalarField>, data: Map) -> Map {
+    // Iterate through the given map
+    data.into_iter()
+        .filter_map(|(key, value)| {
+            match value {
+                // If we have a map, we strip all implicit keys and recurse
+                Item::Map(map) => Some((
+                    key,
+                    Item::Map(remove_implicit_fields(
+                        implicits,
+                        map.into_iter()
+                            .filter_map(|(key2, val)| {
+                                implicits
+                                    .iter()
+                                    .find(|sf| sf.field.name == key2)
+                                    .map_or_else(|| Some((key2, val)), |_| None)
+                            })
+                            .collect(),
+                    )),
+                )),
+                // For a list we only check for maps to recurse into
+                Item::List(list) => Some((
+                    key,
+                    Item::List(
+                        list.into_iter()
+                            .map(|item| match item {
+                                Item::Map(map) => Item::Map(remove_implicit_fields(implicits, map)),
+                                ignore => ignore,
+                            })
+                            .collect(),
+                    ),
+                )),
+                // All other keys are ignored
+                ignore => Some((key, ignore)),
+            }
+        })
+        // Fold back up to the correct map
+        .fold(Map::new(), |mut map, (k, v)| {
+            map.insert(k, v);
+            map
+        })
+}
