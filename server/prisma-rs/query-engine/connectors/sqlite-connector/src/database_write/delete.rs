@@ -11,10 +11,8 @@ use rusqlite::Transaction;
 /// The functions are transactional and will do a rollback is handled in case of
 /// an error.
 pub trait DatabaseDelete {
-    /// A top level delete that removes one record and should be called if the
-    /// action is not nested in any other action in the query. Otherwise use
-    /// `execute_nested_delete`. Violating any relations or a non-existing
-    /// record will cause an error.
+    /// A top level delete that removes one record. Violating any relations or a
+    /// non-existing record will cause an error.
     ///
     /// Will return the deleted record if the delete was successful.
     /// ```rust
@@ -47,7 +45,7 @@ pub trait DatabaseDelete {
     ///     &trans,
     ///     Arc::clone(&user),
     ///     &args,
-    ///     &[],
+    ///     &[("cats", vec![])],
     /// ).unwrap();
     ///
     /// assert_eq!(1, Sqlite::count(&trans, "User", ConditionTree::NoCondition).unwrap());
@@ -63,9 +61,8 @@ pub trait DatabaseDelete {
     /// ```
     fn execute_delete(conn: &Transaction, node_selector: &NodeSelector) -> ConnectorResult<SingleNode>;
 
-    /// A top level delete that removes many records and should be called if the
-    /// action is not nested in any other action in the query. Otherwise use
-    /// `execute_nested_delete_many`. Violating any relations will cause an error.
+    /// A top level delete that removes records matching the `Filter`. Violating
+    /// any relations will cause an error.
     ///
     /// Will return the number records deleted.
     /// ```rust
@@ -99,7 +96,7 @@ pub trait DatabaseDelete {
     ///         &trans,
     ///         Arc::clone(&user),
     ///         &args,
-    ///         &[],
+    ///         &[("cats", vec![])],
     ///     ).unwrap();
     /// }
     ///
@@ -153,7 +150,7 @@ pub trait DatabaseDelete {
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
-    /// #     &[],
+    /// #     &[("cats", vec![])],
     /// # ).unwrap();
     /// #
     /// let relation_field = user.fields().find_from_relation_fields("sites").unwrap();
@@ -177,7 +174,7 @@ pub trait DatabaseDelete {
     ///         &create_actions,
     ///         Arc::clone(&relation_field),
     ///         &args,
-    ///         &[],
+    ///         &[("tags", vec![])],
     ///     ).unwrap();
     /// }
     ///
@@ -243,13 +240,13 @@ pub trait DatabaseDelete {
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
-    /// #     &[],
+    /// #     &[("cats", vec![])],
     /// # ).unwrap();
     /// #
     /// let relation_field = user.fields().find_from_relation_fields("sites").unwrap();
-    /// let mut args = PrismaArgs::new();
     ///
     /// for arg in ["A Cat Blog", "A Car Blog", "A Shoe Blog"].into_iter() {
+    ///     let mut args = PrismaArgs::new();
     ///     args.insert("id", GraphqlId::from(format!("id_{}", *arg)));
     ///     args.insert("name", *arg);
     ///
@@ -267,7 +264,7 @@ pub trait DatabaseDelete {
     ///         &create_actions,
     ///         Arc::clone(&relation_field),
     ///         &args,
-    ///         &[],
+    ///         &[("tags", vec![])],
     ///     ).unwrap();
     /// }
     ///

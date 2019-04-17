@@ -8,12 +8,15 @@ use rusqlite::Transaction;
 use std::sync::Arc;
 
 impl DatabaseUpdate for Sqlite {
-    fn execute_update(
+    fn execute_update<T>(
         conn: &Transaction,
         node_selector: &NodeSelector,
         non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<GraphqlId> {
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<GraphqlId>
+    where
+        T: AsRef<str>,
+    {
         let model = node_selector.field.model();
         let id = Self::id_for(conn, node_selector)?;
         let updating = MutationBuilder::update_one(Arc::clone(&model), &id, non_list_args)?;
@@ -22,18 +25,21 @@ impl DatabaseUpdate for Sqlite {
             Self::execute_one(conn, update)?;
         }
 
-        Self::update_list_args(conn, vec![id.clone()], Arc::clone(&model), list_args.to_vec())?;
+        Self::update_list_args(conn, &[id.clone()], Arc::clone(&model), list_args)?;
 
         Ok(id)
     }
 
-    fn execute_update_many(
+    fn execute_update_many<T>(
         conn: &Transaction,
         model: ModelRef,
         filter: &Filter,
         non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<usize> {
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<usize>
+    where
+        T: AsRef<str>,
+    {
         let ids = Self::ids_for(conn, Arc::clone(&model), filter.clone())?;
         let count = ids.len();
 
@@ -43,19 +49,22 @@ impl DatabaseUpdate for Sqlite {
         };
 
         Self::execute_many(conn, updates)?;
-        Self::update_list_args(conn, ids, Arc::clone(&model), list_args.to_vec())?;
+        Self::update_list_args(conn, ids.as_slice(), Arc::clone(&model), list_args)?;
 
         Ok(count)
     }
 
-    fn execute_nested_update(
+    fn execute_nested_update<T>(
         conn: &Transaction,
         parent_id: &GraphqlId,
         node_selector: &Option<NodeSelector>,
         relation_field: RelationFieldRef,
         non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<GraphqlId> {
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<GraphqlId>
+    where
+        T: AsRef<str>,
+    {
         if let Some(ref node_selector) = node_selector {
             Self::id_for(conn, node_selector)?;
         };
@@ -66,14 +75,17 @@ impl DatabaseUpdate for Sqlite {
         Self::execute_update(conn, &node_selector, non_list_args, list_args)
     }
 
-    fn execute_nested_update_many(
+    fn execute_nested_update_many<T>(
         conn: &Transaction,
         parent_id: &GraphqlId,
         filter: &Option<Filter>,
         relation_field: RelationFieldRef,
         non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<usize> {
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<usize>
+    where
+        T: AsRef<str>,
+    {
         let ids = Self::get_ids_by_parents(conn, Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
         let count = ids.len();
 
@@ -83,19 +95,22 @@ impl DatabaseUpdate for Sqlite {
         };
 
         Self::execute_many(conn, updates)?;
-        Self::update_list_args(conn, ids, relation_field.model(), list_args.to_vec())?;
+        Self::update_list_args(conn, ids.as_slice(), relation_field.model(), list_args)?;
 
         Ok(count)
     }
 
-    fn update_list_args(
+    fn update_list_args<T>(
         conn: &Transaction,
-        ids: Vec<GraphqlId>,
+        ids: &[GraphqlId],
         model: ModelRef,
-        list_args: Vec<(String, PrismaListValue)>,
-    ) -> ConnectorResult<()> {
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<()>
+    where
+        T: AsRef<str>,
+    {
         for (field_name, list_value) in list_args {
-            let field = model.fields().find_from_scalar(&field_name).unwrap();
+            let field = model.fields().find_from_scalar(field_name.as_ref()).unwrap();
             let table = field.scalar_list_table();
             let (deletes, inserts) = MutationBuilder::update_scalar_list_values(&table, &list_value, ids.to_vec());
 

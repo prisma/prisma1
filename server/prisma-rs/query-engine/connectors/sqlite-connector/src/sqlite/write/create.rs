@@ -8,12 +8,15 @@ use rusqlite::Transaction;
 use std::sync::Arc;
 
 impl DatabaseCreate for Sqlite {
-    fn execute_create(
+    fn execute_create<T>(
         conn: &Transaction,
         model: ModelRef,
         non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<GraphqlId> {
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<GraphqlId>
+    where
+        T: AsRef<str>,
+    {
         let (insert, returned_id) = MutationBuilder::create_node(Arc::clone(&model), non_list_args.clone());
 
         Self::execute_one(conn, insert)?;
@@ -23,8 +26,8 @@ impl DatabaseCreate for Sqlite {
             None => GraphqlId::Int(conn.last_insert_rowid() as usize),
         };
 
-        for (field_name, list_value) in list_args.to_vec() {
-            let field = model.fields().find_from_scalar(&field_name).unwrap();
+        for (field_name, list_value) in list_args {
+            let field = model.fields().find_from_scalar(field_name.as_ref()).unwrap();
             let table = field.scalar_list_table();
 
             if let Some(insert) = MutationBuilder::create_scalar_list_value(table.table(), &list_value, &id) {
@@ -35,14 +38,17 @@ impl DatabaseCreate for Sqlite {
         Ok(id)
     }
 
-    fn execute_nested_create(
+    fn execute_nested_create<T>(
         conn: &Transaction,
         parent_id: &GraphqlId,
         actions: &NestedActions,
         relation_field: RelationFieldRef,
         non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<GraphqlId> {
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<GraphqlId>
+    where
+        T: AsRef<str>,
+    {
         if let Some((select, check)) = actions.required_check(parent_id)? {
             let ids = Self::query(conn, select, Self::fetch_id)?;
             check.call_box(ids.into_iter().next())?

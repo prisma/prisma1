@@ -15,6 +15,10 @@ impl SingleNode {
     pub fn get_id_value(&self, model: ModelRef) -> DomainResult<&GraphqlId> {
         self.node.get_id_value(&self.field_names, model)
     }
+
+    pub fn get_field_value(&self, field: &str) -> DomainResult<&PrismaValue> {
+        self.node.get_field_value(&self.field_names, field)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -90,6 +94,21 @@ impl Node {
             PrismaValue::GraphqlId(ref id) => id,
             _ => unimplemented!(),
         })
+    }
+
+    pub fn get_field_value(&self, field_names: &Vec<String>, field: &str) -> DomainResult<&PrismaValue> {
+        let index = field_names
+            .iter()
+            .position(|r| r == field)
+            .map(|i| Ok(i))
+            .unwrap_or_else(|| {
+                Err(Error::FieldNotFound {
+                    name: field.to_string(),
+                    model: String::new(),
+                })
+            })?;
+
+        Ok(&self.values[index])
     }
 
     /// (WIP) Associate a nested selection-set with a set of parents

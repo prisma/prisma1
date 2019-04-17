@@ -4,16 +4,8 @@ use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFi
 use rusqlite::Transaction;
 
 /// Functions to create new records to the database.
-///
-/// The functions get a `Transaction` as a parameter and should take care of
-/// rolling back any writes in case of an error.
-///
-/// Both creates will return a `GraphqlId` to be used in any subsequent nested
-/// actions.
 pub trait DatabaseCreate {
     /// Creates a new root record and any associated list records to the database.
-    /// Should be called if the create is not nested in another write call,
-    /// otherwise use `execute_nested_create`.
     /// ```rust
     /// # use prisma_models::*;
     /// # use rusqlite::{Connection, NO_PARAMS};
@@ -29,6 +21,8 @@ pub trait DatabaseCreate {
     /// # let trans = conn.transaction().unwrap();
     /// # trans.execute("ATTACH DATABASE './test.db' AS 'test'", NO_PARAMS).unwrap();
     /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User (id Text, name Text);", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User_cats (nodeId Text, position Integer, value Text);", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.Site_tags (nodeId Text, position Integer, value Text);", NO_PARAMS).unwrap();
     /// let user = schema.find_model("User").unwrap();
     ///
     /// let mut args = PrismaArgs::new();
@@ -39,7 +33,7 @@ pub trait DatabaseCreate {
     ///     &trans,
     ///     Arc::clone(&user),
     ///     &args,
-    ///     &[],
+    ///     &[("cats", vec![])],
     /// ).unwrap();
     ///
     /// let name_field = user.fields().find_from_scalar("name").unwrap();
@@ -49,17 +43,17 @@ pub trait DatabaseCreate {
     ///     Sqlite::id_for(&trans, &NodeSelector::from((name_field, "Bob"))).unwrap(),
     /// );
     /// ```
-    fn execute_create(
+    fn execute_create<T>(
         conn: &Transaction,
         model: ModelRef,
         non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<GraphqlId>;
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<GraphqlId>
+    where
+        T: AsRef<str>;
 
     /// Creates a new nested item related to a parent, including any associated
     /// list values, and is connected with the `parent_id` to the parent record.
-    /// Should be called if the create is nested in another write action,
-    /// otherwise use `execute_create`.
     /// ```rust
     /// # use prisma_models::*;
     /// # use rusqlite::{Connection, NO_PARAMS};
@@ -77,6 +71,8 @@ pub trait DatabaseCreate {
     /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User (id Text, name Text);", NO_PARAMS).unwrap();
     /// # trans.execute("CREATE TABLE IF NOT EXISTS test.Site (id Text, name Text, user Text);", NO_PARAMS).unwrap();
     /// # trans.execute("CREATE TABLE IF NOT EXISTS test._UserToSites (A Text, B Text, id Text);", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.User_cats (nodeId Text, position Integer, value Text);", NO_PARAMS).unwrap();
+    /// # trans.execute("CREATE TABLE IF NOT EXISTS test.Site_tags (nodeId Text, position Integer, value Text);", NO_PARAMS).unwrap();
     /// # let user = schema.find_model("User").unwrap();
     /// # let site = schema.find_model("Site").unwrap();
     /// #
@@ -84,7 +80,7 @@ pub trait DatabaseCreate {
     /// # args.insert("id", GraphqlId::from("id1"));
     /// # args.insert("name", "Bob");
     /// #
-    /// # let user_id = Sqlite::execute_create(
+    /// # let user_id = Sqlite::execute_create::<String>(
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
@@ -111,7 +107,7 @@ pub trait DatabaseCreate {
     ///     &actions,
     ///     Arc::clone(&relation_field),
     ///     &args,
-    ///     &[],
+    ///     &[("tags", vec![])],
     /// ).unwrap();
     ///
     /// let name_field = site.fields().find_from_scalar("name").unwrap();
@@ -128,12 +124,14 @@ pub trait DatabaseCreate {
     ///     from_parent,
     /// );
     /// ```
-    fn execute_nested_create(
+    fn execute_nested_create<T>(
         conn: &Transaction,
         parent_id: &GraphqlId,
         actions: &NestedActions,
         relation_field: RelationFieldRef,
         non_list_args: &PrismaArgs,
-        list_args: &[(String, PrismaListValue)],
-    ) -> ConnectorResult<GraphqlId>;
+        list_args: &[(T, PrismaListValue)],
+    ) -> ConnectorResult<GraphqlId>
+    where
+        T: AsRef<str>;
 }

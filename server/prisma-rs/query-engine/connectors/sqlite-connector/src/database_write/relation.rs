@@ -48,7 +48,7 @@ pub trait DatabaseRelation {
     /// # args.insert("id", GraphqlId::from("id1"));
     /// # args.insert("name", "Bob");
     /// #
-    /// # let user_id = Sqlite::execute_create(
+    /// # let user_id = Sqlite::execute_create::<String>(
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
@@ -59,7 +59,7 @@ pub trait DatabaseRelation {
     /// # args.insert("id", GraphqlId::from("id1"));
     /// # args.insert("name", "A Blog");
     /// #
-    /// # let site_id = Sqlite::execute_create(
+    /// # let site_id = Sqlite::execute_create::<String>(
     /// #     &trans,
     /// #     Arc::clone(&site),
     /// #     &args,
@@ -140,7 +140,7 @@ pub trait DatabaseRelation {
     /// # args.insert("id", GraphqlId::from("id1"));
     /// # args.insert("name", "Bob");
     /// #
-    /// # let user_id = Sqlite::execute_create(
+    /// # let user_id = Sqlite::execute_create::<String>(
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
@@ -151,7 +151,7 @@ pub trait DatabaseRelation {
     /// # args.insert("id", GraphqlId::from("id1"));
     /// # args.insert("name", "A Blog");
     /// #
-    /// # let site_id = Sqlite::execute_create(
+    /// # let site_id = Sqlite::execute_create::<String>(
     /// #     &trans,
     /// #     Arc::clone(&site),
     /// #     &args,
