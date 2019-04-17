@@ -8,10 +8,7 @@ pub use delete::*;
 pub use relation::*;
 pub use update::*;
 
-use connector::{
-    mutaction::{DatabaseMutactionResults, NestedDatabaseMutaction, TopLevelDatabaseMutaction},
-    ConnectorResult,
-};
+use connector::{mutaction::NestedMutactions, ConnectorResult};
 use prisma_models::GraphqlId;
 use prisma_query::ast::Query;
 use rusqlite::Transaction;
@@ -27,14 +24,5 @@ pub trait DatabaseWrite {
     where
         T: Into<Query>;
 
-    fn execute_toplevel(
-        conn: &Transaction,
-        mutaction: TopLevelDatabaseMutaction,
-    ) -> ConnectorResult<DatabaseMutactionResults>;
-
-    fn execute_nested(
-        conn: &Transaction,
-        mutaction: NestedDatabaseMutaction,
-        parent_id: GraphqlId,
-    ) -> ConnectorResult<DatabaseMutactionResults>;
+    fn execute_nested(conn: &Transaction, mutaction: &NestedMutactions, parent_id: &GraphqlId) -> ConnectorResult<()>;
 }

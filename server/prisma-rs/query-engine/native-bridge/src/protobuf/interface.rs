@@ -268,16 +268,12 @@ impl ExternalInterface for ProtoBufInterface {
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
             let project: ProjectRef = project_template.into();
 
-            let parent_id = input.parent_id.clone().map(GraphqlId::from);
             let mutaction = convert_mutaction(input, Arc::clone(&project));
             let db_name = project.schema().db_name.to_string();
 
-            let mut results = self
-                .database_mutaction_executor
-                .execute(db_name, mutaction, parent_id)?;
-            let result = results.pop().expect("no mutaction results returned");
-
+            let result = self.database_mutaction_executor.execute(db_name, mutaction)?;
             let response = RpcResponse::ok_mutaction(convert_mutaction_result(result));
+
             let mut response_payload = Vec::new();
 
             response.encode(&mut response_payload).unwrap();

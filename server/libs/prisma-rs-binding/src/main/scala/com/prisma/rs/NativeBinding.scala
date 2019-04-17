@@ -130,6 +130,7 @@ object NativeBinding {
           case Error.Value.InternalServerError(msg)        => new NativeError(msg)
           case Error.Value.Empty                           => sys.error("Empty RPC response error value")
           case Error.Value.RelationViolation(err)          => RelationViolation(err.relationName, err.modelAName, err.modelBName)
+          case Error.Value.NodeNotFoundForWhere(err)       => NodeNotFoundForWhere(err.modelName, err.fieldName, toGcValue(err.value.prismaValue))
           case Error.Value.NodesNotConnected(err)          => NodesNotConnected(
             err.relationName,
             err.parentName,
