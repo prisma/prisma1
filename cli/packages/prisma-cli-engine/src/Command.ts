@@ -73,28 +73,24 @@ export class Command {
     return `Prisma CLI version: ${this.config.userAgent}`
   }
 
-  getVersionTokens(v: string): {minorVersion: string, stage: string} {
-    const tokens = v.split('.')
+  getVersionTokens(v: string): { minorVersion: string, stage: string } {
+    const tokens = v.replace('-', '.').split('.')
     if (tokens.length < 2) {
       throw new Error(`Unable to construct minor version from ${v}`)
     }
     let stage = 'master'
-    if (tokens.length >= 3) {
-      if (tokens[2].includes('beta')) {
-        stage = 'beta'
-      }
-      if (tokens[2].includes('alpha')) {
-        stage = 'alpha'
-      }
+    stage = tokens.some(t => t.includes('beta')) ? 'beta' : 'master'
+    if (stage === 'master') {
+      stage = tokens.some(t => t.includes('alpha')) ? 'alpha' : 'master'
     }
     return {
-      minorVersion: `${tokens[0]}.${tokens[1]}`,
+      minorVersion: `${tokens[0]}.${tokens[1]}`.replace('-alpha', '').replace('-beta', ''),
       stage: stage
     }
   }
 
   printVersionSyncWarningMessage() {
-    return `${chalk.yellow(chalk.bold(`Warning: Your Prisma server and Prisma CLI are currently out of sync. They should be on the same minor version.`))}`
+    return `${chalk.yellow(chalk.bold(`Warning: `))}Your Prisma server and Prisma CLI are currently out of sync. They should be on the same minor version.`
   }
 
   compareVersions(v1, v2) {

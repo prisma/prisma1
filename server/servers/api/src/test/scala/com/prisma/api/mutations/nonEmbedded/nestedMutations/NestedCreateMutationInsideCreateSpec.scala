@@ -470,7 +470,7 @@ class NestedCreateMutationInsideCreateSpec extends WordSpecLike with Matchers wi
     server.query("query{posts{id}}", project).pathAsSeq("data.posts").length should be(1)
   }
 
-  "A nested create on a one to one relation should correctly assign violations to offending model and not partially execute second direction" taggedAs IgnoreSQLite in { // TODO: Remove when transactions are back
+  "A nested create on a one to one relation should correctly assign violations to offending model and not partially execute second direction" in {
     val project = SchemaDsl.fromStringV11() {
       """type User{
         |   id: ID! @id

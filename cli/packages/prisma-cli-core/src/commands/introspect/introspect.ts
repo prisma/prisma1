@@ -95,14 +95,6 @@ export default class IntrospectCommand extends Command {
       description: 'Mongo database',
     }),
 
-    /**
-     * Temporary flag needed to test Datamodel v1.1
-     */
-    ['prototype']: flags.boolean({
-      description:
-        'Output Datamodel v2. Note: This is a temporary flag for debugging',
-    }),
-
     ['sdl']: flags.boolean({
       description:
         'Omit any CLI output and just print the resulting datamodel. Requires an existing Prisma project with executeRaw. Useful for scripting',
@@ -196,10 +188,7 @@ ${chalk.bold(
       ? await introspection.getNormalizedDatamodel(existingDatamodel)
       : await introspection.getNormalizedDatamodel()
 
-    const renderer = DefaultRenderer.create(
-      introspection.databaseType,
-      this.flags.prototype,
-    )
+    const renderer = DefaultRenderer.create(introspection.databaseType, true)
     const renderedSdl = renderer.render(sdl)
 
     // disconnect from database
@@ -225,8 +214,7 @@ ${chalk.bold(
   }
 
   writeDatamodel(renderedSdl: string): string {
-    const prototypeFileName = this.flags.prototype ? '-prototype' : ''
-    const fileName = `datamodel${prototypeFileName}-${new Date().getTime()}.prisma`
+    const fileName = `datamodel-${new Date().getTime()}.prisma`
     const fullFileName = path.join(this.config.definitionDir, fileName)
     fs.writeFileSync(fullFileName, renderedSdl)
     return fileName
