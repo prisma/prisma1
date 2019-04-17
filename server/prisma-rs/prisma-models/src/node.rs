@@ -56,6 +56,11 @@ impl ManyNodes {
             })
             .collect()
     }
+
+    pub fn reverse(mut self) -> Self {
+        self.nodes.reverse();
+        self
+    }
 }
 
 #[derive(Debug, Default, Clone)]

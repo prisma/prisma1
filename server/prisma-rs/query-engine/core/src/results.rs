@@ -146,6 +146,20 @@ impl ManyReadQueryResults {
         }
     }
 
+    /// Note: At the moment, this is only to strip the excess records added to by the database query layer
+    pub fn add_pagination_info(self) -> () {
+        let reversed = self.query_arguments.last.is_some();
+        if reversed {
+            self.scalars.reverse();
+        }
+
+        // (queryArguments.first, queryArguments.last) match {
+        //   case (Some(f), _) if items.size > f => ResolverResult(items.dropRight(1), hasPreviousPage = false, hasNextPage = true, parentModelId = parentModelId)
+        //   case (_, Some(l)) if items.size > l => ResolverResult(items.tail, hasPreviousPage = true, hasNextPage = false, parentModelId = parentModelId)
+        //   case _                              => ResolverResult(items, hasPreviousPage = false, hasNextPage = false, parentModelId = parentModelId)
+        // }
+    }
+
     /// Get all IDs from a query result
     pub fn find_ids(&self) -> Option<Vec<&GraphqlId>> {
         let id_position: usize = self.scalars.field_names.iter().position(|name| name == "id")?;
