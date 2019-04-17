@@ -27,7 +27,9 @@ class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase 
     }
 
     // Load the applied revision, which is 2 (2 steps are done in setupProject)
-    loadProject.get.revision shouldEqual 2
+    val project1 = loadProject.get
+    project1.revision shouldEqual 2
+    project1.rawDataModel should equal(basicTypesGql)
 
     // After another migration is completed, the revision is bumped to the revision of the latest migration
     migrationPersistence.updateMigrationStatus(MigrationId(project.id, 3), MigrationStatus.Success).await
@@ -48,12 +50,13 @@ class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase 
     setupProject(basicTypesGql, stage = "stage1")
     setupProject(basicTypesGql, stage = "stage2")
 
-    projectPersistence.loadAll().await should have(size(2))
+    val projects = projectPersistence.loadAll().await
+    projects should have(size(2))
+    projects.foreach(p => p.rawDataModel should equal(basicTypesGql))
   }
 
   ".update()" should "update a project" in {
     val (project, _) = setupProject(basicTypesGql)
-    println(project.id)
 
     val updatedProject = project.copy(secrets = Vector("Some", "secrets"))
     projectPersistence.update(updatedProject).await()
@@ -67,7 +70,6 @@ class ProjectPersistenceSpec extends FlatSpec with Matchers with DeploySpecBase 
 
   ".delete()" should "delete a project" in {
     val (project, _) = setupProject(basicTypesGql)
-    println(project.id)
 
     projectPersistence.delete(project.id).await()
     projectPersistence.load(project.id).await should be(None)
