@@ -1,6 +1,6 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
-use core::{ir, ReadQuery, RootBuilder};
+use core::{ir::Builder, ReadQuery, RootBuilder};
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -64,8 +64,7 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         .read_query_executor
         .execute(&queries)?
         .into_iter()
-        .map(|r| r.filter()) // FIXME: Remove
-        .fold(ir::Builder::new(), |builder, result| builder.add(result))
+        .fold(Builder::new(), |builder, result| builder.add(result))
         .build();
 
     Ok(json::serialize(ir))

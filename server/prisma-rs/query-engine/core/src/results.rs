@@ -1,5 +1,5 @@
 use connector::{QueryArguments, ScalarListValues};
-use prisma_models::{ManyNodes, PrismaValue, SelectedFields, SingleNode};
+use prisma_models::{GraphqlId, ManyNodes, PrismaValue, SelectedFields, SingleNode};
 
 #[derive(Debug)]
 pub enum ReadQueryResult {
@@ -19,7 +19,7 @@ pub struct SingleReadQueryResult {
     pub nested: Vec<ReadQueryResult>,
 
     /// Scalar list results, field names mapped to their results
-    pub lists: ListValues,
+    pub lists: Vec<(String, Vec<ScalarListValues>)>,
 
     /// Used for filtering implicit fields in result records
     pub selected_fields: SelectedFields,
@@ -37,51 +37,13 @@ pub struct ManyReadQueryResults {
     pub nested: Vec<ReadQueryResult>,
 
     /// Scalar list results, field names mapped to their results
-    pub lists: ListValues,
+    pub lists: Vec<(String, Vec<ScalarListValues>)>,
 
     /// Required for result processing
     pub query_arguments: QueryArguments,
 
     /// Used for filtering implicit fields in result records
     pub selected_fields: SelectedFields,
-}
-
-#[derive(Debug)]
-pub struct ListValues {
-    pub field_names: Vec<String>,
-    pub values: Vec<Vec<Vec<PrismaValue>>>,
-}
-
-/// This function transforms list results into a presentation that eases the mapping of list results
-/// to their corresponding records on higher layers.
-/// This is mostly used for result serialization, where we have to combine results into their final representation.
-///
-/// ```
-/// [ // all records
-///     [ // one record
-///         [ List A ], // one list
-///         [ List B ],
-///     ],
-///     [ // one record
-///         [ List A ], // one list
-///         [ List B ],
-///     ],
-///     [ // one record
-///         [ List A ], // one list
-///         [ List B ],
-///     ]
-/// ]
-/// ```
-///
-pub fn fold_list_result(list_results: Vec<(String, Vec<ScalarListValues>)>) -> ListValues {
-    let field_names: Vec<_> = list_results.iter().map(|(a, _)| a.clone()).collect();
-
-    let values: Vec<Vec<Vec<_>>> = list_results
-        .into_iter()
-        .map(|(_, vec)| vec.into_iter().map(|s| s.values).collect())
-        .collect();
-
-    ListValues { field_names, values }
 }
 
 impl ReadQueryResult {
@@ -121,6 +83,21 @@ impl SingleReadQueryResult {
             nested,
             ..self
         }
+    }
+
+    /// Get the ID from a record
+    pub fn find_id(&self) -> Option<&GraphqlId> {
+        let id_position: usize = self
+            .scalars
+            .as_ref()
+            .map_or(None, |r| r.field_names.iter().position(|name| name == "id"))?;
+
+        self.scalars.as_ref().map_or(None, |r| {
+            r.node.values.get(id_position).map(|pv| match pv {
+                PrismaValue::GraphqlId(id) => Some(id),
+                _ => None,
+            })?
+        })
     }
 }
 
@@ -167,5 +144,19 @@ impl ManyReadQueryResults {
             nested,
             ..self
         }
+    }
+
+    /// Get all IDs from a query result
+    pub fn find_ids(&self) -> Option<Vec<&GraphqlId>> {
+        let id_position: usize = self.scalars.field_names.iter().position(|name| name == "id")?;
+        self.scalars
+            .nodes
+            .iter()
+            .map(|node| node.values.get(id_position))
+            .map(|pv| match pv {
+                Some(PrismaValue::GraphqlId(id)) => Some(id),
+                _ => None,
+            })
+            .collect()
     }
 }

@@ -1,9 +1,11 @@
 //! Process a record into an IR Map
 
-use super::{lists::build_list, Item, Map};
+use super::{lists::build_list, utils, Item, Map};
 use crate::{ReadQueryResult, SingleReadQueryResult};
 
 pub fn build_map(result: &SingleReadQueryResult) -> Map {
+    result.find_id();
+
     // Build selected fields first
     let mut outer = match &result.scalars {
         Some(single) => single
@@ -27,19 +29,16 @@ pub fn build_map(result: &SingleReadQueryResult) -> Map {
         map
     });
 
-    result
-        .lists
-        .values
-        .iter()
-        .zip(&result.lists.field_names)
-        .for_each(|(values, field_name)| {
-            outer.insert(
-                field_name.clone(),
-                Item::List(values.iter().fold(vec![], |_, list| {
-                    list.iter().map(|pv| Item::Value(pv.clone())).collect()
-                })),
-            );
-        });
+    let ids = result.find_id().expect("Failed to find record IDs!");
+    let scalar_values = utils::associate_list_results(vec![ids], &result.lists);
+
+    scalar_values.into_iter().for_each(|item| {
+        if let Item::Map(map) = item {
+            map.into_iter().for_each(|(k, v)| {
+                outer.insert(k, v);
+            });
+        }
+    });
 
     result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(

@@ -30,7 +30,7 @@ impl ReadQueryExecutor {
                             let model = Arc::clone(&query.selector.field.model());
                             let ids = vec![record.get_id_value(model)?.clone()];
                             let list_fields = selected_fields.scalar_lists();
-                            let lists = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                            let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                             let nested = self.execute_internal(&query.nested, ids)?;
                             let result = SingleReadQueryResult {
                                 name: query.name.clone(),
@@ -53,7 +53,7 @@ impl ReadQueryExecutor {
 
                     let ids = scalars.get_id_values(Arc::clone(&query.model))?;
                     let list_fields = selected_fields.scalar_lists();
-                    let lists = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                    let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
 
                     // FIXME: Rewrite to not panic and also in a more functional way!
                     let nested = scalars.nodes.iter().fold(vec![], |mut vec, _| {
@@ -85,7 +85,7 @@ impl ReadQueryExecutor {
                     if let Some(record) = result.into_single_node() {
                         let ids = vec![record.get_id_value(query.parent_field.related_model())?.clone()];
                         let list_fields = selected_fields.scalar_lists();
-                        let lists = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                        let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                         let nested = self.execute_internal(&query.nested, ids)?;
                         let result = SingleReadQueryResult {
                             name: query.name.clone(),
@@ -111,7 +111,7 @@ impl ReadQueryExecutor {
                     // FIXME: Rewrite to not panic and also in a more functional way!
                     let ids = scalars.get_id_values(Arc::clone(&query.parent_field.related_model()))?;
                     let list_fields = selected_fields.scalar_lists();
-                    let lists = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                    let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                     let nested = scalars.nodes.iter().fold(vec![], |mut vec, _| {
                         vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
                         vec

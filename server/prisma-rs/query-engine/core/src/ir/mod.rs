@@ -10,6 +10,7 @@
 #![warn(warnings)]
 
 mod lists;
+mod utils;
 mod maps;
 
 use crate::ReadQueryResult;

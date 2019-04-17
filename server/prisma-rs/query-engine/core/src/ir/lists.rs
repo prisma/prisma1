@@ -1,11 +1,7 @@
 //! Process a set of records into an IR List
 
-use super::{maps::build_map, Item, List, Map};
+use super::{maps::build_map, utils, Item, List, Map};
 use crate::{ManyReadQueryResults, ReadQueryResult};
-use itertools::{
-    EitherOrBoth::{Both, Left},
-    Itertools,
-};
 
 pub fn build_list(result: &ManyReadQueryResults) -> List {
     let mut vec: Vec<Item> = result
@@ -30,42 +26,24 @@ pub fn build_list(result: &ManyReadQueryResults) -> List {
         };
     });
 
-    dbg!(&result.lists);
-    dbg!(&vec);
+    // Explicitly handle scalar-list results
+    let ids = result.find_ids().expect("Failed to find record IDs!");
+    let scalar_values = utils::associate_list_results(ids, &result.lists);
 
-    // Associate scalarlists with corresponding records
-    //
-    // This is done by iterating through both existing records and the list of
-    // list-results. But because the list-results list can be shorter, we need
-    // to zip_longest() which yields a special enum. We differentiate between
-    // "only record was found" and "both record and corresponding list data
-    // was found". In case there's only list data but no record, we panic.
-    vec.iter_mut().zip_longest(&result.lists.values).for_each(|eob| {
-        match eob {
-            Both(item, values) => {
-                if let Item::Map(ref mut map) = item {
-                    values
-                        .iter()
-                        .zip(&result.lists.field_names)
-                        .for_each(|(list, field_name)| {
-                            map.insert(
-                                field_name.clone(),
-                                Item::List(list.iter().map(|pv| Item::Value(pv.clone())).collect()),
-                            );
-                        })
-                }
-            }
-            Left(item) => {
-                if let Item::Map(ref mut map) = item {
-                    result.lists.field_names.iter().for_each(|field_name| {
-                        map.insert(field_name.clone(), Item::List(vec![]));
-                    })
-                }
-            }
-            _ => unreachable!("Unexpected scalar-list values for missing record"),
-        };
+    // Then just merge the maps into the existing data
+    vec = vec.into_iter().zip(scalar_values).fold(vec![], |mut vec, iter| {
+        vec.push(Item::Map(match iter {
+            (Item::Map(map), Item::Map(scalars)) => scalars.into_iter().fold(map, |mut map, (k, v)| {
+                map.insert(k, v);
+                map
+            }),
+            _ => unreachable!("Tried merging two `Item`s that were not `Map`"),
+        }));
+
+        vec
     });
 
+    // Do one last pass to sort in order
     vec.into_iter()
         .fold(vec![], |mut vec, mut item| {
             if let Item::Map(ref mut map) = item {
