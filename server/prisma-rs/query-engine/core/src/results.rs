@@ -1,4 +1,4 @@
-use connector::ScalarListValues;
+use connector::{QueryArguments, ScalarListValues};
 use prisma_models::{ManyNodes, PrismaValue, SelectedFields, SingleNode};
 
 #[derive(Debug)]
@@ -11,11 +11,15 @@ pub enum ReadQueryResult {
 pub struct SingleReadQueryResult {
     pub name: String,
     pub fields: Vec<String>,
-    pub result: Option<SingleNode>,
+
+    /// Scalar field results
+    pub scalars: Option<SingleNode>,
+
+    /// Nested queries results
     pub nested: Vec<ReadQueryResult>,
 
-    /// Scalar list field names mapped to their results
-    pub list_results: ListValues,
+    /// Scalar list results, field names mapped to their results
+    pub lists: ListValues,
 
     /// Used for filtering implicit fields in result records
     pub selected_fields: SelectedFields,
@@ -25,11 +29,18 @@ pub struct SingleReadQueryResult {
 pub struct ManyReadQueryResults {
     pub name: String,
     pub fields: Vec<String>,
-    pub result: ManyNodes,
+
+    /// Scalar field results
+    pub scalars: ManyNodes,
+
+    /// Nested queries results
     pub nested: Vec<ReadQueryResult>,
 
-    /// Scalar list field names mapped to their results
-    pub list_results: ListValues,
+    /// Scalar list results, field names mapped to their results
+    pub lists: ListValues,
+
+    /// Required for result processing
+    pub query_arguments: QueryArguments,
 
     /// Used for filtering implicit fields in result records
     pub selected_fields: SelectedFields,
@@ -83,14 +94,13 @@ impl ReadQueryResult {
     }
 }
 
-// Q: Best pattern here? Mix of in place mutation and recreating result
 impl SingleReadQueryResult {
     /// Filters implicitly selected fields in-place in the result record and field names.
     /// Traverses nested result tree.
     pub fn filter(self) -> Self {
         let implicit_fields = self.selected_fields.get_implicit_fields();
 
-        let result = self.result.map(|mut r| {
+        let scalars = self.scalars.map(|mut r| {
             let positions: Vec<usize> = implicit_fields
                 .into_iter()
                 .filter_map(|implicit| r.field_names.iter().position(|name| &implicit.field.name == name))
@@ -106,7 +116,11 @@ impl SingleReadQueryResult {
 
         let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
 
-        Self { result, nested, ..self }
+        Self {
+            scalars,
+            nested,
+            ..self
+        }
     }
 }
 
@@ -118,7 +132,7 @@ impl ManyReadQueryResults {
         let positions: Vec<usize> = implicit_fields
             .into_iter()
             .filter_map(|implicit| {
-                self.result
+                self.scalars
                     .field_names
                     .iter()
                     .position(|name| &implicit.field.name == name)
@@ -126,12 +140,12 @@ impl ManyReadQueryResults {
             .collect();
 
         positions.iter().for_each(|p| {
-            self.result.field_names.remove(p.clone());
+            self.scalars.field_names.remove(p.clone());
         });
 
         // Remove values on found positions from all records.
         let records = self
-            .result
+            .scalars
             .nodes
             .into_iter()
             .map(|mut record| {
@@ -142,12 +156,16 @@ impl ManyReadQueryResults {
             })
             .collect();
 
-        let result = ManyNodes {
+        let scalars = ManyNodes {
             nodes: records,
-            ..self.result
+            ..self.scalars
         };
         let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
 
-        Self { result, nested, ..self }
+        Self {
+            scalars,
+            nested,
+            ..self
+        }
     }
 }

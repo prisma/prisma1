@@ -5,7 +5,7 @@ use crate::{ReadQueryResult, SingleReadQueryResult};
 
 pub fn build_map(result: &SingleReadQueryResult) -> Map {
     // Build selected fields first
-    let mut outer = match &result.result {
+    let mut outer = match &result.scalars {
         Some(single) => single
             .field_names
             .iter()
@@ -28,10 +28,10 @@ pub fn build_map(result: &SingleReadQueryResult) -> Map {
     });
 
     result
-        .list_results
+        .lists
         .values
         .iter()
-        .zip(&result.list_results.field_names)
+        .zip(&result.lists.field_names)
         .for_each(|(values, field_name)| {
             outer.insert(
                 field_name.clone(),

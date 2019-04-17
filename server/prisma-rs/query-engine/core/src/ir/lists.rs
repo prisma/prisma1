@@ -9,7 +9,7 @@ use itertools::{
 
 pub fn build_list(result: &ManyReadQueryResults) -> List {
     let mut vec: Vec<Item> = result
-        .result
+        .scalars
         .as_pairs()
         .iter()
         .map(|vec| {
@@ -30,7 +30,7 @@ pub fn build_list(result: &ManyReadQueryResults) -> List {
         };
     });
 
-    dbg!(&result.list_results);
+    dbg!(&result.lists);
     dbg!(&vec);
 
     // Associate scalarlists with corresponding records
@@ -40,13 +40,13 @@ pub fn build_list(result: &ManyReadQueryResults) -> List {
     // to zip_longest() which yields a special enum. We differentiate between
     // "only record was found" and "both record and corresponding list data
     // was found". In case there's only list data but no record, we panic.
-    vec.iter_mut().zip_longest(&result.list_results.values).for_each(|eob| {
+    vec.iter_mut().zip_longest(&result.lists.values).for_each(|eob| {
         match eob {
             Both(item, values) => {
                 if let Item::Map(ref mut map) = item {
                     values
                         .iter()
-                        .zip(&result.list_results.field_names)
+                        .zip(&result.lists.field_names)
                         .for_each(|(list, field_name)| {
                             map.insert(
                                 field_name.clone(),
@@ -57,7 +57,7 @@ pub fn build_list(result: &ManyReadQueryResults) -> List {
             }
             Left(item) => {
                 if let Item::Map(ref mut map) = item {
-                    result.list_results.field_names.iter().for_each(|field_name| {
+                    result.lists.field_names.iter().for_each(|field_name| {
                         map.insert(field_name.clone(), Item::List(vec![]));
                     })
                 }

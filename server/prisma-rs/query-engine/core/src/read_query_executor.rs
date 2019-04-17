@@ -9,7 +9,6 @@ pub struct ReadQueryExecutor {
 }
 
 impl ReadQueryExecutor {
-    // WIP
     pub fn execute(&self, queries: &[ReadQuery]) -> CoreResult<Vec<ReadQueryResult>> {
         self.execute_internal(queries, vec![])
     }
@@ -22,25 +21,24 @@ impl ReadQueryExecutor {
                 ReadQuery::RecordQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
-                    let result = self
+                    let scalars = self
                         .data_resolver
                         .get_node_by_where(&query.selector, &selected_fields)?;
 
-                    match result {
+                    match scalars {
                         Some(ref record) => {
                             let model = Arc::clone(&query.selector.field.model());
                             let ids = vec![record.get_id_value(model)?.clone()];
                             let list_fields = selected_fields.scalar_lists();
-                            let list_results =
-                                fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                            let lists = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
                             let nested = self.execute_internal(&query.nested, ids)?;
                             let result = SingleReadQueryResult {
                                 name: query.name.clone(),
                                 fields: query.fields.clone(),
-                                result,
+                                scalars,
                                 nested,
                                 selected_fields,
-                                list_results,
+                                lists,
                             };
                             results.push(ReadQueryResult::Single(result));
                         }
@@ -49,16 +47,16 @@ impl ReadQueryExecutor {
                 }
                 ReadQuery::ManyRecordsQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
-                    let result =
+                    let scalars =
                         self.data_resolver
                             .get_nodes(Arc::clone(&query.model), query.args.clone(), &selected_fields)?;
 
-                    let ids = result.get_id_values(Arc::clone(&query.model))?;
+                    let ids = scalars.get_id_values(Arc::clone(&query.model))?;
                     let list_fields = selected_fields.scalar_lists();
-                    let list_results = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                    let lists = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
 
                     // FIXME: Rewrite to not panic and also in a more functional way!
-                    let nested = result.nodes.iter().fold(vec![], |mut vec, _| {
+                    let nested = scalars.nodes.iter().fold(vec![], |mut vec, _| {
                         vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
                         vec
                     });
@@ -66,10 +64,11 @@ impl ReadQueryExecutor {
                     results.push(ReadQueryResult::Many(ManyReadQueryResults {
                         name: query.name.clone(),
                         fields: query.fields.clone(),
-                        result,
+                        scalars,
                         nested,
                         selected_fields,
-                        list_results,
+                        lists,
+                        query_arguments: query.args.clone(),
                     }));
                 }
                 ReadQuery::RelatedRecordQuery(query) => {
@@ -86,15 +85,15 @@ impl ReadQueryExecutor {
                     if let Some(record) = result.into_single_node() {
                         let ids = vec![record.get_id_value(query.parent_field.related_model())?.clone()];
                         let list_fields = selected_fields.scalar_lists();
-                        let list_results = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                        let lists = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
                         let nested = self.execute_internal(&query.nested, ids)?;
                         let result = SingleReadQueryResult {
                             name: query.name.clone(),
                             fields: query.fields.clone(),
-                            result: Some(record),
+                            scalars: Some(record),
                             nested,
                             selected_fields,
-                            list_results,
+                            lists,
                         };
                         results.push(ReadQueryResult::Single(result));
                     }
@@ -102,7 +101,7 @@ impl ReadQueryExecutor {
                 ReadQuery::ManyRelatedRecordsQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
-                    let result = self.data_resolver.get_related_nodes(
+                    let scalars = self.data_resolver.get_related_nodes(
                         Arc::clone(&query.parent_field),
                         &parent_ids,
                         query.args.clone(),
@@ -110,10 +109,10 @@ impl ReadQueryExecutor {
                     )?;
 
                     // FIXME: Rewrite to not panic and also in a more functional way!
-                    let ids = result.get_id_values(Arc::clone(&query.parent_field.related_model()))?;
+                    let ids = scalars.get_id_values(Arc::clone(&query.parent_field.related_model()))?;
                     let list_fields = selected_fields.scalar_lists();
-                    let list_results = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
-                    let nested = result.nodes.iter().fold(vec![], |mut vec, _| {
+                    let lists = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                    let nested = scalars.nodes.iter().fold(vec![], |mut vec, _| {
                         vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
                         vec
                     });
@@ -121,10 +120,11 @@ impl ReadQueryExecutor {
                     results.push(ReadQueryResult::Many(ManyReadQueryResults {
                         name: query.name.clone(),
                         fields: query.fields.clone(),
-                        result,
+                        scalars,
                         nested,
                         selected_fields,
-                        list_results,
+                        lists,
+                        query_arguments: query.args.clone(),
                     }));
                 }
             }
