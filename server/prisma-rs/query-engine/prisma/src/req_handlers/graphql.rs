@@ -64,7 +64,6 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         .query_executor
         .execute(&queries)?
         .into_iter()
-        .map(|r| r.filter()) // FIXME: Remove
         .fold(Builder::new(), |builder, result| builder.add(result))
         .build();
 

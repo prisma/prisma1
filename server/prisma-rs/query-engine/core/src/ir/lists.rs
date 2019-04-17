@@ -27,9 +27,6 @@ pub fn build_list(result: &MultiPrismaQueryResult) -> List {
         };
     });
 
-    dbg!(&result.list_results);
-    dbg!(&vec);
-
     // Associate scalarlists with corresponding records
     //
     // This is done by iterating through both existing records and the list of
@@ -37,32 +34,32 @@ pub fn build_list(result: &MultiPrismaQueryResult) -> List {
     // to zip_longest() which yields a special enum. We differentiate between
     // "only record was found" and "both record and corresponding list data
     // was found". In case there's only list data but no record, we panic.
-    vec.iter_mut().zip_longest(&result.list_results.values).for_each(|eob| {
-        match eob {
+    // vec.iter_mut().zip_longest(&result.list_results.values).for_each(|eob| {
+    //     match eob {
 
-            Both(item, values) => {
-                if let Item::Map(ref mut map) = item {
-                    values
-                        .iter()
-                        .zip(&result.list_results.field_names)
-                        .for_each(|(list, field_name)| {
-                            map.insert(
-                                field_name.clone(),
-                                Item::List(list.iter().map(|pv| Item::Value(pv.clone())).collect()),
-                            );
-                        })
-                }
-            }
-            Left(item) => {
-                if let Item::Map(ref mut map) = item {
-                    result.list_results.field_names.iter().for_each(|field_name| {
-                        map.insert(field_name.clone(), Item::List(vec![]));
-                    })
-                }
-            }
-            _ => unreachable!("Unexpected scalar-list values for missing record")
-        };
-    });
+    //         Both(item, values) => {
+    //             if let Item::Map(ref mut map) = item {
+    //                 values
+    //                     .iter()
+    //                     .zip(&result.list_results.field_names)
+    //                     .for_each(|(list, field_name)| {
+    //                         map.insert(
+    //                             field_name.clone(),
+    //                             Item::List(list.iter().map(|pv| Item::Value(pv.clone())).collect()),
+    //                         );
+    //                     })
+    //             }
+    //         }
+    //         Left(item) => {
+    //             if let Item::Map(ref mut map) = item {
+    //                 result.list_results.field_names.iter().for_each(|field_name| {
+    //                     map.insert(field_name.clone(), Item::List(vec![]));
+    //                 })
+    //             }
+    //         }
+    //         _ => unreachable!("Unexpected scalar-list values for missing record")
+    //     };
+    // });
 
 
     vec.into_iter()

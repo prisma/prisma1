@@ -1,6 +1,8 @@
+#![warn(warnings)]
+
 use crate::{query_ast, CoreResult};
 use connector::{ConnectorResult, DataResolver, ScalarListValues};
-use prisma_models::{GraphqlId, ManyNodes, PrismaValue, ScalarField, SelectedFields, SingleNode};
+use prisma_models::{GraphqlId, ManyNodes, PrismaValue, ScalarField, SelectedFields, SelectedScalarField, SingleNode};
 use query_ast::*;
 use std::sync::Arc;
 
@@ -18,7 +20,7 @@ pub struct SinglePrismaQueryResult {
     pub nested: Vec<PrismaQueryResult>,
 
     /// Scalar list field names mapped to their results
-    pub list_results: ListValues,
+    pub list_results: Vec<(String, Vec<ScalarListValues>)>,
 
     /// Used for filtering implicit fields in result records
     selected_fields: SelectedFields,
@@ -32,17 +34,17 @@ pub struct MultiPrismaQueryResult {
     pub nested: Vec<PrismaQueryResult>,
 
     /// Scalar list field names mapped to their results
-    pub list_results: ListValues,
+    pub list_results: Vec<(String, Vec<ScalarListValues>)>,
 
     /// Used for filtering implicit fields in result records
     selected_fields: SelectedFields,
 }
 
-#[derive(Debug)]
-pub struct ListValues {
-    pub field_names: Vec<String>,
-    pub values: Vec<Vec<Vec<PrismaValue>>>,
-}
+// #[derive(Debug)]
+// pub struct ListValues {
+//     pub field_names: Vec<String>,
+//     pub values: Vec<Vec<Vec<PrismaValue>>>,
+// }
 
 /// This function transforms list results into a presentation that eases the mapping of list results
 /// to their corresponding records on higher layers.
@@ -65,18 +67,16 @@ pub struct ListValues {
 /// ]
 /// ```
 ///
-pub fn fold_list_result(list_results: Vec<(String, Vec<ScalarListValues>)>) -> ListValues {
-    dbg!(&list_results);
+// pub fn fold_list_result(list_results: Vec<(String, Vec<ScalarListValues>)>) -> ListValues {
+//     let field_names: Vec<_> = list_results.iter().map(|(a, _)| a.clone()).collect();
 
-    let field_names: Vec<_> = list_results.iter().map(|(a, _)| a.clone()).collect();
+//     let values: Vec<Vec<Vec<_>>> = list_results
+//         .into_iter()
+//         .map(|(_, vec)| vec.into_iter().map(|s| s.values).collect())
+//         .collect();
 
-    let values: Vec<Vec<Vec<_>>> = list_results
-        .into_iter()
-        .map(|(_, vec)| vec.into_iter().map(|s| s.values).collect())
-        .collect();
-
-    ListValues { field_names, values }
-}
+//     ListValues { field_names, values }
+// }
 
 impl PrismaQueryResult {
     /// Filters implicitly selected fields from the result set.
@@ -112,6 +112,21 @@ impl SinglePrismaQueryResult {
         let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
 
         Self { result, nested, ..self }
+    }
+
+    /// Get the ID from a record
+    pub fn find_id(&self) -> Option<&GraphqlId> {
+        let id_position: usize = self
+            .result
+            .as_ref()
+            .map_or(None, |r| r.field_names.iter().position(|name| name == "id"))?;
+
+        self.result.as_ref().map_or(None, |r| {
+            r.node.values.get(id_position).map(|pv| match pv {
+                PrismaValue::GraphqlId(id) => Some(id),
+                _ => None,
+            })?
+        })
     }
 }
 
@@ -155,6 +170,20 @@ impl MultiPrismaQueryResult {
 
         Self { result, nested, ..self }
     }
+
+    /// Get all IDs from a query result
+    pub fn find_ids(&self) -> Option<Vec<&GraphqlId>> {
+        let id_position: usize = self.result.field_names.iter().position(|name| name == "id")?;
+        self.result
+            .nodes
+            .iter()
+            .map(|node| node.values.get(id_position))
+            .map(|pv| match pv {
+                Some(PrismaValue::GraphqlId(id)) => Some(id),
+                _ => None,
+            })
+            .collect()
+    }
 }
 
 pub struct QueryExecutor {
@@ -188,8 +217,7 @@ impl QueryExecutor {
                             let model = Arc::clone(&query.selector.field.model());
                             let ids = vec![record.get_id_value(model)?.clone()];
                             let list_fields = selected_fields.scalar_lists();
-                            let list_results =
-                                fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                            let list_results = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                             let nested = self.execute_internal(&query.nested, ids)?;
                             let result = SinglePrismaQueryResult {
                                 name: query.name.clone(),
@@ -212,7 +240,7 @@ impl QueryExecutor {
 
                     let ids = result.get_id_values(Arc::clone(&query.model))?;
                     let list_fields = selected_fields.scalar_lists();
-                    let list_results = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                    let list_results = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
 
                     // FIXME: Rewrite to not panic and also in a more functional way!
                     let nested = result.nodes.iter().fold(vec![], |mut vec, _| {
@@ -243,7 +271,7 @@ impl QueryExecutor {
                     if let Some(record) = result.into_single_node() {
                         let ids = vec![record.get_id_value(query.parent_field.related_model())?.clone()];
                         let list_fields = selected_fields.scalar_lists();
-                        let list_results = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                        let list_results = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                         let nested = self.execute_internal(&query.nested, ids)?;
                         let result = SinglePrismaQueryResult {
                             name: query.name.clone(),
@@ -269,7 +297,7 @@ impl QueryExecutor {
                     // FIXME: Rewrite to not panic and also in a more functional way!
                     let ids = result.get_id_values(Arc::clone(&query.parent_field.related_model()))?;
                     let list_fields = selected_fields.scalar_lists();
-                    let list_results = fold_list_result(self.resolve_scalar_list_fields(ids.clone(), list_fields)?);
+                    let list_results = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                     let nested = result.nodes.iter().fold(vec![], |mut vec, _| {
                         vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
                         vec

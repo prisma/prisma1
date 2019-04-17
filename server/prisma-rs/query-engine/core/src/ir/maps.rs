@@ -4,6 +4,8 @@ use crate::{PrismaQueryResult, SinglePrismaQueryResult};
 use super::{Map, Item, lists::build_list};
 
 pub fn build_map(result: &SinglePrismaQueryResult) -> Map {
+    result.find_id();
+
     // Build selected fields first
     let mut outer = match &result.result {
         Some(single) => single
@@ -27,19 +29,20 @@ pub fn build_map(result: &SinglePrismaQueryResult) -> Map {
         map
     });
 
-    result
-        .list_results
-        .values
-        .iter()
-        .zip(&result.list_results.field_names)
-        .for_each(|(values, field_name)| {
-            outer.insert(
-                field_name.clone(),
-                Item::List(values.iter().fold(vec![], |_, list| {
-                    list.iter().map(|pv| Item::Value(pv.clone())).collect()
-                })),
-            );
-        });
+    // Associate scalarlist values
+    // result
+    //     .list_results
+    //     .values
+    //     .iter()
+    //     .zip(&result.list_results.field_names)
+    //     .for_each(|(values, field_name)| {
+    //         outer.insert(
+    //             field_name.clone(),
+    //             Item::List(values.iter().fold(vec![], |_, list| {
+    //                 list.iter().map(|pv| Item::Value(pv.clone())).collect()
+    //             })),
+    //         );
+    //     });
 
     result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(
