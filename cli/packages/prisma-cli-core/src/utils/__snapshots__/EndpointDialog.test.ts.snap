@@ -27,7 +27,7 @@ Object {
       "user": "prisma",
     },
     "datamodel": "type User {
-  id: ID! @unique
+  id: ID! @id
   name: String!
 }
 ",
@@ -102,7 +102,7 @@ Object {
       "user": "prisma",
     },
     "datamodel": "type User {
-  id: ID! @unique
+  id: ID! @id
   name: String!
 }
 ",
