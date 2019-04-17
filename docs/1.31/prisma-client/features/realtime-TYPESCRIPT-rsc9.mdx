@@ -1,12 +1,10 @@
-import Collapse from "components/Markdown/Collapse"
-import Code from "components/Markdown/Code"
-import Warning from "components/Markdown/Warning"
+import Collapse from 'components/Markdown/Collapse'
 
 export const meta = {
-  title: "Realtime (JavaScript)",
+  title: 'Realtime (TypeScript)',
   position: 90,
-  technology: "node",
-  technologyOrder: 1,
+  technology: "typescript",
+  technologyOrder: 2,
   articleGroup: "Realtime",
 }
 
@@ -21,7 +19,7 @@ The `$subscribe` API is based on [WebSockets](https://developer.mozilla.org/en-U
 _Subscribe to "create" and "update" events for the `User` mode_:
 
 ```js
-const createdAndUpdatedUserIterator = await db.$subscribe.user({
+const createdAndUpdatedUserIterator: UserAsyncIterator = await db.$subscribe.user({
   mutation_in: ['CREATED', 'UPDATED']
 }).node()
 ```
@@ -29,18 +27,18 @@ const createdAndUpdatedUserIterator = await db.$subscribe.user({
 _Subscribe to "create" events for a specific `User` that has an `email` address corresponding to `alice@prisma.io`_: 
 
 ```js
-const fooBarCreatedUserIterator = await db.$subscribe.user({
-  mutation_in: ['CREATED', 'UPDATED'],
+const createdUserIterator = await db.$subscribe.user({
+  mutation_in: ['CREATED'],
   node: {
     email_contains: `alice@prisma.io`,
   }
 }).node()
 ```
 
- _Subscribe to any write event for `User` models where the user has a an email-address that contains the string `gmail`_:
+_Subscribe to any write event for `User` models where the user has a an email-address that contains the string `gmail`_:
 
  ```js
-const userIterator = await db.$subscribe.user({
+const userIterator: UserAsyncIterator = await db.$subscribe.user({
   email_contains: `gmail` 
 }).node()
 ```
