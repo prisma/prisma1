@@ -39,6 +39,9 @@ pub fn build_map(result: &SingleReadQueryResult) -> Map {
         map
     });
 
+    // Strip implicit fields
+    let implicits = result.get_implicit_fields();
+    outer = utils::remove_implicit_fields(&implicits, outer);
 
     result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(

@@ -35,49 +35,11 @@ pub struct ManyReadQueryResults {
     pub selected_fields: SelectedFields,
 }
 
-impl ReadQueryResult {
-    /// Filters implicitly selected fields from the result set.
-    #[deprecated]
-    #[warn(warnings)]
-    pub fn filter(self) -> Self {
-        match self {
-            ReadQueryResult::Single(s) => ReadQueryResult::Single(s.filter()),
-            ReadQueryResult::Many(m) => ReadQueryResult::Many(m.filter()),
-        }
-    }
-}
-
 // Q: Best pattern here? Mix of in place mutation and recreating result
 impl SingleReadQueryResult {
     /// Returns the implicitly added fields
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.selected_fields.get_implicit_fields()
-    }
-
-    /// Filters implicitly selected fields in-place in the result record and field names.
-    /// Traverses nested result tree.
-    #[deprecated]
-    #[warn(warnings)]
-    pub fn filter(self) -> Self {
-        let implicit_fields = self.selected_fields.get_implicit_fields();
-
-        let result = self.result.map(|mut r| {
-            let positions: Vec<usize> = implicit_fields
-                .into_iter()
-                .filter_map(|implicit| r.field_names.iter().position(|name| &implicit.field.name == name))
-                .collect();
-
-            positions.into_iter().for_each(|p| {
-                r.field_names.remove(p);
-                r.node.values.remove(p);
-            });
-
-            r
-        });
-
-        let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
-
-        Self { result, nested, ..self }
     }
 
     /// Get the ID from a record
@@ -100,48 +62,6 @@ impl ManyReadQueryResults {
     /// Returns the implicitly added fields
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.selected_fields.get_implicit_fields()
-    }
-
-    /// Filters implicitly selected fields in-place in the result records and field names.
-    /// Traverses nested result tree.
-    #[deprecated]
-    #[warn(warnings)]
-    pub fn filter(mut self) -> Self {
-        let implicit_fields = self.selected_fields.get_implicit_fields();
-        let positions: Vec<usize> = implicit_fields
-            .into_iter()
-            .filter_map(|implicit| {
-                self.result
-                    .field_names
-                    .iter()
-                    .position(|name| &implicit.field.name == name)
-            })
-            .collect();
-
-        positions.iter().for_each(|p| {
-            self.result.field_names.remove(p.clone());
-        });
-
-        // Remove values on found positions from all records.
-        let records = self
-            .result
-            .nodes
-            .into_iter()
-            .map(|mut record| {
-                positions.iter().for_each(|p| {
-                    record.values.remove(p.clone());
-                });
-                record
-            })
-            .collect();
-
-        let result = ManyNodes {
-            nodes: records,
-            ..self.result
-        };
-        let nested = self.nested.into_iter().map(|nested| nested.filter()).collect();
-
-        Self { result, nested, ..self }
     }
 
     /// Get all IDs from a query result
