@@ -29,3 +29,4 @@ failure = "0.1"
 failure_derive = "0.1"
 debug_stub_derive = "0.3"
 indexmap = { version = "1.0", features = [ "serde-1" ] }
+itertools = "0.8"
