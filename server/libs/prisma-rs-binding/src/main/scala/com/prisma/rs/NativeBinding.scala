@@ -75,18 +75,16 @@ object NativeBinding {
 
   def execute_mutaction(
       input: DatabaseMutaction,
-      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable]
   ): DatabaseMutactionResult = {
     val (pointer, length) = writeBuffer(input)
     // FIXME: this must return proper result intead of this int
-    handleProtoResult(library.execute_mutaction(pointer, length), errorHandler) { x: DatabaseMutactionResult =>
+    handleProtoResult(library.execute_mutaction(pointer, length)) { x: DatabaseMutactionResult =>
       x
     }
   }
 
   def handleProtoResult[T, U](
       envelope: ProtobufEnvelope.ByReference,
-      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = PartialFunction.empty
   )(processMessage: T => U): U = {
     val messageContent = envelope.data.getByteArray(0, envelope.len.intValue())
     library.destroy(envelope)
@@ -117,32 +115,34 @@ object NativeBinding {
         }
 
       // Error cases
-      case RpcResponse.Response.Error(error: Error) =>
+      case RpcResponse.Response.Error(error: Error) => {
         def defaultHandler(error: Error.Value): Throwable = error match {
-          case Error.Value.ConnectionError(str)            => ConnectionError(str)
-          case Error.Value.InvalidInputError(str)          => InvalidInputError(str)
-          case Error.Value.JsonDecodeError(str)            => JsonDecodeError(str)
-          case Error.Value.NoResultsError(str)             => NoResultError(str)
-          case Error.Value.ProtobufDecodeError(str)        => ProtobufDecodeError(str)
-          case Error.Value.QueryError(str)                 => QueryError(str)
+          case Error.Value.FieldCannotBeNull(err) => FieldCannotBeNull(err)
+          case Error.Value.ConnectionError(str) => ConnectionError(str)
+          case Error.Value.InvalidInputError(str) => InvalidInputError(str)
+          case Error.Value.JsonDecodeError(str) => JsonDecodeError(str)
+          case Error.Value.NoResultsError(str) => NoResultError(str)
+          case Error.Value.ProtobufDecodeError(str) => ProtobufDecodeError(str)
+          case Error.Value.QueryError(str) => QueryError(str)
           case Error.Value.InvalidConnectionArguments(str) => InvalidConnectionArguments(str)
-          case Error.Value.UniqueConstraintViolation(str)  => UniqueConstraintViolation(str)
-          case Error.Value.InternalServerError(msg)        => new NativeError(msg)
-          case Error.Value.Empty                           => sys.error("Empty RPC response error value")
-          case Error.Value.RelationViolation(err)          => RelationViolation(err.relationName, err.modelAName, err.modelBName)
-          case Error.Value.NodeNotFoundForWhere(err)       => NodeNotFoundForWhere(err.modelName, err.fieldName, toGcValue(err.value.prismaValue))
-          case Error.Value.NodesNotConnected(err)          => NodesNotConnected(
+          case Error.Value.UniqueConstraintViolation(str) => UniqueConstraintViolation(str)
+          case Error.Value.InternalServerError(msg) => new NativeError(msg)
+          case Error.Value.Empty => sys.error("Empty RPC response error value")
+          case Error.Value.RelationViolation(err) => RelationViolation(err.relationName, err.modelAName, err.modelBName)
+          case Error.Value.NodeNotFoundForWhere(err) =>
+            NodeNotFoundForWhere(err.modelName, err.fieldName, toGcValue(err.value.prismaValue))
+          case Error.Value.NodesNotConnected(err) => NodesNotConnected(
             err.relationName,
             err.parentName,
             err.parentWhere.map(w => NodeSelectorInfo(w.modelName, w.fieldName, toGcValue(w.value.prismaValue))),
             err.childName,
             err.childWhere.map(w => NodeSelectorInfo(w.modelName, w.fieldName, toGcValue(w.value.prismaValue)))
           )
-          case x                                           => sys.error(s"unhandled error: $x")
+          case x => sys.error(s"unhandled error: $x")
         }
 
-        val exception = errorHandler.applyOrElse(error.value, defaultHandler)
-        throw exception
+        throw defaultHandler(error.value)
+      }
 
       case RpcResponse.Response.Empty => sys.error("Empty RPC response value")
     }

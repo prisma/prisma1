@@ -5,10 +5,9 @@ import com.prisma.api.connector.jdbc.impl._
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
 import com.prisma.api.schema.APIErrors
-import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, NodeNotFoundForWhereError}
 import com.prisma.connector.shared.jdbc.SlickDatabase
 import com.prisma.gc_values.{IdGCValue, ListGCValue}
-import com.prisma.rs.{NativeBinding, NodeNotFoundForWhere, NodeSelectorInfo, NodesNotConnected, RelationViolation, UniqueConstraintViolation}
+import com.prisma.rs.{FieldCannotBeNull, NativeBinding, NodeNotFoundForWhere, NodeSelectorInfo, NodesNotConnected, RelationViolation, UniqueConstraintViolation}
 import com.prisma.shared.models.Project
 import play.api.libs.json.{JsValue, Json}
 import prisma.protocol
@@ -68,11 +67,7 @@ case class SQLiteDatabaseMutactionExecutor(
           updateNodeToProtocol(m)
         )
         val envelope = prisma.protocol.DatabaseMutaction(projectJson, protoMutaction)
-        val errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = {
-          case Error.Value.NodeNotFoundForWhere(_)  => throw NodeNotFoundForWhereError(m.where)
-          case Error.Value.FieldCannotBeNull(field) => throw FieldCannotBeNull(field)
-        }
-        top_level_mutaction_interpreter(envelope, m, errorHandler)
+        top_level_mutaction_interpreter(envelope, m)
 
       case m: TopLevelUpsertNode =>
         val protoMutaction = prisma.protocol.DatabaseMutaction.Type.Upsert(
@@ -267,27 +262,11 @@ case class SQLiteDatabaseMutactionExecutor(
   private def top_level_mutaction_interpreter(
       protoMutaction: prisma.protocol.DatabaseMutaction,
       mutaction: DatabaseMutaction,
-      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = PartialFunction.empty
   ): TopLevelDatabaseMutactionInterpreter = {
 
     new TopLevelDatabaseMutactionInterpreter {
       override protected def dbioAction(mutationBuilder: JdbcActionsBuilder): DBIO[DatabaseMutactionResult] = {
-        forwarding_dbio(protoMutaction, mutaction, errorHandler)
-      }
-
-      override val errorMapper: PartialFunction[Throwable, APIErrors.ClientApiError] = sharedErrorMapper
-    }
-  }
-
-  private def nested_mutaction_interpreter(
-      protoMutaction: prisma.protocol.DatabaseMutaction,
-      mutaction: DatabaseMutaction,
-      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = PartialFunction.empty
-  ): NestedDatabaseMutactionInterpreter = {
-
-    new NestedDatabaseMutactionInterpreter {
-      override protected def dbioAction(mutationBuilder: JdbcActionsBuilder, parentId: IdGCValue): DBIO[DatabaseMutactionResult] = {
-        forwarding_dbio(protoMutaction, mutaction, errorHandler)
+        forwarding_dbio(protoMutaction, mutaction)
       }
 
       override val errorMapper: PartialFunction[Throwable, APIErrors.ClientApiError] = sharedErrorMapper
@@ -297,10 +276,9 @@ case class SQLiteDatabaseMutactionExecutor(
   private def forwarding_dbio(
       protoMutaction: prisma.protocol.DatabaseMutaction,
       mutaction: DatabaseMutaction,
-      errorHandler: PartialFunction[prisma.protocol.Error.Value, Throwable] = PartialFunction.empty
   ): DBIO[DatabaseMutactionResult] = {
     SimpleDBIO { _ =>
-      val executionResult = NativeBinding.execute_mutaction(protoMutaction, errorHandler)
+      val executionResult = NativeBinding.execute_mutaction(protoMutaction)
       executionResult.`type` match {
         case prisma.protocol.DatabaseMutactionResult.Type.Create(result) =>
           val m = mutaction match {
