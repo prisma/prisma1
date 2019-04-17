@@ -1,13 +1,13 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
-use core::{ReadQuery, ReadQueryResult, RootBuilder};
+use core::{ir, ReadQuery, RootBuilder};
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use serde_json::{Map, Value};
 
-use crate::serializer::{ir::IrBuilder, json};
+use crate::serializer::json;
 
 type JsonMap = Map<String, Value>;
 
@@ -60,14 +60,15 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     };
 
     let queries: Vec<ReadQuery> = rb.build()?;
-    let results: Vec<ReadQueryResult> = dbg!(ctx.read_query_executor.execute(&queries))?
+    let ir = ctx
+        .read_query_executor
+        .execute(&queries)?
         .into_iter()
-        .map(|r| r.filter())
-        .collect();
+        .map(|r| r.filter()) // FIXME: Remove
+        .fold(ir::Builder::new(), |builder, result| builder.add(result))
+        .build();
 
-    Ok(json::serialize(
-        results.iter().fold(IrBuilder::new(), |b, res| b.add(res)).build(),
-    ))
+    Ok(json::serialize(ir))
 }
 
 /// Create a json envelope

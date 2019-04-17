@@ -6,6 +6,8 @@ mod query_ast;
 mod read_query_executor;
 mod results;
 
+pub mod ir;
+
 pub use builders::*;
 pub use error::*;
 pub use query_ast::*;
