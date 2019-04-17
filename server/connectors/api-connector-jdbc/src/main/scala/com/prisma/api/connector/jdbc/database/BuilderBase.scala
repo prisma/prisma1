@@ -36,6 +36,7 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   def column(table: String, column: String)                                  = field(name(project.dbName, table, column))
   def aliasColumn(column: String)                                            = field(name(topLevelAlias, column))
   def aliasColumn(scalarField: ScalarField)                                  = field(name(topLevelAlias, scalarField.dbName))
+  def aliasColumn(relationField: RelationField)                              = field(name(topLevelAlias, relationField.dbName))
   def placeHolders(vector: Iterable[Any])                                    = vector.toList.map(_ => placeHolder).asJava
   private def scalarListTableName(field: ScalarField)                        = field.model.dbName + "_" + field.dbName
 }
