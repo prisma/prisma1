@@ -50,7 +50,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
     runMutaction(CreateModelTable(project, model))
 
     model.scalarNonListFields
-      .filter(f => f.name != ReservedFields.idFieldName)
+      .filter(f => !f.isId)
       .map(field => CreateColumn(project, model, field))
       .foreach(runMutaction)
 

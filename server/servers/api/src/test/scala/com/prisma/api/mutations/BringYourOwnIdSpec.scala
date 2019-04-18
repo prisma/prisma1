@@ -201,4 +201,25 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
       res2.toString should be("""{"data":{"updateParent":{"p":"Parent","id":"Own Id","childOpt":{"c":"test 3","id":"Own Id 3"}}}}""")
     }
   }
+
+  "An id field with a custom name" should "work" in {
+    val dataModel =
+      """
+        |type Blog {
+        |  myId: ID! @id
+        |  name: String!
+        |}
+      """.stripMargin
+
+    val project = SchemaDsl.fromStringV11() { dataModel }
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |  createBlog(data: {name: "MyBlog"}){ name }
+         |}""",
+      project = project
+    )
+    res should be("""{"data": { "createBlog": { "name": "MyBlog" } } }""".parseJson)
+  }
 }
