@@ -195,7 +195,7 @@ Here is what you can do next:
 
 - [Build an app with Prisma client](https://www.prisma.io/docs/-t201/)
 - [Check out some examples](#examples)
-- [Read more about how Prisma works](https://www.prisma.io/docs/-j9ff/).
+- [Read more about how Prisma works](https://www.prisma.io/docs/-j9ff/)
 
 ## Examples
 
