@@ -284,6 +284,8 @@ Join the discussion or contribute to influence which we'll work on next!
 
 Prisma has a [community](https://www.prisma.io/community) of thousands of amazing developers and contributors. Welcome, please join us! 👋
 
+> Meet the Prisma community in person and learn about modern application development and database best practices at [**Prisma Day**](https://www.prisma.io/day/) (Berlin, June 19).
+
 ### Channels
 
 - [Forum](https://www.prisma.io/forum)
