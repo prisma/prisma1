@@ -1,0 +1,183 @@
+import Warning from 'components/Markdown/Warning'
+import Code from 'components/Markdown/Code'
+import Info from 'components/Markdown/Info'
+
+export const meta = {
+  title: 'Change Datamodel',
+  position: 2,
+  nextText: 'Fantastic! 🎉 You are now able to migrate your database using Prisma. Next you will learn how to build an API server based on Prisma client.',
+  technology: 'go',
+  technologyOrder: 4,
+  gettingStartedOrder: 1,
+  articleGroup: 'Change Datamodel',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Adjust the datamodel and update your Prisma API
+- Regenerate your Prisma client
+- Create two database records in a single transaction
+- Query relational data
+
+<Warning>
+
+This page is only relevant if you started with a [new database](t002) or a [Demo server](t001). If you configured Prisma with an [existing database](t003), you need to run migrations directly against your database.
+
+</Warning>
+
+
+## Adjust your datamodel
+
+Update the datamodel in `datamodel.prisma` as follows:
+
+```graphql copy
+type User {
+  id: ID! @id
+  email: String @unique
+  name: String!
+  posts: [Post!]!
+}
+
+type Post {
+  id: ID! @id
+  title: String!
+  published: Boolean! @default(value: false)
+  author: User @relation(link: INLINE)
+}
+```
+
+Here's what changed:
+
+- You added a new `email` field to the `User` type.
+- You added a new `Post` type to the datamodel.
+- You added a _relation_ between `User` and `Post` (via the `posts` and `author` fields).
+
+## Redeploy your Prisma API
+
+To apply the changes you just made to your datamodel, you need to redeploy the Prisma datamodel:
+
+```bash copy
+prisma deploy
+```
+
+## Regenerate your Prisma client
+
+Because the Prisma client is based on your datamodel, it needs to be regenerated every time the datamodel is updated:
+
+```bash copy
+prisma generate
+```
+
+The Prisma client library in the `/generated/prisma-client` directory is now being updated and its API has been adjusted to use the new datamodel.
+
+<Info>
+
+You can ensure that your Prisma client is automatically being updated after every deploy by adding the following lines to your `prisma.yml`:
+
+```yml copy
+hooks:
+  post-deploy:
+    - prisma generate
+```
+
+</Info>
+
+## Read and write nested objects
+
+The Prisma client API allows to write nested objects in a single transaction without having to manually control when the transaction starts or ends.
+
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
+
+Update your `index.go` to look as follows:
+
+```go copy
+package main
+
+import (
+	"context"
+	"fmt"
+	prisma "hello-world/generated/prisma-client"
+)
+
+func main() {
+	client := prisma.New(nil)
+	ctx := context.TODO()
+
+	// Create a new user with two posts
+	name := "Bob"
+	email := "bob@prisma.io"
+	title1 := "Join us for GraphQL Conf in 2019"
+	title2 := "Subscribe to GraphQL Weekly for GraphQL news"
+	newUser, err := client.CreateUser(prisma.UserCreateInput{
+		Name:  name,
+		Email: &email,
+		Posts: &prisma.PostCreateManyWithoutAuthorInput{
+			Create: []prisma.PostCreateWithoutAuthorInput{
+				prisma.PostCreateWithoutAuthorInput{
+					Title: title1,
+				},
+				prisma.PostCreateWithoutAuthorInput{
+					Title: title2,
+				},
+			},
+		},
+	}).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Created new user: %+v\\n", newUser)
+
+	allUsers, err := client.Users(nil).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v\\n", allUsers)
+
+	allPosts, err := client.Posts(nil).Exec(ctx)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v\\n", allPosts)
+}
+```
+
+Run the script with the following command:
+
+```bash copy
+go run index.go
+```
+
+## Query relational data
+
+With the Prisma client API, you can navigate relations in your data graph using chained method calls (also called _fluent API_). Here is how you can query the `posts` written by a certain `User`:
+
+```js copy
+package main
+
+import (
+	"context"
+	"fmt"
+	prisma "hello-world/generated/prisma-client"
+)
+
+func main() {
+	client := prisma.New(nil)
+	ctx := context.TODO()
+
+	email := "alice@prisma.io"
+	postsByUser, err := client.User(prisma.UserWhereUniqueInput{
+		Email: &email,
+	}).Posts(nil).Exec(ctx)
+
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%+v\\n", postsByUser)
+}
+```

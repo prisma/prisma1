@@ -33,10 +33,6 @@ object APIErrors {
   case class DataItemDoesNotExist(model: String, uniqueField: String, value: String)
       extends ClientApiError(s"'$model' has no item with $uniqueField '$value'", 3002)
 
-  object DataItemDoesNotExist {
-    def apply(model: String, id: String): DataItemDoesNotExist = DataItemDoesNotExist(model, "id", id)
-  }
-
   case class DataItemAlreadyExists(modelId: String, id: String) extends ClientApiError(s"'$modelId' already has an item with id '$id'", 3004)
 
   case class ExtraArguments(arguments: List[String], model: String)
@@ -101,7 +97,7 @@ object APIErrors {
       extends ClientApiError(s"No Node for the model $modelName with value ${value.value} for $fieldName found.", 3039)
 
   case class NodeNotFoundForWhereError(where: NodeSelector)
-    extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.value} for ${where.field.name} found.", 3039)
+      extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.value} for ${where.field.name} found.", 3039)
 
   case class NullProvidedForWhereError(modelName: String)
       extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
@@ -111,8 +107,12 @@ object APIErrors {
 
   case class NodeSelectorInfo(model: String, field: String, value: GCValue)
 
-  case class NodesNotConnectedNative(relationName: String, parentName: String, parentWhere: Option[NodeSelectorInfo], childName: String, childWhere: Option[NodeSelectorInfo])
-    extends ClientApiError(pathErrorMessageNative(relationName, parentName, parentWhere, childName, childWhere), errorCode = 3041)
+  case class NodesNotConnectedNative(relationName: String,
+                                     parentName: String,
+                                     parentWhere: Option[NodeSelectorInfo],
+                                     childName: String,
+                                     childWhere: Option[NodeSelectorInfo])
+      extends ClientApiError(pathErrorMessageNative(relationName, parentName, parentWhere, childName, childWhere), errorCode = 3041)
 
   case class RequiredRelationWouldBeViolated(relation: Relation)
       extends ClientApiError(
@@ -121,10 +121,10 @@ object APIErrors {
       )
 
   case class RequiredRelationWouldBeViolatedNative(relationName: String, modelAName: String, modelBName: String)
-    extends ClientApiError(
-      s"The change you are trying to make would violate the required relation '$relationName' between $modelAName and $modelBName",
-      3042
-    )
+      extends ClientApiError(
+        s"The change you are trying to make would violate the required relation '$relationName' between $modelAName and $modelBName",
+        3042
+      )
 
   case class MongoConflictingUpdates(model: String, override val message: String)
       extends ClientApiError(

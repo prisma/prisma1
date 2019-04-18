@@ -1,0 +1,139 @@
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: 'How to keep the version of your Prisma server in sync with the Prisma CLI?',
+  position: 8,
+  articleGroup: 'Keeping Prisma server and CLI in sync',
+}
+
+## FAQ
+
+It is important that the version of your Prisma CLI matches the version of the Prisma server that you're talking to through the CLI.
+
+While a core design goal of Prisma is to maintain backward/forward compatibility at both ends, out of sync CLI/server versions might lead to unexpected issues.
+
+In the following, we'll explain how you can detect and change the versions of the Prisma CLI and the Prisma server. Note that it's typically easier to change the version of the Prisma CLI than the one of a Prisma server.
+
+### Prisma CLI
+
+#### Detecting the version of your Prisma CLI
+
+You can find out which version of the Prisma CLI you have installed by running the following command:
+
+```
+prisma --version
+```
+
+or
+
+```
+prisma -v
+```
+
+#### Changing the version of your Prisma CLI
+
+To change the version of your Prisma CLI, you need to re-install it via NPM.
+
+To install the _latest_ version of the Prisma CLI, run:
+
+```
+npm install -g prisma
+```
+
+To install a specific version `x` of the Prisma CLI, run:
+
+```
+npm install -g prisma@x
+```
+
+For example, if you wanted to install the Prisma CLI version `1.20.1`, run:
+
+```
+npm install -g prisma@1.20.1
+```
+
+### Prisma server 
+
+#### Detecting the version of your Prisma server
+
+If you have access to the Docker file that was used to deploy your Prisma server, you can find the Prisma server version under the `services.prisma.image` property. For example, the following Docker file deploys a Prisma server running on version `1.31`:
+
+<Code lines="4">
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.31
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mysql
+            host: mysql
+            port: 3306
+            user: root
+            password: prisma
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  mysql:
+```
+
+</Code>
+
+If you don't have access to the Docker file, you can find out the Prisma version via the [Management API](foe1) (which is available via the `/management` path) of your running Prisma server. Run the following query in the Management API's Playground:
+
+```graphql
+query {
+  serverInfo {
+    version
+  }
+}
+```
+
+#### Changing the version of your Prisma server
+
+To change the version of your Prisma server, you need to redeploy the Prisma server via Docker and ensure that the `services.prisma.image` property is set to your desired version. For example, if you wanted to use version `1.20.1` for your Prisma server, you need to set this in the Docker file:
+
+<Code lines="4">
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.20.1
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        databases:
+          default:
+            connector: mysql
+            host: mysql
+            port: 3306
+            user: root
+            password: prisma
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  mysql:
+```
+
+</Code>

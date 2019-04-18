@@ -1,0 +1,51 @@
+import Code from 'components/Markdown/Code'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: "Database Connector (MySQL)",
+  position: 50,
+  technology: "mysql",
+  technologyOrder: 1,
+  articleGroup: "Database Connector",
+}
+
+## Overview
+
+A database connector is the bridge between Prisma and the underlying database. The MySQL connector is used to connect a Prisma server to a [MySQL](https://www.mysql.com/) database.
+
+The core responsibilities of a database connector are:
+
+- Translate Prisma client requests into SQL
+- Send the generated SQL query to the database
+- Return the database results as back to the Prisma client
+- Perform database migrations (optional)
+
+When configuring your Prisma server with Docker, you need to specify which connector you'd like to use in order to connect to a certain database. You provide this info via the `connector` property:
+
+<Code lines="6">
+
+```yml
+PRISMA_CONFIG: |
+  managementApiSecret: __YOUR_MANAGEMENT_API_SECRET__
+  port: 4466
+  databases:
+    default:
+      connector: mysql
+      host: __YOUR_DATABASE_HOST__
+      port: __YOUR_DATABASE_PORT__
+      user: __YOUR_DATABASE_USER__
+      password: __YOUR_DATABASE_PASSWORD__
+      connectionLimit: __YOUR_CONNECTION_LIMIT__
+```
+
+</Code>
+
+## Managing database connections
+
+The `connectionLimit` property in `PRISMA_CONFIG` determines the number of database connections a Prisma service is going to use.
+
+<Warning>
+
+The `connectionLimit` needs to be set to at least **2**. One connection is always reserved for the [Management API](foe1), all other connections are used for the Prisma service.
+
+</Warning>
