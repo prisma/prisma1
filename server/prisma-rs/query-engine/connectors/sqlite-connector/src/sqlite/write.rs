@@ -129,7 +129,7 @@ impl DatabaseWrite for Sqlite {
         T: Into<Query>,
     {
         let (sql, params) = dbg!(visitor::Sqlite::build(query));
-        conn.prepare(&sql)?.execute(&params)?;
+        conn.prepare_cached(&sql)?.execute(&params)?;
 
         Ok(())
     }

@@ -42,6 +42,8 @@ impl TransactionalExecutor for Sqlite {
     {
         self.with_connection(db_name, |conn| {
             let tx = conn.transaction()?;
+            tx.set_prepared_statement_cache_capacity(65536);
+
             let result = f(&tx);
 
             if result.is_ok() {
@@ -68,7 +70,7 @@ impl Sqlite {
     ///
     /// The database is then attached to the memory with an alias of `{db_name}`.
     fn attach_database(conn: &mut Connection, db_name: &str) -> ConnectorResult<()> {
-        let mut stmt = conn.prepare("PRAGMA database_list")?;
+        let mut stmt = conn.prepare_cached("PRAGMA database_list")?;
 
         let databases: HashSet<String> = stmt
             .query_map(NO_PARAMS, |row| {
