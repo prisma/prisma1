@@ -86,7 +86,7 @@ type Post {
 }
 ```
 
-#### 4. Deploy datamodel to your migrate database
+#### 4. Deploy datamodel & migrate database
 
 To deploy your Prisma API, run the following command:
 
