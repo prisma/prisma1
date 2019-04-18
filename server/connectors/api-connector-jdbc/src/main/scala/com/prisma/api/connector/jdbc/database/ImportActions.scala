@@ -53,7 +53,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           e.getUpdateCounts.zipWithIndex
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
-              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idField.value
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idFieldByName(mutaction.model.idField_!.name).value
               s"Failure inserting ${model.dbName} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause())}"
             }
             .toVector

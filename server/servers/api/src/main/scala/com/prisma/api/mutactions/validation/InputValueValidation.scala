@@ -39,6 +39,7 @@ object InputValueValidation {
   }
 
   def scalarFieldsWithValues(model: Model, args: PrismaArgs): List[ScalarField] = {
-    model.scalarFields.filter(field => args.getFieldValue(field.name).isDefined).filter(_.name != "id")
+    // TODO: do4gr should check whether we should indeed filter out the id field here. (bring your own id changed that maybe)
+    model.scalarFields.filter(field => args.getFieldValue(field.name).isDefined).filter(!_.isId)
   }
 }

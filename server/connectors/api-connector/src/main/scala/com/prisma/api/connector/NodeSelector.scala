@@ -11,9 +11,8 @@ object NodeSelector {
 
 case class NodeSelector(model: Model, field: ScalarField, fieldGCValue: GCValue) {
   require(field.isUnique, s"NodeSelectors may be only instantiated for unique fields! ${field.name} on ${model.name} is not unique.")
-  lazy val value         = fieldGCValue.value
-  lazy val fieldName     = field.name
-  lazy val isId: Boolean = field.name == "id"
+  lazy val value     = fieldGCValue.value
+  lazy val fieldName = field.name
 }
 
 object NodeAddress {

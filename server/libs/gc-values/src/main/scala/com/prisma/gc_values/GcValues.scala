@@ -27,10 +27,6 @@ object RootGCValue {
 }
 
 case class RootGCValue(map: Map[String, GCValue]) extends GCValue {
-  def idField = map.get("id") match {
-    case Some(id) => id.asInstanceOf[IdGCValue]
-    case None     => sys.error("There was no field with name 'id'.")
-  }
 
   def idFieldByName(name: String) = map.get(name) match {
     case Some(id) => id.asInstanceOf[IdGCValue]
