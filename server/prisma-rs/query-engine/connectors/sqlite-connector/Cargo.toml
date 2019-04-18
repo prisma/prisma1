@@ -22,6 +22,7 @@ failure = "0.1"
 failure_derive = "0.1"
 r2d2 = "0.8"
 cuid = { git = "https://github.com/prisma/cuid-rust" }
+rand = "0.6"
 
 r2d2_sqlite = { version = "0.8", optional = true }
 libsqlite3-sys = {  version = "0.11", optional = true }

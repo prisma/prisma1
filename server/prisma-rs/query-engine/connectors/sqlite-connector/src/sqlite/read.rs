@@ -21,7 +21,7 @@ impl DatabaseRead for Sqlite {
         let (query_sql, params) = dbg!(visitor::Sqlite::build(query.into()));
 
         let res: ConnectorResult<Vec<T>> = conn
-            .prepare(&query_sql)?
+            .prepare_cached(&query_sql)?
             .query_map(&params, |row| f(row))?
             .map(|row_res| row_res.unwrap())
             .collect();
@@ -41,7 +41,7 @@ impl DatabaseRead for Sqlite {
         let (sql, params) = dbg!(visitor::Sqlite::build(select));
 
         let res = conn
-            .prepare(&sql)?
+            .prepare_cached(&sql)?
             .query_map(&params, |row| Self::fetch_int(row))?
             .map(|r| r.unwrap())
             .next()
