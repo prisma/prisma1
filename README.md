@@ -72,16 +72,16 @@ Edit `datamodel.prisma` to define your datamodel using [SDL](https://www.prisma.
 
 ```graphql
 type User {
-  id: ID! @unique
+  id: ID! @id
   email: String @unique
   name: String!
   posts: [Post!]!
 }
 
 type Post {
-  id: ID! @unique
+  id: ID! @id
   title: String!
-  published: Boolean! @default(value: "false")
+  published: Boolean! @default(value: false)
   author: User
 }
 ```
