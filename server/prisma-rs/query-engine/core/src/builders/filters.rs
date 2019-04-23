@@ -1,3 +1,10 @@
+use connector::{
+    filter::{Filter},
+    QueryArguments,
+};
+use std::{collections::BTreeMap, sync::Arc};
+use graphql_parser::query::{Value};
+
 enum FilterOp {
     In,
     NotIn,
@@ -21,28 +28,30 @@ enum FilterOp {
     Field,
 }
 
-fn extract_filter() -> () {
+fn extract_filter(aggregator: QueryArguments,
+        map: &BTreeMap<String, Value>,
+        model: ModelRef,) -> CoreResult<Filter> {
     map.iter().fold(Ok(aggregator), |prev, (k, v)| {
-        match k.as_str() {
+        let match k.as_str() {
             // Filters
-            x if x.ends_with("_in") => (x.split(), Filters::IN),
-            x if x.ends_with("_not_in") => {}
-            x if x.ends_with("_not") => {}
-            x if x.ends_with("_lt") => {}
-            x if x.ends_with("_lte") => {}
-            x if x.ends_with("_gt") => {}
-            x if x.ends_with("_gte") => {}
-            x if x.ends_with("_contains") => {}
-            x if x.ends_with("_not_contains") => {}
-            x if x.ends_with("_starts_with") => {}
-            x if x.ends_with("_not_starts_with") => {}
-            x if x.ends_with("_ends_with") => {}
-            x if x.ends_with("_not_ends_with") => {}
+            x if x.ends_with("_in") => (x.trim_end_matches("_in"), FilterOp::In),
+            x if x.ends_with("_not_in") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_not") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_lt") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_lte") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_gt") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_gte") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_contains") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_not_contains") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_starts_with") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_not_starts_with") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_ends_with") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_not_ends_with") => (x.trim_end_matches("_in"), FilterOp::In)
 
             // Relations
-            x if x.ends_with("_some") => {}
-            x if x.ends_with("_none") => {}
-            x if x.ends_with("_every") => {}
+            x if x.ends_with("_some") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_none") => (x.trim_end_matches("_in"), FilterOp::In)
+            x if x.ends_with("_every") => (x.trim_end_matches("_in"), FilterOp::In)
 
             // Nesting
             "AND" => {}
