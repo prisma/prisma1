@@ -199,7 +199,7 @@ pub trait BuilderExt {
         map: &BTreeMap<String, Value>,
         model: ModelRef,
     ) -> CoreResult<QueryArguments> {
-        let filter = filters::extract_filter(map, model)?;
+        let filter = dbg!(filters::extract_filter(map, model)?);
 
         Ok(QueryArguments {
             filter: Some(filter),

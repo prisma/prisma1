@@ -69,6 +69,10 @@ pub trait RelationCompare {
     where
         T: Into<Filter>;
 
+    fn to_one_related<T>(&self, filter: T) -> Filter
+    where
+        T: Into<Filter>;
+
     fn no_related<T>(&self, filter: T) -> Filter
     where
         T: Into<Filter>;

@@ -110,6 +110,7 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
       |    migrations: true
       |    active: true
       |    rawAccess: true
+      |    testMode: true
     """.stripMargin
 
   def renderConfig(dbName: String): String = {
@@ -194,7 +195,7 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
                                           variables: JsValue,
                                           requestId: String): Future[JsValue] = {
     // Decide whether to go through the external server or internal resolver
-    if (query.startsWith("mutation")) {
+    if (query.stripPrefix("\n").startsWith("mutation")) {
       val queryAst = QueryParser.parse(query.stripMargin).get
       val result = dependencies.queryExecutor.execute(
         requestId = requestId,

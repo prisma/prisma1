@@ -168,7 +168,7 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                                     FilterOp::Some => r.at_least_one_related(extract_filter(value, r.related_model())?),
                                     FilterOp::None => r.no_related(extract_filter(value, r.related_model())?),
                                     FilterOp::Every => r.every_related(extract_filter(value, r.related_model())?),
-                                    FilterOp::Field => extract_filter(value, r.related_model())?,
+                                    FilterOp::Field => r.to_one_related(extract_filter(value, r.related_model())?),
                                     _ => unreachable!(),
                                 })
                             }
