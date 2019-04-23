@@ -63,15 +63,15 @@ impl ReadQueryExecutor {
                         vec
                     });
 
-                    results.push(ReadQueryResult::Many(ManyReadQueryResults {
-                        name: query.name.clone(),
-                        fields: query.fields.clone(),
+                    results.push(ReadQueryResult::Many(ManyReadQueryResults::new(
+                        query.name.clone(),
+                        query.fields.clone(),
                         scalars,
                         nested,
-                        selected_fields,
                         lists,
-                        query_arguments: query.args.clone(),
-                    }));
+                        query.args.clone(),
+                        selected_fields,
+                    )));
                 }
                 ReadQuery::RelatedRecordQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
@@ -119,15 +119,15 @@ impl ReadQueryExecutor {
                         vec
                     });
 
-                    results.push(ReadQueryResult::Many(ManyReadQueryResults {
-                        name: query.name.clone(),
-                        fields: query.fields.clone(),
+                    results.push(ReadQueryResult::Many(ManyReadQueryResults::new(
+                        query.name.clone(),
+                        query.fields.clone(),
                         scalars,
                         nested,
-                        selected_fields,
                         lists,
-                        query_arguments: query.args.clone(),
-                    }));
+                        query.args.clone(),
+                        selected_fields,
+                    )));
                 }
             }
         }

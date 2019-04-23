@@ -65,7 +65,6 @@ impl Builder {
                 }
                 ReadQueryResult::Many(mut query) => {
                     // WIP: This is most likely better for a constructor call to ManyReadQueryResults
-                    query.remove_excess_records();
                     Response::Data(query.name.clone(), Item::List(lists::build_list(&query)))
                 }
             });

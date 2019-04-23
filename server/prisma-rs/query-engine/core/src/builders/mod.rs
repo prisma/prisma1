@@ -138,27 +138,27 @@ pub trait BuilderExt {
                     match (k.as_str(), v) {
                         ("skip", Value::Int(num)) => match num.as_i64() {
                             Some(num) => Ok(QueryArguments { skip: Some(num as u32), ..res }),
-                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                            None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
                         },
                         ("first", Value::Int(num)) => match num.as_i64() {
                             Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                            None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
                         },
                         ("last", Value::Int(num)) => match num.as_i64() {
-                            Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                            Some(num) => Ok(QueryArguments { last: Some(num as u32), ..res }),
+                            None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
                         },
                         ("after", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { after: Some(GraphqlId::UUID(s.as_uuid())), ..res }),
                         ("after", Value::String(s)) => Ok(QueryArguments { after: Some(s.clone().into()), ..res }),
                         ("after", Value::Int(num)) => match num.as_i64() {
-                            Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                            Some(num) => Ok(QueryArguments { after: Some((num as usize).into()), ..res }),
+                            None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
                         },
                         ("before", Value::String(s)) if s.is_uuid() => Ok(QueryArguments { before: Some(GraphqlId::UUID(s.as_uuid())), ..res }),
                         ("before", Value::String(s)) => Ok(QueryArguments { before: Some(s.clone().into()), ..res }),
                         ("before", Value::Int(num)) => match num.as_i64() {
-                            Some(num) => Ok(QueryArguments { first: Some(num as u32), ..res }),
-                            None => Err(CoreError::QueryValidationError("Invalid number povided".into())),
+                            Some(num) => Ok(QueryArguments { after: Some((num as usize).into()), ..res }),
+                            None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
                         },
                         ("orderby", Value::Enum(name)) => {
                             let vec = name.split("_").collect::<Vec<&str>>();

@@ -38,7 +38,7 @@ impl<'f> BuilderExt for ManyBuilder<'f> {
         let nested = Self::build_nested_queries(nested_builders)?;
 
         let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, None)?;
-        let args = Self::extract_query_args(field, Arc::clone(&model))?;
+        let args = dbg!(Self::extract_query_args(field, Arc::clone(&model))?);
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
         let model = Arc::clone(model);
         let fields = Self::collect_selection_order(&field);

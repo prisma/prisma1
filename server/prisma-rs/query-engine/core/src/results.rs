@@ -44,6 +44,10 @@ pub struct ManyReadQueryResults {
 
     /// Used for filtering implicit fields in result records
     pub selected_fields: SelectedFields,
+
+    /// Marker to prohibit explicit struct initialization
+    #[doc(hidden)]
+    __inhibit: (),
 }
 
 // Q: Best pattern here? Mix of in place mutation and recreating result
@@ -70,16 +74,45 @@ impl SingleReadQueryResult {
 }
 
 impl ManyReadQueryResults {
+    pub fn new(
+        name: String,
+        fields: Vec<String>,
+        scalars: ManyNodes,
+        nested: Vec<ReadQueryResult>,
+        lists: Vec<(String, Vec<ScalarListValues>)>,
+        query_arguments: QueryArguments,
+        selected_fields: SelectedFields,
+    ) -> Self {
+        let mut result = Self {
+            name,
+            fields,
+            scalars,
+            nested,
+            lists,
+            query_arguments,
+            selected_fields,
+            __inhibit: (),
+        };
+
+        result.remove_excess_records();
+        result
+    }
+
     /// Returns the implicitly added fields
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.selected_fields.get_implicit_fields()
     }
 
     /// Removes the excess records added to by the database query layer based on the query arguments
+    /// This would be the right place to add pagination markers (has next page, etc.).
     pub fn remove_excess_records(&mut self) {
+        dbg!(&self.query_arguments);
         dbg!(&self.scalars);
+        // The query engine reverses lists when querying for `last`, so we need to reverse again to have the intended order.
         let reversed = self.query_arguments.last.is_some();
+        dbg!(reversed);
         if reversed {
+            dbg!("REVERSING AGAIN");
             self.scalars.reverse();
         }
         dbg!(&self.scalars);
