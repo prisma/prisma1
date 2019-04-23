@@ -53,6 +53,8 @@ pub struct ManyReadQueryResults {
 // Q: Best pattern here? Mix of in place mutation and recreating result
 impl SingleReadQueryResult {
     /// Returns the implicitly added fields
+    #[deprecated]
+    #[allow(warnings)]
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.selected_fields.get_implicit_fields()
     }
@@ -99,6 +101,8 @@ impl ManyReadQueryResults {
     }
 
     /// Returns the implicitly added fields
+    #[deprecated]
+    #[allow(warnings)]
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.selected_fields.get_implicit_fields()
     }
