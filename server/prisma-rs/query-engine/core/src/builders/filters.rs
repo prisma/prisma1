@@ -21,6 +21,33 @@ enum FilterOp {
     Field,
 }
 
+impl From<FilterOp> for &'static str {
+    fn from(fo: FilterOp) -> Self {
+        match fo {
+            FilterOp::In => "_in",
+            FilterOp::NotIn => "_not_in",
+            FilterOp::Not => "_not",
+            FilterOp::Lt => "_lt",
+            FilterOp::Lte => "_lte",
+            FilterOp::Gt => "_gt",
+            FilterOp::Gte => "_gte",
+            FilterOp::Contains => "_contains",
+            FilterOp::NotContains => "_not_contains",
+            FilterOp::StartsWith => "_starts_with",
+            FilterOp::NotStartsWith => "_not_starts_with",
+            FilterOp::EndsWith => "_ends_with",
+            FilterOp::NotEndsWith => "_not_ends_with",
+            FilterOp::Some => "_some",
+            FilterOp::None => "_none",
+            FilterOp::Every => "_every",
+            FilterOp::NestedAnd => "AND",
+            FilterOp::NestedOr => "OR",
+            FilterOp::NestedNot => "NOT",
+            FilterOp::Field => "<field>",
+        }
+    }
+}
+
 fn extract_filter() -> () {
     map.iter().fold(Ok(aggregator), |prev, (k, v)| {
         match k.as_str() {
