@@ -114,6 +114,15 @@ impl From<PrismaListValue> for PrismaValue {
     }
 }
 
+impl From<PrismaValue> for PrismaListValue {
+    fn from(s: PrismaValue) -> Self {
+        match s {
+            PrismaValue::List(l) => l,
+            _ => panic!("From `NotList` to `Vec` not a valid transformation!"),
+        }
+    }
+}
+
 impl From<GraphqlId> for PrismaValue {
     fn from(id: GraphqlId) -> PrismaValue {
         PrismaValue::GraphqlId(id)
