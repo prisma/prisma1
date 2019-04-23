@@ -160,28 +160,7 @@ pub trait BuilderExt {
                             Some(num) => Ok(QueryArguments { after: Some((num as usize).into()), ..res }),
                             None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
                         },
-                        ("orderby", Value::Enum(name)) => {
-                            let vec = name.split("_").collect::<Vec<&str>>();
-                            if vec.len() == 2 {
-                                model
-                                    .fields()
-                                    .find_from_scalar(vec[0])
-                                    .map(|val| QueryArguments {
-                                        order_by: Some(OrderBy {
-                                            field: Arc::clone(&val),
-                                            sort_order: match vec[1] {
-                                                "ASC" => SortOrder::Ascending,
-                                                "DESC" => SortOrder::Descending,
-                                                _ => unreachable!(),
-                                            },
-                                        }),
-                                        ..res
-                                    })
-                                    .map_err(|_| CoreError::QueryValidationError(format!("Unknown field `{}`", vec[0])))
-                            } else {
-                                Err(CoreError::QueryValidationError("...".into()))
-                            }
-                        }
+                        ("orderby", Value::Enum(order_arg)) => Self::extract_order_by(res, order_arg, Arc::clone(&model)),
                         ("where", _) => panic!("lolnope"),
                         (name, _) => Err(CoreError::QueryValidationError(format!("Unknown key: `{}`", name))),
                     }
@@ -189,6 +168,29 @@ pub trait BuilderExt {
                     result
                 }
             })
+    }
+
+    fn extract_order_by(aggregator: QueryArguments, order_arg: &str, model: ModelRef) -> CoreResult<QueryArguments> {
+        let vec = order_arg.split("_").collect::<Vec<&str>>();
+        if vec.len() == 2 {
+            model
+                .fields()
+                .find_from_scalar(vec[0])
+                .map(|val| QueryArguments {
+                    order_by: Some(OrderBy {
+                        field: Arc::clone(&val),
+                        sort_order: match vec[1] {
+                            "ASC" => SortOrder::Ascending,
+                            "DESC" => SortOrder::Descending,
+                            _ => unreachable!(),
+                        },
+                    }),
+                    ..aggregator
+                })
+                .map_err(|_| CoreError::QueryValidationError(format!("Unknown field `{}`", vec[0])))
+        } else {
+            Err(CoreError::QueryValidationError("...".into()))
+        }
     }
 
     /// Get all selected fields from a model
@@ -237,8 +239,8 @@ pub trait BuilderExt {
             .iter()
             .filter_map(|i| {
                 if let Selection::Field(x) = i {
-                    let field = dbg!(&model).fields().find_from_all(&x.name);
-                    match dbg!(&field) {
+                    let field = &model.fields().find_from_all(&x.name);
+                    match &field {
                         Ok(ModelField::Scalar(_f)) => None,
                         Ok(ModelField::Relation(f)) => {
                             let model = f.related_model();

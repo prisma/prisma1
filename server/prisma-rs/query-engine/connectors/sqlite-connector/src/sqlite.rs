@@ -30,7 +30,7 @@ impl TransactionalExecutor for Sqlite {
 
         let result = f(&mut conn);
         if self.test_mode {
-            dbg!(conn.execute("DETACH DATABASE ?", &[db_name])?);
+            conn.execute("DETACH DATABASE ?", &[db_name])?;
         }
 
         result

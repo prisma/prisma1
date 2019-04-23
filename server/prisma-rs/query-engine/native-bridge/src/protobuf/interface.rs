@@ -17,7 +17,6 @@ pub struct ProtoBufInterface {
 
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
-        dbg!(config);
         let connector = match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config))
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
@@ -49,11 +48,9 @@ impl ProtoBufInterface {
                 response_payload
             }
             _ => {
-                dbg!(&error);
-
                 let error_response = prisma::RpcResponse::error(error);
-
                 let mut payload = Vec::new();
+
                 error_response.encode(&mut payload).unwrap();
                 payload
             }

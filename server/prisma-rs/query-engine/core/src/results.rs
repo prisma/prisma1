@@ -45,7 +45,7 @@ pub struct ManyReadQueryResults {
     /// Used for filtering implicit fields in result records
     pub selected_fields: SelectedFields,
 
-    /// Marker to prohibit explicit struct initialization
+    /// Marker to prohibit explicit struct initialization.
     #[doc(hidden)]
     __inhibit: (),
 }
@@ -106,24 +106,17 @@ impl ManyReadQueryResults {
     /// Removes the excess records added to by the database query layer based on the query arguments
     /// This would be the right place to add pagination markers (has next page, etc.).
     pub fn remove_excess_records(&mut self) {
-        dbg!(&self.query_arguments);
-        dbg!(&self.scalars);
         // The query engine reverses lists when querying for `last`, so we need to reverse again to have the intended order.
         let reversed = self.query_arguments.last.is_some();
-        dbg!(reversed);
         if reversed {
-            dbg!("REVERSING AGAIN");
             self.scalars.reverse();
         }
-        dbg!(&self.scalars);
 
         match (self.query_arguments.first, self.query_arguments.last) {
             (Some(f), _) if self.scalars.nodes.len() > f as usize => self.scalars.drop_right(1),
             (_, Some(l)) if self.scalars.nodes.len() > l as usize => self.scalars.drop_left(1),
             _ => (),
         };
-
-        dbg!(&self.scalars);
     }
 
     /// Get all IDs from a query result

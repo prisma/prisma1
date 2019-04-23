@@ -51,8 +51,6 @@ impl ReadQueryExecutor {
                         self.data_resolver
                             .get_nodes(Arc::clone(&query.model), query.args.clone(), &selected_fields)?;
 
-                    dbg!(&scalars);
-
                     let ids = scalars.get_id_values(Arc::clone(&query.model))?;
                     let list_fields = selected_fields.scalar_lists();
                     let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
