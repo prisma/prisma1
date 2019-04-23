@@ -37,7 +37,7 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
       model.fields.collect { case field if field.isScalar && field.isList => s"${model.dbName}_${field.dbName}" }
     }
 
-    val tables = Vector("_RelayId") ++ project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
+    val tables = project.models.map(_.dbName) ++ project.relations.map(_.relationTableName) ++ listTableNames
     val queries = tables.map(tableName => {
       changeDatabaseQueryToDBIO(sql.truncate(DSL.name(project.dbName, tableName)).cascade())()
     })
@@ -78,13 +78,14 @@ case class PostgresJdbcDeployDatabaseMutationBuilder(
   }
 
   override def createScalarListTable(project: Project, model: Model, fieldName: String, typeIdentifier: ScalarTypeIdentifier): DBIO[_] = {
-    val sqlType = typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier)
+    val sqlTypeForValue   = typeMapper.rawSqlTypeForScalarTypeIdentifier(typeIdentifier)
+    val sqlTypeForIdField = typeMapper.rawSqlTypeForScalarTypeIdentifier(model.idField_!.typeIdentifier)
 
     sqlu"""
            CREATE TABLE #${qualify(project.dbName, s"${model.dbName}_$fieldName")} (
-              "nodeId" VARCHAR (25) NOT NULL REFERENCES #${qualify(project.dbName, model.dbName)} (#${qualify(model.dbNameOfIdField_!)}),
+              "nodeId" #$sqlTypeForIdField NOT NULL REFERENCES #${qualify(project.dbName, model.dbName)} (#${qualify(model.dbNameOfIdField_!)}),
               "position" INT NOT NULL,
-              "value" #$sqlType NOT NULL,
+              "value" #$sqlTypeForValue NOT NULL,
               PRIMARY KEY ("nodeId", "position")
            )
       """

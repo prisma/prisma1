@@ -26,6 +26,17 @@ const createdAndUpdatedUserIterator = await db.$subscribe.user({
 }).node()
 ```
 
+_Subscribe to "create" events for a specific `User` that has an `email` address corresponding to `alice@prisma.io`_: 
+
+```js
+const fooBarCreatedUserIterator = await db.$subscribe.user({
+  mutation_in: ['CREATED', 'UPDATED'],
+  node: {
+    email_contains: `alice@prisma.io`,
+  }
+}).node()
+```
+
  _Subscribe to any write event for `User` models where the user has a an email-address that contains the string `gmail`_:
 
  ```js

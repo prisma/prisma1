@@ -24,10 +24,9 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       val field = model.getFieldByName_!(x.name)
 
       field match {
-        case _: RelationField                        => Vector.empty
-        case f: ScalarField if f.isId                => Vector.empty
-        case f: ScalarField if field.isScalarList    => Vector(CreateScalarListTable(project, model, f))
-        case f: ScalarField if field.isScalarNonList => Vector(CreateColumn(project, model, f))
+        case f: ScalarField if f.isId => Vector.empty
+        case _: RelationField         => Vector.empty
+        case f: ScalarField           => Vector(createField(f))
       }
 
     case x: DeleteField =>
@@ -35,9 +34,8 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
       val field = model.getFieldByName_!(x.name)
 
       field match {
-        case _ if field.isRelation                   => Vector.empty
-        case f: ScalarField if field.isScalarList    => Vector(DeleteScalarListTable(project, model, f))
-        case f: ScalarField if field.isScalarNonList => Vector(DeleteColumn(project, model, f))
+        case _ if field.isRelation => Vector.empty
+        case f: ScalarField        => Vector(deleteField(f))
       }
 
     case x: UpdateField =>
@@ -68,14 +66,24 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
           val isIdTypeChange = previous.asScalarField_!.isId && next.asScalarField_!.isId && previous.asScalarField_!.typeIdentifier != next.asScalarField_!.typeIdentifier
 
           if (isIdTypeChange) {
-            val deleteRelations = previousSchema.relations.filter(_.containsTheModel(previous.model)).map(deleteRelation).toVector
+
+            val deleteRelations = previousSchema.relations
+              .filter(_.containsTheModel(previous.model))
+              .map(deleteRelation)
+              .toVector
             val recreateRelations = nextSchema.relations
               .filter(r => r.containsTheModel(next.model))
               .filter(r => previousSchema.relations.exists(_.name == r.name))
               .map(createRelation)
               .toVector
 
-            deleteRelations ++ common ++ recreateRelations
+            val deleteScalarListFields = oldModel.scalarListFields.toVector.map(deleteField)
+            val recreateScalarListFields = for {
+              scalarField <- newModel.scalarListFields
+              if oldModel.scalarListFields.map(_.name).contains(scalarField.name) // filter out new fields that should not be created here a 2nd time
+            } yield createField(scalarField)
+
+            deleteScalarListFields ++ deleteRelations ++ common ++ recreateScalarListFields ++ recreateRelations
           } else {
             common
           }
@@ -139,6 +147,22 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
 
     case x: UpdateSecrets =>
       Vector.empty
+  }
+
+  def deleteField(field: ScalarField) = {
+    if (field.isScalarList) {
+      DeleteScalarListTable(project, field.model, field)
+    } else {
+      DeleteColumn(project, field.model, field)
+    }
+  }
+
+  def createField(field: ScalarField) = {
+    if (field.isScalarList) {
+      CreateScalarListTable(project, field.model, field)
+    } else {
+      CreateColumn(project, field.model, field)
+    }
   }
 
   def deleteRelation(relation: Relation): DeployMutaction = {

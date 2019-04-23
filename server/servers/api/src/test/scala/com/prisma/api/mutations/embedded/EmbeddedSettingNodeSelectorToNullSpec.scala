@@ -9,16 +9,17 @@ class EmbeddedSettingNodeSelectorToNullSpec extends FlatSpec with Matchers with 
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Setting a where value to null " should "should only update one if there are several nulls for the specified node selector" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  b: String @unique
         |  key: String! @unique
         |  c: C
         |}
         |
-        |type C @embedded{
+        |type C @embedded {
+        |  id: ID! @id
         |  c: String
         |}
       """

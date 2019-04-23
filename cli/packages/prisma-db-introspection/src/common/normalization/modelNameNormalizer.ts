@@ -7,22 +7,17 @@ import {
   plural,
   toposort,
   isTypeIdentifier,
+  camelCase,
 } from 'prisma-datamodel'
-import camelcase from 'camelcase'
-import { INormalizer } from './normalizer'
-import * as uppercamelcase from 'uppercamelcase'
+import { INormalizer, Normalizer } from './normalizer'
 import { groupBy, uniqBy } from 'lodash'
 
-export default class ModelNameNormalizer implements INormalizer {
+export default class ModelNameNormalizer extends Normalizer {
   public normalize(model: ISDL) {
     // We need to sort types according to topological order for name normalization.
     // Otherwise embedded type naming might break as embedded types depend on
     // their parent type.
-    for (const type of toposort(model.types)) {
-      this.normalizeType(type, model)
-    }
-
-    this.fixConflicts(model)
+    this.normalizeTypes(toposort(model.types), model)
   }
 
   protected assignName(obj: IGQLType | IGQLField, newName: string) {
@@ -36,12 +31,12 @@ export default class ModelNameNormalizer implements INormalizer {
     }
   }
 
-  protected getNormalizedName(name: string, model: ISDL) {
+  protected getNormalizedTypeName(name: string, model: ISDL) {
     if (name.toUpperCase() === name) {
       return name
     }
 
-    const normalizedName = uppercamelcase(singular(name))
+    const normalizedName = capitalize(camelCase(singular(name)))
 
     // if there is a naming conflict with a known scalar type, use the default name
     if (isTypeIdentifier(normalizedName) || isTypeIdentifier(singular(name))) {
@@ -49,7 +44,7 @@ export default class ModelNameNormalizer implements INormalizer {
     }
 
     // if there is already a table in the database with the exact name we're generating - let's just not do it
-    if (model.types.some(t => (t.databaseName || t.name) === normalizedName)) {
+    if (model.types.some(t => t.name === normalizedName)) {
       return name
     }
 
@@ -62,38 +57,39 @@ export default class ModelNameNormalizer implements INormalizer {
     forceNoRename: boolean = false,
   ) {
     if (!forceNoRename) {
-      this.assignName(type, this.getNormalizedName(type.name, model))
+      this.assignName(type, this.getNormalizedTypeName(type.name, model))
     }
 
-    for (const field of type.fields) {
-      this.normalizeField(field, type, model)
-    }
+    super.normalizeType(type, model)
   }
 
-  protected fixConflicts(model: ISDL) {
-    const groupedTypesByName = groupBy(model.types, t => t.name)
-
-    for (const types of Object.values(groupedTypesByName)) {
-      if (types.length > 1) {
-        for (const type of types) {
-          if (type.databaseName) {
-            type.name = uppercamelcase(type.databaseName)
-          }
-        }
-
-        const uniqueTypes = uniqBy(types, t => t.name)
-
-        // if there still are duplicates, default to the database name
-        if (uniqueTypes.length < types.length) {
-          for (const type of types) {
-            if (type.databaseName) {
-              type.name = type.databaseName
-              type.databaseName = null
-            }
-          }
-        }
-      }
+  protected getNormalizedFieldName(
+    name: string,
+    parentType: IGQLType,
+    field: IGQLField,
+  ) {
+    // For all-uppercase field names, we do not normalize.
+    if (name.toUpperCase() === name) {
+      return name.toLowerCase()
     }
+
+    // Trim _id from related fields.
+    if (typeof field.type !== 'string' && name.toLowerCase().endsWith('_id')) {
+      name = name.substring(0, name.length - 3)
+    }
+
+    // Follow prisma conventions.
+    const normalizedName = camelCase(name)
+
+    // If there is already a field in this type for the normalized name, don't rename.
+    const conflictingField = parentType.fields.find(
+      f => f.name === normalizedName && f !== field,
+    )
+    if (conflictingField) {
+      return null
+    }
+
+    return normalizedName
   }
 
   protected normalizeField(
@@ -101,17 +97,25 @@ export default class ModelNameNormalizer implements INormalizer {
     parentType: IGQLType,
     parentModel: ISDL,
   ) {
-    // Make embedded type names pretty
+    // Make field names pretty
     if (!parentType.isEnum && !field.isId) {
-      if (field.name !== camelcase(field.name)) {
-        // if we can't find another field with the camelcased name, we're save
-        // and don't have a collision
-        if (!parentType.fields.find(f => f.name === camelcase(field.name))) {
-          field.databaseName = field.name
-          field.name = camelcase(field.name)
-        }
+      let normalizedName = this.getNormalizedFieldName(
+        field.name,
+        parentType,
+        field,
+      )
+      if (normalizedName === null) {
+        field.comments.push({
+          isError: false,
+          text:
+            'Field name normalization failed because of a conflicting field name.',
+        })
+      } else {
+        this.assignName(field, normalizedName)
       }
     }
+
+    // Make embedded type names pretty
     if (typeof field.type !== 'string' && field.type.isEmbedded) {
       if (!field.type.databaseName) field.type.databaseName = field.type.name
 

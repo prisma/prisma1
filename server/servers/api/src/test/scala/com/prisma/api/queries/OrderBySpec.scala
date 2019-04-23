@@ -6,10 +6,10 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class OrderBySpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """
       |type NeedsTiebreaker {
-      |  id: ID! @unique
+      |  id: ID! @id
       |  name: String!
       |  order: Int!
       |}

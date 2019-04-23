@@ -10,15 +10,16 @@ import org.scalatest.{FlatSpec, Matchers}
 class FilterUnwrapSomeSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val project: Project = SchemaDsl.fromString() { """type Item {
-                                                    |  id: ID! @unique
+  val project: Project = SchemaDsl.fromStringV11() { """type Item {
+                                                    |  id: ID! @id
                                                     |  name: String @unique
                                                     |  subItems: [SubItem!]!
                                                     |}
                                                     |
                                                     |type SubItem {
-                                                    |  id: ID! @unique
+                                                    |  id: ID! @id
                                                     |  name: String @unique
+                                                    |  item: Item @relation(link: INLINE)
                                                     |}""".stripMargin }
 
   override protected def beforeAll(): Unit = {

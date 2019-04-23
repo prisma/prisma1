@@ -1,4 +1,6 @@
 package com.prisma.deploy.migration
+import com.prisma.ConnectorTag
+import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.deploy.specutils.PassiveDeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, TypeIdentifier}
@@ -9,7 +11,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
 
   override def doNotRunForCapabilities: Set[ConnectorCapability] = Set.empty
   override def runOnlyForCapabilities                            = Set(MigrationsCapability)
-  override def doNotRunForPrototypes: Boolean                    = true
+  override def doNotRunForConnectors: Set[ConnectorTag]          = Set(SQLiteConnectorTag)
 
   "adding a type for an existing table should work" in {
     val postgres =

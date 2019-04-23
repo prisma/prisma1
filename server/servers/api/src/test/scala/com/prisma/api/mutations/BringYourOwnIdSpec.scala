@@ -1,111 +1,138 @@
 package com.prisma.api.mutations
 
-import com.prisma.ConnectorTag
+import com.prisma.{ConnectorTag, IgnoreSQLite}
 import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag}
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBaseV11 {
 
   override def runOnlyForConnectors: Set[ConnectorTag] = Set(MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag)
-  val project                                          = SchemaDsl.fromString() { schemaP1optToC1opt }
-
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-    database.setup(project)
-  }
-
-  override def beforeEach(): Unit = database.truncateProjectTables(project)
 
   "A Create Mutation" should "create and return item with own Id" in {
-    val res = server.query(
-      s"""mutation {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server.query(
+        s"""mutation {
          |  createParent(data: {p: "Parent", id: "Own Id"}){p, id}
          |}""",
-      project = project
-    )
+        project = project
+      )
 
-    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id"}}}""")
+      res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id"}}}""")
 
-    server.queryThatMustFail(
-      s"""mutation {
-         |  createParent(data: {p: "Parent", id: "Own Id"}){p, id}
+      server.queryThatMustFail(
+        s"""mutation {
+         |  createParent(data: {p: "Parent2", id: "Own Id"}){p, id}
          |}""",
-      project = project,
-      errorCode = 3010,
-      errorContains = "A unique constraint would be violated on Parent. Details: Field name: id"
-    )
+        project = project,
+        errorCode = 3010,
+        errorContains = "A unique constraint would be violated on Parent. Details: Field name = id"
+      )
+    }
+
   }
 
   "A Create Mutation" should "error for id that is invalid" in { //Fixme does that make sense??
-    val res = server.query(
-      s"""mutation {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server.query(
+        s"""mutation {
          |  createParent(data: {p: "Parent", id: 12}){p, id}
          |}""",
-      project = project
-    )
+        project = project
+      )
 
-    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"12"}}}""")
+      res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"12"}}}""")
+    }
   }
 
   "A Create Mutation" should "error for id that is invalid 2" in {
-    server.queryThatMustFail(
-      s"""mutation {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      server.queryThatMustFail(
+        s"""mutation {
          |  createParent(data: {p: "Parent", id: true}){p, id}
          |}""",
-      project = project,
-      errorCode = 0,
-      errorContains = "Reason: 'id' String or Int value expected"
-    )
+        project = project,
+        errorCode = 0,
+        errorContains = "Reason: 'id' String or Int value expected"
+      )
+    }
   }
 
-  "A Create Mutation" should "error for id that is invalid 3" in {
-    server.queryThatMustFail(
-      s"""mutation {
+  "A Create Mutation" should "error for id that is invalid 3" taggedAs IgnoreSQLite in {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      server.queryThatMustFail(
+        s"""mutation {
          |  createParent(data: {p: "Parent", id: "this is probably way to long, lets see what error it throws"}){p, id}
          |}""",
-      project = project,
-      errorCode = 3007,
-      errorContains = "Value for field id is too long."
-    )
+        project = project,
+        errorCode = 3007,
+        errorContains = "Value for field id is too long."
+      )
+    }
   }
 
   "A Nested Create Mutation" should "create and return item with own Id" in {
-    val res = server.query(
-      s"""mutation {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server.query(
+        s"""mutation {
          |  createParent(data: {p: "Parent", id: "Own Id", childOpt:{create:{c:"Child", id: "Own Child Id"}}}){p, id, childOpt { c, id} }
          |}""",
-      project = project
-    )
+        project = project
+      )
 
-    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id","childOpt":{"c":"Child","id":"Own Child Id"}}}}""")
+      res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id","childOpt":{"c":"Child","id":"Own Child Id"}}}}""")
 
-    server.queryThatMustFail(
-      s"""mutation {
+      server.queryThatMustFail(
+        s"""mutation {
          |createParent(data: {p: "Parent 2", id: "Own Id 2", childOpt:{create:{c:"Child 2", id: "Own Child Id"}}}){p, id, childOpt { c, id} }
          |}""",
-      project = project,
-      errorCode = 3010,
-      errorContains = "A unique constraint would be violated on Child. Details: Field name: id"
-    )
+        project = project,
+        errorCode = 3010,
+        errorContains = "A unique constraint would be violated on Child. Details: Field name = id"
+      )
+    }
   }
 
-  "A Nested Create Mutation" should "error with invalid id" in {
-    server.queryThatMustFail(
-      s"""mutation {
+  "A Nested Create Mutation" should "error with invalid id" taggedAs IgnoreSQLite in { // TODO: Should we really validate this
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      server.queryThatMustFail(
+        s"""mutation {
          |createParent(data: {p: "Parent 2", id: "Own Id 2", childOpt:{create:{c:"Child 2", id: "This is way too long and should error"}}}){p, id, childOpt { c, id} }
          |}""",
-      project = project,
-      errorCode = 3007,
-      errorContains = "Value for field id is too long."
-    )
+        project = project,
+        errorCode = 3007,
+        errorContains = "Value for field id is too long."
+      )
+    }
   }
 
   "An Upsert Mutation" should "work" in {
-    val res = server.query(
-      s"""mutation {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server.query(
+        s"""mutation {
          |upsertParent(
          |    where: {id: "Does not exist"}
          |    create: {p: "Parent 2", id: "Own Id"}
@@ -113,15 +140,20 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
          |    )
          |  {p, id}
          |}""",
-      project = project
-    )
+        project = project
+      )
 
-    res.toString should be("""{"data":{"upsertParent":{"p":"Parent 2","id":"Own Id"}}}""")
+      res.toString should be("""{"data":{"upsertParent":{"p":"Parent 2","id":"Own Id"}}}""")
+    }
   }
 
-  "An Upsert Mutation" should "error with id that is too long" in {
-    server.queryThatMustFail(
-      s"""mutation {
+  "An Upsert Mutation" should "error with id that is too long" taggedAs IgnoreSQLite in {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      server.queryThatMustFail(
+        s"""mutation {
          |upsertParent(
          |    where: {id: "Does not exist"}
          |    create: {p: "Parent 2", id: "Way way too long for a proper id"}
@@ -129,24 +161,29 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
          |    )
          |  {p, id}
          |}""",
-      project = project,
-      errorCode = 3007,
-      errorContains = "Value for field id is too long."
-    )
+        project = project,
+        errorCode = 3007,
+        errorContains = "Value for field id is too long."
+      )
+    }
   }
 
   "An nested Upsert Mutation" should "work" in {
-    val res = server.query(
-      s"""mutation {
+    schemaP1optToC1opt.test { dataModel =>
+      val project = SchemaDsl.fromStringV11() { dataModel }
+      database.setup(project)
+
+      val res = server.query(
+        s"""mutation {
          |  createParent(data: {p: "Parent", id: "Own Id"}){p, id}
          |}""",
-      project = project
-    )
+        project = project
+      )
 
-    res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id"}}}""")
+      res.toString should be(s"""{"data":{"createParent":{"p":"Parent","id":"Own Id"}}}""")
 
-    val res2 = server.query(
-      s"""mutation {
+      val res2 = server.query(
+        s"""mutation {
          |updateParent(
          |    where: {id: "Own Id"}
          |    data: {
@@ -158,9 +195,31 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
          |    )
          |  {p, id, childOpt{c, id}}
          |}""",
+        project = project
+      )
+
+      res2.toString should be("""{"data":{"updateParent":{"p":"Parent","id":"Own Id","childOpt":{"c":"test 3","id":"Own Id 3"}}}}""")
+    }
+  }
+
+  "An id field with a custom name" should "work" in {
+    val dataModel =
+      """
+        |type Blog {
+        |  myId: ID! @id
+        |  name: String!
+        |}
+      """.stripMargin
+
+    val project = SchemaDsl.fromStringV11() { dataModel }
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+         |  createBlog(data: {name: "MyBlog"}){ name }
+         |}""",
       project = project
     )
-
-    res2.toString should be("""{"data":{"updateParent":{"p":"Parent","id":"Own Id","childOpt":{"c":"test 3","id":"Own Id 3"}}}}""")
+    res should be("""{"data": { "createBlog": { "name": "MyBlog" } } }""".parseJson)
   }
 }

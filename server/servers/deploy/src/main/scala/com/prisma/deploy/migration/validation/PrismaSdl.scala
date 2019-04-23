@@ -1,11 +1,10 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.deploy.migration.DirectiveTypes.RelationDBDirective
 import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.OnDelete.OnDelete
-import com.prisma.shared.models.{FieldBehaviour, RelationStrategy, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{FieldBehaviour, RelationStrategy, TypeIdentifier}
 
 case class PrismaSdl(
     typesFn: Vector[PrismaSdl => PrismaType],
@@ -95,7 +94,6 @@ case class EnumPrismaField(
 case class RelationalPrismaField(
     name: String,
     columnName: Option[String],
-    relationDbDirective: Option[RelationDBDirective],
     strategy: Option[RelationStrategy],
     isList: Boolean,
     isRequired: Boolean,

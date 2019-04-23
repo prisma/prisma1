@@ -94,11 +94,8 @@ CREATE TABLE `E` (
 
 DROP TABLE IF EXISTS `_AToA`;
 CREATE TABLE `_AToA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -112,11 +109,8 @@ CREATE TABLE `_AToA` (
 
 DROP TABLE IF EXISTS `_AToB`;
 CREATE TABLE `_AToB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -130,11 +124,8 @@ CREATE TABLE `_AToB` (
 
 DROP TABLE IF EXISTS `_AToC`;
 CREATE TABLE `_AToC` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -148,11 +139,8 @@ CREATE TABLE `_AToC` (
 
 DROP TABLE IF EXISTS `_AToD`;
 CREATE TABLE `_AToD` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -166,11 +154,8 @@ CREATE TABLE `_AToD` (
 
 DROP TABLE IF EXISTS `_AToE`;
 CREATE TABLE `_AToE` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -184,11 +169,8 @@ CREATE TABLE `_AToE` (
 
 DROP TABLE IF EXISTS `_BToB`;
 CREATE TABLE `_BToB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -202,11 +184,8 @@ CREATE TABLE `_BToB` (
 
 DROP TABLE IF EXISTS `_BToC`;
 CREATE TABLE `_BToC` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -220,11 +199,8 @@ CREATE TABLE `_BToC` (
 
 DROP TABLE IF EXISTS `_BToC2`;
 CREATE TABLE `_BToC2` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -238,11 +214,8 @@ CREATE TABLE `_BToC2` (
 
 DROP TABLE IF EXISTS `_BToD`;
 CREATE TABLE `_BToD` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -256,11 +229,8 @@ CREATE TABLE `_BToD` (
 
 DROP TABLE IF EXISTS `_CToC`;
 CREATE TABLE `_CToC` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -274,11 +244,8 @@ CREATE TABLE `_CToC` (
 
 DROP TABLE IF EXISTS `_CToD`;
 CREATE TABLE `_CToD` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -292,11 +259,8 @@ CREATE TABLE `_CToD` (
 
 DROP TABLE IF EXISTS `_DToD`;
 CREATE TABLE `_DToD` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -317,4 +281,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

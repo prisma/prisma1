@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -101,7 +101,6 @@ CREATE TABLE "schema-generator$meshRelation"."E" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_AToA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -112,7 +111,6 @@ CREATE TABLE "schema-generator$meshRelation"."_AToA" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_AToB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -123,7 +121,6 @@ CREATE TABLE "schema-generator$meshRelation"."_AToB" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_AToC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -134,7 +131,6 @@ CREATE TABLE "schema-generator$meshRelation"."_AToC" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_AToD" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -145,7 +141,6 @@ CREATE TABLE "schema-generator$meshRelation"."_AToD" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_AToE" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -156,7 +151,6 @@ CREATE TABLE "schema-generator$meshRelation"."_AToE" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_BToB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -167,7 +161,6 @@ CREATE TABLE "schema-generator$meshRelation"."_BToB" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_BToC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -178,7 +171,6 @@ CREATE TABLE "schema-generator$meshRelation"."_BToC" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_BToC2" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -189,7 +181,6 @@ CREATE TABLE "schema-generator$meshRelation"."_BToC2" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_BToD" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -200,7 +191,6 @@ CREATE TABLE "schema-generator$meshRelation"."_BToD" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_CToC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -211,7 +201,6 @@ CREATE TABLE "schema-generator$meshRelation"."_CToC" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_CToD" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -222,7 +211,6 @@ CREATE TABLE "schema-generator$meshRelation"."_CToD" (
 --
 
 CREATE TABLE "schema-generator$meshRelation"."_DToD" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -284,102 +272,6 @@ ALTER TABLE ONLY "schema-generator$meshRelation"."D"
 
 ALTER TABLE ONLY "schema-generator$meshRelation"."E"
     ADD CONSTRAINT "E_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToA _AToA_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_AToA"
-    ADD CONSTRAINT "_AToA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToB _AToB_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_AToB"
-    ADD CONSTRAINT "_AToB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToC _AToC_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_AToC"
-    ADD CONSTRAINT "_AToC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToD _AToD_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_AToD"
-    ADD CONSTRAINT "_AToD_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToE _AToE_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_AToE"
-    ADD CONSTRAINT "_AToE_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BToB _BToB_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_BToB"
-    ADD CONSTRAINT "_BToB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BToC2 _BToC2_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_BToC2"
-    ADD CONSTRAINT "_BToC2_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BToC _BToC_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_BToC"
-    ADD CONSTRAINT "_BToC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _BToD _BToD_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_BToD"
-    ADD CONSTRAINT "_BToD_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CToC _CToC_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_CToC"
-    ADD CONSTRAINT "_CToC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _CToD _CToD_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_CToD"
-    ADD CONSTRAINT "_CToD_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _DToD _DToD_pkey; Type: CONSTRAINT; Schema: schema-generator$meshRelation; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$meshRelation"."_DToD"
-    ADD CONSTRAINT "_DToD_pkey" PRIMARY KEY (id);
 
 
 --

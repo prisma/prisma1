@@ -15,16 +15,16 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "Embedded relations and join Relations" should "have relational filters" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
 
       """
         |type Top2{
-        |   id: ID! @unique
-        |   top: Top
+        |   id: ID! @id
+        |   top: Top @relation(link: INLINE)
         |}
         |
         |type Top{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   em: Embedded
         |}
         |
@@ -133,10 +133,10 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
   }
 
   "An embedded relation" should "have relational filters" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type Top{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   em: [Embedded]
         |}
         |
@@ -158,10 +158,10 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
   }
 
   "An embedded type" should "have relational filters towards another top level type " in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |  em: Embe!
         |}
@@ -172,7 +172,7 @@ class EmbeddedTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpec
         |}
         |
         |  type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  s2: String!
         |}
       """

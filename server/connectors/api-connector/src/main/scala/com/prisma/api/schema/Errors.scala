@@ -3,6 +3,7 @@ package com.prisma.api.schema
 import java.sql.SQLException
 
 import com.prisma.api.connector.NodeSelector
+import com.prisma.gc_values.GCValue
 import com.prisma.shared.models.{Model, Relation}
 
 abstract class UserFacingError(val message: String, val code: Int) extends Exception(message)
@@ -31,10 +32,6 @@ object APIErrors {
 
   case class DataItemDoesNotExist(model: String, uniqueField: String, value: String)
       extends ClientApiError(s"'$model' has no item with $uniqueField '$value'", 3002)
-
-  object DataItemDoesNotExist {
-    def apply(model: String, id: String): DataItemDoesNotExist = DataItemDoesNotExist(model, "id", id)
-  }
 
   case class DataItemAlreadyExists(modelId: String, id: String) extends ClientApiError(s"'$modelId' already has an item with id '$id'", 3004)
 
@@ -96,6 +93,9 @@ object APIErrors {
   case class StoredValueForFieldNotValid(fieldName: String, modelName: String)
       extends ClientApiError(s"The value in the field '$fieldName' on the model '$modelName' ist not valid for that field.", 3038)
 
+  case class NodeNotFoundForWhereErrorNative(modelName: String, value: GCValue, fieldName: String)
+      extends ClientApiError(s"No Node for the model $modelName with value $value for $fieldName found.", 3039)
+
   case class NodeNotFoundForWhereError(where: NodeSelector)
       extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.value} for ${where.field.name} found.", 3039)
 
@@ -105,9 +105,24 @@ object APIErrors {
   case class NodesNotConnectedError(relation: Relation, parent: Model, parentWhere: Option[NodeSelector], child: Model, childWhere: Option[NodeSelector])
       extends ClientApiError(pathErrorMessage(relation, parent, parentWhere, child, childWhere), 3041)
 
+  case class NodeSelectorInfo(model: String, field: String, value: GCValue)
+
+  case class NodesNotConnectedNative(relationName: String,
+                                     parentName: String,
+                                     parentWhere: Option[NodeSelectorInfo],
+                                     childName: String,
+                                     childWhere: Option[NodeSelectorInfo])
+      extends ClientApiError(pathErrorMessageNative(relationName, parentName, parentWhere, childName, childWhere), errorCode = 3041)
+
   case class RequiredRelationWouldBeViolated(relation: Relation)
       extends ClientApiError(
         s"The change you are trying to make would violate the required relation '${relation.name}' between ${relation.modelA.name} and ${relation.modelB.name}",
+        3042
+      )
+
+  case class RequiredRelationWouldBeViolatedNative(relationName: String, modelAName: String, modelBName: String)
+      extends ClientApiError(
+        s"The change you are trying to make would violate the required relation '$relationName' between $modelAName and $modelBName",
         3042
       )
 
@@ -125,6 +140,19 @@ object APIErrors {
 
   case class ExecuteRawError(e: SQLException) extends ClientApiError(e.getMessage, e.getErrorCode)
 
+  def pathErrorMessageNative(relation: String, parent: String, parentWhere: Option[NodeSelectorInfo], child: String, childWhere: Option[NodeSelectorInfo]) = {
+    (parentWhere, childWhere) match {
+      case (Some(parentWhere), Some(childWhere)) =>
+        s"The relation ${relation} has no node for the model ${parent} with the value '${parentWhere.value.value}' for the field '${parentWhere.field}' connected to a node for the model ${child} with the value '${childWhere.value.value}' for the field '${childWhere.field}'"
+      case (Some(parentWhere), None) =>
+        s"The relation ${relation} has no node for the model ${parent} with the value '${parentWhere.value.value}' for the field '${parentWhere.field}' connected to a node for the model ${child} on your mutation path."
+      case (None, Some(childWhere)) =>
+        s"The relation ${relation} has no node for the model ${parent} connected to a Node for the model ${child} with the value '${childWhere.value.value}' for the field '${childWhere.field}' on your mutation path."
+      case (None, None) =>
+        s"The relation ${relation} has no node for the model ${parent} connected to a Node for the model ${child} on your mutation path."
+    }
+  }
+
   def pathErrorMessage(relation: Relation, parent: Model, parentWhere: Option[NodeSelector], child: Model, childWhere: Option[NodeSelector]) = {
     (parentWhere, childWhere) match {
       case (Some(parentWhere), Some(childWhere)) =>
@@ -137,4 +165,5 @@ object APIErrors {
         s"The relation ${relation.name} has no node for the model ${parent.name} connected to a Node for the model ${child.name} on your mutation path."
     }
   }
+
 }

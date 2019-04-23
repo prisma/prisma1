@@ -99,11 +99,13 @@ export default class ModelCreateInputGenerator extends ModelInputObjectTypeGener
     generators: IGenerators,
   ) {
     if (
-      field.isReadOnly &&
-      !(
-        field.idStrategy === IdStrategy.Auto ||
-        field.idStrategy === IdStrategy.None
-      )
+      (field.isReadOnly &&
+        !(
+          field.idStrategy === IdStrategy.Auto ||
+          field.idStrategy === IdStrategy.None
+        )) ||
+      field.isCreatedAt ||
+      field.isUpdatedAt
     ) {
       return null
     } else {

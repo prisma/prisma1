@@ -2,13 +2,17 @@ package com.prisma.api.queries
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{FlatSpec, Matchers, WordSpecLike}
 
-class SingleItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
+class SingleItemQuerySpec extends WordSpecLike with Matchers with ApiSpecBase {
 
-  "the single item query" should "return null if the id does not exist" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
+  "should return null if the id does not exist" in {
+    val project = SchemaDsl.fromStringV11() {
+      """type Todo {
+      |  id: ID! @id
+      |  title: String!
+      |}
+    """.stripMargin
     }
     database.setup(project)
 
@@ -30,9 +34,13 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     result.toString should equal("""{"data":{"todo":null}}""")
   }
 
-  "the single item query" should "work by id" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
+  "should work by id" in {
+    val project = SchemaDsl.fromStringV11() {
+      """type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -57,9 +65,14 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     result.pathAsString("data.todo.title") should equal(title)
   }
 
-  "the single item query" should "work by any unique field" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true)
+  "should work by any unique field" in {
+    val project = SchemaDsl.fromStringV11() {
+      """type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  alias: String! @unique
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -85,5 +98,34 @@ class SingleItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
 
     result.pathAsString("data.todo.title") should equal(title)
+  }
+
+  "should respect custom db names" in {
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo @db(name: "my_table") {
+        |  id: ID! @id
+        |  title: String @db(name: "my_column")
+        |}
+      """.stripMargin
+    }
+    database.setup(project)
+
+    val result = server.query(
+      s"""{
+         |  todo(where: {id: "5beea4aa6183dd734b2dbd9b"}){
+         |    ...todoFields
+         |  }
+         |}
+         |
+         |fragment todoFields on Todo {
+         |  id
+         |  title
+         |}
+         |""".stripMargin,
+      project
+    )
+
+    result.toString should equal("""{"data":{"todo":null}}""")
   }
 }

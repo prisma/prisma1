@@ -1,0 +1,34 @@
+export const meta = {
+  title: 'What usage metrics does Prisma track?',
+  position: 9,
+  articleGroup: 'Usage tracking',
+}
+
+## FAQ
+
+We're constantly trying to improve the tools that we build. A key component that helps us achieve better quality in our tools is **usage tracking**.
+
+Usage tracking refers to the collection of anonymized user data ("usage meta data") that provides insights into how our tools are being used, and what problems our users run into.
+
+## What usage metrics are being tracked?
+
+We're currently tracking usage meta data for the following components:
+
+### Prisma CLI
+
+- **Metrics/Events**: Every command executed with the Prisma CLI emits an event to our metrics collector. The event contains information about command that was executed and the CLI version.
+- **Services**: The CLI uses [Sentry](https://sentry.io/welcome/) for crash reporting.
+
+### Prisma server
+
+- **Metrics/Events**: The Prisma server sends an hourly ping to our metrics collector. The request contains: Date and time, server ID, number of running services, Prisma server info (version, IP, creation date).
+- **Services**: The Prisma server doesn't use any services for usage tracking.
+
+### Prisma Admin
+
+- **Metrics/Events**: Prisma Admin doesn't send any events. It only tracks the number of users, sessions and bounce rate.
+- **Services**: Prisma Admin uses [Sentry](https://sentry.io/welcome/) for crash reporting and [Google Analytics](https://analytics.google.com/analytics/web/) for the remaining metrics.
+
+## How to opt-out of usage tracking?
+
+It is currently not possible to disable usage tracking. However, we are working on this and it will soon be able to opt-out.

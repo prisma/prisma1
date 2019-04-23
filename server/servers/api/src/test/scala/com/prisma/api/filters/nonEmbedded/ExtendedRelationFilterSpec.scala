@@ -10,42 +10,42 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
 
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
-  val project = SchemaDsl.fromString() { """type Artist {
-                                         |  id: ID! @unique
+  val project = SchemaDsl.fromStringV11() { """type Artist {
+                                         |  id: ID! @id
                                          |  ArtistId: Int! @unique
                                          |  Name: String!
                                          |  Albums: [Album]
                                          |}
                                          |
                                          |type Album {
-                                         |  id: ID! @unique
+                                         |  id: ID! @id
                                          |  AlbumId: Int! @unique
                                          |  Title: String!
-                                         |  Artist: Artist!
+                                         |  Artist: Artist! @relation(link: INLINE)
                                          |  Tracks: [Track]
                                          |}
                                          |
                                          |type Genre {
-                                         |  id: ID! @unique
+                                         |  id: ID! @id
                                          |  GenreId: Int! @unique
                                          |  Name: String!
                                          |  Tracks: [Track]
                                          |}
                                          |
                                          |type MediaType {
-                                         |  id: ID! @unique
+                                         |  id: ID! @id
                                          |  MediaTypeId: Int! @unique
                                          |  Name: String!
                                          |  Tracks: [Track]
                                          |}
                                          |
                                          |type Track {
-                                         |  id: ID! @unique
+                                         |  id: ID! @id
                                          |  TrackId: Int! @unique
                                          |  Name: String!
-                                         |  Album: Album!
-                                         |  MediaType: MediaType!
-                                         |  Genre: Genre!
+                                         |  Album: Album! @relation(link: INLINE)
+                                         |  MediaType: MediaType! @relation(link: INLINE)
+                                         |  Genre: Genre! @relation(link: INLINE)
                                          |  Composer: String
                                          |  Milliseconds: Int!
                                          |  Bytes: Int!

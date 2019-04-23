@@ -26,7 +26,7 @@ object FilteredResolver extends SangriaExtensions {
 
     def removeTopLevelIdFilter(element: Filter) =
       element match {
-        case e: ScalarFilter => e.field.name != "id"
+        case e: ScalarFilter => !e.field.isId
         case _               => true
       }
 

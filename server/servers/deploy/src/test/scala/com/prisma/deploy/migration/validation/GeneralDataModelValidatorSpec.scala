@@ -1,11 +1,10 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.{IgnoreMySql, IgnorePostgres, IgnoreSQLite}
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.gc_values.{EnumGCValue, StringGCValue}
 import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.shared.models.FieldBehaviour._
-import com.prisma.shared.models.{OnDelete, RelationStrategy, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier
+import com.prisma.{IgnoreMySql, IgnorePostgres, IgnoreSQLite}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecBase with DataModelValidationSpecBase {

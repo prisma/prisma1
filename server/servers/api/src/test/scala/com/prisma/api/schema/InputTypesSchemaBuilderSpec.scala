@@ -1,7 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, SupportsExistingDatabasesCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, IdSequenceCapability, IntIdCapability, SupportsExistingDatabasesCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.util.GraphQLSchemaMatchers
 import org.scalatest.{FlatSpec, Matchers}
@@ -9,26 +9,25 @@ import sangria.renderer.SchemaRenderer
 
 class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase with GraphQLSchemaMatchers {
   val schemaBuilder = testDependencies.apiSchemaBuilder
-  // a lot of the schemas omit the id field which is required for passive connectors
-  override def doNotRunForCapabilities = Set(SupportsExistingDatabasesCapability, EmbeddedTypesCapability)
+//  override def doNotRunForCapabilities = Set(EmbeddedTypesCapability)
 
   "Sample schema with relation and id only types" should "be generated correctly" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |}
         |
         |type B {
-        |  id: ID! @unique
-        |  rel: User
-        |  c: C
+        |  id: ID! @id
+        |  rel: User @relation(link: INLINE)
+        |  c: C @relation(link: INLINE)
         |}
         |
         |type C {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  b: B
         |}""".stripMargin
     }
@@ -149,19 +148,21 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "Sample schema with relation only types" should "be generated correctly" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |}
         |
         |type B {
-        |  rel: User
-        |  c: C
+        |  id: ID! @id
+        |  rel: User @relation(link: INLINE)
+        |  c: C @relation(link: INLINE)
         |}
         |
         |type C {
+        |  id: ID! @id
         |  name: String! @unique
         |  b: B
         |}""".stripMargin
@@ -172,20 +173,24 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val inputTypes =
       """
         |input BCreateInput {
+        |  id: ID
         |  rel: UserCreateOneInput
         |  c: CCreateOneWithoutBInput
         |}
         |
         |input BCreateOneWithoutCInput {
         |  create: BCreateWithoutCInput
+        |  connect: BWhereUniqueInput
         |}
         |
         |input BCreateWithoutCInput {
+        |  id: ID
         |  rel: UserCreateOneInput
         |}
         |
         |input BUpdateOneWithoutCInput {
         |  create: BCreateWithoutCInput
+        |  connect: BWhereUniqueInput
         |  disconnect: Boolean
         |  delete: Boolean
         |  update: BUpdateWithoutCDataInput
@@ -202,6 +207,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |input CCreateInput {
+        |  id: ID
         |  name: String!
         |  b: BCreateOneWithoutCInput
         |}
@@ -212,6 +218,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |input CCreateWithoutBInput {
+        |  id: ID
         |  name: String!
         |}
         |
@@ -269,11 +276,12 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "Sample schema with selfrelations" should "generate the correct input types" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User{
+        |   id: ID! @id
         |   name: String! @unique
-        |   friend: User! @relation(name: "UserFriends")
+        |   friend: User! @relation(name: "UserFriends" link: INLINE)
         |   friendOf: User! @relation(name: "UserFriends")
         |}""".stripMargin
     }
@@ -281,6 +289,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
     val inputTypes = """input UserCreateInput {
+                       |  id: ID
                        |  name: String!
                        |  friend: UserCreateOneWithoutFriendOfInput!
                        |  friendOf: UserCreateOneWithoutFriendInput!
@@ -297,11 +306,13 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input UserCreateWithoutFriendInput {
+                       |  id: ID
                        |  name: String!
                        |  friendOf: UserCreateOneWithoutFriendInput!
                        |}
                        |
                        |input UserCreateWithoutFriendOfInput {
+                       |  id: ID
                        |  name: String!
                        |  friend: UserCreateOneWithoutFriendOfInput!
                        |}
@@ -347,6 +358,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input UserWhereUniqueInput {
+                       |  id: ID
                        |  name: String
                        |}"""
 
@@ -355,16 +367,18 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "Sample schema with selfrelation and optional backrelation" should "be generated correctly" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type User{
+        |   id: ID! @id
         |   name: String! @unique
-        |   bestBuddy: User
+        |   bestBuddy: User @relation(link: INLINE)
         |}""".stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
     val inputTypes = """input UserCreateInput {
+                       |  id: ID
                        |  name: String!
                        |  bestBuddy: UserCreateOneInput
                        |}
@@ -399,6 +413,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input UserWhereUniqueInput {
+                       |  id: ID
                        |  name: String
                        |}"""
 
@@ -407,21 +422,24 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "Disconnect and Delete" should "not be generated on required to-One Relations" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Parent{
+        |   id: ID! @id
         |   name: String! @unique
         |   child: [Child]
         |}
         |
         |type Child{
+        |   id: ID! @id
         |   name: String! @unique
-        |   parent: Parent!
+        |   parent: Parent! @relation(link: INLINE)
         |}""".stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
 
     val inputTypes = """input ChildCreateInput {
+                       |  id: ID
                        |  name: String!
                        |  parent: ParentCreateOneWithoutChildInput!
                        |}
@@ -432,6 +450,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input ChildCreateWithoutParentInput {
+                       |  id: ID
                        |  name: String!
                        |}
                        |
@@ -468,10 +487,12 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input ChildWhereUniqueInput {
+                       |  id: ID
                        |  name: String
                        |}
                        |
                        |input ParentCreateInput {
+                       |  id: ID
                        |  name: String!
                        |  child: ChildCreateManyWithoutParentInput
                        |}
@@ -482,6 +503,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input ParentCreateWithoutChildInput {
+                       |  id: ID
                        |  name: String!
                        |}
                        |
@@ -507,6 +529,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
                        |}
                        |
                        |input ParentWhereUniqueInput {
+                       |  id: ID
                        |  name: String
                        |}"""
 
@@ -515,22 +538,22 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "When a type is both required and non-required two separate types" should "be generated" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type A {
-        |    id: ID! @unique
+        |    id: ID! @id
         |    field: Int @unique
         |}
         |
         |type B {
-        |    id: ID! @unique
+        |    id: ID! @id
         |    field: Int @unique
-        |    a: A!
+        |    a: A! @relation(link: INLINE)
         |}
         |
         |type C {
-        |    id: ID! @unique
+        |    id: ID! @id
         |    field: Int @unique
-        |    a: A
+        |    a: A @relation(link: INLINE)
         |}"""
     }
 
@@ -610,19 +633,22 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
   "When a type is both required and non-required two separate types" should "be generated (changed order)" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type A {
+        |    id: ID! @id
         |    field: Int @unique
         |}
         |
         |type B {
+        |    id: ID! @id
         |    field: Int @unique
-        |    a: A
+        |    a: A @relation(link: INLINE)
         |}
         |
         |type C {
+        |    id: ID! @id
         |    field: Int @unique
-        |    a: A!
+        |    a: A! @relation(link: INLINE)
         |}"""
     }
 
@@ -630,6 +656,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     val inputTypes =
       """input ACreateInput {
+        |  id: ID
         |  field: Int
         |}
         |
@@ -668,6 +695,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |input BCreateInput {
+        |  id: ID
         |  field: Int
         |  a: ACreateOneInput
         |}
@@ -678,6 +706,7 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
         |}
         |
         |input CCreateInput {
+        |  id: ID
         |  field: Int
         |  a: ACreateOneInput!
         |}
@@ -690,25 +719,29 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
 
-  "Nested Create types" should "not be omitted anymore since we now have bring your own id" in {
-    val project = SchemaDsl.fromString() {
+  "Nested Create types" should "with only id and relation should still be there because of bring your own id" in {
+    val project = SchemaDsl.fromStringV11() {
       """type A {
-        |    id: ID! @unique
-        |    b: B
+        |    id: ID! @id
+        |    b: B @relation(link: INLINE)
         |}
         |
         |type B {
+        |    id: ID! @id
         |    a: A!
         |}""".stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
-    schema should not(containInputType("BCreateOneWithoutAInput"))
+    schema should containInputType(
+      name = "BCreateWithoutAInput",
+      fields = Vector("id: ID")
+    )
   }
 
-  "Sample schema with relation and relation strategy NONE" should "be generated correctly" in {
+  "Sample schema with relation and id strategy NONE" should "be generated correctly" in {
 
-    val project = SchemaDsl.fromStringv11() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User {
         |  id: ID! @id(strategy:NONE)
@@ -726,9 +759,9 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
 
-  "Sample schema with relation and relation strategy AUTO" should "be generated correctly" in {
+  "Sample schema with relation and id strategy AUTO" should "be generated correctly" in {
 
-    val project = SchemaDsl.fromStringv11() {
+    val project = SchemaDsl.fromStringV11() {
 
       """type User {
         |  id: ID! @id(strategy:AUTO)
@@ -745,5 +778,19 @@ class InputTypesSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBas
 
     inputTypes.split("input").map(inputType => schema should include(inputType.stripMargin))
   }
-  //Fixme once AUTO and idtypes Int, CUID, UUID are explicitly allowed, add them
+
+  "Sample schema with relation and id strategy SEQUENCE" should "be generated correctly" in {
+
+    val project = SchemaDsl.fromStringV11Capabilities(Set(IdSequenceCapability, IntIdCapability)) {
+
+      """type User {
+        |  id: Int! @id(strategy: SEQUENCE)
+        |}""".stripMargin
+    }
+
+    val schema = SchemaRenderer.renderSchema(schemaBuilder(project)).toString
+
+    schema should not(containInputType("UserCreateInput"))
+  }
+  //Fixme once AUTO and idtypes CUID, UUID are explicitly allowed, add them
 }

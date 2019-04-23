@@ -36,7 +36,8 @@
     "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "helpers.ts"
+      "helpers.ts",
+      "sandbox.ts"
     ],
     "moduleFileExtensions": [
       "ts",

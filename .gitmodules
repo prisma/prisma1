@@ -1,0 +1,6 @@
+[submodule "prisma-query"]
+	path = server/prisma-rs/libs/prisma-query
+	url = https://github.com/prisma/prisma-query.git
+[submodule "server/.buildkite/build-cli"]
+	path = server/.buildkite/build-cli
+	url = https://github.com/prisma/build-cli.git

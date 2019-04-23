@@ -15,11 +15,6 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
 
   val database = client.getDatabase(project.dbName)
 
-  override def getModelForGlobalId(globalId: StringIdGCValue): Future[Option[Model]] = {
-    val query = queryBuilder.getModelForGlobalId(project, globalId)
-    SlickReplacement.run(database, query)
-  }
-
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = {
     val query = queryBuilder.getNodeByWhere(where, selectedFields)
     SlickReplacement.run(database, query)
@@ -43,8 +38,8 @@ case class MongoDataResolver(project: Project, client: MongoClient)(implicit ec:
     SlickReplacement.run(database, query)
   }
 
-  override def countByTable(table: String, whereFilter: Option[Filter]): Future[Int] = {
-    val query = queryBuilder.countFromTable(table, whereFilter)
+  override def countByTable(table: String): Future[Int] = {
+    val query = queryBuilder.countFromTable(table, None)
     SlickReplacement.run(database, query)
   }
 

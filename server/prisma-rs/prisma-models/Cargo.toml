@@ -1,0 +1,27 @@
+[package]
+name = "prisma-models"
+version = "0.0.0"
+authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@prisma.io>", "Marcus Böhm <boehm@prisma.io>" ]
+edition = "2018"
+
+[features]
+default = ["sql", "sqlite"]
+sqlite = ["rusqlite"]
+sql = ["prisma-query"]
+
+[dependencies]
+once_cell = "0.1"
+serde_derive = "1.0"
+serde_json = "1.0"
+serde = "1.0"
+debug_stub_derive = "0.3"
+parking_lot = "0.7"
+uuid = { version = "0.7", features = ["serde", "v4"] }
+cuid = { git = "https://github.com/prisma/cuid-rust" }
+chrono = { version = "0.4", features = ["serde"] }
+failure = "0.1"
+failure_derive = "0.1"
+rand = "0.6"
+
+prisma-query = { path = "../libs/prisma-query", optional = true }
+rusqlite = { version = "0.16", features = ["chrono"], optional = true }

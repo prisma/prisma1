@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -147,7 +147,6 @@ CREATE TABLE "schema-generator$selfReferencing"."SelfReferencingCWithId" (
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_AToA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -158,7 +157,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_AToA" (
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_AToA2" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -179,7 +177,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_RelayId" (
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -190,7 +187,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferenc
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -201,7 +197,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfRe
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -212,7 +207,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferenc
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -223,7 +217,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfRe
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -234,7 +227,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfRe
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -245,7 +237,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferenc
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_WithIdAToA" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -256,7 +247,6 @@ CREATE TABLE "schema-generator$selfReferencing"."_WithIdAToA" (
 --
 
 CREATE TABLE "schema-generator$selfReferencing"."_WithIdAToA2" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -340,86 +330,6 @@ ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingCWithId"
 
 ALTER TABLE ONLY "schema-generator$selfReferencing"."SelfReferencingC"
     ADD CONSTRAINT "SelfReferencingC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToA2 _AToA2_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA2"
-    ADD CONSTRAINT "_AToA2_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _AToA _AToA_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_AToA"
-    ADD CONSTRAINT "_AToA_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _SelfReferencingAToSelfReferencingAWithId _SelfReferencingAToSelfReferencingAWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAToSelfReferencingAWithId"
-    ADD CONSTRAINT "_SelfReferencingAToSelfReferencingAWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _SelfReferencingAWithIdToSelfReferencingAWithId _SelfReferencingAWithIdToSelfReferencingAWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingAWithIdToSelfReferencingAWithId"
-    ADD CONSTRAINT "_SelfReferencingAWithIdToSelfReferencingAWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _SelfReferencingBToSelfReferencingB _SelfReferencingBToSelfReferencingB_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBToSelfReferencingB"
-    ADD CONSTRAINT "_SelfReferencingBToSelfReferencingB_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _SelfReferencingBWithIdToSelfReferencingBWithId _SelfReferencingBWithIdToSelfReferencingBWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingBWithId"
-    ADD CONSTRAINT "_SelfReferencingBWithIdToSelfReferencingBWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _SelfReferencingBWithIdToSelfReferencingCWithId _SelfReferencingBWithIdToSelfReferencingCWithId_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingBWithIdToSelfReferencingCWithId"
-    ADD CONSTRAINT "_SelfReferencingBWithIdToSelfReferencingCWithId_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _SelfReferencingCToSelfReferencingC _SelfReferencingCToSelfReferencingC_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_SelfReferencingCToSelfReferencingC"
-    ADD CONSTRAINT "_SelfReferencingCToSelfReferencingC_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _WithIdAToA2 _WithIdAToA2_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA2"
-    ADD CONSTRAINT "_WithIdAToA2_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _WithIdAToA _WithIdAToA_pkey; Type: CONSTRAINT; Schema: schema-generator$selfReferencing; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$selfReferencing"."_WithIdAToA"
-    ADD CONSTRAINT "_WithIdAToA_pkey" PRIMARY KEY (id);
 
 
 --

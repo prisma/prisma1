@@ -9,20 +9,23 @@ class DeleteRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | b: B!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: B! @relation(link: INLINE)
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A
          |}"""
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """|type C {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}
          |"""
 
@@ -33,13 +36,15 @@ class DeleteRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | b: B!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: B! @relation(link: INLINE)
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -48,11 +53,13 @@ class DeleteRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema2 =
       """|type A {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}
          |
          |type B {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}"""
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(

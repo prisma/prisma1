@@ -8,9 +8,6 @@ import org.joda.time.DateTime
 import scala.concurrent.Future
 
 trait DeployConnector {
-  def isActive: Boolean
-  def fieldRequirements: FieldRequirementsInterface
-
   def projectPersistence: ProjectPersistence
   def migrationPersistence: MigrationPersistence
   def cloudSecretPersistence: CloudSecretPersistence
@@ -19,7 +16,6 @@ trait DeployConnector {
   def deployMutactionExecutor: DeployMutactionExecutor
   def clientDBQueries(project: Project): ClientDbQueries
   def projectIdEncoder: ProjectIdEncoder
-  def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer
   def databaseInspector: DatabaseInspector
   def capabilities: ConnectorCapabilities
 

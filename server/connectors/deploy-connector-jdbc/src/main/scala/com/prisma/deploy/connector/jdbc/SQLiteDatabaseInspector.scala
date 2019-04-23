@@ -16,7 +16,7 @@ case class SQLiteDatabaseInspector(db: SlickDatabase)(implicit val ec: Execution
 
   override def inspect(schema: String): Future[DatabaseSchema] = {
     val list   = sql"""PRAGMA database_list;""".as[(String, String, String)]
-    val path   = s"""'db/$schema'"""
+    val path   = s"""'db/$schema.db'"""
     val attach = sqlu"ATTACH DATABASE #${path} AS #${schema};"
 
     val attachIfNecessary = for {

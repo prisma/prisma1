@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -63,7 +63,6 @@ CREATE TABLE "schema-generator$prisma-3143"."_RelayId" (
 --
 
 CREATE TABLE "schema-generator$prisma-3143"."_StoriesByUserSpace" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -83,14 +82,6 @@ ALTER TABLE ONLY "schema-generator$prisma-3143"."Story"
 
 ALTER TABLE ONLY "schema-generator$prisma-3143"."UserSpace"
     ADD CONSTRAINT "UserSpace_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _StoriesByUserSpace _StoriesByUserSpace_pkey; Type: CONSTRAINT; Schema: schema-generator$prisma-3143; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$prisma-3143"."_StoriesByUserSpace"
-    ADD CONSTRAINT "_StoriesByUserSpace_pkey" PRIMARY KEY (id);
 
 
 --

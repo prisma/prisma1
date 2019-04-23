@@ -1,17 +1,17 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbeddedToNonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBaseV11 {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a FriendsOpt relation" should "be possible" in {
 
-    val project = SchemaDsl.fromString() { embedddedToJoinFriendsOpt }
+    val project = SchemaDsl.fromStringV11() { embedddedToJoinFriendsOpt }
 
     database.setup(project)
 
@@ -27,6 +27,7 @@ class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with 
           |  }){
           |    p
           |    children{
+          |       id
           |       c
           |       friendsOpt{
           |         f
@@ -38,7 +39,7 @@ class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with 
         project
       )
 
-    create.toString should be("""{"data":{"createParent":{"p":"p1","children":[{"c":"c1","friendsOpt":[{"f":"f1"}]}]}}}""")
+    val idOfC1 = create.pathAsString("data.createParent.children.[0].id")
 
     val create2 = server.query("""mutation { createFriend(data: {f: "f2"}){f}}""", project)
 
@@ -46,12 +47,12 @@ class UpdateWithNestedSetMutationInsideEmbeddedUpdateSpec extends FlatSpec with 
 
     val update = server
       .query(
-        """mutation {
+        s"""mutation {
           |  updateParent(
           |  where:{p:"p1"}
           |  data: {
           |    children: {update:{
-          |       where:{c: "c1"}
+          |       where:{id: "$idOfC1"}
           |       data:{
           |           friendsOpt:{set:{f: "f2"}}
           |       }

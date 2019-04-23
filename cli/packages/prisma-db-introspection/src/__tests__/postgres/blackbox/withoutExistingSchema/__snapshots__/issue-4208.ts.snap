@@ -1,0 +1,337 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector Issue - 4208 1`] = `
+"type CloudSecret {
+  id: ID! @pgColumn(name: \\"secret\\") @unique
+}
+
+type Course @pgTable(name: \\"courses\\") {
+  id: Int! @pgColumn(name: \\"course_id\\") @unique
+  charLimit: Int! @default(value: 100) @pgColumn(name: \\"char_limit\\")
+  code: String!
+  courseUsers: [CourseUser]
+  endDate: DateTime! @pgColumn(name: \\"end_date\\")
+  name: String!
+  # Type interval is not supported
+  # queueOpenInterval: interval! @pgColumn(name: \\"queue_open_interval\\")
+  semester: String!
+  sessions: [Session]
+  sessionSeries: [SessionSery]
+  startDate: DateTime! @pgColumn(name: \\"start_date\\")
+  tags: [Tag]
+}
+
+type CourseUser @pgTable(name: \\"course_users\\") {
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Course! @pgColumn(name: \\"course_id\\") @unique
+  # Multiple ID fields (compound indexes) are not supported
+  # id: User! @pgColumn(name: \\"user_id\\") @unique
+  role: String!
+}
+
+type InternalMigration {
+  id: ID! @unique
+  appliedAt: DateTime!
+}
+
+type Migration {
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Int! @default(value: 1) @pgColumn(name: \\"revision\\") @unique
+  # Multiple ID fields (compound indexes) are not supported
+  # id: Project! @default(value: ) @pgColumn(name: \\"projectId\\") @unique
+  applied: Int! @default(value: 0)
+  datamodel: String
+  errors: String
+  finishedAt: DateTime
+  functions: String
+  rolledBack: Int! @default(value: 0)
+  schema: String
+  startedAt: DateTime
+  status: String! @default(value: \\"PENDING\\")
+  steps: String
+}
+
+type Project {
+  id: ID! @default(value: \\"\\") @unique
+  allowMutations: Boolean! @default(value: true)
+  allowQueries: Boolean! @default(value: true)
+  functions: String
+  migration: [Migration]
+  secrets: String
+}
+
+type Question @pgTable(name: \\"questions\\") {
+  id: Int! @pgColumn(name: \\"question_id\\") @unique
+  answerer: User @pgColumn(name: \\"answerer_id\\") @relation(name: \\"QuestionAnswererToUserQuestions\\")
+  asker: User! @pgColumn(name: \\"asker_id\\") @relation(name: \\"QuestionAskerToUserQuestions\\")
+  content: String!
+  location: String
+  questionTags: [QuestionTag]
+  session: Session! @pgColumn(name: \\"session_id\\")
+  status: String!
+  timeAddressed: DateTime @pgColumn(name: \\"time_addressed\\")
+  timeEntered: DateTime! @pgColumn(name: \\"time_entered\\")
+}
+
+type QuestionTag @linkTable @pgTable(name: \\"question_tags\\") {
+  question: Question! @pgColumn(name: \\"question_id\\")
+  tag: Tag! @pgColumn(name: \\"tag_id\\")
+}
+
+type Session @pgTable(name: \\"sessions\\") {
+  id: Int! @pgColumn(name: \\"session_id\\") @unique
+  building: String!
+  course: Course! @pgColumn(name: \\"course_id\\")
+  endTime: DateTime! @pgColumn(name: \\"end_time\\")
+  questions: [Question]
+  room: String!
+  sessionSeries: SessionSery @pgColumn(name: \\"session_series_id\\")
+  sessionTas: [SessionTa]
+  startTime: DateTime! @pgColumn(name: \\"start_time\\")
+  title: String
+}
+
+type SessionSeriesTa @linkTable @pgTable(name: \\"session_series_tas\\") {
+  sessionSeries: SessionSery! @pgColumn(name: \\"session_series_id\\")
+  user: User! @pgColumn(name: \\"user_id\\")
+}
+
+type SessionSery @pgTable(name: \\"session_series\\") {
+  id: Int! @pgColumn(name: \\"session_series_id\\") @unique
+  building: String!
+  course: Course! @pgColumn(name: \\"course_id\\")
+  endTime: DateTime! @pgColumn(name: \\"end_time\\")
+  room: String!
+  sessions: [Session]
+  sessionSeriesTas: [SessionSeriesTa]
+  startTime: DateTime! @pgColumn(name: \\"start_time\\")
+  title: String
+}
+
+type SessionTa @linkTable @pgTable(name: \\"session_tas\\") {
+  session: Session! @pgColumn(name: \\"session_id\\")
+  user: User! @pgColumn(name: \\"user_id\\")
+}
+
+type Tag @pgTable(name: \\"tags\\") {
+  id: Int! @pgColumn(name: \\"tag_id\\") @unique
+  activated: Boolean! @default(value: true)
+  course: Course! @pgColumn(name: \\"course_id\\")
+  level: Int!
+  name: String!
+  questionTags: [QuestionTag]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references TagRelation.child.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationChild\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references TagRelation.parent.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
+}
+
+type TagRelation @linkTable @pgTable(name: \\"tag_relations\\") {
+  child: Tag! @pgColumn(name: \\"child_id\\") @relation(name: \\"TagTagRelationsToTagRelationChild\\")
+  parent: Tag! @pgColumn(name: \\"parent_id\\") @relation(name: \\"TagTagRelationsToTagRelationParent\\")
+}
+
+type TelemetryInfo {
+  id: ID! @unique
+  lastPinged: DateTime
+}
+
+type User @pgTable(name: \\"users\\") {
+  id: Int! @pgColumn(name: \\"user_id\\") @unique
+  courseUsers: [CourseUser]
+  createdAt: DateTime @pgColumn(name: \\"created_at\\")
+  displayName: String @pgColumn(name: \\"display_name\\")
+  email: String! @unique
+  firstName: String @pgColumn(name: \\"first_name\\")
+  googleId: String! @pgColumn(name: \\"google_id\\") @unique
+  lastActivityAt: DateTime @pgColumn(name: \\"last_activity_at\\")
+  lastName: String @pgColumn(name: \\"last_name\\")
+  photoUrl: String @pgColumn(name: \\"photo_url\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Question.answerer.
+  # questions: [Question] @relation(name: \\"QuestionAnswererToUserQuestions\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Question.asker.
+  # questions: [Question] @relation(name: \\"QuestionAskerToUserQuestions\\")
+  sessionSeriesTas: [SessionSeriesTa]
+  sessionTas: [SessionTa]
+}"
+`;
+
+exports[`Introspector Issue - 4208 2`] = `
+"type CloudSecret {
+  secret: ID! @id
+}
+
+type Course @db(name: \\"courses\\") {
+  course_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"courses_course_id_seq\\", initialValue: 1, allocationSize: 1)
+  charLimit: Int! @db(name: \\"char_limit\\") @default(value: 100)
+  code: String!
+  courseUsers: [CourseUser]
+  endDate: DateTime! @db(name: \\"end_date\\")
+  name: String!
+  # Type interval is not supported
+  # queueOpenInterval: interval! @db(name: \\"queue_open_interval\\")
+  semester: String!
+  sessions: [Session]
+  sessionSeries: [SessionSery]
+  startDate: DateTime! @db(name: \\"start_date\\")
+  tags: [Tag]
+}
+
+type CourseUser @db(name: \\"course_users\\") {
+  # Multiple ID fields (compound indexes) are not supported
+  # course_id: Course! @id
+  # Multiple ID fields (compound indexes) are not supported
+  # user_id: User! @id
+  role: String!
+}
+
+type InternalMigration {
+  id: ID! @id
+  appliedAt: DateTime!
+}
+
+type Migration {
+  # Multiple ID fields (compound indexes) are not supported
+  # revision: Int! @default(value: 1) @id
+  # Multiple ID fields (compound indexes) are not supported
+  # projectId: Project! @default(value: ) @id
+  applied: Int! @default(value: 0)
+  datamodel: String
+  errors: String
+  finishedAt: DateTime
+  functions: String
+  rolledBack: Int! @default(value: 0)
+  schema: String
+  startedAt: DateTime
+  status: String! @default(value: \\"PENDING\\")
+  steps: String
+}
+
+type Project {
+  id: ID! @default(value: \\"\\") @id
+  allowMutations: Boolean! @default(value: true)
+  allowQueries: Boolean! @default(value: true)
+  functions: String
+  migration: [Migration]
+  secrets: String
+}
+
+type Question @db(name: \\"questions\\") {
+  question_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"questions_question_id_seq\\", initialValue: 1, allocationSize: 1)
+  answerer: User @db(name: \\"answerer_id\\") @relation(name: \\"QuestionAnswererToUserQuestions\\")
+  asker: User! @db(name: \\"asker_id\\") @relation(name: \\"QuestionAskerToUserQuestions\\")
+  content: String!
+  location: String
+  questionTags: [QuestionTag]
+  session: Session! @db(name: \\"session_id\\")
+  status: String!
+  timeAddressed: DateTime @db(name: \\"time_addressed\\")
+  timeEntered: DateTime! @db(name: \\"time_entered\\")
+}
+
+type QuestionTag @db(name: \\"question_tags\\") @linkTable {
+  question: Question! @db(name: \\"question_id\\")
+  tag: Tag! @db(name: \\"tag_id\\")
+}
+
+type Session @db(name: \\"sessions\\") {
+  session_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sessions_session_id_seq\\", initialValue: 1, allocationSize: 1)
+  building: String!
+  course: Course! @db(name: \\"course_id\\")
+  endTime: DateTime! @db(name: \\"end_time\\")
+  questions: [Question]
+  room: String!
+  sessionSeries: SessionSery @db(name: \\"session_series_id\\")
+  sessionTas: [SessionTa]
+  startTime: DateTime! @db(name: \\"start_time\\")
+  title: String
+}
+
+type SessionSeriesTa @db(name: \\"session_series_tas\\") @linkTable {
+  sessionSeries: SessionSery! @db(name: \\"session_series_id\\")
+  user: User! @db(name: \\"user_id\\")
+}
+
+type SessionSery @db(name: \\"session_series\\") {
+  session_series_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"session_series_session_series_id_seq\\", initialValue: 1, allocationSize: 1)
+  building: String!
+  course: Course! @db(name: \\"course_id\\")
+  endTime: DateTime! @db(name: \\"end_time\\")
+  room: String!
+  sessions: [Session]
+  sessionSeriesTas: [SessionSeriesTa]
+  startTime: DateTime! @db(name: \\"start_time\\")
+  title: String
+}
+
+type SessionTa @db(name: \\"session_tas\\") @linkTable {
+  session: Session! @db(name: \\"session_id\\")
+  user: User! @db(name: \\"user_id\\")
+}
+
+type Tag @db(name: \\"tags\\") {
+  tag_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"tags_tag_id_seq\\", initialValue: 1, allocationSize: 1)
+  activated: Boolean! @default(value: true)
+  course: Course! @db(name: \\"course_id\\")
+  level: Int!
+  name: String!
+  questionTags: [QuestionTag]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references TagRelation.child.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationChild\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references TagRelation.parent.
+  # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
+}
+
+type TagRelation @db(name: \\"tag_relations\\") @linkTable {
+  child: Tag! @db(name: \\"child_id\\") @relation(name: \\"TagTagRelationsToTagRelationChild\\")
+  parent: Tag! @db(name: \\"parent_id\\") @relation(name: \\"TagTagRelationsToTagRelationParent\\")
+}
+
+type TelemetryInfo {
+  id: ID! @id
+  lastPinged: DateTime
+}
+
+type User @db(name: \\"users\\") {
+  user_id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"users_user_id_seq\\", initialValue: 1, allocationSize: 1)
+  courseUsers: [CourseUser]
+  createdAt: DateTime @db(name: \\"created_at\\")
+  displayName: String @db(name: \\"display_name\\")
+  email: String! @unique
+  firstName: String @db(name: \\"first_name\\")
+  googleId: String! @db(name: \\"google_id\\") @unique
+  lastActivityAt: DateTime @db(name: \\"last_activity_at\\")
+  lastName: String @db(name: \\"last_name\\")
+  photoUrl: String @db(name: \\"photo_url\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Question.answerer.
+  # questions: [Question] @relation(name: \\"QuestionAnswererToUserQuestions\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Question.asker.
+  # questions: [Question] @relation(name: \\"QuestionAskerToUserQuestions\\")
+  sessionSeriesTas: [SessionSeriesTa]
+  sessionTas: [SessionTa]
+}"
+`;

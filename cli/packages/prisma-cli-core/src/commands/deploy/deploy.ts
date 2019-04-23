@@ -1,28 +1,23 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
 import { Cluster } from 'prisma-yml'
 import chalk from 'chalk'
-import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
 import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
-import {
-  prettyTime,
-  concatName,
-  defaultDockerCompose,
-  printAdminLink,
-} from '../../utils/util'
-import * as sillyname from 'sillyname'
+import { prettyTime, concatName, printAdminLink } from '../../utils/util'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
 import { satisfiesVersion } from '../../utils/satisfiesVersion'
+import GenerateCommand from '../generate/generate'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
   static description = 'Deploy service changes (or new service)'
   static group = 'general'
+  static printVersionSyncWarning = true
   static help = `
   
   ${chalk.green.bold('Examples:')}
@@ -68,6 +63,12 @@ ${chalk.gray(
       description: 'Path to Prisma definition file',
       char: 'p',
     }),
+    'no-generate': flags.boolean({
+      description: 'Disable implicit client generation',
+    }),
+    'skip-hooks': flags.boolean({
+      description: 'Disable hooks on deploy',
+    }),
   }
   private showedHooks: boolean = false
   async run() {
@@ -79,6 +80,8 @@ ${chalk.gray(
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
     const noMigrate = this.flags['no-migrate']
+    const noGenerate = this.flags['no-generate']
+    const noHook = this.flags['skip-hooks']
 
     if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
       await this.out.error(`--env-file path '${envFile}' does not exist`)
@@ -185,6 +188,8 @@ ${chalk.gray(
       projectNew,
       workspace!,
       noMigrate,
+      noGenerate,
+      noHook
     )
   }
 
@@ -231,6 +236,8 @@ ${chalk.gray(
     projectNew: boolean,
     workspace: string | null,
     noMigrate: boolean,
+    noGenerate: boolean,
+    noHook: boolean,
   ): Promise<void> {
     let before = Date.now()
 
@@ -269,7 +276,6 @@ ${chalk.gray(
       )
       let done = false
       while (!done) {
-        const revision = migrationResult.migration.revision
         const migration = await this.client.getMigration(
           concatName(cluster, serviceName, workspace),
           stageName,
@@ -305,33 +311,80 @@ ${chalk.gray(
     }
 
     const hooks = this.definition.getHooks('post-deploy')
-    if (hooks.length > 0) {
-      this.out.log(`\n${chalk.bold('post-deploy')}:`)
-    }
-    for (const hook of hooks) {
-      const splittedHook = hook.split(' ')
-      this.out.action.start(`Running ${chalk.cyan(hook)}`)
-      const isPackaged = fs.existsSync('/snapshot')
-      debug({ isPackaged })
-      const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
-      const child = spawnPath(splittedHook[0], splittedHook.slice(1))
-      const stderr = child.stderr && child.stderr.toString()
-      if (stderr && stderr.length > 0) {
-        this.out.log(chalk.red(stderr))
+    if (!noHook) {
+      if (hooks.length > 0) {
+        this.out.log(`\n${chalk.bold('post-deploy')}:`)
       }
-      const stdout = child.stdout && child.stdout.toString()
-      if (stdout && stdout.length > 0) {
-        this.out.log(stdout)
-      }
-      const { status, error } = child
-      if (error || status !== 0) {
-        if (error) {
-          this.out.log(chalk.red(error.message))
+      for (const hook of hooks) {
+        const splittedHook = hook.split(' ')
+        this.out.action.start(`Running ${chalk.cyan(hook)}`)
+        const isPackaged = fs.existsSync('/snapshot')
+        debug({ isPackaged })
+        const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
+        const child = spawnPath(splittedHook[0], splittedHook.slice(1))
+        const stderr = child.stderr && child.stderr.toString()
+        if (stderr && stderr.length > 0) {
+          this.out.log(chalk.red(stderr))
         }
-        this.out.action.stop(chalk.red(figures.cross))
-      } else {
-        this.out.action.stop()
+        const stdout = child.stdout && child.stdout.toString()
+        if (stdout && stdout.length > 0) {
+          this.out.log(stdout)
+        }
+        const { status, error } = child
+        if (error || status !== 0) {
+          if (error) {
+            this.out.log(chalk.red(error.message))
+          }
+          this.out.action.stop(chalk.red(figures.cross))
+        } else {
+          this.out.action.stop()
+        }
       }
+    } else {
+      debug('Hooks are disabled by the --skip-hooks flag')
+    }
+
+    if (
+      migrationResult &&
+      migrationResult.migration &&
+      migrationResult.migration.revision > 0 &&
+      !dryRun &&
+      !noGenerate
+    ) {
+      let done = false
+      while (!done) {
+        const migration = await this.client.getMigration(
+          concatName(cluster, serviceName, workspace),
+          stageName,
+        )
+        if (
+          (migration.errors &&
+            migration.errors.length === 0 &&
+            migration.applied === migrationResult.migration.steps.length) ||
+          ['SUCCESS'].includes(migration.status)
+        ) {
+          done = true
+          const isGenerateHookPresent = hooks.some(
+            hook => hook.includes('prisma') && hook.includes('generate'),
+          )
+          if (!noHook && isGenerateHookPresent) {
+            this.out.log(
+              chalk.yellow(
+                `Warning: The \`prisma generate\` command was executed twice. Since Prisma 1.31, the Prisma client is generated automatically after running \`prisma deploy\`. It is not necessary to generate it via a \`post-deploy\` hook any more, you can therefore remove the hook if you do not need it otherwise.`,
+              ),
+            )
+          }
+          const generateCommand = new GenerateCommand({
+            config: this.config
+          })
+          generateCommand.run()
+        } else {
+          debug('skipping implicit generate at migration polling')
+        }
+        await new Promise(r => setTimeout(r, 500))
+      }
+    } else {
+      debug('skipping implicit generate at migrationResult')
     }
 
     if (migrationResult.migration) {
@@ -340,7 +393,9 @@ ${chalk.gray(
         !this.flags['no-seed'] &&
         projectNew
       ) {
-        this.printHooks()
+        if (!noHook) {
+          this.printHooks()
+        }
         await this.seed(
           cluster,
           projectNew,
@@ -450,7 +505,7 @@ ${chalk.gray(
 
     if (steps.length > 0) {
       this.out.log(
-        '\n' + chalk.bold(dryRun ? 'Potential changees:' : 'Changes:'),
+        '\n' + chalk.bold(dryRun ? 'Potential changes:' : 'Changes:'),
       )
       this.out.migration.printMessages(steps)
       this.out.log('')
@@ -471,7 +526,7 @@ ${chalk.gray(
         )
       : ''
 
-    this.out.log(`\n${'Your Prisma GraphQL database endpoint is live:'}
+    this.out.log(`\n${'Your Prisma endpoint is live:'}
 
   ${'HTTP:'}  ${cluster.getApiEndpoint(serviceName, stageName, workspace)}
   ${'WS:'}    ${cluster.getWSEndpoint(

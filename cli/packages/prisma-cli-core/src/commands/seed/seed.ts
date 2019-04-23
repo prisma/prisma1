@@ -9,6 +9,7 @@ import * as path from 'path'
 export default class Seed extends Command {
   static topic = 'seed'
   static description = 'Seed a service with data specified in the prisma.yml'
+  static printVersionSyncWarning = true
   static flags: Flags = {
     reset: flags.boolean({
       char: 'r',

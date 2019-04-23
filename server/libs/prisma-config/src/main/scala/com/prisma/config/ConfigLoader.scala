@@ -272,7 +272,6 @@ object ConfigLoader {
     val config = DatabaseConfig(
       name = name,
       connector = connector,
-      active = active.getOrElse(true),
       host = host,
       port = port,
       user = user,
@@ -369,7 +368,6 @@ case class PrismaConfig(
 case class DatabaseConfig(
     name: String,
     connector: String,
-    active: Boolean,
     host: String,
     port: Int,
     user: String,

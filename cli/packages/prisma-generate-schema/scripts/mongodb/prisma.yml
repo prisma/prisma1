@@ -1,3 +1,0 @@
-endpoint: http://localhost:4466/schema-generator/withAndWithoutId
-datamodel: ../../__tests__/blackbox/cases/withAndWithoutId/model_document.graphql
-databaseType: 'document'

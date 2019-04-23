@@ -12,16 +12,36 @@ trait RelationQueries extends BuilderBase with FilterConditionBuilder with Order
       args: QueryArguments
   ): DBIO[ResolverResult[RelationNode]] = {
 
-    lazy val query = {
+    lazy val query = if (relation.isRelationTable) {
       val aliasedTable = relationTable(relation).as(topLevelAlias)
-      val condition    = buildConditionForFilter(args.filter)
       val order        = orderByForRelation(relation, topLevelAlias, args)
       val skipAndLimit = LimitClauseHelper.skipAndLimitValues(args)
 
       val base = sql
         .select()
         .from(aliasedTable)
-        .where(condition)
+        .orderBy(order: _*)
+        .offset(intDummy)
+
+      skipAndLimit.limit match {
+        case Some(_) => base.limit(intDummy)
+        case None    => base
+      }
+    } else {
+      val aliasedTable      = relationTable(relation).as(topLevelAlias)
+      val order             = orderByForRelation(relation, topLevelAlias, args)
+      val skipAndLimit      = LimitClauseHelper.skipAndLimitValues(args)
+      val isInlinedInModelA = relation.modelAField.relationIsInlinedInParent
+
+      val conditionField = if (isInlinedInModelA) aliasColumn(relation.modelAField) else aliasColumn(relation.modelBField)
+
+      val fieldA = if (isInlinedInModelA) modelIdColumn(topLevelAlias, relation.modelA) else aliasColumn(relation.modelBField)
+      val fieldB = if (isInlinedInModelA) aliasColumn(relation.modelAField) else modelIdColumn(topLevelAlias, relation.modelB)
+
+      val base = sql
+        .select(fieldA.as("A"), fieldB.as("B"))
+        .from(aliasedTable)
+        .where(conditionField.isNotNull)
         .orderBy(order: _*)
         .offset(intDummy)
 

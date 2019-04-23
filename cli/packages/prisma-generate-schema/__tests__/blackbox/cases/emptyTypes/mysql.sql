@@ -102,11 +102,8 @@ CREATE TABLE `OnlyRelationB` (
 
 DROP TABLE IF EXISTS `_OnlyDateToOnlyRelation`;
 CREATE TABLE `_OnlyDateToOnlyRelation` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -120,11 +117,8 @@ CREATE TABLE `_OnlyDateToOnlyRelation` (
 
 DROP TABLE IF EXISTS `_OnlyIdToOnlyIdAndARelation`;
 CREATE TABLE `_OnlyIdToOnlyIdAndARelation` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -138,11 +132,8 @@ CREATE TABLE `_OnlyIdToOnlyIdAndARelation` (
 
 DROP TABLE IF EXISTS `_OnlyIdToOnlyIdAndARelation2`;
 CREATE TABLE `_OnlyIdToOnlyIdAndARelation2` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -156,11 +147,8 @@ CREATE TABLE `_OnlyIdToOnlyIdAndARelation2` (
 
 DROP TABLE IF EXISTS `_OnlyRelationAToOnlyRelationA`;
 CREATE TABLE `_OnlyRelationAToOnlyRelationA` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -174,11 +162,8 @@ CREATE TABLE `_OnlyRelationAToOnlyRelationA` (
 
 DROP TABLE IF EXISTS `_OnlyRelationBToOnlyRelationB`;
 CREATE TABLE `_OnlyRelationBToOnlyRelationB` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
   `A` char(25) CHARACTER SET utf8 NOT NULL,
   `B` char(25) CHARACTER SET utf8 NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
   UNIQUE KEY `AB_unique` (`A`,`B`),
   KEY `A` (`A`),
   KEY `B` (`B`),
@@ -199,4 +184,4 @@ CREATE TABLE `_RelayId` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
--- Dump completed on 2019-02-06 22:04:18
+-- Dump completed on 2019-04-10 20:39:46

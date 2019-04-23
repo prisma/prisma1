@@ -1,15 +1,19 @@
 package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.gc_values.StringGCValue
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "A Create Mutation on a non-list field" should "utilize the defaultValue" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("ScalarModel").field_!("reqString", _.String, defaultValue = Some(StringGCValue("default")))
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type ScalarModel {
+        |  id: ID! @id
+        |  reqString: String! @default(value: "default")
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -32,12 +36,12 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The default value" should "work for int" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Service {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
-        |  int: Int @default(value: "1")
+        |  int: Int @default(value: 1)
         |}
       """.stripMargin
     }
@@ -61,7 +65,7 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The default value" should "work for enums" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |enum IsActive{
         |  Yes
@@ -69,11 +73,11 @@ class DefaultValueSpec extends FlatSpec with Matchers with ApiSpecBase {
         |}
         |
         |type Service {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |  description: String
         |  unit: String
-        |  active: IsActive @default(value: "Yes")
+        |  active: IsActive @default(value: Yes)
         |}
       """.stripMargin
     }

@@ -1,31 +1,29 @@
 import { ISDL, IGQLField, IGQLType } from 'prisma-datamodel'
-import { INormalizer } from './normalizer'
+import { INormalizer, Normalizer } from './normalizer'
 
-export class RemoveBackRelation implements INormalizer {
-  protected baseModel: ISDL
-
-  constructor(baseModel: ISDL) {
-    this.baseModel = baseModel
-  }
-
-  public normalizeType(type: IGQLType, ref: IGQLType) {
+export class RemoveBackRelation extends Normalizer {
+  public normalizeType(type: IGQLType, parentModel: ISDL) {
     // Here, we explicitely need a classic for loop,
     // as we need to restart it in the case of
     // self-referencing relations. Otherwise
     // we might end up removing too many relations.
     for (let i = 0; i < type.fields.length; i++) {
       const field = type.fields[i]
-      if (typeof field.type !== 'string' && field.relatedField !== null) {
-        // Fid the reference field.
-        const refField = ref.fields.find(x => x.name === field.name)
+      if (
+        typeof field.type !== 'string' &&
+        field.relatedField !== null &&
+        this.baseType !== null
+      ) {
+        this.baseField =
+          this.baseType.fields.find(f => f.name === field.name) || null
 
-        if (refField === undefined || typeof refField.type === 'string')
+        if (this.baseField === null || typeof this.baseField.type === 'string')
           continue
 
-        if (refField.type.name !== field.type.name) continue
+        if (this.baseField.type.name !== field.type.name) continue
 
-        // If the reference field has no related field  we drop it.
-        if (refField.relatedField === null) {
+        // If the reference field has no related field we drop the current field.
+        if (this.baseField.relatedField === null) {
           const relatedType = field.type as IGQLType
           relatedType.fields = relatedType.fields.filter(
             x => x !== field.relatedField,
@@ -40,15 +38,12 @@ export class RemoveBackRelation implements INormalizer {
     }
   }
 
-  public normalize(model: ISDL) {
-    for (const type of model.types) {
-      // TODO: We should move all tooling for finding types or fields into some common class.
-      const ref = this.baseModel.types.find(
-        x => x.name === type.name || x.databaseName === type.name,
-      )
-      if (ref !== undefined) {
-        this.normalizeType(type, ref)
-      }
-    }
+  // This is never called.
+  protected normalizeField(
+    field: IGQLField,
+    parentType: IGQLType,
+    parentModel: ISDL,
+  ) {
+    throw new Error('Method not implemented.')
   }
 }

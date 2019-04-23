@@ -12,12 +12,12 @@ exports[`Introspector CMS/sequences 1`] = `
   addressStreet02: String @pgColumn(name: \\"address_street_02\\")
   addressZipCode: String @pgColumn(name: \\"address_zip_code\\")
   entityType: String @pgColumn(name: \\"entity_type\\")
-  providerPerformance: [ProviderPerformance] @pgColumn(name: \\"provider_performance\\")
-  providersIndividuals: [ProvidersIndividual] @pgColumn(name: \\"providers_individuals\\")
-  providersOrganizations: [ProvidersOrganization] @pgColumn(name: \\"providers_organizations\\")
+  providerPerformance: [ProviderPerformance]
+  providersIndividuals: [ProvidersIndividual]
+  providersOrganizations: [ProvidersOrganization]
   providerType: String @pgColumn(name: \\"provider_type\\")
-  serviceProviderPerformance: [ServiceProviderPerformance] @pgColumn(name: \\"service_provider_performance\\")
-  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary] @pgColumn(name: \\"service_provider_performance_summary\\")
+  serviceProviderPerformance: [ServiceProviderPerformance]
+  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary]
 }
 
 type ProviderPerformance @pgTable(name: \\"provider_performance\\") {
@@ -53,9 +53,9 @@ type Service @pgTable(name: \\"services\\") {
   id: ID! @pgColumn(name: \\"hcpcs_code\\") @unique
   hcpcsDescription: String @pgColumn(name: \\"hcpcs_description\\")
   hcpcsDrugIndicator: String @pgColumn(name: \\"hcpcs_drug_indicator\\")
-  providerPerformance: [ProviderPerformance] @pgColumn(name: \\"provider_performance\\")
-  servicePerformance: [ServicePerformance] @pgColumn(name: \\"service_performance\\")
-  serviceProviderPerformance: [ServiceProviderPerformance] @pgColumn(name: \\"service_provider_performance\\")
+  providerPerformance: [ProviderPerformance]
+  servicePerformance: [ServicePerformance]
+  serviceProviderPerformance: [ServiceProviderPerformance]
 }
 
 type ServicePerformance @pgTable(name: \\"service_performance\\") {
@@ -168,7 +168,7 @@ type ServiceProviderPerformanceSummaryType @pgTable(name: \\"service_provider_pe
   id: Int! @unique
   description: String!
   groupMembership: Boolean! @default(value: true) @pgColumn(name: \\"group_membership\\")
-  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary] @pgColumn(name: \\"service_provider_performance_summary\\")
+  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary]
   slug: String @unique
 }"
 `;
@@ -185,12 +185,12 @@ exports[`Introspector CMS/sequences 2`] = `
   addressStreet02: String @db(name: \\"address_street_02\\")
   addressZipCode: String @db(name: \\"address_zip_code\\")
   entityType: String @db(name: \\"entity_type\\")
-  providerPerformance: [ProviderPerformance] @db(name: \\"provider_performance\\")
-  providersIndividuals: [ProvidersIndividual] @db(name: \\"providers_individuals\\")
-  providersOrganizations: [ProvidersOrganization] @db(name: \\"providers_organizations\\")
+  providerPerformance: [ProviderPerformance]
+  providersIndividuals: [ProvidersIndividual]
+  providersOrganizations: [ProvidersOrganization]
   providerType: String @db(name: \\"provider_type\\")
-  serviceProviderPerformance: [ServiceProviderPerformance] @db(name: \\"service_provider_performance\\")
-  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary] @db(name: \\"service_provider_performance_summary\\")
+  serviceProviderPerformance: [ServiceProviderPerformance]
+  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary]
 }
 
 type ProviderPerformance @db(name: \\"provider_performance\\") {
@@ -226,9 +226,9 @@ type Service @db(name: \\"services\\") {
   hcpcs_code: ID! @id
   hcpcsDescription: String @db(name: \\"hcpcs_description\\")
   hcpcsDrugIndicator: String @db(name: \\"hcpcs_drug_indicator\\")
-  providerPerformance: [ProviderPerformance] @db(name: \\"provider_performance\\")
-  servicePerformance: [ServicePerformance] @db(name: \\"service_performance\\")
-  serviceProviderPerformance: [ServiceProviderPerformance] @db(name: \\"service_provider_performance\\")
+  providerPerformance: [ProviderPerformance]
+  servicePerformance: [ServicePerformance]
+  serviceProviderPerformance: [ServiceProviderPerformance]
 }
 
 type ServicePerformance @db(name: \\"service_performance\\") {
@@ -341,7 +341,7 @@ type ServiceProviderPerformanceSummaryType @db(name: \\"service_provider_perform
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"service_provider_performance_summary_type_id_seq1\\", initialValue: 1, allocationSize: 1)
   description: String!
   groupMembership: Boolean! @db(name: \\"group_membership\\") @default(value: true)
-  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary] @db(name: \\"service_provider_performance_summary\\")
+  serviceProviderPerformanceSummary: [ServiceProviderPerformanceSummary]
   slug: String @unique
 }"
 `;

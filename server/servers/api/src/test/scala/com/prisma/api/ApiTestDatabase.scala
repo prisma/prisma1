@@ -15,7 +15,7 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
   implicit lazy val materializer: ActorMaterializer = dependencies.materializer
 
   def setup(project: Project): Unit = {
-    dependencies.deployConnector.deleteProjectDatabase(project.dbName).await
+    deleteProjectDatabase(project)
     dependencies.invalidationTestKit.publish(Only(project.id), project.id)
     createProjectDatabase(project)
 
@@ -50,12 +50,12 @@ case class ApiTestDatabase()(implicit dependencies: TestApiDependencies) extends
     runMutaction(CreateModelTable(project, model))
 
     model.scalarNonListFields
-      .filter(f => f.name != ReservedFields.idFieldName)
+      .filter(f => !f.isId)
       .map(field => CreateColumn(project, model, field))
-      .map(runMutaction)
+      .foreach(runMutaction)
 
     model.scalarListFields
       .map(field => CreateScalarListTable(project, model, field))
-      .map(runMutaction)
+      .foreach(runMutaction)
   }
 }

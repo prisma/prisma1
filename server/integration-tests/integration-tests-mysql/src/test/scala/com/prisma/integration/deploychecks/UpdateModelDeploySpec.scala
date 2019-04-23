@@ -9,7 +9,8 @@ class UpdateModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -18,7 +19,8 @@ class UpdateModelDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type B @rename(oldName: "A"){
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)

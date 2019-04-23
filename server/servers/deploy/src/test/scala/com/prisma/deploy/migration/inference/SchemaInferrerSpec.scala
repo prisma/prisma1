@@ -1,11 +1,10 @@
 package com.prisma.deploy.migration.inference
 
-import com.prisma.deploy.connector.InferredTables
 import com.prisma.deploy.migration.validation.DataModelValidatorImpl
 import com.prisma.deploy.specutils.DeploySpecBase
 import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, MigrationsCapability, RelationLinkListCapability, RelationLinkTableCapability}
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, FieldManifestation, ModelManifestation, RelationTable}
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, RelationSide, Schema}
+import com.prisma.shared.models.{ConnectorCapabilities, RelationSide, Schema}
 import com.prisma.shared.schema_dsl.{SchemaDsl, TestProject}
 import org.scalatest.{Matchers, WordSpec}
 
@@ -155,9 +154,18 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
   }
 
   "if a given relation does already exist, the inferer" should {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val comment = schema.model("Comment")
-      schema.model("Todo").oneToManyRelation("comments", "todo", comment, relationName = Some("CommentToTodo"))
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+        |type Todo {
+        |  id: ID! @id
+        |  comments: [Comment] @relation(name: "CommentToTodo" $listInlineArgument)
+        |}
+        |
+        |type Comment {
+        |  id: ID! @id
+        |  todo: Todo @relation(name: "CommentToTodo")
+        |}
+      """.stripMargin
     }
 
     "infer the existing relation and update it accordingly when the type names change" in {
@@ -185,8 +193,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
-      relation.modelAName should be("TodoNew")
-      relation.modelBName should be("CommentNew")
+      relation.modelAName should be("CommentNew")
+      relation.modelBName should be("TodoNew")
 
       val field1 = newSchema.getModelByName_!("TodoNew").getRelationFieldByName_!("comments")
       field1.isList should be(true)
@@ -226,8 +234,8 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
       newSchema.relations.foreach(println(_))
 
       val relation = newSchema.getRelationByName_!("CommentNewToTodoNew")
-      relation.modelAName should be("TodoNew")
-      relation.modelBName should be("CommentNew")
+      relation.modelAName should be("CommentNew")
+      relation.modelBName should be("TodoNew")
 
       val field1 = newSchema.getModelByName_!("TodoNew").getRelationFieldByName_!("commentsNew")
       field1.isList should be(true)
@@ -241,8 +249,13 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
 
   "if a model already exists and it gets renamed, the inferrer" should {
     "infer the next model with the stable identifier of the existing model" in {
-      val project = SchemaDsl.fromBuilder { schema =>
-        schema.model("Todo").field("title", _.String)
+      val project = SchemaDsl.fromStringV11() {
+        """
+          |type Todo {
+          |  id: ID! @id
+          |  title: String
+          |}
+        """.stripMargin
       }
       val types =
         """
@@ -543,7 +556,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         |  model: Model @relation(name: "ModelToModelRelation", link: TABLE)
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  firstColumn: Model!
         |  secondColumn: Model!
         |}
@@ -589,7 +602,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         |  model: Model @relation(name: "ModelToModelRelation")
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  firstColumn: Model!
         |  secondColumn: Model!
         |}
@@ -611,7 +624,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
         |  model: Model @relation(name: "ModelToModelRelation", link: TABLE)
         |}
         |
-        |type ModelToModelRelation @linkTable {
+        |type ModelToModelRelation @relationTable {
         |  idColumn: ID! @id @db(name: "id_column")
         |  firstColumn: Model!
         |  secondColumn: Model!
@@ -627,7 +640,7 @@ class SchemaInferrerSpec extends WordSpec with Matchers with DeploySpecBase {
   }
 
   def infer(schema: Schema, types: String, mapping: SchemaMapping = SchemaMapping.empty, capabilities: ConnectorCapabilities): Schema = {
-    val prismaSdl = DataModelValidatorImpl.validate(types, deployConnector.fieldRequirements, capabilities).get.dataModel
-    SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl, InferredTables.empty)
+    val prismaSdl = DataModelValidatorImpl.validate(types, capabilities).get.dataModel
+    SchemaInferrer(capabilities).infer(schema, mapping, prismaSdl)
   }
 }

@@ -10,7 +10,7 @@ exports[`Introspector sportsdb 1`] = `
   floor: String
   language: String
   locality: String
-  locationId: Location! @pgColumn(name: \\"location_id\\")
+  location: Location! @pgColumn(name: \\"location_id\\")
   neighborhood: String
   postalCode: String @pgColumn(name: \\"postal_code\\")
   region: String
@@ -23,52 +23,60 @@ exports[`Introspector sportsdb 1`] = `
 
 type Affiliation @pgTable(name: \\"affiliations\\") {
   id: Int! @unique
-  affiliation_phases: [AffiliationPhase]
   affiliationKey: String! @pgColumn(name: \\"affiliation_key\\")
-  affiliationPhases: [AffiliationPhase] @pgColumn(name: \\"affiliation_phases\\")
-  affiliationsDocuments: [AffiliationsDocument] @pgColumn(name: \\"affiliations_documents\\")
-  affiliationsEvents: [AffiliationsEvent] @pgColumn(name: \\"affiliations_events\\")
-  affiliationsMedia: [AffiliationsMedia] @pgColumn(name: \\"affiliations_media\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references AffiliationPhase.affiliation.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAffiliation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references AffiliationPhase.ancestorAffiliation.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAncestorAffiliation\\")
+  affiliationsDocuments: [AffiliationsDocument]
+  affiliationsEvents: [AffiliationsEvent]
+  affiliationsMedia: [AffiliationsMedia]
   affiliationType: String @pgColumn(name: \\"affiliation_type\\")
   positions: [Position]
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
   seasons: [Season]
   standings: [Standing]
-  standingSubgroups: [StandingSubgroup] @pgColumn(name: \\"standing_subgroups\\")
-  teamPhases: [TeamPhase] @pgColumn(name: \\"team_phases\\")
+  standingSubgroups: [StandingSubgroup]
+  teamPhases: [TeamPhase]
 }
 
 type AffiliationPhase @pgTable(name: \\"affiliation_phases\\") {
   id: Int! @unique
-  affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
-  ancestorAffiliationId: Affiliation @pgColumn(name: \\"ancestor_affiliation_id\\")
+  affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\") @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAffiliation\\")
+  ancestorAffiliation: Affiliation @pgColumn(name: \\"ancestor_affiliation_id\\") @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAncestorAffiliation\\")
   endDateTime: DateTime @pgColumn(name: \\"end_date_time\\")
-  endSeasonId: Season @pgColumn(name: \\"end_season_id\\")
+  endSeason: Season @pgColumn(name: \\"end_season_id\\") @relation(name: \\"AffiliationPhaseEndSeasonToSeasonAffiliationPhases\\")
   startDateTime: DateTime @pgColumn(name: \\"start_date_time\\")
-  startSeasonId: Season @pgColumn(name: \\"start_season_id\\")
+  startSeason: Season @pgColumn(name: \\"start_season_id\\") @relation(name: \\"AffiliationPhaseStartSeasonToSeasonAffiliationPhases\\")
 }
 
 type AffiliationsDocument @linkTable @pgTable(name: \\"affiliations_documents\\") {
-  affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
-  documentId: Document! @pgColumn(name: \\"document_id\\")
+  affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
+  document: Document! @pgColumn(name: \\"document_id\\")
 }
 
 type AffiliationsEvent @linkTable @pgTable(name: \\"affiliations_events\\") {
-  affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
 }
 
 type AffiliationsMedia @linkTable @pgTable(name: \\"affiliations_media\\") {
-  affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
-  mediaId: Media! @pgColumn(name: \\"media_id\\")
+  affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
+  media: Media! @pgColumn(name: \\"media_id\\")
 }
 
 type AmericanFootballActionParticipant @pgTable(name: \\"american_football_action_participants\\") {
   id: Int! @unique
-  americanFootballActionPlayId: AmericanFootballActionPlay! @pgColumn(name: \\"american_football_action_play_id\\")
+  americanFootballActionPlay: AmericanFootballActionPlay! @pgColumn(name: \\"american_football_action_play_id\\")
   fieldLine: Int @pgColumn(name: \\"field_line\\")
   participantRole: String! @pgColumn(name: \\"participant_role\\")
-  personId: Person! @pgColumn(name: \\"person_id\\")
+  person: Person! @pgColumn(name: \\"person_id\\")
   scoreCredit: Int @pgColumn(name: \\"score_credit\\")
   scoreType: String @pgColumn(name: \\"score_type\\")
   yardage: Int
@@ -77,8 +85,8 @@ type AmericanFootballActionParticipant @pgTable(name: \\"american_football_actio
 
 type AmericanFootballActionPlay @pgTable(name: \\"american_football_action_plays\\") {
   id: Int! @unique
-  americanFootballActionParticipants: [AmericanFootballActionParticipant] @pgColumn(name: \\"american_football_action_participants\\")
-  americanFootballEventStateId: AmericanFootballEventState! @pgColumn(name: \\"american_football_event_state_id\\")
+  americanFootballActionParticipants: [AmericanFootballActionParticipant]
+  americanFootballEventState: AmericanFootballEventState! @pgColumn(name: \\"american_football_event_state_id\\")
   comment: String
   driveResult: String @pgColumn(name: \\"drive_result\\")
   playType: String @pgColumn(name: \\"play_type\\")
@@ -118,20 +126,20 @@ type AmericanFootballDownProgressStat @pgTable(name: \\"american_football_down_p
 
 type AmericanFootballEventState @pgTable(name: \\"american_football_event_states\\") {
   id: Int! @unique
-  americanFootballActionPlays: [AmericanFootballActionPlay] @pgColumn(name: \\"american_football_action_plays\\")
+  americanFootballActionPlays: [AmericanFootballActionPlay]
   clockState: String @pgColumn(name: \\"clock_state\\")
   context: String
   currentState: Int @pgColumn(name: \\"current_state\\")
   distanceFor1stDown: Int @pgColumn(name: \\"distance_for_1st_down\\")
   down: Int
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   fieldLine: Int @pgColumn(name: \\"field_line\\")
   fieldSide: String @pgColumn(name: \\"field_side\\")
   periodTimeElapsed: String @pgColumn(name: \\"period_time_elapsed\\")
   periodTimeRemaining: String @pgColumn(name: \\"period_time_remaining\\")
   periodValue: Int @pgColumn(name: \\"period_value\\")
   sequenceNumber: Int @pgColumn(name: \\"sequence_number\\")
-  teamInPossessionId: Team @pgColumn(name: \\"team_in_possession_id\\")
+  teamInPossession: Team @pgColumn(name: \\"team_in_possession_id\\")
 }
 
 type AmericanFootballFumblesStat @pgTable(name: \\"american_football_fumbles_stats\\") {
@@ -262,7 +270,7 @@ type AmericanFootballSpecialTeamsStat @pgTable(name: \\"american_football_specia
 
 type BaseballActionContactDetail @pgTable(name: \\"baseball_action_contact_details\\") {
   id: Int! @unique
-  baseballActionPitchId: BaseballActionPitch! @pgColumn(name: \\"baseball_action_pitch_id\\")
+  baseballActionPitch: BaseballActionPitch! @pgColumn(name: \\"baseball_action_pitch_id\\")
   comment: String
   location: String
   strength: String
@@ -274,9 +282,9 @@ type BaseballActionContactDetail @pgTable(name: \\"baseball_action_contact_detai
 type BaseballActionPitch @pgTable(name: \\"baseball_action_pitches\\") {
   id: Int! @unique
   ballType: String @pgColumn(name: \\"ball_type\\")
-  baseballActionContactDetails: [BaseballActionContactDetail] @pgColumn(name: \\"baseball_action_contact_details\\")
-  baseballActionPlayId: BaseballActionPlay! @pgColumn(name: \\"baseball_action_play_id\\")
-  baseballDefensiveGroupId: BaseballDefensiveGroup @pgColumn(name: \\"baseball_defensive_group_id\\")
+  baseballActionContactDetails: [BaseballActionContactDetail]
+  baseballActionPlay: BaseballActionPlay! @pgColumn(name: \\"baseball_action_play_id\\")
+  baseballDefensiveGroup: BaseballDefensiveGroup @pgColumn(name: \\"baseball_defensive_group_id\\")
   comment: String
   pitchLocation: String @pgColumn(name: \\"pitch_location\\")
   pitchType: String @pgColumn(name: \\"pitch_type\\")
@@ -290,9 +298,9 @@ type BaseballActionPitch @pgTable(name: \\"baseball_action_pitches\\") {
 
 type BaseballActionPlay @pgTable(name: \\"baseball_action_plays\\") {
   id: Int! @unique
-  baseballActionPitches: [BaseballActionPitch] @pgColumn(name: \\"baseball_action_pitches\\")
+  baseballActionPitches: [BaseballActionPitch]
   baseballDefensiveGroupId: Int @pgColumn(name: \\"baseball_defensive_group_id\\")
-  baseballEventStateId: BaseballEventState! @pgColumn(name: \\"baseball_event_state_id\\")
+  baseballEventState: BaseballEventState! @pgColumn(name: \\"baseball_event_state_id\\")
   comment: String
   earnedRunsScored: String @pgColumn(name: \\"earned_runs_scored\\")
   notation: String
@@ -308,14 +316,14 @@ type BaseballActionPlay @pgTable(name: \\"baseball_action_plays\\") {
 
 type BaseballActionSubstitution @pgTable(name: \\"baseball_action_substitutions\\") {
   id: Int! @unique
-  baseballEventStateId: BaseballEventState! @pgColumn(name: \\"baseball_event_state_id\\")
+  baseballEventState: BaseballEventState! @pgColumn(name: \\"baseball_event_state_id\\")
   comment: String
-  personOriginalId: Person @pgColumn(name: \\"person_original_id\\")
+  personOriginal: Person @pgColumn(name: \\"person_original_id\\") @relation(name: \\"BaseballActionSubstitutionPersonOriginalToPersonBaseballActionSubstitutions\\")
   personOriginalLineupSlot: Int @pgColumn(name: \\"person_original_lineup_slot\\")
-  personOriginalPositionId: Position @pgColumn(name: \\"person_original_position_id\\")
-  personReplacingId: Person @pgColumn(name: \\"person_replacing_id\\")
+  personOriginalPosition: Position @pgColumn(name: \\"person_original_position_id\\") @relation(name: \\"BaseballActionSubstitutionPersonOriginalPositionToPositionBaseballActionSubstitutions\\")
+  personReplacing: Person @pgColumn(name: \\"person_replacing_id\\") @relation(name: \\"BaseballActionSubstitutionPersonReplacingToPersonBaseballActionSubstitutions\\")
   personReplacingLineupSlot: Int @pgColumn(name: \\"person_replacing_lineup_slot\\")
-  personReplacingPositionId: Position @pgColumn(name: \\"person_replacing_position_id\\")
+  personReplacingPosition: Position @pgColumn(name: \\"person_replacing_position_id\\") @relation(name: \\"BaseballActionSubstitutionPersonReplacingPositionToPositionBaseballActionSubstitutions\\")
   personType: String @pgColumn(name: \\"person_type\\")
   sequenceNumber: Int @pgColumn(name: \\"sequence_number\\")
   substitutionReason: String @pgColumn(name: \\"substitution_reason\\")
@@ -323,15 +331,15 @@ type BaseballActionSubstitution @pgTable(name: \\"baseball_action_substitutions\
 
 type BaseballDefensiveGroup @linkTable @pgTable(name: \\"baseball_defensive_group\\") {
   id: Int! @unique
-  baseballActionPitches: [BaseballActionPitch] @pgColumn(name: \\"baseball_action_pitches\\")
-  baseballDefensivePlayers: [BaseballDefensivePlayer] @pgColumn(name: \\"baseball_defensive_players\\")
+  baseballActionPitches: [BaseballActionPitch]
+  baseballDefensivePlayers: [BaseballDefensivePlayer]
 }
 
 type BaseballDefensivePlayer @pgTable(name: \\"baseball_defensive_players\\") {
   id: Int! @unique
-  baseballDefensiveGroupId: BaseballDefensiveGroup! @pgColumn(name: \\"baseball_defensive_group_id\\")
-  playerId: Person! @pgColumn(name: \\"player_id\\")
-  positionId: Position! @pgColumn(name: \\"position_id\\")
+  baseballDefensiveGroup: BaseballDefensiveGroup! @pgColumn(name: \\"baseball_defensive_group_id\\")
+  player: Person! @pgColumn(name: \\"player_id\\")
+  position: Position! @pgColumn(name: \\"position_id\\")
 }
 
 type BaseballDefensiveStat @pgTable(name: \\"baseball_defensive_stats\\") {
@@ -351,23 +359,26 @@ type BaseballEventState @pgTable(name: \\"baseball_event_states\\") {
   id: Int! @unique
   atBatNumber: Int @pgColumn(name: \\"at_bat_number\\")
   balls: Int
-  baseballActionPlays: [BaseballActionPlay] @pgColumn(name: \\"baseball_action_plays\\")
-  baseballActionSubstitutions: [BaseballActionSubstitution] @pgColumn(name: \\"baseball_action_substitutions\\")
-  batterId: Person @pgColumn(name: \\"batter_id\\")
+  baseballActionPlays: [BaseballActionPlay]
+  baseballActionSubstitutions: [BaseballActionSubstitution]
+  batter: Person @pgColumn(name: \\"batter_id\\") @relation(name: \\"BaseballEventStateBatterToPersonBaseballEventStates\\")
   batterSide: String @pgColumn(name: \\"batter_side\\")
   context: String
   currentState: Int @pgColumn(name: \\"current_state\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   inningHalf: String @pgColumn(name: \\"inning_half\\")
   inningValue: Int @pgColumn(name: \\"inning_value\\")
   outs: Int
-  pitcherId: Person @pgColumn(name: \\"pitcher_id\\")
+  pitcher: Person @pgColumn(name: \\"pitcher_id\\") @relation(name: \\"BaseballEventStatePitcherToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  runner_on_first_id: Person @relation(name: \\"BaseballEventStateRunner_on_first_idToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  runner_on_second_id: Person @relation(name: \\"BaseballEventStateRunner_on_second_idToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  runner_on_third_id: Person @relation(name: \\"BaseballEventStateRunner_on_third_idToPersonBaseballEventStates\\")
   runnerOnFirst: Int @pgColumn(name: \\"runner_on_first\\")
-  runnerOnFirstId: Person @pgColumn(name: \\"runner_on_first_id\\")
   runnerOnSecond: Int @pgColumn(name: \\"runner_on_second\\")
-  runnerOnSecondId: Person @pgColumn(name: \\"runner_on_second_id\\")
   runnerOnThird: Int @pgColumn(name: \\"runner_on_third\\")
-  runnerOnThirdId: Person @pgColumn(name: \\"runner_on_third_id\\")
   runsThisInningHalf: Int @pgColumn(name: \\"runs_this_inning_half\\")
   sequenceNumber: Int @pgColumn(name: \\"sequence_number\\")
   strikes: Int
@@ -455,7 +466,7 @@ type BasketballEventState @pgTable(name: \\"basketball_event_states\\") {
   id: Int! @unique
   context: String
   currentState: Int @pgColumn(name: \\"current_state\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   periodTimeElapsed: String @pgColumn(name: \\"period_time_elapsed\\")
   periodTimeRemaining: String @pgColumn(name: \\"period_time_remaining\\")
   periodValue: String @pgColumn(name: \\"period_value\\")
@@ -515,20 +526,20 @@ type BasketballTeamStat @pgTable(name: \\"basketball_team_stats\\") {
 type Bookmaker @pgTable(name: \\"bookmakers\\") {
   id: Int! @unique
   bookmakerKey: String @pgColumn(name: \\"bookmaker_key\\")
-  locationId: Location @pgColumn(name: \\"location_id\\")
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
-  wageringMoneylines: [WageringMoneyline] @pgColumn(name: \\"wagering_moneylines\\")
-  wageringOddsLines: [WageringOddsLine] @pgColumn(name: \\"wagering_odds_lines\\")
-  wageringRunlines: [WageringRunline] @pgColumn(name: \\"wagering_runlines\\")
-  wageringStraightSpreadLines: [WageringStraightSpreadLine] @pgColumn(name: \\"wagering_straight_spread_lines\\")
-  wageringTotalScoreLines: [WageringTotalScoreLine] @pgColumn(name: \\"wagering_total_score_lines\\")
+  location: Location @pgColumn(name: \\"location_id\\")
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
+  wageringMoneylines: [WageringMoneyline]
+  wageringOddsLines: [WageringOddsLine]
+  wageringRunlines: [WageringRunline]
+  wageringStraightSpreadLines: [WageringStraightSpreadLine]
+  wageringTotalScoreLines: [WageringTotalScoreLine]
 }
 
 type CorePersonStat @pgTable(name: \\"core_person_stats\\") {
   id: Int! @unique
   eventsPlayed: Int @pgColumn(name: \\"events_played\\")
   eventsStarted: Int @pgColumn(name: \\"events_started\\")
-  positionId: Position @pgColumn(name: \\"position_id\\")
+  position: Position @pgColumn(name: \\"position_id\\")
   timePlayedEvent: String @pgColumn(name: \\"time_played_event\\")
   timePlayedEventAverage: String @pgColumn(name: \\"time_played_event_average\\")
   timePlayedTotal: String @pgColumn(name: \\"time_played_total\\")
@@ -566,71 +577,71 @@ type DisplayName @pgTable(name: \\"display_names\\") {
 
 type Document @pgTable(name: \\"documents\\") {
   id: Int! @unique
-  affiliationsDocuments: [AffiliationsDocument] @pgColumn(name: \\"affiliations_documents\\")
+  affiliationsDocuments: [AffiliationsDocument]
   dateTime: DateTime @pgColumn(name: \\"date_time\\")
   dbLoadingDateTime: DateTime @pgColumn(name: \\"db_loading_date_time\\")
   docId: String! @pgColumn(name: \\"doc_id\\")
-  documentContents: [DocumentContent] @pgColumn(name: \\"document_contents\\")
-  documentFixtureId: DocumentFixture! @pgColumn(name: \\"document_fixture_id\\")
-  documentFixturesEvents: [DocumentFixturesEvent] @pgColumn(name: \\"document_fixtures_events\\")
-  documentPackageEntry: [DocumentPackageEntry] @pgColumn(name: \\"document_package_entry\\")
-  documentsMedia: [DocumentsMedia] @pgColumn(name: \\"documents_media\\")
-  eventsDocuments: [EventsDocument] @pgColumn(name: \\"events_documents\\")
+  documentContents: [DocumentContent]
+  documentFixture: DocumentFixture! @pgColumn(name: \\"document_fixture_id\\")
+  documentFixturesEvents: [DocumentFixturesEvent]
+  documentPackageEntry: [DocumentPackageEntry]
+  documentsMedia: [DocumentsMedia]
+  eventsDocuments: [EventsDocument]
   language: String
-  latestRevisions: [LatestRevision] @pgColumn(name: \\"latest_revisions\\")
-  personsDocuments: [PersonsDocument] @pgColumn(name: \\"persons_documents\\")
+  latestRevisions: [LatestRevision]
+  personsDocuments: [PersonsDocument]
   priority: String
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\") @relation(name: \\"DocumentPublisherToPublisherDocuments\\")
   revisionId: String @pgColumn(name: \\"revision_id\\")
-  sourceId: Publisher @pgColumn(name: \\"source_id\\")
+  source: Publisher @pgColumn(name: \\"source_id\\") @relation(name: \\"DocumentSourceToPublisherDocuments\\")
   statsCoverage: String @pgColumn(name: \\"stats_coverage\\")
-  teamsDocuments: [TeamsDocument] @pgColumn(name: \\"teams_documents\\")
+  teamsDocuments: [TeamsDocument]
   title: String
 }
 
 type DocumentClass @pgTable(name: \\"document_classes\\") {
   id: Int! @unique
-  documentFixtures: [DocumentFixture] @pgColumn(name: \\"document_fixtures\\")
+  documentFixtures: [DocumentFixture]
   name: String
 }
 
 type DocumentContent @pgTable(name: \\"document_contents\\") {
   id: Int! @unique
   abstract: String
-  documentId: Document! @pgColumn(name: \\"document_id\\")
+  document: Document! @pgColumn(name: \\"document_id\\")
   sportsml: String
 }
 
 type DocumentFixture @pgTable(name: \\"document_fixtures\\") {
   id: Int! @unique
-  documentClassId: DocumentClass! @pgColumn(name: \\"document_class_id\\")
-  documentFixturesEvents: [DocumentFixturesEvent] @pgColumn(name: \\"document_fixtures_events\\")
+  documentClass: DocumentClass! @pgColumn(name: \\"document_class_id\\")
+  documentFixturesEvents: [DocumentFixturesEvent]
   documents: [Document]
   fixtureKey: String @pgColumn(name: \\"fixture_key\\")
   name: String
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
 }
 
 type DocumentFixturesEvent @pgTable(name: \\"document_fixtures_events\\") {
   id: Int! @unique
-  documentFixtureId: DocumentFixture! @pgColumn(name: \\"document_fixture_id\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  documentFixture: DocumentFixture! @pgColumn(name: \\"document_fixture_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   lastUpdate: DateTime @pgColumn(name: \\"last_update\\")
-  latestDocumentId: Document! @pgColumn(name: \\"latest_document_id\\")
+  latestDocument: Document! @pgColumn(name: \\"latest_document_id\\")
 }
 
 type DocumentPackage @pgTable(name: \\"document_packages\\") {
   id: Int! @unique
   dateTime: DateTime @pgColumn(name: \\"date_time\\")
-  documentPackageEntry: [DocumentPackageEntry] @pgColumn(name: \\"document_package_entry\\")
+  documentPackageEntry: [DocumentPackageEntry]
   packageKey: String @pgColumn(name: \\"package_key\\")
   packageName: String @pgColumn(name: \\"package_name\\")
 }
 
 type DocumentPackageEntry @pgTable(name: \\"document_package_entry\\") {
   id: Int! @unique
-  documentId: Document! @pgColumn(name: \\"document_id\\")
-  documentPackageId: DocumentPackage! @pgColumn(name: \\"document_package_id\\")
+  document: Document! @pgColumn(name: \\"document_id\\")
+  documentPackage: DocumentPackage! @pgColumn(name: \\"document_package_id\\")
   headline: String
   rank: String
   shortHeadline: String @pgColumn(name: \\"short_headline\\")
@@ -638,57 +649,57 @@ type DocumentPackageEntry @pgTable(name: \\"document_package_entry\\") {
 
 type DocumentsMedia @pgTable(name: \\"documents_media\\") {
   id: Int! @unique
-  documentId: Document! @pgColumn(name: \\"document_id\\")
-  mediaCaptionId: MediaCaption! @pgColumn(name: \\"media_caption_id\\")
-  mediaId: Media! @pgColumn(name: \\"media_id\\")
+  document: Document! @pgColumn(name: \\"document_id\\")
+  media: Media! @pgColumn(name: \\"media_id\\")
+  mediaCaption: MediaCaption! @pgColumn(name: \\"media_caption_id\\")
 }
 
 type Event @pgTable(name: \\"events\\") {
   id: Int! @unique
-  affiliationsEvents: [AffiliationsEvent] @pgColumn(name: \\"affiliations_events\\")
-  americanFootballEventStates: [AmericanFootballEventState] @pgColumn(name: \\"american_football_event_states\\")
+  affiliationsEvents: [AffiliationsEvent]
+  americanFootballEventStates: [AmericanFootballEventState]
   attendance: String
-  baseballEventStates: [BaseballEventState] @pgColumn(name: \\"baseball_event_states\\")
-  basketballEventStates: [BasketballEventState] @pgColumn(name: \\"basketball_event_states\\")
-  documentFixturesEvents: [DocumentFixturesEvent] @pgColumn(name: \\"document_fixtures_events\\")
+  baseballEventStates: [BaseballEventState]
+  basketballEventStates: [BasketballEventState]
+  documentFixturesEvents: [DocumentFixturesEvent]
   duration: String
   eventKey: String! @pgColumn(name: \\"event_key\\")
-  eventsDocuments: [EventsDocument] @pgColumn(name: \\"events_documents\\")
-  eventsMedia: [EventsMedia] @pgColumn(name: \\"events_media\\")
-  eventsSubSeasons: [EventsSubSeason] @pgColumn(name: \\"events_sub_seasons\\")
+  eventsDocuments: [EventsDocument]
+  eventsMedia: [EventsMedia]
+  eventsSubSeasons: [EventsSubSeason]
   eventStatus: String @pgColumn(name: \\"event_status\\")
-  iceHockeyEventStates: [IceHockeyEventState] @pgColumn(name: \\"ice_hockey_event_states\\")
+  iceHockeyEventStates: [IceHockeyEventState]
   lastUpdate: DateTime @pgColumn(name: \\"last_update\\")
-  motorRacingEventStates: [MotorRacingEventState] @pgColumn(name: \\"motor_racing_event_states\\")
-  participantsEvents: [ParticipantsEvent] @pgColumn(name: \\"participants_events\\")
-  personEventMetadata: [PersonEventMetadatum] @pgColumn(name: \\"person_event_metadata\\")
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  motorRacingEventStates: [MotorRacingEventState]
+  participantsEvents: [ParticipantsEvent]
+  personEventMetadata: [PersonEventMetadatum]
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
+  site: Site @pgColumn(name: \\"site_id\\")
   siteAlignment: String @pgColumn(name: \\"site_alignment\\")
-  siteId: Site @pgColumn(name: \\"site_id\\")
-  soccerEventStates: [SoccerEventState] @pgColumn(name: \\"soccer_event_states\\")
+  soccerEventStates: [SoccerEventState]
   startDateTime: DateTime @pgColumn(name: \\"start_date_time\\")
-  tennisEventStates: [TennisEventState] @pgColumn(name: \\"tennis_event_states\\")
-  wageringMoneylines: [WageringMoneyline] @pgColumn(name: \\"wagering_moneylines\\")
-  wageringOddsLines: [WageringOddsLine] @pgColumn(name: \\"wagering_odds_lines\\")
-  wageringRunlines: [WageringRunline] @pgColumn(name: \\"wagering_runlines\\")
-  wageringStraightSpreadLines: [WageringStraightSpreadLine] @pgColumn(name: \\"wagering_straight_spread_lines\\")
-  wageringTotalScoreLines: [WageringTotalScoreLine] @pgColumn(name: \\"wagering_total_score_lines\\")
-  weatherConditions: [WeatherCondition] @pgColumn(name: \\"weather_conditions\\")
+  tennisEventStates: [TennisEventState]
+  wageringMoneylines: [WageringMoneyline]
+  wageringOddsLines: [WageringOddsLine]
+  wageringRunlines: [WageringRunline]
+  wageringStraightSpreadLines: [WageringStraightSpreadLine]
+  wageringTotalScoreLines: [WageringTotalScoreLine]
+  weatherConditions: [WeatherCondition]
 }
 
 type EventsDocument @linkTable @pgTable(name: \\"events_documents\\") {
-  documentId: Document! @pgColumn(name: \\"document_id\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  document: Document! @pgColumn(name: \\"document_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
 }
 
 type EventsMedia @linkTable @pgTable(name: \\"events_media\\") {
-  eventId: Event! @pgColumn(name: \\"event_id\\")
-  mediaId: Media! @pgColumn(name: \\"media_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
+  media: Media! @pgColumn(name: \\"media_id\\")
 }
 
 type EventsSubSeason @linkTable @pgTable(name: \\"events_sub_seasons\\") {
-  eventId: Event! @pgColumn(name: \\"event_id\\")
-  subSeasonId: SubSeason! @pgColumn(name: \\"sub_season_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
+  subSeason: SubSeason! @pgColumn(name: \\"sub_season_id\\")
 }
 
 type IceHockeyActionParticipant @pgTable(name: \\"ice_hockey_action_participants\\") {
@@ -734,7 +745,7 @@ type IceHockeyEventState @pgTable(name: \\"ice_hockey_event_states\\") {
   id: Int! @unique
   context: String
   currentState: Int @pgColumn(name: \\"current_state\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   periodTimeElapsed: String @pgColumn(name: \\"period_time_elapsed\\")
   periodTimeRemaining: String @pgColumn(name: \\"period_time_remaining\\")
   periodValue: String @pgColumn(name: \\"period_value\\")
@@ -780,27 +791,27 @@ type InjuryPhase @pgTable(name: \\"injury_phases\\") {
   injurySide: String @pgColumn(name: \\"injury_side\\")
   injuryStatus: String @pgColumn(name: \\"injury_status\\")
   injuryType: String @pgColumn(name: \\"injury_type\\")
-  personId: Person! @pgColumn(name: \\"person_id\\")
+  person: Person! @pgColumn(name: \\"person_id\\")
   phaseType: String @pgColumn(name: \\"phase_type\\")
-  seasonId: Season @pgColumn(name: \\"season_id\\")
+  season: Season @pgColumn(name: \\"season_id\\")
   startDateTime: DateTime @pgColumn(name: \\"start_date_time\\")
 }
 
 type KeyAlias @pgTable(name: \\"key_aliases\\") {
   id: Int! @unique
   keyId: Int! @pgColumn(name: \\"key_id\\")
-  keyRootId: KeyRoot! @pgColumn(name: \\"key_root_id\\")
+  keyRoot: KeyRoot! @pgColumn(name: \\"key_root_id\\")
 }
 
 type KeyRoot @pgTable(name: \\"key_roots\\") {
   id: Int! @unique
-  keyAliases: [KeyAlias] @pgColumn(name: \\"key_aliases\\")
+  keyAliases: [KeyAlias]
   keyType: String @pgColumn(name: \\"key_type\\")
 }
 
 type LatestRevision @pgTable(name: \\"latest_revisions\\") {
   id: Int! @unique
-  latestDocumentId: Document! @pgColumn(name: \\"latest_document_id\\")
+  latestDocument: Document! @pgColumn(name: \\"latest_document_id\\")
   revisionId: String! @pgColumn(name: \\"revision_id\\")
 }
 
@@ -812,44 +823,60 @@ type Location @pgTable(name: \\"locations\\") {
   latitude: String
   longitude: String
   media: [Media]
-  persons: [Person]
-  persons: [Person]
-  persons: [Person]
-  persons: [Person]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.birthLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.deathLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonDeathLocation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.hometownLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonHometownLocation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.residenceLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonResidenceLocation\\")
   sites: [Site]
   timezone: String
 }
 
 type Media @pgTable(name: \\"media\\") {
   id: Int! @unique
-  affiliationsMedia: [AffiliationsMedia] @pgColumn(name: \\"affiliations_media\\")
-  creationLocationId: Location! @pgColumn(name: \\"creation_location_id\\")
-  creditId: Person! @pgColumn(name: \\"credit_id\\")
+  affiliationsMedia: [AffiliationsMedia]
+  creationLocation: Location! @pgColumn(name: \\"creation_location_id\\")
+  credit: Person! @pgColumn(name: \\"credit_id\\")
   dateTime: String @pgColumn(name: \\"date_time\\")
   dbLoadingDateTime: DateTime @pgColumn(name: \\"db_loading_date_time\\")
-  documentsMedia: [DocumentsMedia] @pgColumn(name: \\"documents_media\\")
-  eventsMedia: [EventsMedia] @pgColumn(name: \\"events_media\\")
-  mediaCaptions: [MediaCaption] @pgColumn(name: \\"media_captions\\")
-  mediaContents: [MediaContent] @pgColumn(name: \\"media_contents\\")
-  mediaKeywords: [MediaKeyword] @pgColumn(name: \\"media_keywords\\")
+  documentsMedia: [DocumentsMedia]
+  eventsMedia: [EventsMedia]
+  mediaCaptions: [MediaCaption]
+  mediaContents: [MediaContent]
+  mediaKeywords: [MediaKeyword]
   mediaType: String @pgColumn(name: \\"media_type\\")
   objectId: Int @pgColumn(name: \\"object_id\\")
-  personsMedia: [PersonsMedia] @pgColumn(name: \\"persons_media\\")
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  personsMedia: [PersonsMedia]
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
   revisionId: Int @pgColumn(name: \\"revision_id\\")
   sourceId: Int @pgColumn(name: \\"source_id\\")
-  teamsMedia: [TeamsMedia] @pgColumn(name: \\"teams_media\\")
+  teamsMedia: [TeamsMedia]
 }
 
 type MediaCaption @pgTable(name: \\"media_captions\\") {
   id: Int! @unique
   caption: String
-  captionAuthorId: Person! @pgColumn(name: \\"caption_author_id\\")
+  captionAuthor: Person! @pgColumn(name: \\"caption_author_id\\")
   captionSize: String @pgColumn(name: \\"caption_size\\")
   captionType: String @pgColumn(name: \\"caption_type\\")
-  documentsMedia: [DocumentsMedia] @pgColumn(name: \\"documents_media\\")
+  documentsMedia: [DocumentsMedia]
   language: String
-  mediaId: Media! @pgColumn(name: \\"media_id\\")
+  media: Media! @pgColumn(name: \\"media_id\\")
 }
 
 type MediaContent @pgTable(name: \\"media_contents\\") {
@@ -858,7 +885,7 @@ type MediaContent @pgTable(name: \\"media_contents\\") {
   fileSize: String @pgColumn(name: \\"file_size\\")
   format: String
   height: String
-  mediaId: Media! @pgColumn(name: \\"media_id\\")
+  media: Media! @pgColumn(name: \\"media_id\\")
   mimeType: String @pgColumn(name: \\"mime_type\\")
   object: String
   resolution: String
@@ -868,14 +895,14 @@ type MediaContent @pgTable(name: \\"media_contents\\") {
 type MediaKeyword @pgTable(name: \\"media_keywords\\") {
   id: Int! @unique
   keyword: String
-  mediaId: Media! @pgColumn(name: \\"media_id\\")
+  media: Media! @pgColumn(name: \\"media_id\\")
 }
 
 type MotorRacingEventState @pgTable(name: \\"motor_racing_event_states\\") {
   id: Int! @unique
   context: String
   currentState: Int @pgColumn(name: \\"current_state\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   flagState: String @pgColumn(name: \\"flag_state\\")
   lap: String
   lapsRemaining: String @pgColumn(name: \\"laps_remaining\\")
@@ -934,7 +961,7 @@ type OutcomeTotal @pgTable(name: \\"outcome_totals\\") {
   pointsScoredFor: String @pgColumn(name: \\"points_scored_for\\")
   rank: String
   standingPoints: String @pgColumn(name: \\"standing_points\\")
-  standingSubgroupId: StandingSubgroup! @pgColumn(name: \\"standing_subgroup_id\\")
+  standingSubgroup: StandingSubgroup! @pgColumn(name: \\"standing_subgroup_id\\")
   streakDuration: String @pgColumn(name: \\"streak_duration\\")
   streakEnd: DateTime @pgColumn(name: \\"streak_end\\")
   streakStart: DateTime @pgColumn(name: \\"streak_start\\")
@@ -949,7 +976,7 @@ type OutcomeTotal @pgTable(name: \\"outcome_totals\\") {
 type ParticipantsEvent @pgTable(name: \\"participants_events\\") {
   id: Int! @unique
   alignment: String
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   eventOutcome: String @pgColumn(name: \\"event_outcome\\")
   participantId: Int! @pgColumn(name: \\"participant_id\\")
   participantType: String! @pgColumn(name: \\"participant_type\\")
@@ -960,108 +987,149 @@ type ParticipantsEvent @pgTable(name: \\"participants_events\\") {
 
 type Period @pgTable(name: \\"periods\\") {
   id: Int! @unique
-  participantEventId: ParticipantsEvent! @pgColumn(name: \\"participant_event_id\\")
+  participantEvent: ParticipantsEvent! @pgColumn(name: \\"participant_event_id\\")
   periodValue: String @pgColumn(name: \\"period_value\\")
   score: String
-  subPeriods: [SubPeriod] @pgColumn(name: \\"sub_periods\\")
+  subPeriods: [SubPeriod]
 }
 
 type Person @pgTable(name: \\"persons\\") {
   id: Int! @unique
-  americanFootballActionParticipants: [AmericanFootballActionParticipant] @pgColumn(name: \\"american_football_action_participants\\")
-  baseball_action_substitutions: [BaseballActionSubstitution]
-  baseball_event_states: [BaseballEventState]
-  baseball_event_states: [BaseballEventState]
-  baseball_event_states: [BaseballEventState]
-  baseball_event_states: [BaseballEventState]
-  baseballActionSubstitutions: [BaseballActionSubstitution] @pgColumn(name: \\"baseball_action_substitutions\\")
-  baseballDefensivePlayers: [BaseballDefensivePlayer] @pgColumn(name: \\"baseball_defensive_players\\")
-  baseballEventStates: [BaseballEventState] @pgColumn(name: \\"baseball_event_states\\")
+  americanFootballActionParticipants: [AmericanFootballActionParticipant]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballActionSubstitution.personOriginal.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalToPersonBaseballActionSubstitutions\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballActionSubstitution.personReplacing.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingToPersonBaseballActionSubstitutions\\")
+  baseballDefensivePlayers: [BaseballDefensivePlayer]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballEventState.batter.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateBatterToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballEventState.pitcher.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStatePitcherToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballEventState.runner_on_first_id.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_first_idToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballEventState.runner_on_second_id.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_second_idToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_third_idToPersonBaseballEventStates\\")
   birthDate: String @pgColumn(name: \\"birth_date\\")
-  birthLocationId: Location @pgColumn(name: \\"birth_location_id\\")
+  birthLocation: Location @pgColumn(name: \\"birth_location_id\\") @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
   deathDate: String @pgColumn(name: \\"death_date\\")
-  deathLocationId: Location @pgColumn(name: \\"death_location_id\\")
+  deathLocation: Location @pgColumn(name: \\"death_location_id\\") @relation(name: \\"LocationPersonsToPersonDeathLocation\\")
   gender: String
-  hometownLocationId: Location @pgColumn(name: \\"hometown_location_id\\")
-  injuryPhases: [InjuryPhase] @pgColumn(name: \\"injury_phases\\")
+  hometownLocation: Location @pgColumn(name: \\"hometown_location_id\\") @relation(name: \\"LocationPersonsToPersonHometownLocation\\")
+  injuryPhases: [InjuryPhase]
   media: [Media]
-  mediaCaptions: [MediaCaption] @pgColumn(name: \\"media_captions\\")
-  personEventMetadata: [PersonEventMetadatum] @pgColumn(name: \\"person_event_metadata\\")
+  mediaCaptions: [MediaCaption]
+  personEventMetadata: [PersonEventMetadatum]
   personKey: String! @pgColumn(name: \\"person_key\\")
-  personPhases: [PersonPhase] @pgColumn(name: \\"person_phases\\")
-  personsDocuments: [PersonsDocument] @pgColumn(name: \\"persons_documents\\")
-  personsMedia: [PersonsMedia] @pgColumn(name: \\"persons_media\\")
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
-  residenceLocationId: Location @pgColumn(name: \\"residence_location_id\\")
+  personPhases: [PersonPhase]
+  personsDocuments: [PersonsDocument]
+  personsMedia: [PersonsMedia]
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
+  residenceLocation: Location @pgColumn(name: \\"residence_location_id\\") @relation(name: \\"LocationPersonsToPersonResidenceLocation\\")
 }
 
 type PersonEventMetadatum @pgTable(name: \\"person_event_metadata\\") {
   id: Int! @unique
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   health: String
   lineupSlot: Int @pgColumn(name: \\"lineup_slot\\")
   lineupSlotSequence: Int @pgColumn(name: \\"lineup_slot_sequence\\")
-  personId: Person! @pgColumn(name: \\"person_id\\")
-  positionId: Position @pgColumn(name: \\"position_id\\")
-  roleId: Role @pgColumn(name: \\"role_id\\")
+  person: Person! @pgColumn(name: \\"person_id\\")
+  position: Position @pgColumn(name: \\"position_id\\")
+  role: Role @pgColumn(name: \\"role_id\\")
   status: String
-  teamId: Team @pgColumn(name: \\"team_id\\")
+  team: Team @pgColumn(name: \\"team_id\\")
   weight: String
 }
 
 type PersonPhase @pgTable(name: \\"person_phases\\") {
   id: Int! @unique
   endDateTime: DateTime @pgColumn(name: \\"end_date_time\\")
-  endSeasonId: Season @pgColumn(name: \\"end_season_id\\")
+  endSeason: Season @pgColumn(name: \\"end_season_id\\") @relation(name: \\"PersonPhaseEndSeasonToSeasonPersonPhases\\")
   entryReason: String @pgColumn(name: \\"entry_reason\\")
   exitReason: String @pgColumn(name: \\"exit_reason\\")
   height: String
   membershipId: Int! @pgColumn(name: \\"membership_id\\")
   membershipType: String! @pgColumn(name: \\"membership_type\\")
-  personId: Person! @pgColumn(name: \\"person_id\\")
+  person: Person! @pgColumn(name: \\"person_id\\")
   phaseStatus: String @pgColumn(name: \\"phase_status\\")
+  regularPosition: Position @pgColumn(name: \\"regular_position_id\\")
   regularPositionDepth: String @pgColumn(name: \\"regular_position_depth\\")
-  regularPositionId: Position @pgColumn(name: \\"regular_position_id\\")
-  roleId: Role @pgColumn(name: \\"role_id\\")
+  role: Role @pgColumn(name: \\"role_id\\")
   roleStatus: String @pgColumn(name: \\"role_status\\")
   selectionLevel: Int @pgColumn(name: \\"selection_level\\")
   selectionOverall: Int @pgColumn(name: \\"selection_overall\\")
   selectionSublevel: Int @pgColumn(name: \\"selection_sublevel\\")
   startDateTime: DateTime @pgColumn(name: \\"start_date_time\\")
-  startSeasonId: Season @pgColumn(name: \\"start_season_id\\")
+  startSeason: Season @pgColumn(name: \\"start_season_id\\") @relation(name: \\"PersonPhaseStartSeasonToSeasonPersonPhases\\")
   uniformNumber: String @pgColumn(name: \\"uniform_number\\")
   weight: String
 }
 
 type PersonsDocument @linkTable @pgTable(name: \\"persons_documents\\") {
-  documentId: Document! @pgColumn(name: \\"document_id\\")
-  personId: Person! @pgColumn(name: \\"person_id\\")
+  document: Document! @pgColumn(name: \\"document_id\\")
+  person: Person! @pgColumn(name: \\"person_id\\")
 }
 
 type PersonsMedia @linkTable @pgTable(name: \\"persons_media\\") {
-  mediaId: Media! @pgColumn(name: \\"media_id\\")
-  personId: Person! @pgColumn(name: \\"person_id\\")
+  media: Media! @pgColumn(name: \\"media_id\\")
+  person: Person! @pgColumn(name: \\"person_id\\")
 }
 
 type Position @pgTable(name: \\"positions\\") {
   id: Int! @unique
   abbreviation: String!
-  affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
-  baseball_action_substitutions: [BaseballActionSubstitution]
-  baseballActionSubstitutions: [BaseballActionSubstitution] @pgColumn(name: \\"baseball_action_substitutions\\")
-  baseballDefensivePlayers: [BaseballDefensivePlayer] @pgColumn(name: \\"baseball_defensive_players\\")
-  corePersonStats: [CorePersonStat] @pgColumn(name: \\"core_person_stats\\")
-  personEventMetadata: [PersonEventMetadatum] @pgColumn(name: \\"person_event_metadata\\")
-  personPhases: [PersonPhase] @pgColumn(name: \\"person_phases\\")
+  affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballActionSubstitution.personOriginalPosition.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalPositionToPositionBaseballActionSubstitutions\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballActionSubstitution.personReplacingPosition.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingPositionToPositionBaseballActionSubstitutions\\")
+  baseballDefensivePlayers: [BaseballDefensivePlayer]
+  corePersonStats: [CorePersonStat]
+  personEventMetadata: [PersonEventMetadatum]
+  personPhases: [PersonPhase]
 }
 
 type Publisher @pgTable(name: \\"publishers\\") {
   id: Int! @unique
   affiliations: [Affiliation]
   bookmakers: [Bookmaker]
-  documentFixtures: [DocumentFixture] @pgColumn(name: \\"document_fixtures\\")
-  documents: [Document]
-  documents: [Document]
+  documentFixtures: [DocumentFixture]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Document.publisher.
+  # documents: [Document] @relation(name: \\"DocumentPublisherToPublisherDocuments\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Document.source.
+  # documents: [Document] @relation(name: \\"DocumentSourceToPublisherDocuments\\")
   events: [Event]
   media: [Media]
   persons: [Person]
@@ -1076,35 +1144,59 @@ type Publisher @pgTable(name: \\"publishers\\") {
 type Role @pgTable(name: \\"roles\\") {
   id: Int! @unique
   comment: String
-  personEventMetadata: [PersonEventMetadatum] @pgColumn(name: \\"person_event_metadata\\")
-  personPhases: [PersonPhase] @pgColumn(name: \\"person_phases\\")
+  personEventMetadata: [PersonEventMetadatum]
+  personPhases: [PersonPhase]
   roleKey: String! @pgColumn(name: \\"role_key\\")
   roleName: String @pgColumn(name: \\"role_name\\")
-  teamPhases: [TeamPhase] @pgColumn(name: \\"team_phases\\")
+  teamPhases: [TeamPhase]
 }
 
 type Season @pgTable(name: \\"seasons\\") {
   id: Int! @unique
-  affiliation_phases: [AffiliationPhase]
-  affiliationPhases: [AffiliationPhase] @pgColumn(name: \\"affiliation_phases\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references AffiliationPhase.endSeason.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationPhaseEndSeasonToSeasonAffiliationPhases\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references AffiliationPhase.startSeason.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationPhaseStartSeasonToSeasonAffiliationPhases\\")
   endDateTime: DateTime @pgColumn(name: \\"end_date_time\\")
-  injuryPhases: [InjuryPhase] @pgColumn(name: \\"injury_phases\\")
-  leagueId: Affiliation! @pgColumn(name: \\"league_id\\")
-  person_phases: [PersonPhase]
-  personPhases: [PersonPhase] @pgColumn(name: \\"person_phases\\")
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  injuryPhases: [InjuryPhase]
+  league: Affiliation! @pgColumn(name: \\"league_id\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references PersonPhase.endSeason.
+  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseEndSeasonToSeasonPersonPhases\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references PersonPhase.startSeason.
+  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseStartSeasonToSeasonPersonPhases\\")
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
   seasonKey: Int! @pgColumn(name: \\"season_key\\")
   startDateTime: DateTime @pgColumn(name: \\"start_date_time\\")
-  subSeasons: [SubSeason] @pgColumn(name: \\"sub_seasons\\")
-  team_phases: [TeamPhase]
-  teamPhases: [TeamPhase] @pgColumn(name: \\"team_phases\\")
+  subSeasons: [SubSeason]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references TeamPhase.endSeason.
+  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseEndSeason\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references TeamPhase.startSeason.
+  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseStartSeason\\")
 }
 
 type Site @pgTable(name: \\"sites\\") {
   id: Int! @unique
   events: [Event]
-  locationId: Location @pgColumn(name: \\"location_id\\")
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  location: Location @pgColumn(name: \\"location_id\\")
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
   siteKey: Int! @pgColumn(name: \\"site_key\\")
   teams: [Team]
 }
@@ -1129,7 +1221,7 @@ type SoccerEventState @pgTable(name: \\"soccer_event_states\\") {
   id: Int! @unique
   context: String
   currentState: Int @pgColumn(name: \\"current_state\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   minutesElapsed: String @pgColumn(name: \\"minutes_elapsed\\")
   periodMinuteElapsed: String @pgColumn(name: \\"period_minute_elapsed\\")
   periodTimeElapsed: String @pgColumn(name: \\"period_time_elapsed\\")
@@ -1180,26 +1272,26 @@ type SoccerOffensiveStat @pgTable(name: \\"soccer_offensive_stats\\") {
 
 type Standing @pgTable(name: \\"standings\\") {
   id: Int! @unique
-  affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
+  affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
   alignmentScope: String @pgColumn(name: \\"alignment_scope\\")
   competitionScope: String @pgColumn(name: \\"competition_scope\\")
   competitionScopeId: String @pgColumn(name: \\"competition_scope_id\\")
   durationScope: String @pgColumn(name: \\"duration_scope\\")
   lastUpdated: String @pgColumn(name: \\"last_updated\\")
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
   scopingLabel: String @pgColumn(name: \\"scoping_label\\")
   siteScope: String @pgColumn(name: \\"site_scope\\")
   source: String
-  standingSubgroups: [StandingSubgroup] @pgColumn(name: \\"standing_subgroups\\")
+  standingSubgroups: [StandingSubgroup]
   standingType: String @pgColumn(name: \\"standing_type\\")
-  subSeasonId: SubSeason! @pgColumn(name: \\"sub_season_id\\")
+  subSeason: SubSeason! @pgColumn(name: \\"sub_season_id\\")
 }
 
 type StandingSubgroup @pgTable(name: \\"standing_subgroups\\") {
   id: Int! @unique
-  affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
-  outcomeTotals: [OutcomeTotal] @pgColumn(name: \\"outcome_totals\\")
-  standingId: Standing! @pgColumn(name: \\"standing_id\\")
+  affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
+  outcomeTotals: [OutcomeTotal]
+  standing: Standing! @pgColumn(name: \\"standing_id\\")
 }
 
 type Stat @pgTable(name: \\"stats\\") {
@@ -1215,7 +1307,7 @@ type Stat @pgTable(name: \\"stats\\") {
 
 type SubPeriod @pgTable(name: \\"sub_periods\\") {
   id: Int! @unique
-  periodId: Period! @pgColumn(name: \\"period_id\\")
+  period: Period! @pgColumn(name: \\"period_id\\")
   score: String
   subPeriodValue: String @pgColumn(name: \\"sub_period_value\\")
 }
@@ -1223,8 +1315,8 @@ type SubPeriod @pgTable(name: \\"sub_periods\\") {
 type SubSeason @pgTable(name: \\"sub_seasons\\") {
   id: Int! @unique
   endDateTime: DateTime @pgColumn(name: \\"end_date_time\\")
-  eventsSubSeasons: [EventsSubSeason] @pgColumn(name: \\"events_sub_seasons\\")
-  seasonId: Season! @pgColumn(name: \\"season_id\\")
+  eventsSubSeasons: [EventsSubSeason]
+  season: Season! @pgColumn(name: \\"season_id\\")
   standings: [Standing]
   startDateTime: DateTime @pgColumn(name: \\"start_date_time\\")
   subSeasonKey: String! @pgColumn(name: \\"sub_season_key\\")
@@ -1233,19 +1325,19 @@ type SubSeason @pgTable(name: \\"sub_seasons\\") {
 
 type Team @pgTable(name: \\"teams\\") {
   id: Int! @unique
-  americanFootballEventStates: [AmericanFootballEventState] @pgColumn(name: \\"american_football_event_states\\")
-  homeSiteId: Site @pgColumn(name: \\"home_site_id\\")
-  personEventMetadata: [PersonEventMetadatum] @pgColumn(name: \\"person_event_metadata\\")
-  publisherId: Publisher! @pgColumn(name: \\"publisher_id\\")
+  americanFootballEventStates: [AmericanFootballEventState]
+  homeSite: Site @pgColumn(name: \\"home_site_id\\")
+  personEventMetadata: [PersonEventMetadatum]
+  publisher: Publisher! @pgColumn(name: \\"publisher_id\\")
   teamKey: String! @pgColumn(name: \\"team_key\\")
-  teamPhases: [TeamPhase] @pgColumn(name: \\"team_phases\\")
-  teamsDocuments: [TeamsDocument] @pgColumn(name: \\"teams_documents\\")
-  teamsMedia: [TeamsMedia] @pgColumn(name: \\"teams_media\\")
-  wageringMoneylines: [WageringMoneyline] @pgColumn(name: \\"wagering_moneylines\\")
-  wageringOddsLines: [WageringOddsLine] @pgColumn(name: \\"wagering_odds_lines\\")
-  wageringRunlines: [WageringRunline] @pgColumn(name: \\"wagering_runlines\\")
-  wageringStraightSpreadLines: [WageringStraightSpreadLine] @pgColumn(name: \\"wagering_straight_spread_lines\\")
-  wageringTotalScoreLines: [WageringTotalScoreLine] @pgColumn(name: \\"wagering_total_score_lines\\")
+  teamPhases: [TeamPhase]
+  teamsDocuments: [TeamsDocument]
+  teamsMedia: [TeamsMedia]
+  wageringMoneylines: [WageringMoneyline]
+  wageringOddsLines: [WageringOddsLine]
+  wageringRunlines: [WageringRunline]
+  wageringStraightSpreadLines: [WageringStraightSpreadLine]
+  wageringTotalScoreLines: [WageringTotalScoreLine]
 }
 
 type TeamAmericanFootballStat @pgTable(name: \\"team_american_football_stats\\") {
@@ -1259,24 +1351,24 @@ type TeamAmericanFootballStat @pgTable(name: \\"team_american_football_stats\\")
 
 type TeamPhase @pgTable(name: \\"team_phases\\") {
   id: Int! @unique
-  affiliationId: Affiliation! @pgColumn(name: \\"affiliation_id\\")
+  affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
   endDateTime: String @pgColumn(name: \\"end_date_time\\")
-  endSeasonId: Season @pgColumn(name: \\"end_season_id\\")
+  endSeason: Season @pgColumn(name: \\"end_season_id\\") @relation(name: \\"SeasonTeamPhasesToTeamPhaseEndSeason\\")
   phaseStatus: String @pgColumn(name: \\"phase_status\\")
-  roleId: Role @pgColumn(name: \\"role_id\\")
+  role: Role @pgColumn(name: \\"role_id\\")
   startDateTime: String @pgColumn(name: \\"start_date_time\\")
-  startSeasonId: Season @pgColumn(name: \\"start_season_id\\")
-  teamId: Team! @pgColumn(name: \\"team_id\\")
+  startSeason: Season @pgColumn(name: \\"start_season_id\\") @relation(name: \\"SeasonTeamPhasesToTeamPhaseStartSeason\\")
+  team: Team! @pgColumn(name: \\"team_id\\")
 }
 
 type TeamsDocument @linkTable @pgTable(name: \\"teams_documents\\") {
-  documentId: Document! @pgColumn(name: \\"document_id\\")
-  teamId: Team! @pgColumn(name: \\"team_id\\")
+  document: Document! @pgColumn(name: \\"document_id\\")
+  team: Team! @pgColumn(name: \\"team_id\\")
 }
 
 type TeamsMedia @linkTable @pgTable(name: \\"teams_media\\") {
-  mediaId: Media! @pgColumn(name: \\"media_id\\")
-  teamId: Team! @pgColumn(name: \\"team_id\\")
+  media: Media! @pgColumn(name: \\"media_id\\")
+  team: Team! @pgColumn(name: \\"team_id\\")
 }
 
 type TennisActionPoint @pgTable(name: \\"tennis_action_points\\") {
@@ -1301,7 +1393,7 @@ type TennisEventState @pgTable(name: \\"tennis_event_states\\") {
   id: Int! @unique
   context: String
   currentState: Int @pgColumn(name: \\"current_state\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   game: String
   receiverPersonId: Int @pgColumn(name: \\"receiver_person_id\\")
   receiverScore: String @pgColumn(name: \\"receiver_score\\")
@@ -1349,78 +1441,78 @@ type TennisServiceStat @pgTable(name: \\"tennis_service_stats\\") {
 
 type WageringMoneyline @pgTable(name: \\"wagering_moneylines\\") {
   id: Int! @unique
-  bookmakerId: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @pgColumn(name: \\"date_time\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   line: String
   lineOpening: String @pgColumn(name: \\"line_opening\\")
   personId: Int @pgColumn(name: \\"person_id\\")
   prediction: String
   rotationKey: String @pgColumn(name: \\"rotation_key\\")
-  teamId: Team! @pgColumn(name: \\"team_id\\")
+  team: Team! @pgColumn(name: \\"team_id\\")
   vigorish: String
 }
 
 type WageringOddsLine @pgTable(name: \\"wagering_odds_lines\\") {
   id: Int! @unique
-  bookmakerId: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @pgColumn(name: \\"date_time\\")
   denominator: String
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   numerator: String
   payoutAmount: String @pgColumn(name: \\"payout_amount\\")
   payoutCalculation: String @pgColumn(name: \\"payout_calculation\\")
   personId: Int @pgColumn(name: \\"person_id\\")
   prediction: String
   rotationKey: String @pgColumn(name: \\"rotation_key\\")
-  teamId: Team! @pgColumn(name: \\"team_id\\")
+  team: Team! @pgColumn(name: \\"team_id\\")
 }
 
 type WageringRunline @pgTable(name: \\"wagering_runlines\\") {
   id: Int! @unique
-  bookmakerId: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @pgColumn(name: \\"date_time\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   line: String
   lineOpening: String @pgColumn(name: \\"line_opening\\")
   lineValue: String @pgColumn(name: \\"line_value\\")
   personId: Int @pgColumn(name: \\"person_id\\")
   prediction: String
   rotationKey: String @pgColumn(name: \\"rotation_key\\")
-  teamId: Team! @pgColumn(name: \\"team_id\\")
+  team: Team! @pgColumn(name: \\"team_id\\")
   vigorish: String
 }
 
 type WageringStraightSpreadLine @pgTable(name: \\"wagering_straight_spread_lines\\") {
   id: Int! @unique
-  bookmakerId: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @pgColumn(name: \\"date_time\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   lineValue: String @pgColumn(name: \\"line_value\\")
   lineValueOpening: String @pgColumn(name: \\"line_value_opening\\")
   personId: Int @pgColumn(name: \\"person_id\\")
   prediction: String
   rotationKey: String @pgColumn(name: \\"rotation_key\\")
-  teamId: Team! @pgColumn(name: \\"team_id\\")
+  team: Team! @pgColumn(name: \\"team_id\\")
   vigorish: String
 }
 
 type WageringTotalScoreLine @pgTable(name: \\"wagering_total_score_lines\\") {
   id: Int! @unique
-  bookmakerId: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @pgColumn(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @pgColumn(name: \\"date_time\\")
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   lineOver: String @pgColumn(name: \\"line_over\\")
   lineUnder: String @pgColumn(name: \\"line_under\\")
   personId: Int @pgColumn(name: \\"person_id\\")
   prediction: String
   rotationKey: String @pgColumn(name: \\"rotation_key\\")
-  teamId: Team! @pgColumn(name: \\"team_id\\")
+  team: Team! @pgColumn(name: \\"team_id\\")
   total: String
   totalOpening: String @pgColumn(name: \\"total_opening\\")
   vigorish: String
@@ -1429,7 +1521,7 @@ type WageringTotalScoreLine @pgTable(name: \\"wagering_total_score_lines\\") {
 type WeatherCondition @pgTable(name: \\"weather_conditions\\") {
   id: Int! @unique
   clouds: String
-  eventId: Event! @pgColumn(name: \\"event_id\\")
+  event: Event! @pgColumn(name: \\"event_id\\")
   humidity: String
   temperature: String
   temperatureUnits: String @pgColumn(name: \\"temperature_units\\")
@@ -1449,7 +1541,7 @@ exports[`Introspector sportsdb 2`] = `
   floor: String
   language: String
   locality: String
-  locationId: Location! @db(name: \\"location_id\\")
+  location: Location! @db(name: \\"location_id\\")
   neighborhood: String
   postalCode: String @db(name: \\"postal_code\\")
   region: String
@@ -1462,52 +1554,60 @@ exports[`Introspector sportsdb 2`] = `
 
 type Affiliation @db(name: \\"affiliations\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"affiliations_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliation_phases: [AffiliationPhase]
   affiliationKey: String! @db(name: \\"affiliation_key\\")
-  affiliationPhases: [AffiliationPhase] @db(name: \\"affiliation_phases\\")
-  affiliationsDocuments: [AffiliationsDocument] @db(name: \\"affiliations_documents\\")
-  affiliationsEvents: [AffiliationsEvent] @db(name: \\"affiliations_events\\")
-  affiliationsMedia: [AffiliationsMedia] @db(name: \\"affiliations_media\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references AffiliationPhase.affiliation.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAffiliation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references AffiliationPhase.ancestorAffiliation.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAncestorAffiliation\\")
+  affiliationsDocuments: [AffiliationsDocument]
+  affiliationsEvents: [AffiliationsEvent]
+  affiliationsMedia: [AffiliationsMedia]
   affiliationType: String @db(name: \\"affiliation_type\\")
   positions: [Position]
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  publisher: Publisher! @db(name: \\"publisher_id\\")
   seasons: [Season]
   standings: [Standing]
-  standingSubgroups: [StandingSubgroup] @db(name: \\"standing_subgroups\\")
-  teamPhases: [TeamPhase] @db(name: \\"team_phases\\")
+  standingSubgroups: [StandingSubgroup]
+  teamPhases: [TeamPhase]
 }
 
 type AffiliationPhase @db(name: \\"affiliation_phases\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"affiliation_phases_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
-  ancestorAffiliationId: Affiliation @db(name: \\"ancestor_affiliation_id\\")
+  affiliation: Affiliation! @db(name: \\"affiliation_id\\") @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAffiliation\\")
+  ancestorAffiliation: Affiliation @db(name: \\"ancestor_affiliation_id\\") @relation(name: \\"AffiliationAffiliationPhasesToAffiliationPhaseAncestorAffiliation\\")
   endDateTime: DateTime @db(name: \\"end_date_time\\")
-  endSeasonId: Season @db(name: \\"end_season_id\\")
+  endSeason: Season @db(name: \\"end_season_id\\") @relation(name: \\"AffiliationPhaseEndSeasonToSeasonAffiliationPhases\\")
   startDateTime: DateTime @db(name: \\"start_date_time\\")
-  startSeasonId: Season @db(name: \\"start_season_id\\")
+  startSeason: Season @db(name: \\"start_season_id\\") @relation(name: \\"AffiliationPhaseStartSeasonToSeasonAffiliationPhases\\")
 }
 
 type AffiliationsDocument @db(name: \\"affiliations_documents\\") @linkTable {
-  affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
-  documentId: Document! @db(name: \\"document_id\\")
+  affiliation: Affiliation! @db(name: \\"affiliation_id\\")
+  document: Document! @db(name: \\"document_id\\")
 }
 
 type AffiliationsEvent @db(name: \\"affiliations_events\\") @linkTable {
-  affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  affiliation: Affiliation! @db(name: \\"affiliation_id\\")
+  event: Event! @db(name: \\"event_id\\")
 }
 
 type AffiliationsMedia @db(name: \\"affiliations_media\\") @linkTable {
-  affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
-  mediaId: Media! @db(name: \\"media_id\\")
+  affiliation: Affiliation! @db(name: \\"affiliation_id\\")
+  media: Media! @db(name: \\"media_id\\")
 }
 
 type AmericanFootballActionParticipant @db(name: \\"american_football_action_participants\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"american_football_action_participants_id_seq\\", initialValue: 1, allocationSize: 1)
-  americanFootballActionPlayId: AmericanFootballActionPlay! @db(name: \\"american_football_action_play_id\\")
+  americanFootballActionPlay: AmericanFootballActionPlay! @db(name: \\"american_football_action_play_id\\")
   fieldLine: Int @db(name: \\"field_line\\")
   participantRole: String! @db(name: \\"participant_role\\")
-  personId: Person! @db(name: \\"person_id\\")
+  person: Person! @db(name: \\"person_id\\")
   scoreCredit: Int @db(name: \\"score_credit\\")
   scoreType: String @db(name: \\"score_type\\")
   yardage: Int
@@ -1516,8 +1616,8 @@ type AmericanFootballActionParticipant @db(name: \\"american_football_action_par
 
 type AmericanFootballActionPlay @db(name: \\"american_football_action_plays\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"american_football_action_plays_id_seq\\", initialValue: 1, allocationSize: 1)
-  americanFootballActionParticipants: [AmericanFootballActionParticipant] @db(name: \\"american_football_action_participants\\")
-  americanFootballEventStateId: AmericanFootballEventState! @db(name: \\"american_football_event_state_id\\")
+  americanFootballActionParticipants: [AmericanFootballActionParticipant]
+  americanFootballEventState: AmericanFootballEventState! @db(name: \\"american_football_event_state_id\\")
   comment: String
   driveResult: String @db(name: \\"drive_result\\")
   playType: String @db(name: \\"play_type\\")
@@ -1557,20 +1657,20 @@ type AmericanFootballDownProgressStat @db(name: \\"american_football_down_progre
 
 type AmericanFootballEventState @db(name: \\"american_football_event_states\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"american_football_event_states_id_seq\\", initialValue: 1, allocationSize: 1)
-  americanFootballActionPlays: [AmericanFootballActionPlay] @db(name: \\"american_football_action_plays\\")
+  americanFootballActionPlays: [AmericanFootballActionPlay]
   clockState: String @db(name: \\"clock_state\\")
   context: String
   currentState: Int @db(name: \\"current_state\\")
   distanceFor1stDown: Int @db(name: \\"distance_for_1st_down\\")
   down: Int
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   fieldLine: Int @db(name: \\"field_line\\")
   fieldSide: String @db(name: \\"field_side\\")
   periodTimeElapsed: String @db(name: \\"period_time_elapsed\\")
   periodTimeRemaining: String @db(name: \\"period_time_remaining\\")
   periodValue: Int @db(name: \\"period_value\\")
   sequenceNumber: Int @db(name: \\"sequence_number\\")
-  teamInPossessionId: Team @db(name: \\"team_in_possession_id\\")
+  teamInPossession: Team @db(name: \\"team_in_possession_id\\")
 }
 
 type AmericanFootballFumblesStat @db(name: \\"american_football_fumbles_stats\\") {
@@ -1701,7 +1801,7 @@ type AmericanFootballSpecialTeamsStat @db(name: \\"american_football_special_tea
 
 type BaseballActionContactDetail @db(name: \\"baseball_action_contact_details\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_action_contact_details_id_seq\\", initialValue: 1, allocationSize: 1)
-  baseballActionPitchId: BaseballActionPitch! @db(name: \\"baseball_action_pitch_id\\")
+  baseballActionPitch: BaseballActionPitch! @db(name: \\"baseball_action_pitch_id\\")
   comment: String
   location: String
   strength: String
@@ -1713,9 +1813,9 @@ type BaseballActionContactDetail @db(name: \\"baseball_action_contact_details\\"
 type BaseballActionPitch @db(name: \\"baseball_action_pitches\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_action_pitches_id_seq\\", initialValue: 1, allocationSize: 1)
   ballType: String @db(name: \\"ball_type\\")
-  baseballActionContactDetails: [BaseballActionContactDetail] @db(name: \\"baseball_action_contact_details\\")
-  baseballActionPlayId: BaseballActionPlay! @db(name: \\"baseball_action_play_id\\")
-  baseballDefensiveGroupId: BaseballDefensiveGroup @db(name: \\"baseball_defensive_group_id\\")
+  baseballActionContactDetails: [BaseballActionContactDetail]
+  baseballActionPlay: BaseballActionPlay! @db(name: \\"baseball_action_play_id\\")
+  baseballDefensiveGroup: BaseballDefensiveGroup @db(name: \\"baseball_defensive_group_id\\")
   comment: String
   pitchLocation: String @db(name: \\"pitch_location\\")
   pitchType: String @db(name: \\"pitch_type\\")
@@ -1729,9 +1829,9 @@ type BaseballActionPitch @db(name: \\"baseball_action_pitches\\") {
 
 type BaseballActionPlay @db(name: \\"baseball_action_plays\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_action_plays_id_seq\\", initialValue: 1, allocationSize: 1)
-  baseballActionPitches: [BaseballActionPitch] @db(name: \\"baseball_action_pitches\\")
+  baseballActionPitches: [BaseballActionPitch]
   baseballDefensiveGroupId: Int @db(name: \\"baseball_defensive_group_id\\")
-  baseballEventStateId: BaseballEventState! @db(name: \\"baseball_event_state_id\\")
+  baseballEventState: BaseballEventState! @db(name: \\"baseball_event_state_id\\")
   comment: String
   earnedRunsScored: String @db(name: \\"earned_runs_scored\\")
   notation: String
@@ -1747,14 +1847,14 @@ type BaseballActionPlay @db(name: \\"baseball_action_plays\\") {
 
 type BaseballActionSubstitution @db(name: \\"baseball_action_substitutions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_action_substitutions_id_seq\\", initialValue: 1, allocationSize: 1)
-  baseballEventStateId: BaseballEventState! @db(name: \\"baseball_event_state_id\\")
+  baseballEventState: BaseballEventState! @db(name: \\"baseball_event_state_id\\")
   comment: String
-  personOriginalId: Person @db(name: \\"person_original_id\\")
+  personOriginal: Person @db(name: \\"person_original_id\\") @relation(name: \\"BaseballActionSubstitutionPersonOriginalToPersonBaseballActionSubstitutions\\")
   personOriginalLineupSlot: Int @db(name: \\"person_original_lineup_slot\\")
-  personOriginalPositionId: Position @db(name: \\"person_original_position_id\\")
-  personReplacingId: Person @db(name: \\"person_replacing_id\\")
+  personOriginalPosition: Position @db(name: \\"person_original_position_id\\") @relation(name: \\"BaseballActionSubstitutionPersonOriginalPositionToPositionBaseballActionSubstitutions\\")
+  personReplacing: Person @db(name: \\"person_replacing_id\\") @relation(name: \\"BaseballActionSubstitutionPersonReplacingToPersonBaseballActionSubstitutions\\")
   personReplacingLineupSlot: Int @db(name: \\"person_replacing_lineup_slot\\")
-  personReplacingPositionId: Position @db(name: \\"person_replacing_position_id\\")
+  personReplacingPosition: Position @db(name: \\"person_replacing_position_id\\") @relation(name: \\"BaseballActionSubstitutionPersonReplacingPositionToPositionBaseballActionSubstitutions\\")
   personType: String @db(name: \\"person_type\\")
   sequenceNumber: Int @db(name: \\"sequence_number\\")
   substitutionReason: String @db(name: \\"substitution_reason\\")
@@ -1762,15 +1862,15 @@ type BaseballActionSubstitution @db(name: \\"baseball_action_substitutions\\") {
 
 type BaseballDefensiveGroup @db(name: \\"baseball_defensive_group\\") @linkTable {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_defensive_group_id_seq\\", initialValue: 1, allocationSize: 1)
-  baseballActionPitches: [BaseballActionPitch] @db(name: \\"baseball_action_pitches\\")
-  baseballDefensivePlayers: [BaseballDefensivePlayer] @db(name: \\"baseball_defensive_players\\")
+  baseballActionPitches: [BaseballActionPitch]
+  baseballDefensivePlayers: [BaseballDefensivePlayer]
 }
 
 type BaseballDefensivePlayer @db(name: \\"baseball_defensive_players\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_defensive_players_id_seq\\", initialValue: 1, allocationSize: 1)
-  baseballDefensiveGroupId: BaseballDefensiveGroup! @db(name: \\"baseball_defensive_group_id\\")
-  playerId: Person! @db(name: \\"player_id\\")
-  positionId: Position! @db(name: \\"position_id\\")
+  baseballDefensiveGroup: BaseballDefensiveGroup! @db(name: \\"baseball_defensive_group_id\\")
+  player: Person! @db(name: \\"player_id\\")
+  position: Position! @db(name: \\"position_id\\")
 }
 
 type BaseballDefensiveStat @db(name: \\"baseball_defensive_stats\\") {
@@ -1790,23 +1890,26 @@ type BaseballEventState @db(name: \\"baseball_event_states\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_event_states_id_seq\\", initialValue: 1, allocationSize: 1)
   atBatNumber: Int @db(name: \\"at_bat_number\\")
   balls: Int
-  baseballActionPlays: [BaseballActionPlay] @db(name: \\"baseball_action_plays\\")
-  baseballActionSubstitutions: [BaseballActionSubstitution] @db(name: \\"baseball_action_substitutions\\")
-  batterId: Person @db(name: \\"batter_id\\")
+  baseballActionPlays: [BaseballActionPlay]
+  baseballActionSubstitutions: [BaseballActionSubstitution]
+  batter: Person @db(name: \\"batter_id\\") @relation(name: \\"BaseballEventStateBatterToPersonBaseballEventStates\\")
   batterSide: String @db(name: \\"batter_side\\")
   context: String
   currentState: Int @db(name: \\"current_state\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   inningHalf: String @db(name: \\"inning_half\\")
   inningValue: Int @db(name: \\"inning_value\\")
   outs: Int
-  pitcherId: Person @db(name: \\"pitcher_id\\")
+  pitcher: Person @db(name: \\"pitcher_id\\") @relation(name: \\"BaseballEventStatePitcherToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  runner_on_first_id: Person @relation(name: \\"BaseballEventStateRunner_on_first_idToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  runner_on_second_id: Person @relation(name: \\"BaseballEventStateRunner_on_second_idToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  runner_on_third_id: Person @relation(name: \\"BaseballEventStateRunner_on_third_idToPersonBaseballEventStates\\")
   runnerOnFirst: Int @db(name: \\"runner_on_first\\")
-  runnerOnFirstId: Person @db(name: \\"runner_on_first_id\\")
   runnerOnSecond: Int @db(name: \\"runner_on_second\\")
-  runnerOnSecondId: Person @db(name: \\"runner_on_second_id\\")
   runnerOnThird: Int @db(name: \\"runner_on_third\\")
-  runnerOnThirdId: Person @db(name: \\"runner_on_third_id\\")
   runsThisInningHalf: Int @db(name: \\"runs_this_inning_half\\")
   sequenceNumber: Int @db(name: \\"sequence_number\\")
   strikes: Int
@@ -1894,7 +1997,7 @@ type BasketballEventState @db(name: \\"basketball_event_states\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"basketball_event_states_id_seq\\", initialValue: 1, allocationSize: 1)
   context: String
   currentState: Int @db(name: \\"current_state\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   periodTimeElapsed: String @db(name: \\"period_time_elapsed\\")
   periodTimeRemaining: String @db(name: \\"period_time_remaining\\")
   periodValue: String @db(name: \\"period_value\\")
@@ -1954,20 +2057,20 @@ type BasketballTeamStat @db(name: \\"basketball_team_stats\\") {
 type Bookmaker @db(name: \\"bookmakers\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"bookmakers_id_seq\\", initialValue: 1, allocationSize: 1)
   bookmakerKey: String @db(name: \\"bookmaker_key\\")
-  locationId: Location @db(name: \\"location_id\\")
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
-  wageringMoneylines: [WageringMoneyline] @db(name: \\"wagering_moneylines\\")
-  wageringOddsLines: [WageringOddsLine] @db(name: \\"wagering_odds_lines\\")
-  wageringRunlines: [WageringRunline] @db(name: \\"wagering_runlines\\")
-  wageringStraightSpreadLines: [WageringStraightSpreadLine] @db(name: \\"wagering_straight_spread_lines\\")
-  wageringTotalScoreLines: [WageringTotalScoreLine] @db(name: \\"wagering_total_score_lines\\")
+  location: Location @db(name: \\"location_id\\")
+  publisher: Publisher! @db(name: \\"publisher_id\\")
+  wageringMoneylines: [WageringMoneyline]
+  wageringOddsLines: [WageringOddsLine]
+  wageringRunlines: [WageringRunline]
+  wageringStraightSpreadLines: [WageringStraightSpreadLine]
+  wageringTotalScoreLines: [WageringTotalScoreLine]
 }
 
 type CorePersonStat @db(name: \\"core_person_stats\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"core_person_stats_id_seq\\", initialValue: 1, allocationSize: 1)
   eventsPlayed: Int @db(name: \\"events_played\\")
   eventsStarted: Int @db(name: \\"events_started\\")
-  positionId: Position @db(name: \\"position_id\\")
+  position: Position @db(name: \\"position_id\\")
   timePlayedEvent: String @db(name: \\"time_played_event\\")
   timePlayedEventAverage: String @db(name: \\"time_played_event_average\\")
   timePlayedTotal: String @db(name: \\"time_played_total\\")
@@ -2005,71 +2108,71 @@ type DisplayName @db(name: \\"display_names\\") {
 
 type Document @db(name: \\"documents\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"documents_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliationsDocuments: [AffiliationsDocument] @db(name: \\"affiliations_documents\\")
+  affiliationsDocuments: [AffiliationsDocument]
   dateTime: DateTime @db(name: \\"date_time\\")
   dbLoadingDateTime: DateTime @db(name: \\"db_loading_date_time\\")
   docId: String! @db(name: \\"doc_id\\")
-  documentContents: [DocumentContent] @db(name: \\"document_contents\\")
-  documentFixtureId: DocumentFixture! @db(name: \\"document_fixture_id\\")
-  documentFixturesEvents: [DocumentFixturesEvent] @db(name: \\"document_fixtures_events\\")
-  documentPackageEntry: [DocumentPackageEntry] @db(name: \\"document_package_entry\\")
-  documentsMedia: [DocumentsMedia] @db(name: \\"documents_media\\")
-  eventsDocuments: [EventsDocument] @db(name: \\"events_documents\\")
+  documentContents: [DocumentContent]
+  documentFixture: DocumentFixture! @db(name: \\"document_fixture_id\\")
+  documentFixturesEvents: [DocumentFixturesEvent]
+  documentPackageEntry: [DocumentPackageEntry]
+  documentsMedia: [DocumentsMedia]
+  eventsDocuments: [EventsDocument]
   language: String
-  latestRevisions: [LatestRevision] @db(name: \\"latest_revisions\\")
-  personsDocuments: [PersonsDocument] @db(name: \\"persons_documents\\")
+  latestRevisions: [LatestRevision]
+  personsDocuments: [PersonsDocument]
   priority: String
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  publisher: Publisher! @db(name: \\"publisher_id\\") @relation(name: \\"DocumentPublisherToPublisherDocuments\\")
   revisionId: String @db(name: \\"revision_id\\")
-  sourceId: Publisher @db(name: \\"source_id\\")
+  source: Publisher @db(name: \\"source_id\\") @relation(name: \\"DocumentSourceToPublisherDocuments\\")
   statsCoverage: String @db(name: \\"stats_coverage\\")
-  teamsDocuments: [TeamsDocument] @db(name: \\"teams_documents\\")
+  teamsDocuments: [TeamsDocument]
   title: String
 }
 
 type DocumentClass @db(name: \\"document_classes\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"document_classes_id_seq\\", initialValue: 1, allocationSize: 1)
-  documentFixtures: [DocumentFixture] @db(name: \\"document_fixtures\\")
+  documentFixtures: [DocumentFixture]
   name: String
 }
 
 type DocumentContent @db(name: \\"document_contents\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"document_contents_id_seq\\", initialValue: 1, allocationSize: 1)
   abstract: String
-  documentId: Document! @db(name: \\"document_id\\")
+  document: Document! @db(name: \\"document_id\\")
   sportsml: String
 }
 
 type DocumentFixture @db(name: \\"document_fixtures\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"document_fixtures_id_seq\\", initialValue: 1, allocationSize: 1)
-  documentClassId: DocumentClass! @db(name: \\"document_class_id\\")
-  documentFixturesEvents: [DocumentFixturesEvent] @db(name: \\"document_fixtures_events\\")
+  documentClass: DocumentClass! @db(name: \\"document_class_id\\")
+  documentFixturesEvents: [DocumentFixturesEvent]
   documents: [Document]
   fixtureKey: String @db(name: \\"fixture_key\\")
   name: String
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  publisher: Publisher! @db(name: \\"publisher_id\\")
 }
 
 type DocumentFixturesEvent @db(name: \\"document_fixtures_events\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"document_fixtures_events_id_seq\\", initialValue: 1, allocationSize: 1)
-  documentFixtureId: DocumentFixture! @db(name: \\"document_fixture_id\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  documentFixture: DocumentFixture! @db(name: \\"document_fixture_id\\")
+  event: Event! @db(name: \\"event_id\\")
   lastUpdate: DateTime @db(name: \\"last_update\\")
-  latestDocumentId: Document! @db(name: \\"latest_document_id\\")
+  latestDocument: Document! @db(name: \\"latest_document_id\\")
 }
 
 type DocumentPackage @db(name: \\"document_packages\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"document_packages_id_seq\\", initialValue: 1, allocationSize: 1)
   dateTime: DateTime @db(name: \\"date_time\\")
-  documentPackageEntry: [DocumentPackageEntry] @db(name: \\"document_package_entry\\")
+  documentPackageEntry: [DocumentPackageEntry]
   packageKey: String @db(name: \\"package_key\\")
   packageName: String @db(name: \\"package_name\\")
 }
 
 type DocumentPackageEntry @db(name: \\"document_package_entry\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"document_package_entry_id_seq\\", initialValue: 1, allocationSize: 1)
-  documentId: Document! @db(name: \\"document_id\\")
-  documentPackageId: DocumentPackage! @db(name: \\"document_package_id\\")
+  document: Document! @db(name: \\"document_id\\")
+  documentPackage: DocumentPackage! @db(name: \\"document_package_id\\")
   headline: String
   rank: String
   shortHeadline: String @db(name: \\"short_headline\\")
@@ -2077,57 +2180,57 @@ type DocumentPackageEntry @db(name: \\"document_package_entry\\") {
 
 type DocumentsMedia @db(name: \\"documents_media\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"documents_media_id_seq\\", initialValue: 1, allocationSize: 1)
-  documentId: Document! @db(name: \\"document_id\\")
-  mediaCaptionId: MediaCaption! @db(name: \\"media_caption_id\\")
-  mediaId: Media! @db(name: \\"media_id\\")
+  document: Document! @db(name: \\"document_id\\")
+  media: Media! @db(name: \\"media_id\\")
+  mediaCaption: MediaCaption! @db(name: \\"media_caption_id\\")
 }
 
 type Event @db(name: \\"events\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"events_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliationsEvents: [AffiliationsEvent] @db(name: \\"affiliations_events\\")
-  americanFootballEventStates: [AmericanFootballEventState] @db(name: \\"american_football_event_states\\")
+  affiliationsEvents: [AffiliationsEvent]
+  americanFootballEventStates: [AmericanFootballEventState]
   attendance: String
-  baseballEventStates: [BaseballEventState] @db(name: \\"baseball_event_states\\")
-  basketballEventStates: [BasketballEventState] @db(name: \\"basketball_event_states\\")
-  documentFixturesEvents: [DocumentFixturesEvent] @db(name: \\"document_fixtures_events\\")
+  baseballEventStates: [BaseballEventState]
+  basketballEventStates: [BasketballEventState]
+  documentFixturesEvents: [DocumentFixturesEvent]
   duration: String
   eventKey: String! @db(name: \\"event_key\\")
-  eventsDocuments: [EventsDocument] @db(name: \\"events_documents\\")
-  eventsMedia: [EventsMedia] @db(name: \\"events_media\\")
-  eventsSubSeasons: [EventsSubSeason] @db(name: \\"events_sub_seasons\\")
+  eventsDocuments: [EventsDocument]
+  eventsMedia: [EventsMedia]
+  eventsSubSeasons: [EventsSubSeason]
   eventStatus: String @db(name: \\"event_status\\")
-  iceHockeyEventStates: [IceHockeyEventState] @db(name: \\"ice_hockey_event_states\\")
+  iceHockeyEventStates: [IceHockeyEventState]
   lastUpdate: DateTime @db(name: \\"last_update\\")
-  motorRacingEventStates: [MotorRacingEventState] @db(name: \\"motor_racing_event_states\\")
-  participantsEvents: [ParticipantsEvent] @db(name: \\"participants_events\\")
-  personEventMetadata: [PersonEventMetadatum] @db(name: \\"person_event_metadata\\")
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  motorRacingEventStates: [MotorRacingEventState]
+  participantsEvents: [ParticipantsEvent]
+  personEventMetadata: [PersonEventMetadatum]
+  publisher: Publisher! @db(name: \\"publisher_id\\")
+  site: Site @db(name: \\"site_id\\")
   siteAlignment: String @db(name: \\"site_alignment\\")
-  siteId: Site @db(name: \\"site_id\\")
-  soccerEventStates: [SoccerEventState] @db(name: \\"soccer_event_states\\")
+  soccerEventStates: [SoccerEventState]
   startDateTime: DateTime @db(name: \\"start_date_time\\")
-  tennisEventStates: [TennisEventState] @db(name: \\"tennis_event_states\\")
-  wageringMoneylines: [WageringMoneyline] @db(name: \\"wagering_moneylines\\")
-  wageringOddsLines: [WageringOddsLine] @db(name: \\"wagering_odds_lines\\")
-  wageringRunlines: [WageringRunline] @db(name: \\"wagering_runlines\\")
-  wageringStraightSpreadLines: [WageringStraightSpreadLine] @db(name: \\"wagering_straight_spread_lines\\")
-  wageringTotalScoreLines: [WageringTotalScoreLine] @db(name: \\"wagering_total_score_lines\\")
-  weatherConditions: [WeatherCondition] @db(name: \\"weather_conditions\\")
+  tennisEventStates: [TennisEventState]
+  wageringMoneylines: [WageringMoneyline]
+  wageringOddsLines: [WageringOddsLine]
+  wageringRunlines: [WageringRunline]
+  wageringStraightSpreadLines: [WageringStraightSpreadLine]
+  wageringTotalScoreLines: [WageringTotalScoreLine]
+  weatherConditions: [WeatherCondition]
 }
 
 type EventsDocument @db(name: \\"events_documents\\") @linkTable {
-  documentId: Document! @db(name: \\"document_id\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  document: Document! @db(name: \\"document_id\\")
+  event: Event! @db(name: \\"event_id\\")
 }
 
 type EventsMedia @db(name: \\"events_media\\") @linkTable {
-  eventId: Event! @db(name: \\"event_id\\")
-  mediaId: Media! @db(name: \\"media_id\\")
+  event: Event! @db(name: \\"event_id\\")
+  media: Media! @db(name: \\"media_id\\")
 }
 
 type EventsSubSeason @db(name: \\"events_sub_seasons\\") @linkTable {
-  eventId: Event! @db(name: \\"event_id\\")
-  subSeasonId: SubSeason! @db(name: \\"sub_season_id\\")
+  event: Event! @db(name: \\"event_id\\")
+  subSeason: SubSeason! @db(name: \\"sub_season_id\\")
 }
 
 type IceHockeyActionParticipant @db(name: \\"ice_hockey_action_participants\\") {
@@ -2173,7 +2276,7 @@ type IceHockeyEventState @db(name: \\"ice_hockey_event_states\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"ice_hockey_event_states_id_seq\\", initialValue: 1, allocationSize: 1)
   context: String
   currentState: Int @db(name: \\"current_state\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   periodTimeElapsed: String @db(name: \\"period_time_elapsed\\")
   periodTimeRemaining: String @db(name: \\"period_time_remaining\\")
   periodValue: String @db(name: \\"period_value\\")
@@ -2219,27 +2322,27 @@ type InjuryPhase @db(name: \\"injury_phases\\") {
   injurySide: String @db(name: \\"injury_side\\")
   injuryStatus: String @db(name: \\"injury_status\\")
   injuryType: String @db(name: \\"injury_type\\")
-  personId: Person! @db(name: \\"person_id\\")
+  person: Person! @db(name: \\"person_id\\")
   phaseType: String @db(name: \\"phase_type\\")
-  seasonId: Season @db(name: \\"season_id\\")
+  season: Season @db(name: \\"season_id\\")
   startDateTime: DateTime @db(name: \\"start_date_time\\")
 }
 
 type KeyAlias @db(name: \\"key_aliases\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"key_aliases_id_seq\\", initialValue: 1, allocationSize: 1)
   keyId: Int! @db(name: \\"key_id\\")
-  keyRootId: KeyRoot! @db(name: \\"key_root_id\\")
+  keyRoot: KeyRoot! @db(name: \\"key_root_id\\")
 }
 
 type KeyRoot @db(name: \\"key_roots\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"key_roots_id_seq\\", initialValue: 1, allocationSize: 1)
-  keyAliases: [KeyAlias] @db(name: \\"key_aliases\\")
+  keyAliases: [KeyAlias]
   keyType: String @db(name: \\"key_type\\")
 }
 
 type LatestRevision @db(name: \\"latest_revisions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"latest_revisions_id_seq\\", initialValue: 1, allocationSize: 1)
-  latestDocumentId: Document! @db(name: \\"latest_document_id\\")
+  latestDocument: Document! @db(name: \\"latest_document_id\\")
   revisionId: String! @db(name: \\"revision_id\\")
 }
 
@@ -2251,44 +2354,60 @@ type Location @db(name: \\"locations\\") {
   latitude: String
   longitude: String
   media: [Media]
-  persons: [Person]
-  persons: [Person]
-  persons: [Person]
-  persons: [Person]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.birthLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.deathLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonDeathLocation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.hometownLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonHometownLocation\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Person.residenceLocation.
+  # persons: [Person] @relation(name: \\"LocationPersonsToPersonResidenceLocation\\")
   sites: [Site]
   timezone: String
 }
 
 type Media @db(name: \\"media\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliationsMedia: [AffiliationsMedia] @db(name: \\"affiliations_media\\")
-  creationLocationId: Location! @db(name: \\"creation_location_id\\")
-  creditId: Person! @db(name: \\"credit_id\\")
+  affiliationsMedia: [AffiliationsMedia]
+  creationLocation: Location! @db(name: \\"creation_location_id\\")
+  credit: Person! @db(name: \\"credit_id\\")
   dateTime: String @db(name: \\"date_time\\")
   dbLoadingDateTime: DateTime @db(name: \\"db_loading_date_time\\")
-  documentsMedia: [DocumentsMedia] @db(name: \\"documents_media\\")
-  eventsMedia: [EventsMedia] @db(name: \\"events_media\\")
-  mediaCaptions: [MediaCaption] @db(name: \\"media_captions\\")
-  mediaContents: [MediaContent] @db(name: \\"media_contents\\")
-  mediaKeywords: [MediaKeyword] @db(name: \\"media_keywords\\")
+  documentsMedia: [DocumentsMedia]
+  eventsMedia: [EventsMedia]
+  mediaCaptions: [MediaCaption]
+  mediaContents: [MediaContent]
+  mediaKeywords: [MediaKeyword]
   mediaType: String @db(name: \\"media_type\\")
   objectId: Int @db(name: \\"object_id\\")
-  personsMedia: [PersonsMedia] @db(name: \\"persons_media\\")
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  personsMedia: [PersonsMedia]
+  publisher: Publisher! @db(name: \\"publisher_id\\")
   revisionId: Int @db(name: \\"revision_id\\")
   sourceId: Int @db(name: \\"source_id\\")
-  teamsMedia: [TeamsMedia] @db(name: \\"teams_media\\")
+  teamsMedia: [TeamsMedia]
 }
 
 type MediaCaption @db(name: \\"media_captions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_captions_id_seq\\", initialValue: 1, allocationSize: 1)
   caption: String
-  captionAuthorId: Person! @db(name: \\"caption_author_id\\")
+  captionAuthor: Person! @db(name: \\"caption_author_id\\")
   captionSize: String @db(name: \\"caption_size\\")
   captionType: String @db(name: \\"caption_type\\")
-  documentsMedia: [DocumentsMedia] @db(name: \\"documents_media\\")
+  documentsMedia: [DocumentsMedia]
   language: String
-  mediaId: Media! @db(name: \\"media_id\\")
+  media: Media! @db(name: \\"media_id\\")
 }
 
 type MediaContent @db(name: \\"media_contents\\") {
@@ -2297,7 +2416,7 @@ type MediaContent @db(name: \\"media_contents\\") {
   fileSize: String @db(name: \\"file_size\\")
   format: String
   height: String
-  mediaId: Media! @db(name: \\"media_id\\")
+  media: Media! @db(name: \\"media_id\\")
   mimeType: String @db(name: \\"mime_type\\")
   object: String
   resolution: String
@@ -2307,14 +2426,14 @@ type MediaContent @db(name: \\"media_contents\\") {
 type MediaKeyword @db(name: \\"media_keywords\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"media_keywords_id_seq\\", initialValue: 1, allocationSize: 1)
   keyword: String
-  mediaId: Media! @db(name: \\"media_id\\")
+  media: Media! @db(name: \\"media_id\\")
 }
 
 type MotorRacingEventState @db(name: \\"motor_racing_event_states\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"motor_racing_event_states_id_seq\\", initialValue: 1, allocationSize: 1)
   context: String
   currentState: Int @db(name: \\"current_state\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   flagState: String @db(name: \\"flag_state\\")
   lap: String
   lapsRemaining: String @db(name: \\"laps_remaining\\")
@@ -2373,7 +2492,7 @@ type OutcomeTotal @db(name: \\"outcome_totals\\") {
   pointsScoredFor: String @db(name: \\"points_scored_for\\")
   rank: String
   standingPoints: String @db(name: \\"standing_points\\")
-  standingSubgroupId: StandingSubgroup! @db(name: \\"standing_subgroup_id\\")
+  standingSubgroup: StandingSubgroup! @db(name: \\"standing_subgroup_id\\")
   streakDuration: String @db(name: \\"streak_duration\\")
   streakEnd: DateTime @db(name: \\"streak_end\\")
   streakStart: DateTime @db(name: \\"streak_start\\")
@@ -2388,7 +2507,7 @@ type OutcomeTotal @db(name: \\"outcome_totals\\") {
 type ParticipantsEvent @db(name: \\"participants_events\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"participants_events_id_seq\\", initialValue: 1, allocationSize: 1)
   alignment: String
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   eventOutcome: String @db(name: \\"event_outcome\\")
   participantId: Int! @db(name: \\"participant_id\\")
   participantType: String! @db(name: \\"participant_type\\")
@@ -2399,108 +2518,149 @@ type ParticipantsEvent @db(name: \\"participants_events\\") {
 
 type Period @db(name: \\"periods\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"periods_id_seq\\", initialValue: 1, allocationSize: 1)
-  participantEventId: ParticipantsEvent! @db(name: \\"participant_event_id\\")
+  participantEvent: ParticipantsEvent! @db(name: \\"participant_event_id\\")
   periodValue: String @db(name: \\"period_value\\")
   score: String
-  subPeriods: [SubPeriod] @db(name: \\"sub_periods\\")
+  subPeriods: [SubPeriod]
 }
 
 type Person @db(name: \\"persons\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"persons_id_seq\\", initialValue: 1, allocationSize: 1)
-  americanFootballActionParticipants: [AmericanFootballActionParticipant] @db(name: \\"american_football_action_participants\\")
-  baseball_action_substitutions: [BaseballActionSubstitution]
-  baseball_event_states: [BaseballEventState]
-  baseball_event_states: [BaseballEventState]
-  baseball_event_states: [BaseballEventState]
-  baseball_event_states: [BaseballEventState]
-  baseballActionSubstitutions: [BaseballActionSubstitution] @db(name: \\"baseball_action_substitutions\\")
-  baseballDefensivePlayers: [BaseballDefensivePlayer] @db(name: \\"baseball_defensive_players\\")
-  baseballEventStates: [BaseballEventState] @db(name: \\"baseball_event_states\\")
+  americanFootballActionParticipants: [AmericanFootballActionParticipant]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballActionSubstitution.personOriginal.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalToPersonBaseballActionSubstitutions\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballActionSubstitution.personReplacing.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingToPersonBaseballActionSubstitutions\\")
+  baseballDefensivePlayers: [BaseballDefensivePlayer]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballEventState.batter.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateBatterToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballEventState.pitcher.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStatePitcherToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballEventState.runner_on_first_id.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_first_idToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballEventState.runner_on_second_id.
+  # baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_second_idToPersonBaseballEventStates\\")
+  # Field name normalization failed because of a conflicting field name.
+  baseballEventStates: [BaseballEventState] @relation(name: \\"BaseballEventStateRunner_on_third_idToPersonBaseballEventStates\\")
   birthDate: String @db(name: \\"birth_date\\")
-  birthLocationId: Location @db(name: \\"birth_location_id\\")
+  birthLocation: Location @db(name: \\"birth_location_id\\") @relation(name: \\"LocationPersonsToPersonBirthLocation\\")
   deathDate: String @db(name: \\"death_date\\")
-  deathLocationId: Location @db(name: \\"death_location_id\\")
+  deathLocation: Location @db(name: \\"death_location_id\\") @relation(name: \\"LocationPersonsToPersonDeathLocation\\")
   gender: String
-  hometownLocationId: Location @db(name: \\"hometown_location_id\\")
-  injuryPhases: [InjuryPhase] @db(name: \\"injury_phases\\")
+  hometownLocation: Location @db(name: \\"hometown_location_id\\") @relation(name: \\"LocationPersonsToPersonHometownLocation\\")
+  injuryPhases: [InjuryPhase]
   media: [Media]
-  mediaCaptions: [MediaCaption] @db(name: \\"media_captions\\")
-  personEventMetadata: [PersonEventMetadatum] @db(name: \\"person_event_metadata\\")
+  mediaCaptions: [MediaCaption]
+  personEventMetadata: [PersonEventMetadatum]
   personKey: String! @db(name: \\"person_key\\")
-  personPhases: [PersonPhase] @db(name: \\"person_phases\\")
-  personsDocuments: [PersonsDocument] @db(name: \\"persons_documents\\")
-  personsMedia: [PersonsMedia] @db(name: \\"persons_media\\")
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
-  residenceLocationId: Location @db(name: \\"residence_location_id\\")
+  personPhases: [PersonPhase]
+  personsDocuments: [PersonsDocument]
+  personsMedia: [PersonsMedia]
+  publisher: Publisher! @db(name: \\"publisher_id\\")
+  residenceLocation: Location @db(name: \\"residence_location_id\\") @relation(name: \\"LocationPersonsToPersonResidenceLocation\\")
 }
 
 type PersonEventMetadatum @db(name: \\"person_event_metadata\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"person_event_metadata_id_seq\\", initialValue: 1, allocationSize: 1)
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   health: String
   lineupSlot: Int @db(name: \\"lineup_slot\\")
   lineupSlotSequence: Int @db(name: \\"lineup_slot_sequence\\")
-  personId: Person! @db(name: \\"person_id\\")
-  positionId: Position @db(name: \\"position_id\\")
-  roleId: Role @db(name: \\"role_id\\")
+  person: Person! @db(name: \\"person_id\\")
+  position: Position @db(name: \\"position_id\\")
+  role: Role @db(name: \\"role_id\\")
   status: String
-  teamId: Team @db(name: \\"team_id\\")
+  team: Team @db(name: \\"team_id\\")
   weight: String
 }
 
 type PersonPhase @db(name: \\"person_phases\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"person_phases_id_seq\\", initialValue: 1, allocationSize: 1)
   endDateTime: DateTime @db(name: \\"end_date_time\\")
-  endSeasonId: Season @db(name: \\"end_season_id\\")
+  endSeason: Season @db(name: \\"end_season_id\\") @relation(name: \\"PersonPhaseEndSeasonToSeasonPersonPhases\\")
   entryReason: String @db(name: \\"entry_reason\\")
   exitReason: String @db(name: \\"exit_reason\\")
   height: String
   membershipId: Int! @db(name: \\"membership_id\\")
   membershipType: String! @db(name: \\"membership_type\\")
-  personId: Person! @db(name: \\"person_id\\")
+  person: Person! @db(name: \\"person_id\\")
   phaseStatus: String @db(name: \\"phase_status\\")
+  regularPosition: Position @db(name: \\"regular_position_id\\")
   regularPositionDepth: String @db(name: \\"regular_position_depth\\")
-  regularPositionId: Position @db(name: \\"regular_position_id\\")
-  roleId: Role @db(name: \\"role_id\\")
+  role: Role @db(name: \\"role_id\\")
   roleStatus: String @db(name: \\"role_status\\")
   selectionLevel: Int @db(name: \\"selection_level\\")
   selectionOverall: Int @db(name: \\"selection_overall\\")
   selectionSublevel: Int @db(name: \\"selection_sublevel\\")
   startDateTime: DateTime @db(name: \\"start_date_time\\")
-  startSeasonId: Season @db(name: \\"start_season_id\\")
+  startSeason: Season @db(name: \\"start_season_id\\") @relation(name: \\"PersonPhaseStartSeasonToSeasonPersonPhases\\")
   uniformNumber: String @db(name: \\"uniform_number\\")
   weight: String
 }
 
 type PersonsDocument @db(name: \\"persons_documents\\") @linkTable {
-  documentId: Document! @db(name: \\"document_id\\")
-  personId: Person! @db(name: \\"person_id\\")
+  document: Document! @db(name: \\"document_id\\")
+  person: Person! @db(name: \\"person_id\\")
 }
 
 type PersonsMedia @db(name: \\"persons_media\\") @linkTable {
-  mediaId: Media! @db(name: \\"media_id\\")
-  personId: Person! @db(name: \\"person_id\\")
+  media: Media! @db(name: \\"media_id\\")
+  person: Person! @db(name: \\"person_id\\")
 }
 
 type Position @db(name: \\"positions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"positions_id_seq\\", initialValue: 1, allocationSize: 1)
   abbreviation: String!
-  affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
-  baseball_action_substitutions: [BaseballActionSubstitution]
-  baseballActionSubstitutions: [BaseballActionSubstitution] @db(name: \\"baseball_action_substitutions\\")
-  baseballDefensivePlayers: [BaseballDefensivePlayer] @db(name: \\"baseball_defensive_players\\")
-  corePersonStats: [CorePersonStat] @db(name: \\"core_person_stats\\")
-  personEventMetadata: [PersonEventMetadatum] @db(name: \\"person_event_metadata\\")
-  personPhases: [PersonPhase] @db(name: \\"person_phases\\")
+  affiliation: Affiliation! @db(name: \\"affiliation_id\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballActionSubstitution.personOriginalPosition.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonOriginalPositionToPositionBaseballActionSubstitutions\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references BaseballActionSubstitution.personReplacingPosition.
+  # baseballActionSubstitutions: [BaseballActionSubstitution] @relation(name: \\"BaseballActionSubstitutionPersonReplacingPositionToPositionBaseballActionSubstitutions\\")
+  baseballDefensivePlayers: [BaseballDefensivePlayer]
+  corePersonStats: [CorePersonStat]
+  personEventMetadata: [PersonEventMetadatum]
+  personPhases: [PersonPhase]
 }
 
 type Publisher @db(name: \\"publishers\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"publishers_id_seq\\", initialValue: 1, allocationSize: 1)
   affiliations: [Affiliation]
   bookmakers: [Bookmaker]
-  documentFixtures: [DocumentFixture] @db(name: \\"document_fixtures\\")
-  documents: [Document]
-  documents: [Document]
+  documentFixtures: [DocumentFixture]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Document.publisher.
+  # documents: [Document] @relation(name: \\"DocumentPublisherToPublisherDocuments\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references Document.source.
+  # documents: [Document] @relation(name: \\"DocumentSourceToPublisherDocuments\\")
   events: [Event]
   media: [Media]
   persons: [Person]
@@ -2515,35 +2675,59 @@ type Publisher @db(name: \\"publishers\\") {
 type Role @db(name: \\"roles\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"roles_id_seq\\", initialValue: 1, allocationSize: 1)
   comment: String
-  personEventMetadata: [PersonEventMetadatum] @db(name: \\"person_event_metadata\\")
-  personPhases: [PersonPhase] @db(name: \\"person_phases\\")
+  personEventMetadata: [PersonEventMetadatum]
+  personPhases: [PersonPhase]
   roleKey: String! @db(name: \\"role_key\\")
   roleName: String @db(name: \\"role_name\\")
-  teamPhases: [TeamPhase] @db(name: \\"team_phases\\")
+  teamPhases: [TeamPhase]
 }
 
 type Season @db(name: \\"seasons\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"seasons_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliation_phases: [AffiliationPhase]
-  affiliationPhases: [AffiliationPhase] @db(name: \\"affiliation_phases\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references AffiliationPhase.endSeason.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationPhaseEndSeasonToSeasonAffiliationPhases\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references AffiliationPhase.startSeason.
+  # affiliationPhases: [AffiliationPhase] @relation(name: \\"AffiliationPhaseStartSeasonToSeasonAffiliationPhases\\")
   endDateTime: DateTime @db(name: \\"end_date_time\\")
-  injuryPhases: [InjuryPhase] @db(name: \\"injury_phases\\")
-  leagueId: Affiliation! @db(name: \\"league_id\\")
-  person_phases: [PersonPhase]
-  personPhases: [PersonPhase] @db(name: \\"person_phases\\")
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  injuryPhases: [InjuryPhase]
+  league: Affiliation! @db(name: \\"league_id\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references PersonPhase.endSeason.
+  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseEndSeasonToSeasonPersonPhases\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references PersonPhase.startSeason.
+  # personPhases: [PersonPhase] @relation(name: \\"PersonPhaseStartSeasonToSeasonPersonPhases\\")
+  publisher: Publisher! @db(name: \\"publisher_id\\")
   seasonKey: Int! @db(name: \\"season_key\\")
   startDateTime: DateTime @db(name: \\"start_date_time\\")
-  subSeasons: [SubSeason] @db(name: \\"sub_seasons\\")
-  team_phases: [TeamPhase]
-  teamPhases: [TeamPhase] @db(name: \\"team_phases\\")
+  subSeasons: [SubSeason]
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references TeamPhase.endSeason.
+  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseEndSeason\\")
+  # Field name normalization failed because of a conflicting field name.
+  # Could not auto-generate backwards relation field, field name would be ambiguous.
+  # Please specify the name of this field and the name of the relation manually.
+  # It references TeamPhase.startSeason.
+  # teamPhases: [TeamPhase] @relation(name: \\"SeasonTeamPhasesToTeamPhaseStartSeason\\")
 }
 
 type Site @db(name: \\"sites\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sites_id_seq\\", initialValue: 1, allocationSize: 1)
   events: [Event]
-  locationId: Location @db(name: \\"location_id\\")
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  location: Location @db(name: \\"location_id\\")
+  publisher: Publisher! @db(name: \\"publisher_id\\")
   siteKey: Int! @db(name: \\"site_key\\")
   teams: [Team]
 }
@@ -2568,7 +2752,7 @@ type SoccerEventState @db(name: \\"soccer_event_states\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"soccer_event_states_id_seq\\", initialValue: 1, allocationSize: 1)
   context: String
   currentState: Int @db(name: \\"current_state\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   minutesElapsed: String @db(name: \\"minutes_elapsed\\")
   periodMinuteElapsed: String @db(name: \\"period_minute_elapsed\\")
   periodTimeElapsed: String @db(name: \\"period_time_elapsed\\")
@@ -2619,26 +2803,26 @@ type SoccerOffensiveStat @db(name: \\"soccer_offensive_stats\\") {
 
 type Standing @db(name: \\"standings\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"standings_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
+  affiliation: Affiliation! @db(name: \\"affiliation_id\\")
   alignmentScope: String @db(name: \\"alignment_scope\\")
   competitionScope: String @db(name: \\"competition_scope\\")
   competitionScopeId: String @db(name: \\"competition_scope_id\\")
   durationScope: String @db(name: \\"duration_scope\\")
   lastUpdated: String @db(name: \\"last_updated\\")
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  publisher: Publisher! @db(name: \\"publisher_id\\")
   scopingLabel: String @db(name: \\"scoping_label\\")
   siteScope: String @db(name: \\"site_scope\\")
   source: String
-  standingSubgroups: [StandingSubgroup] @db(name: \\"standing_subgroups\\")
+  standingSubgroups: [StandingSubgroup]
   standingType: String @db(name: \\"standing_type\\")
-  subSeasonId: SubSeason! @db(name: \\"sub_season_id\\")
+  subSeason: SubSeason! @db(name: \\"sub_season_id\\")
 }
 
 type StandingSubgroup @db(name: \\"standing_subgroups\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"standing_subgroups_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
-  outcomeTotals: [OutcomeTotal] @db(name: \\"outcome_totals\\")
-  standingId: Standing! @db(name: \\"standing_id\\")
+  affiliation: Affiliation! @db(name: \\"affiliation_id\\")
+  outcomeTotals: [OutcomeTotal]
+  standing: Standing! @db(name: \\"standing_id\\")
 }
 
 type Stat @db(name: \\"stats\\") {
@@ -2654,7 +2838,7 @@ type Stat @db(name: \\"stats\\") {
 
 type SubPeriod @db(name: \\"sub_periods\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sub_periods_id_seq\\", initialValue: 1, allocationSize: 1)
-  periodId: Period! @db(name: \\"period_id\\")
+  period: Period! @db(name: \\"period_id\\")
   score: String
   subPeriodValue: String @db(name: \\"sub_period_value\\")
 }
@@ -2662,8 +2846,8 @@ type SubPeriod @db(name: \\"sub_periods\\") {
 type SubSeason @db(name: \\"sub_seasons\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"sub_seasons_id_seq\\", initialValue: 1, allocationSize: 1)
   endDateTime: DateTime @db(name: \\"end_date_time\\")
-  eventsSubSeasons: [EventsSubSeason] @db(name: \\"events_sub_seasons\\")
-  seasonId: Season! @db(name: \\"season_id\\")
+  eventsSubSeasons: [EventsSubSeason]
+  season: Season! @db(name: \\"season_id\\")
   standings: [Standing]
   startDateTime: DateTime @db(name: \\"start_date_time\\")
   subSeasonKey: String! @db(name: \\"sub_season_key\\")
@@ -2672,19 +2856,19 @@ type SubSeason @db(name: \\"sub_seasons\\") {
 
 type Team @db(name: \\"teams\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"teams_id_seq\\", initialValue: 1, allocationSize: 1)
-  americanFootballEventStates: [AmericanFootballEventState] @db(name: \\"american_football_event_states\\")
-  homeSiteId: Site @db(name: \\"home_site_id\\")
-  personEventMetadata: [PersonEventMetadatum] @db(name: \\"person_event_metadata\\")
-  publisherId: Publisher! @db(name: \\"publisher_id\\")
+  americanFootballEventStates: [AmericanFootballEventState]
+  homeSite: Site @db(name: \\"home_site_id\\")
+  personEventMetadata: [PersonEventMetadatum]
+  publisher: Publisher! @db(name: \\"publisher_id\\")
   teamKey: String! @db(name: \\"team_key\\")
-  teamPhases: [TeamPhase] @db(name: \\"team_phases\\")
-  teamsDocuments: [TeamsDocument] @db(name: \\"teams_documents\\")
-  teamsMedia: [TeamsMedia] @db(name: \\"teams_media\\")
-  wageringMoneylines: [WageringMoneyline] @db(name: \\"wagering_moneylines\\")
-  wageringOddsLines: [WageringOddsLine] @db(name: \\"wagering_odds_lines\\")
-  wageringRunlines: [WageringRunline] @db(name: \\"wagering_runlines\\")
-  wageringStraightSpreadLines: [WageringStraightSpreadLine] @db(name: \\"wagering_straight_spread_lines\\")
-  wageringTotalScoreLines: [WageringTotalScoreLine] @db(name: \\"wagering_total_score_lines\\")
+  teamPhases: [TeamPhase]
+  teamsDocuments: [TeamsDocument]
+  teamsMedia: [TeamsMedia]
+  wageringMoneylines: [WageringMoneyline]
+  wageringOddsLines: [WageringOddsLine]
+  wageringRunlines: [WageringRunline]
+  wageringStraightSpreadLines: [WageringStraightSpreadLine]
+  wageringTotalScoreLines: [WageringTotalScoreLine]
 }
 
 type TeamAmericanFootballStat @db(name: \\"team_american_football_stats\\") {
@@ -2698,24 +2882,24 @@ type TeamAmericanFootballStat @db(name: \\"team_american_football_stats\\") {
 
 type TeamPhase @db(name: \\"team_phases\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"team_phases_id_seq\\", initialValue: 1, allocationSize: 1)
-  affiliationId: Affiliation! @db(name: \\"affiliation_id\\")
+  affiliation: Affiliation! @db(name: \\"affiliation_id\\")
   endDateTime: String @db(name: \\"end_date_time\\")
-  endSeasonId: Season @db(name: \\"end_season_id\\")
+  endSeason: Season @db(name: \\"end_season_id\\") @relation(name: \\"SeasonTeamPhasesToTeamPhaseEndSeason\\")
   phaseStatus: String @db(name: \\"phase_status\\")
-  roleId: Role @db(name: \\"role_id\\")
+  role: Role @db(name: \\"role_id\\")
   startDateTime: String @db(name: \\"start_date_time\\")
-  startSeasonId: Season @db(name: \\"start_season_id\\")
-  teamId: Team! @db(name: \\"team_id\\")
+  startSeason: Season @db(name: \\"start_season_id\\") @relation(name: \\"SeasonTeamPhasesToTeamPhaseStartSeason\\")
+  team: Team! @db(name: \\"team_id\\")
 }
 
 type TeamsDocument @db(name: \\"teams_documents\\") @linkTable {
-  documentId: Document! @db(name: \\"document_id\\")
-  teamId: Team! @db(name: \\"team_id\\")
+  document: Document! @db(name: \\"document_id\\")
+  team: Team! @db(name: \\"team_id\\")
 }
 
 type TeamsMedia @db(name: \\"teams_media\\") @linkTable {
-  mediaId: Media! @db(name: \\"media_id\\")
-  teamId: Team! @db(name: \\"team_id\\")
+  media: Media! @db(name: \\"media_id\\")
+  team: Team! @db(name: \\"team_id\\")
 }
 
 type TennisActionPoint @db(name: \\"tennis_action_points\\") {
@@ -2740,7 +2924,7 @@ type TennisEventState @db(name: \\"tennis_event_states\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"tennis_event_states_id_seq\\", initialValue: 1, allocationSize: 1)
   context: String
   currentState: Int @db(name: \\"current_state\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   game: String
   receiverPersonId: Int @db(name: \\"receiver_person_id\\")
   receiverScore: String @db(name: \\"receiver_score\\")
@@ -2788,78 +2972,78 @@ type TennisServiceStat @db(name: \\"tennis_service_stats\\") {
 
 type WageringMoneyline @db(name: \\"wagering_moneylines\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"wagering_moneylines_id_seq\\", initialValue: 1, allocationSize: 1)
-  bookmakerId: Bookmaker! @db(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @db(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @db(name: \\"date_time\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   line: String
   lineOpening: String @db(name: \\"line_opening\\")
   personId: Int @db(name: \\"person_id\\")
   prediction: String
   rotationKey: String @db(name: \\"rotation_key\\")
-  teamId: Team! @db(name: \\"team_id\\")
+  team: Team! @db(name: \\"team_id\\")
   vigorish: String
 }
 
 type WageringOddsLine @db(name: \\"wagering_odds_lines\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"wagering_odds_lines_id_seq\\", initialValue: 1, allocationSize: 1)
-  bookmakerId: Bookmaker! @db(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @db(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @db(name: \\"date_time\\")
   denominator: String
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   numerator: String
   payoutAmount: String @db(name: \\"payout_amount\\")
   payoutCalculation: String @db(name: \\"payout_calculation\\")
   personId: Int @db(name: \\"person_id\\")
   prediction: String
   rotationKey: String @db(name: \\"rotation_key\\")
-  teamId: Team! @db(name: \\"team_id\\")
+  team: Team! @db(name: \\"team_id\\")
 }
 
 type WageringRunline @db(name: \\"wagering_runlines\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"wagering_runlines_id_seq\\", initialValue: 1, allocationSize: 1)
-  bookmakerId: Bookmaker! @db(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @db(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @db(name: \\"date_time\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   line: String
   lineOpening: String @db(name: \\"line_opening\\")
   lineValue: String @db(name: \\"line_value\\")
   personId: Int @db(name: \\"person_id\\")
   prediction: String
   rotationKey: String @db(name: \\"rotation_key\\")
-  teamId: Team! @db(name: \\"team_id\\")
+  team: Team! @db(name: \\"team_id\\")
   vigorish: String
 }
 
 type WageringStraightSpreadLine @db(name: \\"wagering_straight_spread_lines\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"wagering_straight_spread_lines_id_seq\\", initialValue: 1, allocationSize: 1)
-  bookmakerId: Bookmaker! @db(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @db(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @db(name: \\"date_time\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   lineValue: String @db(name: \\"line_value\\")
   lineValueOpening: String @db(name: \\"line_value_opening\\")
   personId: Int @db(name: \\"person_id\\")
   prediction: String
   rotationKey: String @db(name: \\"rotation_key\\")
-  teamId: Team! @db(name: \\"team_id\\")
+  team: Team! @db(name: \\"team_id\\")
   vigorish: String
 }
 
 type WageringTotalScoreLine @db(name: \\"wagering_total_score_lines\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"wagering_total_score_lines_id_seq\\", initialValue: 1, allocationSize: 1)
-  bookmakerId: Bookmaker! @db(name: \\"bookmaker_id\\")
+  bookmaker: Bookmaker! @db(name: \\"bookmaker_id\\")
   comment: String
   dateTime: DateTime @db(name: \\"date_time\\")
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   lineOver: String @db(name: \\"line_over\\")
   lineUnder: String @db(name: \\"line_under\\")
   personId: Int @db(name: \\"person_id\\")
   prediction: String
   rotationKey: String @db(name: \\"rotation_key\\")
-  teamId: Team! @db(name: \\"team_id\\")
+  team: Team! @db(name: \\"team_id\\")
   total: String
   totalOpening: String @db(name: \\"total_opening\\")
   vigorish: String
@@ -2868,7 +3052,7 @@ type WageringTotalScoreLine @db(name: \\"wagering_total_score_lines\\") {
 type WeatherCondition @db(name: \\"weather_conditions\\") {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"weather_conditions_id_seq\\", initialValue: 1, allocationSize: 1)
   clouds: String
-  eventId: Event! @db(name: \\"event_id\\")
+  event: Event! @db(name: \\"event_id\\")
   humidity: String
   temperature: String
   temperatureUnits: String @db(name: \\"temperature_units\\")

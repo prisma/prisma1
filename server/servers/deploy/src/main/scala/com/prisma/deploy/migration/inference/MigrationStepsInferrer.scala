@@ -21,7 +21,7 @@ object MigrationStepsInferrer {
 case class MigrationStepsInferrerImpl(previousSchema: Schema, nextSchema: Schema, renames: SchemaMapping) {
   import com.prisma.util.Diff._
 
-  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV2
+  val isMigrationFromV1ToV2 = previousSchema.isLegacy && nextSchema.isV11
 
   /**
     * The following evaluation order considers all interdependencies:

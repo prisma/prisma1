@@ -20,7 +20,7 @@ import { DatabaseType, IGQLType } from 'prisma-datamodel'
 import { fetchAndPrintSchema } from '../deploy/printSchema'
 
 const debug = require('debug')('generate')
-export default class GenereateCommand extends Command {
+export default class GenerateCommand extends Command {
   static topic = 'generate'
   static description = 'Generate a schema or Prisma Bindings'
   static flags: Flags = {
@@ -39,6 +39,7 @@ export default class GenereateCommand extends Command {
     }),
   }
   async run() {
+    this.flags = this.flags || {}
     const envFile = this.flags['env-file']
     await this.definition.load(this.flags, envFile)
 

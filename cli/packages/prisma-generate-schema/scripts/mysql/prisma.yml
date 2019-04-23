@@ -1,2 +1,0 @@
-endpoint: http://localhost:4466/schema-generator/withAndWithoutId
-datamodel: ../../__tests__/blackbox/cases/withAndWithoutId/model_relational_v1.1.graphql

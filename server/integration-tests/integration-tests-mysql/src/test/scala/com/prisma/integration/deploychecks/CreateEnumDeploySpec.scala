@@ -9,7 +9,8 @@ class CreateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -18,8 +19,9 @@ class CreateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: AB
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: AB
         |}
         |
         |enum AB{
@@ -35,7 +37,8 @@ class CreateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema =
       """type A {
-        | name: String! @unique
+        |  id: ID! @id
+        |  name: String! @unique
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -44,8 +47,9 @@ class CreateEnumDeploySpec extends FlatSpec with Matchers with IntegrationBaseSp
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: AB!
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: AB!
         |}
         |
         |enum AB{

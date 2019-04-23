@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 10.1
--- Dumped by pg_dump version 10.5
+-- Dumped by pg_dump version 11.1
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -58,7 +58,6 @@ CREATE TABLE "schema-generator$flavian"."User" (
 --
 
 CREATE TABLE "schema-generator$flavian"."_PostToUser" (
-    id character(25) NOT NULL,
     "A" character varying(25) NOT NULL,
     "B" character varying(25) NOT NULL
 );
@@ -88,14 +87,6 @@ ALTER TABLE ONLY "schema-generator$flavian"."Post"
 
 ALTER TABLE ONLY "schema-generator$flavian"."User"
     ADD CONSTRAINT "User_pkey" PRIMARY KEY (id);
-
-
---
--- Name: _PostToUser _PostToUser_pkey; Type: CONSTRAINT; Schema: schema-generator$flavian; Owner: -
---
-
-ALTER TABLE ONLY "schema-generator$flavian"."_PostToUser"
-    ADD CONSTRAINT "_PostToUser_pkey" PRIMARY KEY (id);
 
 
 --

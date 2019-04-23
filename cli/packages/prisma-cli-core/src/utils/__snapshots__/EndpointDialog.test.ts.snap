@@ -27,7 +27,7 @@ Object {
       "user": "prisma",
     },
     "datamodel": "type User {
-  id: ID! @unique
+  id: ID! @id
   name: String!
 }
 ",
@@ -51,6 +51,9 @@ services:
             migrations: true
   postgres:
     restart: always
+    # Uncomment the next two lines to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # ports:
+    # - \\"5432:5432\\"
     environment:
       POSTGRES_USER: prisma
       POSTGRES_PASSWORD: prisma
@@ -99,7 +102,7 @@ Object {
       "user": "prisma",
     },
     "datamodel": "type User {
-  id: ID! @unique
+  id: ID! @id
   name: String!
 }
 ",
@@ -123,6 +126,9 @@ services:
             migrations: true
   postgres:
     restart: always
+    # Uncomment the next two lines to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # ports:
+    # - \\"5432:5432\\"
     environment:
       POSTGRES_USER: prisma
       POSTGRES_PASSWORD: prisma

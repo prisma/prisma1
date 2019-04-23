@@ -11,31 +11,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class JdbcClientDbQueries(project: Project, slickDatabase: SlickDatabase)(implicit ec: ExecutionContext) extends JdbcBase with ClientDbQueries {
 
-  private def runAttached[T](query: DBIO[T]) = {
-    if (slickDatabase.isSQLite) {
-      import slickDatabase.profile.api._
-      val projectId          = project.id
-      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
-      val path               = s"""'db/$projectId'"""
-      val attach             = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
-      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
-
-      val attachIfNecessary = for {
-        attachedDbs <- list
-        _ <- attachedDbs.map(_._2).contains(projectId) match {
-              case true  => slick.dbio.DBIO.successful(())
-              case false => attach
-            }
-        _      <- activateForeignKey
-        result <- query
-      } yield result
-
-      database.run(attachIfNecessary.withPinnedSession)
-    } else {
-      database.run(query)
-    }
-  }
-
   val queryBuilder = JdbcDeployDatabaseQueryBuilder(slickDatabase)
 
   def existsByModel(model: Model): Future[Boolean] = {
@@ -78,5 +53,30 @@ case class JdbcClientDbQueries(project: Project, slickDatabase: SlickDatabase)(i
 
   private val recoverPf: PartialFunction[Throwable, Boolean] = {
     case _: java.sql.SQLException => false
+  }
+
+  private def runAttached[T](query: DBIO[T]) = {
+    if (slickDatabase.isSQLite) {
+      import slickDatabase.profile.api._
+      val projectId          = project.id
+      val list               = sql"""PRAGMA database_list;""".as[(String, String, String)]
+      val path               = s"""'db/$projectId.db'"""
+      val attach             = sqlu"ATTACH DATABASE #${path} AS #${projectId};"
+      val activateForeignKey = sqlu"""PRAGMA foreign_keys = ON;"""
+
+      val attachIfNecessary = for {
+        attachedDbs <- list
+        _ <- attachedDbs.map(_._2).contains(projectId) match {
+              case true  => slick.dbio.DBIO.successful(())
+              case false => attach
+            }
+        _      <- activateForeignKey
+        result <- query
+      } yield result
+
+      database.run(attachIfNecessary.withPinnedSession)
+    } else {
+      database.run(query)
+    }
   }
 }

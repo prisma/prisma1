@@ -30,7 +30,7 @@ trait MigrationPersistence {
   protected def enrichWithPreviousSchemas(migrations: Vector[Migration]): Vector[Migration] = {
     migrations.map { migration =>
       val previousMigration = migrations.find(mig => mig.status == MigrationStatus.Success && mig.revision < migration.revision)
-      migration.copy(previousSchema = previousMigration.map(_.schema).getOrElse(Schema.empty))
+      migration.copy(previousSchema = previousMigration.map(_.schema).getOrElse(Schema.emptyV11))
     }
   }
 }

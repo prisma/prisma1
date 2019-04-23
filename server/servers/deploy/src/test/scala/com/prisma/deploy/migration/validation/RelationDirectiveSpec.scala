@@ -6,7 +6,7 @@ import com.prisma.shared.models.ConnectorCapability.{
   RelationLinkListCapability,
   RelationLinkTableCapability
 }
-import com.prisma.shared.models.{ConnectorCapabilities, OnDelete, RelationStrategy}
+import com.prisma.shared.models.{OnDelete, RelationStrategy}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelValidationSpecBase {

@@ -23,10 +23,10 @@ class EmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with Api
     webhookTestKit.reset
   }
 
-  lazy val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromStringV11() {
     """
       |type Todo {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   title: String
       |   status: TodoStatus
       |   comments: [Comment]

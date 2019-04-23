@@ -4,11 +4,11 @@ import com.prisma.api.connector.PrismaArgs
 import com.prisma.api.schema.APIErrors.{FieldCannotBeNull, ValueTooLong}
 import com.prisma.gc_values._
 import com.prisma.shared.models.TypeIdentifier.IdTypeIdentifier
-import com.prisma.shared.models.{Model, TypeIdentifier}
+import com.prisma.shared.models.{Field, Model, TypeIdentifier}
 
 import scala.concurrent.ExecutionContext
 
-trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarListActions with RelayIdActions {
+trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarListActions {
   import slickDatabase.profile.api._
 
   def createNode(model: Model, args: PrismaArgs): DBIO[IdGCValue] = {
@@ -22,7 +22,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
       }
     }
 
-    val fields = model.fields.filter(field => argsWithIdIfNecessary.hasArgFor(field.name))
+    val fields: Seq[Field] = model.fields.filter(field => argsWithIdIfNecessary.hasArgFor(field.name))
     val query = sql
       .insertInto(modelTable(model))
       .columns(fields.map(modelColumn): _*)
@@ -40,7 +40,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
           rs.next()
           rs.getId(model)
         } else {
-          argsWithIdIfNecessary.idField
+          argsWithIdIfNecessary.idFieldByName(model.idField_!.name)
         }
       }
     )
@@ -85,14 +85,13 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
     }
   }
 
-  def deleteNodeById(model: Model, id: IdGCValue, shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext) = {
-    deleteNodes(model, Vector(id), shouldDeleteRelayIds)
+  def deleteNodeById(model: Model, id: IdGCValue)(implicit ec: ExecutionContext) = {
+    deleteNodes(model, Vector(id))
   }
 
-  def deleteNodes(model: Model, ids: Vector[IdGCValue], shouldDeleteRelayIds: Boolean)(implicit ec: ExecutionContext): DBIO[Unit] = {
+  def deleteNodes(model: Model, ids: Vector[IdGCValue])(implicit ec: ExecutionContext): DBIO[Unit] = {
     DBIO.seq(
       deleteScalarListValuesByNodeIds(model, ids),
-      if (shouldDeleteRelayIds) deleteRelayIds(ids) else dbioUnit,
       deleteNodesByIds(model, ids)
     )
   }

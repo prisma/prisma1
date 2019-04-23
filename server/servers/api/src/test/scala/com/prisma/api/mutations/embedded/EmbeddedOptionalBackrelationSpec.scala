@@ -1,6 +1,5 @@
 package com.prisma.api.mutations.embedded
 
-import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -10,16 +9,17 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "Nested Updates" should "work for models with missing backrelations " in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Owner {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  ownerName: String! @unique
         |  cat: Cat
         |}
         |
-        |type Cat @embedded{
-        |  catName: String! @unique
+        |type Cat @embedded {
+        |  id: ID! @id
+        |  catName: String!
         |}
         |
       """.stripMargin
@@ -53,39 +53,42 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
   }
 
   "Nested Upsert" should "work for models with missing backrelations for update " in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Owner {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  ownerName: String! @unique
         |  cats: [Cat]
         |}
         |
-        |type Cat @embedded{
-        |  catName: String! @unique
+        |type Cat @embedded {
+        |  id: ID! @id
+        |  catName: String!
         |}
         |
       """.stripMargin
     }
     database.setup(project)
 
-    server.query(
+    val setupResult = server.query(
       """mutation {createOwner(data: {ownerName: "jon", cats: {create: {catName: "garfield"}}}) {
         |    ownerName
         |    cats {
+        |      id
         |      catName
         |    }
         |  }
         |}""".stripMargin,
       project
     )
+    val catId = setupResult.pathAsString("data.createOwner.cats.[0].id")
 
     val res = server.query(
-      """mutation {updateOwner(where: {ownerName: "jon"},
+      s"""mutation {updateOwner(where: {ownerName: "jon"},
         |data: {cats: {upsert: {
-        |                   where:{catName: "garfield"},
-        |                   update: {catName: "azrael"}
-        |                   create: {catName: "should not matter"}
+        |                   where:{ id: "$catId" },
+        |                   update: { catName: "azrael" }
+        |                   create: { catName: "should not matter" }
         |                   }}})
         |{
         |    ownerName
@@ -101,16 +104,17 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
   }
 
   "Nested Upsert" should "work for models with missing backrelations for create" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Owner {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  ownerName: String! @unique
         |  cats: [Cat]
         |}
         |
-        |type Cat @embedded{
-        |  catName: String! @unique
+        |type Cat @embedded {
+        |  id: ID! @id
+        |  catName: String!
         |}
         |
       """.stripMargin
@@ -131,7 +135,7 @@ class EmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with ApiSp
     val res = server.query(
       """mutation {updateOwner(where: {ownerName: "jon"},
         |data: {cats: {upsert: {
-        |                   where:{catName: "DOES NOT EXIST"},
+        |                   where:{id: "DOES NOT EXIST"},
         |                   update: {catName: "SHOULD NOT MATTER"}
         |                   create: {catName: "azrael"}
         |                   }}})

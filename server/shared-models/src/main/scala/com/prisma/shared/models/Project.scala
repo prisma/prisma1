@@ -21,13 +21,13 @@ case class Project(
   val serverSideSubscriptionFunctions = functions.collect { case x: ServerSideSubscriptionFunction => x }
 
   val dbName: String = manifestation match {
-    case ProjectManifestation(Some(_), Some(schema), "postgres")                  => schema
-    case ProjectManifestation(Some(_), Some(schema), _)                           => sys.error("Only Postgres allows schema + database.")
-    case ProjectManifestation(Some(_), None, "postgres")                          => id
-    case ProjectManifestation(Some(database), None, "mongo" | "mysql" | "sqlite") => database
-    case ProjectManifestation(Some(database), None, _)                            => sys.error("We only have four connectors atm.")
-    case ProjectManifestation(None, Some(_), _)                                   => sys.error("You cannot provide a schema only.")
-    case ProjectManifestation(None, None, _)                                      => id
+    case ProjectManifestation(Some(_), Some(schema), "postgres")                                                                 => schema
+    case ProjectManifestation(Some(_), Some(schema), _)                                                                          => sys.error("Only Postgres allows schema + database.")
+    case ProjectManifestation(Some(_), None, "postgres")                                                                         => id
+    case ProjectManifestation(Some(database), None, "mongo" | "mysql" | "sqlite" | "sqlite-native" | "native-integration-tests") => database
+    case ProjectManifestation(Some(database), None, _)                                                                           => sys.error("We only have four connectors atm.")
+    case ProjectManifestation(None, Some(_), _)                                                                                  => sys.error("You cannot provide a schema only.")
+    case ProjectManifestation(None, None, _)                                                                                     => id
   }
 }
 

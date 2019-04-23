@@ -607,7 +607,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
       "The column for the inline relation field `author` is not referencing a valid column. Those columns must always reference the column of the id field of related model. So it should reference `id` instead of `nick`.")
   }
 
-  "it should error if a @linkTable is missing in the database" in {
+  "it should error if a @relationTable is missing in the database" in {
     val postgres =
       s"""
          | CREATE TABLE author (
@@ -651,7 +651,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |  id: Int! @id
          |}
          |
-         |type BlogToAuthor @linkTable @db(name:"blog_to_author"){
+         |type BlogToAuthor @relationTable @db(name:"blog_to_author"){
          |  id: ID! @id
          |  blog: Blog!
          |  author: Author!
@@ -666,7 +666,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     error.description should be("Could not find the table `blog_to_author` for the relation `BlogToAuthor` in the database.")
   }
 
-  "it should error if the id column of a @linkTable is missing in the database" in {
+  "it should error if the id column of a @relationTable is missing in the database" in {
     val postgres =
       s"""
          | CREATE TABLE author (
@@ -726,7 +726,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |  id: Int! @id
          |}
          |
-         |type BlogToAuthor @linkTable @db(name:"blog_to_author"){
+         |type BlogToAuthor @relationTable @db(name:"blog_to_author"){
          |  id: ID! @id
          |  blog: Blog!
          |  author: Author!
@@ -741,7 +741,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
     error.description should be("The link table `BlogToAuthor` is missing the column `id`.")
   }
 
-  "it should succeed if the @linkTable matches the relation table in database" in {
+  "it should succeed if the @relationTable matches the relation table in database" in {
     val postgres =
       s"""
          | CREATE TABLE author (
@@ -801,7 +801,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |  id: Int! @id
          |}
          |
-         |type BlogToAuthor @linkTable @db(name:"blog_to_author"){
+         |type BlogToAuthor @relationTable @db(name:"blog_to_author"){
          |  blog: Blog!
          |  author: Author!
          |}
@@ -866,7 +866,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |  id: Int! @id
          |}
          |
-         |type BlogToAuthor @linkTable @db(name:"blog_to_author"){
+         |type BlogToAuthor @relationTable @db(name:"blog_to_author"){
          |  blog: Blog!
          |  author: Author!
          |}
@@ -953,7 +953,7 @@ class DatabaseSchemaValidatorSpec extends WordSpecLike with Matchers with Passiv
          |  id: Int! @id
          |}
          |
-         |type BlogToAuthor @linkTable @db(name:"blog_to_author"){
+         |type BlogToAuthor @relationTable @db(name:"blog_to_author"){
          |  blog: Blog!
          |  author: Author!
          |}

@@ -12,7 +12,7 @@ sealed trait ApiMutaction {
 // DATABASE MUTACTIONS
 sealed trait DatabaseMutaction extends ApiMutaction {
   def project: Project
-  def allNestedMutactions: Vector[DatabaseMutaction] = Vector.empty
+  def allNestedMutactions: Vector[NestedDatabaseMutaction] = Vector.empty
 }
 
 sealed trait TopLevelDatabaseMutaction extends DatabaseMutaction
@@ -141,12 +141,15 @@ case class NestedDeleteNode(project: Project, relationField: RelationField, wher
 }
 
 // UPSERT
-sealed trait UpsertNode extends DatabaseMutaction
+sealed trait UpsertNode extends DatabaseMutaction {
+  def create: CreateNode
+  def update: UpdateNode
+}
 
 case class TopLevelUpsertNode(
     project: Project,
     where: NodeSelector,
-    create: CreateNode,
+    create: TopLevelCreateNode,
     update: TopLevelUpdateNode
 ) extends UpsertNode
     with TopLevelDatabaseMutaction

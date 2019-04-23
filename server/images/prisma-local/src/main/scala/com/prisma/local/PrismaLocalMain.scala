@@ -12,6 +12,8 @@ object PrismaLocalMain extends App {
   implicit val materializer = ActorMaterializer()
   implicit val dependencies = PrismaLocalDependencies()
 
+  dependencies.apiConnector
+
   dependencies.initialize()
   Version.check()
 

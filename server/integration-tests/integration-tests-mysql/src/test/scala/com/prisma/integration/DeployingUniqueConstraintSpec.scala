@@ -8,6 +8,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   "Adding a unique constraint with violating data" should "throw a deploy error" in {
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |}"""
@@ -19,6 +20,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String @unique
         |}"""
@@ -31,6 +33,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   "Adding a unique constraint without violating data" should "work" taggedAs (IgnoreSQLite) in {
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |}"""
@@ -42,6 +45,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String @unique
         |}"""
@@ -52,6 +56,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   "Adding a unique constraint without violating data" should "work even with multiple nulls" taggedAs (IgnoreSQLite) in {
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |}"""
@@ -63,6 +68,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String @unique
         |}"""
@@ -73,6 +79,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   "Adding a new String field with a unique constraint" should "work" in {
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |}"""
@@ -84,6 +91,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |  newField: String @unique
@@ -95,6 +103,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   "Adding a new required String field with a unique constraint" should "error" in {
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |}"""
@@ -106,6 +115,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |  newField: String! @unique
@@ -119,6 +129,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   "Adding a new Int field with a unique constraint" should "work" in {
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |}"""
@@ -130,6 +141,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |  newField: Int @unique
@@ -141,6 +153,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
   "Removing a unique constraint" should "work" taggedAs (IgnoreSQLite) in {
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  dummy: String
         |}"""
@@ -152,6 +165,7 @@ class DeployingUniqueConstraintSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String!
         |  dummy: String
         |}"""

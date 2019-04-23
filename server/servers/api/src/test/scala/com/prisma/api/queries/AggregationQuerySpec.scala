@@ -6,8 +6,13 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class AggregationQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
-  val project = SchemaDsl.fromBuilder { schema =>
-    schema.model("Todo").field_!("title", _.String)
+
+  val project = SchemaDsl.fromStringV11() {
+    """type Todo {
+      |  id: ID! @id
+      |  title: String!
+      |}
+    """.stripMargin
   }
 
   override protected def beforeEach(): Unit = {
