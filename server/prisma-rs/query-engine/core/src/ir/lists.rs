@@ -43,16 +43,8 @@ pub fn build_list(result: &ManyReadQueryResults) -> List {
         vec
     });
 
-    // Strip implicit fields
-    let implicits = result.get_implicit_fields();
-    vec = vec.into_iter().map(|item| {
-        match item {
-            Item::Map(map) => Item::Map(utils::remove_implicit_fields(&implicits, map)),
-            ignore => ignore,
-        }
-    }).collect();
-
-    // Do one last pass to sort in order
+    // Re-order fields to be in-line with what the query specified
+    // This also removes implicit fields
     vec.into_iter()
         .fold(vec![], |mut vec, mut item| {
             if let Item::Map(ref mut map) = item {

@@ -48,6 +48,7 @@ fn main() {
     let sys = actix::System::new("prisma");
     let address = ("0.0.0.0", port);
 
+    println!("Binding to {:?}", address);
     server::new(move || {
         App::with_state(Arc::clone(&request_context))
             .resource("/", |r| {

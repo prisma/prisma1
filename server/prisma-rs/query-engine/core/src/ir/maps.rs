@@ -4,7 +4,6 @@ use super::{lists::build_list, utils, Item, Map};
 use crate::{ReadQueryResult, SingleReadQueryResult};
 
 pub fn build_map(result: &SingleReadQueryResult) -> Map {
-
     // Build selected fields first
     let mut outer = match &result.scalars {
         Some(single) => single
@@ -38,10 +37,8 @@ pub fn build_map(result: &SingleReadQueryResult) -> Map {
         }
     });
 
-    // Strip implicit fields
-    let implicits = result.get_implicit_fields();
-    outer = utils::remove_implicit_fields(&implicits, outer);
-
+    // Re-order fields to be in-line with what the query specified
+    // This also removes implicit fields
     result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(
             field.clone(),
