@@ -136,7 +136,7 @@ pub trait BuilderExt {
             .fold(Ok(QueryArguments::default()), |result, (k, v)| {
                 if let Ok(res) = result {
                     #[cfg_attr(rustfmt, rustfmt_skip)]
-                    match (k.as_str(), v) {
+                    match (k.to_lowercase().as_str(), v) {
                         ("skip", Value::Int(num)) => match num.as_i64() {
                             Some(num) => Ok(QueryArguments { skip: Some(num as u32), ..res }),
                             None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
