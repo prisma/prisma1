@@ -17,10 +17,7 @@ pub use single::*;
 use self::inflector::Inflector;
 use crate::{CoreError, CoreResult, ReadQuery};
 use ::inflector::Inflector as RustInflector;
-use connector::{
-    filter::{Filter, NodeSelector},
-    QueryArguments,
-};
+use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
     Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
