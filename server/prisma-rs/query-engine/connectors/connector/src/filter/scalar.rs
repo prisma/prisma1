@@ -59,7 +59,7 @@ impl ScalarCompare for Arc<ScalarField> {
     {
         Filter::from(ScalarFilter {
             field: Arc::clone(self),
-            condition: ScalarCondition::In(val.into_iter().map(|i| i.into()).collect()),
+            condition: ScalarCondition::NotIn(val.into_iter().map(|i| i.into()).collect()),
         })
     }
 

@@ -199,7 +199,12 @@ pub trait BuilderExt {
         map: &BTreeMap<String, Value>,
         model: ModelRef,
     ) -> CoreResult<QueryArguments> {
-        unimplemented!()
+        let filter = filters::extract_filter(map, model)?;
+
+        Ok(QueryArguments {
+            filter: Some(filter),
+            ..aggregator
+        })
     }
 
     /// Get all selected fields from a model

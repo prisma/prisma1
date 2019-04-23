@@ -1,10 +1,10 @@
-use crate::CoreResult;
-use connector::filter::Filter;
+use crate::{CoreError, CoreResult};
+use connector::{filter::Filter, RelationCompare, ScalarCompare};
 use graphql_parser::query::Value;
-use prisma_models::{ModelRef, Field, PrismaValue};
-use std::collections::BTreeMap;
-use connector::compare::ScalarCompare;
+use prisma_models::{Field, ModelRef, PrismaValue};
+use std::{collections::BTreeMap, sync::Arc};
 
+#[derive(PartialEq)]
 enum FilterOp {
     In,
     NotIn,
@@ -28,8 +28,8 @@ enum FilterOp {
     Field,
 }
 
-impl From<FilterOp> for &'static str {
-    fn from(fo: FilterOp) -> Self {
+impl From<&FilterOp> for &'static str {
+    fn from(fo: &FilterOp) -> Self {
         match fo {
             FilterOp::In => "_in",
             FilterOp::NotIn => "_not_in",
@@ -50,115 +50,132 @@ impl From<FilterOp> for &'static str {
             FilterOp::NestedAnd => "AND",
             FilterOp::NestedOr => "OR",
             FilterOp::NestedNot => "NOT",
-            FilterOp::Field => "<field>",
+            FilterOp::Field => "", // Needs to be last
         }
     }
 }
 
-fn to_prisma_value(v: Value) -> PrismaValue {
+fn to_prisma_value(v: &Value) -> PrismaValue {
     match v {
-        Value::Boolean(b) => PrismaValue::Boolean(b),
-        Value::Enum(e) => PrismaValue::Enum(e),
-        Value::Float(f) => PrismaValue::Float(f),
+        Value::Boolean(b) => PrismaValue::Boolean(b.clone()),
+        Value::Enum(e) => PrismaValue::Enum(e.clone()),
+        Value::Float(f) => PrismaValue::Float(f.clone()),
         Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap() as i32),
         Value::Null => PrismaValue::Null,
-        Value::String(s) => PrismaValue::String(s),
+        Value::String(s) => PrismaValue::String(s.clone()),
+        Value::List(l) => PrismaValue::List(l.iter().map(|i| to_prisma_value(i)).collect()),
         _ => unimplemented!(),
     }
 }
 
-fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreResult<Filter> {
+pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreResult<Filter> {
     let ops = vec![
-        FilterOp::In,
         FilterOp::NotIn,
+        FilterOp::NotContains,
+        FilterOp::NotStartsWith,
+        FilterOp::NotEndsWith,
+        FilterOp::In,
         FilterOp::Not,
         FilterOp::Lt,
         FilterOp::Lte,
         FilterOp::Gt,
         FilterOp::Gte,
         FilterOp::Contains,
-        FilterOp::NotContains,
         FilterOp::StartsWith,
-        FilterOp::NotStartsWith,
         FilterOp::EndsWith,
-        FilterOp::NotEndsWith,
         FilterOp::Some,
         FilterOp::None,
         FilterOp::Every,
         FilterOp::NestedAnd,
         FilterOp::NestedOr,
         FilterOp::NestedNot,
-        FilterOp::Field,
+        FilterOp::Field, // Needs to be last
     ];
 
-    map.iter().fold(Ok(None), |_, (k, v)| {
-        ops.iter().find(|op| k.as_str() == op.into()).map(|op| {
-            let field_name = k.trim_end_matches(op.into());
-            let field = model.fields().find_from_all(&field_name).unwrap(); // fixme: unwrap
+    Ok(Filter::and(
+        map.iter()
+            .map(|(k, v): (&String, &Value)| {
+                let op = ops.iter().find(|op| {
+                    let op_name: &'static str = (*op).into();
+                    k.as_str().ends_with(op_name)
+                });
 
-            let filter = match field {
-                Field::Scalar(s) => {
-                    let value = to_prisma_value(v);
-                    match op {
-                        FilterOp::In => unimplemented!(),
-                        FilterOp::NotIn => unimplemented!(),
-                        FilterOp::Not => s.not_equals(v),
-                        FilterOp::Lt => ,
-                        FilterOp::Lte => ,
-                        FilterOp::Gt => ,
-                        FilterOp::Gte => ,
-                        FilterOp::Contains => s.contains(v),
-                        FilterOp::NotContains => ,
-                        FilterOp::StartsWith => ,
-                        FilterOp::NotStartsWith => ,
-                        FilterOp::EndsWith => ,
-                        FilterOp::NotEndsWith => ,
+                let op = match op {
+                    None => return Err(CoreError::QueryValidationError(format!("Query argument {} invalid", k))),
+                    Some(op) => op,
+                };
+
+                match op {
+                    op if (op == &FilterOp::NestedAnd || op == &FilterOp::NestedOr || op == &FilterOp::NestedNot) => {
+                        let value = match v {
+                            Value::List(o) => o,
+                            _ => panic!("Expected list value"),
+                        };
+                        let vec = value
+                            .into_iter()
+                            .map(|v| {
+                                extract_filter(
+                                    match v {
+                                        Value::Object(o) => o,
+                                        _ => panic!("Expected object value"),
+                                    },
+                                    Arc::clone(&model),
+                                )
+                                .unwrap()
+                            })
+                            .collect();
+
+                        Ok(match op {
+                            FilterOp::NestedAnd => Filter::and(vec),
+                            FilterOp::NestedOr => Filter::or(vec),
+                            FilterOp::NestedNot => Filter::not(vec),
+                            _ => unreachable!(),
+                        })
                     }
-                },
-                Field::Relation(r)=> {
-                    match op {
-                        FilterOp::Some => ,
-                        FilterOp::None => ,
-                        FilterOp::Every => ,
+                    op => {
+                        let op_name: &'static str = op.into();
+                        let field_name = k.trim_end_matches(op_name);
+                        let field = model.fields().find_from_all(&field_name).unwrap(); // fixme: unwrap
+
+                        match field {
+                            Field::Scalar(s) => {
+                                let value = to_prisma_value(v);
+                                Ok(match op {
+                                    FilterOp::In => s.is_in(value.into()),
+                                    FilterOp::NotIn => s.not_in(value.into()),
+                                    FilterOp::Not => s.not_equals(value),
+                                    FilterOp::Lt => s.less_than(value),
+                                    FilterOp::Lte => s.less_than_or_equals(value),
+                                    FilterOp::Gt => s.greater_than(value),
+                                    FilterOp::Gte => s.greater_than_or_equals(value),
+                                    FilterOp::Contains => s.contains(value),
+                                    FilterOp::NotContains => s.not_contains(value),
+                                    FilterOp::StartsWith => s.starts_with(value),
+                                    FilterOp::NotStartsWith => s.not_starts_with(value),
+                                    FilterOp::EndsWith => s.ends_with(value),
+                                    FilterOp::NotEndsWith => s.not_ends_with(value),
+                                    FilterOp::Field => s.equals(value),
+                                    _ => unreachable!(),
+                                })
+                            }
+                            Field::Relation(r) => {
+                                let value = match v {
+                                    Value::Object(o) => o,
+                                    _ => panic!("Expected object value"),
+                                };
+
+                                Ok(match op {
+                                    FilterOp::Some => r.at_least_one_related(extract_filter(value, r.related_model())?),
+                                    FilterOp::None => r.no_related(extract_filter(value, r.related_model())?),
+                                    FilterOp::Every => r.every_related(extract_filter(value, r.related_model())?),
+                                    FilterOp::Field => extract_filter(value, r.related_model())?,
+                                    _ => unreachable!(),
+                                })
+                            }
+                        }
                     }
-                },
-            };
-
-            unimplemented!()
-        });
-
-        // let (field_name, op) = match k.as_str() {
-        //     // Filters
-        //     x if x.ends_with("_in") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_not_in") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_not") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_lt") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_lte") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_gt") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_gte") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_contains") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_not_contains") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_starts_with") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_not_starts_with") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_ends_with") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_not_ends_with") => (x.trim_end_matches("_in"), FilterOp::In),
-
-        //     // Relations
-        //     x if x.ends_with("_some") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_none") => (x.trim_end_matches("_in"), FilterOp::In),
-        //     x if x.ends_with("_every") => (x.trim_end_matches("_in"), FilterOp::In),
-
-        //     // Nesting
-        //     "AND" => {}
-        //     "OR" => {}
-        //     "NOT" => {}
-
-        //     // Fields
-        //     x => {}
-        // }
-
-        unimplemented!()
-    });
-
-    unimplemented!()
+                }
+            })
+            .collect::<CoreResult<Vec<Filter>>>()?,
+    ))
 }
