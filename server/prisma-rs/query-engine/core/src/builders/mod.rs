@@ -1,5 +1,6 @@
 //! Query execution builders module
 
+mod filters;
 mod inflector;
 mod many;
 mod many_rel;
@@ -16,14 +17,17 @@ pub use single::*;
 use self::inflector::Inflector;
 use crate::{CoreError, CoreResult, ReadQuery};
 use ::inflector::Inflector as RustInflector;
-use connector::{filter::NodeSelector, QueryArguments};
+use connector::{
+    filter::{Filter, NodeSelector},
+    QueryArguments,
+};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
     Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
     SelectedFields, SelectedScalarField, SortOrder,
 };
 
-use std::sync::Arc;
+use std::{collections::BTreeMap, sync::Arc};
 use uuid::Uuid;
 
 /// A common query-builder type
@@ -161,7 +165,7 @@ pub trait BuilderExt {
                             None => Err(CoreError::QueryValidationError("Invalid number provided".into())),
                         },
                         ("orderby", Value::Enum(order_arg)) => Self::extract_order_by(res, order_arg, Arc::clone(&model)),
-                        ("where", _) => panic!("lolnope"),
+                        ("where", Value::Object(o)) => Self::extract_filter(res, o, Arc::clone(&model)),
                         (name, _) => Err(CoreError::QueryValidationError(format!("Unknown key: `{}`", name))),
                     }
                 } else {
@@ -191,6 +195,14 @@ pub trait BuilderExt {
         } else {
             Err(CoreError::QueryValidationError("...".into()))
         }
+    }
+
+    fn extract_filter(
+        aggregator: QueryArguments,
+        map: &BTreeMap<String, Value>,
+        model: ModelRef,
+    ) -> CoreResult<QueryArguments> {
+        unimplemented!()
     }
 
     /// Get all selected fields from a model
