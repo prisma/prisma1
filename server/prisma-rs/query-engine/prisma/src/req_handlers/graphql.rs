@@ -51,8 +51,6 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         ));
     }
 
-    dbg!(&query_doc);
-
     let rb = RootBuilder {
         query: query_doc,
         schema: ctx.schema.clone(),
@@ -60,9 +58,7 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     };
 
     let queries: Vec<ReadQuery> = rb.build()?;
-    let ir = ctx
-        .read_query_executor
-        .execute(&queries)?
+    let ir = dbg!(ctx.read_query_executor.execute(&queries)?)
         .into_iter()
         .fold(Builder::new(), |builder, result| builder.add(result))
         .build();

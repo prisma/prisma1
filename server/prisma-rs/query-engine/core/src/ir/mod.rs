@@ -63,7 +63,7 @@ impl Builder {
                 ReadQueryResult::Single(query) => {
                     Response::Data(query.name.clone(), Item::Map(maps::build_map(&query)))
                 }
-                ReadQueryResult::Many(mut query) => {
+                ReadQueryResult::Many(query) => {
                     // WIP: This is most likely better for a constructor call to ManyReadQueryResults
                     Response::Data(query.name.clone(), Item::List(lists::build_list(&query)))
                 }
