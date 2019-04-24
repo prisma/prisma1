@@ -73,7 +73,9 @@ export class TypescriptGenerator extends Generator {
         '\n\n' +
         this.renderInterfaceOrObject(type, false) +
         '\n\n' +
-        this.renderInterfaceOrObject(type, false, true)
+        this.renderInterfaceOrObject(type, false, true) +
+        '\n\n' +
+        this.renderInterfaceOrObject(type, true, false, true)
       )
     },
 
@@ -520,8 +522,13 @@ export const prisma = new Prisma()`
     type: GraphQLObjectTypeRef | GraphQLInputObjectType | GraphQLInterfaceType,
     node = true,
     subscription = false,
+    nullable = false,
   ): string {
     const fields = type.getFields()
+
+    if (node && !subscription && nullable) {
+      return this.renderNullableType(type as GraphQLObjectTypeRef)
+    }
 
     if (node && this.isConnectionType(type)) {
       return this.renderConnectionType(type as GraphQLObjectTypeRef)
@@ -641,7 +648,8 @@ export const prisma = new Prisma()`
       !isScalar &&
       !addSubscription
     ) {
-      return typeString === 'Node' ? `Node` : `${typeString}Promise`
+      const nullableString = isOptional && !isMutation && !isSubscription ? 'Nullable' : ''
+      return typeString === 'Node' ? `Node` : `${typeString}${nullableString}Promise`
     }
 
     if ((node || isList) && !isScalar && !addSubscription) {
@@ -760,13 +768,14 @@ ${fieldDefinition}
     fieldDefinition: string,
     promise?: boolean,
     subscription?: boolean,
+    nullable: boolean = false,
   ): string {
     const actualInterfaces = promise
       ? [
           {
             name: subscription
               ? `Promise<AsyncIterator<${typeName}>>`
-              : `Promise<${typeName}>`,
+              : `Promise<${typeName}${nullable ? '| null' : ''}>`,
           },
           {
             name: 'Fragmentable',
@@ -780,7 +789,7 @@ ${fieldDefinition}
         ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition.replace('?:', ':')}
       }>`
-        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${
+        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${nullable ? 'Nullable' : ''}${
             promise && !subscription ? 'Promise' : ''
           }${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
@@ -825,6 +834,53 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
     }
 
     return false
+  }
+
+  renderNullableType(type: GraphQLObjectTypeRef) {
+    const fields = type.getFields()
+    const fieldDefinition = Object.keys(fields)
+      .map(f => {
+        const field = fields[f]
+        const deepType = this.getDeepType(fields[f].type)
+        const embedded = this.isEmbeddedType(deepType)
+        return `  ${this.renderFieldName(field, false)}: ${this.renderFieldType({
+          field,
+          node: false,
+          input: false,
+          partial: false,
+          renderFunction: true,
+          isMutation: false,
+          isSubscription: false,
+          operation: false,
+          embedded,
+        })}`
+      })
+      .join(`${this.lineBreakDelimiter}\n`)
+
+    let interfaces: GraphQLInterfaceType[] = []
+    if (type instanceof GraphQLObjectType) {
+      interfaces = (type as any).getInterfaces()
+    }
+
+    if (['Aggregate'].some(t => type.name.startsWith(t))) {
+      return ``
+    }
+    if (['Connection', 'SubscriptionPayload', 'PreviousValues', 'Edge'].some(t => type.name.endsWith(t))) {
+      return ``
+    }
+    if (['PageInfo', 'BatchPayload'].some(t => type.name === t)) {
+      return ``
+    }
+    return this.renderInterfaceWrapper(
+      `${type.name}`,
+      type.description!,
+      interfaces,
+      fieldDefinition,
+      true,
+      false,
+      true,
+    )
+    
   }
 
   renderConnectionType(type: GraphQLObjectTypeRef) {
