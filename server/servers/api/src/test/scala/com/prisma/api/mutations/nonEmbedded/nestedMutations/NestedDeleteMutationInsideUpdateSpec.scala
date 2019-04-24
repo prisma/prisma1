@@ -1858,5 +1858,4 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     result3.toString should be("""{"data":{"users":[{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
   }
-
 }

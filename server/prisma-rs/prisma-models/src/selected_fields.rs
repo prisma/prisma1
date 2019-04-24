@@ -159,12 +159,11 @@ impl SelectedFields {
     }
 
     pub fn model(&self) -> ModelRef {
-        let field = self
-            .scalar
+        self.scalar
             .first()
-            .expect("Expected at least one scalar field to be present");
-
-        field.field.model()
+            .map(|s| s.field.model())
+            .or_else(|| self.relation.first().map(|r| r.field.model()))
+            .expect("Expected at least one field to be present.")
     }
 
     fn relation_inlined(&self) -> Vec<Arc<RelationField>> {

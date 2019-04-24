@@ -12,6 +12,9 @@ pub enum CoreError {
 
     #[fail(display = "Query validation error: {}", _0)]
     QueryValidationError(String),
+
+    #[fail(display = "Unsupported feature: {}", _0)]
+    UnsupportedFeatureError(String),
 }
 
 impl From<ConnectorError> for CoreError {

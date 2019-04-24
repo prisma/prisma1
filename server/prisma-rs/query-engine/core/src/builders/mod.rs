@@ -21,7 +21,7 @@ use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
     Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
-    SelectedFields, SelectedScalarField, SortOrder,
+    SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
 };
 
 use std::{collections::BTreeMap, sync::Arc};
@@ -227,15 +227,19 @@ pub trait BuilderExt {
                             implicit: false,
                         }))),
                         // Relation fields are not handled here, but in nested queries
-                        Ok(ModelField::Relation(_field)) => None,
+                        Ok(ModelField::Relation(field)) => Some(Ok(SelectedField::Relation(SelectedRelationField {
+                            field: Arc::clone(&field),
+                            selected_fields: SelectedFields::new(vec![], None),
+                        }))),
                         _ => Some(Err(CoreError::QueryValidationError(format!(
                             "Selected field {} not found on model {}",
                             f.name, model.name,
                         )))),
                     }
                 } else {
-                    // Todo: We only support selecting fields at the moment.
-                    unimplemented!()
+                    Some(Err(CoreError::UnsupportedFeatureError(
+                        "Fragments and inline fragment spreads.".into(),
+                    )))
                 }
             })
             .collect::<CoreResult<Vec<_>>>()
