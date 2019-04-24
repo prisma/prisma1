@@ -89,7 +89,6 @@ impl Node {
         }
     }
 
-    // FIXME: This function assumes that `id` was included in the query?!
     pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<&GraphqlId> {
         let id_field = model.fields().id();
         let index = field_names

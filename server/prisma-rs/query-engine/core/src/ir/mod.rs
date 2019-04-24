@@ -15,15 +15,17 @@ mod utils;
 
 use crate::ReadQueryResult;
 use indexmap::IndexMap;
+use prisma_models::GraphqlId;
 use prisma_models::PrismaValue;
 
-/// A response set maps to a Vec<PrismaQueraResponse>
+/// A response set maps to a Vec<PrismaQueryResponse>
 /// where each represents the result of a query
 pub type ResponseSet = Vec<Response>;
 
 /// A response can either be some `key-value` data representation
 /// or an error that occured.
 pub enum Response {
+    /// A data item has a name it will be returned under, and and actual item.
     Data(String, Item),
     Error(String), // FIXME: Use actual error type
 }
@@ -37,7 +39,8 @@ pub type List = Vec<Item>;
 /// An IR item that either expands to a subtype or leaf-record
 #[derive(Debug)]
 pub enum Item {
-    Map(Map),
+    /// (Parent ID, transformed record as map)
+    Map(Option<GraphqlId>, Map),
     List(List),
     Value(PrismaValue),
 }
@@ -56,16 +59,13 @@ impl Builder {
         self
     }
 
-    /// Parse collected queries into a wrapper type
+    /// Parse collected queries into the return wrapper type
     pub fn build(self) -> ResponseSet {
         self.0.into_iter().fold(vec![], |mut vec, res| {
             vec.push(match res {
-                ReadQueryResult::Single(query) => {
-                    Response::Data(query.name.clone(), Item::Map(maps::build_map(&query)))
-                }
+                ReadQueryResult::Single(query) => Response::Data(query.name.clone(), Item::Map(maps::build_map(query))),
                 ReadQueryResult::Many(query) => {
-                    // WIP: This is most likely better for a constructor call to ManyReadQueryResults
-                    Response::Data(query.name.clone(), Item::List(lists::build_list(&query)))
+                    Response::Data(query.name.clone(), Item::List(lists::build_list(query)))
                 }
             });
             vec

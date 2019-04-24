@@ -7,6 +7,15 @@ pub enum ReadQueryResult {
     Many(ManyReadQueryResults),
 }
 
+impl ReadQueryResult {
+    pub fn name(&self) -> String {
+        match self {
+            ReadQueryResult::Single(s) => s.name.clone(),
+            ReadQueryResult::Many(m) => m.name.clone(),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct SingleReadQueryResult {
     pub name: String,
@@ -50,7 +59,6 @@ pub struct ManyReadQueryResults {
     __inhibit: (),
 }
 
-// Q: Best pattern here? Mix of in place mutation and recreating result
 impl SingleReadQueryResult {
     /// Returns the implicitly added fields
     #[deprecated]

@@ -4,7 +4,7 @@ use super::{Item, List, Map};
 use connector::ScalarListValues;
 use prisma_models::GraphqlId;
 
-/// This function transforms list results into a presentation that eases the mapping of list results
+/// This function transforms list results into a representation that eases the mapping of list results
 /// to their corresponding records on higher layers.
 ///
 /// ```
