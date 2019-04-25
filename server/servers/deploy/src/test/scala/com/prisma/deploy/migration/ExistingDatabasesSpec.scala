@@ -369,7 +369,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     val initialDataModel =
       s"""
          |type Blog @db(name: "blog"){
-         |  id: Int! @id
+         |  id: ID! @id
          |  title: String!
          |  tags: [String]
          |}
@@ -385,7 +385,7 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     val dataModel =
       s"""
          |type Blog @db(name: "blog"){
-         |  id: Int! @id
+         |  id: ID! @id
          |  title: String!
          |}
        """.stripMargin
