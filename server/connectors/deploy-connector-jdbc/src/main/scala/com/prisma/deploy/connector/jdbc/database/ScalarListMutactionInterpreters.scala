@@ -5,12 +5,18 @@ import slick.jdbc.PostgresProfile.api._
 
 case class CreateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilder) extends SqlMutactionInterpreter[CreateScalarListTable] {
   override def execute(mutaction: CreateScalarListTable, schemaBeforeMigration: DatabaseSchema) = {
-    builder.createScalarListTable(
-      mutaction.project,
-      model = mutaction.model,
-      fieldName = mutaction.field.dbName,
-      typeIdentifier = mutaction.field.typeIdentifier
-    )
+    schemaBeforeMigration.table(s"${mutaction.model.dbName}_${mutaction.field.dbName}") match {
+      case None =>
+        builder.createScalarListTable(
+          mutaction.project,
+          model = mutaction.model,
+          fieldName = mutaction.field.dbName,
+          typeIdentifier = mutaction.field.typeIdentifier
+        )
+
+      case Some(_) =>
+        DBIO.successful(())
+    }
   }
 
   override def rollback(mutaction: CreateScalarListTable, schemaBeforeMigration: DatabaseSchema) = {

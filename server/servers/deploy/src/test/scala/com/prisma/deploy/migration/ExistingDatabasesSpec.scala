@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration
 import com.prisma.deploy.specutils.PassiveDeploySpecBase
-import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability}
+import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, IntIdCapability, MigrationsCapability, ScalarListsCapability}
 import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, TypeIdentifier}
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -284,6 +284,54 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     tableAfter.indexByColumns("title") should be(empty)
   }
 
+  "creating a scalar list field for an existing table should work" in {
+    val postgres =
+      s"""
+         |CREATE TABLE blog (
+         |   id SERIAL PRIMARY KEY,
+         |   title text NOT NULL
+         |);
+         |CREATE TABLE blog_tags (
+         |  "nodeId" SERIAL NOT NULL REFERENCES blog(id),
+         |  "position" INT NOT NULL,
+         |  "value" text NOT NULL,
+         |  PRIMARY KEY ("nodeId", "position")
+         |);
+       """.stripMargin
+
+    val mysql =
+      s"""
+         |CREATE TABLE blog (
+         |  id int NOT NULL,
+         |  title mediumtext NOT NULL,
+         |  PRIMARY KEY(id)
+         |);
+         |CREATE TABLE blog_tags (
+         |  `nodeId` int NOT NULL,
+         |  `position` INT(4) NOT NULL,
+         |  `value` mediumtext NOT NULL,
+         |  PRIMARY KEY (`nodeId`, `position`),
+         |  INDEX `value` (`value`(191) ASC),
+         |  FOREIGN KEY (`nodeId`) REFERENCES blog(id) ON DELETE CASCADE
+         |)
+       """.stripMargin
+
+    val initialResult = setup(SQLs(postgres = postgres, mysql = mysql, sqlite = ""))
+    initialResult.table("blog_tags").isDefined should be(true)
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String!
+         |  tags: [String]
+         |}
+       """.stripMargin
+
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability, EmbeddedScalarListsCapability))
+    result should equal(initialResult)
+  }
+
   "deleting a field for a non existing column should work" in {
     addProject()
 
@@ -312,6 +360,38 @@ class ExistingDatabasesSpec extends WordSpecLike with Matchers with PassiveDeplo
     val finalResult = deploy(dataModel, ConnectorCapabilities(IntIdCapability))
 
     finalResult should equal(result)
+  }
+
+  "deleting a scalar list field for a non existing scalar list table should work" in {
+    val capas = ConnectorCapabilities(IntIdCapability, EmbeddedScalarListsCapability)
+    addProject()
+
+    val initialDataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String!
+         |  tags: [String]
+         |}
+       """.stripMargin
+
+    val initialResult = deploy(initialDataModel, capas)
+    initialResult.table("blog_tags").isDefined should be(true)
+
+    val dropScalarListTable = "DROP TABLE blog_tags;"
+    val result              = executeSql(SQLs(postgres = dropScalarListTable, mysql = dropScalarListTable, sqlite = dropScalarListTable))
+    result.table("blog_tags").isDefined should be(false)
+
+    val dataModel =
+      s"""
+         |type Blog @db(name: "blog"){
+         |  id: Int! @id
+         |  title: String!
+         |}
+       """.stripMargin
+
+    val finalResult = deploy(dataModel, capas)
+    result should equal(finalResult)
   }
 
   "updating a field for a non existing column should work" in {
