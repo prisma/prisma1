@@ -6,6 +6,10 @@ import { TypescriptGenerator } from '../generators/typescript-client'
 import { FlowGenerator } from '../generators/flow-client'
 import { execFile } from 'child_process'
 import { codeComment } from '../../utils/codeComment'
+import generateCRUDSchemaString, {
+  parseInternalTypes,
+} from 'prisma-generate-schema'
+import { DatabaseType } from 'prisma-datamodel'
 
 const flow = require('flow-bin')
 
@@ -52,34 +56,11 @@ function compile(fileNames: string[], options: ts.CompilerOptions): number {
   return emitResult.emitSkipped ? 1 : 0
 }
 
-export async function testTSCompilation(typeDefs) {
-  const schema = buildSchema(typeDefs)
+export async function testTSCompilation(datamodel) {
+  const schema = buildSchema(generateCRUDSchemaString(datamodel, DatabaseType.postgres))
   const generator = new TestTypescriptGenerator({
     schema,
-    internalTypes: [
-      {
-        name: 'User',
-        fields: [],
-        isEmbedded: false,
-        isEnum: false,
-        isLinkTable: false,
-        indices: [],
-        databaseName: '',
-        directives: [],
-        comments: [],
-      },
-      {
-        name: 'Post',
-        fields: [],
-        isEmbedded: false,
-        isEnum: false,
-        isLinkTable: false,
-        indices: [],
-        databaseName: '',
-        directives: [],
-        comments: [],
-      },
-    ],
+    internalTypes: parseInternalTypes(datamodel, DatabaseType.postgres).types,
   })
 
   const file = generator
@@ -107,11 +88,11 @@ export async function testTSCompilation(typeDefs) {
   })
 }
 
-export async function testFlowCompilation(typeDefs) {
-  const schema = buildSchema(typeDefs)
+export async function testFlowCompilation(datamodel) {
+  const schema = buildSchema(generateCRUDSchemaString(datamodel, DatabaseType.postgres))
   const generator = new FlowGenerator({
     schema,
-    internalTypes: [],
+    internalTypes: parseInternalTypes(datamodel, DatabaseType.postgres).types,
   })
 
   const file = generator.render().toString()
