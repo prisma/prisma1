@@ -14,6 +14,14 @@ case class CreateScalarListInterpreter(builder: JdbcDeployDatabaseMutationBuilde
           typeIdentifier = mutaction.field.typeIdentifier
         )
 
+      case Some(_) if mutaction.ignorePreviousSchema =>
+        builder.createScalarListTable(
+          mutaction.project,
+          model = mutaction.model,
+          fieldName = mutaction.field.dbName,
+          typeIdentifier = mutaction.field.typeIdentifier
+        )
+
       case Some(_) =>
         DBIO.successful(())
     }
