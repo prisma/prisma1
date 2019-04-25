@@ -12,7 +12,6 @@ import {
 import { parse } from 'graphql'
 import { DirectiveKeys } from '../directives'
 import GQLAssert from '../../util/gqlAssert'
-import { type } from 'os';
 
 // TODO(ejoebstl): It would be good to have this Parser fill the directive field for types and models as well.
 // TODO(ejoebstl): Directive parsing should be cleaned up: Parse all directives first and then extract build-in directives.
@@ -39,18 +38,7 @@ export default abstract class DefaultParser {
    * @returns A list of types found in the datamodel.
    */
   public parseFromSchema(schema: any): ISDL {
-    const types = [...this.parseTypes(schema)].filter(type => {
-        if (['Aggregate'].some(t => type.name.startsWith(t))) {
-          return false
-      }
-      if (['Connection', 'SubscriptionPayload', 'PreviousValues', 'Edge'].some(t => type.name.endsWith(t))) {
-          return false
-      }
-      if (['PageInfo', 'BatchPayload'].some(t => type.name === t)) {
-          return false
-      }
-      return true
-    })
+    const types = [...this.parseTypes(schema)]
 
     this.resolveRelations(types)
 
