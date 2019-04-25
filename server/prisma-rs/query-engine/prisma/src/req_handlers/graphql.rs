@@ -39,6 +39,7 @@ impl RequestHandler for GraphQlRequestHandler {
 }
 
 fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> PrismaResult<Value> {
+    debug!("Incoming GQL query: {:?}", &req.body.query);
     let query_doc = match gql::parse_query(&req.body.query) {
         Ok(doc) => doc,
         Err(e) => return Err(PrismaError::QueryParsingError(format!("{:?}", e))),

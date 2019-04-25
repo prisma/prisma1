@@ -94,7 +94,6 @@ impl ReadQueryExecutor {
                     }
                 }
                 ReadQuery::ManyRelatedRecordsQuery(query) => {
-                    println!("Executing query: {:?}", query);
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
                     let scalars = self.data_resolver.get_related_nodes(

@@ -92,7 +92,6 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                         .expect("Expected parent ID to be present on nested query results.");
 
                     if !parents_with_records.contains_key(&parent_id) {
-                        println!("Inserting {:?} key into parents_with_records!", &parent_id);
                         parents_with_records.insert(parent_id.clone(), vec![]);
                     }
 
@@ -100,7 +99,6 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                         .get_mut(&parent_id)
                         .expect("Expected records to parent mapping to contain entries for all nodes.");
 
-                    println!("Pushing {:?}", &i);
                     records_for_parent.push(Item::Map(parent_opt, i));
                 }
                 _ => unreachable!(),
