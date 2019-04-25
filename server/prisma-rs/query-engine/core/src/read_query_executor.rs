@@ -1,4 +1,4 @@
-use crate::{query_ast, results::*, CoreResult};
+use crate::{query_ast, query_results::*, CoreResult};
 use connector::{ConnectorResult, DataResolver, ScalarListValues};
 use prisma_models::{GraphqlId, ScalarField, SelectedFields};
 use query_ast::*;
@@ -54,12 +54,7 @@ impl ReadQueryExecutor {
                     let ids = scalars.get_id_values(Arc::clone(&query.model))?;
                     let list_fields = selected_fields.scalar_lists();
                     let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
-
-                    // FIXME: Rewrite to not panic and also in a more functional way!
-                    let nested = scalars.nodes.iter().fold(vec![], |mut vec, _| {
-                        vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
-                        vec
-                    });
+                    let nested = self.execute_internal(&query.nested, ids.clone())?;
 
                     results.push(ReadQueryResult::Many(ManyReadQueryResults::new(
                         query.name.clone(),
@@ -99,6 +94,7 @@ impl ReadQueryExecutor {
                     }
                 }
                 ReadQuery::ManyRelatedRecordsQuery(query) => {
+                    println!("Executing query: {:?}", query);
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
                     let scalars = self.data_resolver.get_related_nodes(

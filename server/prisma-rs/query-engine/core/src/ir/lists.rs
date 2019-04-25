@@ -1,12 +1,13 @@
 //! Process a set of records into an IR List
 
-use super::{maps::build_map, utils, Item, List, Map};
+use super::{maps::build_map, Item, List, Map};
 use crate::{ManyReadQueryResults, ReadQueryResult};
 use prisma_models::{GraphqlId, PrismaValue};
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
+#[derive(Debug)]
 enum ParentsWithRecords {
-    Single(HashMap<GraphqlId, Vec<Item>>),
+    Single(HashMap<GraphqlId, Item>),
     Many(HashMap<GraphqlId, Vec<Item>>),
 }
 
@@ -18,31 +19,26 @@ impl ParentsWithRecords {
         }
     }
 
-    pub fn insert(&mut self, key: GraphqlId, value: Vec<Item>) {
+    pub fn insert(&mut self, key: GraphqlId, mut value: Vec<Item>) {
         match self {
-            ParentsWithRecords::Single(m) => m.insert(key, value),
-            ParentsWithRecords::Many(m) => m.insert(key, value),
+            ParentsWithRecords::Single(m) => {
+                m.insert(
+                    key,
+                    value
+                        .pop()
+                        .expect("Expected to insert at least one item for single result."),
+                );
+            }
+            ParentsWithRecords::Many(m) => {
+                m.insert(key, value);
+            }
         };
     }
 
     pub fn get_mut(&mut self, key: &GraphqlId) -> Option<&mut Vec<Item>> {
         match self {
-            ParentsWithRecords::Single(m) => m.get_mut(key),
+            ParentsWithRecords::Single(_) => panic!("Can't call get_mut on single parent with record"),
             ParentsWithRecords::Many(m) => m.get_mut(key),
-        }
-    }
-
-    pub fn get(&self, key: &GraphqlId) -> Option<&Vec<Item>> {
-        match self {
-            ParentsWithRecords::Single(m) => m.get(key),
-            ParentsWithRecords::Many(m) => m.get(key),
-        }
-    }
-
-    pub fn remove(&mut self, key: &GraphqlId) -> Option<Vec<Item>> {
-        match self {
-            ParentsWithRecords::Single(m) => m.remove(key),
-            ParentsWithRecords::Many(m) => m.remove(key),
         }
     }
 }
@@ -61,30 +57,54 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     // todo: this might have issues with empty results.
 
     // Group nested results by parent ids and move them into the grouped map.
-    nested.into_iter().for_each(|nested_result| {
-        match nested_result {
-            ReadQueryResult::Single(single) => unimplemented!(),
-            ReadQueryResult::Many(many) => {
-                if !nested_fields_to_groups.contains_key(&many.name) {
-                    nested_fields_to_groups.insert(many.name.clone(), ParentsWithRecords::Many(HashMap::new()));
-                }
+    nested.into_iter().for_each(|nested_result| match nested_result {
+        ReadQueryResult::Single(single) => {
+            let parent_id = single
+                .find_id()
+                .cloned()
+                .expect("Parent ID needs to be present on nested results.");
 
-                let parents_with_records = nested_fields_to_groups.get_mut(&many.name).unwrap();
-                let nested_build = build_list(many);
-                nested_build.into_iter().for_each(|item| match item {
-                    Item::Map(parentOpt, i) => {
-                        // unwrap is safe because we know that we have to have a parent for nested maps.
-                        let parent_id = parentOpt.expect("Expected parent ID to be present on nested query results.");
-                        if parents_with_records.contains_key(&parent_id) {
-                            parents_with_records.insert(parent_id, vec![]);
-                        }
-
-                        let records_for_parent = parents_with_records.get_mut(&parent_id).unwrap();
-                        records_for_parent.push(Item::Map(parentOpt, i));
-                    }
-                    _ => unreachable!(),
-                });
+            if !nested_fields_to_groups.contains_key(&single.name) {
+                nested_fields_to_groups.insert(single.name.clone(), ParentsWithRecords::Single(HashMap::new()));
             }
+
+            let parents_with_records = nested_fields_to_groups
+                .get_mut(&single.name)
+                .expect("Parents with records mapping must contain entries for all nested queries.");;
+
+            let nested_build = build_map(single);
+            parents_with_records.insert(parent_id.clone(), vec![Item::Map(Some(parent_id), nested_build)]);
+        }
+        ReadQueryResult::Many(many) => {
+            if !nested_fields_to_groups.contains_key(&many.name) {
+                nested_fields_to_groups.insert(many.name.clone(), ParentsWithRecords::Many(HashMap::new()));
+            }
+
+            let parents_with_records = nested_fields_to_groups
+                .get_mut(&many.name)
+                .expect("Parents with records mapping must contain entries for all nested queries.");
+
+            let nested_build = build_list(many);
+            nested_build.into_iter().for_each(|item| match item {
+                Item::Map(parent_opt, i) => {
+                    let parent_id = parent_opt
+                        .clone()
+                        .expect("Expected parent ID to be present on nested query results.");
+
+                    if !parents_with_records.contains_key(&parent_id) {
+                        println!("Inserting {:?} key into parents_with_records!", &parent_id);
+                        parents_with_records.insert(parent_id.clone(), vec![]);
+                    }
+
+                    let records_for_parent = parents_with_records
+                        .get_mut(&parent_id)
+                        .expect("Expected records to parent mapping to contain entries for all nodes.");
+
+                    println!("Pushing {:?}", &i);
+                    records_for_parent.push(Item::Map(parent_opt, i));
+                }
+                _ => unreachable!(),
+            });
         }
     });
 
@@ -92,22 +112,36 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     let mut lists_to_groups: HashMap<String, HashMap<GraphqlId, Vec<PrismaValue>>> = HashMap::new();
 
     lists.into_iter().for_each(|(list_field, list_values)| {
-        lists_to_groups.insert(list_field, HashMap::new());
-        let map = lists_to_groups.get(&list_field).unwrap();
+        lists_to_groups.insert(list_field.clone(), HashMap::new());
+        let map = lists_to_groups
+            .get_mut(&list_field)
+            .expect("Expected lists to groups to contain entries for all list fields.");
+
         list_values.into_iter().for_each(|value| {
             map.insert(value.node_id, value.values);
         });
     });
 
+    let nested_field_names: Vec<String> = nested_fields_to_groups
+        .keys()
+        .clone()
+        .into_iter()
+        .map(|k| k.to_owned())
+        .collect();
+
+    let model = Arc::clone(&result.selected_fields.model());
+    let final_field_order = result.fields.clone();
+
     // There is always at least one scalar selected (id), making scalars the perfect entry point.
-    let vec: Vec<Item> = result
+    result
         .scalars
         .nodes
         .into_iter()
         .map(|record| {
             let record_id = record
-                .get_id_value(&field_names, result.selected_fields.model())
-                .expect("Expected ID value to be present in the result set for each returned record.");
+                .get_id_value(&field_names, Arc::clone(&model))
+                .expect("Expected ID value to be present in the result set for each returned record.")
+                .clone();
 
             let mut base_map = Map::new();
 
@@ -121,14 +155,17 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 });
 
             // For each nested query, find the relevant related records and insert them into the map.
-            nested.iter().for_each(|n| {
-                let field_name = n.name();
+            nested_field_names.iter().for_each(|field_name| {
+                // let field_name = n.name();
 
                 // Unwraps are safe due to the preprocessing done above.
-                match nested_fields_to_groups.get(&field_name).unwrap() {
+                match nested_fields_to_groups
+                    .get_mut(field_name)
+                    .expect("Expected nested fields to groups map to be complete after preprocessing.")
+                {
                     ParentsWithRecords::Single(m) => {
-                        let records = m.remove(&record_id).unwrap_or(vec![Item::Value(PrismaValue::Null)]);
-                        base_map.insert(field_name.clone(), records.pop().unwrap());
+                        let record = m.remove(&record_id).unwrap_or(Item::Value(PrismaValue::Null));
+                        base_map.insert(field_name.clone(), record);
                     }
                     ParentsWithRecords::Many(m) => {
                         let records = m.remove(&record_id).unwrap_or(vec![]);
@@ -138,8 +175,8 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
             });
 
             // For each list, find the relevant nodes and insert them into the map.
-            lists_to_groups.into_iter().for_each(|(list_field_name, mapping)| {
-                match mapping.remove(record_id) {
+            lists_to_groups.iter_mut().for_each(|(list_field_name, mapping)| {
+                match mapping.remove(&record_id) {
                     Some(values) => base_map.insert(
                         list_field_name.clone(),
                         Item::List(values.into_iter().map(|v| Item::Value(v)).collect()),
@@ -148,25 +185,15 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 };
             });
 
-            Item::Map(record.parent_id, base_map)
-        })
-        .collect();
-
-    // Re-order fields to be in-line with what the query specified
-    // This also removes implicitly selected fields (like IDs).
-    vec.into_iter()
-        .fold(vec![], |mut vec, mut item| {
-            if let Item::Map(_, ref mut map) = item {
-                vec.push(result.fields.iter().fold(Map::new(), |mut new, field| {
-                    let item = map.remove(field).expect("[List]: Missing required field");
+            // Reorder fields into final form.
+            Item::Map(
+                record.parent_id,
+                final_field_order.iter().fold(Map::new(), |mut new, field| {
+                    let item = base_map.remove(field).expect("Missing field for serialization.");
                     new.insert(field.clone(), item);
                     new
-                }));
-            }
-
-            vec
+                }),
+            )
         })
-        .into_iter()
-        .map(|i| Item::Map(None, i))
         .collect()
 }

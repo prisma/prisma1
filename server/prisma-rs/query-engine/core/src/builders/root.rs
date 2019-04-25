@@ -4,6 +4,7 @@ use graphql_parser::query::*;
 use prisma_models::SchemaRef;
 use std::sync::Arc;
 
+#[derive(Debug)]
 pub struct RootBuilder {
     pub query: Document,
     pub schema: SchemaRef,

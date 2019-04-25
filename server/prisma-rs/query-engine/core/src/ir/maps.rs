@@ -1,50 +1,54 @@
 //! Process a record into an IR Map
 
-use super::{lists::build_list, utils, Item, Map};
+use super::{lists::build_list, Item, Map};
 use crate::{ReadQueryResult, SingleReadQueryResult};
+use prisma_models::PrismaValue;
 
 pub fn build_map(result: SingleReadQueryResult) -> Map {
-    // // Build selected fields first
-    // let mut outer = match &result.scalars {
-    //     Some(single) => single
-    //         .field_names
-    //         .iter()
-    //         .zip(&single.node.values)
-    //         .fold(Map::new(), |mut map, (name, val)| {
-    //             map.insert(name.clone(), Item::Value(val.clone()));
-    //             map
-    //         }),
-    //     None => panic!("No result found"), // FIXME: Can this ever happen?
-    // };
+    // Build selected fields first
+    let mut outer = match &result.scalars {
+        Some(single) => single
+            .field_names
+            .iter()
+            .zip(&single.node.values)
+            .fold(Map::new(), |mut map, (name, val)| {
+                map.insert(name.clone(), Item::Value(val.clone()));
+                map
+            }),
+        None => panic!("No result found"), // FIXME: Can this ever happen?
+    };
 
-    // // Then add nested selected fields
-    // outer = result.nested.into_iter().fold(outer, |mut map, query| {
-    //     match query {
-    //         ReadQueryResult::Single(nested) => map.insert(nested.name.clone(), Item::Map(build_map(nested))),
-    //         ReadQueryResult::Many(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
-    //     };
+    // Parent id for nested queries has to be the id of this record.
+    let parent_id = result.find_id().cloned();
 
-    //     map
-    // });
+    // Then add nested selected fields
+    outer = result.nested.into_iter().fold(outer, |mut map, query| {
+        match query {
+            ReadQueryResult::Single(nested) => {
+                map.insert(nested.name.clone(), Item::Map(parent_id.clone(), build_map(nested)))
+            }
+            ReadQueryResult::Many(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+        };
 
-    // let ids = result.find_id().expect("Failed to find record IDs!");
-    // let scalar_values = utils::associate_list_results(vec![ids], &result.lists);
-    // scalar_values.into_iter().for_each(|item| {
-    //     if let Item::Map(map) = item {
-    //         map.into_iter().for_each(|(k, v)| {
-    //             outer.insert(k, v);
-    //         });
-    //     }
-    // });
+        map
+    });
 
-    // // Re-order fields to be in-line with what the query specified
-    // // This also removes implicit fields
-    // result.fields.iter().fold(Map::new(), |mut map, field| {
-    //     map.insert(
-    //         field.clone(),
-    //         outer.remove(field).expect("[Map]: Missing required field"),
-    //     );
-    //     map
-    // })
-    unimplemented!()
+    // Insert list data into the map
+    result.lists.into_iter().for_each(|(field_name, mut list_values)| {
+        let values: Vec<PrismaValue> = list_values.pop().into_iter().flat_map(|i| i.values).collect();
+        outer.insert(
+            field_name,
+            Item::List(values.into_iter().map(|i| Item::Value(i)).collect()),
+        );
+    });
+
+    // Re-order fields to be in-line with what the query specified
+    // This also removes implicit fields
+    result.fields.iter().fold(Map::new(), |mut map, field| {
+        map.insert(
+            field.clone(),
+            outer.remove(field).expect("[Map]: Missing required field"),
+        );
+        map
+    })
 }

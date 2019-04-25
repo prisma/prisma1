@@ -24,7 +24,7 @@ pub fn serialize(resp: ResponseSet) -> Value {
         .into_iter()
         .map(|res| match res {
             Response::Data(name, Item::List(list)) => envelope!(name, Value::Array(serialize_list(list))),
-            Response::Data(name, Item::Map(map)) => envelope!(name, Value::Object(serialize_map(map))),
+            Response::Data(name, Item::Map(_parent, map)) => envelope!(name, Value::Object(serialize_map(map))),
             _ => unreachable!(),
         })
         .collect();
@@ -45,7 +45,7 @@ macro_rules! match_serialize {
     ($val:ident) => {
         match $val {
             Item::List(l) => Value::Array(serialize_list(l)),
-            Item::Map(m) => Value::Object(serialize_map(m)),
+            Item::Map(_, m) => Value::Object(serialize_map(m)),
             Item::Value(v) => serialize_prisma_value(v).unwrap(),
         }
     };

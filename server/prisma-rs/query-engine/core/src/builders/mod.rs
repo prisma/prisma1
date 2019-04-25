@@ -28,6 +28,7 @@ use std::{collections::BTreeMap, sync::Arc};
 use uuid::Uuid;
 
 /// A common query-builder type
+#[derive(Debug)]
 pub enum Builder<'field> {
     Single(SingleBuilder<'field>),
     Many(ManyBuilder<'field>),
@@ -199,7 +200,7 @@ pub trait BuilderExt {
         map: &BTreeMap<String, Value>,
         model: ModelRef,
     ) -> CoreResult<QueryArguments> {
-        let filter = dbg!(filters::extract_filter(map, model)?);
+        let filter = filters::extract_filter(map, model)?;
 
         Ok(QueryArguments {
             filter: Some(filter),
@@ -272,7 +273,9 @@ pub trait BuilderExt {
                         )))),
                     }
                 } else {
-                    panic!("We only support selecting fields at the moment!");
+                    Some(Err(CoreError::UnsupportedFeatureError(
+                        "Fragments and inline fragment spreads.".into(),
+                    )))
                 }
             })
             .collect()

@@ -623,7 +623,7 @@ impl DatabaseWrite for Sqlite {
     where
         T: Into<Query>,
     {
-        let (sql, params) = dbg!(visitor::Sqlite::build(query));
+        let (sql, params) = visitor::Sqlite::build(query);
         conn.prepare(&sql)?.execute(&params)?;
 
         Ok(())

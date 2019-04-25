@@ -5,7 +5,7 @@ use graphql_parser::query::Field;
 use prisma_models::{ModelRef, RelationFieldRef};
 use std::sync::Arc;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ManyRelationBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,

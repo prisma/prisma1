@@ -11,7 +11,6 @@
 
 mod lists;
 mod maps;
-mod utils;
 
 use crate::ReadQueryResult;
 use indexmap::IndexMap;
@@ -46,6 +45,7 @@ pub enum Item {
 }
 
 /// A serialization IR builder utility
+#[derive(Debug)]
 pub struct Builder(Vec<ReadQueryResult>);
 
 impl Builder {
@@ -63,7 +63,9 @@ impl Builder {
     pub fn build(self) -> ResponseSet {
         self.0.into_iter().fold(vec![], |mut vec, res| {
             vec.push(match res {
-                ReadQueryResult::Single(query) => Response::Data(query.name.clone(), Item::Map(maps::build_map(query))),
+                ReadQueryResult::Single(query) => {
+                    Response::Data(query.name.clone(), Item::Map(None, maps::build_map(query)))
+                }
                 ReadQueryResult::Many(query) => {
                     Response::Data(query.name.clone(), Item::List(lists::build_list(query)))
                 }
