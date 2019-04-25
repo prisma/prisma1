@@ -28,6 +28,7 @@ import * as flatten from 'lodash.flatten'
 import * as prettier from 'prettier'
 import { codeComment } from '../../utils/codeComment'
 import { connectionNodeHasScalars } from '../../utils/connectionNodeHasScalars'
+import { GeneratorType } from '../types'
 
 export interface RenderOptions {
   endpoint?: string
@@ -51,6 +52,7 @@ export class TypescriptGenerator extends Generator {
     Json: 'any',
   }
   typeObjectType = 'interface'
+  generator: GeneratorType = 'typescript'
 
   graphqlRenderers = {
     GraphQLUnionType: (type: GraphQLUnionType): string => {
@@ -96,7 +98,7 @@ export class TypescriptGenerator extends Generator {
           const isOptional = !isNonNullType(field.type)
           return `  ${this.renderFieldName(field, false)}${
             isOptional ? '?' : ''
-          }: ${this.renderInputFieldType(field.type)}`
+          }: ${isOptional && this.generator === 'typescript' ? `Maybe<${this.renderInputFieldType(field.type)}>` : this.renderInputFieldType(field.type)}`
         })
         .join(`${this.lineBreakDelimiter}\n`)
 
@@ -170,7 +172,9 @@ export type ${type.name}_Output = string`
   renderAtLeastOne() {
     return `export type AtLeastOne<T, U = {[K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]`
   }
-
+  renderMaybe() {
+    return `export type Maybe<T> = T | undefined | null`
+  }
   renderModels() {
     const models = this.internalTypes
       .map(
@@ -191,6 +195,8 @@ export type ${type.name}_Output = string`
 ${this.renderImports()}
 
 ${this.renderAtLeastOne()}
+
+${this.generator === 'typescript' && this.renderMaybe()}
 
 export interface Exists {\n${this.renderExists()}\n}
 

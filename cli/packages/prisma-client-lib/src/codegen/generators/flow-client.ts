@@ -5,6 +5,7 @@ import * as prettier from 'prettier'
 import { codeComment } from '../../utils/codeComment'
 
 import * as os from 'os'
+import { GeneratorType } from '../types';
 
 export interface RenderOptions {
   endpoint?: string
@@ -20,6 +21,7 @@ export class FlowGenerator extends TypescriptGenerator {
   prismaInterface = 'PrismaInterface'
 
   typeObjectType = 'type'
+  generator: GeneratorType = 'flow'
 
   renderImports() {
     return `\
