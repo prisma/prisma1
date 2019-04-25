@@ -13,8 +13,7 @@ const datamodel = fs.readFileSync(
   path.join(fixturesPath, 'datamodel.prisma'),
   'utf-8',
 )
-// These are the only two tests that test the fix for https://github.com/prisma/prisma/issues/3372
-// as we need to provide internal types manually in the tests because of them being different from the datamodel.
+
 test('typescript generator', t => {
   const schema = buildSchema(generateCRUDSchemaString(datamodel, DatabaseType.postgres))
   const generator = new TypescriptGenerator({
