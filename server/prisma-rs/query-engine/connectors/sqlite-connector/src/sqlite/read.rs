@@ -18,7 +18,7 @@ impl DatabaseRead for Sqlite {
         F: FnMut(&Row) -> ConnectorResult<T>,
         S: Into<Select>,
     {
-        let (query_sql, params) = visitor::Sqlite::build(query.into());
+        let (query_sql, params) = dbg!(visitor::Sqlite::build(query.into()));
 
         let res: ConnectorResult<Vec<T>> = conn
             .prepare(&query_sql)?
@@ -38,7 +38,7 @@ impl DatabaseRead for Sqlite {
             .value(count(asterisk()))
             .so_that(conditions.into());
 
-        let (sql, params) = visitor::Sqlite::build(select);
+        let (sql, params) = dbg!(visitor::Sqlite::build(select));
 
         let res = conn
             .prepare(&sql)?
