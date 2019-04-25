@@ -52,6 +52,13 @@ export class TypescriptGenerator extends Generator {
   }
   typeObjectType = 'interface'
 
+  models: {[key: string]: boolean} = this.internalTypes.reduce((acc, type) => {
+    return {
+      ...{ [`${type.name}`]: true },
+      ...acc
+    }
+  }, {})
+
   graphqlRenderers = {
     GraphQLUnionType: (type: GraphQLUnionType): string => {
       return `${this.renderDescription(type.description!)}export type ${
@@ -189,6 +196,7 @@ export type ${type.name}_Output = string`
   render(options?: RenderOptions) {
     const queries = this.renderQueries()
     const mutations = this.renderMutations()
+
     return this.format(this.compile`\
 ${this.renderImports()}
 
@@ -648,7 +656,7 @@ export const prisma = new Prisma()`
       !isScalar &&
       !addSubscription
     ) {
-      const nullableString = isOptional && !isMutation && !isSubscription ? 'Nullable' : ''
+      const nullableString = isOptional && !isMutation && !isSubscription && Boolean(this.models[type.name]) ? 'Nullable' : ''
       return typeString === 'Node' ? `Node` : `${typeString}${nullableString}Promise`
     }
 
@@ -862,13 +870,7 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
       interfaces = (type as any).getInterfaces()
     }
 
-    if (['Aggregate'].some(t => type.name.startsWith(t))) {
-      return ``
-    }
-    if (['Connection', 'SubscriptionPayload', 'PreviousValues', 'Edge'].some(t => type.name.endsWith(t))) {
-      return ``
-    }
-    if (['PageInfo', 'BatchPayload'].some(t => type.name === t)) {
+    if (!Boolean(this.models[type.name])) {
       return ``
     }
     return this.renderInterfaceWrapper(

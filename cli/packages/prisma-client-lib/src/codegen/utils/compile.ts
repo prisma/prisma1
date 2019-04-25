@@ -56,7 +56,30 @@ export async function testTSCompilation(typeDefs) {
   const schema = buildSchema(typeDefs)
   const generator = new TestTypescriptGenerator({
     schema,
-    internalTypes: [],
+    internalTypes: [
+      {
+        name: 'User',
+        fields: [],
+        isEmbedded: false,
+        isEnum: false,
+        isLinkTable: false,
+        indices: [],
+        databaseName: '',
+        directives: [],
+        comments: [],
+      },
+      {
+        name: 'Post',
+        fields: [],
+        isEmbedded: false,
+        isEnum: false,
+        isLinkTable: false,
+        indices: [],
+        databaseName: '',
+        directives: [],
+        comments: [],
+      },
+    ],
   })
 
   const file = generator

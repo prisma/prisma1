@@ -9,7 +9,7 @@ const typeDefs = fs.readFileSync(
   path.join(fixturesPath, 'airbnb.graphql'),
   'utf-8',
 )
-test('typescript generator', t => {
+test('typescript generator - airbnb', t => {
   const schema = buildSchema(typeDefs)
   const generator = new TypescriptGenerator({
     schema,
