@@ -13,6 +13,7 @@
 //! - [TransactionalExecutor](trait.TransactionalExecutor.html) for abstract transaction and connection handling.
 //!
 //! The implementation is currently only for [SQLite](struct.Sqlite.html).
+
 mod cursor_condition;
 mod database_read;
 mod database_write;

@@ -2,9 +2,9 @@ package com.prisma.api.connector.jdbc.database
 
 import java.sql.{PreparedStatement, Statement}
 
-import com.prisma.api.connector.{ImportNodes, ImportRelations, ImportScalarLists}
+import com.prisma.api.connector._
 import com.prisma.connector.shared.jdbc.SharedJdbcExtensions
-import com.prisma.gc_values.{GCValue, IdGCValue, ListGCValue, NullGCValue}
+import com.prisma.gc_values._
 import com.prisma.shared.models.ScalarField
 import com.prisma.slick.ReadsResultSet
 import cool.graph.cuid.Cuid
@@ -53,7 +53,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           e.getUpdateCounts.zipWithIndex
             .filter(element => element._1 == Statement.EXECUTE_FAILED)
             .map { failed =>
-              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idField.value
+              val failedId = argsWithIndex.find(_._2 == failed._2).get._1.rootGC.idFieldByName(mutaction.model.idField_!.name).value
               s"Failure inserting ${model.dbName} with Id: $failedId. Cause: ${removeConnectionInfoFromCause(e.getCause())}"
             }
             .toVector
@@ -102,7 +102,7 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           }
           relationInsert.executeBatch()
 
-        } else {
+        } else if (relation.isRelationTable) {
           val query = sql
             .insertInto(relationTable(relation))
             .columns(
@@ -115,6 +115,28 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           mutaction.args.foreach { arg =>
             relationInsert.setGcValue(1, arg._1)
             relationInsert.setGcValue(2, arg._2)
+            relationInsert.addBatch()
+          }
+          relationInsert.executeBatch()
+        } else if (relation.isInlineRelation) {
+          val referencingColumn    = relation.inlineManifestation.get.referencingColumn
+          val isInlinedInModelA    = relation.modelAField.relationIsInlinedInParent
+          val rowToUpdateCondition = if (isInlinedInModelA) idField(relation.modelA).equal(placeHolder) else idField(relation.modelB).equal(placeHolder)
+
+          val query = sql
+            .update(relationTable(relation))
+            .setColumnsWithPlaceHolders(Vector(referencingColumn))
+            .where(rowToUpdateCondition)
+
+          val relationInsert: PreparedStatement = x.connection.prepareStatement(query.getSQL)
+          mutaction.args.foreach { arg =>
+            if (isInlinedInModelA) {
+              relationInsert.setGcValue(1, arg._2)
+              relationInsert.setGcValue(2, arg._1)
+            } else {
+              relationInsert.setGcValue(1, arg._1)
+              relationInsert.setGcValue(2, arg._2)
+            }
             relationInsert.addBatch()
           }
           relationInsert.executeBatch()

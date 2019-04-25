@@ -40,7 +40,7 @@ trait NodeActions extends BuilderBase with FilterConditionBuilder with ScalarLis
           rs.next()
           rs.getId(model)
         } else {
-          argsWithIdIfNecessary.idField
+          argsWithIdIfNecessary.idFieldByName(model.idField_!.name)
         }
       }
     )

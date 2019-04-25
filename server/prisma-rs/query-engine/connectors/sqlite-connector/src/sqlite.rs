@@ -42,6 +42,8 @@ impl TransactionalExecutor for Sqlite {
     {
         self.with_connection(db_name, |conn| {
             let tx = conn.transaction()?;
+            tx.set_prepared_statement_cache_capacity(65536);
+
             let result = f(&tx);
 
             if result.is_ok() {

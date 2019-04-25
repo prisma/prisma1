@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.{IgnoreMongo, IgnoreSQLite}
+import com.prisma.{IgnoreMongo}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
@@ -312,7 +312,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   //Transactionality
-  "TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreMongo, IgnoreSQLite) in { // TODO: Remove when transactions are back
+  "TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreMongo) in {
     val project = SchemaDsl.fromStringV11() {
       s"""type Todo {
         | id: ID! @id
@@ -378,7 +378,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
     server.query(s"""query{todo(where:{id: "$todoId"}){title}}""", project, dataContains = """{"todo":{"title":"the title"}}""")
   }
 
-  "NON-TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" taggedAs (IgnoreSQLite) in { // TODO: Enable when enabling transactions in Rust.
+  "NON-TRANSACTIONAL: a many to many relation" should "fail gracefully on wrong where and assign error correctly and not execute partially" in {
     val project = SchemaDsl.fromStringV11() {
       s"""type Todo {
         | id: ID! @id
@@ -838,7 +838,7 @@ class NestedUpdateMutationInsideUpdateSpec extends FlatSpec with Matchers with A
       """{"data":{"updateTop":{"nameTop":"updated top","middle":{"nameMiddle":"updated middle","bottom":{"nameBottom":"updated bottom","below":[{"nameBelow":"updated below"},{"nameBelow":"second below"}]}}}}}""")
   }
 
-  "a deeply nested mutation" should "fail if there are model and node edges on the path and back relations are missing and node edges follow model edges but the path is interrupted" taggedAs IgnoreSQLite in { // TODO: Enable when enabling transactions
+  "a deeply nested mutation" should "fail if there are model and node edges on the path and back relations are missing and node edges follow model edges but the path is interrupted" in {
     val project = SchemaDsl.fromStringV11() { s"""type Top {
                                              |  id: ID! @id
                                              |  nameTop: String! @unique

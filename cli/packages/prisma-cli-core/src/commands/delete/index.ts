@@ -38,7 +38,7 @@ export default class Delete extends Command {
       this.definition.getWorkspace(),
     )
 
-    const prettyName = `${chalk.bold(serviceName)}@${stage}`
+    const prettyName = `${chalk.bold(this.definition.endpoint!)}`
 
     if (!force) {
       await this.askForConfirmation(prettyName)

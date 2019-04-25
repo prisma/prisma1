@@ -44,7 +44,7 @@ export function concatName(
 
 export const defaultDataModel = `\
 type User {
-  id: ID! @unique
+  id: ID! @id
   name: String!
 }
 `
