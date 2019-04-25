@@ -79,6 +79,7 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
     let result = request_context
         .graphql_request_handler
         .handle(req, &request_context.context);
+
     serde_json::to_string(&result)
 }
 

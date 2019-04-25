@@ -25,9 +25,7 @@ impl PrismaContext {
                     .trim_end_matches(&format!("{}.db", db_name))
                     .trim_end_matches("/");
 
-                // FIXME: active is misused here
                 let sqlite = Sqlite::new(db_folder.to_owned(), config.limit(), false).unwrap();
-
                 Arc::new(sqlite)
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
