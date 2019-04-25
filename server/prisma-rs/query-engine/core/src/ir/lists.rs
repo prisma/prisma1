@@ -89,22 +89,18 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     });
 
     // { scalar list field name -> { record id -> values } }
-    let mut lists_to_groups: HashMap<String, HashMap<String, Vec<PrismaValue>>> = HashMap::new();
+    let mut lists_to_groups: HashMap<String, HashMap<GraphqlId, Vec<PrismaValue>>> = HashMap::new();
 
     lists.into_iter().for_each(|(list_field, list_values)| {
-        lists_to_groups.insert(&list_field, HashMap::new());
-        let map = lists_to_groups.get(&list_field)
-    //         pub node_id: GraphqlId,
-    // pub values: Vec<PrismaValue>,
-            list_values.into_iter().for_each(|value| {
-
-                value.node_id
-            });
-        ));
+        lists_to_groups.insert(list_field, HashMap::new());
+        let map = lists_to_groups.get(&list_field).unwrap();
+        list_values.into_iter().for_each(|value| {
+            map.insert(value.node_id, value.values);
+        });
     });
 
     // There is always at least one scalar selected (id), making scalars the perfect entry point.
-    result
+    let vec: Vec<Item> = result
         .scalars
         .nodes
         .into_iter()
@@ -141,44 +137,36 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 }
             });
 
+            // For each list, find the relevant nodes and insert them into the map.
+            lists_to_groups.into_iter().for_each(|(list_field_name, mapping)| {
+                match mapping.remove(record_id) {
+                    Some(values) => base_map.insert(
+                        list_field_name.clone(),
+                        Item::List(values.into_iter().map(|v| Item::Value(v)).collect()),
+                    ),
+                    None => base_map.insert(list_field_name.clone(), Item::List(vec![])),
+                };
+            });
+
             Item::Map(record.parent_id, base_map)
         })
         .collect();
 
-    // // Explicitly handle scalar-list results
-    // let ids = result.find_ids().expect("Failed to find record IDs!");
-    // let scalar_values = utils::associate_list_results(ids, &result.lists);
+    // Re-order fields to be in-line with what the query specified
+    // This also removes implicitly selected fields (like IDs).
+    vec.into_iter()
+        .fold(vec![], |mut vec, mut item| {
+            if let Item::Map(_, ref mut map) = item {
+                vec.push(result.fields.iter().fold(Map::new(), |mut new, field| {
+                    let item = map.remove(field).expect("[List]: Missing required field");
+                    new.insert(field.clone(), item);
+                    new
+                }));
+            }
 
-    // // Then just merge the maps into the existing data
-    // vec = vec.into_iter().zip(scalar_values).fold(vec![], |mut vec, iter| {
-    //     vec.push(Item::Map(match iter {
-    //         (Item::Map(map), Item::Map(scalars)) => scalars.into_iter().fold(map, |mut map, (k, v)| {
-    //             map.insert(k, v);
-    //             map
-    //         }),
-    //         _ => unreachable!("Tried merging two `Item`s that were not `Map`"),
-    //     }));
-
-    //     vec
-    // });
-
-    // // Re-order fields to be in-line with what the query specified
-    // // This also removes implicitly selected fields (like IDs).
-    // vec.into_iter()
-    //     .fold(vec![], |mut vec, mut item| {
-    //         if let Item::Map(ref mut map) = item {
-    //             vec.push(result.fields.iter().fold(Map::new(), |mut new, field| {
-    //                 let item = map.remove(field).expect("[List]: Missing required field");
-    //                 new.insert(field.clone(), item);
-    //                 new
-    //             }));
-    //         }
-
-    //         vec
-    //     })
-    //     .into_iter()
-    //     .map(|i| Item::Map(i))
-    //     .collect()
-
-    unimplemented!()
+            vec
+        })
+        .into_iter()
+        .map(|i| Item::Map(None, i))
+        .collect()
 }
