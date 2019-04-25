@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use connector::*;
 use prisma_models::prelude::*;
 use r2d2_sqlite::SqliteConnectionManager;
-use rusqlite::{Row, Transaction, NO_PARAMS};
+use rusqlite::{types::Type, Error as RusqliteError, Row, Transaction, NO_PARAMS};
 use std::collections::HashSet;
 use uuid::Uuid;
 
@@ -146,7 +146,12 @@ impl Sqlite {
             TypeIdentifier::Int => row.get_checked(i).map(|val| PrismaValue::Int(val)),
             TypeIdentifier::Boolean => row.get_checked(i).map(|val| PrismaValue::Boolean(val)),
             TypeIdentifier::Enum => row.get_checked(i).map(|val| PrismaValue::Enum(val)),
-            TypeIdentifier::Json => row.get_checked(i).map(|val| PrismaValue::Json(val)),
+            TypeIdentifier::Json => row.get_checked(i).and_then(|val| {
+                let val: String = val;
+                serde_json::from_str(&val)
+                    .map(|r| PrismaValue::Json(r))
+                    .map_err(|err| RusqliteError::FromSqlConversionFailure(i as usize, Type::Text, Box::new(err)))
+            }),
             TypeIdentifier::DateTime => row.get_checked(i).map(|ts: i64| {
                 let nsecs = ((ts % 1000) * 1_000_000) as u32;
                 let secs = (ts / 1000) as i64;

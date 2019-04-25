@@ -3,6 +3,7 @@ use prisma_query::ast::*;
 use chrono::{DateTime, Utc};
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::fmt;
 use uuid::Uuid;
 
@@ -22,7 +23,7 @@ pub enum PrismaValue {
     Boolean(bool),
     DateTime(DateTime<Utc>),
     Enum(String),
-    Json(String),
+    Json(Value),
     Int(i32),
     Relation(usize),
     Null,

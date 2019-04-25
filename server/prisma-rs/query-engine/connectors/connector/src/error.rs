@@ -92,11 +92,20 @@ pub enum ConnectorError {
         child_name: String,
         child_where: Option<NodeSelectorInfo>,
     },
+
+    #[fail(display = "Conversion error: {}", _0)]
+    ConversionError(Error),
 }
 
 impl From<DomainError> for ConnectorError {
     fn from(e: DomainError) -> ConnectorError {
         ConnectorError::DomainError(e)
+    }
+}
+
+impl From<serde_json::error::Error> for ConnectorError {
+    fn from(e: serde_json::error::Error) -> ConnectorError {
+        ConnectorError::ConversionError(e.into())
     }
 }
 

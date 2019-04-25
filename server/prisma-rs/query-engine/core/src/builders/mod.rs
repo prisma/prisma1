@@ -104,6 +104,7 @@ pub trait BuilderExt {
 
     /// Get node selector from field and model
     fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResult<NodeSelector> {
+        println!("NODE SELECT");
         // FIXME: this expects at least one query arg...
         let (_, value) = field.arguments.first().expect("no arguments found");
         match value {
@@ -124,7 +125,10 @@ pub trait BuilderExt {
     /// Turning a GraphQL value to a PrismaValue
     fn value_to_prisma_value(val: &Value) -> PrismaValue {
         match val {
-            Value::String(s) => PrismaValue::String(s.clone()),
+            Value::String(ref s) => match serde_json::from_str(s) {
+                Ok(val) => PrismaValue::Json(val),
+                _ => PrismaValue::String(s.clone()),
+            },
             Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap() as i32),
             _ => unimplemented!(),
         }
