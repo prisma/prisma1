@@ -4,8 +4,6 @@ import { buildSchema } from 'graphql'
 import { TypescriptGenerator } from '../typescript-client'
 import { test } from 'ava'
 import { fixturesPath } from './fixtures'
-import { parseInternalTypes } from 'prisma-generate-schema'
-import { DatabaseType } from 'prisma-datamodel'
 
 const typeDefs = fs.readFileSync(
   path.join(fixturesPath, 'schema.graphql'),
@@ -17,7 +15,30 @@ test('typescript generator', t => {
   const schema = buildSchema(typeDefs)
   const generator = new TypescriptGenerator({
     schema,
-    internalTypes: parseInternalTypes(typeDefs, DatabaseType.mysql).types,
+    internalTypes: [
+      {
+        name: 'User',
+        fields: [],
+        isEmbedded: false,
+        isEnum: false,
+        isLinkTable: false,
+        indices: [],
+        databaseName: '',
+        directives: [],
+        comments: [],
+      },
+      {
+        name: 'Post',
+        fields: [],
+        isEmbedded: false,
+        isEnum: false,
+        isLinkTable: false,
+        indices: [],
+        databaseName: '',
+        directives: [],
+        comments: [],
+      },
+    ],
   })
   const result = generator.render()
   t.snapshot(result)
@@ -26,7 +47,30 @@ test('typescript generator definitions', t => {
   const schema = buildSchema(typeDefs)
   const generator = new TypescriptGenerator({
     schema,
-    internalTypes: parseInternalTypes(typeDefs, DatabaseType.mysql).types,
+    internalTypes: [
+      {
+        name: 'User',
+        fields: [],
+        isEmbedded: false,
+        isEnum: false,
+        isLinkTable: false,
+        indices: [],
+        databaseName: '',
+        directives: [],
+        comments: [],
+      },
+      {
+        name: 'Post',
+        fields: [],
+        isEmbedded: false,
+        isEnum: false,
+        isLinkTable: false,
+        indices: [],
+        databaseName: '',
+        directives: [],
+        comments: [],
+      },
+    ],
   })
   const result = generator.renderTypedefs()
   t.snapshot(result)

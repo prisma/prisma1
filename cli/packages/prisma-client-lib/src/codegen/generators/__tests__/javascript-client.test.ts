@@ -4,8 +4,6 @@ import { buildSchema } from 'graphql'
 import { JavascriptGenerator } from '../../generators/javascript-client'
 import { test } from 'ava'
 import { fixturesPath } from './fixtures'
-import { parseInternalTypes } from 'prisma-generate-schema'
-import { DatabaseType } from 'prisma-datamodel'
 
 const typeDefs = fs.readFileSync(
   path.join(fixturesPath, 'schema.graphql'),
@@ -15,7 +13,7 @@ test('typescript definition generator', t => {
   const schema = buildSchema(typeDefs)
   const generator = new JavascriptGenerator({
     schema,
-    internalTypes: parseInternalTypes(typeDefs, DatabaseType.mysql).types,
+    internalTypes: [],
   })
   const javascript = generator.renderJavascript()
   t.snapshot(javascript)

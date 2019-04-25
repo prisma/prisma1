@@ -4,8 +4,6 @@ import { buildSchema } from 'graphql'
 import { FlowGenerator } from '../../generators/flow-client'
 import { test } from 'ava'
 import { fixturesPath } from './fixtures'
-import { parseInternalTypes } from 'prisma-generate-schema'
-import { DatabaseType } from 'prisma-datamodel'
 
 const typeDefs = fs.readFileSync(
   path.join(fixturesPath, 'schema.graphql'),
@@ -16,7 +14,7 @@ test('flow generator', t => {
     const schema = buildSchema(typeDefs)
     const generator = new FlowGenerator({
       schema,
-      internalTypes: parseInternalTypes(typeDefs, DatabaseType.mysql).types,
+      internalTypes: [],
     })
     const result = generator.render()
     t.snapshot(result)
@@ -29,7 +27,7 @@ test('flow generator - print schema', t => {
     const schema = buildSchema(typeDefs)
     const generator = new FlowGenerator({
       schema,
-      internalTypes: parseInternalTypes(typeDefs, DatabaseType.mysql).types,
+      internalTypes: [],
     })
     const result = generator.renderTypedefs()
     t.snapshot(result)
