@@ -41,6 +41,28 @@ pub enum ScalarListCondition {
 }
 
 impl ScalarCompare for Arc<ScalarField> {
+    /// Field is in a given value
+    fn is_in<T>(&self, val: Vec<T>) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::In(val.into_iter().map(|i| i.into()).collect()),
+        })
+    }
+
+    /// Field is not in a given value
+    fn not_in<T>(&self, val: Vec<T>) -> Filter
+    where
+        T: Into<PrismaValue>,
+    {
+        Filter::from(ScalarFilter {
+            field: Arc::clone(self),
+            condition: ScalarCondition::NotIn(val.into_iter().map(|i| i.into()).collect()),
+        })
+    }
+
     /// Field equals the given value.
     /// ```rust
     /// # use connector::{*, filter::*};

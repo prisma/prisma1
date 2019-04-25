@@ -6,10 +6,9 @@
   <meta name="viewport"
     content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui" />
   <title>Rust Playground</title>
-  <link rel="stylesheet"
-    href="//cdn.jsdelivr.net/npm/graphql-playground-react@1.7.21-test/build/static/css/index.css" />
-  <link rel="shortcut icon" href="//cdn.jsdelivr.net/npm/graphql-playground-react@1.7.21-test/build/favicon.png" />
-  <script src="//cdn.jsdelivr.net/npm/graphql-playground-react@1.7.21-test/build/static/js/middleware.js"></script>
+  <link rel="stylesheet" href="https://rust-playground.netlify.com/static/css/index.css" />
+  <link rel="shortcut icon" href="https://rust-playground.netlify.com/favicon.png" />
+  <script src="https://rust-playground.netlify.com/static/js/middleware.js"></script>
 </head>
 
 <body>
@@ -45,18 +44,18 @@
         font-weight: 400;
       }
     </style>
-    <img src="//cdn.jsdelivr.net/npm/graphql-playground-react/build/logo.png" alt="" />
+    <img src="https://rust-playground.netlify.com/logo.png" alt="" />
     <div class="loading">
       Loading
       <span class="title">Rust Playground</span>
     </div>
   </div>
   <script>
-    window.addEventListener("load", function (event) {
-      GraphQLPlayground.init(document.getElementById("root"), {
-        datamodelEndpoint: "/datamodel"
-      });
-    });
+    window.addEventListener('load', function (event) {
+      GraphQLPlayground.init(document.getElementById('root'), {
+        datamodelEndpoint: '/datamodel',
+      })
+    })
   </script>
 </body>
 

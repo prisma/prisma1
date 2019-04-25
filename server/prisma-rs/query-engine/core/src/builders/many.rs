@@ -1,17 +1,17 @@
 use super::BuilderExt;
-use crate::{query_ast::RecordQuery, CoreResult};
+use crate::{query_ast::ManyRecordsQuery, CoreResult};
 
 use graphql_parser::query::Field;
 use prisma_models::ModelRef;
 use std::sync::Arc;
 
-#[derive(Debug, Default)]
-pub struct SingleBuilder<'f> {
+#[derive(Default, Debug)]
+pub struct ManyBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
 }
 
-impl<'f> SingleBuilder<'f> {
+impl<'f> ManyBuilder<'f> {
     pub fn setup(self, model: ModelRef, field: &'f Field) -> Self {
         Self {
             model: Some(model),
@@ -20,8 +20,8 @@ impl<'f> SingleBuilder<'f> {
     }
 }
 
-impl<'f> BuilderExt for SingleBuilder<'f> {
-    type Output = RecordQuery;
+impl<'f> BuilderExt for ManyBuilder<'f> {
+    type Output = ManyRecordsQuery;
 
     fn new() -> Self {
         Default::default()
@@ -32,19 +32,21 @@ impl<'f> BuilderExt for SingleBuilder<'f> {
             (Some(m), Some(f)) => Some((m, f)),
             _ => None,
         }
-        .expect("`RecordQuery` builder not properly initialised!");
+        .expect("`ManyQuery` builder not properly initialised!");
 
         let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.schema())?;
         let nested = Self::build_nested_queries(nested_builders)?;
 
         let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, None)?;
-        let selector = Self::extract_node_selector(&field, Arc::clone(&model))?;
+        let args = Self::extract_query_args(field, Arc::clone(&model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
+        let model = Arc::clone(model);
         let fields = Self::collect_selection_order(&field);
 
-        Ok(RecordQuery {
+        Ok(ManyRecordsQuery {
             name,
-            selector,
+            model,
+            args,
             selected_fields,
             nested,
             fields,

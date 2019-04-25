@@ -1,13 +1,13 @@
 use super::{PrismaRequest, RequestHandler};
-use crate::{context::PrismaContext, error::PrismaError, schema::Validatable, PrismaResult};
-use core::{PrismaQuery, PrismaQueryResult, RootQueryBuilder};
+use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
+use core::{ir::Builder, ReadQuery, RootBuilder};
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use serde_json::{Map, Value};
 
-use crate::serializer::{ir::IrBuilder, json};
+use crate::serializer::json;
 
 type JsonMap = Map<String, Value>;
 
@@ -39,6 +39,7 @@ impl RequestHandler for GraphQlRequestHandler {
 }
 
 fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> PrismaResult<Value> {
+    debug!("Incoming GQL query: {:?}", &req.body.query);
     let query_doc = match gql::parse_query(&req.body.query) {
         Ok(doc) => doc,
         Err(e) => return Err(PrismaError::QueryParsingError(format!("{:?}", e))),
@@ -51,24 +52,19 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         ));
     }
 
-    dbg!(&query_doc);
-
-    let qb = RootQueryBuilder {
+    let rb = RootBuilder {
         query: query_doc,
         schema: ctx.schema.clone(),
         operation_name: req.body.operation_name,
     };
 
-    let queries: Vec<PrismaQuery> = qb.build()?;
-
-    let results: Vec<PrismaQueryResult> = dbg!(ctx.query_executor.execute(&queries))?
+    let queries: Vec<ReadQuery> = rb.build()?;
+    let ir = dbg!(ctx.read_query_executor.execute(&queries)?)
         .into_iter()
-        .map(|r| r.filter())
-        .collect();
+        .fold(Builder::new(), |builder, result| builder.add(result))
+        .build();
 
-    Ok(json::serialize(
-        results.iter().fold(IrBuilder::new(), |b, res| b.add(res)).build(),
-    ))
+    Ok(json::serialize(ir))
 }
 
 /// Create a json envelope

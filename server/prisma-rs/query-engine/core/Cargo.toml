@@ -11,3 +11,7 @@ connector = { path = "../connectors/connector" }
 failure = "0.1"
 failure_derive = "0.1"
 Inflector = "0.11"
+lazy_static = "1.3"
+uuid = "0.7"
+indexmap = "1.0"
+itertools = "0.8"

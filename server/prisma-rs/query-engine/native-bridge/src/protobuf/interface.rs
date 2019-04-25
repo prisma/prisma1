@@ -21,8 +21,8 @@ impl ProtoBufInterface {
             Some(PrismaDatabase::Explicit(ref config))
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
             {
-                let test_mode = true;
-                let sqlite = Sqlite::new(config.limit(), test_mode).unwrap();
+                let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+                let sqlite = Sqlite::new(format!("{}/db", server_root).into(), config.limit(), true).unwrap();
 
                 Arc::new(sqlite)
             }
@@ -48,11 +48,9 @@ impl ProtoBufInterface {
                 response_payload
             }
             _ => {
-                dbg!(&error);
-
                 let error_response = prisma::RpcResponse::error(error);
-
                 let mut payload = Vec::new();
+
                 error_response.encode(&mut payload).unwrap();
                 payload
             }

@@ -5,8 +5,8 @@ use std::io;
 pub enum CommonError {
     #[fail(display = "Failed to parse the config YAML")]
     YamlError(Error),
-    #[fail(display = "Unable to find Prisma config.")]
-    ConfigurationError,
+    #[fail(display = "{}", _0)]
+    ConfigurationError(String),
     #[fail(display = "{}", _0)]
     IoError(Error),
 }

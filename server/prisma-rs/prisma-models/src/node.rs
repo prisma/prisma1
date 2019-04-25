@@ -60,6 +60,23 @@ impl ManyNodes {
             })
             .collect()
     }
+
+    /// Reverses the wrapped records in place
+    pub fn reverse(&mut self) {
+        self.nodes.reverse();
+    }
+
+    /// Drops x records on the end of the wrapped records in place.
+    pub fn drop_right(&mut self, x: u32) {
+        self.nodes.truncate(self.nodes.len() - x as usize);
+    }
+
+    /// Drops x records on the start of the wrapped records in place.
+    pub fn drop_left(&mut self, x: u32) {
+        self.reverse();
+        self.drop_right(x);
+        self.reverse();
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -76,7 +93,6 @@ impl Node {
         }
     }
 
-    // FIXME: This function assumes that `id` was included in the query?!
     pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<&GraphqlId> {
         let id_field = model.fields().id();
         let index = field_names

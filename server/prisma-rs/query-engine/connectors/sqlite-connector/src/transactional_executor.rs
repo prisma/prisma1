@@ -15,7 +15,7 @@ pub trait TransactionalExecutor {
     /// # use connector::{error::ConnectorError, ConnectorResult};
     /// # use sqlite_connector::*;
     /// # use prisma_query::ast::*;
-    /// # let sqlite = Sqlite::new(1, false).unwrap();
+    /// # let sqlite = Sqlite::new("../".into(), 1, false).unwrap();
     /// let _ = sqlite.with_transaction("test", |trans| {
     ///     trans.execute(
     ///         "CREATE TABLE IF NOT EXISTS test.users (id Text, name Text);",
