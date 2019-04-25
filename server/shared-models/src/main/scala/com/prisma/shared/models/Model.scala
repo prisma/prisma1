@@ -1,5 +1,6 @@
 package com.prisma.shared.models
 
+import com.prisma.shared.SpecialEnvVars
 import com.prisma.shared.models.Manifestations.{FieldManifestation, ModelManifestation}
 
 import scala.language.implicitConversions
@@ -29,7 +30,10 @@ class Model(
   import template._
   val isLegacy = schema.isLegacy
 
-  val dbName: String                                     = manifestation.map(_.dbName).getOrElse(name)
+  val dbName: String = {
+    val dbNameTmp = manifestation.map(_.dbName).getOrElse(name)
+    if (SpecialEnvVars.lowerCasedTableNames) dbNameTmp.toLowerCase else dbNameTmp
+  }
   lazy val fields: List[Field]                           = fieldTemplates.map(_.build(this))
   lazy val scalarFields: List[ScalarField]               = fields.collect { case f: ScalarField => f }
   lazy val scalarListFields: List[ScalarField]           = scalarFields.filter(_.isList)
