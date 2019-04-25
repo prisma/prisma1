@@ -115,7 +115,6 @@ impl QueryBuilder {
 
         let query = Select::from_table(table_name)
             .column("nodeId")
-            .column("position")
             .column("value")
             .so_that(vhere);
 

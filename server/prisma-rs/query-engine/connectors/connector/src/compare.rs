@@ -3,13 +3,15 @@ use prisma_models::PrismaValue;
 
 /// Comparing methods for scalars.
 pub trait ScalarCompare {
-    fn is_in<T>(&self, val: Vec<T>) -> Filter
+    fn is_in<I, T>(&self, val: I) -> Filter
     where
-        T: Into<PrismaValue>;
+        T: Into<PrismaValue>,
+        I: IntoIterator<Item = T>;
 
-    fn not_in<T>(&self, val: Vec<T>) -> Filter
+    fn not_in<I, T>(&self, val: I) -> Filter
     where
-        T: Into<PrismaValue>;
+        T: Into<PrismaValue>,
+        I: IntoIterator<Item = T>;
 
     fn equals<T>(&self, val: T) -> Filter
     where

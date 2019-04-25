@@ -20,6 +20,7 @@ failure = "0.1"
 failure_derive = "0.1"
 uuid = "0.7"
 itertools = "0.8"
+chrono = { version = "0.4", features = ["serde"] }
 
 r2d2 = { version = "0.8", optional = true }
 r2d2_sqlite = { version = "0.8", optional = true }

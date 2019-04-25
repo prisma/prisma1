@@ -122,7 +122,7 @@ impl From<ValueContainer> for PrismaValue {
             vc::PrismaValue::DateTime(v) => PrismaValue::DateTime(v.parse::<DateTime<Utc>>().unwrap()),
             vc::PrismaValue::Enum(v) => PrismaValue::Enum(v),
             vc::PrismaValue::Json(ref v) => PrismaValue::Json(serde_json::from_str(v).unwrap()),
-            vc::PrismaValue::Int(v) => PrismaValue::Int(v),
+            vc::PrismaValue::Int(v) => PrismaValue::Int(v as i64),
             vc::PrismaValue::Relation(v) => PrismaValue::Relation(v as usize),
             vc::PrismaValue::Null(_) => PrismaValue::Null,
             vc::PrismaValue::Uuid(v) => PrismaValue::Uuid(Uuid::parse_str(&v).unwrap()), // You must die if you didn't send uuid
@@ -171,7 +171,7 @@ impl From<PrismaValue> for ValueContainer {
             PrismaValue::DateTime(v) => vc::PrismaValue::DateTime(v.to_rfc3339()),
             PrismaValue::Enum(v) => vc::PrismaValue::Enum(v),
             PrismaValue::Json(ref v) => vc::PrismaValue::Json(serde_json::to_string(v).unwrap()),
-            PrismaValue::Int(v) => vc::PrismaValue::Int(v),
+            PrismaValue::Int(v) => vc::PrismaValue::Int(v as i32),
             PrismaValue::Relation(v) => vc::PrismaValue::Relation(v as i64),
             PrismaValue::Null => vc::PrismaValue::Null(true),
             PrismaValue::Uuid(v) => vc::PrismaValue::Uuid(v.to_hyphenated().to_string()),

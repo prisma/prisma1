@@ -18,17 +18,17 @@ use prisma_query::ast::*;
 // TODO: Replace me with FnBox from std when it's stabilized in 1.35.
 // https://doc.rust-lang.org/std/boxed/trait.FnBox.html
 pub trait FnBox {
-    fn call_box(self: Box<Self>, o: Option<GraphqlId>) -> ConnectorResult<()>;
+    fn call_box(self: Box<Self>, exists: bool) -> ConnectorResult<()>;
 }
 
 // TODO: Replace me with FnBox from std when it's stabilized in 1.35.
 // https://doc.rust-lang.org/std/boxed/trait.FnBox.html
 impl<F> FnBox for F
 where
-    F: FnOnce(Option<GraphqlId>) -> ConnectorResult<()>,
+    F: FnOnce(bool) -> ConnectorResult<()>,
 {
-    fn call_box(self: Box<F>, o: Option<GraphqlId>) -> ConnectorResult<()> {
-        (*self)(o)
+    fn call_box(self: Box<F>, exists: bool) -> ConnectorResult<()> {
+        (*self)(exists)
     }
 }
 
@@ -56,8 +56,8 @@ pub trait NestedActions {
     fn nodes_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> ConnectorError {
         let rf = self.relation_field();
 
-        let parent_where = dbg!(parent_id).map(|parent_id| NodeSelectorInfo::for_id(rf.model(), &parent_id));
-        let child_where = dbg!(child_id).map(|child_id| NodeSelectorInfo::for_id(rf.model(), &child_id));
+        let parent_where = parent_id.map(|parent_id| NodeSelectorInfo::for_id(rf.model(), &parent_id));
+        let child_where = child_id.map(|child_id| NodeSelectorInfo::for_id(rf.model(), &child_id));
 
         ConnectorError::NodesNotConnected {
             relation_name: rf.relation().name.clone(),
@@ -134,8 +134,8 @@ pub trait NestedActions {
 
         let error = self.relation_violation();
 
-        let check = |row_opt: Option<GraphqlId>| {
-            if row_opt.is_some() {
+        let check = |exists: bool| {
+            if exists {
                 Err(error)
             } else {
                 Ok(())
@@ -169,8 +169,8 @@ pub trait NestedActions {
 
         let error = self.relation_violation();
 
-        let check = |row_opt: Option<GraphqlId>| {
-            if row_opt.is_some() {
+        let check = |exists: bool| {
+            if exists {
                 Err(error)
             } else {
                 Ok(())
@@ -193,11 +193,11 @@ pub trait NestedActions {
 
         let error = self.nodes_not_connected(Some(parent_id.clone()), None);
 
-        let check = |row_opt: Option<GraphqlId>| {
-            if row_opt.is_none() {
-                Err(error)
-            } else {
+        let check = |exists: bool| {
+            if exists {
                 Ok(())
+            } else {
+                Err(error)
             }
         };
 
@@ -219,11 +219,11 @@ pub trait NestedActions {
 
         let error = self.nodes_not_connected(Some(parent_id.clone()), Some(child_id.clone()));
 
-        let check = |row_opt: Option<GraphqlId>| {
-            if row_opt.is_none() {
-                Err(error)
-            } else {
+        let check = |exists: bool| {
+            if exists {
                 Ok(())
+            } else {
+                Err(error)
             }
         };
 

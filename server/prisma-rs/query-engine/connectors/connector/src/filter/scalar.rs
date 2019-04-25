@@ -42,9 +42,10 @@ pub enum ScalarListCondition {
 
 impl ScalarCompare for Arc<ScalarField> {
     /// Field is in a given value
-    fn is_in<T>(&self, val: Vec<T>) -> Filter
+    fn is_in<I, T>(&self, val: I) -> Filter
     where
         T: Into<PrismaValue>,
+        I: IntoIterator<Item = T>,
     {
         Filter::from(ScalarFilter {
             field: Arc::clone(self),
@@ -53,9 +54,10 @@ impl ScalarCompare for Arc<ScalarField> {
     }
 
     /// Field is not in a given value
-    fn not_in<T>(&self, val: Vec<T>) -> Filter
+    fn not_in<I, T>(&self, val: I) -> Filter
     where
         T: Into<PrismaValue>,
+        I: IntoIterator<Item = T>,
     {
         Filter::from(ScalarFilter {
             field: Arc::clone(self),
@@ -71,7 +73,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -104,7 +106,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -137,7 +139,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -170,7 +172,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -203,7 +205,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -236,7 +238,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -269,7 +271,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -302,7 +304,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -335,7 +337,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -368,7 +370,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -401,7 +403,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #
@@ -434,7 +436,7 @@ impl ScalarCompare for Arc<ScalarField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let model = schema.find_model("User").unwrap();
     /// #

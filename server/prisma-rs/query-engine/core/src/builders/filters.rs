@@ -1,8 +1,8 @@
 use crate::{CoreError, CoreResult};
 use connector::{filter::Filter, RelationCompare, ScalarCompare};
 use graphql_parser::query::Value;
-use prisma_models::{Field, ModelRef, PrismaValue};
-use std::{collections::BTreeMap, sync::Arc};
+use prisma_models::{Field, ModelRef, PrismaListValue, PrismaValue};
+use std::{collections::BTreeMap, convert::TryFrom, sync::Arc};
 
 #[derive(PartialEq)]
 enum FilterOp {
@@ -52,19 +52,6 @@ impl From<&FilterOp> for &'static str {
             FilterOp::NestedNot => "NOT",
             FilterOp::Field => "", // Needs to be last
         }
-    }
-}
-
-fn to_prisma_value(v: &Value) -> PrismaValue {
-    match v {
-        Value::Boolean(b) => PrismaValue::Boolean(b.clone()),
-        Value::Enum(e) => PrismaValue::Enum(e.clone()),
-        Value::Float(f) => PrismaValue::Float(f.clone()),
-        Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap() as i32),
-        Value::Null => PrismaValue::Null,
-        Value::String(s) => PrismaValue::String(s.clone()),
-        Value::List(l) => PrismaValue::List(l.iter().map(|i| to_prisma_value(i)).collect()),
-        _ => unimplemented!(),
     }
 }
 
@@ -139,10 +126,10 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
 
                         match field {
                             Field::Scalar(s) => {
-                                let value = to_prisma_value(v);
+                                let value = PrismaValue::from_value(v);
                                 Ok(match op {
-                                    FilterOp::In => s.is_in(value.into()),
-                                    FilterOp::NotIn => s.not_in(value.into()),
+                                    FilterOp::In => s.is_in(PrismaListValue::try_from(value)?),
+                                    FilterOp::NotIn => s.not_in(PrismaListValue::try_from(value)?),
                                     FilterOp::Not => s.not_equals(value),
                                     FilterOp::Lt => s.less_than(value),
                                     FilterOp::Lte => s.less_than_or_equals(value),
