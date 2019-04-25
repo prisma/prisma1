@@ -6,6 +6,8 @@ import { TypescriptGenerator } from '../generators/typescript-client'
 import { FlowGenerator } from '../generators/flow-client'
 import { execFile } from 'child_process'
 import { codeComment } from '../../utils/codeComment'
+import { parseInternalTypes } from 'prisma-generate-schema'
+import { DatabaseType } from 'prisma-datamodel'
 
 const flow = require('flow-bin')
 
@@ -56,30 +58,7 @@ export async function testTSCompilation(typeDefs) {
   const schema = buildSchema(typeDefs)
   const generator = new TestTypescriptGenerator({
     schema,
-    internalTypes: [
-      {
-        name: 'User',
-        fields: [],
-        isEmbedded: false,
-        isEnum: false,
-        isLinkTable: false,
-        indices: [],
-        databaseName: '',
-        directives: [],
-        comments: [],
-      },
-      {
-        name: 'Post',
-        fields: [],
-        isEmbedded: false,
-        isEnum: false,
-        isLinkTable: false,
-        indices: [],
-        databaseName: '',
-        directives: [],
-        comments: [],
-      },
-    ],
+    internalTypes: parseInternalTypes(typeDefs, DatabaseType.mysql).types,
   })
 
   const file = generator
