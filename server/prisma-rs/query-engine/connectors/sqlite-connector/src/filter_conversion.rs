@@ -137,7 +137,7 @@ impl AliasedCondition for Filter {
                 }
             },
             Filter::Or(mut filters) => match filters.pop() {
-                None => ConditionTree::NoCondition,
+                None => ConditionTree::NegativeCondition,
                 Some(filter) => {
                     let right = (*filter).aliased_cond(alias);
 
