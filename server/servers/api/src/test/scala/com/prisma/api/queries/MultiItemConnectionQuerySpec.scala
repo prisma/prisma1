@@ -136,6 +136,9 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
          |      name: "x"
          |    },
          |  }, first: 2, after: "${a.pathAsString("data.createUser.id")}") {
+         |     aggregate {
+         |	    count
+         |    }
          |    edges {
          |      node {
          |        name
@@ -146,7 +149,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
       project2
     )
 
-    result.toString should be("""{"data":{"usersConnection":{"edges":[{"node":{"name":"d"}},{"node":{"name":"g"}}]}}}""")
+    result.toString should be("""{"data":{"usersConnection":{"aggregate":{"count":2},"edges":[{"node":{"name":"d"}},{"node":{"name":"g"}}]}}}""")
 
   }
 
@@ -175,6 +178,9 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
          |      name: "x"
          |    },
          |  }, first: 2, after: "${a.pathAsString("data.createUser.id")}") {
+         |   aggregate {
+         |	    count
+         |    }
          |    edges {
          |      node {
          |        name
@@ -185,7 +191,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
       project2
     )
 
-    result.toString should be("""{"data":{"usersConnection":{"edges":[{"node":{"name":"d"}},{"node":{"name":"g"}}]}}}""")
+    result.toString should be("""{"data":{"usersConnection":{"aggregate":{"count":2},"edges":[{"node":{"name":"d"}},{"node":{"name":"g"}}]}}}""")
 
   }
 
