@@ -26,8 +26,10 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
                        selectedFields: SelectedFields,
                        rowValueOpt: Option[GCValue]): Future[Seq[Document]] = {
     aggregationQueryForId(database, model, queryArguments, rowValueOpt).flatMap { ids =>
-      val inFilter = in("_id", ids.map(GCToBson(_)): _*)
-      database.getCollection(model.dbName).find(inFilter).projection(projectSelected(selectedFields)).toFuture
+      val bsonIds = ids.map(GCToBson(_))
+      database.getCollection(model.dbName).find(in("_id", bsonIds: _*)).projection(projectSelected(selectedFields)).toFuture.map { seq =>
+        bsonIds.map(id => seq.find(doc => doc.get("_id").get == id).get) //sort according to ids ordering
+      }
     }
   }
 
