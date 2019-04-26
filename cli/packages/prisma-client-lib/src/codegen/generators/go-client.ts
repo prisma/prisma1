@@ -52,6 +52,7 @@ export class GoGenerator extends Generator {
     Int: 'int32',
     String: 'string',
     ID: 'string',
+    UUID: 'string',
     Float: 'float64',
     Boolean: 'bool',
     DateTime: 'string',

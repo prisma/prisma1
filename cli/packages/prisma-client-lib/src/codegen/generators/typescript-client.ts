@@ -44,6 +44,7 @@ export class TypescriptGenerator extends Generator {
     Int: 'number',
     String: 'string',
     ID: 'string | number',
+    UUID: 'string',
     Float: 'number',
     Boolean: 'boolean',
     DateTimeInput: 'Date | string',
