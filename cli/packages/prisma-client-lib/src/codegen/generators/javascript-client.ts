@@ -1,7 +1,9 @@
 import { TypescriptGenerator, RenderOptions } from './typescript-client'
 import * as prettier from 'prettier'
+import { GeneratorType } from '../types';
 
 export class JavascriptGenerator extends TypescriptGenerator {
+  generator: GeneratorType = 'javascript'
   constructor(options) {
     super(options)
   }
