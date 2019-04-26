@@ -58,7 +58,7 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
     //-------------------------------- Match on Cursor Condition ----------------------------------------
     val pipeline = rowValueOpt match {
       case None           => common
-      case Some(rowValue) => CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue) +: common
+      case Some(rowValue) => `match`(CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue)) +: common
     }
 
     database.getCollection(model.dbName).aggregate(pipeline).toFuture.map(_.map(readsId))
