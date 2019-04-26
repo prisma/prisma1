@@ -92,7 +92,7 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
         FilterOp::Field, // Needs to be last
     ];
 
-    let mut filters = map
+    let filters = map
         .iter()
         .map(|(k, v): (&String, &Value)| {
             let op = ops.iter().find(|op| {
@@ -177,9 +177,5 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
         })
         .collect::<CoreResult<Vec<Filter>>>()?;
 
-    if filters.len() == 1 {
-        Ok(filters.pop().unwrap())
-    } else {
-        Ok(Filter::and(filters))
-    }
+    Ok(Filter::and(filters))
 }

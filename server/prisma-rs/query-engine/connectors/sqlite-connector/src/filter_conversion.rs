@@ -357,7 +357,26 @@ impl AliasedSelect for RelationFilter {
         let this_column = self.field.relation_column().table(alias.to_string(None));
         let other_column = self.field.opposite_column().table(alias.to_string(None));
 
-        match *self.nested_filter {
+        // Normalize filter tree
+        let compacted = match *self.nested_filter {
+            Filter::And(mut filters) => {
+                if filters.len() == 1 {
+                    *filters.pop().unwrap()
+                } else {
+                    Filter::And(filters)
+                }
+            }
+            Filter::Or(mut filters) => {
+                if filters.len() == 1 {
+                    *filters.pop().unwrap()
+                } else {
+                    Filter::Or(filters)
+                }
+            }
+            f => f,
+        };
+
+        match compacted {
             Filter::Relation(filter) => {
                 let sub_condition = filter.condition.clone();
                 let sub_select = filter.aliased_sel(Some(alias.inc(AliasMode::Table)));
