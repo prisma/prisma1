@@ -5,7 +5,7 @@
     "sourceMap": true,
     "outDir": "dist",
     "lib": ["esnext", "dom"],
-    "target": "es5",
+    "target": "es2017",
     "allowSyntheticDefaultImports": true,
     "module": "commonjs",
     "rootDir": "src"

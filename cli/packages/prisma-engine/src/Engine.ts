@@ -10,6 +10,7 @@ interface EngineConfig {
   prismaConfig?: string
   debug?: boolean
   managementApiEnabled?: boolean
+  datamodelJson?: string
 }
 
 /**
@@ -26,14 +27,17 @@ export class Engine {
    */
   exiting: boolean = false
   managementApiEnabled: boolean = false
+  datamodelJson?: string
   constructor({
     prismaConfig,
     debug,
     managementApiEnabled,
+    datamodelJson,
   }: EngineConfig = {}) {
     this.prismaConfig = prismaConfig || this.getPrismaYml()
     this.debug = debug || false
     this.managementApiEnabled = managementApiEnabled || false
+    this.datamodelJson = datamodelJson
   }
 
   /**
@@ -91,11 +95,21 @@ export class Engine {
       console.log(PRISMA_CONFIG)
       console.log('\n')
     }
+    const schemaEnv: any = {}
+    if (this.datamodelJson) {
+      schemaEnv.PRISMA_INTERNAL_DATA_MODEL_JSON = this.datamodelJson
+    } else {
+      schemaEnv.SCHEMA_INFERRER_PATH = path.join(
+        __dirname,
+        '../schema-inferrer-bin',
+      )
+    }
     this.child = spawn(path.join(__dirname, '../prisma'), [], {
       env: {
         PRISMA_CONFIG,
-        PRISMA_SCHEMA_PATH: this.getDatamodelPath(),
-        SCHEMA_INFERRER_PATH: path.join(__dirname, '../schema-inferrer-bin'),
+        PRISMA_DATA_MODEL_PATH: this.getDatamodelPath(),
+        SERVER_ROOT: process.cwd(),
+        ...schemaEnv,
       },
       detached: false,
       stdio: this.debug ? 'inherit' : 'pipe',

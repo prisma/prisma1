@@ -76,9 +76,9 @@ async function download() {
   enableProgress('Downloading Prisma Binary ' + packageJSON.version)
   showProgress(0)
 
-  await downloadFile(getDownloadUrl(platform, 'prisma'), prismaBinPath)
-  await downloadFile(
-    getDownloadUrl(platform, 'schema-inferrer-bin'),
+  await downloadFile(getPrismaDownloadUrl(platform), prismaBinPath)
+  await downloadZip(
+    getSchemaInferrerDownloadUrl(platform),
     schemaInferrerBinPath,
     50,
   )
@@ -101,7 +101,7 @@ async function download() {
   // }
 }
 
-async function downloadFile(url: string, target: string, progressOffset = 0) {
+async function downloadZip(url: string, target: string, progressOffset = 0) {
   const partial = target + '.partial'
   await retry(
     async () => {
@@ -148,6 +148,47 @@ async function downloadFile(url: string, target: string, progressOffset = 0) {
   fs.renameSync(partial, target)
 }
 
+async function downloadFile(url: string, target: string, progressOffset = 0) {
+  await retry(
+    async () => {
+      try {
+        const resp = await fetch(url, { compress: false })
+
+        if (resp.status !== 200) {
+          throw new Error(resp.statusText + ' ' + url)
+        }
+
+        const size = resp.headers.get('content-length')
+        const ws = fs.createWriteStream(target)
+
+        await new Promise((resolve, reject) => {
+          let bytesRead = 0
+
+          resp.body.on('error', reject).on('data', chunk => {
+            bytesRead += chunk.length
+
+            if (size) {
+              showProgress((50 * bytesRead) / size + progressOffset)
+            }
+          })
+
+          resp.body.pipe(ws)
+
+          ws.on('error', reject).on('close', () => {
+            resolve()
+          })
+        })
+      } finally {
+        //
+      }
+    },
+    {
+      retries: 1,
+      onRetry: err => console.error(err),
+    },
+  )
+}
+
 async function getPlatform() {
   const { os, dist } = (await new Promise(r => {
     getos((e, os) => {
@@ -160,14 +201,21 @@ async function getPlatform() {
   }
 
   if (os === 'linux' && dist === 'Raspbian') {
-    return 'lambda'
+    return 'linux-musl'
   }
 
-  return 'linux'
+  return 'linux-glibc'
 }
 
-function getDownloadUrl(platform, file = 'prisma') {
-  return `https://s3-eu-west-1.amazonaws.com/curl-linux/prisma-native/${platform}/${file}2.gz`
+function getSchemaInferrerDownloadUrl(platform: string) {
+  if (platform.startsWith('linux-')) {
+    platform = 'linux'
+  }
+  return `https://s3-eu-west-1.amazonaws.com/curl-linux/prisma-native/${platform}/schema-inferrer-bin.gz`
+}
+
+function getPrismaDownloadUrl(platform: string) {
+  return `https://s3-eu-west-1.amazonaws.com/prisma-native/alpha/latest/${platform}/prisma`
 }
 
 async function main() {
