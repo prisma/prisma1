@@ -74,18 +74,18 @@ fn serialize_prisma_value(value: PrismaValue) -> PrismaResult<Value> {
             None => return Err(PrismaError::SerializationError("`f64` number was invalid".into())),
         }),
         PrismaValue::Boolean(x) => Value::Bool(x),
-        PrismaValue::DateTime(_) => unimplemented!(),
+        PrismaValue::DateTime(date) => Value::String(format!("{}", date.format("%Y-%m-%dT%H:%M:%S%.3fZ"))),
         PrismaValue::Enum(x) => Value::String(x.clone()),
         PrismaValue::Json(x) => x,
         PrismaValue::Int(x) => Value::Number(match Number::from_f64(x as f64) {
             Some(num) => num,
             None => return Err(PrismaError::SerializationError("`f64` number was invalid".into())),
         }),
-        PrismaValue::Relation(_) => unimplemented!(),
+        PrismaValue::Relation(_) => unreachable!(),
         PrismaValue::Null => Value::Null,
         PrismaValue::Uuid(x) => Value::String(x.to_hyphenated().to_string()),
         PrismaValue::GraphqlId(x) => serialize_graphql_id(&x)?,
-        PrismaValue::List(_) => unimplemented!(),
+        PrismaValue::List(_) => unreachable!(),
     })
 }
 
