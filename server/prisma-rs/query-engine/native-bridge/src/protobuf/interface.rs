@@ -7,7 +7,7 @@ use connector::{error::ConnectorError, filter::NodeSelector, DataResolver, Datab
 use prisma_common::config::*;
 use prisma_models::prelude::*;
 use prost::Message;
-use sqlite_connector::Sqlite;
+use sql_connector::{database::SqlDatabase, database::Sqlite};
 use std::sync::Arc;
 
 pub struct ProtoBufInterface {
@@ -24,7 +24,7 @@ impl ProtoBufInterface {
                 let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
                 let sqlite = Sqlite::new(format!("{}/db", server_root).into(), config.limit(), true).unwrap();
 
-                Arc::new(sqlite)
+                Arc::new(SqlDatabase::new(sqlite))
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };

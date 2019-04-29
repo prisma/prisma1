@@ -45,9 +45,9 @@ impl MutationBuilder {
     pub fn create_relation(field: RelationFieldRef, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query {
         let relation = field.relation();
 
-        match relation.inline_manifestation() {
-            Some(mani) => {
-                let referencing_column = mani.referencing_column.as_ref();
+        match relation.inline_relation_column() {
+            Some(column) => {
+                let referencing_column = column.name.as_ref();
 
                 let (update_id, link_id) = match field.relation_is_inlined_in_parent() {
                     true => (parent_id, child_id),

@@ -155,6 +155,12 @@ impl SelectedFields {
             result.push(rf.type_identifier);
         }
 
+        // Related and parent id.
+        if self.from_field.is_some() {
+            result.push(TypeIdentifier::GraphQLID);
+            result.push(TypeIdentifier::GraphQLID);
+        };
+
         result
     }
 

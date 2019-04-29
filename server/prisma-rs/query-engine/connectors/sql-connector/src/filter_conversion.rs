@@ -58,7 +58,8 @@ impl Alias {
     /// overridden by defining the `mode_override`.
     ///
     /// ```rust
-    /// # use sqlite_connector::{Alias, AliasMode};
+    /// # use sql_connector::{Alias, AliasMode};
+    ///
     /// let alias = Alias::default();
     ///
     /// assert_eq!(String::from("t0"), alias.to_string(None));
@@ -96,7 +97,7 @@ impl AliasedCondition for Filter {
     /// Conversion from a `Filter` to a query condition tree. Aliased when in a nested `SELECT`.
     ///
     /// ```rust
-    /// # use sqlite_connector::*;
+    /// # use sql_connector::*;
     /// # use connector::*;
     /// # use prisma_models::*;
     /// # use connector::*;
@@ -177,7 +178,7 @@ impl AliasedCondition for ScalarFilter {
     /// Conversion from a `ScalarFilter` to a query condition tree. Aliased when in a nested `SELECT`.
     ///
     /// ```rust
-    /// # use sqlite_connector::*;
+    /// # use sql_connector::*;
     /// # use prisma_models::*;
     /// # use connector::{*, filter::*};
     /// # use prisma_query::ast::*;
@@ -245,7 +246,7 @@ impl AliasedCondition for RelationFilter {
     /// Conversion from a `RelationFilter` to a query condition tree. Aliased when in a nested `SELECT`.
     ///
     /// ```rust
-    /// # use sqlite_connector::*;
+    /// # use sql_connector::*;
     /// # use prisma_models::*;
     /// # use connector::*;
     /// # use prisma_query::ast::*;
@@ -430,7 +431,7 @@ impl AliasedCondition for OneRelationIsNullFilter {
     /// Conversion from a `OneRelationIsNullFilter` to a query condition tree. Aliased when in a nested `SELECT`.
     ///
     /// ```rust
-    /// # use sqlite_connector::*;
+    /// # use sql_connector::*;
     /// # use prisma_models::*;
     /// # use connector::*;
     /// # use prisma_query::ast::*;

@@ -1,8 +1,8 @@
 use crate::{query_ast, query_results::*, CoreResult};
 use connector::{ConnectorResult, DataResolver, ScalarListValues};
-use prisma_models::{GraphqlId, ScalarField, SelectedFields};
+use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleNode};
 use query_ast::*;
-use std::sync::Arc;
+use std::{convert::TryFrom, sync::Arc};
 
 pub struct ReadQueryExecutor {
     pub data_resolver: Arc<DataResolver + Send + Sync + 'static>,
@@ -77,7 +77,7 @@ impl ReadQueryExecutor {
                     )?;
 
                     // FIXME: Required fields need to return Errors, non-required can be ignored!
-                    if let Some(record) = result.into_single_node() {
+                    if let Ok(record) = SingleNode::try_from(result) {
                         let ids = vec![record.get_id_value(query.parent_field.related_model())?.clone()];
                         let list_fields = selected_fields.scalar_lists();
                         let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;

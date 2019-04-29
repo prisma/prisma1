@@ -14,9 +14,9 @@ impl DeleteActions {
     /// connector, giving the connector the possibility to return an optional
     /// `GraphqlID` from the database, such as trying to read a row from the
     /// `SELECT`.
-    pub fn check_relation_violations<F>(model: ModelRef, ids: &[&GraphqlId], f: F) -> ConnectorResult<()>
+    pub fn check_relation_violations<F>(model: ModelRef, ids: &[&GraphqlId], mut f: F) -> ConnectorResult<()>
     where
-        F: Fn(Select) -> ConnectorResult<Option<GraphqlId>>,
+        F: FnMut(Select) -> ConnectorResult<Option<GraphqlId>>,
     {
         for rf in model.schema().fields_requiring_model(model) {
             let relation = rf.relation();
