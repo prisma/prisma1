@@ -140,16 +140,8 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                         Field::Scalar(s) => {
                             let value = to_prisma_value(v);
                             Ok(match op {
-                                FilterOp::In => match value {
-                                    PrismaValue::List(Some(l)) => s.is_in(l.into()),
-                                    PrismaValue::Null => s.equals(PrismaValue::Null),
-                                    _ => unreachable!(),
-                                },
-                                FilterOp::NotIn => match value {
-                                    PrismaValue::List(Some(l)) => s.not_in(l.into()),
-                                    PrismaValue::Null => s.equals(PrismaValue::Null),
-                                    _ => unreachable!(),
-                                },
+                                FilterOp::In => s.is_in(value.into()),
+                                FilterOp::NotIn => s.not_in(value.into()),
                                 FilterOp::Not => s.not_equals(value),
                                 FilterOp::Lt => s.less_than(value),
                                 FilterOp::Lte => s.less_than_or_equals(value),

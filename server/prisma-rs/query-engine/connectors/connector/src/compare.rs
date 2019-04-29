@@ -3,11 +3,11 @@ use prisma_models::PrismaValue;
 
 /// Comparing methods for scalars.
 pub trait ScalarCompare {
-    fn is_in<T>(&self, val: Vec<T>) -> Filter
+    fn is_in<T>(&self, val: Option<Vec<T>>) -> Filter
     where
         T: Into<PrismaValue>;
 
-    fn not_in<T>(&self, val: Vec<T>) -> Filter
+    fn not_in<T>(&self, val: Option<Vec<T>>) -> Filter
     where
         T: Into<PrismaValue>;
 
@@ -78,4 +78,20 @@ pub trait RelationCompare {
         T: Into<Filter>;
 
     fn one_relation_is_null(&self) -> Filter;
+}
+
+pub trait ScalarListCompare {
+    fn contains<T>(&self, value: T) -> Filter
+    where
+        T: Into<PrismaValue>;
+
+    fn contains_every<T>(&self, filter: Vec<T>) -> Filter
+    where
+        T: Into<Filter>;
+
+    fn contains_some<T>(&self, filter: Vec<T>) -> Filter
+    where
+        T: Into<Filter>;
+
+    fn contains_none(&self) -> Filter;
 }
