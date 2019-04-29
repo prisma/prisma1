@@ -63,7 +63,7 @@ fn to_prisma_value(v: &Value) -> PrismaValue {
         Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap() as i32),
         Value::Null => PrismaValue::Null,
         Value::String(s) => PrismaValue::String(s.clone()),
-        Value::List(l) => PrismaValue::List(l.iter().map(|i| to_prisma_value(i)).collect()),
+        Value::List(l) => PrismaValue::List(Some(l.iter().map(|i| to_prisma_value(i)).collect())),
         _ => unimplemented!(),
     }
 }
@@ -140,8 +140,16 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                         Field::Scalar(s) => {
                             let value = to_prisma_value(v);
                             Ok(match op {
-                                FilterOp::In => s.is_in(value.into()),
-                                FilterOp::NotIn => s.not_in(value.into()),
+                                FilterOp::In => match value {
+                                    PrismaValue::List(Some(l)) => s.is_in(l.into()),
+                                    PrismaValue::Null => s.equals(PrismaValue::Null),
+                                    _ => unreachable!(),
+                                },
+                                FilterOp::NotIn => match value {
+                                    PrismaValue::List(Some(l)) => s.not_in(l.into()),
+                                    PrismaValue::Null => s.equals(PrismaValue::Null),
+                                    _ => unreachable!(),
+                                },
                                 FilterOp::Not => s.not_equals(value),
                                 FilterOp::Lt => s.less_than(value),
                                 FilterOp::Lte => s.less_than_or_equals(value),

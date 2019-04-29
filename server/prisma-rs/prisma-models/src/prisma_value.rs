@@ -7,7 +7,7 @@ use serde_json::Value;
 use std::fmt;
 use uuid::Uuid;
 
-pub type PrismaListValue = Vec<PrismaValue>;
+pub type PrismaListValue = Option<Vec<PrismaValue>>;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone)]
 pub enum GraphqlId {
@@ -119,7 +119,8 @@ impl From<PrismaValue> for PrismaListValue {
     fn from(s: PrismaValue) -> Self {
         match s {
             PrismaValue::List(l) => l,
-            _ => panic!("From `NotList` to `Vec` not a valid transformation!"),
+            PrismaValue::Null => None,
+            s => panic!("From `{}` to `PrismaListValue` not a valid transformation!", s),
         }
     }
 }
