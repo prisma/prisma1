@@ -145,7 +145,7 @@ networks:
     driver: bridge
 
 volumes:
-  db-persistence:
+  db-persistence: ~
 ```
 
 In `.env`, replace `SECRET_1` and `SECRET_2` (occurs twice) with a long and secure random string.

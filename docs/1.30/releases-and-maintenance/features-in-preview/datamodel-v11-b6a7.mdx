@@ -593,7 +593,7 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
 volumes:
-  postgres:
+  postgres: ~
 ```
 
 Note that in this example, we're using a PostgreSQL database. We're also exposing the PostgreSQL port `5432` so that you can e.g. connect to it from a database GUI like Postico.
