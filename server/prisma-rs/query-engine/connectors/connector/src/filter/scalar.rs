@@ -10,12 +10,6 @@ pub struct ScalarFilter {
 }
 
 #[derive(Debug, Clone)]
-pub struct ScalarListFilter {
-    pub field: Arc<ScalarField>,
-    pub condition: ScalarListCondition,
-}
-
-#[derive(Debug, Clone)]
 pub enum ScalarCondition {
     Equals(PrismaValue),
     NotEquals(PrismaValue),
@@ -29,37 +23,30 @@ pub enum ScalarCondition {
     LessThanOrEquals(PrismaValue),
     GreaterThan(PrismaValue),
     GreaterThanOrEquals(PrismaValue),
-    In(Vec<PrismaValue>),
-    NotIn(Vec<PrismaValue>),
-}
-
-#[derive(Debug, Clone)]
-pub enum ScalarListCondition {
-    Contains(PrismaValue),
-    ContainsEvery(Vec<PrismaValue>),
-    ContainsSome(Vec<PrismaValue>),
+    In(Option<Vec<PrismaValue>>),
+    NotIn(Option<Vec<PrismaValue>>),
 }
 
 impl ScalarCompare for Arc<ScalarField> {
     /// Field is in a given value
-    fn is_in<T>(&self, val: Vec<T>) -> Filter
+    fn is_in<T>(&self, val: Option<Vec<T>>) -> Filter
     where
         T: Into<PrismaValue>,
     {
         Filter::from(ScalarFilter {
             field: Arc::clone(self),
-            condition: ScalarCondition::In(val.into_iter().map(|i| i.into()).collect()),
+            condition: ScalarCondition::In(val.map(|v| v.into_iter().map(|i| i.into()).collect())),
         })
     }
 
     /// Field is not in a given value
-    fn not_in<T>(&self, val: Vec<T>) -> Filter
+    fn not_in<T>(&self, val: Option<Vec<T>>) -> Filter
     where
         T: Into<PrismaValue>,
     {
         Filter::from(ScalarFilter {
             field: Arc::clone(self),
-            condition: ScalarCondition::NotIn(val.into_iter().map(|i| i.into()).collect()),
+            condition: ScalarCondition::NotIn(val.map(|v| v.into_iter().map(|i| i.into()).collect())),
         })
     }
 

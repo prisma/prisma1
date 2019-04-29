@@ -54,26 +54,28 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     // We need the ParentsWithRecords indirection to preserve information if the nesting is to-one or to-many.
     let mut nested_fields_to_groups: HashMap<String, ParentsWithRecords> = HashMap::new();
 
-    // todo: this might have issues with empty results.
+    // todo: The code below might have issues with empty results. To test.
 
     // Group nested results by parent ids and move them into the grouped map.
     nested.into_iter().for_each(|nested_result| match nested_result {
         ReadQueryResult::Single(single) => {
-            let parent_id = single
-                .find_id()
-                .cloned()
-                .expect("Parent ID needs to be present on nested results.");
+            if single.scalars.is_some() {
+                let parent_id = single
+                    .parent_id()
+                    .cloned()
+                    .expect("Parent ID needs to be present on nested results.");
 
-            if !nested_fields_to_groups.contains_key(&single.name) {
-                nested_fields_to_groups.insert(single.name.clone(), ParentsWithRecords::Single(HashMap::new()));
+                if !nested_fields_to_groups.contains_key(&single.name) {
+                    nested_fields_to_groups.insert(single.name.clone(), ParentsWithRecords::Single(HashMap::new()));
+                }
+
+                let parents_with_records = nested_fields_to_groups
+                    .get_mut(&single.name)
+                    .expect("Parents with records mapping must contain entries for all nested queries.");;
+
+                let nested_build = build_map(single);
+                parents_with_records.insert(parent_id.clone(), vec![Item::Map(Some(parent_id), nested_build)]);
             }
-
-            let parents_with_records = nested_fields_to_groups
-                .get_mut(&single.name)
-                .expect("Parents with records mapping must contain entries for all nested queries.");;
-
-            let nested_build = build_map(single);
-            parents_with_records.insert(parent_id.clone(), vec![Item::Map(Some(parent_id), nested_build)]);
         }
         ReadQueryResult::Many(many) => {
             if !nested_fields_to_groups.contains_key(&many.name) {

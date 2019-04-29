@@ -4,10 +4,12 @@
 //! [ScalarCompare](/connector/trait.ScalarCompare.html) and
 //! [RelationCompare](/connector/trait.RelationCompare.html).
 
+mod list;
 mod node_selector;
 mod relation;
 mod scalar;
 
+pub use list::*;
 pub use node_selector::*;
 pub use relation::*;
 pub use scalar::*;
