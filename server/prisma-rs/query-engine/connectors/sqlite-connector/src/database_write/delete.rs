@@ -45,7 +45,7 @@ pub trait DatabaseDelete {
     ///     &trans,
     ///     Arc::clone(&user),
     ///     &args,
-    ///     &[("cats", vec![])],
+    ///     &[("cats", Some(vec![]))],
     /// ).unwrap();
     ///
     /// assert_eq!(1, Sqlite::count(&trans, "User", ConditionTree::NoCondition).unwrap());
@@ -96,7 +96,7 @@ pub trait DatabaseDelete {
     ///         &trans,
     ///         Arc::clone(&user),
     ///         &args,
-    ///         &[("cats", vec![])],
+    ///         &[("cats", Some(vec![]))],
     ///     ).unwrap();
     /// }
     ///
@@ -150,7 +150,7 @@ pub trait DatabaseDelete {
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
-    /// #     &[("cats", vec![])],
+    /// #     &[("cats", Some(vec![]))],
     /// # ).unwrap();
     /// #
     /// let relation_field = user.fields().find_from_relation_fields("sites").unwrap();
@@ -174,7 +174,7 @@ pub trait DatabaseDelete {
     ///         &create_actions,
     ///         Arc::clone(&relation_field),
     ///         &args,
-    ///         &[("tags", vec![])],
+    ///         &[("tags", Some(vec![]))],
     ///     ).unwrap();
     /// }
     ///
@@ -240,7 +240,7 @@ pub trait DatabaseDelete {
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
-    /// #     &[("cats", vec![])],
+    /// #     &[("cats", Some(vec![]))],
     /// # ).unwrap();
     /// #
     /// let relation_field = user.fields().find_from_relation_fields("sites").unwrap();
@@ -264,7 +264,7 @@ pub trait DatabaseDelete {
     ///         &create_actions,
     ///         Arc::clone(&relation_field),
     ///         &args,
-    ///         &[("tags", vec![])],
+    ///         &[("tags", Some(vec![]))],
     ///     ).unwrap();
     /// }
     ///

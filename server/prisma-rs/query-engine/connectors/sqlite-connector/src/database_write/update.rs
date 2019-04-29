@@ -34,7 +34,7 @@ pub trait DatabaseUpdate {
     ///     &trans,
     ///     Arc::clone(&user),
     ///     &args,
-    ///     &[("cats", vec![])],
+    ///     &[("cats", Some(vec![]))],
     /// ).unwrap();
     ///
     /// let id_field = user.fields().id();
@@ -48,7 +48,7 @@ pub trait DatabaseUpdate {
     ///     &trans,
     ///     &selector,
     ///     &args,
-    ///     &[("cats", vec![])],
+    ///     &[("cats", Some(vec![]))],
     /// ).unwrap();
     ///
     /// let record = Sqlite::find_node(&trans, &selector).unwrap();
@@ -96,7 +96,7 @@ pub trait DatabaseUpdate {
     ///         &trans,
     ///         Arc::clone(&user),
     ///         &args,
-    ///         &[("cats", vec![])],
+    ///         &[("cats", Some(vec![]))],
     ///     ).unwrap();
     /// }
     ///
@@ -111,7 +111,7 @@ pub trait DatabaseUpdate {
     ///     Arc::clone(&user),
     ///     &finder,
     ///     &args,
-    ///     &[("cats", vec![])],
+    ///     &[("cats", Some(vec![]))],
     /// ).unwrap();
     ///
     /// let id_field = user.fields().id();
@@ -162,7 +162,7 @@ pub trait DatabaseUpdate {
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
-    /// #     &[("cats", vec![])],
+    /// #     &[("cats", Some(vec![]))],
     /// # ).unwrap();
     /// #
     /// let relation_field = user.fields().find_from_relation_fields("sites").unwrap();
@@ -185,7 +185,7 @@ pub trait DatabaseUpdate {
     ///     &actions,
     ///     Arc::clone(&relation_field),
     ///     &args,
-    ///     &[("tags", vec![])],
+    ///     &[("tags", Some(vec![]))],
     /// ).unwrap();
     ///
     /// let name_field = site.fields().find_from_scalar("name").unwrap();
@@ -199,7 +199,7 @@ pub trait DatabaseUpdate {
     ///     &Some(NodeSelector::from((name_field, "A Cat Blog"))),
     ///     relation_field,
     ///     &args,
-    ///     &[("tags", vec![])],
+    ///     &[("tags", Some(vec![]))],
     /// ).unwrap();
     ///
     /// assert_eq!(
@@ -256,7 +256,7 @@ pub trait DatabaseUpdate {
     /// #     &trans,
     /// #     Arc::clone(&user),
     /// #     &args,
-    /// #     &[("cats", vec![])],
+    /// #     &[("cats", Some(vec![]))],
     /// # ).unwrap();
     /// #
     /// let relation_field = user.fields().find_from_relation_fields("sites").unwrap();
@@ -280,7 +280,7 @@ pub trait DatabaseUpdate {
     ///         &create_actions,
     ///         Arc::clone(&relation_field),
     ///         &args,
-    ///         &[("tags", vec![])],
+    ///         &[("tags", Some(vec![]))],
     ///     ).unwrap();
     /// }
     ///
@@ -296,7 +296,7 @@ pub trait DatabaseUpdate {
     ///     &Some(filter),
     ///     relation_field,
     ///     &args,
-    ///     &[("cats", vec![])],
+    ///     &[("cats", Some(vec![]))],
     /// ).unwrap();
     ///
     /// assert_eq!(2, count);
@@ -345,7 +345,7 @@ pub trait DatabaseUpdate {
     ///     &trans,
     ///     Arc::clone(&user),
     ///     &args,
-    ///     &[("cats", vec![PrismaValue::from("musti")])],
+    ///     &[("cats", Some(vec![PrismaValue::from("musti")]))],
     /// ).unwrap();
     ///
     /// assert_eq!(1, Sqlite::count(&trans, "User_cats", ConditionTree::default()).unwrap());
@@ -356,7 +356,7 @@ pub trait DatabaseUpdate {
     ///     user,
     ///     &[(
     ///         "cats",
-    ///         vec![PrismaValue::from("musti"), PrismaValue::from("naukio")]
+    ///         Some(vec![PrismaValue::from("musti"), PrismaValue::from("naukio")])
     ///     )],
     /// ).unwrap();
     ///

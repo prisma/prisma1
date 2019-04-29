@@ -81,15 +81,15 @@ pub trait RelationCompare {
 }
 
 pub trait ScalarListCompare {
-    fn contains<T>(&self, value: T) -> Filter
+    fn contains_element<T>(&self, value: T) -> Filter
     where
         T: Into<PrismaValue>;
 
-    fn contains_every<T>(&self, filter: Vec<T>) -> Filter
+    fn contains_every_element<T>(&self, filter: Vec<T>) -> Filter
     where
         T: Into<Filter>;
 
-    fn contains_some<T>(&self, filter: Vec<T>) -> Filter
+    fn contains_some_element<T>(&self, filter: Vec<T>) -> Filter
     where
         T: Into<Filter>;
 

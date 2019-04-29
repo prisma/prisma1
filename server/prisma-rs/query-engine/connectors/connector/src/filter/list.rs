@@ -26,7 +26,7 @@ pub enum ScalarListCondition {
 
 #[allow(warnings)]
 impl ScalarListCompare for Arc<ScalarField> {
-    fn contains<T>(&self, value: T) -> Filter
+    fn contains_element<T>(&self, value: T) -> Filter
     where
         T: Into<PrismaValue>,
     {
@@ -36,7 +36,7 @@ impl ScalarListCompare for Arc<ScalarField> {
         })
     }
 
-    fn contains_every<T>(&self, values: Vec<T>) -> Filter
+    fn contains_every_element<T>(&self, values: Vec<T>) -> Filter
     where
         T: Into<Filter>,
     {
@@ -47,7 +47,7 @@ impl ScalarListCompare for Arc<ScalarField> {
         unimplemented!()
     }
 
-    fn contains_some<T>(&self, values: Vec<T>) -> Filter
+    fn contains_some_element<T>(&self, values: Vec<T>) -> Filter
     where
         T: Into<Filter>,
     {

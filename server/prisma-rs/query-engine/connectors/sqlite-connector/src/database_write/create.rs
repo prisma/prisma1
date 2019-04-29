@@ -33,7 +33,7 @@ pub trait DatabaseCreate {
     ///     &trans,
     ///     Arc::clone(&user),
     ///     &args,
-    ///     &[("cats", vec![])],
+    ///     &[("cats", Some(vec![]))],
     /// ).unwrap();
     ///
     /// let name_field = user.fields().find_from_scalar("name").unwrap();
@@ -107,7 +107,7 @@ pub trait DatabaseCreate {
     ///     &actions,
     ///     Arc::clone(&relation_field),
     ///     &args,
-    ///     &[("tags", vec![])],
+    ///     &[("tags", Some(vec![]))],
     /// ).unwrap();
     ///
     /// let name_field = site.fields().find_from_scalar("name").unwrap();
