@@ -10,7 +10,7 @@ use uuid::Uuid;
 #[cfg(feature = "sql")]
 use prisma_query::ast::*;
 
-pub type PrismaListValue = Vec<PrismaValue>;
+pub type PrismaListValue = Option<Vec<PrismaValue>>;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone)]
 pub enum GraphqlId {
@@ -51,7 +51,7 @@ impl PrismaValue {
             GraphqlValue::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
             GraphqlValue::Null => PrismaValue::Null,
             GraphqlValue::String(s) => PrismaValue::String(s.clone()),
-            GraphqlValue::List(l) => PrismaValue::List(l.iter().map(|i| Self::from_value(i)).collect()),
+            GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
             _ => unimplemented!(),
         }
     }
@@ -155,6 +155,7 @@ impl TryFrom<PrismaValue> for PrismaListValue {
     fn try_from(s: PrismaValue) -> DomainResult<PrismaListValue> {
         match s {
             PrismaValue::List(l) => Ok(l),
+            PrismaValue::Null => Ok(None),
             _ => Err(DomainError::ConversionFailure("PrismaValue", "PrismaListValue")),
         }
     }

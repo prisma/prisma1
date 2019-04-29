@@ -141,7 +141,7 @@ impl From<ValueContainer> for PrismaListValue {
         match container.prisma_value.unwrap() {
             vc::PrismaValue::List(list) => {
                 let prisma_values: Vec<PrismaValue> = list.values.into_iter().map(|v| v.into()).collect();
-                prisma_values
+                Some(prisma_values)
             }
             x => panic!("only prisma lists allowed here but received: {:?}", x),
         }
@@ -177,7 +177,11 @@ impl From<PrismaValue> for ValueContainer {
             PrismaValue::Uuid(v) => vc::PrismaValue::Uuid(v.to_hyphenated().to_string()),
             PrismaValue::GraphqlId(v) => vc::PrismaValue::GraphqlId(v.into()),
             PrismaValue::List(v) => {
-                let values: Vec<ValueContainer> = v.into_iter().map(|x| x.into()).collect();
+                let values: Vec<ValueContainer> = v
+                    .expect("Proto bridge should not deal with list NULLs")
+                    .into_iter()
+                    .map(|x| x.into())
+                    .collect();
                 let list_value = crate::protobuf::prisma::PrismaListValue { values };
                 vc::PrismaValue::List(list_value)
             }

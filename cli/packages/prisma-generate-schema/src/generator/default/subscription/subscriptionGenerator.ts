@@ -8,7 +8,7 @@ export default class SubscriptionGenerator extends RootGenerator {
   }
 
   protected shouldGenerateSubscription(type: IGQLType) {
-    return !type.isEnum
+    return !type.isEnum && !type.isRelationTable
   }
 
   protected generateInternal(input: IGQLType[], args: {}) {

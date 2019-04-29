@@ -79,90 +79,90 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
         FilterOp::Field, // Needs to be last
     ];
 
-    Ok(Filter::and(
-        map.iter()
-            .map(|(k, v): (&String, &Value)| {
-                let op = ops.iter().find(|op| {
-                    let op_name: &'static str = (*op).into();
-                    k.as_str().ends_with(op_name)
-                });
+    let filters = map
+        .iter()
+        .map(|(k, v): (&String, &Value)| {
+            let op = ops.iter().find(|op| {
+                let op_name: &'static str = (*op).into();
+                k.as_str().ends_with(op_name)
+            });
 
-                let op = match op {
-                    None => return Err(CoreError::QueryValidationError(format!("Query argument {} invalid", k))),
-                    Some(op) => op,
-                };
+            let op = match op {
+                None => return Err(CoreError::QueryValidationError(format!("Query argument {} invalid", k))),
+                Some(op) => op,
+            };
 
-                match op {
-                    op if (op == &FilterOp::NestedAnd || op == &FilterOp::NestedOr || op == &FilterOp::NestedNot) => {
-                        let value = match v {
-                            Value::List(o) => o,
-                            _ => panic!("Expected list value"),
-                        };
-                        let vec = value
-                            .into_iter()
-                            .map(|v| {
-                                extract_filter(
-                                    match v {
-                                        Value::Object(o) => o,
-                                        _ => panic!("Expected object value"),
-                                    },
-                                    Arc::clone(&model),
-                                )
-                                .unwrap()
+            match op {
+                op if (op == &FilterOp::NestedAnd || op == &FilterOp::NestedOr || op == &FilterOp::NestedNot) => {
+                    let extract_nested = |v: &Value| {
+                        extract_filter(
+                            match v {
+                                Value::Object(o) => o,
+                                _ => panic!("Expected object value"),
+                            },
+                            Arc::clone(&model),
+                        )
+                        .unwrap()
+                    };
+
+                    let value: Vec<Filter> = match v {
+                        Value::List(l) => l.into_iter().map(extract_nested).collect(),
+                        Value::Object(_) => vec![extract_nested(v)],
+                        _ => unreachable!(),
+                    };
+
+                    Ok(match op {
+                        FilterOp::NestedAnd => Filter::and(value),
+                        FilterOp::NestedOr => Filter::or(value),
+                        FilterOp::NestedNot => Filter::not(value),
+                        _ => unreachable!(),
+                    })
+                }
+                op => {
+                    let op_name: &'static str = op.into();
+                    let field_name = k.trim_end_matches(op_name);
+                    let field = model.fields().find_from_all(&field_name).unwrap(); // fixme: unwrap
+
+                    match field {
+                        Field::Scalar(s) => {
+                            let value = PrismaValue::from_value(v);
+                            Ok(match op {
+                                FilterOp::In => s.is_in(PrismaListValue::try_from(value)?),
+                                FilterOp::NotIn => s.not_in(PrismaListValue::try_from(value)?),
+                                FilterOp::Not => s.not_equals(value),
+                                FilterOp::Lt => s.less_than(value),
+                                FilterOp::Lte => s.less_than_or_equals(value),
+                                FilterOp::Gt => s.greater_than(value),
+                                FilterOp::Gte => s.greater_than_or_equals(value),
+                                FilterOp::Contains => s.contains(value),
+                                FilterOp::NotContains => s.not_contains(value),
+                                FilterOp::StartsWith => s.starts_with(value),
+                                FilterOp::NotStartsWith => s.not_starts_with(value),
+                                FilterOp::EndsWith => s.ends_with(value),
+                                FilterOp::NotEndsWith => s.not_ends_with(value),
+                                FilterOp::Field => s.equals(value),
+                                _ => unreachable!(),
                             })
-                            .collect();
+                        }
+                        Field::Relation(r) => {
+                            let value = match v {
+                                Value::Object(o) => o,
+                                _ => panic!("Expected object value"),
+                            };
 
-                        Ok(match op {
-                            FilterOp::NestedAnd => Filter::and(vec),
-                            FilterOp::NestedOr => Filter::or(vec),
-                            FilterOp::NestedNot => Filter::not(vec),
-                            _ => unreachable!(),
-                        })
-                    }
-                    op => {
-                        let op_name: &'static str = op.into();
-                        let field_name = k.trim_end_matches(op_name);
-                        let field = model.fields().find_from_all(&field_name).unwrap(); // fixme: unwrap
-
-                        match field {
-                            Field::Scalar(s) => {
-                                let value = PrismaValue::from_value(v);
-                                Ok(match op {
-                                    FilterOp::In => s.is_in(PrismaListValue::try_from(value)?),
-                                    FilterOp::NotIn => s.not_in(PrismaListValue::try_from(value)?),
-                                    FilterOp::Not => s.not_equals(value),
-                                    FilterOp::Lt => s.less_than(value),
-                                    FilterOp::Lte => s.less_than_or_equals(value),
-                                    FilterOp::Gt => s.greater_than(value),
-                                    FilterOp::Gte => s.greater_than_or_equals(value),
-                                    FilterOp::Contains => s.contains(value),
-                                    FilterOp::NotContains => s.not_contains(value),
-                                    FilterOp::StartsWith => s.starts_with(value),
-                                    FilterOp::NotStartsWith => s.not_starts_with(value),
-                                    FilterOp::EndsWith => s.ends_with(value),
-                                    FilterOp::NotEndsWith => s.not_ends_with(value),
-                                    FilterOp::Field => s.equals(value),
-                                    _ => unreachable!(),
-                                })
-                            }
-                            Field::Relation(r) => {
-                                let value = match v {
-                                    Value::Object(o) => o,
-                                    _ => panic!("Expected object value"),
-                                };
-
-                                Ok(match op {
-                                    FilterOp::Some => r.at_least_one_related(extract_filter(value, r.related_model())?),
-                                    FilterOp::None => r.no_related(extract_filter(value, r.related_model())?),
-                                    FilterOp::Every => r.every_related(extract_filter(value, r.related_model())?),
-                                    FilterOp::Field => r.to_one_related(extract_filter(value, r.related_model())?),
-                                    _ => unreachable!(),
-                                })
-                            }
+                            Ok(match op {
+                                FilterOp::Some => r.at_least_one_related(extract_filter(value, r.related_model())?),
+                                FilterOp::None => r.no_related(extract_filter(value, r.related_model())?),
+                                FilterOp::Every => r.every_related(extract_filter(value, r.related_model())?),
+                                FilterOp::Field => r.to_one_related(extract_filter(value, r.related_model())?),
+                                _ => unreachable!(),
+                            })
                         }
                     }
                 }
-            })
-            .collect::<CoreResult<Vec<Filter>>>()?,
-    ))
+            }
+        })
+        .collect::<CoreResult<Vec<Filter>>>()?;
+
+    Ok(Filter::and(filters))
 }

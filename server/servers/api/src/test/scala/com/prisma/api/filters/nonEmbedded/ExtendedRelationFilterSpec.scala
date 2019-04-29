@@ -456,7 +456,7 @@ class ExtendedRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBase
       project
     )
 
-    result.pathAsJsValue("data") shouldBe ("""{"genres":[{"GenreId":1}]}""".parseJson)
+    result.pathAsJsValue("data") shouldBe """{"genres":[{"GenreId":1}]}""".parseJson
   }
 
   "an empty _none filter" should "return all nodes that do have an empty relation" taggedAs (IgnoreMongo) in {

@@ -138,7 +138,7 @@ impl AliasedCondition for Filter {
                 }
             },
             Filter::Or(mut filters) => match filters.pop() {
-                None => ConditionTree::NoCondition,
+                None => ConditionTree::NegativeCondition,
                 Some(filter) => {
                     let right = (*filter).aliased_cond(alias);
 
@@ -224,14 +224,18 @@ impl AliasedCondition for ScalarFilter {
             ScalarCondition::LessThanOrEquals(value) => column.less_than_or_equals(value),
             ScalarCondition::GreaterThan(value) => column.greater_than(value),
             ScalarCondition::GreaterThanOrEquals(value) => column.greater_than_or_equals(value),
-            ScalarCondition::In(values) => match values.split_first() {
+            // We need to preserve the split first semantic for protobuf
+            ScalarCondition::In(Some(values)) => match values.split_first() {
                 Some((PrismaValue::Null, tail)) if tail.is_empty() => column.is_null(),
                 _ => column.in_selection(values),
             },
-            ScalarCondition::NotIn(values) => match values.split_first() {
+            // We need to preserve the split first semantic for protobuf
+            ScalarCondition::NotIn(Some(values)) => match values.split_first() {
                 Some((PrismaValue::Null, tail)) if tail.is_empty() => column.is_not_null(),
                 _ => column.not_in_selection(values),
             },
+            ScalarCondition::In(None) => column.is_null(),
+            ScalarCondition::NotIn(None) => column.is_not_null(),
         };
 
         ConditionTree::single(condition)
@@ -358,7 +362,26 @@ impl AliasedSelect for RelationFilter {
         let this_column = self.field.relation_column().table(alias.to_string(None));
         let other_column = self.field.opposite_column().table(alias.to_string(None));
 
-        match *self.nested_filter {
+        // Normalize filter tree
+        let compacted = match *self.nested_filter {
+            Filter::And(mut filters) => {
+                if filters.len() == 1 {
+                    *filters.pop().unwrap()
+                } else {
+                    Filter::And(filters)
+                }
+            }
+            Filter::Or(mut filters) => {
+                if filters.len() == 1 {
+                    *filters.pop().unwrap()
+                } else {
+                    Filter::Or(filters)
+                }
+            }
+            f => f,
+        };
+
+        match compacted {
             Filter::Relation(filter) => {
                 let sub_condition = filter.condition.clone();
                 let sub_select = filter.aliased_sel(Some(alias.inc(AliasMode::Table)));

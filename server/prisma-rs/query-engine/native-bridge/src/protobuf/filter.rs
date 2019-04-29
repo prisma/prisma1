@@ -75,8 +75,8 @@ impl IntoFilter for pb::ScalarFilter {
             LessThanOrEquals(value) => ScalarCondition::LessThanOrEquals(value.into()),
             GreaterThan(value) => ScalarCondition::GreaterThan(value.into()),
             GreaterThanOrEquals(value) => ScalarCondition::GreaterThanOrEquals(value.into()),
-            In(mc) => ScalarCondition::In(mc.values.into_iter().map(|value| value.into()).collect()),
-            NotIn(mc) => ScalarCondition::NotIn(mc.values.into_iter().map(|value| value.into()).collect()),
+            In(mc) => ScalarCondition::In(Some(mc.values.into_iter().map(|value| value.into()).collect())),
+            NotIn(mc) => ScalarCondition::NotIn(Some(mc.values.into_iter().map(|value| value.into()).collect())),
         };
 
         Filter::Scalar(ScalarFilter { field, condition })

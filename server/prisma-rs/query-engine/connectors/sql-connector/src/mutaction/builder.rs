@@ -88,9 +88,11 @@ impl MutationBuilder {
         list_value: &PrismaListValue,
         id: &GraphqlId,
     ) -> Option<Insert> {
-        if list_value.is_empty() {
-            return None;
-        }
+        let list_value = match list_value {
+            Some(l) if l.is_empty() => return None,
+            None => return None,
+            Some(l) => l,
+        };
 
         let positions = (1..=list_value.len()).map(|v| (v * 1000) as i64);
         let values = list_value.iter().zip(positions);
@@ -180,12 +182,12 @@ impl MutationBuilder {
             Self::delete_scalar_list_values(scalar_list_table, ids.as_slice())
         };
 
-        let inserts = if list_value.is_empty() {
-            Vec::new()
-        } else {
-            ids.iter()
+        let inserts = match list_value {
+            Some(l) if l.is_empty() => Vec::new(),
+            _ => ids
+                .iter()
                 .flat_map(|id| Self::create_scalar_list_value(scalar_list_table.table(), list_value, id))
-                .collect()
+                .collect(),
         };
 
         (deletes, inserts)

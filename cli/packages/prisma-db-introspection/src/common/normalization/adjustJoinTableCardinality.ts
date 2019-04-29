@@ -38,11 +38,11 @@ export class AdjustJoinTableCardinality extends Normalizer {
       if (alreadyHasLinkDirective) {
         return
       }
-      field.directives.push(this.createLinkTableDirective(field))
+      field.directives.push(this.createRelationTableDirective(field))
     }
   }
 
-  private createLinkTableDirective(field: IGQLField): IDirectiveInfo {
+  private createRelationTableDirective(field: IGQLField): IDirectiveInfo {
     // TODO: Find a way to do this without any
     const directive: any = {
       name: DirectiveKeys.relation,
