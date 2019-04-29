@@ -62,7 +62,7 @@ impl Fields {
         })
     }
 
-    fn scalar(&self) -> Vec<Arc<ScalarField>> {
+    pub fn scalar(&self) -> Vec<Arc<ScalarField>> {
         self.scalar_weak().iter().map(|f| f.upgrade().unwrap()).collect()
     }
 

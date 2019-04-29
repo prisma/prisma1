@@ -1,7 +1,6 @@
 use crate::steps::*;
 use database_inspector::DatabaseSchema;
-
-use std::sync::Arc;
+use prisma_models::*;
 
 pub trait MigrationStepsInferrer {
     fn infer(next: &Schema, database_schema: &DatabaseSchema) -> Vec<MigrationStep>;
@@ -25,8 +24,7 @@ impl<'a> MigrationStepsInferrer for MigrationStepsInferrerImpl<'a> {
 impl<'a> MigrationStepsInferrerImpl<'a> {
     fn infer(&self) -> Vec<MigrationStep> {
         let mut result: Vec<MigrationStep> = vec![];
-        let default = vec![];
-        let next_models = self.schema.models.get().unwrap_or(&default);
+        let next_models = self.schema.models();
         let mut create_model_steps: Vec<MigrationStep> = next_models
             .iter()
             .filter(|model| self.database_schema.table(model.db_name()).is_none())
@@ -46,6 +44,7 @@ impl<'a> MigrationStepsInferrerImpl<'a> {
 
         let mut create_field_steps: Vec<MigrationStep> = vec![];
         for model in next_models {
+            // TODO: also create steps for relation fields
             for field in model.fields().scalar() {
                 let step = CreateField {
                     model: model.name.clone(),
@@ -74,8 +73,7 @@ impl<'a> MigrationStepsInferrerImpl<'a> {
         }
 
         let mut create_relations = vec![];
-        let empty_relations = vec![];
-        let relations = self.schema.relations.get().unwrap_or(&empty_relations);
+        let relations = self.schema.relations();
         for relation in relations {
             let model_a = relation.model_a();
             let model_b = relation.model_b();
