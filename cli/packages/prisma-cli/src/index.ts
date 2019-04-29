@@ -19,3 +19,4 @@ if (!semver.satisfies(nodeVersion, pjson.engines.node)) {
 }
 
 run({ config: { root, mock: false } })
+
