@@ -90,7 +90,7 @@ type Playlist {
   playlistTrack: [PlaylistTrack]
 }
 
-type PlaylistTrack @linkTable {
+type PlaylistTrack @relationTable {
   playlistId: Playlist! @pgColumn(name: \\"PlaylistId\\")
   trackId: Track! @pgColumn(name: \\"TrackId\\")
 }
@@ -200,7 +200,7 @@ type Playlist {
   playlistTrack: [PlaylistTrack]
 }
 
-type PlaylistTrack @linkTable {
+type PlaylistTrack @relationTable {
   playlistId: Playlist! @db(name: \\"PlaylistId\\")
   trackId: Track! @db(name: \\"TrackId\\")
 }
