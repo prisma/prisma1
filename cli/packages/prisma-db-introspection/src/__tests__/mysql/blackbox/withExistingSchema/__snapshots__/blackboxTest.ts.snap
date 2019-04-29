@@ -984,6 +984,126 @@ type UserSpace {
 }"
 `;
 
+exports[`Introspects relations-4424/mysql correctly: relations-4424 - legacy datamodel 1`] = `
+"type Customer {
+  cartItems: [CustomerCartItem] @relation(name: \\"CustomerCartItemsRelation\\")
+  createdAt: DateTime!
+  emailId: String! @unique
+  id: ID! @unique
+  mobileNumber: String
+  name: String
+  uid: String! @unique
+  updatedAt: DateTime!
+  wishlists: [CustomerWishlist] @relation(name: \\"CustomerWishlistsRelation\\")
+}
+
+type CustomerCartItem {
+  addedAtPrice: Int!
+  createdAt: DateTime!
+  customer: Customer @relation(name: \\"CustomerCartItemsRelation\\")
+  id: ID! @unique
+  product: Product @relation(name: \\"ProductsInCartRelation\\")
+  quantity: Int!
+  savedForLater: Boolean! @default(value: false)
+  updatedAt: DateTime!
+}
+
+type CustomerWishlist {
+  customer: Customer @relation(name: \\"CustomerWishlistsRelation\\")
+  id: ID! @unique
+  listName: String!
+}
+
+type Post {
+  createdAt: DateTime!
+  id: ID! @unique
+  text: String
+  updatedAt: DateTime!
+}
+
+type PostsProductsRelation @relationTable {
+  post: Post!
+  product: Product!
+}
+
+type Product {
+  brand: String!
+  cartedIn: [CustomerCartItem] @relation(name: \\"ProductsInCartRelation\\")
+  createdAt: DateTime!
+  description: String!
+  id: ID! @unique
+  name: String!
+  ratingsDistribution: [Int]
+  tags: [String]
+  updatedAt: DateTime!
+}
+
+type WishlistedProductsRelation @relationTable {
+  product: Product!
+  wishlist: CustomerWishlist!
+}"
+`;
+
+exports[`Introspects relations-4424/mysql correctly: relations-4424 - v1.1 datamodel 1`] = `
+"type Customer {
+  cartItems: [CustomerCartItem] @relation(name: \\"CustomerCartItemsRelation\\")
+  createdAt: DateTime! @createdAt
+  emailId: String! @unique
+  id: ID! @id
+  mobileNumber: String
+  name: String
+  uid: String! @unique
+  updatedAt: DateTime! @updatedAt
+  wishlists: [CustomerWishlist] @relation(name: \\"CustomerWishlistsRelation\\")
+}
+
+type CustomerCartItem {
+  addedAtPrice: Int!
+  createdAt: DateTime! @createdAt
+  customer: Customer @relation(name: \\"CustomerCartItemsRelation\\")
+  id: ID! @id
+  product: Product @relation(name: \\"ProductsInCartRelation\\")
+  quantity: Int!
+  savedForLater: Boolean! @default(value: false)
+  updatedAt: DateTime! @updatedAt
+}
+
+type CustomerWishlist {
+  customer: Customer @relation(name: \\"CustomerWishlistsRelation\\")
+  id: ID! @id
+  listName: String!
+}
+
+type Post {
+  createdAt: DateTime! @createdAt
+  id: ID! @id
+  text: String
+  updatedAt: DateTime! @updatedAt
+}
+
+type PostsProductsRelation @relationTable {
+  post: Post!
+  product: Product!
+}
+
+type Product {
+  brand: String!
+  cartedIn: [CustomerCartItem] @relation(name: \\"ProductsInCartRelation\\")
+  createdAt: DateTime! @createdAt
+  description: String!
+  id: ID! @id
+  name: String!
+  ratingsDistribution: [Int] @scalarList(strategy: RELATION)
+  tags: [String] @scalarList(strategy: RELATION)
+  updatedAt: DateTime! @updatedAt
+}
+
+type WishlistedProductsRelation @relationTable {
+  product: Product!
+  wishlist: CustomerWishlist!
+}"
+`;
+
 exports[`Introspects scalars/mysql correctly: scalars - legacy datamodel 1`] = `
 "type LotsOfRequiredScalars {
   boolean: Boolean!

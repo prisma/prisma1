@@ -1,3 +1,13 @@
+-- ######################################
+-- WARNING
+-- mysqldump creates an invalid database
+-- schema for this use case.
+-- The tables are created in the wrong 
+-- order. If you regenerate this test
+-- case, make sure to adjust it or remove
+-- this warning if it works.
+-- ######################################
+
 -- MySQL dump 10.17  Distrib 10.3.12-MariaDB, for Linux (x86_64)
 --
 -- Host: localhost    Database: schema-generator@relations-4424
@@ -21,6 +31,34 @@ CREATE TABLE `Customer` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uid_UNIQUE` (`uid`(191)),
   UNIQUE KEY `emailId_UNIQUE` (`emailId`(191))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `Post`
+--
+
+DROP TABLE IF EXISTS `Post`;
+CREATE TABLE `Post` (
+  `id` char(25) CHARACTER SET utf8 NOT NULL,
+  `text` mediumtext COLLATE utf8mb4_unicode_ci,
+  `createdAt` datetime(3) NOT NULL,
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Table structure for table `Product`
+--
+
+DROP TABLE IF EXISTS `Product`;
+CREATE TABLE `Product` (
+  `id` char(25) CHARACTER SET utf8 NOT NULL,
+  `name` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `brand` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `createdAt` datetime(3) NOT NULL,
+  `updatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -59,19 +97,6 @@ CREATE TABLE `CustomerWishlist` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Table structure for table `Post`
---
-
-DROP TABLE IF EXISTS `Post`;
-CREATE TABLE `Post` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
-  `text` mediumtext COLLATE utf8mb4_unicode_ci,
-  `createdAt` datetime(3) NOT NULL,
-  `updatedAt` datetime(3) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
 -- Table structure for table `PostsProductsRelation`
 --
 
@@ -83,21 +108,6 @@ CREATE TABLE `PostsProductsRelation` (
   KEY `product` (`product`),
   CONSTRAINT `PostsProductsRelation_ibfk_1` FOREIGN KEY (`post`) REFERENCES `Post` (`id`) ON DELETE CASCADE,
   CONSTRAINT `PostsProductsRelation_ibfk_2` FOREIGN KEY (`product`) REFERENCES `Product` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
---
--- Table structure for table `Product`
---
-
-DROP TABLE IF EXISTS `Product`;
-CREATE TABLE `Product` (
-  `id` char(25) CHARACTER SET utf8 NOT NULL,
-  `name` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `brand` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `createdAt` datetime(3) NOT NULL,
-  `updatedAt` datetime(3) NOT NULL,
-  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
