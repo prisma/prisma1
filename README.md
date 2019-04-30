@@ -1,6 +1,6 @@
 <p align="center"><a href="https://www.prisma.io"><img src="https://i.imgur.com/QgwDieO.png" alt="Prisma" height="230px"></a></p>
 
-[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Blog](https://www.prisma.io/blog) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [OSS](https://oss.prisma.io/) • [Learn](https://www.howtographql.com)
+[Website](https://www.prisma.io) • [Docs](https://www.prisma.io/docs/) • [Examples](https://github.com/prisma/prisma-examples/) • [Blog](https://www.prisma.io/blog) • [Forum](https://www.prisma.io/forum) • [Slack](https://slack.prisma.io/) • [Twitter](https://twitter.com/prisma) • [OSS](https://oss.prisma.io/) • [Learn](https://www.howtographql.com)
 
 [![CircleCI](https://circleci.com/gh/prisma/prisma.svg?style=shield)](https://circleci.com/gh/prisma/prisma) [![Slack Status](https://slack.prisma.io/badge.svg)](https://slack.prisma.io) [![Join the community on Spectrum](https://withspectrum.github.io/badge/badge.svg)](https://spectrum.chat/prisma)
 
@@ -195,7 +195,7 @@ Here is what you can do next:
 
 - [Build an app with Prisma client](https://www.prisma.io/docs/-t201/)
 - [Check out some examples](#examples)
-- [Read more about how Prisma works](https://www.prisma.io/docs/-j9ff/).
+- [Read more about how Prisma works](https://www.prisma.io/docs/-j9ff/)
 
 ## Examples
 
