@@ -116,29 +116,16 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
 
   //Fixme this does not use all queryarguments
   def countFromModel(model: Model, queryArguments: QueryArguments) = SimpleMongoAction { database =>
-    //    val queryArgFilter = queryArguments match {
-//      case Some(arg) => arg.filter
-//      case None      => None
-//    }
-//
-//    val skipAndLimit = LimitClauseHelper.skipAndLimitValues(queryArguments)
-//
-//    val cursorCondition = CursorConditionBuilder.buildCursorCondition(queryArguments)
-//    We could try passing the other args into countoptions, but not sure about order
-//    val baseQuery2                               = collection.countDocuments(Filters.and(buildConditionForFilter(queryArgFilter), cursorCondition)).toFuture()
-//
-//    val baseQuery: FindObservable[Document]      = collection(Filters.and(buildConditionForFilter(queryArgFilter), cursorCondition))
-//    val queryWithOrder: FindObservable[Document] = OrderByClauseBuilder.queryWithOrder(baseQuery, queryArguments)
-//    val queryWithSkip: FindObservable[Document]  = queryWithOrder.skip(skipAndLimit.skip)
-//
-//    val queryWithLimit = skipAndLimit.limit match {
-//      case Some(limit) => queryWithSkip.limit(limit)
-//      case None        => queryWithSkip
-//    }
-//
-//    queryWithLimit.collect().toFuture
-
-    database.getCollection(model.dbName).countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
+    if (needsAggregation(queryArguments.filter)) {
+      aggregationQueryForId(database, model, queryArguments).map { x =>
+        x.length match {
+          case 0 => 0
+          case x => x - 1 // we always fetch one more item for the page info we need to subtract that
+        }
+      }
+    } else {
+      database.getCollection(model.dbName).countDocuments(buildConditionForFilter(queryArguments.filter)).toFuture.map(_.toInt)
+    }
   }
 
   def countFromTable(table: String, filter: Option[Filter]) = SimpleMongoAction { database =>
