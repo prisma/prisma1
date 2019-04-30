@@ -22,13 +22,16 @@ prisma deploy [flags]
 ### Flags
 
 ```
--d, --dry-run              Perform a dry-run of the deployment
+-d, --dry-run    Perform a dry-run of the deployment
 -e, --env-file ENV-FILE    Path to .env file to inject env vars
--f, --force                Accept data loss caused by schema changes
--j, --json                 JSON Output
--n, --new                  Force interactive mode to select the cluster
--w, --watch                Watch for changes
---no-seed                  Disable seed on initial service deploy
+-f, --force    Accept data loss caused by schema changes
+-j, --json    Json Output
+-n, --new    Force interactive mode to select the cluster
+-p, --project PROJECT    Path to Prisma definition file
+--no-generate    Disable implicit client generation
+--no-migrate    Disable migrations. Prisma 1.26 and above needed
+--no-seed    Disable seed on initial service deploy
+--skip-hooks    Disable hooks on deploy
 ```
 
 ### Examples
