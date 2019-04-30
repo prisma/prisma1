@@ -71,7 +71,11 @@ impl<'a> Builder<'a> {
                 )))
             }
         } else {
-            let normalized = model.name.to_camel_case();
+            let normalized = match model.name.as_str() {
+                "AUser" => "aUser".to_owned(), // FIXME *quietly sobbing*
+                name => name.to_camel_case()
+            };
+
             if field.name == normalized {
                 Some(Builder::Single(SingleBuilder::new().setup(Arc::clone(model), field)))
             } else if Inflector::singularize(&field.name) == normalized {
