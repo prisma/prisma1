@@ -743,32 +743,4 @@ posts, err := client.Posts(&prisma.PostsParams{
 
 ## Aggregations
 
-You can submit aggregation queries via _connection queries_. The following aggregation functions are supported:
-
-- `count`: Counts the number of records in a list
-- `avg` (_coming soon_): Computes the average of a list of numbers.
-- `median` (_coming soon_): Computes the median of a list of numbers. 
-- `max` (_coming soon_): Returns the greatest element of a list of numbers.
-- `min` (_coming soon_): Returns the smallest element of a list of numbers.
-- `sum` (_coming soon_): Computes the sum of a list of numbers.
-
-> See [this](https://github.com/prisma/prisma/issues/1312) GitHub issue to learn more about the upcoming aggregation functions.
-
-### Examples
-
-_Count the number of post records_:
-
-<Code languages={["Go", "Result"]}>
-
-```ts
-const postCount: number = await prisma
-  .postsConnection()
-  .aggregate()
-  .count()
-```
-
-```js
-9
-```
-
-</Code>
+Aggregrations are currently not supported in the Prisma Go client. You can track the progress of this feature in [this](https://github.com/prisma/prisma/issues/4027) GitHub issue.
