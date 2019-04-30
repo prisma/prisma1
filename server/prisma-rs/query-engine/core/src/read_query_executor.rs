@@ -16,7 +16,6 @@ impl ReadQueryExecutor {
     #[warn(warnings)]
     fn execute_internal(&self, queries: &[ReadQuery], parent_ids: Vec<GraphqlId>) -> CoreResult<Vec<ReadQueryResult>> {
         let mut results = vec![];
-        dbg!(&queries);
 
         for query in queries {
             match query {
@@ -71,12 +70,12 @@ impl ReadQueryExecutor {
                 ReadQuery::RelatedRecordQuery(query) => {
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
-                    let result = dbg!(self.data_resolver.get_related_nodes(
+                    let result = self.data_resolver.get_related_nodes(
                         Arc::clone(&query.parent_field),
                         &parent_ids,
                         query.args.clone(),
                         &selected_fields,
-                    )?);
+                    )?;
 
                     // If our result set contains more than one entry
                     // we need to handle all of them!
@@ -84,7 +83,7 @@ impl ReadQueryExecutor {
                         for node in result.nodes.into_iter() {
                             let single = SingleNode {
                                 node,
-                                field_names: query.fields.clone()
+                                field_names: result.field_names.clone(),
                             };
 
                             let ids = vec![single.get_id_value(query.parent_field.related_model())?.clone()];
