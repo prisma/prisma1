@@ -56,7 +56,7 @@ npm install -g prisma@1.20.1
 
 #### Detecting the version of your Prisma server
 
-If you have access to the Docker file that was used to deploy your Prisma server, you can find the Prisma server version under the `services.prisma.image` property. For example, the following Docker file deploys a Prisma server running on version `1.32`:
+If you have access to the Docker file that was used to deploy your Prisma server, you can find the Prisma server version under the `services.prisma.image` property. For example, the following Docker file deploys a Prisma server running on version `1.31`:
 
 <Code lines="4">
 
@@ -64,7 +64,7 @@ If you have access to the Docker file that was used to deploy your Prisma server
 version: '3'
 services:
   prisma:
-    image: prismagraphql/prisma:1.32
+    image: prismagraphql/prisma:1.31
     restart: always
     ports:
     - "4466:4466"
@@ -86,7 +86,7 @@ services:
     volumes:
       - mysql:/var/lib/mysql
 volumes:
-  mysql:
+  mysql: ~
 ```
 
 </Code>
@@ -133,7 +133,7 @@ services:
     volumes:
       - mysql:/var/lib/mysql
 volumes:
-  mysql:
+  mysql: ~
 ```
 
 </Code>
