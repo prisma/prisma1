@@ -110,7 +110,7 @@ class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBa
       .toString should equal("""{"data":{"todoesConnection":{"edges":[{"node":{"title":"Hello World!"}}]}}}""")
   }
 
-  "the connection query" should "work when using cursors when not on Mongo" in {
+  "the connection query" should "work when using cursors when not on Mongo" taggedAs (IgnoreSQLite) in {
     val datamodels = {
       val dm1 =
         """type User {
