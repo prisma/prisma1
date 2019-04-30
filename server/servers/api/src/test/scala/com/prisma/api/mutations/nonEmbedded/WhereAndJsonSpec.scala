@@ -73,6 +73,5 @@ class WhereAndJsonSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     server.query(s"""query{note(where:{outerJson:$outerWhere}){outerString}}""", project, dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
     server.query(s"""query{todo(where:{innerJson:$innerWhere}){innerString}}""", project, dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
-
   }
 }

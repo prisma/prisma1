@@ -213,7 +213,7 @@ for (const parser of parsersToTest) {
       lastName: String!
     }
     
-    type UserToUser @linkTable {
+    type UserToUser @relationTable {
       A: User!
       B: User!
     }
@@ -222,10 +222,10 @@ for (const parser of parsersToTest) {
       const { types } = parser.instance.parseFromSchemaString(model)
 
       const userType = SdlExpect.type(types, 'User')
-      expect(userType.isLinkTable).toBe(false)
+      expect(userType.isRelationTable).toBe(false)
 
       const linkType = SdlExpect.type(types, 'UserToUser')
-      expect(linkType.isLinkTable).toBe(true)
+      expect(linkType.isRelationTable).toBe(true)
     })
   })
 }

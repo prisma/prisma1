@@ -17,7 +17,7 @@ export default class MutationGenerator extends RootGenerator {
   }
   protected generateInternal(input: IGQLType[], args: {}) {
     const fieldMaps = input
-      .filter(type => !type.isEnum && !type.isEmbedded)
+      .filter(type => !type.isEnum && !type.isEmbedded && !type.isRelationTable)
       .map(type =>
         FieldConfigUtils.merge(
           this.generateCreateField(type),

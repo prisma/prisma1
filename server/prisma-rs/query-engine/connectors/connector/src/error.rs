@@ -1,9 +1,13 @@
 use crate::filter::NodeSelector;
 use failure::{Error, Fail};
-use libsqlite3_sys as ffi;
 use prisma_models::prelude::{DomainError, GraphqlId, ModelRef, PrismaValue};
-use rusqlite;
 use std::fmt;
+
+#[cfg(feature = "sqlite")]
+use rusqlite;
+
+#[cfg(feature = "sqlite")]
+use libsqlite3_sys as ffi;
 
 #[derive(Debug)]
 pub struct NodeSelectorInfo {
@@ -50,6 +54,9 @@ pub enum ConnectorError {
     #[fail(display = "Node does not exist.")]
     NodeDoesNotExist,
 
+    #[fail(display = "Column does not exist")]
+    ColumnDoesNotExist,
+
     #[fail(display = "Error creating a database connection.")]
     ConnectionError(Error),
 
@@ -92,11 +99,20 @@ pub enum ConnectorError {
         child_name: String,
         child_where: Option<NodeSelectorInfo>,
     },
+
+    #[fail(display = "Conversion error: {}", _0)]
+    ConversionError(Error),
 }
 
 impl From<DomainError> for ConnectorError {
     fn from(e: DomainError) -> ConnectorError {
         ConnectorError::DomainError(e)
+    }
+}
+
+impl From<serde_json::error::Error> for ConnectorError {
+    fn from(e: serde_json::error::Error) -> ConnectorError {
+        ConnectorError::ConversionError(e.into())
     }
 }
 

@@ -81,7 +81,7 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
             val recreateScalarListFields = for {
               scalarField <- newModel.scalarListFields
               if oldModel.scalarListFields.map(_.name).contains(scalarField.name) // filter out new fields that should not be created here a 2nd time
-            } yield createField(scalarField)
+            } yield createScalarListField(scalarField).copy(ignorePreviousSchema = true)
 
             deleteScalarListFields ++ deleteRelations ++ common ++ recreateScalarListFields ++ recreateRelations
           } else {
@@ -159,11 +159,13 @@ case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper
 
   def createField(field: ScalarField) = {
     if (field.isScalarList) {
-      CreateScalarListTable(project, field.model, field)
+      createScalarListField(field)
     } else {
       CreateColumn(project, field.model, field)
     }
   }
+
+  def createScalarListField(field: ScalarField) = CreateScalarListTable(project, field.model, field)
 
   def deleteRelation(relation: Relation): DeployMutaction = {
     relation.manifestation match {

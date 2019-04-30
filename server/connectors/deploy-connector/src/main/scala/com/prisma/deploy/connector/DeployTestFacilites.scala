@@ -37,6 +37,8 @@ case class Table(name: String, columnFns: Vector[Table => Column], indexes: Vect
       case _            => false
     }
   }
+
+  override def toString: String = s"Table($name, $columns, $indexes)"
 }
 
 case class Index(name: String, columns: Vector[String], unique: Boolean)

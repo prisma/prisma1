@@ -1,6 +1,6 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.{IgnoreMongo, IgnoreSQLite}
+import com.prisma.{IgnoreMongo}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -495,7 +495,7 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
   }
 
   // transactionality again -.-
-  "a PM to CM  relation" should "work" taggedAs (IgnoreMongo, IgnoreSQLite) in { // TODO: Remove ignore when enabling transactions
+  "a PM to CM  relation" should "work" taggedAs (IgnoreMongo) in {
     schemaPMToCM.test { dataModel =>
       val project = SchemaDsl.fromStringV11() { dataModel }
       database.setup(project)
@@ -1858,5 +1858,4 @@ class NestedDeleteMutationInsideUpdateSpec extends FlatSpec with Matchers with A
 
     result3.toString should be("""{"data":{"users":[{"name":"Y","following":[]},{"name":"Z","following":[]}]}}""")
   }
-
 }

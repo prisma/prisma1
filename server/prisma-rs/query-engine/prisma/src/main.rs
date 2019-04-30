@@ -1,15 +1,20 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate rust_embed;
+
+#[macro_use]
+extern crate debug_stub_derive;
+
 mod context;
+mod data_model;
 mod error;
 mod req_handlers;
-mod schema;
+mod serializer;
 mod utilities;
 
-mod serializer;
-
-use actix_web::{fs, http::Method, server, App, HttpRequest, Json, Responder};
+use actix_web::{http::Method, server, App, HttpRequest, HttpResponse, Json, Responder};
 use context::PrismaContext;
 use error::PrismaError;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
@@ -18,31 +23,36 @@ use std::sync::Arc;
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
 
-struct HttpHandler {
+#[derive(RustEmbed)]
+#[folder = "query-engine/prisma/static_files"]
+struct StaticFiles;
+
+#[derive(DebugStub)]
+struct RequestContext {
     context: PrismaContext,
+
+    #[debug_stub = "#GraphQlRequestHandler#"]
     graphql_request_handler: GraphQlRequestHandler,
 }
 
-#[allow(unused_variables)]
 fn main() {
     env_logger::init();
 
     let context = PrismaContext::new().unwrap();
     let port = context.config.port;
-    let http_handler = HttpHandler {
+    let request_context = Arc::new(RequestContext {
         context: context,
         graphql_request_handler: GraphQlRequestHandler,
-    };
+    });
 
-    let http_handler_arc = Arc::new(http_handler);
     let sys = actix::System::new("prisma");
     let address = ("0.0.0.0", port);
 
     server::new(move || {
-        App::with_state(Arc::clone(&http_handler_arc))
+        App::with_state(Arc::clone(&request_context))
             .resource("/", |r| {
-                r.method(Method::GET).with(playground);
-                r.method(Method::POST).with(handler);
+                r.method(Method::POST).with(http_handler);
+                r.method(Method::GET).with(playground_handler);
             })
             .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
     })
@@ -54,8 +64,8 @@ fn main() {
     let _ = sys.run();
 }
 
-fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>>)) -> impl Responder {
-    let http_handler = req.state();
+fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<RequestContext>>)) -> impl Responder {
+    let request_context = req.state();
     let req: PrismaRequest<GraphQlBody> = PrismaRequest {
         body: json.clone().unwrap(),
         path: req.path().into(),
@@ -66,14 +76,18 @@ fn handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<HttpHandler>
             .collect(),
     };
 
-    let result = http_handler.graphql_request_handler.handle(req, &http_handler.context);
+    let result = request_context
+        .graphql_request_handler
+        .handle(req, &request_context.context);
+
     serde_json::to_string(&result)
 }
 
 fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
-    schema::load_datamodel_file().unwrap()
+    data_model::load_sdl_string().unwrap()
 }
 
-fn playground<T>(_: HttpRequest<T>) -> impl Responder {
-    fs::NamedFile::open("prisma-rs/playground.html")
+fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {
+    let index_html = StaticFiles::get("playground.html").unwrap();
+    HttpResponse::Ok().content_type("text/html").body(index_html)
 }

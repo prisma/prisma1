@@ -1,0 +1,3053 @@
+type AggregateCustomer {
+  count: Int!
+}
+
+type AggregateCustomerCartItem {
+  count: Int!
+}
+
+type AggregateCustomerWishlist {
+  count: Int!
+}
+
+type AggregatePost {
+  count: Int!
+}
+
+type AggregateProduct {
+  count: Int!
+}
+
+type BatchPayload {
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
+  count: Long!
+}
+
+type Customer implements Node {
+  id: ID!
+  uid: String!
+  emailId: String!
+  mobileNumber: String
+  name: String
+  wishlists(where: CustomerWishlistWhereInput, orderBy: CustomerWishlistOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CustomerWishlist!]
+  cartItems(where: CustomerCartItemWhereInput, orderBy: CustomerCartItemOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CustomerCartItem!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CustomerCartItem implements Node {
+  id: ID!
+  customer: Customer!
+  product: Product!
+  addedAtPrice: Int!
+  quantity: Int!
+  savedForLater: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type CustomerCartItemConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [CustomerCartItemEdge]!
+  aggregate: AggregateCustomerCartItem!
+}
+
+input CustomerCartItemCreateInput {
+  id: ID
+  addedAtPrice: Int!
+  quantity: Int!
+  savedForLater: Boolean
+  customer: CustomerCreateOneWithoutCartItemsInput!
+  product: ProductCreateOneWithoutCartedInInput!
+}
+
+input CustomerCartItemCreateManyWithoutCustomerInput {
+  create: [CustomerCartItemCreateWithoutCustomerInput!]
+  connect: [CustomerCartItemWhereUniqueInput!]
+}
+
+input CustomerCartItemCreateManyWithoutProductInput {
+  create: [CustomerCartItemCreateWithoutProductInput!]
+  connect: [CustomerCartItemWhereUniqueInput!]
+}
+
+input CustomerCartItemCreateWithoutCustomerInput {
+  id: ID
+  addedAtPrice: Int!
+  quantity: Int!
+  savedForLater: Boolean
+  product: ProductCreateOneWithoutCartedInInput!
+}
+
+input CustomerCartItemCreateWithoutProductInput {
+  id: ID
+  addedAtPrice: Int!
+  quantity: Int!
+  savedForLater: Boolean
+  customer: CustomerCreateOneWithoutCartItemsInput!
+}
+
+"""
+An edge in a connection.
+"""
+type CustomerCartItemEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: CustomerCartItem!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum CustomerCartItemOrderByInput {
+  id_ASC
+  id_DESC
+  addedAtPrice_ASC
+  addedAtPrice_DESC
+  quantity_ASC
+  quantity_DESC
+  savedForLater_ASC
+  savedForLater_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type CustomerCartItemPreviousValues {
+  id: ID!
+  addedAtPrice: Int!
+  quantity: Int!
+  savedForLater: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input CustomerCartItemScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CustomerCartItemScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CustomerCartItemScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CustomerCartItemScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  addedAtPrice: Int
+  """
+  All values that are not equal to given value.
+  """
+  addedAtPrice_not: Int
+  """
+  All values that are contained in given list.
+  """
+  addedAtPrice_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  addedAtPrice_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  addedAtPrice_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  addedAtPrice_lte: Int
+  """
+  All values greater than the given value.
+  """
+  addedAtPrice_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  addedAtPrice_gte: Int
+  quantity: Int
+  """
+  All values that are not equal to given value.
+  """
+  quantity_not: Int
+  """
+  All values that are contained in given list.
+  """
+  quantity_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  quantity_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  quantity_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  quantity_lte: Int
+  """
+  All values greater than the given value.
+  """
+  quantity_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  quantity_gte: Int
+  savedForLater: Boolean
+  """
+  All values that are not equal to given value.
+  """
+  savedForLater_not: Boolean
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+type CustomerCartItemSubscriptionPayload {
+  mutation: MutationType!
+  node: CustomerCartItem
+  updatedFields: [String!]
+  previousValues: CustomerCartItemPreviousValues
+}
+
+input CustomerCartItemSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CustomerCartItemSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: CustomerCartItemWhereInput
+}
+
+input CustomerCartItemUpdateInput {
+  addedAtPrice: Int
+  quantity: Int
+  savedForLater: Boolean
+  customer: CustomerUpdateOneRequiredWithoutCartItemsInput
+  product: ProductUpdateOneRequiredWithoutCartedInInput
+}
+
+input CustomerCartItemUpdateManyDataInput {
+  addedAtPrice: Int
+  quantity: Int
+  savedForLater: Boolean
+}
+
+input CustomerCartItemUpdateManyMutationInput {
+  addedAtPrice: Int
+  quantity: Int
+  savedForLater: Boolean
+}
+
+input CustomerCartItemUpdateManyWithoutCustomerInput {
+  create: [CustomerCartItemCreateWithoutCustomerInput!]
+  connect: [CustomerCartItemWhereUniqueInput!]
+  set: [CustomerCartItemWhereUniqueInput!]
+  disconnect: [CustomerCartItemWhereUniqueInput!]
+  delete: [CustomerCartItemWhereUniqueInput!]
+  update: [CustomerCartItemUpdateWithWhereUniqueWithoutCustomerInput!]
+  updateMany: [CustomerCartItemUpdateManyWithWhereNestedInput!]
+  deleteMany: [CustomerCartItemScalarWhereInput!]
+  upsert: [CustomerCartItemUpsertWithWhereUniqueWithoutCustomerInput!]
+}
+
+input CustomerCartItemUpdateManyWithoutProductInput {
+  create: [CustomerCartItemCreateWithoutProductInput!]
+  connect: [CustomerCartItemWhereUniqueInput!]
+  set: [CustomerCartItemWhereUniqueInput!]
+  disconnect: [CustomerCartItemWhereUniqueInput!]
+  delete: [CustomerCartItemWhereUniqueInput!]
+  update: [CustomerCartItemUpdateWithWhereUniqueWithoutProductInput!]
+  updateMany: [CustomerCartItemUpdateManyWithWhereNestedInput!]
+  deleteMany: [CustomerCartItemScalarWhereInput!]
+  upsert: [CustomerCartItemUpsertWithWhereUniqueWithoutProductInput!]
+}
+
+input CustomerCartItemUpdateManyWithWhereNestedInput {
+  where: CustomerCartItemScalarWhereInput!
+  data: CustomerCartItemUpdateManyDataInput!
+}
+
+input CustomerCartItemUpdateWithoutCustomerDataInput {
+  addedAtPrice: Int
+  quantity: Int
+  savedForLater: Boolean
+  product: ProductUpdateOneRequiredWithoutCartedInInput
+}
+
+input CustomerCartItemUpdateWithoutProductDataInput {
+  addedAtPrice: Int
+  quantity: Int
+  savedForLater: Boolean
+  customer: CustomerUpdateOneRequiredWithoutCartItemsInput
+}
+
+input CustomerCartItemUpdateWithWhereUniqueWithoutCustomerInput {
+  where: CustomerCartItemWhereUniqueInput!
+  data: CustomerCartItemUpdateWithoutCustomerDataInput!
+}
+
+input CustomerCartItemUpdateWithWhereUniqueWithoutProductInput {
+  where: CustomerCartItemWhereUniqueInput!
+  data: CustomerCartItemUpdateWithoutProductDataInput!
+}
+
+input CustomerCartItemUpsertWithWhereUniqueWithoutCustomerInput {
+  where: CustomerCartItemWhereUniqueInput!
+  update: CustomerCartItemUpdateWithoutCustomerDataInput!
+  create: CustomerCartItemCreateWithoutCustomerInput!
+}
+
+input CustomerCartItemUpsertWithWhereUniqueWithoutProductInput {
+  where: CustomerCartItemWhereUniqueInput!
+  update: CustomerCartItemUpdateWithoutProductDataInput!
+  create: CustomerCartItemCreateWithoutProductInput!
+}
+
+input CustomerCartItemWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CustomerCartItemWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  addedAtPrice: Int
+  """
+  All values that are not equal to given value.
+  """
+  addedAtPrice_not: Int
+  """
+  All values that are contained in given list.
+  """
+  addedAtPrice_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  addedAtPrice_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  addedAtPrice_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  addedAtPrice_lte: Int
+  """
+  All values greater than the given value.
+  """
+  addedAtPrice_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  addedAtPrice_gte: Int
+  quantity: Int
+  """
+  All values that are not equal to given value.
+  """
+  quantity_not: Int
+  """
+  All values that are contained in given list.
+  """
+  quantity_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  quantity_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  quantity_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  quantity_lte: Int
+  """
+  All values greater than the given value.
+  """
+  quantity_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  quantity_gte: Int
+  savedForLater: Boolean
+  """
+  All values that are not equal to given value.
+  """
+  savedForLater_not: Boolean
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  customer: CustomerWhereInput
+  product: ProductWhereInput
+}
+
+input CustomerCartItemWhereUniqueInput {
+  id: ID
+}
+
+"""
+A connection to a list of items.
+"""
+type CustomerConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [CustomerEdge]!
+  aggregate: AggregateCustomer!
+}
+
+input CustomerCreateInput {
+  id: ID
+  uid: String!
+  emailId: String!
+  mobileNumber: String
+  name: String
+  wishlists: CustomerWishlistCreateManyWithoutCustomerInput
+  cartItems: CustomerCartItemCreateManyWithoutCustomerInput
+}
+
+input CustomerCreateOneWithoutCartItemsInput {
+  create: CustomerCreateWithoutCartItemsInput
+  connect: CustomerWhereUniqueInput
+}
+
+input CustomerCreateOneWithoutWishlistsInput {
+  create: CustomerCreateWithoutWishlistsInput
+  connect: CustomerWhereUniqueInput
+}
+
+input CustomerCreateWithoutCartItemsInput {
+  id: ID
+  uid: String!
+  emailId: String!
+  mobileNumber: String
+  name: String
+  wishlists: CustomerWishlistCreateManyWithoutCustomerInput
+}
+
+input CustomerCreateWithoutWishlistsInput {
+  id: ID
+  uid: String!
+  emailId: String!
+  mobileNumber: String
+  name: String
+  cartItems: CustomerCartItemCreateManyWithoutCustomerInput
+}
+
+"""
+An edge in a connection.
+"""
+type CustomerEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: Customer!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum CustomerOrderByInput {
+  id_ASC
+  id_DESC
+  uid_ASC
+  uid_DESC
+  emailId_ASC
+  emailId_DESC
+  mobileNumber_ASC
+  mobileNumber_DESC
+  name_ASC
+  name_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type CustomerPreviousValues {
+  id: ID!
+  uid: String!
+  emailId: String!
+  mobileNumber: String
+  name: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CustomerSubscriptionPayload {
+  mutation: MutationType!
+  node: Customer
+  updatedFields: [String!]
+  previousValues: CustomerPreviousValues
+}
+
+input CustomerSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CustomerSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: CustomerWhereInput
+}
+
+input CustomerUpdateInput {
+  uid: String
+  emailId: String
+  mobileNumber: String
+  name: String
+  wishlists: CustomerWishlistUpdateManyWithoutCustomerInput
+  cartItems: CustomerCartItemUpdateManyWithoutCustomerInput
+}
+
+input CustomerUpdateManyMutationInput {
+  uid: String
+  emailId: String
+  mobileNumber: String
+  name: String
+}
+
+input CustomerUpdateOneRequiredWithoutCartItemsInput {
+  create: CustomerCreateWithoutCartItemsInput
+  connect: CustomerWhereUniqueInput
+  update: CustomerUpdateWithoutCartItemsDataInput
+  upsert: CustomerUpsertWithoutCartItemsInput
+}
+
+input CustomerUpdateOneRequiredWithoutWishlistsInput {
+  create: CustomerCreateWithoutWishlistsInput
+  connect: CustomerWhereUniqueInput
+  update: CustomerUpdateWithoutWishlistsDataInput
+  upsert: CustomerUpsertWithoutWishlistsInput
+}
+
+input CustomerUpdateWithoutCartItemsDataInput {
+  uid: String
+  emailId: String
+  mobileNumber: String
+  name: String
+  wishlists: CustomerWishlistUpdateManyWithoutCustomerInput
+}
+
+input CustomerUpdateWithoutWishlistsDataInput {
+  uid: String
+  emailId: String
+  mobileNumber: String
+  name: String
+  cartItems: CustomerCartItemUpdateManyWithoutCustomerInput
+}
+
+input CustomerUpsertWithoutCartItemsInput {
+  update: CustomerUpdateWithoutCartItemsDataInput!
+  create: CustomerCreateWithoutCartItemsInput!
+}
+
+input CustomerUpsertWithoutWishlistsInput {
+  update: CustomerUpdateWithoutWishlistsDataInput!
+  create: CustomerCreateWithoutWishlistsInput!
+}
+
+input CustomerWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CustomerWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  uid: String
+  """
+  All values that are not equal to given value.
+  """
+  uid_not: String
+  """
+  All values that are contained in given list.
+  """
+  uid_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  uid_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  uid_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  uid_lte: String
+  """
+  All values greater than the given value.
+  """
+  uid_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  uid_gte: String
+  """
+  All values containing the given string.
+  """
+  uid_contains: String
+  """
+  All values not containing the given string.
+  """
+  uid_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  uid_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  uid_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  uid_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  uid_not_ends_with: String
+  emailId: String
+  """
+  All values that are not equal to given value.
+  """
+  emailId_not: String
+  """
+  All values that are contained in given list.
+  """
+  emailId_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  emailId_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  emailId_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  emailId_lte: String
+  """
+  All values greater than the given value.
+  """
+  emailId_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  emailId_gte: String
+  """
+  All values containing the given string.
+  """
+  emailId_contains: String
+  """
+  All values not containing the given string.
+  """
+  emailId_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  emailId_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  emailId_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  emailId_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  emailId_not_ends_with: String
+  mobileNumber: String
+  """
+  All values that are not equal to given value.
+  """
+  mobileNumber_not: String
+  """
+  All values that are contained in given list.
+  """
+  mobileNumber_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  mobileNumber_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  mobileNumber_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  mobileNumber_lte: String
+  """
+  All values greater than the given value.
+  """
+  mobileNumber_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  mobileNumber_gte: String
+  """
+  All values containing the given string.
+  """
+  mobileNumber_contains: String
+  """
+  All values not containing the given string.
+  """
+  mobileNumber_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  mobileNumber_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  mobileNumber_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  mobileNumber_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  mobileNumber_not_ends_with: String
+  name: String
+  """
+  All values that are not equal to given value.
+  """
+  name_not: String
+  """
+  All values that are contained in given list.
+  """
+  name_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  name_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  name_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  name_lte: String
+  """
+  All values greater than the given value.
+  """
+  name_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  name_gte: String
+  """
+  All values containing the given string.
+  """
+  name_contains: String
+  """
+  All values not containing the given string.
+  """
+  name_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  name_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  name_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  name_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  name_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  wishlists_some: CustomerWishlistWhereInput
+  cartItems_some: CustomerCartItemWhereInput
+}
+
+input CustomerWhereUniqueInput {
+  id: ID
+  uid: String
+  emailId: String
+}
+
+type CustomerWishlist implements Node {
+  id: ID!
+  customer: Customer!
+  listName: String!
+  products(where: ProductWhereInput, orderBy: ProductOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Product!]
+}
+
+"""
+A connection to a list of items.
+"""
+type CustomerWishlistConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [CustomerWishlistEdge]!
+  aggregate: AggregateCustomerWishlist!
+}
+
+input CustomerWishlistCreateInput {
+  id: ID
+  listName: String!
+  customer: CustomerCreateOneWithoutWishlistsInput!
+  products: ProductCreateManyWithoutWishlistedInInput
+}
+
+input CustomerWishlistCreateManyWithoutCustomerInput {
+  create: [CustomerWishlistCreateWithoutCustomerInput!]
+  connect: [CustomerWishlistWhereUniqueInput!]
+}
+
+input CustomerWishlistCreateManyWithoutProductsInput {
+  create: [CustomerWishlistCreateWithoutProductsInput!]
+  connect: [CustomerWishlistWhereUniqueInput!]
+}
+
+input CustomerWishlistCreateWithoutCustomerInput {
+  id: ID
+  listName: String!
+  products: ProductCreateManyWithoutWishlistedInInput
+}
+
+input CustomerWishlistCreateWithoutProductsInput {
+  id: ID
+  listName: String!
+  customer: CustomerCreateOneWithoutWishlistsInput!
+}
+
+"""
+An edge in a connection.
+"""
+type CustomerWishlistEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: CustomerWishlist!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum CustomerWishlistOrderByInput {
+  id_ASC
+  id_DESC
+  listName_ASC
+  listName_DESC
+}
+
+type CustomerWishlistPreviousValues {
+  id: ID!
+  listName: String!
+}
+
+input CustomerWishlistScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CustomerWishlistScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [CustomerWishlistScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [CustomerWishlistScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  listName: String
+  """
+  All values that are not equal to given value.
+  """
+  listName_not: String
+  """
+  All values that are contained in given list.
+  """
+  listName_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  listName_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  listName_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  listName_lte: String
+  """
+  All values greater than the given value.
+  """
+  listName_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  listName_gte: String
+  """
+  All values containing the given string.
+  """
+  listName_contains: String
+  """
+  All values not containing the given string.
+  """
+  listName_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  listName_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  listName_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  listName_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  listName_not_ends_with: String
+}
+
+type CustomerWishlistSubscriptionPayload {
+  mutation: MutationType!
+  node: CustomerWishlist
+  updatedFields: [String!]
+  previousValues: CustomerWishlistPreviousValues
+}
+
+input CustomerWishlistSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CustomerWishlistSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: CustomerWishlistWhereInput
+}
+
+input CustomerWishlistUpdateInput {
+  listName: String
+  customer: CustomerUpdateOneRequiredWithoutWishlistsInput
+  products: ProductUpdateManyWithoutWishlistedInInput
+}
+
+input CustomerWishlistUpdateManyDataInput {
+  listName: String
+}
+
+input CustomerWishlistUpdateManyMutationInput {
+  listName: String
+}
+
+input CustomerWishlistUpdateManyWithoutCustomerInput {
+  create: [CustomerWishlistCreateWithoutCustomerInput!]
+  connect: [CustomerWishlistWhereUniqueInput!]
+  set: [CustomerWishlistWhereUniqueInput!]
+  disconnect: [CustomerWishlistWhereUniqueInput!]
+  delete: [CustomerWishlistWhereUniqueInput!]
+  update: [CustomerWishlistUpdateWithWhereUniqueWithoutCustomerInput!]
+  updateMany: [CustomerWishlistUpdateManyWithWhereNestedInput!]
+  deleteMany: [CustomerWishlistScalarWhereInput!]
+  upsert: [CustomerWishlistUpsertWithWhereUniqueWithoutCustomerInput!]
+}
+
+input CustomerWishlistUpdateManyWithoutProductsInput {
+  create: [CustomerWishlistCreateWithoutProductsInput!]
+  connect: [CustomerWishlistWhereUniqueInput!]
+  set: [CustomerWishlistWhereUniqueInput!]
+  disconnect: [CustomerWishlistWhereUniqueInput!]
+  delete: [CustomerWishlistWhereUniqueInput!]
+  update: [CustomerWishlistUpdateWithWhereUniqueWithoutProductsInput!]
+  updateMany: [CustomerWishlistUpdateManyWithWhereNestedInput!]
+  deleteMany: [CustomerWishlistScalarWhereInput!]
+  upsert: [CustomerWishlistUpsertWithWhereUniqueWithoutProductsInput!]
+}
+
+input CustomerWishlistUpdateManyWithWhereNestedInput {
+  where: CustomerWishlistScalarWhereInput!
+  data: CustomerWishlistUpdateManyDataInput!
+}
+
+input CustomerWishlistUpdateWithoutCustomerDataInput {
+  listName: String
+  products: ProductUpdateManyWithoutWishlistedInInput
+}
+
+input CustomerWishlistUpdateWithoutProductsDataInput {
+  listName: String
+  customer: CustomerUpdateOneRequiredWithoutWishlistsInput
+}
+
+input CustomerWishlistUpdateWithWhereUniqueWithoutCustomerInput {
+  where: CustomerWishlistWhereUniqueInput!
+  data: CustomerWishlistUpdateWithoutCustomerDataInput!
+}
+
+input CustomerWishlistUpdateWithWhereUniqueWithoutProductsInput {
+  where: CustomerWishlistWhereUniqueInput!
+  data: CustomerWishlistUpdateWithoutProductsDataInput!
+}
+
+input CustomerWishlistUpsertWithWhereUniqueWithoutCustomerInput {
+  where: CustomerWishlistWhereUniqueInput!
+  update: CustomerWishlistUpdateWithoutCustomerDataInput!
+  create: CustomerWishlistCreateWithoutCustomerInput!
+}
+
+input CustomerWishlistUpsertWithWhereUniqueWithoutProductsInput {
+  where: CustomerWishlistWhereUniqueInput!
+  update: CustomerWishlistUpdateWithoutProductsDataInput!
+  create: CustomerWishlistCreateWithoutProductsInput!
+}
+
+input CustomerWishlistWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [CustomerWishlistWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  listName: String
+  """
+  All values that are not equal to given value.
+  """
+  listName_not: String
+  """
+  All values that are contained in given list.
+  """
+  listName_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  listName_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  listName_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  listName_lte: String
+  """
+  All values greater than the given value.
+  """
+  listName_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  listName_gte: String
+  """
+  All values containing the given string.
+  """
+  listName_contains: String
+  """
+  All values not containing the given string.
+  """
+  listName_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  listName_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  listName_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  listName_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  listName_not_ends_with: String
+  customer: CustomerWhereInput
+  products_some: ProductWhereInput
+}
+
+input CustomerWishlistWhereUniqueInput {
+  id: ID
+}
+
+scalar DateTime
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type Mutation {
+  createCustomer(data: CustomerCreateInput!): Customer!
+  createCustomerWishlist(data: CustomerWishlistCreateInput!): CustomerWishlist!
+  createCustomerCartItem(data: CustomerCartItemCreateInput!): CustomerCartItem!
+  createProduct(data: ProductCreateInput!): Product!
+  createPost(data: PostCreateInput!): Post!
+  updateCustomer(data: CustomerUpdateInput!, where: CustomerWhereUniqueInput!): Customer
+  updateCustomerWishlist(data: CustomerWishlistUpdateInput!, where: CustomerWishlistWhereUniqueInput!): CustomerWishlist
+  updateCustomerCartItem(data: CustomerCartItemUpdateInput!, where: CustomerCartItemWhereUniqueInput!): CustomerCartItem
+  updateProduct(data: ProductUpdateInput!, where: ProductWhereUniqueInput!): Product
+  updatePost(data: PostUpdateInput!, where: PostWhereUniqueInput!): Post
+  deleteCustomer(where: CustomerWhereUniqueInput!): Customer
+  deleteCustomerWishlist(where: CustomerWishlistWhereUniqueInput!): CustomerWishlist
+  deleteCustomerCartItem(where: CustomerCartItemWhereUniqueInput!): CustomerCartItem
+  deleteProduct(where: ProductWhereUniqueInput!): Product
+  deletePost(where: PostWhereUniqueInput!): Post
+  upsertCustomer(where: CustomerWhereUniqueInput!, create: CustomerCreateInput!, update: CustomerUpdateInput!): Customer!
+  upsertCustomerWishlist(where: CustomerWishlistWhereUniqueInput!, create: CustomerWishlistCreateInput!, update: CustomerWishlistUpdateInput!): CustomerWishlist!
+  upsertCustomerCartItem(where: CustomerCartItemWhereUniqueInput!, create: CustomerCartItemCreateInput!, update: CustomerCartItemUpdateInput!): CustomerCartItem!
+  upsertProduct(where: ProductWhereUniqueInput!, create: ProductCreateInput!, update: ProductUpdateInput!): Product!
+  upsertPost(where: PostWhereUniqueInput!, create: PostCreateInput!, update: PostUpdateInput!): Post!
+  updateManyCustomers(data: CustomerUpdateManyMutationInput!, where: CustomerWhereInput): BatchPayload!
+  updateManyCustomerWishlists(data: CustomerWishlistUpdateManyMutationInput!, where: CustomerWishlistWhereInput): BatchPayload!
+  updateManyCustomerCartItems(data: CustomerCartItemUpdateManyMutationInput!, where: CustomerCartItemWhereInput): BatchPayload!
+  updateManyProducts(data: ProductUpdateManyMutationInput!, where: ProductWhereInput): BatchPayload!
+  updateManyPosts(data: PostUpdateManyMutationInput!, where: PostWhereInput): BatchPayload!
+  deleteManyCustomers(where: CustomerWhereInput): BatchPayload!
+  deleteManyCustomerWishlists(where: CustomerWishlistWhereInput): BatchPayload!
+  deleteManyCustomerCartItems(where: CustomerCartItemWhereInput): BatchPayload!
+  deleteManyProducts(where: ProductWhereInput): BatchPayload!
+  deleteManyPosts(where: PostWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""
+An object with an ID
+"""
+interface Node {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Post implements Node {
+  id: ID!
+  text: String
+  products(where: ProductWhereInput, orderBy: ProductOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Product!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type PostConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [PostEdge]!
+  aggregate: AggregatePost!
+}
+
+input PostCreateInput {
+  id: ID
+  text: String
+  products: ProductCreateManyWithoutPostedInInput
+}
+
+input PostCreateManyWithoutProductsInput {
+  create: [PostCreateWithoutProductsInput!]
+  connect: [PostWhereUniqueInput!]
+}
+
+input PostCreateWithoutProductsInput {
+  id: ID
+  text: String
+}
+
+"""
+An edge in a connection.
+"""
+type PostEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: Post!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum PostOrderByInput {
+  id_ASC
+  id_DESC
+  text_ASC
+  text_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type PostPreviousValues {
+  id: ID!
+  text: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input PostScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PostScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [PostScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [PostScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  text: String
+  """
+  All values that are not equal to given value.
+  """
+  text_not: String
+  """
+  All values that are contained in given list.
+  """
+  text_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  text_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  text_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  text_lte: String
+  """
+  All values greater than the given value.
+  """
+  text_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  text_gte: String
+  """
+  All values containing the given string.
+  """
+  text_contains: String
+  """
+  All values not containing the given string.
+  """
+  text_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  text_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  text_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  text_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  text_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+type PostSubscriptionPayload {
+  mutation: MutationType!
+  node: Post
+  updatedFields: [String!]
+  previousValues: PostPreviousValues
+}
+
+input PostSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PostSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: PostWhereInput
+}
+
+input PostUpdateInput {
+  text: String
+  products: ProductUpdateManyWithoutPostedInInput
+}
+
+input PostUpdateManyDataInput {
+  text: String
+}
+
+input PostUpdateManyMutationInput {
+  text: String
+}
+
+input PostUpdateManyWithoutProductsInput {
+  create: [PostCreateWithoutProductsInput!]
+  connect: [PostWhereUniqueInput!]
+  set: [PostWhereUniqueInput!]
+  disconnect: [PostWhereUniqueInput!]
+  delete: [PostWhereUniqueInput!]
+  update: [PostUpdateWithWhereUniqueWithoutProductsInput!]
+  updateMany: [PostUpdateManyWithWhereNestedInput!]
+  deleteMany: [PostScalarWhereInput!]
+  upsert: [PostUpsertWithWhereUniqueWithoutProductsInput!]
+}
+
+input PostUpdateManyWithWhereNestedInput {
+  where: PostScalarWhereInput!
+  data: PostUpdateManyDataInput!
+}
+
+input PostUpdateWithoutProductsDataInput {
+  text: String
+}
+
+input PostUpdateWithWhereUniqueWithoutProductsInput {
+  where: PostWhereUniqueInput!
+  data: PostUpdateWithoutProductsDataInput!
+}
+
+input PostUpsertWithWhereUniqueWithoutProductsInput {
+  where: PostWhereUniqueInput!
+  update: PostUpdateWithoutProductsDataInput!
+  create: PostCreateWithoutProductsInput!
+}
+
+input PostWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [PostWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  text: String
+  """
+  All values that are not equal to given value.
+  """
+  text_not: String
+  """
+  All values that are contained in given list.
+  """
+  text_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  text_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  text_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  text_lte: String
+  """
+  All values greater than the given value.
+  """
+  text_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  text_gte: String
+  """
+  All values containing the given string.
+  """
+  text_contains: String
+  """
+  All values not containing the given string.
+  """
+  text_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  text_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  text_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  text_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  text_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  products_some: ProductWhereInput
+}
+
+input PostWhereUniqueInput {
+  id: ID
+}
+
+type Product implements Node {
+  id: ID!
+  name: String!
+  brand: String!
+  tags: [String!]!
+  description: String!
+  ratingsDistribution: [Int!]!
+  postedIn(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post!]
+  wishlistedIn(where: CustomerWishlistWhereInput, orderBy: CustomerWishlistOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CustomerWishlist!]
+  cartedIn(where: CustomerCartItemWhereInput, orderBy: CustomerCartItemOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CustomerCartItem!]
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type ProductConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [ProductEdge]!
+  aggregate: AggregateProduct!
+}
+
+input ProductCreateInput {
+  id: ID
+  name: String!
+  brand: String!
+  description: String!
+  tags: ProductCreatetagsInput
+  ratingsDistribution: ProductCreateratingsDistributionInput
+  postedIn: PostCreateManyWithoutProductsInput
+  wishlistedIn: CustomerWishlistCreateManyWithoutProductsInput
+  cartedIn: CustomerCartItemCreateManyWithoutProductInput
+}
+
+input ProductCreateManyWithoutPostedInInput {
+  create: [ProductCreateWithoutPostedInInput!]
+  connect: [ProductWhereUniqueInput!]
+}
+
+input ProductCreateManyWithoutWishlistedInInput {
+  create: [ProductCreateWithoutWishlistedInInput!]
+  connect: [ProductWhereUniqueInput!]
+}
+
+input ProductCreateOneWithoutCartedInInput {
+  create: ProductCreateWithoutCartedInInput
+  connect: ProductWhereUniqueInput
+}
+
+input ProductCreateratingsDistributionInput {
+  set: [Int!]
+}
+
+input ProductCreatetagsInput {
+  set: [String!]
+}
+
+input ProductCreateWithoutCartedInInput {
+  id: ID
+  name: String!
+  brand: String!
+  description: String!
+  tags: ProductCreatetagsInput
+  ratingsDistribution: ProductCreateratingsDistributionInput
+  postedIn: PostCreateManyWithoutProductsInput
+  wishlistedIn: CustomerWishlistCreateManyWithoutProductsInput
+}
+
+input ProductCreateWithoutPostedInInput {
+  id: ID
+  name: String!
+  brand: String!
+  description: String!
+  tags: ProductCreatetagsInput
+  ratingsDistribution: ProductCreateratingsDistributionInput
+  wishlistedIn: CustomerWishlistCreateManyWithoutProductsInput
+  cartedIn: CustomerCartItemCreateManyWithoutProductInput
+}
+
+input ProductCreateWithoutWishlistedInInput {
+  id: ID
+  name: String!
+  brand: String!
+  description: String!
+  tags: ProductCreatetagsInput
+  ratingsDistribution: ProductCreateratingsDistributionInput
+  postedIn: PostCreateManyWithoutProductsInput
+  cartedIn: CustomerCartItemCreateManyWithoutProductInput
+}
+
+"""
+An edge in a connection.
+"""
+type ProductEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: Product!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum ProductOrderByInput {
+  id_ASC
+  id_DESC
+  name_ASC
+  name_DESC
+  brand_ASC
+  brand_DESC
+  description_ASC
+  description_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type ProductPreviousValues {
+  id: ID!
+  name: String!
+  brand: String!
+  tags: [String!]!
+  description: String!
+  ratingsDistribution: [Int!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+input ProductScalarWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ProductScalarWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [ProductScalarWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [ProductScalarWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  name: String
+  """
+  All values that are not equal to given value.
+  """
+  name_not: String
+  """
+  All values that are contained in given list.
+  """
+  name_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  name_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  name_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  name_lte: String
+  """
+  All values greater than the given value.
+  """
+  name_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  name_gte: String
+  """
+  All values containing the given string.
+  """
+  name_contains: String
+  """
+  All values not containing the given string.
+  """
+  name_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  name_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  name_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  name_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  name_not_ends_with: String
+  brand: String
+  """
+  All values that are not equal to given value.
+  """
+  brand_not: String
+  """
+  All values that are contained in given list.
+  """
+  brand_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  brand_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  brand_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  brand_lte: String
+  """
+  All values greater than the given value.
+  """
+  brand_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  brand_gte: String
+  """
+  All values containing the given string.
+  """
+  brand_contains: String
+  """
+  All values not containing the given string.
+  """
+  brand_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  brand_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  brand_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  brand_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  brand_not_ends_with: String
+  description: String
+  """
+  All values that are not equal to given value.
+  """
+  description_not: String
+  """
+  All values that are contained in given list.
+  """
+  description_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  description_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  description_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  description_lte: String
+  """
+  All values greater than the given value.
+  """
+  description_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  description_gte: String
+  """
+  All values containing the given string.
+  """
+  description_contains: String
+  """
+  All values not containing the given string.
+  """
+  description_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  description_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  description_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  description_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  description_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+type ProductSubscriptionPayload {
+  mutation: MutationType!
+  node: Product
+  updatedFields: [String!]
+  previousValues: ProductPreviousValues
+}
+
+input ProductSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ProductSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: ProductWhereInput
+}
+
+input ProductUpdateInput {
+  name: String
+  brand: String
+  description: String
+  tags: ProductUpdatetagsInput
+  ratingsDistribution: ProductUpdateratingsDistributionInput
+  postedIn: PostUpdateManyWithoutProductsInput
+  wishlistedIn: CustomerWishlistUpdateManyWithoutProductsInput
+  cartedIn: CustomerCartItemUpdateManyWithoutProductInput
+}
+
+input ProductUpdateManyDataInput {
+  name: String
+  brand: String
+  description: String
+  tags: ProductUpdatetagsInput
+  ratingsDistribution: ProductUpdateratingsDistributionInput
+}
+
+input ProductUpdateManyMutationInput {
+  name: String
+  brand: String
+  description: String
+  tags: ProductUpdatetagsInput
+  ratingsDistribution: ProductUpdateratingsDistributionInput
+}
+
+input ProductUpdateManyWithoutPostedInInput {
+  create: [ProductCreateWithoutPostedInInput!]
+  connect: [ProductWhereUniqueInput!]
+  set: [ProductWhereUniqueInput!]
+  disconnect: [ProductWhereUniqueInput!]
+  delete: [ProductWhereUniqueInput!]
+  update: [ProductUpdateWithWhereUniqueWithoutPostedInInput!]
+  updateMany: [ProductUpdateManyWithWhereNestedInput!]
+  deleteMany: [ProductScalarWhereInput!]
+  upsert: [ProductUpsertWithWhereUniqueWithoutPostedInInput!]
+}
+
+input ProductUpdateManyWithoutWishlistedInInput {
+  create: [ProductCreateWithoutWishlistedInInput!]
+  connect: [ProductWhereUniqueInput!]
+  set: [ProductWhereUniqueInput!]
+  disconnect: [ProductWhereUniqueInput!]
+  delete: [ProductWhereUniqueInput!]
+  update: [ProductUpdateWithWhereUniqueWithoutWishlistedInInput!]
+  updateMany: [ProductUpdateManyWithWhereNestedInput!]
+  deleteMany: [ProductScalarWhereInput!]
+  upsert: [ProductUpsertWithWhereUniqueWithoutWishlistedInInput!]
+}
+
+input ProductUpdateManyWithWhereNestedInput {
+  where: ProductScalarWhereInput!
+  data: ProductUpdateManyDataInput!
+}
+
+input ProductUpdateOneRequiredWithoutCartedInInput {
+  create: ProductCreateWithoutCartedInInput
+  connect: ProductWhereUniqueInput
+  update: ProductUpdateWithoutCartedInDataInput
+  upsert: ProductUpsertWithoutCartedInInput
+}
+
+input ProductUpdateratingsDistributionInput {
+  set: [Int!]
+}
+
+input ProductUpdatetagsInput {
+  set: [String!]
+}
+
+input ProductUpdateWithoutCartedInDataInput {
+  name: String
+  brand: String
+  description: String
+  tags: ProductUpdatetagsInput
+  ratingsDistribution: ProductUpdateratingsDistributionInput
+  postedIn: PostUpdateManyWithoutProductsInput
+  wishlistedIn: CustomerWishlistUpdateManyWithoutProductsInput
+}
+
+input ProductUpdateWithoutPostedInDataInput {
+  name: String
+  brand: String
+  description: String
+  tags: ProductUpdatetagsInput
+  ratingsDistribution: ProductUpdateratingsDistributionInput
+  wishlistedIn: CustomerWishlistUpdateManyWithoutProductsInput
+  cartedIn: CustomerCartItemUpdateManyWithoutProductInput
+}
+
+input ProductUpdateWithoutWishlistedInDataInput {
+  name: String
+  brand: String
+  description: String
+  tags: ProductUpdatetagsInput
+  ratingsDistribution: ProductUpdateratingsDistributionInput
+  postedIn: PostUpdateManyWithoutProductsInput
+  cartedIn: CustomerCartItemUpdateManyWithoutProductInput
+}
+
+input ProductUpdateWithWhereUniqueWithoutPostedInInput {
+  where: ProductWhereUniqueInput!
+  data: ProductUpdateWithoutPostedInDataInput!
+}
+
+input ProductUpdateWithWhereUniqueWithoutWishlistedInInput {
+  where: ProductWhereUniqueInput!
+  data: ProductUpdateWithoutWishlistedInDataInput!
+}
+
+input ProductUpsertWithoutCartedInInput {
+  update: ProductUpdateWithoutCartedInDataInput!
+  create: ProductCreateWithoutCartedInInput!
+}
+
+input ProductUpsertWithWhereUniqueWithoutPostedInInput {
+  where: ProductWhereUniqueInput!
+  update: ProductUpdateWithoutPostedInDataInput!
+  create: ProductCreateWithoutPostedInInput!
+}
+
+input ProductUpsertWithWhereUniqueWithoutWishlistedInInput {
+  where: ProductWhereUniqueInput!
+  update: ProductUpdateWithoutWishlistedInDataInput!
+  create: ProductCreateWithoutWishlistedInInput!
+}
+
+input ProductWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ProductWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  name: String
+  """
+  All values that are not equal to given value.
+  """
+  name_not: String
+  """
+  All values that are contained in given list.
+  """
+  name_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  name_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  name_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  name_lte: String
+  """
+  All values greater than the given value.
+  """
+  name_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  name_gte: String
+  """
+  All values containing the given string.
+  """
+  name_contains: String
+  """
+  All values not containing the given string.
+  """
+  name_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  name_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  name_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  name_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  name_not_ends_with: String
+  brand: String
+  """
+  All values that are not equal to given value.
+  """
+  brand_not: String
+  """
+  All values that are contained in given list.
+  """
+  brand_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  brand_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  brand_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  brand_lte: String
+  """
+  All values greater than the given value.
+  """
+  brand_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  brand_gte: String
+  """
+  All values containing the given string.
+  """
+  brand_contains: String
+  """
+  All values not containing the given string.
+  """
+  brand_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  brand_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  brand_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  brand_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  brand_not_ends_with: String
+  description: String
+  """
+  All values that are not equal to given value.
+  """
+  description_not: String
+  """
+  All values that are contained in given list.
+  """
+  description_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  description_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  description_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  description_lte: String
+  """
+  All values greater than the given value.
+  """
+  description_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  description_gte: String
+  """
+  All values containing the given string.
+  """
+  description_contains: String
+  """
+  All values not containing the given string.
+  """
+  description_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  description_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  description_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  description_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  description_not_ends_with: String
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+  postedIn_some: PostWhereInput
+  wishlistedIn_some: CustomerWishlistWhereInput
+  cartedIn_some: CustomerCartItemWhereInput
+}
+
+input ProductWhereUniqueInput {
+  id: ID
+}
+
+type Query {
+  customers(where: CustomerWhereInput, orderBy: CustomerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Customer]!
+  customerWishlists(where: CustomerWishlistWhereInput, orderBy: CustomerWishlistOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CustomerWishlist]!
+  customerCartItems(where: CustomerCartItemWhereInput, orderBy: CustomerCartItemOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [CustomerCartItem]!
+  products(where: ProductWhereInput, orderBy: ProductOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Product]!
+  posts(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [Post]!
+  customer(where: CustomerWhereUniqueInput!): Customer
+  customerWishlist(where: CustomerWishlistWhereUniqueInput!): CustomerWishlist
+  customerCartItem(where: CustomerCartItemWhereUniqueInput!): CustomerCartItem
+  product(where: ProductWhereUniqueInput!): Product
+  post(where: PostWhereUniqueInput!): Post
+  customersConnection(where: CustomerWhereInput, orderBy: CustomerOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CustomerConnection!
+  customerWishlistsConnection(where: CustomerWishlistWhereInput, orderBy: CustomerWishlistOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CustomerWishlistConnection!
+  customerCartItemsConnection(where: CustomerCartItemWhereInput, orderBy: CustomerCartItemOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): CustomerCartItemConnection!
+  productsConnection(where: ProductWhereInput, orderBy: ProductOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): ProductConnection!
+  postsConnection(where: PostWhereInput, orderBy: PostOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): PostConnection!
+  """
+  Fetches an object given its ID
+  """
+  node(
+    """
+    The ID of an object
+    """
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  customer(where: CustomerSubscriptionWhereInput): CustomerSubscriptionPayload
+  customerWishlist(where: CustomerWishlistSubscriptionWhereInput): CustomerWishlistSubscriptionPayload
+  customerCartItem(where: CustomerCartItemSubscriptionWhereInput): CustomerCartItemSubscriptionPayload
+  product(where: ProductSubscriptionWhereInput): ProductSubscriptionPayload
+  post(where: PostSubscriptionWhereInput): PostSubscriptionPayload
+}
+

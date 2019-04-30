@@ -34,6 +34,7 @@ pub trait DataResolver {
     fn count_by_table(&self, database: &str, table: &str) -> ConnectorResult<usize>;
 }
 
+#[derive(Debug)]
 pub struct ScalarListValues {
     pub node_id: GraphqlId,
     pub values: Vec<PrismaValue>,

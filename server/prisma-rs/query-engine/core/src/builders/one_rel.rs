@@ -1,22 +1,32 @@
-use super::{Builder as SuperBuilder, BuilderExt};
-use crate::{query_ast::RelatedRecordQuery, CoreError, CoreResult};
+use super::BuilderExt;
+use crate::{query_ast::RelatedRecordQuery, CoreResult};
 
-use connector::filter::NodeSelector;
 use graphql_parser::query::Field;
-use prisma_models::{ModelRef, RelationFieldRef, SelectedFields};
+use prisma_models::{ModelRef, RelationFieldRef};
 use std::sync::Arc;
 
-pub struct Builder<'f> {
+#[derive(Default, Debug)]
+pub struct OneRelationBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
     parent: Option<RelationFieldRef>,
 }
 
-impl<'f> BuilderExt for Builder<'f> {
+impl<'f> OneRelationBuilder<'f> {
+    pub fn setup(self, model: ModelRef, field: &'f Field, parent: RelationFieldRef) -> Self {
+        Self {
+            model: Some(model),
+            field: Some(field),
+            parent: Some(parent),
+        }
+    }
+}
+
+impl<'f> BuilderExt for OneRelationBuilder<'f> {
     type Output = RelatedRecordQuery;
 
     fn new() -> Self {
-        unimplemented!()
+        Default::default()
     }
 
     fn build(self) -> CoreResult<Self::Output> {
@@ -33,6 +43,7 @@ impl<'f> BuilderExt for Builder<'f> {
         let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, Arc::clone(&parent))?;
         let args = Self::extract_query_args(field, Arc::clone(model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
+        let fields = Self::collect_selection_order(&field);
 
         Ok(RelatedRecordQuery {
             name,
@@ -40,16 +51,7 @@ impl<'f> BuilderExt for Builder<'f> {
             args,
             selected_fields,
             nested,
+            fields,
         })
-    }
-}
-
-impl<'f> Builder<'f> {
-    pub fn setup(self, model: ModelRef, field: &'f Field, parent: RelationFieldRef) -> Self {
-        Self {
-            model: Some(model),
-            field: Some(field),
-            parent: Some(parent),
-        }
     }
 }

@@ -56,17 +56,17 @@ type AffiliationPhase @pgTable(name: \\"affiliation_phases\\") {
   startSeason: Season @pgColumn(name: \\"start_season_id\\") @relation(name: \\"AffiliationPhaseStartSeasonToSeasonAffiliationPhases\\")
 }
 
-type AffiliationsDocument @linkTable @pgTable(name: \\"affiliations_documents\\") {
+type AffiliationsDocument @pgTable(name: \\"affiliations_documents\\") @relationTable {
   affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
   document: Document! @pgColumn(name: \\"document_id\\")
 }
 
-type AffiliationsEvent @linkTable @pgTable(name: \\"affiliations_events\\") {
+type AffiliationsEvent @pgTable(name: \\"affiliations_events\\") @relationTable {
   affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
   event: Event! @pgColumn(name: \\"event_id\\")
 }
 
-type AffiliationsMedia @linkTable @pgTable(name: \\"affiliations_media\\") {
+type AffiliationsMedia @pgTable(name: \\"affiliations_media\\") @relationTable {
   affiliation: Affiliation! @pgColumn(name: \\"affiliation_id\\")
   media: Media! @pgColumn(name: \\"media_id\\")
 }
@@ -329,7 +329,7 @@ type BaseballActionSubstitution @pgTable(name: \\"baseball_action_substitutions\
   substitutionReason: String @pgColumn(name: \\"substitution_reason\\")
 }
 
-type BaseballDefensiveGroup @linkTable @pgTable(name: \\"baseball_defensive_group\\") {
+type BaseballDefensiveGroup @pgTable(name: \\"baseball_defensive_group\\") @relationTable {
   id: Int! @unique
   baseballActionPitches: [BaseballActionPitch]
   baseballDefensivePlayers: [BaseballDefensivePlayer]
@@ -687,17 +687,17 @@ type Event @pgTable(name: \\"events\\") {
   weatherConditions: [WeatherCondition]
 }
 
-type EventsDocument @linkTable @pgTable(name: \\"events_documents\\") {
+type EventsDocument @pgTable(name: \\"events_documents\\") @relationTable {
   document: Document! @pgColumn(name: \\"document_id\\")
   event: Event! @pgColumn(name: \\"event_id\\")
 }
 
-type EventsMedia @linkTable @pgTable(name: \\"events_media\\") {
+type EventsMedia @pgTable(name: \\"events_media\\") @relationTable {
   event: Event! @pgColumn(name: \\"event_id\\")
   media: Media! @pgColumn(name: \\"media_id\\")
 }
 
-type EventsSubSeason @linkTable @pgTable(name: \\"events_sub_seasons\\") {
+type EventsSubSeason @pgTable(name: \\"events_sub_seasons\\") @relationTable {
   event: Event! @pgColumn(name: \\"event_id\\")
   subSeason: SubSeason! @pgColumn(name: \\"sub_season_id\\")
 }
@@ -1085,12 +1085,12 @@ type PersonPhase @pgTable(name: \\"person_phases\\") {
   weight: String
 }
 
-type PersonsDocument @linkTable @pgTable(name: \\"persons_documents\\") {
+type PersonsDocument @pgTable(name: \\"persons_documents\\") @relationTable {
   document: Document! @pgColumn(name: \\"document_id\\")
   person: Person! @pgColumn(name: \\"person_id\\")
 }
 
-type PersonsMedia @linkTable @pgTable(name: \\"persons_media\\") {
+type PersonsMedia @pgTable(name: \\"persons_media\\") @relationTable {
   media: Media! @pgColumn(name: \\"media_id\\")
   person: Person! @pgColumn(name: \\"person_id\\")
 }
@@ -1361,12 +1361,12 @@ type TeamPhase @pgTable(name: \\"team_phases\\") {
   team: Team! @pgColumn(name: \\"team_id\\")
 }
 
-type TeamsDocument @linkTable @pgTable(name: \\"teams_documents\\") {
+type TeamsDocument @pgTable(name: \\"teams_documents\\") @relationTable {
   document: Document! @pgColumn(name: \\"document_id\\")
   team: Team! @pgColumn(name: \\"team_id\\")
 }
 
-type TeamsMedia @linkTable @pgTable(name: \\"teams_media\\") {
+type TeamsMedia @pgTable(name: \\"teams_media\\") @relationTable {
   media: Media! @pgColumn(name: \\"media_id\\")
   team: Team! @pgColumn(name: \\"team_id\\")
 }
@@ -1587,17 +1587,17 @@ type AffiliationPhase @db(name: \\"affiliation_phases\\") {
   startSeason: Season @db(name: \\"start_season_id\\") @relation(name: \\"AffiliationPhaseStartSeasonToSeasonAffiliationPhases\\")
 }
 
-type AffiliationsDocument @db(name: \\"affiliations_documents\\") @linkTable {
+type AffiliationsDocument @db(name: \\"affiliations_documents\\") @relationTable {
   affiliation: Affiliation! @db(name: \\"affiliation_id\\")
   document: Document! @db(name: \\"document_id\\")
 }
 
-type AffiliationsEvent @db(name: \\"affiliations_events\\") @linkTable {
+type AffiliationsEvent @db(name: \\"affiliations_events\\") @relationTable {
   affiliation: Affiliation! @db(name: \\"affiliation_id\\")
   event: Event! @db(name: \\"event_id\\")
 }
 
-type AffiliationsMedia @db(name: \\"affiliations_media\\") @linkTable {
+type AffiliationsMedia @db(name: \\"affiliations_media\\") @relationTable {
   affiliation: Affiliation! @db(name: \\"affiliation_id\\")
   media: Media! @db(name: \\"media_id\\")
 }
@@ -1860,7 +1860,7 @@ type BaseballActionSubstitution @db(name: \\"baseball_action_substitutions\\") {
   substitutionReason: String @db(name: \\"substitution_reason\\")
 }
 
-type BaseballDefensiveGroup @db(name: \\"baseball_defensive_group\\") @linkTable {
+type BaseballDefensiveGroup @db(name: \\"baseball_defensive_group\\") @relationTable {
   id: Int! @id(strategy: SEQUENCE) @sequence(name: \\"baseball_defensive_group_id_seq\\", initialValue: 1, allocationSize: 1)
   baseballActionPitches: [BaseballActionPitch]
   baseballDefensivePlayers: [BaseballDefensivePlayer]
@@ -2218,17 +2218,17 @@ type Event @db(name: \\"events\\") {
   weatherConditions: [WeatherCondition]
 }
 
-type EventsDocument @db(name: \\"events_documents\\") @linkTable {
+type EventsDocument @db(name: \\"events_documents\\") @relationTable {
   document: Document! @db(name: \\"document_id\\")
   event: Event! @db(name: \\"event_id\\")
 }
 
-type EventsMedia @db(name: \\"events_media\\") @linkTable {
+type EventsMedia @db(name: \\"events_media\\") @relationTable {
   event: Event! @db(name: \\"event_id\\")
   media: Media! @db(name: \\"media_id\\")
 }
 
-type EventsSubSeason @db(name: \\"events_sub_seasons\\") @linkTable {
+type EventsSubSeason @db(name: \\"events_sub_seasons\\") @relationTable {
   event: Event! @db(name: \\"event_id\\")
   subSeason: SubSeason! @db(name: \\"sub_season_id\\")
 }
@@ -2616,12 +2616,12 @@ type PersonPhase @db(name: \\"person_phases\\") {
   weight: String
 }
 
-type PersonsDocument @db(name: \\"persons_documents\\") @linkTable {
+type PersonsDocument @db(name: \\"persons_documents\\") @relationTable {
   document: Document! @db(name: \\"document_id\\")
   person: Person! @db(name: \\"person_id\\")
 }
 
-type PersonsMedia @db(name: \\"persons_media\\") @linkTable {
+type PersonsMedia @db(name: \\"persons_media\\") @relationTable {
   media: Media! @db(name: \\"media_id\\")
   person: Person! @db(name: \\"person_id\\")
 }
@@ -2892,12 +2892,12 @@ type TeamPhase @db(name: \\"team_phases\\") {
   team: Team! @db(name: \\"team_id\\")
 }
 
-type TeamsDocument @db(name: \\"teams_documents\\") @linkTable {
+type TeamsDocument @db(name: \\"teams_documents\\") @relationTable {
   document: Document! @db(name: \\"document_id\\")
   team: Team! @db(name: \\"team_id\\")
 }
 
-type TeamsMedia @db(name: \\"teams_media\\") @linkTable {
+type TeamsMedia @db(name: \\"teams_media\\") @relationTable {
   media: Media! @db(name: \\"media_id\\")
   team: Team! @db(name: \\"team_id\\")
 }

@@ -1,12 +1,16 @@
-use prisma_query::ast::*;
-
+use crate::{DomainError, DomainResult};
 use chrono::{DateTime, Utc};
+use graphql_parser::query::Value as GraphqlValue;
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use serde::{Deserialize, Serialize};
-use std::fmt;
+use serde_json::Value;
+use std::{convert::TryFrom, fmt};
 use uuid::Uuid;
 
-pub type PrismaListValue = Vec<PrismaValue>;
+#[cfg(feature = "sql")]
+use prisma_query::ast::*;
+
+pub type PrismaListValue = Option<Vec<PrismaValue>>;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone)]
 pub enum GraphqlId {
@@ -22,8 +26,8 @@ pub enum PrismaValue {
     Boolean(bool),
     DateTime(DateTime<Utc>),
     Enum(String),
-    Json(String),
-    Int(i32),
+    Json(Value),
+    Int(i64),
     Relation(usize),
     Null,
     Uuid(Uuid),
@@ -36,6 +40,19 @@ impl PrismaValue {
         match self {
             PrismaValue::Null => true,
             _ => false,
+        }
+    }
+
+    pub fn from_value(v: &GraphqlValue) -> Self {
+        match v {
+            GraphqlValue::Boolean(b) => PrismaValue::Boolean(b.clone()),
+            GraphqlValue::Enum(e) => PrismaValue::Enum(e.clone()),
+            GraphqlValue::Float(f) => PrismaValue::Float(f.clone()),
+            GraphqlValue::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
+            GraphqlValue::Null => PrismaValue::Null,
+            GraphqlValue::String(s) => PrismaValue::String(s.clone()),
+            GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
+            _ => unimplemented!(),
         }
     }
 }
@@ -98,6 +115,12 @@ impl From<bool> for PrismaValue {
 
 impl From<i32> for PrismaValue {
     fn from(s: i32) -> Self {
+        PrismaValue::Int(s as i64)
+    }
+}
+
+impl From<i64> for PrismaValue {
+    fn from(s: i64) -> Self {
         PrismaValue::Int(s)
     }
 }
@@ -120,6 +143,47 @@ impl From<GraphqlId> for PrismaValue {
     }
 }
 
+impl From<&GraphqlId> for PrismaValue {
+    fn from(id: &GraphqlId) -> PrismaValue {
+        PrismaValue::GraphqlId(id.clone())
+    }
+}
+
+impl TryFrom<PrismaValue> for PrismaListValue {
+    type Error = DomainError;
+
+    fn try_from(s: PrismaValue) -> DomainResult<PrismaListValue> {
+        match s {
+            PrismaValue::List(l) => Ok(l),
+            PrismaValue::Null => Ok(None),
+            _ => Err(DomainError::ConversionFailure("PrismaValue", "PrismaListValue")),
+        }
+    }
+}
+
+impl TryFrom<PrismaValue> for GraphqlId {
+    type Error = DomainError;
+
+    fn try_from(value: PrismaValue) -> DomainResult<GraphqlId> {
+        match value {
+            PrismaValue::GraphqlId(id) => Ok(id),
+            _ => Err(DomainError::ConversionFailure("PrismaValue", "GraphqlId")),
+        }
+    }
+}
+
+impl TryFrom<PrismaValue> for i64 {
+    type Error = DomainError;
+
+    fn try_from(value: PrismaValue) -> DomainResult<i64> {
+        match value {
+            PrismaValue::Int(i) => Ok(i),
+            _ => Err(DomainError::ConversionFailure("PrismaValue", "i64")),
+        }
+    }
+}
+
+#[cfg(feature = "sql")]
 impl From<GraphqlId> for DatabaseValue {
     fn from(id: GraphqlId) -> DatabaseValue {
         match id {
@@ -130,12 +194,14 @@ impl From<GraphqlId> for DatabaseValue {
     }
 }
 
+#[cfg(feature = "sql")]
 impl From<&GraphqlId> for DatabaseValue {
     fn from(id: &GraphqlId) -> DatabaseValue {
         id.clone().into()
     }
 }
 
+#[cfg(feature = "sql")]
 impl From<PrismaValue> for DatabaseValue {
     fn from(pv: PrismaValue) -> DatabaseValue {
         match pv {

@@ -413,8 +413,8 @@ export default abstract class DefaultParser {
    * Checks if the given type is marked as link table.
    * @param type
    */
-  protected isLinkTable(type: any): boolean {
-    return this.hasDirective(type, DirectiveKeys.linkTable)
+  protected isRelationTable(type: any): boolean {
+    return this.hasDirective(type, DirectiveKeys.relationTable)
   }
 
   /**
@@ -432,7 +432,7 @@ export default abstract class DefaultParser {
 
     const databaseName = this.getDatabaseTypeName(type)
     const isEmbedded = this.isEmbedded(type)
-    const isLinkTable = this.isLinkTable(type)
+    const isRelationTable = this.isRelationTable(type)
     const directives = this.parseDirectives(type)
     const indices = this.parseIndices(type, fields)
 
@@ -440,7 +440,7 @@ export default abstract class DefaultParser {
       name: type.name.value,
       fields,
       isEnum: false,
-      isLinkTable,
+      isRelationTable,
       isEmbedded,
       databaseName,
       directives,
@@ -489,7 +489,7 @@ export default abstract class DefaultParser {
         name: type.name.value,
         fields: values,
         isEnum: true,
-        isLinkTable: false,
+        isRelationTable: false,
         isEmbedded: false,
         directives,
         comments: [],
