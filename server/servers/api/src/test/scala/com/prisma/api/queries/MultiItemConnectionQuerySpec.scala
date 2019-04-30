@@ -3,6 +3,7 @@ package com.prisma.api.queries
 import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
+import com.prisma.IgnoreSQLite
 
 class MultiItemConnectionQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
 
