@@ -35,7 +35,7 @@ There are several available building blocks to shape your datamodel:
 
 - [**Types**](#object-types) consist of multiple [fields](#fields) and typically represent entities from your application domain (e.g. `User`, `Car`, `Order`). Each type in your datamodel is mapped to a database table and CRUD operations are exposed in the generated Prisma client API.
 - [**Relations**](#relations) describe _relationships_ between types.
-- [**Directives**](#graphql-directives) covering different use cases such as type constraints or cascading delete behaviour.
+- [**Directives**](#sdl-directives) covering different use cases such as type constraints or cascading delete behaviour.
 
 ## Example
 
@@ -947,13 +947,9 @@ Let's investigate the deletion behaviour for the three types:
 
 ## SDL directives
 
-Directives are used to provide additional information in your datamodel. They look like this: `@name(argument: "value")` or simply `@name` when there are no arguments.
+Directives are used to provide additional information and add specific behaviours to the types in your datamodel. They look like this: `@name(argument: "value")` or simply `@name` when there are no arguments.
 
-### Datamodel directives
-
-Datamodel directives describe additional information about models or fields.
-
-#### `@id`
+### `@id`
 
 A record will automatically get assigned a globally unique identifier when it's created, this identifier is stored in the field annotated with the `@id` directive:
 
@@ -969,7 +965,7 @@ An auto-generated `id` has the following properties:
 * Always starts with a (lowercase) letter, e.g. `c`
 * Follows [cuid](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
 
-#### `@createdAt` and `@updatedAt`
+### `@createdAt` and `@updatedAt`
 
 The datamodel further provides two special field directives which you can add to your types:
 
@@ -986,7 +982,7 @@ type User {
 }
 ```
 
-#### `@unique`
+### `@unique`
 
 The `@unique` directive marks a scalar field as [unique](#unique). Unique fields will have a unique _index_ applied in the underlying database.
 
@@ -998,7 +994,7 @@ type User {
 
 Find more info about the `@unique` directive [above](#unique).
 
-#### `@db`
+### `@db`
 
 The `@db` directive can be applied to types/fields to determine the name of the table/column in the underlying database. For example:
 
@@ -1011,24 +1007,35 @@ type User @db(name: "user") {
 
 In this case, the underlying table for the `User` model is called `user` and the column representing the `name` field is called `full_name`.
 
-#### Relation fields
+### `@default`
 
-The directive `@relation(name: String, onDelete: ON_DELETE! = SET_NULL)` can be attached to a relation field.
-
-[See above](#the-relation-directive) for more information.
-
-#### Default value for scalar fields
-
-The directive `@default(value: String!)` sets [a default value](#default-value) for a scalar field:
+The `@default(value: String!)` directive sets [a default value](#default-value) for a scalar field:
 
 ```graphql
-# the `title`, `published` and `someNumber` fields have default values `New Post`, `false` and `42`
 type Post {
   title: String! @default(value: "New Post")
   published: Boolean! @default(value: false)
   someNumber: Int! @default(value: 42)
 }
 ```
+
+### `@scalarList`
+
+This `@scalarList(strategy: STRATEGY!`) directive is required on any scalar list field. The only valid argument for the `strategy` argument is `RELATION`.
+
+```graphql
+type Post {
+  tags: [String!]! @scalarList(strategy: RELATION)
+}
+```
+
+### `@relation`
+
+The directive `@relation(name: String, onDelete: ON_DELETE! = SET_NULL)` can be attached to a relation field.
+
+[See above](#the-relation-directive) for more information.
+
+
 
 ## Naming conventions
 
