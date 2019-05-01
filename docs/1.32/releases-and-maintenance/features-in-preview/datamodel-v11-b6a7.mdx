@@ -87,7 +87,7 @@ The `@id` is used to indicate that a (scalar) field on a model is used as the pr
 The `@id` directive can be applied to scalar fields of types:
 
 - `ID`
-- `UUID`
+- `UUID` (only available for PostgreSQL)
 - `Int`
 
 It can be used at most once per model.
@@ -110,6 +110,8 @@ type User {
   name: String!
 }
 ```
+
+> `UUID` is only available for PostgreSQL.
 
 _The `_myID` field is used as the primary identifier of the `User` model. IDs must be provided whenever a new record is created._
 

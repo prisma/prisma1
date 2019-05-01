@@ -560,6 +560,12 @@ An auto-generated `id` has the following properties:
 * Always starts with a (lowercase) letter, e.g. `c`
 * Follows [cuid](https://github.com/ericelliott/cuid) (_collision resistant unique identifiers_) scheme
 
+The type of an `id` field can be:
+
+- `ID`
+- `Int`
+- `UUID`
+
 ### `@createdAt` and `@updatedAt`
 
 The datamodel further provides two special field directives which you can add to your types:
@@ -629,6 +635,7 @@ type Post {
 The directive `@relation(name: String, onDelete: ON_DELETE! = SET_NULL)` can be attached to a relation field.
 
 [See above](#the-relation-directive) for more information.
+
 ## Naming conventions
 
 Different objects you encounter in a Prisma service like types or relations follow separate naming conventions to help you distinguish them.
