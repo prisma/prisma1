@@ -4,8 +4,8 @@ jobs:
   cli_publish:
     docker:
       - image: circleci/node:8
-      - image: circleci/mongo:3.6
-        restart: always
+      - image: circleci/mongo:2.6.8
+        command: [--smallfiles]
         environment:
           MONGO_INITDB_ROOT_USERNAME: prisma
           MONGO_INITDB_ROOT_PASSWORD: prisma
@@ -47,8 +47,8 @@ jobs:
   cli_test:
     docker:
       - image: circleci/node:8
-      - image: circleci/mongo:3.6
-        restart: always
+      - image: circleci/mongo:2.6.8
+        command: [--smallfiles]
         environment:
           MONGO_INITDB_ROOT_USERNAME: prisma
           MONGO_INITDB_ROOT_PASSWORD: prisma
