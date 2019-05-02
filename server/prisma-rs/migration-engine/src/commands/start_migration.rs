@@ -15,6 +15,7 @@ impl MigrationCommand for StartMigrationCommand {
     }
 
     fn execute(&self) -> StartMigrationOutput {
+        println!("{:?}", self.input);
         let response = StartMigrationOutput {
             data_model_errors: vec![],
             data_model_warnings: vec![],

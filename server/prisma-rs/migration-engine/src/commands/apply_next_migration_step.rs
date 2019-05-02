@@ -14,6 +14,7 @@ impl MigrationCommand for ApplyNextMigrationStepCommand {
     }
 
     fn execute(&self) -> Self::Output {
+        println!("{:?}", self.input);
         let response = ApplyNextMigrationStepOutput {
             status: MigrationStatus::InProgress,
             steps: 3,
