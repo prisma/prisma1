@@ -4,7 +4,7 @@ jobs:
   cli_publish:
     docker:
       - image: circleci/node:8
-      - image: circleci/mongo:3.4
+      - image: mongo:3.4.4-jessie
         environment:
           MONGO_INITDB_ROOT_USERNAME: prisma
           MONGO_INITDB_ROOT_PASSWORD: prisma
