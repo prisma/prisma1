@@ -10,6 +10,8 @@ pub struct ReadQueryExecutor {
 
 impl ReadQueryExecutor {
     pub fn execute(&self, queries: &[ReadQuery]) -> CoreResult<Vec<ReadQueryResult>> {
+        dbg!(queries);
+        println!("{:?}", queries);
         self.execute_internal(queries, vec![])
     }
 
@@ -121,6 +123,7 @@ impl ReadQueryExecutor {
                     }
                 }
                 ReadQuery::ManyRelatedRecordsQuery(query) => {
+
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
                     let scalars = self.data_resolver.get_related_nodes(
@@ -134,12 +137,9 @@ impl ReadQueryExecutor {
                     let ids = scalars.get_id_values(Arc::clone(&query.parent_field.related_model()))?;
                     let list_fields = selected_fields.scalar_lists();
                     let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
-                    let nested = scalars.nodes.iter().fold(vec![], |mut vec, _| {
-                        vec.append(&mut self.execute_internal(&query.nested, ids.clone()).unwrap());
-                        vec
-                    });
+                    let nested = self.execute_internal(&query.nested, ids.clone())?;
 
-                    results.push(ReadQueryResult::Many(ManyReadQueryResults::new(
+                    let foobar = dbg!(ReadQueryResult::Many(ManyReadQueryResults::new(
                         query.name.clone(),
                         query.fields.clone(),
                         scalars,
@@ -148,6 +148,7 @@ impl ReadQueryExecutor {
                         query.args.clone(),
                         selected_fields,
                     )));
+                    results.push(foobar);
                 }
             }
         }

@@ -1,6 +1,6 @@
 //! Process a set of records into an IR List
 
-use super::{maps::build_map, Item, List, Map};
+use super::{maps::build_map, Item, List, Map, remove_excess_records};
 use crate::{ManyReadQueryResults, ReadQueryResult};
 use prisma_models::{GraphqlId, PrismaValue};
 use std::{collections::HashMap, sync::Arc};
@@ -86,7 +86,12 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 .get_mut(&many.name)
                 .expect("Parents with records mapping must contain entries for all nested queries.");
 
-            let nested_build = build_list(many);
+            let query_args = many.query_arguments.clone();
+            let mut nested_build = build_list(many);
+
+            // Trim excess data from nested queries
+            remove_excess_records(&mut nested_build, &query_args);
+
             nested_build.into_iter().for_each(|item| match item {
                 Item::Map(parent_opt, i) => {
                     let parent_id = parent_opt
@@ -133,7 +138,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     let final_field_order = result.fields.clone();
 
     // There is always at least one scalar selected (id), making scalars the perfect entry point.
-    result
+    let mut end_result = result
         .scalars
         .nodes
         .into_iter()
@@ -195,5 +200,9 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 }),
             )
         })
-        .collect()
+        .collect();
+
+    // Trim excess data from nested queries
+    remove_excess_records(&mut end_result, &result.query_arguments);
+    end_result
 }

@@ -97,7 +97,7 @@ impl ManyReadQueryResults {
         query_arguments: QueryArguments,
         selected_fields: SelectedFields,
     ) -> Self {
-        let mut result = Self {
+        let result = Self {
             name,
             fields,
             scalars,
@@ -108,7 +108,7 @@ impl ManyReadQueryResults {
             __inhibit: (),
         };
 
-        result.remove_excess_records();
+        // result.remove_excess_records();
         result
     }
 
@@ -117,22 +117,6 @@ impl ManyReadQueryResults {
     #[allow(warnings)]
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.selected_fields.get_implicit_fields()
-    }
-
-    /// Removes the excess records added to by the database query layer based on the query arguments
-    /// This would be the right place to add pagination markers (has next page, etc.).
-    pub fn remove_excess_records(&mut self) {
-        // The query engine reverses lists when querying for `last`, so we need to reverse again to have the intended order.
-        let reversed = self.query_arguments.last.is_some();
-        if reversed {
-            self.scalars.reverse();
-        }
-
-        match (self.query_arguments.first, self.query_arguments.last) {
-            (Some(f), _) if self.scalars.nodes.len() > f as usize => self.scalars.drop_right(1),
-            (_, Some(l)) if self.scalars.nodes.len() > l as usize => self.scalars.drop_left(1),
-            _ => (),
-        };
     }
 
     /// Get all IDs from a query result

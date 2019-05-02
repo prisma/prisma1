@@ -41,7 +41,7 @@ impl Transactional for Sqlite {
 
 impl<'a> Transaction for SqliteTransaction<'a> {
     fn write(&mut self, q: Query) -> ConnectorResult<WriteItems> {
-        let (sql, params) = visitor::Sqlite::build(q);
+        let (sql, params) = dbg!(visitor::Sqlite::build(q));
         let mut stmt = self.prepare_cached(&sql)?;
 
         Ok(WriteItems {
@@ -51,7 +51,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
     }
 
     fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> ConnectorResult<Vec<PrismaRow>> {
-        let (sql, params) = visitor::Sqlite::build(q);
+        let (sql, params) = dbg!(visitor::Sqlite::build(q));
 
         let mut stmt = self.prepare_cached(&sql)?;
         let mut rows = stmt.query(params)?;
