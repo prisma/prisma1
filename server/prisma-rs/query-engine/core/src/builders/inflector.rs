@@ -1,5 +1,5 @@
-use inflector::Inflector as RustInflector;
 use lazy_static::lazy_static;
+use rust_inflector::Inflector as RustInflector;
 use std::collections::HashMap;
 
 /// This is a remnant from the Scala inflector

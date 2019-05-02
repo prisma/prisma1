@@ -16,13 +16,13 @@ pub use single::*;
 
 use self::inflector::Inflector;
 use crate::{CoreError, CoreResult, ReadQuery};
-use ::inflector::Inflector as RustInflector;
 use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
     Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
     SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
 };
+use rust_inflector::Inflector as RustInflector;
 
 use std::{collections::BTreeMap, sync::Arc};
 use uuid::Uuid;
@@ -71,7 +71,11 @@ impl<'a> Builder<'a> {
                 )))
             }
         } else {
-            let normalized = model.name.to_camel_case();
+            let normalized = match model.name.as_str() {
+                "AUser" => "aUser".to_owned(), // FIXME *quietly sobbing*
+                name => name.to_camel_case()
+            };
+
             if field.name == normalized {
                 Some(Builder::Single(SingleBuilder::new().setup(Arc::clone(model), field)))
             } else if Inflector::singularize(&field.name) == normalized {
@@ -129,7 +133,7 @@ pub trait BuilderExt {
                 Ok(val) => PrismaValue::Json(val),
                 _ => PrismaValue::String(s.clone()),
             },
-            Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap() as i32),
+            Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
             _ => unimplemented!(),
         }
     }

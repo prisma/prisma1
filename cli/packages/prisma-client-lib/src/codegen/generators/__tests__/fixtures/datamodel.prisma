@@ -1,0 +1,15 @@
+type Post {
+  id: ID!
+  isPublished: Boolean!
+  title: String!
+  text: String!
+  author: User!
+}
+
+type User {
+  id: ID!
+  email: String!
+  password: String!
+  name: String!
+  posts: [Post!]
+}

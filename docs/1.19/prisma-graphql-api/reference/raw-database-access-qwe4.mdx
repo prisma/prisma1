@@ -1,3 +1,6 @@
+
+import Code from 'components/Markdown/Code'
+
 export const meta = {
   title: "Raw Database Access",
   position: 70,
@@ -52,7 +55,7 @@ services:
     volumes:
       - mysql:/var/lib/mysql
 volumes:
-  mysql:
+  mysql: ~
 ```
 
 ```yml copy
@@ -87,7 +90,7 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
 volumes:
-  postgres:
+  postgres: ~
 ```
 
 </Code>

@@ -3,8 +3,9 @@ members = [
   "prisma-models",
   "migration-engine",
   "query-engine/connectors/connector",
-  "query-engine/connectors/sqlite-connector",
+  "query-engine/connectors/sql-connector",
   "query-engine/prisma",
   "query-engine/native-bridge",
   "query-engine/core",
+  "libs/prisma-datamodel",
 ]

@@ -28,6 +28,7 @@ import * as flatten from 'lodash.flatten'
 import * as prettier from 'prettier'
 import { codeComment } from '../../utils/codeComment'
 import { connectionNodeHasScalars } from '../../utils/connectionNodeHasScalars'
+import { GeneratorType } from '../types'
 
 export interface RenderOptions {
   endpoint?: string
@@ -51,6 +52,14 @@ export class TypescriptGenerator extends Generator {
     Json: 'any',
   }
   typeObjectType = 'interface'
+  generator: GeneratorType = 'typescript'
+
+  models: {[key: string]: boolean} = this.internalTypes.reduce((acc, type) => {
+    return {
+      ...{ [`${type.name}`]: true },
+      ...acc
+    }
+  }, {})
 
   graphqlRenderers = {
     GraphQLUnionType: (type: GraphQLUnionType): string => {
@@ -73,7 +82,9 @@ export class TypescriptGenerator extends Generator {
         '\n\n' +
         this.renderInterfaceOrObject(type, false) +
         '\n\n' +
-        this.renderInterfaceOrObject(type, false, true)
+        this.renderInterfaceOrObject(type, false, true) +
+        '\n\n' +
+        this.renderInterfaceOrObject(type, true, false, true)
       )
     },
 
@@ -96,7 +107,7 @@ export class TypescriptGenerator extends Generator {
           const isOptional = !isNonNullType(field.type)
           return `  ${this.renderFieldName(field, false)}${
             isOptional ? '?' : ''
-          }: ${this.renderInputFieldType(field.type)}`
+          }: ${isOptional && this.generator === 'typescript' ? `Maybe<${this.renderInputFieldType(field.type)}>` : this.renderInputFieldType(field.type)}`
         })
         .join(`${this.lineBreakDelimiter}\n`)
 
@@ -170,7 +181,9 @@ export type ${type.name}_Output = string`
   renderAtLeastOne() {
     return `export type AtLeastOne<T, U = {[K in keyof T]: Pick<T, K> }> = Partial<T> & U[keyof U]`
   }
-
+  renderMaybe() {
+    return `export type Maybe<T> = T | undefined | null`
+  }
   renderModels() {
     const models = this.internalTypes
       .map(
@@ -187,10 +200,13 @@ export type ${type.name}_Output = string`
   render(options?: RenderOptions) {
     const queries = this.renderQueries()
     const mutations = this.renderMutations()
+
     return this.format(this.compile`\
 ${this.renderImports()}
 
 ${this.renderAtLeastOne()}
+
+${this.generator === 'typescript' && this.renderMaybe()}
 
 export interface Exists {\n${this.renderExists()}\n}
 
@@ -520,8 +536,13 @@ export const prisma = new Prisma()`
     type: GraphQLObjectTypeRef | GraphQLInputObjectType | GraphQLInterfaceType,
     node = true,
     subscription = false,
+    nullable = false,
   ): string {
     const fields = type.getFields()
+
+    if (node && !subscription && nullable) {
+      return this.renderNullableType(type as GraphQLObjectTypeRef)
+    }
 
     if (node && this.isConnectionType(type)) {
       return this.renderConnectionType(type as GraphQLObjectTypeRef)
@@ -641,7 +662,8 @@ export const prisma = new Prisma()`
       !isScalar &&
       !addSubscription
     ) {
-      return typeString === 'Node' ? `Node` : `${typeString}Promise`
+      const nullableString = isOptional && !isMutation && !isSubscription && Boolean(this.models[type.name]) ? 'Nullable' : ''
+      return typeString === 'Node' ? `Node` : `${typeString}${nullableString}Promise`
     }
 
     if ((node || isList) && !isScalar && !addSubscription) {
@@ -760,13 +782,14 @@ ${fieldDefinition}
     fieldDefinition: string,
     promise?: boolean,
     subscription?: boolean,
+    nullable: boolean = false,
   ): string {
     const actualInterfaces = promise
       ? [
           {
             name: subscription
               ? `Promise<AsyncIterator<${typeName}>>`
-              : `Promise<${typeName}>`,
+              : `Promise<${typeName}${nullable ? '| null' : ''}>`,
           },
           {
             name: 'Fragmentable',
@@ -780,7 +803,7 @@ ${fieldDefinition}
         ? `export type ${typeName} = AtLeastOne<{
         ${fieldDefinition.replace('?:', ':')}
       }>`
-        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${
+        : `export interface ${typeName}${typeName === 'Node' ? 'Node' : ''}${nullable ? 'Nullable' : ''}${
             promise && !subscription ? 'Promise' : ''
           }${subscription ? 'Subscription' : ''}${
             actualInterfaces.length > 0
@@ -825,6 +848,47 @@ ${description.split('\n').map(l => ` * ${l}\n`)}
     }
 
     return false
+  }
+
+  renderNullableType(type: GraphQLObjectTypeRef) {
+    const fields = type.getFields()
+    const fieldDefinition = Object.keys(fields)
+      .map(f => {
+        const field = fields[f]
+        const deepType = this.getDeepType(fields[f].type)
+        const embedded = this.isEmbeddedType(deepType)
+        return `  ${this.renderFieldName(field, false)}: ${this.renderFieldType({
+          field,
+          node: false,
+          input: false,
+          partial: false,
+          renderFunction: true,
+          isMutation: false,
+          isSubscription: false,
+          operation: false,
+          embedded,
+        })}`
+      })
+      .join(`${this.lineBreakDelimiter}\n`)
+
+    let interfaces: GraphQLInterfaceType[] = []
+    if (type instanceof GraphQLObjectType) {
+      interfaces = (type as any).getInterfaces()
+    }
+
+    if (!Boolean(this.models[type.name])) {
+      return ``
+    }
+    return this.renderInterfaceWrapper(
+      `${type.name}`,
+      type.description!,
+      interfaces,
+      fieldDefinition,
+      true,
+      false,
+      true,
+    )
+    
   }
 
   renderConnectionType(type: GraphQLObjectTypeRef) {

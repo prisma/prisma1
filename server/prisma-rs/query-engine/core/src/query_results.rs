@@ -67,6 +67,10 @@ impl SingleReadQueryResult {
         self.selected_fields.get_implicit_fields()
     }
 
+    pub fn parent_id(&self) -> Option<&GraphqlId> {
+        self.scalars.as_ref().map_or(None, |r| r.node.parent_id.as_ref())
+    }
+
     /// Get the ID from a record
     pub fn find_id(&self) -> Option<&GraphqlId> {
         let id_position: usize = self

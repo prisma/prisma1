@@ -38,7 +38,7 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
 volumes:
-  postgres:
+  postgres: ~
 ```
 
 ## Get started

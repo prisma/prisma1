@@ -2,8 +2,10 @@ use crate::{data_model, PrismaResult};
 use core::ReadQueryExecutor;
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
 use prisma_models::SchemaRef;
-use sqlite_connector::Sqlite;
 use std::sync::Arc;
+
+#[cfg(feature = "sql")]
+use sql_connector::{database::SqlDatabase, database::Sqlite};
 
 #[derive(DebugStub)]
 pub struct PrismaContext {
@@ -26,7 +28,7 @@ impl PrismaContext {
                     .trim_end_matches("/");
 
                 let sqlite = Sqlite::new(db_folder.to_owned(), config.limit(), false).unwrap();
-                Arc::new(sqlite)
+                Arc::new(SqlDatabase::new(sqlite))
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };

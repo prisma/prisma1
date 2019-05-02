@@ -34,7 +34,7 @@ describe(`Renderer datamodel v1.1 test`, () => {
     const type: IGQLType = {
       name: 'Test',
       isEmbedded: false,
-      isLinkTable: false,
+      isRelationTable: false,
       isEnum: false,
       fields: [field1, field2, field3, field4],
       comments: [],
