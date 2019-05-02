@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 nullable = { path = "../libs/nullable" }
 database-inspector = { path = "../libs/database-inspector" }
+prisma-datamodel = { path = "../libs/prisma-datamodel" }
 prisma-models = { path = "../prisma-models" }
 chrono = { version = "0.4", features = ["serde"] }
 jsonrpc-core = "10.1.0"
