@@ -36,10 +36,10 @@ jobs:
           name: Wait for MySQL to start
           # preinstalled in circleci/* docker image
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
-      - run:
-          name: Wait for Mongo to start
-          # preinstalled in circleci/* docker image
-          command: dockerize -wait tcp://127.0.0.1:27017 -timeout 120s
+      # - run:
+      #     name: Wait for Mongo to start
+      #     # preinstalled in circleci/* docker image
+      #     command: dockerize -wait tcp://127.0.0.1:27017 -timeout 120s
       - run: ./cli/scripts/test_ci.sh
       - run: ./cli/scripts/publish.sh
 
@@ -78,10 +78,10 @@ jobs:
           name: Wait for MySQL to start
           # preinstalled in circleci/* docker image
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
-      - run:
-          name: Wait for Mongo to start
-          # preinstalled in circleci/* docker image
-          command: dockerize -wait tcp://127.0.0.1:27017 -timeout 120s
+      # - run:
+      #     name: Wait for Mongo to start
+      #     # preinstalled in circleci/* docker image
+      #     command: dockerize -wait tcp://127.0.0.1:27017 -timeout 180s
       - run: ./cli/scripts/test_ci.sh
 
   # content deployment
