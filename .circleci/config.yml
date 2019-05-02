@@ -46,7 +46,7 @@ jobs:
   cli_test:
     docker:
       - image: circleci/node:8
-      - image: circleci/mongo:3
+      - image: circleci/mongo:4-ram
         environment:
           MONGO_INITDB_ROOT_USERNAME: prisma
           MONGO_INITDB_ROOT_PASSWORD: prisma
