@@ -147,8 +147,7 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                         Field::Relation(r) => {
                             let value = match v {
                                 Value::Object(o) => Some(o),
-                                Value::Null => None,
-                                v => panic!("Expected object value, found {:?}", v),
+                                _ => None, // This handles `Null` values which might be valid!
                             };
 
                             Ok(match (op, value) {
@@ -157,7 +156,7 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                                 (FilterOp::Every, Some(value)) => r.every_related(extract_filter(value, r.related_model())?),
                                 (FilterOp::Field, Some(value)) => r.to_one_related(extract_filter(value, r.related_model())?),
                                 (FilterOp::Field, None) => r.one_relation_is_null(),
-                                _ => unreachable!(),
+                                (op, _) => panic!("Reached unreachable code with operation `{:?}` and value `{:?}`", op, v),
                             })
                         }
                     }
