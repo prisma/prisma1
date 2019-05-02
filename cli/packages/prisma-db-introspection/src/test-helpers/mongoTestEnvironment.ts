@@ -2,6 +2,7 @@ import { MongoClient } from 'mongodb'
 import { Data } from '../databases/document/data'
 import { IConnector } from '../common/connector'
 import { IDocumentConnector } from '../databases/document/documentConnector'
+import { MongoMemoryServer } from 'mongodb-memory-server'
 
 export interface IDocumentTestEnvironment {
   schemaName: string
@@ -17,8 +18,10 @@ export class MongoTestEnvironment implements IDocumentTestEnvironment {
   private schema: string
   private client: MongoClient
   public readonly schemaName: string
+  private mongod: MongoMemoryServer
 
   constructor(uri?: string, schema?: string) {
+    this.mongod = new MongoMemoryServer()
     this.schema = schema || process.env.TEST_MONGO_SCHEMA || ''
     this.uri = uri || process.env.TEST_MONGO_URI || ''
 
@@ -27,6 +30,8 @@ export class MongoTestEnvironment implements IDocumentTestEnvironment {
   }
 
   public async connect() {
+    this.uri = await this.mongod.getConnectionString()
+    this.client = new MongoClient(this.uri)
     await this.client.connect()
   }
 
@@ -56,5 +61,6 @@ export class MongoTestEnvironment implements IDocumentTestEnvironment {
 
   public async disconnect() {
     await this.client.close(true)
+    await this.mongod.stop()
   }
 }

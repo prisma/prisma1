@@ -4,6 +4,10 @@ jobs:
   cli_publish:
     docker:
       - image: circleci/node:8
+      - image: circleci/mongo:3
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: prisma
+          MONGO_INITDB_ROOT_PASSWORD: prisma
       - image: circleci/postgres:10.3-alpine
         environment:
           POSTGRES_USER: prisma
@@ -13,11 +17,6 @@ jobs:
       - image: circleci/mysql:5
         environment:
           MYSQL_ROOT_PASSWORD: prisma
-      - image: circleci/mongo:3
-        command: [--smallfiles]
-        environment:
-          MONGO_INITDB_ROOT_USERNAME: prisma
-          MONGO_INITDB_ROOT_PASSWORD: prisma
     steps:
       - checkout
       - run: sudo apt install postgresql-client
@@ -37,16 +36,20 @@ jobs:
           name: Wait for MySQL to start
           # preinstalled in circleci/* docker image
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
-      - run:
-          name: Wait for Mongo to start
-          # preinstalled in circleci/* docker image
-          command: dockerize -wait tcp://127.0.0.1:27017 -timeout 120s
+      # - run:
+      #     name: Wait for Mongo to start
+      #     # preinstalled in circleci/* docker image
+      #     command: dockerize -wait tcp://127.0.0.1:27017 -timeout 120s
       - run: ./cli/scripts/test_ci.sh
       - run: ./cli/scripts/publish.sh
 
   cli_test:
     docker:
       - image: circleci/node:8
+      - image: circleci/mongo:3
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: prisma
+          MONGO_INITDB_ROOT_PASSWORD: prisma
       - image: circleci/postgres:10.3-alpine
         environment:
           POSTGRES_USER: prisma
@@ -56,11 +59,6 @@ jobs:
       - image: circleci/mysql:5
         environment:
           MYSQL_ROOT_PASSWORD: prisma
-      - image: circleci/mongo:3
-        command: [--smallfiles]
-        environment:
-          MONGO_INITDB_ROOT_USERNAME: prisma
-          MONGO_INITDB_ROOT_PASSWORD: prisma
     steps:
       - checkout
       - run: sudo apt install postgresql-client
@@ -80,10 +78,10 @@ jobs:
           name: Wait for MySQL to start
           # preinstalled in circleci/* docker image
           command: dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
-      - run:
-          name: Wait for Mongo to start
-          # preinstalled in circleci/* docker image
-          command: dockerize -wait tcp://127.0.0.1:27017 -timeout 180s
+      # - run:
+      #     name: Wait for Mongo to start
+      #     # preinstalled in circleci/* docker image
+      #     command: dockerize -wait tcp://127.0.0.1:27017 -timeout 180s
       - run: ./cli/scripts/test_ci.sh
 
   # content deployment
