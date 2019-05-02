@@ -5,6 +5,7 @@ jobs:
     docker:
       - image: circleci/node:8
       - image: circleci/mongo:3.6
+        restart: always
         environment:
           MONGO_INITDB_ROOT_USERNAME: prisma
           MONGO_INITDB_ROOT_PASSWORD: prisma
@@ -47,6 +48,7 @@ jobs:
     docker:
       - image: circleci/node:8
       - image: circleci/mongo:3.6
+        restart: always
         environment:
           MONGO_INITDB_ROOT_USERNAME: prisma
           MONGO_INITDB_ROOT_PASSWORD: prisma
