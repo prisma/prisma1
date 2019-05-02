@@ -2,7 +2,7 @@ import { MongoClient } from 'mongodb'
 import { Data } from '../databases/document/data'
 import { IConnector } from '../common/connector'
 import { IDocumentConnector } from '../databases/document/documentConnector'
-import { MongoMemoryServer } from 'mongodb-memory-server'
+import { MongoMemoryServer } from 'mongodb-memory-server-global'
 
 export interface IDocumentTestEnvironment {
   schemaName: string

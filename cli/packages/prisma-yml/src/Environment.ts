@@ -97,6 +97,7 @@ export class Environment {
           `),
           new Promise((_, r) => setTimeout(() => r(), 6000)),
         ])) as any
+        console.dir(res, { depth: null })
         if (!res) {
           return
         }
@@ -111,8 +112,8 @@ export class Environment {
               const endpoint = cluster.connectInfo
                 ? cluster.connectInfo.endpoint
                 : cluster.customConnectionInfo
-                ? cluster.customConnectionInfo.endpoint
-                : this.clusterEndpointMap[cluster.name]
+                  ? cluster.customConnectionInfo.endpoint
+                  : this.clusterEndpointMap[cluster.name]
               this.addCluster(
                 new Cluster(
                   this.out,
