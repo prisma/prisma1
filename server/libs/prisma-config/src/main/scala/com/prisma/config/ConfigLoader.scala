@@ -125,8 +125,9 @@ object ConfigLoader {
     val dbConnector = extractString("connector", db)
 
     if (dbConnector == "mongo") {
-      val uri      = extractString("uri", db)
-      val database = extractStringOpt("database", db)
+      val uri       = extractString("uri", db)
+      val database  = extractStringOpt("database", db)
+      val queueSize = extractIntOpt("queueSize", db)
       extractStringOpt("schema", db).map(x => throw InvalidConfiguration("Mongo should not define a schema, but only a database."))
 
       databaseConfig(
@@ -144,7 +145,8 @@ object ConfigLoader {
         managementSchema = None,
         ssl = None,
         rawAccess = None,
-        uri = uri
+        uri = uri,
+        queueSize = queueSize
       )
 
     } else {
@@ -163,6 +165,7 @@ object ConfigLoader {
       val database   = uri.path.toAbsolute.parts.headOption
       val ssl        = uri.query.paramMap.get("ssl").flatMap(_.headOption).map(_ == "1")
       val rawAccess  = extractBooleanOpt("rawAccess", db)
+      val queueSize  = extractIntOpt("queueSize", db)
 
       if (schema.isDefined && database.isDefined && dbConnector != "postgres")
         throw InvalidConfiguration("Only Postgres connectors are allowed to configure schema and database. For others please use database.")
@@ -186,7 +189,8 @@ object ConfigLoader {
         managementSchema = mgmtSchema,
         ssl = ssl,
         rawAccess = rawAccess,
-        uri = uriString
+        uri = uriString,
+        queueSize = queueSize
       )
     }
   }
@@ -204,6 +208,8 @@ object ConfigLoader {
     val schema      = extractStringOpt("schema", db)
     val ssl         = extractBooleanOpt("ssl", db)
     val rawAccess   = extractBooleanOpt("rawAccess", db)
+    val queueSize   = extractIntOpt("queueSize", db)
+
     val dbActive = extractBooleanOpt("migrations", db).orElse(extractBooleanOpt("active", db)) match {
       case Some(x) if dbConnector == "mongo" =>
         println(
@@ -248,7 +254,8 @@ object ConfigLoader {
       managementSchema = mgmtSchema,
       ssl = ssl,
       rawAccess = rawAccess,
-      uri = uri
+      uri = uri,
+      queueSize = queueSize
     )
   }
 
@@ -267,7 +274,8 @@ object ConfigLoader {
       managementSchema: Option[String],
       ssl: Option[Boolean],
       rawAccess: Option[Boolean],
-      uri: String
+      uri: String,
+      queueSize: Option[Int]
   ): DatabaseConfig = {
     val config = DatabaseConfig(
       name = name,
@@ -284,7 +292,8 @@ object ConfigLoader {
       managementSchema = managementSchema,
       ssl = ssl.getOrElse(false),
       rawAccess = rawAccess.getOrElse(false),
-      uri = uri
+      uri = uri,
+      queueSize = queueSize
     )
     validateDatabaseConfig(config)
   }
@@ -381,8 +390,11 @@ case class DatabaseConfig(
     schema: Option[String],
     ssl: Boolean,
     rawAccess: Boolean,
-    uri: String
-)
+    uri: String,
+    queueSize: Option[Int]
+) {
+  def queueSizeLimitOrDefault = queueSize.getOrElse(1000)
+}
 
 abstract class ConfigError(reason: String)       extends Exception(reason)
 case class InvalidConfiguration(message: String) extends ConfigError(message)
