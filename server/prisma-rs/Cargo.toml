@@ -2,7 +2,7 @@
 members = [
   "prisma-models",
   "migration-engine/connectors/migration-connector",
-  # "migration-engine/connectors/sql-connector",
+  "migration-engine/connectors/sql-migration-connector",
   "migration-engine/core",
   "query-engine/connectors/connector",
   "query-engine/connectors/sql-connector",

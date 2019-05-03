@@ -1,0 +1,9 @@
+[package]
+name = "sql-migration-connector"
+version = "0.1.0"
+authors = ["Marcus Böhm <boehm@prisma.io>"]
+edition = "2018"
+
+[dependencies]
+migration-connector = { path = "../migration-connector" }
+prisma-datamodel = { path = "../../../libs/prisma-datamodel" }

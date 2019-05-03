@@ -1815,6 +1815,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "sql-migration-connector"
+version = "0.1.0"
+dependencies = [
+ "migration-connector 0.1.0",
+ "prisma-datamodel 0.1.0",
+]
+
+[[package]]
 name = "sqlite"
 version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

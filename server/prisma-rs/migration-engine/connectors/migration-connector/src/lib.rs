@@ -1,30 +1,33 @@
+pub mod steps;
+
 use chrono::{DateTime, Utc};
 use prisma_datamodel::Schema;
+use std::sync::Arc;
+pub use steps::MigrationStep;
 
-pub mod steps;
 
 #[macro_use]
 extern crate serde_derive;
 
-trait MigrationConnector {
+pub trait MigrationConnector {
     type DatabaseMigrationStep;
 
-    fn migration_persistence(&self) -> MigrationPersistence;
+    fn migration_persistence(&self) -> Arc<MigrationPersistence>;
 
-    fn database_steps_inferrer(&self) -> DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep>;
-    fn database_step_applier(&self) -> DatabaseMigrationStepApplier<Self::DatabaseMigrationStep>;
-    fn destructive_changes_checker(&self) -> DestructiveChangesChecker<Self::DatabaseMigrationStep>;
+    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep>>;
+    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigrationStep>>;
+    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigrationStep>>;
 }
 
-trait DatabaseMigrationStepsInferrer<T> {
-    fn infer(&self, previous: &Schema, current: &Schema) -> Vec<T>;
+pub trait DatabaseMigrationStepsInferrer<T> {
+    fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<T>;
 }
 
-trait DatabaseMigrationStepApplier<T> {
+pub trait DatabaseMigrationStepApplier<T> {
     fn apply(&self, step: T);
 }
 
-trait DestructiveChangesChecker<T> {
+pub trait DestructiveChangesChecker<T> {
     fn check(&self, steps: Vec<T>) -> Vec<MigrationResult>;
 }
 
@@ -45,7 +48,7 @@ pub struct MigrationError {
     pub field: Option<String>,
 }
 
-trait MigrationPersistence {
+pub trait MigrationPersistence {
     // returns the last successful Migration
     fn last(&self) -> Option<Migration>;
 
