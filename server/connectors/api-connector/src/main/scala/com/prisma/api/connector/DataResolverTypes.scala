@@ -4,7 +4,7 @@ import com.prisma.gc_values.{StringIdGCValue, GCValue, IdGCValue}
 import com.prisma.shared.models.IdType.Id
 import com.prisma.shared.models._
 
-case class ScalarListElement(nodeId: Id, position: Int, value: GCValue)
+case class ScalarListElement(nodeId: IdGCValue, position: Int, value: GCValue)
 
 case class ResolverResult[T](
     nodes: Vector[T],
