@@ -97,7 +97,6 @@ export class Environment {
           `),
           new Promise((_, r) => setTimeout(() => r(), 6000)),
         ])) as any
-        console.dir(res, { depth: null })
         if (!res) {
           return
         }
