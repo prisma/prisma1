@@ -1,6 +1,6 @@
 use super::DataModelWarningOrError;
 use crate::commands::command::MigrationCommand;
-use crate::steps::*;
+use migration_connector::steps::*;
 
 pub struct StartMigrationCommand {
     input: StartMigrationInput,

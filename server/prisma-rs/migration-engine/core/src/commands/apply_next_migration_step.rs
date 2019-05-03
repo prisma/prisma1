@@ -46,6 +46,8 @@ pub struct ApplyNextMigrationStepOutput {
     pub updated_at: DateTime<Utc>,
 }
 
+
+// TODO: use the one defined in the connector interface instead
 #[derive(Debug, Serialize)]
 pub enum MigrationStatus {
     Pending,

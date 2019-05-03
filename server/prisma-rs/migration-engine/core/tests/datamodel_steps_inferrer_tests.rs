@@ -3,7 +3,7 @@
 use migration_core::migration::datamodel_migration_steps_inferrer::{
     DataModelMigrationStepsInferrer, DataModelMigrationStepsInferrerImpl,
 };
-use migration_core::steps::*;
+use migration_connector::steps::*;
 use prisma_datamodel::dml::*;
 use prisma_datamodel::Validator;
 

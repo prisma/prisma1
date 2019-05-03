@@ -1,5 +1,4 @@
 use nullable::Nullable;
-use prisma_models::prelude::*;
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(tag = "stepType")]
@@ -80,13 +79,13 @@ pub struct CreateField {
     pub is_updated_at: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<FieldBehaviour>, // fixme: how could we scope this to IdBehaviour?
+    pub id: Option<String>, // fixme: change to behaviour
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<String>, // fixme: change to PrismaValue
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalar_list: Option<FieldBehaviour>, // fixme: change to behaviour
+    pub scalar_list: Option<String>, // fixme: change to behaviour
 }
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
@@ -211,7 +210,7 @@ pub struct RelationFieldSpec {
     pub is_optional: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub on_delete: Option<OnDelete>,
+    pub on_delete: Option<String>, // fixme: change to proper enum
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inline_link: Option<bool>,

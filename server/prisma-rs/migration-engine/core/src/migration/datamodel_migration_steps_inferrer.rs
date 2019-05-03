@@ -1,4 +1,4 @@
-use crate::steps::*;
+use migration_connector::steps::*;
 use prisma_datamodel::*;
 
 pub trait DataModelMigrationStepsInferrer {
@@ -12,6 +12,7 @@ impl DataModelMigrationStepsInferrer for DataModelMigrationStepsInferrerImpl {
     }
 }
 
+#[allow(dead_code)]
 pub struct DataModelMigrationStepsInferrerImpl {
     previous: Schema,
     next: Schema,
