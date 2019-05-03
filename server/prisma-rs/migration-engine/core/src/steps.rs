@@ -54,7 +54,7 @@ pub struct DeleteModel {
     pub name: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Eq, PartialEq, Default)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateField {
     pub model: String,
