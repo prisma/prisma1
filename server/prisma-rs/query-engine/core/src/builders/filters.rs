@@ -156,7 +156,7 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                                 (FilterOp::Every, Some(value)) => r.every_related(extract_filter(value, r.related_model())?),
                                 (FilterOp::Field, Some(value)) => r.to_one_related(extract_filter(value, r.related_model())?),
                                 (FilterOp::Field, None) => r.one_relation_is_null(),
-                                (op, _) => panic!("Reached unreachable code with operation `{:?}` and value `{:?}`", op, v),
+                                (op, val) => Err(CoreError::QueryValidationError(format!("Invalid filter: Operation {:?} with {:?}", op, val)))?,
                             })
                         }
                     }

@@ -76,11 +76,9 @@ class SameModelSelfRelationWithoutBackRelationSpec extends FlatSpec with Matcher
     testDataModels.testV11 { project =>
       server.query("mutation{createPost(data:{identifier: 1}){identifier}}", project)
       server.query("mutation{createPost(data:{identifier: 2}){identifier}}", project)
-
       server.query(
         """mutation {
         |  updatePost (
-        |  
         |    where:{identifier: 1}
         |    data: {
         |      related: {

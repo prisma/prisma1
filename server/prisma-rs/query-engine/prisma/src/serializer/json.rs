@@ -1,4 +1,4 @@
-//! Json serialisation endpoint from IR
+//! Json serialisation endpoint for IR
 
 use crate::{PrismaError, PrismaResult};
 use core::ir::{Item, Response, ResponseSet};
@@ -10,7 +10,7 @@ type JsonMap = Map<String, Value>;
 type JsonVec = Vec<Value>;
 
 macro_rules! envelope {
-    ($name:ident, $producer:expr) => {{
+    ($name:expr, $producer:expr) => {{
         let mut m = JsonMap::new();
         m.insert($name, $producer);
         Value::Object(m)
@@ -20,7 +20,14 @@ macro_rules! envelope {
 pub fn serialize(resp: ResponseSet) -> Value {
     let mut map = Map::new();
 
-    let vals: Vec<Value> = resp
+    // Error workaround
+    if let Response::Error(err) = resp.first().unwrap() {
+        map.insert(
+            "errors".into(),
+            Value::Array(vec![envelope!("error".into(), Value::String(err.to_string()))])
+        );
+    } else {
+        let vals: Vec<Value> = resp
         .into_iter()
         .map(|res| match res {
             Response::Data(name, Item::List(list)) => envelope!(name, Value::Array(serialize_list(list))),
@@ -29,14 +36,17 @@ pub fn serialize(resp: ResponseSet) -> Value {
         })
         .collect();
 
-    map.insert(
-        "data".into(),
-        if vals.len() == 1 {
-            vals.first().unwrap().clone()
-        } else {
-            Value::Array(vals)
-        },
-    );
+        map.insert(
+            "data".into(),
+            if vals.len() == 1 {
+                vals.first().unwrap().clone()
+            } else {
+                Value::Array(vals)
+            },
+        );
+    }
+
+
 
     Value::Object(map)
 }

@@ -24,6 +24,7 @@ pub type ResponseSet = Vec<Response>;
 
 /// A response can either be some `key-value` data representation
 /// or an error that occured.
+#[derive(Debug)]
 pub enum Response {
     /// A data item has a name it will be returned under, and and actual item.
     Data(String, Item),
@@ -70,7 +71,6 @@ impl Builder {
                         Some(m) => Response::Data(query_name, Item::Map(None, m)),
                         None => Response::Data(query_name, Item::Value(PrismaValue::Null)),
                     }
-
                 }
                 ReadQueryResult::Many(query) => {
                     let query_name = query.name.clone();
