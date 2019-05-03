@@ -14,7 +14,7 @@ impl DataModelMigrationStepsInferrer for DataModelMigrationStepsInferrerImpl {
 
 pub struct DataModelMigrationStepsInferrerImpl {
     previous: Schema,
-    next: Schema
+    next: Schema,
 }
 
 impl DataModelMigrationStepsInferrerImpl {
