@@ -38,7 +38,7 @@ trait CursorConditionBuilder extends BuilderBase {
     val selectQuery = sql
       .select(orderByField)
       .from(modelTable(model))
-      .where(idField.equal(stringDummy))
+      .where(idField.equal(placeHolder))
 
     // Then, we select the comparison operation and construct the cursors. For instance, if we use ascending order, and we want
     // to get the items before, we use the "<" comparator on the column that defines the order.
