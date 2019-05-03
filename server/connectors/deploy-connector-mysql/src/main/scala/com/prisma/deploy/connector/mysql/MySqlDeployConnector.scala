@@ -64,7 +64,7 @@ case class MySqlDeployConnector(config: DatabaseConfig, driver: Driver)(implicit
   override def clientDBQueries(project: Project): ClientDbQueries      = JdbcClientDbQueries(project, managementDatabase)
   override def getOrCreateTelemetryInfo(): Future[TelemetryInfo]       = telemetryPersistence.getOrCreateInfo()
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
-  override def projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
+  override val projectIdEncoder: ProjectIdEncoder                      = ProjectIdEncoder('@')
 
   override def initialize(): Future[Unit] = {
     setupDatabases.primary.database
