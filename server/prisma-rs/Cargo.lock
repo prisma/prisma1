@@ -896,6 +896,13 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "migration-connector"
+version = "0.1.0"
+dependencies = [
+ "prisma-datamodel 0.1.0",
+]
+
+[[package]]
 name = "migration-engine"
 version = "0.1.0"
 dependencies = [
@@ -903,6 +910,7 @@ dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "database-inspector 0.1.0",
  "jsonrpc-core 10.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "migration-connector 0.1.0",
  "nullable 0.1.0",
  "prisma-datamodel 0.1.0",
  "prisma-models 0.0.0",
