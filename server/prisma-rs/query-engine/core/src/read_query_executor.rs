@@ -11,7 +11,6 @@ pub struct ReadQueryExecutor {
 impl ReadQueryExecutor {
     pub fn execute(&self, queries: &[ReadQuery]) -> CoreResult<Vec<ReadQueryResult>> {
         dbg!(queries);
-        println!("{:?}", queries);
         self.execute_internal(queries, vec![])
     }
 
@@ -35,6 +34,7 @@ impl ReadQueryExecutor {
                             let list_fields = selected_fields.scalar_lists();
                             let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                             let nested = self.execute_internal(&query.nested, ids)?;
+
                             let result = SingleReadQueryResult {
                                 name: query.name.clone(),
                                 fields: query.fields.clone(),
@@ -120,10 +120,18 @@ impl ReadQueryExecutor {
                             lists,
                         };
                         results.push(ReadQueryResult::Single(result));
+                    } else {
+                        results.push(ReadQueryResult::Single(SingleReadQueryResult {
+                            name: query.name.clone(),
+                            fields: query.fields.clone(),
+                            scalars: None,
+                            nested: vec![],
+                            selected_fields,
+                            lists: vec![],
+                        }));
                     }
                 }
                 ReadQuery::ManyRelatedRecordsQuery(query) => {
-
                     let selected_fields = Self::inject_required_fields(query.selected_fields.clone());
 
                     let scalars = self.data_resolver.get_related_nodes(
@@ -139,7 +147,7 @@ impl ReadQueryExecutor {
                     let lists = self.resolve_scalar_list_fields(ids.clone(), list_fields)?;
                     let nested = self.execute_internal(&query.nested, ids.clone())?;
 
-                    let foobar = dbg!(ReadQueryResult::Many(ManyReadQueryResults::new(
+                    results.push(ReadQueryResult::Many(ManyReadQueryResults::new(
                         query.name.clone(),
                         query.fields.clone(),
                         scalars,
@@ -148,7 +156,6 @@ impl ReadQueryExecutor {
                         query.args.clone(),
                         selected_fields,
                     )));
-                    results.push(foobar);
                 }
             }
         }

@@ -5,9 +5,9 @@ use std::collections::HashMap;
 /// This is a remnant from the Scala inflector
 lazy_static! {
     pub static ref SINGULARIZE_EXCEPTIONS: HashMap<&'static str, &'static str> =
-        vec![("todoes", "todo"), ("children", "child")].into_iter().collect();
+        vec![("todoes", "todo"), ("children", "child"), ("campuses", "campus")].into_iter().collect();
     pub static ref PLURALIZE_EXCEPTIONS: HashMap<&'static str, &'static str> =
-        vec![("todo", "todoes"), ("child", "children")].into_iter().collect();
+        vec![("todo", "todoes"), ("child", "children"), ("campus", "campuses")].into_iter().collect();
 }
 
 pub struct Inflector;

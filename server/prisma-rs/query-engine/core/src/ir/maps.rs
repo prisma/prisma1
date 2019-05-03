@@ -4,7 +4,7 @@ use super::{lists::build_list, Item, Map};
 use crate::{ReadQueryResult, SingleReadQueryResult};
 use prisma_models::PrismaValue;
 
-pub fn build_map(result: SingleReadQueryResult) -> Map {
+pub fn build_map(result: SingleReadQueryResult) -> Option<Map> {
     // Build selected fields first
     let mut outer = match &result.scalars {
         Some(single) => single
@@ -15,7 +15,7 @@ pub fn build_map(result: SingleReadQueryResult) -> Map {
                 map.insert(name.clone(), Item::Value(val.clone()));
                 map
             }),
-        None => panic!("No result found"), // FIXME: Can this ever happen?
+        None => return None,
     };
 
     // Parent id for nested queries has to be the id of this record.
@@ -25,7 +25,11 @@ pub fn build_map(result: SingleReadQueryResult) -> Map {
     outer = result.nested.into_iter().fold(outer, |mut map, query| {
         match query {
             ReadQueryResult::Single(nested) => {
-                map.insert(nested.name.clone(), Item::Map(parent_id.clone(), build_map(nested)))
+                let nested_name = nested.name.clone();
+                match build_map(nested) {
+                    Some(m) => map.insert(nested_name, Item::Map(parent_id.clone(), m)),
+                    None => map.insert(nested_name, Item::Value(PrismaValue::Null)),
+                }
             }
             ReadQueryResult::Many(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
         };
@@ -44,11 +48,11 @@ pub fn build_map(result: SingleReadQueryResult) -> Map {
 
     // Re-order fields to be in-line with what the query specified
     // This also removes implicit fields
-    result.fields.iter().fold(Map::new(), |mut map, field| {
+    Some(result.fields.iter().fold(Map::new(), |mut map, field| {
         map.insert(
             field.clone(),
             outer.remove(field).expect("[Map]: Missing required field"),
         );
         map
-    })
+    }))
 }

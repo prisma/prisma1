@@ -3,7 +3,7 @@
 use super::{maps::build_map, Item, List, Map, remove_excess_records};
 use crate::{ManyReadQueryResults, ReadQueryResult};
 use prisma_models::{GraphqlId, PrismaValue};
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::{hash_map::IterMut, HashMap}, sync::Arc};
 
 #[derive(Debug)]
 enum ParentsWithRecords {
@@ -12,6 +12,13 @@ enum ParentsWithRecords {
 }
 
 impl ParentsWithRecords {
+    pub fn iter_mut(&mut self) -> IterMut<GraphqlId, Vec<Item>> {
+        match self {
+            ParentsWithRecords::Single(_) => panic!("Can't call iter_mut on single parent with record"),
+            ParentsWithRecords::Many(m) => m.iter_mut(),
+        }
+    }
+
     pub fn contains_key(&self, key: &GraphqlId) -> bool {
         match self {
             ParentsWithRecords::Single(m) => m.contains_key(key),
@@ -73,8 +80,11 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                     .get_mut(&single.name)
                     .expect("Parents with records mapping must contain entries for all nested queries.");;
 
-                let nested_build = build_map(single);
-                parents_with_records.insert(parent_id.clone(), vec![Item::Map(Some(parent_id), nested_build)]);
+                match build_map(single) {
+                    Some(m) => parents_with_records.insert(parent_id.clone(), vec![Item::Map(Some(parent_id), m)]),
+                    None => parents_with_records.insert(parent_id.clone(), vec![Item::Value(PrismaValue::Null)]),
+                };
+
             }
         }
         ReadQueryResult::Many(many) => {
@@ -87,10 +97,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 .expect("Parents with records mapping must contain entries for all nested queries.");
 
             let query_args = many.query_arguments.clone();
-            let mut nested_build = build_list(many);
-
-            // Trim excess data from nested queries
-            remove_excess_records(&mut nested_build, &query_args);
+            let nested_build = build_list(many);
 
             nested_build.into_iter().for_each(|item| match item {
                 Item::Map(parent_opt, i) => {
@@ -109,6 +116,11 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                     records_for_parent.push(Item::Map(parent_opt, i));
                 }
                 _ => unreachable!(),
+            });
+
+            // Post process results for this query
+            parents_with_records.iter_mut().for_each(|(_, v)| {
+                remove_excess_records(v, &query_args);
             });
         }
     });
@@ -138,7 +150,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     let final_field_order = result.fields.clone();
 
     // There is always at least one scalar selected (id), making scalars the perfect entry point.
-    let mut end_result = result
+    result
         .scalars
         .nodes
         .into_iter()
@@ -200,9 +212,5 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 }),
             )
         })
-        .collect();
-
-    // Trim excess data from nested queries
-    remove_excess_records(&mut end_result, &result.query_arguments);
-    end_result
+        .collect()
 }
