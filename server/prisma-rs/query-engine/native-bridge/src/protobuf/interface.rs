@@ -7,8 +7,11 @@ use connector::{error::ConnectorError, filter::NodeSelector, DataResolver, Datab
 use prisma_common::config::*;
 use prisma_models::prelude::*;
 use prost::Message;
-use sql_connector::{database::SqlDatabase, database::Sqlite};
-use std::sync::Arc;
+use sql_connector::{
+    database::SqlDatabase,
+    database::{PostgreSql, Sqlite},
+};
+use std::{convert::TryFrom, sync::Arc};
 
 pub struct ProtoBufInterface {
     data_resolver: Arc<DataResolver + Send + Sync + 'static>,
@@ -17,21 +20,33 @@ pub struct ProtoBufInterface {
 
 impl ProtoBufInterface {
     pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
-        let connector = match config.databases.get("default") {
+        match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config))
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
             {
                 let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
                 let sqlite = Sqlite::new(format!("{}/db", server_root).into(), config.limit(), true).unwrap();
 
-                Arc::new(SqlDatabase::new(sqlite))
-            }
-            _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
-        };
+                let connector = Arc::new(SqlDatabase::new(sqlite));
 
-        ProtoBufInterface {
-            data_resolver: connector.clone(),
-            database_mutaction_executor: connector,
+                ProtoBufInterface {
+                    data_resolver: connector.clone(),
+                    database_mutaction_executor: connector,
+                }
+            }
+            Some(database) => match database.connector() {
+                "postgres-native" => {
+                    let postgres = PostgreSql::try_from(database).unwrap();
+                    let connector = Arc::new(SqlDatabase::new(postgres));
+
+                    ProtoBufInterface {
+                        data_resolver: connector.clone(),
+                        database_mutaction_executor: connector,
+                    }
+                }
+                connector => panic!("Unsupported connector {}", connector),
+            },
+            _ => panic!("Unsupported connector config"),
         }
     }
 
@@ -48,7 +63,7 @@ impl ProtoBufInterface {
                 response_payload
             }
             _ => {
-                let error_response = prisma::RpcResponse::error(error);
+                let error_response = prisma::RpcResponse::error(dbg!(error));
                 let mut payload = Vec::new();
 
                 error_response.encode(&mut payload).unwrap();

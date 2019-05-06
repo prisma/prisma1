@@ -1,13 +1,19 @@
 use crate::{DomainError, DomainResult};
 use chrono::prelude::*;
 use graphql_parser::query::Value as GraphqlValue;
-use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt};
 use uuid::Uuid;
 
 #[cfg(feature = "sql")]
 use prisma_query::ast::*;
+
+#[cfg(feature = "sqlite")]
+use rusqlite::types::{FromSql as FromSqlite, FromSqlResult, ValueRef};
+
+#[cfg(feature = "postgresql")]
+use postgres::types::{FromSql as FromPostgreSql, Type as PType};
 
 pub type PrismaListValue = Option<Vec<PrismaValue>>;
 
@@ -49,7 +55,9 @@ impl PrismaValue {
             GraphqlValue::Float(f) => PrismaValue::Float(f.clone()),
             GraphqlValue::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
             GraphqlValue::Null => PrismaValue::Null,
-            GraphqlValue::String(s) => Self::str_as_json(s).or_else(|| Self::str_as_datetime(s)).unwrap_or(PrismaValue::String(s.clone())),
+            GraphqlValue::String(s) => Self::str_as_json(s)
+                .or_else(|| Self::str_as_datetime(s))
+                .unwrap_or(PrismaValue::String(s.clone())),
             GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
             value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
         }
@@ -63,7 +71,9 @@ impl PrismaValue {
     // Feel free to try and fix it for cases with AND without Z.
     fn str_as_datetime(s: &str) -> Option<PrismaValue> {
         let fmt = "%Y-%m-%dT%H:%M:%S%.3f";
-        Utc.datetime_from_str(s.trim_end_matches("Z"), fmt).ok().map(|dt| PrismaValue::DateTime(DateTime::<Utc>::from_utc(dt.naive_utc(), Utc)))
+        Utc.datetime_from_str(s.trim_end_matches("Z"), fmt)
+            .ok()
+            .map(|dt| PrismaValue::DateTime(DateTime::<Utc>::from_utc(dt.naive_utc(), Utc)))
     }
 }
 
@@ -199,7 +209,7 @@ impl From<GraphqlId> for DatabaseValue {
         match id {
             GraphqlId::String(s) => s.into(),
             GraphqlId::Int(i) => (i as i64).into(),
-            GraphqlId::UUID(u) => u.to_hyphenated_ref().to_string().into(),
+            GraphqlId::UUID(u) => u.into(),
         }
     }
 }
@@ -218,25 +228,55 @@ impl From<PrismaValue> for DatabaseValue {
             PrismaValue::String(s) => s.into(),
             PrismaValue::Float(f) => (f as f64).into(),
             PrismaValue::Boolean(b) => b.into(),
-            PrismaValue::DateTime(d) => d.timestamp_millis().into(),
+            PrismaValue::DateTime(d) => d.into(),
             PrismaValue::Enum(e) => e.into(),
-            PrismaValue::Json(j) => j.into(),
+            PrismaValue::Json(j) => j.to_string().into(),
             PrismaValue::Int(i) => (i as i64).into(),
             PrismaValue::Relation(i) => (i as i64).into(),
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
-            PrismaValue::Uuid(u) => u.to_hyphenated_ref().to_string().into(),
+            PrismaValue::Uuid(u) => u.into(),
             PrismaValue::GraphqlId(id) => id.into(),
             PrismaValue::List(_) => panic!("List values are not supported here"),
         }
     }
 }
 
-impl FromSql for GraphqlId {
+#[cfg(feature = "sqlite")]
+impl FromSqlite for GraphqlId {
     fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
         value
             .as_str()
-            .map(|strval| GraphqlId::String(strval.to_string()))
+            .and_then(|strval| {
+                let res = Uuid::from_slice(strval.as_bytes())
+                    .map(|uuid| GraphqlId::UUID(uuid))
+                    .unwrap_or_else(|_| GraphqlId::String(strval.to_string()));
+
+                Ok(res)
+            })
             .or_else(|_| value.as_i64().map(|intval| GraphqlId::Int(intval as usize)))
+    }
+}
+
+#[cfg(feature = "postgresql")]
+impl<'a> FromPostgreSql<'a> for GraphqlId {
+    fn from_sql(ty: &PType, raw: &'a [u8]) -> Result<GraphqlId, Box<dyn std::error::Error + Sync + Send>> {
+        let res = match *ty {
+            PType::INT2 => GraphqlId::Int(i16::from_sql(ty, raw)? as usize),
+            PType::INT4 => GraphqlId::Int(i32::from_sql(ty, raw)? as usize),
+            PType::INT8 => GraphqlId::Int(i64::from_sql(ty, raw)? as usize),
+            PType::UUID => GraphqlId::UUID(Uuid::from_sql(ty, raw)?),
+            _ => GraphqlId::String(String::from_sql(ty, raw)?),
+        };
+
+        Ok(res)
+    }
+
+    fn accepts(ty: &PType) -> bool {
+        <&str as FromPostgreSql>::accepts(ty)
+            || <Uuid as FromPostgreSql>::accepts(ty)
+            || <i16 as FromPostgreSql>::accepts(ty)
+            || <i32 as FromPostgreSql>::accepts(ty)
+            || <i64 as FromPostgreSql>::accepts(ty)
     }
 }
 

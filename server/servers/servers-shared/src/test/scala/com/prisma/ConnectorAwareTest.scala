@@ -48,7 +48,7 @@ trait ConnectorAwareTest extends SuiteMixin { self: Suite =>
   lazy val connectorTag = connector.connector match {
     case "mongo"                                                 => ConnectorTag.MongoConnectorTag
     case "mysql"                                                 => ConnectorTag.MySqlConnectorTag
-    case "postgres"                                              => ConnectorTag.PostgresConnectorTag
+    case "postgres" | "postgres-native"                          => ConnectorTag.PostgresConnectorTag
     case "sqlite" | "sqlite-native" | "native-integration-tests" => ConnectorTag.SQLiteConnectorTag
   }
   private lazy val isPrototype: Boolean = prismaConfig.isPrototype

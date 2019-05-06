@@ -8,6 +8,10 @@ dev-postgres:
 	docker-compose -f docker-compose/postgres/dev-postgres.yml up -d --remove-orphans
 	cp ./docker-compose/postgres/prisma.yml ./prisma.yml
 
+dev-postgres-native:
+	docker-compose -f docker-compose/postgres/dev-postgres.yml up -d --remove-orphans
+	cp ./docker-compose/postgres-native/prisma.yml ./prisma.yml
+
 dev-mongo:
 	docker-compose -f docker-compose/mongo/dev-mongo.yml up -d --remove-orphans
 	cp ./docker-compose/mongo/prisma.yml ./prisma.yml
