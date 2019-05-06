@@ -78,7 +78,7 @@ impl Builder {
                     let mut result = lists::build_list(query);
 
                     // Trim excess data from the processed result set
-                    remove_excess_records(&mut result, &query_args);
+                    trim_records(&mut result, &query_args);
                     Response::Data(query_name, Item::List(result))
                 }
             });
@@ -90,7 +90,7 @@ impl Builder {
 
 /// Removes the excess records added to by the database query layer based on the query arguments
 /// This would be the right place to add pagination markers (has next page, etc.).
-pub fn remove_excess_records(data: &mut Vec<Item>, query_args: &QueryArguments) {
+pub fn trim_records(data: &mut Vec<Item>, query_args: &QueryArguments) {
     // The query engine reverses lists when querying for `last`, so we need to reverse again to have the intended order.
     let reversed = query_args.last.is_some();
     if reversed {
