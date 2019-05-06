@@ -82,9 +82,8 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Using the same input in an update using where as used during creation of the item" should "work with the same time for inner and outer" in {
-
-    val outerWhere = """"2018-01-03T11:27:38+00:00""""
-    val innerWhere = """"2018-01-03T11:27:38+00:00""""
+    val outerWhere = """"2018-01-03T11:27:38.000Z""""
+    val innerWhere = """"2018-01-03T11:27:38.000Z""""
 
     database.setup(project)
 

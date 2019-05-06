@@ -126,7 +126,6 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                     match field {
                         Field::Scalar(s) => {
                             let value = PrismaValue::from_value(v);
-                            dbg!(&value);
                             Ok(match op {
                                 FilterOp::In => s.is_in(PrismaListValue::try_from(value)?),
                                 FilterOp::NotIn => s.not_in(PrismaListValue::try_from(value)?),
