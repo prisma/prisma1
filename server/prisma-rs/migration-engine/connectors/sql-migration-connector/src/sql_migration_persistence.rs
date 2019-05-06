@@ -14,7 +14,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
 
 
     fn create(&self, migration: Migration) -> Migration {
-        unimplemented!()
+        migration
     }
 
     fn update(&self, migration: Migration) {        

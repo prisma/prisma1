@@ -23,20 +23,20 @@ pub trait WithDatabaseName {
 
 // This is duplicate for now, but explicitely required
 // since we want to seperate ast and dml.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum FieldArity {
     Required,
     Optional,
     List,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Comment {
     pub text: String,
     pub is_error: bool,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone)]
 pub enum ScalarType {
     Int,
     Float,
@@ -48,7 +48,7 @@ pub enum ScalarType {
 }
 
 // TODO, Check if data types are correct
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Int(i32),
     Float(f32),
@@ -59,7 +59,7 @@ pub enum Value {
     ConstantLiteral(String),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum FieldType {
     Enum {
         enum_type: String,
@@ -76,7 +76,7 @@ pub enum FieldType {
     Base(ScalarType),
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone)]
 pub enum IdStrategy {
     Auto,
     None,
@@ -94,7 +94,7 @@ impl FromStr for IdStrategy {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone)]
 pub enum ScalarListStrategy {
     Embedded,
     Relation,
@@ -112,7 +112,7 @@ impl FromStr for ScalarListStrategy {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Sequence {
     pub name: String,
     pub initial_value: i32,
@@ -128,7 +128,7 @@ impl WithName for Sequence {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Field {
     pub name: String,
     pub arity: FieldArity,
@@ -180,7 +180,7 @@ impl Field {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Enum {
     pub name: String,
     pub values: Vec<String>,
@@ -196,7 +196,7 @@ impl WithName for Enum {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Type {
     pub name: String,
     pub fields: Vec<Field>,
@@ -235,13 +235,13 @@ impl WithDatabaseName for Type {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TypeOrEnum {
     Enum(Enum),
     Type(Type),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Schema {
     pub types: Vec<TypeOrEnum>,
     pub comments: Vec<Comment>,

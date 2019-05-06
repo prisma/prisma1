@@ -64,11 +64,13 @@ pub trait MigrationPersistence {
     fn update(&self, migration: Migration);
 }
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct MigrationId {
     pub name: String,
     pub revision: u32,
 }
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct Migration {
     pub id: MigrationId,
     pub status: MigrationStatus,
@@ -79,10 +81,30 @@ pub struct Migration {
     pub database_steps: Vec<String>,
     pub errors: Vec<String>,
     pub started_at: DateTime<Utc>,
-    pub finished_at: DateTime<Utc>,
+    pub finished_at: Option<DateTime<Utc>>,
 }
 
-#[derive(Debug, Serialize)]
+impl Migration {
+    pub fn new(name: String) -> Migration {
+        Migration {
+            id: MigrationId {
+                name: name,
+                revision: 0,
+            },
+            status: MigrationStatus::Pending,
+            applied: 0,
+            rolled_back: 0,
+            datamodel: Schema::empty(),
+            datamodel_steps: Vec::new(),
+            database_steps: Vec::new(),
+            errors: Vec::new(),
+            started_at: Utc::now(),
+            finished_at: None,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, PartialEq, Clone)]
 pub enum MigrationStatus {
     Pending,
     InProgress,

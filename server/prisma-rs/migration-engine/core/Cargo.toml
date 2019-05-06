@@ -17,6 +17,9 @@ serde_json = "1.0"
 serde_derive = "1.0"
 boolinator = "2.4.0"
 
+[dev-dependencies]
+sql-migration-connector = { path = "../connectors/sql-migration-connector" }
+
 [[bin]]
 name = "migration-engine-rpc"
 path = "src/bin/rpc_api_bin.rs"
