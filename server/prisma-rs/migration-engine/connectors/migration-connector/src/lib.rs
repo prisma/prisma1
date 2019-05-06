@@ -1,7 +1,8 @@
 pub mod steps;
 
-use chrono::{DateTime, Utc};
+use chrono::{ DateTime, Utc };
 use prisma_datamodel::Schema;
+use std::str::FromStr;
 use std::sync::Arc;
 pub use steps::MigrationStep;
 
@@ -10,6 +11,10 @@ extern crate serde_derive;
 
 pub trait MigrationConnector {
     type DatabaseMigrationStep;
+
+    fn initialize(&self);
+
+    fn reset(&self);
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence>;
 
@@ -74,8 +79,8 @@ pub struct MigrationId {
 pub struct Migration {
     pub id: MigrationId,
     pub status: MigrationStatus,
-    pub applied: u32,
-    pub rolled_back: u32,
+    pub applied: usize,
+    pub rolled_back: usize,
     pub datamodel: Schema,
     pub datamodel_steps: Vec<String>,
     pub database_steps: Vec<String>,
@@ -98,10 +103,19 @@ impl Migration {
             datamodel_steps: Vec::new(),
             database_steps: Vec::new(),
             errors: Vec::new(),
-            started_at: Utc::now(),
+            started_at: timestamp_without_nanos(),
             finished_at: None,
         }
     }
+}
+
+fn timestamp_without_nanos() -> DateTime<Utc> {
+    let timestamp = Utc::now().timestamp_millis();
+    let nsecs = ((timestamp % 1000) * 1_000_000) as u32;
+    let secs = (timestamp / 1000) as i64;
+    let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
+    let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+    datetime
 }
 
 #[derive(Debug, Serialize, PartialEq, Clone)]
@@ -112,4 +126,29 @@ pub enum MigrationStatus {
     RollingBack,
     RollbackSuccess,
     RollbackFailure,
+}
+
+impl MigrationStatus {
+    pub fn code(&self) -> &str {
+        match self {
+            MigrationStatus::Pending => "Pending",
+            MigrationStatus::InProgress => "InProgress",
+            MigrationStatus::Success => "Success",
+            MigrationStatus::RollingBack => "RollingBack",
+            MigrationStatus::RollbackSuccess => "RollbackSuccess",
+            MigrationStatus::RollbackFailure => "RollbackFailure",
+        }
+    }
+
+    pub fn from_str(s: String) -> MigrationStatus {
+        match s.as_ref() {
+            "Pending" => MigrationStatus::Pending,
+            "InProgress" => MigrationStatus::InProgress,
+            "Success" => MigrationStatus::Success,
+            "RollingBack" => MigrationStatus::RollingBack,
+            "RollbackSuccess" => MigrationStatus::RollbackSuccess,
+            "RollbackFailure" => MigrationStatus::RollbackFailure,
+            _ => panic!("MigrationStatus {:?} is not known", s),
+        }
+    }
 }
