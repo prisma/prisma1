@@ -3,8 +3,9 @@
 
 use crate::{CoreError, CoreResult};
 use connector::{
-    mutaction::{CreateNode, TopLevelDatabaseMutaction},
+    mutaction::{CreateNode, TopLevelDatabaseMutaction, DatabaseMutactionResult},
     DatabaseMutactionExecutor,
+    ConnectorResult,
 };
 use graphql_parser::query::{Field, OperationDefinition, Value};
 use prisma_models::{ModelRef, PrismaArgs, PrismaValue, SchemaRef, SelectedFields};
@@ -42,6 +43,12 @@ pub struct WriteQueryExecutor {
     pub write_executor: Arc<DatabaseMutactionExecutor + Send + Sync + 'static>,
 }
 
+impl WriteQueryExecutor {
+    pub fn execute(&self, mutaction: &TopLevelDatabaseMutaction) -> ConnectorResult<DatabaseMutactionResult> {
+        self.write_executor.execute(self.db_name.clone(), mutaction)
+    }
+}
+
 impl<'field> MutationBuilder<'field> {
     pub fn new(schema: SchemaRef, field: &'field Field) -> Self {
         Self { field, schema }
@@ -73,11 +80,9 @@ fn get_mutation_args(args: &Vec<(String, Value)>) -> PrismaArgs {
     args.iter()
         .fold(BTreeMap::new(), |mut map, (k, v)| {
             match v {
-                Value::Object(o) => {
-                    o.iter().for_each(|(k, v)| {
-                        map.insert(k.clone(), PrismaValue::from_value(v));
-                    })
-                },
+                Value::Object(o) => o.iter().for_each(|(k, v)| {
+                    map.insert(k.clone(), PrismaValue::from_value(v));
+                }),
                 _ => panic!("Unknown argument structure!"),
             }
             map

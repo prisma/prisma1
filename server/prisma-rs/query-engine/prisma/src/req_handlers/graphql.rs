@@ -1,6 +1,10 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
-use core::{ir::{self, Builder}, RootBuilder, Query};
+use core::{
+    ir::{self, Builder},
+    Query, RootBuilder,
+};
+use connector::mutaction::DatabaseMutactionResult;
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -62,14 +66,14 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     let mut queries = rb.build()?;
 
     // Execute mutations first!
-    queries.iter_mut().filter_map(|q| match q {
-        Query::Write(q) => Some(q),
-        _ => None,
-    }).map(|wq| {
-        // ctx.write_query_executor.write_executor.execute(db_name: String, mutaction: TopLevelDatabaseMutaction)
-
-        unimplemented!()
-    });
+    let writes: CoreError<Vec<DatabaseMutactionResult>> = queries
+        .iter_mut()
+        .filter_map(|q| match q {
+            Query::Write(q) => Some(q),
+            _ => None,
+        })
+        .map(|wq| ctx.write_query_executor.execute(wq))
+        .collect();
 
     // let ir = match queries {
     //     Ok(queries) => match dbg!(ctx.read_query_executor.execute(&queries)) {
