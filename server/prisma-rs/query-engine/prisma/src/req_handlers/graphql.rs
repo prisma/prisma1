@@ -1,6 +1,6 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
-use core::{ir::{self, Builder}, RootBuilder};
+use core::{ir::{self, Builder}, RootBuilder, Query};
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -59,19 +59,30 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         operation_name: req.body.operation_name,
     };
 
-    let queries = rb.build();
+    let mut queries = rb.build()?;
 
-    let ir = match queries {
-        Ok(queries) => match dbg!(ctx.read_query_executor.execute(&queries)) {
-            Ok(results) => results.into_iter()
-                .fold(Builder::new(), |builder, result| builder.add(result))
-                .build(),
-            Err(err) => vec![ir::Response::Error(format!("{:?}", err))], // This is merely a workaround
-        },
-        Err(err) => vec![ir::Response::Error(format!("{:?}", err))] // This is merely a workaround
-    };
+    // Execute mutations first!
+    queries.iter_mut().filter_map(|q| match q {
+        Query::Write(q) => Some(q),
+        _ => None,
+    }).map(|wq| {
+        // ctx.write_query_executor.write_executor.execute(db_name: String, mutaction: TopLevelDatabaseMutaction)
 
-    Ok(json::serialize(ir))
+        unimplemented!()
+    });
+
+    // let ir = match queries {
+    //     Ok(queries) => match dbg!(ctx.read_query_executor.execute(&queries)) {
+    //         Ok(results) => results.into_iter()
+    //             .fold(Builder::new(), |builder, result| builder.add(result))
+    //             .build(),
+    //         Err(err) => vec![ir::Response::Error(format!("{:?}", err))], // This is merely a workaround
+    //     },
+    //     Err(err) => vec![ir::Response::Error(format!("{:?}", err))] // This is merely a workaround
+    // };
+
+    // Ok(json::serialize(ir))
+    unimplemented!()
 }
 
 /// Create a json envelope

@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::{CoreResult, ReadQuery, MutationBuilder, WriteQuery};
+use crate::{CoreResult, Query as PrismaQuery, MutationBuilder};
 use graphql_parser::query::*;
 use prisma_models::SchemaRef;
 use std::sync::Arc;
@@ -13,7 +13,7 @@ pub struct RootBuilder {
 
 impl RootBuilder {
     // FIXME: Find op name and only execute op!
-    pub fn build(self) -> CoreResult<Vec<ReadQuery>> {
+    pub fn build(self) -> CoreResult<Vec<PrismaQuery>> {
         self.query
             .definitions
             .iter()
@@ -38,25 +38,21 @@ impl RootBuilder {
                     variable_definitions: _,
                     directives: _,
                     selection_set,
-                })) => {
-                    let muts = self.build_mutation(&selection_set.items);
-                    dbg!(&muts);
+                })) => self.build_mutation(&selection_set.items),
 
-                    unimplemented!()
-                }
                 _ => unimplemented!(),
             })
-            .collect::<CoreResult<Vec<Vec<ReadQuery>>>>() // Collect all the "query trees"
+            .collect::<CoreResult<Vec<Vec<PrismaQuery>>>>() // Collect all the "query trees"
             .map(|v| v.into_iter().flatten().collect())
     }
 
-    fn build_query(&self, root_fields: &Vec<Selection>) -> CoreResult<Vec<ReadQuery>> {
+    fn build_query(&self, root_fields: &Vec<Selection>) -> CoreResult<Vec<PrismaQuery>> {
         root_fields
             .iter()
             .map(|item| {
                 // First query-level fields map to a model in our schema, either a plural or singular
                 match item {
-                    Selection::Field(root_field) => Builder::new(Arc::clone(&self.schema), root_field)?.build(),
+                    Selection::Field(root_field) => Builder::new(Arc::clone(&self.schema), root_field)?.build().map(|q| PrismaQuery::Read(q)),
                     _ => unimplemented!(),
                 }
             })
@@ -64,12 +60,12 @@ impl RootBuilder {
     }
 
     /// Mutations do something to the database and then follow-up with a query
-    fn build_mutation(&self, root_fields: &Vec<Selection>) -> CoreResult<Vec<WriteQuery>> {
+    fn build_mutation(&self, root_fields: &Vec<Selection>) -> CoreResult<Vec<PrismaQuery>> {
         root_fields
             .iter()
             .map(|item| {
                 match item {
-                    Selection::Field(root_field) => MutationBuilder::new(Arc::clone(&self.schema), root_field).build(),
+                    Selection::Field(root_field) => MutationBuilder::new(Arc::clone(&self.schema), root_field).build().map(|q| PrismaQuery::Write(q)),
                     _ => unimplemented!(),
                 }
             })

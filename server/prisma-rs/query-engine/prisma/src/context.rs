@@ -42,15 +42,18 @@ impl PrismaContext {
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
 
-        let read_query_executor: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
-        let write_query_executor: WriteQueryExecutor = WriteQueryExecutor { write_executor };
-
         let db_name = config
             .databases
             .get("default")
             .unwrap()
             .db_name()
             .expect("database was not set");
+
+        let read_query_executor: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
+        let write_query_executor: WriteQueryExecutor = WriteQueryExecutor {
+            db_name: db_name.clone(),
+            write_executor
+        };
 
         let schema = data_model::load(db_name)?;
         Ok(Self {

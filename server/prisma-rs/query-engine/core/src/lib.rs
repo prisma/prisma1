@@ -17,3 +17,10 @@ pub use read_query_executor::*;
 pub use mutations::*;
 
 pub type CoreResult<T> = Result<T, CoreError>;
+
+/// A type wrapper around read and write queries
+#[derive(Debug, Clone)]
+pub enum Query {
+    Read(ReadQuery),
+    Write(WriteQuery),
+}
