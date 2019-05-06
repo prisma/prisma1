@@ -78,7 +78,7 @@ pub fn field_to_dmmf(field: &dml::Field) -> Field {
     }
 }
 
-pub fn model_to_dmmf(model: &dml::Type) -> Model {
+pub fn model_to_dmmf(model: &dml::Model) -> Model {
     Model {
         name: model.name.clone(),
         dbName: model.database_name.clone(),
@@ -90,10 +90,10 @@ pub fn model_to_dmmf(model: &dml::Type) -> Model {
 pub fn schema_to_dmmf(schema: &dml::Schema) -> Datamodel {
     let mut datamodel = Datamodel { models: vec![] };
 
-    for obj in &schema.types {
+    for obj in &schema.models {
         match obj {
-            dml::TypeOrEnum::Enum(en) => unimplemented!("DMML has no enum support."),
-            dml::TypeOrEnum::Type(ty) => datamodel.models.push(model_to_dmmf(&ty))
+            dml::ModelOrEnum::Enum(en) => unimplemented!("DMML has no enum support."),
+            dml::ModelOrEnum::Model(model) => datamodel.models.push(model_to_dmmf(&model))
         }
     }
 

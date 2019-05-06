@@ -51,8 +51,8 @@ pub fn new_field_directives() -> DirectiveListValidator<dml::Field> {
     return validator;
 }
 
-pub fn new_type_directives() -> DirectiveListValidator<dml::Type> {
-    let mut validator = DirectiveListValidator::<dml::Type> { known_directives: HashMap::new() };
+pub fn new_model_directives() -> DirectiveListValidator<dml::Model> {
+    let mut validator = DirectiveListValidator::<dml::Model> { known_directives: HashMap::new() };
 
     validator.add(Box::new(db::DbDirectiveValidator{}));
     validator.add(Box::new(embedded::EmbeddedDirectiveValidator{}));

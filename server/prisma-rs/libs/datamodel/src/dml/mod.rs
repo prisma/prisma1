@@ -1,6 +1,6 @@
 // TODOs to answer together with rust teams:
 // * Should this structure be mutatble or immutable?
-// * Should this structure contain circular references? (Would make renaming types/fields MUCH easier)
+// * Should this structure contain circular references? (Would make renaming models/fields MUCH easier)
 // * How do we handle ocnnector specific settings, like indeces? Maybe inheritance, traits and having a Connector<T>?
 
 use chrono::{DateTime, Utc};
@@ -173,7 +173,7 @@ impl WithName for Enum {
 
 
 #[derive(Debug)]
-pub struct Type {
+pub struct Model {
     pub name: String,
     pub fields: Vec<Field>,
     pub comments: Vec<Comment>,
@@ -181,9 +181,9 @@ pub struct Type {
     pub is_embedded: bool
 }
 
-impl Type {
-    fn new(name: &String) -> Type {
-        Type {
+impl Model {
+    fn new(name: &String) -> Model {
+        Model {
             name: name.clone(),
             fields: vec![],
             comments: vec![],
@@ -193,32 +193,32 @@ impl Type {
     }
 }
 
-impl WithName for Type {
+impl WithName for Model {
     fn name(&self) -> &String { &self.name }
     fn set_name(&mut self, name: &String) { self.name = name.clone() }
 }
 
-impl WithDatabaseName for Type {
+impl WithDatabaseName for Model {
     fn database_name(&self) -> &Option<String> { &self.database_name }
     fn set_database_name(&mut self, database_name: &Option<String>) { self.database_name = database_name.clone() }
 }
 
 #[derive(Debug)]
-pub enum TypeOrEnum {
+pub enum ModelOrEnum {
     Enum(Enum),
-    Type(Type)
+    Model(Model)
 }
 
 #[derive(Debug)]
 pub struct Schema {
-    pub types: Vec<TypeOrEnum>,
+    pub models: Vec<ModelOrEnum>,
     pub comments: Vec<Comment>
 }
 
 impl Schema {
     fn new() -> Schema {
         Schema {
-            types: vec![],
+            models: vec![],
             comments: vec![]
         }
     }

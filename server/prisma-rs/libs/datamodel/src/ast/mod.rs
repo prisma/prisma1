@@ -76,29 +76,29 @@ impl WithComments for Enum {
 }
 
 #[derive(Debug)]
-pub struct Type {
+pub struct Model {
     pub name: String,
     pub fields: Vec<Field>,
     pub directives: Vec<Directive>,
     pub comments: Vec<Comment>,
 }
 
-impl WithDirectives for Type {
+impl WithDirectives for Model {
     fn directives(&self) -> &Vec<Directive> { &self.directives }
 }
 
-impl WithComments for Type  {
+impl WithComments for Model  {
     fn comments(&self) -> &Vec<Comment> { &self.comments }
 }
 
 #[derive(Debug)]
-pub enum TypeOrEnum {
+pub enum ModelOrEnum {
     Enum(Enum),
-    Type(Type)
+    Model(Model)
 }
 
 #[derive(Debug)]
 pub struct Schema {
-    pub types: Vec<TypeOrEnum>,
+    pub models: Vec<ModelOrEnum>,
     pub comments: Vec<Comment>
 }

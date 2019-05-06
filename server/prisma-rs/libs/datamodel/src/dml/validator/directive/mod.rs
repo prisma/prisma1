@@ -13,6 +13,6 @@ pub trait DirectiveValidator<T> {
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Option<Error>;
 }
 
-pub trait TypeDirectiveValidator : DirectiveValidator<dml::Type> { }
+pub trait ModelDirectiveValidator : DirectiveValidator<dml::Model> { }
 pub trait EnumDirectiveValidator : DirectiveValidator<dml::Enum> { }
 pub trait FieldDirectiveValidator : DirectiveValidator<dml::Field> { }

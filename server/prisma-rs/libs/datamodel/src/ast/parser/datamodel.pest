@@ -35,7 +35,7 @@ directive_arguments = { "(" ~ ((directive_argument ~ ("," ~ directive_argument)*
 
 directive = { "@" ~ identifier ~ directive_arguments? }
 
-// Type declarations - flattend for easy parsing
+// Model declarations - flattend for easy parsing
 optional_type = { identifier ~ ("?")}
 optional_list_type = { "[" ~ identifier ~ "]" ~ ("?")}
 base_type = { identifier } // Called base type to not conflict with type rust keyword
@@ -48,12 +48,12 @@ field_type = { optional_list_type | list_type | optional_type | base_type }
 default_value = { "=" ~ any_literal }
 field_declaration = { identifier ~ ":" ~ field_type ~ default_value? ~ directive* }
 
-// Type
-type_declaration = { directive* ~ "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" }
+// Model
+model_declaration = { directive* ~ "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" }
 
 // Enum
 enum_field_declaration = { ASCII_ALPHA_UPPER }
 enum_declaration = { directive* ~ "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" }
 
 // Datamodel
-datamodel = { (type_declaration | enum_declaration)+ }
+datamodel = { (model_declaration | enum_declaration)+ }

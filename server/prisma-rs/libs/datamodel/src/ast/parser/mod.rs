@@ -102,7 +102,7 @@ fn parse_directive(token: &pest::iterators::Pair<'_, Rule>) -> Directive {
     }
 }
 
-// Type parsing
+// Base type parsing
 fn parse_base_type(token: &pest::iterators::Pair<'_, Rule>) -> String {
     return match_first! { token, current,
         Rule::identifier => current.as_str().to_string(),
@@ -157,8 +157,8 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
 }
 
 
-// Type parsing
-fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Type {
+// Model parsing
+fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut fields: Vec<Field> = vec![];
@@ -167,17 +167,17 @@ fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Type {
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::field_declaration => fields.push(parse_field(&current)),
-        _ => unreachable!("Encounterd impossible type declaration during parsing: {:?}", current.as_str())
+        _ => unreachable!("Encounterd impossible model declaration during parsing: {:?}", current.as_str())
     }
 
     return match name {
-        Some(name) => Type {
+        Some(name) => Model {
             name,
             fields,
             directives,
             comments: vec![]
         },
-        _ => panic!("Encounterd impossible type declaration during parsing: {:?}", token.as_str()) 
+        _ => panic!("Encounterd impossible model declaration during parsing: {:?}", token.as_str()) 
     }
 }
 
@@ -211,16 +211,16 @@ pub fn parse(datamodel_string: &String) -> Schema {
     .expect("Could not parse datamodel file.")
     .next().unwrap();
 
-    let mut types: Vec<TypeOrEnum> = vec![];
+    let mut models: Vec<ModelOrEnum> = vec![];
 
     match_children! { datamodel, current,
-        Rule::type_declaration => types.push(TypeOrEnum::Type(parse_type(&current))),
-        Rule::enum_declaration => types.push(TypeOrEnum::Enum(parse_enum(&current))),
+        Rule::model_declaration => models.push(ModelOrEnum::Model(parse_model(&current))),
+        Rule::enum_declaration => models.push(ModelOrEnum::Enum(parse_enum(&current))),
         _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.as_str())
     }
 
     return Schema {
-        types,
+        models,
         comments: vec![]
     }
 }

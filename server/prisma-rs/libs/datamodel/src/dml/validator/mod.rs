@@ -6,11 +6,11 @@ pub mod argument;
 pub mod directive;
 
 use value::{WrappedValue, ValueValidator};
-use directive::builtin::{DirectiveListValidator, new_field_directives, new_type_directives, new_enum_directives};
+use directive::builtin::{DirectiveListValidator, new_field_directives, new_model_directives, new_enum_directives};
 
 pub struct Validator {
     pub field_directives: DirectiveListValidator<dml::Field>,
-    pub type_directives: DirectiveListValidator<dml::Type>,
+    pub model_directives: DirectiveListValidator<dml::Model>,
     pub enum_directives: DirectiveListValidator<dml::Enum>
 }
 
@@ -19,7 +19,7 @@ impl Validator {
     pub fn new() -> Validator {
         Validator {
             field_directives: new_field_directives(),
-            type_directives: new_type_directives(),
+            model_directives: new_model_directives(),
             enum_directives: new_enum_directives()
         }
     }
@@ -27,10 +27,10 @@ impl Validator {
     pub fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema {
         let mut schema = dml::Schema::new();
         
-        for ast_obj in &ast_schema.types {
+        for ast_obj in &ast_schema.models {
             match ast_obj {
-                ast::TypeOrEnum::Enum(en) => schema.types.push(dml::TypeOrEnum::Enum(self.validate_enum(&en))),
-                ast::TypeOrEnum::Type(ty) => schema.types.push(dml::TypeOrEnum::Type(self.validate_type(&ty)))
+                ast::ModelOrEnum::Enum(en) => schema.models.push(dml::ModelOrEnum::Enum(self.validate_enum(&en))),
+                ast::ModelOrEnum::Model(ty) => schema.models.push(dml::ModelOrEnum::Model(self.validate_model(&ty)))
             }
         }
 
@@ -38,11 +38,11 @@ impl Validator {
         return schema
     }
 
-    fn validate_type(&self, ast_type: &ast::Type) -> dml::Type {
-        let mut ty = dml::Type::new(&ast_type.name);
-        self.type_directives.validate_and_apply(ast_type, &mut ty);
+    fn validate_model(&self, ast_model: &ast::Model) -> dml::Model {
+        let mut ty = dml::Model::new(&ast_model.name);
+        self.model_directives.validate_and_apply(ast_model, &mut ty);
 
-        for ast_field in &ast_type.fields {
+        for ast_field in &ast_model.fields {
             ty.fields.push(self.validate_field(ast_field));
         }
 
