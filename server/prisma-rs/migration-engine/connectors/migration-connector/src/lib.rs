@@ -5,7 +5,6 @@ use prisma_datamodel::Schema;
 use std::sync::Arc;
 pub use steps::MigrationStep;
 
-
 #[macro_use]
 extern crate serde_derive;
 
@@ -36,12 +35,14 @@ pub enum MigrationResult {
     Warning(MigrationError),
 }
 
+#[derive(Debug, Serialize)]
 pub struct MigrationWarning {
     pub tpe: String,
     pub description: String,
     pub field: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
 pub struct MigrationError {
     pub tpe: String,
     pub description: String,
@@ -81,7 +82,7 @@ pub struct Migration {
     pub finished_at: DateTime<Utc>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum MigrationStatus {
     Pending,
     InProgress,
