@@ -1,5 +1,5 @@
 use super::Builder;
-use crate::{CoreResult, ReadQuery};
+use crate::{CoreResult, ReadQuery, MutationBuilder, WriteQuery};
 use graphql_parser::query::*;
 use prisma_models::SchemaRef;
 use std::sync::Arc;
@@ -31,6 +31,19 @@ impl RootBuilder {
                     directives: _,
                     selection_set,
                 })) => self.build_query(&selection_set.items),
+
+                Definition::Operation(OperationDefinition::Mutation(Mutation {
+                    position: _,
+                    name: _,
+                    variable_definitions: _,
+                    directives: _,
+                    selection_set,
+                })) => {
+                    let muts = self.build_mutation(&selection_set.items);
+                    dbg!(&muts);
+
+                    unimplemented!()
+                }
                 _ => unimplemented!(),
             })
             .collect::<CoreResult<Vec<Vec<ReadQuery>>>>() // Collect all the "query trees"
@@ -44,6 +57,19 @@ impl RootBuilder {
                 // First query-level fields map to a model in our schema, either a plural or singular
                 match item {
                     Selection::Field(root_field) => Builder::new(Arc::clone(&self.schema), root_field)?.build(),
+                    _ => unimplemented!(),
+                }
+            })
+            .collect()
+    }
+
+    /// Mutations do something to the database and then follow-up with a query
+    fn build_mutation(&self, root_fields: &Vec<Selection>) -> CoreResult<Vec<WriteQuery>> {
+        root_fields
+            .iter()
+            .map(|item| {
+                match item {
+                    Selection::Field(root_field) => MutationBuilder::new(Arc::clone(&self.schema), root_field).build(),
                     _ => unimplemented!(),
                 }
             })

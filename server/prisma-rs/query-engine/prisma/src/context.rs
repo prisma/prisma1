@@ -1,5 +1,5 @@
 use crate::{data_model, PrismaResult};
-use core::ReadQueryExecutor;
+use core::{ReadQueryExecutor, WriteQueryExecutor};
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
 use prisma_models::SchemaRef;
 use std::sync::Arc;
@@ -14,12 +14,20 @@ pub struct PrismaContext {
 
     #[debug_stub = "#QueryExecutor#"]
     pub read_query_executor: ReadQueryExecutor,
+
+    #[debug_stub = "#WriteExecutor#"]
+    pub write_query_executor: WriteQueryExecutor,
 }
 
 impl PrismaContext {
     pub fn new() -> PrismaResult<Self> {
         let config = config::load().unwrap();
-        let data_resolver = match config.databases.get("default") {
+
+        // FIXME: This is a weird ugly hack - make pretty
+        //        Not sure why we need to clone the Arc before assigning it. When we
+        //        try to Arc::clone(..) in the struct creation below it fails
+        //        with incompatble type errors!
+        let (data_resolver, write_executor) = match config.databases.get("default") {
             Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => {
                 let db_name = config.db_name();
                 let db_folder = config
@@ -28,12 +36,14 @@ impl PrismaContext {
                     .trim_end_matches("/");
 
                 let sqlite = Sqlite::new(db_folder.to_owned(), config.limit(), false).unwrap();
-                Arc::new(SqlDatabase::new(sqlite))
+                let arc = Arc::new(SqlDatabase::new(sqlite));
+                (Arc::clone(&arc), arc)
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
 
         let read_query_executor: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
+        let write_query_executor: WriteQueryExecutor = WriteQueryExecutor { write_executor };
 
         let db_name = config
             .databases
@@ -47,6 +57,7 @@ impl PrismaContext {
             config: config,
             schema: schema,
             read_query_executor,
+            write_query_executor
         })
     }
 }
