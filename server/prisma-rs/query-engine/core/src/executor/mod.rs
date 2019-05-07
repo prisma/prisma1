@@ -1,5 +1,4 @@
 //! A slightly more generic interface over executing read and write queries
-#![warn(warnings)]
 
 mod read;
 mod write;
@@ -7,7 +6,7 @@ mod write;
 pub use read::ReadQueryExecutor;
 pub use write::WriteQueryExecutor;
 
-use crate::{CoreResult, Query, WriteQuery, WriteQueryResult, ReadQuery, ReadQueryResult};
+use crate::{CoreResult, Query, WriteQuery, ReadQuery, ReadQueryResult};
 
 /// A wrapper around QueryExecutor
 pub struct Executor {
@@ -21,8 +20,7 @@ impl Executor {
     ///
     /// Will execute WriteQueries first, then all ReadQueries, while preserving order.
     pub fn exec_all(&self, queries: Vec<Query>) -> CoreResult<Vec<ReadQueryResult>> {
-        let (writes, reads) = Self::split_read_write(queries);
-
+        let (_writes, reads) = Self::split_read_write(queries);
 
         // FIXME: This is not how you do write-processing
         let reads: Vec<ReadQuery> = reads.into_iter().filter_map(|q| q).collect();

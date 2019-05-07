@@ -1,9 +1,9 @@
 //! Providing an interface to build WriteQueries
 
 use crate::{CoreError, CoreResult, WriteQuery};
-use connector::mutaction::{CreateNode, TopLevelDatabaseMutaction, DatabaseMutactionResult};
-use graphql_parser::query::{Field, OperationDefinition, Value};
-use prisma_models::{ModelRef, PrismaArgs, PrismaValue, SchemaRef, SelectedFields};
+use connector::mutaction::{CreateNode, TopLevelDatabaseMutaction};
+use graphql_parser::query::{Field, Value};
+use prisma_models::{ModelRef, PrismaArgs, PrismaValue, SchemaRef};
 
 use rust_inflector::Inflector;
 
@@ -49,7 +49,7 @@ impl<'field> MutationBuilder<'field> {
 /// Extract String-Value pairs into usable mutation arguments
 fn get_mutation_args(args: &Vec<(String, Value)>) -> PrismaArgs {
     args.iter()
-        .fold(BTreeMap::new(), |mut map, (k, v)| {
+        .fold(BTreeMap::new(), |mut map, (_, v)| {
             match v {
                 Value::Object(o) => o.iter().for_each(|(k, v)| {
                     map.insert(k.clone(), PrismaValue::from_value(v));
@@ -62,6 +62,7 @@ fn get_mutation_args(args: &Vec<(String, Value)>) -> PrismaArgs {
 }
 
 /// A simple enum to discriminate top-level actions
+#[allow(dead_code)] // FIXME: Remove!
 enum Operation {
     Create,
     Update,

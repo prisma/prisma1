@@ -14,7 +14,6 @@ impl ReadQueryExecutor {
         self.execute_internal(queries, vec![])
     }
 
-    #[warn(warnings)]
     fn execute_internal(&self, queries: &[ReadQuery], parent_ids: Vec<GraphqlId>) -> CoreResult<Vec<ReadQueryResult>> {
         let mut results = vec![];
 

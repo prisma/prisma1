@@ -1,5 +1,4 @@
 //! WriteQuery results are kinda special
-#![warn(warnings)]
 
 use connector::mutaction::DatabaseMutactionResult;
 

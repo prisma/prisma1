@@ -1,5 +1,4 @@
 //! Mutation builder module
-#![warn(warnings)]
 
 mod results;
 mod builder;

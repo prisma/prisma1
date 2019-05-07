@@ -1,5 +1,4 @@
 //! Simple wrapper for WriteQueries
-#![warn(warnings)]
 
 use connector::mutaction::{TopLevelDatabaseMutaction, NestedDatabaseMutaction};
 
