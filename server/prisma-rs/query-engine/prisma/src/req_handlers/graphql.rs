@@ -1,11 +1,10 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
+use connector::mutaction::DatabaseMutactionResult;
 use core::{
     ir::{self, Builder},
-    Query, RootBuilder,
-    CoreResult,
+    CoreResult, Query, RootBuilder,
 };
-use connector::mutaction::DatabaseMutactionResult;
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -64,7 +63,12 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         operation_name: req.body.operation_name,
     };
 
-    let mut queries = rb.build()?;
+    let ir = ctx
+        .executor
+        .exec_all(rb.build()?)?
+        .into_iter()
+        .fold(Builder::new(), |builder, result| builder.add(result))
+        .build();
 
     // Execute mutations first!
     // let (writes, reads) = queries
@@ -76,9 +80,7 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     //             }) => {
     //                 let write_results = ctx.write_query_executor.execute(root);
 
-
     //                 first.push(ctx.write_query_executor.execute(wq.root));
-
 
     //             },
     //             Query::Read(rq) => second.push(rq),
@@ -97,8 +99,7 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     //     Err(err) => vec![ir::Response::Error(format!("{:?}", err))] // This is merely a workaround
     // };
 
-    // Ok(json::serialize(ir))
-    unimplemented!()
+    Ok(json::serialize(ir))
 }
 
 /// Create a json envelope
