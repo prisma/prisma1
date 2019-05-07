@@ -5,13 +5,26 @@ use sql_migration_connector::SqlMigrationConnector;
 use std::panic;
 use std::sync::Arc;
 
+use lazy_static::lazy_static;
+
+thread_local! {
+    static harness: MigrationEngineTestHarness = MigrationEngineTestHarness::new();
+}
+
 #[test]
 fn last_should_return_none_if_there_is_no_migration() {
-    run_test(|| {
-        let persistence = load_persistence();
-        let result = persistence.last();
-        assert_eq!(result.is_some(), false);
+    harness.with(|h|{
+        h.test(||{
+            let persistence = load_persistence();
+            let result = persistence.last();
+            assert_eq!(result.is_some(), false);
+        });
     });
+    // run_test(|| {
+    //     let persistence = load_persistence();
+    //     let result = persistence.last();
+    //     assert_eq!(result.is_some(), false);
+    // });
 }
 
 #[test]
@@ -95,7 +108,7 @@ fn update_must_work() {
 }
 
 fn load_persistence() -> Arc<MigrationPersistence> {
-    let connector = SqlMigrationConnector::new();
+    let connector = SqlMigrationConnector::new("migration_persistence_tests".to_string());
     connector.migration_persistence()
 }
 
@@ -104,7 +117,7 @@ where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
     // setup();
-    let connector = SqlMigrationConnector::new();
+    let connector = SqlMigrationConnector::new("migration_persistence_tests".to_string());
     connector.initialize();
     connector.reset();
     let result = panic::catch_unwind(|| test());
@@ -112,4 +125,37 @@ where
     // teardown();
 
     assert!(result.is_ok())
+}
+
+struct MigrationEngineTestHarness {
+    did_before_all_run: bool,
+    connector: Arc<MigrationConnector<DatabaseMigrationStep = sql_migration_connector::SqlMigrationStep>>,
+}
+
+impl MigrationEngineTestHarness {
+    fn new() -> MigrationEngineTestHarness {
+        MigrationEngineTestHarness {
+            did_before_all_run: false,
+            connector: Arc::new(SqlMigrationConnector::new("migration_persistence_tests".to_string())),
+        }
+    }
+
+    fn before_all(&self) {
+        self.connector.initialize();
+    }
+
+    fn before_each(&self) {
+        self.connector.reset();
+    }
+
+    fn test<F>(&self, testFn: F) -> ()
+    where 
+        F: FnOnce() -> () + panic::UnwindSafe,
+    {
+        if !self.did_before_all_run {
+            self.before_all();
+        }
+        self.before_each();
+        testFn();        
+    }
 }

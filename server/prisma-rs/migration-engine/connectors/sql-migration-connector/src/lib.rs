@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
+    schema_name: String,
     migration_persistence: Arc<MigrationPersistence>,
     sql_database_migration_steps_inferrer: Arc<DatabaseMigrationStepsInferrer<SqlMigrationStep>>,
     database_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigrationStep>>,
@@ -24,12 +25,13 @@ pub struct SqlMigrationConnector {
 
 impl SqlMigrationConnector {
     // FIXME: this must take the config as a param at some point
-    pub fn new() -> SqlMigrationConnector {
-        let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn(SCHEMA_NAME)));
+    pub fn new(schema_name: String) -> SqlMigrationConnector {
+        let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn(&schema_name)));
         let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {});
         let database_step_applier = Arc::new(SqlDatabaseStepApplier {});
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
         SqlMigrationConnector {
+            schema_name,
             migration_persistence,
             sql_database_migration_steps_inferrer,
             database_step_applier,
@@ -48,14 +50,12 @@ impl SqlMigrationConnector {
     }
 }
 
-const SCHEMA_NAME: &str = "Test";
-
 impl MigrationConnector for SqlMigrationConnector {
     type DatabaseMigrationStep = SqlMigrationStep;
 
     fn initialize(&self) {
-        let conn = Self::new_conn(SCHEMA_NAME);
-        let mut m = barrel::Migration::new().schema(SCHEMA_NAME);
+        let conn = Self::new_conn(&self.schema_name);
+        let mut m = barrel::Migration::new().schema(self.schema_name.clone());
         m.create_table_if_not_exists("_Migration", |t| {
             t.add_column("revision", types::primary());
             t.add_column("name", types::text());
@@ -76,10 +76,8 @@ impl MigrationConnector for SqlMigrationConnector {
     }
 
     fn reset(&self) {
-        let conn = Self::new_conn(SCHEMA_NAME);
-        let sql_str = r#"
-            DELETE FROM "Test"."_Migration";
-        "#;
+        let conn = Self::new_conn(&self.schema_name);
+        let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
 
         dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
     }
