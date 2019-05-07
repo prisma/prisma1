@@ -1,6 +1,6 @@
 pub mod steps;
 
-use chrono::{ DateTime, Utc };
+use chrono::{DateTime, Utc};
 use prisma_datamodel::Schema;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -59,25 +59,19 @@ pub trait MigrationPersistence {
     fn last(&self) -> Option<Migration>;
 
     // this power the listMigrations command
-    // TODO: should this only return the successful ones? Or also the ones that were rolled back?
     fn load_all(&self) -> Vec<Migration>;
 
     // writes the migration to the Migration table
     fn create(&self, migration: Migration) -> Migration;
 
     // used by the MigrationApplier to write the progress of a Migration into the database
-    fn update(&self, migration: Migration);
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct MigrationId {
-    pub name: String,
-    pub revision: u32,
+    fn update(&self, params: MigrationUpdateParams);
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Migration {
-    pub id: MigrationId,
+    pub name: String,
+    pub revision: usize,
     pub status: MigrationStatus,
     pub applied: usize,
     pub rolled_back: usize,
@@ -89,13 +83,22 @@ pub struct Migration {
     pub finished_at: Option<DateTime<Utc>>,
 }
 
+#[derive(Debug, Clone)]
+pub struct MigrationUpdateParams {
+    pub name: String,
+    pub revision: usize,
+    pub status: MigrationStatus,
+    pub applied: usize,
+    pub rolled_back: usize,
+    pub errors: Vec<String>,
+    pub finished_at: Option<DateTime<Utc>>,
+}
+
 impl Migration {
     pub fn new(name: String) -> Migration {
         Migration {
-            id: MigrationId {
-                name: name,
-                revision: 0,
-            },
+            name: name,
+            revision: 0,
             status: MigrationStatus::Pending,
             applied: 0,
             rolled_back: 0,
@@ -103,19 +106,32 @@ impl Migration {
             datamodel_steps: Vec::new(),
             database_steps: Vec::new(),
             errors: Vec::new(),
-            started_at: timestamp_without_nanos(),
+            started_at: Self::timestamp_without_nanos(),
             finished_at: None,
         }
     }
-}
 
-fn timestamp_without_nanos() -> DateTime<Utc> {
-    let timestamp = Utc::now().timestamp_millis();
-    let nsecs = ((timestamp % 1000) * 1_000_000) as u32;
-    let secs = (timestamp / 1000) as i64;
-    let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
-    let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
-    datetime
+    pub fn update_params(&self) -> MigrationUpdateParams {
+        MigrationUpdateParams {
+            name: self.name.clone(),
+            revision: self.revision.clone(),
+            status: self.status.clone(),
+            applied: self.applied,
+            rolled_back: self.rolled_back,
+            errors: self.errors.clone(),
+            finished_at: self.finished_at.clone(),
+        }
+    }
+
+    // SQLite does not store nano precision. Therefore we cut it so we can assert equality in our tests.
+    pub fn timestamp_without_nanos() -> DateTime<Utc> {
+        let timestamp = Utc::now().timestamp_millis();
+        let nsecs = ((timestamp % 1000) * 1_000_000) as u32;
+        let secs = (timestamp / 1000) as i64;
+        let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
+        let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+        datetime
+    }
 }
 
 #[derive(Debug, Serialize, PartialEq, Clone)]

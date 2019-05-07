@@ -3,7 +3,7 @@ use migration_connector::*;
 use chrono::*;
 use prisma_query::{ast::*, visitor::*};
 use serde_json;
-use rusqlite::Connection;
+use rusqlite::{ Connection, Row };
 use prisma_datamodel::Schema;
 
 pub struct SqlMigrationPersistence {
@@ -23,27 +23,23 @@ impl MigrationPersistence for SqlMigrationPersistence {
         let query = Select::from_table(TABLE_NAME).so_that(conditions).order_by("revision".descend());
         let (sql_str, params) = dbg!(Sqlite::build(query));
         
-        let result = self.connection.query_row(&sql_str, params, |row|{
-            let applied: u32 = row.get(APPLIED_COLUMN);
-            let rolled_back: u32 = row.get(ROLLED_BACK_COLUMN);
-            Migration {
-                id: MigrationId { name: row.get(NAME_COLUMN), revision: 0 },
-                datamodel: Schema::empty(),
-                status: MigrationStatus::from_str(row.get(STATUS_COLUMN)),
-                applied: applied as usize,
-                rolled_back: rolled_back as usize,
-                datamodel_steps: Vec::new(),
-                database_steps: Vec::new(),
-                errors: Vec::new(),
-                started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN)),
-                finished_at: None,
-            }
-        });
+        let result = self.connection.query_row(&sql_str, params, parse_row);
         result.ok()
     }
 
     fn load_all(&self) -> Vec<Migration> {
-        vec![]
+        let query = Select::from_table(TABLE_NAME);
+        let (sql_str, params) = dbg!(Sqlite::build(query));
+        
+        let mut stmt = self.connection.prepare_cached(&sql_str).unwrap();
+        let mut rows = stmt.query(params).unwrap();
+        let mut result = Vec::new();
+
+        while let Some(row) = rows.next() {
+            result.push(parse_row(&row.unwrap()));
+        }
+
+        result
     }
 
 
@@ -52,14 +48,14 @@ impl MigrationPersistence for SqlMigrationPersistence {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
         };
-        let cloned = migration.clone();
+        let mut cloned = migration.clone();
         // let status_value = serde_json::to_string(&migration.status).unwrap();
         let model_steps_json = serde_json::to_string(&migration.datamodel_steps).unwrap();
         let database_steps_json = serde_json::to_string(&migration.database_steps).unwrap();
         let errors_json = serde_json::to_string(&migration.errors).unwrap();
 
         let query = Insert::single_into(TABLE_NAME)
-            .value(NAME_COLUMN, migration.id.name)
+            .value(NAME_COLUMN, migration.name)
             .value(DATAMODEL_COLUMN, "".to_string()) // todo: serialize datamodel
             .value(STATUS_COLUMN, migration.status.code())
             .value(APPLIED_COLUMN, migration.applied)
@@ -74,10 +70,32 @@ impl MigrationPersistence for SqlMigrationPersistence {
 
         let result = dbg!(self.connection.execute(&sql_str, params));
 
+        cloned.revision = self.connection.last_insert_rowid() as usize;
         cloned
     }
 
-    fn update(&self, migration: Migration) {        
+    fn update(&self, params: MigrationUpdateParams) {
+        let finished_at_value = match params.finished_at {
+            Some(x) => x.timestamp_millis().into(),
+            None => ParameterizedValue::Null,
+        };
+        let errors_json = serde_json::to_string(&params.errors).unwrap();
+        let query = Update::table(TABLE_NAME)
+            .set(STATUS_COLUMN, params.status.code())
+            .set(APPLIED_COLUMN, params.applied)
+            .set(ROLLED_BACK_COLUMN, params.rolled_back)
+            .set(ERRORS_COLUMN, errors_json)
+            .set(FINISHED_AT_COLUMN, finished_at_value)
+            .so_that(
+                NAME_COLUMN.equals(params.name).and(
+                    REVISION_COLUMN.equals(params.revision)
+                ),
+
+            );
+
+        let (sql_str, params) = dbg!(Sqlite::build(query));
+
+        let result = dbg!(self.connection.execute(&sql_str, params));
     }
 }
 
@@ -88,6 +106,28 @@ fn timestamp_to_datetime(timestamp: i64) -> DateTime<Utc> {
     let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
 
     datetime
+}
+
+fn parse_row(row: &Row) -> Migration {
+    let revision: u32 = row.get(REVISION_COLUMN);
+    let applied: u32 = row.get(APPLIED_COLUMN);
+    let rolled_back: u32 = row.get(ROLLED_BACK_COLUMN);
+    let errors_json: String = row.get(ERRORS_COLUMN);
+    let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
+    let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN);
+    Migration {
+        name: row.get(NAME_COLUMN), 
+        revision: revision as usize,
+        datamodel: Schema::empty(),
+        status: MigrationStatus::from_str(row.get(STATUS_COLUMN)),
+        applied: applied as usize,
+        rolled_back: rolled_back as usize,
+        datamodel_steps: Vec::new(),
+        database_steps: Vec::new(),
+        errors: errors,
+        started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN)),
+        finished_at: finished_at.map(timestamp_to_datetime),
+    }
 }
 
 static TABLE_NAME: &str = "_Migration";
