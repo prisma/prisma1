@@ -10,6 +10,7 @@ mod primary;
 mod embedded;
 mod scalarlist;
 mod sequence;
+mod default;
 mod unique;
 
 pub struct DirectiveListValidator<T> { 
@@ -47,6 +48,7 @@ pub fn new_field_directives() -> DirectiveListValidator<dml::Field> {
     validator.add(Box::new(scalarlist::ScalarListDirectiveValidator{ }));
     validator.add(Box::new(sequence::SequenceDirectiveValidator{ }));
     validator.add(Box::new(unique::UniqueDirectiveValidator{ }));
+    validator.add(Box::new(default::DefaultDirectiveValidator{ }));
     
     return validator;
 }
