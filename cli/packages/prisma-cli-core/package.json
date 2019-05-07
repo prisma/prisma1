@@ -11,7 +11,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^0.0.17",
     "@types/fs-extra": "^5.0.0",
-    "@types/graphql": "^14.0.3",
+    "@types/graphql": "14.0.3",
     "@types/node": "^8.0.22",
     "@types/semver": "^5.5.0",
     "faker": "^4.1.0",
