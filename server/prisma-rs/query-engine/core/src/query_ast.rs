@@ -17,7 +17,6 @@ pub struct RecordQuery {
     pub selector: NodeSelector,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
-    // TODO: rename to something more obvious maybe?
     pub fields: Vec<String>,
 }
 
@@ -28,7 +27,6 @@ pub struct ManyRecordsQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
-    // TODO: rename to something more obvious maybe?
     pub fields: Vec<String>,
 }
 
@@ -39,7 +37,6 @@ pub struct RelatedRecordQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
-    // TODO: rename to something more obvious maybe?
     pub fields: Vec<String>,
 }
 
@@ -50,6 +47,5 @@ pub struct ManyRelatedRecordsQuery {
     pub args: QueryArguments,
     pub selected_fields: SelectedFields,
     pub nested: Vec<ReadQuery>,
-    // TODO: rename to something more obvious maybe?
     pub fields: Vec<String>,
 }

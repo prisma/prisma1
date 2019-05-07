@@ -5,6 +5,7 @@ mod error;
 mod query_ast;
 mod query_results;
 mod read_query_executor;
+mod schema;
 
 pub mod ir;
 
