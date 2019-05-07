@@ -4,7 +4,6 @@ mod builders;
 mod error;
 mod query_ast;
 mod query_results;
-mod read_query_executor;
 mod mutations;
 mod executor;
 
@@ -14,7 +13,6 @@ pub use builders::*;
 pub use error::*;
 pub use query_ast::*;
 pub use query_results::*;
-pub use read_query_executor::*;
 pub use mutations::*;
 pub use executor::*;
 
