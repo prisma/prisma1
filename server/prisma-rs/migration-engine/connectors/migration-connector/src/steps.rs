@@ -1,5 +1,4 @@
 use nullable::Nullable;
-use prisma_models::prelude::*;
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(tag = "stepType")]
@@ -54,7 +53,7 @@ pub struct DeleteModel {
     pub name: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Eq, PartialEq, Default)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateField {
     pub model: String,
@@ -80,13 +79,13 @@ pub struct CreateField {
     pub is_updated_at: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<FieldBehaviour>, // fixme: how could we scope this to IdBehaviour?
+    pub id: Option<String>, // fixme: change to behaviour
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<String>, // fixme: change to PrismaValue
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalar_list: Option<FieldBehaviour>, // fixme: change to behaviour
+    pub scalar_list: Option<String>, // fixme: change to behaviour
 }
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
@@ -211,7 +210,7 @@ pub struct RelationFieldSpec {
     pub is_optional: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub on_delete: Option<OnDelete>,
+    pub on_delete: Option<String>, // fixme: change to proper enum
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inline_link: Option<bool>,
@@ -229,15 +228,16 @@ pub struct LinkTableSpec {
 }
 
 #[cfg(test)]
+#[allow(non_snake_case)]
 mod tests {
     use crate::steps::*;
     use nullable::Nullable::*;
-    use prisma_models::prelude::IdStrategy;
-    use prisma_models::prelude::ScalarListStrategy;
-    use prisma_models::Field;
-    use prisma_models::FieldBehaviour;
-    use prisma_models::OnDelete;
-    use prisma_models::Sequence;
+    // use prisma_models::prelude::IdStrategy;
+    // use prisma_models::prelude::ScalarListStrategy;
+    // use prisma_models::Field;
+    // use prisma_models::FieldBehaviour;
+    // use prisma_models::OnDelete;
+    // use prisma_models::Sequence;
     use serde_json::Value;
 
     #[test]
@@ -314,58 +314,59 @@ mod tests {
         assert_symmetric_serde(json, expected_struct);
     }
 
-    #[test]
-    fn full_CreateField_must_work() {
-        let json = r#"{
-            "stepType":"CreateField",
-            "model":"Blog",
-            "name":"title",
-            "type":"String",
-            "dbName":"blog",
-            "isOptional":true,
-            "isList":true,
-            "isCreatedAt":true,
-            "isUpdatedAt":true,
-            "id": {
-                "type": "id",
-                "strategy":"Sequence",
-                "sequence": {
-                    "name": "My_Sequence",
-                    "allocationSize": 5,
-                    "initialValue": 100
-                }
-            },
-            "default":"default",
-            "scalarList": {
-                "type":"scalarList",
-                "strategy": "Embedded"
-            }
-        }"#;
-        let sequence = Sequence {
-            name: "My_Sequence".to_string(),
-            allocation_size: 5,
-            initial_value: 100,
-        };
-        let expected_struct = MigrationStep::CreateField(CreateField {
-            model: "Blog".to_string(),
-            name: "title".to_string(),
-            tpe: "String".to_string(),
-            db_name: Some("blog".to_string()),
-            is_optional: Some(true),
-            is_list: Some(true),
-            is_created_at: Some(true),
-            is_updated_at: Some(true),
-            id: Some(FieldBehaviour::Id {
-                strategy: IdStrategy::Sequence,
-                sequence: Some(sequence),
-            }),
-            default: Some("default".to_string()),
-            scalar_list: Some(FieldBehaviour::ScalarList {
-                strategy: ScalarListStrategy::Embedded,
-            }),
-        });
-        assert_symmetric_serde(json, expected_struct);
-    }
+    // TODO: bring back once we have decided on field behavious
+    //#[test]
+    // fn full_CreateField_must_work() {
+    //     let json = r#"{
+    //         "stepType":"CreateField",
+    //         "model":"Blog",
+    //         "name":"title",
+    //         "type":"String",
+    //         "dbName":"blog",
+    //         "isOptional":true,
+    //         "isList":true,
+    //         "isCreatedAt":true,
+    //         "isUpdatedAt":true,
+    //         "id": {
+    //             "type": "id",
+    //             "strategy":"Sequence",
+    //             "sequence": {
+    //                 "name": "My_Sequence",
+    //                 "allocationSize": 5,
+    //                 "initialValue": 100
+    //             }
+    //         },
+    //         "default":"default",
+    //         "scalarList": {
+    //             "type":"scalarList",
+    //             "strategy": "Embedded"
+    //         }
+    //     }"#;
+    //     let sequence = Sequence {
+    //         name: "My_Sequence".to_string(),
+    //         allocation_size: 5,
+    //         initial_value: 100,
+    //     };
+    //     let expected_struct = MigrationStep::CreateField(CreateField {
+    //         model: "Blog".to_string(),
+    //         name: "title".to_string(),
+    //         tpe: "String".to_string(),
+    //         db_name: Some("blog".to_string()),
+    //         is_optional: Some(true),
+    //         is_list: Some(true),
+    //         is_created_at: Some(true),
+    //         is_updated_at: Some(true),
+    //         id: Some(FieldBehaviour::Id {
+    //             strategy: IdStrategy::Sequence,
+    //             sequence: Some(sequence),
+    //         }),
+    //         default: Some("default".to_string()),
+    //         scalar_list: Some(FieldBehaviour::ScalarList {
+    //             strategy: ScalarListStrategy::Embedded,
+    //         }),
+    //     });
+    //     assert_symmetric_serde(json, expected_struct);
+    // }
 
     #[test]
     fn minimal_UpdateField_must_work() {
@@ -505,7 +506,7 @@ mod tests {
                 field: Some("posts".to_string()),
                 is_list: Some(true),
                 is_optional: None,
-                on_delete: Some(OnDelete::SetNull),
+                on_delete: Some("SET_NULL".to_string()),
                 inline_link: Some(true),
             },
             model_b: RelationFieldSpec {
@@ -513,7 +514,7 @@ mod tests {
                 field: Some("blog".to_string()),
                 is_list: None,
                 is_optional: Some(true),
-                on_delete: Some(OnDelete::Cascade),
+                on_delete: Some("CASCADE".to_string()),
                 inline_link: None,
             },
             table: Some(LinkTableSpec {

@@ -2,7 +2,6 @@ use crate::{DomainError, DomainResult};
 use chrono::prelude::*;
 use graphql_parser::query::Value as GraphqlValue;
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt};
 use uuid::Uuid;

@@ -1,5 +1,5 @@
-use crate::steps::*;
 use database_inspector::DatabaseSchema;
+use migration_connector::steps::*;
 use prisma_models::*;
 
 pub trait MigrationStepsInferrer {
@@ -52,12 +52,12 @@ impl<'a> MigrationStepsInferrerImpl<'a> {
                     tpe: field.type_identifier.user_friendly_type_name(),
                     db_name: field.db_name_opt().map(|f| f.to_string()),
                     default: None,
-                    id: field.id_behaviour_clone(),
+                    id: None, //field.id_behaviour_clone(),
                     is_created_at: field.is_created_at().as_some_if_true(),
                     is_updated_at: field.is_updated_at().as_some_if_true(),
                     is_list: field.is_list.as_some_if_true(),
                     is_optional: field.is_required.as_some_if_true(),
-                    scalar_list: field.scalar_list_behaviour_clone(),
+                    scalar_list: None, //field.scalar_list_behaviour_clone(),
                 };
                 create_field_steps.push(MigrationStep::CreateField(step))
             }
@@ -87,7 +87,7 @@ impl<'a> MigrationStepsInferrerImpl<'a> {
                     field: Some(field_a.name.clone()),
                     is_list: field_a.is_list.as_some_if_true(),
                     is_optional: field_a.is_optional().as_some_if_true(),
-                    on_delete: Some(relation.model_a_on_delete),
+                    on_delete: None, //Some(relation.model_a_on_delete),
                     inline_link: self.is_inlined_in_model(relation, &model_a).as_some_if_true(),
                 },
                 model_b: RelationFieldSpec {
@@ -95,7 +95,7 @@ impl<'a> MigrationStepsInferrerImpl<'a> {
                     field: Some(field_b.name.clone()),
                     is_list: field_b.is_list.as_some_if_true(),
                     is_optional: field_b.is_optional().as_some_if_true(),
-                    on_delete: Some(relation.model_a_on_delete),
+                    on_delete: None, //Some(relation.model_a_on_delete),
                     inline_link: self.is_inlined_in_model(relation, &model_b).as_some_if_true(),
                 },
                 table: match relation.manifestation {

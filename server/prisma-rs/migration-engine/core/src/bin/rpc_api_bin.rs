@@ -1,4 +1,4 @@
-use migration_engine::rpc_api::RpcApi;
+use migration_core::rpc_api::RpcApi;
 //use serde::de::DeserializeOwned;
 //use serde::Serialize;
 

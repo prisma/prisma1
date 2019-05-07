@@ -1,5 +1,5 @@
-use migration_engine::commands::command::*;
-use migration_engine::commands::suggest_migration_step::*;
+use migration_core::commands::command::*;
+use migration_core::commands::suggest_migration_step::*;
 use std::fs;
 
 fn main() {

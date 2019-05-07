@@ -2,8 +2,8 @@ use super::DataModelWarningOrError;
 use crate::commands::command::MigrationCommand;
 use crate::migration::migration_steps_inferrer::{MigrationStepsInferrer, MigrationStepsInferrerImpl};
 use crate::migration::schema_inferer::*;
-use crate::steps::*;
 use database_inspector::{DatabaseInspector, EmptyDatabaseInspectorImpl};
+use migration_connector::steps::*;
 
 pub struct SuggestMigrationStepsCommand {
     input: SuggestMigrationStepsInput,
