@@ -2,7 +2,7 @@ use lazy_static::lazy_static;
 use rust_inflector::Inflector as RustInflector;
 use std::collections::HashMap;
 
-/// This is a remnant from the Scala inflector
+// This is a remnant from the Scala inflector
 lazy_static! {
     pub static ref SINGULARIZE_EXCEPTIONS: HashMap<&'static str, &'static str> =
         vec![("todoes", "todo"), ("children", "child"), ("campuses", "campus")].into_iter().collect();

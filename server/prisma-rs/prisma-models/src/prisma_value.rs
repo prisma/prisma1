@@ -51,7 +51,7 @@ impl PrismaValue {
             GraphqlValue::Null => PrismaValue::Null,
             GraphqlValue::String(s) => Self::str_as_json(s).or_else(|| Self::str_as_datetime(s)).unwrap_or(PrismaValue::String(s.clone())),
             GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
-            _ => unimplemented!(),
+            value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
         }
     }
 

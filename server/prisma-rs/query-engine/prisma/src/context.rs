@@ -1,5 +1,5 @@
 use crate::{data_model, PrismaResult};
-use core::ReadQueryExecutor;
+use core::{ReadQueryExecutor, WriteQueryExecutor, Executor};
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
 use prisma_models::SchemaRef;
 use std::sync::Arc;
@@ -12,14 +12,19 @@ pub struct PrismaContext {
     pub config: PrismaConfig,
     pub schema: SchemaRef,
 
-    #[debug_stub = "#QueryExecutor#"]
-    pub read_query_executor: ReadQueryExecutor,
+    #[debug_stub = "#Executor#"]
+    pub executor: Executor,
 }
 
 impl PrismaContext {
     pub fn new() -> PrismaResult<Self> {
         let config = config::load().unwrap();
-        let data_resolver = match config.databases.get("default") {
+
+        // FIXME: This is a weird ugly hack - make pretty
+        //        Not sure why we need to clone the Arc before assigning it. When we
+        //        try to Arc::clone(..) in the struct creation below it fails
+        //        with incompatble type errors!
+        let (data_resolver, write_executor) = match config.databases.get("default") {
             Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => {
                 let db_name = config.db_name();
                 let db_folder = config
@@ -28,12 +33,11 @@ impl PrismaContext {
                     .trim_end_matches("/");
 
                 let sqlite = Sqlite::new(db_folder.to_owned(), config.limit(), false).unwrap();
-                Arc::new(SqlDatabase::new(sqlite))
+                let arc = Arc::new(SqlDatabase::new(sqlite));
+                (Arc::clone(&arc), arc)
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
-
-        let read_query_executor: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
 
         let db_name = config
             .databases
@@ -42,11 +46,21 @@ impl PrismaContext {
             .db_name()
             .expect("database was not set");
 
+        let read_exec: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
+        let write_exec: WriteQueryExecutor = WriteQueryExecutor {
+            db_name: db_name.clone(),
+            write_executor
+        };
+
+        let executor = Executor {
+            read_exec, write_exec
+        };
+
         let schema = data_model::load(db_name)?;
         Ok(Self {
             config: config,
             schema: schema,
-            read_query_executor,
+            executor,
         })
     }
 }
