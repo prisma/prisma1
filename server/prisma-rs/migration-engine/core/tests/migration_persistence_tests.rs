@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
+mod test_harness;
+
+use test_harness::*;
 use migration_connector::*;
-use sql_migration_connector::SqlMigrationConnector;
-use std::panic;
-use std::path::Path;
 
 #[test]
 fn last_should_return_none_if_there_is_no_migration() {
@@ -95,22 +95,3 @@ fn update_must_work() {
 }
 
 
-fn run_test<T>(test: T) -> ()
-where
-    T: FnOnce() -> () + panic::UnwindSafe,
-{
-    // SETUP
-    let connector = connector();
-    connector.initialize();
-    connector.reset();
-
-    // TEST
-    let result = panic::catch_unwind(|| test());
-    assert!(result.is_ok())
-}
-
-fn connector() -> Box<MigrationConnector<DatabaseMigrationStep = sql_migration_connector::SqlMigrationStep>> {
-    let file_path = dbg!(file!());
-    let file_name = dbg!(Path::new(file_path).file_stem().unwrap().to_str().unwrap());
-    Box::new(SqlMigrationConnector::new(file_name.to_string()))
-}
