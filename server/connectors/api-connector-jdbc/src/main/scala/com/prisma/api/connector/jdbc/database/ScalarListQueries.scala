@@ -41,7 +41,7 @@ trait ScalarListQueries extends BuilderBase with FilterConditionBuilder with Ord
         val result = rs.readWith(readsScalarListField(field))
         val convertedValues = result
           .groupBy(_.nodeId)
-          .map { case (id, values) => ScalarListValues(StringIdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }
+          .map { case (id, values) => ScalarListValues(id, ListGCValue(values.sortBy(_.position).map(_.value))) }
           .toVector
 
         ResolverResult(convertedValues)
@@ -56,7 +56,7 @@ trait ScalarListQueries extends BuilderBase with FilterConditionBuilder with Ord
       val nodeIdField   = scalarListColumn(field, nodeIdFieldName)
       val positionField = scalarListColumn(field, positionFieldName)
       val valueField    = scalarListColumn(field, valueFieldName)
-      val condition     = nodeIdField.in(Vector.fill(nodeIds.length) { stringDummy }: _*)
+      val condition     = nodeIdField.in(Vector.fill(nodeIds.length) { placeHolder }: _*)
 
       sql
         .select(nodeIdField, positionField, valueField)
@@ -67,9 +67,9 @@ trait ScalarListQueries extends BuilderBase with FilterConditionBuilder with Ord
     queryToDBIO(query)(
       setParams = pp => nodeIds.foreach(pp.setGcValue),
       readResult = { rs =>
-        val scalarListElements                          = rs.readWith(readsScalarListField(field))
-        val grouped: Map[Id, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
-        grouped.map { case (id, values) => ScalarListValues(StringIdGCValue(id), ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
+        val scalarListElements                                 = rs.readWith(readsScalarListField(field))
+        val grouped: Map[IdGCValue, Vector[ScalarListElement]] = scalarListElements.groupBy(_.nodeId)
+        grouped.map { case (id, values) => ScalarListValues(id, ListGCValue(values.sortBy(_.position).map(_.value))) }.toVector
       }
     )
   }
