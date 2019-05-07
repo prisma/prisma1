@@ -121,11 +121,8 @@ curl -X POST \\
 
 ```bash copy
 curl -X PUT \\
-  http://localhost:3000/post/publish \\
+  http://localhost:3000/post/publish/__POST_ID__ \\
   -H 'Content-Type: application/json' \\
-  -d '{
-  "id": "__POST_ID__"
-}'
 ```
 
 ```bash copy
