@@ -48,7 +48,7 @@ field_type = { optional_list_type | list_type | optional_type | base_type }
 
 // Field
 default_value = { "=" ~ any_literal }
-field_declaration = { identifier ~ ":" ~ field_type ~ default_value? ~ directive* }
+field_declaration = { identifier ~ (":")? ~ field_type ~ default_value? ~ directive* }
 
 // Model
 model_declaration = { directive* ~ "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" }

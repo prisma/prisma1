@@ -43,7 +43,6 @@ macro_rules! match_first (
 );
 
 fn parse_string_literal(token: &pest::iterators::Pair<'_, Rule>) -> String {
-
     return match_first! { token, current,
         Rule::string_content => current.as_str().to_string(),
         _ => unreachable!("Encountered impossible string content during parsing: {:?}", current.as_str())
