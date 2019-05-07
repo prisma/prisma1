@@ -22,6 +22,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    ssl: true
                           |    connectionLimit: 2
                           |    rawAccess: true
+                          |    queueSize: 1234
                         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
@@ -40,6 +41,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.ssl shouldBe true
       database.connectionLimit shouldBe Some(2)
       database.rawAccess shouldBe true
+      database.queueSize shouldBe Some(1234)
     }
 
     "be parsed without errors if an optional field is missing" in {
@@ -70,6 +72,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.schema shouldBe None
       database.ssl shouldBe false
       database.rawAccess shouldBe false
+      database.queueSize shouldBe None
     }
 
     "be parsed without errors if an optional field is there but set to nothing" in {
@@ -112,6 +115,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
           |  default:
           |    connector: postgres
           |    uri: postgres://user:password@host:5432/database?ssl=1
+          |    queueSize: 1234
         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
@@ -128,6 +132,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.database shouldBe Some("database")
       database.schema shouldBe None
       database.ssl shouldBe true
+      database.queueSize shouldBe Some(1234)
     }
   }
 
@@ -322,6 +327,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                         |  default:
                         |    connector: mongo
                         |    uri: $uri
+                        |    queueSize: 1234
                       """.stripMargin
     val config        = ConfigLoader.tryLoadString(invalidConfig)
     println(config)
@@ -329,5 +335,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
     val db = config.get.databases.head
     db.connector should be("mongo")
     db.uri should be(uri)
+    db.queueSize should be(Some(1234))
   }
 }

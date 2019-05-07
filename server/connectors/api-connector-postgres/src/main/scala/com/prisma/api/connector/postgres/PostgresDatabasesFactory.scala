@@ -53,7 +53,14 @@ object PostgresDatabasesFactory {
     val poolName       = "database"
     val numThreads     = dbConfig.connectionLimit.getOrElse(10) - 1
     val maxConnections = numThreads
-    val executor       = AsyncExecutor(poolName, numThreads, numThreads, 1000, maxConnections, registerMbeans = false)
+    val executor = AsyncExecutor(
+      name = poolName,
+      minThreads = numThreads,
+      maxThreads = numThreads,
+      queueSize = dbConfig.queueSizeLimitOrDefault,
+      maxConnections = maxConnections,
+      registerMbeans = false
+    )
 
     Database.forSource(source, executor)
   }
@@ -71,6 +78,7 @@ object PostgresDatabasesFactory {
                       |    password = "${dbConfig.password.getOrElse("")}"
                       |  }
                       |  numThreads = ${dbConfig.connectionLimit.getOrElse(10) - 1} // we subtract 1 because one connection is consumed already by deploy
+                      |  queueSize = ${dbConfig.queueSizeLimitOrDefault}
                       |  connectionTimeout = 5000
                       |  $pooled
                       |}
