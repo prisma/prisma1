@@ -1,18 +1,18 @@
-mod sql_migration_persistence;
 mod sql_database_migration_steps_inferrer;
 mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
+mod sql_migration_persistence;
 
-use sql_migration_persistence::*;
+use barrel;
+use barrel::backend::Sqlite;
+use barrel::types;
+use migration_connector::*;
+use rusqlite::{Connection, NO_PARAMS};
 use sql_database_migration_steps_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
-use migration_connector::*;
+use sql_migration_persistence::*;
 use std::sync::Arc;
-use rusqlite::{ Connection, NO_PARAMS };
-use barrel;
-use barrel::types;
-use barrel::backend::Sqlite;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
@@ -26,10 +26,15 @@ impl SqlMigrationConnector {
     // FIXME: this must take the config as a param at some point
     pub fn new() -> SqlMigrationConnector {
         let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn(SCHEMA_NAME)));
-        let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer{});
-        let database_step_applier = Arc::new(SqlDatabaseStepApplier{});
-        let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker{});
-        SqlMigrationConnector{migration_persistence, sql_database_migration_steps_inferrer, database_step_applier, destructive_changes_checker}
+        let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {});
+        let database_step_applier = Arc::new(SqlDatabaseStepApplier {});
+        let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
+        SqlMigrationConnector {
+            migration_persistence,
+            sql_database_migration_steps_inferrer,
+            database_step_applier,
+            destructive_changes_checker,
+        }
     }
 
     fn new_conn(name: &str) -> Connection {
@@ -37,7 +42,8 @@ impl SqlMigrationConnector {
         let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
         let path = format!("{}/db", server_root);
         let database_file_path = format!("{}/{}.db", path, name);
-        conn.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), name]).unwrap();
+        conn.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), name])
+            .unwrap();
         conn
     }
 }
@@ -62,14 +68,14 @@ impl MigrationConnector for SqlMigrationConnector {
             t.add_column("errors", types::text());
             t.add_column("started_at", types::date());
             t.add_column("finished_at", types::date().nullable(true));
-        });       
+        });
 
-        let sql_str = dbg!(m.make::<Sqlite>());    
+        let sql_str = dbg!(m.make::<Sqlite>());
 
         dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
     }
 
-    fn reset(&self){
+    fn reset(&self) {
         let conn = Self::new_conn(SCHEMA_NAME);
         let sql_str = r#"
             DELETE FROM "Test"."_Migration";

@@ -1,6 +1,6 @@
 use crate::commands::command::MigrationCommand;
-use migration_connector::*;
 use chrono::*;
+use migration_connector::*;
 
 pub struct MigrationProgressCommand {
     input: MigrationProgressInput,
@@ -27,7 +27,6 @@ impl MigrationCommand for MigrationProgressCommand {
         }
     }
 }
-
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

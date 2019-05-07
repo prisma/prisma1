@@ -24,7 +24,6 @@ impl MigrationCommand for ApplyMigrationCommand {
     }
 }
 
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ApplyMigrationInput {
@@ -40,5 +39,5 @@ pub struct ApplyMigrationOutput {
     pub steps: Vec<MigrationStep>,
     pub warnings: Vec<MigrationWarning>,
     pub errors: Vec<MigrationError>,
-    pub general_errors: Vec<String>
+    pub general_errors: Vec<String>,
 }

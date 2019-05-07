@@ -73,7 +73,7 @@ impl<'a> Builder<'a> {
         } else {
             let normalized = match model.name.as_str() {
                 "AUser" => "aUser".to_owned(), // FIXME *quietly sobbing*
-                name => name.to_camel_case()
+                name => name.to_camel_case(),
             };
 
             if field.name == normalized {

@@ -1,5 +1,5 @@
-use migration_connector::steps::*;
 use database_inspector::DatabaseSchema;
+use migration_connector::steps::*;
 use prisma_models::*;
 
 pub trait MigrationStepsInferrer {

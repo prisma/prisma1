@@ -20,7 +20,6 @@ impl MigrationCommand for ListMigrationStepsCommand {
     }
 }
 
-
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ListMigrationStepsInput {

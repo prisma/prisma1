@@ -1,6 +1,6 @@
+use super::list_migrations::ListMigrationStepsOutput;
 use crate::commands::command::MigrationCommand;
 use migration_connector::*;
-use super::list_migrations::ListMigrationStepsOutput;
 
 pub struct UnapplyMigrationCommand {
     input: UnapplyMigrationInput,
@@ -26,11 +26,10 @@ impl MigrationCommand for UnapplyMigrationCommand {
                 id: "bar".to_string(),
                 steps: Vec::new(),
                 status: MigrationStatus::Pending,
-            }
+            },
         }
     }
 }
-
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]

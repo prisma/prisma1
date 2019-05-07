@@ -1,10 +1,10 @@
-use migration_connector::*;
 #[allow(unused, dead_code)]
 use chrono::*;
-use prisma_query::{ast::*, visitor::*};
-use serde_json;
-use rusqlite::{ Connection, Row };
+use migration_connector::*;
 use prisma_datamodel::Schema;
+use prisma_query::{ast::*, visitor::*};
+use rusqlite::{Connection, Row};
+use serde_json;
 
 pub struct SqlMigrationPersistence {
     connection: Connection,
@@ -20,9 +20,11 @@ impl SqlMigrationPersistence {
 impl MigrationPersistence for SqlMigrationPersistence {
     fn last(&self) -> Option<Migration> {
         let conditions = STATUS_COLUMN.equals("Success");
-        let query = Select::from_table(TABLE_NAME).so_that(conditions).order_by("revision".descend());
+        let query = Select::from_table(TABLE_NAME)
+            .so_that(conditions)
+            .order_by("revision".descend());
         let (sql_str, params) = dbg!(Sqlite::build(query));
-        
+
         let result = self.connection.query_row(&sql_str, params, parse_row);
         result.ok()
     }
@@ -30,7 +32,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
     fn load_all(&self) -> Vec<Migration> {
         let query = Select::from_table(TABLE_NAME);
         let (sql_str, params) = dbg!(Sqlite::build(query));
-        
+
         let mut stmt = self.connection.prepare_cached(&sql_str).unwrap();
         let mut rows = stmt.query(params).unwrap();
         let mut result = Vec::new();
@@ -41,7 +43,6 @@ impl MigrationPersistence for SqlMigrationPersistence {
 
         result
     }
-
 
     fn create(&self, migration: Migration) -> Migration {
         let finished_at_value = match migration.finished_at {
@@ -63,7 +64,10 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .value(DATAMODEL_STEPS_COLUMN, model_steps_json)
             .value(DATABASE_STEPS_COLUMN, database_steps_json)
             .value(ERRORS_COLUMN, errors_json)
-            .value(STARTED_AT_COLUMN, ParameterizedValue::Integer(migration.started_at.timestamp_millis()))
+            .value(
+                STARTED_AT_COLUMN,
+                ParameterizedValue::Integer(migration.started_at.timestamp_millis()),
+            )
             .value(FINISHED_AT_COLUMN, finished_at_value);
 
         let (sql_str, params) = dbg!(Sqlite::build(query));
@@ -87,10 +91,9 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .set(ERRORS_COLUMN, errors_json)
             .set(FINISHED_AT_COLUMN, finished_at_value)
             .so_that(
-                NAME_COLUMN.equals(params.name).and(
-                    REVISION_COLUMN.equals(params.revision)
-                ),
-
+                NAME_COLUMN
+                    .equals(params.name)
+                    .and(REVISION_COLUMN.equals(params.revision)),
             );
 
         let (sql_str, params) = dbg!(Sqlite::build(query));
@@ -116,7 +119,7 @@ fn parse_row(row: &Row) -> Migration {
     let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
     let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN);
     Migration {
-        name: row.get(NAME_COLUMN), 
+        name: row.get(NAME_COLUMN),
         revision: revision as usize,
         datamodel: Schema::empty(),
         status: MigrationStatus::from_str(row.get(STATUS_COLUMN)),
@@ -142,7 +145,6 @@ static DATABASE_STEPS_COLUMN: &str = "database_steps";
 static ERRORS_COLUMN: &str = "errors";
 static STARTED_AT_COLUMN: &str = "started_at";
 static FINISHED_AT_COLUMN: &str = "finished_at";
-
 
 // pub struct MigrationRow {
 //     revision: u32,

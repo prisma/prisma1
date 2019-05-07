@@ -2,12 +2,12 @@
 
 use migration_connector::*;
 use sql_migration_connector::SqlMigrationConnector;
-use std::sync::Arc;
 use std::panic;
+use std::sync::Arc;
 
 #[test]
 fn last_should_return_none_if_there_is_no_migration() {
-    run_test(||{
+    run_test(|| {
         let persistence = load_persistence();
         let result = persistence.last();
         assert_eq!(result.is_some(), false);
@@ -16,7 +16,7 @@ fn last_should_return_none_if_there_is_no_migration() {
 
 #[test]
 fn last_must_return_none_if_there_is_no_successful_migration() {
-    run_test(||{
+    run_test(|| {
         let persistence = load_persistence();
         persistence.create(Migration::new("my_migration".to_string()));
         let loaded = persistence.last();
@@ -25,8 +25,8 @@ fn last_must_return_none_if_there_is_no_successful_migration() {
 }
 
 #[test]
-fn load_all_should_return_empty_if_there_is_no_migration(){
-    run_test(||{
+fn load_all_should_return_empty_if_there_is_no_migration() {
+    run_test(|| {
         let persistence = load_persistence();
         let result = persistence.load_all();
         assert_eq!(result.is_empty(), true);
@@ -35,23 +35,20 @@ fn load_all_should_return_empty_if_there_is_no_migration(){
 
 #[test]
 fn load_all_must_return_all_created_migrations() {
-    run_test(||{
+    run_test(|| {
         let persistence = load_persistence();
         let migration1 = persistence.create(Migration::new("migration_1".to_string()));
         let migration2 = persistence.create(Migration::new("migration_2".to_string()));
         let migration3 = persistence.create(Migration::new("migration_3".to_string()));
 
         let result = persistence.load_all();
-        assert_eq!(
-            result,
-            vec![migration1, migration2, migration3]
-        )
+        assert_eq!(result, vec![migration1, migration2, migration3])
     });
 }
 
 #[test]
 fn create_should_allow_to_create_a_new_migration() {
-    run_test(||{
+    run_test(|| {
         let persistence = load_persistence();
         let mut migration = Migration::new("my_migration".to_string());
         migration.status = MigrationStatus::Success;
@@ -65,7 +62,7 @@ fn create_should_allow_to_create_a_new_migration() {
 
 #[test]
 fn create_should_increment_revisions() {
-    run_test(||{
+    run_test(|| {
         let persistence = load_persistence();
         let migration1 = persistence.create(Migration::new("migration_1".to_string()));
         let migration2 = persistence.create(Migration::new("migration_2".to_string()));
@@ -75,7 +72,7 @@ fn create_should_increment_revisions() {
 
 #[test]
 fn update_must_work() {
-    run_test(||{
+    run_test(|| {
         let persistence = load_persistence();
         let migration = persistence.create(Migration::new("my_migration".to_string()));
 
@@ -103,15 +100,14 @@ fn load_persistence() -> Arc<MigrationPersistence> {
 }
 
 fn run_test<T>(test: T) -> ()
-    where T: FnOnce() -> () + panic::UnwindSafe
+where
+    T: FnOnce() -> () + panic::UnwindSafe,
 {
     // setup();
     let connector = SqlMigrationConnector::new();
     connector.initialize();
     connector.reset();
-    let result = panic::catch_unwind(|| {
-        test()
-    });
+    let result = panic::catch_unwind(|| test());
 
     // teardown();
 

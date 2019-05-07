@@ -1,6 +1,6 @@
-use prisma_datamodel::Schema;
-use migration_connector::*;
 use crate::SqlMigrationStep;
+use migration_connector::*;
+use prisma_datamodel::Schema;
 
 pub struct SqlDatabaseMigrationStepsInferrer {}
 
