@@ -2,7 +2,6 @@ pub mod steps;
 
 use chrono::{DateTime, Utc};
 use prisma_datamodel::Schema;
-use std::str::FromStr;
 use std::sync::Arc;
 pub use steps::MigrationStep;
 

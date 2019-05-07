@@ -204,7 +204,7 @@ source = "git+https://github.com/spacekookie/barrel#c7d9111c13242ad81a113ea0f558
 
 [[package]]
 name = "barrel"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -1824,7 +1824,7 @@ dependencies = [
 name = "sql-migration-connector"
 version = "0.1.0"
 dependencies = [
- "barrel 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "barrel 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "migration-connector 0.1.0",
  "prisma-datamodel 0.1.0",
@@ -2504,7 +2504,7 @@ dependencies = [
 "checksum backtrace 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "f106c02a3604afcdc0df5d36cc47b44b55917dbaf3d808f71c163a0ddba64637"
 "checksum backtrace-sys 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)" = "797c830ac25ccc92a7f8a7b9862bde440715531514594a6154e3d4a54dd769b6"
 "checksum barrel 0.5.1 (git+https://github.com/spacekookie/barrel)" = "<none>"
-"checksum barrel 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "bcb17bec18c58ae59100500940ba085476718a24f6ca5f6edf12d464dc84e156"
+"checksum barrel 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ccaea201efcef96f0e4f1b4b52173ff8081f0d1b2fab0e11a3f26a2eab442945"
 "checksum base64 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
 "checksum base64 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)" = "489d6c0ed21b11d038c31b6ceccca973e65d73ba3bd8ecb9a2babf5546164643"
 "checksum bitflags 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "bd1fa8ad26490b0a5cfec99089952250301b6716cdeaa7c9ab229598fb82ab66"

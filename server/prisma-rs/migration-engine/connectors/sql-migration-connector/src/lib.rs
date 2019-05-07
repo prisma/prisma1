@@ -49,38 +49,22 @@ impl MigrationConnector for SqlMigrationConnector {
 
     fn initialize(&self) {
         let conn = Self::new_conn(SCHEMA_NAME);
-        // let mut m = barrel::Migration::new().schema(SCHEMA_NAME);
-        // m.create_table_if_not_exists("_Migration", |t| {
-        //     t.add_column("revision", types::primary());
-        //     t.add_column("name", types::text());
-        //     t.add_column("datamodel", types::text());
-        //     t.add_column("status", types::text());
-        //     t.add_column("applied", types::integer());
-        //     t.add_column("rolled_back", types::integer());
-        //     t.add_column("steps", types::text());
-        //     t.add_column("errors", types::text());
-        //     t.add_column("started_at", types::date());
-        //     t.add_column("finished_at", types::date());
-        // });       
+        let mut m = barrel::Migration::new().schema(SCHEMA_NAME);
+        m.create_table_if_not_exists("_Migration", |t| {
+            t.add_column("revision", types::primary());
+            t.add_column("name", types::text());
+            t.add_column("datamodel", types::text());
+            t.add_column("status", types::text());
+            t.add_column("applied", types::integer());
+            t.add_column("rolled_back", types::integer());
+            t.add_column("datamodel_steps", types::text());
+            t.add_column("database_steps", types::text());
+            t.add_column("errors", types::text());
+            t.add_column("started_at", types::date());
+            t.add_column("finished_at", types::date().nullable(true));
+        });       
 
-        // let sql_str = dbg!(m.make::<Sqlite>());
-        
-        // TODO: barrel does not support schema names at the moment. switch when this is fixed
-        let sql_str = r#"
-            CREATE TABLE IF NOT EXISTS "Test"."_Migration" (
-                "revision" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, 
-                "name" TEXT NOT NULL, 
-                "datamodel" TEXT NOT NULL, 
-                "status" TEXT NOT NULL, 
-                "applied" INTEGER NOT NULL, 
-                "rolled_back" INTEGER NOT NULL, 
-                "datamodel_steps" TEXT NOT NULL, 
-                "database_steps" TEXT NOT NULL, 
-                "errors" TEXT NOT NULL, 
-                "started_at" DATE NOT NULL, 
-                "finished_at" DATE
-            );
-        "#;
+        let sql_str = dbg!(m.make::<Sqlite>());    
 
         dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
     }
