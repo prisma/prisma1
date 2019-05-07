@@ -22,7 +22,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
         let conditions = STATUS_COLUMN.equals("Success");
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
-            .order_by("revision".descend());
+            .order_by(REVISION_COLUMN.descend());
         let (sql_str, params) = dbg!(Sqlite::build(query));
 
         let result = self.connection.query_row(&sql_str, params, parse_row);
@@ -145,16 +145,3 @@ static DATABASE_STEPS_COLUMN: &str = "database_steps";
 static ERRORS_COLUMN: &str = "errors";
 static STARTED_AT_COLUMN: &str = "started_at";
 static FINISHED_AT_COLUMN: &str = "finished_at";
-
-// pub struct MigrationRow {
-//     revision: u32,
-//     name: String,
-//     data_model: String,
-//     status: MigrationStatus,
-//     applied: u32,
-//     rolled_back: u32,
-//     steps: String,
-//     errors: String,
-//     started_at: DateTime<Utc>,
-//     finished_at: DateTime<Utc>,
-// }
