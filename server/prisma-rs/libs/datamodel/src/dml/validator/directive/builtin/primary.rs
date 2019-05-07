@@ -1,10 +1,10 @@
 use crate::dml;
 use crate::dml::validator::directive::{Args, Error, DirectiveValidator};
 
-pub struct IdDirectiveValidator { }
+pub struct PrimaryDirectiveValidator { }
 
-impl DirectiveValidator<dml::Field> for IdDirectiveValidator {
-    fn directive_name(&self) -> &'static str{ &"id" }
+impl DirectiveValidator<dml::Field> for PrimaryDirectiveValidator {
+    fn directive_name(&self) -> &'static str{ &"primary" }
     fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field) -> Option<Error> {
         obj.is_id = true;
 

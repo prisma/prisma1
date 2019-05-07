@@ -17,7 +17,8 @@ numeric_literal = { ("-")? ~ ASCII_DIGIT+ ~("." ~ ASCII_DIGIT+)? }
 string_escaped_predefined = { "n" | "r" | "t" | "\\" | "0" | "\"" | "'" }
 string_escape     = { "\\" ~ string_escaped_predefined }
 string_raw = { (!("\\" | "\"" | NEWLINE) ~ ANY)+ }
-string_literal = @{ "\"" ~ (string_raw | string_escape)* ~ "\"" }
+string_content = { (string_raw | string_escape)* }
+string_literal = { "\"" ~ string_content ~ "\"" }
 
 boolean_true  = { "true" }
 boolean_false = { "false" }
@@ -28,12 +29,13 @@ constant_Literal = { ASCII_ALPHA_UPPER+ } // TABLE, EMBED etc.
 any_literal = { numeric_literal | string_literal | boolean_literal | constant_Literal }
 
 // Directives
-directive_argument_name = { (!":" ~ identifier)+ ~ ":" }
+directive_argument_name = { (!":" ~ identifier)+ }
 directive_argument_value = { any_literal }
-directive_argument = { (directive_argument_name ~ directive_argument_value) | directive_argument_value }
+directive_argument = { (directive_argument_name ~ ":" ~ directive_argument_value) }
 directive_arguments = { "(" ~ ((directive_argument ~ ("," ~ directive_argument)*)?) ~ ")" }
-
-directive = { "@" ~ identifier ~ directive_arguments? }
+directive_single_argument = { "(" ~ directive_argument_value ~ ")" }
+// A directive either has one unnamed argument or any number of named arguments or no argument.
+directive = { "@" ~ identifier ~ (directive_arguments | directive_single_argument ) ? }
 
 // Model declarations - flattend for easy parsing
 optional_type = { identifier ~ ("?")}

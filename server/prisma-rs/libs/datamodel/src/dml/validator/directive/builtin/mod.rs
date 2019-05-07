@@ -6,7 +6,7 @@ use crate::ast;
 use std::collections::HashMap;
 
 mod db;
-mod id;
+mod primary;
 mod embedded;
 mod scalarlist;
 mod sequence;
@@ -43,7 +43,7 @@ pub fn new_field_directives() -> DirectiveListValidator<dml::Field> {
     let mut validator = DirectiveListValidator::<dml::Field> { known_directives: HashMap::new() };
 
     validator.add(Box::new(db::DbDirectiveValidator{ }));
-    validator.add(Box::new(id::IdDirectiveValidator{ }));
+    validator.add(Box::new(primary::PrimaryDirectiveValidator{ }));
     validator.add(Box::new(scalarlist::ScalarListDirectiveValidator{ }));
     validator.add(Box::new(sequence::SequenceDirectiveValidator{ }));
     validator.add(Box::new(unique::UniqueDirectiveValidator{ }));

@@ -42,11 +42,19 @@ macro_rules! match_first (
     );
 );
 
+fn parse_string_literal(token: &pest::iterators::Pair<'_, Rule>) -> String {
+
+    return match_first! { token, current,
+        Rule::string_content => current.as_str().to_string(),
+        _ => unreachable!("Encountered impossible string content during parsing: {:?}", current.as_str())
+    }
+}
+
 // Literals
 fn parse_literal(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     return match_first! { token, current,
         Rule::numeric_literal => Value::NumericValue(current.as_str().to_string()),
-        Rule::string_literal => Value::StringValue(current.as_str().to_string()),
+        Rule::string_literal => Value::StringValue(parse_string_literal(&current)),
         Rule::boolean_literal => Value::BooleanValue(current.as_str().to_string()),
         Rule::constant_Literal => Value::ConstantValue(current.as_str().to_string()),
         _ => unreachable!("Encounterd impossible literal during parsing: {:?}", current.as_str())
@@ -61,6 +69,12 @@ fn parse_directive_arg_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     }
 }
 
+fn parse_directive_default_arg(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<DirectiveArgument>) {
+    match_children! { token, current,
+        Rule::directive_argument_value => arguments.push(DirectiveArgument { name: String::from(""), value: parse_directive_arg_value(&current) }),
+        _ => unreachable!("Encounterd impossible directive default argument during parsing: {:?}", current.as_str())
+    };
+}
 
 fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgument {
     let mut name: Option<String> = None;
@@ -74,7 +88,7 @@ fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgu
 
     return match (name, argument) {
         (Some(name), Some(value)) => DirectiveArgument { name: name, value: value },
-        _ => panic!("Encounterd impossible type during parsing: {:?}", token.as_str())
+        _ => panic!("Encounterd impossible directive arg during parsing: {:?}", token.as_str())
     };
 }
 
@@ -93,6 +107,7 @@ fn parse_directive(token: &pest::iterators::Pair<'_, Rule>) -> Directive {
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive_arguments => parse_directive_args(&current, &mut arguments),
+        Rule::directive_single_argument => parse_directive_default_arg(&current, &mut arguments),
         _ => unreachable!("Encounterd impossible directive during parsing: {:?}", current.as_str())
     };
 

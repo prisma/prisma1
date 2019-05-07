@@ -12,15 +12,28 @@ extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 
+extern crate clap;
+use clap::{Arg, App, SubCommand};
+
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let formats = ["sorenbs", "matthewmueller"];
 
-    if args.len() < 2 {
-        println!("usage: prisma-datamodel-2-parser FILENAME");
-        return;
-    }
+    let matches = App::new("Prisma Datamodel Playgroung")
+        .version("0.1")
+        .author("Emanuel Jöbstl <emanuel.joebstl@gmail.com>")
+        .about("Alpha implementation of different datamodel definition grammars.")
+        .arg(Arg::with_name("INPUT")
+            .help("Sets the input datamodel file to use")
+            .required(true)
+            .index(1))
+        .arg(Arg::with_name("format")
+            .short("f")
+            .possible_values(&formats)
+            .help("Sets the schema format."))
+        .get_matches();
 
-    let file = fs::read_to_string(&args[1]).expect(&format!("Unable to open file {}", args[1]));
+    let file_name = matches.value_of("INPUT").unwrap();
+    let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
 
     let ast = parser::parse(&file);
 
