@@ -4,14 +4,18 @@
 use crate::{Query, WriteQuery, WriteQueryResult, ReadQuery, ReadQueryResult};
 use crate::{WriteQueryExecutor, ReadQueryExecutor};
 
-pub struct Executor;
+/// A wrapper around QueryExecutor
+pub struct Executor {
+    pub read_exec: ReadQueryExecutor,
+    pub write_exec: WriteQueryExecutor,
+}
 
 impl Executor {
 
     /// Can be given a list of both ReadQueries and WriteQueries
     ///
     /// Will execute WriteQueries first, then all ReadQueries, while preserving order
-    pub fn exec_all(queries: Vec<Query>) {
+    pub fn exec_all(&mut self, queries: Vec<Query>) {
         let (writes, reads) = Self::split_read_write(queries);
 
 
@@ -26,7 +30,7 @@ impl Executor {
                     match query {
                         Query::Write(q) => {
                             w.push(q); // Push WriteQuery
-                            r.push(None); // Push read placeholder
+                            r.push(None); // Push Read placeholder
                         },
                         Query::Read(q) => r.push(Some(q)),
                     }

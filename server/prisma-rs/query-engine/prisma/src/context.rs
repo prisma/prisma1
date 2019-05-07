@@ -1,5 +1,5 @@
 use crate::{data_model, PrismaResult};
-use core::{ReadQueryExecutor, WriteQueryExecutor};
+use core::{ReadQueryExecutor, WriteQueryExecutor, Executor};
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
 use prisma_models::SchemaRef;
 use std::sync::Arc;
@@ -12,11 +12,8 @@ pub struct PrismaContext {
     pub config: PrismaConfig,
     pub schema: SchemaRef,
 
-    #[debug_stub = "#QueryExecutor#"]
-    pub read_query_executor: ReadQueryExecutor,
-
-    #[debug_stub = "#WriteExecutor#"]
-    pub write_query_executor: WriteQueryExecutor,
+    #[debug_stub = "#Executor#"]
+    pub executor: Executor,
 }
 
 impl PrismaContext {
@@ -49,18 +46,21 @@ impl PrismaContext {
             .db_name()
             .expect("database was not set");
 
-        let read_query_executor: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
-        let write_query_executor: WriteQueryExecutor = WriteQueryExecutor {
+        let read_exec: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
+        let write_exec: WriteQueryExecutor = WriteQueryExecutor {
             db_name: db_name.clone(),
             write_executor
+        };
+
+        let executor = Executor {
+            read_exec, write_exec
         };
 
         let schema = data_model::load(db_name)?;
         Ok(Self {
             config: config,
             schema: schema,
-            read_query_executor,
-            write_query_executor
+            executor,
         })
     }
 }
