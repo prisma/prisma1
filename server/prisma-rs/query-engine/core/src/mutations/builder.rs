@@ -1,6 +1,6 @@
 //! Providing an interface to build WriteQueries
 
-use crate::{CoreError, CoreResult};
+use crate::{CoreError, CoreResult, WriteQuery};
 use connector::mutaction::{CreateNode, TopLevelDatabaseMutaction, DatabaseMutactionResult};
 use graphql_parser::query::{Field, OperationDefinition, Value};
 use prisma_models::{ModelRef, PrismaArgs, PrismaValue, SchemaRef, SelectedFields};
@@ -32,7 +32,7 @@ impl<'field> MutationBuilder<'field> {
             Arc::clone(&self.schema),
         )?;
 
-        let root = match op {
+        let inner = match op {
             Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
                 model,
                 non_list_args,
@@ -42,7 +42,7 @@ impl<'field> MutationBuilder<'field> {
             _ => unimplemented!(),
         };
 
-        Ok(WriteQuery { root, nested: () })
+        Ok(WriteQuery { inner, query: (), nested: vec![] })
     }
 }
 

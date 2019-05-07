@@ -6,7 +6,7 @@ mod builder;
 mod ast;
 
 pub use results::*;
-pub use builder::*
+pub use builder::*;
 pub use ast::*;
 
 use connector::{DatabaseMutactionExecutor, ConnectorResult};
@@ -18,8 +18,8 @@ pub struct WriteQueryExecutor {
     pub write_executor: Arc<DatabaseMutactionExecutor + Send + Sync + 'static>,
 }
 
-impl WriteQueryExecutor {
-    pub fn execute(&self, mutaction: TopLevelDatabaseMutaction) -> ConnectorResult<DatabaseMutactionResult> {
-        self.write_executor.execute(self.db_name.clone(), mutaction)
-    }
-}
+// impl WriteQueryExecutor {
+//     pub fn execute(&self, mutaction: TopLevelDatabaseMutaction) -> ConnectorResult<DatabaseMutactionResult> {
+//         self.write_executor.execute(self.db_name.clone(), mutaction)
+//     }
+// }

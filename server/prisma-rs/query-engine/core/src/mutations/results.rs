@@ -1,4 +1,5 @@
 //! WriteQuery results are kinda special
+#![warn(warnings)]
 
 use connector::mutaction::DatabaseMutactionResult;
 
@@ -9,7 +10,7 @@ pub struct WriteQueryResult {
     pub inner: DatabaseMutactionResult,
 
     /// Nested mutation results
-    pub nested: Vec<WriteQueryResult>
+    pub nested: Vec<WriteQueryResult>,
 
     /// Associated selection-set for this level
     pub query: (),

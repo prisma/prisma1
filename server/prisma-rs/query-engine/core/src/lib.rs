@@ -16,6 +16,7 @@ pub use query_ast::*;
 pub use query_results::*;
 pub use read_query_executor::*;
 pub use mutations::*;
+pub use executor::*;
 
 pub type CoreResult<T> = Result<T, CoreError>;
 

@@ -67,25 +67,25 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     let mut queries = rb.build()?;
 
     // Execute mutations first!
-    let (writes, reads) = queries
-        .into_iter()
-        .fold((vec![], vec![]), |(mut first, mut second), query| {
-            match query {
-                Query::Write(WriteQuery {
-                    root, nested: _,
-                }) => {
-                    let write_results = ctx.write_query_executor.execute(root);
+    // let (writes, reads) = queries
+    //     .into_iter()
+    //     .fold((vec![], vec![]), |(mut first, mut second), query| {
+    //         match query {
+    //             Query::Write(WriteQuery {
+    //                 root, nested: _,
+    //             }) => {
+    //                 let write_results = ctx.write_query_executor.execute(root);
 
 
-                    first.push(ctx.write_query_executor.execute(wq.root));
+    //                 first.push(ctx.write_query_executor.execute(wq.root));
 
 
-                },
-                Query::Read(rq) => second.push(rq),
-            };
+    //             },
+    //             Query::Read(rq) => second.push(rq),
+    //         };
 
-            (first, second)
-        });
+    //         (first, second)
+    //     });
 
     // let ir = match queries {
     //     Ok(queries) => match dbg!(ctx.read_query_executor.execute(&queries)) {
