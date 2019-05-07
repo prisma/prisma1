@@ -1,5 +1,6 @@
 package com.prisma.api.queries
 
+import com.prisma.{IgnoreMongo, IgnoreMySql, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.{NonEmbeddedScalarListCapability, ScalarListsCapability}
 import com.prisma.shared.models.Project
@@ -394,6 +395,43 @@ class ScalarListsQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
     )
 
     result2.toString should equal("""{"data":{"model":{"ints":[1,2],"strings":["one","two"]}}}""")
+
+  }
+
+  "Using Int ids" should "work with scalar lists" taggedAs (IgnoreMySql, IgnoreSQLite, IgnoreMongo) in {
+
+    val project = SchemaDsl.fromStringV11() {
+      s"""type Model{
+         |   id: Int! @id
+         |   name: String
+         |   ints: [Int] $scalarListStrategy
+         |}"""
+    }
+
+    database.setup(project)
+
+    server.query(
+      s"""mutation {
+           |  createModel(data: {ints: { set: [1,2] }, name: "test"}) {
+           |    id
+           |    name
+           |    ints
+           |  }
+           |}""".stripMargin,
+      project
+    )
+
+    val result = server.query(
+      s"""{
+         |  models{
+         |    ints
+         |    name
+         |  }
+         |}""".stripMargin,
+      project
+    )
+
+    result.toString should equal("""{"data":{"models":[{"ints":[1,2],"name":"test"}]}}""")
 
   }
 

@@ -31,7 +31,7 @@ trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
   }
 
   def readsScalarListField(field: ScalarField): ReadsResultSet[ScalarListElement] = ReadsResultSet { rs =>
-    val nodeId   = rs.getString(nodeIdFieldName)
+    val nodeId   = rs.getGcValue(nodeIdFieldName, field.model.idField_!.typeIdentifier).asInstanceOf[IdGCValue]
     val position = rs.getInt(positionFieldName)
     val value    = rs.getGcValue(valueFieldName, field.typeIdentifier)
     ScalarListElement(nodeId, position, value)

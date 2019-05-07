@@ -51,7 +51,7 @@ export class StatusChecker {
       globalBin,
       hashDate,
     })
-    const secret = 'pah2eiw5Oolooquaetevaira6'
+    const secret = 'epiGheezoh5eogoachiu9tie9'
 
     const hash = crypto
       .createHmac('sha256', secret)
