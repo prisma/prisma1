@@ -5,7 +5,7 @@ authors = ["Marcus Böhm <boehm@prisma.io>"]
 edition = "2018"
 
 [dependencies]
-prisma-datamodel = { path = "../../../libs/prisma-datamodel" }
+datamodel = { path = "../../../libs/datamodel" }
 nullable = { path = "../../../libs/nullable" }
 chrono = { version = "0.4" }
 serde = "1.0"

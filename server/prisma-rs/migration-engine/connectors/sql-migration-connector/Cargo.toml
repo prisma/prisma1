@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 migration-connector = { path = "../migration-connector" }
-prisma-datamodel = { path = "../../../libs/prisma-datamodel" }
+datamodel = { path = "../../../libs/datamodel" }
 chrono = { version = "0.4" }
 prisma-query = { path = "../../../libs/prisma-query" }
 serde_json = "1.0"

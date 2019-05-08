@@ -50,6 +50,8 @@ macro_rules! wrap_value (
 );
 
 pub trait ValueValidator {
+    fn is_valid(&self) -> bool;
+
     fn as_str(&self) -> Result<String, ValueParserError>;
     fn as_int(&self) -> Result<i32, ValueParserError>;
     fn as_float(&self) -> Result<f32, ValueParserError>;
@@ -78,6 +80,10 @@ pub struct WrappedValue {
 }
 
 impl ValueValidator for WrappedValue {
+    fn is_valid(&self) -> bool {
+        true
+    }
+
     fn as_str(&self) -> Result<String, ValueParserError> {
         match &self.value {
             ast::Value::StringValue(value) => Ok(value.to_string()),
@@ -137,6 +143,8 @@ pub struct WrappedErrorValue {
 }
 
 impl ValueValidator for WrappedErrorValue {
+    fn is_valid(&self) -> bool { false }
+
     fn as_str(&self) -> Result<String, ValueParserError> { Err(ValueParserError::new(self.message.clone())) }
     fn as_int(&self) -> Result<i32, ValueParserError> { Err(ValueParserError::new(self.message.clone())) }
     fn as_float(&self) -> Result<f32, ValueParserError> { Err(ValueParserError::new(self.message.clone())) }

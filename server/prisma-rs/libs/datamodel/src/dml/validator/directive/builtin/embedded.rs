@@ -3,9 +3,9 @@ use crate::dml::validator::directive::{Args, Error, DirectiveValidator};
 
 pub struct EmbeddedDirectiveValidator { }
 
-impl DirectiveValidator<dml::Type> for EmbeddedDirectiveValidator {
+impl DirectiveValidator<dml::Model> for EmbeddedDirectiveValidator {
     fn directive_name(&self) -> &'static str{ &"embedded" }
-    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Type) -> Option<Error> {
+    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Model) -> Option<Error> {
         obj.is_embedded = true;
         return None
     }
