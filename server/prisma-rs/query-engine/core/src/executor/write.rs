@@ -1,6 +1,5 @@
-
-use connector::{DatabaseMutactionExecutor, ConnectorResult};
-use connector::mutaction::{TopLevelDatabaseMutaction, DatabaseMutactionResult};
+use connector::mutaction::{DatabaseMutactionResult, TopLevelDatabaseMutaction};
+use connector::{ConnectorResult, DatabaseMutactionExecutor};
 use std::sync::Arc;
 
 /// A small wrapper around running WriteQueries
