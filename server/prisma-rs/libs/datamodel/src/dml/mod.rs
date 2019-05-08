@@ -59,10 +59,11 @@ pub enum Value {
     ConstantLiteral(String)
 }
 
+// TODO: Maybe we include a seperate struct for relations which can be generic?
 #[derive(Debug, Clone)]
 pub enum FieldType {
     Enum { enum_type: String },
-    Relation { to: String, to_field: String, name: Option<String> },
+    Relation { to: String, to_field: String, name: Option<String>, on_delete: OnDeleteStrategy },
     ConnectorSpecific { base_type: ScalarType, connector_type: Option<String> },
     Base(ScalarType)
 }
@@ -102,6 +103,26 @@ impl FromStr for ScalarListStrategy {
         }
     }
 }
+
+
+#[derive(Debug, Copy, Clone)]
+pub enum OnDeleteStrategy {
+    Cascade,
+    None
+}
+
+impl FromStr for OnDeleteStrategy {
+    type Err = ValueParserError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "CASCADE" => Ok(OnDeleteStrategy::Cascade),
+            "NONE" => Ok(OnDeleteStrategy::None),
+            _ => Err(ValueParserError::new(format!("Invalid onDelete strategy {}.", s)))
+        }
+    }
+}
+
 
 #[derive(Debug)]
 pub struct Sequence {

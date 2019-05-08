@@ -12,6 +12,8 @@ mod scalarlist;
 mod sequence;
 mod default;
 mod unique;
+mod ondelete;
+mod relation;
 
 pub struct DirectiveListValidator<T> { 
     known_directives: HashMap<&'static str, Box<DirectiveValidator<T>>>
@@ -49,6 +51,8 @@ pub fn new_field_directives() -> DirectiveListValidator<dml::Field> {
     validator.add(Box::new(sequence::SequenceDirectiveValidator{ }));
     validator.add(Box::new(unique::UniqueDirectiveValidator{ }));
     validator.add(Box::new(default::DefaultDirectiveValidator{ }));
+    validator.add(Box::new(relation::RelationDirectiveValidator{ }));
+    validator.add(Box::new(ondelete::OnDeleteDirectiveValidator{ }));
     
     return validator;
 }

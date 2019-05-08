@@ -93,7 +93,7 @@ impl Validator {
             "String" => dml::FieldType::Base(dml::ScalarType::String),
             "DateTime" => dml::FieldType::Base(dml::ScalarType::DateTime),
             // Everything is a relation for now.
-            _ => dml::FieldType::Relation { to: type_name.to_string(), to_field: String::from(""), name: None }
+            _ => dml::FieldType::Relation { to: type_name.to_string(), to_field: String::from(""), name: None, on_delete: dml::OnDeleteStrategy::None }
         }
     }
 }
