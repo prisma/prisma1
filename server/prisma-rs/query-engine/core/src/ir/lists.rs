@@ -1,6 +1,6 @@
 //! Process a set of records into an IR List
 
-use super::{maps::build_map, Item, List, Map, remove_excess_records};
+use super::{maps::build_map, Item, List, Map, trim_records};
 use crate::{ManyReadQueryResults, ReadQueryResult};
 use prisma_models::{GraphqlId, PrismaValue};
 use std::{collections::{hash_map::IterMut, HashMap}, sync::Arc};
@@ -61,8 +61,6 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     // We need the ParentsWithRecords indirection to preserve information if the nesting is to-one or to-many.
     let mut nested_fields_to_groups: HashMap<String, ParentsWithRecords> = HashMap::new();
 
-    // todo: The code below might have issues with empty results. To test.
-
     // Group nested results by parent ids and move them into the grouped map.
     nested.into_iter().for_each(|nested_result| match nested_result {
         ReadQueryResult::Single(single) => {
@@ -120,7 +118,7 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
 
             // Post process results for this query
             parents_with_records.iter_mut().for_each(|(_, v)| {
-                remove_excess_records(v, &query_args);
+                trim_records(v, &query_args);
             });
         }
     });

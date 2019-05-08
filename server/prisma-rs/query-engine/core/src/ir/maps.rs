@@ -1,6 +1,6 @@
 //! Process a record into an IR Map
 
-use super::{lists::build_list, Item, Map};
+use super::{lists::build_list, Item, Map, trim_records};
 use crate::{ReadQueryResult, SingleReadQueryResult};
 use prisma_models::PrismaValue;
 
@@ -31,7 +31,16 @@ pub fn build_map(result: SingleReadQueryResult) -> Option<Map> {
                     None => map.insert(nested_name, Item::Value(PrismaValue::Null)),
                 }
             }
-            ReadQueryResult::Many(nested) => map.insert(nested.name.clone(), Item::List(build_list(nested))),
+            ReadQueryResult::Many(nested) => {
+                let query_name = nested.name.clone();
+                let query_args = nested.query_arguments.clone();
+                let mut nested_result = build_list(nested);
+
+                // Trim excess data from the processed result set
+                trim_records(&mut nested_result, &query_args);
+
+                map.insert(query_name, Item::List(nested_result))
+            },
         };
 
         map

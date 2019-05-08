@@ -1,6 +1,6 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
-use core::{ir::{self, Builder}, RootBuilder};
+use core::{ir::Builder, RootBuilder};
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -59,17 +59,12 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         operation_name: req.body.operation_name,
     };
 
-    let queries = rb.build();
-
-    let ir = match queries {
-        Ok(queries) => match dbg!(ctx.read_query_executor.execute(&queries)) {
-            Ok(results) => results.into_iter()
-                .fold(Builder::new(), |builder, result| builder.add(result))
-                .build(),
-            Err(err) => vec![ir::Response::Error(format!("{:?}", err))], // This is merely a workaround
-        },
-        Err(err) => vec![ir::Response::Error(format!("{:?}", err))] // This is merely a workaround
-    };
+    let ir = ctx
+        .executor
+        .exec_all(rb.build()?)?
+        .into_iter()
+        .fold(Builder::new(), |builder, result| builder.add(result))
+        .build();
 
     Ok(json::serialize(ir))
 }

@@ -1,0 +1,130 @@
+export const meta = {
+  title: "Local Prisma Setup",
+  position: 10
+}
+
+## Overview
+
+You can run a local instance of a Prisma service using Docker. Learn more about the Docker configuration of Prisma servers [here](rty1).
+
+This page explains how you can use Prisma with a _local_ database instance. Both the Prisma server and the database are configured locally through Docker.
+
+## Example Docker Compose setup
+
+### MySQL
+
+The following Docker Compose file configures two Docker containers:
+
+- `prisma`: The container running your Prisma server.
+- `mysql-db`: The container running a local MySQL instance, based on the [MySQL Docker image](https://hub.docker.com/_/mysql/).
+
+`prisma` is using the `mysql-db` container as its database. Instead of referencing the database `host` via an IP address or URL, it simply references the `mysql-db` image as the database `host`:
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.32
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        managementApiSecret: my-server-secret-123
+        port: 4466
+        databases:
+          default:
+            connector: mysql
+            host: mysql-db
+            port: 3306
+            user: root
+            password: prisma
+  mysql-db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: prisma
+    volumes:
+      - mysql:/var/lib/mysql
+volumes:
+  mysql: ~
+```
+
+### PostgreSQL
+
+The following Docker Compose file configures two Docker containers:
+
+- `prisma`: The container running your Prisma server.
+- `postgres-db`: The container running a local PostgreSQL instance, based on the [PostgreSQL Docker image](https://hub.docker.com/_/postgres/).
+
+`prisma` is using the `postgres-db` container as its database. Instead of referencing the database `host` via an IP address or URL, it simply references the `postgres-db` image as the database `host`:
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.32
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        managementApiSecret: mysecret42
+        databases:
+          default:
+            connector: postgres
+            host: postgres-db
+            port: 5432
+            user: prisma
+            password: prisma
+  postgres-db:
+    image: postgres:10.3
+    restart: always
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres: ~
+```
+
+### MongoDB
+
+The following Docker Compose file configures two Docker containers:
+
+- `prisma`: The container running your Prisma server.
+- `mongo-db`: The container running a local MongoDB instance, based on the [MonogDB Docker image](https://hub.docker.com/_/mongo/).
+
+`prisma` is using the `mongo-db` container as its database, this is configured in the `uri` property wich represents the MongoDB [connection string](https://docs.mongodb.com/manual/reference/connection-string):
+
+```yml
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.32
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        managementApiSecret: mysecret42
+        databases:
+          default:
+            connector: mongo
+            uri: mongodb://prisma:prisma@mongo-db
+  mongo-db:
+    image: mongo:3.6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: prisma
+      MONGO_INITDB_ROOT_PASSWORD: prisma
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo:/var/lib/mongo
+volumes:
+  mongo:⏎ 
+```

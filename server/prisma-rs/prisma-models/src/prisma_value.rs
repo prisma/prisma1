@@ -1,8 +1,7 @@
 use crate::{DomainError, DomainResult};
-use chrono::{DateTime, Utc};
+use chrono::prelude::*;
 use graphql_parser::query::Value as GraphqlValue;
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt};
 use uuid::Uuid;
@@ -50,10 +49,21 @@ impl PrismaValue {
             GraphqlValue::Float(f) => PrismaValue::Float(f.clone()),
             GraphqlValue::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
             GraphqlValue::Null => PrismaValue::Null,
-            GraphqlValue::String(s) => PrismaValue::String(s.clone()),
+            GraphqlValue::String(s) => Self::str_as_json(s).or_else(|| Self::str_as_datetime(s)).unwrap_or(PrismaValue::String(s.clone())),
             GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
-            _ => unimplemented!(),
+            value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
         }
+    }
+
+    fn str_as_json(s: &str) -> Option<PrismaValue> {
+        serde_json::from_str(s).ok().map(|j| PrismaValue::Json(j))
+    }
+
+    // If you look at this and think: "What's up with Z?" then you're asking the right question.
+    // Feel free to try and fix it for cases with AND without Z.
+    fn str_as_datetime(s: &str) -> Option<PrismaValue> {
+        let fmt = "%Y-%m-%dT%H:%M:%S%.3f";
+        Utc.datetime_from_str(s.trim_end_matches("Z"), fmt).ok().map(|dt| PrismaValue::DateTime(DateTime::<Utc>::from_utc(dt.naive_utc(), Utc)))
     }
 }
 

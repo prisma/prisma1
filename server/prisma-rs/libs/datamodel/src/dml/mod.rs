@@ -9,7 +9,7 @@ use validator::value::ValueParserError;
 
 pub mod validator;
 
-// Setters are a bit untypical for rust, 
+// Setters are a bit untypical for rust,
 // but we want to have "composeable" struct creation.
 pub trait WithName {
     fn name(&self) -> &String;
@@ -21,34 +21,34 @@ pub trait WithDatabaseName {
     fn set_database_name(&mut self, database_name: &Option<String>);
 }
 
-// This is duplicate for now, but explicitely required 
+// This is duplicate for now, but explicitely required
 // since we want to seperate ast and dml.
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum FieldArity {
     Required,
     Optional,
     List,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Comment {
     pub text: String,
-    pub is_error: bool
+    pub is_error: bool,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone)]
 pub enum ScalarType {
     Int,
-    Float, 
+    Float,
     Decimal,
     Boolean,
     String,
     DateTime,
-    Enum
+    Enum,
 }
 
 // TODO, Check if data types are correct
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Value {
     Int(i32),
     Float(f32),
@@ -56,11 +56,11 @@ pub enum Value {
     Boolean(bool),
     String(String),
     DateTime(DateTime<Utc>),
-    ConstantLiteral(String)
+    ConstantLiteral(String),
 }
 
 // TODO: Maybe we include a seperate struct for relations which can be generic?
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum FieldType {
     Enum { enum_type: String },
     Relation { to: String, to_field: String, name: Option<String>, on_delete: OnDeleteStrategy },
@@ -68,10 +68,10 @@ pub enum FieldType {
     Base(ScalarType)
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone)]
 pub enum IdStrategy {
     Auto,
-    None
+    None,
 }
 
 impl FromStr for IdStrategy {
@@ -81,15 +81,15 @@ impl FromStr for IdStrategy {
         match s {
             "AUTO" => Ok(IdStrategy::Auto),
             "NONE" => Ok(IdStrategy::None),
-            _ => Err(ValueParserError::new(format!("Invalid id strategy {}.", s)))
+            _ => Err(ValueParserError::new(format!("Invalid id strategy {}.", s))),
         }
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone)]
 pub enum ScalarListStrategy {
     Embedded,
-    Relation
+    Relation,
 }
 
 impl FromStr for ScalarListStrategy {
@@ -99,13 +99,12 @@ impl FromStr for ScalarListStrategy {
         match s {
             "EMBEDDED" => Ok(ScalarListStrategy::Embedded),
             "RELATION" => Ok(ScalarListStrategy::Relation),
-            _ => Err(ValueParserError::new(format!("Invalid scalar list strategy {}.", s)))
+            _ => Err(ValueParserError::new(format!("Invalid scalar list strategy {}.", s))),
         }
     }
 }
 
-
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone)]
 pub enum OnDeleteStrategy {
     Cascade,
     None
@@ -124,19 +123,23 @@ impl FromStr for OnDeleteStrategy {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Sequence {
-    pub name: String, 
+    pub name: String,
     pub initial_value: i32,
-    pub allocation_size: i32
+    pub allocation_size: i32,
 }
 
 impl WithName for Sequence {
-    fn name(&self) -> &String { &self.name }
-    fn set_name(&mut self, name: &String) { self.name = name.clone() }
+    fn name(&self) -> &String {
+        &self.name
+    }
+    fn set_name(&mut self, name: &String) {
+        self.name = name.clone()
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Field {
     pub name: String,
     pub arity: FieldArity,
@@ -149,17 +152,25 @@ pub struct Field {
     // TODO: Not sure if a sequence should be a member of field.
     pub id_sequence: Option<Sequence>,
     pub scalar_list_strategy: Option<ScalarListStrategy>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }
 
 impl WithName for Field {
-    fn name(&self) -> &String { &self.name }
-    fn set_name(&mut self, name: &String) { self.name = name.clone() }
+    fn name(&self) -> &String {
+        &self.name
+    }
+    fn set_name(&mut self, name: &String) {
+        self.name = name.clone()
+    }
 }
 
 impl WithDatabaseName for Field {
-    fn database_name(&self) -> &Option<String> { &self.database_name }
-    fn set_database_name(&mut self, database_name: &Option<String>) { self.database_name = database_name.clone() }
+    fn database_name(&self) -> &Option<String> {
+        &self.database_name
+    }
+    fn set_database_name(&mut self, database_name: &Option<String>) {
+        self.database_name = database_name.clone()
+    }
 }
 
 impl Field {
@@ -175,31 +186,34 @@ impl Field {
             id_strategy: None,
             id_sequence: None,
             scalar_list_strategy: None,
-            comments: vec![]
+            comments: vec![],
         }
     }
 }
 
-#[derive(Debug)]
-pub struct Enum { 
+#[derive(Debug, PartialEq, Clone)]
+pub struct Enum {
     pub name: String,
     pub values: Vec<String>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }
 
 impl WithName for Enum {
-    fn name(&self) -> &String { &self.name }
-    fn set_name(&mut self, name: &String) { self.name = name.clone() }
+    fn name(&self) -> &String {
+        &self.name
+    }
+    fn set_name(&mut self, name: &String) {
+        self.name = name.clone()
+    }
 }
 
-
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Model {
     pub name: String,
     pub fields: Vec<Field>,
     pub comments: Vec<Comment>,
     pub database_name: Option<String>,
-    pub is_embedded: bool
+    pub is_embedded: bool,
 }
 
 impl Model {
@@ -209,7 +223,7 @@ impl Model {
             fields: vec![],
             comments: vec![],
             database_name: None,
-            is_embedded: false
+            is_embedded: false,
         }
     }
 }
@@ -224,23 +238,27 @@ impl WithDatabaseName for Model {
     fn set_database_name(&mut self, database_name: &Option<String>) { self.database_name = database_name.clone() }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ModelOrEnum {
     Enum(Enum),
     Model(Model)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Schema {
     pub models: Vec<ModelOrEnum>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }
 
 impl Schema {
     fn new() -> Schema {
         Schema {
             models: vec![],
-            comments: vec![]
+            comments: vec![],
         }
+    }
+
+    pub fn empty() -> Schema {
+        Self::new()
     }
 }

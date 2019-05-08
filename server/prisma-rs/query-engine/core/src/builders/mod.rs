@@ -73,7 +73,7 @@ impl<'a> Builder<'a> {
         } else {
             let normalized = match model.name.as_str() {
                 "AUser" => "aUser".to_owned(), // FIXME *quietly sobbing*
-                name => name.to_camel_case()
+                name => name.to_camel_case(),
             };
 
             if field.name == normalized {
@@ -108,32 +108,19 @@ pub trait BuilderExt {
 
     /// Get node selector from field and model
     fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResult<NodeSelector> {
-        println!("NODE SELECT");
         // FIXME: this expects at least one query arg...
         let (_, value) = field.arguments.first().expect("no arguments found");
         match value {
             Value::Object(obj) => {
                 let (field_name, value) = obj.iter().next().expect("object was empty");
                 let field = model.fields().find_from_scalar(field_name).unwrap();
-                let value = Self::value_to_prisma_value(value);
+                let value = PrismaValue::from_value(value);
 
                 Ok(NodeSelector {
                     field: Arc::clone(&field),
                     value: value,
                 })
             }
-            _ => unimplemented!(),
-        }
-    }
-
-    /// Turning a GraphQL value to a PrismaValue
-    fn value_to_prisma_value(val: &Value) -> PrismaValue {
-        match val {
-            Value::String(ref s) => match serde_json::from_str(s) {
-                Ok(val) => PrismaValue::Json(val),
-                _ => PrismaValue::String(s.clone()),
-            },
-            Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
             _ => unimplemented!(),
         }
     }

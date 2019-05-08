@@ -56,8 +56,8 @@ fn query_tables(c: &mut Connection) -> Vec<String> {
 
         Ok(())
     })()
-        .map_err(|e| panic!(e))
-        .unwrap();
+    .map_err(|e| panic!(e))
+    .unwrap();
 
     vec![]
 }

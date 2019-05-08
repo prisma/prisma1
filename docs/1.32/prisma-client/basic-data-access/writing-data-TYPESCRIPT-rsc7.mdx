@@ -1,0 +1,459 @@
+import Collapse from 'components/Markdown/Collapse'
+import Code from 'components/Markdown/Code'
+import Warning from 'components/Markdown/Warning'
+
+export const meta = {
+  title: 'Writing Data (TypeScript)',
+  position: 60,
+  technology: "typescript",
+  technologyOrder: 2,
+  articleGroup: "Writing Data",
+}
+
+## Overview
+
+The Prisma client is generated from your [datamodel](knul). Its API exposes CRUD and other operations for the models defined in the datamodel.
+
+For this page, we'll assume your Prisma project is based on the following datamodel:
+
+```graphql
+type Post {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  title: String!
+  published: Boolean! @default(value: false)
+  author: User
+  comments: [Comment!]!
+}
+
+type User {
+  id: ID! @id
+  name: String
+  email: String! @unique
+  role: Role! @default(value: USER)
+  posts: [Post!]!
+  comments: [Comment!]!
+}
+
+type Comment {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  text: String!
+  post: Post!
+  writtenBy: User!
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+```
+
+For each model type in your datamodel, six methods for writing data are generated. For example, for the `User` model the following operations are available:
+
+- `createUser`: Creates a new `User` record in the database.
+- `updateUser`: Updates an existing `User` record in the database.
+- `deleteUser`: Deletes an existing `User` record from the database.
+- `upsertUser`: Updates an existing or create a new `User` record in the database.
+- `updateManyUsers`: Updates many existing `User` records in the database at once. 
+- `deleteManyUsers`: Deletes many existing `User` records from the database at once.
+
+## Creating records
+
+When creating new records in the database, the `create`-method takes one input object which wraps all the scalar fields of the record to be created. It also provides a way to create relational data for the model, this can be supplied using [nested object writes](#nested-object-writes).
+
+Each method call returns a Promise for an object that contains all the scalar fields of the model that was just created.
+
+### Examples
+
+_Create a new user_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const newUser: User = await prisma
+  .createUser({
+    name: "Alice",
+    email: "alice@prisma.io",
+  })
+```
+
+```js
+{
+  id: 'cjswxd4t7379v0b56geckqnoy',
+  name: 'Alice',
+  email: 'alice@prisma,io',
+  role: 'USER'
+}
+```
+
+</Code>
+
+_Create a new post and set `alice@prisma.io` as the author_:
+
+> When using the **MySQL** or **Postgres** databases connectors, the following call is executed as a single database transaction. The **MongoDB** connector [doesn't support transactions yet](https://github.com/prisma/prisma/issues/3785). Learn more in the [Declarative nest writes](#declarative-nested-writes) section.
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const post: Post = prisma.createPost({
+    title: "Join us for GraphQL Conf in 2019",
+    author: {
+      connect: { email: "alice@prisma.io" }
+    }
+  })
+```
+
+```js
+{ 
+  id: 'cjswxmho93a5m0b56nyui0yub',
+  updatedAt: '2019-03-06T08:20:17.529Z',
+  createdAt: '2019-03-06T08:20:17.529Z',
+  published: false,
+  title: 'Join us for GraphQL Conf in 2019' 
+}
+```
+
+</Code>
+
+_Create a new user with two new posts_:
+
+> When using the **MySQL** or **Postgres** databases connectors, the following call is executed as a single database transaction. The **MongoDB** connector [doesn't support transactions yet](https://github.com/prisma/prisma/issues/3785).
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const newUser: User = await prisma
+  .createUser({
+    name: "Alice",
+    email: "alice@prisma.io",
+    posts: {
+      create: [{
+        title: "Follow @prisma on Twitter",
+      }, {
+        title: "Join us for GraphQL Conf in 2019",
+      }]
+    }, 
+  })
+```
+
+```js
+{
+  id: 'cjswy0ig53cg60b56evl2ow46',
+  name: 'Bob',
+  email: 'bob@prisma.io',
+  role: 'USER'
+}
+```
+
+</Code>
+
+## Updating records
+
+When updating existing records in the database, the `update`-method receives one input object with two fields:
+
+- `data`: This is similar to the input object you provide to a `create`-method. It wraps scalar fields of the model to be updated and lets you provide relational data via [nested object writes](#nested-object-writes).
+- `where`: This is used to select the record that should be updated. You can use any [unique](knul#unique-scalar-fields) field to identify the record. For the example datamodel above, this means that for `User`, `Post` and `Comment` it has an `id` property. For `User` it additionally accepts the `email` field.
+
+Each method call returns a Promise for an object that contains all the scalar fields of the model that was just updated.
+
+### Examples
+
+_Update the role of an existing user_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const updatedUser: User = await prisma
+  .updateUser({
+    data: {
+      role: "ADMIN"
+    },
+    where: {
+      id: "cjli512bd005g0a233s1ogbgy"
+    }
+  })
+```
+
+```js
+{
+  id: 'cjswxd4t7379v0b56geckqnoy',
+  name: 'Alice',
+  email: 'alice@prisma.io',
+  role: 'ADMIN'
+}
+```
+
+</Code>
+
+_Update the author of a post_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const updatedPost: Post = await prisma
+  .updatePost({
+    data: {
+      author: {
+        connect: { email: "bob@prisma.io" }
+      },
+    },
+    where: { id: "cjli47wr3005b0a23m9crhh0e" }
+  })
+```
+
+```js
+{
+  id: 'cjswxd4t7379v0b56geckqnoy',
+  name: 'Alice',
+  email: 'alice@prisma.io',
+  role: 'ADMIN'
+}
+```
+
+</Code>
+
+## Deleting records
+
+When deleting records from the database, the `delete`-method receives one input object that specifies which record is to be deleted. The type of this input object is identical to the `where` object in `update`-methods.
+
+The properties of that object correspond to those fields of the model that are marked as [unique](knul#unique-scalar-fields). For the example datamodel above, this means that for `User`, `Post` and `Comment` it has an `id` property. For `User` it additionally accepts the `email` field.
+
+Each method call returns a Promise for an object that contains all the scalar fields of the model that was just deleted.
+
+### Examples
+
+_Delete a post by its id_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const deletedPost: Post = await prisma
+  .deletePost({
+    id: "cjli47wr3005b0a23m9crhh0e"
+  })
+```
+
+```js
+{
+  id: 'cjsviilj20g8u0b434rujzkt5',
+  createdAt: '2019-03-05T08:29:35.483Z',
+  updatedAt: '2019-03-05T08:29:35.483Z',
+  title: 'Join us for GraphQL Conf 2019',
+  published: false,
+}
+```
+
+</Code>
+
+_Delete a user by their email_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const deletedUser: User = await prisma
+  .deleteUser({
+    email: "alice@prisma.io"
+  })
+```
+
+```js
+{
+  id: 'cjswxd4t7379v0b56geckqnoy',
+  name: 'Alice',
+  email: 'alice@prisma,io',
+  role: 'USER'
+}
+```
+
+</Code>
+
+## Creating or updating objects (upserts)
+
+Upsert operations allow you to _try_ to update an existing record. If that record actually does not exist yet, it will be created. The `upsert`-methods are a mix of `create`- and `update`-methods, meaning they receive an input argument that has three fields:
+
+- `where`: Identical to the `where` field provided in `update`-methods
+- `update`: Identical to the `data` field provided in `update`-methods
+- `create`: Identical to the input object provided in `create`-methods
+
+### Examples
+
+_Update the role of a user. If the user doesn't exist yet, create a new one_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const updatedOrCreatedUser: User = await prisma
+  .upsertUser({
+    where: {
+      email: "alice@prisma.io"
+    },
+    update: {
+      role: "ADMIN"
+    },
+    create: {
+      name: "Alice",
+      email: "alice@prisma.io",
+      role: "ADMIN",
+    }
+  })
+```
+
+```js
+{
+  id: 'cjswxd4t7379v0b56geckqnoy',
+  name: 'Alice',
+  email: 'alice@prisma.io',
+  role: 'ADMIN'
+}
+```
+
+</Code>
+
+## Updating and deleting many records in bulk
+
+The Prisma client API offers special methods to update or delete many records at once. Each `updateMany`- and `deleteMany`-method returns the _number_ of records that ultimately have been affected by the operation.
+
+### Examples
+
+_Unpublish three posts by their IDs_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const updatedPostCount: number = await prisma
+  .updateManyPosts({
+    where: {
+      id_in: ["cjsviilio0g8f0b430jbnyvi7", "cjli6tnkj005x0a2325ynfpb9", "cjli6tq3200620a23s4lp8npd"]
+    },
+    data: { published: false },
+  }).count()
+```
+
+```js
+2
+```
+
+</Code>
+
+<Warning>
+
+If one of more of the provided IDs does not actually exist in the database, the operation will **not** return an error. The returned `count` indicates how many records actually were updated.
+
+</Warning>
+
+_Update all posts where the description contains the string `prisma` and publish them_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const updatedPostsCount: number = await prisma
+  .updateManyPosts({
+    where: { title_contains: "prisma" },
+    data: { published: true },
+  }).count()
+```
+
+```js
+1
+```
+
+</Code>
+
+_Delete all posts that were created before 2018_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const deletePostsCount = await prisma
+  .deleteManyPosts({
+    createdAt_lte: "2018"
+  }).count()
+```
+
+```js
+42
+```
+
+</Code>
+
+## Nested object writes
+
+Nested object writes let you modify multiple database records across relations in a single transaction. Nested object writes are available for `create`- and `update`-methods.
+
+<Warning>
+
+The [MongoDB](jgfm) database connector currently does not support ACID transactions. Learn more in [this](https://github.com/prisma/prisma/issues/3738) GitHub issue.
+
+</Warning>
+
+Because the model `User` has a relation to `Post` via the `author` field, you can create/update/delete `Post` records through `createUser` and `updateUser` operations. In these cases, the `author` field in the `data` object for `createUser` and `updateUser` operations can contain one or more of the following keywords: 
+
+- `create`: Creates a new `Post` record and connects it via the `author` field to the `User` record.
+- `update`: Updates a `Post` record that is connected to a `User` record via the `author` field.
+- `upsert`: Updates a `Post` record that is connected to a `User` record via the `author` field or creates a new `Post` record and connects it via the `author` field to the `User` record.
+- `delete`: Deletes a `Post` record that is connected to a `User` record via the `author` field.
+- `connect`: Connects a `Post` record to a `User` record via the `author` field.
+- `disconnect`: Disconnects a `Post` record from a `User` record.
+- `set`:  Connects a `Post` record to a `User` record via the `author` field. If the `Post` record was connected to a different `User` record before, it is disconnected from that one (`set` effecitvely executes `connect` and `disconnect` operations under the hood).
+
+### Examples
+
+_Create a new user with two new posts and connect one existing post_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const newUser: User = await prisma
+  .createUser({
+    name: "Bob",
+    email: "bob@prisma.io",
+    posts: {
+      create: [{
+        title: "Follow @prisma on Twitter",
+      }, {
+        title: "Join us for GraphQL Conf in 2019",
+      }],
+      connect: { id: "cjsviiljo0g9h0b43i943n4ni" }
+    }
+  })
+```
+
+```js
+{
+  id: 'cjsx0u2do3s0m0b5624n9jhwd',
+  name: 'Bob',
+  email: 'bob@prisma.io',
+  role: 'USER'
+}
+```
+
+</Code>
+
+_Delete a comment of a user_:
+
+<Code languages={["TypeScript", "Result"]}>
+
+```js
+const updatedUser: User = await prisma
+  .updateUser({
+    where: { id: "cjli8znnd006n0a23ywc6wf8w" },
+    data: {
+      comments: {
+        delete: { id: "cjli6tknz005s0a23uf0lmlve" }
+      }
+    }
+  })
+```
+
+```js
+{
+  id: 'cjsviiliz0g8t0b43zyu25usd',
+  name: 'Grace',
+  email: 'grace@prisma.io',
+  role: 'USER'
+}
+```
+
+</Code>
