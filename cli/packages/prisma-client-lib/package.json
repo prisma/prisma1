@@ -6,8 +6,10 @@
   "files": [
     "dist"
   ],
+  "repository": "prisma/prisma",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  https://github.com/prisma/prisma/tree/master/cli/packages/prisma-client-lib
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "rm -rf dist && tsc -d",
