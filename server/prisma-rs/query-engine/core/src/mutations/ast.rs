@@ -1,6 +1,7 @@
 //! Simple wrapper for WriteQueries
 
 use connector::mutaction::{TopLevelDatabaseMutaction, NestedDatabaseMutaction};
+use graphql_parser::query::Field;
 
 /// A top-level write query (mutation)
 #[derive(Debug, Clone)]
@@ -8,8 +9,8 @@ pub struct WriteQuery {
     /// The actual mutation object being built
     pub inner: TopLevelDatabaseMutaction,
 
-    /// Every WriteQuery is followed by a ReadQuery
-    pub query: (),
+    /// Required to create following ReadQuery
+    pub field: Field,
 
     /// Nested mutations
     pub nested: Vec<NestedWriteQuery>,
@@ -21,8 +22,8 @@ pub struct NestedWriteQuery {
     /// The nested mutation being built
     pub inner: NestedDatabaseMutaction,
 
-    /// Every WriteQuery is followed by a ReadQuery
-    pub query: (),
+    /// Required to create following ReadQuery
+    pub field: Field,
 
     /// NestedWriteQueries can only have nested children
     pub nested: Vec<NestedWriteQuery>

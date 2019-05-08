@@ -42,7 +42,8 @@ impl<'field> MutationBuilder<'field> {
             _ => unimplemented!(),
         };
 
-        Ok(WriteQuery { inner, query: (), nested: vec![] })
+        // FIXME: Cloning is unethical and should be avoided
+        Ok(WriteQuery { inner, field: self.field.clone(), nested: vec![] })
     }
 }
 
