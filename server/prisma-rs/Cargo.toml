@@ -8,5 +8,5 @@ members = [
   "query-engine/native-bridge",
   "query-engine/core",
   "libs/prisma-datamodel",
-  "libs/inflector",
+  "libs/prisma-inflector",
 ]

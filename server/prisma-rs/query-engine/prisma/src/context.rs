@@ -1,5 +1,5 @@
 use crate::{data_model, PrismaResult};
-use core::ReadQueryExecutor;
+use core::{ReadQueryExecutor, SchemaBuilder};
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
 use prisma_models::SchemaRef;
 use std::sync::Arc;
@@ -42,10 +42,14 @@ impl PrismaContext {
             .db_name()
             .expect("database was not set");
 
-        let schema = data_model::load(db_name)?;
+        // WIP TODO get naming straight!
+        let data_model = data_model::load(db_name)?;
+
+        let schema = SchemaBuilder::build(data_model.clone());
+
         Ok(Self {
             config: config,
-            schema: schema,
+            schema: data_model,
             read_query_executor,
         })
     }

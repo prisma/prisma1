@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 graphql-parser = "0.2.2"
 prisma-models = { path = "../../prisma-models" }
+prisma-inflector = { path = "../../libs/prisma-inflector" }
 connector = { path = "../connectors/connector" }
 failure = "0.1"
 failure_derive = "0.1"

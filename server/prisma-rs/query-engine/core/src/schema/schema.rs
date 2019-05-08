@@ -1,9 +1,9 @@
-struct Schema {
-    models: Vec<Model>,
+pub struct Schema {
+//    models: Vec<Model>,
 }
 
-struct Model {
-    fields: Vec<Field>,
+pub struct Model {
+//    fields: Vec<Field>,
 }
 
-struct Field {}
+pub struct Field {}

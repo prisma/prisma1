@@ -15,8 +15,17 @@ pub struct Inflector {
 }
 
 impl Pluralize for Inflector {
-    fn pluralize(s: String) -> String {
-        unimplemented!()
+    fn pluralize(&self, s: &str) -> Option<String> {
+        for rule in &self.rules {
+            if let Some(s) = match rule {
+                Rule::Category(c) => c.pluralize(s),
+                Rule::Regex(r) => r.pluralize(s),
+            } {
+                return Some(s);
+            }
+        }
+
+        None
     }
 }
 
@@ -46,9 +55,11 @@ impl Inflector {
         rules.push(Self::category_rule("", "s", &categories::CATEGORY_MAN_MANS));
 
         // Handle irregular inflections for common suffixes
-        exceptions::IRREGULAR_SUFFIX_INFLECTIONS.iter().for_each(|(singular, plural)| {
-            rules.push(Self::regex_rule(singular, plural));
-        });
+        exceptions::IRREGULAR_SUFFIX_INFLECTIONS
+            .iter()
+            .for_each(|(singular, plural)| {
+                rules.push(Self::regex_rule(singular, plural));
+            });
 
         // Handle fully assimilated classical inflections
         rules.push(Self::category_rule("ex", "ices", &categories::CATEGORY_EX_ICES));
@@ -59,9 +70,11 @@ impl Inflector {
 
         // Handle classical variants of modern inflections
         if mode == Mode::Classical {
-            exceptions::MODERN_CLASSICAL_INFLECTIONS.iter().for_each(|(singular, plural)| {
-                rules.push(Self::regex_rule(singular, plural));
-            });
+            exceptions::MODERN_CLASSICAL_INFLECTIONS
+                .iter()
+                .for_each(|(singular, plural)| {
+                    rules.push(Self::regex_rule(singular, plural));
+                });
 
             rules.push(Self::category_rule("en", "ina", &categories::CATEGORY_EN_INA));
             rules.push(Self::category_rule("a", "ata", &categories::CATEGORY_A_ATA));
@@ -82,9 +95,11 @@ impl Inflector {
         rules.push(Self::regex_rule("(us)$", "$1es"));
         rules.push(Self::category_rule("", "s", &categories::CATEGORY_A_ATA));
 
-        exceptions::ADDITIONAL_SUFFIX_INFLECTIONS.iter().for_each(|(singular, plural)| {
-            rules.push(Self::regex_rule(singular, plural));
-        });
+        exceptions::ADDITIONAL_SUFFIX_INFLECTIONS
+            .iter()
+            .for_each(|(singular, plural)| {
+                rules.push(Self::regex_rule(singular, plural));
+            });
 
         // Some words ending in -o take -os (including does preceded by a vowel)
         rules.push(Self::category_rule("o", "os", &categories::CATEGORY_O_I));
@@ -131,7 +146,7 @@ impl Inflector {
                         singular[1..].to_owned()
                     ))
                     .unwrap(),
-                    plural[1..].to_owned().to_uppercase(),
+                    format!("{}{}", first_plural.to_uppercase(), plural[1..].to_owned()),
                 ),
                 Rule::regex(
                     Regex::new(&format!(
@@ -140,7 +155,7 @@ impl Inflector {
                         singular[1..].to_owned()
                     ))
                     .unwrap(),
-                    plural[1..].to_owned().to_lowercase(),
+                    format!("{}{}", first_plural.to_lowercase(), plural[1..].to_owned()),
                 ),
             ]
         }
@@ -154,5 +169,3 @@ impl Inflector {
         Rule::category(singular.into(), plural.into(), words)
     }
 }
-
-//// 2. Handle words that do not inflect in the plural (such as fish, travois, chassis, nationalities ending

@@ -1,4 +1,13 @@
-/// Exposes DSL to build schemas.
-struct SchemaBuilder;
+use prisma_inflector::{self, Pluralize};
+use prisma_models::SchemaRef;
 
-impl SchemaBuilder {}
+pub struct SchemaBuilder;
+
+impl SchemaBuilder {
+    pub fn build(data_model: SchemaRef) {
+        data_model.models().into_iter().for_each(|m| {
+            let candidate = prisma_inflector::default.pluralize(&m.name);
+            println!("{} -> {:?}", &m.name, candidate);
+        });
+    }
+}

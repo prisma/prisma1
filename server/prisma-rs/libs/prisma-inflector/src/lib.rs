@@ -13,6 +13,6 @@ lazy_static! {
     pub static ref classical: Inflector = Inflector::new(Mode::Classical);
 }
 
-trait Pluralize {
-    fn pluralize(s: String) -> String;
+pub trait Pluralize {
+    fn pluralize(&self, s: &str) -> Option<String>;
 }
