@@ -226,6 +226,10 @@ impl Model {
             is_embedded: false,
         }
     }
+
+    pub fn find_field(&self, name: String) -> Option<Field> {
+        self.fields.iter().find(|f| f.name == name).map(|f| f.clone())
+    }
 }
 
 impl WithName for Model {
@@ -260,5 +264,34 @@ impl Schema {
 
     pub fn empty() -> Schema {
         Self::new()
+    }
+
+    pub fn has_model(&self, name: String) -> bool {
+        for model in &self.models {
+            match model {
+                ModelOrEnum::Model(m) => {
+                    if(m.name() == &name) {
+                        return true;
+                    }
+                },
+                _ => {},
+            }
+        }
+        false
+    }
+
+    pub fn models(&self) -> Vec<Model> {
+        let mut result = Vec::new();
+        for model in &self.models {
+            match model {
+                ModelOrEnum::Model(m) => result.push(m.clone()),
+                _ => {},
+            }
+        }
+        result
+    }
+
+    pub fn find_model(&self, name: String) -> Option<Model> {
+        self.models().iter().find(|m| m.name == name).map(|m| m.clone())
     }
 }
