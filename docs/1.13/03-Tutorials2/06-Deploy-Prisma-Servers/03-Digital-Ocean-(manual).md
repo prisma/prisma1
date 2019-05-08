@@ -118,7 +118,7 @@ services:
     volumes:
       - mysql:/var/lib/mysql
 volumes:
-  mysql:
+  mysql: ~
 ```
 
 The `managementApiSecret` is used to secure your Prisma server. It is specified in the server's Docker configuration and later used by the Prisma CLI to authenticate its requests against the server.

@@ -1,16 +1,10 @@
-import * as fs from 'fs'
-import * as path from 'path'
 import { buildSchema } from 'graphql'
 import { TypescriptGenerator } from '../typescript-client'
 import { test } from 'ava'
-import { parseInternalTypes } from 'prisma-generate-schema'
+import generateCRUDSchemaString, {
+  parseInternalTypes,
+} from 'prisma-generate-schema'
 import { DatabaseType } from 'prisma-datamodel'
-import { fixturesPath } from './fixtures'
-
-const typeDefs = fs.readFileSync(
-  path.join(fixturesPath, 'embedded.graphql'),
-  'utf-8',
-)
 
 const datamodel = `
 type User {
@@ -25,7 +19,7 @@ type Address @embedded {
 `
 
 test.skip('typescript generator - embedded', t => {
-  const schema = buildSchema(typeDefs)
+  const schema = buildSchema(generateCRUDSchemaString(datamodel, DatabaseType.postgres))
   const generator = new TypescriptGenerator({
     schema,
     internalTypes: parseInternalTypes(datamodel, DatabaseType.postgres).types,

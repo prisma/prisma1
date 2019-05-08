@@ -4,7 +4,7 @@ This document contains a rough outline of future features and changes in Prisma.
 
 The roadmap is updated every two weeks (i.e. with every Prisma release). If you want to see the changes that have happened in the latest releases, check out the [changelog](https://github.com/prisma/prisma/releases).
 
-## Q1/Q2 2019
+## Q2/Q3 2019
 
 ### Short term fixes & improvements
 
@@ -14,14 +14,10 @@ The following lists represent a number of smaller-scope issues and improvements 
 
 - [ ] [Nested upsert in create mutations (correct: nested connectOrCreate) #2194](https://github.com/prisma/prisma/issues/2194)
 - [ ] [Use sensible migration values for existing nodes when adding required fields #2323](https://github.com/prisma/prisma/issues/2323)
-- [ ] [Allow for custom IDs to be submitted in a create-mutation #3839](https://github.com/prisma/prisma/issues/3839)
+- [ ] [Allow for custom IDs to be submitted when creating new records in client API #3839](https://github.com/prisma/prisma/issues/4219)
 - [ ] [[Mongo] improve relational link design to enhance performance #3754](https://github.com/prisma/prisma/issues/3754)
 - [ ] [Add inner connection fields #1780](https://github.com/prisma/prisma/issues/1780)
 - [ ] [Order by multiple fields #62](https://github.com/prisma/prisma/issues/62)
-
-#### Bug fixes
-
-- [ ] [Introspect postgres: "Could not connect to database. Prisma Config doesn't have any database connection" #3136](https://github.com/prisma/prisma/issues/3136)
 
 ### Specification phase
 
@@ -31,22 +27,20 @@ Here are the big features that are currently being specced out:
 
 - [A more fine-grained and powerful migration system](https://github.com/prisma/rfcs/blob/migrations/text/0000-migrations.md)
 - [An aggregations API](https://github.com/prisma/rfcs/blob/prisma-basic-aggregation-support/text/0000-prisma-basic-aggregation-support.md)
-- [A more powerful API for the Prisma client](https://github.com/prisma/rfcs/blob/prisma-basic-aggregation-support/text/0000-prisma-basic-aggregation-support.md)
 - [A new generator API for the Prisma client](https://github.com/prisma/rfcs/blob/client-generators/text/0000-client-generators.md)
+- [Datamodel v2](https://github.com/prisma/rfcs/blob/datamodel/text/0000-datamodel.md)
 
 ### Implementation phase
 
 The "implementation phase" reflects the larger features that we are currently working on. These features typically require multiple weeks/months to be implemented:
 
-- [Prisma Admin](https://github.com/prisma/prisma-admin-feedback)
 - [Enabling usage of the Prisma client without running an extra server](https://github.com/prisma/prisma/issues/2992)
-- A reimplementation of the Prisma core in Rust
+- [A more powerful API for the Prisma client (JS/TS)](https://github.com/prisma/rfcs/blob/new-ts-client-rfc/text/0000-new-ts-client.md)
 
 ## Upcoming
 
-While the following features are currently not listed in the `Q1/Q2 2019`-section, they may still get added to it:
+While the following features are currently not listed in the `Q2/Q3 2019`-section, they may still get added to it:
 
-- Datamodel v2
 - Prisma SDK
 - Observability & monitoring
 - Caching

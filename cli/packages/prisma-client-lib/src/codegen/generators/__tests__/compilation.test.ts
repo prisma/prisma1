@@ -4,15 +4,15 @@ import { testTSCompilation, testFlowCompilation } from '../../utils/compile'
 import test from 'ava'
 import { fixturesPath } from './fixtures'
 
-const typeDefs = fs.readFileSync(
-  path.join(fixturesPath, 'schema.graphql'),
+const datamodel = fs.readFileSync(
+  path.join(fixturesPath, 'datamodel.prisma'),
   'utf-8',
 )
 
 test('flow compilation', async t => {
-  t.is(await testFlowCompilation(typeDefs), 0)
+  t.is(await testFlowCompilation(datamodel), 0)
 })
 
 test('typescript compilation', async t => {
-  t.is(await testTSCompilation(typeDefs), 0)
+  t.is(await testTSCompilation(datamodel), 0)
 })

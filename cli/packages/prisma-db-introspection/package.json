@@ -16,6 +16,7 @@
     "@types/node": "^8.0.57",
     "@types/pg": "^7.4.6",
     "jest": "23.6.0",
+    "mongodb-memory-server-global": "^5.1.0",
     "prettier": "1.14.3",
     "ts-jest": "^23.10.5",
     "tslint": "^5.6.0",

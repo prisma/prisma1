@@ -1,0 +1,10 @@
+type User {
+  id: ID!
+  house: House!
+}
+
+type House {
+  id: ID!
+  name: String!
+  user: User!
+}
