@@ -87,7 +87,6 @@ impl Builder {
     }
 }
 
-
 /// Removes the excess records added to by the database query layer based on the query arguments
 /// This would be the right place to add pagination markers (has next page, etc.).
 pub fn trim_records(data: &mut Vec<Item>, query_args: &QueryArguments) {
@@ -103,7 +102,6 @@ pub fn trim_records(data: &mut Vec<Item>, query_args: &QueryArguments) {
         _ => (),
     };
 }
-
 
 /// Drops x records on the end of the wrapped records in place.
 fn drop_right<T>(vec: &mut Vec<T>, x: u32) {

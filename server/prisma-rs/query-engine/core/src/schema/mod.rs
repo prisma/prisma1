@@ -1,1 +1,2 @@
 mod builder;
+mod schema;

@@ -50,7 +50,7 @@ fn parse_literal(token: &pest::iterators::Pair<'_, Rule>) -> Value {
         Rule::boolean_literal => Value::BooleanValue(current.as_str().to_string()),
         Rule::constant_Literal => Value::ConstantValue(current.as_str().to_string()),
         _ => unreachable!("Encounterd impossible literal during parsing: {:?}", current.as_str())
-    }
+    };
 }
 
 // Directive parsing
@@ -58,9 +58,8 @@ fn parse_directive_arg_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     return match_first! { token, current,
         Rule::any_literal => parse_literal(&current),
         _ => unreachable!("Encounterd impossible value during parsing: {:?}", current.as_str())
-    }
+    };
 }
-
 
 fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgument {
     let mut name: Option<String> = None;
@@ -73,11 +72,13 @@ fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgu
     };
 
     return match (name, argument) {
-        (Some(name), Some(value)) => DirectiveArgument { name: name, value: value },
-        _ => panic!("Encounterd impossible type during parsing: {:?}", token.as_str())
+        (Some(name), Some(value)) => DirectiveArgument {
+            name: name,
+            value: value,
+        },
+        _ => panic!("Encounterd impossible type during parsing: {:?}", token.as_str()),
     };
 }
-
 
 fn parse_directive_args(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<DirectiveArgument>) {
     match_children! { token, current,
@@ -98,8 +99,8 @@ fn parse_directive(token: &pest::iterators::Pair<'_, Rule>) -> Directive {
 
     return match name {
         Some(name) => Directive { name, arguments },
-        _ => panic!("Encounterd impossible type during parsing: {:?}", token.as_str())
-    }
+        _ => panic!("Encounterd impossible type during parsing: {:?}", token.as_str()),
+    };
 }
 
 // Type parsing
@@ -107,17 +108,17 @@ fn parse_base_type(token: &pest::iterators::Pair<'_, Rule>) -> String {
     return match_first! { token, current,
         Rule::identifier => current.as_str().to_string(),
         _ => unreachable!("Encounterd impossible type during parsing: {:?}", current.as_str())
-    }
+    };
 }
 
 fn parse_field_type(token: &pest::iterators::Pair<'_, Rule>) -> (FieldArity, String) {
-   return match_first! { token, current,
+    return match_first! { token, current,
         Rule::optional_type => (FieldArity::Optional, parse_base_type(&current)),
         Rule::optional_list_type => (FieldArity::List, parse_base_type(&current)),
         Rule::base_type => (FieldArity::Required, parse_base_type(&current)),
         Rule::list_type => (FieldArity::List, parse_base_type(&current)),
         _ => unreachable!("Encounterd impossible field during parsing: {:?}", current.as_str())
-    }
+    };
 }
 
 // Field parsing
@@ -125,7 +126,7 @@ fn parse_default_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     return match_first! { token, current,
         Rule::any_literal => parse_literal(&current),
         _ => unreachable!("Encounterd impossible value during parsing: {:?}", current.as_str())
-    }
+    };
 }
 
 fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
@@ -133,7 +134,6 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     let mut directives: Vec<Directive> = vec![];
     let mut default_value: Option<Value> = None;
     let mut field_type: Option<(FieldArity, String)> = None;
-
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
@@ -150,12 +150,14 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
             arity,
             default_value,
             directives,
-            comments: vec![]
+            comments: vec![],
         },
-        _ => panic!("Encounterd impossible field declaration during parsing: {:?}", token.as_str()) 
-    }
+        _ => panic!(
+            "Encounterd impossible field declaration during parsing: {:?}",
+            token.as_str()
+        ),
+    };
 }
-
 
 // Type parsing
 fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Type {
@@ -175,10 +177,13 @@ fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Type {
             name,
             fields,
             directives,
-            comments: vec![]
+            comments: vec![],
         },
-        _ => panic!("Encounterd impossible type declaration during parsing: {:?}", token.as_str()) 
-    }
+        _ => panic!(
+            "Encounterd impossible type declaration during parsing: {:?}",
+            token.as_str()
+        ),
+    };
 }
 
 // Enum parsing
@@ -186,7 +191,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut values: Vec<String> = vec![];
-    
+
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
@@ -199,17 +204,21 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
             name,
             values,
             directives,
-            comments: vec![]
+            comments: vec![],
         },
-        _ => panic!("Encounterd impossible enum declaration during parsing: {:?}", token.as_str()) 
-    }
+        _ => panic!(
+            "Encounterd impossible enum declaration during parsing: {:?}",
+            token.as_str()
+        ),
+    };
 }
 
 // Whole datamodel parsing
 pub fn parse(datamodel_string: &String) -> Schema {
     let datamodel = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string)
-    .expect("Could not parse datamodel file.")
-    .next().unwrap();
+        .expect("Could not parse datamodel file.")
+        .next()
+        .unwrap();
 
     let mut types: Vec<TypeOrEnum> = vec![];
 
@@ -221,6 +230,6 @@ pub fn parse(datamodel_string: &String) -> Schema {
 
     return Schema {
         types,
-        comments: vec![]
-    }
+        comments: vec![],
+    };
 }
