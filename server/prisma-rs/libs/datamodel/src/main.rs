@@ -26,11 +26,6 @@ fn main() {
             .help("Sets the input datamodel file to use")
             .required(true)
             .index(1))
-        .arg(Arg::with_name("format")
-            .short("f")
-            .possible_values(&formats)
-            .help("Sets the schema format."))
-        .get_matches();
 
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
