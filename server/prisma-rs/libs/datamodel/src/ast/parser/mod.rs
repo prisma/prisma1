@@ -127,7 +127,6 @@ fn parse_base_type(token: &pest::iterators::Pair<'_, Rule>) -> String {
 fn parse_field_type(token: &pest::iterators::Pair<'_, Rule>) -> (FieldArity, String) {
    return match_first! { token, current,
         Rule::optional_type => (FieldArity::Optional, parse_base_type(&current)),
-        Rule::optional_list_type => (FieldArity::List, parse_base_type(&current)),
         Rule::base_type => (FieldArity::Required, parse_base_type(&current)),
         Rule::list_type => (FieldArity::List, parse_base_type(&current)),
         _ => unreachable!("Encounterd impossible field during parsing: {:?}", current.as_str())

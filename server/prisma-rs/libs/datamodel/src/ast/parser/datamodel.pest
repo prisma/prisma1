@@ -38,13 +38,12 @@ directive_single_argument = { "(" ~ directive_argument_value ~ ")" }
 directive = { "@" ~ identifier ~ (directive_arguments | directive_single_argument ) ? }
 
 // Model declarations - flattend for easy parsing
-optional_type = { identifier ~ ("?")}
-optional_list_type = { "[" ~ identifier ~ "]" ~ ("?")}
+optional_type = { identifier ~ ("?") }
 base_type = { identifier } // Called base type to not conflict with type rust keyword
-list_type = { "[" ~ identifier ~ "]" }
+list_type = { identifier ~ "[]" }
 
 // Pest is greedy, order is very important here.
-field_type = { optional_list_type | list_type | optional_type | base_type }
+field_type = { list_type | optional_type | base_type }
 // This is a field link identifier which comes in braces after the type.
 field_link = @{ identifier }
 
