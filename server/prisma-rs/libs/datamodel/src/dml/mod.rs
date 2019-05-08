@@ -147,6 +147,7 @@ pub struct Field {
     pub database_name: Option<String>,
     pub default_value: Option<Value>,
     pub is_unique: bool,
+    // TODO: isn't `is_id` implied if the `id_strategy` field is Some()?
     pub is_id: bool,
     pub id_strategy: Option<IdStrategy>,
     // TODO: Not sure if a sequence should be a member of field.

@@ -1,4 +1,5 @@
 use nullable::Nullable;
+use datamodel::*;
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
 #[serde(tag = "stepType")]
@@ -60,16 +61,12 @@ pub struct CreateField {
     pub name: String,
 
     #[serde(rename = "type")]
-    pub tpe: String,
+    pub tpe: FieldType,
 
+    pub arity: FieldArity,
+    
     #[serde(skip_serializing_if = "Option::is_none")]
     pub db_name: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_optional: Option<bool>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_list: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_created_at: Option<bool>,
@@ -81,10 +78,10 @@ pub struct CreateField {
     pub id: Option<String>, // fixme: change to behaviour
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub default: Option<String>, // fixme: change to PrismaValue
+    pub default: Option<Value>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalar_list: Option<String>, // fixme: change to behaviour
+    pub scalar_list: Option<ScalarListStrategy>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
