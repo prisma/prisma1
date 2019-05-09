@@ -6,6 +6,7 @@ use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::{
     DataModelMigrationStepsInferrer, DataModelMigrationStepsInferrerImpl,
 };
+use nullable::*;
 
 #[test]
 fn infer_CreateModel_if_it_does_not_exit_yet() {
@@ -79,17 +80,14 @@ fn infer_UpdateModel() {
     );
 
     let steps = infer(dm1, dm2);
-    let expected = vec![
-        MigrationStep::UpdateModel(UpdateModel {
-            name: "Test".to_string(),
-            new_name: None,
-            db_name: None,
-            embedded: Some(true),
-        })
-    ];
+    let expected = vec![MigrationStep::UpdateModel(UpdateModel {
+        name: "Test".to_string(),
+        new_name: None,
+        db_name: None,
+        embedded: Some(true),
+    })];
     assert_eq!(steps, expected);
 }
-
 
 #[test]
 fn infer_CreateField_if_it_does_not_exist_yet() {
@@ -212,6 +210,42 @@ fn infer_DeleteField() {
     let expected = vec![MigrationStep::DeleteField(DeleteField {
         model: "Test".to_string(),
         name: "field".to_string(),
+    })];
+    assert_eq!(steps, expected);
+}
+
+#[test]
+fn infer_UpdateField_simple() {
+    let dm1 = parse(
+        r#"
+        model Test {
+            id: String
+            field: Int?
+        }
+    "#,
+    );
+    let dm2 = parse(
+        r#"
+        model Test {
+            id: String
+            field: Boolean @default(false)
+        }
+    "#,
+    );
+
+    let steps = infer(dm1, dm2);
+    let expected = vec![MigrationStep::UpdateField(UpdateField {
+        model: "Test".to_string(),
+        name: "field".to_string(),
+        new_name: None,
+        tpe: Some(FieldType::Base(ScalarType::Boolean)),
+        arity: Some(FieldArity::Required),
+        db_name: None,
+        is_created_at: None,
+        is_updated_at: None,
+        id: None,
+        default: Some(Nullable::NotNull(Value::Boolean(false))),
+        scalar_list: None,
     })];
     assert_eq!(steps, expected);
 }

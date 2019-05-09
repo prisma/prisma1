@@ -119,6 +119,19 @@ pub struct UpdateField {
     pub scalar_list: Option<Nullable<ScalarListStrategy>>,
 }
 
+impl UpdateField {
+    pub fn is_any_option_set(&self) -> bool {
+        self.new_name.is_some()
+            || self.arity.is_some()
+            || self.db_name.is_some()
+            || self.is_created_at.is_some()
+            || self.is_updated_at.is_some()
+            || self.id.is_some()
+            || self.default.is_some()
+            || self.scalar_list.is_some()
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DeleteField {

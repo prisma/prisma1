@@ -1,5 +1,6 @@
 use datamodel::*;
 use migration_connector::steps::*;
+use nullable::Nullable;
 
 pub trait DataModelMigrationStepsInferrer {
     fn infer(previous: Schema, next: Schema) -> Vec<MigrationStep>;
@@ -18,6 +19,7 @@ pub struct DataModelMigrationStepsInferrerImpl {
     next: Schema,
 }
 
+// TODO: this does not deal with renames yet
 impl DataModelMigrationStepsInferrerImpl {
     fn infer_internal(&self) -> Vec<MigrationStep> {
         let mut result: Vec<MigrationStep> = Vec::new();
@@ -25,11 +27,13 @@ impl DataModelMigrationStepsInferrerImpl {
         let models_to_delete = self.models_to_delete();
         let fields_to_create = self.fields_to_create();
         let fields_to_delete = self.fields_to_delete();
+        let fields_to_update = self.fields_to_update();
 
         result.append(&mut Self::wrap_as_step(models_to_create, MigrationStep::CreateModel));
         result.append(&mut Self::wrap_as_step(models_to_delete, MigrationStep::DeleteModel));
         result.append(&mut Self::wrap_as_step(fields_to_create, MigrationStep::CreateField));
         result.append(&mut Self::wrap_as_step(fields_to_delete, MigrationStep::DeleteField));
+        result.append(&mut Self::wrap_as_step(fields_to_update, MigrationStep::UpdateField));
         result
     }
 
@@ -102,13 +106,64 @@ impl DataModelMigrationStepsInferrerImpl {
                 if must_delete_field {
                     let step = DeleteField {
                         model: previous_model.name.clone(),
-                        name: previous_field.name.clone(),                        
+                        name: previous_field.name.clone(),
                     };
                     result.push(step);
                 }
             }
         }
         result
+    }
+
+    fn fields_to_update(&self) -> Vec<UpdateField> {
+        let mut result = Vec::new();
+        for previous_model in self.previous.models() {
+            for previous_field in previous_model.fields {
+                if let Some(next_field) = self
+                    .next
+                    .find_model(previous_model.name.to_string())
+                    .and_then(|m| m.find_field(previous_field.name.to_string()))
+                {
+                    let (p, n) = (previous_field, next_field);
+                    let step = UpdateField {
+                        model: previous_model.name.clone(),
+                        name: p.name.clone(),
+                        new_name: None,
+                        tpe: Self::diff(p.field_type, n.field_type),
+                        arity: Self::diff(p.arity, n.arity),
+                        db_name: Self::diff_nullable(p.database_name, n.database_name),
+                        is_created_at: None,
+                        is_updated_at: None,
+                        id: None,
+                        default: Self::diff_nullable(p.default_value, n.default_value),
+                        scalar_list: Self::diff_nullable(p.scalar_list_strategy, n.scalar_list_strategy),
+                    };
+                    if step.is_any_option_set() {
+                        result.push(step);
+                    }
+                }
+            }
+        }
+        result
+    }
+
+    fn diff<T: PartialEq>(current: T, updated: T) -> Option<T> {
+        if current == updated {
+            None
+        } else {
+            Some(updated)
+        }
+    }
+
+    fn diff_nullable<T: PartialEq>(current: Option<T>, updated: Option<T>) -> Option<Nullable<T>> {
+        if current == updated {
+            None
+        } else {
+            match updated {
+                None => Some(Nullable::Null),
+                Some(x) => Some(Nullable::NotNull(x)),
+            }
+        }
     }
 
     fn wrap_as_step<T, F>(steps: Vec<T>, mut wrap_fn: F) -> Vec<MigrationStep>
