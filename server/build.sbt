@@ -298,10 +298,11 @@ lazy val apiConnectorMongo = connectorProject("api-connector-mongo")
       oldOptions.filterNot(_ == "-Xfatal-warnings")
     })
 
-lazy val apiConnectorSQLiteNative = connectorProject("api-connector-sqlite-native")
+lazy val apiConnectorNative = connectorProject("api-connector-native")
   .dependsOn(apiConnector)
   .dependsOn(prismaRsBinding)
   .dependsOn(apiConnectorSQLite)
+  .dependsOn(apiConnectorPostgres)
 
 
 // ##################
@@ -519,7 +520,7 @@ lazy val apiConnectorProjects = List(
   apiConnectorPostgres,
   apiConnectorMongo,
   apiConnectorSQLite,
-  apiConnectorSQLiteNative
+  apiConnectorNative
 )
 
 lazy val allConnectorProjects = deployConnectorProjects ++ apiConnectorProjects ++ Seq(connectorUtils, connectorShared)

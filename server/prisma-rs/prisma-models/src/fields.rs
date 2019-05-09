@@ -106,16 +106,13 @@ impl Fields {
     }
 
     pub fn find_many_from_all(&self, names: &BTreeSet<String>) -> Vec<&Field> {
-        self.all
-            .iter()
-            .filter(|field| names.contains(field.db_name().as_ref()))
-            .collect()
+        self.all.iter().filter(|field| names.contains(field.name())).collect()
     }
 
     pub fn find_many_from_scalar(&self, names: &BTreeSet<String>) -> Vec<Arc<ScalarField>> {
         self.scalar_weak()
             .iter()
-            .filter(|field| names.contains(field.upgrade().unwrap().db_name()))
+            .filter(|field| names.contains(&field.upgrade().unwrap().name))
             .map(|field| field.upgrade().unwrap())
             .collect()
     }
@@ -123,7 +120,7 @@ impl Fields {
     pub fn find_many_from_relation(&self, names: &BTreeSet<String>) -> Vec<Arc<RelationField>> {
         self.relation_weak()
             .iter()
-            .filter(|field| names.contains(&field.upgrade().unwrap().db_name()))
+            .filter(|field| names.contains(&field.upgrade().unwrap().name))
             .map(|field| field.upgrade().unwrap())
             .collect()
     }
@@ -131,7 +128,7 @@ impl Fields {
     pub fn find_from_all(&self, name: &str) -> DomainResult<&Field> {
         self.all
             .iter()
-            .find(|field| field.db_name() == name)
+            .find(|field| field.name() == name)
             .ok_or_else(|| DomainError::FieldNotFound {
                 name: name.to_string(),
                 model: self.model().name.clone(),
@@ -142,7 +139,7 @@ impl Fields {
         self.scalar_weak()
             .iter()
             .map(|field| field.upgrade().unwrap())
-            .find(|field| field.db_name() == name)
+            .find(|field| field.name == name)
             .ok_or_else(|| DomainError::ScalarFieldNotFound {
                 name: name.to_string(),
                 model: self.model().name.clone(),

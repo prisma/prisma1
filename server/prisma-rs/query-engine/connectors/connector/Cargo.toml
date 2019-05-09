@@ -5,8 +5,9 @@ authors = []
 edition = "2018"
 
 [features]
-default = ["sql", "sqlite"]
+default = ["sql", "sqlite", "postgresql"]
 sqlite = ["rusqlite", "libsqlite3-sys", "r2d2_sqlite"]
+postgresql = ["tokio-postgres", "native-tls"]
 sql = ["r2d2"]
 
 [dependencies]
@@ -26,3 +27,6 @@ r2d2 = { version = "0.8", optional = true }
 r2d2_sqlite = { version = "0.8", optional = true }
 rusqlite = { version = "0.16", features = ["chrono", "bundled"], optional = true }
 libsqlite3-sys = { version = "0.11", optional = true }
+
+tokio-postgres = { version = "0.4.0-rc.2", optional = true }
+native-tls = { version = "0.2", optional = true }

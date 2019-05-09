@@ -256,9 +256,19 @@ impl Relation {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
-            Some(RelationTable(ref m)) => m.table.clone().into(),
-            Some(Inline(ref m)) => self.internal_data_model().find_model(&m.in_table_of_model_name).unwrap().table(),
-            None => format!("_{}", self.name).into(),
+            Some(RelationTable(ref m)) => {
+                let db = self.model_a().internal_data_model().db_name.clone();
+                (db, m.table.clone()).into()
+            }
+            Some(Inline(ref m)) => self
+                .internal_data_model()
+                .find_model(&m.in_table_of_model_name)
+                .unwrap()
+                .table(),
+            None => {
+                let db = self.model_a().internal_data_model().db_name.clone();
+                (db, format!("_{}", self.name)).into()
+            }
         }
     }
 

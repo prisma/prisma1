@@ -39,7 +39,6 @@ impl RootBuilder {
                     directives: _,
                     selection_set,
                 })) => self.build_mutation(&selection_set.items),
-
                 _ => unimplemented!(),
             })
             .collect::<CoreResult<Vec<Vec<PrismaQuery>>>>() // Collect all the "query trees"
