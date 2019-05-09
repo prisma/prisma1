@@ -8,16 +8,22 @@ pub mod directive;
 use value::{WrappedValue, ValueValidator};
 use directive::builtin::{DirectiveListValidator, new_field_directives, new_model_directives, new_enum_directives};
 
-pub struct Validator<Types: dml::TypePack> {
+// TODO: Naming
+pub trait Validator<Types: dml::TypePack> {
+    fn new() -> Self;
+    fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema<Types>;
+}
+
+// TODO: Naming
+pub struct BaseValidator<Types: dml::TypePack> {
     pub field_directives: DirectiveListValidator<dml::Field<Types>, Types>,
     pub model_directives: DirectiveListValidator<dml::Model<Types>, Types>,
     pub enum_directives: DirectiveListValidator<dml::Enum<Types>, Types>
 }
 
-impl<Types: dml::TypePack> Validator<Types> {
-
-    pub fn new() -> Validator<Types> {
-        Validator {
+impl<Types: dml::TypePack> Validator<Types> for BaseValidator<Types> {
+    fn new() -> Self {
+        BaseValidator {
             field_directives: new_field_directives(),
             model_directives: new_model_directives(),
             enum_directives: new_enum_directives()
@@ -26,7 +32,7 @@ impl<Types: dml::TypePack> Validator<Types> {
 
 
     // TODO: Intro factory methods for creating DML nodes.
-    pub fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema<Types> {
+    fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema<Types> {
         let mut schema = dml::Schema::new();
         
         for ast_obj in &ast_schema.models {
@@ -39,7 +45,9 @@ impl<Types: dml::TypePack> Validator<Types> {
         // TODO: This needs some resolver logic for enum and relation types. 
         return schema
     }
+}
 
+impl<Types: dml::TypePack> BaseValidator<Types> {
     fn validate_model(&self, ast_model: &ast::Model) -> dml::Model<Types> {
         let mut ty = dml::Model::new(&ast_model.name);
         self.model_directives.validate_and_apply(ast_model, &mut ty);

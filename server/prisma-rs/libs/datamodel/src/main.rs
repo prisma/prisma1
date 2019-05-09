@@ -5,7 +5,7 @@ pub mod dmmf;
 pub mod ast;
 use ast::parser;
 pub mod dml;
-use dml::validator::Validator;
+use dml::validator::{BaseValidator, Validator};
 
 // Pest grammar generation on compile time.
 extern crate pest;
@@ -35,7 +35,7 @@ fn main() {
 
     let ast = parser::parse(&file);
 
-    let validator = Validator::<dml::BuiltinTypePack>::new();
+    let validator = BaseValidator::<dml::BuiltinTypePack>::new();
 
     let dml = validator.validate(&ast);
 
