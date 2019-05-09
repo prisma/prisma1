@@ -18,6 +18,7 @@
 
 use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery};
 use indexmap::IndexMap;
+use std::mem::replace;
 
 /// Represents the lifecycle of a query
 ///
@@ -45,7 +46,7 @@ enum Stage {
     Done(ReadQueryResult),
 }
 
-/// A list of Queryers that need to be processed
+/// A list of Queries and their stage that need to be processed
 ///
 /// Generally the order to call the associated functions in is
 ///
@@ -90,7 +91,7 @@ impl QueryPipeline {
 
     /// Takes the set of pre-fetched results and re-associates it into the pipeline
     pub fn store_prefetch(&mut self, mut data: IndexMap<usize, ReadQueryResult>) {
-        self.0 = std::mem::replace(&mut self.0, vec![]) // A small hack around ownership
+        self.0 = replace(&mut self.0, vec![]) // A small hack around ownership
             .into_iter()
             .map(|stage| match stage {
                 Stage::Write(idx, query) => match data.remove(&idx) {
@@ -116,24 +117,24 @@ impl QueryPipeline {
     /// must result in another ReadQuery and the pipeline then uses this
     /// information to re-associate data to be in the expected order.
     pub fn get_writes(&mut self) -> Vec<(WriteQuery, Option<usize>)> {
-        let (rest, writes) = std::mem::replace(&mut self.0, vec![]).into_iter().fold(
-            (vec![], vec![]),
-            |(mut rest, mut writes), stage| {
-                match stage {
-                    Stage::Write(idx, query) => {
-                        rest.push(Stage::WriteMark(idx));
-                        writes.push((query, Some(idx)));
-                    }
-                    Stage::PreFetched(query, data) => {
-                        rest.push(Stage::Done(data));
-                        writes.push((query, None));
-                    }
-                    Stage::Read(query) => rest.push(Stage::Read(query)),
-                    stage => panic!("Unexpected pipeline stage {:?} in function `get_writes`", stage),
-                };
-                (rest, writes)
-            },
-        );
+        let (rest, writes) =
+            replace(&mut self.0, vec![]) // A small hack around ownership
+                .into_iter()
+                .fold((vec![], vec![]), |(mut rest, mut writes), stage| {
+                    match stage {
+                        Stage::Write(idx, query) => {
+                            rest.push(Stage::WriteMark(idx));
+                            writes.push((query, Some(idx)));
+                        }
+                        Stage::PreFetched(query, data) => {
+                            rest.push(Stage::Done(data));
+                            writes.push((query, None));
+                        }
+                        Stage::Read(query) => rest.push(Stage::Read(query)),
+                        stage => panic!("Unexpected pipeline stage {:?} in function `get_writes`", stage),
+                    };
+                    (rest, writes)
+                });
 
         self.0 = rest;
         writes
