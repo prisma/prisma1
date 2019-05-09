@@ -2,7 +2,6 @@ use crate::{DomainError, DomainResult};
 use chrono::prelude::*;
 use graphql_parser::query::Value as GraphqlValue;
 use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt};
 use uuid::Uuid;
@@ -54,7 +53,7 @@ impl PrismaValue {
                 .or_else(|| Self::str_as_datetime(s))
                 .unwrap_or(PrismaValue::String(s.clone())),
             GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
-            _ => unimplemented!(),
+            value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
         }
     }
 

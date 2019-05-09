@@ -65,7 +65,7 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     let queries = rb.build();
 
     let ir = match queries {
-        Ok(queries) => match dbg!(ctx.read_query_executor.execute(&queries)) {
+        Ok(q) => match dbg!(ctx.executor.exec_all(q)) {
             Ok(results) => results
                 .into_iter()
                 .fold(Builder::new(), |builder, result| builder.add(result))

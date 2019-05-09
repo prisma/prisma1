@@ -1,0 +1,62 @@
+// Global (builtin) expressions
+
+// Treat every whitespace the same
+WHITESPACE = _{ SPACE_SEPARATOR | LINE_SEPARATOR | PARAGRAPH_SEPARATOR | NEWLINE }
+// Comment ignores everything until end of line.
+// COMMENT = @{ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+
+// Prisma Datamodel expressions
+
+// Base building blocks
+// TODO: Ask for proper format.
+identifier = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* } 
+
+// Literals
+numeric_literal = { ("-")? ~ ASCII_DIGIT+ ~("." ~ ASCII_DIGIT+)? }
+
+string_escaped_predefined = { "n" | "r" | "t" | "\\" | "0" | "\"" | "'" }
+string_escape     = { "\\" ~ string_escaped_predefined }
+string_raw = { (!("\\" | "\"" | NEWLINE) ~ ANY)+ }
+string_content = { (string_raw | string_escape)* }
+string_literal = { "\"" ~ string_content ~ "\"" }
+
+boolean_true  = { "true" }
+boolean_false = { "false" }
+boolean_literal =  { boolean_true | boolean_false }
+
+constant_Literal = { ASCII_ALPHA_UPPER+ } // TABLE, EMBED etc.
+
+any_literal = { numeric_literal | string_literal | boolean_literal | constant_Literal }
+
+// Directives
+directive_argument_name = { (!":" ~ identifier)+ }
+directive_argument_value = { any_literal }
+directive_argument = { (directive_argument_name ~ ":" ~ directive_argument_value) }
+directive_arguments = { "(" ~ ((directive_argument ~ ("," ~ directive_argument)*)?) ~ ")" }
+directive_single_argument = { "(" ~ directive_argument_value ~ ")" }
+// A directive either has one unnamed argument or any number of named arguments or no argument.
+directive = { "@" ~ identifier ~ (directive_arguments | directive_single_argument ) ? }
+
+// Model declarations - flattend for easy parsing
+optional_type = { identifier ~ ("?") }
+base_type = { identifier } // Called base type to not conflict with type rust keyword
+list_type = { identifier ~ "[]" }
+
+// Pest is greedy, order is very important here.
+field_type = { list_type | optional_type | base_type }
+// This is a field link identifier which comes in braces after the type.
+field_link = @{ identifier }
+
+// Field
+default_value = { "=" ~ any_literal }
+field_declaration = { identifier ~ (":")? ~ field_type ~ ("(" ~ field_link ~ ")")? ~ default_value? ~ directive* }
+
+// Model
+model_declaration = { directive* ~ "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" }
+
+// Enum
+enum_field_declaration = { ASCII_ALPHA_UPPER }
+enum_declaration = { directive* ~ "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" }
+
+// Datamodel
+datamodel = { (model_declaration | enum_declaration)+ }

@@ -38,10 +38,10 @@
     "zen-observable": "^0.8.10"
   },
   "devDependencies": {
-    "@types/graphql": "14.0.3",
+    "@types/graphql": "14.2.0",
     "@types/prettier": "1.16.1",
     "ava": "^0.25.0",
-    "graphql": "^14.0.2",
+    "graphql": "^14.3.0",
     "semantic-release": "^15.10.4",
     "tslint": "5.11.0",
     "tslint-config-standard": "8.0.1",

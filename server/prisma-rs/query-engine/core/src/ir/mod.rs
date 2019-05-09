@@ -7,7 +7,6 @@
 //!
 //! This IR (intermediate representation) is meant for general
 //! processing and storage. It can also be easily serialised.
-#![warn(warnings)]
 
 mod lists;
 mod maps;
