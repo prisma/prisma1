@@ -2,7 +2,7 @@ use crate::dml;
 use crate::ast;
 
 use crate::dml::{ TypePack, Attachment, EmptyAttachment };
-use crate::dml::validator::AttachmentValidator;
+use crate::dml::validator::{AttachmentDirectiveSource, AttachmentDirectiveValidator};
 use crate::dml::validator::directive::builtin::{DirectiveListValidator};
 use crate::dml::validator::directive::{Args, Error, DirectiveValidator};
 
@@ -36,8 +36,8 @@ impl TypePack for PostgresTypePack {
 }
 
 // Validator for the special directive.
-pub struct PostgresSpecialPropValdiator { }
-impl<Types: dml::TypePack, T: dml::WithDatabaseName> DirectiveValidator<T, Types> for PostgresSpecialPropValdiator {
+pub struct PostgresSpecialPropValidator { }
+impl<Types: dml::TypePack, T: dml::WithDatabaseName> DirectiveValidator<T, Types> for PostgresSpecialPropValidator {
     fn directive_name(&self) -> &'static str{ &"postgres.specialProp" }
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Option<Error> {
 
@@ -51,36 +51,16 @@ impl<Types: dml::TypePack, T: dml::WithDatabaseName> DirectiveValidator<T, Types
     }
 }
 
-// We can fix the TypePack to our specialized version here.
-type Types = PostgresTypePack;
+// Attachement Validator Implementation. Minimal variant for directives.
+// Alternatively, we could use the AttachmendValidator trait to get more control.
+pub struct PostgresDirectives { }
 
-// Attachement Validator Impl.
-// TODO: I think we can safe a lot of lines here if we build upon the directive mechanism. 
-pub struct PostgresAttachmentValidator {
-    field_directives: DirectiveListValidator<dml::Field<PostgresTypePack>, Types>
-}
-
-fn postgres_field_directives<Types: TypePack>() -> DirectiveListValidator<dml::Field<Types>, Types> {
-    let mut validator = DirectiveListValidator::<dml::Field<Types>, Types>::new();
-    validator.add(Box::new(PostgresSpecialPropValdiator { }));
-    return validator;
-}
-
-
-impl AttachmentValidator<Types> for PostgresAttachmentValidator {
-    fn new() -> Self {
-        PostgresAttachmentValidator {
-            field_directives: postgres_field_directives()
-        }
+impl AttachmentDirectiveSource<PostgresTypePack> for PostgresDirectives {
+    fn add_field_directives(validator: &mut DirectiveListValidator<dml::Field<PostgresTypePack>, PostgresTypePack>) { 
+        validator.add(Box::new(PostgresSpecialPropValidator { }));
     }
-
-    fn validate_field_attachment(&self, ast_field: &ast::Field, field: &mut dml::Field<Types>) { 
-        self.field_directives.validate_and_apply(ast_field, field);
-    }
-
-    // Default impl.
-    fn validate_model_attachment(&self, ast_field: &ast::Model, field: &mut dml::Model<Types>) { }
-    fn validate_enum_attachment(&self, ast_field: &ast::Enum, field: &mut dml::Enum<Types>) { }
-    fn validate_schema_attachment(&self, ast_field: &ast::Schema, field: &mut dml::Schema<Types>) { }
-    fn validate_relation_attachment(&self, ast_field: &ast::Field, field: &mut dml::RelationInfo<Types>) { }
+    fn add_model_directives(validator: &mut DirectiveListValidator<dml::Model<PostgresTypePack>, PostgresTypePack>) { }
+    fn add_enum_directives(validator: &mut DirectiveListValidator<dml::Enum<PostgresTypePack>, PostgresTypePack>) {} 
 }
+
+pub type PostgresAttachmentValidator = AttachmentDirectiveValidator<PostgresTypePack, PostgresDirectives>;
