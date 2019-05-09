@@ -14,8 +14,10 @@
 //! mutation builders for a lot of this. But the general lifecycle
 //! of queries is implemented here
 
+#![allow(warnings)]
+
 use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery};
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 /// Represents the lifecycle of a query
 pub enum QueryMark {
@@ -54,19 +56,19 @@ impl QueryPipeline {
     /// `WriteQuery` which destructively acts on the database (i.e. deletes).
     ///
     /// **Important:** you need to call `store_prefetch` with the results
-    pub fn prefetch(&self) -> Vec<(usize, ReadQuery)> {
-        self.0.iter().fold(vec![], |mut vec, query| {
+    pub fn prefetch(&self) -> IndexMap<usize, ReadQuery> {
+        self.0.iter().fold(IndexMap::new(), |mut map, query| {
             if let QueryMark::Write(idx, query) = query {
                 if let Some(fetch) = query.generate_prefetch() {
-                    vec.push((*idx, fetch));
+                    map.insert(*idx, fetch);
                 }
             }
-            vec
+            map
         })
     }
 
     /// Takes the set of pre-fetched results and re-associates it into the pipeline
-    pub fn store_prefetch(&mut self, mut data: HashMap<usize, ReadQueryResult>) {
+    pub fn store_prefetch(&mut self, mut data: IndexMap<usize, ReadQueryResult>) {
         self.0 = std::mem::replace(&mut self.0, vec![]) // A small hack around ownership
             .into_iter()
             .map(|mark| match mark {
