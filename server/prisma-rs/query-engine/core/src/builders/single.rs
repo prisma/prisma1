@@ -1,4 +1,4 @@
-use super::BuilderExt;
+use super::{BuilderExt, utils};
 use crate::{query_ast::RecordQuery, CoreResult};
 
 use graphql_parser::query::Field;
@@ -38,7 +38,7 @@ impl<'f> BuilderExt for SingleBuilder<'f> {
         let nested = Self::build_nested_queries(nested_builders)?;
 
         let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, None)?;
-        let selector = Self::extract_node_selector(&field, Arc::clone(&model))?;
+        let selector = utils::extract_node_selector(&field, Arc::clone(&model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
         let fields = Self::collect_selection_order(&field);
 
