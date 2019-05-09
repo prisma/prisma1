@@ -14,22 +14,20 @@ pub struct Inflector {
     _inhibit: (),
 }
 
-impl Pluralize for Inflector {
-    fn pluralize(&self, s: &str) -> Option<String> {
+impl Inflector {
+    fn pluralize(&self, s: &str) -> String {
         for rule in &self.rules {
             if let Some(s) = match rule {
                 Rule::Category(c) => c.pluralize(s),
                 Rule::Regex(r) => r.pluralize(s),
             } {
-                return Some(s);
+                return s;
             }
         }
 
-        None
+        panic!("Violated invariant: Inflector should always fall back to catch-all case -s.")
     }
-}
 
-impl Inflector {
     pub fn new(mode: Mode) -> Inflector {
         let mut rules = vec![];
 
@@ -88,11 +86,11 @@ impl Inflector {
         };
 
         rules.push(Self::category_rule("us", "i", &categories::CATEGORY_US_I));
-        rules.push(Self::regex_rule("([cs]h|[zx])$", "$1es"));
+        rules.push(Self::regex_rule("([zx])$", "${1}es"));
         rules.push(Self::category_rule("", "es", &categories::CATEGORY_S_ES));
         rules.push(Self::category_rule("", "es", &categories::CATEGORY_IS_IDES));
         rules.push(Self::category_rule("", "es", &categories::CATEGORY_US_US));
-        rules.push(Self::regex_rule("(us)$", "$1es"));
+        rules.push(Self::regex_rule("(us)$", "${1}es"));
         rules.push(Self::category_rule("", "s", &categories::CATEGORY_A_ATA));
 
         exceptions::ADDITIONAL_SUFFIX_INFLECTIONS
@@ -104,7 +102,7 @@ impl Inflector {
         // Some words ending in -o take -os (including does preceded by a vowel)
         rules.push(Self::category_rule("o", "os", &categories::CATEGORY_O_I));
         rules.push(Self::category_rule("o", "os", &categories::CATEGORY_O_OS));
-        rules.push(Self::regex_rule("([aeiou])o$", "$1os"));
+        rules.push(Self::regex_rule("([aeiou])o$", "${1}os"));
 
         // The rest take -oes
         rules.push(Self::regex_rule("o$", "oes"));
@@ -135,7 +133,7 @@ impl Inflector {
                     singular[1..].to_owned()
                 ))
                 .unwrap(),
-                format!("$1{}", plural[1..].to_owned()),
+                format!("${{1}}{}", plural[1..].to_owned()),
             )]
         } else {
             vec![
@@ -167,5 +165,56 @@ impl Inflector {
 
     fn category_rule(singular: &'static str, plural: &'static str, words: &'static [&'static str]) -> Rule {
         Rule::category(singular.into(), plural.into(), words)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_example_word_list() {
+        let examples = vec![
+            ("alga", "algae"),
+            ("nova", "novas"),
+            ("dogma", "dogmas"),
+            ("Woman", "Women"),
+            ("church", "churches"),
+            ("quick_chateau", "quick_chateaus"),
+            ("codex", "codices"),
+            ("index", "indexes"),
+            ("NightWolf", "NightWolves"),
+            ("Milieu", "Milieus"),
+            ("basis", "bases"),
+            ("iris", "irises"),
+            ("phalanx", "phalanxes"),
+            ("tempo", "tempos"),
+            ("foot", "feet"),
+            ("series", "series"),
+            ("WorldAtlas", "WorldAtlases"),
+            ("wish", "wishes"),
+            ("Bacterium", "Bacteria"),
+            ("medium", "mediums"),
+            ("Genus", "Genera"),
+            ("stimulus", "stimuli"),
+            ("opus", "opuses"),
+            ("status", "statuses"),
+            ("Box", "Boxes"),
+            ("ferry", "ferries"),
+            ("protozoon", "protozoa"),
+            ("cherub", "cherubs"),
+            ("human", "humans"),
+            ("sugar", "sugar"),
+            ("virus", "viruses"),
+            ("gastrostomy", "gastrostomies"),
+            ("baculum", "bacula"),
+            ("pancreas", "pancreases"),
+        ];
+
+        let inflector = Inflector::new(Mode::Anglicized);
+
+        examples.into_iter().for_each(|(singular, expected_plural)| {
+            assert_eq!(inflector.pluralize(singular).unwrap(), expected_plural);
+        });
     }
 }

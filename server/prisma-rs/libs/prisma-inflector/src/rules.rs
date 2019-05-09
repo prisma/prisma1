@@ -25,10 +25,11 @@ impl Pluralize for CategoryRule {
                     panic!("Inflection rule error.");
                 }
 
-                let chars = normalized.graphemes(true).collect::<Vec<&str>>();
+                let chars = s.graphemes(true).collect::<Vec<&str>>();
                 let end_index = chars.len() - self.singular.len();
+                let result = format!("{}{}", chars[0..end_index].join(""), self.plural);
 
-                return Some(format!("{}{}", chars[0..end_index].join(""), self.plural));
+                return Some(result);
             }
         }
 
@@ -64,11 +65,5 @@ impl Rule {
 
     pub fn regex(singular: Regex, plural: String) -> Rule {
         Rule::Regex(RegexRule { singular, plural })
-    }
-}
-
-impl Pluralize for Rule {
-    fn pluralize(&self, s: &str) -> Option<String> {
-        self.pluralize(s)
     }
 }
