@@ -55,22 +55,22 @@ impl DataModelMigrationStepsInferrerImpl {
         for next_model in self.next.models() {
             if let Some(previous_model) = self.previous.find_model(next_model.name.clone()) {
                 for next_field in next_model.fields {
-                    if let None = previous_model.find_field(next_field.name.clone()) {
-                        let step = CreateField {
-                            model: next_model.name.clone(),
-                            name: next_field.name.clone(),
-                            tpe: "String".to_string(),
-                            db_name: next_field.database_name.clone(),
-                            default: None,
-                            id: None, //field.id_behaviour_clone(),
-                            is_created_at: Some(false),
-                            is_updated_at: Some(false),
-                            is_list: Some(false),
-                            is_optional: Some(false),
-                            scalar_list: None, //field.scalar_list_behaviour_clone(),
-                        };
-                        result.push(step);
-                    }
+                    // if let None = previous_model.find_field(next_field.name.clone()) {
+                    //     let step = CreateField {
+                    //         model: next_model.name.clone(),
+                    //         name: next_field.name.clone(),
+                    //         tpe: "String".to_string(),
+                    //         db_name: next_field.database_name.clone(),
+                    //         default: None,
+                    //         id: None, //field.id_behaviour_clone(),
+                    //         is_created_at: Some(false),
+                    //         is_updated_at: Some(false),
+                    //         is_list: Some(false),
+                    //         is_optional: Some(false),
+                    //         scalar_list: None, //field.scalar_list_behaviour_clone(),
+                    //     };
+                    //     result.push(step);
+                    // }
                 }
             }
 
