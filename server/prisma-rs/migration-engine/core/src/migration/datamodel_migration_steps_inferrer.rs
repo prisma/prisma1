@@ -21,27 +21,13 @@ pub struct DataModelMigrationStepsInferrerImpl {
 impl DataModelMigrationStepsInferrerImpl {
     fn infer_internal(&self) -> Vec<MigrationStep> {
         let mut result: Vec<MigrationStep> = Vec::new();
-        let mut models_to_create: Vec<MigrationStep> = self
-            .models_to_create()
-            .into_iter()
-            .map(|x| MigrationStep::CreateModel(x))
-            .collect();
+        let models_to_create = self.models_to_create();
+        let models_to_delete = self.models_to_delete();
+        let fields_to_create = self.fields_to_create();
 
-        let mut models_to_delete: Vec<MigrationStep> = self
-            .models_to_delete()
-            .into_iter()
-            .map(|x| MigrationStep::DeleteModel(x))
-            .collect();
-
-        let mut fields_to_create: Vec<MigrationStep> = self
-            .fields_to_create()
-            .into_iter()
-            .map(|x| MigrationStep::CreateField(x))
-            .collect();
-
-        result.append(&mut models_to_create);
-        result.append(&mut models_to_delete);
-        result.append(&mut fields_to_create);
+        result.append(&mut Self::wrap_as_step(models_to_create, MigrationStep::CreateModel));
+        result.append(&mut Self::wrap_as_step(models_to_delete, MigrationStep::DeleteModel));
+        result.append(&mut Self::wrap_as_step(fields_to_create, MigrationStep::CreateField));
         result
     }
 
@@ -101,5 +87,12 @@ impl DataModelMigrationStepsInferrerImpl {
             }
         }
         result
+    }
+
+    fn wrap_as_step<T, F>(steps: Vec<T>, mut wrap_fn: F) -> Vec<MigrationStep>
+    where
+        F: FnMut(T) -> MigrationStep,
+    {
+        steps.into_iter().map(|x| wrap_fn(x)).collect()
     }
 }
