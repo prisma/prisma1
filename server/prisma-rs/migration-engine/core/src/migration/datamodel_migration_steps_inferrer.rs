@@ -1,5 +1,5 @@
-use migration_connector::steps::*;
 use datamodel::*;
+use migration_connector::steps::*;
 
 pub trait DataModelMigrationStepsInferrer {
     fn infer(previous: Schema, next: Schema) -> Vec<MigrationStep>;
@@ -21,9 +21,17 @@ pub struct DataModelMigrationStepsInferrerImpl {
 impl DataModelMigrationStepsInferrerImpl {
     fn infer_internal(&self) -> Vec<MigrationStep> {
         let mut result: Vec<MigrationStep> = Vec::new();
-        let mut models_to_create: Vec<MigrationStep> = self.models_to_create().into_iter().map(|x| MigrationStep::CreateModel(x)).collect();
-        let mut fields_to_create: Vec<MigrationStep> = self.fields_to_create().into_iter().map(|x| MigrationStep::CreateField(x)).collect();
-        
+        let mut models_to_create: Vec<MigrationStep> = self
+            .models_to_create()
+            .into_iter()
+            .map(|x| MigrationStep::CreateModel(x))
+            .collect();
+        let mut fields_to_create: Vec<MigrationStep> = self
+            .fields_to_create()
+            .into_iter()
+            .map(|x| MigrationStep::CreateField(x))
+            .collect();
+
         result.append(&mut models_to_create);
         result.append(&mut fields_to_create);
         result
@@ -43,7 +51,7 @@ impl DataModelMigrationStepsInferrerImpl {
                         result.push(step);
                     }
                 }
-                _ => {},
+                _ => {}
             }
         }
 
@@ -73,7 +81,6 @@ impl DataModelMigrationStepsInferrerImpl {
                     // }
                 }
             }
-
         }
         result
     }

@@ -2,8 +2,8 @@
 
 mod test_harness;
 
-use test_harness::*;
 use migration_connector::*;
+use test_harness::*;
 
 #[test]
 fn last_should_return_none_if_there_is_no_migration() {
@@ -93,5 +93,3 @@ fn update_must_work() {
         assert_eq!(loaded.finished_at, params.finished_at);
     });
 }
-
-

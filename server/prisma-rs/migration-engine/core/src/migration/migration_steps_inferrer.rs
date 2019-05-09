@@ -117,7 +117,7 @@ impl<'a> MigrationStepsInferrerImpl<'a> {
         // result
         vec![]
     }
-    
+
     #[allow(unused)]
     fn is_inlined_in_model(&self, relation: &RelationRef, model: &ModelRef) -> bool {
         match relation.manifestation {

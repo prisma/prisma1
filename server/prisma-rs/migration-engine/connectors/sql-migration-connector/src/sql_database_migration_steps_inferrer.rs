@@ -1,6 +1,6 @@
 use crate::SqlMigrationStep;
-use migration_connector::*;
 use datamodel::Schema;
+use migration_connector::*;
 
 pub struct SqlDatabaseMigrationStepsInferrer {}
 

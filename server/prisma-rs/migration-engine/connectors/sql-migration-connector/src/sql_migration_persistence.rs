@@ -1,7 +1,7 @@
 #[allow(unused, dead_code)]
 use chrono::*;
-use migration_connector::*;
 use datamodel::Schema;
+use migration_connector::*;
 use prisma_query::{ast::*, visitor::*};
 use rusqlite::{Connection, Row};
 use serde_json;

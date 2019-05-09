@@ -1,4 +1,3 @@
-
 use migration_connector::*;
 use sql_migration_connector::SqlMigrationConnector;
 use std::panic;

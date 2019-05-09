@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
+use datamodel::dml::*;
+use datamodel::Validator;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::{
     DataModelMigrationStepsInferrer, DataModelMigrationStepsInferrerImpl,
 };
-use datamodel::dml::*;
-use datamodel::Validator;
 
 // #[test]
 // #[ignore]
