@@ -26,6 +26,13 @@ impl DataModelMigrationStepsInferrerImpl {
             .into_iter()
             .map(|x| MigrationStep::CreateModel(x))
             .collect();
+
+        let mut models_to_delete: Vec<MigrationStep> = self
+            .models_to_delete()
+            .into_iter()
+            .map(|x| MigrationStep::DeleteModel(x))
+            .collect();
+
         let mut fields_to_create: Vec<MigrationStep> = self
             .fields_to_create()
             .into_iter()
@@ -33,25 +40,35 @@ impl DataModelMigrationStepsInferrerImpl {
             .collect();
 
         result.append(&mut models_to_create);
+        result.append(&mut models_to_delete);
         result.append(&mut fields_to_create);
         result
     }
 
     fn models_to_create(&self) -> Vec<CreateModel> {
         let mut result = Vec::new();
-        for next_model in &self.next.models {
-            match next_model {
-                ModelOrEnum::Model(ref model) => {
-                    if !self.previous.has_model(model.name().to_string()) {
-                        let step = CreateModel {
-                            name: model.name().to_string(),
-                            db_name: model.database_name.as_ref().cloned(),
-                            embedded: model.is_embedded,
-                        };
-                        result.push(step);
-                    }
-                }
-                _ => {}
+        for next_model in &self.next.models() {
+            if !self.previous.has_model(next_model.name().to_string()) {
+                let step = CreateModel {
+                    name: next_model.name().to_string(),
+                    db_name: next_model.database_name.as_ref().cloned(),
+                    embedded: next_model.is_embedded,
+                };
+                result.push(step);
+            }
+        }
+
+        result
+    }
+
+    fn models_to_delete(&self) -> Vec<DeleteModel> {
+        let mut result = Vec::new();
+        for previous_model in &self.previous.models() {
+            if !self.next.has_model(previous_model.name.to_string()) {
+                let step = DeleteModel {
+                    name: previous_model.name().to_string(),
+                };
+                result.push(step);
             }
         }
 
@@ -61,24 +78,25 @@ impl DataModelMigrationStepsInferrerImpl {
     fn fields_to_create(&self) -> Vec<CreateField> {
         let mut result = Vec::new();
         for next_model in self.next.models() {
-            if let Some(previous_model) = self.previous.find_model(next_model.name.clone()) {
-                for next_field in next_model.fields {
-                    // if let None = previous_model.find_field(next_field.name.clone()) {
-                    //     let step = CreateField {
-                    //         model: next_model.name.clone(),
-                    //         name: next_field.name.clone(),
-                    //         tpe: "String".to_string(),
-                    //         db_name: next_field.database_name.clone(),
-                    //         default: None,
-                    //         id: None, //field.id_behaviour_clone(),
-                    //         is_created_at: Some(false),
-                    //         is_updated_at: Some(false),
-                    //         is_list: Some(false),
-                    //         is_optional: Some(false),
-                    //         scalar_list: None, //field.scalar_list_behaviour_clone(),
-                    //     };
-                    //     result.push(step);
-                    // }
+            for next_field in next_model.fields {
+                let must_create_field = match self.previous.find_model(next_model.name.clone()) {
+                    None => true,
+                    Some(previous_model) => previous_model.find_field(next_field.name.clone()).is_none(),
+                };
+                if must_create_field {
+                    let step = CreateField {
+                        model: next_model.name.clone(),
+                        name: next_field.name.clone(),
+                        tpe: next_field.field_type,
+                        arity: next_field.arity,
+                        db_name: next_field.database_name.clone(),
+                        default: next_field.default_value,
+                        id: None, //field.id_behaviour_clone(),
+                        is_created_at: None,
+                        is_updated_at: None,
+                        scalar_list: next_field.scalar_list_strategy,
+                    };
+                    result.push(step);
                 }
             }
         }
