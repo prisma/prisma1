@@ -21,6 +21,10 @@ where
     let ids = conn.filter_ids(Arc::clone(&model), filter.clone())?;
     let count = ids.len();
 
+    if count == 0 {
+        return Ok(count);
+    }
+
     let updates = {
         let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
         MutationBuilder::update_many(Arc::clone(&model), ids.as_slice(), non_list_args)?
@@ -50,6 +54,10 @@ where
 {
     let ids = conn.filter_ids_by_parents(Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
     let count = ids.len();
+
+    if count == 0 {
+        return Ok(count);
+    }
 
     let updates = {
         let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();

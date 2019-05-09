@@ -1,6 +1,6 @@
 package com.prisma.api.mutations
 
-import com.prisma.{ConnectorTag, IgnoreSQLite}
+import com.prisma.{ConnectorTag, IgnorePostgres, IgnoreSQLite}
 import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag}
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
@@ -69,7 +69,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     }
   }
 
-  "A Create Mutation" should "error for id that is invalid 3" taggedAs IgnoreSQLite in {
+  "A Create Mutation" should "error for id that is invalid 3" taggedAs (IgnoreSQLite, IgnorePostgres) in {
     schemaP1optToC1opt.test { dataModel =>
       val project = SchemaDsl.fromStringV11() { dataModel }
       database.setup(project)
@@ -110,7 +110,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     }
   }
 
-  "A Nested Create Mutation" should "error with invalid id" taggedAs IgnoreSQLite in { // TODO: Should we really validate this
+  "A Nested Create Mutation" should "error with invalid id" taggedAs (IgnoreSQLite, IgnorePostgres) in { // TODO: Should we really validate this
     schemaP1optToC1opt.test { dataModel =>
       val project = SchemaDsl.fromStringV11() { dataModel }
       database.setup(project)
@@ -147,7 +147,7 @@ class BringYourOwnIdSpec extends FlatSpec with Matchers with ApiSpecBase with Sc
     }
   }
 
-  "An Upsert Mutation" should "error with id that is too long" taggedAs IgnoreSQLite in {
+  "An Upsert Mutation" should "error with id that is too long" taggedAs (IgnoreSQLite, IgnorePostgres) in {
     schemaP1optToC1opt.test { dataModel =>
       val project = SchemaDsl.fromStringV11() { dataModel }
       database.setup(project)

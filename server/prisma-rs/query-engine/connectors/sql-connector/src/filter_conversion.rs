@@ -273,7 +273,7 @@ impl AliasedCondition for RelationFilter {
     ///         .on(("j0", "id").equals(Column::from(("t0", "A"))));
     ///
     ///     let sub_cond: ConditionTree = ("j0", "name").equals("Blog").into();
-    ///     let sub_select = Select::from_table(Table::from("_UserToSites").alias("t0"))
+    ///     let sub_select = Select::from_table(Table::from(("test", "_UserToSites")).alias("t0"))
     ///         .column(("t0", "B"))
     ///         .so_that(sub_cond.not())
     ///         .inner_join(join_data);
@@ -296,7 +296,7 @@ impl AliasedCondition for RelationFilter {
     ///         .alias("j0")
     ///         .on(("j0", "id").equals(Column::from(("t0", "A"))));
     ///
-    ///     let sub_select = Select::from_table(Table::from("_UserToSites").alias("t0"))
+    ///     let sub_select = Select::from_table(Table::from(("test", "_UserToSites")).alias("t0"))
     ///         .column(("t0", "B"))
     ///         .so_that(("j0", "name").equals("Blog"))
     ///         .inner_join(join_data);
@@ -318,7 +318,7 @@ impl AliasedCondition for RelationFilter {
     ///         .alias("j0")
     ///         .on(("j0", "id").equals(Column::from(("t0", "A"))));
     ///
-    ///     let sub_select = Select::from_table(Table::from("_UserToSites").alias("t0"))
+    ///     let sub_select = Select::from_table(Table::from(("test", "_UserToSites")).alias("t0"))
     ///         .column(("t0", "B"))
     ///         .so_that(("j0", "name").equals("Blog"))
     ///         .inner_join(join_data);
@@ -448,7 +448,7 @@ impl AliasedCondition for OneRelationIsNullFilter {
     ///
     /// let expected = {
     ///     let compare = Column::from((("test", "User"), "id"))
-    ///         .not_in_selection(Select::from_table("_UserToSites").column("B"));
+    ///         .not_in_selection(Select::from_table(("test", "_UserToSites")).column("B"));
     ///
     ///     ConditionTree::single(compare)
     /// };

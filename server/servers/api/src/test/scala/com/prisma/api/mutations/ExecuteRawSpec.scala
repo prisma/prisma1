@@ -2,7 +2,7 @@ package com.prisma.api.mutations
 
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
-import com.prisma.api.connector.sqlite.native.SQLiteDatabaseMutactionExecutor
+import com.prisma.api.connector.native.NativeDatabaseMutactionExecutor
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RawAccessCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -42,7 +42,7 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
 
   lazy val slickDatabase = testDependencies.databaseMutactionExecutor match {
     case m: JdbcDatabaseMutactionExecutor   => m.slickDatabase
-    case m: SQLiteDatabaseMutactionExecutor => m.slickDatabaseArg
+    case m: NativeDatabaseMutactionExecutor => m.slickDatabaseArg
   }
 
   lazy val isMySQL     = slickDatabase.isMySql

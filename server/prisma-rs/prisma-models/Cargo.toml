@@ -5,9 +5,10 @@ authors = ["Dominic Petrick <petrick@prisma.io>", "Julius de Bruijn <bruijn@pris
 edition = "2018"
 
 [features]
-default = ["sql", "sqlite"]
+default = ["sql", "sqlite", "postgresql"]
 sqlite = ["rusqlite"]
 sql = ["prisma-query"]
+postgresql = ["postgres"]
 
 [dependencies]
 once_cell = "0.1"
@@ -26,3 +27,4 @@ graphql-parser = "0.2.2"
 
 prisma-query = { path = "../libs/prisma-query", optional = true }
 rusqlite = { version = "0.16", features = ["chrono"], optional = true }
+postgres = { version = "0.16.0-rc.1", optional = true }

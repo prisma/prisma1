@@ -37,6 +37,14 @@ pub enum PrismaDatabase {
 }
 
 impl PrismaDatabase {
+    pub fn connector(&self) -> &str {
+        match self {
+            PrismaDatabase::Explicit(config) => &config.connector,
+            PrismaDatabase::ConnectionString(config) => &config.uri.scheme(),
+            PrismaDatabase::File(config) => &config.connector,
+        }
+    }
+
     pub fn db_name(&self) -> Option<String> {
         match self {
             PrismaDatabase::Explicit(config) => config.database.clone(),
