@@ -22,6 +22,7 @@ impl Attachment for EmptyAttachment {
 }
 
 // TODO: Better name
+// TODO: Decide which attachments we really need.
 pub trait TypePack : std::fmt::Debug + std::clone::Clone + std::cmp::PartialEq {
     type FieldAttachment : Attachment;
     type ModelAttachment : Attachment;

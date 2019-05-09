@@ -15,11 +15,18 @@ mod unique;
 mod ondelete;
 mod relation;
 
+// TODO: This should not be in the builtin mod.
 pub struct DirectiveListValidator<T, Types: dml::TypePack> { 
     known_directives: HashMap<&'static str, Box<DirectiveValidator<T, Types>>>
 }
 
 impl<T, Types: dml::TypePack> DirectiveListValidator<T, Types> {
+
+    pub fn new() -> Self {
+        DirectiveListValidator {
+            known_directives: HashMap::new()
+        }
+    }
 
     pub fn add(&mut self, validator: Box<DirectiveValidator<T, Types>>) {
 
@@ -36,7 +43,9 @@ impl<T, Types: dml::TypePack> DirectiveListValidator<T, Types> {
         for directive in ast.directives() {
             match self.known_directives.get(directive.name.as_str()) {
                 Some(validator) => validator.validate_and_apply(&DirectiveArguments::new(&directive.arguments), t),
-                None => panic!("Encountered unknown directive: {:?}", directive.name) 
+                None => continue,
+                // TODO: Removed error for now, does not play well with attachment system.
+                //None => panic!("Encountered unknown directive: {:?}", directive.name) 
             };
         }
     }

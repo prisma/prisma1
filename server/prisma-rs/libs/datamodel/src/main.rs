@@ -5,7 +5,9 @@ pub mod dmmf;
 pub mod ast;
 use ast::parser;
 pub mod dml;
-use dml::validator::{BaseValidator, Validator};
+use dml::validator::{BaseValidator, Validator, EmptyAttachmentValidator};
+
+mod postgres;
 
 // Pest grammar generation on compile time.
 extern crate pest;
@@ -35,7 +37,11 @@ fn main() {
 
     let ast = parser::parse(&file);
 
-    let validator = BaseValidator::<dml::BuiltinTypePack>::new();
+    // Builtin Tooling
+    // let validator = BaseValidator::<dml::BuiltinTypePack, EmptyAttachmentValidator>::new();
+    
+    // Postgres-Specific Tooling
+    let validator = BaseValidator::<postgres::PostgresTypePack, postgres::PostgresAttachmentValidator>::new();
 
     let dml = validator.validate(&ast);
 
