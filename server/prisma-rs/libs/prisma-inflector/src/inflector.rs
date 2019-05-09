@@ -1,4 +1,7 @@
-use super::{categories, exceptions, rules::Rule, Pluralize};
+use super::{
+    categories, exceptions,
+    rules::{Pluralize, Rule},
+};
 use regex::Regex;
 
 #[derive(Debug, PartialEq)]
@@ -15,17 +18,14 @@ pub struct Inflector {
 }
 
 impl Inflector {
-    fn pluralize(&self, s: &str) -> String {
+    pub fn pluralize(&self, s: &str) -> String {
         for rule in &self.rules {
-            if let Some(s) = match rule {
-                Rule::Category(c) => c.pluralize(s),
-                Rule::Regex(r) => r.pluralize(s),
-            } {
+            if let Some(s) = rule.pluralize(s) {
                 return s;
             }
         }
 
-        panic!("Violated invariant: Inflector should always fall back to catch-all case -s.")
+        panic!("Invariant violation: Inflector should always fall back to catch-all case -s.")
     }
 
     pub fn new(mode: Mode) -> Inflector {
@@ -214,7 +214,7 @@ mod test {
         let inflector = Inflector::new(Mode::Anglicized);
 
         examples.into_iter().for_each(|(singular, expected_plural)| {
-            assert_eq!(inflector.pluralize(singular).unwrap(), expected_plural);
+            assert_eq!(inflector.pluralize(singular), expected_plural);
         });
     }
 }

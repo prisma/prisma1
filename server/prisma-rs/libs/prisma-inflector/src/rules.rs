@@ -1,11 +1,37 @@
-use super::Pluralize;
 use regex::Regex;
 use unicode_segmentation::UnicodeSegmentation;
+
+pub trait Pluralize {
+    fn pluralize(&self, s: &str) -> Option<String>;
+}
 
 #[derive(Debug)]
 pub enum Rule {
     Category(CategoryRule),
     Regex(RegexRule),
+}
+
+impl Rule {
+    pub fn category(singular: String, plural: String, words: &'static [&'static str]) -> Rule {
+        Rule::Category(CategoryRule {
+            singular,
+            plural,
+            words,
+        })
+    }
+
+    pub fn regex(singular: Regex, plural: String) -> Rule {
+        Rule::Regex(RegexRule { singular, plural })
+    }
+}
+
+impl Pluralize for Rule {
+    fn pluralize(&self, s: &str) -> Option<String> {
+        match self {
+            Rule::Category(c) => c.pluralize(s),
+            Rule::Regex(r) => r.pluralize(s),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -22,7 +48,7 @@ impl Pluralize for CategoryRule {
         for suffix in self.words {
             if normalized.ends_with(suffix) {
                 if !normalized.ends_with(&self.singular) {
-                    panic!("Inflection rule error.");
+                    panic!("Invariant violation: Invalid inflection rule match: {}.", self.singular);
                 }
 
                 let chars = s.graphemes(true).collect::<Vec<&str>>();
@@ -51,19 +77,5 @@ impl Pluralize for RegexRule {
         } else {
             Some(candidate.to_string())
         }
-    }
-}
-
-impl Rule {
-    pub fn category(singular: String, plural: String, words: &'static [&'static str]) -> Rule {
-        Rule::Category(CategoryRule {
-            singular,
-            plural,
-            words,
-        })
-    }
-
-    pub fn regex(singular: Regex, plural: String) -> Rule {
-        Rule::Regex(RegexRule { singular, plural })
     }
 }

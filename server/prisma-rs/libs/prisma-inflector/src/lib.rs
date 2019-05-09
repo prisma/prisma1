@@ -9,10 +9,16 @@ mod rules;
 use inflector::{Inflector, Mode};
 
 lazy_static! {
-    pub static ref default: Inflector = Inflector::new(Mode::Anglicized);
-    pub static ref classical: Inflector = Inflector::new(Mode::Classical);
+    static ref DEFAULT: Inflector = Inflector::new(Mode::Anglicized);
+    static ref CLASSICAL: Inflector = Inflector::new(Mode::Classical);
 }
 
-pub trait Pluralize {
-    fn pluralize(&self, s: &str) -> Option<String>;
+/// Default inflector, anglecized mode.
+pub fn default() -> &'static Inflector {
+    &DEFAULT
+}
+
+/// Inflector, classical mode.
+pub fn classical() -> &'static Inflector {
+    &CLASSICAL
 }
