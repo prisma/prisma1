@@ -3,9 +3,9 @@ use crate::dml::validator::directive::{Args, Error, DirectiveValidator};
 
 pub struct SequenceDirectiveValidator { }
 
-impl DirectiveValidator<dml::Field> for SequenceDirectiveValidator {
+impl<Types: dml::TypePack> DirectiveValidator<dml::Field<Types>, Types> for SequenceDirectiveValidator {
     fn directive_name(&self) -> &'static str{ &"sequence" }
-    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field) -> Option<Error> {
+    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field<Types>) -> Option<Error> {
 
         // TODO: Handle fields according to tests: 
         // https://github.com/prisma/prisma/blob/master/server/servers/deploy/src/test/scala/com/prisma/deploy/migration/validation/SequenceDirectiveSpec.scala

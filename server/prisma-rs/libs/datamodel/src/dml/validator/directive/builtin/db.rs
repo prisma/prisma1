@@ -3,7 +3,7 @@ use crate::dml::validator::directive::{Args, Error, DirectiveValidator};
 
 pub struct DbDirectiveValidator { }
 
-impl<T: dml::WithDatabaseName> DirectiveValidator<T> for DbDirectiveValidator {
+impl<Types: dml::TypePack, T: dml::WithDatabaseName> DirectiveValidator<T, Types> for DbDirectiveValidator {
     fn directive_name(&self) -> &'static str{ &"db" }
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Option<Error> {
 

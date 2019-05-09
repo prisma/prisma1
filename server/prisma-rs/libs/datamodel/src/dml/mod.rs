@@ -9,6 +9,62 @@ use validator::value::ValueParserError;
 
 pub mod validator;
 
+// TODO: Naming
+pub trait Attachment : std::fmt::Debug + std::clone::Clone + std::cmp::PartialEq {
+    fn default() -> Self;
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct EmptyAttachment {}
+
+impl Attachment for EmptyAttachment {
+    fn default() -> Self { EmptyAttachment {} } 
+}
+
+// TODO: Better name
+pub trait TypePack : std::fmt::Debug + std::clone::Clone + std::cmp::PartialEq {
+    type FieldAttachment : Attachment;
+    type ModelAttachment : Attachment;
+    type EnumAttachment : Attachment;
+    type SchemaAttachment : Attachment;
+    type RelationAttachment : Attachment;
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct BuiltinTypePack { }
+
+impl TypePack for BuiltinTypePack {
+    type EnumAttachment = EmptyAttachment;
+    type ModelAttachment = EmptyAttachment;
+    type FieldAttachment = EmptyAttachment;
+    type SchemaAttachment = EmptyAttachment;
+    type RelationAttachment = EmptyAttachment;
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct RelationInfo<Types: TypePack> { 
+    pub to: String,
+    pub to_field: String, 
+    pub name: Option<String>, 
+    pub on_delete: OnDeleteStrategy,
+    pub attachment: Types::RelationAttachment
+}
+
+
+impl<Types: TypePack> RelationInfo<Types> {
+    fn new(to: String, to_field: String) -> RelationInfo<Types> {
+        RelationInfo {
+            to: to,
+            to_field: to_field,
+            name: None,
+            on_delete: OnDeleteStrategy::None,
+            attachment: Types::RelationAttachment::default()
+        }
+    }
+}
+
+
+
 // Setters are a bit untypical for rust,
 // but we want to have "composeable" struct creation.
 pub trait WithName {
@@ -61,9 +117,9 @@ pub enum Value {
 
 // TODO: Maybe we include a seperate struct for relations which can be generic?
 #[derive(Debug, Clone, PartialEq)]
-pub enum FieldType {
+pub enum FieldType<Types: TypePack> {
     Enum { enum_type: String },
-    Relation { to: String, to_field: String, name: Option<String>, on_delete: OnDeleteStrategy },
+    Relation(RelationInfo<Types>),
     ConnectorSpecific { base_type: ScalarType, connector_type: Option<String> },
     Base(ScalarType)
 }
@@ -140,10 +196,10 @@ impl WithName for Sequence {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Field {
+pub struct Field<Types: TypePack> {
     pub name: String,
     pub arity: FieldArity,
-    pub field_type: FieldType,
+    pub field_type: FieldType<Types>,
     pub database_name: Option<String>,
     pub default_value: Option<Value>,
     pub is_unique: bool,
@@ -153,9 +209,10 @@ pub struct Field {
     pub id_sequence: Option<Sequence>,
     pub scalar_list_strategy: Option<ScalarListStrategy>,
     pub comments: Vec<Comment>,
+    pub attachment: Types::FieldAttachment
 }
 
-impl WithName for Field {
+impl<Types: TypePack> WithName for Field<Types> {
     fn name(&self) -> &String {
         &self.name
     }
@@ -164,7 +221,7 @@ impl WithName for Field {
     }
 }
 
-impl WithDatabaseName for Field {
+impl<Types: TypePack> WithDatabaseName for Field<Types> {
     fn database_name(&self) -> &Option<String> {
         &self.database_name
     }
@@ -173,12 +230,12 @@ impl WithDatabaseName for Field {
     }
 }
 
-impl Field {
-    fn new(name: &String, field_type: &FieldType) -> Field {
+impl<Types: TypePack> Field<Types> {
+    fn new(name: String, field_type: FieldType<Types>) -> Field<Types> {
         Field {
-            name: name.clone(),
+            name: name,
             arity: FieldArity::Required,
-            field_type: field_type.clone(),
+            field_type: field_type,
             database_name: None,
             default_value: None,
             is_unique: false,
@@ -187,18 +244,31 @@ impl Field {
             id_sequence: None,
             scalar_list_strategy: None,
             comments: vec![],
+            attachment: Types::FieldAttachment::default(),
         }
     }
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Enum {
+pub struct Enum<Types: TypePack> {
     pub name: String,
     pub values: Vec<String>,
     pub comments: Vec<Comment>,
+    pub attachment: Types::EnumAttachment
 }
 
-impl WithName for Enum {
+impl<Types: TypePack> Enum<Types> {
+    fn new(name: String, values: Vec<String>) -> Enum<Types> {
+        Enum {
+            name: name,
+            values: values,
+            comments: vec![],
+            attachment: Types::EnumAttachment::default(),
+        }
+    }
+}
+
+impl<Types: TypePack> WithName for Enum<Types> {
     fn name(&self) -> &String {
         &self.name
     }
@@ -208,57 +278,61 @@ impl WithName for Enum {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Model {
+pub struct Model<Types: TypePack> {
     pub name: String,
-    pub fields: Vec<Field>,
+    pub fields: Vec<Field<Types>>,
     pub comments: Vec<Comment>,
     pub database_name: Option<String>,
     pub is_embedded: bool,
+    pub attachment: Types::ModelAttachment,
 }
 
-impl Model {
-    fn new(name: &String) -> Model {
+impl<Types: TypePack> Model<Types> {
+    fn new(name: &String) -> Model<Types> {
         Model {
             name: name.clone(),
             fields: vec![],
             comments: vec![],
             database_name: None,
             is_embedded: false,
+            attachment: Types::ModelAttachment::default()
         }
     }
 }
 
-impl WithName for Model {
+impl<Types: TypePack> WithName for Model<Types> {
     fn name(&self) -> &String { &self.name }
     fn set_name(&mut self, name: &String) { self.name = name.clone() }
 }
 
-impl WithDatabaseName for Model {
+impl<Types: TypePack> WithDatabaseName for Model<Types> {
     fn database_name(&self) -> &Option<String> { &self.database_name }
     fn set_database_name(&mut self, database_name: &Option<String>) { self.database_name = database_name.clone() }
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum ModelOrEnum {
-    Enum(Enum),
-    Model(Model)
+pub enum ModelOrEnum<Types: TypePack> {
+    Enum(Enum<Types>),
+    Model(Model<Types>)
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Schema {
-    pub models: Vec<ModelOrEnum>,
+pub struct Schema<Types: TypePack> {
+    pub models: Vec<ModelOrEnum<Types>>,
     pub comments: Vec<Comment>,
+    pub attachment: Types::SchemaAttachment
 }
 
-impl Schema {
-    fn new() -> Schema {
+impl<Types: TypePack> Schema<Types> {
+    fn new() -> Schema<Types> {
         Schema {
             models: vec![],
             comments: vec![],
+            attachment: Types::SchemaAttachment::default()
         }
     }
 
-    pub fn empty() -> Schema {
+    pub fn empty() -> Schema<Types> {
         Self::new()
     }
 }

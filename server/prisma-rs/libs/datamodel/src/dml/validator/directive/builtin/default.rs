@@ -3,9 +3,9 @@ use crate::dml::validator::directive::{Args, Error, DirectiveValidator};
 
 pub struct DefaultDirectiveValidator { }
 
-impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
+impl<Types: dml::TypePack> DirectiveValidator<dml::Field<Types>, Types> for DefaultDirectiveValidator {
     fn directive_name(&self) -> &'static str{ &"default" }
-    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Option<Error> {
+    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field<Types>) -> Option<Error> {
 
         // TODO: This is most likely duplicate code.
         if let dml::FieldType::Base(scalar_type) = field.field_type {

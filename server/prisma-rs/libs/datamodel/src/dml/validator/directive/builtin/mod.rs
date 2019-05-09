@@ -15,13 +15,13 @@ mod unique;
 mod ondelete;
 mod relation;
 
-pub struct DirectiveListValidator<T> { 
-    known_directives: HashMap<&'static str, Box<DirectiveValidator<T>>>
+pub struct DirectiveListValidator<T, Types: dml::TypePack> { 
+    known_directives: HashMap<&'static str, Box<DirectiveValidator<T, Types>>>
 }
 
-impl<T> DirectiveListValidator<T> {
+impl<T, Types: dml::TypePack> DirectiveListValidator<T, Types> {
 
-    pub fn add(&mut self, validator: Box<DirectiveValidator<T>>) {
+    pub fn add(&mut self, validator: Box<DirectiveValidator<T, Types>>) {
 
         let name = validator.directive_name();
 
@@ -42,8 +42,8 @@ impl<T> DirectiveListValidator<T> {
     }
 }
 
-pub fn new_field_directives() -> DirectiveListValidator<dml::Field> {
-    let mut validator = DirectiveListValidator::<dml::Field> { known_directives: HashMap::new() };
+pub fn new_field_directives<Types: dml::TypePack>() -> DirectiveListValidator<dml::Field<Types>, Types> {
+    let mut validator = DirectiveListValidator::<dml::Field<Types>, Types> { known_directives: HashMap::new() };
 
     validator.add(Box::new(db::DbDirectiveValidator{ }));
     validator.add(Box::new(primary::PrimaryDirectiveValidator{ }));
@@ -57,8 +57,8 @@ pub fn new_field_directives() -> DirectiveListValidator<dml::Field> {
     return validator;
 }
 
-pub fn new_model_directives() -> DirectiveListValidator<dml::Model> {
-    let mut validator = DirectiveListValidator::<dml::Model> { known_directives: HashMap::new() };
+pub fn new_model_directives<Types: dml::TypePack>() -> DirectiveListValidator<dml::Model<Types>, Types> {
+    let mut validator = DirectiveListValidator::<dml::Model<Types>, Types> { known_directives: HashMap::new() };
 
     validator.add(Box::new(db::DbDirectiveValidator{}));
     validator.add(Box::new(embedded::EmbeddedDirectiveValidator{}));
@@ -66,8 +66,8 @@ pub fn new_model_directives() -> DirectiveListValidator<dml::Model> {
     return validator;
 }
 
-pub fn new_enum_directives() -> DirectiveListValidator<dml::Enum> {
-    let mut validator = DirectiveListValidator::<dml::Enum> { known_directives: HashMap::new() };
+pub fn new_enum_directives<Types: dml::TypePack>() -> DirectiveListValidator<dml::Enum<Types>, Types> {
+    let mut validator = DirectiveListValidator::<dml::Enum<Types>, Types> { known_directives: HashMap::new() };
     
     // Adds are missing
 

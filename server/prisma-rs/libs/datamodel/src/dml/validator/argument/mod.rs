@@ -15,9 +15,7 @@ impl<'a> DirectiveArguments<'a> {
 
     pub fn arg(&self, name: &str) -> Box<value::ValueValidator> {
         for arg in self.arguments {
-            println!("{} <> {}", arg.name, name);
             if arg.name == name {
-                println!("Returning result");
                 return Box::new(value::WrappedValue { value: arg.value.clone() })
             }
         }
@@ -28,7 +26,7 @@ impl<'a> DirectiveArguments<'a> {
     pub fn default_arg(&self, name: &str) -> Box<value::ValueValidator> {
         let arg = self.arg(name);
 
-        if(arg.is_valid()) {
+        if arg.is_valid() {
             return arg;
         } else {
             // Fallback to default arg without name.

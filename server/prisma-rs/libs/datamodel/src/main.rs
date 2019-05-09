@@ -26,13 +26,16 @@ fn main() {
             .help("Sets the input datamodel file to use")
             .required(true)
             .index(1))
+        .get_matches();
+
+
 
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
 
     let ast = parser::parse(&file);
 
-    let validator = Validator::new();
+    let validator = Validator::<dml::BuiltinTypePack>::new();
 
     let dml = validator.validate(&ast);
 
