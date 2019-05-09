@@ -1,7 +1,7 @@
 //! Providing an interface to build WriteQueries
 
-use crate::{CoreError, CoreResult, WriteQuery};
-use connector::mutaction::{CreateNode, TopLevelDatabaseMutaction};
+use crate::{CoreError, CoreResult, WriteQuery, builders::utils};
+use connector::mutaction::{CreateNode, UpdateNode, DeleteNode, TopLevelDatabaseMutaction};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{ModelRef, PrismaArgs, PrismaValue, SchemaRef};
 
@@ -26,6 +26,8 @@ impl<'field> MutationBuilder<'field> {
     }
 
     pub fn build(self) -> CoreResult<WriteQuery> {
+        dbg!(&self);
+
         let non_list_args = get_mutation_args(&self.field.arguments);
         let (op, model) = parse_model_action(
             self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
@@ -36,8 +38,17 @@ impl<'field> MutationBuilder<'field> {
             Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
                 model,
                 non_list_args,
+                list_args: vec![], // FIXME
+                nested_mutactions: Default::default(),
+            }),
+            Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
+                where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
+                non_list_args,
                 list_args: vec![],
                 nested_mutactions: Default::default(),
+            }),
+            Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
+                where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
             }),
             _ => unimplemented!(),
         };
@@ -78,6 +89,8 @@ impl From<&str> for Operation {
     fn from(s: &str) -> Self {
         match s {
             "create" => Operation::Create,
+            "update" => Operation::Update,
+            "delete" => Operation::Delete,
             _ => unimplemented!(),
         }
     }
@@ -85,7 +98,7 @@ impl From<&str> for Operation {
 
 /// Parse the mutation name into an action and the model it should operate on
 fn parse_model_action(name: &String, schema: SchemaRef) -> CoreResult<(Operation, ModelRef)> {
-    let actions = vec!["create"];
+    let actions = vec!["create", "update", "delete"];
 
     let action = match actions.iter().find(|action| name.starts_with(*action)) {
         Some(a) => a,

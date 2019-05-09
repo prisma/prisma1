@@ -8,9 +8,15 @@ mod write;
 pub use read::ReadQueryExecutor;
 pub use write::WriteQueryExecutor;
 
-use crate::{CoreError, CoreResult, Query, ReadQuery, ReadQueryResult, WriteQuery, WriteQueryResult, RecordQuery};
-use connector::{mutaction::DatabaseMutactionResult, ConnectorResult};
+use crate::{
+    BuilderExt, CoreError, CoreResult, Query, ReadQuery, ReadQueryResult, RecordQuery, SingleBuilder, WriteQuery,
+    WriteQueryResult,
+};
 use connector::{filter::NodeSelector, QueryArguments};
+use connector::{
+    mutaction::{DatabaseMutactionResult, TopLevelDatabaseMutaction},
+    ConnectorResult,
+};
 
 use std::sync::Arc;
 
@@ -19,7 +25,6 @@ use prisma_models::{
     Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
     SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
 };
-
 
 /// A wrapper around QueryExecutor
 pub struct Executor {
@@ -53,43 +58,9 @@ impl Executor {
     /// Executes a single WriteQuery
     fn exec_single_tree(&self, wq: WriteQuery) -> CoreResult<WriteQueryResult> {
         let result = self.write_exec.execute(wq.inner.clone())?;
+        let model = wq.model();
 
-        dbg!(&wq);
-        dbg!(&result);
-
-        use connector::mutaction::TopLevelDatabaseMutaction;
-        use connector::mutaction::Identifier;
-        use prisma_models::PrismaValue;
-
-        let model = match wq.inner {
-            TopLevelDatabaseMutaction::CreateNode(cn) => cn.model,
-            _ => unimplemented!(),
-        };
-
-        let name = model.name.clone();
-        let field = model.fields().find_from_scalar("id").unwrap();
-
-        let graphqlid = match result.identifier {
-            Identifier::Id(ref gqlid) => gqlid.clone(),
-            _ => unimplemented!(),
-        };
-
-        let value = PrismaValue::GraphqlId(graphqlid);
-        let selector = NodeSelector {
-            field: Arc::clone(&field),
-            value,
-        };
-
-        let selected_fields = Self::collect_selected_fields(Arc::clone(&model), &wq.field, None)?;
-        let fields = Self::collect_selection_order(&wq.field);
-
-        let query = RecordQuery {
-            name,
-            selector,
-            selected_fields,
-            nested: vec![],
-            fields,
-        };
+        let query: RecordQuery = SingleBuilder::new().setup(Arc::clone(&model), &wq.field).build()?;
 
         Ok(WriteQueryResult {
             inner: result,
@@ -119,59 +90,4 @@ impl Executor {
             }
         });
     }
-
-    fn collect_selection_order(field: &Field) -> Vec<String> {
-        field
-            .selection_set
-            .items
-            .iter()
-            .filter_map(|select| {
-                if let Selection::Field(field) = select {
-                    Some(field.alias.clone().unwrap_or_else(|| field.name.clone()))
-                } else {
-                    None
-                }
-            })
-            .collect()
-    }
-
-    /// FIXME: Deduplicate code here
-    fn collect_selected_fields<I: Into<Option<RelationFieldRef>>>(
-        model: ModelRef,
-        field: &Field,
-        parent: I,
-    ) -> CoreResult<SelectedFields> {
-        field
-            .selection_set
-            .items
-            .iter()
-            .filter_map(|i| {
-                if let Selection::Field(f) = i {
-                    // We have to make sure the selected field exists in some form.
-                    let field = model.fields().find_from_all(&f.name);
-                    match field {
-                        Ok(ModelField::Scalar(field)) => Some(Ok(SelectedField::Scalar(SelectedScalarField {
-                            field: Arc::clone(&field),
-                            implicit: false,
-                        }))),
-                        // Relation fields are not handled here, but in nested queries
-                        Ok(ModelField::Relation(field)) => Some(Ok(SelectedField::Relation(SelectedRelationField {
-                            field: Arc::clone(&field),
-                            selected_fields: SelectedFields::new(vec![], None),
-                        }))),
-                        _ => Some(Err(CoreError::QueryValidationError(format!(
-                            "Selected field {} not found on model {}",
-                            f.name, model.name,
-                        )))),
-                    }
-                } else {
-                    Some(Err(CoreError::UnsupportedFeatureError(
-                        "Fragments and inline fragment spreads.".into(),
-                    )))
-                }
-            })
-            .collect::<CoreResult<Vec<_>>>()
-            .map(|sf| SelectedFields::new(sf, parent.into()))
-    }
 }
-
