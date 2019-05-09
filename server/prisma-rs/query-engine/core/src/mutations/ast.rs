@@ -1,6 +1,7 @@
 //! Simple wrapper for WriteQueries
 
-use connector::mutaction::{TopLevelDatabaseMutaction, NestedDatabaseMutaction};
+use crate::{BuilderExt, ManyBuilder, ReadQuery, SingleBuilder};
+use connector::mutaction::{NestedDatabaseMutaction as NestedMutation, TopLevelDatabaseMutaction as RootMutation};
 use graphql_parser::query::Field;
 use prisma_models::ModelRef;
 use std::sync::Arc;
@@ -9,7 +10,7 @@ use std::sync::Arc;
 #[derive(Debug, Clone)]
 pub struct WriteQuery {
     /// The actual mutation object being built
-    pub inner: TopLevelDatabaseMutaction,
+    pub inner: RootMutation,
 
     /// Required to create following ReadQuery
     pub field: Field,
@@ -22,25 +23,42 @@ pub struct WriteQuery {
 #[derive(Debug, Clone)]
 pub struct NestedWriteQuery {
     /// The nested mutation being built
-    pub inner: NestedDatabaseMutaction,
+    pub inner: NestedMutation,
 
     /// Required to create following ReadQuery
     pub field: Field,
 
     /// NestedWriteQueries can only have nested children
-    pub nested: Vec<NestedWriteQuery>
+    pub nested: Vec<NestedWriteQuery>,
 }
 
 impl WriteQuery {
     pub fn model(&self) -> ModelRef {
         match self.inner {
-            TopLevelDatabaseMutaction::CreateNode(ref node) => Arc::clone(&node.model),
-            TopLevelDatabaseMutaction::UpdateNode(ref node) => node.where_.field.model.upgrade().unwrap(),
-            TopLevelDatabaseMutaction::DeleteNode(ref node) => node.where_.field.model.upgrade().unwrap(),
-            TopLevelDatabaseMutaction::UpsertNode(ref node) => node.where_.field.model.upgrade().unwrap(),
-            TopLevelDatabaseMutaction::UpdateNodes(ref nodes) => Arc::clone(&nodes.model),
-            TopLevelDatabaseMutaction::DeleteNodes(ref nodes) => Arc::clone(&nodes.model),
+            RootMutation::CreateNode(ref node) => Arc::clone(&node.model),
+            RootMutation::UpdateNode(ref node) => node.where_.field.model.upgrade().unwrap(),
+            RootMutation::DeleteNode(ref node) => node.where_.field.model.upgrade().unwrap(),
+            RootMutation::UpsertNode(ref node) => node.where_.field.model.upgrade().unwrap(),
+            RootMutation::UpdateNodes(ref nodes) => Arc::clone(&nodes.model),
+            RootMutation::DeleteNodes(ref nodes) => Arc::clone(&nodes.model),
             _ => unimplemented!(),
+        }
+    }
+
+    /// This function generates a pre-fetch `ReadQuery` for appropriate `WriteQuery` types
+    pub fn generate_prefetch(&self) -> Option<ReadQuery> {
+        match self.inner {
+            RootMutation::DeleteNode(_) => SingleBuilder::new()
+                .setup(self.model(), &self.field)
+                .build()
+                .ok()
+                .map(|q| ReadQuery::RecordQuery(q)),
+            RootMutation::DeleteNodes(_) => ManyBuilder::new()
+                .setup(self.model(), &self.field)
+                .build()
+                .ok()
+                .map(|q| ReadQuery::ManyRecordsQuery(q)),
+            _ => None,
         }
     }
 }
@@ -48,10 +66,10 @@ impl WriteQuery {
 impl NestedWriteQuery {
     pub fn model(&self) -> ModelRef {
         match self.inner {
-            NestedDatabaseMutaction::CreateNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedDatabaseMutaction::UpdateNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedDatabaseMutaction::UpsertNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedDatabaseMutaction::DeleteNode(ref node) => node.relation_field.model.upgrade().unwrap(),
+            NestedMutation::CreateNode(ref node) => node.relation_field.model.upgrade().unwrap(),
+            NestedMutation::UpdateNode(ref node) => node.relation_field.model.upgrade().unwrap(),
+            NestedMutation::UpsertNode(ref node) => node.relation_field.model.upgrade().unwrap(),
+            NestedMutation::DeleteNode(ref node) => node.relation_field.model.upgrade().unwrap(),
             _ => unimplemented!(),
         }
     }
