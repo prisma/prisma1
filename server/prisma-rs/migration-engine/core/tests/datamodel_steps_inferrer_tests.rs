@@ -190,6 +190,32 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
     assert_eq!(steps, expected);
 }
 
+#[test]
+fn infer_DeleteField() {
+    let dm1 = parse(
+        r#"
+        model Test {
+            id: String
+            field: Int?
+        }
+    "#,
+    );
+    let dm2 = parse(
+        r#"
+        model Test {
+            id: String
+        }
+    "#,
+    );
+
+    let steps = infer(dm1, dm2);
+    let expected = vec![MigrationStep::DeleteField(DeleteField {
+        model: "Test".to_string(),
+        name: "field".to_string(),
+    })];
+    assert_eq!(steps, expected);
+}
+
 // TODO: we will need this in a lot of test files. Extract it.
 fn parse(datamodel_string: &'static str) -> Schema {
     let ast = datamodel::parser::parse(&datamodel_string.to_string());

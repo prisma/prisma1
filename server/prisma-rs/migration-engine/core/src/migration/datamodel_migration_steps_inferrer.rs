@@ -24,10 +24,12 @@ impl DataModelMigrationStepsInferrerImpl {
         let models_to_create = self.models_to_create();
         let models_to_delete = self.models_to_delete();
         let fields_to_create = self.fields_to_create();
+        let fields_to_delete = self.fields_to_delete();
 
         result.append(&mut Self::wrap_as_step(models_to_create, MigrationStep::CreateModel));
         result.append(&mut Self::wrap_as_step(models_to_delete, MigrationStep::DeleteModel));
         result.append(&mut Self::wrap_as_step(fields_to_create, MigrationStep::CreateField));
+        result.append(&mut Self::wrap_as_step(fields_to_delete, MigrationStep::DeleteField));
         result
     }
 
@@ -81,6 +83,26 @@ impl DataModelMigrationStepsInferrerImpl {
                         is_created_at: None,
                         is_updated_at: None,
                         scalar_list: next_field.scalar_list_strategy,
+                    };
+                    result.push(step);
+                }
+            }
+        }
+        result
+    }
+
+    fn fields_to_delete(&self) -> Vec<DeleteField> {
+        let mut result = Vec::new();
+        for previous_model in self.previous.models() {
+            for previous_field in previous_model.fields {
+                let must_delete_field = match self.next.find_model(previous_model.name.clone()) {
+                    None => true,
+                    Some(next_model) => next_model.find_field(previous_field.name.clone()).is_none(),
+                };
+                if must_delete_field {
+                    let step = DeleteField {
+                        model: previous_model.name.clone(),
+                        name: previous_field.name.clone(),                        
                     };
                     result.push(step);
                 }
