@@ -60,6 +60,38 @@ fn infer_DeleteModel() {
 }
 
 #[test]
+#[ignore]
+fn infer_UpdateModel() {
+    // TODO: add tests for other properties as well
+    let dm1 = parse(
+        r#"
+        model Post {
+            id: String
+        }
+    "#,
+    );
+    let dm2 = parse(
+        r#"
+        embed Post {
+            id: String
+        }
+    "#,
+    );
+
+    let steps = infer(dm1, dm2);
+    let expected = vec![
+        MigrationStep::UpdateModel(UpdateModel {
+            name: "Test".to_string(),
+            new_name: None,
+            db_name: None,
+            embedded: Some(true),
+        })
+    ];
+    assert_eq!(steps, expected);
+}
+
+
+#[test]
 fn infer_CreateField_if_it_does_not_exist_yet() {
     let dm1 = parse(
         r#"
