@@ -1,5 +1,4 @@
-use crate::dml;
-use crate::ast;
+use crate::{dml, ast};
 
 pub mod value;
 pub mod argument;
@@ -26,7 +25,7 @@ impl Validator {
 
     pub fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema {
         let mut schema = dml::Schema::new();
-        
+
         for ast_obj in &ast_schema.models {
             match ast_obj {
                 ast::ModelOrEnum::Enum(en) => schema.models.push(dml::ModelOrEnum::Enum(self.validate_enum(&en))),
@@ -34,7 +33,7 @@ impl Validator {
             }
         }
 
-        // TODO: This needs some resolver logic for enum and relation types. 
+        // TODO: This needs some resolver logic for enum and relation types.
         return schema
     }
 
@@ -59,7 +58,7 @@ impl Validator {
         let mut field = dml::Field::new(&ast_field.name, &field_type);
 
         field.arity = self.validate_field_arity(&ast_field.arity);
-        
+
         if let Some(value) = &ast_field.default_value {
             if let dml::FieldType::Base(base_type) = &field_type {
                 // TODO: Proper error handling.
@@ -83,7 +82,7 @@ impl Validator {
             ast::FieldArity::List => dml::FieldArity::List
         }
     }
-    
+
     fn validate_field_type(&self, type_name: &String) -> dml::FieldType {
         match type_name.as_ref() {
             "Int" => dml::FieldType::Base(dml::ScalarType::Int),

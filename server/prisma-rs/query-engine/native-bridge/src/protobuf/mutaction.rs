@@ -27,7 +27,7 @@ pub fn convert_create_envelope(
 }
 
 pub fn convert_create(m: crate::protobuf::prisma::CreateNode, project: ProjectRef) -> CreateNode {
-    let model = project.schema().find_model(&m.model_name).unwrap();
+    let model = project.internal_data_model().find_model(&m.model_name).unwrap();
     CreateNode {
         model: model,
         non_list_args: convert_prisma_args(m.non_list_args),
@@ -129,7 +129,7 @@ pub fn convert_nested_update(m: crate::protobuf::prisma::NestedUpdateNode, proje
 }
 
 pub fn convert_update_nodes(m: crate::protobuf::prisma::UpdateNodes, project: ProjectRef) -> TopLevelDatabaseMutaction {
-    let model = project.schema().find_model(&m.model_name).unwrap();
+    let model = project.internal_data_model().find_model(&m.model_name).unwrap();
     let update_nodes = UpdateNodes {
         model: Arc::clone(&model),
         filter: m.filter.into_filter(model),
@@ -186,7 +186,7 @@ pub fn convert_nested_delete(m: crate::protobuf::prisma::NestedDeleteNode, proje
 }
 
 pub fn convert_delete_nodes(m: crate::protobuf::prisma::DeleteNodes, project: ProjectRef) -> TopLevelDatabaseMutaction {
-    let model = project.schema().find_model(&m.model_name).unwrap();
+    let model = project.internal_data_model().find_model(&m.model_name).unwrap();
     let delete_nodes = DeleteNodes {
         model: Arc::clone(&model),
         filter: m.filter.into_filter(model),
@@ -212,7 +212,7 @@ pub fn convert_reset(_: crate::protobuf::prisma::ResetData, project: ProjectRef)
 
 pub fn convert_nested_connect(m: crate::protobuf::prisma::NestedConnect, project: ProjectRef) -> NestedConnect {
     let relation_field = project
-        .schema()
+        .internal_data_model()
         .find_model(&m.model_name)
         .unwrap()
         .fields()
@@ -231,7 +231,7 @@ pub fn convert_nested_disconnect(
     project: ProjectRef,
 ) -> NestedDisconnect {
     let relation_field = project
-        .schema()
+        .internal_data_model()
         .find_model(&m.model_name)
         .unwrap()
         .fields()
@@ -246,7 +246,7 @@ pub fn convert_nested_disconnect(
 
 pub fn convert_nested_set(m: crate::protobuf::prisma::NestedSet, project: ProjectRef) -> NestedSet {
     let relation_field = project
-        .schema()
+        .internal_data_model()
         .find_model(&m.model_name)
         .unwrap()
         .fields()
@@ -264,7 +264,7 @@ pub fn convert_nested_set(m: crate::protobuf::prisma::NestedSet, project: Projec
 }
 
 pub fn convert_node_select(selector: crate::protobuf::prisma::NodeSelector, project: ProjectRef) -> NodeSelector {
-    let model = project.schema().find_model(&selector.model_name).unwrap();
+    let model = project.internal_data_model().find_model(&selector.model_name).unwrap();
     let field = model.fields().find_from_scalar(&selector.field_name).unwrap();
     let value: PrismaValue = selector.value.into();
     NodeSelector { field, value }
@@ -290,7 +290,7 @@ pub fn convert_list_args(proto: crate::protobuf::prisma::PrismaArgs) -> Vec<(Str
 
 pub fn find_relation_field(project: ProjectRef, model: String, field: String) -> Arc<RelationField> {
     project
-        .schema()
+        .internal_data_model()
         .find_model(&model)
         .unwrap()
         .fields()

@@ -105,9 +105,9 @@ impl AliasedCondition for Filter {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let template: SchemaTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// let schema = template.build(String::from("test"));
-    /// let model = schema.find_model("User").unwrap();
+    /// # let template: InternalDataModelTemplate = serde_json::from_reader(File::open("./test_internal_data_model.json").unwrap()).unwrap();
+    /// let internal_data_model = template.build(String::from("test"));
+    /// let model = internal_data_model.find_model("User").unwrap();
     /// let field = model.fields().find_from_scalar("name").unwrap();
     ///
     /// // Without aliasing:
@@ -185,9 +185,9 @@ impl AliasedCondition for ScalarFilter {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let template: SchemaTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// let schema = template.build(String::from("test"));
-    /// let model = schema.find_model("User").unwrap();
+    /// # let template: InternalDataModelTemplate = serde_json::from_reader(File::open("./test_internal_data_model.json").unwrap()).unwrap();
+    /// let internal_data_model = template.build(String::from("test"));
+    /// let model = internal_data_model.find_model("User").unwrap();
     /// let field = model.fields().find_from_scalar("name").unwrap();
     ///
     /// let sf = ScalarFilter {
@@ -253,10 +253,10 @@ impl AliasedCondition for RelationFilter {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let template: SchemaTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// let schema = template.build(String::from("test"));
-    /// let user = schema.find_model("User").unwrap();
-    /// let site = schema.find_model("Site").unwrap();
+    /// # let template: InternalDataModelTemplate = serde_json::from_reader(File::open("./test_internal_data_model.json").unwrap()).unwrap();
+    /// let internal_data_model = template.build(String::from("test"));
+    /// let user = internal_data_model.find_model("User").unwrap();
+    /// let site = internal_data_model.find_model("Site").unwrap();
     ///
     /// let rf = user.fields().find_from_relation_fields("sites").unwrap();
     /// let site_name = site.fields().find_from_scalar("name").unwrap();
@@ -438,9 +438,9 @@ impl AliasedCondition for OneRelationIsNullFilter {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let template: SchemaTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// let schema = template.build(String::from("test"));
-    /// let user = schema.find_model("User").unwrap();
+    /// # let template: InternalDataModelTemplate = serde_json::from_reader(File::open("./test_internal_data_model.json").unwrap()).unwrap();
+    /// let internal_data_model = template.build(String::from("test"));
+    /// let user = internal_data_model.find_model("User").unwrap();
     ///
     /// // Not inlined in parent...
     ///

@@ -34,7 +34,7 @@ impl<'f> BuilderExt for SingleBuilder<'f> {
         }
         .expect("`RecordQuery` builder not properly initialised!");
 
-        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.schema())?;
+        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
         let nested = Self::build_nested_queries(nested_builders)?;
 
         let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, None)?;

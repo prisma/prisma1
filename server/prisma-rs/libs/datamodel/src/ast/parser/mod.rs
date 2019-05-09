@@ -168,7 +168,7 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
             directives,
             comments: vec![]
         },
-        _ => panic!("Encounterd impossible field declaration during parsing: {:?}", token.as_str()) 
+        _ => panic!("Encounterd impossible field declaration during parsing: {:?}", token.as_str())
     }
 }
 
@@ -193,7 +193,7 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
             directives,
             comments: vec![]
         },
-        _ => panic!("Encounterd impossible model declaration during parsing: {:?}", token.as_str()) 
+        _ => panic!("Encounterd impossible model declaration during parsing: {:?}", token.as_str())
     }
 }
 
@@ -202,7 +202,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut values: Vec<String> = vec![];
-    
+
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
@@ -217,7 +217,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
             directives,
             comments: vec![]
         },
-        _ => panic!("Encounterd impossible enum declaration during parsing: {:?}", token.as_str()) 
+        _ => panic!("Encounterd impossible enum declaration during parsing: {:?}", token.as_str())
     }
 }
 

@@ -19,7 +19,7 @@ use crate::{CoreError, CoreResult, ReadQuery};
 use connector::{filter::NodeSelector, QueryArguments};
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
-    Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
+    Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, InternalDataModelRef, SelectedField,
     SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
 };
 use rust_inflector::Inflector as RustInflector;
@@ -37,9 +37,9 @@ pub enum Builder<'field> {
 }
 
 impl<'a> Builder<'a> {
-    fn new(schema: SchemaRef, root_field: &'a Field) -> CoreResult<Self> {
-        // Find model for field - this is a temporary workaround before we have a data model definition (/ schema builder).
-        let builder: Option<Builder> = schema
+    fn new(internal_data_model: InternalDataModelRef, root_field: &'a Field) -> CoreResult<Self> {
+        // Find model for field - this is a temporary workaround before we have a data model definition (/ internal_data_model builder).
+        let builder: Option<Builder> = internal_data_model
             .models()
             .iter()
             .filter_map(|model| Builder::infer(model, root_field, None))
@@ -245,7 +245,7 @@ pub trait BuilderExt {
     fn collect_nested_queries<'field>(
         model: ModelRef,
         ast_field: &'field Field,
-        _schema: SchemaRef,
+        _internal_data_model: InternalDataModelRef,
     ) -> CoreResult<Vec<Builder<'field>>> {
         ast_field
             .selection_set

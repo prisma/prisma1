@@ -61,7 +61,7 @@ impl WithComments for Field {
 }
 
 #[derive(Debug)]
-pub struct Enum { 
+pub struct Enum {
     pub name: String,
     pub values: Vec<String>,
     pub directives: Vec<Directive>,

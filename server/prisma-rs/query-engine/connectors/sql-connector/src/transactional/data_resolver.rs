@@ -18,7 +18,7 @@ where
         node_selector: &NodeSelector,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<Option<SingleNode>> {
-        let db_name = &node_selector.field.model().schema().db_name;
+        let db_name = &node_selector.field.model().internal_data_model().db_name;
         let query = QueryBuilder::get_nodes(node_selector.field.model(), selected_fields, node_selector);
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
@@ -42,7 +42,7 @@ where
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes> {
-        let db_name = &model.schema().db_name;
+        let db_name = &model.internal_data_model().db_name;
         let field_names = selected_fields.names();
         let idents = selected_fields.type_identifiers();
         let query = QueryBuilder::get_nodes(model, selected_fields, query_arguments);
@@ -64,7 +64,7 @@ where
         query_arguments: QueryArguments,
         selected_fields: &SelectedFields,
     ) -> ConnectorResult<ManyNodes> {
-        let db_name = &from_field.model().schema().db_name;
+        let db_name = &from_field.model().internal_data_model().db_name;
         let idents = selected_fields.type_identifiers();
         let field_names = selected_fields.names();
         let query = QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, selected_fields);
@@ -94,7 +94,7 @@ where
     }
 
     fn count_by_model(&self, model: ModelRef, query_arguments: QueryArguments) -> ConnectorResult<usize> {
-        let db_name = &model.schema().db_name;
+        let db_name = &model.internal_data_model().db_name;
         let query = QueryBuilder::count_by_model(model, query_arguments);
 
         self.executor
@@ -114,7 +114,7 @@ where
         list_field: ScalarFieldRef,
         node_ids: Vec<GraphqlId>,
     ) -> ConnectorResult<Vec<ScalarListValues>> {
-        let db_name = &list_field.model().schema().db_name;
+        let db_name = &list_field.model().internal_data_model().db_name;
         let type_identifier = list_field.type_identifier;
         let query = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
 

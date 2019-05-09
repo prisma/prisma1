@@ -73,7 +73,7 @@ impl ExternalInterface for ProtoBufInterface {
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
             let project: ProjectRef = project_template.into();
 
-            let model = project.schema().find_model(&input.model_name)?;
+            let model = project.internal_data_model().find_model(&input.model_name)?;
             let selected_fields = input.selected_fields.into_selected_fields(model.clone(), None);
 
             let value: PrismaValue = input.value.into();
@@ -104,7 +104,7 @@ impl ExternalInterface for ProtoBufInterface {
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
             let project: ProjectRef = project_template.into();
 
-            let model = project.schema().find_model(&input.model_name)?;
+            let model = project.internal_data_model().find_model(&input.model_name)?;
             let selected_fields = input.selected_fields.into_selected_fields(model.clone(), None);
             let query_arguments = into_model_query_arguments(model.clone(), input.query_arguments);
 
@@ -132,7 +132,7 @@ impl ExternalInterface for ProtoBufInterface {
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
 
             let project: ProjectRef = project_template.into();
-            let model = project.schema().find_model(&input.model_name)?;
+            let model = project.internal_data_model().find_model(&input.model_name)?;
 
             let from_field = model.fields().find_from_relation_fields(&input.from_field)?;
             let from_node_ids: Vec<GraphqlId> = input.from_node_ids.into_iter().map(GraphqlId::from).collect();
@@ -172,7 +172,7 @@ impl ExternalInterface for ProtoBufInterface {
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
             let project: ProjectRef = project_template.into();
 
-            let model = project.schema().find_model(&input.model_name)?;
+            let model = project.internal_data_model().find_model(&input.model_name)?;
             let list_field = model.fields().find_from_scalar(&input.list_field)?;
 
             let node_ids: Vec<GraphqlId> = input.node_ids.into_iter().map(GraphqlId::from).collect();
@@ -205,7 +205,7 @@ impl ExternalInterface for ProtoBufInterface {
 
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
             let project: ProjectRef = project_template.into();
-            let model = project.schema().find_model(&input.model_name)?;
+            let model = project.internal_data_model().find_model(&input.model_name)?;
 
             let query_arguments = into_model_query_arguments(model.clone(), input.query_arguments);
             let count = self.data_resolver.count_by_model(model, query_arguments)?;
@@ -227,13 +227,13 @@ impl ExternalInterface for ProtoBufInterface {
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
             let project: ProjectRef = project_template.into();
 
-            let count = match project.schema().find_model(&input.model_name) {
+            let count = match project.internal_data_model().find_model(&input.model_name) {
                 Ok(model) => self
                     .data_resolver
-                    .count_by_table(project.schema().db_name.as_ref(), model.db_name()),
+                    .count_by_table(project.internal_data_model().db_name.as_ref(), model.db_name()),
                 Err(_) => self
                     .data_resolver
-                    .count_by_table(project.schema().db_name.as_ref(), &input.model_name),
+                    .count_by_table(project.internal_data_model().db_name.as_ref(), &input.model_name),
             }?;
 
             let response = RpcResponse::ok(count);
@@ -267,7 +267,7 @@ impl ExternalInterface for ProtoBufInterface {
             let project: ProjectRef = project_template.into();
 
             let mutaction = convert_mutaction(input, Arc::clone(&project));
-            let db_name = project.schema().db_name.to_string();
+            let db_name = project.internal_data_model().db_name.to_string();
 
             let result = self.database_mutaction_executor.execute(db_name, mutaction)?;
             let response = RpcResponse::ok_mutaction(convert_mutaction_result(result));
