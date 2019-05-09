@@ -40,6 +40,7 @@ pub trait AttachmentDirectiveSource<Types: dml::TypePack> {
     fn add_enum_directives(validator: &mut DirectiveListValidator<dml::Enum<Types>, Types>);
 }
 
+// TODO: Proably we can make this just "directive source and use it everywhere.
 pub struct AttachmentDirectiveValidator<Types: dml::TypePack, Attachments: AttachmentDirectiveSource<Types>> { 
     pub field_directives: DirectiveListValidator<dml::Field<Types>, Types>,
     pub model_directives: DirectiveListValidator<dml::Model<Types>, Types>,
