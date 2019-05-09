@@ -187,4 +187,18 @@ impl QueryPipeline {
         self.0 = rest;
         reads
     }
+
+    /// Consumes the pipeline into a list of results
+    pub fn consume(self) -> Vec<ReadQueryResult> {
+        self.0
+            .into_iter()
+            .map(|stage| match stage {
+                Stage::Done(data) => data,
+                stage => panic!(
+                    "Called `consume` on non-final pipeline containing {:?} stage items!",
+                    stage
+                ),
+            })
+            .collect()
+    }
 }
