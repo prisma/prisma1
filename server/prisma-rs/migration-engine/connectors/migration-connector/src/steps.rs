@@ -17,7 +17,7 @@ pub enum MigrationStep {
     // DeleteRelation(DeleteRelation),
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateModel {
     pub name: String,
@@ -28,7 +28,7 @@ pub struct CreateModel {
     pub embedded: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UpdateModel {
     pub name: String,

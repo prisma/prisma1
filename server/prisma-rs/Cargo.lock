@@ -1853,6 +1853,7 @@ dependencies = [
  "barrel 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "datamodel 0.1.0",
+ "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "migration-connector 0.1.0",
  "prisma-query 0.1.0",
  "rusqlite 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",

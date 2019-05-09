@@ -13,8 +13,8 @@ use sql_database_migration_steps_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
 use sql_migration_persistence::*;
-use std::sync::Arc;
 pub use sql_migration_step::*;
+use std::sync::Arc;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
