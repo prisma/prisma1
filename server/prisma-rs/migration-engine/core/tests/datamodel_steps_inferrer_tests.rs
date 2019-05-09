@@ -250,6 +250,29 @@ fn infer_UpdateField_simple() {
     assert_eq!(steps, expected);
 }
 
+#[test]
+#[ignore]
+fn infer_CreateEnum() {
+    let dm1 = Schema::empty();
+    let dm2 = parse(
+        r#"
+        enum Test {
+            A,
+            B
+        }
+    "#,
+    );
+
+    let steps = infer(dm1, dm2);
+    let expected = vec![
+        MigrationStep::CreateEnum(CreateEnum {
+            name: "Test".to_string(),
+            values: vec!["A".to_string(), "B".to_string()]
+        }),        
+    ];
+    assert_eq!(steps, expected);
+}
+
 // TODO: we will need this in a lot of test files. Extract it.
 fn parse(datamodel_string: &'static str) -> Schema {
     let ast = datamodel::parser::parse(&datamodel_string.to_string());
