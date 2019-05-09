@@ -46,8 +46,21 @@ impl WriteQuery {
     }
 
     /// This function generates a pre-fetch `ReadQuery` for appropriate `WriteQuery` types
-    pub fn generate_read(&self) -> ReadQuery {
+    pub fn generate_prefetch(&self) -> Option<ReadQuery> {
         match self.inner {
+            RootMutation::DeleteNode(_) | RootMutation::DeleteNodes(_) => Some(self.generate_read()?),
+            _ => None,
+        }
+    }
+
+    /// Generate a `ReadQuery` from the encapsulated `WriteQuery`
+    pub fn generate_read(&self) -> Option<ReadQuery> {
+        match self.inner {
+            RootMutation::CreateNode(_) => SingleBuilder::new()
+                .setup(self.model(), &self.field)
+                .build()
+                .ok()
+                .map(|q| ReadQuery::RecordQuery(q)),
             RootMutation::DeleteNode(_) => SingleBuilder::new()
                 .setup(self.model(), &self.field)
                 .build()
@@ -58,11 +71,6 @@ impl WriteQuery {
                 .build()
                 .ok()
                 .map(|q| ReadQuery::ManyRecordsQuery(q)),
-            RootMutation::CreateNode(_) => SingleBuilder::new()
-                .setup(self.model(), &self.field)
-                .build()
-                .ok()
-                .map(|q| ReadQuery::RecordQuery(q)),
             _ => unimplemented!(),
         }
     }
