@@ -33,7 +33,9 @@ use std::mem::replace;
 #[derive(Debug)]
 enum Stage {
     /// Stores a simple read query
-    Read(ReadQuery),
+    Read(usize, ReadQuery),
+    /// Acts as a placeholder for when read queries are executed
+    ReadMark(usize),
     /// Store a write query and an index
     Write(usize, WriteQuery),
     /// Acts as a placeholder to hand out `WriteQuery` ownership.
@@ -53,8 +55,10 @@ enum Stage {
 /// 1. `prefetch()`
 /// 2. `store_prefetch()`
 /// 3. `get_writes()`
-/// 4. `get_reads()`
-/// 5. `consume()`
+/// 4. `store_write_returns()`
+/// 5. `get_reads()`
+/// 6. `store_reads()`
+/// 7. `consume()`
 pub struct QueryPipeline(Vec<Stage>);
 
 impl From<Vec<Query>> for QueryPipeline {
@@ -64,7 +68,7 @@ impl From<Vec<Query>> for QueryPipeline {
                 .zip(0..)
                 .map(|(q, idx)| match q {
                     Query::Write(query) => Stage::Write(idx, query),
-                    Query::Read(query) => Stage::Read(query),
+                    Query::Read(query) => Stage::Read(idx, query),
                 })
                 .collect(),
         )
@@ -111,32 +115,76 @@ impl QueryPipeline {
     /// Get all write queries to execute
     ///
     /// Some of them will have an index associated to them. This is because
-    /// they will return a ReadQuery which has not been executed yet.
+    /// they will return a ReadQuery which has not yet been executed.
     ///
     /// This marker should also be used to determine which WriteQuery
     /// must result in another ReadQuery and the pipeline then uses this
     /// information to re-associate data to be in the expected order.
     pub fn get_writes(&mut self) -> Vec<(WriteQuery, Option<usize>)> {
-        let (rest, writes) =
-            replace(&mut self.0, vec![]) // A small hack around ownership
-                .into_iter()
-                .fold((vec![], vec![]), |(mut rest, mut writes), stage| {
-                    match stage {
-                        Stage::Write(idx, query) => {
-                            rest.push(Stage::WriteMark(idx));
-                            writes.push((query, Some(idx)));
-                        }
-                        Stage::PreFetched(query, data) => {
-                            rest.push(Stage::Done(data));
-                            writes.push((query, None));
-                        }
-                        Stage::Read(query) => rest.push(Stage::Read(query)),
-                        stage => panic!("Unexpected pipeline stage {:?} in function `get_writes`", stage),
-                    };
-                    (rest, writes)
-                });
+        let (rest, writes) = replace(&mut self.0, vec![]) // A small hack around ownership
+            .into_iter()
+            .fold((vec![], vec![]), |(mut rest, mut writes), stage| {
+                match stage {
+                    Stage::Write(idx, query) => {
+                        rest.push(Stage::WriteMark(idx));
+                        writes.push((query, Some(idx)));
+                    }
+                    Stage::PreFetched(query, data) => {
+                        rest.push(Stage::Done(data));
+                        writes.push((query, None));
+                    }
+                    Stage::Read(idx, query) => rest.push(Stage::Read(idx, query)),
+                    stage => panic!("Unexpected pipeline stage {:?} in function `get_writes`", stage),
+                };
+                (rest, writes)
+            });
 
         self.0 = rest;
         writes
+    }
+
+    /// Store read results at placeholder locations in the pipeline
+    ///
+    /// This function is invoked both after what the execution engines
+    /// does with the result of `get_writes()` and normal reads provided
+    /// by `get_reads()`.
+    pub fn store_reads(&mut self, mut data: IndexMap<usize, ReadQueryResult>) {
+        self.0 = replace(&mut self.0, vec![]) // A small hack around ownership
+            .into_iter()
+            .map(|stage| match stage {
+                Stage::ReadMark(idx) => match data.remove(&idx) {
+                    Some(result) => Stage::Done(result),
+                    None => panic!("Expected data entry for index `{}`, but `None` was found!", idx),
+                },
+                stage => stage,
+            })
+            .collect();
+
+        // This _should_ never happen but we should warn-log it anyway
+        if data.len() != 0 {
+            warn!("Unused pre-fetch results in query pipeline!");
+        }
+    }
+
+    /// Get all remaining read queries and their pipeline indices
+    ///
+    /// Be sure to call `store_reads()` with query results!
+    pub fn get_reads(&mut self) -> Vec<(ReadQuery, usize)> {
+        let (rest, reads) = replace(&mut self.0, vec![]) // A small hack around ownership
+            .into_iter()
+            .fold((vec![], vec![]), |(mut rest, mut reads), stage| {
+                match stage {
+                    Stage::Read(idx, query) => {
+                        rest.push(Stage::ReadMark(idx));
+                        reads.push((query, idx));
+                    }
+                    Stage::Done(data) => rest.push(Stage::Done(data)),
+                    stage => panic!("Unexpected pipeline stage {:?} in function `get_reads`", stage),
+                };
+                (rest, reads)
+            });
+
+        self.0 = rest;
+        reads
     }
 }
