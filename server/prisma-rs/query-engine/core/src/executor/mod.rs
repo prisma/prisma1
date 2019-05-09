@@ -4,6 +4,9 @@
 
 mod read;
 mod write;
+mod pipeline;
+
+use self::pipeline::*;
 
 pub use read::ReadQueryExecutor;
 pub use write::WriteQueryExecutor;
