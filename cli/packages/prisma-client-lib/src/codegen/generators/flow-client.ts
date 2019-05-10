@@ -4,7 +4,6 @@ import { getExistsFlowTypes } from '../../utils'
 import * as prettier from 'prettier'
 import { codeComment } from '../../utils/codeComment'
 
-import * as os from 'os'
 import { GeneratorType } from '../types';
 
 export interface RenderOptions {
@@ -75,7 +74,7 @@ type NodePromise = Promise<Node>`
 export const prisma = new Prisma()`
   }
   renderTypedefsFirstLine() {
-    return `// @flow${os.EOL}`
+    return `// @flow\r\n`
   }
   static replaceEnv(str: string): string {
     const regex = /\${env:(.*?)}/
