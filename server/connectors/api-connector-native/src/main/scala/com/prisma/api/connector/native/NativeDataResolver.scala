@@ -1,4 +1,4 @@
-package com.prisma.api.connector.sqlite.native
+package com.prisma.api.connector.native
 
 import com.google.protobuf.ByteString
 import com.prisma.api.connector._
@@ -13,12 +13,10 @@ import prisma.protocol.ValueContainer.PrismaValue.GraphqlId
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SQLiteNativeDataResolver(delegate: DataResolver)(implicit ec: ExecutionContext) extends DataResolver {
+case class NativeDataResolver(project: Project)(implicit ec: ExecutionContext) extends DataResolver {
   import NativeUtils._
   import com.prisma.shared.models.ProjectJsonFormatter._
   import com.prisma.api.helpers.LimitClauseHelper._
-
-  override def project: Project = delegate.project
 
   override def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): Future[Option[PrismaNode]] = Future {
     val projectJson = Json.toJson(project)

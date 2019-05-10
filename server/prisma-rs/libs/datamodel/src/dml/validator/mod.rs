@@ -1,5 +1,4 @@
-use crate::ast;
-use crate::dml;
+use crate::{dml, ast};
 
 pub mod argument;
 pub mod directive;

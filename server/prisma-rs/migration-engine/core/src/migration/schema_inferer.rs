@@ -7,13 +7,13 @@ use std::process::Stdio;
 use std::sync::Arc;
 
 pub trait SchemaInferer {
-    fn infer(data_model: String) -> Arc<Schema>;
+    fn infer(data_model: String) -> Arc<InternalDataModel>;
 }
 
 pub struct LegacySchemaInferer;
 
 impl SchemaInferer for LegacySchemaInferer {
-    fn infer(data_model: String) -> Arc<Schema> {
+    fn infer(data_model: String) -> Arc<InternalDataModel> {
         let bin_path = "/Users/marcusboehm/R/github.com/prisma/prisma/server/images/schema-inferrer-bin/target/prisma-native-image/schema-inferrer-bin";
         let cmd = Command::new(bin_path)
             .stdin(Stdio::null())
@@ -23,7 +23,7 @@ impl SchemaInferer for LegacySchemaInferer {
             .unwrap();
         let input = SchemaInfererBinInput {
             data_model: data_model,
-            previous_schema: SchemaTemplate::default(),
+            previous_schema: InternalDataModelTemplate::default(),
         };
         write!(cmd.stdin.unwrap(), "{}", serde_json::to_string(&input).unwrap()).unwrap();
         let mut buffer = String::new();
@@ -32,7 +32,7 @@ impl SchemaInferer for LegacySchemaInferer {
 
         println!("received from the schema-inferrer-bin: {}", &buffer);
 
-        let schema: SchemaTemplate = serde_json::from_str(buffer.as_str()).expect("Deserializing the schema failed.");
+        let schema: InternalDataModelTemplate = serde_json::from_str(buffer.as_str()).expect("Deserializing the schema failed.");
         schema.build("".to_string())
     }
 }
@@ -41,5 +41,5 @@ impl SchemaInferer for LegacySchemaInferer {
 #[serde(rename_all = "camelCase")]
 struct SchemaInfererBinInput {
     data_model: String,
-    previous_schema: SchemaTemplate,
+    previous_schema: InternalDataModelTemplate,
 }

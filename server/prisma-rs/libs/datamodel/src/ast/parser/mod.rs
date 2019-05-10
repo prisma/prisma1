@@ -46,7 +46,7 @@ fn parse_string_literal(token: &pest::iterators::Pair<'_, Rule>) -> String {
     return match_first! { token, current,
         Rule::string_content => current.as_str().to_string(),
         _ => unreachable!("Encountered impossible string content during parsing: {:?}", current.as_str())
-    }
+    };
 }
 
 // Literals
@@ -86,8 +86,14 @@ fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgu
     };
 
     return match (name, argument) {
-        (Some(name), Some(value)) => DirectiveArgument { name: name, value: value },
-        _ => panic!("Encounterd impossible directive arg during parsing: {:?}", token.as_str())
+        (Some(name), Some(value)) => DirectiveArgument {
+            name: name,
+            value: value,
+        },
+        _ => panic!(
+            "Encounterd impossible directive arg during parsing: {:?}",
+            token.as_str()
+        ),
     };
 }
 
@@ -173,7 +179,6 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     };
 }
 
-
 // Model parsing
 fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
     let mut name: Option<String> = None;
@@ -194,8 +199,11 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
             directives,
             comments: vec![],
         },
-        _ => panic!("Encounterd impossible model declaration during parsing: {:?}", token.as_str())
-    }
+        _ => panic!(
+            "Encounterd impossible model declaration during parsing: {:?}",
+            token.as_str()
+        ),
+    };
 }
 
 // Enum parsing
@@ -242,6 +250,6 @@ pub fn parse(datamodel_string: &String) -> Schema {
 
     return Schema {
         models,
-        comments: vec![]
-    }
+        comments: vec![],
+    };
 }

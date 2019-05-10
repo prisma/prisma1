@@ -26,8 +26,8 @@ pub struct Model {
 
     fields: OnceCell<Fields>,
 
-    #[debug_stub = "#SchemaWeakRef#"]
-    pub schema: SchemaWeakRef,
+    #[debug_stub = "#InternalDataModelWeakRef#"]
+    pub internal_data_model: InternalDataModelWeakRef,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -37,14 +37,14 @@ pub struct ModelManifestation {
 }
 
 impl ModelTemplate {
-    pub fn build(self, schema: SchemaWeakRef) -> ModelRef {
+    pub fn build(self, internal_data_model: InternalDataModelWeakRef) -> ModelRef {
         let model = Arc::new(Model {
             name: self.name,
             stable_identifier: self.stable_identifier,
             is_embedded: self.is_embedded,
             fields: OnceCell::new(),
             manifestation: self.manifestation,
-            schema: schema,
+            internal_data_model: internal_data_model,
         });
 
         let fields = Fields::new(
@@ -86,7 +86,7 @@ impl Model {
     }
 
     pub fn table(&self) -> Table {
-        (self.schema().db_name.as_str(), self.db_name()).into()
+        (self.internal_data_model().db_name.as_str(), self.db_name()).into()
     }
 
     pub fn fields(&self) -> &Fields {
@@ -97,7 +97,7 @@ impl Model {
     }
 
     pub fn is_legacy(&self) -> bool {
-        self.schema().is_legacy()
+        self.internal_data_model().is_legacy()
     }
 
     pub fn db_name(&self) -> &str {
@@ -108,10 +108,10 @@ impl Model {
         self.manifestation.as_ref().map(|mf| mf.db_name.as_ref())
     }
 
-    pub fn schema(&self) -> SchemaRef {
-        self.schema
+    pub fn internal_data_model(&self) -> InternalDataModelRef {
+        self.internal_data_model
             .upgrade()
-            .expect("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
+            .expect("InternalDataModel does not exist anymore. Parent internal_data_model is deleted without deleting the child internal_data_model.")
     }
 
     pub fn id_column(&self) -> Column {

@@ -15,6 +15,10 @@ pub fn execute(conn: &mut Transaction, model: ModelRef, filter: &Filter) -> Conn
     let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
     let count = ids.len();
 
+    if count == 0 {
+        return Ok(count);
+    }
+
     DeleteActions::check_relation_violations(Arc::clone(&model), ids.as_slice(), |select| {
         let ids = conn.select_ids(select)?;
         Ok(ids.into_iter().next())
@@ -38,6 +42,10 @@ pub fn execute_nested(
 ) -> ConnectorResult<usize> {
     let ids = conn.filter_ids_by_parents(Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
     let count = ids.len();
+
+    if count == 0 {
+        return Ok(count);
+    }
 
     let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
     let model = relation_field.model();

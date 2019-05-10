@@ -1,6 +1,8 @@
+mod postgresql;
 mod sqlite;
 
 use crate::Transactional;
+pub use postgresql::*;
 pub use sqlite::*;
 
 /// A common interface for relational SQL databases.

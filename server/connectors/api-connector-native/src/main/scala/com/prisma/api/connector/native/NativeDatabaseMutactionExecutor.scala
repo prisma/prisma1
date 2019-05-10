@@ -1,4 +1,4 @@
-package com.prisma.api.connector.sqlite.native
+package com.prisma.api.connector.native
 import com.google.protobuf.ByteString
 import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
 import com.prisma.api.connector.jdbc.impl._
@@ -17,7 +17,7 @@ import slick.jdbc.TransactionIsolation
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SQLiteDatabaseMutactionExecutor(
+case class NativeDatabaseMutactionExecutor(
     slickDatabaseArg: SlickDatabase
 )(implicit ec: ExecutionContext)
     extends DatabaseMutactionExecutor {

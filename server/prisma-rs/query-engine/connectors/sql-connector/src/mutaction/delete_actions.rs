@@ -18,7 +18,7 @@ impl DeleteActions {
     where
         F: FnMut(Select) -> ConnectorResult<Option<GraphqlId>>,
     {
-        for rf in model.schema().fields_requiring_model(model) {
+        for rf in model.internal_data_model().fields_requiring_model(model) {
             let relation = rf.relation();
 
             let condition = rf

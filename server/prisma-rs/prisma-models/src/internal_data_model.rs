@@ -2,21 +2,21 @@ use crate::prelude::*;
 use once_cell::sync::OnceCell;
 use std::sync::{Arc, Weak};
 
-pub type SchemaRef = Arc<Schema>;
-pub type SchemaWeakRef = Weak<Schema>;
+pub type InternalDataModelRef = Arc<InternalDataModel>;
+pub type InternalDataModelWeakRef = Weak<InternalDataModel>;
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct SchemaTemplate {
+pub struct InternalDataModelTemplate {
     pub models: Vec<ModelTemplate>,
     pub relations: Vec<RelationTemplate>,
-    pub enums: Vec<PrismaEnum>,
+    pub enums: Vec<InternalEnum>,
     pub version: Option<String>,
 }
 
 #[derive(DebugStub)]
-pub struct Schema {
-    pub enums: Vec<PrismaEnum>,
+pub struct InternalDataModel {
+    pub enums: Vec<InternalEnum>,
     pub version: Option<String>,
     pub db_name: String,
 
@@ -27,14 +27,14 @@ pub struct Schema {
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct PrismaEnum {
+pub struct InternalEnum {
     pub name: String,
     pub values: Vec<String>,
 }
 
-impl SchemaTemplate {
-    pub fn build(self, db_name: String) -> SchemaRef {
-        let schema = Arc::new(Schema {
+impl InternalDataModelTemplate {
+    pub fn build(self, db_name: String) -> InternalDataModelRef {
+        let internal_data_model = Arc::new(InternalDataModel {
             models: OnceCell::new(),
             relations: OnceCell::new(),
             enums: self.enums,
@@ -46,23 +46,23 @@ impl SchemaTemplate {
         let models = self
             .models
             .into_iter()
-            .map(|mt| mt.build(Arc::downgrade(&schema)))
+            .map(|mt| mt.build(Arc::downgrade(&internal_data_model)))
             .collect();
 
-        schema.models.set(models).unwrap();
+        internal_data_model.models.set(models).unwrap();
 
         let relations = self
             .relations
             .into_iter()
-            .map(|rt| rt.build(Arc::downgrade(&schema)))
+            .map(|rt| rt.build(Arc::downgrade(&internal_data_model)))
             .collect();
 
-        schema.relations.set(relations).unwrap();
-        schema
+        internal_data_model.relations.set(relations).unwrap();
+        internal_data_model
     }
 }
 
-impl Schema {
+impl InternalDataModel {
     pub fn models(&self) -> &[ModelRef] {
         self.models.get().unwrap()
     }

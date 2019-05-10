@@ -21,7 +21,7 @@ where
 
     let id = match returned_id {
         Some(id) => id,
-        None => GraphqlId::Int(last_id),
+        None => last_id.unwrap(),
     };
 
     for (field_name, list_value) in list_args {

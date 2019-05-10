@@ -1,5 +1,8 @@
 #![deny(warnings)]
 
+#[macro_use]
+extern crate log;
+
 mod builders;
 mod error;
 mod query_ast;

@@ -50,15 +50,15 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
     };
 
     // Let's validate the schema!
-    if let Err(_) = ctx.schema.validate(&query_doc) {
+    if let Err(_) = ctx.internal_data_model.validate(&query_doc) {
         return Err(PrismaError::QueryValidationError(
-            "Schema validation failed for unknown reasons".into(),
+            "InternalDataModel validation failed for unknown reasons".into(),
         ));
     }
 
     let rb = RootBuilder {
         query: query_doc,
-        schema: ctx.schema.clone(),
+        internal_data_model: ctx.internal_data_model.clone(),
         operation_name: req.body.operation_name,
     };
 
