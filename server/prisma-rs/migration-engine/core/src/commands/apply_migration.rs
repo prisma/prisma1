@@ -35,6 +35,8 @@ impl MigrationCommand for ApplyMigrationCommand {
 
         let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
 
+        connector.migration_applier().apply_steps(database_migration_steps);
+
         ApplyMigrationOutput {
             datamodel_steps: self.input.steps.clone(),
             database_steps: database_steps_json,

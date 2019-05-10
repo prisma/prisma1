@@ -1,7 +1,9 @@
+mod migration_applier;
 pub mod steps;
 
 use chrono::{DateTime, Utc};
 use datamodel::Schema;
+pub use migration_applier::*;
 use serde::Serialize;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -11,7 +13,7 @@ pub use steps::MigrationStep;
 extern crate serde_derive;
 
 pub trait MigrationConnector {
-    type DatabaseMigrationStep: DatabaseMigrationStepExt;
+    type DatabaseMigrationStep: DatabaseMigrationStepExt + 'static;
 
     fn initialize(&self);
 
@@ -22,6 +24,14 @@ pub trait MigrationConnector {
     fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep>>;
     fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigrationStep>>;
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigrationStep>>;
+
+    fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigrationStep>> {
+        let applier = MigrationApplierImpl {
+            migration_persistence: self.migration_persistence(),
+            step_applier: self.database_step_applier(),
+        };
+        Box::new(applier)
+    }
 }
 
 pub trait DatabaseMigrationStepExt: Debug + Serialize {}
