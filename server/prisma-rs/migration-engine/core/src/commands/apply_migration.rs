@@ -35,7 +35,14 @@ impl MigrationCommand for ApplyMigrationCommand {
 
         let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
 
-        connector.migration_applier().apply_steps(database_migration_steps);
+        let mut migration = Migration::new(self.input.migration_id.clone());
+        migration.datamodel_steps = self.input.steps.clone();
+        migration.database_steps = database_steps_json.to_string();
+        let saved_migration = connector.migration_persistence().create(migration);
+
+        connector
+            .migration_applier()
+            .apply_steps(saved_migration, database_migration_steps);
 
         ApplyMigrationOutput {
             datamodel_steps: self.input.steps.clone(),

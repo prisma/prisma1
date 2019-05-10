@@ -78,7 +78,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
         cloned
     }
 
-    fn update(&self, params: MigrationUpdateParams) {
+    fn update(&self, params: &MigrationUpdateParams) {
         let finished_at_value = match params.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -92,7 +92,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .set(FINISHED_AT_COLUMN, finished_at_value)
             .so_that(
                 NAME_COLUMN
-                    .equals(params.name)
+                    .equals(params.name.clone())
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
@@ -118,6 +118,7 @@ fn parse_row(row: &Row) -> Migration {
     let errors_json: String = row.get(ERRORS_COLUMN);
     let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
     let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN);
+    let database_steps_json: String = row.get(DATABASE_STEPS_COLUMN);
     Migration {
         name: row.get(NAME_COLUMN),
         revision: revision as usize,
@@ -126,7 +127,7 @@ fn parse_row(row: &Row) -> Migration {
         applied: applied as usize,
         rolled_back: rolled_back as usize,
         datamodel_steps: Vec::new(),
-        database_steps: Vec::new(),
+        database_steps: database_steps_json,
         errors: errors,
         started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN)),
         finished_at: finished_at.map(timestamp_to_datetime),

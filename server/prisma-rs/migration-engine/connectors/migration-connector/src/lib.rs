@@ -78,7 +78,7 @@ pub trait MigrationPersistence {
     fn create(&self, migration: Migration) -> Migration;
 
     // used by the MigrationApplier to write the progress of a Migration into the database
-    fn update(&self, params: MigrationUpdateParams);
+    fn update(&self, params: &MigrationUpdateParams);
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -89,8 +89,8 @@ pub struct Migration {
     pub applied: usize,
     pub rolled_back: usize,
     pub datamodel: Schema,
-    pub datamodel_steps: Vec<String>,
-    pub database_steps: Vec<String>,
+    pub datamodel_steps: Vec<MigrationStep>,
+    pub database_steps: String,
     pub errors: Vec<String>,
     pub started_at: DateTime<Utc>,
     pub finished_at: Option<DateTime<Utc>>,
@@ -117,7 +117,7 @@ impl Migration {
             rolled_back: 0,
             datamodel: Schema::empty(),
             datamodel_steps: Vec::new(),
-            database_steps: Vec::new(),
+            database_steps: "[]".to_string(),
             errors: Vec::new(),
             started_at: Self::timestamp_without_nanos(),
             finished_at: None,

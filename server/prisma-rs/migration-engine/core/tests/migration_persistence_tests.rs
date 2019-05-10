@@ -83,7 +83,7 @@ fn update_must_work() {
         params.errors = vec!["err1".to_string(), "err2".to_string()];
         params.finished_at = Some(Migration::timestamp_without_nanos());
 
-        persistence.update(params.clone());
+        persistence.update(&params);
 
         let loaded = persistence.last().unwrap();
         assert_eq!(loaded.status, params.status);
