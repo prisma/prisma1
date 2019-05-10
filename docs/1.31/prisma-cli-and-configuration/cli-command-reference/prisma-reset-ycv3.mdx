@@ -1,0 +1,35 @@
+export const meta = {
+  title: "prisma reset",
+  position: 230,
+}
+
+## `$ prisma reset`
+
+Delete all service data.
+
+### Usage
+
+```sh
+prisma reset [flags]
+```
+
+### Flags
+
+```
+ -e, --env-file ENV-FILE    Path to .env file to inject env vars
+ -f, --force                Force reset data without confirmation
+```
+
+### Examples
+
+**Delete all of the service's data (with confirmation prompt).**
+
+```sh
+prisma reset
+```
+
+**Delete all of the service's data (without confirmation prompt).**
+
+```sh
+prisma reset --force
+```

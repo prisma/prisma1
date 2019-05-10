@@ -24,11 +24,12 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
   }
 
   def countFromModel(model: Model, queryArguments: QueryArguments): DBIO[Int] = {
-    val baseQuery = modelQuery(model, queryArguments, SelectedFields(Set(model.idField_!)))
-    val query     = sql.selectCount().from(baseQuery)
+    val baseQuery = modelQuery(model, queryArguments, SelectedFields(Set(SelectedScalarField(model.idField_!))))
+
+    val query = if (queryArguments.isEmpty) sql.selectCount().from(modelTable(model)) else sql.selectCount().from(baseQuery)
 
     queryToDBIO(query)(
-      setParams = pp => SetParams.setQueryArgs(pp, queryArguments),
+      setParams = pp => if (queryArguments.isEmpty) () else SetParams.setQueryArgs(pp, queryArguments),
       readResult = { rs =>
         val _                      = rs.next()
         val count                  = rs.getInt(1)
@@ -69,13 +70,13 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       selectedFields: SelectedFields
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
 
-    val selectedFieldsWithAddedRelationField = SelectedFields(selectedFields.scalarDbFields ++ Set(fromField))
+    val selectedFieldsWithAddedRelationField = SelectedFields(selectedFields.fields ++ Set(SelectedRelationField.empty(fromField)))
 
     if (isMySql && queryArguments.isWithPagination) {
       selectAllFromRelatedWithPaginationForMySQL(fromField, fromNodeIds, queryArguments, selectedFieldsWithAddedRelationField.includeOrderBy(queryArguments))
     } else {
       val builder = RelatedModelsQueryBuilder(slickDatabase,
-                                              schemaName,
+                                              project,
                                               fromField,
                                               queryArguments,
                                               fromNodeIds,
@@ -116,7 +117,7 @@ trait NodeManyQueries extends BuilderBase with FilterConditionBuilder with Curso
       selectedFields: SelectedFields
   ): DBIO[Vector[ResolverResult[PrismaNodeWithParent]]] = {
     require(queryArguments.isWithPagination)
-    val builder = RelatedModelsQueryBuilder(slickDatabase, schemaName, fromField, queryArguments, fromModelIds, selectedFields)
+    val builder = RelatedModelsQueryBuilder(slickDatabase, project, fromField, queryArguments, fromModelIds, selectedFields)
 
     SimpleDBIO { ctx =>
       val baseQuery        = "(" + builder.mysqlHack.getSQL + ")"

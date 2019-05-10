@@ -3,6 +3,454 @@ import { Client } from './Client'
 import { Model } from './types'
 import { print } from 'graphql'
 
+test('unpacking extract payload - nested array', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+      houses: [House!]!
+    }
+
+    type House {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  // Instruction length and fragment key are used,
+  // unless testing for fragment, an empty object is
+  // enough to test for now.
+  const payload = client.extractPayload(
+    {
+      user: {
+        houses: [
+          {
+            id: '1',
+            name: 'My House',
+          },
+          {
+            id: '2',
+            name: 'Summer House',
+          },
+        ],
+      },
+    },
+    [{}, {}],
+  )
+
+  t.snapshot(JSON.stringify(payload))
+})
+
+test('unpacking extract payload - nested object', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+      house: House
+    }
+
+    type House {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  // Instruction length and fragment key are used,
+  // unless testing for fragment, an empty object is
+  // enough to test for now.
+  const payload = client.extractPayload(
+    {
+      user: {
+        house: {
+          id: '1',
+          name: 'My House',
+        },
+      },
+    },
+    [{}, {}],
+  )
+
+  t.snapshot(JSON.stringify(payload))
+})
+
+test('unpacking extract payload - array', t => {
+  const typeDefs = `
+    type Query {
+      users(where: UserWhereInput): [User]
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  // Instruction length and fragment key are used,
+  // unless testing for fragment, an empty object is
+  // enough to test for now.
+  const payload = client.extractPayload(
+    { users: [{ id: '1', name: 'Alice' }, { id: '2', name: 'Bob' }] },
+    [{}],
+  )
+
+  t.snapshot(JSON.stringify(payload))
+})
+
+test('unpacking extract payload - null from server', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereUniqueInput!): User
+    }
+
+    input UserWhereUniqueInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  // Instruction length and fragment key are used,
+  // unless testing for fragment, an empty object is
+  // enough to test for now.
+  const payload = client.extractPayload({ user: null }, [{}])
+
+  t.snapshot(JSON.stringify(payload))
+})
+
+test('automatic non-scalar sub selection for a connection without scalars', t => {
+  const typeDefs = `
+    type Query {
+      usersConnection(where: UserWhereInput): UserConnection
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type UserConnection {
+      pageInfo: PageInfo!
+      edges: [UserEdge]!
+      aggregate: AggregateUser!
+    }
+
+    type PageInfo {
+      hasNextPage: Boolean!
+      hasPreviousPage: Boolean!
+      startCursor: String
+      endCursor: String
+    }
+
+    type UserEdge {
+      node: User!
+      cursor: String!
+    }
+
+    type AggregateUser {
+      count: Int!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+      user: User!
+    }
+
+    type User {
+      house: House!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.usersConnection()
+
+  const document = getQueryDocument(client)
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection for a connection with scalars', t => {
+  const typeDefs = `
+    type Query {
+      housesConnection(where: HouseWhereInput): HouseConnection
+    }
+
+    input HouseWhereInput {
+      id: ID!
+    }
+
+    type HouseConnection {
+      pageInfo: PageInfo!
+      edges: [HouseEdge]!
+      aggregate: AggregateHouse!
+    }
+
+    type PageInfo {
+      hasNextPage: Boolean!
+      hasPreviousPage: Boolean!
+      startCursor: String
+      endCursor: String
+    }
+
+    type HouseEdge {
+      node: House!
+      cursor: String!
+    }
+
+    type AggregateHouse {
+      count: Int!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+      user: User!
+    }
+
+    type User {
+      house: House!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.housesConnection()
+
+  const document = getQueryDocument(client)
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection for relation', t => {
+  const typeDefs = `
+    type Query {
+      house(where: HouseWhereInput): House
+    }
+
+    input HouseWhereInput {
+      id: ID!
+    }
+
+    type User {
+      house: House!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+      user: User!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client
+    .house({
+      id: 'id',
+    })
+    .user()
+
+  const document = getQueryDocument(client)
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection and enums', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+      type: UserType!
+    }
+
+    enum UserType {
+      NORMAL
+      ADMIN
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.user().type()
+
+  const document = getQueryDocument(client)
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection and scalars', t => {
+  const typeDefs = `
+    type Query {
+      user(where: UserWhereInput): User
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.user().name()
+
+  const document = getQueryDocument(client)
+
+  t.snapshot(print(document))
+})
+
+test('automatic non-scalar sub selection', t => {
+  const typeDefs = `
+    type Query {
+      users(where: UserWhereInput): [User]
+    }
+
+    input UserWhereInput {
+      id: ID!
+    }
+
+    type User {
+      house: House!
+    }
+    
+    type House {
+      id: ID!
+      name: String!
+    }
+  `
+
+  const models: Model[] = []
+
+  const endpoint = 'http://localhost:4466'
+
+  const client: any = new Client({
+    typeDefs,
+    endpoint,
+    models,
+  })
+
+  client.users()
+
+  const document = getQueryDocument(client)
+
+  t.snapshot(print(document))
+})
+
 test('related type', t => {
   const typeDefs = `
     type Query {
@@ -30,7 +478,7 @@ test('related type', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -40,9 +488,7 @@ test('related type', t => {
 
   client.user()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -74,7 +520,7 @@ test('deep related type', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -84,9 +530,7 @@ test('deep related type', t => {
 
   client.user().posts()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -118,7 +562,7 @@ test('embedded type', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -128,9 +572,7 @@ test('embedded type', t => {
 
   client.user()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -171,7 +613,7 @@ test('nested mbedded type', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -181,9 +623,7 @@ test('nested mbedded type', t => {
 
   client.user()
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -222,9 +662,7 @@ test('top level args', t => {
 
   client.post({ id: 'test' })
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
@@ -269,7 +707,7 @@ test('nested args', t => {
     },
   ]
 
-  const endpoint = 'http://localhost;4466'
+  const endpoint = 'http://localhost:4466'
 
   const client: any = new Client({
     typeDefs,
@@ -284,9 +722,13 @@ test('nested args', t => {
     },
   })
 
-  const document = client.getDocumentForInstructions(
-    Object.keys(client._currentInstructions)[0],
-  )
+  const document = getQueryDocument(client)
 
   t.snapshot(print(document))
 })
+
+function getQueryDocument(client) {
+  return client.getDocumentForInstructions(
+    Object.keys(client._currentInstructions)[0],
+  )
+}

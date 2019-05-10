@@ -1,6 +1,6 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.deploy.connector.FieldRequirement
+import com.prisma.gc_values.GCValue
 import sangria.ast.{EnumTypeDefinition, FieldDefinition, ObjectTypeDefinition, TypeDefinition}
 
 object DeployWarnings {
@@ -15,21 +15,66 @@ object DeployWarnings {
   def dataLossField(`type`: String, field: String): DeployWarning = {
     DeployWarning(`type`, "You already have nodes for this model. This change may result in data loss.", Some(field))
   }
+
+  def migValueUsedOnExistingField(`type`: String, field: String, migValue: GCValue): DeployWarning = {
+    DeployWarning(`type`, s"You are changing the type of a required field. The fields will be pre-filled with the value: `${migValue.value}`.", Some(field))
+  }
+
+  def migValueUsedOnNewField(`type`: String, field: String, migValue: GCValue): DeployWarning = {
+    DeployWarning(
+      `type`,
+      s"You are creating a required field but there are already nodes present that would violate that constraint." +
+        s"The fields will be pre-filled with the value `${migValue.value}`.",
+      Some(field)
+    )
+  }
 }
 
 object DeployErrors {
   import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
-  def missingIdField(typeDefinition: TypeDefinition): DeployError = {
-    error(typeDefinition, "All models must specify the `id` field: `id: ID! @unique`")
-  }
-
-  def missingUniqueDirective(fieldAndType: FieldAndType): DeployError = {
-    error(fieldAndType, s"""All id fields must specify the `@unique` directive.""")
-  }
-
-  def uniqueDisallowedOnEmbeddedTyps(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
+  def uniqueDisallowedOnEmbeddedTypes(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
     error(objectType, fieldDef, s"The field `${fieldDef.name}` is marked as unique but its type `${objectType.name}` is embedded. This is disallowed.")
+  }
+
+  def creatingUniqueRequiredFieldWithExistingNulls(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are creating a new required unique field `$field`. There are already nodes for the model `${`type`}` that would violate that constraint."
+    )
+  }
+
+  def updatingUniqueRequiredFieldWithExistingNulls(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are updating the field `$field` to be required and unique. But there are already nodes for the model `${`type`}` that would violate that constraint."
+    )
+  }
+
+  def makingFieldRequired(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are updating the field `$field` to be required. But there are already nodes for the model `${`type`}` that would violate that constraint."
+    )
+  }
+
+  def makingFieldUnique(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are updating the field `$field` to be unique. But there are already nodes for the model `${`type`}` that would violate that constraint."
+    )
+  }
+
+  def changingTypeOfIdField(`type`: String, field: String): DeployError = {
+    DeployError(
+      `type`,
+      field,
+      s"You are changing the type of the id field `$field`. But there are already nodes for this model. This would require to regenerate IDs for all nodes which is not possible. You have to remove all nodes for this type by either running `prisma reset` or through a `deleteMany${`type`}s` mutation."
+    )
   }
 
   def missingRelationDirective(fieldAndType: FieldAndType): DeployError = {
@@ -52,10 +97,11 @@ object DeployErrors {
     )
   }
 
-  def missingBackRelationField(tpe: PrismaType, relationField: RelationalPrismaField): DeployError = {
+  def cascadeUsedWithMongo(relationField: RelationalPrismaField): DeployError = {
     DeployError(
-      tpe.name,
-      s"The type `${tpe.name}` does not specify a back relation field. It is referenced from the type `${relationField.tpe.name}` in the field `${relationField.name}`."
+      relationField.tpe.name,
+      relationField.name,
+      s"The Mongo connector currently does not support Cascading Deletes, but the field `${relationField.name}` defines cascade behaviour. Please remove the onDelete argument.}"
     )
   }
 
@@ -71,16 +117,10 @@ object DeployErrors {
     error(fieldAndType, s"""The field `${fieldAndType.fieldDef.name}` is a scalar field and cannot specify the `@relation` directive.""")
   }
 
-  def ambiguousRelationSinceThereIsOnlyOneRelationDirective(fieldAndType: FieldAndType): DeployError = {
-    val relationName = fieldAndType.fieldDef.previousRelationName.get
-    val nameA        = fieldAndType.objectType.name
-    val nameB        = fieldAndType.fieldDef.fieldType.namedType.name
+  def relationDirectiveHasInvalidName(fieldAndType: FieldAndType): DeployError = {
     error(
       fieldAndType,
-      s"You are trying to set the relation '$relationName' from `$nameA` to `$nameB` and are only providing a relation directive on `$nameA`. " +
-        s"Since there is also a relation field without a relation directive on `$nameB` pointing towards `$nameA` that is ambiguous. " +
-        s"Please provide the same relation directive on `$nameB` if this is supposed to be the same relation. " +
-        s"If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `$nameB`."
+      s"""The field `${fieldAndType.fieldDef.name}` has an invalid name in the `@relation` directive. It can only have up to 54 characters and must have the shape [A-Z][a-zA-Z0-9]*"""
     )
   }
 
@@ -91,7 +131,7 @@ object DeployErrors {
     error(
       fieldAndType,
       s"You are trying to set the relation '$relationName' from `$nameA` to `$nameB` and are only providing a relation directive with a name on `$nameA`. " +
-        s"Please also provide the same named relation directive on the relation field on `$nameB` pointing towards `$nameA`. "
+        s"Please also provide the same named relation directive on the relation field on `$nameB` pointing towards `$nameA`."
     )
   }
 
@@ -112,7 +152,6 @@ object DeployErrors {
     )
   }
 
-  def missingType(fieldAndType: FieldAndType): DeployError = missingType(fieldAndType.objectType, fieldAndType.fieldDef)
   def missingType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition): DeployError = {
     error(
       objectType,
@@ -121,49 +160,17 @@ object DeployErrors {
     )
   }
 
-  def malformedReservedField(fieldAndType: FieldAndType, requirement: FieldRequirement): DeployError = {
-    error(
-      fieldAndType,
-      s"The field `${fieldAndType.fieldDef.name}` is reserved and has to have the format: ${requirementMessage(requirement)}."
-    )
-  }
-
-  def missingReservedField(objectType: ObjectTypeDefinition, fieldName: String, requirement: FieldRequirement): DeployError = {
-    DeployError(
-      objectType.name,
-      fieldName,
-      s"The required field `$fieldName` is missing and has to have the format: ${requirementMessage(requirement)}."
-    )
-  }
-
-  // Brain kaputt, todo find a better solution
-  def requirementMessage(requirement: FieldRequirement): String = {
-    val requiredTypeMessages = requirement.validTypes.map { typeName =>
-      requirement match {
-        case x @ FieldRequirement(name, _, true, false, false)  => s"$name: $typeName!"
-        case x @ FieldRequirement(name, _, true, true, false)   => s"$name: $typeName! @unique"
-        case x @ FieldRequirement(name, _, true, true, true)    => s"$name: [$typeName!]! @unique" // is that even possible? Prob. not.
-        case x @ FieldRequirement(name, _, true, false, true)   => s"$name: [$typeName!]!"
-        case x @ FieldRequirement(name, _, false, true, false)  => s"$name: $typeName @unique"
-        case x @ FieldRequirement(name, _, false, true, true)   => s"$name: [$typeName!] @unique"
-        case x @ FieldRequirement(name, _, false, false, true)  => s"$name: [$typeName!]"
-        case x @ FieldRequirement(name, _, false, false, false) => s"$name: $typeName"
-      }
-    }
-    requiredTypeMessages.mkString(" or ")
-  }
-
-  def atNodeIsDeprecated(fieldAndType: FieldAndType) = {
-    error(
-      fieldAndType,
-      s"The model `${fieldAndType.objectType.name}` has the implements Node annotation. This is deprecated, please do not use an annotation."
-    )
-  }
-
   def duplicateFieldName(fieldAndType: FieldAndType) = {
     error(
       fieldAndType,
       s"The type `${fieldAndType.objectType.name}` has a duplicate fieldName. The detection of duplicates is performed case insensitive. "
+    )
+  }
+
+  def reservedTypeName(objectTypeDefinition: ObjectTypeDefinition) = {
+    error(
+      objectTypeDefinition,
+      s"The type `${objectTypeDefinition.objectType.name}` has is using a reserved type name. Please rename it."
     )
   }
 
@@ -189,43 +196,6 @@ object DeployErrors {
     error(objectType, s"The type `${objectType.name}` specifies a directive more than once. Directives must appear exactly once on a type.")
   }
 
-  def manyRelationFieldsMustBeRequired(fieldAndType: FieldAndType) = {
-    error(fieldAndType, s"Many relation fields must be marked as required.")
-  }
-
-  def listFieldsCantHaveDefaultValues(fieldAndType: FieldAndType) = {
-    error(fieldAndType, s"List fields cannot have defaultValues.")
-  }
-
-  def invalidEnumValueInDefaultValue(fieldAndType: FieldAndType) = {
-    error(fieldAndType, s"The defaultValue contains an invalid enumValue.")
-  }
-
-  def invalidTypeForDefaultValue(fieldAndType: FieldAndType) = {
-    error(
-      fieldAndType,
-      s"Invalid value '${fieldAndType.fieldDef.directiveArgumentAsString("default", "value").get}' for type ${fieldAndType.fieldDef.fieldType.namedType.name}."
-    )
-  }
-
-  def invalidSyntaxForDefaultValue(fieldAndType: FieldAndType) = {
-    error(fieldAndType, s"""You are using a '@defaultValue' directive. Prisma uses '@default(value: "Value as String")' to declare default values.""")
-  }
-
-  def invalidScalarNonListType(fieldAndType: FieldAndType)       = invalidScalarType(fieldAndType, listTypesAllowed = false)
-  def invalidScalarListOrNonListType(fieldAndType: FieldAndType) = invalidScalarType(fieldAndType, listTypesAllowed = true)
-
-  private def invalidScalarType(fieldAndType: FieldAndType, listTypesAllowed: Boolean): DeployError = {
-    val scalarType      = fieldAndType.fieldDef.fieldType.namedType.name
-    val nonListFormats  = s"`$scalarType`, `$scalarType!`"
-    val listFormats     = s", `[$scalarType!]` or `[$scalarType!]!"
-    val possibleFormats = if (listTypesAllowed) nonListFormats + listFormats else nonListFormats
-    error(
-      fieldAndType,
-      s"""The scalar field `${fieldAndType.fieldDef.name}` has the wrong format: `${fieldAndType.fieldDef.typeString}` Possible Formats: $possibleFormats"""
-    )
-  }
-
   def enumNamesMustBeUnique(enumType: EnumTypeDefinition) = {
     error(enumType, s"The enum type `${enumType.name}` is defined twice in the schema. Enum names must be unique.")
   }
@@ -236,24 +206,6 @@ object DeployErrors {
 
   def enumValuesMustBeValid(enumType: EnumTypeDefinition, enumValues: Seq[String]) = {
     error(enumType, s"The enum type `${enumType.name}` contains invalid enum values. Those are invalid: ${enumValues.map(v => s"`$v`").mkString(", ")}.")
-  }
-
-  def systemFieldCannotBeRemoved(theType: String, field: String) = {
-    DeployError(theType, field, s"The field `$field` is a system field and cannot be removed.")
-  }
-
-  def schemaFileHeaderIsMissing() = {
-    DeployError.global(s"""The schema must specify the project id and version as a front matter, e.g.:
-                          |# projectId: your-project-id
-                          |# version: 3
-                          |type MyType {
-                          |  myfield: String!
-                          |}
-       """.stripMargin)
-  }
-
-  def schemaFileHeaderIsReferencingWrongVersion(expected: Int) = {
-    DeployError.global(s"The schema is referencing the wrong project version. Expected version $expected.")
   }
 
   def embeddedTypesAreNotSupported(typeName: String) = {
@@ -286,15 +238,5 @@ object DeployErrors {
 
   def error(typeDef: TypeDefinition, description: String): DeployError = {
     DeployError(typeDef.name, description)
-  }
-
-  // note: the cli relies on the string "destructive changes" being present in this error message. Ugly but effective
-  def forceArgumentRequired: DeployError = {
-    DeployError.global(
-      "Your migration includes potentially destructive changes. Review using `graphcool deploy --dry-run` and continue using `graphcool deploy --force`.")
-  }
-
-  def invalidEnv(message: String) = {
-    DeployError.global(s"""the environment file is invalid: $message""")
   }
 }

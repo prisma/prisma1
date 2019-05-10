@@ -1,7 +1,8 @@
 package com.prisma.deploy.connector.mongo.impl
 
+import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector.persistence.{MigrationPersistence, ProjectPersistence}
-import com.prisma.shared.models.{Migration, MigrationStatus, Project}
+import com.prisma.shared.models.{Migration, MigrationStatus, Project, ProjectManifestation}
 import com.prisma.utils.mongo.MongoExtensions
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.{Document, MongoCollection, MongoDatabase}
@@ -10,14 +11,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class MongoProjectPersistence(
     internalDatabase: MongoDatabase,
-    migrationPersistence: MigrationPersistence
+    migrationPersistence: MigrationPersistence,
+    dbConfig: DatabaseConfig
 )(implicit ec: ExecutionContext)
     extends ProjectPersistence
     with MongoExtensions {
 
   import DbMapper._
 
-  val projects: MongoCollection[Document] = internalDatabase.getCollection("Project")
+  val projectManifestation: ProjectManifestation = ProjectManifestation(dbConfig.database, dbConfig.schema, dbConfig.connector)
+  val projects: MongoCollection[Document]        = internalDatabase.getCollection("Project")
 
   override def load(id: String): Future[Option[Project]] = {
     for {
@@ -26,7 +29,7 @@ case class MongoProjectPersistence(
     } yield {
       theProjects.headOption.flatMap { project =>
         migration.map { migration =>
-          DbMapper.convertToProjectModel(project, migration)
+          DbMapper.convertToProjectModel(project, migration, projectManifestation)
         }
       }
     }
@@ -40,7 +43,7 @@ case class MongoProjectPersistence(
     } yield {
       projectDocuments.map { pd =>
         val migration = migrations.flatten.find(_.projectId == pd.id).get
-        DbMapper.convertToProjectModel(pd, migration)
+        DbMapper.convertToProjectModel(pd, migration, projectManifestation)
       }
     }
   }

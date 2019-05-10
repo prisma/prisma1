@@ -8,20 +8,20 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class NonEmbeddedPaginationSpecForCuids extends NonEmbeddedPaginationSpec {
-  override val project = SchemaDsl.fromString() {
+  override val project = SchemaDsl.fromStringV11() {
     """
       |type List {
-      |  id: ID! @unique
-      |  createdAt: DateTime!
+      |  id: ID! @id
+      |  createdAt: DateTime! @createdAt
       |  name: String! @unique
       |  todos: [Todo]
       |}
       |
       |type Todo {
-      |  id: ID! @unique
-      |  createdAt: DateTime!
+      |  id: ID! @id
+      |  createdAt: DateTime! @createdAt
       |  title: String! @unique
-      |  list: List!
+      |  list: List! @relation(link: INLINE)
       |}
     """
   }
@@ -31,20 +31,20 @@ class NonEmbeddedPaginationSpecForUuids extends NonEmbeddedPaginationSpec {
 
   override def runOnlyForConnectors = Set(PostgresConnectorTag)
 
-  override lazy val project = SchemaDsl.fromString() {
+  override lazy val project = SchemaDsl.fromStringV11() {
     """
       |type List {
-      |  id: UUID! @unique
-      |  createdAt: DateTime!
+      |  id: UUID! @id
+      |  createdAt: DateTime! @createdAt
       |  name: String! @unique
       |  todos: [Todo]
       |}
       |
       |type Todo {
-      |  id: UUID! @unique
-      |  createdAt: DateTime!
+      |  id: UUID! @id
+      |  createdAt: DateTime! @createdAt
       |  title: String! @unique
-      |  list: List!
+      |  list: List! @relation(link: INLINE)
       |}
     """
   }
@@ -159,6 +159,52 @@ trait NonEmbeddedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase 
       project
     )
     result2.pathAsJsArray("data.listsConnection.edges").toString should equal("""[{"node":{"name":"4"}},{"node":{"name":"5"}},{"node":{"name":"6"}}]""")
+  }
+
+  "the cursor returned on the top level" should "work with default order" in {
+    val result1 = server.query(
+      """
+        |{
+        |  listsConnection(first: 3) {
+        |    pageInfo {
+        |      hasNextPage
+        |      hasPreviousPage
+        |      startCursor
+        |      endCursor
+        |    }
+        |    edges {
+        |      node {
+        |        name
+        |      }
+        |    }
+        |  }
+        |}
+      """,
+      project
+    )
+
+    val cursor = result1.pathAsString("data.listsConnection.pageInfo.endCursor")
+
+    val result2 = server.query(
+      s"""
+         |{
+         |  listsConnection(after: "$cursor", first: 3) {
+         |    pageInfo {
+         |      hasNextPage
+         |      hasPreviousPage
+         |      startCursor
+         |      endCursor
+         |    }
+         |    edges {
+         |      node {
+         |        name
+         |      }
+         |    }
+         |  }
+         |}
+      """,
+      project
+    )
   }
 
   "the cursor returned on the sub level" should "work" in {

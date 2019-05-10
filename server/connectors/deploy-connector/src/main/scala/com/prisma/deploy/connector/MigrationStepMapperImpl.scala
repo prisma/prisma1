@@ -1,34 +1,32 @@
 package com.prisma.deploy.connector
 
-import com.prisma.shared.models.ConnectorCapability.RelationLinkListCapability
 import com.prisma.shared.models.Manifestations.{EmbeddedRelationLink, RelationTable}
 import com.prisma.shared.models._
 
-case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMapper {
+case class MigrationStepMapperImpl(project: Project) extends MigrationStepMapper {
   def mutactionFor(previousSchema: Schema, nextSchema: Schema, step: MigrationStep): Vector[DeployMutaction] = step match {
     case x: CreateModel =>
       val model = nextSchema.getModelByName_!(x.name)
-      Vector(CreateModelTable(projectId, model))
+      Vector(CreateModelTable(project, model))
 
     case x: DeleteModel =>
       val model                = previousSchema.getModelByName_!(x.name)
       val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
-      Vector(DeleteModelTable(projectId, model, model.dbNameOfIdField_!, scalarListFieldNames))
+      Vector(DeleteModelTable(project, model, model.dbNameOfIdField_!, scalarListFieldNames))
 
     case x: UpdateModel =>
-      val model                = nextSchema.getModelByName(x.newName).getOrElse(nextSchema.getModelByName_!(x.newName.substring(2)))
-      val scalarListFieldNames = model.scalarListFields.map(_.name).toVector
-      Vector(RenameTable(projectId = projectId, previousName = x.name, nextName = x.newName, scalarListFieldsNames = scalarListFieldNames))
+      val oldModel = previousSchema.getModelByName_!(x.name)
+      val newModel = nextSchema.getModelByName_!(x.newName)
+      Vector(UpdateModelTable(project = project, oldModel = oldModel, newModel = newModel))
 
     case x: CreateField =>
       val model = nextSchema.getModelByName_!(x.model)
       val field = model.getFieldByName_!(x.name)
 
       field match {
-        case _ if ReservedFields.idFieldName == field.name => Vector.empty
-        case _: RelationField                              => Vector.empty
-        case f: ScalarField if field.isScalarList          => Vector(CreateScalarListTable(projectId, model, f))
-        case f: ScalarField if field.isScalarNonList       => Vector(CreateColumn(projectId, model, f))
+        case f: ScalarField if f.isId => Vector.empty
+        case _: RelationField         => Vector.empty
+        case f: ScalarField           => Vector(createField(f))
       }
 
     case x: DeleteField =>
@@ -36,51 +34,56 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       val field = model.getFieldByName_!(x.name)
 
       field match {
-        case _ if field.isRelation                   => Vector.empty
-        case f: ScalarField if field.isScalarList    => Vector(DeleteScalarListTable(projectId, model, f))
-        case f: ScalarField if field.isScalarNonList => Vector(DeleteColumn(projectId, model, f))
+        case _ if field.isRelation => Vector.empty
+        case f: ScalarField        => Vector(deleteField(f))
       }
 
     case x: UpdateField =>
-      val oldModel           = previousSchema.getModelByName_!(x.model)
-      val newModel           = nextSchema.getModelByName_!(x.newModel)
-      val next               = nextSchema.getFieldByName_!(x.newModel, x.finalName)
-      val previous           = previousSchema.getFieldByName_!(x.model, x.name)
-      lazy val temporaryNext = next.asScalarField_!.copy(name = next.name + "_prisma_tmp", manifestation = None)
-
-      lazy val createColumn          = CreateColumn(projectId, oldModel, next.asScalarField_!)
-      lazy val updateColumn          = UpdateColumn(projectId, oldModel, previous.asScalarField_!, next.asScalarField_!)
-      lazy val deleteColumn          = DeleteColumn(projectId, oldModel, previous.asScalarField_!)
-      lazy val createScalarListTable = CreateScalarListTable(projectId, oldModel, next.asScalarField_!)
-      lazy val deleteScalarListTable = DeleteScalarListTable(projectId, oldModel, previous.asScalarField_!)
-      lazy val updateScalarListTable = UpdateScalarListTable(projectId, oldModel, newModel, previous.asScalarField_!, next.asScalarField_!)
-      lazy val createTemporaryColumn = createColumn.copy(field = temporaryNext)
-      lazy val renameTemporaryColumn = UpdateColumn(projectId, oldModel, temporaryNext, next.asScalarField_!)
+      val oldModel                   = previousSchema.getModelByName_!(x.model)
+      val newModel                   = nextSchema.getModelByName_!(x.newModel)
+      val next                       = nextSchema.getFieldByName_!(x.newModel, x.finalName)
+      val previous                   = previousSchema.getFieldByName_!(x.model, x.name)
+      lazy val createColumn          = CreateColumn(project, oldModel, next.asScalarField_!)
+      lazy val updateColumn          = UpdateColumn(project, oldModel, previous.asScalarField_!, next.asScalarField_!)
+      lazy val deleteColumn          = DeleteColumn(project, oldModel, previous.asScalarField_!)
+      lazy val createScalarListTable = CreateScalarListTable(project, oldModel, next.asScalarField_!)
+      lazy val deleteScalarListTable = DeleteScalarListTable(project, oldModel, previous.asScalarField_!)
+      lazy val updateScalarListTable = UpdateScalarListTable(project, oldModel, newModel, previous.asScalarField_!, next.asScalarField_!)
 
       // TODO: replace that with a pattern match based on the subtypes of `models.Field`
       () match {
-        case _ if previous.isRelation && next.isRelation                                                             => Vector.empty
-        case _ if previous.isRelation && next.isScalarNonList                                                        => Vector(createColumn)
-        case _ if previous.isRelation && next.isScalarList                                                           => Vector(createScalarListTable)
-        case _ if previous.isScalarList && next.isScalarNonList                                                      => Vector(createColumn, deleteScalarListTable)
-        case _ if previous.isScalarList && next.isRelation                                                           => Vector(deleteScalarListTable)
-        case _ if previous.isScalarNonList && next.isScalarList                                                      => Vector(createScalarListTable, deleteColumn)
-        case _ if previous.isScalarNonList && next.isRelation                                                        => Vector(deleteColumn)
-        case _ if previous.isScalarNonList && next.isScalarNonList && previous.typeIdentifier == next.typeIdentifier => Vector(updateColumn)
-        case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier       => Vector(updateScalarListTable)
-        case _ if previous.isScalarList && next.isScalarList                                                         => Vector(deleteScalarListTable, createScalarListTable)
+        case _ if previous.isRelation && next.isRelation                                                       => Vector.empty
+        case _ if previous.isRelation && next.isScalarNonList                                                  => Vector(createColumn)
+        case _ if previous.isRelation && next.isScalarList                                                     => Vector(createScalarListTable)
+        case _ if previous.isScalarList && next.isScalarNonList                                                => Vector(createColumn, deleteScalarListTable)
+        case _ if previous.isScalarList && next.isRelation                                                     => Vector(deleteScalarListTable)
+        case _ if previous.isScalarList && next.isScalarList && previous.typeIdentifier == next.typeIdentifier => Vector(updateScalarListTable)
+        case _ if previous.isScalarList && next.isScalarList                                                   => Vector(deleteScalarListTable, createScalarListTable)
+        case _ if previous.isScalarNonList && next.isRelation                                                  => Vector(deleteColumn)
+        case _ if previous.isScalarNonList && next.isScalarList                                                => Vector(createScalarListTable, deleteColumn)
         case _ if previous.isScalarNonList && next.isScalarNonList =>
+          val common         = Vector(updateColumn)
           val isIdTypeChange = previous.asScalarField_!.isId && next.asScalarField_!.isId && previous.asScalarField_!.typeIdentifier != next.asScalarField_!.typeIdentifier
-          val common         = Vector(createTemporaryColumn, deleteColumn, renameTemporaryColumn)
+
           if (isIdTypeChange) {
-            val deleteRelations = previousSchema.relations.filter(_.containsTheModel(previous.model)).map(deleteRelation).toVector
+
+            val deleteRelations = previousSchema.relations
+              .filter(_.containsTheModel(previous.model))
+              .map(deleteRelation)
+              .toVector
             val recreateRelations = nextSchema.relations
               .filter(r => r.containsTheModel(next.model))
               .filter(r => previousSchema.relations.exists(_.name == r.name))
               .map(createRelation)
               .toVector
 
-            deleteRelations ++ common ++ recreateRelations
+            val deleteScalarListFields = oldModel.scalarListFields.toVector.map(deleteField)
+            val recreateScalarListFields = for {
+              scalarField <- newModel.scalarListFields
+              if oldModel.scalarListFields.map(_.name).contains(scalarField.name) // filter out new fields that should not be created here a 2nd time
+            } yield createField(scalarField)
+
+            deleteScalarListFields ++ deleteRelations ++ common ++ recreateScalarListFields ++ recreateRelations
           } else {
             common
           }
@@ -101,29 +104,36 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       val nextManifestation     = nextRelation.manifestation
 
       val manifestationChange = (previousManifestation, nextManifestation) match {
-        case (Some(_: EmbeddedRelationLink), Some(_: RelationTable)) =>
+        case (_: EmbeddedRelationLink, _: RelationTable) =>
           Vector(
             deleteRelation(previousRelation),
             createRelation(nextRelation)
           )
-        case (Some(_: RelationTable), Some(_: EmbeddedRelationLink)) =>
+        case (_: RelationTable, _: EmbeddedRelationLink) =>
           Vector(
             deleteRelation(previousRelation),
             createRelation(nextRelation)
           )
 
-        case (Some(_: EmbeddedRelationLink), Some(_: EmbeddedRelationLink)) =>
+        case (previousLink: EmbeddedRelationLink, nextLink: EmbeddedRelationLink) =>
+          val previousModel     = previousSchema.getModelByName_!(previousLink.inTableOfModelName)
+          val nextModel         = nextSchema.getModelByName_!(nextLink.inTableOfModelName)
+          val tableDidNotChange = previousModel.stableIdentifier == nextModel.stableIdentifier
+
+          if (tableDidNotChange) {
+            Vector(
+              UpdateInlineRelation(project, previousRelation, nextRelation)
+            )
+          } else {
+            Vector(
+              deleteRelation(previousRelation),
+              createRelation(nextRelation)
+            )
+          }
+
+        case (_: RelationTable, _: RelationTable) =>
           Vector(
-            deleteRelation(previousRelation),
-            createRelation(nextRelation)
-          )
-        case (Some(_: RelationTable), Some(_: RelationTable)) =>
-          Vector(
-            UpdateRelationTable(projectId, previousRelation, nextRelation)
-          )
-        case (None, None) => // this is the case for the legacy data model where we always have relation tables
-          Vector(
-            UpdateRelationTable(projectId, previousRelation, nextRelation)
+            UpdateRelationTable(project, previousRelation, nextRelation)
           )
 
         case (p, n) =>
@@ -139,29 +149,45 @@ case class MigrationStepMapperImpl(projectId: String) extends MigrationStepMappe
       Vector.empty
   }
 
+  def deleteField(field: ScalarField) = {
+    if (field.isScalarList) {
+      DeleteScalarListTable(project, field.model, field)
+    } else {
+      DeleteColumn(project, field.model, field)
+    }
+  }
+
+  def createField(field: ScalarField) = {
+    if (field.isScalarList) {
+      CreateScalarListTable(project, field.model, field)
+    } else {
+      CreateColumn(project, field.model, field)
+    }
+  }
+
   def deleteRelation(relation: Relation): DeployMutaction = {
     relation.manifestation match {
-      case Some(m: EmbeddedRelationLink) =>
+      case m: EmbeddedRelationLink =>
         val modelA              = relation.modelA
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
 
-        DeleteInlineRelation(projectId, model, references, m.referencingColumn)
+        DeleteInlineRelation(project, relation, model, references, m.referencingColumn)
       case _ =>
-        DeleteRelationTable(projectId, relation)
+        DeleteRelationTable(project, relation)
     }
   }
 
   def createRelation(relation: Relation): DeployMutaction = {
     relation.manifestation match {
-      case Some(m: EmbeddedRelationLink) =>
+      case m: EmbeddedRelationLink =>
         val modelA              = relation.modelA
         val modelB              = relation.modelB
         val (model, references) = if (m.inTableOfModelName == modelA.name) (modelA, modelB) else (modelB, modelA)
 
-        CreateInlineRelation(projectId, model, references, m.referencingColumn)
+        CreateInlineRelation(project, relation, model, references, m.referencingColumn)
       case _ =>
-        CreateRelationTable(projectId, relation = relation)
+        CreateRelationTable(project, relation = relation)
     }
   }
 }

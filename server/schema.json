@@ -1,0 +1,2 @@
+{ "dataModel": "type User { id: ID! @id @unique \n name: String! }" }
+

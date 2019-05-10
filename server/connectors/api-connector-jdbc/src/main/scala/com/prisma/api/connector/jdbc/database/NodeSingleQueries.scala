@@ -12,23 +12,7 @@ import scala.language.existentials
 trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterConditionBuilder {
   import slickDatabase.profile.api._
 
-  def getModelForGlobalId(schema: Schema, idGCValue: IdGCValue): DBIO[Option[Model]] = {
-    val query = sql
-      .select(relayStableIdentifierColumn)
-      .from(relayTable)
-      .where(relayIdColumn.equal(placeHolder))
-
-    queryToDBIO(query)(
-      setParams = pp => pp.setGcValue(idGCValue),
-      readResult = { rs =>
-        rs.readWith(readStableModelIdentifier).headOption.map { stableModelIdentifier =>
-          schema.getModelByStableIdentifier_!(stableModelIdentifier.trim)
-        }
-      }
-    )
-  }
-
-  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.all(where.model))
+  def getNodeByWhere(where: NodeSelector): DBIO[Option[PrismaNode]] = getNodeByWhere(where, SelectedFields.allScalarAndFlatRelationFields(where.model))
 
   def getNodeByWhere(where: NodeSelector, selectedFields: SelectedFields): DBIO[Option[PrismaNode]] = {
     val model      = where.model

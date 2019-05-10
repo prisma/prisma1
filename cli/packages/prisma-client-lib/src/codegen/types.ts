@@ -1,4 +1,4 @@
-export type GeneratorType = 'typescript' | 'javascript'
+export type GeneratorType = 'typescript' | 'javascript' | 'flow' | 'go'
 
 export type Interpolation<P> =
   | FlattenInterpolation<P>

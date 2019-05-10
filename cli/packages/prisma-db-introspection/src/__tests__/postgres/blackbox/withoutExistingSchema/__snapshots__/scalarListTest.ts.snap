@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector Type with scalar lists 1`] = `
+"type Car {
+  id: ID! @unique
+  createdAt: DateTime!
+  name: String!
+  updatedAt: DateTime!
+  user: [User] @pgColumn(name: \\"User\\")
+}
+
+type House {
+  id: ID! @unique
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  user: [User] @pgColumn(name: \\"User\\")
+  windows: Int!
+}
+
+type User {
+  id: ID! @unique
+  car: [Car] @pgColumn(name: \\"Car\\")
+  createdAt: DateTime!
+  house: [House] @pgColumn(name: \\"House\\")
+  name355: String!
+  scalarIntList: [Int]
+  scalarStringList: [String]
+  updatedAt: DateTime!
+}"
+`;
+
+exports[`Introspector Type with scalar lists 2`] = `
+"type Car {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  name: String!
+  updatedAt: DateTime! @updatedAt
+  user: [User] @db(name: \\"User\\")
+}
+
+type House {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  user: [User] @db(name: \\"User\\")
+  windows: Int!
+}
+
+type User {
+  id: ID! @id
+  car: [Car] @db(name: \\"Car\\")
+  createdAt: DateTime! @createdAt
+  house: [House] @db(name: \\"House\\")
+  name355: String!
+  scalarIntList: [Int] @scalarList(strategy: RELATION)
+  scalarStringList: [String] @scalarList(strategy: RELATION)
+  updatedAt: DateTime! @updatedAt
+}"
+`;

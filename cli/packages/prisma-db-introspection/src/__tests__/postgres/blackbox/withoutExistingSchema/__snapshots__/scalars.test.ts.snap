@@ -1,0 +1,163 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector DateTime columns 1`] = `
+"type Booleans {
+  a: DateTime
+  b: DateTime!
+  c: DateTime!
+}"
+`;
+
+exports[`Introspector DateTime columns 2`] = `
+"type Booleans {
+  a: DateTime
+  b: DateTime!
+  c: DateTime!
+}"
+`;
+
+exports[`Introspector Json columns 1`] = `
+"type Booleans {
+  a: Json
+  b: Json!
+}"
+`;
+
+exports[`Introspector Json columns 2`] = `
+"type Booleans {
+  a: Json
+  b: Json!
+}"
+`;
+
+exports[`Introspector Unmapped columns 1`] = `
+"type Unmapped {
+  a: Json
+  # Type tsvector is not supported
+  # c: tsvector
+  d: DateTime
+}"
+`;
+
+exports[`Introspector Unmapped columns 2`] = `
+"type Unmapped {
+  a: Json
+  # Type tsvector is not supported
+  # c: tsvector
+  d: DateTime
+}"
+`;
+
+exports[`Introspector boolean columns 1`] = `
+"type Booleans {
+  a: Boolean
+  b: Boolean!
+}"
+`;
+
+exports[`Introspector boolean columns 2`] = `
+"type Booleans {
+  a: Boolean
+  b: Boolean!
+}"
+`;
+
+exports[`Introspector float columns 1`] = `
+"type Floats {
+  a: Float @default(value: 3.4)
+  b: Float
+  c: Float
+  d: Float
+  e: Float!
+  f: Float!
+  g: Float!
+  h: Float!
+  i: Float
+  j: Float!
+}"
+`;
+
+exports[`Introspector float columns 2`] = `
+"type Floats {
+  a: Float @default(value: 3.4)
+  b: Float
+  c: Float
+  d: Float
+  e: Float!
+  f: Float!
+  g: Float!
+  h: Float!
+  i: Float
+  j: Float!
+}"
+`;
+
+exports[`Introspector int columns 1`] = `
+"type Ints {
+  a: Int @default(value: 3)
+  b: Int
+  c: Int
+  d: Int!
+  e: Int!
+  f: Int!
+}"
+`;
+
+exports[`Introspector int columns 2`] = `
+"type Ints {
+  a: Int @default(value: 3)
+  b: Int
+  c: Int
+  d: Int!
+  e: Int!
+  f: Int!
+}"
+`;
+
+exports[`Introspector text columns 1`] = `
+"type Strings {
+  id: ID! @pgColumn(name: \\"pk\\") @unique
+  a: String @unique
+  aa: String! @unique
+  b: String @unique
+  c: String @default(value: \\"abc\\")
+  cc: String! @default(value: \\"abc\\")
+  d: String!
+  e: String!
+  f: String!
+  g: UUID
+  h: UUID!
+}"
+`;
+
+exports[`Introspector text columns 2`] = `
+"type Strings {
+  pk: ID! @id
+  a: String @unique
+  aa: String! @unique
+  b: String @unique
+  c: String @default(value: \\"abc\\")
+  cc: String! @default(value: \\"abc\\")
+  d: String!
+  e: String!
+  f: String!
+  g: UUID
+  h: UUID!
+}"
+`;
+
+exports[`Introspector uuid columns 1`] = `
+"type UUIDs {
+  id: UUID! @pgColumn(name: \\"pk\\") @unique
+  nk: UUID!
+  tk: UUID
+}"
+`;
+
+exports[`Introspector uuid columns 2`] = `
+"type UUIDs {
+  pk: UUID! @id
+  nk: UUID!
+  tk: UUID
+}"
+`;

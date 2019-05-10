@@ -11,10 +11,21 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   val schemaBuilder = testDependencies.apiSchemaBuilder
 
   "the update Mutation for a many to many relation with an optional backrelation" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
-      val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
-      list.manyToManyRelation("todoes", "does not matter", todo, includeFieldBInSchema = false)
+    val project = SchemaDsl.fromStringV11() {
+      s"""
+        |type List {
+        |  id: ID! @id
+        |  listUnique: String! @unique
+        |  optList: String
+        |  todoes: [Todo] $listInlineDirective
+        |}
+        |
+        |type Todo {
+        |  id: ID! @id
+        |  todoUnique: String! @unique
+        |  optString: String
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -60,10 +71,21 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "the update Mutation for a one to one relation with an optional backrelation" should "be generated correctly" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val list = schema.model("List").field_!("listUnique", _.String, isUnique = true).field("optList", _.String)
-      val todo = schema.model("Todo").field_!("todoUnique", _.String, isUnique = true).field("optString", _.String)
-      list.oneToOneRelation("todo", "does not matter", todo, includeFieldB = false)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type List {
+        |  id: ID! @id
+        |  listUnique: String! @unique
+        |  optList: String
+        |  todo: Todo @relation(link: INLINE)
+        |}
+        |
+        |type Todo {
+        |  id: ID! @id
+        |  todoUnique: String! @unique
+        |  optString: String
+        |}
+      """.stripMargin
     }
 
     val schema = SchemaRenderer.renderSchema(schemaBuilder(project))
@@ -107,16 +129,16 @@ class RelationsSchemaBuilderSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "a schema with optional back relations" should "not include any type related to magical back relations" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       s"""
          |type List {
-         |  id: ID! @unique
+         |  id: ID! @id
          |  title: String!
-         |  todos: [Todo]
          |}
          |type Todo {
-         |  id: ID! @unique
+         |  id: ID! @id
          |  name: String
+         |  list: List @relation(link: INLINE)
          |}
        """.stripMargin
     }

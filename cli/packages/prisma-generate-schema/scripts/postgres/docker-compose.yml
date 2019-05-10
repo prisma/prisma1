@@ -1,0 +1,34 @@
+version: '3'
+services:
+  prisma:
+    image: prismagraphql/prisma:1.31-beta 
+    restart: always
+    ports:
+    - "4466:4466"
+    environment:
+      PRISMA_CONFIG: |
+        port: 4466
+        prototype: true
+        # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
+        # managementApiSecret: my-secret
+        databases:
+          default:
+            connector: postgres
+            host: postgres
+            user: prisma
+            password: prisma
+            rawAccess: true
+            port: 5432
+            migrations: true
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+    - "5433:5432"
+    environment:
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:

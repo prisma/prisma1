@@ -43,7 +43,7 @@ trait NodeActions extends NodeSingleQueries {
 
   def updateNodeByWhere(mutaction: UpdateNode, where: NodeSelector)(implicit ec: ExecutionContext) = {
     for {
-      previousValues <- getNodeByWhere(where)
+      previousValues <- getNodeByWhereComplete(where)
       results        <- updateHelper(mutaction, where, previousValues)
     } yield results
   }
@@ -110,7 +110,13 @@ trait NodeActions extends NodeSingleQueries {
 
     val listValues: Vector[(String, GCValue)] = mutaction.listArgs.map { case (f, v) => (mutaction.model.getFieldByName_!(f).dbName, v) }
 
-    val id = StringIdGCValue(ObjectId.get().toString)
+    val id = mutaction.nonListArgs.rootGCMap.get(mutaction.model.idField_!.name) match {
+      case None                => StringIdGCValue(ObjectId.get().toString)
+      case Some(NullGCValue)   => StringIdGCValue(ObjectId.get().toString)
+      case Some(id: IdGCValue) => id
+      case _                   => sys.error("Should not happen")
+    }
+
     val currentParent: NodeAddress = (parent, relationField) match {
       case (Some(p), Some(rf)) if rf.isList  => p.appendPath(rf, NodeSelector.forId(mutaction.model, id))
       case (Some(p), Some(rf)) if !rf.isList => p.appendPath(rf)
@@ -199,7 +205,7 @@ trait NodeActions extends NodeSingleQueries {
                                                  parent: NodeAddress): (Vector[Bson], Vector[Bson], Vector[DatabaseMutactionResult]) = {
 
     val actionsArrayFiltersAndResults = mutactions.collect {
-      case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
+      case toOneUpdate @ NestedUpdateNode(_, rf, None, _, _, _, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
         val updatedParent = parent.appendPath(rf)
         val subNode = node.getToOneChild(rf) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, None)
@@ -214,7 +220,7 @@ trait NodeActions extends NodeSingleQueries {
 
         (scalars ++ creates ++ deletes ++ updates, arrayFilters, createResults ++ deleteResults ++ updateResults :+ thisResult)
 
-      case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
+      case toManyUpdate @ NestedUpdateNode(_, rf, Some(where), _, _, _, _, _, _, _, _, _, _, _) if rf.relatedModel_!.isEmbedded =>
         val subNode = node.getToManyChild(rf, where) match {
           case None             => throw NodesNotConnectedError(rf.relation, rf.model, None, rf.relatedModel_!, Some(where))
           case Some(prismaNode) => prismaNode

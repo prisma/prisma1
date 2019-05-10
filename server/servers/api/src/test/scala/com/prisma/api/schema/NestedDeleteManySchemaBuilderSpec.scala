@@ -14,47 +14,46 @@ class NestedDeleteManySchemaBuilderSpec extends FlatSpec with Matchers with ApiS
   val schemaBuilder                   = testDependencies.apiSchemaBuilder
 
   "Nested DeleteMany" should "have scalarWhereFilter" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Top {
+        |   id: ID! @id
         |   name: String @unique
         |   other: [Other]
         |}
         |
         |type Other{
-        |   top: Top
+        |   id: ID! @id
+        |   top: Top @relation(link: INLINE)
         |   test: String
         |}
       """
     }
 
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
+    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies)
     val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
 
-    schema should include("input TopUpdateInput {\n  name: String\n  other: OtherUpdateManyWithoutTopInput\n}")
-    schema should include(
-      "input OtherUpdateManyWithoutTopInput {\n  create: [OtherCreateWithoutTopInput!]\n  updateMany: [OtherUpdateManyWithWhereNestedInput!]\n  deleteMany: [OtherScalarWhereInput!]\n}")
-  }
-
-  "Nested DeleteMany" should "not be created if there are no scalar fields" in {
-    val project = SchemaDsl.fromString() {
-      """
-        |type Top {
-        |   name: String @unique
-        |   other: [Other]
-        |}
-        |
-        |type Other{
-        |   top: Top
-        |}
-      """
-    }
-
-    val schemaBuilder = SchemaBuilderImpl(project, capabilities = ConnectorCapabilities(EmbeddedTypesCapability))(testDependencies, system)
-    val schema        = SchemaRenderer.renderSchema(schemaBuilder.build())
-
-    schema should include("input TopUpdateInput {\n  name: String\n}")
-    schema should not(include("OtherScalarWhereInput"))
+    schema should containInputType(
+      "TopUpdateInput",
+      fields = Vector(
+        "name: String",
+        "other: OtherUpdateManyWithoutTopInput",
+      )
+    )
+    schema should containInputType(
+      "OtherUpdateManyWithoutTopInput",
+      fields = Vector(
+        "create: [OtherCreateWithoutTopInput!]",
+        "update: [OtherUpdateWithWhereUniqueWithoutTopInput!]",
+        "delete: [OtherWhereUniqueInput!]",
+        "upsert: [OtherUpsertWithWhereUniqueWithoutTopInput!]",
+        "updateMany: [OtherUpdateManyWithWhereNestedInput!]",
+        "deleteMany: [OtherScalarWhereInput!]",
+        "connect: [OtherWhereUniqueInput!]",
+        "disconnect: [OtherWhereUniqueInput!]",
+        "set: [OtherWhereUniqueInput!]",
+      )
+    )
   }
 
 }

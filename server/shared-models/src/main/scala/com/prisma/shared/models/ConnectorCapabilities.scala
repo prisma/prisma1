@@ -1,6 +1,5 @@
 package com.prisma.shared.models
 
-import com.prisma.shared.models.ConnectorCapability.{EmbeddedScalarListsCapability, NonEmbeddedScalarListCapability, ScalarListsCapability}
 import com.prisma.utils.boolean.BooleanUtils
 import enumeratum.{EnumEntry, Enum => Enumeratum}
 
@@ -25,13 +24,12 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 
   object SupportsExistingDatabasesCapability extends ConnectorCapability
   object MigrationsCapability                extends ConnectorCapability
-  object LegacyDataModelCapability           extends ConnectorCapability
+  object RawAccessCapability                 extends ConnectorCapability
   object IntrospectionCapability             extends ConnectorCapability
   object JoinRelationLinksCapability         extends ConnectorCapability // the ability to join using relation links
   object MongoJoinRelationLinksCapability    extends ConnectorCapability // does not allow NOT/OR and only _some on manyrelations
   object RelationLinkListCapability          extends ConnectorCapability // relation links can be stored inline in a node in a list
   object RelationLinkTableCapability         extends ConnectorCapability // relation links are stored in a table
-  // RawAccessCapability
 
   sealed trait IdCapability   extends ConnectorCapability
   object IntIdCapability      extends IdCapability
@@ -40,6 +38,8 @@ object ConnectorCapability extends Enumeratum[ConnectorCapability] {
 }
 
 case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
+  import ConnectorCapability._
+
   def has(capability: ConnectorCapability): Boolean = capability match {
     case ScalarListsCapability => capabilities.contains(EmbeddedScalarListsCapability) || capabilities.contains(NonEmbeddedScalarListCapability)
     case x                     => capabilities.contains(x)
@@ -47,17 +47,37 @@ case class ConnectorCapabilities(capabilities: Set[ConnectorCapability]) {
   def hasNot(capability: ConnectorCapability): Boolean = !has(capability)
 
   def supportsScalarLists = capabilities.exists(_.isInstanceOf[ScalarListsCapability])
+
+  def isMongo: Boolean = has(EmbeddedTypesCapability)
 }
 
 object ConnectorCapabilities extends BooleanUtils {
+  import ConnectorCapability._
+
   val empty: ConnectorCapabilities                                     = ConnectorCapabilities(Set.empty[ConnectorCapability])
   def apply(capabilities: ConnectorCapability*): ConnectorCapabilities = ConnectorCapabilities(Set(capabilities: _*))
 
-  import com.prisma.shared.models.ConnectorCapability._
+  lazy val sqliteNative: ConnectorCapabilities = {
+    val filteredCapas = sqliteJdbcPrototype.capabilities.filter(_ != TransactionalExecutionCapability)
+    ConnectorCapabilities(filteredCapas)
+  }
 
-  def mysql: ConnectorCapabilities = {
-    val capas = Set(
-      LegacyDataModelCapability,
+  lazy val sqliteJdbcPrototype: ConnectorCapabilities = {
+    val actualCapas = sqlPrototype.filter(_ != ImportExportCapability)
+    ConnectorCapabilities(actualCapas)
+  }
+
+  lazy val postgresPrototype: ConnectorCapabilities = {
+    val capas = sqlPrototype ++ Set(UuidIdCapability)
+    ConnectorCapabilities(capas)
+  }
+
+  lazy val mysqlPrototype: ConnectorCapabilities = {
+    ConnectorCapabilities(sqlPrototype)
+  }
+
+  private lazy val sqlPrototype: Set[ConnectorCapability] = {
+    Set(
       TransactionalExecutionCapability,
       JoinRelationsFilterCapability,
       JoinRelationLinksCapability,
@@ -65,31 +85,17 @@ object ConnectorCapabilities extends BooleanUtils {
       MigrationsCapability,
       NonEmbeddedScalarListCapability,
       NodeQueryCapability,
-      ImportExportCapability
-    )
-    ConnectorCapabilities(capas)
-  }
-
-  def postgres(isActive: Boolean): ConnectorCapabilities = {
-    val common = Set(
-      LegacyDataModelCapability,
-      TransactionalExecutionCapability,
-      JoinRelationsFilterCapability,
-      JoinRelationLinksCapability,
-      RelationLinkTableCapability,
+      ImportExportCapability,
       IntrospectionCapability,
+      SupportsExistingDatabasesCapability,
       IntIdCapability,
-      UuidIdCapability
+      NonEmbeddedScalarListCapability,
+      RawAccessCapability,
+      IdSequenceCapability
     )
-    val capas = if (isActive) {
-      common ++ Set(MigrationsCapability, NonEmbeddedScalarListCapability, NodeQueryCapability, ImportExportCapability)
-    } else {
-      common ++ Set(SupportsExistingDatabasesCapability)
-    }
-    ConnectorCapabilities(capas)
   }
 
-  def mongo(isActive: Boolean, isTest: Boolean): ConnectorCapabilities = {
+  val mongo: ConnectorCapabilities = {
     val common = Set(
       NodeQueryCapability,
       EmbeddedScalarListsCapability,
@@ -97,10 +103,10 @@ object ConnectorCapabilities extends BooleanUtils {
       JoinRelationLinksCapability,
       MongoJoinRelationLinksCapability,
       RelationLinkListCapability,
-      EmbeddedTypesCapability
+      EmbeddedTypesCapability,
+      SupportsExistingDatabasesCapability
     )
-    val dataModelCapability = isTest.toOption(LegacyDataModelCapability)
 
-    ConnectorCapabilities(common ++ dataModelCapability)
+    ConnectorCapabilities(common)
   }
 }

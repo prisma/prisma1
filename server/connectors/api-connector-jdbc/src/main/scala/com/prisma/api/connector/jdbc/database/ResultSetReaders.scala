@@ -15,23 +15,23 @@ trait ResultSetReaders extends JdbcExtensions with QueryBuilderConstants {
 
   def readNodeId(model: Model): ReadsResultSet[IdGCValue] = ReadsResultSet(_.getId(model))
 
-  def readPrismaNodeWithParent(rf: RelationField, fields: Set[ScalarField]): ReadsResultSet[PrismaNodeWithParent] = ReadsResultSet { rs =>
+  def readPrismaNodeWithParent(rf: RelationField, fields: List[ScalarField]): ReadsResultSet[PrismaNodeWithParent] = ReadsResultSet { rs =>
     val node     = readPrismaNode(rf.relatedModel_!, fields, rs)
     val parentId = rs.getParentId(parentModelAlias, rf.model.idField_!.typeIdentifier)
     PrismaNodeWithParent(parentId, node)
   }
 
-  def readsPrismaNode(model: Model, fields: Set[ScalarField]): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
+  def readsPrismaNode(model: Model, fields: List[ScalarField]): ReadsResultSet[PrismaNode] = ReadsResultSet { rs =>
     readPrismaNode(model, fields, rs)
   }
 
-  private def readPrismaNode(model: Model, fields: Set[ScalarField], rs: ResultSet): PrismaNode = {
+  private def readPrismaNode(model: Model, fields: List[ScalarField], rs: ResultSet): PrismaNode = {
     val data = fields.toVector.map(field => field.name -> rs.getGcValue(field.dbName, field.typeIdentifier))
     PrismaNode(id = rs.getId(model), data = RootGCValue(data: _*), Some(model.name))
   }
 
   def readsScalarListField(field: ScalarField): ReadsResultSet[ScalarListElement] = ReadsResultSet { rs =>
-    val nodeId   = rs.getString(nodeIdFieldName)
+    val nodeId   = rs.getGcValue(nodeIdFieldName, field.model.idField_!.typeIdentifier).asInstanceOf[IdGCValue]
     val position = rs.getInt(positionFieldName)
     val value    = rs.getGcValue(valueFieldName, field.typeIdentifier)
     ScalarListElement(nodeId, position, value)

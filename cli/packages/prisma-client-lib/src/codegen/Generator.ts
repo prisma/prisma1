@@ -25,4 +25,19 @@ export class Generator {
       '',
     )
   }
+
+  static replaceEnv(str: string): string {
+    const regex = /\${env:(.*?)}/
+    const match = regex.exec(str)
+    // tslint:disable-next-line:prefer-conditional-expression
+    if (match) {
+      return Generator.replaceEnv(
+        `${str.slice(0, match.index)}$\{process.env['${match[1]}']}${str.slice(
+          match[0].length + match.index,
+        )}`,
+      )
+    } else {
+      return `\`${str}\``
+    }
+  }
 }

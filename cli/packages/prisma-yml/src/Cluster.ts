@@ -53,13 +53,20 @@ export class Cluster {
     stageName?: string,
   ): Promise<string | null> {
     // public clusters just take the token
+
+    const needsAuth = await this.needsAuth()
+    debug({needsAuth})
+    if (!needsAuth) {
+      return null
+    }
+
     if (this.name === 'shared-public-demo') {
       return ''
     }
     if (this.isPrivate && process.env.PRISMA_MANAGEMENT_API_SECRET) {
       return this.getLocalToken()
     }
-    if (this.shared || this.isPrivate) {
+    if (this.shared || (this.isPrivate && !process.env.PRISMA_MANAGEMENT_API_SECRET)) {
       return this.generateClusterToken(serviceName, workspaceSlug, stageName)
     } else {
       return this.getLocalToken()
@@ -134,6 +141,31 @@ Original error: ${e.message}`,
     })
 
     return clusterToken
+  }
+
+  async addServiceToCloudDBIfMissing(
+    serviceName: string,
+    workspaceSlug: string = this.workspaceSlug!,
+    stageName?: string,
+  ): Promise<boolean> {
+    const query = `
+      mutation ($input: GenerateClusterTokenRequest!) {
+        addServiceToCloudDBIfMissing(input: $input)
+      }
+    `
+
+    const serviceCreated = await this.cloudClient.request<{
+      addServiceToCloudDBIfMissing: boolean
+    }>(query, {
+      input: {
+        workspaceSlug,
+        clusterName: this.name,
+        serviceName,
+        stageName,
+      },
+    })
+
+    return serviceCreated.addServiceToCloudDBIfMissing
   }
 
   getApiEndpoint(
@@ -253,9 +285,15 @@ Original error: ${e.message}`,
           name
         }
       }`)
-      return true
-    } catch (e) {
+      const data = await result.json()
+      if (data.errors && data.errors.length > 0) {
+        return true
+      }
       return false
+    } catch (e) {
+      debug('Assuming that the server needs authentication')
+      debug(e.toString())
+      return true
     }
   }
 

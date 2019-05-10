@@ -1,17 +1,17 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.models.ConnectorCapability.{EmbeddedTypesCapability, JoinRelationLinksCapability}
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBaseV11 {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "A 1-n relation" should "error if trying to use nestedDeleteMany" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
+    val project = SchemaDsl.fromStringV11() { embeddedP1opt }
     database.setup(project)
 
     val parent1Id = server
@@ -50,7 +50,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -83,7 +83,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "work with several deleteManys" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -120,7 +120,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "work with empty Filter" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -152,7 +152,7 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "not change anything when there is no hit" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -222,18 +222,19 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
     )
   }
 
-  "Deleting toMany relations if they have a unique" should "work" in {
+  "Deleting toMany relations if they have a id" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: [Middle]
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   id: ID! @id
+        |   int: Int!
         |   name: String!
         |}"""
     }
@@ -246,11 +247,11 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |   unique: 1,
          |   name: "Top",
          |   middle: {create:[{
-         |      unique: 11,
+         |      int: 11,
          |      name: "Middle"
          |   },
          |   {
-         |      unique: 12,
+         |      int: 12,
          |      name: "Middle2"
          |   }
          |
@@ -258,13 +259,15 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |}){
          |  unique,
          |  middle{
-         |    unique
+         |    int
          |  }
          |}}""".stripMargin,
       project
     )
 
-    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11},{"unique":12}]}}}""")
+    res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"int":11},{"int":12}]}}}""")
+
+    val middleId = server.query("""query{top(where:{unique: 1}){middle{id}}}""", project).pathAsString("""data.top.middle.[0].id""")
 
     val res2 = server.query(
       s"""mutation {
@@ -272,17 +275,17 @@ class EmbeddedNestedDeleteManyMutationInsideUpdateSpec extends FlatSpec with Mat
          |   where:{unique: 1}
          |   data: {
          |      name: "Top2",
-         |      middle: {delete:{unique:11}}
+         |      middle: {delete:{id:"$middleId"}}
          |}){
          |  unique,
          |  middle{
-         |    unique
+         |    int
          |  }
          |}}""".stripMargin,
       project
     )
 
-    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"unique":12}]}}}""")
+    res2.toString should be("""{"data":{"updateTop":{"unique":1,"middle":[{"int":12}]}}}""")
   }
 
 }

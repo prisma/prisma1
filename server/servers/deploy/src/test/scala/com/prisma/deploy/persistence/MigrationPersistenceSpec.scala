@@ -54,10 +54,12 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
     val (project, _) = setupProject(basicTypesGql)
     migrationPersistence.loadAll(project.id).await should have(size(2))
 
-    val savedMigration    = migrationPersistence.create(migrationWithRandomSchema(project.id)).await()
+    val rawDataModel      = "type User { id: ID }"
+    val savedMigration    = migrationPersistence.create(migrationWithRandomSchema(project.id, rawDataModel = rawDataModel)).await()
     val previousMigration = migrationPersistence.loadAll(project.id).await.apply(1)
     savedMigration.revision shouldEqual 3
     savedMigration.previousSchema should equal(previousMigration.schema)
+    savedMigration.rawDataModel should be(rawDataModel)
     migrationPersistence.loadAll(project.id).await should have(size(3))
   }
 
@@ -69,12 +71,15 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
       delivery = WebhookDelivery("https://mywebhook.com", Vector("header1" -> "value1")),
       query = "query"
     )
-    val migration        = Migration.empty(project.id).copy(functions = Vector(function), status = MigrationStatus.Success)
+    val rawDataModel     = "type User { id: ID }"
+    val migration        = Migration.empty(project.id).copy(functions = Vector(function), status = MigrationStatus.Success, rawDataModel = rawDataModel)
     val createdMigration = migrationPersistence.create(migration).await()
     createdMigration.previousSchema should equal(initialMigration.schema)
+    createdMigration.rawDataModel should be(rawDataModel)
 
     val inDb = migrationPersistence.getLastMigration(project.id).await().get
     inDb.functions should equal(Vector(function))
+    inDb.rawDataModel should be(rawDataModel)
   }
 
   ".loadAll()" should "return all migrations for a project" in {
@@ -198,12 +203,13 @@ class MigrationPersistenceSpec extends FlatSpec with Matchers with DeploySpecBas
     projectIds should have(size(2))
   }
 
-  def migrationWithRandomSchema(projectId: String): Migration = {
+  def migrationWithRandomSchema(projectId: String, rawDataModel: String = ""): Migration = {
     Migration(
       projectId = projectId,
       schema = randomSchema(),
       steps = Vector.empty,
-      functions = Vector.empty
+      functions = Vector.empty,
+      rawDataModel = rawDataModel
     )
   }
 

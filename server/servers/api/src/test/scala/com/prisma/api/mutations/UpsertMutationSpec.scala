@@ -8,10 +8,29 @@ import org.scalatest.{FlatSpec, Matchers}
 
 class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
-  val project: Project = SchemaDsl.fromBuilder { schema =>
-    schema.model("Todo").field_!("title", _.String).field_!("alias", _.String, isUnique = true).field("anotherIDField", _.Cuid, isUnique = true)
-    schema.model("WithDefaultValue").field_!("reqString", _.String, defaultValue = Some(StringGCValue("defaultValue"))).field_!("title", _.String)
-    schema.model("MultipleFields").field_!("reqString", _.String).field_!("reqInt", _.Int).field_!("reqFloat", _.Float).field_!("reqBoolean", _.Boolean)
+  val project = SchemaDsl.fromStringV11() {
+    """
+      |type Todo {
+      |  id: ID! @id
+      |  title: String!
+      |  alias: String! @unique
+      |  anotherIDField: ID @unique
+      |}
+      |
+      |type WithDefaultValue {
+      |  id: ID! @id
+      |  reqString: String! @default(value: "defaultValue")
+      |  title: String!
+      |}
+      |
+      |type MultipleFields {
+      |  id: ID! @id
+      |  reqString: String!
+      |  reqInt: Int!
+      |  reqFloat: Float!
+      |  reqBoolean: Boolean!
+      |}
+    """.stripMargin
   }
 
   override protected def beforeAll(): Unit = {
@@ -113,7 +132,7 @@ class UpsertMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     result.pathAsString("data.upsertWithDefaultValue.reqString") should be("defaultValue")
   }
 
-  "an item" should "note be created when trying to set a required value to null even if there is a default value for that field" in {
+  "an item" should "not be created when trying to set a required value to null even if there is a default value for that field" in {
     server.queryThatMustFail(
       s"""mutation {
          |  upsertWithDefaultValue(

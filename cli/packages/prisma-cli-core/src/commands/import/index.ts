@@ -1,10 +1,12 @@
 import { Command, flags, Flags } from 'prisma-cli-engine'
 import * as fs from 'fs-extra'
 import { Importer } from './Importer'
+import chalk from 'chalk';
 
 export default class Import extends Command {
   static topic = 'import'
   static description = 'Import data into a service'
+  static printVersionSyncWarning = true
   static flags: Flags = {
     data: flags.string({
       char: 'd',
@@ -15,6 +17,10 @@ export default class Import extends Command {
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
   }
   async run() {
     const { data } = this.flags
@@ -23,14 +29,23 @@ export default class Import extends Command {
     const serviceName = this.definition.service!
     const stage = this.definition.stage!
 
-    const cluster = this.definition.getCluster()
+    const cluster = await this.definition.getCluster()
     this.env.setActiveCluster(cluster!)
 
     if (
       this.definition.definition!.databaseType &&
       this.definition.definition!.databaseType === 'document'
-    ) {
-      throw new Error('Import is not yet supported for document stores.')
+      ) {
+        throw new Error(`Import is not yet supported for document stores. Please use the native import features of your database. 
+        
+        More info here: https://docs.mongodb.com/manual/reference/program/mongorestore/`)
+      } else {
+        this.out.log(chalk.yellow(`Warning: The \`prisma import\` command will not be further developed in the future. Please use the native import features of your database for these workflows. 
+    
+More info here:
+MySQL: https://dev.mysql.com/doc/refman/5.7/en/mysqlimport.html
+Postgres: https://www.postgresql.org/docs/10/app-pgrestore.html
+`))
     }
 
     if (!fs.pathExistsSync(data)) {

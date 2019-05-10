@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, JoinRelationsFilterCapability}
+import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
@@ -11,25 +11,25 @@ class DeleteManyRelationFilterSpec extends FlatSpec with Matchers with ApiSpecBa
 
   val schema =
     """type Top{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   top: String!
-      |   bottom: Bottom
+      |   bottom: Bottom @relation(link: INLINE)
       |}
       |
       |type Bottom{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   bottom: String!
       |   top: Top
-      |   veryBottom: VeryBottom
+      |   veryBottom: VeryBottom @relation(link: INLINE)
       |}
       |
       |type VeryBottom{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   veryBottom: String!
       |   bottom: Bottom
       |}""".stripMargin
 
-  lazy val project: Project = SchemaDsl.fromString() { schema }
+  lazy val project: Project = SchemaDsl.fromStringV11() { schema }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

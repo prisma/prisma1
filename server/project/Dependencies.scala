@@ -8,7 +8,7 @@ object Dependencies {
     */
   object v {
     val sangria       = "1.3.3"
-    val akka          = "2.5.11"
+    val akka          = "2.5.12"
     val akkaHttp      = "10.1.0"
     val joda          = "2.9.4"
     val jodaConvert   = "1.7"
@@ -37,9 +37,14 @@ object Dependencies {
   val mariaDbClient  = "org.mariadb.jdbc"  % "mariadb-java-client" % "2.1.2"
   val postgresClient = "org.postgresql"    % "postgresql"          % "42.2.2"
   val mongoClient    = "org.mongodb.scala" %% "mongo-scala-driver" % "2.4.0"
+  val sqliteClient   = "org.xerial"        % "sqlite-jdbc"         % "3.25.2"
 
   val playJson    = "com.typesafe.play" %% "play-json"    % v.play
   val playStreams = "com.typesafe.play" %% "play-streams" % v.play
+
+  val nettyTransport = "io.netty" % "netty-transport" % "4.1.17.Final"
+  val nettyHandler   = "io.netty" % "netty-handler" % "4.1.17.Final"
+  val netty          = Seq(nettyTransport, nettyHandler)
 
   val akka            = "com.typesafe.akka" %% "akka-actor"        % v.akka
   val akkaStream      = "com.typesafe.akka" %% "akka-stream"       % v.akka
@@ -54,7 +59,6 @@ object Dependencies {
 
   val jsr305        = "com.google.code.findbugs"      % "jsr305"                % "3.0.0"
   val caffeine      = "com.github.ben-manes.caffeine" % "caffeine"              % "2.6.2"
-  val finagle       = "com.twitter"                   %% "finagle-http"         % "6.44.0"
   val guava         = "com.google.guava"              % "guava"                 % "19.0"
   val datadogStatsd = "com.datadoghq"                 % "java-dogstatsd-client" % "2.3"
 
@@ -76,22 +80,26 @@ object Dependencies {
   val amqp              = "com.rabbitmq"               % "amqp-client"                    % "4.1.0"
   val java8Compat       = "org.scala-lang.modules"     %% "scala-java8-compat"            % "0.8.0"
   val scalaLogging      = "com.typesafe.scala-logging" %% "scala-logging"                 % "3.7.0"
+  val log4j             = "log4j"                      % "log4j"                          % "1.2.17"
   val jwt               = "com.pauldijou"              %% "jwt-core"                      % "0.14.1"
   val scalajHttp        = "org.scalaj"                 %% "scalaj-http"                   % "2.3.0"
   val evoInflector      = "org.atteo"                  % "evo-inflector"                  % "1.2"
-  val logBack           = "ch.qos.logback"             % "logback-classic"                % "1.1.7"
-  val snakeYML          = "org.yaml"                   % "snakeyaml"                      % "1.19"
-  val logstash          = "net.logstash.logback"       % "logstash-logback-encoder"       % "4.7"
+  val snakeYML          = "org.yaml"                   % "snakeyaml"                      % "1.23"
   val librato           = "com.librato.metrics"        % "librato-java"                   % "2.1.0"
   val jettyServer       = "org.eclipse.jetty"          % "jetty-server"                   % "9.3.0.v20150612"
-  val scalaUri          = "io.lemonlabs"               %% "scala-uri"                     % "1.1.1"
+  val scalaUri          = "io.lemonlabs"               %% "scala-uri"                     % "1.3.1"
   val parserCombinators = "org.scala-lang.modules"     %% "scala-parser-combinators"      % "1.0.4"
-  val apacheCommons     = "commons-lang"               % "commons-lang"                   % "2.6"
+  val apacheCommons     = "org.apache.commons"         % "commons-lang3"                  % "3.8.1"
   val microMeter        = "io.micrometer"              % "micrometer-registry-prometheus" % "1.0.6"
   val jooq = Vector(
-    "org.jooq" % "jooq"        % "3.11.0",
-    "org.jooq" %% "jooq-scala" % "3.11.0"
+    "org.jooq" % "jooq"        % "3.11.10",
+    "org.jooq" %% "jooq-scala" % "3.11.10"
   )
+
+  val jna              = "net.java.dev.jna"      % "jna"                   % "4.5.2"
+  val javaxPersistence = "javax.persistence"     % "javax.persistence-api" % "2.2"
+  val registry         = "io.dropwizard.metrics" % "metrics-core"          % "3.2.4"
+  val checks           = "io.dropwizard.metrics" % "metrics-healthchecks"  % "3.2.4"
 
   val http4s = Seq(
     "org.http4s" %% "http4s-blaze-server" % v.http4sVersion,
@@ -122,11 +130,11 @@ object Dependencies {
     playJson,
     scalajHttp,
     scalaLogging,
-    logBack,
-    logstash,
     evoInflector,
+    apacheCommons,
     cuid,
-    finagle,
-    jwt
+    jwt,
+    log4j,
+    javaxPersistence
   )
 }

@@ -4,19 +4,20 @@ import com.prisma.api.connector._
 import com.prisma.api.connector.mongo.database._
 import com.prisma.api.connector.mongo.extensions.SlickReplacement._
 import com.prisma.api.connector.mongo.{NestedDatabaseMutactionInterpreter, TopLevelDatabaseMutactionInterpreter}
+import com.prisma.shared.models.Project
 import org.mongodb.scala.{MongoClient, MongoDatabase}
 import play.api.libs.json.{JsValue, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MongoDatabaseMutactionExecutor(client: MongoClient, schema: Option[String])(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
+class MongoDatabaseMutactionExecutor(client: MongoClient)(implicit ec: ExecutionContext) extends DatabaseMutactionExecutor {
 
   override def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = execute(mutaction, transactionally = true)
 
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = execute(mutaction, transactionally = false)
 
   private def execute(mutaction: TopLevelDatabaseMutaction, transactionally: Boolean): Future[MutactionResults] = {
-    val actionsBuilder = MongoActionsBuilder(schema.getOrElse(mutaction.project.id), client)
+    val actionsBuilder = MongoActionsBuilder(mutaction.project.dbName, client)
     val action         = generateTopLevelMutaction(actionsBuilder.database, mutaction, actionsBuilder)
 
     run(actionsBuilder.database, action)
@@ -132,16 +133,16 @@ class MongoDatabaseMutactionExecutor(client: MongoClient, schema: Option[String]
   }
 
   def interpreterFor(mutaction: TopLevelDatabaseMutaction): TopLevelDatabaseMutactionInterpreter = mutaction match {
-    case m: TopLevelCreateNode => CreateNodeInterpreter(mutaction = m)
-    case m: TopLevelUpdateNode => UpdateNodeInterpreter(mutaction = m)
-    case m: TopLevelUpsertNode => UpsertNodeInterpreter(mutaction = m)
-    case m: TopLevelDeleteNode => DeleteNodeInterpreter(mutaction = m)
-    case m: UpdateNodes        => UpdateNodesInterpreter(mutaction = m)
-    case m: DeleteNodes        => DeleteNodesInterpreter(mutaction = m)
-    case m: ResetData          => ResetDataInterpreter(mutaction = m)
-    case m: ImportNodes        => ??? //delayed
-    case m: ImportRelations    => ??? //delayed
-    case m: ImportScalarLists  => ??? //delayed
+    case m: TopLevelCreateNode  => CreateNodeInterpreter(mutaction = m)
+    case m: TopLevelUpdateNode  => UpdateNodeInterpreter(mutaction = m)
+    case m: TopLevelUpsertNode  => UpsertNodeInterpreter(mutaction = m)
+    case m: TopLevelDeleteNode  => DeleteNodeInterpreter(mutaction = m)
+    case m: TopLevelUpdateNodes => UpdateNodesInterpreter(mutaction = m)
+    case m: TopLevelDeleteNodes => DeleteNodesInterpreter(mutaction = m)
+    case m: ResetData           => ResetDataInterpreter(mutaction = m)
+    case m: ImportNodes         => ??? //delayed
+    case m: ImportRelations     => ??? //delayed
+    case m: ImportScalarLists   => ??? //delayed
   }
 
   //for embedded types none of these should actually fire since they should be embedded in their toplevel actions
@@ -151,10 +152,11 @@ class MongoDatabaseMutactionExecutor(client: MongoClient, schema: Option[String]
     case m: NestedUpsertNode  => NestedUpsertNodeInterpreter(mutaction = m)
     case m: NestedDeleteNode  => NestedDeleteNodeInterpreter(mutaction = m)
     case m: NestedConnect     => NestedConnectInterpreter(mutaction = m)
+    case m: NestedSet         => NestedSetInterpreter(mutaction = m)
     case m: NestedDisconnect  => NestedDisconnectInterpreter(mutaction = m)
     case m: NestedUpdateNodes => NestedUpdateNodesInterpreter(mutaction = m)
     case m: NestedDeleteNodes => NestedDeleteNodesInterpreter(mutaction = m)
   }
 
-  override def executeRaw(query: String): Future[JsValue] = Future.successful(Json.obj("notImplemented" -> true))
+  override def executeRaw(project: Project, query: String): Future[JsValue] = Future.successful(Json.obj("notImplemented" -> true))
 }

@@ -1,16 +1,16 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBaseV11 {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "a P1! relation" should "be possible" in {
-    val project = SchemaDsl.fromString() { embeddedP1req }
+    val project = SchemaDsl.fromStringV11() { embeddedP1req }
     database.setup(project)
 
     val res = server
@@ -35,7 +35,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a P1 relation" should "work" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
+    val project = SchemaDsl.fromStringV11() { embeddedP1opt }
     database.setup(project)
 
     val res = server
@@ -59,7 +59,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a PM relation" should "work" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     val res = server
@@ -85,10 +85,10 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a one to many relation" should "be creatable through a nested mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo{
-        | id: ID! @unique
+        | id: ID! @id
         | comments: [Comment]
         |}
         |
@@ -120,9 +120,22 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "A nested create on a one to one relation" should "correctly assign violations to offending model and not partially execute" ignore {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val user = schema.model("User").field_!("name", _.String).field("unique", _.String, isUnique = true)
-      schema.model("Post").field_!("title", _.String).field("uniquePost", _.String, isUnique = true).oneToOneRelation("user", "post", user)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type User {
+        |  id: ID! @id
+        |  name: String!
+        |  unique: String @unique
+        |  post: Post
+        |}
+        |
+        |type Post {
+        |  id: ID! @id
+        |  title: String!
+        |  uniquePost: String @unique
+        |  user: User
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -183,10 +196,10 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
   }
 
   "a deeply nested mutation" should "execute all levels of the mutation" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type List{
-        | id: ID! @unique
+        | id: ID! @id
         | name: String!
         | todos: [Todo]
         |}
@@ -241,10 +254,10 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
   "a required one2one relation" should "be creatable through a nested create mutation" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Comment{
-        | id: ID! @unique
+        | id: ID! @id
         | reqOnComment: String!
         | todo: Todo!
         |}
@@ -297,31 +310,29 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
   "Deeply nested create" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |  pets: [Dog]
         |  posts: [Post]
         |}
         |
         |type Post {
-        |  id: ID! @unique
-        |  author: User @mongoRelation(field: "author")
+        |  id: ID! @id
+        |  author: User @relation(link:INLINE)
         |  title: String!
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
         |}
         |
         |type Walker {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  name: String!
         |}
         |
         |type Dog @embedded {
         |  breed: String!
-        |  walker: Walker @mongoRelation(field: "dogtowalker")
+        |  walker: Walker
         |}"""
     }
 
@@ -355,26 +366,23 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
   "To one relations" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: Middle
-        |   createdAt: DateTime!
         |}
         |
         |type Middle @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |   bottom: Bottom
-        |   createdAt: DateTime!
         |}
         |
         |type Bottom @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
-        |   updatedAt: DateTime!
         |}"""
     }
 
@@ -410,22 +418,22 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
   "To many relations" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |   middle: [Middle]
         |}
         |
         |type Middle @embedded {
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |   bottom: [Bottom]
         |}
         |
         |type Bottom @embedded{
-        |   unique: Int! @unique
+        |   unique: Int!
         |   name: String!
         |}"""
     }
@@ -467,22 +475,25 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
     res.toString should be("""{"data":{"createTop":{"unique":1,"middle":[{"unique":11,"bottom":[{"unique":111}]},{"unique":12,"bottom":[{"unique":112}]}]}}}""")
   }
+
   "Relations from embedded to Non-Embedded" should "work 1" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Parent{
+        |    id: ID! @id
         |    name: String
         |    child: Child
         |}
         |
         |type Friend{
+        |    id: ID! @id
         |    name: String
         |}
         |
         |type Child @embedded {
         |    name: String
-        |    friend: Friend @mongoRelation(field: "friend")
+        |    friend: Friend
         |}"""
     }
 
@@ -516,26 +527,29 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
   "Relations from embedded to Non-Embedded" should "work 2" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Parent{
+        |    id: ID! @id
         |    name: String @unique
         |    children: [Child]
         |}
         |
         |type Friend{
+        |    id: ID! @id
         |    name: String
         |}
         |
         |type Child @embedded {
-        |    name: String @unique
-        |    friend: Friend @mongoRelation(field: "friend")
+        |    id: ID! @id 
+        |    name: String
+        |    friend: Friend
         |}"""
     }
 
     database.setup(project)
 
-    server.query(
+    val create = server.query(
       s"""mutation {
          |   createParent(data: {
          |   name: "Dad",
@@ -545,6 +559,7 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
          |}){
          |  name,
          |  children{
+         |    id
          |    name
          |    friend{
          |      name
@@ -554,13 +569,15 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
       project
     )
 
+    val childID = create.pathAsString("data.createParent.children.[0].id")
+
     val res = server.query(
       s"""mutation {
          |   updateParent(
          |   where:{name: "Dad"}
          |   data: {
          |   children: {update:{
-         |      where: {name: "Daughter"}
+         |      where: {id: "$childID"}
          |      data: {
          |          friend:{create:{name: "Buddy"}}
          |      }
@@ -582,20 +599,22 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
   "Relations from embedded to Non-Embedded" should "work 3" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Parent{
+        |    id: ID! @id
         |    name: String
         |    children: [Child]
         |}
         |
         |type Friend{
+        |    id: ID! @id
         |    name: String
         |}
         |
         |type Child @embedded {
         |    name: String
-        |    friend: Friend @mongoRelation(field: "friend")
+        |    friend: Friend
         |}"""
     }
 
@@ -629,20 +648,22 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
   "Relations from embedded to Non-Embedded" should "work 4" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Parent{
+        |    id: ID! @id
         |    name: String
         |    children: [Child]
         |}
         |
         |type Friend{
+        |    id: ID! @id
         |    name: String
         |}
         |
         |type Child @embedded {
         |    name: String
-        |    friends: [Friend] @mongoRelation(field: "friends")
+        |    friends: [Friend]
         |}"""
     }
 
@@ -670,6 +691,55 @@ class EmbeddedNestedCreateMutationInsideCreateSpec extends FlatSpec with Matcher
 
     res.toString should be(
       """{"data":{"createParent":{"name":"Dad","children":[{"name":"Daughter","friends":[{"name":"Buddy"},{"name":"Buddy2"}]},{"name":"Daughter2","friends":[{"name":"Buddy3"},{"name":"Buddy4"}]}]}}}""")
+  }
+
+  "Triple nested create" should "work " in {
+
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type MealPlan {
+        |   id: ID! @id
+        |   menuItem: MenuItem @relation(name: "TEST", link: INLINE)
+        |   subtotal: Int
+        |}
+        |
+        |type MenuItem {
+        |   id: ID! @id
+        |   name: String
+        |   image: [menuImage]
+        |}
+        |
+        |type menuImage @embedded {
+        |   name: String
+        |}"""
+    }
+
+    database.setup(project)
+
+    val res = server.query(
+      s"""mutation {
+  createMealPlan(
+    data: {
+      subtotal: 123
+      menuItem: {
+        create: {
+          name: "asd"
+          image: { create: [{ name: "adsw"}] }
+        }
+      }
+    }
+  ) {
+    menuItem{
+      image{
+        name
+      }
+    }
+  }
+}""",
+      project
+    )
+
+    res.toString should be("""{"data":{"createMealPlan":{"menuItem":{"image":[{"name":"adsw"}]}}}}""")
   }
 
 }

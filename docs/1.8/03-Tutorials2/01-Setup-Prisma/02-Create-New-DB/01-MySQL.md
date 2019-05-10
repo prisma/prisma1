@@ -109,12 +109,12 @@ services:
     volumes:
       - mysql:/var/lib/mysql
 volumes:
-  mysql:
+  mysql: ~
 ```
 
 </Instruction>
 
-To learn more about the structure of this Docker compose file, check out the [reference documentation](http://localhost:3000/docs/reference/prisma-servers-and-dbs/prisma-servers/docker-aira9zama5#configuration-with-docker-compose).
+To learn more about the structure of this Docker compose file, check out the [reference documentation](!alias-aira9zama5).
 
 <Instruction>
 

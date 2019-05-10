@@ -9,11 +9,13 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema =
       """|type A {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}
          |
          |type B {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -23,13 +25,15 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema2 =
       """|type A {
-         | name: String! @unique
-         | b: B
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: B @relation(link: INLINE)
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: [A]
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: [A]
          |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -39,24 +43,28 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema =
       """|type A {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}
          |
          |type B {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}"""
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """|type A {
-         | name: String! @unique
-         | b: B!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: B! @relation(link: INLINE)
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A!
          |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -66,11 +74,13 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema =
       """|type A {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}
          |
          |type B {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -80,13 +90,15 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema2 =
       """|type A {
-         | name: String! @unique
-         | b: B!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: B! @relation(link: INLINE)
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A
          |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
@@ -97,7 +109,8 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema =
       """|type A {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -106,13 +119,15 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema2 =
       """|type A {
-         | name: String! @unique
-         | b: B!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: B! @relation(link: INLINE)
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A
          |}"""
 
     deployServer.deploySchemaThatMustError(project, schema2).toString should be(
@@ -123,7 +138,8 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema =
       """|type C {
-         | name: String! @unique
+         |  id: ID! @id
+         |  name: String! @unique
          |}
          |"""
 
@@ -131,13 +147,15 @@ class CreateRelationDeploySpec extends FlatSpec with Matchers with IntegrationBa
 
     val schema2 =
       """|type A {
-         | name: String! @unique
-         | b: B!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: B! @relation(link: INLINE)
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A
          |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)

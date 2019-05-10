@@ -1,18 +1,21 @@
 package com.prisma.integration
 
+import com.prisma.IgnoreSQLite
 import org.scalatest.{FlatSpec, Matchers}
 
 class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Changing a field from scalar to relation" should "work when there is no data yet" in {
+  "Changing a field from scalar to relation" should "work when there is no data yet" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
         |  b: String
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}"""
 
@@ -20,26 +23,30 @@ class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B
+        |  b: B @relation(link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}"""
 
     deployServer.deploySchema(project, schema1)
   }
 
-  "Changing a field from scalar to relation" should "work when there is already data and should delete the old column" in {
+  "Changing a field from scalar to relation" should "work when there is already data and should delete the old column" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
         |  b: String
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}"""
 
@@ -52,11 +59,13 @@ class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B
+        |  b: B @relation(link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}"""
 
@@ -67,11 +76,13 @@ class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B
+        |  b: B @relation(link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}"""
 
@@ -79,11 +90,13 @@ class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
         |  b: String
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}"""
 
@@ -94,11 +107,13 @@ class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B
+        |  b: B @relation(link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}"""
 
@@ -111,11 +126,13 @@ class ChangingFromRelationToScalarOrBackSpec extends FlatSpec with Matchers with
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
         |  b: String
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}"""
 

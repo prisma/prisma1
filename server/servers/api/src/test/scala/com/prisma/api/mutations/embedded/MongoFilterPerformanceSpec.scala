@@ -8,13 +8,14 @@ import org.scalatest.{FlatSpec, Matchers}
 import scala.collection.mutable.ListBuffer
 
 class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase {
+
   override def doNotRun: Boolean = true
 
   "Testing a query that uses the aggregation framework" should "work" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  a: String
         |  b: String
         |  c: String
@@ -22,13 +23,13 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  e: Float
         |  f: Boolean
         |  int: Int! @unique
-        |  posts: [Post] @mongoRelation(field: "posts")
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  posts: [Post] @relation(link: INLINE)
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Post {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  author: User
         |  int: Int! @unique
         |  a: String
@@ -37,13 +38,13 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  comments: [Comment] @mongoRelation(field: "comments")
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  comments: [Comment] @relation(link: INLINE)
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Comment {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  int: Int! @unique
         |  a: String
         |  b: String
@@ -51,9 +52,9 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  post: Post @mongoRelation(field: "comments")
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  post: Post
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}"""
     }
     database.setup(project)
@@ -69,7 +70,7 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     val findDeep   = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
 
     val mutStart = System.currentTimeMillis()
-    for (x <- 1 to 100) {
+    for (x <- 1 to 1000) {
       createData(project, x)
     }
     val mutEnd = System.currentTimeMillis()
@@ -101,10 +102,10 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
   }
 
   "Testing with embedded types" should "work" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type User {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  a: String
         |  b: String
         |  c: String
@@ -112,9 +113,9 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  e: Float
         |  f: Boolean
         |  int: Int! @unique
-        |  posts: [Post]
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  posts: [Post] @relation(link: INLINE)
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Post @embedded {
@@ -125,9 +126,9 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  comments: [Comment]
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  comments: [Comment] @relation(link: INLINE)
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}
         |
         |type Comment @embedded {
@@ -138,8 +139,8 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
         |  d: Int
         |  e: Float
         |  f: Boolean
-        |  createdAt: DateTime!
-        |  updatedAt: DateTime!
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
         |}"""
     }
     database.setup(project)
@@ -149,16 +150,26 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     var findFilter      = new ListBuffer[Long]
     var findFilterDeep  = new ListBuffer[Long]
 
-    val find     = """query{users(where:{int_gt: 5, int_lt: 19}){int}}"""
-    val findDeep = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
+    val filter     = """query{users(where:{int_gt: 5, int_lt: 19, posts_some:{int_gt: 10000, comments_some: {int_gt:10000}}}){int}}"""
+    val filterDeep = """query{users(where:{int_gt: 5,int_lt: 19, posts_some:{int_gt: 10000,comments_some: {int_gt:10000}}}){int, posts{int,comments{int}}}}"""
+    val find       = """query{users(where:{int_gt: 5, int_lt: 19}){int}}"""
+    val findDeep   = """query{users(where:{int_gt: 5, int_lt: 19}){int, posts{int,comments{int}}}}"""
 
     val mutStart = System.currentTimeMillis()
-    for (x <- 1 to 100) {
+    for (x <- 1 to 1000) {
       createData(project, x)
     }
     val mutEnd = System.currentTimeMillis()
 
     val numQueries = 40
+
+    for (x <- 1 to numQueries) {
+      timesFilter += query(project, filter)
+    }
+
+    for (x <- 1 to numQueries) {
+      timesFilterDeep += query(project, filterDeep)
+    }
 
     for (x <- 1 to numQueries) {
       findFilter += query(project, find)
@@ -167,9 +178,12 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
     for (x <- 1 to numQueries) {
       findFilterDeep += query(project, findDeep)
     }
+
     Thread.sleep(1000)
 
     println("Data Creation: " + (mutEnd - mutStart))
+    println("Filterquery Average: " + (timesFilter.sum / numQueries))
+    println("Filterquery Deep Average: " + (timesFilterDeep.sum / numQueries))
     println("Findquery Average: " + (findFilter.sum / numQueries))
     println("Findquery Deep Average: " + (findFilterDeep.sum / numQueries))
   }
@@ -219,8 +233,8 @@ class MongoFilterPerformanceSpec extends FlatSpec with Matchers with ApiSpecBase
                    |                        int: ${1000 + int}1
                    |                        a: "Just a Dummy"
                    |                        b: "Just a Dummy"
-                   |                        c: "Just a Dummy"
-                   |                        d: 500
+                   |                        c: "Just a Dummy"     
+                   |                        d: 500     
                    |                        e: 100.343
                    |                        f: true
                    |                        comments:{create:[

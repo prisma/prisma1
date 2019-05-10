@@ -1,0 +1,2438 @@
+type AggregateLotsOfRequiredScalars {
+  count: Int!
+}
+
+type AggregateLotsOfRequiredScalarsWithID {
+  count: Int!
+}
+
+type AggregateLotsOfScalarLists {
+  count: Int!
+}
+
+type AggregateLotsOfScalarListsWithID {
+  count: Int!
+}
+
+type AggregateLotsOfScalars {
+  count: Int!
+}
+
+type AggregateLotsOfScalarsWithID {
+  count: Int!
+}
+
+type BatchPayload {
+  """
+  The number of nodes that have been affected by the Batch operation.
+  """
+  count: Long!
+}
+
+scalar DateTime
+
+"""
+Raw JSON value
+"""
+scalar Json
+
+"""
+The `Long` scalar type represents non-fractional signed whole numeric values.
+Long can represent values between -(2^63) and 2^63 - 1.
+"""
+scalar Long
+
+type LotsOfRequiredScalars implements Node {
+  id: ID!
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type LotsOfRequiredScalarsConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [LotsOfRequiredScalarsEdge]!
+  aggregate: AggregateLotsOfRequiredScalars!
+}
+
+input LotsOfRequiredScalarsCreateInput {
+  id: ID
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+}
+
+"""
+An edge in a connection.
+"""
+type LotsOfRequiredScalarsEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: LotsOfRequiredScalars!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum LotsOfRequiredScalarsOrderByInput {
+  id_ASC
+  id_DESC
+  int_ASC
+  int_DESC
+  string_ASC
+  string_DESC
+  float_ASC
+  float_DESC
+  dateTime_ASC
+  dateTime_DESC
+  json_ASC
+  json_DESC
+  boolean_ASC
+  boolean_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type LotsOfRequiredScalarsPreviousValues {
+  id: ID!
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LotsOfRequiredScalarsSubscriptionPayload {
+  mutation: MutationType!
+  node: LotsOfRequiredScalars
+  updatedFields: [String!]
+  previousValues: LotsOfRequiredScalarsPreviousValues
+}
+
+input LotsOfRequiredScalarsSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfRequiredScalarsSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfRequiredScalarsSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfRequiredScalarsSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: LotsOfRequiredScalarsWhereInput
+}
+
+input LotsOfRequiredScalarsUpdateInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+input LotsOfRequiredScalarsUpdateManyMutationInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+input LotsOfRequiredScalarsWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfRequiredScalarsWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfRequiredScalarsWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfRequiredScalarsWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  int: Int
+  """
+  All values that are not equal to given value.
+  """
+  int_not: Int
+  """
+  All values that are contained in given list.
+  """
+  int_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  int_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  int_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  int_lte: Int
+  """
+  All values greater than the given value.
+  """
+  int_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  int_gte: Int
+  string: String
+  """
+  All values that are not equal to given value.
+  """
+  string_not: String
+  """
+  All values that are contained in given list.
+  """
+  string_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  string_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  string_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  string_lte: String
+  """
+  All values greater than the given value.
+  """
+  string_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  string_gte: String
+  """
+  All values containing the given string.
+  """
+  string_contains: String
+  """
+  All values not containing the given string.
+  """
+  string_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  string_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  string_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  string_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  string_not_ends_with: String
+  float: Float
+  """
+  All values that are not equal to given value.
+  """
+  float_not: Float
+  """
+  All values that are contained in given list.
+  """
+  float_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  float_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  float_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  float_lte: Float
+  """
+  All values greater than the given value.
+  """
+  float_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  float_gte: Float
+  dateTime: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  dateTime_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  dateTime_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  dateTime_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  dateTime_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  dateTime_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  dateTime_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  dateTime_gte: DateTime
+  boolean: Boolean
+  """
+  All values that are not equal to given value.
+  """
+  boolean_not: Boolean
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input LotsOfRequiredScalarsWhereUniqueInput {
+  id: ID
+}
+
+type LotsOfRequiredScalarsWithID implements Node {
+  id: ID!
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type LotsOfRequiredScalarsWithIDConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [LotsOfRequiredScalarsWithIDEdge]!
+  aggregate: AggregateLotsOfRequiredScalarsWithID!
+}
+
+input LotsOfRequiredScalarsWithIDCreateInput {
+  id: ID
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+}
+
+"""
+An edge in a connection.
+"""
+type LotsOfRequiredScalarsWithIDEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: LotsOfRequiredScalarsWithID!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum LotsOfRequiredScalarsWithIDOrderByInput {
+  id_ASC
+  id_DESC
+  int_ASC
+  int_DESC
+  string_ASC
+  string_DESC
+  float_ASC
+  float_DESC
+  dateTime_ASC
+  dateTime_DESC
+  json_ASC
+  json_DESC
+  boolean_ASC
+  boolean_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type LotsOfRequiredScalarsWithIDPreviousValues {
+  id: ID!
+  int: Int!
+  string: String!
+  float: Float!
+  dateTime: DateTime!
+  json: Json!
+  boolean: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LotsOfRequiredScalarsWithIDSubscriptionPayload {
+  mutation: MutationType!
+  node: LotsOfRequiredScalarsWithID
+  updatedFields: [String!]
+  previousValues: LotsOfRequiredScalarsWithIDPreviousValues
+}
+
+input LotsOfRequiredScalarsWithIDSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfRequiredScalarsWithIDSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: LotsOfRequiredScalarsWithIDWhereInput
+}
+
+input LotsOfRequiredScalarsWithIDUpdateInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+input LotsOfRequiredScalarsWithIDUpdateManyMutationInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+input LotsOfRequiredScalarsWithIDWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfRequiredScalarsWithIDWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfRequiredScalarsWithIDWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfRequiredScalarsWithIDWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  int: Int
+  """
+  All values that are not equal to given value.
+  """
+  int_not: Int
+  """
+  All values that are contained in given list.
+  """
+  int_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  int_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  int_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  int_lte: Int
+  """
+  All values greater than the given value.
+  """
+  int_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  int_gte: Int
+  string: String
+  """
+  All values that are not equal to given value.
+  """
+  string_not: String
+  """
+  All values that are contained in given list.
+  """
+  string_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  string_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  string_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  string_lte: String
+  """
+  All values greater than the given value.
+  """
+  string_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  string_gte: String
+  """
+  All values containing the given string.
+  """
+  string_contains: String
+  """
+  All values not containing the given string.
+  """
+  string_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  string_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  string_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  string_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  string_not_ends_with: String
+  float: Float
+  """
+  All values that are not equal to given value.
+  """
+  float_not: Float
+  """
+  All values that are contained in given list.
+  """
+  float_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  float_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  float_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  float_lte: Float
+  """
+  All values greater than the given value.
+  """
+  float_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  float_gte: Float
+  dateTime: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  dateTime_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  dateTime_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  dateTime_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  dateTime_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  dateTime_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  dateTime_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  dateTime_gte: DateTime
+  boolean: Boolean
+  """
+  All values that are not equal to given value.
+  """
+  boolean_not: Boolean
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input LotsOfRequiredScalarsWithIDWhereUniqueInput {
+  id: ID
+}
+
+type LotsOfScalarLists implements Node {
+  id: ID!
+  int: [Int!]!
+  string: [String!]!
+  float: [Float!]!
+  dateTime: [DateTime!]!
+  json: [Json!]!
+  boolean: [Boolean!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type LotsOfScalarListsConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [LotsOfScalarListsEdge]!
+  aggregate: AggregateLotsOfScalarLists!
+}
+
+input LotsOfScalarListsCreatebooleanInput {
+  set: [Boolean!]
+}
+
+input LotsOfScalarListsCreatedateTimeInput {
+  set: [DateTime!]
+}
+
+input LotsOfScalarListsCreatefloatInput {
+  set: [Float!]
+}
+
+input LotsOfScalarListsCreateInput {
+  id: ID
+  int: LotsOfScalarListsCreateintInput
+  string: LotsOfScalarListsCreatestringInput
+  float: LotsOfScalarListsCreatefloatInput
+  dateTime: LotsOfScalarListsCreatedateTimeInput
+  json: LotsOfScalarListsCreatejsonInput
+  boolean: LotsOfScalarListsCreatebooleanInput
+}
+
+input LotsOfScalarListsCreateintInput {
+  set: [Int!]
+}
+
+input LotsOfScalarListsCreatejsonInput {
+  set: [Json!]
+}
+
+input LotsOfScalarListsCreatestringInput {
+  set: [String!]
+}
+
+"""
+An edge in a connection.
+"""
+type LotsOfScalarListsEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: LotsOfScalarLists!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum LotsOfScalarListsOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type LotsOfScalarListsPreviousValues {
+  id: ID!
+  int: [Int!]!
+  string: [String!]!
+  float: [Float!]!
+  dateTime: [DateTime!]!
+  json: [Json!]!
+  boolean: [Boolean!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LotsOfScalarListsSubscriptionPayload {
+  mutation: MutationType!
+  node: LotsOfScalarLists
+  updatedFields: [String!]
+  previousValues: LotsOfScalarListsPreviousValues
+}
+
+input LotsOfScalarListsSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfScalarListsSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfScalarListsSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfScalarListsSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: LotsOfScalarListsWhereInput
+}
+
+input LotsOfScalarListsUpdatebooleanInput {
+  set: [Boolean!]
+}
+
+input LotsOfScalarListsUpdatedateTimeInput {
+  set: [DateTime!]
+}
+
+input LotsOfScalarListsUpdatefloatInput {
+  set: [Float!]
+}
+
+input LotsOfScalarListsUpdateInput {
+  int: LotsOfScalarListsUpdateintInput
+  string: LotsOfScalarListsUpdatestringInput
+  float: LotsOfScalarListsUpdatefloatInput
+  dateTime: LotsOfScalarListsUpdatedateTimeInput
+  json: LotsOfScalarListsUpdatejsonInput
+  boolean: LotsOfScalarListsUpdatebooleanInput
+}
+
+input LotsOfScalarListsUpdateintInput {
+  set: [Int!]
+}
+
+input LotsOfScalarListsUpdatejsonInput {
+  set: [Json!]
+}
+
+input LotsOfScalarListsUpdateManyMutationInput {
+  int: LotsOfScalarListsUpdateintInput
+  string: LotsOfScalarListsUpdatestringInput
+  float: LotsOfScalarListsUpdatefloatInput
+  dateTime: LotsOfScalarListsUpdatedateTimeInput
+  json: LotsOfScalarListsUpdatejsonInput
+  boolean: LotsOfScalarListsUpdatebooleanInput
+}
+
+input LotsOfScalarListsUpdatestringInput {
+  set: [String!]
+}
+
+input LotsOfScalarListsWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfScalarListsWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfScalarListsWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfScalarListsWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input LotsOfScalarListsWhereUniqueInput {
+  id: ID
+}
+
+type LotsOfScalarListsWithID implements Node {
+  id: ID!
+  int: [Int!]!
+  string: [String!]!
+  float: [Float!]!
+  dateTime: [DateTime!]!
+  json: [Json!]!
+  boolean: [Boolean!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type LotsOfScalarListsWithIDConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [LotsOfScalarListsWithIDEdge]!
+  aggregate: AggregateLotsOfScalarListsWithID!
+}
+
+input LotsOfScalarListsWithIDCreatebooleanInput {
+  set: [Boolean!]
+}
+
+input LotsOfScalarListsWithIDCreatedateTimeInput {
+  set: [DateTime!]
+}
+
+input LotsOfScalarListsWithIDCreatefloatInput {
+  set: [Float!]
+}
+
+input LotsOfScalarListsWithIDCreateInput {
+  id: ID
+  int: LotsOfScalarListsWithIDCreateintInput
+  string: LotsOfScalarListsWithIDCreatestringInput
+  float: LotsOfScalarListsWithIDCreatefloatInput
+  dateTime: LotsOfScalarListsWithIDCreatedateTimeInput
+  json: LotsOfScalarListsWithIDCreatejsonInput
+  boolean: LotsOfScalarListsWithIDCreatebooleanInput
+}
+
+input LotsOfScalarListsWithIDCreateintInput {
+  set: [Int!]
+}
+
+input LotsOfScalarListsWithIDCreatejsonInput {
+  set: [Json!]
+}
+
+input LotsOfScalarListsWithIDCreatestringInput {
+  set: [String!]
+}
+
+"""
+An edge in a connection.
+"""
+type LotsOfScalarListsWithIDEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: LotsOfScalarListsWithID!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum LotsOfScalarListsWithIDOrderByInput {
+  id_ASC
+  id_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type LotsOfScalarListsWithIDPreviousValues {
+  id: ID!
+  int: [Int!]!
+  string: [String!]!
+  float: [Float!]!
+  dateTime: [DateTime!]!
+  json: [Json!]!
+  boolean: [Boolean!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LotsOfScalarListsWithIDSubscriptionPayload {
+  mutation: MutationType!
+  node: LotsOfScalarListsWithID
+  updatedFields: [String!]
+  previousValues: LotsOfScalarListsWithIDPreviousValues
+}
+
+input LotsOfScalarListsWithIDSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfScalarListsWithIDSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: LotsOfScalarListsWithIDWhereInput
+}
+
+input LotsOfScalarListsWithIDUpdatebooleanInput {
+  set: [Boolean!]
+}
+
+input LotsOfScalarListsWithIDUpdatedateTimeInput {
+  set: [DateTime!]
+}
+
+input LotsOfScalarListsWithIDUpdatefloatInput {
+  set: [Float!]
+}
+
+input LotsOfScalarListsWithIDUpdateInput {
+  int: LotsOfScalarListsWithIDUpdateintInput
+  string: LotsOfScalarListsWithIDUpdatestringInput
+  float: LotsOfScalarListsWithIDUpdatefloatInput
+  dateTime: LotsOfScalarListsWithIDUpdatedateTimeInput
+  json: LotsOfScalarListsWithIDUpdatejsonInput
+  boolean: LotsOfScalarListsWithIDUpdatebooleanInput
+}
+
+input LotsOfScalarListsWithIDUpdateintInput {
+  set: [Int!]
+}
+
+input LotsOfScalarListsWithIDUpdatejsonInput {
+  set: [Json!]
+}
+
+input LotsOfScalarListsWithIDUpdateManyMutationInput {
+  int: LotsOfScalarListsWithIDUpdateintInput
+  string: LotsOfScalarListsWithIDUpdatestringInput
+  float: LotsOfScalarListsWithIDUpdatefloatInput
+  dateTime: LotsOfScalarListsWithIDUpdatedateTimeInput
+  json: LotsOfScalarListsWithIDUpdatejsonInput
+  boolean: LotsOfScalarListsWithIDUpdatebooleanInput
+}
+
+input LotsOfScalarListsWithIDUpdatestringInput {
+  set: [String!]
+}
+
+input LotsOfScalarListsWithIDWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfScalarListsWithIDWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfScalarListsWithIDWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfScalarListsWithIDWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input LotsOfScalarListsWithIDWhereUniqueInput {
+  id: ID
+}
+
+type LotsOfScalars implements Node {
+  id: ID!
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type LotsOfScalarsConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [LotsOfScalarsEdge]!
+  aggregate: AggregateLotsOfScalars!
+}
+
+input LotsOfScalarsCreateInput {
+  id: ID
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+"""
+An edge in a connection.
+"""
+type LotsOfScalarsEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: LotsOfScalars!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum LotsOfScalarsOrderByInput {
+  id_ASC
+  id_DESC
+  int_ASC
+  int_DESC
+  string_ASC
+  string_DESC
+  float_ASC
+  float_DESC
+  dateTime_ASC
+  dateTime_DESC
+  json_ASC
+  json_DESC
+  boolean_ASC
+  boolean_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type LotsOfScalarsPreviousValues {
+  id: ID!
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LotsOfScalarsSubscriptionPayload {
+  mutation: MutationType!
+  node: LotsOfScalars
+  updatedFields: [String!]
+  previousValues: LotsOfScalarsPreviousValues
+}
+
+input LotsOfScalarsSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfScalarsSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfScalarsSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfScalarsSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: LotsOfScalarsWhereInput
+}
+
+input LotsOfScalarsUpdateInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+input LotsOfScalarsUpdateManyMutationInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+input LotsOfScalarsWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfScalarsWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfScalarsWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfScalarsWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  int: Int
+  """
+  All values that are not equal to given value.
+  """
+  int_not: Int
+  """
+  All values that are contained in given list.
+  """
+  int_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  int_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  int_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  int_lte: Int
+  """
+  All values greater than the given value.
+  """
+  int_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  int_gte: Int
+  string: String
+  """
+  All values that are not equal to given value.
+  """
+  string_not: String
+  """
+  All values that are contained in given list.
+  """
+  string_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  string_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  string_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  string_lte: String
+  """
+  All values greater than the given value.
+  """
+  string_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  string_gte: String
+  """
+  All values containing the given string.
+  """
+  string_contains: String
+  """
+  All values not containing the given string.
+  """
+  string_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  string_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  string_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  string_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  string_not_ends_with: String
+  float: Float
+  """
+  All values that are not equal to given value.
+  """
+  float_not: Float
+  """
+  All values that are contained in given list.
+  """
+  float_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  float_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  float_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  float_lte: Float
+  """
+  All values greater than the given value.
+  """
+  float_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  float_gte: Float
+  dateTime: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  dateTime_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  dateTime_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  dateTime_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  dateTime_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  dateTime_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  dateTime_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  dateTime_gte: DateTime
+  boolean: Boolean
+  """
+  All values that are not equal to given value.
+  """
+  boolean_not: Boolean
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input LotsOfScalarsWhereUniqueInput {
+  id: ID
+}
+
+type LotsOfScalarsWithID implements Node {
+  id: ID!
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""
+A connection to a list of items.
+"""
+type LotsOfScalarsWithIDConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+  """
+  A list of edges.
+  """
+  edges: [LotsOfScalarsWithIDEdge]!
+  aggregate: AggregateLotsOfScalarsWithID!
+}
+
+input LotsOfScalarsWithIDCreateInput {
+  id: ID
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+"""
+An edge in a connection.
+"""
+type LotsOfScalarsWithIDEdge {
+  """
+  The item at the end of the edge.
+  """
+  node: LotsOfScalarsWithID!
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+}
+
+enum LotsOfScalarsWithIDOrderByInput {
+  id_ASC
+  id_DESC
+  int_ASC
+  int_DESC
+  string_ASC
+  string_DESC
+  float_ASC
+  float_DESC
+  dateTime_ASC
+  dateTime_DESC
+  json_ASC
+  json_DESC
+  boolean_ASC
+  boolean_DESC
+  createdAt_ASC
+  createdAt_DESC
+  updatedAt_ASC
+  updatedAt_DESC
+}
+
+type LotsOfScalarsWithIDPreviousValues {
+  id: ID!
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type LotsOfScalarsWithIDSubscriptionPayload {
+  mutation: MutationType!
+  node: LotsOfScalarsWithID
+  updatedFields: [String!]
+  previousValues: LotsOfScalarsWithIDPreviousValues
+}
+
+input LotsOfScalarsWithIDSubscriptionWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfScalarsWithIDSubscriptionWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfScalarsWithIDSubscriptionWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfScalarsWithIDSubscriptionWhereInput!]
+  """
+  The subscription event gets dispatched when it's listed in mutation_in
+  """
+  mutation_in: [MutationType!]
+  """
+  The subscription event gets only dispatched when one of the updated fields names is included in this list
+  """
+  updatedFields_contains: String
+  """
+  The subscription event gets only dispatched when all of the field names included in this list have been updated
+  """
+  updatedFields_contains_every: [String!]
+  """
+  The subscription event gets only dispatched when some of the field names included in this list have been updated
+  """
+  updatedFields_contains_some: [String!]
+  node: LotsOfScalarsWithIDWhereInput
+}
+
+input LotsOfScalarsWithIDUpdateInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+input LotsOfScalarsWithIDUpdateManyMutationInput {
+  int: Int
+  string: String
+  float: Float
+  dateTime: DateTime
+  json: Json
+  boolean: Boolean
+}
+
+input LotsOfScalarsWithIDWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [LotsOfScalarsWithIDWhereInput!]
+  """
+  Logical OR on all given filters.
+  """
+  OR: [LotsOfScalarsWithIDWhereInput!]
+  """
+  Logical NOT on all given filters combined by AND.
+  """
+  NOT: [LotsOfScalarsWithIDWhereInput!]
+  id: ID
+  """
+  All values that are not equal to given value.
+  """
+  id_not: ID
+  """
+  All values that are contained in given list.
+  """
+  id_in: [ID!]
+  """
+  All values that are not contained in given list.
+  """
+  id_not_in: [ID!]
+  """
+  All values less than the given value.
+  """
+  id_lt: ID
+  """
+  All values less than or equal the given value.
+  """
+  id_lte: ID
+  """
+  All values greater than the given value.
+  """
+  id_gt: ID
+  """
+  All values greater than or equal the given value.
+  """
+  id_gte: ID
+  """
+  All values containing the given string.
+  """
+  id_contains: ID
+  """
+  All values not containing the given string.
+  """
+  id_not_contains: ID
+  """
+  All values starting with the given string.
+  """
+  id_starts_with: ID
+  """
+  All values not starting with the given string.
+  """
+  id_not_starts_with: ID
+  """
+  All values ending with the given string.
+  """
+  id_ends_with: ID
+  """
+  All values not ending with the given string.
+  """
+  id_not_ends_with: ID
+  int: Int
+  """
+  All values that are not equal to given value.
+  """
+  int_not: Int
+  """
+  All values that are contained in given list.
+  """
+  int_in: [Int!]
+  """
+  All values that are not contained in given list.
+  """
+  int_not_in: [Int!]
+  """
+  All values less than the given value.
+  """
+  int_lt: Int
+  """
+  All values less than or equal the given value.
+  """
+  int_lte: Int
+  """
+  All values greater than the given value.
+  """
+  int_gt: Int
+  """
+  All values greater than or equal the given value.
+  """
+  int_gte: Int
+  string: String
+  """
+  All values that are not equal to given value.
+  """
+  string_not: String
+  """
+  All values that are contained in given list.
+  """
+  string_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  string_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  string_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  string_lte: String
+  """
+  All values greater than the given value.
+  """
+  string_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  string_gte: String
+  """
+  All values containing the given string.
+  """
+  string_contains: String
+  """
+  All values not containing the given string.
+  """
+  string_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  string_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  string_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  string_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  string_not_ends_with: String
+  float: Float
+  """
+  All values that are not equal to given value.
+  """
+  float_not: Float
+  """
+  All values that are contained in given list.
+  """
+  float_in: [Float!]
+  """
+  All values that are not contained in given list.
+  """
+  float_not_in: [Float!]
+  """
+  All values less than the given value.
+  """
+  float_lt: Float
+  """
+  All values less than or equal the given value.
+  """
+  float_lte: Float
+  """
+  All values greater than the given value.
+  """
+  float_gt: Float
+  """
+  All values greater than or equal the given value.
+  """
+  float_gte: Float
+  dateTime: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  dateTime_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  dateTime_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  dateTime_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  dateTime_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  dateTime_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  dateTime_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  dateTime_gte: DateTime
+  boolean: Boolean
+  """
+  All values that are not equal to given value.
+  """
+  boolean_not: Boolean
+  createdAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  createdAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  createdAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  createdAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  createdAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  createdAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  createdAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  createdAt_gte: DateTime
+  updatedAt: DateTime
+  """
+  All values that are not equal to given value.
+  """
+  updatedAt_not: DateTime
+  """
+  All values that are contained in given list.
+  """
+  updatedAt_in: [DateTime!]
+  """
+  All values that are not contained in given list.
+  """
+  updatedAt_not_in: [DateTime!]
+  """
+  All values less than the given value.
+  """
+  updatedAt_lt: DateTime
+  """
+  All values less than or equal the given value.
+  """
+  updatedAt_lte: DateTime
+  """
+  All values greater than the given value.
+  """
+  updatedAt_gt: DateTime
+  """
+  All values greater than or equal the given value.
+  """
+  updatedAt_gte: DateTime
+}
+
+input LotsOfScalarsWithIDWhereUniqueInput {
+  id: ID
+}
+
+type Mutation {
+  createLotsOfScalars(data: LotsOfScalarsCreateInput!): LotsOfScalars!
+  createLotsOfRequiredScalars(data: LotsOfRequiredScalarsCreateInput!): LotsOfRequiredScalars!
+  createLotsOfScalarLists(data: LotsOfScalarListsCreateInput!): LotsOfScalarLists!
+  createLotsOfScalarsWithID(data: LotsOfScalarsWithIDCreateInput!): LotsOfScalarsWithID!
+  createLotsOfRequiredScalarsWithID(data: LotsOfRequiredScalarsWithIDCreateInput!): LotsOfRequiredScalarsWithID!
+  createLotsOfScalarListsWithID(data: LotsOfScalarListsWithIDCreateInput!): LotsOfScalarListsWithID!
+  updateLotsOfScalars(data: LotsOfScalarsUpdateInput!, where: LotsOfScalarsWhereUniqueInput!): LotsOfScalars
+  updateLotsOfRequiredScalars(data: LotsOfRequiredScalarsUpdateInput!, where: LotsOfRequiredScalarsWhereUniqueInput!): LotsOfRequiredScalars
+  updateLotsOfScalarLists(data: LotsOfScalarListsUpdateInput!, where: LotsOfScalarListsWhereUniqueInput!): LotsOfScalarLists
+  updateLotsOfScalarsWithID(data: LotsOfScalarsWithIDUpdateInput!, where: LotsOfScalarsWithIDWhereUniqueInput!): LotsOfScalarsWithID
+  updateLotsOfRequiredScalarsWithID(data: LotsOfRequiredScalarsWithIDUpdateInput!, where: LotsOfRequiredScalarsWithIDWhereUniqueInput!): LotsOfRequiredScalarsWithID
+  updateLotsOfScalarListsWithID(data: LotsOfScalarListsWithIDUpdateInput!, where: LotsOfScalarListsWithIDWhereUniqueInput!): LotsOfScalarListsWithID
+  deleteLotsOfScalars(where: LotsOfScalarsWhereUniqueInput!): LotsOfScalars
+  deleteLotsOfRequiredScalars(where: LotsOfRequiredScalarsWhereUniqueInput!): LotsOfRequiredScalars
+  deleteLotsOfScalarLists(where: LotsOfScalarListsWhereUniqueInput!): LotsOfScalarLists
+  deleteLotsOfScalarsWithID(where: LotsOfScalarsWithIDWhereUniqueInput!): LotsOfScalarsWithID
+  deleteLotsOfRequiredScalarsWithID(where: LotsOfRequiredScalarsWithIDWhereUniqueInput!): LotsOfRequiredScalarsWithID
+  deleteLotsOfScalarListsWithID(where: LotsOfScalarListsWithIDWhereUniqueInput!): LotsOfScalarListsWithID
+  upsertLotsOfScalars(where: LotsOfScalarsWhereUniqueInput!, create: LotsOfScalarsCreateInput!, update: LotsOfScalarsUpdateInput!): LotsOfScalars!
+  upsertLotsOfRequiredScalars(where: LotsOfRequiredScalarsWhereUniqueInput!, create: LotsOfRequiredScalarsCreateInput!, update: LotsOfRequiredScalarsUpdateInput!): LotsOfRequiredScalars!
+  upsertLotsOfScalarLists(where: LotsOfScalarListsWhereUniqueInput!, create: LotsOfScalarListsCreateInput!, update: LotsOfScalarListsUpdateInput!): LotsOfScalarLists!
+  upsertLotsOfScalarsWithID(where: LotsOfScalarsWithIDWhereUniqueInput!, create: LotsOfScalarsWithIDCreateInput!, update: LotsOfScalarsWithIDUpdateInput!): LotsOfScalarsWithID!
+  upsertLotsOfRequiredScalarsWithID(where: LotsOfRequiredScalarsWithIDWhereUniqueInput!, create: LotsOfRequiredScalarsWithIDCreateInput!, update: LotsOfRequiredScalarsWithIDUpdateInput!): LotsOfRequiredScalarsWithID!
+  upsertLotsOfScalarListsWithID(where: LotsOfScalarListsWithIDWhereUniqueInput!, create: LotsOfScalarListsWithIDCreateInput!, update: LotsOfScalarListsWithIDUpdateInput!): LotsOfScalarListsWithID!
+  updateManyLotsOfScalarses(data: LotsOfScalarsUpdateManyMutationInput!, where: LotsOfScalarsWhereInput): BatchPayload!
+  updateManyLotsOfRequiredScalarses(data: LotsOfRequiredScalarsUpdateManyMutationInput!, where: LotsOfRequiredScalarsWhereInput): BatchPayload!
+  updateManyLotsOfScalarListses(data: LotsOfScalarListsUpdateManyMutationInput!, where: LotsOfScalarListsWhereInput): BatchPayload!
+  updateManyLotsOfScalarsWithIDs(data: LotsOfScalarsWithIDUpdateManyMutationInput!, where: LotsOfScalarsWithIDWhereInput): BatchPayload!
+  updateManyLotsOfRequiredScalarsWithIDs(data: LotsOfRequiredScalarsWithIDUpdateManyMutationInput!, where: LotsOfRequiredScalarsWithIDWhereInput): BatchPayload!
+  updateManyLotsOfScalarListsWithIDs(data: LotsOfScalarListsWithIDUpdateManyMutationInput!, where: LotsOfScalarListsWithIDWhereInput): BatchPayload!
+  deleteManyLotsOfScalarses(where: LotsOfScalarsWhereInput): BatchPayload!
+  deleteManyLotsOfRequiredScalarses(where: LotsOfRequiredScalarsWhereInput): BatchPayload!
+  deleteManyLotsOfScalarListses(where: LotsOfScalarListsWhereInput): BatchPayload!
+  deleteManyLotsOfScalarsWithIDs(where: LotsOfScalarsWithIDWhereInput): BatchPayload!
+  deleteManyLotsOfRequiredScalarsWithIDs(where: LotsOfRequiredScalarsWithIDWhereInput): BatchPayload!
+  deleteManyLotsOfScalarListsWithIDs(where: LotsOfScalarListsWithIDWhereInput): BatchPayload!
+}
+
+enum MutationType {
+  CREATED
+  UPDATED
+  DELETED
+}
+
+"""
+An object with an ID
+"""
+interface Node {
+  """
+  The id of the object.
+  """
+  id: ID!
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+type Query {
+  lotsOfScalarses(where: LotsOfScalarsWhereInput, orderBy: LotsOfScalarsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfScalars]!
+  lotsOfRequiredScalarses(where: LotsOfRequiredScalarsWhereInput, orderBy: LotsOfRequiredScalarsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfRequiredScalars]!
+  lotsOfScalarListses(where: LotsOfScalarListsWhereInput, orderBy: LotsOfScalarListsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfScalarLists]!
+  lotsOfScalarsWithIDs(where: LotsOfScalarsWithIDWhereInput, orderBy: LotsOfScalarsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfScalarsWithID]!
+  lotsOfRequiredScalarsWithIDs(where: LotsOfRequiredScalarsWithIDWhereInput, orderBy: LotsOfRequiredScalarsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfRequiredScalarsWithID]!
+  lotsOfScalarListsWithIDs(where: LotsOfScalarListsWithIDWhereInput, orderBy: LotsOfScalarListsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): [LotsOfScalarListsWithID]!
+  lotsOfScalars(where: LotsOfScalarsWhereUniqueInput!): LotsOfScalars
+  lotsOfRequiredScalars(where: LotsOfRequiredScalarsWhereUniqueInput!): LotsOfRequiredScalars
+  lotsOfScalarLists(where: LotsOfScalarListsWhereUniqueInput!): LotsOfScalarLists
+  lotsOfScalarsWithID(where: LotsOfScalarsWithIDWhereUniqueInput!): LotsOfScalarsWithID
+  lotsOfRequiredScalarsWithID(where: LotsOfRequiredScalarsWithIDWhereUniqueInput!): LotsOfRequiredScalarsWithID
+  lotsOfScalarListsWithID(where: LotsOfScalarListsWithIDWhereUniqueInput!): LotsOfScalarListsWithID
+  lotsOfScalarsesConnection(where: LotsOfScalarsWhereInput, orderBy: LotsOfScalarsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfScalarsConnection!
+  lotsOfRequiredScalarsesConnection(where: LotsOfRequiredScalarsWhereInput, orderBy: LotsOfRequiredScalarsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfRequiredScalarsConnection!
+  lotsOfScalarListsesConnection(where: LotsOfScalarListsWhereInput, orderBy: LotsOfScalarListsOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfScalarListsConnection!
+  lotsOfScalarsWithIDsConnection(where: LotsOfScalarsWithIDWhereInput, orderBy: LotsOfScalarsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfScalarsWithIDConnection!
+  lotsOfRequiredScalarsWithIDsConnection(where: LotsOfRequiredScalarsWithIDWhereInput, orderBy: LotsOfRequiredScalarsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfRequiredScalarsWithIDConnection!
+  lotsOfScalarListsWithIDsConnection(where: LotsOfScalarListsWithIDWhereInput, orderBy: LotsOfScalarListsWithIDOrderByInput, skip: Int, after: String, before: String, first: Int, last: Int): LotsOfScalarListsWithIDConnection!
+  """
+  Fetches an object given its ID
+  """
+  node(
+    """
+    The ID of an object
+    """
+    id: ID!
+  ): Node
+}
+
+type Subscription {
+  lotsOfScalars(where: LotsOfScalarsSubscriptionWhereInput): LotsOfScalarsSubscriptionPayload
+  lotsOfRequiredScalars(where: LotsOfRequiredScalarsSubscriptionWhereInput): LotsOfRequiredScalarsSubscriptionPayload
+  lotsOfScalarLists(where: LotsOfScalarListsSubscriptionWhereInput): LotsOfScalarListsSubscriptionPayload
+  lotsOfScalarsWithID(where: LotsOfScalarsWithIDSubscriptionWhereInput): LotsOfScalarsWithIDSubscriptionPayload
+  lotsOfRequiredScalarsWithID(where: LotsOfRequiredScalarsWithIDSubscriptionWhereInput): LotsOfRequiredScalarsWithIDSubscriptionPayload
+  lotsOfScalarListsWithID(where: LotsOfScalarListsWithIDSubscriptionWhereInput): LotsOfScalarListsWithIDSubscriptionPayload
+}
+

@@ -11,7 +11,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val schema =
     """type ScalarModel{
-    |   id: ID! @unique
+    |   id: ID! @id
     |   optString: String
     |   optInt: Int
     |   optFloat: Float
@@ -27,7 +27,7 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     |   B
     |}""".stripMargin
 
-  val project = SchemaDsl.fromString() { schema }
+  val project = SchemaDsl.fromStringV11() { schema }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
@@ -166,7 +166,8 @@ class CreateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A Create Mutation" should "gracefully fail when a unique violation occurs" in {
-    server.query(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project)
-    server.queryThatMustFail(s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}""", project, errorCode = 3010)
+    val mutation = s"""mutation {createScalarModel(data: {optUnique: "test"}){optUnique}}"""
+    server.query(mutation, project)
+    server.queryThatMustFail(mutation, project, errorCode = 3010)
   }
 }

@@ -2,29 +2,31 @@ import * as BSON from 'bson'
 
 // Client doc: https://mongodb.github.io/node-mongodb-native/api-bson-generated/bson.html
 // Database doc: https://docs.mongodb.com/manual/reference/bson-types/
-export const scalars = [{
-  _id: 0,
-  double: new BSON.Double(0.5),
-  string: 'string',
-  object: { test: 'test' },
-  array: [1, 2, 3],
-  binary: new BSON.Binary(new Buffer(5)),
-  objectId: new BSON.ObjectID(),
-  boolean: true,
-  date: new Date(),
-  null: null,
-  regex: new BSON.BSONRegExp('\\w', 'i'),
-  javascript: new BSON.Code('alert("hello")'),
-  int32: new BSON.Int32(10),
-  timestamp: new BSON.Timestamp(10, 10),
-  int64: new BSON.Long(10, 10),
-  decimal128: new BSON.Decimal128(new Buffer(4))
-}]
+export const scalars = [
+  {
+    _id: 0,
+    double: new BSON.Double(0.5),
+    string: 'string',
+    object: { test: 'test' },
+    array: [1, 2, 3],
+    binary: new BSON.Binary(new Buffer(5)),
+    objectId: new BSON.ObjectID(),
+    boolean: true,
+    date: new Date(),
+    null: null,
+    regex: new BSON.BSONRegExp('\\w', 'i'),
+    javascript: new BSON.Code('alert("hello")'),
+    int32: new BSON.Int32(10),
+    timestamp: new BSON.Timestamp(10, 10),
+    int64: new BSON.Long(10, 10),
+    decimal128: new BSON.Decimal128(new Buffer(4)),
+  },
+]
 
 export const schemaString = `type scalars {
   # Type Int is currently not supported for id fields.
   _id: Int! @id
-  array: [Int!]!
+  array: [Int] @scalarList(strategy: RELATION)
   # Field type not supported: Binary
   # binary: <Unknown>
   boolean: Boolean

@@ -12,20 +12,20 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   val schema =
     """type List{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   uList: String @unique
-        |   todo: Todo
+        |   todo: Todo @relation(link: INLINE)
         |}
         |
         |type Todo{
-        |   id: ID! @unique
+        |   id: ID! @id
         |   uTodo: String @unique
         |   list: List
         |}"""
 
-  "Deleting a parent node" should "remove it from the relation and delete the relay id" in {
-    val project = SchemaDsl.fromString() { schema }
+  val project = SchemaDsl.fromStringV11() { schema }
 
+  "Deleting a parent node" should "remove it from the relation and delete the relay id" in {
     database.setup(project)
 
     server.query(s"""mutation {createList(data: {uList: "A", todo : { create: {uTodo: "B"}}}){id}}""", project)
@@ -41,12 +41,10 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(s"""mutation{deleteList(where: {uList:"A"}){id}}""", project)
 
     countItems(project, "lists") should be(0)
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(1) }
+
   }
 
   "Deleting a child node" should "remove it from the relation and delete the relay id" in {
-    val project = SchemaDsl.fromString() { schema }
-
     database.setup(project)
 
     server.query(s"""mutation {createList(data: {uList: "A", todo : { create: {uTodo: "B"}}}){id}}""", project)
@@ -62,7 +60,7 @@ class RelationDesignSpec extends FlatSpec with Matchers with ApiSpecBase {
     server.query(s"""mutation{deleteTodo(where: {uTodo:"B"}){id}}""", project)
 
     countItems(project, "todoes") should be(0)
-    ifConnectorIsActive { dataResolver(project).countByTable("_RelayId").await should be(1) }
+
   }
 
   def countItems(project: Project, name: String): Int = {

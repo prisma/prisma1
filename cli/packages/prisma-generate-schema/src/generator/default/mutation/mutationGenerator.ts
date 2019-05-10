@@ -39,20 +39,22 @@ export default class MutationGenerator extends RootGenerator {
     const fields = {} as GraphQLFieldConfigMap<null, null>
 
     // TODO: model.fields.length === 0 should be encapuslated in the respective "wouldBeEmpty" or another helper function
-    const wouldBeEmpty = this.generators.modelCreateInput.wouldBeEmpty(model, {})
+    const wouldBeEmpty = this.generators.modelCreateInput.wouldBeEmpty(
+      model,
+      {},
+    )
 
     fields[`create${model.name}`] = {
       type: new GraphQLNonNull(this.generators.model.generate(model, {})),
-      args:
-        wouldBeEmpty
-          ? {}
-          : {
-              data: {
-                type: new GraphQLNonNull(
-                  this.generators.modelCreateInput.generate(model, {}),
-                ),
-              },
+      args: wouldBeEmpty
+        ? {}
+        : {
+            data: {
+              type: new GraphQLNonNull(
+                this.generators.modelCreateInput.generate(model, {}),
+              ),
             },
+          },
     }
 
     return fields

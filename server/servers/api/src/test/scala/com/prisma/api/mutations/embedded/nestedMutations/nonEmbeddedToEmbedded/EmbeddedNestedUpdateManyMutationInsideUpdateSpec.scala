@@ -1,17 +1,17 @@
 package com.prisma.api.mutations.embedded.nestedMutations.nonEmbeddedToEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBase
+import com.prisma.api.mutations.nonEmbedded.nestedMutations.SchemaBaseV11
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBase {
+class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Matchers with ApiSpecBase with SchemaBaseV11 {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
   "A 1-n relation" should "error if trying to use nestedUpdateMany" in {
-    val project = SchemaDsl.fromString() { embeddedP1opt }
+    val project = SchemaDsl.fromStringV11() { embeddedP1opt }
     database.setup(project)
 
     val parent1Id = server
@@ -52,7 +52,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "work" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -85,7 +85,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "work with several updateManys" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -124,7 +124,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM relation " should "work with empty Filter" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -159,7 +159,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
   }
 
   "a PM to CM  relation " should "not change anything when there is no hit" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -200,7 +200,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
   //optional ordering
 
   "a PM to CM  relation " should "work when multiple filters hit" in {
-    val project = SchemaDsl.fromString() { embeddedPM }
+    val project = SchemaDsl.fromStringV11() { embeddedPM }
     database.setup(project)
 
     setupData(project)
@@ -232,7 +232,7 @@ class EmbeddedNestedUpdateManyMutationInsideUpdateSpec extends FlatSpec with Mat
       project,
       errorCode = 3043,
       errorContains =
-        """You have several updates affecting the same area of the document underlying Parent. MongoMessage: Update created a conflict at 'childrenOpt.0.test_column'"""
+        """You have several updates affecting the same area of the document underlying Parent. MongoMessage: Update created a conflict at 'childrenOpt.0.test'"""
     )
   }
 

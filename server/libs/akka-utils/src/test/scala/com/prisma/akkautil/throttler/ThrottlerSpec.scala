@@ -14,9 +14,10 @@ class ThrottlerSpec extends AcceptanceSpecification {
     The Throttler must
       make the call if throttle rate is not reached $rate_not_reached
       make the call later if the throttle rate is reached $rate_reached
-      make the call and result in a ThrottleCallTimeoutException if the call takes too long $timeout_hit
       make the call and result in a ThrottleBufferFullException if the call buffer is full $buffer_full
   """
+
+  // make the call and result in a ThrottleCallTimeoutException if the call takes too long $timeout_hit
 
   def rate_not_reached = new AkkaTestKitSpecs2Context {
     val throttler    = testThrottler()

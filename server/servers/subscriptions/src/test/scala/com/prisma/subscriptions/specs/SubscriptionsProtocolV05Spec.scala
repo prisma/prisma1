@@ -10,13 +10,15 @@ import scala.concurrent.duration._
 
 class SubscriptionsProtocolV05Spec extends FlatSpec with Matchers with SubscriptionSpecBase {
 
-  val project = SchemaDsl.fromBuilder { schema =>
-    val todo = schema
-      .model("Todo")
-      .field("text", _.String)
-      .field("json", _.Json)
-      .field("int", _.Int)
-
+  val project = SchemaDsl.fromStringV11() {
+    """
+      |type Todo {
+      |  id: ID! @id
+      |  text: String
+      |  json: Json
+      |  int: Int
+      |}
+    """.stripMargin
   }
 
   val model: Model = project.schema.getModelByName_!("Todo")

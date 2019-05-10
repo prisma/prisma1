@@ -1,33 +1,33 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
+  val project = SchemaDsl.fromStringV11() {
+    s"""type Note{
+      |   id: ID! @id
+      |   outerString: String!
+      |   outerDateTime: DateTime! @unique
+      |   todos: [Todo] $listInlineDirective
+      |}
+      |
+      |type Todo{
+      |   id: ID! @id
+      |   innerString: String!
+      |   innerDateTime: DateTime! @unique
+      |   notes: [Note]
+      |}"""
+  }
+
   "Using the same input in an update using where as used during creation of the item" should "work" in {
 
     val outerWhere = """"2018-12-05T12:34:23.000Z""""
     val innerWhere = """"2019-12-05T12:34:23.000Z""""
-
-    val project = SchemaDsl.fromString() {
-      """type Note{
-        |   id: ID! @unique
-        |   outerString: String!
-        |   outerDateTime: DateTime! @unique
-        |   todos: [Todo]
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   innerString: String!
-        |   innerDateTime: DateTime! @unique
-        |   notes: [Note]
-        |}"""
-    }
 
     database.setup(project)
 
@@ -86,23 +86,6 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
     val outerWhere = """"2018-01-03T11:27:38+00:00""""
     val innerWhere = """"2018-01-03T11:27:38+00:00""""
 
-    val project = SchemaDsl.fromString() {
-      """type Note{
-        |   id: ID! @unique
-        |   outerString: String!
-        |   outerDateTime: DateTime! @unique
-        |   todos: [Todo]
-        |}
-        |
-        |type Todo{
-        |   id: ID! @unique
-        |   innerString: String!
-        |   innerDateTime: DateTime! @unique
-        |   notes: [Note]
-        |}"""
-
-    }
-
     database.setup(project)
 
     val createResult = server.query(
@@ -138,19 +121,25 @@ class WhereAndDateTimeSpec extends FlatSpec with Matchers with ApiSpecBase {
          |      }
          |    }
          |  ){
-         |    id
+         |    id,
+         |    outerDateTime
+         |
          |  }
          |}
       """.stripMargin,
       project
     )
 
-    server.query(s"""query{note(where:{outerDateTime:$outerWhere}){outerString}}""",
-                 project,
-                 dataContains = s"""{"note":{"outerString":"Changed Outer String"}}""")
-    server.query(s"""query{todo(where:{innerDateTime:$innerWhere}){innerString}}""",
-                 project,
-                 dataContains = s"""{"todo":{"innerString":"Changed Inner String"}}""")
+    server.query(
+      s"""query{note(where:{outerDateTime:$outerWhere}){outerString, outerDateTime}}""",
+      project,
+      dataContains = s"""{"note":{"outerString":"Changed Outer String","outerDateTime":"2018-01-03T11:27:38.000Z"}}"""
+    )
+    server.query(
+      s"""query{todo(where:{innerDateTime:$innerWhere}){innerString, innerDateTime}}""",
+      project,
+      dataContains = s"""{"todo":{"innerString":"Changed Inner String","innerDateTime":"2018-01-03T11:27:38.000Z"}}"""
+    )
   }
 
 }

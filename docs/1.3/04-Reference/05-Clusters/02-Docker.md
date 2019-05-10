@@ -60,7 +60,7 @@ networks:
     driver: bridge
 
 volumes:
-  db-persistence:
+  db-persistence: ~
 ```
 
 > **Note**: In an upcoming release, [`prisma-database` will be renamed to just `prisma`](https://github.com/graphcool/prisma/issues/1791).

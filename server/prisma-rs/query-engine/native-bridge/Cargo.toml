@@ -1,0 +1,29 @@
+[package]
+name = "native-bridge"
+version = "0.1.0"
+authors = ["Dominic Petrick <dompetrick@gmail.com>"]
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+prost = "0.4"
+prost-derive = "0.4"
+prost-types = "0.4"
+bytes = "0.4"
+lazy_static = "1.2"
+uuid = "0.7"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+connector = { path = "../connectors/connector" }
+sqlite-connector = { path = "../connectors/sqlite-connector" }
+prisma-common = { path = "../../libs/prisma-common" }
+prisma-models = { path = "../../prisma-models" }
+prisma-query = { path = "../../libs/prisma-query" }
+chrono = { version = "0.4", features = ["serde"] }
+failure = "0.1"
+failure_derive = "0.1"
+
+[build-dependencies]
+prost-build = "0.4"

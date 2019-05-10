@@ -21,10 +21,10 @@ set -x
 #
 
 if [[ -z "$CIRCLE_BRANCH" ]]; then
-  if [[ $CIRCLE_TAG == "*beta" ]]; then
+  if [[ $CIRCLE_TAG == *"beta" ]]; then
     export CIRCLE_BRANCH=beta
   fi
-  if [[ $CIRCLE_TAG == "*alpha" ]]; then
+  if [[ $CIRCLE_TAG == *"alpha" ]]; then
     export CIRCLE_BRANCH=alpha
   fi
 fi
@@ -160,11 +160,12 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ] || [ $da
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
+  sleep 20.0
   cd ..
 fi
 
@@ -180,10 +181,10 @@ if [ $generateSchemaChanged ] || [ $clientChanged ] || [ $coreChanged ]; then
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -197,15 +198,15 @@ cd prisma-client-lib
 export clientVersionBefore=$(cat package.json | jq -r '.version')
 if [ $clientChanged ] || [ $CIRCLE_TAG ]; then
   echo "Going to publish client"
+  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
   yarn install
   yarn build
   npm version $newVersion
-  yarn add prisma-datamodel@$newVersion prisma-generate-schema@$newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
 
   yarn install
@@ -231,10 +232,10 @@ if [ $ymlChanged ] || [ $CIRCLE_TAG ]; then
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   ../../scripts/doubleInstall.sh
   cd ..
@@ -254,10 +255,10 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $engineChanged ]; then
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -279,10 +280,10 @@ if [ $ymlVersionBefore != $ymlVersion ] || [ $introspectionChanged ] || [ $CIRCL
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -296,30 +297,30 @@ export introspectionVersion=$(cat prisma-db-introspection/package.json | jq -r '
 if [ $ymlVersionBefore != $ymlVersion ] || [ $coreChanged ] || [ $introspectionChanged ]; then
   cd prisma-cli-core
   sleep 3.0
-  yarn add prisma-datamodel@$newVersion
+  yarn add prisma-datamodel@$newVersion || yarn add prisma-datamodel@$newVersion
   sleep 0.2
-  yarn add prisma-yml@$ymlVersion
+  yarn add prisma-yml@$newVersion
   sleep 0.2
-  yarn add prisma-db-introspection@$introspectionVersion
+  yarn add prisma-db-introspection@$newVersion
   sleep 0.5
-  yarn add prisma-generate-schema@$generateSchemaVersion
+  yarn add prisma-generate-schema@$newVersion
   sleep 0.2
-  yarn add prisma-client-lib@$clientVersion
+  yarn add prisma-client-lib@$newVersion
   sleep 0.3
   ../../scripts/doubleInstall.sh
 
   # new docker tag
-  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/util.ts
+  sed -i.bak "s/image: prismagraphql\/prisma:[0-9]\{1,\}\.[0-9]\{1,\}/image: prismagraphql\/prisma:$nextDockerTag/g" src/utils/util.ts
 
-  cat src/util.ts
+  cat src/utils/util.ts
 
   yarn build
   npm version $newVersion
 
-  if [[ $CIRCLE_TAG ]]; then
-    npm publish
+  if [[ $CIRCLE_TAG ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
+    npm publish || echo "Try catch"
   else
-    npm publish --tag $CIRCLE_BRANCH
+    npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
   fi
   cd ..
 fi
@@ -342,10 +343,10 @@ if [[ -n "$CIRCLE_TAG" ]] && [[ "$CIRCLE_BRANCH" == "master" ]]; then
 
   echo "new version: $newVersion"
   npm version $newVersion
-  npm publish
+  npm publish || echo "Try catch"
 else
   npm version $newVersion
-  npm publish --tag $CIRCLE_BRANCH
+  npm publish --tag $CIRCLE_BRANCH || echo "Try catch"
 fi
 
 ############################################
@@ -371,7 +372,7 @@ if [ $CIRCLE_BRANCH == "alpha" ] || [ $CIRCLE_BRANCH == "beta" ]; then
     for example in */; do
       cd $example
 
-      yarn add prisma-client-lib@$CIRCLE_BRANCH 
+      yarn add prisma-client-lib@$CIRCLE_BRANCH -s
 
       cd ..
     done 

@@ -126,6 +126,28 @@ class RelationDirectiveSpec extends WordSpecLike with Matchers with DataModelVal
     error.field should be(Some("model"))
   }
 
+  "the link mode INLINE must error on list relation fields if the connector does not support it" in {
+    val dataModelString =
+      """
+        |type Model {
+        |  id: ID! @id
+        |  models: [Model] @relation(link: INLINE)
+        |}
+      """.stripMargin
+
+    val errors = validateThatMustError(dataModelString, Set(RelationLinkTableCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("Model")
+    error.field should be(Some("models"))
+    error.description should be(
+      "This connector does not support the `INLINE` strategy for list relation fields. You could fix this by using the strategy `TABLE` instead.")
+
+    val dataModel = validate(dataModelString, Set(RelationLinkListCapability))
+    val field     = dataModel.modelType_!("Model").relationField_!("models")
+    field.strategy should be(Some(RelationStrategy.Inline))
+  }
+
   "must be optional" in {
     val dataModelString =
       """

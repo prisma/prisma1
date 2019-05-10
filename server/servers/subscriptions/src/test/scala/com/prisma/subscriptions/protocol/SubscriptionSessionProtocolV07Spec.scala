@@ -3,7 +3,6 @@ package com.prisma.subscriptions.protocol
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.testkit.{TestKit, TestProbe}
-import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.TestProject
 import com.prisma.subscriptions.TestSubscriptionDependencies
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.{CreateSubscription, EndSubscription}
@@ -43,26 +42,13 @@ class SubscriptionSessionProtocolV07Spec extends TestKit(ActorSystem("subscripti
       parent.expectMsg(GqlConnectionAck)
     }
 
-    "succeed when the payload contains a String in the Authorization field" in withProjectFetcherStub(projectId) {
+    "succeed when the payload contains a String in the Authorization field and the project has no secrets" in withProjectFetcherStub(projectId) {
       val parent              = TestProbe()
       val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(ignoreRef)))
       val payloadWithAuth     = Json.obj("Authorization" -> "abc")
 
       subscriptionSession ! GqlConnectionInit(Some(payloadWithAuth))
       parent.expectMsg(GqlConnectionAck)
-    }
-
-    "fail when the payload contains a NON String value in the Authorization field" in withProjectFetcherStub(projectId) {
-      val parent              = TestProbe()
-      val subscriptionSession = parent.childActorOf(Props(subscriptionSessionActor(ignoreRef)))
-
-      val payload1 = Json.obj("Authorization" -> 123)
-      subscriptionSession ! GqlConnectionInit(Some(payload1))
-      parent.expectMsgType[GqlConnectionError]
-
-      val payload2 = Json.obj("Authorization" -> Json.obj())
-      subscriptionSession ! GqlConnectionInit(Some(payload2))
-      parent.expectMsgType[GqlConnectionError]
     }
   }
 
@@ -167,7 +153,7 @@ class SubscriptionSessionProtocolV07Spec extends TestKit(ActorSystem("subscripti
   def subscriptionSessionActor(subscriptionsManager: ActorRef) = new SubscriptionSessionActor("sessionId", "projectId", subscriptionsManager)
 
   def withProjectFetcherStub[T](projectId: String)(fn: => T) = {
-    val project = TestProject().copy(id = projectId)
+    val project = TestProject.emptyV11.copy(id = projectId)
     dependencies.projectFetcher.put(projectId, project)
     fn
   }

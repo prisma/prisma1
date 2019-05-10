@@ -12,7 +12,7 @@ sealed trait ApiMutaction {
 // DATABASE MUTACTIONS
 sealed trait DatabaseMutaction extends ApiMutaction {
   def project: Project
-  def allNestedMutactions: Vector[DatabaseMutaction] = Vector.empty
+  def allNestedMutactions: Vector[NestedDatabaseMutaction] = Vector.empty
 }
 
 sealed trait TopLevelDatabaseMutaction extends DatabaseMutaction
@@ -27,12 +27,13 @@ sealed trait FurtherNestedMutaction extends DatabaseMutaction {
   def nestedUpserts: Vector[NestedUpsertNode]
   def nestedDeletes: Vector[NestedDeleteNode]
   def nestedConnects: Vector[NestedConnect]
+  def nestedSets: Vector[NestedSet]
   def nestedDisconnects: Vector[NestedDisconnect]
   def nestedUpdateManys: Vector[NestedUpdateNodes]
   def nestedDeleteManys: Vector[NestedDeleteNodes]
 
   override def allNestedMutactions: Vector[NestedDatabaseMutaction] = {
-    nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedDisconnects ++ nestedUpdateManys ++ nestedDeleteManys
+    nestedCreates ++ nestedUpdates ++ nestedUpserts ++ nestedDeletes ++ nestedConnects ++ nestedSets ++ nestedDisconnects ++ nestedUpdateManys ++ nestedDeleteManys
   }
 }
 
@@ -50,6 +51,7 @@ sealed trait CreateNode extends FurtherNestedMutaction {
   override def nestedDisconnects = Vector.empty
   override def nestedUpdateManys = Vector.empty
   override def nestedDeleteManys = Vector.empty
+  override def nestedSets        = Vector.empty
 }
 case class TopLevelCreateNode(
     project: Project,
@@ -98,6 +100,7 @@ case class TopLevelUpdateNode(
     nestedUpserts: Vector[NestedUpsertNode],
     nestedDeletes: Vector[NestedDeleteNode],
     nestedConnects: Vector[NestedConnect],
+    nestedSets: Vector[NestedSet],
     nestedDisconnects: Vector[NestedDisconnect],
     nestedUpdateManys: Vector[NestedUpdateNodes],
     nestedDeleteManys: Vector[NestedDeleteNodes]
@@ -117,6 +120,7 @@ case class NestedUpdateNode(
     nestedUpserts: Vector[NestedUpsertNode],
     nestedDeletes: Vector[NestedDeleteNode],
     nestedConnects: Vector[NestedConnect],
+    nestedSets: Vector[NestedSet],
     nestedDisconnects: Vector[NestedDisconnect],
     nestedUpdateManys: Vector[NestedUpdateNodes],
     nestedDeleteManys: Vector[NestedDeleteNodes]
@@ -137,12 +141,15 @@ case class NestedDeleteNode(project: Project, relationField: RelationField, wher
 }
 
 // UPSERT
-sealed trait UpsertNode extends DatabaseMutaction
+sealed trait UpsertNode extends DatabaseMutaction {
+  def create: CreateNode
+  def update: UpdateNode
+}
 
 case class TopLevelUpsertNode(
     project: Project,
     where: NodeSelector,
-    create: CreateNode,
+    create: TopLevelCreateNode,
     update: TopLevelUpdateNode
 ) extends UpsertNode
     with TopLevelDatabaseMutaction
@@ -157,9 +164,9 @@ case class NestedUpsertNode(
     with NestedDatabaseMutaction
 
 // TOP LEVEL - MANY
-case class ResetData(project: Project)                                              extends TopLevelDatabaseMutaction with FinalMutaction
-case class DeleteNodes(project: Project, model: Model, whereFilter: Option[Filter]) extends TopLevelDatabaseMutaction with FinalMutaction
-case class UpdateNodes(
+case class ResetData(project: Project)                                                      extends TopLevelDatabaseMutaction with FinalMutaction
+case class TopLevelDeleteNodes(project: Project, model: Model, whereFilter: Option[Filter]) extends TopLevelDatabaseMutaction with FinalMutaction
+case class TopLevelUpdateNodes(
     project: Project,
     model: Model,
     whereFilter: Option[Filter],
@@ -190,6 +197,9 @@ case class NestedUpdateNodes(
 case class NestedConnect(project: Project, relationField: RelationField, where: NodeSelector, topIsCreate: Boolean)
     extends NestedDatabaseMutaction
     with FinalMutaction
+
+case class NestedSet(project: Project, relationField: RelationField, wheres: Vector[NodeSelector]) extends NestedDatabaseMutaction with FinalMutaction
+
 case class NestedDisconnect(project: Project, relationField: RelationField, where: Option[NodeSelector]) extends NestedDatabaseMutaction with FinalMutaction
 
 // IMPORT

@@ -14,7 +14,7 @@ import {
   GraphQLEnumValueConfig,
   GraphQLEnumValueConfigMap,
 } from 'graphql/type'
-import { IGQLType, IGQLField } from 'prisma-datamodel'
+import { IGQLType, IGQLField, IdStrategy } from 'prisma-datamodel'
 import { GraphQLList, GraphQLNonNull } from 'graphql'
 
 // tslint:disable:max-classes-per-file
@@ -97,7 +97,6 @@ export abstract class TypeFromModelGenerator<
     | GraphQLEnumValueConfigMap
     | GraphQLInputFieldConfigMap
 > extends TypeGenerator<IGQLType, Args, Type> {
-
   /**
    * Checks if the given list of fields has
    * a unique field.
@@ -116,7 +115,28 @@ export abstract class TypeFromModelGenerator<
    */
   public hasFieldsExcept(fields: IGQLField[], ...fieldNames: string[]) {
     return fields.filter(field => !fieldNames.includes(field.name)).length > 0
-  } 
+  }
+
+  /**
+   * Returns all fields needed for the create input in the given field list.
+   * @param fields
+   */
+  public getCreateInputFields(fields: IGQLField[]) {
+    return fields.filter(
+      field =>
+        !field.isReadOnly ||
+        field.idStrategy === IdStrategy.Auto ||
+        field.idStrategy === IdStrategy.None,
+    )
+  }
+
+  /**
+   * Checks if the given field list contains at least one field that is used in the created input
+   * @param fields
+   */
+  public hasCreateInputFields(fields: IGQLField[]) {
+    return this.getCreateInputFields(fields).length > 0
+  }
 
   /**
    * Returns all writeable fields in the given field list.
@@ -132,10 +152,10 @@ export abstract class TypeFromModelGenerator<
   public hasWriteableFields(fields: IGQLField[]) {
     return this.getWriteableFields(fields).length > 0
   }
-  
+
   /**
    * Checks if the given list of fields contains at least one scalar field.
-   * @param fields 
+   * @param fields
    */
   public hasScalarFields(fields: IGQLField[]) {
     return this.getScalarFields(fields).length > 0
@@ -143,18 +163,22 @@ export abstract class TypeFromModelGenerator<
 
   /**
    * Returns all scalar fields from the given field list.
-   * @param fields 
+   * @param fields
    */
   public getScalarFields(fields: IGQLField[]) {
-    return fields.filter(field => this.generators.scalarTypeGenerator.isScalarField(field))
+    return fields.filter(field =>
+      this.generators.scalarTypeGenerator.isScalarField(field),
+    )
   }
 
   /**
    * Returns all scalar fields from the given field list.
-   * @param fields 
+   * @param fields
    */
   public getRelationFields(fields: IGQLField[]) {
-    return fields.filter(field => !this.generators.scalarTypeGenerator.isScalarField(field))
+    return fields.filter(
+      field => !this.generators.scalarTypeGenerator.isScalarField(field),
+    )
   }
 
   /**
@@ -185,7 +209,7 @@ export abstract class TypeFromModelGenerator<
         fields[field.name] = fieldSchema
       }
     }
-    
+
     return fields
   }
 
@@ -511,6 +535,7 @@ export interface IGenerators {
   modelWhereUniqueInput: ModelInputObjectTypeGenerator
   modelScalarWhereInput: ModelInputObjectTypeGenerator
   modelWhereInput: ModelInputObjectTypeGenerator
+  modelRestrictedWhereInput: ModelInputObjectTypeGenerator
   modelOrderByInput: ModelEnumTypeGeneratorBase
   modelConnection: ModelObjectTypeGenerator
   modelEdge: ModelObjectTypeGenerator
@@ -563,7 +588,6 @@ export class FieldConfigUtils {
       Object.keys(fieldMap).forEach((name: string) => {
         const field = fieldMap[name]
         if (name in newMap) {
-          console.dir(fieldMaps)
           throw new Error(
             'Field configuration to merge has duplicate field names.',
           )

@@ -74,10 +74,14 @@ class BulkImport(project: Project)(implicit apiDependencies: ApiDependencies) {
     val fieldName    = jsObject.value.filterKeys(k => k != "_typeName" && k != "id").keys.head
     val field        = model.getScalarFieldByName_!(fieldName)
     val jsonForField = jsObject.value(fieldName)
-    val gcValue      = GCValueJsonFormatter.readListGCValue(field)(jsonForField).get
+    val gcValue =
+      GCValueJsonFormatter
+        .readListGCValue(field)(jsonForField)
+        .getOrElse(sys.error(s"conversion to GcValue for ${field.name} and value $jsonForField failed"))
     ImportList(ImportIdentifier(typeName, id), field, gcValue)
   }
 
+  // TODO: do4gr should think about whether Import/Export works with custom names for id fields. I think it does but that should be validated.
   def parseIdGCValue(input: JsObject, model: Model): IdGCValue = model.idField_!.typeIdentifier match {
     case TypeIdentifier.UUID => UuidGCValue.parse_!(input.value("id").as[String])
     case TypeIdentifier.Cuid => StringIdGCValue(input.value("id").as[String])

@@ -1,40 +1,44 @@
 package com.prisma.api.connector.mongo.database
 
 import com.prisma.api.connector._
-import com.prisma.api.connector.mongo.extensions.DocumentToId
 import com.prisma.api.connector.mongo.extensions.FieldCombinators._
 import com.prisma.api.connector.mongo.extensions.GCBisonTransformer.GCToBson
 import com.prisma.api.connector.mongo.extensions.HackforTrue.hackForTrue
+import com.prisma.api.connector.mongo.extensions.MongoResultReader
 import com.prisma.api.helpers.LimitClauseHelper
-import com.prisma.gc_values.{IdGCValue, NullGCValue}
+import com.prisma.gc_values.{GCValue, IdGCValue, NullGCValue}
 import com.prisma.shared.models.{Model, RelationField, ScalarField}
 import org.mongodb.scala.MongoDatabase
 import org.mongodb.scala.bson.conversions
 import org.mongodb.scala.model.Filters._
 
 import scala.concurrent.Future
-trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuilder {
+trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuilder with MongoResultReader {
   import org.mongodb.scala.bson.collection.immutable.Document
   import org.mongodb.scala.bson.conversions.Bson
   import org.mongodb.scala.model.Aggregates._
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def aggregationQuery(database: MongoDatabase, model: Model, queryArguments: QueryArguments, selectedFields: SelectedFields): Future[Seq[Document]] = {
-    aggregationQueryForId(database, model, queryArguments).flatMap { ids =>
-      val inFilter = in("_id", ids.map(GCToBson(_)): _*)
-      database.getCollection(model.dbName).find(inFilter).toFuture
+  def aggregationQuery(database: MongoDatabase,
+                       model: Model,
+                       queryArguments: QueryArguments,
+                       selectedFields: SelectedFields,
+                       rowValueOpt: Option[GCValue]): Future[Seq[Document]] = {
+    aggregationQueryForId(database, model, queryArguments, rowValueOpt).flatMap { ids =>
+      val bsonIds = ids.distinct.map(GCToBson(_))
+      database.getCollection(model.dbName).find(in("_id", bsonIds: _*)).projection(projectSelected(selectedFields)).toFuture.map { seq =>
+        bsonIds.map(id => seq.find(doc => doc.get("_id").get == id).get) //sort according to ids ordering
+      }
     }
   }
 
-  def aggregationQueryForId(database: MongoDatabase, model: Model, queryArguments: QueryArguments): Future[Seq[IdGCValue]] = {
+  def aggregationQueryForId(database: MongoDatabase,
+                            model: Model,
+                            queryArguments: QueryArguments,
+                            rowValueOpt: Option[GCValue] = None): Future[Seq[IdGCValue]] = {
 
     //--------------------------- Assemble Pipeline -----------------------------------------------------
-    //-------------------------------- Match on Cursor Condition ----------------------------------------
-    val cursorMatch: Option[Bson] = CursorConditionBuilder.buildCursorCondition(queryArguments) match {
-      case None         => None
-      case Some(filter) => Some(filter)
-    }
 
     //-------------------------------- QueryArg Filter --------------------------------------------------
     val joinAndFilter = buildJoinStagesForFilter(queryArguments.filter)
@@ -51,9 +55,15 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
     val projectStage = Seq(idProjectionStage)
 
     //--------------------------- Setup Query -----------------------------------------------------------
-    val pipeline = cursorMatch ++ joinAndFilter ++ sort ++ skipStage ++ limitStage ++ projectStage
+    val common = joinAndFilter ++ sort ++ skipStage ++ limitStage ++ projectStage
 
-    database.getCollection(model.dbName).aggregate(pipeline.toSeq).toFuture.map(_.map(DocumentToId.toCUIDGCValue))
+    //-------------------------------- Match on Cursor Condition ----------------------------------------
+    val pipeline = rowValueOpt match {
+      case None           => common
+      case Some(rowValue) => `match`(CursorConditionBuilder.buildCursorCondition(model, queryArguments, rowValue)) +: common
+    }
+
+    database.getCollection(model.dbName).aggregate(pipeline).toFuture.map(_.map(readsId))
   }
 
   //-------------------------------------- Join And Filter ---------------------------------------------------

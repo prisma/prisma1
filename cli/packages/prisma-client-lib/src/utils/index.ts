@@ -141,6 +141,14 @@ export function getWhere(field) {
     .type as GraphQLInputObjectType).name
 }
 
+export function getDeepType(type) {
+  if (type.ofType) {
+    return getDeepType(type.ofType)
+  }
+
+  return type
+}
+
 export function getDeepListType(field) {
   const type = field.type
   if (isListType(type)) {

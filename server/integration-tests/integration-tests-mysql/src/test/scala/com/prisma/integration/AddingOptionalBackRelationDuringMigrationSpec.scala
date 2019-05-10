@@ -1,21 +1,26 @@
 package com.prisma.integration
 
+import com.prisma.ConnectorTag
+import com.prisma.ConnectorTag.{MySqlConnectorTag, PostgresConnectorTag, SQLiteConnectorTag}
 import org.scalatest.{FlatSpec, Matchers}
 
 class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  override def runOnlyForConnectors: Set[ConnectorTag] = Set(PostgresConnectorTag, SQLiteConnectorTag, MySqlConnectorTag)
 
   "Adding a missing back-relation of non-list type" should "work when there are no violating occurences of Team" in {
 
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
-        |  winner: Team @relation(name: "TeamMatchWinner")
+        |  winner: Team @relation(name: "TeamMatchWinner" link: INLINE)
         |}"""
 
     val (project, _) = setupProject(schema)
@@ -39,15 +44,17 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  win: Match @relation(name: "TeamMatchWinner")
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
-        |  winner: Team @relation(name: "TeamMatchWinner")
+        |  winner: Team @relation(name: "TeamMatchWinner" link: INLINE)
         |}"""
 
     val updatedProject = deployServer.deploySchema(project, schema1)
@@ -60,10 +67,12 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
@@ -91,11 +100,13 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  wins: [Match] @relation(name: "TeamMatchWinner")
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
@@ -112,10 +123,12 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
@@ -155,11 +168,13 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  wins: [Match] @relation(name: "TeamMatchWinner")
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
@@ -176,14 +191,16 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
-        |  winner: Team @relation(name: "TeamMatchWinner")
+        |  winner: Team @relation(name: "TeamMatchWinner" link: INLINE)
         |}"""
 
     val (project, _) = setupProject(schema)
@@ -219,15 +236,17 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  wins: Match @relation(name: "TeamMatchWinner")
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
-        |  winner: Team @relation(name: "TeamMatchWinner")
+        |  winner: Team @relation(name: "TeamMatchWinner" link: INLINE)
         |}"""
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)
@@ -237,17 +256,19 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
   }
 
   "Adding a missing back-relation of non-list type" should "work when there are already multiple nodes but they are not in a relation" in {
-
+    // TODO: this only works with `link: TABLE` and not `link: INLINE`. Why is that? Maybe do4gr can check.
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
-        |  winner: Team @relation(name: "TeamMatchWinner")
+        |  winner: Team @relation(name: "TeamMatchWinner" link: TABLE)
         |}"""
 
     val (project, _) = setupProject(schema)
@@ -259,15 +280,17 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  wins: Match @relation(name: "TeamMatchWinner")
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
-        |  winner: Team @relation(name: "TeamMatchWinner")
+        |  winner: Team @relation(name: "TeamMatchWinner" link: TABLE)
         |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3)
@@ -277,10 +300,12 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")
@@ -320,12 +345,14 @@ class AddingOptionalBackRelationDuringMigrationSpec extends FlatSpec with Matche
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |  wins: [Match] @relation(name: "TeamMatchWinner")
         |  lefts: [Match] @relation(name: "TeamMatchLeft")
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: Team @relation(name: "TeamMatchLeft")
         |  teamRight: Team @relation(name: "TeamMatchRight")

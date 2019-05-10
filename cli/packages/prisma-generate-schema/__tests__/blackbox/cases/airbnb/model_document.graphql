@@ -1,7 +1,7 @@
 type User {
   id: ID! @id
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
   firstName: String!
   lastName: String!
   email: String! @unique
@@ -11,15 +11,15 @@ type User {
   responseTime: Int
 
   isSuperHost: Boolean! @default(value: false)
-  ownedPlaces: [Place!]! @relation(link: INLINE)
+  ownedPlaces: [Place] @relation(link: INLINE)
   location: Location @relation(link: INLINE)
-  bookings: [Booking!]! @relation(link: INLINE)
-  paymentAccount: [PaymentAccount!]! @relation(link: INLINE)
-  sentMessages: [Message!]! @relation(name: "SentMessages", link: INLINE)
-  receivedMessages: [Message!]! @relation(name: "ReceivedMessages", link: INLINE)
-  notifications: [Notification!]! @relation(link: INLINE)
+  bookings: [Booking] @relation(link: INLINE)
+  paymentAccount: [PaymentAccount] @relation(link: INLINE)
+  sentMessages: [Message] @relation(name: "SentMessages", link: INLINE)
+  receivedMessages: [Message] @relation(name: "ReceivedMessages", link: INLINE)
+  notifications: [Notification] @relation(link: INLINE)
   profilePicture: Picture @relation(link: INLINE)
-  hostingExperiences: [Experience!]! @relation(link: INLINE)
+  hostingExperiences: [Experience] @relation(link: INLINE)
 }
 
 type Place {
@@ -34,7 +34,7 @@ type Place {
   numBeds: Int!
   numBaths: Int!
 
-  reviews: [Review!]! @relation(link: INLINE)
+  reviews: [Review] @relation(link: INLINE)
   amenities: Amenities! @relation(link: INLINE)
   host: User!
   pricing: Pricing! @relation(link: INLINE)
@@ -43,8 +43,8 @@ type Place {
   guestRequirements: GuestRequirements @relation(link: INLINE)
   policies: Policies @relation(link: INLINE)
   houseRules: HouseRules @relation(link: INLINE)
-  bookings: [Booking!]! @relation(link: INLINE)
-  pictures: [Picture!]! @relation(link: INLINE)
+  bookings: [Booking] @relation(link: INLINE)
+  pictures: [Picture] @relation(link: INLINE)
   popularity: Int!
 }
 
@@ -75,8 +75,8 @@ type GuestRequirements {
 
 type Policies {
   id: ID! @id
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
   checkInStartTime: Float!
   checkInEndTime: Float!
   checkoutTime: Float!
@@ -85,8 +85,8 @@ type Policies {
 
 type HouseRules {
   id: ID! @id
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
   suitableForChildren: Boolean
   suitableForInfants: Boolean
   petsAllowed: Boolean
@@ -116,7 +116,7 @@ type Location {
 
 type Neighbourhood {
   id: ID! @id
-  locations: [Location!]!
+  locations: [Location]
   name: String!
   slug: String!
   homePreview: Picture @relation(link: INLINE)
@@ -128,7 +128,7 @@ type Neighbourhood {
 type City {
   id: ID! @id
   name: String!
-  neighbourhoods: [Neighbourhood!]!
+  neighbourhoods: [Neighbourhood]
 }
 
 type Picture {
@@ -143,7 +143,7 @@ type Experience {
   host: User!
   location: Location!
   pricePerPerson: Int!
-  reviews: [Review!]! @relation(link: INLINE)
+  reviews: [Review] @relation(link: INLINE)
   preview: Picture! @relation(link: INLINE)
   popularity: Int!
 }
@@ -202,7 +202,7 @@ type Amenities {
 
 type Review {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   text: String!
   stars: Int!
   accuracy: Int!
@@ -217,7 +217,7 @@ type Review {
 
 type Booking {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   bookee: User!
   place: Place!
   startDate: DateTime!
@@ -227,7 +227,7 @@ type Booking {
 
 type Payment {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   serviceFee: Float!
   placePrice: Float!
   totalPrice: Float!
@@ -237,24 +237,24 @@ type Payment {
 
 type PaymentAccount {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   type: PAYMENT_PROVIDER
   user: User!
-  payments: [Payment!]! @relation(link: INLINE)
+  payments: [Payment] @relation(link: INLINE)
   paypal: PaypalInformation @relation(link: INLINE)
   creditcard: CreditCardInformation @relation(link: INLINE)
 }
 
 type PaypalInformation {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   email: String!
   paymentAccount: PaymentAccount!
 }
 
 type CreditCardInformation {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   cardNumber: String!
   expiresOnMonth: Int!
   expiresOnYear: Int!
@@ -268,7 +268,7 @@ type CreditCardInformation {
 
 type Message {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   from: User! @relation(name: "SentMessages")
   to: User! @relation(name: "ReceivedMessages")
   deliveredAt: DateTime!
@@ -277,7 +277,7 @@ type Message {
 
 type Notification {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   type: NOTIFICATION_TYPE
   user: User!
   link: String!
@@ -286,10 +286,10 @@ type Notification {
 
 type Restaurant {
   id: ID! @id
-  createdAt: DateTime!
+  createdAt: DateTime! @createdAt
   title: String!
   avgPricePerPerson: Int!
-  pictures: [Picture!]! @relation(link: INLINE)
+  pictures: [Picture] @relation(link: INLINE)
   location: Location!
   isCurated: Boolean! @default(value: true)
   slug: String!

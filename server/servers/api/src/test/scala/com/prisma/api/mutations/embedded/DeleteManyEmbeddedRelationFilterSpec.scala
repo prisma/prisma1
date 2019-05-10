@@ -11,7 +11,7 @@ class DeleteManyEmbeddedRelationFilterSpec extends FlatSpec with Matchers with A
 
   val schema =
     """type Top{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   top: String!
       |   bottom: Bottom
       |}
@@ -25,7 +25,7 @@ class DeleteManyEmbeddedRelationFilterSpec extends FlatSpec with Matchers with A
       |   veryBottom: String!
       |}"""
 
-  lazy val project: Project = SchemaDsl.fromString() { schema }
+  lazy val project: Project = SchemaDsl.fromStringV11() { schema }
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()

@@ -6,15 +6,16 @@ import { ProjectDefinition, RunOptions } from './types/common'
 import { OutputArgs, OutputFlags, Parser } from './Parser'
 import Help from './Help'
 import { Client } from './Client/Client'
-// import { Auth } from './Auth'
 import { Environment, PrismaDefinitionClass } from 'prisma-yml'
 import packagejson = require('../package.json')
 import * as mock from './mock'
+import { RC } from './types/rc'
+import { initStatusChecker } from './StatusChecker'
+import { filterObject } from './util'
+import * as os from 'os'
 import * as fs from 'fs-extra'
 import * as path from 'path'
-import { RC } from './types/rc'
-import { PrismaDefinition } from 'prisma-json-schema'
-import { initStatusChecker } from './StatusChecker'
+import chalk from 'chalk';
 const debug = require('debug')('command')
 
 const pjson = packagejson as any
@@ -33,6 +34,7 @@ export class Command {
   static mockRC: RC
   static allowAnyFlags: boolean = false
   static deprecated?: boolean = false
+  static printVersionSyncWarning: boolean = false
 
   static get id(): string {
     return this.command ? `${this.topic}:${this.command}` : this.topic
@@ -59,11 +61,106 @@ export class Command {
     return this.run({ argv, mock: true, mockDefinition, mockRC, mockConfig })
   }
 
+  printServerVersion(version: string | null) {
+    if (version) {
+      return `${os.EOL}Prisma server version: ${version}`
+    } else {
+      return ``
+    }
+  }
+
+  printCLIVersion() {
+    return `Prisma CLI version: ${this.config.userAgent}`
+  }
+
+  getVersionTokens(v: string): { minorVersion: string, stage: string } {
+    const tokens = v.replace('-', '.').split('.')
+    if (tokens.length < 2) {
+      throw new Error(`Unable to construct minor version from ${v}`)
+    }
+    let stage = 'master'
+    stage = tokens.some(t => t.includes('beta')) ? 'beta' : 'master'
+    if (stage === 'master') {
+      stage = tokens.some(t => t.includes('alpha')) ? 'alpha' : 'master'
+    }
+    return {
+      minorVersion: `${tokens[0]}.${tokens[1]}`.replace('-alpha', '').replace('-beta', ''),
+      stage: stage
+    }
+  }
+
+  printVersionSyncWarningMessage() {
+    return `${chalk.yellow(chalk.bold(`Warning: `))}Your Prisma server and Prisma CLI are currently out of sync. They should be on the same minor version.`
+  }
+
+  compareVersions(v1, v2) {
+    const v1Tokens = this.getVersionTokens(v1)
+    const v2Tokens = this.getVersionTokens(v2)
+    return v1Tokens.minorVersion === v2Tokens.minorVersion && v1Tokens.stage === v2Tokens.stage
+  }
+
+  async areServerAndCLIInSync(cmd: Command): Promise<{
+    inSync: boolean,
+    serverVersion: string | null
+  }> {
+    try {
+      const envFile = cmd.flags['env-file']
+      if (envFile && !fs.pathExistsSync(path.join(cmd.config.cwd, envFile))) {
+        await cmd.out.error(`--env-file path '${envFile}' does not exist`)
+      }
+      await cmd.definition.load(cmd.flags, envFile)
+
+      const server = await cmd.definition.getCluster(false)
+      if (server) {
+        try {
+          const serverVersion = await server.getVersion()
+          return {
+            inSync: this.compareVersions(serverVersion, cmd.config.version),
+            serverVersion
+          }
+        } catch (e) {
+          debug(`Failed to fetch server version`)
+          debug(e.toString())
+          return {
+            inSync: true,
+            serverVersion: null
+          }
+        }
+      } else {
+        debug(`Failed to get the server`)
+        return {
+          inSync: true,
+          serverVersion: null
+        }
+      }
+    } catch(e) {
+      debug(`Failed to get the definition file`)
+      debug(e.toString())
+      return {
+        inSync: true,
+        serverVersion: null
+      }
+    }
+  }
+
   static async run(config?: RunOptions): Promise<Command> {
     const cmd = new this({ config })
 
     try {
       await cmd.init(config)
+      
+      if (this.printVersionSyncWarning) {
+        const { inSync, serverVersion } = await cmd.areServerAndCLIInSync(cmd)
+        if (!inSync) {
+          cmd.out.log(`${cmd.printVersionSyncWarningMessage()}
+  
+${cmd.printCLIVersion()}${cmd.printServerVersion(serverVersion)}
+  
+For further information, please read: http://bit.ly/prisma-cli-server-sync
+  `)
+        }
+      }
+
       await cmd.run()
       await cmd.out.done()
     } catch (err) {
@@ -106,7 +203,7 @@ export class Command {
     this.out = new Output(this.config)
     this.config.setOutput(this.out)
     this.argv = options.config && options.config.argv ? options.config.argv : []
-    this.env = new Environment(this.config.home, this.out)
+    this.env = new Environment(this.config.home, this.out, this.config.version)
     this.definition = new PrismaDefinitionClass(
       this.env,
       this.config.definitionPath,
@@ -123,15 +220,6 @@ export class Command {
   }
 
   async init(options?: RunOptions) {
-    // parse stuff here
-    const mockDefinition = options && options.mockDefinition
-    const mockRC = options && options.mockRC
-    // if (mockDefinition) {
-    //   this.definition.set(mockDefinition)
-    // }
-    // if (mockRC) {
-    //   this.env.localRC = mockRC
-    // }
     const parser = new Parser({
       flags: (this.constructor as any).flags || {},
       args: (this.constructor as any).args || [],
@@ -145,8 +233,7 @@ export class Command {
     this.flags = flags!
     this.argv = argv!
     this.args = args
-    const loadClusters = !['help'].includes((this.constructor as any).topic)
-    await this.env.load(loadClusters)
+    await this.env.load()
     initStatusChecker(this.config, this.env)
   }
 
@@ -156,5 +243,15 @@ export class Command {
 
   get stderr(): string {
     return this.out.stderr.output
+  }
+
+  getSanitizedFlags(): OutputFlags {
+    return filterObject(this.flags, (_, value) => {
+      if (value === undefined) {
+        return false
+      }
+
+      return true
+    })
   }
 }

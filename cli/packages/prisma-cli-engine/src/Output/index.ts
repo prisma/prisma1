@@ -15,7 +15,7 @@ import ExitError from '../errors/ExitError'
 import * as inquirer from 'inquirer'
 import { MigrationPrinter } from './migration'
 import * as treeify from 'treeify'
-import dirTree from 'directory-tree'
+import * as dirTree from 'directory-tree'
 import * as marked from 'marked'
 import * as TerminalRenderer from 'marked-terminal'
 import * as Charm from 'charm'
@@ -23,7 +23,7 @@ import { padEnd, repeat, set, uniqBy, values } from 'lodash'
 import { Project, Stages } from '../types/common'
 import * as Raven from 'raven'
 import { getStatusChecker } from '../StatusChecker'
-const debug = require('debug')('Output')
+const debug = require('debug')('output')
 
 marked.setOptions({
   renderer: new TerminalRenderer(),
@@ -188,7 +188,7 @@ export class Output {
             ? '$ set -x DEBUG "*"'
             : '$ export DEBUG="*"'
         this.stderr.log(
-          `\nGet in touch if you need help: https://www.prisma.io/forum/
+          `\nGet in touch if you need help: https://spectrum.chat/prisma
 To get more detailed output, run ${chalk.dim(instruction)}`,
         )
       }
@@ -269,9 +269,7 @@ To get more detailed output, run ${chalk.dim(instruction)}`,
   }
 
   exit(code: number = 0) {
-    if (this.config.debug) {
-      console.error(`Exiting with code: ${code}`)
-    }
+    debug(`Exiting with code: ${code}`)
     if (this.mock && process.env.NODE_ENV === 'test') {
       throw new ExitError(code)
     } else {

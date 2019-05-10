@@ -84,21 +84,21 @@ object MongoDeployDatabaseMutationBuilder {
 //    database.getCollection(collectionName).drop().toFuture().map(_ -> Unit)
   }
 
-  def renameCollection(projectId: String, collectionName: String, newName: String) = DeployMongoAction { database =>
+  def renameCollection(project: Project, collectionName: String, newName: String) = DeployMongoAction { database =>
     Future.successful(())
 
 //    database.getCollection(collectionName).renameCollection(MongoNamespace(projectId, newName)).toFuture().map(_ -> Unit)
   }
 
   //Fields
-  def createField(model: Model, fieldName: String) = DeployMongoAction { database =>
+  def createIndex(model: Model, fieldName: String) = DeployMongoAction { database =>
     model.isEmbedded match {
       case false => addUniqueConstraint(database, model.dbName, fieldName)
       case true  => Future.successful(())
     }
   }
 
-  def deleteField(model: Model, fieldName: String) = DeployMongoAction { database =>
+  def deleteIndex(model: Model, fieldName: String) = DeployMongoAction { database =>
     model.isEmbedded match {
       case false => removeUniqueConstraint(database, model.dbName, fieldName)
       case true  => Future.successful(())
@@ -186,7 +186,8 @@ object MongoDeployDatabaseMutationBuilder {
   }
 
   def indexNameHelper(collectionName: String, fieldName: String, unique: Boolean): String = {
-    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 12).min(fieldName.length))
+    // TODO: explain this magic calculation
+    val shortenedName = fieldName.replaceAll("_", "x") substring (0, (125 - 25 - collectionName.length - 13).min(fieldName.length))
 
     unique match {
       case false => shortenedName + "_R"

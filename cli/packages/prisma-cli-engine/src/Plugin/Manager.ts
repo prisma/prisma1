@@ -3,7 +3,7 @@ import { Config } from '../Config'
 import { ParsedCommand, ParsedTopic, PluginPath } from './PluginPath'
 import Cache, { Group } from './Cache'
 
-export type PluginType = "builtin" | "core" | "user" | "link"
+export type PluginType = 'builtin' | 'core' | 'user' | 'link'
 
 export interface ParsedPlugin {
   topics?: ParsedTopic[]
@@ -16,7 +16,15 @@ export class Manager {
   config: Config
   cache: Cache
 
-  constructor({out, config, cache}: { out: Output, config: Config, cache: Cache }) {
+  constructor({
+    out,
+    config,
+    cache,
+  }: {
+    out: Output
+    config: Config
+    cache: Cache
+  }) {
     this.out = out
     this.config = config
     this.cache = cache

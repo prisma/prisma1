@@ -4,3 +4,4 @@ dist
 error.log
 plugins.json
 .DS_Store
+!.envrc

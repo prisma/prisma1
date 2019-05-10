@@ -1,7 +1,7 @@
 package com.prisma.api.mutations.nonEmbedded
 
 import com.prisma.api.ApiSpecBase
-import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
+import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RelationLinkListCapability}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -9,16 +9,16 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
   override def runOnlyForCapabilities = Set(JoinRelationLinksCapability)
 
   "Nested Updates" should "work for models with missing backrelations " in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Owner {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  ownerName: String! @unique
-        |  cat: Cat
+        |  cat: Cat @relation(link: INLINE)
         |}
         |
         |type Cat {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  catName: String! @unique
         |}
         |
@@ -53,16 +53,16 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
   }
 
   "Nested Upsert" should "work for models with missing backrelations for update " in {
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type Owner {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  ownerName: String! @unique
-        |  cats: [Cat]
+        |  cats: [Cat] $listInlineDirective
         |}
         |
         |type Cat {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  catName: String! @unique
         |}
         |
@@ -102,16 +102,16 @@ class NonEmbeddedOptionalBackrelationSpec extends FlatSpec with Matchers with Ap
   }
 
   "Nested Upsert" should "work for models with missing backrelations for create" in {
-    val project = SchemaDsl.fromString() {
-      """
+    val project = SchemaDsl.fromStringV11() {
+      s"""
         |type Owner {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  ownerName: String! @unique
-        |  cats: [Cat]
+        |  cats: [Cat] $listInlineDirective
         |}
         |
         |type Cat {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  catName: String! @unique
         |}
         |

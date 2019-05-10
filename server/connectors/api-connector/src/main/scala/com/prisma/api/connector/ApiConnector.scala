@@ -1,8 +1,7 @@
 package com.prisma.api.connector
 
 import com.prisma.gc_values.IdGCValue
-import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import play.api.libs.json.JsValue
 
 import scala.concurrent.Future
@@ -29,5 +28,5 @@ case class MutactionResults(results: Vector[DatabaseMutactionResult]) {
 trait DatabaseMutactionExecutor {
   def executeTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults]
   def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults]
-  def executeRaw(query: String): Future[JsValue]
+  def executeRaw(project: Project, query: String): Future[JsValue]
 }

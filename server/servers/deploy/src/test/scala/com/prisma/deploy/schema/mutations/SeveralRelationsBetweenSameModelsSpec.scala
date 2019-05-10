@@ -1,21 +1,22 @@
 package com.prisma.deploy.schema.mutations
 
+import com.prisma.IgnoreSQLite
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
 import org.scalatest.{FlatSpec, Matchers}
 
 class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
-  "DeployMutation" should "be able to name a relation that previously had no name" in {
+  "DeployMutation" should "be able to name a relation that previously had no name" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B 
+        |  b1: B @relation(link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A
         |}"""
@@ -27,13 +28,13 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
+        |  b1: B @relation(name: "AB1", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         |}"""
@@ -48,15 +49,15 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  # b1: B @relation(name: "AB1")
-        |  # b2: B @relation(name: "AB2")
-        |  # b3: B @relation(name: "AB3")
+        |  # b1: B @relation(name: "AB1", link: INLINE)
+        |  # b2: B @relation(name: "AB2", link: INLINE)
+        |  # b3: B @relation(name: "AB3", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  # a1: A @relation(name: "AB1")
         |  # a2: A @relation(name: "AB2")
@@ -69,15 +70,15 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
-        |  b2: B @relation(name: "AB2")
-        |  # b3: B @relation(name: "AB3")
+        |  b1: B @relation(name: "AB1", link: INLINE)
+        |  b2: B @relation(name: "AB2", link: INLINE)
+        |  # b3: B @relation(name: "AB3", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         |  a2: A @relation(name: "AB2")
@@ -92,15 +93,15 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema2 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
-        |  b2: B @relation(name: "AB2")
-        |  b3: B @relation(name: "AB3")
+        |  b1: B @relation(name: "AB1", link: INLINE)
+        |  b2: B @relation(name: "AB2", link: INLINE)
+        |  b3: B @relation(name: "AB3", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         |  a2: A @relation(name: "AB2")
@@ -115,17 +116,17 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
     updatedProject2.schema.relations(2).name should be("""AB2""")
   }
 
-  "DeployMutation" should "be able to handle renaming relations" in {
+  "DeployMutation" should "be able to handle renaming relations" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
+        |  b1: B @relation(name: "AB1", link: INLINE)
         | }
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         | }"""
@@ -137,14 +138,14 @@ class SeveralRelationsBetweenSameModelsSpec extends FlatSpec with Matchers with 
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(oldName: "AB1", name: "NewName")
+        |  b1: B @relation(oldName: "AB1", name: "NewName", link: INLINE)
         |}
         |
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(oldName: "AB1", name: "NewName")
         |}"""

@@ -1,7 +1,8 @@
 package com.prisma.deploy.migration.migrator
 
-import com.prisma.deploy.connector.{CreateModelTable, DeployMutaction, DeployMutactionExecutor, MigrationStepMapper}
-import com.prisma.deploy.specutils.ActiveDeploySpecBase
+import com.prisma.IgnoreSQLite
+import com.prisma.deploy.connector._
+import com.prisma.deploy.specutils.{ActiveDeploySpecBase, TestProject}
 import com.prisma.shared.models._
 import com.prisma.utils.await.AwaitUtils
 import org.scalatest.{FlatSpec, Matchers}
@@ -12,7 +13,8 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
   import system.dispatcher
   val persistence = testDependencies.migrationPersistence
 
-  val projectId   = "test-project-id"
+  val project     = TestProject()
+  val projectId   = project.id
   val emptySchema = Schema()
   val migration = Migration(
     projectId = projectId,
@@ -24,7 +26,8 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     rolledBack = 0,
     steps = Vector(CreateModel("Step1"), CreateModel("Step2"), CreateModel("Step3")),
     errors = Vector.empty,
-    previousSchema = Schema.empty
+    previousSchema = Schema.emptyV11,
+    rawDataModel = ""
   )
 
   val step1Model = Model.empty.copy(name = "Step1").build(emptySchema)
@@ -32,9 +35,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
   val step3Model = Model.empty.copy(name = "Step3").build(emptySchema)
 
   val mapper = stepMapper({
-    case CreateModel("Step1") => Vector(CreateModelTable(projectId, step1Model))
-    case CreateModel("Step2") => Vector(CreateModelTable(projectId, step2Model))
-    case CreateModel("Step3") => Vector(CreateModelTable(projectId, step3Model))
+    case CreateModel("Step1") => Vector(CreateModelTable(project, step1Model))
+    case CreateModel("Step2") => Vector(CreateModelTable(project, step2Model))
+    case CreateModel("Step3") => Vector(CreateModelTable(project, step3Model))
   })
 
   override protected def beforeEach(): Unit = {
@@ -42,7 +45,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     testDependencies.projectPersistence.create(Project(projectId, 1, emptySchema)).await
   }
 
-  "the applier" should "succeed when all steps succeed" in {
+  "the applier" should "succeed when all steps succeed" taggedAs (IgnoreSQLite) in {
     persistence.create(migration).await
     val executor = mutactionExecutor(
       execute = {
@@ -53,7 +56,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
       }
     )
     val applier = migrationApplier(mapper, executor)
-    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val result  = applier.apply(project, previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(true)
 
     val persisted = persistence.getLastMigration(projectId).await.get
@@ -64,7 +67,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     persisted.finishedAt.isDefined shouldEqual true
   }
 
-  "the applier" should "mark a migration as ROLLBACK_SUCCESS if all steps can be rolled back successfully" in {
+  "the applier" should "mark a migration as ROLLBACK_SUCCESS if all steps can be rolled back successfully" taggedAs (IgnoreSQLite) in {
     persistence.create(migration).await
 
     val executor = mutactionExecutor(
@@ -80,7 +83,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
       }
     )
     val applier = migrationApplier(mapper, executor)
-    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val result  = applier.apply(project, previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(false)
 
     val persisted = loadMigrationFromDb
@@ -89,7 +92,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     persisted.rolledBack should be(1) // 1 step was rolled back
   }
 
-  "the applier" should "mark a migration as ROLLBACK_FAILURE if the rollback fails" in {
+  "the applier" should "mark a migration as ROLLBACK_FAILURE if the rollback fails" taggedAs (IgnoreSQLite) in {
     persistence.create(migration).await
 
     val executor = mutactionExecutor(
@@ -106,7 +109,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     )
 
     val applier = migrationApplier(mapper, executor)
-    val result  = applier.apply(previousSchema = emptySchema, migration = migration).await
+    val result  = applier.apply(project, previousSchema = emptySchema, migration = migration).await
     result.succeeded should be(false)
 
     val persisted = loadMigrationFromDb
@@ -118,7 +121,7 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
   def loadMigrationFromDb: Migration = persistence.byId(migration.id).await.get
 
   def migrationApplier(stepMapper: MigrationStepMapper, mutactionExecutor: DeployMutactionExecutor) = {
-    MigrationApplierImpl(persistence, stepMapper, mutactionExecutor)
+    MigrationApplierImpl(persistence, testDependencies.projectPersistence, stepMapper, mutactionExecutor, deployConnector.databaseInspector)
   }
 
 //  lazy val succeedingSqlMutactionWithSucceedingRollback = clientSqlMutaction(succeedingStatementResult, rollback = succeedingStatementResult)
@@ -153,9 +156,9 @@ class MigrationApplierSpec extends FlatSpec with Matchers with ActiveDeploySpecB
     val rollbackPf = rollback
 
     new DeployMutactionExecutor {
-      override def execute(mutaction: DeployMutaction) = doit(executePf, mutaction)
+      override def execute(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema) = doit(executePf, mutaction)
 
-      override def rollback(mutaction: DeployMutaction) = doit(rollbackPf, mutaction)
+      override def rollback(mutaction: DeployMutaction, schemaBeforeMigration: DatabaseSchema) = doit(rollbackPf, mutaction)
 
       def doit(pf: PartialFunction[DeployMutaction, Option[Throwable]], mutaction: DeployMutaction) = {
         pf.lift.apply(mutaction).flatten match {

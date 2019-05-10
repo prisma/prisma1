@@ -93,6 +93,7 @@ type CampusConnection {
 }
 
 input CampusCreateInput {
+  id: ID
   description: String
   isActive: Boolean
   name: String!
@@ -108,6 +109,7 @@ input CampusCreateManyWithoutAccountsInput {
 }
 
 input CampusCreateWithoutAccountsInput {
+  id: ID
   description: String
   isActive: Boolean
   name: String!
@@ -340,14 +342,6 @@ input CampusSubscriptionWhereInput {
   """
   AND: [CampusSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [CampusSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CampusSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -391,6 +385,7 @@ input CampusUpdateManyMutationInput {
 input CampusUpdateManyWithoutAccountsInput {
   create: [CampusCreateWithoutAccountsInput!]
   connect: [CampusWhereUniqueInput!]
+  set: [CampusWhereUniqueInput!]
   disconnect: [CampusWhereUniqueInput!]
   delete: [CampusWhereUniqueInput!]
   update: [CampusUpdateWithWhereUniqueWithoutAccountsInput!]
@@ -429,14 +424,6 @@ input CampusWhereInput {
   Logical AND on all given filters.
   """
   AND: [CampusWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CampusWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CampusWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -601,6 +588,10 @@ input CampusWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  accounts_some: FinancialAccountWhereInput
+  organization: GroupWhereInput
+  location: LocationWhereInput
+  phoneNumbers_some: PhoneNumberWhereInput
 }
 
 input CampusWhereUniqueInput {
@@ -646,6 +637,7 @@ type FinancialAccountConnection {
 }
 
 input FinancialAccountCreateInput {
+  id: ID
   key: String
   description: String!
   isActive: Boolean!
@@ -664,6 +656,7 @@ input FinancialAccountCreateOneInput {
 }
 
 input FinancialAccountCreateWithoutCampusesInput {
+  id: ID
   key: String
   description: String!
   isActive: Boolean!
@@ -950,14 +943,6 @@ input FinancialAccountSubscriptionWhereInput {
   """
   AND: [FinancialAccountSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialAccountSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialAccountSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1009,6 +994,7 @@ input FinancialAccountUpdateManyMutationInput {
 input FinancialAccountUpdateManyWithoutCampusesInput {
   create: [FinancialAccountCreateWithoutCampusesInput!]
   connect: [FinancialAccountWhereUniqueInput!]
+  set: [FinancialAccountWhereUniqueInput!]
   disconnect: [FinancialAccountWhereUniqueInput!]
   delete: [FinancialAccountWhereUniqueInput!]
   update: [FinancialAccountUpdateWithWhereUniqueWithoutCampusesInput!]
@@ -1059,14 +1045,6 @@ input FinancialAccountWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialAccountWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialAccountWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialAccountWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1284,6 +1262,7 @@ input FinancialAccountWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  campuses_some: CampusWhereInput
 }
 
 input FinancialAccountWhereUniqueInput {
@@ -1318,6 +1297,7 @@ type FinancialPaymentDetailConnection {
 }
 
 input FinancialPaymentDetailCreateInput {
+  id: ID
   accountNumberMasked: String!
   creditCardType: CREDIT_CARD
   achType: ACH_TYPE
@@ -1386,14 +1366,6 @@ input FinancialPaymentDetailSubscriptionWhereInput {
   """
   AND: [FinancialPaymentDetailSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialPaymentDetailSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialPaymentDetailSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1460,14 +1432,6 @@ input FinancialPaymentDetailWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialPaymentDetailWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialPaymentDetailWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialPaymentDetailWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1695,6 +1659,7 @@ input FinancialPaymentDetailWhereInput {
   All values not ending with the given string.
   """
   nameOnCard_not_ends_with: String
+  billingLocation: LocationWhereInput
 }
 
 input FinancialPaymentDetailWhereUniqueInput {
@@ -1730,6 +1695,7 @@ type FinancialScheduledTransactionConnection {
 }
 
 input FinancialScheduledTransactionCreateInput {
+  id: ID
   endDate: DateTime
   isActive: Boolean!
   startDate: DateTime
@@ -1752,6 +1718,7 @@ input FinancialScheduledTransactionCreateOneWithoutTransactionsInput {
 }
 
 input FinancialScheduledTransactionCreateWithoutPersonInput {
+  id: ID
   endDate: DateTime
   isActive: Boolean!
   startDate: DateTime
@@ -1763,6 +1730,7 @@ input FinancialScheduledTransactionCreateWithoutPersonInput {
 }
 
 input FinancialScheduledTransactionCreateWithoutTransactionsInput {
+  id: ID
   endDate: DateTime
   isActive: Boolean!
   startDate: DateTime
@@ -1997,14 +1965,6 @@ input FinancialScheduledTransactionSubscriptionWhereInput {
   """
   AND: [FinancialScheduledTransactionSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialScheduledTransactionSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialScheduledTransactionSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -2054,6 +2014,7 @@ input FinancialScheduledTransactionUpdateManyMutationInput {
 input FinancialScheduledTransactionUpdateManyWithoutPersonInput {
   create: [FinancialScheduledTransactionCreateWithoutPersonInput!]
   connect: [FinancialScheduledTransactionWhereUniqueInput!]
+  set: [FinancialScheduledTransactionWhereUniqueInput!]
   disconnect: [FinancialScheduledTransactionWhereUniqueInput!]
   delete: [FinancialScheduledTransactionWhereUniqueInput!]
   update: [FinancialScheduledTransactionUpdateWithWhereUniqueWithoutPersonInput!]
@@ -2119,14 +2080,6 @@ input FinancialScheduledTransactionWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialScheduledTransactionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialScheduledTransactionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialScheduledTransactionWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -2285,6 +2238,10 @@ input FinancialScheduledTransactionWhereInput {
   All values greater than or equal the given value.
   """
   amount_gte: Float
+  person: PersonWhereInput
+  payment: FinancialPaymentDetailWhereInput
+  transactions_some: FinancialTransactionWhereInput
+  account: FinancialAccountWhereInput
 }
 
 input FinancialScheduledTransactionWhereUniqueInput {
@@ -2320,6 +2277,7 @@ type FinancialTransactionConnection {
 }
 
 input FinancialTransactionCreateInput {
+  id: ID
   processedDate: DateTime
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
@@ -2342,6 +2300,7 @@ input FinancialTransactionCreateManyWithoutScheduledTransactionInput {
 }
 
 input FinancialTransactionCreateWithoutPersonInput {
+  id: ID
   processedDate: DateTime
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
@@ -2353,6 +2312,7 @@ input FinancialTransactionCreateWithoutPersonInput {
 }
 
 input FinancialTransactionCreateWithoutScheduledTransactionInput {
+  id: ID
   processedDate: DateTime
   status: TRANSACTION_STATUS!
   transactionDate: DateTime
@@ -2579,14 +2539,6 @@ input FinancialTransactionSubscriptionWhereInput {
   """
   AND: [FinancialTransactionSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialTransactionSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialTransactionSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -2634,6 +2586,7 @@ input FinancialTransactionUpdateManyMutationInput {
 input FinancialTransactionUpdateManyWithoutPersonInput {
   create: [FinancialTransactionCreateWithoutPersonInput!]
   connect: [FinancialTransactionWhereUniqueInput!]
+  set: [FinancialTransactionWhereUniqueInput!]
   disconnect: [FinancialTransactionWhereUniqueInput!]
   delete: [FinancialTransactionWhereUniqueInput!]
   update: [FinancialTransactionUpdateWithWhereUniqueWithoutPersonInput!]
@@ -2645,6 +2598,7 @@ input FinancialTransactionUpdateManyWithoutPersonInput {
 input FinancialTransactionUpdateManyWithoutScheduledTransactionInput {
   create: [FinancialTransactionCreateWithoutScheduledTransactionInput!]
   connect: [FinancialTransactionWhereUniqueInput!]
+  set: [FinancialTransactionWhereUniqueInput!]
   disconnect: [FinancialTransactionWhereUniqueInput!]
   delete: [FinancialTransactionWhereUniqueInput!]
   update: [FinancialTransactionUpdateWithWhereUniqueWithoutScheduledTransactionInput!]
@@ -2707,14 +2661,6 @@ input FinancialTransactionWhereInput {
   Logical AND on all given filters.
   """
   AND: [FinancialTransactionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FinancialTransactionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FinancialTransactionWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -2868,6 +2814,11 @@ input FinancialTransactionWhereInput {
   All values greater than or equal the given value.
   """
   amount_gte: Float
+  payment: FinancialPaymentDetailWhereInput
+  person: PersonWhereInput
+  scheduledTransaction: FinancialScheduledTransactionWhereInput
+  account: FinancialAccountWhereInput
+  organization: GroupWhereInput
 }
 
 input FinancialTransactionWhereUniqueInput {
@@ -2913,6 +2864,7 @@ type GroupConnection {
 }
 
 input GroupCreateInput {
+  id: ID
   key: String
   description: String
   isActive: Boolean!
@@ -2944,6 +2896,7 @@ input GroupCreateOneWithoutMembersInput {
 }
 
 input GroupCreateWithoutInvitesInput {
+  id: ID
   key: String
   description: String
   isActive: Boolean!
@@ -2954,6 +2907,7 @@ input GroupCreateWithoutInvitesInput {
 }
 
 input GroupCreateWithoutMembersInput {
+  id: ID
   key: String
   description: String
   isActive: Boolean!
@@ -2964,6 +2918,7 @@ input GroupCreateWithoutMembersInput {
 }
 
 input GroupCreateWithoutTypeInput {
+  id: ID
   key: String
   description: String
   isActive: Boolean!
@@ -3011,6 +2966,7 @@ type GroupInviteConnection {
 }
 
 input GroupInviteCreateInput {
+  id: ID
   email: String!
   status: GROUP_INVITE_STATUS!
   group: GroupCreateOneWithoutInvitesInput!
@@ -3023,6 +2979,7 @@ input GroupInviteCreateManyWithoutGroupInput {
 }
 
 input GroupInviteCreateWithoutGroupInput {
+  id: ID
   email: String!
   status: GROUP_INVITE_STATUS!
   groupRole: GroupRoleCreateOneInput
@@ -3204,14 +3161,6 @@ input GroupInviteSubscriptionWhereInput {
   """
   AND: [GroupInviteSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [GroupInviteSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupInviteSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -3250,6 +3199,7 @@ input GroupInviteUpdateManyMutationInput {
 input GroupInviteUpdateManyWithoutGroupInput {
   create: [GroupInviteCreateWithoutGroupInput!]
   connect: [GroupInviteWhereUniqueInput!]
+  set: [GroupInviteWhereUniqueInput!]
   disconnect: [GroupInviteWhereUniqueInput!]
   delete: [GroupInviteWhereUniqueInput!]
   update: [GroupInviteUpdateWithWhereUniqueWithoutGroupInput!]
@@ -3285,14 +3235,6 @@ input GroupInviteWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupInviteWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupInviteWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupInviteWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -3412,6 +3354,8 @@ input GroupInviteWhereInput {
   All values that are not contained in given list.
   """
   status_not_in: [GROUP_INVITE_STATUS!]
+  group: GroupWhereInput
+  groupRole: GroupRoleWhereInput
 }
 
 input GroupInviteWhereUniqueInput {
@@ -3441,6 +3385,7 @@ type GroupMemberConnection {
 }
 
 input GroupMemberCreateInput {
+  id: ID
   group: GroupCreateOneWithoutMembersInput
   role: GroupRoleCreateOneInput
   person: PersonCreateOneInput
@@ -3452,6 +3397,7 @@ input GroupMemberCreateManyWithoutGroupInput {
 }
 
 input GroupMemberCreateWithoutGroupInput {
+  id: ID
   role: GroupRoleCreateOneInput
   person: PersonCreateOneInput
 }
@@ -3560,14 +3506,6 @@ input GroupMemberSubscriptionWhereInput {
   """
   AND: [GroupMemberSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [GroupMemberSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupMemberSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -3595,6 +3533,7 @@ input GroupMemberUpdateInput {
 input GroupMemberUpdateManyWithoutGroupInput {
   create: [GroupMemberCreateWithoutGroupInput!]
   connect: [GroupMemberWhereUniqueInput!]
+  set: [GroupMemberWhereUniqueInput!]
   disconnect: [GroupMemberWhereUniqueInput!]
   delete: [GroupMemberWhereUniqueInput!]
   update: [GroupMemberUpdateWithWhereUniqueWithoutGroupInput!]
@@ -3623,14 +3562,6 @@ input GroupMemberWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupMemberWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupMemberWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupMemberWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -3684,6 +3615,9 @@ input GroupMemberWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  group: GroupWhereInput
+  role: GroupRoleWhereInput
+  person: PersonWhereInput
 }
 
 input GroupMemberWhereUniqueInput {
@@ -3738,6 +3672,7 @@ type GroupRoleConnection {
 }
 
 input GroupRoleCreateInput {
+  id: ID
   canEdit: Boolean!
   canView: Boolean!
   description: String!
@@ -3758,6 +3693,7 @@ input GroupRoleCreateOneInput {
 }
 
 input GroupRoleCreateWithoutGroupTypeInput {
+  id: ID
   canEdit: Boolean!
   canView: Boolean!
   description: String!
@@ -4022,14 +3958,6 @@ input GroupRoleSubscriptionWhereInput {
   """
   AND: [GroupRoleSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [GroupRoleSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupRoleSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -4089,6 +4017,7 @@ input GroupRoleUpdateManyMutationInput {
 input GroupRoleUpdateManyWithoutGroupTypeInput {
   create: [GroupRoleCreateWithoutGroupTypeInput!]
   connect: [GroupRoleWhereUniqueInput!]
+  set: [GroupRoleWhereUniqueInput!]
   disconnect: [GroupRoleWhereUniqueInput!]
   delete: [GroupRoleWhereUniqueInput!]
   update: [GroupRoleUpdateWithWhereUniqueWithoutGroupTypeInput!]
@@ -4141,14 +4070,6 @@ input GroupRoleWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupRoleWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupRoleWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupRoleWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -4336,6 +4257,7 @@ input GroupRoleWhereInput {
   All values that are not contained in given list.
   """
   type_not_in: [GROUP_ROLE_TYPE!]
+  groupType: GroupTypeWhereInput
 }
 
 input GroupRoleWhereUniqueInput {
@@ -4588,14 +4510,6 @@ input GroupSubscriptionWhereInput {
   """
   AND: [GroupSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [GroupSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -4638,6 +4552,7 @@ type GroupTypeConnection {
 }
 
 input GroupTypeCreateInput {
+  id: ID
   description: String
   name: String!
   groups: GroupCreateManyWithoutTypeInput
@@ -4655,12 +4570,14 @@ input GroupTypeCreateOneWithoutRolesInput {
 }
 
 input GroupTypeCreateWithoutGroupsInput {
+  id: ID
   description: String
   name: String!
   roles: GroupRoleCreateManyWithoutGroupTypeInput
 }
 
 input GroupTypeCreateWithoutRolesInput {
+  id: ID
   description: String
   name: String!
   groups: GroupCreateManyWithoutTypeInput
@@ -4707,14 +4624,6 @@ input GroupTypeSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupTypeSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupTypeSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupTypeSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -4789,14 +4698,6 @@ input GroupTypeWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupTypeWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupTypeWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupTypeWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -4956,6 +4857,8 @@ input GroupTypeWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  groups_some: GroupWhereInput
+  roles_some: GroupRoleWhereInput
 }
 
 input GroupTypeWhereUniqueInput {
@@ -5002,6 +4905,7 @@ input GroupUpdateManyMutationInput {
 input GroupUpdateManyWithoutTypeInput {
   create: [GroupCreateWithoutTypeInput!]
   connect: [GroupWhereUniqueInput!]
+  set: [GroupWhereUniqueInput!]
   disconnect: [GroupWhereUniqueInput!]
   delete: [GroupWhereUniqueInput!]
   update: [GroupUpdateWithWhereUniqueWithoutTypeInput!]
@@ -5108,14 +5012,6 @@ input GroupWhereInput {
   Logical AND on all given filters.
   """
   AND: [GroupWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [GroupWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [GroupWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -5333,6 +5229,10 @@ input GroupWhereInput {
   All values not ending with the given string.
   """
   name_not_ends_with: String
+  type: GroupTypeWhereInput
+  invites_some: GroupInviteWhereInput
+  members_some: GroupMemberWhereInput
+  organization: GroupWhereInput
 }
 
 input GroupWhereUniqueInput {
@@ -5371,6 +5271,7 @@ type LocationConnection {
 }
 
 input LocationCreateInput {
+  id: ID
   city: String
   locationType: LOCATION_TYPE
   postalCode: String
@@ -5438,14 +5339,6 @@ input LocationSubscriptionWhereInput {
   """
   AND: [LocationSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [LocationSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LocationSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -5510,14 +5403,6 @@ input LocationWhereInput {
   Logical AND on all given filters.
   """
   AND: [LocationWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [LocationWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [LocationWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -6011,6 +5896,7 @@ type PersonConnection {
 }
 
 input PersonCreateInput {
+  id: ID
   email: String
   firstName: String
   lastName: String
@@ -6041,6 +5927,7 @@ input PersonCreateOneWithoutUserInput {
 }
 
 input PersonCreateWithoutScheduledTransactionsInput {
+  id: ID
   email: String
   firstName: String
   lastName: String
@@ -6050,6 +5937,7 @@ input PersonCreateWithoutScheduledTransactionsInput {
 }
 
 input PersonCreateWithoutTransactionsInput {
+  id: ID
   email: String
   firstName: String
   lastName: String
@@ -6059,6 +5947,7 @@ input PersonCreateWithoutTransactionsInput {
 }
 
 input PersonCreateWithoutUserInput {
+  id: ID
   email: String
   firstName: String
   lastName: String
@@ -6111,14 +6000,6 @@ input PersonSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [PersonSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PersonSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PersonSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -6250,14 +6131,6 @@ input PersonWhereInput {
   Logical AND on all given filters.
   """
   AND: [PersonWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PersonWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PersonWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -6470,6 +6343,10 @@ input PersonWhereInput {
   All values not ending with the given string.
   """
   lastName_not_ends_with: String
+  phoneNumbers_some: PhoneNumberWhereInput
+  scheduledTransactions_some: FinancialScheduledTransactionWhereInput
+  transactions_some: FinancialTransactionWhereInput
+  user: UserWhereInput
 }
 
 input PersonWhereUniqueInput {
@@ -6497,6 +6374,7 @@ type PhoneNumberConnection {
 }
 
 input PhoneNumberCreateInput {
+  id: ID
   number: String!
 }
 
@@ -6665,14 +6543,6 @@ input PhoneNumberSubscriptionWhereInput {
   """
   AND: [PhoneNumberSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [PhoneNumberSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PhoneNumberSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -6706,6 +6576,7 @@ input PhoneNumberUpdateManyDataInput {
 input PhoneNumberUpdateManyInput {
   create: [PhoneNumberCreateInput!]
   connect: [PhoneNumberWhereUniqueInput!]
+  set: [PhoneNumberWhereUniqueInput!]
   disconnect: [PhoneNumberWhereUniqueInput!]
   delete: [PhoneNumberWhereUniqueInput!]
   update: [PhoneNumberUpdateWithWhereUniqueNestedInput!]
@@ -6739,14 +6610,6 @@ input PhoneNumberWhereInput {
   Logical AND on all given filters.
   """
   AND: [PhoneNumberWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [PhoneNumberWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [PhoneNumberWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -6964,11 +6827,17 @@ type UserConnection {
 }
 
 input UserCreateInput {
+  id: ID
   person: PersonCreateOneWithoutUserInput!
 }
 
 input UserCreateOneWithoutPersonInput {
+  create: UserCreateWithoutPersonInput
   connect: UserWhereUniqueInput
+}
+
+input UserCreateWithoutPersonInput {
+  id: ID
 }
 
 """
@@ -7007,14 +6876,6 @@ input UserSubscriptionWhereInput {
   """
   AND: [UserSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [UserSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [UserSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -7038,6 +6899,7 @@ input UserUpdateInput {
 }
 
 input UserUpdateOneWithoutPersonInput {
+  create: UserCreateWithoutPersonInput
   connect: UserWhereUniqueInput
   disconnect: Boolean
   delete: Boolean
@@ -7048,14 +6910,6 @@ input UserWhereInput {
   Logical AND on all given filters.
   """
   AND: [UserWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [UserWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [UserWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -7109,6 +6963,7 @@ input UserWhereInput {
   All values not ending with the given string.
   """
   id_not_ends_with: ID
+  person: PersonWhereInput
 }
 
 input UserWhereUniqueInput {

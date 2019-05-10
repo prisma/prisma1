@@ -3,8 +3,7 @@
 ```sh
 $ git clone git@github.com:prisma/prisma.git
 $ cd prisma/cli
-$ yarn run build
-$ cd packages/prisma-cli
+$ ./scripts/build.sh
 $ node dist/index.js
 ```
 

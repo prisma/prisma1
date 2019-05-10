@@ -1,25 +1,23 @@
 import { Command, flags, Flags, DeployPayload, Config } from 'prisma-cli-engine'
 import { Cluster } from 'prisma-yml'
 import chalk from 'chalk'
-import * as inquirer from 'inquirer'
 import * as path from 'path'
 import * as fs from 'fs-extra'
-import { fetchAndPrintSchema } from './printSchema'
 import { Seeder } from '../seed/Seeder'
 const debug = require('debug')('deploy')
-import { prettyTime, concatName, defaultDockerCompose } from '../../util'
-import * as sillyname from 'sillyname'
-import { getSchemaPathFromConfig } from './getSchemaPathFromConfig'
+import { prettyTime, concatName, printAdminLink } from '../../utils/util'
 import { EndpointDialog } from '../../utils/EndpointDialog'
 import { spawnSync } from 'npm-run'
 import { spawnSync as nativeSpawnSync } from 'child_process'
 import * as figures from 'figures'
+import { satisfiesVersion } from '../../utils/satisfiesVersion'
+import GenerateCommand from '../generate/generate'
 
 export default class Deploy extends Command {
   static topic = 'deploy'
   static description = 'Deploy service changes (or new service)'
   static group = 'general'
-  static allowAnyFlags = true
+  static printVersionSyncWarning = true
   static help = `
   
   ${chalk.green.bold('Examples:')}
@@ -54,14 +52,25 @@ ${chalk.gray(
       char: 'j',
       description: 'Json Output',
     }),
+    'no-migrate': flags.boolean({
+      description: 'Disable migrations. Prisma 1.26 and above needed',
+    }),
     ['env-file']: flags.string({
       description: 'Path to .env file to inject env vars',
       char: 'e',
     }),
+    ['project']: flags.string({
+      description: 'Path to Prisma definition file',
+      char: 'p',
+    }),
+    'no-generate': flags.boolean({
+      description: 'Disable implicit client generation',
+    }),
+    'skip-hooks': flags.boolean({
+      description: 'Disable hooks on deploy',
+    }),
   }
-  private deploying: boolean = false
   private showedHooks: boolean = false
-  private loggedIn: boolean = false
   async run() {
     /**
      * Get Args
@@ -70,6 +79,9 @@ ${chalk.gray(
     const interactive = this.flags.new // new is a reserved keyword, so we use interactive instead
     const envFile = this.flags['env-file']
     const dryRun = this.flags['dry-run']
+    const noMigrate = this.flags['no-migrate']
+    const noGenerate = this.flags['no-generate']
+    const noHook = this.flags['skip-hooks']
 
     if (envFile && !fs.pathExistsSync(path.join(this.config.cwd, envFile))) {
       await this.out.error(`--env-file path '${envFile}' does not exist`)
@@ -94,8 +106,8 @@ ${chalk.gray(
      */
     let workspace: string | undefined | null = this.definition.getWorkspace()
     let cluster
-    let dockerComposeYml = defaultDockerCompose
     if (!serviceName || !stage || interactive) {
+      await this.env.fetchClusters()
       const endpointDialog = new EndpointDialog({
         out: this.out,
         client: this.client,
@@ -109,7 +121,6 @@ ${chalk.gray(
       workspace = results.workspace
       serviceName = results.service
       stage = results.stage
-      dockerComposeYml = results.dockerComposeYml
       this.definition.replaceEndpoint(results.endpoint)
       // Reload definition because we are changing the yml file
       await this.definition.load(this.flags, envFile)
@@ -119,7 +130,7 @@ ${chalk.gray(
         )}\` to prisma.yml\n`,
       )
     } else {
-      cluster = this.definition.getCluster(false)
+      cluster = await this.definition.getCluster(false)
     }
 
     if (cluster && cluster.local && !(await cluster.isOnline())) {
@@ -149,6 +160,7 @@ ${chalk.gray(
       if (
         workspace &&
         !workspace.startsWith('public-') &&
+        !process.env.PRISMA_MANAGEMENT_API_SECRET &&
         (!this.env.cloudSessionKey || this.env.cloudSessionKey === '')
       ) {
         await this.client.login()
@@ -175,17 +187,10 @@ ${chalk.gray(
       dryRun,
       projectNew,
       workspace!,
+      noMigrate,
+      noGenerate,
+      noHook
     )
-  }
-
-  private getSillyName() {
-    return `${slugify(sillyname()).split('-')[0]}-${Math.round(
-      Math.random() * 1000,
-    )}`
-  }
-
-  private getPublicName() {
-    return `public-${this.getSillyName()}`
   }
 
   private async projectExists(
@@ -230,8 +235,10 @@ ${chalk.gray(
     dryRun: boolean,
     projectNew: boolean,
     workspace: string | null,
+    noMigrate: boolean,
+    noGenerate: boolean,
+    noHook: boolean,
   ): Promise<void> {
-    this.deploying = true
     let before = Date.now()
 
     const b = s => `\`${chalk.bold(s)}\``
@@ -252,9 +259,10 @@ ${chalk.gray(
       this.definition.getSubscriptions(),
       this.definition.secrets,
       force,
+      noMigrate,
     )
     this.out.action.stop(prettyTime(Date.now() - before))
-    this.printResult(migrationResult, force)
+    this.printResult(migrationResult, force, dryRun)
 
     if (
       migrationResult.migration &&
@@ -268,7 +276,6 @@ ${chalk.gray(
       )
       let done = false
       while (!done) {
-        const revision = migrationResult.migration.revision
         const migration = await this.client.getMigration(
           concatName(cluster, serviceName, workspace),
           stageName,
@@ -302,14 +309,93 @@ ${chalk.gray(
 
       this.out.action.stop(prettyTime(Date.now() - before))
     }
-    // TODO move up to if statement after testing done
+
+    const hooks = this.definition.getHooks('post-deploy')
+    if (!noHook) {
+      if (hooks.length > 0) {
+        this.out.log(`\n${chalk.bold('post-deploy')}:`)
+      }
+      for (const hook of hooks) {
+        const splittedHook = hook.split(' ')
+        this.out.action.start(`Running ${chalk.cyan(hook)}`)
+        const isPackaged = fs.existsSync('/snapshot')
+        debug({ isPackaged })
+        const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
+        const child = spawnPath(splittedHook[0], splittedHook.slice(1))
+        const stderr = child.stderr && child.stderr.toString()
+        if (stderr && stderr.length > 0) {
+          this.out.log(chalk.red(stderr))
+        }
+        const stdout = child.stdout && child.stdout.toString()
+        if (stdout && stdout.length > 0) {
+          this.out.log(stdout)
+        }
+        const { status, error } = child
+        if (error || status !== 0) {
+          if (error) {
+            this.out.log(chalk.red(error.message))
+          }
+          this.out.action.stop(chalk.red(figures.cross))
+        } else {
+          this.out.action.stop()
+        }
+      }
+    } else {
+      debug('Hooks are disabled by the --skip-hooks flag')
+    }
+
+    if (
+      migrationResult &&
+      migrationResult.migration &&
+      migrationResult.migration.revision > 0 &&
+      !dryRun &&
+      !noGenerate
+    ) {
+      let done = false
+      while (!done) {
+        const migration = await this.client.getMigration(
+          concatName(cluster, serviceName, workspace),
+          stageName,
+        )
+        if (
+          (migration.errors &&
+            migration.errors.length === 0 &&
+            migration.applied === migrationResult.migration.steps.length) ||
+          ['SUCCESS'].includes(migration.status)
+        ) {
+          done = true
+          const isGenerateHookPresent = hooks.some(
+            hook => hook.includes('prisma') && hook.includes('generate'),
+          )
+          if (!noHook && isGenerateHookPresent) {
+            this.out.log(
+              chalk.yellow(
+                `Warning: The \`prisma generate\` command was executed twice. Since Prisma 1.31, the Prisma client is generated automatically after running \`prisma deploy\`. It is not necessary to generate it via a \`post-deploy\` hook any more, you can therefore remove the hook if you do not need it otherwise.`,
+              ),
+            )
+          }
+          const generateCommand = new GenerateCommand({
+            config: this.config
+          })
+          generateCommand.run()
+        } else {
+          debug('skipping implicit generate at migration polling')
+        }
+        await new Promise(r => setTimeout(r, 500))
+      }
+    } else {
+      debug('skipping implicit generate at migrationResult')
+    }
+
     if (migrationResult.migration) {
       if (
         this.definition.definition!.seed &&
         !this.flags['no-seed'] &&
         projectNew
       ) {
-        this.printHooks()
+        if (!noHook) {
+          this.printHooks()
+        }
         await this.seed(
           cluster,
           projectNew,
@@ -320,42 +406,13 @@ ${chalk.gray(
       }
 
       // no action required
-      this.deploying = false
       if (migrationResult.migration) {
-        this.printEndpoints(
+        await this.printEndpoints(
           cluster,
           serviceName,
           stageName,
           this.definition.getWorkspace() || undefined,
         )
-      }
-    }
-    const hooks = this.definition.getHooks('post-deploy')
-    if (hooks.length > 0) {
-      this.out.log(`\n${chalk.bold('post-deploy')}:`)
-    }
-    for (const hook of hooks) {
-      const splittedHook = hook.split(' ')
-      this.out.action.start(`Running ${chalk.cyan(hook)}`)
-      const isPackaged = fs.existsSync('/snapshot')
-      const spawnPath = isPackaged ? nativeSpawnSync : spawnSync
-      const child = spawnPath(splittedHook[0], splittedHook.slice(1))
-      const stderr = child.stderr && child.stderr.toString()
-      if (stderr && stderr.length > 0) {
-        this.out.log(chalk.red(stderr))
-      }
-      const stdout = child.stdout && child.stdout.toString()
-      if (stdout && stdout.length > 0) {
-        this.out.log(stdout)
-      }
-      const { status, error } = child
-      if (error || status !== 0) {
-        if (error) {
-          this.out.log(chalk.red(error.message))
-        }
-        this.out.action.stop(chalk.red(figures.cross))
-      } else {
-        this.out.action.stop()
       }
     }
   }
@@ -401,45 +458,7 @@ ${chalk.gray(
     this.out.action.stop(prettyTime(Date.now() - before))
   }
 
-  /**
-   * Returns true if there was a change
-   */
-  private async generateSchema(
-    cluster: Cluster,
-    serviceName: string,
-    stageName: string,
-  ): Promise<boolean> {
-    const schemaPath = getSchemaPathFromConfig()
-    if (schemaPath) {
-      this.printHooks()
-      const schemaDir = path.dirname(schemaPath)
-      fs.mkdirpSync(schemaDir)
-      const token = this.definition.getToken(serviceName, stageName)
-      const before = Date.now()
-      this.out.action.start(`Checking, if schema file changed`)
-      const schemaString = await fetchAndPrintSchema(
-        this.client,
-        concatName(cluster, serviceName, this.definition.getWorkspace()),
-        stageName,
-        token,
-      )
-      this.out.action.stop(prettyTime(Date.now() - before))
-      const oldSchemaString = fs.pathExistsSync(schemaPath)
-        ? fs.readFileSync(schemaPath, 'utf-8')
-        : null
-      if (schemaString !== oldSchemaString) {
-        const beforeWrite = Date.now()
-        this.out.action.start(`Writing database schema to \`${schemaPath}\` `)
-        fs.writeFileSync(schemaPath, schemaString)
-        this.out.action.stop(prettyTime(Date.now() - beforeWrite))
-        return true
-      }
-    }
-
-    return false
-  }
-
-  private printResult(payload: DeployPayload, force: boolean) {
+  private printResult(payload: DeployPayload, force: boolean, dryRun: boolean) {
     if (payload.errors && payload.errors.length > 0) {
       this.out.log(`${chalk.bold.red('\nErrors:')}`)
       this.out.migration.printErrors(payload.errors)
@@ -472,179 +491,53 @@ ${chalk.gray(
       }
     }
 
-    if (!payload.migration || payload.migration.steps.length === 0) {
-      this.out.log('Service is already up to date.')
+    const steps =
+      payload.steps || (payload.migration && payload.migration.steps) || []
+
+    if (steps.length === 0) {
+      if (dryRun) {
+        this.out.log('There are no changes.')
+      } else {
+        this.out.log('Service is already up to date.')
+      }
       return
     }
 
-    if (payload.migration.steps.length > 0) {
-      // this.out.migrati
-      this.out.log('\n' + chalk.bold('Changes:'))
-      this.out.migration.printMessages(payload.migration.steps)
+    if (steps.length > 0) {
+      this.out.log(
+        '\n' + chalk.bold(dryRun ? 'Potential changes:' : 'Changes:'),
+      )
+      this.out.migration.printMessages(steps)
       this.out.log('')
     }
   }
 
-  private printEndpoints(
+  private async printEndpoints(
     cluster: Cluster,
     serviceName: string,
     stageName: string,
     workspace?: string,
   ) {
-    this.out.log(`\n${chalk.bold(
-      'Your Prisma GraphQL database endpoint is live:',
-    )}
+    const version = await cluster.getVersion()
+    const hasAdmin = satisfiesVersion(version!, '1.29.0')
+    const adminText = hasAdmin
+      ? printAdminLink(
+          cluster.getApiEndpoint(serviceName, stageName, workspace),
+        )
+      : ''
 
-  ${chalk.bold('HTTP:')}  ${cluster.getApiEndpoint(
+    this.out.log(`\n${'Your Prisma endpoint is live:'}
+
+  ${'HTTP:'}  ${cluster.getApiEndpoint(serviceName, stageName, workspace)}
+  ${'WS:'}    ${cluster.getWSEndpoint(
       serviceName,
       stageName,
       workspace,
-    )}
-  ${chalk.bold('WS:')}    ${cluster.getWSEndpoint(
-      serviceName,
-      stageName,
-      workspace,
-    )}
+    )}${adminText}
 `)
-  }
-
-  private getCloudClusters(): Cluster[] {
-    return this.env.clusters.filter(c => c.shared || c.isPrivate)
-  }
-
-  private async clusterSelection(loggedIn: boolean): Promise<string> {
-    debug({ loggedIn })
-
-    const choices = loggedIn
-      ? await this.getLoggedInChoices()
-      : this.getPublicChoices()
-
-    const question = {
-      name: 'cluster',
-      type: 'list',
-      message: `Please choose the cluster you want to deploy to`,
-      choices,
-      pageSize: 9,
-    }
-
-    const { cluster } = await this.out.prompt(question)
-
-    if (cluster === 'login') {
-      await this.client.login()
-      this.loggedIn = true
-      return this.clusterSelection(true)
-    }
-
-    return cluster
-  }
-
-  private getLocalClusterChoices(): string[][] {
-    // const clusters = this.env.clusters.filter(c => !c.shared && !c.isPrivate)
-
-    // const clusterNames: string[][] = clusters.map(c => {
-    //   const note =
-    //     c.baseUrl.includes('localhost') || c.baseUrl.includes('127.0.0.1')
-    //       ? 'Local cluster (requires Docker)'
-    //       : 'Self-hosted'
-    //   return [c.name, note]
-    // })
-
-    // if (clusterNames.length === 0) {
-    //   clusterNames.push(['local', 'Local cluster (requires Docker)'])
-    // }
-    // return clusterNames
-    return [['local', 'Local cluster (requires Docker)']]
-  }
-
-  private async getLoggedInChoices(): Promise<any[]> {
-    const localChoices = this.getLocalClusterChoices()
-    // const workspaces = await this.client.getWorkspaces()
-    // const clusters = this.env.clusters.filter(
-    //   c => c.shared && c.name !== 'shared-public-demo',
-    // )
-    const combinations: string[][] = []
-    const remoteClusters = this.env.clusters.filter(
-      c => c.shared || c.isPrivate,
-    )
-
-    remoteClusters.forEach(cluster => {
-      const label = this.env.sharedClusters.includes(cluster.name)
-        ? 'Free development cluster (hosted on Prisma Cloud)'
-        : 'Private Prisma Cluster'
-      combinations.push([`${cluster.workspaceSlug}/${cluster.name}`, label])
-    })
-
-    const allCombinations = [...combinations, ...localChoices]
-
-    return [
-      new inquirer.Separator('                     '),
-      ...this.convertChoices(allCombinations),
-      new inquirer.Separator('                     '),
-      new inquirer.Separator(
-        chalk.dim(
-          `You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`,
-        ),
-      ),
-    ]
-  }
-
-  private convertChoices(
-    choices: string[][],
-  ): Array<{ value: string; name: string }> {
-    const padded = this.out.printPadded(choices, 0, 6).split('\n')
-    return padded.map((name, index) => ({
-      name,
-      value: choices[index][0],
-    }))
-  }
-
-  private getPublicChoices(): any[] {
-    const publicChoices = [
-      [
-        'prisma-eu1',
-        'Public development cluster (hosted in EU on Prisma Cloud)',
-      ],
-      [
-        'prisma-us1',
-        'Public development cluster (hosted in US on Prisma Cloud)',
-      ],
-    ]
-    const allCombinations = [...publicChoices, ...this.getLocalClusterChoices()]
-
-    return [
-      ...this.convertChoices(allCombinations),
-      new inquirer.Separator('                     '),
-      {
-        value: 'login',
-        name: 'Log in or create new account on Prisma Cloud',
-      },
-      new inquirer.Separator('                     '),
-      new inquirer.Separator(
-        chalk.dim(
-          `Note: When not logged in, service deployments to Prisma Cloud expire after 7 days.`,
-        ),
-      ),
-      new inquirer.Separator(
-        chalk.dim(
-          `You can learn more about deployment in the docs: http://bit.ly/prisma-graphql-deployment`,
-        ),
-      ),
-      new inquirer.Separator('                     '),
-    ]
   }
 }
 
 export function isValidProjectName(projectName: string): boolean {
   return /^[A-Z](.*)/.test(projectName)
-}
-
-function slugify(text) {
-  return text
-    .toString()
-    .toLowerCase()
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/[^\w\-]+/g, '') // Remove all non-word chars
-    .replace(/\-\-+/g, '-') // Replace multiple - with single -
-    .replace(/^-+/, '') // Trim - from start of text
-    .replace(/-+$/, '') // Trim - from end of text
 }

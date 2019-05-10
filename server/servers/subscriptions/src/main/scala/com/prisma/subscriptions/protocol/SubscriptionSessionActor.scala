@@ -1,14 +1,13 @@
 package com.prisma.subscriptions.protocol
 
-import akka.actor.{Actor, ActorRef, Stash}
+import akka.actor.{Actor, ActorRef, PoisonPill, Stash}
 import com.prisma.akkautil.{LogUnhandled, LogUnhandledExceptions}
 import com.prisma.api.ApiMetrics
-import com.prisma.auth.AuthImpl
+import com.prisma.jwt.Auth
 import com.prisma.shared.models.Project
 import com.prisma.subscriptions.SubscriptionDependencies
 import com.prisma.subscriptions.helpers.ProjectHelper
 import com.prisma.subscriptions.metrics.SubscriptionMetrics
-import com.prisma.subscriptions.protocol.SubscriptionSessionActorV05.Internal.Authorization
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.EndSubscription
 import com.prisma.subscriptions.resolving.SubscriptionsManager.Responses.{
   CreateSubscriptionFailed,
@@ -48,7 +47,8 @@ case class SubscriptionSessionActor(
   import com.prisma.subscriptions.resolving.SubscriptionsManager.Requests.CreateSubscription
   import context.dispatcher
 
-  val reporter = dependencies.reporter
+  val reporter   = dependencies.reporter
+  val auth: Auth = dependencies.auth
 
   override def preStart() = {
     super.preStart()
@@ -77,16 +77,23 @@ case class SubscriptionSessionActor(
   def waitingForInit(project: Project): Receive = logUnhandled {
     case GqlConnectionInit(payload) =>
       ParseAuthorization.parseAuthorization(payload.getOrElse(Json.obj())) match {
-        case Some(auth) =>
-          val authResult = AuthImpl.verify(project.secrets, auth.token)
+        // Case 1: Project has no secrets. Provided auth doesn't matter.
+        case x if project.secrets.isEmpty =>
+          sendToWebsocket(GqlConnectionAck)
+          context.become(initFinishedReceive(x))
+
+        // Case 2: Project has secrets. Verify provided auth.
+        case x @ Some(token) if project.secrets.nonEmpty =>
+          val authResult = auth.verifyToken(auth.normalizeToken(token), project.secrets)
           if (authResult.isSuccess) {
             sendToWebsocket(GqlConnectionAck)
-            context.become(initFinishedReceive(auth))
+            context.become(initFinishedReceive(x))
           } else {
             sendToWebsocket(GqlConnectionError("Authentication token is invalid."))
           }
 
-        case None =>
+        // Case 3: Project has secrets, but no auth provided.
+        case None if project.secrets.nonEmpty =>
           sendToWebsocket(GqlConnectionError("No Authorization field was provided in payload."))
       }
 
@@ -94,15 +101,19 @@ case class SubscriptionSessionActor(
       sendToWebsocket(GqlConnectionError("You have to send an init message before sending anything else."))
   }
 
-  def initFinishedReceive(auth: Authorization): Receive = logUnhandled {
+  def initFinishedReceive(auth: Option[String]): Receive = logUnhandled {
     case GqlStart(id, payload) =>
       handleStart(id, payload, auth)
 
     case GqlStop(id) =>
       subscriptionsManager ! EndSubscription(id, sessionId, projectId)
 
+    case GqlConnectionTerminate =>
+      context.parent ! PoisonPill
+
     case _: CreateSubscriptionSucceeded =>
     // NOOP
+
     case fail: CreateSubscriptionFailed =>
       sendToWebsocket(GqlError(fail.request.id, fail.errors.head.getMessage))
 
@@ -115,7 +126,7 @@ case class SubscriptionSessionActor(
       sendToWebsocket(response)
   }
 
-  private def handleStart(id: StringOrInt, payload: GqlStartPayload, auth: Authorization) = {
+  private def handleStart(id: StringOrInt, payload: GqlStartPayload, auth: Option[String]) = {
     val query = QueryParser.parse(payload.query)
 
     if (query.isFailure) {
@@ -127,7 +138,7 @@ case class SubscriptionSessionActor(
         sessionId = sessionId,
         query = query.get,
         variables = payload.variables,
-        authHeader = auth.token,
+        authHeader = auth,
         operationName = SubscriptionSessionActor.Internal.extractOperationName(payload.operationName)
       )
       subscriptionsManager ! createSubscription
@@ -140,17 +151,16 @@ case class SubscriptionSessionActor(
 }
 
 object ParseAuthorization {
-  def parseAuthorization(jsObject: JsObject): Option[Authorization] = {
-
+  def parseAuthorization(jsObject: JsObject): Option[String] = {
     def parseLowerCaseAuthorization = {
       (jsObject \ "authorization").validateOpt[String] match {
-        case JsSuccess(authField, _) => Some(Authorization(authField))
+        case JsSuccess(authField, _) => authField
         case JsError(_)              => None
       }
     }
 
     (jsObject \ "Authorization").validateOpt[String] match {
-      case JsSuccess(Some(auth), _) => Some(Authorization(Some(auth)))
+      case JsSuccess(Some(auth), _) => Some(auth)
       case JsSuccess(None, _)       => parseLowerCaseAuthorization
       case JsError(_)               => None
     }

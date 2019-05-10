@@ -9,12 +9,12 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       val validConfig = """
                           |port: 4466
                           |managementApiSecret: somesecret
+                          |prototype: true
                           |databases:
                           |  default:
-                          |    connector: mysql
-                          |    migrations: true
+                          |    connector: postgres
                           |    host: localhost
-                          |    port: 3306
+                          |    port: 5432
                           |    user: root
                           |    password: prisma
                           |    database: my_database
@@ -22,17 +22,18 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |    ssl: true
                           |    connectionLimit: 2
                           |    rawAccess: true
+                          |    queueSize: 1234
                         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
 
       config.get.port shouldBe Some(4466)
       config.get.managementApiSecret should contain("somesecret")
+      config.get.prototype should contain(true)
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
-      database.connector shouldBe "mysql"
-      database.active shouldBe true
-      database.port shouldBe 3306
+      database.connector shouldBe "postgres"
+      database.port shouldBe 5432
       database.user shouldBe "root"
       database.password shouldBe Some("prisma")
       database.database shouldBe Some("my_database")
@@ -40,6 +41,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.ssl shouldBe true
       database.connectionLimit shouldBe Some(2)
       database.rawAccess shouldBe true
+      database.queueSize shouldBe Some(1234)
     }
 
     "be parsed without errors if an optional field is missing" in {
@@ -59,10 +61,10 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.isSuccess shouldBe true
       config.get.port should contain(4466)
       config.get.managementApiSecret shouldBe None
+      config.get.prototype shouldBe None
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "mysql"
-      database.active shouldBe true
       database.port shouldBe 3306
       database.user shouldBe "root"
       database.password shouldBe Some("prisma")
@@ -70,6 +72,7 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       database.schema shouldBe None
       database.ssl shouldBe false
       database.rawAccess shouldBe false
+      database.queueSize shouldBe None
     }
 
     "be parsed without errors if an optional field is there but set to nothing" in {
@@ -79,7 +82,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                           |databases:
                           |  default:
                           |    connector: mysql
-                          |    migrations: true
                           |    host: localhost
                           |    port: 3306
                           |    user: root
@@ -97,7 +99,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "mysql"
-      database.active shouldBe true
       database.port shouldBe 3306
       database.user shouldBe "root"
       database.password shouldBe Some("prisma")
@@ -113,8 +114,8 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
           |databases:
           |  default:
           |    connector: postgres
-          |    migrations: true
           |    uri: postgres://user:password@host:5432/database?ssl=1
+          |    queueSize: 1234
         """.stripMargin
 
       val config = ConfigLoader.tryLoadString(validConfig)
@@ -125,13 +126,13 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.get.databases.length shouldBe 1
       val database = config.get.databases.head
       database.connector shouldBe "postgres"
-      database.active shouldBe true
       database.port shouldBe 5432
       database.user shouldBe "user"
       database.password shouldBe Some("password")
       database.database shouldBe Some("database")
       database.schema shouldBe None
       database.ssl shouldBe true
+      database.queueSize shouldBe Some(1234)
     }
   }
 
@@ -143,7 +144,6 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                             |databases:
                             |  default:
                             |    connector: mysql
-                            |    migrations: true
                             |    host: localhost
                             |    port: 3306
                             |    user: root
@@ -155,6 +155,117 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
       config.isSuccess shouldBe false
       config.failed.get shouldBe a[InvalidConfiguration]
     }
+
+    "error if mysql has database and schema" in {
+      val invalidConfig = """
+                              |port: 4466
+                              |managementApiSecret: somesecret
+                              |prototype: true
+                              |databases:
+                              |  default:
+                              |    connector: mysql
+                              |    host: localhost
+                              |    port: 3306
+                              |    user: root
+                              |    password: prisma
+                              |    database: my_database
+                              |    schema: my_schema
+                              |    ssl: true
+                              |    connectionLimit: 2
+                              |    rawAccess: true
+                            """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
+    "error if mysql has only schema" in {
+      val invalidConfig = """
+                            |port: 4466
+                            |managementApiSecret: somesecret
+                            |prototype: true
+                            |databases:
+                            |  default:
+                            |    connector: mysql
+                            |    host: localhost
+                            |    port: 3306
+                            |    user: root
+                            |    password: prisma
+                            |    schema: my_schema
+                            |    ssl: true
+                            |    connectionLimit: 2
+                            |    rawAccess: true
+                          """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
+    "error if postgres has only schema" in {
+      val invalidConfig = """
+                            |port: 4466
+                            |managementApiSecret: somesecret
+                            |prototype: true
+                            |databases:
+                            |  default:
+                            |    connector: postgres
+                            |    host: localhost
+                            |    port: 5432
+                            |    user: root
+                            |    password: prisma
+                            |    schema: my_schema
+                            |    ssl: true
+                            |    connectionLimit: 2
+                            |    rawAccess: true
+                          """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
+    "error if mongo has database and schema" in {
+      val invalidConfig = """
+                            |port: 4466
+                            |managementApiSecret: somesecret
+                            |prototype: true
+                            |databases:
+                            |  default:
+                            |    connector: mongo
+                            |    database: test
+                            |    schema: test
+                            |    uri: 'mongodb://prisma:prisma@host.docker.internal:27017/?authSource=admin&ssl=false'
+                          """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
+    "error if only schema is specified for mongo" in {
+      val invalidConfig = """
+                            |port: 4466
+                            |managementApiSecret: somesecret
+                            |prototype: true
+                            |databases:
+                            |  default:
+                            |    connector: mongo
+                            |    schema: test
+                            |    uri: 'mongodb://prisma:prisma@host.docker.internal:27017/?authSource=admin&ssl=false'
+                          """.stripMargin
+
+      val config = ConfigLoader.tryLoadString(invalidConfig)
+
+      config.isSuccess shouldBe false
+      config.failed.get shouldBe a[InvalidConfiguration]
+    }
+
   }
 
   "fail with an invalid config format error for an invalid boolean conversion" in {
@@ -216,11 +327,14 @@ class ConfigLoaderSpec extends WordSpec with Matchers {
                         |  default:
                         |    connector: mongo
                         |    uri: $uri
+                        |    queueSize: 1234
                       """.stripMargin
     val config        = ConfigLoader.tryLoadString(invalidConfig)
+    println(config)
     config.isSuccess shouldBe true
     val db = config.get.databases.head
     db.connector should be("mongo")
     db.uri should be(uri)
+    db.queueSize should be(Some(1234))
   }
 }

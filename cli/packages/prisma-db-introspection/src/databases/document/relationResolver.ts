@@ -9,6 +9,8 @@ import { Data } from './data'
 import { ModelSampler } from './modelSampler'
 import { IDirectiveInfo } from 'prisma-datamodel'
 
+const debug = require('debug')('relation-resolver')
+
 export interface IRelationResolver<InternalCollectionType> {
   resolve(
     types: IGQLType[],
@@ -150,7 +152,7 @@ class RelationResolveContext<Type> {
   }
 
   private hasError(obj: IGQLField | IGQLType) {
-    return obj.comments !== undefined && obj.comments.some(x => x.isError)
+    return obj.comments.some(x => x.isError)
   }
 
   /**
@@ -175,28 +177,33 @@ class RelationResolveContext<Type> {
           if (typeof field.type === 'string') {
             // Primitive field
             if (field.relationName === ModelSampler.ErrorType) {
-              if (data[field.name] !== undefined) {
-                const value = data[field.name]
-                if (Array.isArray(value) !== field.isList) {
-                  throw new Error(
-                    `Array declaration missmatch: ${this.type.name}.${
-                      field.name
-                    } `,
-                  )
-                }
-                const values = Array.isArray(value) ? value : [value]
-                // Handling of array relations.
-                for (const value of values) {
-                  for (const collection of this.collections) {
-                    if (
-                      await this.connector.exists(collection.collection, value)
-                    ) {
-                      this.fieldScores[field.name][collection.name].hits += 1
-                    } else {
-                      this.fieldScores[field.name][collection.name].misses += 1
+              try {
+                if (data[field.name] !== undefined) {
+                  const value = data[field.name]
+                  if (Array.isArray(value) !== field.isList) {
+                    throw new Error(
+                      `Array declaration missmatch: ${this.type.name}.${
+                        field.name
+                      } `,
+                    )
+                  }
+                  const values = Array.isArray(value) ? value : [value]
+                  // Handling of array relations.
+                  for (const value of values) {
+                    for (const collection of this.collections) {
+                      if (
+                        await this.connector.exists(collection.collection, value)
+                      ) {
+                        this.fieldScores[field.name][collection.name].hits += 1
+                      } else {
+                        this.fieldScores[field.name][collection.name].misses += 1
+                      }
                     }
                   }
                 }
+              } catch(e) {
+                debug({ data }, { fieldName: field.name })
+                debug({ error: e.toString()})
               }
             }
           } else {
@@ -270,11 +277,7 @@ class RelationResolveContext<Type> {
                 link: 'INLINE',
               }
 
-              if (field.directives === undefined) {
-                field.directives = [relationDirective]
-              } else {
-                field.directives.push(relationDirective)
-              }
+              field.directives.push(relationDirective)
             }
             // We always remove the fields <unknown> relation tag.
             field.relationName = null

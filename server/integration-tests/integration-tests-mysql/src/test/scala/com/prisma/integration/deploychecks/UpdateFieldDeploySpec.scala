@@ -1,16 +1,20 @@
 package com.prisma.integration.deploychecks
 
+import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.integration.IntegrationBaseSpec
+import com.prisma.{ConnectorTag, IgnoreMongo, IgnoreSQLite}
 import org.scalatest.{FlatSpec, Matchers}
 
 class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseSpec {
+  override def doNotRunForConnectors: Set[ConnectorTag] = Set(SQLiteConnectorTag)
 
   "Updating a field from scalar non-list to scalar list" should "throw a warning if there is already data" in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: Int
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: Int
          |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -18,21 +22,23 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     apiServer.query("""mutation{createA(data:{name: "A", value: 1}){name}}""", project)
 
     val schema2 =
-      """type A {
-        | name: String! @unique
-        | value: [Int]
+      s"""type A {
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: [Int] $scalarListDirective
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
       """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Updating a field from scalar non-list to scalar list" should "throw a warning if there is already data but proceed with -force" in {
+  "Updating a field from scalar non-list to scalar list" should "throw a warning if there is already data but proceed with -force" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: Int
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: Int
          |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -40,29 +46,32 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
     apiServer.query("""mutation{createA(data:{name: "A", value: 1}){name}}""", project)
 
     val schema2 =
-      """type A {
-        | name: String! @unique
-        | value: [Int]
+      s"""type A {
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: [Int] $scalarListDirective
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2, force = true).toString should be(
       """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Updating a field from scalar non-list to scalar list" should "succeed if there is no data yet" in {
+  "Updating a field from scalar non-list to scalar list" should "succeed if there is no data yet" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: Int
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: Int
          |}""".stripMargin
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
-      """type A {
-        | name: String! @unique
-        | value: [Int]
+      s"""type A {
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: [Int] $scalarListDirective
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -71,9 +80,10 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
   "Updating a field from scalar List to scalar non-list" should "warn if there is already data" in {
 
     val schema =
-      """type A {
-        | name: String! @unique
-        | value: [Int]
+      s"""type A {
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: [Int] $scalarListDirective
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -83,8 +93,9 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: Int
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: Int
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
@@ -94,17 +105,19 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
   "Updating a field from scalar List to scalar non-list" should "succeed if there are no nodes yet" in {
 
     val schema =
-      """type A {
-        | name: String! @unique
-        | value: [Int]
+      s"""type A {
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: [Int] $scalarListDirective
         |}""".stripMargin
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: Int
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: Int
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -114,8 +127,9 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -124,20 +138,22 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: Int
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: Int
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
       """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Updating a field from string to int" should "throw a warning if there is already data but proceed with -force" in {
+  "Updating a field from string to int" should "throw a warning if there is already data but proceed with -force" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -146,28 +162,31 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: Int
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: Int
         |}"""
 
     deployServer.deploySchemaThatMustWarn(project, schema2, true).toString should be(
       """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Updating a field from string to int" should "not throw a warning if there is no data yet" in {
+  "Updating a field from string to int" should "not throw a warning if there is no data yet" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}"""
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: Int
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: Int
         |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -177,8 +196,9 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}""".stripMargin
 
     val (project, _) = setupProject(schema)
@@ -187,20 +207,22 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: A
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: A @relation(link: INLINE)
         |}""".stripMargin
 
     deployServer.deploySchemaThatMustWarn(project, schema2).toString should be(
       """{"data":{"deploy":{"migration":null,"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Updating a field from string to a relation" should "throw a warning if there is already data but proceed with -force" in {
+  "Updating a field from string to a relation" should "throw a warning if there is already data but proceed with -force" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -209,58 +231,64 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: A
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: A @relation(link: INLINE)
         |}"""
 
     deployServer.deploySchemaThatMustWarn(project, schema2, true).toString should be(
       """{"data":{"deploy":{"migration":{"applied":0,"revision":3},"errors":[],"warnings":[{"description":"You already have nodes for this model. This change may result in data loss."}]}}}""")
   }
 
-  "Updating a field from string to a relation" should "not throw a warning if there is no data yet" in {
+  "Updating a field from string to a relation" should "not throw a warning if there is no data yet" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}"""
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: A
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: A @relation(link: INLINE)
         |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Updating a scalar field to required" should "not throw an error if there is no data yet" in {
+  "Updating a scalar field to required" should "not throw an error if there is no data yet" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}"""
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: String!
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: String!
         |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Updating a scalar field to required" should "not throw an error if all required fields already have data" in {
+  "Updating a scalar field to required" should "not throw an error if all required fields already have data" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -269,19 +297,21 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: String!
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: String!
         |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Updating a scalar field to required" should "throw an error if a newly required field is null" in {
+  "Updating a scalar field to required" should "warn if a newly required field is null" taggedAs (IgnoreMongo) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -290,20 +320,21 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: String!
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: String!
         |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
+    deployServer.deploySchemaThatMustWarn(project, schema2).toString should include("""The fields will be pre-filled with the value: ``.""")
   }
 
-  "Updating the type of a required scalar field" should "throw an error if there are nodes for that type" in {
+  "Updating the type of a required scalar field" should "warn if there are nodes for that type" in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | value: String!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  value: String!
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -312,38 +343,42 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """type A {
-        | name: String! @unique
-        | value: Int!
+        |  id: ID! @id
+        |  name: String! @unique
+        |  value: Int!
         |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema2, force = true).toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are changing the type of a required field and there are nodes for that type. Consider making the field optional, then set values for all nodes and then making it required."}],"warnings":[]}}}""")
+    deployServer.deploySchemaThatMustWarn(project, schema2, force = true).toString should include("""The fields will be pre-filled with the value: `0`.""")
   }
 
   "Updating a relation field to required" should "not throw an error if there is no data yet" in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | b: [B]
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: [B]
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A @relation(link: INLINE)
          |}"""
 
     val (project, _) = setupProject(schema)
 
     val schema2 =
       """|type A {
-         | name: String! @unique
-         | b: [B]
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: [B]
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A! @relation(link: INLINE)
          |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
@@ -353,13 +388,15 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | b: [B]
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: [B]
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A @relation(link: INLINE)
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -368,29 +405,33 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """|type A {
-         | name: String! @unique
-         | b: [B]
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: [B]
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A! @relation(link: INLINE)
          |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema2, 3)
   }
 
-  "Updating a relation field to required" should "throw an error if a newly required field is null" in {
+  "Updating a relation field to required" should "throw an error if a newly required field is null (INLINE RELATION)" taggedAs (IgnoreMongo) in {
 
     val schema =
       """|type A {
-         | name: String! @unique
-         | b: [B]
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: [B]
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A @relation(link: INLINE)
          |}"""
 
     val (project, _) = setupProject(schema)
@@ -399,17 +440,54 @@ class UpdateFieldDeploySpec extends FlatSpec with Matchers with IntegrationBaseS
 
     val schema2 =
       """|type A {
-         | name: String! @unique
-         | b: [B]
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: [B]
          |}
          |
          |type B {
-         | name: String! @unique
-         | a: A!
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A! @relation(link: INLINE)
          |}"""
 
-    deployServer.deploySchemaThatMustError(project, schema2).toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are making a field required, but there are already nodes that would violate that constraint."}],"warnings":[]}}}""")
+    deployServer.deploySchemaThatMustError(project, schema2).toString should include(
+      """You are updating the field `a` to be required. But there are already nodes for the model `B` that would violate that constraint.""")
   }
 
+  "Updating a relation field to required" should "throw an error if a newly required field is null (RELATION TABLE)" taggedAs (IgnoreMongo) in {
+
+    val schema =
+      """|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: [B]
+         |}
+         |
+         |type B {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A @relation(link: TABLE)
+         |}"""
+
+    val (project, _) = setupProject(schema)
+
+    apiServer.query("""mutation{createB(data:{name: "B"}){name}}""", project)
+
+    val schema2 =
+      """|type A {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  b: [B]
+         |}
+         |
+         |type B {
+         |  id: ID! @id
+         |  name: String! @unique
+         |  a: A! @relation(link: TABLE)
+         |}"""
+
+    deployServer.deploySchemaThatMustError(project, schema2).toString should include(
+      """You are updating the field `a` to be required. But there are already nodes for the model `B` that would violate that constraint.""")
+  }
 }

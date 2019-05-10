@@ -4,31 +4,27 @@ import com.prisma.config.DatabaseConfig
 import com.prisma.deploy.connector._
 import com.prisma.deploy.connector.mongo.impl._
 import com.prisma.deploy.connector.persistence.{CloudSecretPersistence, MigrationPersistence, ProjectPersistence, TelemetryPersistence}
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, Project, ProjectIdEncoder}
+import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
 import org.joda.time.DateTime
 import org.mongodb.scala.MongoClient
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTest: Boolean)(implicit ec: ExecutionContext) extends DeployConnector {
-  override def fieldRequirements: FieldRequirementsInterface = MongoFieldRequirement(isActive)
-
+case class MongoDeployConnector(config: DatabaseConfig)(implicit ec: ExecutionContext) extends DeployConnector {
   lazy val internalDatabaseDefs     = MongoInternalDatabaseDefs(config)
   lazy val mongoClient: MongoClient = internalDatabaseDefs.client
   lazy val internalDatabase         = mongoClient.getDatabase("prisma")
 
-  override val migrationPersistence: MigrationPersistence     = MongoMigrationPersistence(internalDatabase)
-  override val projectPersistence: ProjectPersistence         = MongoProjectPersistence(internalDatabase, migrationPersistence)
-  override val telemetryPersistence: TelemetryPersistence     = MongoTelemetryPersistence()
-  override val cloudSecretPersistence: CloudSecretPersistence = MongoCloudSecretPersistence(internalDatabase)
-
-  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient, config.database)
+  override val migrationPersistence: MigrationPersistence       = MongoMigrationPersistence(internalDatabase)
+  override val projectPersistence: ProjectPersistence           = MongoProjectPersistence(internalDatabase, migrationPersistence, config)
+  override val telemetryPersistence: TelemetryPersistence       = MongoTelemetryPersistence()
+  override val cloudSecretPersistence: CloudSecretPersistence   = MongoCloudSecretPersistence(internalDatabase)
+  override val deployMutactionExecutor: DeployMutactionExecutor = MongoDeployMutactionExecutor(mongoClient)
   override val projectIdEncoder: ProjectIdEncoder               = ProjectIdEncoder('_')
+  override val databaseInspector: DatabaseInspector             = DatabaseInspector.empty
+  override def capabilities: ConnectorCapabilities              = ConnectorCapabilities.mongo
 
-  override def capabilities: ConnectorCapabilities = ConnectorCapabilities.mongo(isActive = isActive, isTest = isTest)
-
-  override def clientDBQueries(project: Project): ClientDbQueries                              = MongoClientDbQueries(project, mongoClient, config.database)
-  override def databaseIntrospectionInferrer(projectId: String): DatabaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer
+  override def clientDBQueries(project: Project): ClientDbQueries = MongoClientDbQueries(project, mongoClient)
 
   override def initialize(): Future[Unit] = Future.unit
 
@@ -59,6 +55,4 @@ case class MongoDeployConnector(config: DatabaseConfig, isActive: Boolean, isTes
   override def updateTelemetryInfo(lastPinged: DateTime): Future[Unit] = telemetryPersistence.updateTelemetryInfo(lastPinged)
 
   override def managementLock(): Future[Unit] = Future.successful(())
-
-  override def testFacilities() = DeployTestFacilites(DatabaseInspector.empty)
 }

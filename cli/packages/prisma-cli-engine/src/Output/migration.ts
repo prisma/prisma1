@@ -4,9 +4,17 @@ import chalk from 'chalk'
 import { Output } from './index'
 import { makePartsEnclodesByCharacterBold } from './util'
 import * as groupBy from 'lodash.groupby'
-import { SchemaError, MigrationStep } from '../Client/types'
+import {
+  SchemaError,
+  MigrationStep,
+  LinkTableManifestation,
+} from '../Client/types'
 
 const b = s => `\`${chalk.bold(s)}\``
+
+interface StepWithName {
+  name: string
+}
 
 export class MigrationPrinter {
   out: Output
@@ -14,19 +22,6 @@ export class MigrationPrinter {
     this.out = out
   }
   printMessages(steps: MigrationStep[]) {
-    // group types,
-    // const groupedByType = groupBy(steps, m => m.type)
-    // Object.keys(groupedByType).forEach(type => {
-    //   const typeMessages = groupedByType[type]
-    //   this.out.log('\n' + printType(type) + '\n')
-    //   const groupedByName = groupBy(typeMessages, m => m.name.split('.')[0])
-    //   Object.keys(groupedByName).forEach(name => {
-    //     this.out.log(`  ${chalk.bold(name)}`)
-    //     const nameMessages = groupedByName[name]
-    //     nameMessages.forEach(this.printMigrationMessage, this)
-    //   })
-    // })
-    // this.out.log('')
     this.printTypes(steps)
     this.printEnums(steps)
     this.printRelations(steps)
@@ -174,12 +169,80 @@ export class MigrationPrinter {
       switch (step.type) {
         case 'CreateRelation':
           this.printRelationName(step)
-          this.out.log(
-            `${pad}${this.getSymbol('create')} Created relation between ${
-              step.leftModel
-            } and ${step.rightModel}`,
-          )
+          if (step.after) {
+            const after = step.after!
+            if (after.type === 'LinkTable') {
+              this.out.log(
+                `${pad}${this.getSymbol('create')} Link Table ${b(
+                  after.table,
+                )} between ${b(step.leftModel)} and ${b(
+                  step.rightModel,
+                )} has been created`,
+              )
+            } else {
+              this.out.log(
+                `${pad}${this.getSymbol(
+                  'create',
+                )} Created an inline relation between ${b(
+                  step.leftModel,
+                )} and ${b(step.rightModel)} in the column ${b(
+                  after.column,
+                )} of table ${b(after.model)}`,
+              )
+            }
+          }
           break
+        case 'UpdateRelation':
+          if (step.ur_after && step.before) {
+            this.printRelationName({ name: step.ur_newName || step.ur_name! })
+
+            const before = step.before!
+            const after = step.ur_after!
+
+            if (before.type === 'LinkTable' && after.type === 'LinkTable') {
+              if (before.idColumn && !after.idColumn) {
+                this.out.log(
+                  `${pad}${this.getSymbol('delete')} The id column ${b(
+                    before.idColumn,
+                  )} in link table ${b(
+                    before.table,
+                  )} has been removed.\n${pad}  It was a Prisma legacy column that is not in use anymore.`,
+                )
+              }
+            }
+
+            if (before.type === 'LinkTable' && after.type === 'Inline') {
+              this.out.log(
+                `${pad}${this.getSymbol('delete')} Link Table ${b(
+                  before.table,
+                )} has been removed`,
+              )
+              this.out.log(
+                `${pad}${this.getSymbol(
+                  'create',
+                )} Created an inline relation in the column ${b(
+                  after.column,
+                )} of table ${b(after.model)}`,
+              )
+            }
+
+            if (before.type === 'Inline' && after.type === 'LinkTable') {
+              this.out.log(
+                `${pad}${this.getSymbol(
+                  'delete',
+                )} Removed an inline relation in the column ${b(
+                  before.column,
+                )} of table ${b(before.model)}`,
+              )
+              this.out.log(
+                `${pad}${this.getSymbol('create')} Link Table ${b(
+                  after.table,
+                )} has been created`,
+              )
+            }
+          }
+          break
+
         case 'DeleteRelation':
           this.printRelationName(step)
           this.out.log(
@@ -192,11 +255,11 @@ export class MigrationPrinter {
     })
   }
 
-  printRelationName(step: MigrationStep) {
+  printRelationName(step: StepWithName) {
     this.out.log(`\n  ${chalk.bold(step.name)} (Relation)`)
   }
 
-  printEnumName(step: MigrationStep) {
+  printEnumName(step: StepWithName) {
     this.out.log(`\n  ${chalk.bold(step.name)} (Enum)`)
   }
 

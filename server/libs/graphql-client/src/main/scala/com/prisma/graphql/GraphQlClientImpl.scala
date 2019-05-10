@@ -25,7 +25,7 @@ case class GraphQlClientImpl(
   override def sendQuery(query: String, path: String, headers: Map[String, String]) = {
     val actualPath = if (path.isEmpty) "" else s"/${path.stripPrefix("/")}"
     val uri        = baseUri + actualPath
-    val body       = Json.obj("query" -> query)
+    val body       = Json.obj("query" -> query, "variables" -> Json.obj())
     val entity     = HttpEntity(ContentTypes.`application/json`, body.toString)
     val akkaHeaders = (baseHeaders ++ headers)
       .flatMap {

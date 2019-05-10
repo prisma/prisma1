@@ -1,6 +1,6 @@
 package com.prisma.api.connector.jdbc.impl
 
-import java.sql.SQLIntegrityConstraintViolationException
+import java.sql.{SQLException, SQLIntegrityConstraintViolationException}
 
 import com.prisma.api.connector._
 import com.prisma.api.connector.jdbc.database.JdbcActionsBuilder
@@ -8,14 +8,12 @@ import com.prisma.api.connector.jdbc.{NestedDatabaseMutactionInterpreter, TopLev
 import com.prisma.api.schema.APIErrors
 import com.prisma.gc_values.{IdGCValue, RootGCValue}
 import com.prisma.shared.models.RelationField
-import org.postgresql.util.PSQLException
 import slick.dbio._
 
 import scala.concurrent.ExecutionContext
 
 case class CreateNodeInterpreter(
-    mutaction: CreateNode,
-    includeRelayRow: Boolean
+    mutaction: CreateNode
 )(implicit ec: ExecutionContext)
     extends TopLevelDatabaseMutactionInterpreter {
   val model = mutaction.model
@@ -24,27 +22,34 @@ case class CreateNodeInterpreter(
     for {
       id <- mutationBuilder.createNode(model, mutaction.nonListArgs)
       _  <- mutationBuilder.createScalarListValuesForNodeId(model, id, mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayId(model, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 
   override val errorMapper = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.model, e).get)
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, mutaction.model, e).get)
 
-    case e: PSQLException if e.getSQLState == "23503" =>
+    case e: SQLException if e.getSQLState == "23505" && e.getMessage.contains(s"${model.dbName}_pkey") =>
+      APIErrors.UniqueConstraintViolation(model.name, s"Field name = " + model.idField_!.name)
+
+    case e: SQLException if e.getSQLState == "23503" =>
       APIErrors.NodeDoesNotExist("")
 
     case e: SQLIntegrityConstraintViolationException
         if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && e.getMessage.contains("'PRIMARY'") =>
+      APIErrors.UniqueConstraintViolation(model.name, s"Field name = " + model.idField_!.name)
+
+    case e: SQLException if e.getErrorCode == 19 && GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(model.name, GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).get)
   }
 
 }
 
 case class NestedCreateNodeInterpreter(
-    mutaction: NestedCreateNode,
-    includeRelayRow: Boolean
+    mutaction: NestedCreateNode
 )(implicit val ec: ExecutionContext)
     extends NestedDatabaseMutactionInterpreter
     with NestedRelationInterpreterBase {
@@ -58,7 +63,6 @@ case class NestedCreateNodeInterpreter(
       _  <- DBIO.seq(requiredCheck(parentId), removalAction(parentId))
       id <- createNodeAndConnectToParent(relationField, mutationBuilder, parentId)
       _  <- mutationBuilder.createScalarListValuesForNodeId(relatedModel, id, mutaction.listArgs)
-      _  <- if (includeRelayRow) mutationBuilder.createRelayId(relatedModel, id) else DBIO.successful(())
     } yield CreateNodeResult(id, mutaction)
   }
 
@@ -117,14 +121,23 @@ case class NestedCreateNodeInterpreter(
     }
 
   override val errorMapper = {
-    case e: PSQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).isDefined =>
-      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(relatedModel, e).get)
+    case e: SQLException if e.getSQLState == "23505" && GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOption(mutaction.project, relatedModel, e).get)
 
-    case e: PSQLException if e.getSQLState == "23503" =>
+    case e: SQLException if e.getSQLState == "23505" && e.getMessage.contains(s"${relatedModel.dbName}_pkey") =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, s"Field name = " + relatedModel.idField_!.name)
+
+    case e: SQLException if e.getSQLState == "23503" => //Foreign Key Violation
       APIErrors.NodeDoesNotExist("")
 
     case e: SQLIntegrityConstraintViolationException
         if e.getErrorCode == 1062 && GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).isDefined =>
       APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOptionMySql(mutaction.nonListArgs.keys, e).get)
+
+    case e: SQLIntegrityConstraintViolationException if e.getErrorCode == 1062 && e.getMessage.contains("'PRIMARY'") =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, s"Field name = " + relatedModel.idField_!.name)
+
+    case e: SQLException if e.getErrorCode == 19 && GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).isDefined =>
+      APIErrors.UniqueConstraintViolation(relatedModel.name, GetFieldFromSQLUniqueException.getFieldOptionSQLite(mutaction.nonListArgs.keys, e).get)
   }
 }

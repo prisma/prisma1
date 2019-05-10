@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -oxe
+set -xe
 cd packages/prisma-datamodel
 yarn
 yarn build
@@ -13,13 +13,13 @@ yarn build
 cd ../prisma-db-introspection
 yarn
 yarn build
+cd ../prisma-generate-schema
+yarn
+yarn build
 cd ../prisma-client-lib
 yarn
 yarn build
 cd ../prisma-cli-core
-yarn
-yarn build
-cd ../prisma-generate-schema
 yarn
 yarn build
 cd ../prisma-cli

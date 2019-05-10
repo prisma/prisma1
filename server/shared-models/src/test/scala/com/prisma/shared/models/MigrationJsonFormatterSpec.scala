@@ -1,7 +1,7 @@
 package com.prisma.shared.models
 
 import com.prisma.utils.json.JsonUtils
-import org.scalatest.{FlatSpec, Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpecLike}
 import play.api.libs.json.Json
 
 class MigrationJsonFormatterSpec extends WordSpecLike with Matchers with JsonUtils {
@@ -76,8 +76,9 @@ class MigrationJsonFormatterSpec extends WordSpecLike with Matchers with JsonUti
     val migration = Migration(
       projectId = "projectId",
       revision = 1,
-      schema = Schema.empty,
+      schema = Schema.emptyV11,
       functions = Vector.empty,
+      rawDataModel = "type User { id:ID }",
       status = MigrationStatus.Success,
       applied = 2,
       rolledBack = 3,
@@ -85,7 +86,7 @@ class MigrationJsonFormatterSpec extends WordSpecLike with Matchers with JsonUti
       errors = Vector.empty,
       startedAt = None,
       finishedAt = None,
-      previousSchema = Schema.empty
+      previousSchema = Schema.emptyV11
     )
 
     val json = Json.toJson(migration)
@@ -94,7 +95,15 @@ class MigrationJsonFormatterSpec extends WordSpecLike with Matchers with JsonUti
       """{
            "projectId":"projectId",
            "revision":1,
-           "schema":{"models":[],"relations":[],"enums":[]},"functions":[],"status":"SUCCESS",
+           "schema":{
+             "models":[],
+             "relations":[],
+             "enums":[],
+             "version": "v2"
+           },
+           "functions":[],
+           "status":"SUCCESS",
+           "datamodel":"type User { id:ID }",
            "applied":2,
            "rolledBack":3,
            "steps":[],

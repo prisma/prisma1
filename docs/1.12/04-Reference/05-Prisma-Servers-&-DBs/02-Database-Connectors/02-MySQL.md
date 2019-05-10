@@ -37,7 +37,7 @@ services:
     volumes:
       - mysql:/var/lib/mysql
 volumes:
-  mysql:
+  mysql: ~
 ```
 
 ## Get started

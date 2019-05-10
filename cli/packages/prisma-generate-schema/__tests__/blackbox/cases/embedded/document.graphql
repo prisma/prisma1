@@ -33,8 +33,64 @@ input ChildCreateManyInput {
   create: [ChildCreateInput!]
 }
 
-type ChildPreviousValues {
+input ChildRestrictedWhereInput {
+  """
+  Logical AND on all given filters.
+  """
+  AND: [ChildRestrictedWhereInput!]
   c: String
+  """
+  All values that are not equal to given value.
+  """
+  c_not: String
+  """
+  All values that are contained in given list.
+  """
+  c_in: [String!]
+  """
+  All values that are not contained in given list.
+  """
+  c_not_in: [String!]
+  """
+  All values less than the given value.
+  """
+  c_lt: String
+  """
+  All values less than or equal the given value.
+  """
+  c_lte: String
+  """
+  All values greater than the given value.
+  """
+  c_gt: String
+  """
+  All values greater than or equal the given value.
+  """
+  c_gte: String
+  """
+  All values containing the given string.
+  """
+  c_contains: String
+  """
+  All values not containing the given string.
+  """
+  c_not_contains: String
+  """
+  All values starting with the given string.
+  """
+  c_starts_with: String
+  """
+  All values not starting with the given string.
+  """
+  c_not_starts_with: String
+  """
+  All values ending with the given string.
+  """
+  c_ends_with: String
+  """
+  All values not ending with the given string.
+  """
+  c_not_ends_with: String
 }
 
 input ChildScalarWhereInput {
@@ -105,45 +161,6 @@ input ChildScalarWhereInput {
   c_not_ends_with: String
 }
 
-type ChildSubscriptionPayload {
-  mutation: MutationType!
-  node: Child
-  updatedFields: [String!]
-  previousValues: ChildPreviousValues
-}
-
-input ChildSubscriptionWhereInput {
-  """
-  Logical AND on all given filters.
-  """
-  AND: [ChildSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ChildSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ChildSubscriptionWhereInput!]
-  """
-  The subscription event gets dispatched when it's listed in mutation_in
-  """
-  mutation_in: [MutationType!]
-  """
-  The subscription event gets only dispatched when one of the updated fields names is included in this list
-  """
-  updatedFields_contains: String
-  """
-  The subscription event gets only dispatched when all of the field names included in this list have been updated
-  """
-  updatedFields_contains_every: [String!]
-  """
-  The subscription event gets only dispatched when some of the field names included in this list have been updated
-  """
-  updatedFields_contains_some: [String!]
-  node: ChildWhereInput
-}
-
 input ChildUpdateManyDataInput {
   c: String
 }
@@ -164,14 +181,6 @@ input ChildWhereInput {
   Logical AND on all given filters.
   """
   AND: [ChildWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ChildWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ChildWhereInput!]
   c: String
   """
   All values that are not equal to given value.
@@ -225,6 +234,8 @@ input ChildWhereInput {
   All values not ending with the given string.
   """
   c_not_ends_with: String
+  friendsOpt_some: FriendWhereInput
+  jointOpt: JointWhereInput
 }
 
 type Friend {
@@ -249,6 +260,7 @@ type FriendConnection {
 
 input FriendCreateInput {
   f: String
+  test: ID
 }
 
 input FriendCreateManyInput {
@@ -295,14 +307,6 @@ input FriendSubscriptionWhereInput {
   """
   AND: [FriendSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [FriendSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FriendSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -334,14 +338,6 @@ input FriendWhereInput {
   Logical AND on all given filters.
   """
   AND: [FriendWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [FriendWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [FriendWhereInput!]
   f: String
   """
   All values that are not equal to given value.
@@ -476,6 +472,7 @@ type JointConnection {
 }
 
 input JointCreateInput {
+  id: ID
   j: String
 }
 
@@ -649,14 +646,6 @@ input JointSubscriptionWhereInput {
   """
   AND: [JointSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [JointSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [JointSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -690,6 +679,7 @@ input JointUpdateManyDataInput {
 input JointUpdateManyInput {
   create: [JointCreateInput!]
   connect: [JointWhereUniqueInput!]
+  set: [JointWhereUniqueInput!]
   disconnect: [JointWhereUniqueInput!]
   delete: [JointWhereUniqueInput!]
   update: [JointUpdateWithWhereUniqueNestedInput!]
@@ -723,14 +713,6 @@ input JointWhereInput {
   Logical AND on all given filters.
   """
   AND: [JointWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [JointWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [JointWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -931,6 +913,7 @@ type ParentConnection {
 }
 
 input ParentCreateInput {
+  id: ID
   p: String
   children: ChildCreateManyInput
   j: JointCreateManyInput
@@ -975,14 +958,6 @@ input ParentSubscriptionWhereInput {
   """
   AND: [ParentSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [ParentSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ParentSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1016,14 +991,6 @@ input ParentWhereInput {
   Logical AND on all given filters.
   """
   AND: [ParentWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [ParentWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [ParentWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1130,9 +1097,10 @@ input ParentWhereInput {
   All values not ending with the given string.
   """
   p_not_ends_with: String
-  children_every: ChildWhereInput
   children_some: ChildWhereInput
-  children_none: ChildWhereInput
+  children_every: ChildRestrictedWhereInput
+  children_none: ChildRestrictedWhereInput
+  j_some: JointWhereInput
 }
 
 input ParentWhereUniqueInput {
@@ -1163,7 +1131,6 @@ type Query {
 
 type Subscription {
   parent(where: ParentSubscriptionWhereInput): ParentSubscriptionPayload
-  child(where: ChildSubscriptionWhereInput): ChildSubscriptionPayload
   joint(where: JointSubscriptionWhereInput): JointSubscriptionPayload
   friend(where: FriendSubscriptionWhereInput): FriendSubscriptionPayload
 }

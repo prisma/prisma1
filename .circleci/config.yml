@@ -1,15 +1,22 @@
 version: 2
 jobs:
   # CLI publishing
-  cli:
+  cli_publish:
     docker:
       - image: circleci/node:8
+      - image: circleci/mongo:3
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: prisma
+          MONGO_INITDB_ROOT_PASSWORD: prisma
       - image: circleci/postgres:10.3-alpine
         environment:
           POSTGRES_USER: prisma
           POSTGRES_PASSWORD: prisma
           POSTGRES_PW: prisma
           POSTGRES_DB: prisma
+      - image: circleci/mysql:5
+        environment:
+          MYSQL_ROOT_PASSWORD: prisma
     steps:
       - checkout
       - run: sudo apt install postgresql-client
@@ -25,7 +32,57 @@ jobs:
               sleep 2
             done
             echo Failed waiting for Postgres && exit 1
+      - run:
+          name: Wait for MySQL to start
+          # preinstalled in circleci/* docker image
+          command: dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
+      # - run:
+      #     name: Wait for Mongo to start
+      #     # preinstalled in circleci/* docker image
+      #     command: dockerize -wait tcp://127.0.0.1:27017 -timeout 120s
+      - run: ./cli/scripts/test_ci.sh
       - run: ./cli/scripts/publish.sh
+
+  cli_test:
+    docker:
+      - image: circleci/node:8
+      - image: circleci/mongo:3
+        environment:
+          MONGO_INITDB_ROOT_USERNAME: prisma
+          MONGO_INITDB_ROOT_PASSWORD: prisma
+      - image: circleci/postgres:10.3-alpine
+        environment:
+          POSTGRES_USER: prisma
+          POSTGRES_PASSWORD: prisma
+          POSTGRES_PW: prisma
+          POSTGRES_DB: prisma
+      - image: circleci/mysql:5
+        environment:
+          MYSQL_ROOT_PASSWORD: prisma
+    steps:
+      - checkout
+      - run: sudo apt install postgresql-client
+      - run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+      - run: cd cli && yarn
+      - run:
+          name: Waiting for PostgreSQL to start
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 5432 && echo Success && exit 0
+              echo -n .
+              sleep 2
+            done
+            echo Failed waiting for Postgres && exit 1
+      - run:
+          name: Wait for MySQL to start
+          # preinstalled in circleci/* docker image
+          command: dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
+      # - run:
+      #     name: Wait for Mongo to start
+      #     # preinstalled in circleci/* docker image
+      #     command: dockerize -wait tcp://127.0.0.1:27017 -timeout 180s
+      - run: ./cli/scripts/test_ci.sh
 
   # content deployment
   content:
@@ -45,7 +102,14 @@ workflows:
   version: 2
   build:
     jobs:
-      - cli:
+      - cli_test:
+          filters:
+            branches:
+              ignore:
+                - beta
+                - alpha
+                - master
+      - cli_publish:
           filters:
             tags:
               only: /.*/

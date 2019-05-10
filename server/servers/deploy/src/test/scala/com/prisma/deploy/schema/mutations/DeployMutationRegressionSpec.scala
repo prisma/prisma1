@@ -1,12 +1,14 @@
 package com.prisma.deploy.schema.mutations
 
+import com.prisma.IgnoreSQLite
 import com.prisma.deploy.specutils.ActiveDeploySpecBase
-import com.prisma.shared.models.{MigrationId, MigrationStatus, ProjectId}
+import com.prisma.shared.models.{MigrationId, MigrationStatus}
 import org.scalatest.{FlatSpec, Matchers}
 
 class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDeploySpecBase {
 
-  override def doNotRunForPrototypes: Boolean = true
+  // FIXME: This used to run only for Datamodel v1. do4gr should check whether we should migrate those test cases to v1.1
+  override def doNotRun: Boolean = true
 
   val projectPersistence   = testDependencies.projectPersistence
   val migrationPersistence = testDependencies.migrationPersistence
@@ -111,7 +113,7 @@ class DeployMutationRegressionSpec extends FlatSpec with Matchers with ActiveDep
     migration.status shouldEqual MigrationStatus.Success
   }
 
-  "DeployMutation" should "succeed for regression #1436" in {
+  "DeployMutation" should "succeed for regression #1436" taggedAs (IgnoreSQLite) in {
     val (project, initialMigration) = setupProject("""
                                                      |type Post {
                                                      |  id: ID! @unique

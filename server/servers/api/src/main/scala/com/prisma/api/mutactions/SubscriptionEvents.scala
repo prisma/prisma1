@@ -32,12 +32,10 @@ object SubscriptionEvents {
   }
 
   private def fromUpdateResult(project: Project, mutationId: Id, result: UpdateNodeResult): PublishSubscriptionEvent = {
-    val previousValues: Map[String, Any] = result.previousValues.data
-      .filterKeys(k => result.namesOfUpdatedFields.contains(k))
-      .filterValues(v => v != NullGCValue && !v.isInstanceOf[RootGCValue])
-      .toMapStringAny + ("id" -> result.previousValues.id.value)
-
     val model = result.mutaction.model
+    val previousValues: Map[String, Any] = result.previousValues.data
+      .filterValues(v => v != NullGCValue && !v.isInstanceOf[RootGCValue])
+      .toMapStringAny + (model.idField_!.name -> result.previousValues.id.value)
 
     PublishSubscriptionEvent(
       project = project,
@@ -53,11 +51,10 @@ object SubscriptionEvents {
   }
 
   private def fromDeleteResult(project: Project, mutationId: Id, result: DeleteNodeResult): PublishSubscriptionEvent = {
+    val model = result.mutaction.model
     val previousValues = result.previousValues.data
       .filterValues(v => v != NullGCValue && !v.isInstanceOf[RootGCValue])
-      .toMapStringAny + ("id" -> result.previousValues.id.value)
-
-    val model = result.mutaction.model
+      .toMapStringAny + (model.idField_!.name -> result.previousValues.id.value)
 
     PublishSubscriptionEvent(
       project = project,

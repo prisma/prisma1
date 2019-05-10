@@ -1,16 +1,21 @@
 package com.prisma.deploy.migration
 
-import com.prisma.deploy.connector.{EmptyDatabaseIntrospectionInferrer, FieldRequirementsInterface, ForeignKey, Tables}
+import com.prisma.ConnectorTag
+import com.prisma.ConnectorTag.SQLiteConnectorTag
+import com.prisma.deploy.connector.jdbc.database.JdbcDeployMutactionExecutor
+import com.prisma.deploy.connector.{DatabaseSchema, ForeignKey}
 import com.prisma.deploy.migration.inference.{MigrationStepsInferrer, SchemaInferrer}
-import com.prisma.deploy.schema.mutations.{DeployMutation, DeployMutationInput, MutationError, MutationSuccess}
+import com.prisma.deploy.migration.validation.DeployError
+import com.prisma.deploy.schema.mutations._
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.shared.models.ConnectorCapability.{IntIdCapability, MigrationsCapability, RelationLinkTableCapability, UuidIdCapability}
+import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.shared.models.{ConnectorCapabilities, Project, Schema}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
-  override def runOnlyForCapabilities = Set(MigrationsCapability)
+  override def runOnlyForCapabilities                   = Set(MigrationsCapability)
+  override def doNotRunForConnectors: Set[ConnectorTag] = Set(SQLiteConnectorTag)
 
   val name      = this.getClass.getSimpleName
   val stage     = "default"
@@ -21,8 +26,10 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       |  id: ID! @id
       |}
     """.stripMargin
-  val inspector        = deployConnector.testFacilities.inspector
-  var project: Project = Project(id = serviceId, schema = Schema.empty)
+  var project: Project   = Project(id = serviceId, schema = Schema.emptyV11)
+  lazy val slickDatabase = deployConnector.deployMutactionExecutor.asInstanceOf[JdbcDeployMutactionExecutor].slickDatabase
+  def isMySql            = slickDatabase.isMySql
+  def isPostgres         = slickDatabase.isPostgres
 
   import system.dispatcher
 
@@ -85,6 +92,19 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
     val column = result.table_!("A").column_!("field")
     column.isRequired should be(true)
+  }
+
+  "adding an id field with a special name should work" in {
+    val dataModel =
+      """
+        |type B {
+        |  specialName: ID! @id
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel)
+
+    result.table_!("B").column("specialName").isDefined should be(true)
   }
 
   "removing a scalar field should work" in {
@@ -252,7 +272,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     result.table_!("A").column_!("b").foreignKey should be(Some(ForeignKey("B", "id")))
   }
 
-  "adding a plain many to many relation should result in our plain relation table" in {
+  "adding a plain many to many relation should result in a plain relation table" in {
     val dataModel =
       """
         |type A {
@@ -266,10 +286,9 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result        = deploy(dataModel)
-    val relationTable = result.table_!("AToB")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability))
+    val relationTable = result.table_!("_AToB")
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
@@ -292,10 +311,9 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
       """.stripMargin
 
-    val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability))
-    val relationTable = result.table_!("AToB")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val result        = deploy(dataModel, ConnectorCapabilities(IntIdCapability, UuidIdCapability, RelationLinkTableCapability))
+    val relationTable = result.table_!("_AToB")
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.Int)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
@@ -324,9 +342,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
 
     val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
-    val relationTable = result.table_!("AToB")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val relationTable = result.table_!("_AToB")
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
@@ -349,7 +366,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |}
         |
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
         |  myB: B
         |  myA: A
@@ -358,14 +375,157 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
 
     val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
     val relationTable = result.table_!("CustomLinkTable")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("myA")
     aColumn.typeIdentifier should be(TI.String)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
     val bColumn = relationTable.column_!("myB")
     bColumn.typeIdentifier should be(TI.Int)
     bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
+  }
+
+  "providing an explicit legacy link table must work" in {
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @relationTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myId: ID! @id
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val relationTable = result.table_!("CustomLinkTable")
+    relationTable.columns should have(size(3))
+    relationTable.column_!("myId").typeIdentifier should be(TI.String)
+    val aColumn = relationTable.column_!("myA")
+    aColumn.typeIdentifier should be(TI.String)
+    aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
+    val bColumn = relationTable.column_!("myB")
+    bColumn.typeIdentifier should be(TI.Int)
+    bColumn.foreignKey should be(Some(ForeignKey("B", "id")))
+  }
+
+  "migrating from a legacy link table to a normal link table should work" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @relationTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myId: ID! @id
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val initialResult        = deploy(initialDataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val initialRelationTable = initialResult.table_!("CustomLinkTable")
+    initialRelationTable.columns should have(size(3))
+    initialRelationTable.column("myId") should not(be(empty))
+
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @relationTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+    val result        = deploy(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val relationTable = result.table_!("CustomLinkTable")
+    relationTable.columns should have(size(2))
+    relationTable.column("myId") should be(empty)
+  }
+
+  "migrating from a normal link table to a legacy link table should error" in {
+    val initialDataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @relationTable {
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val initialResult        = deploy(initialDataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    val initialRelationTable = initialResult.table_!("CustomLinkTable")
+    initialRelationTable.columns should have(size(2))
+
+    val dataModel =
+      """
+        |type A {
+        |  id: ID! @id
+        |  bs: [B] @relation(name: "CustomLinkTable", link: TABLE)
+        |}
+        |
+        |type B {
+        |  id: Int! @id
+        |  a: A @relation(name: "CustomLinkTable")
+        |}
+        |
+        |
+        |type CustomLinkTable @relationTable {
+        |  # those fields are intentionally in reverse lexicographical order to test they are correctly detected
+        |  myId: ID! @id
+        |  myB: B
+        |  myA: A
+        |}
+      """.stripMargin
+
+    val errors = deployThatMustError(dataModel, ConnectorCapabilities(RelationLinkTableCapability, IntIdCapability))
+    errors should have(size(1))
+    val error = errors.head
+    error.`type` should be("CustomLinkTable")
+    error.field should be(Some("myId"))
+    error.description should be("Adding an id field to an existing link table is forbidden.")
+
+    val result        = inspect
+    val relationTable = result.table_!("CustomLinkTable")
+    relationTable.columns should have(size(2))
+    relationTable.column("myId") should be(empty)
   }
 
   "switching models in a link table must work" in {
@@ -386,7 +546,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  id: ID! @id
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  one: A
         |  two: B
         |}
@@ -418,7 +578,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  id: ID! @id
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  one: A
         |  two: C
         |}
@@ -450,7 +610,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
         |  a: A @relation(name: "CustomLinkTable")
         |}
         |
-        |type CustomLinkTable @linkTable {
+        |type CustomLinkTable @relationTable {
         |  myA: A
         |  myB: B
         |}
@@ -473,9 +633,8 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
     val result = deploy(dataModel, capas)
     result.table("CustomLinkTable").isDefined should be(false)
-    val relationTable = result.table_!("AToB")
-    relationTable.columns should have(size(3))
-    relationTable.column_!("id").typeIdentifier should be(TI.String)
+    val relationTable = result.table_!("_AToB")
+    relationTable.columns should have(size(2))
     val aColumn = relationTable.column_!("A")
     aColumn.typeIdentifier should be(TI.String)
     aColumn.foreignKey should be(Some(ForeignKey("A", "id")))
@@ -650,7 +809,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
       """.stripMargin
     val result = deploy(newDataModel, capas)
     result.table_!("A").column("b").isDefined should be(false)
-    result.table("AToB").isDefined should be(true)
+    result.table("_AToB").isDefined should be(true)
   }
 
   "converting a link table to an inline relation should work" in {
@@ -671,7 +830,7 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     {
       val result = deploy(initialDataModel, capas)
       result.table_!("A").column("b").isDefined should be(false)
-      result.table("AToB").isDefined should be(true)
+      result.table("_AToB").isDefined should be(true)
     }
 
     val newDataModel =
@@ -745,6 +904,78 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     index should be(empty)
   }
 
+  "adding a custom sequence must work" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id(strategy: SEQUENCE) @sequence(name: "My_sequence_for_B" initialValue:101 allocationSize:100)
+        |}
+      """.stripMargin
+    val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
+    val sequence = result.table_!("B").column_!("id").sequence.get
+    if (isPostgres) { // mysql does not support named sequences
+      sequence.name should be("My_sequence_for_B")
+    }
+    sequence.current should be(101)
+  }
+
+  "an id field of type Int implies a sequence" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id(strategy: AUTO)
+        |}
+      """.stripMargin
+    val result   = deploy(dataModel, ConnectorCapabilities(IntIdCapability, IdSequenceCapability))
+    val sequence = result.table_!("B").column_!("id").sequence.get
+    if (isPostgres) { // mysql does not support named sequences
+      sequence.name should be("B_id_seq")
+    }
+    sequence.current should be(1)
+  }
+
+  "adding a scalar list for a model with type Int" in {
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |}
+      """.stripMargin
+    val result = deploy(dataModel, ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability))
+    result.table_!("B").column_!("id").typeIdentifier should be(TI.Int)
+
+    val scalarListTable = result.table_!("B_strings")
+    scalarListTable.column_!("nodeId").typeIdentifier should be(TI.Int)
+  }
+
+  "updating a model with a scalar list to id type Int" in {
+    val capas = ConnectorCapabilities(IntIdCapability, NonEmbeddedScalarListCapability)
+    val initialDataModel =
+      """
+        |type B {
+        |  id: ID! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |}
+      """.stripMargin
+    val initialResult = deploy(initialDataModel, capas)
+    initialResult.table_!("B").column_!("id").typeIdentifier should be(TI.String)
+    initialResult.table_!("B_strings").column_!("nodeId").typeIdentifier should be(TI.String)
+
+    val dataModel =
+      """
+        |type B {
+        |  id: Int! @id
+        |  strings: [String] @scalarList(strategy: RELATION)
+        |  strings2: [String] @scalarList(strategy: RELATION) # make sure simultaneously adding new fields works
+        |}
+      """.stripMargin
+
+    val result = deploy(dataModel, capas)
+    result.table_!("B").column_!("id").typeIdentifier should be(TI.Int)
+    result.table_!("B_strings").column_!("nodeId").typeIdentifier should be(TI.Int)
+  }
+
   def setup() = {
     val idAsString = testDependencies.projectIdEncoder.toEncodedString(name, stage)
     deployConnector.deleteProjectDatabase(idAsString).await()
@@ -753,38 +984,21 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     project = testDependencies.projectPersistence.load(serviceId).await.get
   }
 
-  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Tables = {
-    val input = DeployMutationInput(
-      clientMutationId = None,
-      name = name,
-      stage = stage,
-      types = dataModel,
-      dryRun = None,
-      force = None,
-      secrets = Vector.empty,
-      functions = Vector.empty
-    )
-    val refreshedProject = testDependencies.projectPersistence.load(project.id).await.get
-    val mutation = DeployMutation(
-      args = input,
-      project = refreshedProject,
-      schemaInferrer = SchemaInferrer(capabilities),
-      migrationStepsInferrer = MigrationStepsInferrer(),
-      schemaMapper = SchemaMapper,
-      migrationPersistence = testDependencies.migrationPersistence,
-      projectPersistence = testDependencies.projectPersistence,
-      migrator = testDependencies.migrator,
-      functionValidator = testDependencies.functionValidator,
-      invalidationPublisher = testDependencies.invalidationPublisher,
-      capabilities = capabilities,
-      clientDbQueries = deployConnector.clientDBQueries(project),
-      databaseIntrospectionInferrer = EmptyDatabaseIntrospectionInferrer,
-      fieldRequirements = FieldRequirementsInterface.empty,
-      isActive = true
-    )
+  def deployThatMustError(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): Vector[DeployError] = {
+    deployInternal(dataModel, capabilities) match {
+      case MutationSuccess(result) =>
+        if (result.errors.isEmpty) {
+          sys.error(s"Deploy returned no errors which is unexpected.")
+        } else {
+          result.errors.toVector
+        }
+      case MutationError =>
+        sys.error("Deploy returned an unexpected error")
+    }
+  }
 
-    val result = mutation.execute.await
-    result match {
+  def deploy(dataModel: String, capabilities: ConnectorCapabilities = ConnectorCapabilities.empty): DatabaseSchema = {
+    deployInternal(dataModel, capabilities) match {
       case MutationSuccess(result) =>
         if (result.errors.nonEmpty) {
           sys.error(s"Deploy returned unexpected errors: ${result.errors}")
@@ -796,7 +1010,46 @@ class MigrationsSpec extends WordSpecLike with Matchers with DeploySpecBase {
     }
   }
 
-  def inspect: Tables = {
-    deployConnector.testFacilities.inspector.inspect(serviceId).await()
+  private def deployInternal(
+      dataModel: String,
+      capabilities: ConnectorCapabilities = ConnectorCapabilities.empty
+  ): MutationResult[DeployMutationPayload] = {
+    val input = DeployMutationInput(
+      clientMutationId = None,
+      name = name,
+      stage = stage,
+      types = dataModel,
+      dryRun = None,
+      force = Some(true),
+      secrets = Vector.empty,
+      functions = Vector.empty,
+      noMigration = None
+    )
+
+    val refreshedProject: Project = testDependencies.projectPersistence.load(project.id).await.get
+    val schema                    = refreshedProject.schema
+    val refreshedProjectV11       = refreshedProject.copy(schema = schema.copy(version = Some(Schema.version.v11)))
+
+    val mutation = DeployMutation(
+      args = input,
+      project = refreshedProjectV11,
+      schemaInferrer = SchemaInferrer(capabilities),
+      migrationStepsInferrer = MigrationStepsInferrer(),
+      schemaMapper = SchemaMapper,
+      migrationPersistence = testDependencies.migrationPersistence,
+      projectPersistence = testDependencies.projectPersistence,
+      migrator = testDependencies.migrator,
+      functionValidator = testDependencies.functionValidator,
+      invalidationPublisher = testDependencies.invalidationPublisher,
+      capabilities = capabilities,
+      clientDbQueries = deployConnector.clientDBQueries(refreshedProjectV11),
+      deployConnector = deployConnector
+    )
+
+    mutation.execute.await
+  }
+
+  def inspect: DatabaseSchema = {
+    deployConnector.databaseInspector.inspect(serviceId).await()
   }
 }

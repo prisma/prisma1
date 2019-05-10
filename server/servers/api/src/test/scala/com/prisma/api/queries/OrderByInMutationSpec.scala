@@ -1,6 +1,6 @@
 package com.prisma.api.queries
 
-import com.prisma.api.ApiSpecBase
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -10,30 +10,42 @@ class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
 
-  val project = SchemaDsl.fromString() {
+  val testDataModels = {
+    val s1 = """
+      type Foo {
+          id: ID! @id
+          test: String
+          bars: [Bar] @relation(link: INLINE)
+      }
+      
+      type Bar {
+          id: ID! @id
+          quantity: Int!
+          orderField: Int
+      }
     """
-      |type Foo {
-      |    id: ID! @unique
-      |    test: String
-      |    bars: [Bar]
-      |}
-      |
-      |type Bar {
-      |    id: ID! @unique
-      |    quantity: Int!
-      |    orderField: Int
-      |}
-    """
-  }
 
-  override protected def beforeAll(): Unit = {
-    super.beforeAll()
-    database.setup(project)
+    val s2 = """
+      type Foo {
+          id: ID! @id
+          test: String
+          bars: [Bar]
+      }
+      
+      type Bar {
+          id: ID! @id
+          quantity: Int!
+          orderField: Int
+      }
+    """
+
+    TestDataModels(mongo = Vector(s1), sql = Vector(s2))
   }
 
   "Using a field in the order by that is not part of the selected fields" should "work" in {
-    val res = server.query(
-      """mutation {
+    testDataModels.testV11 { project =>
+      val res = server.query(
+        """mutation {
         |  createFoo(
         |    data: {
         |      bars: {
@@ -51,10 +63,11 @@ class OrderByInMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
         |  }
         |}
       """,
-      project
-    )
+        project
+      )
 
-    res.toString should be("""{"data":{"createFoo":{"test":null,"bars":[{"quantity":2}]}}}""")
+      res.toString should be("""{"data":{"createFoo":{"test":null,"bars":[{"quantity":2}]}}}""")
+    }
 
   }
 

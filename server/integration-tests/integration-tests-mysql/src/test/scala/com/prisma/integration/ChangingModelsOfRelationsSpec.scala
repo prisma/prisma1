@@ -1,23 +1,27 @@
 package com.prisma.integration
 
+import com.prisma.IgnoreMongo
 import org.scalatest.{FlatSpec, Matchers}
 
 class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
 
-  "Changing the model a relation points to" should "delete the existing relation data" in {
+  "Changing the model a relation points to" should "delete the existing relation data" taggedAs (IgnoreMongo) in {
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B @relation(name: "Relation")
+        |  b: B @relation(name: "Relation" link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}
         |
         |type C {
+        |  id: ID! @id
         |  c: String! @unique
         |}"""
 
@@ -28,15 +32,18 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: C @relation(name: "Relation")
+        |  b: C @relation(name: "Relation" link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |}
         |
         |type C {
+        |  id: ID! @id
         |  c: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""
@@ -51,11 +58,13 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B @relation(name: "Relation")
+        |  b: B @relation(name: "Relation" link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""
@@ -66,11 +75,13 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: C @relation(name: "Relation")
+        |  b: C @relation(name: "Relation" link: INLINE)
         |}
         |
         |type C {
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""
@@ -81,15 +92,17 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
     as.toString should be("""{"data":{"as":[{"a":"A","b":null}]}}""")
   }
 
-  "Renaming a model with @rename but keeping its relation" should "work" in {
+  "Renaming a model with @rename but keeping its relation" should "work" taggedAs (IgnoreMongo) in {
 
     val schema =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: B @relation(name: "Relation")
+        |  b: B @relation(name: "Relation" link: INLINE)
         |}
         |
         |type B {
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""
@@ -100,11 +113,13 @@ class ChangingModelsOfRelationsSpec extends FlatSpec with Matchers with Integrat
 
     val schema1 =
       """type A {
+        |  id: ID! @id
         |  a: String! @unique
-        |  b: C @relation(name: "Relation")
+        |  b: C @relation(name: "Relation" link: INLINE)
         |}
         |
         |type C @rename(oldName: "B"){
+        |  id: ID! @id
         |  b: String! @unique
         |  a: A @relation(name: "Relation")
         |}"""

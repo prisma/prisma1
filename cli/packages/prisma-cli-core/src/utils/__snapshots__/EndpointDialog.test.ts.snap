@@ -20,14 +20,14 @@ Object {
       "workspaceSlug": undefined,
     },
     "database": Object {
-      "host": "mysql",
+      "host": "postgres",
       "password": "prisma",
-      "port": 3306,
-      "type": "mysql",
-      "user": "root",
+      "port": 5432,
+      "type": "postgres",
+      "user": "prisma",
     },
     "datamodel": "type User {
-  id: ID! @unique
+  id: ID! @id
   name: String!
 }
 ",
@@ -44,19 +44,23 @@ services:
         # managementApiSecret: my-secret
         databases:
           default:
-            connector: mysql
-            host: mysql
+            connector: postgres
+            host: postgres
             rawAccess: true
-            port: 3306
+            port: 5432
             migrations: true
-  mysql:
+  postgres:
     restart: always
+    # Uncomment the next two lines to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # ports:
+    # - \\"5432:5432\\"
     environment:
-      MYSQL_ROOT_PASSWORD: prisma
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
     volumes:
-      - mysql:/var/lib/mysql
+      - postgres:/var/lib/postgresql/data
 volumes:
-  mysql:
+  postgres:
 ",
     "endpoint": "http://localhost:4466",
     "generator": undefined,
@@ -91,14 +95,14 @@ Object {
       "workspaceSlug": undefined,
     },
     "database": Object {
-      "host": "mysql",
+      "host": "postgres",
       "password": "prisma",
-      "port": 3306,
-      "type": "mysql",
-      "user": "root",
+      "port": 5432,
+      "type": "postgres",
+      "user": "prisma",
     },
     "datamodel": "type User {
-  id: ID! @unique
+  id: ID! @id
   name: String!
 }
 ",
@@ -115,19 +119,23 @@ services:
         # managementApiSecret: my-secret
         databases:
           default:
-            connector: mysql
-            host: mysql
+            connector: postgres
+            host: postgres
             rawAccess: true
-            port: 3306
+            port: 5432
             migrations: true
-  mysql:
+  postgres:
     restart: always
+    # Uncomment the next two lines to connect to your your database from outside the Docker environment, e.g. using a database GUI like Postico
+    # ports:
+    # - \\"5432:5432\\"
     environment:
-      MYSQL_ROOT_PASSWORD: prisma
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
     volumes:
-      - mysql:/var/lib/mysql
+      - postgres:/var/lib/postgresql/data
 volumes:
-  mysql:
+  postgres:
 ",
     "endpoint": "http://localhost:4466",
     "generator": undefined,
@@ -162,19 +170,20 @@ services:
         # managementApiSecret: my-secret
         databases:
           default:
-            connector: mysql
-            host: mysql
+            connector: postgres
+            host: postgres
             rawAccess: true
-            port: 3306
+            port: 5432
             migrations: true
-  mysql:
+  postgres:
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: prisma
+      POSTGRES_USER: prisma
+      POSTGRES_PASSWORD: prisma
     volumes:
-      - mysql:/var/lib/mysql
+      - postgres:/var/lib/postgresql/data
 volumes:
-  mysql:
+  postgres:
 ",
   "prisma.yml": "endpoint: http://localhost:4466
 datamodel: datamodel.prisma",
@@ -200,55 +209,8 @@ Next steps:
 
 exports[`init choose local 3`] = `""`;
 
-exports[`init test project 1`] = `
-Object {
-  "datamodel.prisma": "type User {
-  id: ID! @unique
-  name: String!
-}
-",
-  "docker-compose.yml": "version: '3'
-services:
-  prisma:
-    restart: always
-    ports:
-    - \\"4466:4466\\"
-    environment:
-      PRISMA_CONFIG: |
-        port: 4466
-        # uncomment the next line and provide the env var PRISMA_MANAGEMENT_API_SECRET=my-secret to activate cluster security
-        # managementApiSecret: my-secret
-        databases:
-          default:
-            connector: postgres
-            host: localhost
-            rawAccess: true
-            port: 5432
-            migrations: true",
-  "prisma.yml": "endpoint: http://localhost:4466
-datamodel: datamodel.prisma",
-}
-`;
+exports[`init test project 1`] = `Object {}`;
 
-exports[`init test project 2`] = `
-"
+exports[`init test project 2`] = `""`;
 
-Created 3 new files:                                                                          
-
-  prisma.yml           Prisma service definition
-  datamodel.prisma    GraphQL SDL-based datamodel (foundation for database)
-  docker-compose.yml   Docker configuration file
-
-Next steps:
-
-  1. Start your Prisma server: docker-compose up -d
-  2. Deploy your Prisma service: prisma deploy
-  3. Read more about Prisma server:
-     http://bit.ly/prisma-server-overview
-"
-`;
-
-exports[`init test project 3`] = `
-"
-"
-`;
+exports[`init test project 3`] = `""`;

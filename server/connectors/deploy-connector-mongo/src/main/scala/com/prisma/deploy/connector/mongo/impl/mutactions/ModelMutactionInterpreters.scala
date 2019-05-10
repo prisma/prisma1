@@ -1,7 +1,7 @@
 package com.prisma.deploy.connector.mongo.impl.mutactions
 
 import com.prisma.deploy.connector.mongo.database.{MongoDeployDatabaseMutationBuilder, NoAction}
-import com.prisma.deploy.connector.{CreateModelTable, DeleteModelTable, RenameTable}
+import com.prisma.deploy.connector.{CreateModelTable, DeleteModelTable, UpdateModelTable}
 
 object CreateModelInterpreter extends MongoMutactionInterpreter[CreateModelTable] {
   override def execute(mutaction: CreateModelTable) = mutaction.model.isEmbedded match {
@@ -27,12 +27,11 @@ object DeleteModelInterpreter extends MongoMutactionInterpreter[DeleteModelTable
   }
 }
 
-object RenameModelInterpreter extends MongoMutactionInterpreter[RenameTable] {
-  override def execute(mutaction: RenameTable) = NoAction.unit //setName(mutaction, mutaction.previousName, mutaction.nextName)
-
-  override def rollback(mutaction: RenameTable) = NoAction.unit //setName(mutaction, mutaction.nextName, mutaction.previousName)
-
-  private def setName(mutaction: RenameTable, previousName: String, nextName: String) = {
-    MongoDeployDatabaseMutationBuilder.renameCollection(projectId = mutaction.projectId, collectionName = previousName, newName = nextName)
-  }
+object UpdateModelInterpreter extends MongoMutactionInterpreter[UpdateModelTable] {
+  override def execute(mutaction: UpdateModelTable)  = NoAction.unit //setName(mutaction, mutaction.previousName, mutaction.nextName)
+  override def rollback(mutaction: UpdateModelTable) = NoAction.unit //setName(mutaction, mutaction.nextName, mutaction.previousName)
+//
+//  private def setName(mutaction: UpdateModelTable, previousName: String, nextName: String) = {
+//    MongoDeployDatabaseMutationBuilder.renameCollection(mutaction.project, collectionName = previousName, newName = nextName)
+//  }
 }

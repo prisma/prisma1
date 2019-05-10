@@ -12,78 +12,24 @@ import { Environment, Cluster, FunctionInput, getProxyAgent } from 'prisma-yml'
 import { Output } from '../index'
 import chalk from 'chalk'
 import { introspectionQuery } from './introspectionQuery'
-import { User, Migration, DeployPayload, Workspace, Service } from './types'
+import {
+  User,
+  Migration,
+  DeployPayload,
+  Workspace,
+  Service,
+  AuthenticationPayload,
+} from './types'
 import * as opn from 'opn'
 import { concatName } from 'prisma-yml/dist/PrismaDefinition'
+import { IntrospectionQuery } from 'graphql'
+import { hasTypeWithField } from '../utils/graphql-schema'
+import {
+  renderMigrationFragment,
+  renderStepFragment,
+} from './migrationFragment'
 
 const debug = require('debug')('client')
-
-const MIGRATION_FRAGMENT = `
-fragment MigrationFragment on Migration {
-  revision
-  steps {
-    type
-    __typename
-    ... on CreateEnum {
-      name
-      ce_values: values
-    }
-    ... on CreateField {
-      model
-      name
-      cf_typeName: typeName
-      cf_isRequired: isRequired
-      cf_isList: isList
-      cf_isUnique: unique
-      cf_relation: relation
-      cf_defaultValue: default
-      cf_enum: enum
-    }
-    ... on CreateModel {
-      name
-    }
-    ... on CreateRelation {
-      name
-      leftModel
-      rightModel
-    }
-    ... on DeleteEnum {
-      name
-    }
-    ... on DeleteField {
-      model
-      name
-    }
-    ... on DeleteModel {
-      name
-    }
-    ... on DeleteRelation {
-      name
-    }
-    ... on UpdateEnum {
-      name
-      newName
-      values
-    }
-    ... on UpdateField {
-      model
-      name
-      newName
-      typeName
-      isRequired
-      isList
-      isUnique: unique
-      relation
-      default
-      enum
-    }
-    ... on UpdateModel {
-      name
-      um_newName: newName
-    }
-  }
-}
-`
 
 export class Client {
   config: Config
@@ -108,21 +54,38 @@ export class Client {
     stageName?: string,
     workspaceSlug?: string | undefined | null,
   ) {
-    debug('Initializing cluster client')
     try {
       const token = await cluster.getToken(
         serviceName,
         workspaceSlug || undefined,
         stageName,
       )
+      debug(`is local cluster: ${cluster.local}`)
+      const authenticationPayload = await this.isAuthenticated()
+      if (!cluster.local && authenticationPayload.isAuthenticated && !cluster.shared) {
+        // Added a check for login because we can only add a service to cloud when we are logged in
+        try {
+          const serviceCreatedInCloud = await cluster.addServiceToCloudDBIfMissing(
+            serviceName,
+            workspaceSlug || undefined,
+            stageName
+          )
+          debug({ serviceCreatedInCloud })
+        } catch(e) {
+          debug('Failed to add service to cloud, most likely this server is not connected to Prisma cloud')
+          debug(e.toString())
+        }
+      }
       const agent = getProxyAgent(cluster.getDeployEndpoint())
       this.clusterClient = new GraphQLClient(cluster.getDeployEndpoint(), {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...(token && {Authorization: `Bearer ${token}`}),
         },
         agent,
       } as any)
     } catch (e) {
+      debug('Trying manual login')
+      debug(e.toString())
       if (e.message.includes('Not authorized')) {
         await this.login()
         if (cluster.shared) {
@@ -169,15 +132,21 @@ export class Client {
             ) {
               if (!process.env.PRISMA_MANAGEMENT_API_SECRET) {
                 throw new Error(
-                  `Server at ${
-                    this.env.activeCluster.baseUrl
-                  } requires a cluster secret. Please provide it with the env var PRISMA_MANAGEMENT_API_SECRET`,
+                  `Server at ${chalk.bold(
+                    this.env.activeCluster.name,
+                  )} requires the Management API secret. Please set the the ${chalk.bold(
+                    'PRISMA_MANAGEMENT_API_SECRET',
+                  )} environment variable.
+
+                  Learn more about this error in the docs: https://bit.ly/authentication-and-security-docs`,
                 )
               } else {
                 throw new Error(
-                  `Cluster secret in env var PRISMA_MANAGEMENT_API_SECRET does not match for cluster ${
-                    this.env.activeCluster.name
-                  }`,
+                  `Can not authenticate against Prisma server. It seems that your ${chalk.bold(
+                    'PRISMA_MANAGEMENT_API_SECRET',
+                  )} environment variable is set incorrectly. Please make sure that it matches the value that was used when the Prisma server was deployed.
+
+                  For more info visit: https://bit.ly/authentication-and-security-docs`,
                 )
               }
             }
@@ -290,7 +259,6 @@ export class Client {
     token?: string,
     workspaceSlug?: string,
   ): Promise<any> {
-    debug('executing query', serviceName, stageName, query)
     const headers: any = {}
     if (token) {
       headers.Authorization = `Bearer ${token}`
@@ -439,9 +407,9 @@ export class Client {
   }
 
   async ensureAuth(): Promise<void> {
-    const authenticated = await this.isAuthenticated()
+    const authenticationPayload = await this.isAuthenticated()
 
-    if (!authenticated) {
+    if (!authenticationPayload.isAuthenticated) {
       await this.login()
     }
   }
@@ -452,9 +420,13 @@ export class Client {
     if (key) {
       this.env.globalRC.cloudSessionKey = key
     }
-    const authenticated = await this.isAuthenticated()
+    let authenticationPayload = await this.isAuthenticated()
+    const authenticated = authenticationPayload.isAuthenticated
     if (authenticated) {
       this.out.action.stop()
+      this.out.log(
+        `Authenticated with ${authenticationPayload.account!.login[0].email}`,
+      )
       this.out.log(key ? 'Successfully signed in' : 'Already signed in')
       if (key) {
         this.env.saveGlobalRC()
@@ -467,27 +439,29 @@ export class Client {
 
     this.out.log(`Opening ${url} in the browser\n`)
 
-    try {
-      opn(url).catch(e => {
-        throw e
-      })
-    } catch (e) {
-      this.out.log(`Could not open url. Please open ${url} manually`)
-    }
+    opn(url).catch(e => {
+      console.error(
+        `Could not open the authentication link, maybe this is an environment without a browser. Please open this url in your browser to authenticate: ${url}`,
+      )
+    })
 
     while (!token) {
       const cloud = await this.cloudTokenRequest(secret)
       if (cloud.token) {
         token = cloud.token
       }
-      await new Promise(r => setTimeout(r, 500))
+      await new Promise(r => setTimeout(r, 1000))
     }
     this.env.globalRC.cloudSessionKey = token
-
     this.out.action.stop()
 
+    authenticationPayload = await this.isAuthenticated()
+    await this.out.log(
+      `Authenticated with ${authenticationPayload.account!.login[0].email}`,
+    )
+
     this.env.saveGlobalRC()
-    await this.env.getClusters()
+    await this.env.fetchClusters()
   }
 
   logout(): void {
@@ -552,6 +526,7 @@ export class Client {
     serviceName: string,
     stageName: string,
   ): Promise<string> {
+    debug('Calling generateClusterToken')
     const query = `
       mutation ($input: GenerateClusterTokenRequest!) {
         generateClusterToken(input: $input) {
@@ -578,10 +553,11 @@ export class Client {
     return clusterToken
   }
 
-  async isAuthenticated(): Promise<boolean> {
+  async isAuthenticated(): Promise<AuthenticationPayload> {
     let authenticated = false
+    let account: User | null = null
     try {
-      const account = await this.getAccount()
+      account = await this.getAccount()
       if (account) {
         authenticated = Boolean(account)
       }
@@ -589,7 +565,10 @@ export class Client {
       //
     }
 
-    return authenticated
+    return {
+      isAuthenticated: authenticated,
+      account,
+    }
   }
 
   async getWorkspaces(): Promise<Workspace[]> {
@@ -704,6 +683,14 @@ export class Client {
     }
   }
 
+  async hasStepsApi() {
+    const result: IntrospectionQuery = await this.client.request<
+      IntrospectionQuery
+    >(introspectionQuery)
+
+    return hasTypeWithField(result, 'DeployPayload', 'steps')
+  }
+
   async deploy(
     name: string,
     stage: string,
@@ -712,7 +699,8 @@ export class Client {
     subscriptions: FunctionInput[],
     secrets: string[] | null,
     force?: boolean,
-  ): Promise<any> {
+    noMigration?: boolean,
+  ): Promise<DeployPayload> {
     const oldMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!]) {
         deploy(input: {
@@ -733,8 +721,37 @@ export class Client {
           }
         }
       }
-      ${MIGRATION_FRAGMENT}
+      ${renderMigrationFragment(false)}
     `
+
+    const introspectionResult: IntrospectionQuery = await this.client.request<
+      IntrospectionQuery
+    >(introspectionQuery)
+    const hasStepsApi = hasTypeWithField(
+      introspectionResult,
+      'DeployPayload',
+      'steps',
+    )
+
+    const hasRelationManifestationApi = hasTypeWithField(
+      introspectionResult,
+      'CreateRelation',
+      'after',
+    )
+
+    const steps = hasStepsApi
+      ? `steps { ${renderStepFragment(hasRelationManifestationApi)} }`
+      : ''
+
+    if (
+      noMigration &&
+      !hasTypeWithField(introspectionResult, 'DeployInput', 'noMigration')
+    ) {
+      throw new Error(
+        `You provided the --no-migrate option, but the Prisma server doesn't support it yet. It's supported in Prisma 1.26 and above.`,
+      )
+    }
+    const noMigrationInput = noMigration ? 'noMigration: true' : ''
 
     const newMutation = `\
       mutation($name: String!, $stage: String! $types: String! $dryRun: Boolean $secrets: [String!], $subscriptions: [FunctionInput!], $force: Boolean) {
@@ -746,6 +763,7 @@ export class Client {
           secrets: $secrets
           subscriptions: $subscriptions
           force: $force
+          ${noMigrationInput}
         }) {
           errors {
             type
@@ -760,9 +778,11 @@ export class Client {
           migration {
             ...MigrationFragment
           }
+          
+          ${steps}
         }
       }
-      ${MIGRATION_FRAGMENT}
+      ${renderMigrationFragment(hasRelationManifestationApi)}
     `
 
     try {
@@ -896,7 +916,6 @@ export class Client {
     } as any)
     while (!valid) {
       try {
-        debug('requesting', endpoint)
         await client.request(
           `
             {
@@ -932,7 +951,7 @@ export class Client {
             errors
           }
         }
-        `,
+      `,
 
       {
         stage,

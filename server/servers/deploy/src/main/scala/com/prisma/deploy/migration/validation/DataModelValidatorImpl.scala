@@ -1,11 +1,9 @@
 package com.prisma.deploy.migration.validation
-import com.prisma.deploy.connector.FieldRequirementsInterface
 import com.prisma.deploy.migration.DataSchemaAstExtensions._
 import com.prisma.deploy.migration.validation.directives._
 import com.prisma.deploy.validation.NameConstraints
-import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.models.FieldBehaviour.{IdBehaviour, IdStrategy}
-import com.prisma.shared.models.{ConnectorCapabilities, ConnectorCapability, ReservedFields, TypeIdentifier}
+import com.prisma.shared.models.{ConnectorCapabilities, ReservedFields, TypeIdentifier}
 import com.prisma.utils.boolean.BooleanUtils
 import org.scalactic.{Bad, Good, Or}
 import sangria.ast.{Argument => _, _}
@@ -16,38 +14,54 @@ import scala.util.{Failure, Success, Try}
 object DataModelValidatorImpl extends DataModelValidator {
   override def validate(
       dataModel: String,
-      fieldRequirements: FieldRequirementsInterface,
       capabilities: ConnectorCapabilities
-  ): PrismaSdl Or Vector[DeployError] = {
-    DataModelValidatorImpl(dataModel, fieldRequirements, capabilities).validate
+  ): DataModelValidationResult Or Vector[DeployError] = {
+    DataModelValidatorImpl(dataModel, capabilities).validate
   }
 }
 
 case class DataModelValidatorImpl(
     dataModel: String,
-    fieldRequirements: FieldRequirementsInterface,
     capabilities: ConnectorCapabilities
 ) {
-  import com.prisma.deploy.migration.DataSchemaAstExtensions._
   import BooleanUtils._
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
 
   val result   = GraphQlSdlParser.parse(dataModel)
   lazy val doc = result.get
 
-  def validate: PrismaSdl Or Vector[DeployError] = {
+  def validate: DataModelValidationResult Or Vector[DeployError] = {
     val syntaxErrors = validateSyntax
     if (syntaxErrors.isEmpty) {
       val dataModel = generateSDL
-      val semanticErrors = FieldDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct ++
-        TypeDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct
+      val semanticErrors =
+        FieldDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct ++
+          TypeDirective.all.flatMap(_.postValidate(dataModel, capabilities)).distinct
+
       if (semanticErrors.isEmpty) {
-        Good(dataModel)
+        Good(DataModelValidationResult(dataModel, warnings = createWarnings(dataModel)))
       } else {
         Bad(semanticErrors)
       }
     } else {
       Bad(syntaxErrors.toVector)
     }
+  }
+
+  def createWarnings(dataModel: PrismaSdl): Vector[DeployWarning] = {
+    val relationTableWarnings = for {
+      relationTable <- dataModel.relationTables
+      if relationTable.scalarFields.exists(_.isId)
+    } yield {
+      DeployWarning(
+        `type` = relationTable.name,
+        description =
+          "Id fields on link tables are deprecated and will soon loose support. Please remove it from your datamodel to remove the underlying column.",
+        field = relationTable.scalarFields.find(_.isId).map(_.name)
+      )
+    }
+
+    relationTableWarnings
   }
 
   def generateSDL: PrismaSdl = {
@@ -63,7 +77,6 @@ case class DataModelValidatorImpl(
           RelationalPrismaField(
             name = x.name,
             columnName = x.dbName,
-            relationDbDirective = x.relationDBDirective,
             strategy = relationDirective.strategy,
             isList = x.isList,
             isRequired = x.isRequired,
@@ -97,7 +110,7 @@ case class DataModelValidatorImpl(
           )(_)
       }
 
-      // FIXME: it should not be needed that embedded types have a hidden id field
+      // FIXME: it should not be needed that embedded types have a hidden id field. do4gr should check whether this is still true.
       val extraField = typeDef.isEmbedded.toOption {
         ScalarPrismaField(
           name = ReservedFields.embeddedIdFieldName,
@@ -139,13 +152,15 @@ case class DataModelValidatorImpl(
     val fieldDirectiveValidations = tryValidation(validateFieldDirectives())
     val typeDirectiveValidations  = tryValidation(validateTypeDirectives())
     val enumValidations           = tryValidation(EnumValidator(doc).validate())
+    val validateRenames           = tryValidation(validateCrossRenames(doc.objectTypes))
 
     val allValidations = Vector(
       globalValidations,
       reservedFieldsValidations,
       fieldDirectiveValidations,
       enumValidations,
-      typeDirectiveValidations
+      typeDirectiveValidations,
+      validateRenames
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -203,10 +218,8 @@ case class DataModelValidatorImpl(
     val requiredArgErrors = for {
       argumentRequirement <- validator.requiredArgs(capabilities)
       schemaError <- directive.argument(argumentRequirement.name) match {
-                      case None =>
-                        Some(DeployErrors.directiveMissesRequiredArgument(fieldAndType, validator.name, argumentRequirement.name))
-                      case Some(arg) =>
-                        argumentRequirement.validate(arg.value).map(error => DeployError(fieldAndType, error))
+                      case None      => Some(DeployErrors.directiveMissesRequiredArgument(fieldAndType, validator.name, argumentRequirement.name))
+                      case Some(arg) => argumentRequirement.validate(arg.value).map(error => DeployError(fieldAndType, error))
                     }
     } yield schemaError
 
@@ -219,6 +232,20 @@ case class DataModelValidatorImpl(
     } yield schemaError
 
     requiredArgErrors ++ optionalArgErrors
+  }
+
+  def validateCrossRenames(objectTypes: Seq[ObjectTypeDefinition]): Seq[DeployError] = {
+    for {
+      renamedType1                     <- objectTypes
+      oldName                          <- renamedType1.oldName
+      allObjectTypesExceptThisOne      = objectTypes.filterNot(_ == renamedType1)
+      renamedTypeThatHadTheNameOfType1 <- allObjectTypesExceptThisOne.find(_.oldName.contains(renamedType1.name))
+    } yield {
+      DeployError(
+        renamedType1.name,
+        s"You renamed type `$oldName` to `${renamedType1.name}`. But that is the old name of type `${renamedTypeThatHadTheNameOfType1.name}`. Please do this in two steps."
+      )
+    }
   }
 
   def validateDirectiveUniqueness(fieldAndType: FieldAndType): Option[DeployError] = {
@@ -241,14 +268,9 @@ case class DataModelValidatorImpl(
     }
   }
 
-  private def isSelfRelation(fieldAndType: FieldAndType): Boolean  = fieldAndType.fieldDef.typeName == fieldAndType.objectType.name
-  private def isRelationField(fieldAndType: FieldAndType): Boolean = isRelationField(fieldAndType.fieldDef)
-  private def isRelationField(fieldDef: FieldDefinition): Boolean  = !isScalarField(fieldDef) && !isEnumField(fieldDef)
-
-  private def isScalarField(fieldAndType: FieldAndType): Boolean = isScalarField(fieldAndType.fieldDef)
-  private def isScalarField(fieldDef: FieldDefinition): Boolean  = fieldDef.hasScalarType
-
-  private def isEnumField(fieldDef: FieldDefinition): Boolean = doc.isEnumType(fieldDef.typeName)
+  private def isRelationField(fieldDef: FieldDefinition): Boolean = !isScalarField(fieldDef) && !isEnumField(fieldDef)
+  private def isScalarField(fieldDef: FieldDefinition): Boolean   = fieldDef.hasScalarType
+  private def isEnumField(fieldDef: FieldDefinition): Boolean     = doc.isEnumType(fieldDef.typeName)
 }
 
 case class GlobalValidations(doc: Document) {
@@ -295,7 +317,8 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
       tryValidation(validateMissingTypes),
       tryValidation(requiredIdDirectiveValidation.toVector),
       tryValidation(validateRelationFields),
-      tryValidation(validateDuplicateFields)
+      tryValidation(validateDuplicateFields),
+      tryValidation(validateReservedTypeNames)
     )
 
     val validationErrors: Vector[DeployError] = allValidations.collect { case Good(x) => x }.flatten
@@ -338,6 +361,13 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     } yield {
       DeployErrors.duplicateFieldName(FieldAndType(objectType, field))
     }
+  }
+
+  val invalidTypeNameList = List("Mutation", "Query", "Subscription", "Node", "PageInfo", "BatchPayload")
+
+  def validateReservedTypeNames = invalidTypeNameList.contains(objectType.name) match {
+    case false => Seq.empty
+    case true  => Seq(DeployErrors.reservedTypeName(objectType))
   }
 
   def validateRelationFields: Seq[DeployError] = {
@@ -385,6 +415,13 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
         None
     }
 
+    val allowOnlyValidNamesInRelationDirectives = relationFieldsWithRelationDirective.flatMap {
+      case thisType if thisType.fieldDef.relationName.isDefined && !NameConstraints.isValidRelationName(thisType.fieldDef.relationName.get) =>
+        Some(DeployErrors.relationDirectiveHasInvalidName(thisType))
+      case _ =>
+        None
+    }
+
     /**
       * The validation below must be only applied to fields that specify the relation directive.
       * And it can only occur for relation that specify both sides of a relation.
@@ -410,7 +447,7 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
           Iterable.empty
       }
 
-    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous
+    schemaErrors ++ relationFieldsWithNonMatchingTypes ++ allowOnlyOneDirectiveOnlyWhenUnambiguous ++ allowOnlyValidNamesInRelationDirectives
   }
 
   def partition[A, B, C](seq: Seq[A])(partitionFn: A => Either[B, C]): (Seq[B], Seq[C]) = {
@@ -418,5 +455,24 @@ case class ModelValidator(doc: Document, objectType: ObjectTypeDefinition, capab
     val lefts  = mapped.collect { case Left(x) => x }
     val rights = mapped.collect { case Right(x) => x }
     (lefts, rights)
+  }
+}
+
+case class FieldAndType(objectType: ObjectTypeDefinition, fieldDef: FieldDefinition) {
+  import com.prisma.deploy.migration.DataSchemaAstExtensions._
+
+  def isSelfRelation: Boolean = fieldDef.typeName == objectType.name
+
+  def relationCount(doc: Document): Int = {
+    def fieldsWithType(objectType: ObjectTypeDefinition, typeName: String): Seq[FieldDefinition] = objectType.fields.filter(_.typeName == typeName)
+
+    val oppositeObjectType = doc.objectType_!(fieldDef.typeName)
+    val fieldsOnTypeA      = fieldsWithType(objectType, fieldDef.typeName)
+    val fieldsOnTypeB      = fieldsWithType(oppositeObjectType, objectType.name)
+
+    isSelfRelation match {
+      case true  => fieldsOnTypeB.count(_.relationName == fieldDef.relationName)
+      case false => (fieldsOnTypeA ++ fieldsOnTypeB).count(_.relationName == fieldDef.relationName)
+    }
   }
 }

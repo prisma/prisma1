@@ -28,7 +28,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
        | }
      """.stripMargin
 
-    setupProjectDatabaseForProject(sqlSchema)
+    setupWithRawSQL(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -56,7 +56,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(sqlSchema)
+    setupWithRawSQL(sqlSchema)
 
     val result = server.deploySchemaThatMustError(projectId, schema)
     result.pathAsString("data.deploy.errors.[0].description") should be(
@@ -92,7 +92,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(sqlSchema)
+    setupWithRawSQL(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -133,7 +133,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(sqlSchema)
+    setupWithRawSQL(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -157,7 +157,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
      |, title     text NOT NULL
      |);
      |
-     |CREATE TABLE TodoToList(
+     |CREATE TABLE todotolist (
      |  list_id varchar NOT NULL REFERENCES list (id) ON UPDATE CASCADE,
      |  todo_id varchar NOT NULL REFERENCES todo (id) ON UPDATE CASCADE
      |)
@@ -178,7 +178,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(sqlSchema)
+    setupWithRawSQL(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -223,7 +223,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(sqlSchema)
+    setupWithRawSQL(sqlSchema)
 
     val result = server.deploySchema(projectId, schema)
 
@@ -268,7 +268,7 @@ class PassiveDeployMutationSpec extends FlatSpec with Matchers with PassiveDeplo
         | }
       """.stripMargin
 
-    setupProjectDatabaseForProject(sqlSchema)
+    setupWithRawSQL(sqlSchema)
 
     val result = server.deploySchemaThatMustError(projectId, schema)
 

@@ -1,6 +1,7 @@
 package com.prisma.api.mutations
 
-import com.prisma.api.ApiSpecBase
+import com.prisma.ConnectorTag
+import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import com.prisma.utils.await.AwaitUtils
@@ -11,6 +12,7 @@ import scala.concurrent.Future
 
 class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase with AwaitUtils {
   override def runOnlyForCapabilities = Set(ScalarListsCapability)
+  override def doNotRunForConnectors  = Set(ConnectorTag.SQLiteConnectorTag)
 
   import testDependencies.system.dispatcher
 
@@ -20,10 +22,10 @@ class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase 
   }
 
   "creating many items" should "not cause deadlocks" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Todo {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   a: String
         |}"""
     }
@@ -50,36 +52,46 @@ class DeadlockSpec extends FlatSpec with Matchers with Retries with ApiSpecBase 
   }
 
   "creating many node with scalar list values" should "not cause deadlocks" in {
-    val project = SchemaDsl.fromString() {
-      """
+    val testDataModels = {
+      val dm1 = """
         |type Todo {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   a: String
         |   tags: [String]
         |}"""
+
+      val dm2 = """
+        |type Todo {
+        |   id: ID! @id
+        |   a: String
+        |   tags: [String] @scalarList(strategy: RELATION)
+        |}"""
+
+      TestDataModels(mongo = dm1, sql = dm2)
     }
-    database.setup(project)
-
-    def exec(i: Int) =
-      Future(
-        server.query(
-          s"""mutation {
-             |  createTodo(
-             |    data:{
-             |      a: "$i"
-             |      tags: {
-             |        set: ["important", "doitnow"]
-             |      }
-             |    }
-             |  ){
-             |    a
-             |  }
-             |}
-      """,
-          project
+    testDataModels.testV11 { project =>
+      def exec(i: Int) =
+        Future(
+          server.query(
+            s"""mutation {
+               |  createTodo(
+               |    data:{
+               |      a: "$i"
+               |      tags: {
+               |        set: ["important", "doitnow"]
+               |      }
+               |    }
+               |  ){
+               |    a
+               |  }
+               |}
+        """,
+            project
+          )
         )
-      )
 
-    Future.traverse(0 to 50)(i => exec(i)).await(seconds = 30)
+      Future.traverse(0 to 50)(i => exec(i)).await(seconds = 30)
+    }
+
   }
 }

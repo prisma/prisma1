@@ -1,5 +1,7 @@
 package com.prisma.integration
 
+import com.prisma.IgnoreSQLite
+import com.prisma.IgnoreMongo
 import org.scalatest.{FlatSpec, Matchers}
 
 class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Matchers with IntegrationBaseSpec {
@@ -8,7 +10,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  # b1: B @relation(name: "AB1")
         |  # b2: B @relation(name: "AB2")
@@ -16,7 +18,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  # a1: A @relation(name: "AB1")
         |  # a2: A @relation(name: "AB2")
@@ -29,15 +31,15 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
-        |  b2: B @relation(name: "AB2")
+        |  b1: B @relation(name: "AB1", link: INLINE)
+        |  b2: B @relation(name: "AB2", link: INLINE)
         |  # b3: B @relation(name: "AB3")
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         |  a2: A @relation(name: "AB2")
@@ -54,15 +56,15 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema2 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
-        |  b2: B @relation(name: "AB2")
-        |  b3: B @relation(name: "AB3")
+        |  b1: B @relation(name: "AB1", link: INLINE)
+        |  b2: B @relation(name: "AB2", link: INLINE)
+        |  b3: B @relation(name: "AB3", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         |  a2: A @relation(name: "AB2")
@@ -85,12 +87,12 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         | }
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         | }"""
 
@@ -100,13 +102,13 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "NewName")
+        |  b1: B @relation(name: "NewName", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "NewName")
         |}"""
@@ -117,17 +119,17 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     updatedProject.schema.relations.head.name should be("""NewName""")
   }
 
-  "DeployMutation" should "be able to handle renaming relations that don't have a name yet" in {
+  "DeployMutation" should "be able to handle renaming relations that don't have a name yet" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B 
+        |  b1: B @relation(link: INLINE)
         | }
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A
         | }"""
@@ -141,13 +143,13 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "NewName")
+        |  b1: B @relation(name: "NewName", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "NewName")
         |}"""
@@ -162,17 +164,17 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b1":{"title":"B1"}}]}}""")
   }
 
-  "DeployMutation" should "be able to handle renaming relations that are already named" in {
+  "DeployMutation" should "be able to handle renaming relations that are already named" taggedAs (IgnoreSQLite) in {
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(name: "AB1")
+        |  b1: B @relation(name: "AB1", link: INLINE)
         | }
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(name: "AB1")
         | }"""
@@ -186,13 +188,13 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b1: B @relation(oldName: "AB1", name: "NewName")
+        |  b1: B @relation(oldName: "AB1", name: "NewName", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a1: A @relation(oldName: "AB1", name: "NewName")
         |}"""
@@ -211,13 +213,13 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema =
       """type A {
-        |  id: ID! @unique
-        |  b: B @relation(name: "AB1")
-        |  b2: B @relation(name: "AB2")
+        |  id: ID! @id
+        |  b: B @relation(name: "AB1", link: INLINE)
+        |  b2: B @relation(name: "AB2", link: INLINE)
         | }
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a: A @relation(name: "AB1")
         |  a2: A @relation(name: "AB2")
@@ -231,30 +233,30 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
-        |  b: B
+        |  id: ID! @id
+        |  b: B @relation(link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |}"""
 
     deployServer.deploySchemaThatMustErrorWithCode(project, schema1, errorCode = 3018)
   }
 
-  "Going from two named relations between the same models to one named one without a backrelation" should "work" in {
+  "Going from two named relations between the same models to one named one without a backrelation" should "work" taggedAs (IgnoreMongo) in {
 
     val schema =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b: B @relation(name: "AB1")
-        |  b2: B @relation(name: "AB2")
+        |  b: B @relation(name: "AB1", link: INLINE)
+        |  b2: B @relation(name: "AB2", link: INLINE)
         | }
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |  a: A @relation(name: "AB1")
         |  a2: A @relation(name: "AB2")
@@ -270,13 +272,13 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
-        |  b: B @relation(name: "AB1")
+        |  b: B @relation(name: "AB1", link: INLINE)
         |}
         |
         |type B {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  title: String
         |}"""
 
@@ -290,18 +292,18 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     unchangedRelationContent.toString should be("""{"data":{"as":[{"title":"A1","b":{"title":"B1"}}]}}""")
   }
 
-  "Going from two named relations between the same models to one named one without a backrelation" should "work even when there is a rename" in {
+  "Going from two named relations between the same models to one named one without a backrelation" should "work even when there is a rename" taggedAs (IgnoreMongo, IgnoreSQLite) in {
 
     val schema =
       """type A {
-          |  id: ID! @unique
+          |  id: ID! @id
           |  title: String
-          |  b: B @relation(name: "AB1")
-          |  b2: B @relation(name: "AB2")
+          |  b: B @relation(name: "AB1", link: INLINE)
+          |  b2: B @relation(name: "AB2", link: INLINE)
           | }
           |
           |type B {
-          |  id: ID! @unique
+          |  id: ID! @id
           |  title: String
           |  a: A @relation(name: "AB1")
           |  a2: A @relation(name: "AB2")
@@ -317,13 +319,13 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type A {
-          |  id: ID! @unique
+          |  id: ID! @id
           |  title: String
-          |  b: B @relation(name: "AB2" oldName: "AB1")
+          |  b: B @relation(name: "AB2" oldName: "AB1", link: INLINE)
           |}
           |
           |type B {
-          |  id: ID! @unique
+          |  id: ID! @id
           |  title: String
           |}"""
 
@@ -341,10 +343,12 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema =
       """type TeamMatch {
+        |  id: ID! @id
         |  name: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |}"""
 
@@ -352,14 +356,16 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type Team {
+        |  id: ID! @id
         |  name: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
-        |  teamLeft: Team @relation(name: "TeamMatchLeft")
-        |  teamRight: Team @relation(name: "TeamMatchRight")
-        |  winner: Team @relation(name: "TeamMatchWinner")
+        |  teamLeft: Team @relation(name: "TeamMatchLeft", link: INLINE)
+        |  teamRight: Team @relation(name: "TeamMatchRight", link: INLINE)
+        |  winner: Team @relation(name: "TeamMatchWinner", link: INLINE)
         |}"""
     val updatedProject = deployServer.deploySchema(project, schema1)
 
@@ -391,18 +397,20 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     val (project, _) = setupProject(basicTypesGql)
     val schema1 =
       """type TeamMatch {
+        |  id: ID! @id
         |  key: String! @unique
         |  match: Match
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft")
         |}"""
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `TeamMatch`."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive with a name on `Match`. Please also provide the same named relation directive on the relation field on `TeamMatch` pointing towards `Match`."}],"warnings":[]}}}""")
   }
 
   "Several missing backrelations on the same type and one unnamed relation on the other side" should "error" in {
@@ -410,11 +418,13 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val schema1 =
       """type TeamMatch {
+        |  id: ID! @id
         |  key: String! @unique
         |  match: Match
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
         |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft")
         |  teamRight: TeamMatch @relation(name: "TeamMatchRight")
@@ -423,7 +433,7 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
 
     val res = deployServer.deploySchemaThatMustError(project, schema1)
     res.toString should be(
-      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `TeamMatch`."},{"description":"You are trying to set the relation 'TeamMatchRight' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `TeamMatch`."},{"description":"You are trying to set the relation 'TeamMatchWinner' from `Match` to `TeamMatch` and are only providing a relation directive on `Match`. Since there is also a relation field without a relation directive on `TeamMatch` pointing towards `Match` that is ambiguous. Please provide the same relation directive on `TeamMatch` if this is supposed to be the same relation. If you meant to create two separate relations without backrelations please provide a relation directive with a different name on `TeamMatch`."}],"warnings":[]}}}""")
+      """{"data":{"deploy":{"migration":null,"errors":[{"description":"You are trying to set the relation 'TeamMatchLeft' from `Match` to `TeamMatch` and are only providing a relation directive with a name on `Match`. Please also provide the same named relation directive on the relation field on `TeamMatch` pointing towards `Match`."},{"description":"You are trying to set the relation 'TeamMatchRight' from `Match` to `TeamMatch` and are only providing a relation directive with a name on `Match`. Please also provide the same named relation directive on the relation field on `TeamMatch` pointing towards `Match`."},{"description":"You are trying to set the relation 'TeamMatchWinner' from `Match` to `TeamMatch` and are only providing a relation directive with a name on `Match`. Please also provide the same named relation directive on the relation field on `TeamMatch` pointing towards `Match`."}],"warnings":[]}}}""")
   }
 
   "Several missing backrelation to different models" should "work" in {
@@ -431,17 +441,20 @@ class SeveralRelationsBetweenSameModelsIntegrationSpec extends FlatSpec with Mat
     val (project, _) = setupProject(basicTypesGql)
     val schema1 =
       """type TeamMatch {
+        |  id: ID! @id
         |  key: String! @unique
         |}
         |
         |type TeamMatch2 {
+        |  id: ID! @id
         |  key: String! @unique
         |}
         |
         |type Match {
+        |  id: ID! @id
         |  number: Int @unique
-        |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft")
-        |  teamLeft2: TeamMatch2 @relation(name: "TeamMatchLeft2")
+        |  teamLeft: TeamMatch @relation(name: "TeamMatchLeft", link: INLINE)
+        |  teamLeft2: TeamMatch2 @relation(name: "TeamMatchLeft2", link: INLINE)
         |}"""
 
     deployServer.deploySchemaThatMustSucceed(project, schema1, 3)

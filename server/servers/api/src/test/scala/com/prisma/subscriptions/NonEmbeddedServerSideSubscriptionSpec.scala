@@ -1,5 +1,7 @@
 package com.prisma.subscriptions
 
+import com.prisma.ConnectorTag
+import com.prisma.ConnectorTag.SQLiteConnectorTag
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models._
@@ -10,6 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase with ScalaFutures {
 
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
+  override def doNotRunForConnectors: Set[ConnectorTag]         = Set(SQLiteConnectorTag)
 
   val webhookTestKit = testDependencies.webhookPublisher
 
@@ -24,19 +27,19 @@ class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with 
     webhookTestKit.reset
   }
 
-  val project = SchemaDsl.fromString() {
+  val project = SchemaDsl.fromStringV11() {
     """
       |type Todo {
-      |   id: ID! @unique
+      |   id: ID! @id
       |   title: String
       |   status: TodoStatus
       |   comments: [Comment]
       |}
       |
       |type Comment{
-      |   id: ID! @unique
+      |   id: ID! @id
       |   text: String
-      |   todo: Todo
+      |   todo: Todo @relation(link: INLINE)
       |}
       |
       |enum TodoStatus {

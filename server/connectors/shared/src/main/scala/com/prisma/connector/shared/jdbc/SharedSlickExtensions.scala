@@ -3,11 +3,14 @@ package com.prisma.connector.shared.jdbc
 import java.sql.{PreparedStatement, ResultSet, Statement}
 
 import org.jooq.{Query => JooqQuery, _}
+import org.slf4j.LoggerFactory
 import slick.jdbc.PositionedParameters
 
 trait SharedSlickExtensions {
   val slickDatabase: SlickDatabase
   import slickDatabase.profile.api._
+
+  val logger = LoggerFactory.getLogger("prisma")
 
   def queryToDBIO[T](query: JooqQuery)(setParams: PositionedParameters => Unit = (_) => (), readResult: ResultSet => T): DBIO[T] = {
     jooqToDBIO(query, setParams) { ps =>
@@ -30,15 +33,6 @@ trait SharedSlickExtensions {
       }
     )
   }
-
-//  def insertIntoReturning[T](query: Insert[Record])(setParams: PositionedParameters => Unit = (_) => (), readResult: ResultSet => T): DBIO[T] = {
-//    jooqToDBIO(query, setParams)(
-//      statementFn = { ps =>
-//        val rs = ps.executeQuery()
-//        readResult(rs)
-//      }
-//    )
-//  }
 
   def insertToDBIO[T](query: Insert[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit] = jooqToDBIO(query, setParams)(_.execute())
   def deleteToDBIO(query: Delete[Record])(setParams: PositionedParameters => Unit = (_) => ()): DBIO[Unit]    = jooqToDBIO(query, setParams)(_.execute())

@@ -5,12 +5,15 @@ import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
 
 class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
+  val project = SchemaDsl.fromStringV11() {
+    """type Todo {
+      |  id: ID! @id
+      |  title: String!
+      |}
+    """.stripMargin
+  }
 
   "the multi item query" should "return empty list" in {
-
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
-    }
     database.setup(project)
 
     val result = server.query(
@@ -26,9 +29,6 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the multi item query" should "return single node" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
-    }
     database.setup(project)
 
     val title = "Hello World!"
@@ -56,9 +56,6 @@ class MultiItemQuerySpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "the multi item query" should "filter by any field" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String)
-    }
     database.setup(project)
 
     val title = "Hello World!"

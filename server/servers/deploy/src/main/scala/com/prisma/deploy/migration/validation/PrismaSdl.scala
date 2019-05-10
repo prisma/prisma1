@@ -1,10 +1,10 @@
 package com.prisma.deploy.migration.validation
 
-import com.prisma.deploy.migration.DirectiveTypes.RelationDBDirective
 import com.prisma.gc_values.GCValue
+import com.prisma.shared.models.FieldBehaviour.IdBehaviour
 import com.prisma.shared.models.OnDelete.OnDelete
-import com.prisma.shared.models.{FieldBehaviour, RelationStrategy, TypeIdentifier}
 import com.prisma.shared.models.TypeIdentifier.TypeIdentifier
+import com.prisma.shared.models.{FieldBehaviour, RelationStrategy, TypeIdentifier}
 
 case class PrismaSdl(
     typesFn: Vector[PrismaSdl => PrismaType],
@@ -33,6 +33,8 @@ case class PrismaType(
   val fields: Vector[PrismaField] = fieldFn.map(_.apply(this))
 
   val relationFields = fields.collect { case x: RelationalPrismaField => x }
+  val scalarFields   = fields.collect { case x: ScalarPrismaField     => x }
+  val enumFields     = fields.collect { case x: EnumPrismaField       => x }
   val nonRelationFields = fields.collect {
     case x: EnumPrismaField   => x
     case y: ScalarPrismaField => y
@@ -66,7 +68,14 @@ case class ScalarPrismaField(
     behaviour: Option[FieldBehaviour],
     isHidden: Boolean = false
 )(val tpe: PrismaType)
-    extends PrismaField
+    extends PrismaField {
+  def finalDbName = columnName.getOrElse(name)
+
+  def isId: Boolean = behaviour.exists {
+    case IdBehaviour(_, _) => true
+    case _                 => false
+  }
+}
 
 case class EnumPrismaField(
     name: String,
@@ -85,7 +94,6 @@ case class EnumPrismaField(
 case class RelationalPrismaField(
     name: String,
     columnName: Option[String],
-    relationDbDirective: Option[RelationDBDirective],
     strategy: Option[RelationStrategy],
     isList: Boolean,
     isRequired: Boolean,
@@ -116,7 +124,7 @@ case class RelationalPrismaField(
   def hasOneToManyRelation: Boolean  = (isList && relatedField.forall(_.isOne)) || (isOne && relatedField.forall(_.isList))
   def hasOneToOneRelation: Boolean   = isOne && relatedField.exists(_.isOne)
   def isOne: Boolean                 = !isList
-  def oneRelationField               = if (isOne) Some(this) else relatedField
+  def oneRelationField               = if (isOne) Some(this) else relatedField.filter(_.isOne)
 }
 
 case class PrismaEnum(name: String, values: Vector[String])(sdl: PrismaSdl)

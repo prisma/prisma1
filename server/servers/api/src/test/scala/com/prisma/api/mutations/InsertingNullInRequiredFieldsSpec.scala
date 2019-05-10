@@ -7,9 +7,9 @@ import org.scalatest.{FlatSpec, Matchers}
 class InsertingNullInRequiredFieldsSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Updating a required value to null" should "throw a proper error" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  b: String! @unique
         |  key: String!
         |}
@@ -45,9 +45,9 @@ class InsertingNullInRequiredFieldsSpec extends FlatSpec with Matchers with ApiS
   }
 
   "Creating a required value as null" should "throw a proper error" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  b: String! @unique
         |  key: String!
         |}
@@ -71,9 +71,9 @@ class InsertingNullInRequiredFieldsSpec extends FlatSpec with Matchers with ApiS
   }
 
   "Updating an optional value to null" should "work" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  b: String! @unique
         |  key: String @unique
         |}
@@ -110,9 +110,9 @@ class InsertingNullInRequiredFieldsSpec extends FlatSpec with Matchers with ApiS
   }
 
   "Creating an optional value as null" should "work" in {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type A {
-        |  id: ID! @unique
+        |  id: ID! @id
         |  b: String! @unique
         |  key: String
         |}

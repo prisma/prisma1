@@ -182,7 +182,7 @@ networks:
     driver: bridge
 
 volumes:
-  db-persistence:
+  db-persistence: ~
 ```
 
 </Instruction>

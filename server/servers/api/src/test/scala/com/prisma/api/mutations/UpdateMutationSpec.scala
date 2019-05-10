@@ -8,23 +8,24 @@ import org.scalatest.{FlatSpec, Matchers}
 class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "The Update Mutation" should "update an item" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      val enum = schema.enum(
-        name = "MyEnum",
-        values = Vector(
-          "A",
-          "ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJ"
-        )
-      )
-      schema
-        .model("ScalarModel")
-        .field("optString", _.String)
-        .field("optInt", _.Int)
-        .field("optFloat", _.Float)
-        .field("optBoolean", _.Boolean)
-        .field("optEnum", _.Enum, enum = Some(enum))
-        .field("optDateTime", _.DateTime)
-        .field("optJson", _.Json)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type ScalarModel {
+        |  id: ID! @id
+        |  optString: String
+        |  optInt: Int
+        |  optFloat: Float
+        |  optBoolean: Boolean
+        |  optEnum: MyEnum
+        |  optDateTime: DateTime
+        |  optJson: Json
+        |}
+        |
+        |enum MyEnum {
+        |  A
+        |  ABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJABCDEFGHIJA
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -73,8 +74,14 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The Update Mutation" should "update an item by a unique field" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  alias: String @unique
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -114,8 +121,14 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "The Update Mutation" should "gracefully fail when trying to update an item by a unique field with a non-existing value" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema.model("Todo").field_!("title", _.String).field("alias", _.String, isUnique = true)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String!
+        |  alias: String @unique
+        |}
+      """.stripMargin
     }
     database.setup(project)
 
@@ -156,14 +169,17 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Updating" should "change the updatedAt datetime" in {
-    val project = SchemaDsl.fromBuilder { schema =>
-      schema
-        .model("Todo")
-        .field("title", _.String)
-        .field("text", _.String)
-        .field("alias", _.String, isUnique = true)
-        .field("createdAt", _.DateTime)
-        .field("updatedAt", _.DateTime)
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type Todo {
+        |  id: ID! @id
+        |  title: String
+        |  alias: String @unique
+        |  text: String
+        |  createdAt: DateTime! @createdAt
+        |  updatedAt: DateTime! @updatedAt
+        |}
+      """.stripMargin
     }
     database.setup(project)
 

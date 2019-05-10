@@ -1,4 +1,4 @@
-import { ISDL, DatabaseType, Renderer } from 'prisma-datamodel'
+import { ISDL, DatabaseType, Renderer, cloneSchema } from 'prisma-datamodel'
 import { IntrospectionResult } from '../../common/introspectionResult'
 
 /**
@@ -6,7 +6,6 @@ import { IntrospectionResult } from '../../common/introspectionResult'
  * compatibility with relational connectors.
  */
 export class DocumentIntrospectionResult extends IntrospectionResult {
-
   protected model: ISDL
 
   constructor(model: ISDL, databaseType: DatabaseType, renderer?: Renderer) {
@@ -15,7 +14,11 @@ export class DocumentIntrospectionResult extends IntrospectionResult {
     this.model = model
   }
 
-  public async getDatamodel(): Promise<ISDL> {
-    return this.model
+  /**
+   * @deprecated This returns an unnormalized datamodel and might get removed in the near future.
+   */
+  public getDatamodel(): ISDL {
+    // Return a copy - object is muteable.
+    return cloneSchema(this.model)
   }
 }

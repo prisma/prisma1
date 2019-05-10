@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Introspector test schema - 2504 1`] = `
+"type Employee {
+  id: Int! @pgColumn(name: \\"EmployeeId\\") @unique
+  address: String @pgColumn(name: \\"Address\\")
+  birthDate: DateTime @pgColumn(name: \\"BirthDate\\")
+  city: String @pgColumn(name: \\"City\\")
+  country: String @pgColumn(name: \\"Country\\")
+  email: String @pgColumn(name: \\"Email\\")
+  employee: [Employee]
+  fax: String @pgColumn(name: \\"Fax\\")
+  firstName: String! @pgColumn(name: \\"FirstName\\")
+  hireDate: DateTime @pgColumn(name: \\"HireDate\\")
+  lastName: String! @pgColumn(name: \\"LastName\\")
+  phone: String @pgColumn(name: \\"Phone\\")
+  postalCode: String @pgColumn(name: \\"PostalCode\\")
+  reportsTo: Employee @pgColumn(name: \\"ReportsTo\\")
+  state: String @pgColumn(name: \\"State\\")
+  title: String @pgColumn(name: \\"Title\\")
+}"
+`;
+
+exports[`Introspector test schema - 2504 2`] = `
+"type Employee {
+  EmployeeId: Int! @id
+  address: String @db(name: \\"Address\\")
+  birthDate: DateTime @db(name: \\"BirthDate\\")
+  city: String @db(name: \\"City\\")
+  country: String @db(name: \\"Country\\")
+  email: String @db(name: \\"Email\\")
+  employee: [Employee]
+  fax: String @db(name: \\"Fax\\")
+  firstName: String! @db(name: \\"FirstName\\")
+  hireDate: DateTime @db(name: \\"HireDate\\")
+  lastName: String! @db(name: \\"LastName\\")
+  phone: String @db(name: \\"Phone\\")
+  postalCode: String @db(name: \\"PostalCode\\")
+  reportsTo: Employee @db(name: \\"ReportsTo\\")
+  state: String @db(name: \\"State\\")
+  title: String @db(name: \\"Title\\")
+}"
+`;

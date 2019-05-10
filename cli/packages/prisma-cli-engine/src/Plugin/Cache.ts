@@ -9,8 +9,6 @@ import { Manager } from './Manager'
 import Plugin from './Plugin'
 import { PluginPath } from './PluginPath'
 
-const debug = require('debug')('cli:plugincache')
-
 export interface CachedCommand {
   id: string
   topic: string
@@ -82,7 +80,6 @@ export default class Cache {
       node_version: this._cache.node_version,
     }
     try {
-      debug('removing the requireCacheFile', this.config.requireCachePath)
       fs.removeSync(this.config.requireCachePath)
     } catch (e) {
       //
@@ -110,9 +107,6 @@ export default class Cache {
       this._cache.version !== this.config.version ||
       process.env.GRAPHCOOL_CLI_CLEAR_CACHE
     ) {
-      if (process.env.GRAPHCOOL_CLI_CLEAR_CACHE) {
-        debug('clearing cache because GRAPHCOOL_CLI_CLEAR_CACHE is set')
-      }
       this.clear()
     }
     return this._cache
@@ -129,8 +123,6 @@ export default class Cache {
 
   deletePlugin(...paths: string[]) {
     for (const pluginPath of paths) {
-      debug(`clearing cache for ${pluginPath}`)(this
-        .constructor as any).updated = true
       delete this.cache.plugins[pluginPath]
     }
     this.save()
@@ -139,12 +131,9 @@ export default class Cache {
   async fetch(pluginPath: PluginPath): Promise<CachedPlugin> {
     const c = this.plugin(pluginPath.path)
     if (c) {
-      debug(`Got plugin from cache`)
-      debug(this.file)
       return c
     }
     try {
-      debug('updating cache for ' + pluginPath.path)
       const cachedPlugin = await pluginPath.convertToCached()
       this.updatePlugin(pluginPath.path, cachedPlugin)
       return cachedPlugin

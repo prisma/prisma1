@@ -10,10 +10,10 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Simple unique index" should "work" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Top {
-        |   id: ID! @unique
+        |   id: ID! @id
         |   unique: Int! @unique
         |   name: String!
         |}"""
@@ -50,10 +50,10 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //Fixme https://jira.mongodb.org/browse/SERVER-1068
   "Unique indexes on embedded types" should "work" ignore {
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """
         |type Parent{
-        |    id: ID! @unique
+        |    id: ID! @id
         |    name: String @unique
         |    children: [Child]
         |}
@@ -141,16 +141,16 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   "Field names starting with a capital letter" should "not error" in {
 
-    val project = SchemaDsl.fromString() {
+    val project = SchemaDsl.fromStringV11() {
       """type Artist {
-            id: ID! @unique
+            id: ID! @id
             ArtistId: Int! @unique
             Name: String!
-            Albums: [Album!]! @mongoRelation(field: "Albums")
+            Albums: [Album!]! @relation(link: INLINE)
           }
           
           type Album {
-            id: ID! @unique
+            id: ID! @id
             AlbumId: Int! @unique
             Title: String!
             Tracks: [Track!]!
@@ -159,8 +159,8 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
           type Track @embedded{
             TrackId: Int!
             Name: String!
-            MediaType: MediaType! @mongoRelation(field: "MediaType")
-            Genre: Genre! @mongoRelation(field: "Genre")
+            MediaType: MediaType! @relation(link: INLINE)
+            Genre: Genre! @relation(link: INLINE)
             Composer: String
             Milliseconds: Int!
             Bytes: Int!
@@ -168,13 +168,13 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
           }
           
           type Genre {
-            id: ID! @unique
+            id: ID! @id
             GenreId: Int! @unique
             Name: String!
           }
           
           type MediaType {
-            id: ID! @unique
+            id: ID! @id
             MediaTypeId: Int! @unique
             Name: String!
           }"""
@@ -268,6 +268,42 @@ class MongoPrototypingSpec extends FlatSpec with Matchers with ApiSpecBase {
 
     res.toString should be(
       """{"data":{"createArtist":{"ArtistId":1,"Name":"artist1","Albums":[{"AlbumId":1,"Title":"artist1album1","Tracks":[{"TrackId":2,"Name":"track2","Genre":{"GenreId":83},"MediaType":{"MediaTypeId":10}},{"TrackId":3,"Name":"track3","Genre":{"GenreId":83},"MediaType":{"MediaTypeId":10}}]},{"AlbumId":2,"Title":"artist1album2","Tracks":[{"TrackId":4,"Name":"track4","Genre":{"GenreId":83},"MediaType":{"MediaTypeId":10}},{"TrackId":5,"Name":"track5","Genre":{"GenreId":83},"MediaType":{"MediaTypeId":10}}]}]}}}""")
+  }
+
+  "Relations on embedded types" should "be indexed" in {
+
+    val project = SchemaDsl.fromStringV11() {
+      """
+        |type A {
+        |   id: ID! @id
+        |   u: Int! @unique
+        |   name: String!
+        |   emb:  AEmbedded @relation(name: "AEmbeddedOnA")
+        |   embs: [AEmbedded!]! @relation(name: "AEmbeddedsOnA")
+        |}
+        |
+        |type AA {
+        |   id: ID! @id
+        |   u: Int! @unique
+        |   name: String!
+        |   emb:  AEmbedded @relation(name: "AAEmbeddedOnA")
+        |}
+        |
+        |type AEmbedded @embedded {
+        |   u: Int!
+        |   name: String!
+        |   bs: [B!]!
+        |}
+        |
+        |type B {
+        |   id: ID! @id
+        |   u: Int!
+        |   name: String!
+        |}"""
+    }
+
+    database.setup(project)
+
   }
 
 }

@@ -1,41 +1,54 @@
-import { IGQLType, SdlExpect, TypeIdentifiers } from "prisma-datamodel";
+import { IGQLType, SdlExpect, TypeIdentifiers } from 'prisma-datamodel'
 
 /*
-* users and items are a small datamodel to test relations. 
-*/
-export const users = [{
-  _id: 'user1@prisma.com',
-  firstName: 'Charlotte',
-  orders: [{
-    count: 5,
-    item: 'Fridge'
-  }, {
-    count: 1,
-    item: 'Espresso'
-  }]
-}, {
-  _id: 'user2@prisma.com',
-  firstName: 'Dolores',
-  orders: []
-}, {
-  _id: 'user3@prisma.com',
-  firstName: 'Humbert',
-  orders: [{
-    count: 2,
-    item: 'Laptop'
-  }]
-}]
+ * users and items are a small datamodel to test relations.
+ */
+export const users = [
+  {
+    _id: 'user1@prisma.com',
+    firstName: 'Charlotte',
+    orders: [
+      {
+        count: 5,
+        item: 'Fridge',
+      },
+      {
+        count: 1,
+        item: 'Espresso',
+      },
+    ],
+  },
+  {
+    _id: 'user2@prisma.com',
+    firstName: 'Dolores',
+    orders: [],
+  },
+  {
+    _id: 'user3@prisma.com',
+    firstName: 'Humbert',
+    orders: [
+      {
+        count: 2,
+        item: 'Laptop',
+      },
+    ],
+  },
+]
 
-export const items = [{
-  _id: 'Fridge',
-  cost: 200
-}, {
-  _id: 'Laptop',
-  cost: 2500
-}, {
-  _id: 'Espresso',
-  cost: 1
-}]
+export const items = [
+  {
+    _id: 'Fridge',
+    cost: 200,
+  },
+  {
+    _id: 'Laptop',
+    cost: 2500,
+  },
+  {
+    _id: 'Espresso',
+    cost: 1,
+  },
+]
 
 export const schemaString = `type Item {
   # Type String is currently not supported for id fields.
@@ -47,7 +60,7 @@ type User {
   # Type String is currently not supported for id fields.
   _id: String! @id
   firstName: String
-  orders: [UserOrders!]!
+  orders: [UserOrders]
 }
 
 type UserOrders @embedded {

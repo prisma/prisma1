@@ -1,10 +1,10 @@
 package com.prisma.deploy.migration.validation
 
 import com.prisma.deploy.specutils.DeploySpecBase
-import com.prisma.gc_values.{EnumGCValue, StringGCValue}
 import com.prisma.shared.models.ConnectorCapability._
 import com.prisma.shared.models.FieldBehaviour._
-import com.prisma.shared.models.{OnDelete, RelationStrategy, TypeIdentifier}
+import com.prisma.shared.models.TypeIdentifier
+import com.prisma.{IgnoreMySql, IgnorePostgres, IgnoreSQLite}
 import org.scalatest.{Matchers, WordSpecLike}
 
 class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with DeploySpecBase with DataModelValidationSpecBase {
@@ -129,8 +129,9 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
         |  myId: Int! @id
         |}
       """.stripMargin
-    val dataModel = validate(dataModelString, Set(IntIdCapability))
-    dataModel.type_!("Todo").scalarField_!("myId").behaviour should contain(IdBehaviour(IdStrategy.Auto))
+    val dataModel         = validate(dataModelString, Set(IntIdCapability))
+    val expectedBehaviour = IdBehaviour(IdStrategy.Auto, Some(Sequence.default("Todo", "myId")))
+    dataModel.type_!("Todo").scalarField_!("myId").behaviour should contain(expectedBehaviour)
   }
 
   "fail if there is a duplicate enum in datamodel" in {
@@ -196,6 +197,20 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
     error1.description should include(s"The name of the type `Todo` occurs more than once. The detection of duplicates is performed case insensitive.")
   }
 
+  "fail if a type is using a reserved name" in {
+    val dataModelString =
+      """
+        |type Node {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val errors = validateThatMustError(dataModelString)
+    val error1 = errors.head
+    error1.`type` should equal("Node")
+    error1.field should equal(None)
+    error1.description should include(s"The type `Node` has is using a reserved type name. Please rename it.")
+  }
+
   "enum types must be detected" in {
     val dataModelString =
       """
@@ -208,5 +223,25 @@ class GeneralDataModelValidatorSpec extends WordSpecLike with Matchers with Depl
     val dataModel = validate(dataModelString)
     val enum      = dataModel.enum_!("Status")
     enum.values should equal(Vector("A", "B"))
+  }
+
+  "fail if a Mongo is using onDelete" taggedAs (IgnoreSQLite, IgnorePostgres, IgnoreMySql) in {
+    val dataModelString =
+      """
+        |type Test {
+        |  id: ID! @id
+        |  b: B @relation(name:"Test", onDelete: CASCADE)
+        |}
+        |
+        |type B {
+        |  id: ID! @id
+        |}
+      """.stripMargin
+    val errors = validateThatMustError(dataModelString, Set(EmbeddedTypesCapability))
+    val error1 = errors.head
+    error1.`type` should equal("Test")
+    error1.field should equal(Some("b"))
+    error1.description should include(
+      s"The Mongo connector currently does not support Cascading Deletes, but the field `b` defines cascade behaviour. Please remove the onDelete argument.")
   }
 }

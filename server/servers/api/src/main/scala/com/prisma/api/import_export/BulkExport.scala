@@ -68,7 +68,7 @@ class BulkExport(project: Project)(implicit apiDependencies: ApiDependencies) {
 
   private def fetch(info: NodeInfo): Future[PrismaNodesPage] = {
     val queryArguments = QueryArguments(skip = Some(info.cursor.row), after = None, first = Some(1000), None, None, None, None)
-    info.dataResolver.getNodes(info.current, queryArguments, SelectedFields.all(info.current)).map { resolverResult =>
+    info.dataResolver.getNodes(info.current, queryArguments, SelectedFields.allScalarFields(info.current)).map { resolverResult =>
       val jsons = resolverResult.nodes.map(node => prismaNodeToExportNode(node, info))
       PrismaNodesPage(jsons, hasMore = resolverResult.hasNextPage)
     }

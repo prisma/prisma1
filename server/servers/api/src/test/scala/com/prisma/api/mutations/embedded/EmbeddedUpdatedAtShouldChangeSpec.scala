@@ -1,6 +1,5 @@
 package com.prisma.api.mutations.embedded
 
-import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.EmbeddedTypesCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -9,20 +8,21 @@ import org.scalatest.{FlatSpec, Matchers}
 class EmbeddedUpdatedAtShouldChangeSpec extends FlatSpec with Matchers with ApiSpecBase {
   override def runOnlyForCapabilities = Set(EmbeddedTypesCapability)
 
-  lazy val project = SchemaDsl.fromString() {
+  lazy val project = SchemaDsl.fromStringV11() {
 
     """type Top {
-      |id: ID! @unique
-      |top: String! @unique
-      |bottom: Bottom
-      |createdAt: DateTime!
-      |updatedAt: DateTime!
+      |  id: ID! @id
+      |  top: String! @unique
+      |  bottom: Bottom
+      |  createdAt: DateTime! @createdAt
+      |  updatedAt: DateTime! @updatedAt
       |}
       |
       |type Bottom @embedded {
-      |bottom: String! @unique
-      |createdAt: DateTime!
-      |updatedAt: DateTime!
+      |  id: ID! @id
+      |  bottom: String!
+      |  createdAt: DateTime! @createdAt
+      |  updatedAt: DateTime! @updatedAt
       |}
       |"""
   }

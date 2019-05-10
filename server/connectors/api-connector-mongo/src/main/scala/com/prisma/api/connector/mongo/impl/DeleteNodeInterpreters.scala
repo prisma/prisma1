@@ -14,7 +14,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
 
   override def mongoAction(mutationBuilder: MongoActionsBuilder) = {
     for {
-      nodeOpt <- mutationBuilder.getNodeByWhere(mutaction.where)
+      nodeOpt <- mutationBuilder.getNodeByWhereComplete(mutaction.where)
       node <- nodeOpt match {
                case Some(node) =>
                  for {
@@ -29,7 +29,7 @@ case class DeleteNodeInterpreter(mutaction: TopLevelDeleteNode)(implicit val ec:
   }
 }
 
-case class DeleteNodesInterpreter(mutaction: DeleteNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
+case class DeleteNodesInterpreter(mutaction: TopLevelDeleteNodes)(implicit ec: ExecutionContext) extends TopLevelDatabaseMutactionInterpreter {
 
   def mongoAction(mutationBuilder: MongoActionsBuilder) =
     for {
@@ -91,7 +91,7 @@ case class NestedDeleteNodesInterpreter(mutaction: NestedDeleteNodes)(implicit v
       filterOption <- relationField.relationIsInlinedInParent match {
                        case true =>
                          for {
-                           optionRes <- getNodeByWhere(parent.where)
+                           optionRes <- getNodeByWhere(parent.where, SelectedFields.byFieldAndNodeAddress(parentField, parent))
                            filterOption = PrismaNode.getNodeAtPath(optionRes, parent.path.segments).flatMap { res =>
                              (relationField.isList, res.data.map.get(relationField.name)) match {
                                case (true, Some(ListGCValue(values))) => Some(ScalarFilter(relationField.relatedModel_!.idField_!, In(values)))

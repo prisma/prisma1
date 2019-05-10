@@ -24,7 +24,13 @@ case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends 
   def existsByRelation(projectId: String, relation: Relation): DBIOAction[Boolean, NoStream, Effect.All] = {
     val query = sql.select(
       field(
-        exists(sql.select(field(name("id"))).from(table(name(projectId, relation.relationTableName))))
+        exists(
+          sql
+            .select(asterisk())
+            .from(table(name(projectId, relation.relationTableName)))
+            .where(field(name(relation.modelAColumn)).isNotNull)
+            .and(field(name(relation.modelBColumn)).isNotNull)
+        )
       )
     )
 
@@ -82,6 +88,8 @@ case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends 
   }
 
   def existsNullByModelAndRelationField(projectId: String, model: Model, f: RelationField): DBIOAction[Boolean, NoStream, Effect.All] = {
+    val thisColumn    = field(name(f.relation.columnForRelationSide(f.relationSide)))
+    val relatedColumn = field(name(f.relation.columnForRelationSide(f.oppositeRelationSide)))
     val query = sql.select(
       field(
         exists(
@@ -91,8 +99,9 @@ case class JdbcDeployDatabaseQueryBuilder(slickDatabase: SlickDatabase) extends 
             .where(
               field(name(model.dbNameOfIdField_!)).notIn(
                 sql
-                  .select(field(name(f.relationSide.toString)))
+                  .select(thisColumn)
                   .from(table(name(projectId, f.relation.relationTableName)))
+                  .where(relatedColumn.isNotNull)
               ))
         )
       )

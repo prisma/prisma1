@@ -271,3 +271,4 @@ Releases are separated into two _channels_ - the **stable** and **unstable** cha
 * The unstable channel is released with every commit to master and therefore gives access to features and bug fixes before the stable release. You can find more information about running the Prisma on the unstable channel [here](https://github.com/prisma/prisma/blob/master/CONTRIBUTING.md#the-unstable-channel).
 
 <p align="center"><a href="https://oss.prisma.io"><img src="https://imgur.com/IMU2ERq.png" alt="Prisma" height="170px"></a></p>
+

@@ -1,8 +1,0 @@
-type Story {
-  id: ID! @unique
-}
-
-type UserSpace {
-  id: ID! @unique
-  stories: [Story!]! @relation(name: "StoriesByUserSpace", onDelete: SET_NULL)
-}

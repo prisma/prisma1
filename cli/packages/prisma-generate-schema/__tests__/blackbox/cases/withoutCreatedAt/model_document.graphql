@@ -1,0 +1,21 @@
+type User {
+  id: ID! @id
+  email: String! @unique
+  name: String
+  posts: [Post!]! @relation(link: INLINE)
+  signUpDate: DateTime! @createdAt
+}
+
+type Post {
+  id: ID! @id
+  published: Boolean! @default(value: false)
+  title: String!
+  content: String
+  author: User!
+}
+
+type MultiRefToUsers {
+  id: ID! @id
+  name: String
+  users: [User] @relation(link: INLINE)
+}

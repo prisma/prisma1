@@ -4,34 +4,40 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.Http.ServerBinding
 import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{as, entity, extractClientIP, _}
 import akka.http.scaladsl.server.directives.RouteDirectives.reject
 import akka.http.scaladsl.server.{ExceptionHandler, Route, UnsupportedWebSocketSubprotocolRejection}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
-import play.api.libs.json.{JsObject, JsValue, Json}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import com.prisma.akkautil.throttler.Throttler.ThrottlerException
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import play.api.libs.json.JsValue
 
 import scala.concurrent.{Await, Future}
 
 object AkkaHttpSangriaServer extends SangriaServerExecutor {
-  override def create(handler: SangriaHandler, port: Int, requestPrefix: String) = AkkaHttpSangriaServer(handler, port, requestPrefix)
+  override def create(handler: SangriaHandler, port: Int, requestPrefix: String)(implicit system: ActorSystem, materializer: ActorMaterializer) = {
+    AkkaHttpSangriaServer(handler, port, requestPrefix)
+  }
 
   override def supportsWebsockets = true
 }
 
-case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPrefix: String) extends SangriaServer with PlayJsonSupport {
-  import scala.concurrent.duration._
-
-  implicit val system       = ActorSystem("sangria-server")
-  implicit val materializer = ActorMaterializer()
-
+case class AkkaHttpSangriaServer(
+    handler: SangriaHandler,
+    port: Int,
+    requestPrefix: String
+)(implicit val system: ActorSystem, val materializer: ActorMaterializer)
+    extends SangriaServer
+    with PlayJsonSupport {
   import system.dispatcher
+
+  import scala.concurrent.duration._
 
   val routes = {
     handleRejections(CorsDirectives.corsRejectionHandler) {
@@ -63,6 +69,8 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
                       case _ =>
                         reject(UnsupportedWebSocketSubprotocolRejection(handler.supportedWebsocketProtocols.head))
                     }
+                  } ~ (get & pathSuffix("_admin")) {
+                    getFromResource("admin.html", ContentTypes.`text/html(UTF-8)`)
                   } ~
                     getFromResource("playground.html", ContentTypes.`text/html(UTF-8)`)
                 }
@@ -75,6 +83,8 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
   }
 
   def toplevelExceptionHandler(requestId: String) = ExceptionHandler {
+    case e: ThrottlerException =>
+      complete(InternalServerError -> JsonErrorHelper.errorJson(requestId, e.getMessage))
     case e: Throwable =>
       println(e.getMessage)
       e.printStackTrace()
@@ -87,7 +97,7 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
       case HttpMethods.POST => HttpMethod.Post
       case _                => sys.error("not allowed")
     }
-    val headers = req.headers.map(h => h.name -> h.value).toMap
+    val headers = req.headers.map(h => h.name.toLowerCase() -> h.value).toMap
     val path    = req.uri.path.toString.split('/').filter(_.nonEmpty)
     RawRequest(
       id = requestId,
@@ -100,7 +110,7 @@ case class AkkaHttpSangriaServer(handler: SangriaHandler, port: Int, requestPref
   }
 
   private def akkaRequestToRawWebsocketRequest(req: HttpRequest, ip: RemoteAddress, protocol: String, requestId: String): RawWebsocketRequest = {
-    val headers = req.headers.map(h => h.name -> h.value).toMap
+    val headers = req.headers.map(h => h.name.toLowerCase() -> h.value).toMap
     val path    = req.uri.path.toString.split('/')
     RawWebsocketRequest(
       id = requestId,

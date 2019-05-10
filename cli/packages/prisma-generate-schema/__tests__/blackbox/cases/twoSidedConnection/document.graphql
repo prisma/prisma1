@@ -128,6 +128,7 @@ type AWithAConnection {
 }
 
 input AWithACreateInput {
+  removeThisId: ID
   x: AWithIdWithACreateOneWithoutXInput!
   y: AWithoutIdWithACreateOneWithoutXInput!
 }
@@ -143,10 +144,12 @@ input AWithACreateOneWithoutYInput {
 }
 
 input AWithACreateWithoutXInput {
+  removeThisId: ID
   y: AWithoutIdWithACreateOneWithoutXInput!
 }
 
 input AWithACreateWithoutYInput {
+  removeThisId: ID
   x: AWithIdWithACreateOneWithoutXInput!
 }
 
@@ -185,14 +188,6 @@ input AWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -254,14 +249,6 @@ input AWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithAWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -315,6 +302,8 @@ input AWithAWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x: AWithIdWithAWhereInput
+  y: AWithoutIdWithAWhereInput
 }
 
 input AWithAWhereUniqueInput {
@@ -343,6 +332,7 @@ type AWithBConnection {
 }
 
 input AWithBCreateInput {
+  removeThisId: ID
   x: BWithIdWithACreateOneWithoutXInput!
   y: BWithoutIdWithACreateOneWithoutXInput!
 }
@@ -358,10 +348,12 @@ input AWithBCreateOneWithoutYInput {
 }
 
 input AWithBCreateWithoutXInput {
+  removeThisId: ID
   y: BWithoutIdWithACreateOneWithoutXInput!
 }
 
 input AWithBCreateWithoutYInput {
+  removeThisId: ID
   x: BWithIdWithACreateOneWithoutXInput!
 }
 
@@ -400,14 +392,6 @@ input AWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -473,14 +457,6 @@ input AWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithBWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -534,6 +510,8 @@ input AWithBWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x: BWithIdWithAWhereInput
+  y: BWithoutIdWithAWhereInput
 }
 
 input AWithBWhereUniqueInput {
@@ -562,6 +540,7 @@ type AWithCConnection {
 }
 
 input AWithCCreateInput {
+  removeThisId: ID
   x: CWithIdWithACreateOneWithoutXInput!
   y: CWithoutIdWithACreateOneWithoutXInput!
 }
@@ -577,10 +556,12 @@ input AWithCCreateManyWithoutYInput {
 }
 
 input AWithCCreateWithoutXInput {
+  removeThisId: ID
   y: CWithoutIdWithACreateOneWithoutXInput!
 }
 
 input AWithCCreateWithoutYInput {
+  removeThisId: ID
   x: CWithIdWithACreateOneWithoutXInput!
 }
 
@@ -688,14 +669,6 @@ input AWithCSubscriptionWhereInput {
   """
   AND: [AWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [AWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -722,6 +695,7 @@ input AWithCUpdateInput {
 input AWithCUpdateManyWithoutXInput {
   create: [AWithCCreateWithoutXInput!]
   connect: [AWithCWhereUniqueInput!]
+  set: [AWithCWhereUniqueInput!]
   disconnect: [AWithCWhereUniqueInput!]
   delete: [AWithCWhereUniqueInput!]
   update: [AWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -732,6 +706,7 @@ input AWithCUpdateManyWithoutXInput {
 input AWithCUpdateManyWithoutYInput {
   create: [AWithCCreateWithoutYInput!]
   connect: [AWithCWhereUniqueInput!]
+  set: [AWithCWhereUniqueInput!]
   disconnect: [AWithCWhereUniqueInput!]
   delete: [AWithCWhereUniqueInput!]
   update: [AWithCUpdateWithWhereUniqueWithoutYInput!]
@@ -774,14 +749,6 @@ input AWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithCWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -835,6 +802,8 @@ input AWithCWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x: CWithIdWithAWhereInput
+  y: CWithoutIdWithAWhereInput
 }
 
 input AWithCWhereUniqueInput {
@@ -863,6 +832,7 @@ type AWithIdWithAConnection {
 }
 
 input AWithIdWithACreateInput {
+  id: ID
   field: String!
   x: AWithACreateOneWithoutXInput!
 }
@@ -873,6 +843,7 @@ input AWithIdWithACreateOneWithoutXInput {
 }
 
 input AWithIdWithACreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -914,14 +885,6 @@ input AWithIdWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithIdWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithIdWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -971,14 +934,6 @@ input AWithIdWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithIdWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithIdWithAWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1085,6 +1040,7 @@ input AWithIdWithAWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: AWithAWhereInput
 }
 
 input AWithIdWithAWhereUniqueInput {
@@ -1113,6 +1069,7 @@ type AWithIdWithBConnection {
 }
 
 input AWithIdWithBCreateInput {
+  id: ID
   field: String!
   x: BWithACreateOneWithoutXInput!
 }
@@ -1123,6 +1080,7 @@ input AWithIdWithBCreateOneWithoutXInput {
 }
 
 input AWithIdWithBCreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -1164,14 +1122,6 @@ input AWithIdWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithIdWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithIdWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1223,14 +1173,6 @@ input AWithIdWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithIdWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithIdWithBWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1337,6 +1279,7 @@ input AWithIdWithBWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: BWithAWhereInput
 }
 
 input AWithIdWithBWhereUniqueInput {
@@ -1365,6 +1308,7 @@ type AWithIdWithCConnection {
 }
 
 input AWithIdWithCCreateInput {
+  id: ID
   field: String!
   x: CWithACreateOneWithoutXInput!
 }
@@ -1375,6 +1319,7 @@ input AWithIdWithCCreateManyWithoutXInput {
 }
 
 input AWithIdWithCCreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -1538,14 +1483,6 @@ input AWithIdWithCSubscriptionWhereInput {
   """
   AND: [AWithIdWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [AWithIdWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithIdWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -1580,6 +1517,7 @@ input AWithIdWithCUpdateManyMutationInput {
 input AWithIdWithCUpdateManyWithoutXInput {
   create: [AWithIdWithCCreateWithoutXInput!]
   connect: [AWithIdWithCWhereUniqueInput!]
+  set: [AWithIdWithCWhereUniqueInput!]
   disconnect: [AWithIdWithCWhereUniqueInput!]
   delete: [AWithIdWithCWhereUniqueInput!]
   update: [AWithIdWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -1613,14 +1551,6 @@ input AWithIdWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithIdWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithIdWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithIdWithCWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -1727,6 +1657,7 @@ input AWithIdWithCWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: CWithAWhereInput
 }
 
 input AWithIdWithCWhereUniqueInput {
@@ -1755,6 +1686,7 @@ type AWithoutIdWithAConnection {
 }
 
 input AWithoutIdWithACreateInput {
+  removeThisId: ID
   field: String!
   x: AWithACreateOneWithoutYInput!
 }
@@ -1765,6 +1697,7 @@ input AWithoutIdWithACreateOneWithoutXInput {
 }
 
 input AWithoutIdWithACreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -1806,14 +1739,6 @@ input AWithoutIdWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithoutIdWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithoutIdWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithoutIdWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -1863,14 +1788,6 @@ input AWithoutIdWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithoutIdWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithoutIdWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithoutIdWithAWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -1977,6 +1894,7 @@ input AWithoutIdWithAWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: AWithAWhereInput
 }
 
 input AWithoutIdWithAWhereUniqueInput {
@@ -2005,6 +1923,7 @@ type AWithoutIdWithBConnection {
 }
 
 input AWithoutIdWithBCreateInput {
+  removeThisId: ID
   field: String!
   x: BWithACreateOneWithoutYInput!
 }
@@ -2015,6 +1934,7 @@ input AWithoutIdWithBCreateOneWithoutXInput {
 }
 
 input AWithoutIdWithBCreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -2056,14 +1976,6 @@ input AWithoutIdWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithoutIdWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithoutIdWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithoutIdWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -2115,14 +2027,6 @@ input AWithoutIdWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithoutIdWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithoutIdWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithoutIdWithBWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -2229,6 +2133,7 @@ input AWithoutIdWithBWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: BWithAWhereInput
 }
 
 input AWithoutIdWithBWhereUniqueInput {
@@ -2257,6 +2162,7 @@ type AWithoutIdWithCConnection {
 }
 
 input AWithoutIdWithCCreateInput {
+  removeThisId: ID
   field: String!
   x: CWithACreateOneWithoutYInput!
 }
@@ -2267,6 +2173,7 @@ input AWithoutIdWithCCreateManyWithoutXInput {
 }
 
 input AWithoutIdWithCCreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -2430,14 +2337,6 @@ input AWithoutIdWithCSubscriptionWhereInput {
   """
   AND: [AWithoutIdWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [AWithoutIdWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithoutIdWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -2472,6 +2371,7 @@ input AWithoutIdWithCUpdateManyMutationInput {
 input AWithoutIdWithCUpdateManyWithoutXInput {
   create: [AWithoutIdWithCCreateWithoutXInput!]
   connect: [AWithoutIdWithCWhereUniqueInput!]
+  set: [AWithoutIdWithCWhereUniqueInput!]
   disconnect: [AWithoutIdWithCWhereUniqueInput!]
   delete: [AWithoutIdWithCWhereUniqueInput!]
   update: [AWithoutIdWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -2505,14 +2405,6 @@ input AWithoutIdWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [AWithoutIdWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [AWithoutIdWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [AWithoutIdWithCWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -2619,6 +2511,7 @@ input AWithoutIdWithCWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: CWithAWhereInput
 }
 
 input AWithoutIdWithCWhereUniqueInput {
@@ -2654,6 +2547,7 @@ type BWithAConnection {
 }
 
 input BWithACreateInput {
+  removeThisId: ID
   x: AWithIdWithBCreateOneWithoutXInput
   y: AWithoutIdWithBCreateOneWithoutXInput
 }
@@ -2669,10 +2563,12 @@ input BWithACreateOneWithoutYInput {
 }
 
 input BWithACreateWithoutXInput {
+  removeThisId: ID
   y: AWithoutIdWithBCreateOneWithoutXInput
 }
 
 input BWithACreateWithoutYInput {
+  removeThisId: ID
   x: AWithIdWithBCreateOneWithoutXInput
 }
 
@@ -2711,14 +2607,6 @@ input BWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -2780,14 +2668,6 @@ input BWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithAWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -2841,6 +2721,8 @@ input BWithAWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x: AWithIdWithBWhereInput
+  y: AWithoutIdWithBWhereInput
 }
 
 input BWithAWhereUniqueInput {
@@ -2869,6 +2751,7 @@ type BWithBConnection {
 }
 
 input BWithBCreateInput {
+  removeThisId: ID
   x: BWithIdWithBCreateOneWithoutXInput
   y: BWithoutIdWithBCreateOneWithoutXInput
 }
@@ -2884,10 +2767,12 @@ input BWithBCreateOneWithoutYInput {
 }
 
 input BWithBCreateWithoutXInput {
+  removeThisId: ID
   y: BWithoutIdWithBCreateOneWithoutXInput
 }
 
 input BWithBCreateWithoutYInput {
+  removeThisId: ID
   x: BWithIdWithBCreateOneWithoutXInput
 }
 
@@ -2926,14 +2811,6 @@ input BWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -2999,14 +2876,6 @@ input BWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithBWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -3060,6 +2929,8 @@ input BWithBWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x: BWithIdWithBWhereInput
+  y: BWithoutIdWithBWhereInput
 }
 
 input BWithBWhereUniqueInput {
@@ -3088,6 +2959,7 @@ type BWithCConnection {
 }
 
 input BWithCCreateInput {
+  removeThisId: ID
   x: CWithIdWithBCreateOneWithoutXInput
   y: CWithoutIdWithBCreateOneWithoutXInput
 }
@@ -3103,10 +2975,12 @@ input BWithCCreateManyWithoutYInput {
 }
 
 input BWithCCreateWithoutXInput {
+  removeThisId: ID
   y: CWithoutIdWithBCreateOneWithoutXInput
 }
 
 input BWithCCreateWithoutYInput {
+  removeThisId: ID
   x: CWithIdWithBCreateOneWithoutXInput
 }
 
@@ -3214,14 +3088,6 @@ input BWithCSubscriptionWhereInput {
   """
   AND: [BWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [BWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -3248,6 +3114,7 @@ input BWithCUpdateInput {
 input BWithCUpdateManyWithoutXInput {
   create: [BWithCCreateWithoutXInput!]
   connect: [BWithCWhereUniqueInput!]
+  set: [BWithCWhereUniqueInput!]
   disconnect: [BWithCWhereUniqueInput!]
   delete: [BWithCWhereUniqueInput!]
   update: [BWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -3258,6 +3125,7 @@ input BWithCUpdateManyWithoutXInput {
 input BWithCUpdateManyWithoutYInput {
   create: [BWithCCreateWithoutYInput!]
   connect: [BWithCWhereUniqueInput!]
+  set: [BWithCWhereUniqueInput!]
   disconnect: [BWithCWhereUniqueInput!]
   delete: [BWithCWhereUniqueInput!]
   update: [BWithCUpdateWithWhereUniqueWithoutYInput!]
@@ -3300,14 +3168,6 @@ input BWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithCWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -3361,6 +3221,8 @@ input BWithCWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x: CWithIdWithBWhereInput
+  y: CWithoutIdWithBWhereInput
 }
 
 input BWithCWhereUniqueInput {
@@ -3389,6 +3251,7 @@ type BWithIdWithAConnection {
 }
 
 input BWithIdWithACreateInput {
+  id: ID
   field: String!
   x: AWithBCreateOneWithoutXInput
 }
@@ -3399,6 +3262,7 @@ input BWithIdWithACreateOneWithoutXInput {
 }
 
 input BWithIdWithACreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -3440,14 +3304,6 @@ input BWithIdWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithIdWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithIdWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithIdWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -3497,14 +3353,6 @@ input BWithIdWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithIdWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithIdWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithIdWithAWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -3611,6 +3459,7 @@ input BWithIdWithAWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: AWithBWhereInput
 }
 
 input BWithIdWithAWhereUniqueInput {
@@ -3639,6 +3488,7 @@ type BWithIdWithBConnection {
 }
 
 input BWithIdWithBCreateInput {
+  id: ID
   field: String!
   x: BWithBCreateOneWithoutXInput
 }
@@ -3649,6 +3499,7 @@ input BWithIdWithBCreateOneWithoutXInput {
 }
 
 input BWithIdWithBCreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -3690,14 +3541,6 @@ input BWithIdWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithIdWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithIdWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithIdWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -3749,14 +3592,6 @@ input BWithIdWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithIdWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithIdWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithIdWithBWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -3863,6 +3698,7 @@ input BWithIdWithBWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: BWithBWhereInput
 }
 
 input BWithIdWithBWhereUniqueInput {
@@ -3891,6 +3727,7 @@ type BWithIdWithCConnection {
 }
 
 input BWithIdWithCCreateInput {
+  id: ID
   field: String!
   x: CWithBCreateOneWithoutXInput
 }
@@ -3901,6 +3738,7 @@ input BWithIdWithCCreateManyWithoutXInput {
 }
 
 input BWithIdWithCCreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -4064,14 +3902,6 @@ input BWithIdWithCSubscriptionWhereInput {
   """
   AND: [BWithIdWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [BWithIdWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithIdWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -4106,6 +3936,7 @@ input BWithIdWithCUpdateManyMutationInput {
 input BWithIdWithCUpdateManyWithoutXInput {
   create: [BWithIdWithCCreateWithoutXInput!]
   connect: [BWithIdWithCWhereUniqueInput!]
+  set: [BWithIdWithCWhereUniqueInput!]
   disconnect: [BWithIdWithCWhereUniqueInput!]
   delete: [BWithIdWithCWhereUniqueInput!]
   update: [BWithIdWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -4139,14 +3970,6 @@ input BWithIdWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithIdWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithIdWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithIdWithCWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -4253,6 +4076,7 @@ input BWithIdWithCWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: CWithBWhereInput
 }
 
 input BWithIdWithCWhereUniqueInput {
@@ -4281,6 +4105,7 @@ type BWithoutIdWithAConnection {
 }
 
 input BWithoutIdWithACreateInput {
+  removeThisId: ID
   field: String!
   x: AWithBCreateOneWithoutYInput
 }
@@ -4291,6 +4116,7 @@ input BWithoutIdWithACreateOneWithoutXInput {
 }
 
 input BWithoutIdWithACreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -4332,14 +4158,6 @@ input BWithoutIdWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithoutIdWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithoutIdWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithoutIdWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -4389,14 +4207,6 @@ input BWithoutIdWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithoutIdWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithoutIdWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithoutIdWithAWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -4503,6 +4313,7 @@ input BWithoutIdWithAWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: AWithBWhereInput
 }
 
 input BWithoutIdWithAWhereUniqueInput {
@@ -4531,6 +4342,7 @@ type BWithoutIdWithBConnection {
 }
 
 input BWithoutIdWithBCreateInput {
+  removeThisId: ID
   field: String!
   x: BWithBCreateOneWithoutYInput
 }
@@ -4541,6 +4353,7 @@ input BWithoutIdWithBCreateOneWithoutXInput {
 }
 
 input BWithoutIdWithBCreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -4582,14 +4395,6 @@ input BWithoutIdWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithoutIdWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithoutIdWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithoutIdWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -4641,14 +4446,6 @@ input BWithoutIdWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithoutIdWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithoutIdWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithoutIdWithBWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -4755,6 +4552,7 @@ input BWithoutIdWithBWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: BWithBWhereInput
 }
 
 input BWithoutIdWithBWhereUniqueInput {
@@ -4783,6 +4581,7 @@ type BWithoutIdWithCConnection {
 }
 
 input BWithoutIdWithCCreateInput {
+  removeThisId: ID
   field: String!
   x: CWithBCreateOneWithoutYInput
 }
@@ -4793,6 +4592,7 @@ input BWithoutIdWithCCreateManyWithoutXInput {
 }
 
 input BWithoutIdWithCCreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -4956,14 +4756,6 @@ input BWithoutIdWithCSubscriptionWhereInput {
   """
   AND: [BWithoutIdWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [BWithoutIdWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithoutIdWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -4998,6 +4790,7 @@ input BWithoutIdWithCUpdateManyMutationInput {
 input BWithoutIdWithCUpdateManyWithoutXInput {
   create: [BWithoutIdWithCCreateWithoutXInput!]
   connect: [BWithoutIdWithCWhereUniqueInput!]
+  set: [BWithoutIdWithCWhereUniqueInput!]
   disconnect: [BWithoutIdWithCWhereUniqueInput!]
   delete: [BWithoutIdWithCWhereUniqueInput!]
   update: [BWithoutIdWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -5031,14 +4824,6 @@ input BWithoutIdWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [BWithoutIdWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [BWithoutIdWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [BWithoutIdWithCWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -5145,6 +4930,7 @@ input BWithoutIdWithCWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x: CWithBWhereInput
 }
 
 input BWithoutIdWithCWhereUniqueInput {
@@ -5173,6 +4959,7 @@ type CWithAConnection {
 }
 
 input CWithACreateInput {
+  removeThisId: ID
   x: AWithIdWithCCreateManyWithoutXInput
   y: AWithoutIdWithCCreateManyWithoutXInput
 }
@@ -5188,10 +4975,12 @@ input CWithACreateOneWithoutYInput {
 }
 
 input CWithACreateWithoutXInput {
+  removeThisId: ID
   y: AWithoutIdWithCCreateManyWithoutXInput
 }
 
 input CWithACreateWithoutYInput {
+  removeThisId: ID
   x: AWithIdWithCCreateManyWithoutXInput
 }
 
@@ -5230,14 +5019,6 @@ input CWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -5299,14 +5080,6 @@ input CWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithAWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -5360,6 +5133,8 @@ input CWithAWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x_some: AWithIdWithCWhereInput
+  y_some: AWithoutIdWithCWhereInput
 }
 
 input CWithAWhereUniqueInput {
@@ -5388,6 +5163,7 @@ type CWithBConnection {
 }
 
 input CWithBCreateInput {
+  removeThisId: ID
   x: BWithIdWithCCreateManyWithoutXInput
   y: BWithoutIdWithCCreateManyWithoutXInput
 }
@@ -5403,10 +5179,12 @@ input CWithBCreateOneWithoutYInput {
 }
 
 input CWithBCreateWithoutXInput {
+  removeThisId: ID
   y: BWithoutIdWithCCreateManyWithoutXInput
 }
 
 input CWithBCreateWithoutYInput {
+  removeThisId: ID
   x: BWithIdWithCCreateManyWithoutXInput
 }
 
@@ -5445,14 +5223,6 @@ input CWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -5518,14 +5288,6 @@ input CWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithBWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -5579,6 +5341,8 @@ input CWithBWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x_some: BWithIdWithCWhereInput
+  y_some: BWithoutIdWithCWhereInput
 }
 
 input CWithBWhereUniqueInput {
@@ -5607,6 +5371,7 @@ type CWithCConnection {
 }
 
 input CWithCCreateInput {
+  removeThisId: ID
   x: CWithIdWithCCreateManyWithoutXInput
   y: CWithoutIdWithCCreateManyWithoutXInput
 }
@@ -5622,10 +5387,12 @@ input CWithCCreateManyWithoutYInput {
 }
 
 input CWithCCreateWithoutXInput {
+  removeThisId: ID
   y: CWithoutIdWithCCreateManyWithoutXInput
 }
 
 input CWithCCreateWithoutYInput {
+  removeThisId: ID
   x: CWithIdWithCCreateManyWithoutXInput
 }
 
@@ -5733,14 +5500,6 @@ input CWithCSubscriptionWhereInput {
   """
   AND: [CWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [CWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -5767,6 +5526,7 @@ input CWithCUpdateInput {
 input CWithCUpdateManyWithoutXInput {
   create: [CWithCCreateWithoutXInput!]
   connect: [CWithCWhereUniqueInput!]
+  set: [CWithCWhereUniqueInput!]
   disconnect: [CWithCWhereUniqueInput!]
   delete: [CWithCWhereUniqueInput!]
   update: [CWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -5777,6 +5537,7 @@ input CWithCUpdateManyWithoutXInput {
 input CWithCUpdateManyWithoutYInput {
   create: [CWithCCreateWithoutYInput!]
   connect: [CWithCWhereUniqueInput!]
+  set: [CWithCWhereUniqueInput!]
   disconnect: [CWithCWhereUniqueInput!]
   delete: [CWithCWhereUniqueInput!]
   update: [CWithCUpdateWithWhereUniqueWithoutYInput!]
@@ -5819,14 +5580,6 @@ input CWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithCWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -5880,6 +5633,8 @@ input CWithCWhereInput {
   All values not ending with the given string.
   """
   removeThisId_not_ends_with: ID
+  x_some: CWithIdWithCWhereInput
+  y_some: CWithoutIdWithCWhereInput
 }
 
 input CWithCWhereUniqueInput {
@@ -5908,6 +5663,7 @@ type CWithIdWithAConnection {
 }
 
 input CWithIdWithACreateInput {
+  id: ID
   field: String!
   x: AWithCCreateManyWithoutXInput
 }
@@ -5918,6 +5674,7 @@ input CWithIdWithACreateOneWithoutXInput {
 }
 
 input CWithIdWithACreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -5959,14 +5716,6 @@ input CWithIdWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithIdWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithIdWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithIdWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -6016,14 +5765,6 @@ input CWithIdWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithIdWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithIdWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithIdWithAWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -6130,6 +5871,7 @@ input CWithIdWithAWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x_some: AWithCWhereInput
 }
 
 input CWithIdWithAWhereUniqueInput {
@@ -6158,6 +5900,7 @@ type CWithIdWithBConnection {
 }
 
 input CWithIdWithBCreateInput {
+  id: ID
   field: String!
   x: BWithCCreateManyWithoutXInput
 }
@@ -6168,6 +5911,7 @@ input CWithIdWithBCreateOneWithoutXInput {
 }
 
 input CWithIdWithBCreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -6209,14 +5953,6 @@ input CWithIdWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithIdWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithIdWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithIdWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -6268,14 +6004,6 @@ input CWithIdWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithIdWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithIdWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithIdWithBWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -6382,6 +6110,7 @@ input CWithIdWithBWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x_some: BWithCWhereInput
 }
 
 input CWithIdWithBWhereUniqueInput {
@@ -6410,6 +6139,7 @@ type CWithIdWithCConnection {
 }
 
 input CWithIdWithCCreateInput {
+  id: ID
   field: String!
   x: CWithCCreateManyWithoutXInput
 }
@@ -6420,6 +6150,7 @@ input CWithIdWithCCreateManyWithoutXInput {
 }
 
 input CWithIdWithCCreateWithoutXInput {
+  id: ID
   field: String!
 }
 
@@ -6583,14 +6314,6 @@ input CWithIdWithCSubscriptionWhereInput {
   """
   AND: [CWithIdWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [CWithIdWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithIdWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -6625,6 +6348,7 @@ input CWithIdWithCUpdateManyMutationInput {
 input CWithIdWithCUpdateManyWithoutXInput {
   create: [CWithIdWithCCreateWithoutXInput!]
   connect: [CWithIdWithCWhereUniqueInput!]
+  set: [CWithIdWithCWhereUniqueInput!]
   disconnect: [CWithIdWithCWhereUniqueInput!]
   delete: [CWithIdWithCWhereUniqueInput!]
   update: [CWithIdWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -6658,14 +6382,6 @@ input CWithIdWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithIdWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithIdWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithIdWithCWhereInput!]
   id: ID
   """
   All values that are not equal to given value.
@@ -6772,6 +6488,7 @@ input CWithIdWithCWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x_some: CWithCWhereInput
 }
 
 input CWithIdWithCWhereUniqueInput {
@@ -6800,6 +6517,7 @@ type CWithoutIdWithAConnection {
 }
 
 input CWithoutIdWithACreateInput {
+  removeThisId: ID
   field: String!
   x: AWithCCreateManyWithoutYInput
 }
@@ -6810,6 +6528,7 @@ input CWithoutIdWithACreateOneWithoutXInput {
 }
 
 input CWithoutIdWithACreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -6851,14 +6570,6 @@ input CWithoutIdWithASubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithoutIdWithASubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithoutIdWithASubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithoutIdWithASubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -6908,14 +6619,6 @@ input CWithoutIdWithAWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithoutIdWithAWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithoutIdWithAWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithoutIdWithAWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -7022,6 +6725,7 @@ input CWithoutIdWithAWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x_some: AWithCWhereInput
 }
 
 input CWithoutIdWithAWhereUniqueInput {
@@ -7050,6 +6754,7 @@ type CWithoutIdWithBConnection {
 }
 
 input CWithoutIdWithBCreateInput {
+  removeThisId: ID
   field: String!
   x: BWithCCreateManyWithoutYInput
 }
@@ -7060,6 +6765,7 @@ input CWithoutIdWithBCreateOneWithoutXInput {
 }
 
 input CWithoutIdWithBCreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -7101,14 +6807,6 @@ input CWithoutIdWithBSubscriptionWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithoutIdWithBSubscriptionWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithoutIdWithBSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithoutIdWithBSubscriptionWhereInput!]
   """
   The subscription event gets dispatched when it's listed in mutation_in
   """
@@ -7160,14 +6858,6 @@ input CWithoutIdWithBWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithoutIdWithBWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithoutIdWithBWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithoutIdWithBWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -7274,6 +6964,7 @@ input CWithoutIdWithBWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x_some: BWithCWhereInput
 }
 
 input CWithoutIdWithBWhereUniqueInput {
@@ -7302,6 +6993,7 @@ type CWithoutIdWithCConnection {
 }
 
 input CWithoutIdWithCCreateInput {
+  removeThisId: ID
   field: String!
   x: CWithCCreateManyWithoutYInput
 }
@@ -7312,6 +7004,7 @@ input CWithoutIdWithCCreateManyWithoutXInput {
 }
 
 input CWithoutIdWithCCreateWithoutXInput {
+  removeThisId: ID
   field: String!
 }
 
@@ -7475,14 +7168,6 @@ input CWithoutIdWithCSubscriptionWhereInput {
   """
   AND: [CWithoutIdWithCSubscriptionWhereInput!]
   """
-  Logical OR on all given filters.
-  """
-  OR: [CWithoutIdWithCSubscriptionWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithoutIdWithCSubscriptionWhereInput!]
-  """
   The subscription event gets dispatched when it's listed in mutation_in
   """
   mutation_in: [MutationType!]
@@ -7517,6 +7202,7 @@ input CWithoutIdWithCUpdateManyMutationInput {
 input CWithoutIdWithCUpdateManyWithoutXInput {
   create: [CWithoutIdWithCCreateWithoutXInput!]
   connect: [CWithoutIdWithCWhereUniqueInput!]
+  set: [CWithoutIdWithCWhereUniqueInput!]
   disconnect: [CWithoutIdWithCWhereUniqueInput!]
   delete: [CWithoutIdWithCWhereUniqueInput!]
   update: [CWithoutIdWithCUpdateWithWhereUniqueWithoutXInput!]
@@ -7550,14 +7236,6 @@ input CWithoutIdWithCWhereInput {
   Logical AND on all given filters.
   """
   AND: [CWithoutIdWithCWhereInput!]
-  """
-  Logical OR on all given filters.
-  """
-  OR: [CWithoutIdWithCWhereInput!]
-  """
-  Logical NOT on all given filters combined by AND.
-  """
-  NOT: [CWithoutIdWithCWhereInput!]
   removeThisId: ID
   """
   All values that are not equal to given value.
@@ -7664,6 +7342,7 @@ input CWithoutIdWithCWhereInput {
   All values not ending with the given string.
   """
   field_not_ends_with: String
+  x_some: CWithCWhereInput
 }
 
 input CWithoutIdWithCWhereUniqueInput {
