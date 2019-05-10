@@ -3,9 +3,7 @@
 use datamodel::dml::*;
 use datamodel::Validator;
 use migration_connector::steps::*;
-use migration_core::migration::datamodel_migration_steps_inferrer::{
-    DataModelMigrationStepsInferrer, DataModelMigrationStepsInferrerImpl,
-};
+use migration_core::migration::datamodel_migration_steps_inferrer::*;
 use nullable::*;
 
 #[test]
@@ -264,12 +262,10 @@ fn infer_CreateEnum() {
     );
 
     let steps = infer(dm1, dm2);
-    let expected = vec![
-        MigrationStep::CreateEnum(CreateEnum {
-            name: "Test".to_string(),
-            values: vec!["A".to_string(), "B".to_string()]
-        }),        
-    ];
+    let expected = vec![MigrationStep::CreateEnum(CreateEnum {
+        name: "Test".to_string(),
+        values: vec!["A".to_string(), "B".to_string()],
+    })];
     assert_eq!(steps, expected);
 }
 
@@ -282,5 +278,6 @@ fn parse(datamodel_string: &'static str) -> Schema {
 }
 
 fn infer(dm1: Schema, dm2: Schema) -> Vec<MigrationStep> {
-    DataModelMigrationStepsInferrerImpl::infer(dm1, dm2)
+    let inferrer = DataModelMigrationStepsInferrerImplWrapper {};
+    inferrer.infer(dm1, dm2)
 }

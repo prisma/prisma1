@@ -1,10 +1,5 @@
-type Blog {
-    id: ID! @id
-    name: String!
-    posts: [Post]
-}
-
-type Post {
-    id: ID! @id
-    title: String
+model Blog {
+    id: String @primary
+    name: String
+    viewCount: Int
 }

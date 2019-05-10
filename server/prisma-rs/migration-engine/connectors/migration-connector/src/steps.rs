@@ -1,7 +1,7 @@
 use datamodel::*;
 use nullable::Nullable;
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(tag = "stepType")]
 pub enum MigrationStep {
     CreateModel(CreateModel),
@@ -17,7 +17,7 @@ pub enum MigrationStep {
     // DeleteRelation(DeleteRelation),
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateModel {
     pub name: String,
@@ -28,7 +28,7 @@ pub struct CreateModel {
     pub embedded: bool,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UpdateModel {
     pub name: String,
@@ -47,13 +47,13 @@ pub struct UpdateModel {
     pub embedded: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DeleteModel {
     pub name: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateField {
     pub model: String,
@@ -84,7 +84,7 @@ pub struct CreateField {
     pub scalar_list: Option<ScalarListStrategy>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UpdateField {
     pub model: String,
@@ -132,21 +132,21 @@ impl UpdateField {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DeleteField {
     pub model: String,
     pub name: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateEnum {
     pub name: String,
     pub values: Vec<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UpdateEnum {
     pub name: String,
@@ -158,7 +158,7 @@ pub struct UpdateEnum {
     pub values: Option<Vec<String>>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DeleteEnum {
     pub name: String,

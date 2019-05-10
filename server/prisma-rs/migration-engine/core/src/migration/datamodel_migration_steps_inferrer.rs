@@ -3,11 +3,13 @@ use migration_connector::steps::*;
 use nullable::Nullable;
 
 pub trait DataModelMigrationStepsInferrer {
-    fn infer(previous: Schema, next: Schema) -> Vec<MigrationStep>;
+    fn infer(&self, previous: Schema, next: Schema) -> Vec<MigrationStep>;
 }
 
-impl DataModelMigrationStepsInferrer for DataModelMigrationStepsInferrerImpl {
-    fn infer(previous: Schema, next: Schema) -> Vec<MigrationStep> {
+pub struct DataModelMigrationStepsInferrerImplWrapper {}
+
+impl DataModelMigrationStepsInferrer for DataModelMigrationStepsInferrerImplWrapper {
+    fn infer(&self, previous: Schema, next: Schema) -> Vec<MigrationStep> {
         let inferrer = DataModelMigrationStepsInferrerImpl { previous, next };
         inferrer.infer_internal()
     }

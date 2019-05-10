@@ -1,5 +1,6 @@
 use super::list_migrations::ListMigrationStepsOutput;
 use crate::commands::command::MigrationCommand;
+use crate::migration_engine::MigrationEngine;
 use migration_connector::*;
 
 pub struct UnapplyMigrationCommand {
@@ -14,7 +15,7 @@ impl MigrationCommand for UnapplyMigrationCommand {
         Box::new(UnapplyMigrationCommand { input })
     }
 
-    fn execute(&self) -> Self::Output {
+    fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
         UnapplyMigrationOutput {
             rolled_back: ListMigrationStepsOutput {

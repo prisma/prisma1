@@ -1,4 +1,5 @@
 use crate::commands::command::MigrationCommand;
+use crate::migration_engine::MigrationEngine;
 use migration_connector::*;
 
 pub struct ApplyMigrationCommand {
@@ -13,7 +14,7 @@ impl MigrationCommand for ApplyMigrationCommand {
         Box::new(ApplyMigrationCommand { input })
     }
 
-    fn execute(&self) -> Self::Output {
+    fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
         ApplyMigrationOutput {
             steps: Vec::new(),
