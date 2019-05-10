@@ -8,6 +8,8 @@ mod one_rel;
 mod root;
 mod single;
 
+pub(crate) mod utils;
+
 pub use many::*;
 pub use many_rel::*;
 pub use one_rel::*;
@@ -16,10 +18,10 @@ pub use single::*;
 
 use self::inflector::Inflector;
 use crate::{CoreError, CoreResult, ReadQuery};
-use connector::{filter::NodeSelector, QueryArguments};
+use connector::QueryArguments;
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
-    Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
+    Field as ModelField, GraphqlId, ModelRef, OrderBy, RelationFieldRef, InternalDataModelRef, SelectedField,
     SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
 };
 use rust_inflector::Inflector as RustInflector;
@@ -37,9 +39,9 @@ pub enum Builder<'field> {
 }
 
 impl<'a> Builder<'a> {
-    fn new(schema: SchemaRef, root_field: &'a Field) -> CoreResult<Self> {
-        // Find model for field - this is a temporary workaround before we have a data model definition (/ schema builder).
-        let builder: Option<Builder> = schema
+    fn new(internal_data_model: InternalDataModelRef, root_field: &'a Field) -> CoreResult<Self> {
+        // Find model for field - this is a temporary workaround before we have a data model definition (/ internal_data_model builder).
+        let builder: Option<Builder> = internal_data_model
             .models()
             .iter()
             .filter_map(|model| Builder::infer(model, root_field, None))
@@ -105,25 +107,6 @@ pub trait BuilderExt {
 
     /// Last step that invokes query building
     fn build(self) -> CoreResult<Self::Output>;
-
-    /// Get node selector from field and model
-    fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResult<NodeSelector> {
-        // FIXME: this expects at least one query arg...
-        let (_, value) = field.arguments.first().expect("no arguments found");
-        match value {
-            Value::Object(obj) => {
-                let (field_name, value) = obj.iter().next().expect("object was empty");
-                let field = model.fields().find_from_scalar(field_name).unwrap();
-                let value = PrismaValue::from_value(value);
-
-                Ok(NodeSelector {
-                    field: Arc::clone(&field),
-                    value: value,
-                })
-            }
-            _ => unimplemented!(),
-        }
-    }
 
     fn extract_query_args(field: &Field, model: ModelRef) -> CoreResult<QueryArguments> {
         field
@@ -245,7 +228,7 @@ pub trait BuilderExt {
     fn collect_nested_queries<'field>(
         model: ModelRef,
         ast_field: &'field Field,
-        _schema: SchemaRef,
+        _internal_data_model: InternalDataModelRef,
     ) -> CoreResult<Vec<Builder<'field>>> {
         ast_field
             .selection_set

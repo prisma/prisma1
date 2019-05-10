@@ -26,11 +26,6 @@ pub trait Transactional {
         F: FnOnce(&mut Transaction) -> ConnectorResult<T>;
 }
 
-pub struct WriteItems {
-    pub count: usize,
-    pub last_id: usize,
-}
-
 /// Abstraction of a database transaction. Start, commit and rollback should be
 /// handled per-database basis, `Transaction` providing a minimal interface over
 /// different databases.
@@ -39,24 +34,26 @@ pub trait Transaction {
     fn truncate(&mut self, project: ProjectRef) -> ConnectorResult<()>;
 
     /// Write to the database, returning the change count and last id inserted.
-    fn write(&mut self, q: Query) -> ConnectorResult<WriteItems>;
+    fn write(&mut self, q: Query) -> ConnectorResult<Option<GraphqlId>>;
 
     /// Select multiple rows from the database.
     fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> ConnectorResult<Vec<PrismaRow>>;
 
     /// Insert to the database. On success returns the last insert row id.
-    fn insert(&mut self, q: Insert) -> ConnectorResult<usize> {
-        Ok(self.write(q.into())?.last_id)
+    fn insert(&mut self, q: Insert) -> ConnectorResult<Option<GraphqlId>> {
+        Ok(self.write(q.into())?)
     }
 
     /// Update the database. On success returns the number of rows updated.
-    fn update(&mut self, q: Update) -> ConnectorResult<usize> {
-        Ok(self.write(q.into())?.count)
+    fn update(&mut self, q: Update) -> ConnectorResult<()> {
+        self.write(q.into())?;
+        Ok(())
     }
 
     /// Delete from the database. On success returns the number of rows deleted.
-    fn delete(&mut self, q: Delete) -> ConnectorResult<usize> {
-        Ok(self.write(q.into())?.count)
+    fn delete(&mut self, q: Delete) -> ConnectorResult<()> {
+        self.write(q.into())?;
+        Ok(())
     }
 
     /// Find one full record selecting all scalar fields.

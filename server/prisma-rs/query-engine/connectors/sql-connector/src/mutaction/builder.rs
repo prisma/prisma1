@@ -31,15 +31,15 @@ impl MutationBuilder {
 
         let fields = fields
             .iter()
-            .map(|field| (field.name(), args.take_field_value(field.name()).unwrap()));
+            .map(|field| (field.db_name(), args.take_field_value(field.name()).unwrap()));
 
         let base = Insert::single_into(model.table());
 
         let insert = fields
             .into_iter()
-            .fold(base, |acc, (name, value)| acc.value(name, value));
+            .fold(base, |acc, (name, value)| acc.value(name.into_owned(), value));
 
-        (insert.into(), return_id)
+        (Insert::from(insert).returning(vec![model_id.as_column()]), return_id)
     }
 
     pub fn create_relation(field: RelationFieldRef, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query {
@@ -200,11 +200,11 @@ impl MutationBuilder {
     }
 
     pub fn truncate_tables(project: ProjectRef) -> Vec<Delete> {
-        let models = project.schema().models();
+        let models = project.internal_data_model().models();
         let mut deletes = Vec::new();
 
         deletes = project
-            .schema()
+            .internal_data_model()
             .relations()
             .iter()
             .map(|r| r.relation_table())

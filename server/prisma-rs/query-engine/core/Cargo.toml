@@ -16,6 +16,8 @@ indexmap = "1.0"
 itertools = "0.8"
 serde_json = "1.0"
 chrono = "0.4"
+env_logger = "0.6"
+log = "0.4"
 
 [dependencies.rust-inflector]
 version = "0.11"

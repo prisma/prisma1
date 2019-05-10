@@ -1,6 +1,6 @@
 use crate::{utilities, PrismaError, PrismaResult};
 use graphql_parser::query;
-use prisma_models::{SchemaRef, SchemaTemplate};
+use prisma_models::{InternalDataModelRef, InternalDataModelTemplate};
 use serde::Serialize;
 use serde_json;
 use std::{
@@ -23,17 +23,17 @@ pub trait Validatable {
     fn validate(&self, doc: &query::Document) -> Result<(), ValidationError>;
 }
 
-impl Validatable for SchemaRef {
+impl Validatable for InternalDataModelRef {
     fn validate(&self, _: &query::Document) -> Result<(), ValidationError> {
         // It's not really ok 😭
         Ok(())
     }
 }
 
-/// Loads and builds the internal schema from the data model
-pub fn load(db_name: String) -> PrismaResult<SchemaRef> {
+/// Loads and builds the internal data model from the data model JSON.
+pub fn load(db_name: String) -> PrismaResult<InternalDataModelRef> {
     let data_model_json = load_string()?;
-    Ok(serde_json::from_str::<SchemaTemplate>(&data_model_json)?.build(db_name))
+    Ok(serde_json::from_str::<InternalDataModelTemplate>(&data_model_json)?.build(db_name))
 }
 
 /// Loads the config as unparsed json string.
@@ -49,36 +49,36 @@ pub fn load_string() -> PrismaResult<String> {
 pub fn load_from_env() -> PrismaResult<String> {
     debug!("Trying to load data model from env...");
 
-    utilities::get_env("PRISMA_INTERNAL_DATA_MODEL_JSON").and_then(|schema| {
-        let bytes = base64::decode(&schema)?;
-        let schema_json = String::from_utf8(bytes)?;
+    utilities::get_env("PRISMA_INTERNAL_DATA_MODEL_JSON").and_then(|internal_data_model| {
+        let bytes = base64::decode(&internal_data_model)?;
+        let internal_data_model_json = String::from_utf8(bytes)?;
 
-        debug!("Loaded schema from env.");
-        Ok(schema_json)
+        debug!("Loaded data model from env.");
+        Ok(internal_data_model_json)
     })
 }
 
 /// Attempts to resolve the internal data model from a Prisma SDL (DataModel) file.
-/// The contents of that file are processed by the external schema inferrer (until we have a Rust equivalent),
+/// The contents of that file are processed by the external schema (data model) inferrer (until we have a Rust equivalent),
 /// which produces the internal data model JSON string.
 pub fn load_from_file() -> PrismaResult<String> {
-    debug!("Trying to load data model from file...");
+    debug!("Trying to load internal data model from file...");
     let data_model = load_sdl_string()?;
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct SchemaInferrerJson {
+    struct InternalDataModelInferrerJson {
         data_model: String,
     }
 
-    let schema_inferrer = utilities::get_env("SCHEMA_INFERRER_PATH")?;
-    let mut child = Command::new(schema_inferrer)
+    let internal_data_model_inferrer = utilities::get_env("SCHEMA_INFERRER_PATH")?;
+    let mut child = Command::new(internal_data_model_inferrer)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()?;
 
     let child_in = child.stdin.as_mut().unwrap();
-    let json = serde_json::to_string(&SchemaInferrerJson { data_model })?;
+    let json = serde_json::to_string(&InternalDataModelInferrerJson { data_model })?;
 
     child_in.write_all(json.as_bytes()).expect("Failed to write to stdin");
 
@@ -86,7 +86,7 @@ pub fn load_from_file() -> PrismaResult<String> {
     let inferred = String::from_utf8(output.stdout)?;
 
     debug!(
-        "Loaded data model from file: {}.",
+        "Loaded internal data model from file: {}.",
         utilities::get_env("PRISMA_DATA_MODEL_PATH")?
     );
     Ok(inferred)

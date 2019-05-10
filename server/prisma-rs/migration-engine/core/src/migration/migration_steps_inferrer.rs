@@ -3,17 +3,17 @@ use migration_connector::steps::*;
 use prisma_models::*;
 
 pub trait MigrationStepsInferrer {
-    fn infer(next: &Schema, database_schema: &DatabaseSchema) -> Vec<MigrationStep>;
+    fn infer(next: &InternalDataModel, database_schema: &DatabaseSchema) -> Vec<MigrationStep>;
 }
 
 #[allow(unused)]
 pub struct MigrationStepsInferrerImpl<'a> {
-    schema: &'a Schema,
+    schema: &'a InternalDataModel,
     database_schema: &'a DatabaseSchema,
 }
 
 impl<'a> MigrationStepsInferrer for MigrationStepsInferrerImpl<'a> {
-    fn infer(next: &Schema, database_schema: &DatabaseSchema) -> Vec<MigrationStep> {
+    fn infer(next: &InternalDataModel, database_schema: &DatabaseSchema) -> Vec<MigrationStep> {
         let inferer = MigrationStepsInferrerImpl {
             schema: next,
             database_schema: database_schema,

@@ -1,7 +1,7 @@
 use crate::{data_model, PrismaResult};
-use core::{ReadQueryExecutor, WriteQueryExecutor, Executor};
+use core::{Executor, ReadQueryExecutor, WriteQueryExecutor};
 use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
-use prisma_models::SchemaRef;
+use prisma_models::InternalDataModelRef;
 use std::sync::Arc;
 
 #[cfg(feature = "sql")]
@@ -10,7 +10,7 @@ use sql_connector::{database::SqlDatabase, database::Sqlite};
 #[derive(DebugStub)]
 pub struct PrismaContext {
     pub config: PrismaConfig,
-    pub schema: SchemaRef,
+    pub internal_data_model: InternalDataModelRef,
 
     #[debug_stub = "#Executor#"]
     pub executor: Executor,
@@ -49,17 +49,15 @@ impl PrismaContext {
         let read_exec: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
         let write_exec: WriteQueryExecutor = WriteQueryExecutor {
             db_name: db_name.clone(),
-            write_executor
+            write_executor,
         };
 
-        let executor = Executor {
-            read_exec, write_exec
-        };
+        let executor = Executor { read_exec, write_exec };
 
-        let schema = data_model::load(db_name)?;
+        let internal_data_model = data_model::load(db_name)?;
         Ok(Self {
-            config: config,
-            schema: schema,
+            config,
+            internal_data_model,
             executor,
         })
     }

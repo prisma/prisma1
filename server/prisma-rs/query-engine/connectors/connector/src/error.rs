@@ -102,6 +102,9 @@ pub enum ConnectorError {
 
     #[fail(display = "Conversion error: {}", _0)]
     ConversionError(Error),
+
+    #[fail(display = "Database creation error: {}", _0)]
+    DatabaseCreationError(&'static str),
 }
 
 impl From<DomainError> for ConnectorError {
@@ -165,5 +168,39 @@ impl From<rusqlite::Error> for ConnectorError {
 impl From<uuid::parser::ParseError> for ConnectorError {
     fn from(e: uuid::parser::ParseError) -> ConnectorError {
         ConnectorError::ColumnReadFailure(e.into())
+    }
+}
+
+#[cfg(feature = "postgresql")]
+impl From<tokio_postgres::error::Error> for ConnectorError {
+    fn from(e: tokio_postgres::error::Error) -> ConnectorError {
+        use tokio_postgres::error::DbError;
+
+        match e.code().map(|c| c.code()) {
+            // Don't look at me, I'm hideous ;((
+            Some("23505") => {
+                let error = e.into_source().unwrap(); // boom
+                let db_error = error.downcast_ref::<DbError>().unwrap(); // BOOM
+
+                let table = db_error.table().unwrap(); // BOOM
+                let detail = db_error.detail().unwrap(); // KA-BOOM
+
+                let splitted: Vec<&str> = detail.split(")=(").collect();
+                let splitted: Vec<&str> = splitted[0].split(" (").collect();
+                let field = splitted[1].replace("\"", "");
+
+                ConnectorError::UniqueConstraintViolation {
+                    field_name: format!("{}.{}", table, field),
+                }
+            }
+            _ => ConnectorError::QueryError(e.into()),
+        }
+    }
+}
+
+#[cfg(feature = "postgresql")]
+impl From<native_tls::Error> for ConnectorError {
+    fn from(e: native_tls::Error) -> ConnectorError {
+        ConnectorError::ConnectionError(e.into())
     }
 }

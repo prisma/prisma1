@@ -83,11 +83,11 @@ impl ScalarField {
             .expect("Model does not exist anymore. Parent model got deleted without deleting the child.")
     }
 
-    pub fn schema(&self) -> SchemaRef {
-        self.model().schema()
+    pub fn internal_data_model(&self) -> InternalDataModelRef {
+        self.model().internal_data_model()
     }
 
-    /// A field is an ID field if the name is `id` or `_id` in legacy schemas,
+    /// A field is an ID field if the name is `id` or `_id` in legacy internal_data_models,
     /// or if the field has Id behaviour defined.
     pub fn is_id(&self) -> bool {
         if self.model().is_legacy() {
@@ -135,7 +135,7 @@ impl ScalarField {
     }
 
     pub fn as_column(&self) -> Column {
-        ((self.schema().db_name.as_str(), self.model().db_name()), self.db_name()).into()
+        ((self.internal_data_model().db_name.as_str(), self.model().db_name()), self.db_name()).into()
     }
 
     pub fn id_behaviour_clone(&self) -> Option<FieldBehaviour> {

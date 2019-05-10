@@ -155,7 +155,7 @@ impl From<prisma::GraphqlId> for GraphqlId {
         match id.id_value.unwrap() {
             id::IdValue::String(s) => GraphqlId::String(s),
             id::IdValue::Int(i) => GraphqlId::Int(i as usize),
-            id::IdValue::Uuid(s) => GraphqlId::String(s),
+            id::IdValue::Uuid(s) => GraphqlId::UUID(Uuid::parse_str(&s).unwrap()), // BAM!
         }
     }
 }

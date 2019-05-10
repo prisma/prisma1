@@ -1,3 +1,7 @@
+use migration_connector::DatabaseMigrationStepExt;
+
+impl DatabaseMigrationStepExt for SqlMigrationStep{}
+
 pub enum SqlMigrationStep {
     CreateTable(CreateTable),
     AlterTable(AlterTable),
