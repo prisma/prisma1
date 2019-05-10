@@ -70,7 +70,7 @@ class WhereUniqueSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "Using two unique fields with the many query" should "work with an explicit OR 2" in {
-    server.query(s"""query{users(where: {OR: [{unique:242353454325435342}, {email: "test@test.com"}]}){unique}}""", project).toString should be(
+    server.query(s"""query{users(where: {OR: [{unique:24235}, {email: "test@test.com"}]}){unique}}""", project).toString should be(
       """{"data":{"users":[{"unique":2}]}}""")
   }
 }
