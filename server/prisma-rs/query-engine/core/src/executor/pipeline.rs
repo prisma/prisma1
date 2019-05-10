@@ -38,9 +38,6 @@ enum Stage {
     ReadMark(usize),
     /// Store a write query and an index
     Write(usize, WriteQuery),
-    /// Acts as a placeholder to hand out `WriteQuery` ownership.
-    /// The index is used to re-associate slots further down a pipeline
-    WriteMark(usize),
     /// Stores the intermediate result of pre-feteching records
     /// before executing destructive writes (i.e. deletes)
     PreFetched(WriteQuery, ReadQueryResult),
@@ -81,7 +78,10 @@ impl QueryPipeline {
     /// Under the hood this generates a new `ReadQuery` for every
     /// `WriteQuery` which destructively acts on the database (i.e. deletes).
     ///
-    /// **Important:** you need to call `store_prefetch` with the results
+    /// It's recommended to iterate over the map, without disturbing key entries
+    /// because these are used later on to re-associate data into the pipeline.
+    ///
+    /// **Remember:** you need to call `store_prefetch` with the results
     pub fn prefetch(&self) -> IndexMap<usize, ReadQuery> {
         self.0.iter().fold(IndexMap::new(), |mut map, query| {
             if let Stage::Write(idx, query) = query {
@@ -120,18 +120,18 @@ impl QueryPipeline {
     /// This marker should also be used to determine which WriteQuery
     /// must result in another ReadQuery and the pipeline then uses this
     /// information to re-associate data to be in the expected order.
-    pub fn get_writes(&mut self) -> Vec<(WriteQuery, Option<usize>)> {
+    pub fn get_writes(&mut self) -> Vec<(Option<usize>, WriteQuery)> {
         let (rest, writes) = replace(&mut self.0, vec![]) // A small hack around ownership
             .into_iter()
             .fold((vec![], vec![]), |(mut rest, mut writes), stage| {
                 match stage {
                     Stage::Write(idx, query) => {
-                        rest.push(Stage::WriteMark(idx));
-                        writes.push((query, Some(idx)));
+                        rest.push(Stage::ReadMark(idx));
+                        writes.push((Some(idx), query));
                     }
                     Stage::PreFetched(query, data) => {
                         rest.push(Stage::Done(data));
-                        writes.push((query, None));
+                        writes.push((None, query));
                     }
                     Stage::Read(idx, query) => rest.push(Stage::Read(idx, query)),
                     stage => panic!("Unexpected pipeline stage {:?} in function `get_writes`", stage),
@@ -169,14 +169,14 @@ impl QueryPipeline {
     /// Get all remaining read queries and their pipeline indices
     ///
     /// Be sure to call `store_reads()` with query results!
-    pub fn get_reads(&mut self) -> Vec<(ReadQuery, usize)> {
+    pub fn get_reads(&mut self) -> Vec<(usize, ReadQuery)> {
         let (rest, reads) = replace(&mut self.0, vec![]) // A small hack around ownership
             .into_iter()
             .fold((vec![], vec![]), |(mut rest, mut reads), stage| {
                 match stage {
                     Stage::Read(idx, query) => {
                         rest.push(Stage::ReadMark(idx));
-                        reads.push((query, idx));
+                        reads.push((idx, query));
                     }
                     Stage::Done(data) => rest.push(Stage::Done(data)),
                     stage => panic!("Unexpected pipeline stage {:?} in function `get_reads`", stage),
