@@ -1,9 +1,9 @@
 //! Providing an interface to build WriteQueries
 
-use crate::{CoreError, CoreResult, WriteQuery, builders::utils};
-use connector::mutaction::{CreateNode, UpdateNode, DeleteNode, TopLevelDatabaseMutaction};
+use crate::{builders::utils, CoreError, CoreResult, WriteQuery};
+use connector::mutaction::{CreateNode, DeleteNode, TopLevelDatabaseMutaction, UpdateNode};
 use graphql_parser::query::{Field, Value};
-use prisma_models::{ModelRef, PrismaArgs, PrismaValue, InternalDataModelRef};
+use prisma_models::{InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue};
 
 use rust_inflector::Inflector;
 
@@ -22,7 +22,10 @@ pub struct MutationBuilder<'field> {
 
 impl<'field> MutationBuilder<'field> {
     pub fn new(internal_data_model: InternalDataModelRef, field: &'field Field) -> Self {
-        Self { field, internal_data_model }
+        Self {
+            field,
+            internal_data_model,
+        }
     }
 
     pub fn build(self) -> CoreResult<WriteQuery> {
@@ -54,7 +57,11 @@ impl<'field> MutationBuilder<'field> {
         };
 
         // FIXME: Cloning is unethical and should be avoided
-        Ok(WriteQuery { inner, field: self.field.clone(), nested: vec![] })
+        Ok(WriteQuery {
+            inner,
+            field: self.field.clone(),
+            nested: vec![],
+        })
     }
 }
 

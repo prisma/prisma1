@@ -71,6 +71,11 @@ impl WriteQuery {
                 .build()
                 .ok()
                 .map(|q| ReadQuery::ManyRecordsQuery(q)),
+            RootMutation::UpdateNode(_) => SingleBuilder::new()
+                .setup(self.model(), &self.field)
+                .build()
+                .ok()
+                .map(|q| ReadQuery::RecordQuery(q)),
             _ => unimplemented!(),
         }
     }
