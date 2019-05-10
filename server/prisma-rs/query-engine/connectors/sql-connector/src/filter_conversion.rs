@@ -56,17 +56,6 @@ impl Alias {
 
     /// A string representation of the current alias. The current mode can be
     /// overridden by defining the `mode_override`.
-    ///
-    /// ```rust
-    /// # use sql_connector::{Alias, AliasMode};
-    ///
-    /// let alias = Alias::default();
-    ///
-    /// assert_eq!(String::from("t0"), alias.to_string(None));
-    /// assert_eq!(String::from("t1"), alias.inc(AliasMode::Table).to_string(None));
-    /// assert_eq!(String::from("j1"), alias.inc(AliasMode::Join).to_string(None));
-    /// assert_eq!(String::from("j0"), alias.to_string(Some(AliasMode::Join)));
-    /// ```
     pub fn to_string(&self, mode_override: Option<AliasMode>) -> String {
         match mode_override.unwrap_or(self.mode) {
             AliasMode::Table => format!("t{}", self.counter),
@@ -95,35 +84,6 @@ trait AliasedSelect {
 
 impl AliasedCondition for Filter {
     /// Conversion from a `Filter` to a query condition tree. Aliased when in a nested `SELECT`.
-    ///
-    /// ```rust
-    /// # use sql_connector::*;
-    /// # use connector::*;
-    /// # use prisma_models::*;
-    /// # use connector::*;
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// #
-    /// # let template: InternalDataModelTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// let internal_data_model = template.build(String::from("test"));
-    /// let model = internal_data_model.find_model("User").unwrap();
-    /// let field = model.fields().find_from_scalar("name").unwrap();
-    ///
-    /// // Without aliasing:
-    ///
-    /// let cond = field.equals("foo").aliased_cond(None);
-    /// let expected: ConditionTree = (("test", "User"), "name").equals("foo").into();
-    ///
-    /// assert_eq!(expected, cond);
-    ///
-    /// // With aliasing:
-    ///
-    /// let cond = field.equals("foo").aliased_cond(Some(Alias::default()));
-    /// let expected: ConditionTree = ("t0", "name").equals("foo").into();
-    ///
-    /// assert_eq!(expected, cond);
-    /// ```
     fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
         match self {
             Filter::And(mut filters) => match filters.pop() {
@@ -176,33 +136,6 @@ impl AliasedCondition for Filter {
 
 impl AliasedCondition for ScalarFilter {
     /// Conversion from a `ScalarFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    ///
-    /// ```rust
-    /// # use sql_connector::*;
-    /// # use prisma_models::*;
-    /// # use connector::{*, filter::*};
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// #
-    /// # let template: InternalDataModelTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// let internal_data_model = template.build(String::from("test"));
-    /// let model = internal_data_model.find_model("User").unwrap();
-    /// let field = model.fields().find_from_scalar("name").unwrap();
-    ///
-    /// let sf = ScalarFilter {
-    ///     field: Arc::clone(&field),
-    ///     condition: ScalarCondition::Equals(PrismaValue::from("foo"))
-    /// };
-    ///
-    /// let expected: ConditionTree = (("test", "User"), "name").equals("foo").into();
-    /// assert_eq!(expected, sf.clone().aliased_cond(None));
-    ///
-    /// // With aliasing:
-    ///
-    /// let expected: ConditionTree = ("t0", "name").equals("foo").into();
-    /// assert_eq!(expected, sf.aliased_cond(Some(Alias::default())));
-    /// ```
     fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
         let column = match alias {
             Some(ref alias) => self.field.as_column().table(alias.to_string(None)),
@@ -244,92 +177,6 @@ impl AliasedCondition for ScalarFilter {
 
 impl AliasedCondition for RelationFilter {
     /// Conversion from a `RelationFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    ///
-    /// ```rust
-    /// # use sql_connector::*;
-    /// # use prisma_models::*;
-    /// # use connector::*;
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// #
-    /// # let template: InternalDataModelTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// let internal_data_model = template.build(String::from("test"));
-    /// let user = internal_data_model.find_model("User").unwrap();
-    /// let site = internal_data_model.find_model("Site").unwrap();
-    ///
-    /// let rf = user.fields().find_from_relation_fields("sites").unwrap();
-    /// let site_name = site.fields().find_from_scalar("name").unwrap();
-    ///
-    /// // Every related records matches:
-    /// {
-    ///     let cond = rf
-    ///         .clone()
-    ///         .every_related(site_name.clone().equals("Blog"))
-    ///         .aliased_cond(None);
-    ///
-    ///     let join_data = ("test", "Site")
-    ///         .alias("j0")
-    ///         .on(("j0", "id").equals(Column::from(("t0", "A"))));
-    ///
-    ///     let sub_cond: ConditionTree = ("j0", "name").equals("Blog").into();
-    ///     let sub_select = Select::from_table(Table::from(("test", "_UserToSites")).alias("t0"))
-    ///         .column(("t0", "B"))
-    ///         .so_that(sub_cond.not())
-    ///         .inner_join(join_data);
-    ///
-    ///     let expected: ConditionTree = (("test", "User"), "id")
-    ///         .not_in_selection(sub_select)
-    ///         .into();
-    ///
-    ///     assert_eq!(expected, cond);
-    /// }
-    ///
-    /// // No related record matches:
-    /// {
-    ///     let cond = rf
-    ///         .clone()
-    ///         .no_related(site_name.clone().equals("Blog"))
-    ///         .aliased_cond(None);
-    ///
-    ///     let join_data = ("test", "Site")
-    ///         .alias("j0")
-    ///         .on(("j0", "id").equals(Column::from(("t0", "A"))));
-    ///
-    ///     let sub_select = Select::from_table(Table::from(("test", "_UserToSites")).alias("t0"))
-    ///         .column(("t0", "B"))
-    ///         .so_that(("j0", "name").equals("Blog"))
-    ///         .inner_join(join_data);
-    ///
-    ///     let expected: ConditionTree = (("test", "User"), "id")
-    ///         .not_in_selection(sub_select)
-    ///         .into();
-    ///
-    ///     assert_eq!(expected, cond);
-    /// }
-    ///
-    /// // At least one related record matches:
-    /// {
-    ///     let cond = rf
-    ///         .at_least_one_related(site_name.equals("Blog"))
-    ///         .aliased_cond(None);
-    ///
-    ///     let join_data = ("test", "Site")
-    ///         .alias("j0")
-    ///         .on(("j0", "id").equals(Column::from(("t0", "A"))));
-    ///
-    ///     let sub_select = Select::from_table(Table::from(("test", "_UserToSites")).alias("t0"))
-    ///         .column(("t0", "B"))
-    ///         .so_that(("j0", "name").equals("Blog"))
-    ///         .inner_join(join_data);
-    ///
-    ///     let expected: ConditionTree = (("test", "User"), "id")
-    ///         .in_selection(sub_select)
-    ///         .into();
-    ///
-    ///     assert_eq!(expected, cond);
-    /// }
-    /// ```
     fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
         let id = self.field.model().id_column();
 
@@ -429,35 +276,6 @@ impl AliasedSelect for RelationFilter {
 
 impl AliasedCondition for OneRelationIsNullFilter {
     /// Conversion from a `OneRelationIsNullFilter` to a query condition tree. Aliased when in a nested `SELECT`.
-    ///
-    /// ```rust
-    /// # use sql_connector::*;
-    /// # use prisma_models::*;
-    /// # use connector::*;
-    /// # use prisma_query::ast::*;
-    /// # use serde_json;
-    /// # use std::{fs::File, sync::Arc};
-    /// #
-    /// # let template: InternalDataModelTemplate = serde_json::from_reader(File::open("./test_schema.json").unwrap()).unwrap();
-    /// let internal_data_model = template.build(String::from("test"));
-    /// let user = internal_data_model.find_model("User").unwrap();
-    ///
-    /// // Not inlined in parent...
-    ///
-    /// let rf = user.fields().find_from_relation_fields("sites").unwrap();
-    ///
-    /// let expected = {
-    ///     let compare = Column::from((("test", "User"), "id"))
-    ///         .not_in_selection(Select::from_table(("test", "_UserToSites")).column("B"));
-    ///
-    ///     ConditionTree::single(compare)
-    /// };
-    ///
-    /// assert_eq!(
-    ///     expected,
-    ///     rf.one_relation_is_null().aliased_cond(None),
-    /// );
-    /// ```
     fn aliased_cond(self, alias: Option<Alias>) -> ConditionTree {
         let alias = alias.map(|a| a.to_string(None));
 
