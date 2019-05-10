@@ -70,6 +70,21 @@ class SelfRelationFilterBugSpec extends FlatSpec with Matchers with ApiSpecBase 
 
     val res3 = server.query(subCategories, project).toString
     res3 should be("""{"data":{"allSubCategories":[{"name":"Sub","parent":{"name":"Root"}}]}}""")
+
+    val subCategories2 = s"""{
+                           |  allSubCategories2: categories(
+                           |    where: {parent: {name: "Root"} }
+                           |  ) {
+                           |    name
+                           |    parent {
+                           |      name
+                           |    }
+                           |  }
+                           |}"""
+
+    val res4 = server.query(subCategories2, project).toString
+    res4 should be("""{"data":{"allSubCategories2":[{"name":"Sub","parent":{"name":"Root"}}]}}""")
+
   }
 
 }
