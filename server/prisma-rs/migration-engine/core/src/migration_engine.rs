@@ -25,8 +25,8 @@ impl MigrationEngine {
     }
 
     pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepExt>> {
-        let file_path = dbg!(file!());
-        let file_name = dbg!(Path::new(file_path).file_stem().unwrap().to_str().unwrap());
+        let file_path = file!(); // todo: the sqlite file name must be taken from the config
+        let file_name = Path::new(file_path).file_stem().unwrap().to_str().unwrap();
         Arc::new(SqlMigrationConnector::new(file_name.to_string()))
     }
 

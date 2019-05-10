@@ -17,7 +17,6 @@ impl MigrationCommand for InferMigrationStepsCommand {
     }
 
     fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
-        println!("{:?}", self.input);
         let connector = engine.connector();
         let current_data_model = connector
             .migration_persistence()

@@ -25,3 +25,7 @@ path = "src/bin/rpc_api_bin.rs"
 [[bin]]
 name = "infer-migrations-steps"
 path = "src/bin/infer_migration_steps_bin.rs"
+
+[[bin]]
+name = "apply-migration"
+path = "src/bin/apply_migration_bin.rs"

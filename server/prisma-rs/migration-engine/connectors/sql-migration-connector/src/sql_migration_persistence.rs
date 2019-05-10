@@ -23,7 +23,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
-        let (sql_str, params) = dbg!(Sqlite::build(query));
+        let (sql_str, params) = Sqlite::build(query);
 
         let result = self.connection.query_row(&sql_str, params, parse_row);
         result.ok()
