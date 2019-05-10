@@ -49,9 +49,9 @@ impl ProjectTemplate {
     pub fn db_name(&self) -> String {
         match self.manifestation {
             ProjectManifestation {
-                internal_data_model: Some(ref internal_data_model),
+                schema: Some(ref schema),
                 ..
-            } => internal_data_model.clone(),
+            } => schema.clone(),
             ProjectManifestation {
                 database: Some(ref database),
                 ..
@@ -114,7 +114,7 @@ pub enum FunctionType {
 #[serde(rename_all = "camelCase")]
 pub struct ProjectManifestation {
     pub database: Option<String>,
-    pub internal_data_model: Option<String>,
+    pub schema: Option<String>,
 }
 
 #[cfg(test)]
