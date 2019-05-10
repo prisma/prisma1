@@ -1,3 +1,4 @@
+use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
 use datamodel::Validator;
@@ -10,18 +11,24 @@ use std::sync::Arc;
 
 pub struct MigrationEngine {
     datamodel_migration_steps_inferrer: Arc<DataModelMigrationStepsInferrer>,
+    datamodel_calculator: Arc<DataModelCalculator>,
 }
 
 impl MigrationEngine {
     pub fn new() -> Box<MigrationEngine> {
         let engine = MigrationEngine {
             datamodel_migration_steps_inferrer: Arc::new(DataModelMigrationStepsInferrerImplWrapper {}),
+            datamodel_calculator: Arc::new(DataModelCalculatorSingleton {}),
         };
         Box::new(engine)
     }
 
     pub fn datamodel_migration_steps_inferrer(&self) -> Arc<DataModelMigrationStepsInferrer> {
         Arc::clone(&self.datamodel_migration_steps_inferrer)
+    }
+
+    pub fn datamodel_calculator(&self) -> Arc<DataModelCalculator> {
+        Arc::clone(&self.datamodel_calculator)
     }
 
     pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepExt>> {
