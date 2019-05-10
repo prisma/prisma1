@@ -26,8 +26,13 @@ case class NativeDatabaseMutactionExecutor(
   import NativeUtils._
 
   override def executeRaw(project: Project, query: String): Future[JsValue] = {
-    val action = JdbcActionsBuilder(project, slickDatabaseArg).executeRaw(query)
-    runAttached(project, action)
+    val envelope = prisma.protocol.ExecuteRawInput(
+      header = prisma.protocol.Header("ExecuteRawInput"),
+      dbName = project.dbName,
+      query = query
+    )
+
+    Future(NativeBinding.execute_raw(envelope))
   }
 
   override def executeNonTransactionally(mutaction: TopLevelDatabaseMutaction) = execute(mutaction)
