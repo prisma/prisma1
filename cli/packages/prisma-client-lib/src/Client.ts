@@ -16,7 +16,6 @@ import { mapValues } from './utils/mapValues'
 import gql from 'graphql-tag'
 import { getTypesAndWhere } from './utils'
 const log = require('debug')('binding')
-import { sign } from 'jsonwebtoken'
 import { BatchedGraphQLClient } from 'http-link-dataloader'
 import { SubscriptionClient } from 'subscriptions-transport-ws'
 import { observableToAsyncIterable } from './utils/observableToAsyncIterable'
@@ -74,7 +73,7 @@ export class Client {
 
     this.buildMethods()
 
-    const token = secret ? sign({}, secret!) : undefined
+    const token = undefined
 
     this.$graphql = this.buildGraphQL()
     this.$exists = this.buildExists()
