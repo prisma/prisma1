@@ -1,8 +1,8 @@
 use crate::{
     mutaction::{DeleteActions, MutationBuilder},
-    Transaction,
+    SqlResult, Transaction,
 };
-use connector::{filter::Filter, ConnectorResult};
+use connector::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, RelationFieldRef};
 use std::sync::Arc;
 
@@ -10,7 +10,7 @@ use std::sync::Arc;
 /// any relations will cause an error.
 ///
 /// Will return the number records deleted.
-pub fn execute(conn: &mut Transaction, model: ModelRef, filter: &Filter) -> ConnectorResult<usize> {
+pub fn execute(conn: &mut Transaction, model: ModelRef, filter: &Filter) -> SqlResult<usize> {
     let ids = conn.filter_ids(Arc::clone(&model), filter.clone())?;
     let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
     let count = ids.len();
@@ -39,7 +39,7 @@ pub fn execute_nested(
     parent_id: &GraphqlId,
     filter: &Option<Filter>,
     relation_field: RelationFieldRef,
-) -> ConnectorResult<usize> {
+) -> SqlResult<usize> {
     let ids = conn.filter_ids_by_parents(Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
     let count = ids.len();
 

@@ -1,8 +1,8 @@
 use crate::{
     mutaction::{MutationBuilder, NestedActions},
-    Transaction,
+    SqlResult, Transaction,
 };
-use connector::{filter::NodeSelector, ConnectorResult};
+use connector::filter::NodeSelector;
 use prisma_models::{GraphqlId, RelationFieldRef};
 use std::sync::Arc;
 
@@ -31,7 +31,7 @@ pub fn connect(
     actions: &NestedActions,
     node_selector: &NodeSelector,
     relation_field: RelationFieldRef,
-) -> ConnectorResult<()> {
+) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
         check.call_box(ids.into_iter().next().is_some())?
@@ -69,7 +69,7 @@ pub fn disconnect(
     parent_id: &GraphqlId,
     actions: &NestedActions,
     node_selector: &Option<NodeSelector>,
-) -> ConnectorResult<()> {
+) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
         check.call_box(ids.into_iter().next().is_some())?
@@ -106,7 +106,7 @@ pub fn set(
     actions: &NestedActions,
     node_selectors: &Vec<NodeSelector>,
     relation_field: RelationFieldRef,
-) -> ConnectorResult<()> {
+) -> SqlResult<()> {
     if let Some((select, check)) = actions.required_check(parent_id)? {
         let ids = conn.select_ids(select)?;
         check.call_box(ids.into_iter().next().is_some())?

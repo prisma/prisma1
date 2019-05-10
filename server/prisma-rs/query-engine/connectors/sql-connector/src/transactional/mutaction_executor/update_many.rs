@@ -1,6 +1,6 @@
 use super::update;
-use crate::{mutaction::MutationBuilder, Transaction};
-use connector::{filter::Filter, ConnectorResult};
+use crate::{mutaction::MutationBuilder, SqlResult, Transaction};
+use connector::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
 
@@ -14,7 +14,7 @@ pub fn execute<S>(
     filter: &Filter,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> ConnectorResult<usize>
+) -> SqlResult<usize>
 where
     S: AsRef<str>,
 {
@@ -48,7 +48,7 @@ pub fn execute_nested<S>(
     relation_field: RelationFieldRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> ConnectorResult<usize>
+) -> SqlResult<usize>
 where
     S: AsRef<str>,
 {

@@ -1,9 +1,10 @@
-use crate::{MutationBuilder, PrismaRow, ToPrismaRow, Transaction, Transactional};
+use crate::{error::SqlError, MutationBuilder, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional};
 use chrono::{DateTime, NaiveDateTime, Utc};
-use connector::{error::ConnectorError, ConnectorResult};
+use connector::{error::*, ConnectorResult};
 use native_tls::TlsConnector;
 use postgres::{
-    types::ToSql, types::Type as PostgresType, Client, Config, Row as PostgresRow, Transaction as PostgresTransaction,
+    types::{FromSql, ToSql, Type as PostgresType},
+    Client, Config, Row as PostgresRow, Transaction as PostgresTransaction,
 };
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
@@ -16,9 +17,11 @@ use rust_decimal::Decimal;
 use std::{convert::TryFrom, str::FromStr};
 use tokio_postgres::config::SslMode;
 use tokio_postgres_native_tls::MakeTlsConnector;
+use uuid::Uuid;
 
 type Pool = r2d2::Pool<PostgresConnectionManager<MakeTlsConnector>>;
 
+/// The World's Most Advanced Open Source Relational Database
 pub struct PostgreSql {
     pool: Pool,
 }
@@ -38,9 +41,9 @@ impl TryFrom<&PrismaDatabase> for PostgreSql {
 }
 
 impl TryFrom<&ExplicitConfig> for PostgreSql {
-    type Error = ConnectorError;
+    type Error = SqlError;
 
-    fn try_from(e: &ExplicitConfig) -> ConnectorResult<Self> {
+    fn try_from(e: &ExplicitConfig) -> SqlResult<Self> {
         let mut config = Config::new();
         config.host(&e.host);
         config.port(e.port);
@@ -52,26 +55,26 @@ impl TryFrom<&ExplicitConfig> for PostgreSql {
             config.password(pw);
         }
 
-        Self::new(config, e.limit())
+        Ok(Self::new(config, e.limit())?)
     }
 }
 
 impl TryFrom<&ConnectionStringConfig> for PostgreSql {
-    type Error = ConnectorError;
+    type Error = SqlError;
 
-    fn try_from(s: &ConnectionStringConfig) -> ConnectorResult<Self> {
+    fn try_from(s: &ConnectionStringConfig) -> SqlResult<Self> {
         let mut config = Config::from_str(s.uri.as_str())?;
         config.ssl_mode(SslMode::Prefer);
         config.dbname("prisma");
 
-        PostgreSql::new(config, s.limit())
+        Ok(Self::new(config, s.limit())?)
     }
 }
 
 impl Transactional for PostgreSql {
-    fn with_transaction<F, T>(&self, _: &str, f: F) -> ConnectorResult<T>
+    fn with_transaction<F, T>(&self, _: &str, f: F) -> SqlResult<T>
     where
-        F: FnOnce(&mut Transaction) -> ConnectorResult<T>,
+        F: FnOnce(&mut Transaction) -> SqlResult<T>,
     {
         self.with_client(|client| {
             let mut tx = client.transaction()?;
@@ -86,17 +89,42 @@ impl Transactional for PostgreSql {
     }
 }
 
+impl<'a> FromSql<'a> for SqlId {
+    fn from_sql(ty: &PostgresType, raw: &'a [u8]) -> Result<SqlId, Box<dyn std::error::Error + Sync + Send>> {
+        let res = match *ty {
+            PostgresType::INT2 => SqlId::Int(i16::from_sql(ty, raw)? as usize),
+            PostgresType::INT4 => SqlId::Int(i32::from_sql(ty, raw)? as usize),
+            PostgresType::INT8 => SqlId::Int(i64::from_sql(ty, raw)? as usize),
+            PostgresType::UUID => SqlId::UUID(Uuid::from_sql(ty, raw)?),
+            _ => SqlId::String(String::from_sql(ty, raw)?),
+        };
+
+        Ok(res)
+    }
+
+    fn accepts(ty: &PostgresType) -> bool {
+        <&str as FromSql>::accepts(ty)
+            || <Uuid as FromSql>::accepts(ty)
+            || <i16 as FromSql>::accepts(ty)
+            || <i32 as FromSql>::accepts(ty)
+            || <i64 as FromSql>::accepts(ty)
+    }
+}
+
 impl<'a> Transaction for PostgresTransaction<'a> {
-    fn write(&mut self, q: Query) -> ConnectorResult<Option<GraphqlId>> {
+    fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
         let id = match q {
             insert @ Query::Insert(_) => {
                 let (sql, params) = dbg!(visitor::Postgres::build(insert));
 
                 let params: Vec<&ToSql> = params.iter().map(|pv| pv as &ToSql).collect();
                 let stmt = self.prepare(&sql)?;
-
                 let rows = self.query(&stmt, params.as_slice())?;
-                rows.into_iter().rev().next().map(|row| row.get(0))
+
+                rows.into_iter().rev().next().map(|row| {
+                    let id: SqlId = row.get(0);
+                    GraphqlId::from(id)
+                })
             }
             query => {
                 let (sql, params) = dbg!(visitor::Postgres::build(query));
@@ -112,7 +140,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         Ok(id)
     }
 
-    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> ConnectorResult<Vec<PrismaRow>> {
+    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
         let (sql, params) = dbg!(visitor::Postgres::build(q));
         let params: Vec<&ToSql> = params.iter().map(|pv| pv as &ToSql).collect();
 
@@ -127,7 +155,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         Ok(result)
     }
 
-    fn truncate(&mut self, project: ProjectRef) -> ConnectorResult<()> {
+    fn truncate(&mut self, project: ProjectRef) -> SqlResult<()> {
         self.write(Query::from("SET CONSTRAINTS ALL DEFERRED"))?;
 
         for delete in MutationBuilder::truncate_tables(project) {
@@ -138,19 +166,22 @@ impl<'a> Transaction for PostgresTransaction<'a> {
     }
 }
 
-impl ToPrismaRow for PostgresRow {
-    fn to_prisma_row<'b, T>(&'b self, idents: T) -> ConnectorResult<PrismaRow>
+impl ToSqlRow for PostgresRow {
+    fn to_prisma_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {
-        fn convert(row: &PostgresRow, i: usize, typid: &TypeIdentifier) -> ConnectorResult<PrismaValue> {
+        fn convert(row: &PostgresRow, i: usize, typid: &TypeIdentifier) -> SqlResult<PrismaValue> {
             let result = match typid {
                 TypeIdentifier::String => match row.try_get(i)? {
                     Some(val) => PrismaValue::String(val),
                     None => PrismaValue::Null,
                 },
                 TypeIdentifier::GraphQLID | TypeIdentifier::Relation => match row.try_get(i)? {
-                    Some(val) => PrismaValue::GraphqlId(val),
+                    Some(val) => {
+                        let id: SqlId = val;
+                        PrismaValue::GraphqlId(GraphqlId::from(id))
+                    }
                     None => PrismaValue::Null,
                 },
                 TypeIdentifier::Float => match *row.columns()[i].type_() {
@@ -215,7 +246,7 @@ impl ToPrismaRow for PostgresRow {
             Ok(result)
         }
 
-        let mut row = PrismaRow::default();
+        let mut row = SqlRow::default();
 
         for (i, typid) in idents.into_iter().enumerate() {
             row.values.push(convert(self, i, typid)?);
@@ -226,7 +257,7 @@ impl ToPrismaRow for PostgresRow {
 }
 
 impl PostgreSql {
-    fn new(config: Config, connections: u32) -> ConnectorResult<PostgreSql> {
+    fn new(config: Config, connections: u32) -> SqlResult<PostgreSql> {
         let mut tls_builder = TlsConnector::builder();
         tls_builder.danger_accept_invalid_certs(true); // For Heroku
 
@@ -238,9 +269,9 @@ impl PostgreSql {
         Ok(PostgreSql { pool })
     }
 
-    fn with_client<F, T>(&self, f: F) -> ConnectorResult<T>
+    fn with_client<F, T>(&self, f: F) -> SqlResult<T>
     where
-        F: FnOnce(&mut Client) -> ConnectorResult<T>,
+        F: FnOnce(&mut Client) -> SqlResult<T>,
     {
         let mut client = self.pool.get()?;
         let result = f(&mut client);

@@ -1,4 +1,4 @@
-use crate::{database::SqlDatabase, query_builder::QueryBuilder, Transactional};
+use crate::{database::SqlDatabase, error::SqlError, query_builder::QueryBuilder, Transactional};
 use connector::{error::ConnectorError, filter::NodeSelector, *};
 use itertools::Itertools;
 use prisma_models::*;
@@ -27,7 +27,7 @@ where
             .executor
             .with_transaction(db_name, |conn| match conn.find(query, idents.as_slice()) {
                 Ok(result) => Ok(Some(result)),
-                Err(_e @ ConnectorError::NodeNotFoundForWhere(_)) => Ok(None),
+                Err(_e @ SqlError::NodeNotFoundForWhere(_)) => Ok(None),
                 Err(e) => Err(e),
             })?
             .map(Node::from)
@@ -97,16 +97,23 @@ where
         let db_name = &model.internal_data_model().db_name;
         let query = QueryBuilder::count_by_model(model, query_arguments);
 
-        self.executor
+        let result = self
+            .executor
             .with_transaction(db_name, |conn| conn.find_int(query))
-            .map(|count| count as usize)
+            .map(|count| count as usize)?;
+
+        Ok(result)
     }
 
     fn count_by_table(&self, database: &str, table: &str) -> ConnectorResult<usize> {
         let query = QueryBuilder::count_by_table(database, table);
-        self.executor
+
+        let result = self
+            .executor
             .with_transaction(database, |conn| conn.find_int(query))
-            .map(|count| count as usize)
+            .map(|count| count as usize)?;
+
+        Ok(result)
     }
 
     fn get_scalar_list_values_by_node_ids(
@@ -125,8 +132,8 @@ where
                 .map(|row| {
                     let mut iter = row.values.into_iter();
 
-                    let node_id = iter.next().ok_or(ConnectorError::ColumnDoesNotExist)?;
-                    let value = iter.next().ok_or(ConnectorError::ColumnDoesNotExist)?;
+                    let node_id = iter.next().ok_or(SqlError::ColumnDoesNotExist)?;
+                    let value = iter.next().ok_or(SqlError::ColumnDoesNotExist)?;
 
                     Ok(ScalarListElement {
                         node_id: GraphqlId::try_from(node_id)?,
