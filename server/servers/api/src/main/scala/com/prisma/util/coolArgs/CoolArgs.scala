@@ -154,13 +154,18 @@ case class CoolArgs(raw: Map[String, Any]) {
   }
 
   def extractNodeSelector(model: Model): NodeSelector = {
-    raw.asInstanceOf[Map[String, Option[Any]]].collectFirst {
-      case (fieldName, Some(value)) =>
-        NodeSelector(model,
-                     model.getScalarFieldByName_!(fieldName),
-                     GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
-    } getOrElse {
-      throw APIErrors.NullProvidedForWhereError(model.name)
+    val map = raw.asInstanceOf[Map[String, Option[Any]]]
+
+    map.size match {
+      case 0 => throw APIErrors.NullProvidedForWhereError(model.name)
+      case 1 =>
+        map.collectFirst {
+          case (fieldName, Some(value)) =>
+            NodeSelector(model,
+                         model.getScalarFieldByName_!(fieldName),
+                         GCAnyConverter(model.getFieldByName_!(fieldName).typeIdentifier, isList = false).toGCValue(value).get)
+        }.get
+      case _ => throw APIErrors.TwoManyUniquesForWhereError(model.name)
     }
   }
 
