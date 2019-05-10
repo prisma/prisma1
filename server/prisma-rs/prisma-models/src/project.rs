@@ -9,6 +9,7 @@ pub type ProjectWeakRef = Weak<Project>;
 #[serde(rename_all = "camelCase")]
 pub struct ProjectTemplate {
     pub id: String,
+    #[serde(rename = "schema")]
     pub internal_data_model: InternalDataModelTemplate,
 
     #[serde(default)]
@@ -35,7 +36,10 @@ impl Into<ProjectRef> for ProjectTemplate {
             revision: self.revision,
         });
 
-        project.internal_data_model.set(self.internal_data_model.build(db_name)).unwrap();
+        project
+            .internal_data_model
+            .set(self.internal_data_model.build(db_name))
+            .unwrap();
 
         project
     }
@@ -59,7 +63,9 @@ impl ProjectTemplate {
 
 impl Project {
     pub fn internal_data_model(&self) -> &InternalDataModel {
-        self.internal_data_model.get().expect("Project has no internal_data_model set!")
+        self.internal_data_model
+            .get()
+            .expect("Project has no internal_data_model set!")
     }
 }
 
@@ -119,7 +125,7 @@ mod tests {
 
     #[test]
     fn test_relation_internal_data_model() {
-        let file = File::open("./relation_internal_data_model.json").unwrap();
+        let file = File::open("./relation_schema.json").unwrap();
         let project_template: ProjectTemplate = serde_json::from_reader(file).unwrap();
         let _project: ProjectRef = project_template.into();
         assert!(true)
