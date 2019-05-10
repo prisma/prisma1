@@ -1,5 +1,6 @@
 package com.prisma.api.filters.nonEmbedded
 
+import com.prisma.IgnoreMongo
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.Project
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -64,12 +65,12 @@ class WhereUniqueSpec extends FlatSpec with Matchers with ApiSpecBase {
       """{"data":{"users":[{"unique":2}]}}""")
   }
 
-  "Using two unique fields with the many query" should "work with an explicit OR" in {
+  "Using two unique fields with the many query" should "work with an explicit OR" taggedAs (IgnoreMongo) in {
     server.query(s"""query{users(where: {OR: [{unique:2}, {email: "does not exist"}]}){unique}}""", project).toString should be(
       """{"data":{"users":[{"unique":2}]}}""")
   }
 
-  "Using two unique fields with the many query" should "work with an explicit OR 2" in {
+  "Using two unique fields with the many query" should "work with an explicit OR 2" taggedAs (IgnoreMongo) in {
     server.query(s"""query{users(where: {OR: [{unique:24235}, {email: "test@test.com"}]}){unique}}""", project).toString should be(
       """{"data":{"users":[{"unique":2}]}}""")
   }
