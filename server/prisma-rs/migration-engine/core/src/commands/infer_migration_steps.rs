@@ -37,8 +37,11 @@ impl MigrationCommand for InferMigrationStepsCommand {
             model_migration_steps.clone(),
         );
 
+        let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
+
         InferMigrationStepsOutput {
-            steps: model_migration_steps,
+            datamodel_steps: model_migration_steps,
+            database_steps: database_steps_json,
             errors: vec![],
             warnings: vec![],
             general_errors: vec![],
@@ -57,7 +60,8 @@ pub struct InferMigrationStepsInput {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InferMigrationStepsOutput {
-    pub steps: Vec<MigrationStep>,
+    pub datamodel_steps: Vec<MigrationStep>,
+    pub database_steps: serde_json::Value,
     pub warnings: Vec<MigrationWarning>,
     pub errors: Vec<MigrationError>,
     pub general_errors: Vec<String>,

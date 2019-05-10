@@ -65,20 +65,22 @@ where
     steps.into_iter().map(|x| wrap_fn(x)).collect()
 }
 
-fn column_type(ft: FieldType) -> Box<ColumnType> {
+fn column_type(ft: FieldType) -> ColumnType {
     match ft {
-        FieldType::Base(scalar) => Box::new(scalar),
+        FieldType::Base(scalar) => scalar.into(),
         _ => panic!("Only scalar types are supported here"),
     }
 }
 
-impl ColumnType for ScalarType {
-    fn render(&self) -> String {
-        match self {
+impl From<ScalarType> for ColumnType {
+    fn from(scalar: ScalarType) -> ColumnType {
+        let tpe = match scalar {
             ScalarType::Int => "Int".to_string(),
             ScalarType::Float => "Float".to_string(),
+            ScalarType::String => "String".to_string(),
             _ => unimplemented!(),
-        }
+        };
+        ColumnType { tpe }
     }
 }
 

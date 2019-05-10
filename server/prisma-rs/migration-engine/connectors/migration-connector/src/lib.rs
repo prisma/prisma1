@@ -2,6 +2,8 @@ pub mod steps;
 
 use chrono::{DateTime, Utc};
 use datamodel::Schema;
+use serde::Serialize;
+use std::fmt::Debug;
 use std::sync::Arc;
 pub use steps::MigrationStep;
 
@@ -22,7 +24,7 @@ pub trait MigrationConnector {
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigrationStep>>;
 }
 
-pub trait DatabaseMigrationStepExt {}
+pub trait DatabaseMigrationStepExt: Debug + Serialize {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
     fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<T>;
