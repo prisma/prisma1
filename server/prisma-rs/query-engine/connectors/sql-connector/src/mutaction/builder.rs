@@ -1,7 +1,7 @@
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
-use connector::{error::ConnectorError, ConnectorResult};
+use crate::{error::SqlError, SqlResult};
 
 pub struct MutationBuilder;
 
@@ -114,11 +114,11 @@ impl MutationBuilder {
         Some(result)
     }
 
-    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> ConnectorResult<Option<Update>> {
+    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> SqlResult<Option<Update>> {
         Self::update_many(model, &[id; 1], args).map(|updates| updates.into_iter().next())
     }
 
-    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> ConnectorResult<Vec<Update>> {
+    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> SqlResult<Vec<Update>> {
         if args.args.is_empty() || ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -130,7 +130,7 @@ impl MutationBuilder {
             let field = fields.find_from_scalar(&name).unwrap();
 
             if field.is_required && value.is_null() {
-                return Err(ConnectorError::FieldCannotBeNull {
+                return Err(SqlError::FieldCannotBeNull {
                     field: field.name.clone(),
                 });
             }

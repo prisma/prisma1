@@ -1,12 +1,9 @@
 use crate::{
+    error::SqlError,
     mutaction::{DeleteActions, MutationBuilder, NestedActions},
-    Transaction,
+    SqlResult, Transaction,
 };
-use connector::{
-    error::{ConnectorError, NodeSelectorInfo},
-    filter::NodeSelector,
-    ConnectorResult,
-};
+use connector::{error::NodeSelectorInfo, filter::NodeSelector};
 use prisma_models::{GraphqlId, RelationFieldRef, SingleNode};
 use std::sync::Arc;
 
@@ -14,7 +11,7 @@ use std::sync::Arc;
 /// non-existing record will cause an error.
 ///
 /// Will return the deleted record if the delete was successful.
-pub fn execute(conn: &mut Transaction, node_selector: &NodeSelector) -> ConnectorResult<SingleNode> {
+pub fn execute(conn: &mut Transaction, node_selector: &NodeSelector) -> SqlResult<SingleNode> {
     let model = node_selector.field.model();
     let record = conn.find_record(node_selector)?;
     let id = record.get_id_value(Arc::clone(&model)).unwrap();
@@ -46,7 +43,7 @@ pub fn execute_nested(
     actions: &NestedActions,
     node_selector: &Option<NodeSelector>,
     relation_field: RelationFieldRef,
-) -> ConnectorResult<()> {
+) -> SqlResult<()> {
     if let Some(ref node_selector) = node_selector {
         conn.find_id(node_selector)?;
     };
@@ -54,7 +51,7 @@ pub fn execute_nested(
     let child_id = conn
         .find_id_by_parent(Arc::clone(&relation_field), parent_id, node_selector)
         .map_err(|e| match e {
-            ConnectorError::NodesNotConnected {
+            SqlError::NodesNotConnected {
                 relation_name,
                 parent_name,
                 parent_where: _,
@@ -63,7 +60,7 @@ pub fn execute_nested(
             } => {
                 let model = Arc::clone(&relation_field.model());
 
-                ConnectorError::NodesNotConnected {
+                SqlError::NodesNotConnected {
                     relation_name: relation_name,
                     parent_name: parent_name,
                     parent_where: Some(NodeSelectorInfo::for_id(model, parent_id)),

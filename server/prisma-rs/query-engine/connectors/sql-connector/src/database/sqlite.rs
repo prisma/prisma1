@@ -1,6 +1,5 @@
-use crate::{MutationBuilder, PrismaRow, ToPrismaRow, Transaction, Transactional};
+use crate::{MutationBuilder, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional};
 use chrono::{DateTime, Utc};
-use connector::*;
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
     ast::{Query, Select},
@@ -8,8 +7,8 @@ use prisma_query::{
 };
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{
-    types::Type as SqliteType, Connection, Error as SqliteError, Row as SqliteRow, Transaction as SqliteTransaction,
-    NO_PARAMS,
+    types::{FromSql, FromSqlResult, Type as SqliteType, ValueRef},
+    Connection, Error as SqliteError, Row as SqliteRow, Transaction as SqliteTransaction, NO_PARAMS,
 };
 use std::collections::HashSet;
 use uuid::Uuid;
@@ -25,9 +24,9 @@ pub struct Sqlite {
 }
 
 impl Transactional for Sqlite {
-    fn with_transaction<F, T>(&self, db: &str, f: F) -> ConnectorResult<T>
+    fn with_transaction<F, T>(&self, db: &str, f: F) -> SqlResult<T>
     where
-        F: FnOnce(&mut Transaction) -> ConnectorResult<T>,
+        F: FnOnce(&mut Transaction) -> SqlResult<T>,
     {
         self.with_connection(db, |ref mut conn| {
             let mut tx = conn.transaction()?;
@@ -45,7 +44,7 @@ impl Transactional for Sqlite {
 }
 
 impl<'a> Transaction for SqliteTransaction<'a> {
-    fn write(&mut self, q: Query) -> ConnectorResult<Option<GraphqlId>> {
+    fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
         let (sql, params) = dbg!(visitor::Sqlite::build(q));
 
         let mut stmt = self.prepare_cached(&sql)?;
@@ -54,7 +53,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         Ok(Some(GraphqlId::Int(self.last_insert_rowid() as usize)))
     }
 
-    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> ConnectorResult<Vec<PrismaRow>> {
+    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
         let (sql, params) = dbg!(visitor::Sqlite::build(q));
 
         let mut stmt = self.prepare_cached(&sql)?;
@@ -68,7 +67,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         Ok(result)
     }
 
-    fn truncate(&mut self, project: ProjectRef) -> ConnectorResult<()> {
+    fn truncate(&mut self, project: ProjectRef) -> SqlResult<()> {
         self.write(Query::from("PRAGMA foreign_keys = OFF"))?;
 
         for delete in MutationBuilder::truncate_tables(project) {
@@ -81,17 +80,34 @@ impl<'a> Transaction for SqliteTransaction<'a> {
     }
 }
 
-impl<'a, 'stmt> ToPrismaRow for SqliteRow<'a, 'stmt> {
-    fn to_prisma_row<'b, T>(&'b self, idents: T) -> ConnectorResult<PrismaRow>
+impl FromSql for SqlId {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
+        value
+            .as_str()
+            .and_then(|strval| {
+                let res = Uuid::from_slice(strval.as_bytes())
+                    .map(|uuid| SqlId::UUID(uuid))
+                    .unwrap_or_else(|_| SqlId::String(strval.to_string()));
+
+                Ok(res)
+            })
+            .or_else(|_| value.as_i64().map(|intval| SqlId::Int(intval as usize)))
+    }
+}
+
+impl<'a, 'stmt> ToSqlRow for SqliteRow<'a, 'stmt> {
+    fn to_prisma_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {
-        fn convert(row: &SqliteRow, i: usize, typid: &TypeIdentifier) -> ConnectorResult<PrismaValue> {
+        fn convert(row: &SqliteRow, i: usize, typid: &TypeIdentifier) -> SqlResult<PrismaValue> {
             let result = match typid {
                 TypeIdentifier::String => row.get_checked(i).map(|val| PrismaValue::String(val)),
-                TypeIdentifier::GraphQLID => row.get_checked(i).map(|val| PrismaValue::GraphqlId(val)),
+                TypeIdentifier::GraphQLID | TypeIdentifier::Relation => row.get_checked(i).map(|val| {
+                    let id: SqlId = val;
+                    PrismaValue::GraphqlId(GraphqlId::from(id))
+                }),
                 TypeIdentifier::Float => row.get_checked(i).map(|val| PrismaValue::Float(val)),
-                TypeIdentifier::Relation => row.get_checked(i).map(|val| PrismaValue::GraphqlId(val)),
                 TypeIdentifier::Int => row.get_checked(i).map(|val| PrismaValue::Int(val)),
                 TypeIdentifier::Boolean => row.get_checked(i).map(|val| PrismaValue::Boolean(val)),
                 TypeIdentifier::Enum => row.get_checked(i).map(|val| PrismaValue::Enum(val)),
@@ -129,7 +145,7 @@ impl<'a, 'stmt> ToPrismaRow for SqliteRow<'a, 'stmt> {
             }
         }
 
-        let mut row = PrismaRow::default();
+        let mut row = SqlRow::default();
 
         for (i, typid) in idents.into_iter().enumerate() {
             row.values.push(convert(self, i, typid)?);
@@ -141,7 +157,7 @@ impl<'a, 'stmt> ToPrismaRow for SqliteRow<'a, 'stmt> {
 
 impl Sqlite {
     /// Creates a new SQLite pool connected into local memory.
-    pub fn new(databases_folder_path: String, connection_limit: u32, test_mode: bool) -> ConnectorResult<Sqlite> {
+    pub fn new(databases_folder_path: String, connection_limit: u32, test_mode: bool) -> SqlResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
@@ -157,7 +173,7 @@ impl Sqlite {
     /// or created to the configured database file.
     ///
     /// The database is then attached to the memory with an alias of `{db_name}`.
-    fn attach_database(&self, conn: &mut Connection, db_name: &str) -> ConnectorResult<()> {
+    fn attach_database(&self, conn: &mut Connection, db_name: &str) -> SqlResult<()> {
         let mut stmt = conn.prepare("PRAGMA database_list")?;
 
         let databases: HashSet<String> = stmt
@@ -179,9 +195,9 @@ impl Sqlite {
         Ok(())
     }
 
-    fn with_connection<F, T>(&self, db: &str, f: F) -> ConnectorResult<T>
+    fn with_connection<F, T>(&self, db: &str, f: F) -> SqlResult<T>
     where
-        F: FnOnce(&mut Connection) -> ConnectorResult<T>,
+        F: FnOnce(&mut Connection) -> SqlResult<T>,
     {
         let mut conn = self.pool.get()?;
         self.attach_database(&mut conn, db)?;
