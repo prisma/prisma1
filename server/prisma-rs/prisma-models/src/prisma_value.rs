@@ -59,6 +59,7 @@ impl PrismaValue {
                 .or_else(|| Self::str_as_datetime(s))
                 .unwrap_or(PrismaValue::String(s.clone())),
             GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
+            GraphqlValue::Object(obj) if obj.contains_key("set") => Self::from_value(obj.get("set").unwrap()),
             value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
         }
     }
@@ -236,6 +237,7 @@ impl From<PrismaValue> for DatabaseValue {
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
             PrismaValue::Uuid(u) => u.into(),
             PrismaValue::GraphqlId(id) => id.into(),
+            PrismaValue::List(Some(l)) => l.into(),
             PrismaValue::List(_) => panic!("List values are not supported here"),
         }
     }
