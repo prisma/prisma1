@@ -24,11 +24,23 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
         match dbg!(step) {
-            SqlMigrationStep::CreateTable(CreateTable { name, columns }) => {
+            SqlMigrationStep::CreateTable(CreateTable {
+                name,
+                columns,
+                primary_columns,
+            }) => {
                 migration.create_table(name, move |t| {
                     for column in columns.clone() {
                         let tpe = column_description_to_barrel_type(&column);
                         t.add_column(column.name, tpe);
+                    }
+                    if primary_columns.len() > 0 {
+                        let column_names: Vec<String> = primary_columns
+                            .clone()
+                            .into_iter()
+                            .map(|col| format!("\"{}\"", col))
+                            .collect();
+                        t.inject_custom(format!("PRIMARY KEY ({})", column_names.join(",")));
                     }
                 });
             }

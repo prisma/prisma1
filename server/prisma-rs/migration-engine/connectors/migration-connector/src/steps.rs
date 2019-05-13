@@ -17,6 +17,10 @@ pub enum MigrationStep {
     // DeleteRelation(DeleteRelation),
 }
 
+pub trait WithDbName {
+    fn db_name(&self) -> String;
+}
+
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CreateModel {
@@ -82,6 +86,15 @@ pub struct CreateField {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub scalar_list: Option<ScalarListStrategy>,
+}
+
+impl WithDbName for CreateField {
+    fn db_name(&self) -> String {
+        match self.db_name {
+            Some(ref db_name) => db_name.clone(),
+            None => self.name.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]

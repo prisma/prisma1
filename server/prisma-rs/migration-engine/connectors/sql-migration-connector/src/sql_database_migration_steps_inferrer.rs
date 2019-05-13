@@ -37,6 +37,7 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
 
         let mut create_tables: Vec<CreateTable> = Vec::new();
         for (create_model, create_fields) in grouped_steps {
+            let id_column = create_fields.iter().find(|f| f.id.is_some()).map(|f| f.db_name());
             let columns = create_fields
                 .into_iter()
                 .map(|cf| ColumnDescription {
@@ -45,9 +46,12 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
                     required: cf.arity == FieldArity::Required,
                 })
                 .collect();
+            let primary_columns = id_column.map(|c| vec![c]).unwrap_or(Vec::new());
+
             let create_table = CreateTable {
                 name: create_model.name,
                 columns: columns,
+                primary_columns: primary_columns,
             };
             create_tables.push(create_table);
         }
@@ -58,13 +62,23 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
     }
 }
 
+struct Relation {
+    field_a: Field,
+    field_b: Field,
+    manifestation: RelationManifestation,
+}
+
+enum RelationManifestation {
+    Inline { in_table_of_model: String, column: String },
+    Table { table: String, model_a_column: String, model_b_column }
+}
+
 fn scalar_type(ft: FieldType) -> ScalarType {
     match ft {
         FieldType::Base(scalar) => scalar,
         _ => panic!("Only scalar types are supported here"),
     }
 }
-
 
 fn wrap_as_step<T, F>(steps: Vec<T>, mut wrap_fn: F) -> Vec<SqlMigrationStep>
 where

@@ -2,4 +2,10 @@ model Blog {
     id: String @primary
     name: String
     viewCount: Int
+    posts: Post[]
+}
+
+model Post {
+    id: Int @primary
+    title: String
 }

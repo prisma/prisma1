@@ -15,6 +15,7 @@ pub enum SqlMigrationStep {
 pub struct CreateTable {
     pub name: String,
     pub columns: Vec<ColumnDescription>,
+    pub primary_columns: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
