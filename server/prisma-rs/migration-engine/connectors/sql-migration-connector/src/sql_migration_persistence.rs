@@ -52,7 +52,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
         let mut cloned = migration.clone();
         // let status_value = serde_json::to_string(&migration.status).unwrap();
         let model_steps_json = serde_json::to_string(&migration.datamodel_steps).unwrap();
-        let database_steps_json = serde_json::to_string(&migration.database_steps).unwrap();
+        let database_steps_json = migration.database_steps;
         let errors_json = serde_json::to_string(&migration.errors).unwrap();
 
         let query = Insert::single_into(TABLE_NAME)
