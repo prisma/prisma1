@@ -1,6 +1,5 @@
-use connector::{DataResolver, DatabaseMutactionExecutor};
 use core::{Executor, ReadQueryExecutor, WriteQueryExecutor};
-use prisma_common::config::{self, ConnectionLimit, ExplicitConfig, FileConfig, PrismaConfig, PrismaDatabase};
+use prisma_common::config::{ConnectionLimit, FileConfig, PrismaConfig, PrismaDatabase};
 use std::convert::TryFrom;
 use std::sync::Arc;
 
@@ -16,25 +15,6 @@ pub fn load(config: &PrismaConfig) -> Executor {
         Some(config) if config.connector() == "postgres-native" => postgres(config),
         _ => panic!("Database connector is not supported. Supported"),
     }
-
-    // let (data_resolver, write_executor): (Arc<dyn DataResolver>, Arc<WriteQueryExecutor>) =
-    //     match config.databases.get("default") {
-    //         Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => {}
-    //         Some(config) if config.connector() == "postgres-native" => {
-    //             let postgres = PostgreSql::try_from(config).unwrap();
-    //             let connector = Arc::new(SqlDatabase::new(postgres));
-    //             (Arc::clone(&connector), connector)
-    //         }
-    //         _ => panic!("Database connector is not supported. Supported"),
-    //     };
-
-    // let read_exec: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
-    // let write_exec: WriteQueryExecutor = WriteQueryExecutor {
-    //     db_name: db_name.clone(),
-    //     write_executor,
-    // };
-
-    // let executor = Executor { read_exec, write_exec };
 }
 
 #[cfg(feature = "sql")]
@@ -62,12 +42,7 @@ fn postgres(config: &PrismaDatabase) -> Executor {
 }
 
 #[cfg(feature = "sql")]
-fn sql_executor<T>(
-    db_name: String,
-    connector: SqlDatabase<T>,
-    // data_resolver: Arc<dyn DataResolver + Send + Sync + 'static>,
-    // write_executor: Arc<dyn DatabaseMutactionExecutor + Send + Sync + 'static>,
-) -> Executor
+fn sql_executor<T>(db_name: String, connector: SqlDatabase<T>) -> Executor
 where
     T: Transactional + Send + Sync + 'static,
 {

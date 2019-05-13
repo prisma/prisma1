@@ -24,7 +24,7 @@ impl PrismaContext {
 
         // Load internal data model
         let internal_data_model = data_model::load(db_name)?;
-        let _ = SchemaBuilder::build(internal_data_model.clone());
+        // let _ = SchemaBuilder::build(internal_data_model.clone());
 
         Ok(Self {
             config,
