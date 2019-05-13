@@ -7,6 +7,7 @@ mod many_rel;
 mod one_rel;
 mod root;
 mod single;
+mod mutations;
 
 pub(crate) mod utils;
 
@@ -15,6 +16,7 @@ pub use many_rel::*;
 pub use one_rel::*;
 pub use root::*;
 pub use single::*;
+pub use mutations::*;
 
 pub use self::inflector::Inflector;
 
