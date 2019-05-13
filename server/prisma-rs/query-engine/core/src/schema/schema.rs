@@ -1,35 +1,35 @@
-pub struct QuerySchema {
-    query: ObjectType,    // read(s)?
-    mutation: ObjectType, // write(s)?
-}
+// pub struct QuerySchema {
+//     query: ObjectType,    // read(s)?
+//     mutation: ObjectType, // write(s)?
+// }
 
-// enum for Optional input types, list types?
-// Could also be a flag on the structs
+// // enum for Optional input types, list types?
+// // Could also be a flag on the structs
 
-impl QuerySchema {}
+// impl QuerySchema {}
 
-struct ObjectType {}
+// struct ObjectType {}
 
-// On schema construction checks:
-// - field name uniqueness
-// - val NameRegexp = """^[_a-zA-Z][_a-zA-Z0-9]*$""".r match
-// -
+// // On schema construction checks:
+// // - field name uniqueness
+// // - val NameRegexp = """^[_a-zA-Z][_a-zA-Z0-9]*$""".r match
+// // -
 
-enum InputType {
-    EnumType,
-    InputObjectType,
-    ListInputType,
-    OptionInputType,
-    ScalarType,
-}
+// enum InputType {
+//     EnumType,
+//     InputObjectType,
+//     ListInputType,
+//     OptionInputType,
+//     ScalarType,
+// }
 
-enum OutputType {
-    EnumType,
-    ListType(OutputType),
-    ObjectType(ObjectType),
-    OptionType(OutputType),
-    ScalarType,
-}
+// // enum OutputType {
+// //     EnumType,
+// //     ListType(OutputType),
+// //     ObjectType(ObjectType),
+// //     OptionType(OutputType),
+// //     ScalarType,
+// // }
 
-// Possible:
-// InputType(OptionType(StringType))
+// // Possible:
+// // InputType(OptionType(StringType))

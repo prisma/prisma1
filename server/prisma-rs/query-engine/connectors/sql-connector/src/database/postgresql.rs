@@ -44,12 +44,14 @@ impl TryFrom<&ExplicitConfig> for PostgreSql {
     type Error = SqlError;
 
     fn try_from(e: &ExplicitConfig) -> SqlResult<Self> {
+        let db_name = e.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
         let mut config = Config::new();
+
         config.host(&e.host);
         config.port(e.port);
         config.user(&e.user);
         config.ssl_mode(SslMode::Prefer);
-        config.dbname("prisma");
+        config.dbname(db_name);
 
         if let Some(ref pw) = e.password {
             config.password(pw);
@@ -63,9 +65,11 @@ impl TryFrom<&ConnectionStringConfig> for PostgreSql {
     type Error = SqlError;
 
     fn try_from(s: &ConnectionStringConfig) -> SqlResult<Self> {
+        let db_name = s.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
         let mut config = Config::from_str(s.uri.as_str())?;
+
         config.ssl_mode(SslMode::Prefer);
-        config.dbname("prisma");
+        config.dbname(db_name);
 
         Ok(Self::new(config, s.limit())?)
     }
