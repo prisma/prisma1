@@ -1,6 +1,6 @@
+use crate::dml;
 use serde;
 use serde_json;
-use crate::dml;
 
 // This is a simple JSON serialization using Serde.
 // The JSON format follows the DMMF spec, but is incomplete.
@@ -13,7 +13,7 @@ pub struct Field {
     pub arity: String,
     pub isUnique: bool,
     #[serde(rename = "type")]
-    pub field_type: String
+    pub field_type: String,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -22,19 +22,19 @@ pub struct Model {
     pub name: String,
     pub isEmbedded: bool,
     pub dbName: Option<String>,
-    pub fields: Vec<Field>
+    pub fields: Vec<Field>,
 }
 
 #[derive(Debug, serde::Serialize)]
 pub struct Enum {
     pub isEnum: bool,
     pub name: String,
-    pub values: Vec<String>
+    pub values: Vec<String>,
 }
 
 #[derive(Debug, serde::Serialize)]
 pub struct Datamodel {
-    pub models: Vec<serde_json::Value>
+    pub models: Vec<serde_json::Value>,
 }
 
 fn get_field_kind<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
@@ -42,7 +42,7 @@ fn get_field_kind<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
         dml::FieldType::Relation(_) => String::from("relation"),
         dml::FieldType::Enum(_) => String::from("enum"),
         dml::FieldType::Base(_) => String::from("scalar"),
-        _ => unimplemented!("DMMF does not support field type {:?}", field.field_type)
+        _ => unimplemented!("DMMF does not support field type {:?}", field.field_type),
     }
 }
 
@@ -54,16 +54,19 @@ fn type_to_string<Types: dml::TypePack>(scalar: &dml::ScalarType) -> String {
         dml::ScalarType::Boolean => String::from("Boolean"),
         dml::ScalarType::String => String::from("String"),
         dml::ScalarType::DateTime => String::from("DateTime"),
-        dml::ScalarType::Enum => panic!("Enum is an internally used type and should never be rendered.")
+        dml::ScalarType::Enum => panic!("Enum is an internally used type and should never be rendered."),
     }
 }
 
 fn get_field_type<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
     match &field.field_type {
-        dml::FieldType::Relation( relation_info ) => relation_info.to.clone(),
+        dml::FieldType::Relation(relation_info) => relation_info.to.clone(),
         dml::FieldType::Enum(t) => t.clone(),
         dml::FieldType::Base(t) => type_to_string::<Types>(t),
-        dml::FieldType::ConnectorSpecific { base_type: t, connector_type: _ } => type_to_string::<Types>(t)
+        dml::FieldType::ConnectorSpecific {
+            base_type: t,
+            connector_type: _,
+        } => type_to_string::<Types>(t),
     }
 }
 
@@ -71,7 +74,7 @@ fn get_field_arity<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
     match field.arity {
         dml::FieldArity::Required => String::from("required"),
         dml::FieldArity::Optional => String::from("optional"),
-        dml::FieldArity::List => String::from("list")
+        dml::FieldArity::List => String::from("list"),
     }
 }
 
@@ -79,10 +82,9 @@ pub fn enum_to_dmmf<Types: dml::TypePack>(en: &dml::Enum<Types>) -> Enum {
     Enum {
         name: en.name.clone(),
         values: en.values.clone(),
-        isEnum: true
+        isEnum: true,
     }
 }
-
 
 pub fn field_to_dmmf<Types: dml::TypePack>(field: &dml::Field<Types>) -> Field {
     Field {
@@ -91,7 +93,7 @@ pub fn field_to_dmmf<Types: dml::TypePack>(field: &dml::Field<Types>) -> Field {
         dbName: field.database_name.clone(),
         arity: get_field_arity(field),
         isUnique: field.is_unique,
-        field_type: get_field_type(field)
+        field_type: get_field_type(field),
     }
 }
 
@@ -101,7 +103,7 @@ pub fn model_to_dmmf<Types: dml::TypePack>(model: &dml::Model<Types>) -> Model {
         dbName: model.database_name.clone(),
         isEmbedded: model.is_embedded,
         fields: model.fields().map(&field_to_dmmf).collect(),
-        isEnum: false
+        isEnum: false,
     }
 }
 
@@ -109,14 +111,18 @@ pub fn schema_to_dmmf<Types: dml::TypePack>(schema: &dml::Schema<Types>) -> Data
     let mut datamodel = Datamodel { models: vec![] };
 
     for model in schema.models() {
-        datamodel.models.push(serde_json::to_value(&model_to_dmmf(&model)).expect("Failed to render enum"))
+        datamodel
+            .models
+            .push(serde_json::to_value(&model_to_dmmf(&model)).expect("Failed to render enum"))
     }
 
     for enum_model in schema.enums() {
-        datamodel.models.push(serde_json::to_value(&enum_to_dmmf(&enum_model)).expect("Failed to render enum"))
+        datamodel
+            .models
+            .push(serde_json::to_value(&enum_to_dmmf(&enum_model)).expect("Failed to render enum"))
     }
 
-    return datamodel
+    return datamodel;
 }
 
 pub fn render_to_dmmf<Types: dml::TypePack>(schema: &dml::Schema<Types>) -> String {

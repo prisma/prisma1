@@ -1,15 +1,15 @@
-use super::validator::value::ValueParserError;
 use super::attachment::*;
+use super::validator::value::ValueParserError;
 
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct RelationInfo<Types: TypePack> { 
+pub struct RelationInfo<Types: TypePack> {
     pub to: String,
-    pub to_field: String, 
-    pub name: Option<String>, 
+    pub to_field: String,
+    pub name: Option<String>,
     pub on_delete: OnDeleteStrategy,
-    pub attachment: Types::RelationAttachment
+    pub attachment: Types::RelationAttachment,
 }
 
 impl<Types: TypePack> RelationInfo<Types> {
@@ -19,7 +19,7 @@ impl<Types: TypePack> RelationInfo<Types> {
             to_field: to_field,
             name: None,
             on_delete: OnDeleteStrategy::None,
-            attachment: Types::RelationAttachment::default()
+            attachment: Types::RelationAttachment::default(),
         }
     }
 }
@@ -27,7 +27,7 @@ impl<Types: TypePack> RelationInfo<Types> {
 #[derive(Debug, Copy, PartialEq, Clone)]
 pub enum OnDeleteStrategy {
     Cascade,
-    None
+    None,
 }
 
 impl FromStr for OnDeleteStrategy {
@@ -37,7 +37,10 @@ impl FromStr for OnDeleteStrategy {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
-            _ => Err(ValueParserError::new(format!("Invalid onDelete strategy {}.", s), String::from(s)))
+            _ => Err(ValueParserError::new(
+                format!("Invalid onDelete strategy {}.", s),
+                String::from(s),
+            )),
         }
     }
 }

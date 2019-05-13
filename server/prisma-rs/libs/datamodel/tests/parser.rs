@@ -55,4 +55,3 @@ enum CategoryEnum {
 
     datamodel::parser::parse(&String::from(dml));
 }
-

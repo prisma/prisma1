@@ -1,5 +1,3 @@
-
-
 // Setters are a bit untypical for rust,
 // but we want to have "composeable" struct creation.
 pub trait WithName {

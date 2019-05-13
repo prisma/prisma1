@@ -1,7 +1,7 @@
 use super::attachment::*;
-use super::model::*;
-use super::enummodel::*;
 use super::comment::*;
+use super::enummodel::*;
+use super::model::*;
 
 // TODO: Is schema the right name here?
 #[derive(Debug, PartialEq, Clone)]
@@ -9,7 +9,7 @@ pub struct Schema<Types: TypePack> {
     enums: Vec<Enum<Types>>,
     models: Vec<Model<Types>>,
     pub comments: Vec<Comment>,
-    pub attachment: Types::SchemaAttachment
+    pub attachment: Types::SchemaAttachment,
 }
 
 impl<Types: TypePack> Schema<Types> {
@@ -18,7 +18,7 @@ impl<Types: TypePack> Schema<Types> {
             models: vec![],
             enums: vec![],
             comments: vec![],
-            attachment: Types::SchemaAttachment::default()
+            attachment: Types::SchemaAttachment::default(),
         }
     }
 
@@ -29,7 +29,7 @@ impl<Types: TypePack> Schema<Types> {
     pub fn has_model(&self, name: &String) -> bool {
         match self.find_model(name) {
             Some(_) => true,
-            None => false
+            None => false,
         }
     }
 

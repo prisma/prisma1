@@ -1,8 +1,8 @@
 use super::attachment::*;
 use super::comment::*;
-use super::scalar::*;
-use super::relation::*;
 use super::id::*;
+use super::relation::*;
+use super::scalar::*;
 use super::traits::*;
 
 // This is duplicate for now, but explicitely required
@@ -19,8 +19,11 @@ pub enum FieldArity {
 pub enum FieldType<Types: TypePack> {
     Enum(String),
     Relation(RelationInfo<Types>),
-    ConnectorSpecific { base_type: ScalarType, connector_type: Option<String> },
-    Base(ScalarType)
+    ConnectorSpecific {
+        base_type: ScalarType,
+        connector_type: Option<String>,
+    },
+    Base(ScalarType),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -40,7 +43,7 @@ pub struct Field<Types: TypePack> {
     pub id_info: Option<IdInfo>,
     pub scalar_list_strategy: Option<ScalarListStrategy>,
     pub comments: Vec<Comment>,
-    pub attachment: Types::FieldAttachment
+    pub attachment: Types::FieldAttachment,
 }
 
 impl<Types: TypePack> WithName for Field<Types> {

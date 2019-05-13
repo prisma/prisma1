@@ -1,11 +1,11 @@
 use std::env;
 use std::fs;
 
-pub mod dmmf;
 pub mod ast;
+pub mod dmmf;
 use ast::parser;
 pub mod dml;
-use dml::validator::{BaseValidator, Validator, EmptyAttachmentValidator};
+use dml::validator::{BaseValidator, EmptyAttachmentValidator, Validator};
 
 mod postgres;
 
@@ -15,7 +15,7 @@ extern crate pest;
 extern crate pest_derive;
 
 extern crate clap;
-use clap::{Arg, App, SubCommand};
+use clap::{App, Arg, SubCommand};
 
 fn main() {
     let formats = ["sorenbs", "matthewmueller"];
@@ -24,13 +24,13 @@ fn main() {
         .version("0.1")
         .author("Emanuel Jöbstl <emanuel.joebstl@gmail.com>")
         .about("Alpha implementation of different datamodel definition grammars.")
-        .arg(Arg::with_name("INPUT")
-            .help("Sets the input datamodel file to use")
-            .required(true)
-            .index(1))
+        .arg(
+            Arg::with_name("INPUT")
+                .help("Sets the input datamodel file to use")
+                .required(true)
+                .index(1),
+        )
         .get_matches();
-
-
 
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
@@ -39,7 +39,7 @@ fn main() {
 
     // Builtin Tooling
     // let validator = BaseValidator::<dml::BuiltinTypePack, EmptyAttachmentValidator>::new();
-    
+
     // Postgres-Specific Tooling
     let validator = BaseValidator::<postgres::PostgresTypePack, postgres::PostgresAttachmentValidator>::new();
 

@@ -1,5 +1,5 @@
-use super::comment::*;
 use super::attachment::*;
+use super::comment::*;
 use super::traits::*;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -7,7 +7,7 @@ pub struct Enum<Types: TypePack> {
     pub name: String,
     pub values: Vec<String>,
     pub comments: Vec<Comment>,
-    pub attachment: Types::EnumAttachment
+    pub attachment: Types::EnumAttachment,
 }
 
 impl<Types: TypePack> Enum<Types> {

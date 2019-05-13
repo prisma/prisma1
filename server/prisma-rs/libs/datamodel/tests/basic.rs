@@ -14,8 +14,12 @@ fn parse_basic_model() {
     let schema = parse_and_validate(dml);
     let user_model = schema.assert_has_model("User");
     user_model.assert_is_embedded(false);
-    user_model.assert_has_field("firstName").assert_base_type(&dml::ScalarType::String);
-    user_model.assert_has_field("lastName").assert_base_type(&dml::ScalarType::String);
+    user_model
+        .assert_has_field("firstName")
+        .assert_base_type(&dml::ScalarType::String);
+    user_model
+        .assert_has_field("lastName")
+        .assert_base_type(&dml::ScalarType::String);
 }
 
 #[test]

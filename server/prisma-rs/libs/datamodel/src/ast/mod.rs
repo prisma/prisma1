@@ -10,13 +10,13 @@ pub enum FieldArity {
 #[derive(Debug)]
 pub struct Comment {
     pub text: String,
-    pub is_error: bool
+    pub is_error: bool,
 }
 
 #[derive(Debug)]
 pub struct DirectiveArgument {
     pub name: String,
-    pub value: Value
+    pub value: Value,
 }
 
 #[derive(Debug, Clone)]
@@ -24,13 +24,13 @@ pub enum Value {
     NumericValue(String),
     BooleanValue(String),
     StringValue(String),
-    ConstantValue(String)
+    ConstantValue(String),
 }
 
 #[derive(Debug)]
 pub struct Directive {
     pub name: String,
-    pub arguments: Vec<DirectiveArgument>
+    pub arguments: Vec<DirectiveArgument>,
 }
 
 pub trait WithDirectives {
@@ -49,15 +49,19 @@ pub struct Field {
     pub arity: FieldArity,
     pub default_value: Option<Value>,
     pub directives: Vec<Directive>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }
 
 impl WithDirectives for Field {
-    fn directives(&self) -> &Vec<Directive> { &self.directives }
+    fn directives(&self) -> &Vec<Directive> {
+        &self.directives
+    }
 }
 
 impl WithComments for Field {
-    fn comments(&self) -> &Vec<Comment> { &self.comments }
+    fn comments(&self) -> &Vec<Comment> {
+        &self.comments
+    }
 }
 
 #[derive(Debug)]
@@ -65,15 +69,19 @@ pub struct Enum {
     pub name: String,
     pub values: Vec<String>,
     pub directives: Vec<Directive>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }
 
-impl WithDirectives for Enum  {
-    fn directives(&self) -> &Vec<Directive> { &self.directives }
+impl WithDirectives for Enum {
+    fn directives(&self) -> &Vec<Directive> {
+        &self.directives
+    }
 }
 
 impl WithComments for Enum {
-    fn comments(&self) -> &Vec<Comment> { &self.comments }
+    fn comments(&self) -> &Vec<Comment> {
+        &self.comments
+    }
 }
 
 #[derive(Debug)]
@@ -85,21 +93,25 @@ pub struct Model {
 }
 
 impl WithDirectives for Model {
-    fn directives(&self) -> &Vec<Directive> { &self.directives }
+    fn directives(&self) -> &Vec<Directive> {
+        &self.directives
+    }
 }
 
-impl WithComments for Model  {
-    fn comments(&self) -> &Vec<Comment> { &self.comments }
+impl WithComments for Model {
+    fn comments(&self) -> &Vec<Comment> {
+        &self.comments
+    }
 }
 
 #[derive(Debug)]
 pub enum ModelOrEnum {
     Enum(Enum),
-    Model(Model)
+    Model(Model),
 }
 
 #[derive(Debug)]
 pub struct Schema {
     pub models: Vec<ModelOrEnum>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }

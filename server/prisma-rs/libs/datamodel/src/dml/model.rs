@@ -1,6 +1,6 @@
 use super::attachment::*;
-use super::field::*;
 use super::comment::*;
+use super::field::*;
 use super::traits::*;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -21,7 +21,7 @@ impl<Types: TypePack> Model<Types> {
             comments: vec![],
             database_name: None,
             is_embedded: false,
-            attachment: Types::ModelAttachment::default()
+            attachment: Types::ModelAttachment::default(),
         }
     }
 
@@ -43,11 +43,19 @@ impl<Types: TypePack> Model<Types> {
 }
 
 impl<Types: TypePack> WithName for Model<Types> {
-    fn name(&self) -> &String { &self.name }
-    fn set_name(&mut self, name: &String) { self.name = name.clone() }
+    fn name(&self) -> &String {
+        &self.name
+    }
+    fn set_name(&mut self, name: &String) {
+        self.name = name.clone()
+    }
 }
 
 impl<Types: TypePack> WithDatabaseName for Model<Types> {
-    fn database_name(&self) -> &Option<String> { &self.database_name }
-    fn set_database_name(&mut self, database_name: &Option<String>) { self.database_name = database_name.clone() }
+    fn database_name(&self) -> &Option<String> {
+        &self.database_name
+    }
+    fn set_database_name(&mut self, database_name: &Option<String>) {
+        self.database_name = database_name.clone()
+    }
 }

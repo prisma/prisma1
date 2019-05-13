@@ -1,33 +1,36 @@
 use crate::ast;
 use crate::dml;
 
-use chrono::{Utc, DateTime};
-use std::fmt;
+use chrono::{DateTime, Utc};
 use std::error;
 use std::error::Error;
+use std::fmt;
 
 #[derive(Debug)]
 pub struct ValueParserError {
     pub message: String,
-    pub raw: String
+    pub raw: String,
 }
 
 impl ValueParserError {
     pub fn wrap<T, E: error::Error>(result: Result<T, E>, raw_value: &String) -> Result<T, ValueParserError> {
         match result {
             Ok(val) => Ok(val),
-            Err(err) => Err(ValueParserError::new(err.description().to_string(), raw_value.clone()))
+            Err(err) => Err(ValueParserError::new(err.description().to_string(), raw_value.clone())),
         }
     }
 
     pub fn new(message: String, raw: String) -> ValueParserError {
-        ValueParserError { message: message, raw: raw }
+        ValueParserError {
+            message: message,
+            raw: raw,
+        }
     }
 }
 
 impl fmt::Display for ValueParserError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-       write!(f, "{}",self.message)
+        write!(f, "{}", self.message)
     }
 }
 
@@ -70,7 +73,7 @@ pub trait ValueValidator {
             dml::ScalarType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self.raw().clone()),
             dml::ScalarType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self.raw().clone()),
             dml::ScalarType::Enum => wrap_value!(self.as_str(), dml::Value::ConstantLiteral, self.raw().clone()),
-            dml::ScalarType::String => wrap_value!(self.as_str(), dml::Value::String, self.raw().clone())
+            dml::ScalarType::String => wrap_value!(self.as_str(), dml::Value::String, self.raw().clone()),
         }
     }
 }
@@ -78,7 +81,7 @@ pub trait ValueValidator {
 // TODO: Inject error accumulation.
 // TODO: Inject location (line etc.) information into error type.
 pub struct WrappedValue {
-    pub value: ast::Value
+    pub value: ast::Value,
 }
 
 impl ValueValidator for WrappedValue {
@@ -91,28 +94,37 @@ impl ValueValidator for WrappedValue {
             ast::Value::StringValue(x) => x,
             ast::Value::NumericValue(x) => x,
             ast::Value::BooleanValue(x) => x,
-            ast::Value::ConstantValue(x) => x
+            ast::Value::ConstantValue(x) => x,
         }
     }
 
     fn as_str(&self) -> Result<String, ValueParserError> {
         match &self.value {
             ast::Value::StringValue(value) => Ok(value.to_string()),
-            _ => Err(ValueParserError::new(format!("Expected String Value, received {:?}", self.value), self.raw().clone()))
+            _ => Err(ValueParserError::new(
+                format!("Expected String Value, received {:?}", self.value),
+                self.raw().clone(),
+            )),
         }
     }
-    
-    fn as_int(&self) -> Result<i32, ValueParserError>{
+
+    fn as_int(&self) -> Result<i32, ValueParserError> {
         match &self.value {
             ast::Value::NumericValue(value) => ValueParserError::wrap(value.parse::<i32>(), value),
-            _ => Err(ValueParserError::new(format!("Expected Numeric Value, received {:?}", self.value), self.raw().clone()))
+            _ => Err(ValueParserError::new(
+                format!("Expected Numeric Value, received {:?}", self.value),
+                self.raw().clone(),
+            )),
         }
     }
 
     fn as_float(&self) -> Result<f32, ValueParserError> {
         match &self.value {
             ast::Value::NumericValue(value) => ValueParserError::wrap(value.parse::<f32>(), value),
-            _ => Err(ValueParserError::new(format!("Expected Numeric Value, received {:?}", self.value), self.raw().clone()))
+            _ => Err(ValueParserError::new(
+                format!("Expected Numeric Value, received {:?}", self.value),
+                self.raw().clone(),
+            )),
         }
     }
 
@@ -120,30 +132,41 @@ impl ValueValidator for WrappedValue {
     fn as_decimal(&self) -> Result<f32, ValueParserError> {
         match &self.value {
             ast::Value::NumericValue(value) => ValueParserError::wrap(value.parse::<f32>(), value),
-            _ => Err(ValueParserError::new(format!("Expected Numeric Value, received {:?}", self.value), self.raw().clone()))
+            _ => Err(ValueParserError::new(
+                format!("Expected Numeric Value, received {:?}", self.value),
+                self.raw().clone(),
+            )),
         }
     }
-
 
     fn as_bool(&self) -> Result<bool, ValueParserError> {
         match &self.value {
             ast::Value::BooleanValue(value) => ValueParserError::wrap(value.parse::<bool>(), value),
-            _ => Err(ValueParserError::new(format!("Expected Boolean Value, received {:?}", self.value), self.raw().clone()))
+            _ => Err(ValueParserError::new(
+                format!("Expected Boolean Value, received {:?}", self.value),
+                self.raw().clone(),
+            )),
         }
     }
 
     // TODO: Ask which datetime type to use.
-    fn as_date_time(&self) -> Result<DateTime<Utc>, ValueParserError>{
+    fn as_date_time(&self) -> Result<DateTime<Utc>, ValueParserError> {
         match &self.value {
             ast::Value::StringValue(value) => ValueParserError::wrap(value.parse::<DateTime<Utc>>(), value),
-            _ => Err(ValueParserError::new(format!("Expected Boolean Value, received {:?}", self.value), self.raw().clone()))
+            _ => Err(ValueParserError::new(
+                format!("Expected Boolean Value, received {:?}", self.value),
+                self.raw().clone(),
+            )),
         }
     }
 
     fn as_constant_literal(&self) -> Result<String, ValueParserError> {
         match &self.value {
             ast::Value::ConstantValue(value) => Ok(value.to_string()),
-            _ => Err(ValueParserError::new(format!("Expected Constant Value, received {:?}", self.value), self.raw().clone()))
+            _ => Err(ValueParserError::new(
+                format!("Expected Constant Value, received {:?}", self.value),
+                self.raw().clone(),
+            )),
         }
     }
 }
@@ -151,21 +174,37 @@ impl ValueValidator for WrappedValue {
 pub struct WrappedErrorValue {
     // TODO: Make everything str&
     pub message: String,
-    pub raw: String
+    pub raw: String,
 }
 
 impl ValueValidator for WrappedErrorValue {
-    fn is_valid(&self) -> bool { false }
+    fn is_valid(&self) -> bool {
+        false
+    }
 
     fn raw(&self) -> &String {
         &self.raw
     }
 
-    fn as_str(&self) -> Result<String, ValueParserError> { Err(ValueParserError::new(self.message.clone(), self.raw.clone())) }
-    fn as_int(&self) -> Result<i32, ValueParserError> { Err(ValueParserError::new(self.message.clone(), self.raw.clone())) }
-    fn as_float(&self) -> Result<f32, ValueParserError> { Err(ValueParserError::new(self.message.clone(), self.raw.clone())) }
-    fn as_decimal(&self) -> Result<f32, ValueParserError> { Err(ValueParserError::new(self.message.clone(), self.raw.clone())) }
-    fn as_bool(&self) -> Result<bool, ValueParserError> { Err(ValueParserError::new(self.message.clone(), self.raw.clone())) }
-    fn as_date_time(&self) -> Result<DateTime<Utc>, ValueParserError> { Err(ValueParserError::new(self.message.clone(), self.raw.clone())) }
-    fn as_constant_literal(&self) -> Result<String, ValueParserError> { Err(ValueParserError::new(self.message.clone(), self.raw.clone())) }
+    fn as_str(&self) -> Result<String, ValueParserError> {
+        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+    }
+    fn as_int(&self) -> Result<i32, ValueParserError> {
+        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+    }
+    fn as_float(&self) -> Result<f32, ValueParserError> {
+        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+    }
+    fn as_decimal(&self) -> Result<f32, ValueParserError> {
+        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+    }
+    fn as_bool(&self) -> Result<bool, ValueParserError> {
+        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+    }
+    fn as_date_time(&self) -> Result<DateTime<Utc>, ValueParserError> {
+        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+    }
+    fn as_constant_literal(&self) -> Result<String, ValueParserError> {
+        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+    }
 }
