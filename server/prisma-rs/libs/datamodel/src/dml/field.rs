@@ -17,7 +17,7 @@ pub enum FieldArity {
 // TODO: Maybe we include a seperate struct for relations which can be generic?
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldType<Types: TypePack> {
-    Enum { enum_type: String },
+    Enum(String),
     Relation(RelationInfo<Types>),
     ConnectorSpecific { base_type: ScalarType, connector_type: Option<String> },
     Base(ScalarType)
@@ -25,7 +25,7 @@ pub enum FieldType<Types: TypePack> {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct IdInfo {
-    pub strategy: Option<IdStrategy>,
+    pub strategy: IdStrategy,
     pub sequence: Option<Sequence>,
 }
 

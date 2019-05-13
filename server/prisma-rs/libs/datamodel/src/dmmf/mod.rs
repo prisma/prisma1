@@ -40,8 +40,9 @@ pub struct Datamodel {
 fn get_field_kind<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
     match field.field_type {
         dml::FieldType::Relation(_) => String::from("relation"),
+        dml::FieldType::Enum(_) => String::from("enum"),
         dml::FieldType::Base(_) => String::from("scalar"),
-        _ => unimplemented!("DMML does not support field type {:?}", field.field_type)
+        _ => unimplemented!("DMMF does not support field type {:?}", field.field_type)
     }
 }
 
@@ -60,7 +61,7 @@ fn type_to_string<Types: dml::TypePack>(scalar: &dml::ScalarType) -> String {
 fn get_field_type<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
     match &field.field_type {
         dml::FieldType::Relation( relation_info ) => relation_info.to.clone(),
-        dml::FieldType::Enum { enum_type: t } => t.clone(),
+        dml::FieldType::Enum(t) => t.clone(),
         dml::FieldType::Base(t) => type_to_string::<Types>(t),
         dml::FieldType::ConnectorSpecific { base_type: t, connector_type: _ } => type_to_string::<Types>(t)
     }

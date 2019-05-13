@@ -103,12 +103,11 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
         for ast_obj in &ast_schema.models {
             match ast_obj {
                 ast::ModelOrEnum::Enum(en) => schema.add_enum(self.validate_enum(&en)),
-                ast::ModelOrEnum::Model(ty) => schema.add_model(self.validate_model(&ty))
+                ast::ModelOrEnum::Model(ty) => schema.add_model(self.validate_model(&ty, ast_schema))
             }
         }
 
         self.attachment_validator.validate_schema_attachment(ast_schema, &mut schema);
-        self.resolve_relations(&mut schema);
 
         // TODO: This needs some resolver logic for enum and relation types.
         return schema
@@ -116,11 +115,11 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
 }
 
 impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, AV> {
-    fn validate_model(&self, ast_model: &ast::Model) -> dml::Model<Types> {
+    fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> dml::Model<Types> {
         let mut model = dml::Model::new(&ast_model.name);
 
         for ast_field in &ast_model.fields {
-            model.add_field(self.validate_field(ast_field));
+            model.add_field(self.validate_field(ast_field, ast_schema));
         }
 
         self.model_directives.validate_and_apply(ast_model, &mut model);
@@ -137,8 +136,8 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
         return en
     }
 
-    fn validate_field(&self, ast_field: &ast::Field) -> dml::Field<Types> {
-        let field_type = self.validate_field_type(&ast_field.field_type);
+    fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> dml::Field<Types> {
+        let field_type = self.validate_field_type(&ast_field.field_type, ast_schema);
 
         let mut field = dml::Field::new(ast_field.name.clone(), field_type.clone());
 
@@ -169,32 +168,31 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
         }
     }
 
-    fn validate_field_type(&self, type_name: &String) -> dml::FieldType<Types> {
+    fn validate_field_type(&self, type_name: &String, ast_schema: &ast::Schema) -> dml::FieldType<Types> {
         match type_name.as_ref() {
+            "ID" => dml::FieldType::Base(dml::ScalarType::Int),
             "Int" => dml::FieldType::Base(dml::ScalarType::Int),
             "Float" => dml::FieldType::Base(dml::ScalarType::Float),
             "Decimal" => dml::FieldType::Base(dml::ScalarType::Decimal),
             "Boolean" => dml::FieldType::Base(dml::ScalarType::Boolean),
             "String" => dml::FieldType::Base(dml::ScalarType::String),
             "DateTime" => dml::FieldType::Base(dml::ScalarType::DateTime),
-            // Everything is a relation for now.
-            _ => dml::FieldType::Relation(dml::RelationInfo::new(type_name.to_string(), String::from("")))
-        }
-    }
-
-    fn resolve_relations(&self, schema: &mut dml::Schema<Types>) {
-        for model in schema.models_mut() {
-            for field in model.fields_mut() {
-                if let dml::FieldType::Relation(rel_info) = &mut field.field_type {
-           /*         if let Some(related) = schema.find_model(&rel_info.to) {
-                        // TODO: Hook up.
-                        println!("Caramba")
-                    } else if let Some(related_enum) = schema.find_enum(&rel_info.to) {
-                        field.field_type = dml::FieldType::Enum { enum_type: related_enum.name.clone() }
+            // Distinguish between relation and enum.
+            _ => {
+                for model in &ast_schema.models {
+                    match &model {
+                        // TODO: Get primary field
+                        ast::ModelOrEnum::Model(model) if model.name == *type_name => {
+                            return dml::FieldType::Relation(dml::RelationInfo::new(type_name.clone(), String::from("")))
+                        }
+                        ast::ModelOrEnum::Enum(en) if en.name == *type_name => {
+                            return dml::FieldType::Enum(type_name.clone())
+                        }
+                        _ => {}
                     }
-
-            */
                 }
+
+                panic!("Cannot resolve relation, type, model or enum not found: {}", type_name)
             }
         }
     }

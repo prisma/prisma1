@@ -55,7 +55,7 @@ field_declaration = { identifier ~ (":")? ~ field_type ~ ("(" ~ field_link ~ ")"
 model_declaration = { "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" ~ directive* }
 
 // Enum
-enum_field_declaration = { ASCII_ALPHA_UPPER }
+enum_field_declaration = @{ ASCII_ALPHA_UPPER+ }
 enum_declaration = { "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" ~ directive* }
 
 // Datamodel
