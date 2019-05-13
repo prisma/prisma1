@@ -1,11 +1,13 @@
-use crate::commands::apply_next_migration_step::ApplyNextMigrationStepCommand;
 use crate::commands::command::MigrationCommand;
-use crate::commands::start_migration::StartMigrationCommand;
-use crate::commands::suggest_migration_step::SuggestMigrationStepsCommand;
+use crate::commands::infer_migration_steps::InferMigrationStepsCommand;
+use crate::migration_engine::*;
 use jsonrpc_core;
 use jsonrpc_core::IoHandler;
 use jsonrpc_core::*;
+use migration_connector::*;
+use sql_migration_connector::*;
 use std::io;
+use std::path::Path;
 
 pub struct RpcApi {
     io_handler: jsonrpc_core::IoHandler<()>,
@@ -16,9 +18,7 @@ impl RpcApi {
         let mut rpc_api = RpcApi {
             io_handler: IoHandler::new(),
         };
-        rpc_api.add_command_handler::<SuggestMigrationStepsCommand>("suggestMigrationSteps");
-        rpc_api.add_command_handler::<StartMigrationCommand>("startMigration");
-        rpc_api.add_command_handler::<ApplyNextMigrationStepCommand>("applyNextMigrationStep");
+        rpc_api.add_command_handler::<InferMigrationStepsCommand>("inferMigrationSteps");
         rpc_api
     }
 
@@ -26,7 +26,8 @@ impl RpcApi {
         self.io_handler.add_method(name, |params: Params| {
             let input: T::Input = params.parse()?;
             let cmd = T::new(input);
-            let response_json = serde_json::to_value(&cmd.execute()).unwrap();
+            let engine = MigrationEngine::new();
+            let response_json = serde_json::to_value(&cmd.execute(engine)).unwrap();
             Ok(response_json)
         });
     }

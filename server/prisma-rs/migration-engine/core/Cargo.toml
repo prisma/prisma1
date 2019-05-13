@@ -16,8 +16,6 @@ serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
 boolinator = "2.4.0"
-
-[dev-dependencies]
 sql-migration-connector = { path = "../connectors/sql-migration-connector" }
 
 [[bin]]
@@ -25,5 +23,9 @@ name = "migration-engine-rpc"
 path = "src/bin/rpc_api_bin.rs"
 
 [[bin]]
-name = "suggest-migrations"
-path = "src/bin/suggest_migrations.rs"
+name = "infer-migrations-steps"
+path = "src/bin/infer_migration_steps_bin.rs"
+
+[[bin]]
+name = "apply-migration"
+path = "src/bin/apply_migration_bin.rs"

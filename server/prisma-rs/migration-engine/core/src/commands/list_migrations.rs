@@ -1,4 +1,5 @@
 use crate::commands::command::MigrationCommand;
+use crate::migration_engine::MigrationEngine;
 use migration_connector::steps::*;
 use migration_connector::*;
 
@@ -14,7 +15,7 @@ impl MigrationCommand for ListMigrationStepsCommand {
         Box::new(ListMigrationStepsCommand { input })
     }
 
-    fn execute(&self) -> Self::Output {
+    fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
         vec![]
     }

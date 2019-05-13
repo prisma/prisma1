@@ -6,6 +6,7 @@
 use chrono::{DateTime, Utc};
 use std::str::FromStr;
 use validator::value::ValueParserError;
+use serde::{Serialize, Deserialize};
 
 pub mod validator;
 
@@ -23,20 +24,21 @@ pub trait WithDatabaseName {
 
 // This is duplicate for now, but explicitely required
 // since we want to seperate ast and dml.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum FieldArity {
     Required,
     Optional,
     List,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Comment {
     pub text: String,
     pub is_error: bool,
 }
 
-#[derive(Debug, Copy, PartialEq, Clone)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum ScalarType {
     Int,
     Float,
@@ -48,7 +50,7 @@ pub enum ScalarType {
 }
 
 // TODO, Check if data types are correct
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Value {
     Int(i32),
     Float(f32),
@@ -60,13 +62,15 @@ pub enum Value {
 }
 
 // TODO: Maybe we include a seperate struct for relations which can be generic?
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum FieldType {
     Enum { enum_type: String },
     Relation { to: String, to_field: String, name: Option<String>, on_delete: OnDeleteStrategy },
     ConnectorSpecific { base_type: ScalarType, connector_type: Option<String> },
     Base(ScalarType)
 }
+
+
 
 #[derive(Debug, Copy, PartialEq, Clone)]
 pub enum IdStrategy {
@@ -86,7 +90,7 @@ impl FromStr for IdStrategy {
     }
 }
 
-#[derive(Debug, Copy, PartialEq, Clone)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum ScalarListStrategy {
     Embedded,
     Relation,
@@ -104,7 +108,7 @@ impl FromStr for ScalarListStrategy {
     }
 }
 
-#[derive(Debug, Copy, PartialEq, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum OnDeleteStrategy {
     Cascade,
     None
@@ -147,6 +151,7 @@ pub struct Field {
     pub database_name: Option<String>,
     pub default_value: Option<Value>,
     pub is_unique: bool,
+    // TODO: isn't `is_id` implied if the `id_strategy` field is Some()?
     pub is_id: bool,
     pub id_strategy: Option<IdStrategy>,
     // TODO: Not sure if a sequence should be a member of field.
