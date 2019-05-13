@@ -1,5 +1,6 @@
 use super::*;
-use connector::{mutaction::NestedCreateNode, ConnectorResult};
+use crate::SqlResult;
+use connector::mutaction::NestedCreateNode;
 use prisma_models::*;
 use prisma_query::ast::*;
 use std::sync::Arc;
@@ -13,7 +14,7 @@ impl NestedActions for NestedCreateNode {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, parent_id: &GraphqlId) -> ConnectorResult<Option<(Select, ResultCheck)>> {
+    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select, ResultCheck)>> {
         if self.top_is_create {
             return Ok(None);
         }

@@ -36,35 +36,74 @@ pub fn load(db_name: String) -> PrismaResult<InternalDataModelRef> {
     Ok(serde_json::from_str::<InternalDataModelTemplate>(&data_model_json)?.build(db_name))
 }
 
-/// Loads the config as unparsed json string.
-/// Attempts to resolve the data model from env and from file, see `load_from_env` and `load_from_file`.
+/// Attempts to load the config as unparsed JSON string.
 pub fn load_string() -> PrismaResult<String> {
-    load_from_env().or_else(|_| load_from_file()).map_err(|err| {
-        PrismaError::ConfigurationError(format!("Unable to resolve Prisma data model. Last error: {}", err))
+    load_internal_from_env().or_else(|_| load_sdl_string().and_then(|sdl| {
+        resolve_internal_data_model_json(sdl)
+    })).map_err(|err| {
+        PrismaError::ConfigurationError(format!("Unable to construct internal Prisma data model from any source. Last error: {}", err))
     })
 }
 
 /// Attempts to resolve the internal data model from an env var.
-/// Note that the content of the env var has to be base64 encoded JSON.
-pub fn load_from_env() -> PrismaResult<String> {
-    debug!("Trying to load data model from env...");
+/// Note that the content of the env var has to be base64 encoded.
+/// Returns: Internal data model JSON string.
+pub fn load_internal_from_env() -> PrismaResult<String> {
+    debug!("Trying to load internal data model from env...");
 
-    utilities::get_env("PRISMA_INTERNAL_DATA_MODEL_JSON").and_then(|internal_data_model| {
-        let bytes = base64::decode(&internal_data_model)?;
+    utilities::get_env("PRISMA_INTERNAL_DATA_MODEL_JSON").and_then(|internal_data_model_b64| {
+        let bytes = base64::decode(&internal_data_model_b64)?;
         let internal_data_model_json = String::from_utf8(bytes)?;
 
-        debug!("Loaded data model from env.");
+        debug!("Loaded internal data model from env.");
         Ok(internal_data_model_json)
     })
 }
 
-/// Attempts to resolve the internal data model from a Prisma SDL (DataModel) file.
-/// The contents of that file are processed by the external schema (data model) inferrer (until we have a Rust equivalent),
-/// which produces the internal data model JSON string.
-pub fn load_from_file() -> PrismaResult<String> {
-    debug!("Trying to load internal data model from file...");
-    let data_model = load_sdl_string()?;
+// let inferrer = resolve_internal_data_model_json(sdl)?;
 
+/// Attempts to load a Prisma SDL string from either env or file.
+pub fn load_sdl_string() -> PrismaResult<String> {
+    load_sdl_from_env().or_else(|_| load_sdl_from_file()).map_err(|err| {
+        PrismaError::ConfigurationError(format!("Unable to load SDL from any source. Last error: {}", err))
+    })
+}
+
+/// Attempts to load a Prisma SDL string from env.
+/// Note that the content of the env var has to be base64 encoded.
+/// Returns: Decoded Prisma SDL string.
+fn load_sdl_from_env() -> PrismaResult<String> {
+    debug!("Trying to load Prisma SDL from env...");
+    utilities::get_env("PRISMA_SDL").and_then(|sdl_b64| {
+        let bytes = base64::decode(&sdl_b64)?;
+        let sdl = String::from_utf8(bytes)?;
+
+        debug!("Loaded Prisma SDL from env.");
+        Ok(sdl)
+    })
+}
+
+/// Attempts to load a Prisma SDL string from file.
+/// Returns: Decoded Prisma SDL string.
+pub fn load_sdl_from_file() -> PrismaResult<String> {
+    debug!("Trying to load Prisma SDL from file...");
+
+    let path = utilities::get_env("PRISMA_SDL_PATH")?;
+    let mut f = File::open(&path)?;
+    let mut sdl = String::new();
+
+    f.read_to_string(&mut sdl)?;
+
+    debug!(
+        "Loaded Prisma SDL from file: {}.",
+        utilities::get_env("PRISMA_SDL_PATH")?
+    );
+
+    Ok(sdl)
+}
+
+/// Transforms an SDL string into stringified JSON of the internal data model.
+fn resolve_internal_data_model_json(sdl: String) -> PrismaResult<String> {
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
     struct InternalDataModelInferrerJson {
@@ -77,26 +116,14 @@ pub fn load_from_file() -> PrismaResult<String> {
         .stdout(Stdio::piped())
         .spawn()?;
 
+    let compacted = sdl.replace('\n', " ");
     let child_in = child.stdin.as_mut().unwrap();
-    let json = serde_json::to_string(&InternalDataModelInferrerJson { data_model })?;
+    let json = serde_json::to_string(&InternalDataModelInferrerJson { data_model: compacted })?;
 
     child_in.write_all(json.as_bytes()).expect("Failed to write to stdin");
 
     let output = child.wait_with_output()?;
     let inferred = String::from_utf8(output.stdout)?;
 
-    debug!(
-        "Loaded internal data model from file: {}.",
-        utilities::get_env("PRISMA_DATA_MODEL_PATH")?
-    );
     Ok(inferred)
-}
-
-pub fn load_sdl_string() -> PrismaResult<String> {
-    let path = utilities::get_env("PRISMA_DATA_MODEL_PATH")?;
-    let mut f = File::open(&path)?;
-    let mut data_model = String::new();
-
-    f.read_to_string(&mut data_model)?;
-    Ok(data_model)
 }

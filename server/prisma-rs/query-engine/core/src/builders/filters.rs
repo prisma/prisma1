@@ -151,12 +151,23 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                             };
 
                             Ok(match (op, value) {
-                                (FilterOp::Some, Some(value)) => r.at_least_one_related(extract_filter(value, r.related_model())?),
-                                (FilterOp::None, Some(value)) => r.no_related(extract_filter(value, r.related_model())?),
-                                (FilterOp::Every, Some(value)) => r.every_related(extract_filter(value, r.related_model())?),
-                                (FilterOp::Field, Some(value)) => r.to_one_related(extract_filter(value, r.related_model())?),
+                                (FilterOp::Some, Some(value)) => {
+                                    r.at_least_one_related(extract_filter(value, r.related_model())?)
+                                }
+                                (FilterOp::None, Some(value)) => {
+                                    r.no_related(extract_filter(value, r.related_model())?)
+                                }
+                                (FilterOp::Every, Some(value)) => {
+                                    r.every_related(extract_filter(value, r.related_model())?)
+                                }
+                                (FilterOp::Field, Some(value)) => {
+                                    r.to_one_related(extract_filter(value, r.related_model())?)
+                                }
                                 (FilterOp::Field, None) => r.one_relation_is_null(),
-                                (op, val) => Err(CoreError::QueryValidationError(format!("Invalid filter: Operation {:?} with {:?}", op, val)))?,
+                                (op, val) => Err(CoreError::QueryValidationError(format!(
+                                    "Invalid filter: Operation {:?} with {:?}",
+                                    op, val
+                                )))?,
                             })
                         }
                     }

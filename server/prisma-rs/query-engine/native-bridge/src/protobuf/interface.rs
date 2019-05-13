@@ -7,10 +7,7 @@ use connector::{error::ConnectorError, filter::NodeSelector, DataResolver, Datab
 use prisma_common::config::*;
 use prisma_models::prelude::*;
 use prost::Message;
-use sql_connector::{
-    database::SqlDatabase,
-    database::{PostgreSql, Sqlite},
-};
+use sql_connector::{PostgreSql, SqlDatabase, Sqlite};
 use std::{convert::TryFrom, sync::Arc};
 
 pub struct ProtoBufInterface {

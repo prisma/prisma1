@@ -1,6 +1,6 @@
 //! Process a record into an IR Map
 
-use super::{lists::build_list, Item, Map, trim_records};
+use super::{lists::build_list, trim_records, Item, Map};
 use crate::{ReadQueryResult, SingleReadQueryResult};
 use prisma_models::PrismaValue;
 
@@ -40,7 +40,7 @@ pub fn build_map(result: SingleReadQueryResult) -> Option<Map> {
                 trim_records(&mut nested_result, &query_args);
 
                 map.insert(query_name, Item::List(nested_result))
-            },
+            }
         };
 
         map

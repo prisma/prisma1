@@ -7,7 +7,6 @@ pub type Args<'a> = dml::validator::argument::DirectiveArguments<'a>;
 
 // TODO Narrow to type, enum, field, if possible
 pub trait DirectiveValidator<T> {
-
     fn directive_name(&self) -> &'static str;
     // TODO: Proper error type
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Option<Error>;

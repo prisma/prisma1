@@ -1,7 +1,7 @@
 {
   "id": "FilterSpec",
   "revision": 1,
-  "internal_data_model": {
+  "schema": {
     "models": [
       {
         "name": "User",

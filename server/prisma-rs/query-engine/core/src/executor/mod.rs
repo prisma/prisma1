@@ -2,9 +2,9 @@
 
 #![allow(warnings)]
 
+mod pipeline;
 mod read;
 mod write;
-mod pipeline;
 
 use self::pipeline::*;
 
@@ -25,8 +25,8 @@ use std::sync::Arc;
 
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
-    Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, InternalDataModelRef, SelectedField,
-    SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
+    Field as ModelField, GraphqlId, InternalDataModelRef, ModelRef, OrderBy, PrismaValue, RelationFieldRef,
+    SelectedField, SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
 };
 
 /// A wrapper around QueryExecutor
@@ -42,55 +42,34 @@ impl Executor {
     ///
     /// Will execute WriteQueries first, then all ReadQueries, while preserving order.
     pub fn exec_all(&self, queries: Vec<Query>) -> CoreResult<Vec<ReadQueryResult>> {
-        let (writes, mut reads) = Self::split_read_write(queries);
+        // Give all queries to the pipeline module
+        let mut pipeline = QueryPipeline::from(queries);
 
-        // Every WriteQuery get's executed and then built into a ReadQuery
-        let write_results = writes
-            .into_iter()
-            .map(|wq| self.exec_single_tree(wq))
-            .collect::<CoreResult<Vec<WriteQueryResult>>>()?;
+        // Execute prefetch queries for destructive writes
+        let (idx, queries): (Vec<_>, Vec<_>) = pipeline.prefetch().into_iter().unzip();
+        let results = self.read_exec.execute(&queries)?;
+        pipeline.store_prefetch(idx.into_iter().zip(results).collect());
 
-        // Re-insert writes into read-list
-        Self::zip_read_query_lists(write_results, &mut reads);
+        // Execute write queries and generate required read queries
+        let (mut idx, mut queries) = (vec![], vec![]);
+        for (index, write) in pipeline.get_writes() {
+            let res = self.write_exec.execute(write.inner.clone())?;
 
-        // The process all reads
-        let reads: Vec<ReadQuery> = reads.into_iter().filter_map(|q| q).collect();
-        self.read_exec.execute(reads.as_slice())
-    }
-
-    /// Executes a single WriteQuery
-    fn exec_single_tree(&self, wq: WriteQuery) -> CoreResult<WriteQueryResult> {
-        let result = self.write_exec.execute(wq.inner.clone())?;
-        let model = wq.model();
-
-        let query: RecordQuery = SingleBuilder::new().setup(Arc::clone(&model), &wq.field).build()?;
-
-        Ok(WriteQueryResult {
-            inner: result,
-            nested: vec![],
-            query: ReadQuery::RecordQuery(query),
-        })
-    }
-
-    fn split_read_write(queries: Vec<Query>) -> (Vec<WriteQuery>, Vec<Option<ReadQuery>>) {
-        queries.into_iter().fold((vec![], vec![]), |(mut w, mut r), query| {
-            match query {
-                Query::Write(q) => {
-                    w.push(q); // Push WriteQuery
-                    r.push(None); // Push Read placeholder
-                }
-                Query::Read(q) => r.push(Some(q)),
+            // Execute reads if they are required to be executed
+            if let (Some(index), Some(read)) = (index, write.generate_read(res)) {
+                idx.push(index);
+                queries.push(read);
             }
+        }
+        let results = self.read_exec.execute(&queries)?;
+        pipeline.store_reads(idx.into_iter().zip(results.into_iter()).collect());
 
-            (w, r)
-        })
-    }
+        // Now execute all remaining reads
+        let (idx, queries): (Vec<_>, Vec<_>) = pipeline.get_reads().into_iter().unzip();
+        let results = self.read_exec.execute(&queries)?;
+        pipeline.store_reads(idx.into_iter().zip(results).collect());
 
-    fn zip_read_query_lists(mut writes: Vec<WriteQueryResult>, reads: &mut Vec<Option<ReadQuery>>) {
-        (0..reads.len()).for_each(|idx| {
-            if reads.get(idx).unwrap().is_none() {
-                reads.insert(idx, Some(writes.remove(0).query));
-            }
-        });
+        // Consume pipeline into return value
+        Ok(pipeline.consume())
     }
 }

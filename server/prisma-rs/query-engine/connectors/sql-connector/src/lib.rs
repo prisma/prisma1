@@ -7,6 +7,8 @@
 //!   data.
 
 mod cursor_condition;
+mod database;
+mod error;
 mod filter_conversion;
 mod mutaction;
 mod ordering;
@@ -14,10 +16,11 @@ mod query_builder;
 mod row;
 mod transactional;
 
-pub mod database;
+use filter_conversion::*;
+use mutaction::*;
+use row::*;
 
-pub use filter_conversion::*;
-pub use mutaction::*;
-pub use query_builder::SelectDefinition;
-pub use row::*;
+pub use database::*;
 pub use transactional::*;
+
+type SqlResult<T> = Result<T, error::SqlError>;
