@@ -2,18 +2,12 @@ use super::attachment::*;
 use super::model::*;
 use super::enummodel::*;
 use super::comment::*;
-use super::traits::*;
+
 // TODO: Is schema the right name here?
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum ModelOrEnum<Types: TypePack> {
-    Enum(Enum<Types>),
-    Model(Model<Types>)
-}
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct Schema<Types: TypePack> {
-    pub models: Vec<ModelOrEnum<Types>>,
+    enums: Vec<Enum<Types>>,
+    models: Vec<Model<Types>>,
     pub comments: Vec<Comment>,
     pub attachment: Types::SchemaAttachment
 }
@@ -22,6 +16,7 @@ impl<Types: TypePack> Schema<Types> {
     pub fn new() -> Schema<Types> {
         Schema {
             models: vec![],
+            enums: vec![],
             comments: vec![],
             attachment: Types::SchemaAttachment::default()
         }
@@ -31,32 +26,30 @@ impl<Types: TypePack> Schema<Types> {
         Self::new()
     }
 
-    pub fn has_model(&self, name: String) -> bool {
-        for model in &self.models {
-            match model {
-                ModelOrEnum::Model(m) => {
-                    if(m.name() == &name) {
-                        return true;
-                    }
-                },
-                _ => {},
-            }
+    pub fn has_model(&self, name: &String) -> bool {
+        match self.find_model(name) {
+            Some(_) => true,
+            None => false
         }
-        false
     }
 
-    pub fn models(&self) -> Vec<Model<Types>> {
-        let mut result = Vec::new();
-        for model in &self.models {
-            match model {
-                ModelOrEnum::Model(m) => result.push(m.clone()),
-                _ => {},
-            }
-        }
-        result
+    pub fn add_enum(&mut self, en: Enum<Types>) {
+        self.enums.push(en);
     }
 
-    pub fn find_model(&self, name: String) -> Option<Model<Types>> {
-        self.models().iter().find(|m| m.name == name).map(|m| m.clone())
+    pub fn add_model(&mut self, model: Model<Types>) {
+        self.models.push(model);
+    }
+
+    pub fn models(&self) -> std::slice::Iter<Model<Types>> {
+        self.models.iter()
+    }
+
+    pub fn enums(&self) -> std::slice::Iter<Enum<Types>> {
+        self.enums.iter()
+    }
+
+    pub fn find_model(&self, name: &String) -> Option<Model<Types>> {
+        self.models().find(|m| m.name == *name).map(|m| m.clone())
     }
 }

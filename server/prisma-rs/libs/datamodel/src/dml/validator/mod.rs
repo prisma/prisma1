@@ -102,8 +102,8 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
 
         for ast_obj in &ast_schema.models {
             match ast_obj {
-                ast::ModelOrEnum::Enum(en) => schema.models.push(dml::ModelOrEnum::Enum(self.validate_enum(&en))),
-                ast::ModelOrEnum::Model(ty) => schema.models.push(dml::ModelOrEnum::Model(self.validate_model(&ty)))
+                ast::ModelOrEnum::Enum(en) => schema.add_enum(self.validate_enum(&en)),
+                ast::ModelOrEnum::Model(ty) => schema.add_model(self.validate_model(&ty))
             }
         }
 
@@ -116,16 +116,16 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
 
 impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, AV> {
     fn validate_model(&self, ast_model: &ast::Model) -> dml::Model<Types> {
-        let mut ty = dml::Model::new(&ast_model.name);
+        let mut model = dml::Model::new(&ast_model.name);
 
         for ast_field in &ast_model.fields {
-            ty.fields.push(self.validate_field(ast_field));
+            model.add_field(self.validate_field(ast_field));
         }
 
-        self.model_directives.validate_and_apply(ast_model, &mut ty);
-        self.attachment_validator.validate_model_attachment(ast_model, &mut ty);
+        self.model_directives.validate_and_apply(ast_model, &mut model);
+        self.attachment_validator.validate_model_attachment(ast_model, &mut model);
 
-        return ty
+        return model
     }
 
     fn validate_enum(&self, ast_enum: &ast::Enum) -> dml::Enum<Types> {
@@ -179,5 +179,9 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
             // Everything is a relation for now.
             _ => dml::FieldType::Relation(dml::RelationInfo::new(type_name.to_string(), String::from("")))
         }
+    }
+
+    fn resolve_relations(&self, schema: &mut dml::Schema<Types>) {
+        unimplemented!("TODO")
     }
 }

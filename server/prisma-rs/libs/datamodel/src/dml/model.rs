@@ -6,7 +6,7 @@ use super::traits::*;
 #[derive(Debug, PartialEq, Clone)]
 pub struct Model<Types: TypePack> {
     pub name: String,
-    pub fields: Vec<Field<Types>>,
+    fields: Vec<Field<Types>>,
     pub comments: Vec<Comment>,
     pub database_name: Option<String>,
     pub is_embedded: bool,
@@ -25,8 +25,16 @@ impl<Types: TypePack> Model<Types> {
         }
     }
 
-    pub fn find_field(&self, name: String) -> Option<Field<Types>> {
-        self.fields.iter().find(|f| f.name == name).map(|f| f.clone())
+    pub fn add_field(&mut self, field: Field<Types>) {
+        self.fields.push(field)
+    }
+
+    pub fn fields(&self) -> std::slice::Iter<Field<Types>> {
+        self.fields.iter()
+    }
+
+    pub fn find_field(&self, name: &String) -> Option<Field<Types>> {
+        self.fields().find(|f| f.name == *name).map(|f| f.clone())
     }
 }
 

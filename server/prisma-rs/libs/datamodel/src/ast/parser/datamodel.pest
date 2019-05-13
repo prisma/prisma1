@@ -52,11 +52,11 @@ default_value = { "=" ~ any_literal }
 field_declaration = { identifier ~ (":")? ~ field_type ~ ("(" ~ field_link ~ ")")? ~ default_value? ~ directive* }
 
 // Model
-model_declaration = { directive* ~ "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" }
+model_declaration = { "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" ~ directive* }
 
 // Enum
 enum_field_declaration = { ASCII_ALPHA_UPPER }
-enum_declaration = { directive* ~ "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" }
+enum_declaration = { "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" ~ directive* }
 
 // Datamodel
 datamodel = { (model_declaration | enum_declaration)+ }

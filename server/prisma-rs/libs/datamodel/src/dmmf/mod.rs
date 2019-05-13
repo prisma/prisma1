@@ -99,7 +99,7 @@ pub fn model_to_dmmf<Types: dml::TypePack>(model: &dml::Model<Types>) -> Model {
         name: model.name.clone(),
         dbName: model.database_name.clone(),
         isEmbedded: model.is_embedded,
-        fields: model.fields.iter().map(&field_to_dmmf).collect(),
+        fields: model.fields().map(&field_to_dmmf).collect(),
         isEnum: false
     }
 }
@@ -107,17 +107,12 @@ pub fn model_to_dmmf<Types: dml::TypePack>(model: &dml::Model<Types>) -> Model {
 pub fn schema_to_dmmf<Types: dml::TypePack>(schema: &dml::Schema<Types>) -> Datamodel {
     let mut datamodel = Datamodel { models: vec![] };
 
-    for obj in &schema.models {
-        match obj {
-            dml::ModelOrEnum::Enum(en) => datamodel.models.push(
-                serde_json::to_value(
-                    &enum_to_dmmf(&en)
-                ).expect("Failed to render enum")),
-            dml::ModelOrEnum::Model(model) => datamodel.models.push(
-                serde_json::to_value(
-                    &model_to_dmmf(&model)
-                ).expect("Failed to render enum"))
-        }
+    for model in schema.models() {
+        datamodel.models.push(serde_json::to_value(&model_to_dmmf(&model)).expect("Failed to render enum"))
+    }
+
+    for enum_model in schema.enums() {
+        datamodel.models.push(serde_json::to_value(&enum_to_dmmf(&enum_model)).expect("Failed to render enum"))
     }
 
     return datamodel
