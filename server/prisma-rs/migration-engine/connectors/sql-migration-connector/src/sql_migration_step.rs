@@ -1,3 +1,4 @@
+use datamodel::ScalarType;
 use migration_connector::DatabaseMigrationStepExt;
 use serde::Serialize;
 
@@ -50,14 +51,11 @@ pub struct AlterColumn {
     pub column: ColumnDescription,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct ColumnDescription {
     pub name: String,
     pub tpe: ColumnType,
     pub required: bool,
 }
 
-#[derive(Debug, Serialize)]
-pub struct ColumnType {
-    pub tpe: String,
-}
+pub type ColumnType = ScalarType;

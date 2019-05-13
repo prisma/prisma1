@@ -41,7 +41,7 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
                 .into_iter()
                 .map(|cf| ColumnDescription {
                     name: cf.name,
-                    tpe: column_type(cf.tpe),
+                    tpe: scalar_type(cf.tpe),
                     required: cf.arity == FieldArity::Required,
                 })
                 .collect();
@@ -58,30 +58,19 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
     }
 }
 
+fn scalar_type(ft: FieldType) -> ScalarType {
+    match ft {
+        FieldType::Base(scalar) => scalar,
+        _ => panic!("Only scalar types are supported here"),
+    }
+}
+
+
 fn wrap_as_step<T, F>(steps: Vec<T>, mut wrap_fn: F) -> Vec<SqlMigrationStep>
 where
     F: FnMut(T) -> SqlMigrationStep,
 {
     steps.into_iter().map(|x| wrap_fn(x)).collect()
-}
-
-fn column_type(ft: FieldType) -> ColumnType {
-    match ft {
-        FieldType::Base(scalar) => scalar.into(),
-        _ => panic!("Only scalar types are supported here"),
-    }
-}
-
-impl From<ScalarType> for ColumnType {
-    fn from(scalar: ScalarType) -> ColumnType {
-        let tpe = match scalar {
-            ScalarType::Int => "Int".to_string(),
-            ScalarType::Float => "Float".to_string(),
-            ScalarType::String => "String".to_string(),
-            _ => unimplemented!(),
-        };
-        ColumnType { tpe }
-    }
 }
 
 enum CreateModelOrField {

@@ -30,7 +30,10 @@ impl SqlMigrationConnector {
     pub fn new(schema_name: String) -> SqlMigrationConnector {
         let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn(&schema_name)));
         let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {});
-        let database_step_applier = Arc::new(SqlDatabaseStepApplier {});
+        let database_step_applier = Arc::new(SqlDatabaseStepApplier::new(
+            Self::new_conn(&schema_name),
+            schema_name.clone(),
+        ));
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
         SqlMigrationConnector {
             schema_name,
