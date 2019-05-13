@@ -1,29 +1,14 @@
 pub struct QuerySchema {
-    query: ObjectType, // read(s)?
+    query: ObjectType,    // read(s)?
     mutation: ObjectType, // write(s)?
 }
 
 // enum for Optional input types, list types?
 // Could also be a flag on the structs
 
+impl QuerySchema {}
 
-impl QuerySchema {
-
-}
-
-struct ObjectType {
-
-}
-
-struct InputType {
-
-}
-
-struct OutputType {
-
-}
-
-pub struct Field {}
+struct ObjectType {}
 
 // On schema construction checks:
 // - field name uniqueness
@@ -41,11 +26,10 @@ enum InputType {
 enum OutputType {
     EnumType,
     ListType(OutputType),
-    ObjectType,
+    ObjectType(ObjectType),
     OptionType(OutputType),
     ScalarType,
 }
 
 // Possible:
 // InputType(OptionType(StringType))
-
