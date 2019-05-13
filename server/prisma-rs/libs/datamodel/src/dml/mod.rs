@@ -300,7 +300,7 @@ impl<Types: TypePack> Model<Types> {
         }
     }
 
-    pub fn find_field(&self, name: String) -> Option<Field> {
+    pub fn find_field(&self, name: String) -> Option<Field<Types>> {
         self.fields.iter().find(|f| f.name == name).map(|f| f.clone())
     }
 }
@@ -355,7 +355,7 @@ impl<Types: TypePack> Schema<Types> {
         false
     }
 
-    pub fn models(&self) -> Vec<Model> {
+    pub fn models(&self) -> Vec<Model<Types>> {
         let mut result = Vec::new();
         for model in &self.models {
             match model {
@@ -366,7 +366,7 @@ impl<Types: TypePack> Schema<Types> {
         result
     }
 
-    pub fn find_model(&self, name: String) -> Option<Model> {
+    pub fn find_model(&self, name: String) -> Option<Model<Types>> {
         self.models().iter().find(|m| m.name == name).map(|m| m.clone())
     }
 }

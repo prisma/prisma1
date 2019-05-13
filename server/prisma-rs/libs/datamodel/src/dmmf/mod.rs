@@ -18,6 +18,7 @@ pub struct Field {
 
 #[derive(Debug, serde::Serialize)]
 pub struct Model {
+    pub isEnum: bool,
     pub name: String,
     pub isEmbedded: bool,
     pub dbName: Option<String>,
@@ -25,8 +26,15 @@ pub struct Model {
 }
 
 #[derive(Debug, serde::Serialize)]
+pub struct Enum {
+    pub isEnum: bool,
+    pub name: String,
+    pub values: Vec<String>
+}
+
+#[derive(Debug, serde::Serialize)]
 pub struct Datamodel {
-    pub models: Vec<Model>
+    pub models: Vec<serde_json::Value>
 }
 
 fn get_field_kind<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
@@ -66,6 +74,14 @@ fn get_field_arity<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
     }
 }
 
+pub fn enum_to_dmmf<Types: dml::TypePack>(en: &dml::Enum<Types>) -> Enum {
+    Enum {
+        name: en.name.clone(),
+        values: en.values.clone(),
+        isEnum: true
+    }
+}
+
 
 pub fn field_to_dmmf<Types: dml::TypePack>(field: &dml::Field<Types>) -> Field {
     Field {
@@ -83,7 +99,8 @@ pub fn model_to_dmmf<Types: dml::TypePack>(model: &dml::Model<Types>) -> Model {
         name: model.name.clone(),
         dbName: model.database_name.clone(),
         isEmbedded: model.is_embedded,
-        fields: model.fields.iter().map(&field_to_dmmf).collect()
+        fields: model.fields.iter().map(&field_to_dmmf).collect(),
+        isEnum: false
     }
 }
 
@@ -92,8 +109,14 @@ pub fn schema_to_dmmf<Types: dml::TypePack>(schema: &dml::Schema<Types>) -> Data
 
     for obj in &schema.models {
         match obj {
-            dml::ModelOrEnum::Enum(en) => unimplemented!("DMML has no enum support."),
-            dml::ModelOrEnum::Model(model) => datamodel.models.push(model_to_dmmf(&model))
+            dml::ModelOrEnum::Enum(en) => datamodel.models.push(
+                serde_json::to_value(
+                    &enum_to_dmmf(&en)
+                ).expect("Failed to render enum")),
+            dml::ModelOrEnum::Model(model) => datamodel.models.push(
+                serde_json::to_value(
+                    &model_to_dmmf(&model)
+                ).expect("Failed to render enum"))
         }
     }
 

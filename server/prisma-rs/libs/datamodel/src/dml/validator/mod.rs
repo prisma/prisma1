@@ -129,7 +129,11 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
     }
 
     fn validate_enum(&self, ast_enum: &ast::Enum) -> dml::Enum<Types> {
-        unimplemented!("Parsing enums is not implemented yet.");
+        let mut en = dml::Enum::new(ast_enum.name.clone(), ast_enum.values.clone());
+
+        self.enum_directives.validate_and_apply(ast_enum, &mut en);
+
+        return en
     }
 
     fn validate_field(&self, ast_field: &ast::Field) -> dml::Field<Types> {
@@ -163,7 +167,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
             ast::FieldArity::List => dml::FieldArity::List
         }
     }
-    
+
     fn validate_field_type(&self, type_name: &String) -> dml::FieldType<Types> {
         match type_name.as_ref() {
             "Int" => dml::FieldType::Base(dml::ScalarType::Int),
