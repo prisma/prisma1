@@ -1,6 +1,7 @@
 use crate::{DomainError, DomainResult};
 use chrono::prelude::*;
 use graphql_parser::query::Value as GraphqlValue;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt};
 use uuid::Uuid;
@@ -251,6 +252,12 @@ impl From<String> for GraphqlId {
 impl From<usize> for GraphqlId {
     fn from(id: usize) -> Self {
         GraphqlId::Int(id)
+    }
+}
+
+impl From<i64> for GraphqlId {
+    fn from(id: i64) -> Self {
+        GraphqlId::Int(id as usize)
     }
 }
 
