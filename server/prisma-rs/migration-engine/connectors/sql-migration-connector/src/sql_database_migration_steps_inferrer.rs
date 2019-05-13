@@ -70,7 +70,7 @@ struct Relation {
 
 enum RelationManifestation {
     Inline { in_table_of_model: String, column: String },
-    Table { table: String, model_a_column: String, model_b_column }
+    // Table { table: String, model_a_column: String, model_b_column }
 }
 
 fn scalar_type(ft: FieldType) -> ScalarType {
