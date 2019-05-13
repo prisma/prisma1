@@ -53,13 +53,12 @@ impl Executor {
         // Execute write queries and generate required read queries
         let (mut idx, mut queries) = (vec![], vec![]);
         for (index, write) in pipeline.get_writes() {
-            // TODO: Is this required?!
-            let _res = self.write_exec.execute(write.inner.clone())?;
+            let res = self.write_exec.execute(write.inner.clone())?;
 
-            // Reads still need to be executed if the index is set
-            if let Some(index) = index {
+            // Execute reads if they are required to be executed
+            if let (Some(index), Some(read)) = (index, write.generate_read(res)) {
                 idx.push(index);
-                queries.push(write.generate_read().unwrap()); // This is always our fault
+                queries.push(read);
             }
         }
         let results = self.read_exec.execute(&queries)?;
