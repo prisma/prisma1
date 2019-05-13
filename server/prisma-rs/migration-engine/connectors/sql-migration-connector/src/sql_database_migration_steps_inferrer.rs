@@ -42,7 +42,7 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
                 .into_iter()
                 .map(|cf| ColumnDescription {
                     name: cf.name,
-                    tpe: scalar_type(cf.tpe),
+                    tpe: column_type(cf.tpe),
                     required: cf.arity == FieldArity::Required,
                 })
                 .collect();
@@ -73,14 +73,21 @@ enum RelationManifestation {
     // Table { table: String, model_a_column: String, model_b_column }
 }
 
-fn scalar_type(ft: FieldType) -> ScalarType {
+fn column_type(ft: FieldType) -> ColumnType {
     match ft {
-        FieldType::Base(scalar) => scalar,
+        FieldType::Base(scalar) => match scalar {
+            ScalarType::Boolean => ColumnType::Boolean,
+            ScalarType::String => ColumnType::String,
+            ScalarType::Int => ColumnType::Int,
+            ScalarType::Float => ColumnType::Float,
+            ScalarType::DateTime => ColumnType::DateTime,
+            _ => unimplemented!(),
+        },
         _ => panic!("Only scalar types are supported here"),
     }
 }
 
-fn wrap_as_step<T, F>(steps: Vec<T>, mut wrap_fn: F) -> Vec<SqlMigrationStep>
+pub fn wrap_as_step<T, F>(steps: Vec<T>, mut wrap_fn: F) -> Vec<SqlMigrationStep>
 where
     F: FnMut(T) -> SqlMigrationStep,
 {

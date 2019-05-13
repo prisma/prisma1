@@ -9,6 +9,7 @@ migration-connector = { path = "../migration-connector" }
 datamodel = { path = "../../../libs/datamodel" }
 chrono = { version = "0.4" }
 prisma-query = { path = "../../../libs/prisma-query" }
+database-inspector = { path = "../../../libs/database-inspector" }
 serde_json = "1.0"
 serde = "1.0"
 rusqlite = { version = "0.16", features = ["chrono", "bundled"] }

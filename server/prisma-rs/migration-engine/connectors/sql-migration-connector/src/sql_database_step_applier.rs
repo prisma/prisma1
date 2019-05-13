@@ -60,13 +60,11 @@ impl SqlDatabaseStepApplier {
 
 fn column_description_to_barrel_type(column_description: &ColumnDescription) -> barrel::types::Type {
     let tpe = match column_description.tpe {
-        ScalarType::Boolean => barrel::types::boolean(),
-        ScalarType::DateTime => barrel::types::date(),
-        ScalarType::Decimal => unimplemented!(),
-        ScalarType::Enum => barrel::types::varchar(255),
-        ScalarType::Float => barrel::types::float(),
-        ScalarType::Int => barrel::types::integer(),
-        ScalarType::String => barrel::types::text(),
+        ColumnType::Boolean => barrel::types::boolean(),
+        ColumnType::DateTime => barrel::types::date(),
+        ColumnType::Float => barrel::types::float(),
+        ColumnType::Int => barrel::types::integer(),
+        ColumnType::String => barrel::types::text(),
     };
     tpe.nullable(!column_description.required)
 }
