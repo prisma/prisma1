@@ -102,3 +102,5 @@ impl MigrationConnector for SqlMigrationConnector {
 pub enum SqlMigrationStep {
     CreateTable,
 }
+
+impl DatabaseMigrationStepExt for SqlMigrationStep{}

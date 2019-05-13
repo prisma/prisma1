@@ -24,8 +24,7 @@ pub struct CreateModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub db_name: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub embedded: Option<bool>,
+    pub embedded: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Eq, PartialEq)]
@@ -242,11 +241,11 @@ mod tests {
 
     #[test]
     fn minimal_CreateModel_must_work() {
-        let json = r#"{"stepType":"CreateModel","name":"Blog"}"#;
+        let json = r#"{"stepType":"CreateModel","name":"Blog","embedded":false}"#;
         let expected_struct = MigrationStep::CreateModel(CreateModel {
             name: "Blog".to_string(),
             db_name: None,
-            embedded: None,
+            embedded: false,
         });
         assert_symmetric_serde(json, expected_struct);
     }
@@ -257,7 +256,7 @@ mod tests {
         let expected_struct = MigrationStep::CreateModel(CreateModel {
             name: "Blog".to_string(),
             db_name: Some("blog".to_string()),
-            embedded: Some(true),
+            embedded: true,
         });
         assert_symmetric_serde(json, expected_struct);
     }

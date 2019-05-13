@@ -1,5 +1,6 @@
 use super::*;
-use connector::{mutaction::NestedDisconnect, ConnectorResult};
+use crate::SqlResult;
+use connector::mutaction::NestedDisconnect;
 use prisma_models::*;
 use prisma_query::ast::*;
 use std::sync::Arc;
@@ -13,7 +14,7 @@ impl NestedActions for NestedDisconnect {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, _: &GraphqlId) -> ConnectorResult<Option<(Select, ResultCheck)>> {
+    fn required_check(&self, _: &GraphqlId) -> SqlResult<Option<(Select, ResultCheck)>> {
         let p = Arc::clone(&self.relation_field);
         let c = p.related_field();
 

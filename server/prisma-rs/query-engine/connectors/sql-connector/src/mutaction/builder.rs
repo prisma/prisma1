@@ -1,7 +1,7 @@
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
-use connector::{error::ConnectorError, ConnectorResult};
+use crate::{error::SqlError, SqlResult};
 
 pub struct MutationBuilder;
 
@@ -31,15 +31,15 @@ impl MutationBuilder {
 
         let fields = fields
             .iter()
-            .map(|field| (field.name(), args.take_field_value(field.name()).unwrap()));
+            .map(|field| (field.db_name(), args.take_field_value(field.name()).unwrap()));
 
         let base = Insert::single_into(model.table());
 
         let insert = fields
             .into_iter()
-            .fold(base, |acc, (name, value)| acc.value(name, value));
+            .fold(base, |acc, (name, value)| acc.value(name.into_owned(), value));
 
-        (insert.into(), return_id)
+        (Insert::from(insert).returning(vec![model_id.as_column()]), return_id)
     }
 
     pub fn create_relation(field: RelationFieldRef, parent_id: &GraphqlId, child_id: &GraphqlId) -> Query {
@@ -114,11 +114,11 @@ impl MutationBuilder {
         Some(result)
     }
 
-    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> ConnectorResult<Option<Update>> {
+    pub fn update_one(model: ModelRef, id: &GraphqlId, args: &PrismaArgs) -> SqlResult<Option<Update>> {
         Self::update_many(model, &[id; 1], args).map(|updates| updates.into_iter().next())
     }
 
-    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> ConnectorResult<Vec<Update>> {
+    pub fn update_many(model: ModelRef, ids: &[&GraphqlId], args: &PrismaArgs) -> SqlResult<Vec<Update>> {
         if args.args.is_empty() || ids.is_empty() {
             return Ok(Vec::new());
         }
@@ -130,7 +130,7 @@ impl MutationBuilder {
             let field = fields.find_from_scalar(&name).unwrap();
 
             if field.is_required && value.is_null() {
-                return Err(ConnectorError::FieldCannotBeNull {
+                return Err(SqlError::FieldCannotBeNull {
                     field: field.name.clone(),
                 });
             }
@@ -200,11 +200,11 @@ impl MutationBuilder {
     }
 
     pub fn truncate_tables(project: ProjectRef) -> Vec<Delete> {
-        let models = project.schema().models();
+        let models = project.internal_data_model().models();
         let mut deletes = Vec::new();
 
         deletes = project
-            .schema()
+            .internal_data_model()
             .relations()
             .iter()
             .map(|r| r.relation_table())

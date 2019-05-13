@@ -1,5 +1,4 @@
-use crate::dml;
-use crate::ast;
+use crate::{dml, ast};
 
 pub mod value;
 pub mod argument;
@@ -100,7 +99,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
     // TODO: Intro factory methods for creating DML nodes.
     fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema<Types> {
         let mut schema = dml::Schema::new();
-        
+
         for ast_obj in &ast_schema.models {
             match ast_obj {
                 ast::ModelOrEnum::Enum(en) => schema.models.push(dml::ModelOrEnum::Enum(self.validate_enum(&en))),
@@ -110,7 +109,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
 
         self.attachment_validator.validate_schema_attachment(ast_schema, &mut schema);
 
-        // TODO: This needs some resolver logic for enum and relation types. 
+        // TODO: This needs some resolver logic for enum and relation types.
         return schema
     }
 }
@@ -139,7 +138,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
         let mut field = dml::Field::new(ast_field.name.clone(), field_type.clone());
 
         field.arity = self.validate_field_arity(&ast_field.arity);
-        
+
         if let Some(value) = &ast_field.default_value {
             if let dml::FieldType::Base(base_type) = &field_type {
                 // TODO: Proper error handling.

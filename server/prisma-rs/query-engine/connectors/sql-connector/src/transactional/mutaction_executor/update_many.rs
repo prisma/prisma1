@@ -1,6 +1,6 @@
 use super::update;
-use crate::{mutaction::MutationBuilder, Transaction};
-use connector::{filter::Filter, ConnectorResult};
+use crate::{mutaction::MutationBuilder, SqlResult, Transaction};
+use connector::filter::Filter;
 use prisma_models::{GraphqlId, ModelRef, PrismaArgs, PrismaListValue, RelationFieldRef};
 use std::sync::Arc;
 
@@ -14,12 +14,16 @@ pub fn execute<S>(
     filter: &Filter,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> ConnectorResult<usize>
+) -> SqlResult<usize>
 where
     S: AsRef<str>,
 {
     let ids = conn.filter_ids(Arc::clone(&model), filter.clone())?;
     let count = ids.len();
+
+    if count == 0 {
+        return Ok(count);
+    }
 
     let updates = {
         let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();
@@ -44,12 +48,16 @@ pub fn execute_nested<S>(
     relation_field: RelationFieldRef,
     non_list_args: &PrismaArgs,
     list_args: &[(S, PrismaListValue)],
-) -> ConnectorResult<usize>
+) -> SqlResult<usize>
 where
     S: AsRef<str>,
 {
     let ids = conn.filter_ids_by_parents(Arc::clone(&relation_field), vec![parent_id], filter.clone())?;
     let count = ids.len();
+
+    if count == 0 {
+        return Ok(count);
+    }
 
     let updates = {
         let ids: Vec<&GraphqlId> = ids.iter().map(|id| &*id).collect();

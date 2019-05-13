@@ -4,11 +4,6 @@ version = "0.1.0"
 authors = []
 edition = "2018"
 
-[features]
-default = ["sql", "sqlite"]
-sqlite = ["rusqlite", "libsqlite3-sys", "r2d2_sqlite"]
-sql = ["r2d2"]
-
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -21,8 +16,3 @@ failure_derive = "0.1"
 uuid = "0.7"
 itertools = "0.8"
 chrono = { version = "0.4", features = ["serde"] }
-
-r2d2 = { version = "0.8", optional = true }
-r2d2_sqlite = { version = "0.8", optional = true }
-rusqlite = { version = "0.16", features = ["chrono", "bundled"], optional = true }
-libsqlite3-sys = { version = "0.11", optional = true }

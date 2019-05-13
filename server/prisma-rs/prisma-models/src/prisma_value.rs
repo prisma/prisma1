@@ -1,7 +1,6 @@
 use crate::{DomainError, DomainResult};
 use chrono::prelude::*;
 use graphql_parser::query::Value as GraphqlValue;
-use rusqlite::types::{FromSql, FromSqlResult, ValueRef};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt};
 use uuid::Uuid;
@@ -49,8 +48,11 @@ impl PrismaValue {
             GraphqlValue::Float(f) => PrismaValue::Float(f.clone()),
             GraphqlValue::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
             GraphqlValue::Null => PrismaValue::Null,
-            GraphqlValue::String(s) => Self::str_as_json(s).or_else(|| Self::str_as_datetime(s)).unwrap_or(PrismaValue::String(s.clone())),
+            GraphqlValue::String(s) => Self::str_as_json(s)
+                .or_else(|| Self::str_as_datetime(s))
+                .unwrap_or(PrismaValue::String(s.clone())),
             GraphqlValue::List(l) => PrismaValue::List(Some(l.iter().map(|i| Self::from_value(i)).collect())),
+            GraphqlValue::Object(obj) if obj.contains_key("set") => Self::from_value(obj.get("set").unwrap()),
             value => panic!(format!("Unable to make {:?} to PrismaValue", value)),
         }
     }
@@ -63,7 +65,9 @@ impl PrismaValue {
     // Feel free to try and fix it for cases with AND without Z.
     fn str_as_datetime(s: &str) -> Option<PrismaValue> {
         let fmt = "%Y-%m-%dT%H:%M:%S%.3f";
-        Utc.datetime_from_str(s.trim_end_matches("Z"), fmt).ok().map(|dt| PrismaValue::DateTime(DateTime::<Utc>::from_utc(dt.naive_utc(), Utc)))
+        Utc.datetime_from_str(s.trim_end_matches("Z"), fmt)
+            .ok()
+            .map(|dt| PrismaValue::DateTime(DateTime::<Utc>::from_utc(dt.naive_utc(), Utc)))
     }
 }
 
@@ -199,7 +203,7 @@ impl From<GraphqlId> for DatabaseValue {
         match id {
             GraphqlId::String(s) => s.into(),
             GraphqlId::Int(i) => (i as i64).into(),
-            GraphqlId::UUID(u) => u.to_hyphenated_ref().to_string().into(),
+            GraphqlId::UUID(u) => u.into(),
         }
     }
 }
@@ -218,25 +222,17 @@ impl From<PrismaValue> for DatabaseValue {
             PrismaValue::String(s) => s.into(),
             PrismaValue::Float(f) => (f as f64).into(),
             PrismaValue::Boolean(b) => b.into(),
-            PrismaValue::DateTime(d) => d.timestamp_millis().into(),
+            PrismaValue::DateTime(d) => d.into(),
             PrismaValue::Enum(e) => e.into(),
-            PrismaValue::Json(j) => j.into(),
+            PrismaValue::Json(j) => j.to_string().into(),
             PrismaValue::Int(i) => (i as i64).into(),
             PrismaValue::Relation(i) => (i as i64).into(),
             PrismaValue::Null => DatabaseValue::Parameterized(ParameterizedValue::Null),
-            PrismaValue::Uuid(u) => u.to_hyphenated_ref().to_string().into(),
+            PrismaValue::Uuid(u) => u.into(),
             PrismaValue::GraphqlId(id) => id.into(),
+            PrismaValue::List(Some(l)) => l.into(),
             PrismaValue::List(_) => panic!("List values are not supported here"),
         }
-    }
-}
-
-impl FromSql for GraphqlId {
-    fn column_result(value: ValueRef<'_>) -> FromSqlResult<Self> {
-        value
-            .as_str()
-            .map(|strval| GraphqlId::String(strval.to_string()))
-            .or_else(|_| value.as_i64().map(|intval| GraphqlId::Int(intval as usize)))
     }
 }
 

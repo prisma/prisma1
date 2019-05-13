@@ -4,8 +4,8 @@ use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::{
     DataModelMigrationStepsInferrer, DataModelMigrationStepsInferrerImpl,
 };
-use prisma_datamodel::dml::*;
-use prisma_datamodel::Validator;
+use datamodel::dml::*;
+use datamodel::Validator;
 
 #[test]
 #[ignore]
@@ -13,7 +13,7 @@ fn infer_CreateModel_if_it_does_not_exit_yet() {
     let dm1 = Schema::empty();
     let dm2 = parse(
         r#"
-        type Test {
+        model Test {
             id: ID
         }
     "#,
@@ -24,7 +24,7 @@ fn infer_CreateModel_if_it_does_not_exit_yet() {
         MigrationStep::CreateModel(CreateModel {
             name: "Test".to_string(),
             db_name: None,
-            embedded: None,
+            embedded: false,
         }),
         MigrationStep::CreateField(CreateField {
             model: "Test".to_string(),
@@ -40,14 +40,14 @@ fn infer_CreateModel_if_it_does_not_exit_yet() {
 fn infer_CreateField_if_it_does_not_exist_yet() {
     let dm1 = parse(
         r#"
-        type Test {
+        model Test {
             id: ID
         }
     "#,
     );
     let dm2 = parse(
         r#"
-        type Test {
+        model Test {
             id: ID
             field: Int
         }
@@ -66,7 +66,7 @@ fn infer_CreateField_if_it_does_not_exist_yet() {
 
 // TODO: we will need this in a lot of test files. Extract it.
 fn parse(datamodel_string: &'static str) -> Schema {
-    let ast = prisma_datamodel::parser::parse(&datamodel_string.to_string());
+    let ast = datamodel::parser::parse(&datamodel_string.to_string());
     // TODO: this would need capabilities
     let validator = Validator::new();
     validator.validate(&ast)

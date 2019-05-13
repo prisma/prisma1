@@ -1,7 +1,7 @@
 pub mod steps;
 
 use chrono::{DateTime, Utc};
-use prisma_datamodel::Schema;
+use datamodel::Schema;
 use std::sync::Arc;
 pub use steps::MigrationStep;
 
@@ -9,7 +9,7 @@ pub use steps::MigrationStep;
 extern crate serde_derive;
 
 pub trait MigrationConnector {
-    type DatabaseMigrationStep;
+    type DatabaseMigrationStep: DatabaseMigrationStepExt;
 
     fn initialize(&self);
 
@@ -21,6 +21,8 @@ pub trait MigrationConnector {
     fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigrationStep>>;
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigrationStep>>;
 }
+
+pub trait DatabaseMigrationStepExt {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
     fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<T>;

@@ -1,4 +1,4 @@
-package com.prisma.api.connector.sqlite.native
+package com.prisma.api.connector.native
 import com.prisma.api.connector._
 import com.prisma.gc_values._
 import com.prisma.rs.NodeResult
@@ -70,7 +70,7 @@ object NativeUtils {
       case EnumGCValue(e)      => PrismaValue.Enum(e)
       case FloatGCValue(f)     => PrismaValue.Float(f)
       case StringIdGCValue(s)  => PrismaValue.GraphqlId(prisma.protocol.GraphqlId(IdValue.String(s)))
-      case UuidGCValue(uuid)   => PrismaValue.Uuid(uuid.toString)
+      case UuidGCValue(uuid)   => PrismaValue.GraphqlId(prisma.protocol.GraphqlId(IdValue.Uuid(uuid.toString)))
       case IntGCValue(i)       => PrismaValue.GraphqlId(prisma.protocol.GraphqlId(IdValue.Int(i)))
       case JsonGCValue(j)      => PrismaValue.Json(j.toString())
       case StringGCValue(s)    => PrismaValue.String(s)
@@ -84,7 +84,7 @@ object NativeUtils {
   def toPrismaId(value: IdGCValue): protocol.GraphqlId = value match {
     case StringIdGCValue(s) => protocol.GraphqlId(IdValue.String(s))
     case IntGCValue(i)      => protocol.GraphqlId(IdValue.Int(i))
-    case UuidGCValue(u)     => protocol.GraphqlId(IdValue.String(u.toString))
+    case UuidGCValue(u)     => protocol.GraphqlId(IdValue.Uuid(u.toString))
   }
 
   def toPrismaSelectedFields(selectedFields: SelectedFields): prisma.protocol.SelectedFields = {
@@ -92,7 +92,7 @@ object NativeUtils {
       selectedField match {
         case SelectedScalarField(f) => {
           val field = prisma.protocol.SelectedField(
-            prisma.protocol.SelectedField.Field.Scalar(f.dbName)
+            prisma.protocol.SelectedField.Field.Scalar(f.name)
           )
 
           acc :+ field
@@ -101,7 +101,7 @@ object NativeUtils {
           val field = prisma.protocol.SelectedField(
             prisma.protocol.SelectedField.Field.Relational(
               prisma.protocol.RelationalField(
-                f.dbName,
+                f.name,
                 toPrismaSelectedFields(sf)
               ))
           )
@@ -191,22 +191,22 @@ object NativeUtils {
       case ScalarFilter(field, scalarCondition) =>
         protocol.Filter(
           protocol.Filter.Type.Scalar(
-            protocol.ScalarFilter(field.dbName, toPrismaCondition(scalarCondition))
+            protocol.ScalarFilter(field.name, toPrismaCondition(scalarCondition))
           )
         )
       case ScalarListFilter(field, scalarListCondition) =>
         protocol.Filter(
-          protocol.Filter.Type.ScalarList(protocol.ScalarListFilter(field.dbName, toPrismaListCondition(scalarListCondition)))
+          protocol.Filter.Type.ScalarList(protocol.ScalarListFilter(field.name, toPrismaListCondition(scalarListCondition)))
         )
       case OneRelationIsNullFilter(field) =>
         protocol.Filter(
-          protocol.Filter.Type.OneRelationIsNull(protocol.RelationalField(field.dbName, protocol.SelectedFields(Vector.empty)))
+          protocol.Filter.Type.OneRelationIsNull(protocol.RelationalField(field.name, protocol.SelectedFields(Vector.empty)))
         )
       case RelationFilter(field, nestedFilter, condition) =>
         protocol.Filter(
           protocol.Filter.Type.Relation(
             protocol.RelationFilter(
-              protocol.RelationalField(field.dbName, protocol.SelectedFields(Vector.empty)),
+              protocol.RelationalField(field.name, protocol.SelectedFields(Vector.empty)),
               toProtocolFilter(nestedFilter),
               toRelationFilterCondition(condition)
             )
@@ -228,7 +228,7 @@ object NativeUtils {
   }
 
   def toPrismaOrderBy(orderBy: OrderBy): protocol.OrderBy = {
-    protocol.OrderBy(orderBy.field.dbName, orderBy.sortOrder match {
+    protocol.OrderBy(orderBy.field.name, orderBy.sortOrder match {
       case SortOrder.Asc  => protocol.OrderBy.SortOrder.ASC
       case SortOrder.Desc => protocol.OrderBy.SortOrder.DESC
     })
@@ -247,7 +247,7 @@ object NativeUtils {
   }
 
   def toRelationalField(field: RelationField): protocol.RelationalField = {
-    protocol.RelationalField(field.dbName, protocol.SelectedFields(Vector.empty))
+    protocol.RelationalField(field.name, protocol.SelectedFields(Vector.empty))
   }
 
   def toNodeSelector(where: NodeSelector): protocol.NodeSelector = {

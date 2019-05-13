@@ -24,17 +24,17 @@ pub fn serialize(resp: ResponseSet) -> Value {
     if let Response::Error(err) = resp.first().unwrap() {
         map.insert(
             "errors".into(),
-            Value::Array(vec![envelope!("error".into(), Value::String(err.to_string()))])
+            Value::Array(vec![envelope!("error".into(), Value::String(err.to_string()))]),
         );
     } else {
         let vals: Vec<Value> = resp
-        .into_iter()
-        .map(|res| match res {
-            Response::Data(name, Item::List(list)) => envelope!(name, Value::Array(serialize_list(list))),
-            Response::Data(name, Item::Map(_parent, map)) => envelope!(name, Value::Object(serialize_map(map))),
-            _ => unreachable!(),
-        })
-        .collect();
+            .into_iter()
+            .map(|res| match res {
+                Response::Data(name, Item::List(list)) => envelope!(name, Value::Array(serialize_list(list))),
+                Response::Data(name, Item::Map(_parent, map)) => envelope!(name, Value::Object(serialize_map(map))),
+                _ => unreachable!(),
+            })
+            .collect();
 
         map.insert(
             "data".into(),
@@ -45,8 +45,6 @@ pub fn serialize(resp: ResponseSet) -> Value {
             },
         );
     }
-
-
 
     Value::Object(map)
 }
