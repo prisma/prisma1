@@ -1,4 +1,6 @@
 use crate::commands::command::MigrationCommand;
+use crate::migration_engine::MigrationEngine;
+use datamodel::dml::Schema;
 use migration_connector::*;
 
 pub struct ApplyMigrationCommand {
@@ -13,10 +15,38 @@ impl MigrationCommand for ApplyMigrationCommand {
         Box::new(ApplyMigrationCommand { input })
     }
 
-    fn execute(&self) -> Self::Output {
+    fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
+        let connector = engine.connector();
+        let current_data_model = connector
+            .migration_persistence()
+            .last()
+            .map(|m| m.datamodel)
+            .unwrap_or(Schema::empty());
+
+        let next_data_model = engine
+            .datamodel_calculator()
+            .infer(&current_data_model, self.input.steps.clone());
+
+        let database_migration_steps =
+            connector
+                .database_steps_inferrer()
+                .infer(&current_data_model, &next_data_model, self.input.steps.clone());
+
+        let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
+
+        let mut migration = Migration::new(self.input.migration_id.clone());
+        migration.datamodel_steps = self.input.steps.clone();
+        migration.database_steps = database_steps_json.to_string();
+        let saved_migration = connector.migration_persistence().create(migration);
+
+        connector
+            .migration_applier()
+            .apply_steps(saved_migration, database_migration_steps);
+
         ApplyMigrationOutput {
-            steps: Vec::new(),
+            datamodel_steps: self.input.steps.clone(),
+            database_steps: database_steps_json,
             errors: Vec::new(),
             warnings: Vec::new(),
             general_errors: Vec::new(),
@@ -36,7 +66,8 @@ pub struct ApplyMigrationInput {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ApplyMigrationOutput {
-    pub steps: Vec<MigrationStep>,
+    pub datamodel_steps: Vec<MigrationStep>,
+    pub database_steps: serde_json::Value,
     pub warnings: Vec<MigrationWarning>,
     pub errors: Vec<MigrationError>,
     pub general_errors: Vec<String>,

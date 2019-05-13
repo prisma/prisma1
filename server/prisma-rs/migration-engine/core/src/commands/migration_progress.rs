@@ -1,4 +1,5 @@
 use crate::commands::command::MigrationCommand;
+use crate::migration_engine::MigrationEngine;
 use chrono::*;
 use migration_connector::*;
 
@@ -14,7 +15,7 @@ impl MigrationCommand for MigrationProgressCommand {
         Box::new(MigrationProgressCommand { input })
     }
 
-    fn execute(&self) -> Self::Output {
+    fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
         MigrationProgressOutput {
             state: MigrationStatus::Pending,

@@ -1,12 +1,13 @@
 //! Query execution builders module
 
-mod filters;
+pub mod filters;
 mod inflector;
 mod many;
 mod many_rel;
 mod one_rel;
 mod root;
 mod single;
+mod mutations;
 
 pub(crate) mod utils;
 
@@ -15,8 +16,10 @@ pub use many_rel::*;
 pub use one_rel::*;
 pub use root::*;
 pub use single::*;
+pub use mutations::*;
 
-use self::inflector::Inflector;
+pub use self::inflector::Inflector;
+
 use crate::{CoreError, CoreResult, ReadQuery};
 use connector::QueryArguments;
 use graphql_parser::query::{Field, Selection, Value};

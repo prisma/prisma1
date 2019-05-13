@@ -1,15 +1,13 @@
 package com.prisma.api
 
+import java.io.{BufferedReader, InputStreamReader}
 import java.net.{HttpURLConnection, URL}
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
 import com.prisma.graphql.{GraphQlClient, GraphQlResponse}
 import com.prisma.shared.models.Project
-import com.prisma.shared.models.{Schema => SchemaModel}
 import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json._
 import sangria.parser.QueryParser
@@ -19,7 +17,6 @@ import sangria.schema.Schema
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Awaitable, Future}
 import scala.reflect.io.File
-import scala.sys.process.{Process, ProcessLogger}
 
 trait ApiTestServer extends PlayJsonExtensions {
   System.setProperty("org.jooq.no-logo", "true")
@@ -86,8 +83,8 @@ trait ApiTestServer extends PlayJsonExtensions {
 }
 
 case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) extends ApiTestServer {
-  import dependencies.system.dispatcher
   import com.prisma.shared.models.ProjectJsonFormatter._
+  import dependencies.system.dispatcher
 
   implicit val system       = dependencies.system
   implicit val materializer = dependencies.materializer
@@ -195,34 +192,34 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
                                           variables: JsValue,
                                           requestId: String): Future[JsValue] = {
     // Decide whether to go through the external server or internal resolver
-   if (query.trim().stripPrefix("\n").startsWith("mutation")) {
-     val queryAst = QueryParser.parse(query.stripMargin).get
-     val result = dependencies.queryExecutor.execute(
-       requestId = requestId,
-       queryString = query,
-       queryAst = queryAst,
-       variables = variables,
-       operationName = None,
-       project = project,
-       schema = schema
-     )
+    if (query.trim().stripPrefix("\n").startsWith("mutation")) {
+      val queryAst = QueryParser.parse(query.stripMargin).get
+      val result = dependencies.queryExecutor.execute(
+        requestId = requestId,
+        queryString = query,
+        queryAst = queryAst,
+        variables = variables,
+        operationName = None,
+        project = project,
+        schema = schema
+      )
 
-     result.foreach(x => println(s"""Request Result:
+      result.foreach(x => println(s"""Request Result:
          |$x
      """.stripMargin))
-     result
-   } else {
-    val prismaProcess = startPrismaProcess(project)
+      result
+    } else {
+      val prismaProcess = startPrismaProcess(project)
 
-    Future {
-      println(prismaProcess.isAlive)
-      queryPrismaProcess(query)
-    }.map(r => r.jsonBody.get)
-      .transform(r => {
-        println(s"Query result: $r")
-        prismaProcess.destroyForcibly().waitFor()
-        r
-      })
+      Future {
+        println(prismaProcess.isAlive)
+        queryPrismaProcess(query)
+      }.map(r => r.jsonBody.get)
+        .transform(r => {
+          println(s"Query result: $r")
+          prismaProcess.destroyForcibly().waitFor()
+          r
+        })
     }
   }
 

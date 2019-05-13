@@ -4,6 +4,8 @@ use url::Url;
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ConnectionStringConfig {
+    pub connector: String,
+
     #[serde(with = "url_serde")]
     pub uri: Url,
 

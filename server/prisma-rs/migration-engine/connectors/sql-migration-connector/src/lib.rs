@@ -2,6 +2,7 @@ mod sql_database_migration_steps_inferrer;
 mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration_persistence;
+mod sql_migration_step;
 
 use barrel;
 use barrel::backend::Sqlite;
@@ -12,6 +13,7 @@ use sql_database_migration_steps_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
 use sql_migration_persistence::*;
+pub use sql_migration_step::*;
 use std::sync::Arc;
 
 #[allow(unused, dead_code)]
@@ -28,7 +30,10 @@ impl SqlMigrationConnector {
     pub fn new(schema_name: String) -> SqlMigrationConnector {
         let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn(&schema_name)));
         let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {});
-        let database_step_applier = Arc::new(SqlDatabaseStepApplier {});
+        let database_step_applier = Arc::new(SqlDatabaseStepApplier::new(
+            Self::new_conn(&schema_name),
+            schema_name.clone(),
+        ));
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
         SqlMigrationConnector {
             schema_name,
@@ -98,9 +103,3 @@ impl MigrationConnector for SqlMigrationConnector {
         Arc::clone(&self.destructive_changes_checker)
     }
 }
-
-pub enum SqlMigrationStep {
-    CreateTable,
-}
-
-impl DatabaseMigrationStepExt for SqlMigrationStep{}

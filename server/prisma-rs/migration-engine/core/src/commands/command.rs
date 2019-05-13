@@ -1,3 +1,4 @@
+use crate::migration_engine::MigrationEngine;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -6,5 +7,6 @@ pub trait MigrationCommand {
     type Output: Serialize;
 
     fn new(input: Self::Input) -> Box<Self>;
-    fn execute(&self) -> Self::Output;
+
+    fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output;
 }

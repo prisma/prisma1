@@ -1,9 +1,12 @@
 //! Process a set of records into an IR List
 
-use super::{maps::build_map, Item, List, Map, trim_records};
+use super::{maps::build_map, trim_records, Item, List, Map};
 use crate::{ManyReadQueryResults, ReadQueryResult};
 use prisma_models::{GraphqlId, PrismaValue};
-use std::{collections::{hash_map::IterMut, HashMap}, sync::Arc};
+use std::{
+    collections::{hash_map::IterMut, HashMap},
+    sync::Arc,
+};
 
 #[derive(Debug)]
 enum ParentsWithRecords {
@@ -82,7 +85,6 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                     Some(m) => parents_with_records.insert(parent_id.clone(), vec![Item::Map(Some(parent_id), m)]),
                     None => parents_with_records.insert(parent_id.clone(), vec![Item::Value(PrismaValue::Null)]),
                 };
-
             }
         }
         ReadQueryResult::Many(many) => {

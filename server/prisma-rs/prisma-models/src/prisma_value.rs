@@ -1,6 +1,7 @@
 use crate::{DomainError, DomainResult};
 use chrono::prelude::*;
-use graphql_parser::query::Value as GraphqlValue;
+use graphql_parser::query::{Number, Value as GraphqlValue};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::{convert::TryFrom, fmt};
 use uuid::Uuid;
@@ -15,6 +16,16 @@ pub enum GraphqlId {
     String(String),
     Int(usize),
     UUID(Uuid),
+}
+
+impl GraphqlId {
+    pub fn to_value(&self) -> GraphqlValue {
+        match self {
+            GraphqlId::String(s) => GraphqlValue::String(s.clone()),
+            GraphqlId::Int(i) => GraphqlValue::Int(Number::from((*i) as i32)), // This could cause issues!
+            GraphqlId::UUID(u) => GraphqlValue::String(u.to_string()),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -181,6 +192,23 @@ impl TryFrom<PrismaValue> for GraphqlId {
     fn try_from(value: PrismaValue) -> DomainResult<GraphqlId> {
         match value {
             PrismaValue::GraphqlId(id) => Ok(id),
+            PrismaValue::Int(i) => Ok(GraphqlId::from(i)),
+            PrismaValue::String(s) => Ok(GraphqlId::from(s)),
+            PrismaValue::Uuid(u) => Ok(GraphqlId::from(u)),
+            _ => Err(DomainError::ConversionFailure("PrismaValue", "GraphqlId")),
+        }
+    }
+}
+
+impl TryFrom<&PrismaValue> for GraphqlId {
+    type Error = DomainError;
+
+    fn try_from(value: &PrismaValue) -> DomainResult<GraphqlId> {
+        match value {
+            PrismaValue::GraphqlId(id) => Ok(id.clone()),
+            PrismaValue::Int(i) => Ok(GraphqlId::from(*i)),
+            PrismaValue::String(s) => Ok(GraphqlId::from(s.clone())),
+            PrismaValue::Uuid(u) => Ok(GraphqlId::from(u.clone())),
             _ => Err(DomainError::ConversionFailure("PrismaValue", "GraphqlId")),
         }
     }
@@ -251,6 +279,12 @@ impl From<String> for GraphqlId {
 impl From<usize> for GraphqlId {
     fn from(id: usize) -> Self {
         GraphqlId::Int(id)
+    }
+}
+
+impl From<i64> for GraphqlId {
+    fn from(id: i64) -> Self {
+        GraphqlId::Int(id as usize)
     }
 }
 

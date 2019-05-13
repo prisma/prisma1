@@ -38,11 +38,14 @@ pub fn load(db_name: String) -> PrismaResult<InternalDataModelRef> {
 
 /// Attempts to load the config as unparsed JSON string.
 pub fn load_string() -> PrismaResult<String> {
-    load_internal_from_env().or_else(|_| load_sdl_string().and_then(|sdl| {
-        resolve_internal_data_model_json(sdl)
-    })).map_err(|err| {
-        PrismaError::ConfigurationError(format!("Unable to construct internal Prisma data model from any source. Last error: {}", err))
-    })
+    load_internal_from_env()
+        .or_else(|_| load_sdl_string().and_then(|sdl| resolve_internal_data_model_json(sdl)))
+        .map_err(|err| {
+            PrismaError::ConfigurationError(format!(
+                "Unable to construct internal Prisma data model from any source. Last error: {}",
+                err
+            ))
+        })
 }
 
 /// Attempts to resolve the internal data model from an env var.

@@ -19,8 +19,8 @@ mod transactional;
 use filter_conversion::*;
 use mutaction::*;
 use row::*;
-use transactional::*;
 
 pub use database::*;
+pub use transactional::*;
 
 type SqlResult<T> = Result<T, error::SqlError>;
