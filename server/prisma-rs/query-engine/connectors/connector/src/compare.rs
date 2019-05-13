@@ -1,7 +1,7 @@
 use crate::filter::Filter;
 use prisma_models::PrismaValue;
 
-/// Comparing methods for scalars.
+/// Comparing methods for scalar fields.
 pub trait ScalarCompare {
     fn is_in<T>(&self, val: Option<Vec<T>>) -> Filter
     where
@@ -60,6 +60,7 @@ pub trait ScalarCompare {
         T: Into<PrismaValue>;
 }
 
+/// Comparison methods for relational fields.
 pub trait RelationCompare {
     fn every_related<T>(&self, filter: T) -> Filter
     where
@@ -80,6 +81,7 @@ pub trait RelationCompare {
     fn one_relation_is_null(&self) -> Filter;
 }
 
+/// Comparison methods for scalar list fields.
 pub trait ScalarListCompare {
     fn contains_element<T>(&self, value: T) -> Filter
     where

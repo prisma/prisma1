@@ -5,7 +5,7 @@ use prisma_models::InternalDataModelRef;
 use std::sync::Arc;
 
 #[cfg(feature = "sql")]
-use sql_connector::{database::SqlDatabase, database::Sqlite};
+use sql_connector::{SqlDatabase, Sqlite};
 
 #[derive(DebugStub)]
 pub struct PrismaContext {

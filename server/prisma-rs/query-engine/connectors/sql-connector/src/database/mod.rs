@@ -5,7 +5,8 @@ use crate::Transactional;
 pub use postgresql::*;
 pub use sqlite::*;
 
-/// A common interface for relational SQL databases.
+/// A wrapper for relational databases due to trait restrictions. Implements the
+/// needed traits.
 pub struct SqlDatabase<T>
 where
     T: Transactional,
