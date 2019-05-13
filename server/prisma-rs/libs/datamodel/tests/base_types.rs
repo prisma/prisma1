@@ -39,3 +39,25 @@ fn parse_field_arity() {
     post_model.assert_has_field("photo").assert_base_type(&dml::ScalarType::String).assert_arity(&dml::FieldArity::Optional);
     post_model.assert_has_field("comments").assert_base_type(&dml::ScalarType::String).assert_arity(&dml::FieldArity::List);
 }
+
+
+#[test]
+fn parse_defaults() {
+    let dml = r#"
+    model User {
+        firstName: String = "Hello"
+        age: Int = 21
+        isPro: Boolean = false
+        balance: Decimal = 1.2
+        averageGrade: Float = 3.4
+    }
+    "#;
+
+    let schema = parse_and_validate(dml);
+    let user_model = schema.assert_has_model("User");
+    user_model.assert_has_field("firstName").assert_base_type(&dml::ScalarType::String).assert_default_value(dml::Value::String(String::from("Hello")));
+    user_model.assert_has_field("age").assert_base_type(&dml::ScalarType::Int).assert_default_value(dml::Value::Int(21));
+    user_model.assert_has_field("isPro").assert_base_type(&dml::ScalarType::Boolean).assert_default_value(dml::Value::Boolean(false));
+    user_model.assert_has_field("balance").assert_base_type(&dml::ScalarType::Decimal).assert_default_value(dml::Value::Decimal(1.2));
+    user_model.assert_has_field("averageGrade").assert_base_type(&dml::ScalarType::Float).assert_default_value(dml::Value::Float(3.4));
+}

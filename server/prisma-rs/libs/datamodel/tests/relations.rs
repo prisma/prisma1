@@ -19,7 +19,7 @@ fn resolve_relation() {
     let schema = parse_and_validate(dml);
     let user_model = schema.assert_has_model("User");
     user_model.assert_has_field("firstName").assert_base_type(&dml::ScalarType::String);
-    user_model.assert_has_field("posts").assert_relation_to("Post");
+    user_model.assert_has_field("posts").assert_relation_to("Post").assert_arity(&dml::FieldArity::List);
 
     let post_model = schema.assert_has_model("Post");
     post_model.assert_has_field("text").assert_base_type(&dml::ScalarType::String);

@@ -9,11 +9,14 @@ pub trait FieldAsserts {
     fn assert_relation_to(&self, t: &str) -> &Self;
     fn assert_relation_to_field(&self, t: &str) -> &Self;
     fn assert_arity(&self, arity: &dml::FieldArity) -> &Self;
+    fn assert_with_db_name(&self, t: &str) -> &Self;
+    fn assert_default_value(&self, t: dml::Value) -> &Self;
 }
 
 pub trait ModelAsserts<Types: dml::TypePack> {
     fn assert_has_field(&self, t: &str) -> &dml::Field<Types>;
     fn assert_is_embedded(&self, t: bool) -> &Self;
+    fn assert_with_db_name(&self, t: &str) -> &Self;
 }
 
 pub trait EnumAsserts {
@@ -71,6 +74,18 @@ impl<Types: dml::TypePack> FieldAsserts for dml::Field<Types> {
 
         return self
     }
+
+    fn assert_with_db_name(&self, t: &str) -> &Self {
+        assert_eq!(self.database_name, Some(String::from(t)));
+
+        return self
+    }
+
+    fn assert_default_value(&self, t: dml::Value) -> &Self {
+        assert_eq!(self.default_value, Some(t));
+
+        return self
+    }
 }
 
 impl<Types: dml::TypePack> SchemaAsserts<Types> for dml::Schema<Types> {
@@ -88,6 +103,11 @@ impl<Types: dml::TypePack> ModelAsserts<Types> for dml::Model<Types> {
     }
     fn assert_is_embedded(&self, t: bool) -> &Self {
         assert_eq!(self.is_embedded, t);
+
+        return self
+    }
+    fn assert_with_db_name(&self, t: &str) -> &Self {
+        assert_eq!(self.database_name, Some(String::from(t)));
 
         return self
     }

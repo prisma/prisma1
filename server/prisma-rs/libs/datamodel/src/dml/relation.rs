@@ -37,7 +37,7 @@ impl FromStr for OnDeleteStrategy {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
-            _ => Err(ValueParserError::new(format!("Invalid onDelete strategy {}.", s)))
+            _ => Err(ValueParserError::new(format!("Invalid onDelete strategy {}.", s), String::from(s)))
         }
     }
 }

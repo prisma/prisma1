@@ -2,12 +2,13 @@ use crate::dml;
 
 pub mod builtin;
 
+// TODO: This should not be related to value parsing.
 pub type Error = dml::validator::value::ValueParserError;
 pub type Args<'a> = dml::validator::argument::DirectiveArguments<'a>;
 
 
 pub fn error(msg: &str) -> Option<Error> {
-    Some(Error::new(String::from(msg)))
+    Some(Error::new(String::from(msg), String::from("")))
 }
 
 // TODO Narrow to type, enum, field, if possible

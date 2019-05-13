@@ -16,7 +16,7 @@ impl FromStr for IdStrategy {
         match s {
             "AUTO" => Ok(IdStrategy::Auto),
             "NONE" => Ok(IdStrategy::None),
-            _ => Err(ValueParserError::new(format!("Invalid id strategy {}.", s))),
+            _ => Err(ValueParserError::new(format!("Invalid id strategy {}.", s), String::from(s))),
         }
     }
 }
@@ -34,7 +34,7 @@ impl FromStr for ScalarListStrategy {
         match s {
             "EMBEDDED" => Ok(ScalarListStrategy::Embedded),
             "RELATION" => Ok(ScalarListStrategy::Relation),
-            _ => Err(ValueParserError::new(format!("Invalid scalar list strategy {}.", s))),
+            _ => Err(ValueParserError::new(format!("Invalid scalar list strategy {}.", s), String::from(s))),
         }
     }
 }

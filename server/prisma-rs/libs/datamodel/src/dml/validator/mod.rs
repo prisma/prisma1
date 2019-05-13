@@ -181,7 +181,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
             _ => {
                 for model in &ast_schema.models {
                     match &model {
-                        // TODO: Get primary field
+                        // TODO: Get primary key field and hook up String::from.
                         ast::ModelOrEnum::Model(model) if model.name == *type_name => {
                             return dml::FieldType::Relation(dml::RelationInfo::new(type_name.clone(), String::from("")))
                         }

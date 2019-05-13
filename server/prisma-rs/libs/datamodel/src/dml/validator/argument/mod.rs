@@ -19,7 +19,7 @@ impl<'a> DirectiveArguments<'a> {
                 return Box::new(value::WrappedValue { value: arg.value.clone() })
             }
         }
-        return Box::new(value::WrappedErrorValue { message: format!("Argument '{:?}' not found", name) })
+        return Box::new(value::WrappedErrorValue { message: format!("Argument '{:?}' not found", name), raw: String::from("") })
     }
 
 

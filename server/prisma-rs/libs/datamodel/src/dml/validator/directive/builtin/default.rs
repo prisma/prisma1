@@ -1,5 +1,5 @@
 use crate::dml;
-use crate::dml::validator::directive::{Args, Error, DirectiveValidator};
+use crate::dml::validator::directive::{Args, Error, DirectiveValidator, error};
 
 pub struct DefaultDirectiveValidator { }
 
@@ -15,7 +15,7 @@ impl<Types: dml::TypePack> DirectiveValidator<dml::Field<Types>, Types> for Defa
                 Err(err) => return Some(err)
             }
         } else {
-            return Some(Error::new(String::from("Cannot set a default value on a non-scalar field.")))
+            return error("Cannot set a default value on a non-scalar field.")
         }
 
         return None

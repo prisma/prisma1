@@ -12,19 +12,19 @@ WHITESPACE = _{ SPACE_SEPARATOR | LINE_SEPARATOR | PARAGRAPH_SEPARATOR | NEWLINE
 identifier = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* } 
 
 // Literals
-numeric_literal = { ("-")? ~ ASCII_DIGIT+ ~("." ~ ASCII_DIGIT+)? }
+numeric_literal = @{ ("-")? ~ ASCII_DIGIT+ ~("." ~ ASCII_DIGIT+)? }
 
 string_escaped_predefined = { "n" | "r" | "t" | "\\" | "0" | "\"" | "'" }
 string_escape     = { "\\" ~ string_escaped_predefined }
 string_raw = { (!("\\" | "\"" | NEWLINE) ~ ANY)+ }
-string_content = { (string_raw | string_escape)* }
+string_content = @{ (string_raw | string_escape)* }
 string_literal = { "\"" ~ string_content ~ "\"" }
 
 boolean_true  = { "true" }
 boolean_false = { "false" }
-boolean_literal =  { boolean_true | boolean_false }
+boolean_literal =  @{ boolean_true | boolean_false }
 
-constant_Literal = { ASCII_ALPHA_UPPER+ } // TABLE, EMBED etc.
+constant_Literal = @{ ASCII_ALPHA_UPPER+ } // TABLE, EMBED etc.
 
 any_literal = { numeric_literal | string_literal | boolean_literal | constant_Literal }
 
