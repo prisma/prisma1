@@ -49,7 +49,19 @@ impl<Types: TypePack> Schema<Types> {
         self.enums.iter()
     }
 
-    pub fn find_model(&self, name: &String) -> Option<Model<Types>> {
-        self.models().find(|m| m.name == *name).map(|m| m.clone())
+    pub fn models_mut(&mut self) -> std::slice::IterMut<Model<Types>> {
+        self.models.iter_mut()
+    }
+
+    pub fn enums_mut(&mut self) -> std::slice::IterMut<Enum<Types>> {
+        self.enums.iter_mut()
+    }
+
+    pub fn find_model(&self, name: &String) -> Option<&Model<Types>> {
+        self.models().find(|m| m.name == *name)
+    }
+
+    pub fn find_enum(&self, name: &String) -> Option<&Enum<Types>> {
+        self.enums().find(|m| m.name == *name)
     }
 }

@@ -59,4 +59,4 @@ enum_field_declaration = { ASCII_ALPHA_UPPER }
 enum_declaration = { "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" ~ directive* }
 
 // Datamodel
-datamodel = { (model_declaration | enum_declaration)+ }
+datamodel = { SOI ~ (model_declaration | enum_declaration)+ ~ EOI }

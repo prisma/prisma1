@@ -108,6 +108,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
         }
 
         self.attachment_validator.validate_schema_attachment(ast_schema, &mut schema);
+        self.resolve_relations(&mut schema);
 
         // TODO: This needs some resolver logic for enum and relation types.
         return schema
@@ -182,6 +183,19 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
     }
 
     fn resolve_relations(&self, schema: &mut dml::Schema<Types>) {
-        unimplemented!("TODO")
+        for model in schema.models_mut() {
+            for field in model.fields_mut() {
+                if let dml::FieldType::Relation(rel_info) = &mut field.field_type {
+           /*         if let Some(related) = schema.find_model(&rel_info.to) {
+                        // TODO: Hook up.
+                        println!("Caramba")
+                    } else if let Some(related_enum) = schema.find_enum(&rel_info.to) {
+                        field.field_type = dml::FieldType::Enum { enum_type: related_enum.name.clone() }
+                    }
+
+            */
+                }
+            }
+        }
     }
 }

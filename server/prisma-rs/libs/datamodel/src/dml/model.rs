@@ -33,8 +33,12 @@ impl<Types: TypePack> Model<Types> {
         self.fields.iter()
     }
 
-    pub fn find_field(&self, name: &String) -> Option<Field<Types>> {
-        self.fields().find(|f| f.name == *name).map(|f| f.clone())
+    pub fn fields_mut(&mut self) -> std::slice::IterMut<Field<Types>> {
+        self.fields.iter_mut()
+    }
+
+    pub fn find_field(&self, name: &String) -> Option<&Field<Types>> {
+        self.fields().find(|f| f.name == *name)
     }
 }
 
