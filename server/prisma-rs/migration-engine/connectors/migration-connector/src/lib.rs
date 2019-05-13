@@ -1,7 +1,11 @@
+mod migration_applier;
 pub mod steps;
 
 use chrono::{DateTime, Utc};
 use datamodel::Schema;
+pub use migration_applier::*;
+use serde::Serialize;
+use std::fmt::Debug;
 use std::sync::Arc;
 pub use steps::MigrationStep;
 
@@ -9,7 +13,7 @@ pub use steps::MigrationStep;
 extern crate serde_derive;
 
 pub trait MigrationConnector {
-    type DatabaseMigrationStep: DatabaseMigrationStepExt;
+    type DatabaseMigrationStep: DatabaseMigrationStepExt + 'static;
 
     fn initialize(&self);
 
@@ -20,9 +24,17 @@ pub trait MigrationConnector {
     fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep>>;
     fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigrationStep>>;
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigrationStep>>;
+
+    fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigrationStep>> {
+        let applier = MigrationApplierImpl {
+            migration_persistence: self.migration_persistence(),
+            step_applier: self.database_step_applier(),
+        };
+        Box::new(applier)
+    }
 }
 
-pub trait DatabaseMigrationStepExt {}
+pub trait DatabaseMigrationStepExt: Debug + Serialize {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
     fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<T>;
@@ -66,7 +78,7 @@ pub trait MigrationPersistence {
     fn create(&self, migration: Migration) -> Migration;
 
     // used by the MigrationApplier to write the progress of a Migration into the database
-    fn update(&self, params: MigrationUpdateParams);
+    fn update(&self, params: &MigrationUpdateParams);
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -77,8 +89,8 @@ pub struct Migration {
     pub applied: usize,
     pub rolled_back: usize,
     pub datamodel: Schema,
-    pub datamodel_steps: Vec<String>,
-    pub database_steps: Vec<String>,
+    pub datamodel_steps: Vec<MigrationStep>,
+    pub database_steps: String,
     pub errors: Vec<String>,
     pub started_at: DateTime<Utc>,
     pub finished_at: Option<DateTime<Utc>>,
@@ -105,7 +117,7 @@ impl Migration {
             rolled_back: 0,
             datamodel: Schema::empty(),
             datamodel_steps: Vec::new(),
-            database_steps: Vec::new(),
+            database_steps: "[]".to_string(),
             errors: Vec::new(),
             started_at: Self::timestamp_without_nanos(),
             finished_at: None,

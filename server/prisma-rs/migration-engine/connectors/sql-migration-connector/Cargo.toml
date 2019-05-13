@@ -10,5 +10,7 @@ datamodel = { path = "../../../libs/datamodel" }
 chrono = { version = "0.4" }
 prisma-query = { path = "../../../libs/prisma-query" }
 serde_json = "1.0"
+serde = "1.0"
 rusqlite = { version = "0.16", features = ["chrono", "bundled"] }
-barrel = { version = "0.5.3", features = ["sqlite3"] }
+barrel = { version = "0.5.4", features = ["sqlite3"] }
+itertools = "0.8"

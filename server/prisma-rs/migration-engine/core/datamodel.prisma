@@ -1,10 +1,11 @@
-type Blog {
-    id: ID! @id
-    name: String!
-    posts: [Post]
+model Blog {
+    id: String @primary
+    name: String
+    viewCount: Int
+    posts: Post[]
 }
 
-type Post {
-    id: ID! @id
+model Post {
+    id: Int @primary
     title: String
 }
