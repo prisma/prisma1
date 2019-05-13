@@ -100,13 +100,7 @@ impl Node {
                 })
             })?;
 
-        Ok(match &self.values[index] {
-            PrismaValue::GraphqlId(ref id) => id.clone(),
-            PrismaValue::Uuid(ref uuid) => GraphqlId::from(uuid.clone()),
-            PrismaValue::String(ref s) => GraphqlId::from(s.clone()),
-            PrismaValue::Int(i) => GraphqlId::from(*i),
-            _ => unimplemented!(),
-        })
+        Ok(GraphqlId::try_from(&self.values[index])?)
     }
 
     pub fn get_field_value(&self, field_names: &Vec<String>, field: &str) -> DomainResult<&PrismaValue> {

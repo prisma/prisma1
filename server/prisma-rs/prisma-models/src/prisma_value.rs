@@ -192,6 +192,23 @@ impl TryFrom<PrismaValue> for GraphqlId {
     fn try_from(value: PrismaValue) -> DomainResult<GraphqlId> {
         match value {
             PrismaValue::GraphqlId(id) => Ok(id),
+            PrismaValue::Int(i) => Ok(GraphqlId::from(i)),
+            PrismaValue::String(s) => Ok(GraphqlId::from(s)),
+            PrismaValue::Uuid(u) => Ok(GraphqlId::from(u)),
+            _ => Err(DomainError::ConversionFailure("PrismaValue", "GraphqlId")),
+        }
+    }
+}
+
+impl TryFrom<&PrismaValue> for GraphqlId {
+    type Error = DomainError;
+
+    fn try_from(value: &PrismaValue) -> DomainResult<GraphqlId> {
+        match value {
+            PrismaValue::GraphqlId(id) => Ok(id.clone()),
+            PrismaValue::Int(i) => Ok(GraphqlId::from(*i)),
+            PrismaValue::String(s) => Ok(GraphqlId::from(s.clone())),
+            PrismaValue::Uuid(u) => Ok(GraphqlId::from(u.clone())),
             _ => Err(DomainError::ConversionFailure("PrismaValue", "GraphqlId")),
         }
     }
