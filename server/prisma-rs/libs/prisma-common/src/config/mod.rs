@@ -40,7 +40,7 @@ impl PrismaDatabase {
     pub fn connector(&self) -> &str {
         match self {
             PrismaDatabase::Explicit(config) => &config.connector,
-            PrismaDatabase::ConnectionString(config) => &config.uri.scheme(),
+            PrismaDatabase::ConnectionString(config) => &config.connector,
             PrismaDatabase::File(config) => &config.connector,
         }
     }
@@ -50,6 +50,14 @@ impl PrismaDatabase {
             PrismaDatabase::Explicit(config) => config.database.clone(),
             PrismaDatabase::ConnectionString(config) => config.database.clone(),
             PrismaDatabase::File(config) => Some(config.db_name()),
+        }
+    }
+
+    pub fn schema(&self) -> Option<String> {
+        match self {
+            PrismaDatabase::Explicit(config) => config.schema.clone(),
+            PrismaDatabase::ConnectionString(config) => config.schema.clone(),
+            PrismaDatabase::File(config) => config.schema.clone(),
         }
     }
 }

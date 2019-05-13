@@ -4,8 +4,9 @@ use prisma_models::{GraphqlId, ScalarField, SelectedFields, SingleNode};
 use query_ast::*;
 use std::{convert::TryFrom, sync::Arc};
 
+// Todo We could eliminate the trait object with enums.
 pub struct ReadQueryExecutor {
-    pub data_resolver: Arc<DataResolver + Send + Sync + 'static>,
+    pub data_resolver: Arc<dyn DataResolver + Send + Sync + 'static>,
 }
 
 impl ReadQueryExecutor {

@@ -10,6 +10,7 @@ extern crate debug_stub_derive;
 mod context;
 mod data_model;
 mod error;
+mod exec_loader;
 mod req_handlers;
 mod serializer;
 mod utilities;

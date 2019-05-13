@@ -1,8 +1,8 @@
 use crate::{dml, ast};
 
-pub mod value;
 pub mod argument;
 pub mod directive;
+pub mod value;
 
 use value::{WrappedValue, ValueValidator};
 use directive::builtin::{DirectiveListValidator, new_field_directives, new_model_directives, new_enum_directives};
@@ -14,7 +14,6 @@ pub struct Validator {
 }
 
 impl Validator {
-
     pub fn new() -> Validator {
         Validator {
             field_directives: new_field_directives(),
@@ -34,7 +33,7 @@ impl Validator {
         }
 
         // TODO: This needs some resolver logic for enum and relation types.
-        return schema
+        return schema;
     }
 
     fn validate_model(&self, ast_model: &ast::Model) -> dml::Model {
@@ -45,7 +44,7 @@ impl Validator {
             ty.fields.push(self.validate_field(ast_field));
         }
 
-        return ty
+        return ty;
     }
 
     fn validate_enum(&self, ast_enum: &ast::Enum) -> dml::Enum {
@@ -64,7 +63,11 @@ impl Validator {
                 // TODO: Proper error handling.
                 // TODO: WrappedValue is not the tool of choice here,
                 // there should be a static func for converting stuff.
-                field.default_value = Some((WrappedValue { value: value.clone() }).as_type(base_type).expect("Unable to parse."));
+                field.default_value = Some(
+                    (WrappedValue { value: value.clone() })
+                        .as_type(base_type)
+                        .expect("Unable to parse."),
+                );
             } else {
                 unimplemented!("Found a default value for a non-scalar type.")
             }
@@ -72,14 +75,14 @@ impl Validator {
 
         self.field_directives.validate_and_apply(ast_field, &mut field);
 
-        return field
+        return field;
     }
 
     fn validate_field_arity(&self, ast_field: &ast::FieldArity) -> dml::FieldArity {
         match ast_field {
             ast::FieldArity::Required => dml::FieldArity::Required,
             ast::FieldArity::Optional => dml::FieldArity::Optional,
-            ast::FieldArity::List => dml::FieldArity::List
+            ast::FieldArity::List => dml::FieldArity::List,
         }
     }
 

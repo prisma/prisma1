@@ -1,5 +1,5 @@
 use crate::dml;
-use crate::dml::validator::directive::{Args, Error, DirectiveValidator};
+use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
 pub struct PrimaryDirectiveValidator { }
 
@@ -11,10 +11,10 @@ impl DirectiveValidator<dml::Field> for PrimaryDirectiveValidator {
         if let Ok(strategy) = args.arg("name").as_constant_literal() {
             match strategy.parse::<dml::IdStrategy>() {
                 Ok(strategy) => obj.id_strategy = Some(strategy),
-                Err(err) => return Some(err)
+                Err(err) => return Some(err),
             }
         }
 
-        return None
+        return None;
     }
 }
