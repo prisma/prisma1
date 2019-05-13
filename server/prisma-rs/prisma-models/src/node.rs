@@ -27,7 +27,7 @@ impl SingleNode {
         Self { node, field_names }
     }
 
-    pub fn get_id_value(&self, model: ModelRef) -> DomainResult<&GraphqlId> {
+    pub fn get_id_value(&self, model: ModelRef) -> DomainResult<GraphqlId> {
         self.node.get_id_value(&self.field_names, model)
     }
 
@@ -87,7 +87,7 @@ impl Node {
         }
     }
 
-    pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<&GraphqlId> {
+    pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<GraphqlId> {
         let id_field = model.fields().id();
         let index = field_names
             .iter()
@@ -101,7 +101,10 @@ impl Node {
             })?;
 
         Ok(match &self.values[index] {
-            PrismaValue::GraphqlId(ref id) => id,
+            PrismaValue::GraphqlId(ref id) => id.clone(),
+            PrismaValue::Uuid(ref uuid) => GraphqlId::from(uuid.clone()),
+            PrismaValue::String(ref s) => GraphqlId::from(s.clone()),
+            PrismaValue::Int(i) => GraphqlId::from(*i),
             _ => unimplemented!(),
         })
     }

@@ -16,12 +16,12 @@ pub fn execute(conn: &mut Transaction, node_selector: &NodeSelector) -> SqlResul
     let record = conn.find_record(node_selector)?;
     let id = record.get_id_value(Arc::clone(&model)).unwrap();
 
-    DeleteActions::check_relation_violations(Arc::clone(&model), &[id], |select| {
+    DeleteActions::check_relation_violations(Arc::clone(&model), &[&id], |select| {
         let ids = conn.select_ids(select)?;
         Ok(ids.into_iter().next())
     })?;
 
-    for delete in MutationBuilder::delete_many(model, &[id]) {
+    for delete in MutationBuilder::delete_many(model, &[&id]) {
         conn.delete(delete)?;
     }
 
