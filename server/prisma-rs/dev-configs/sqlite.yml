@@ -3,7 +3,7 @@ prototype: true
 databases:
   default:
     connector: sqlite-native
-    databaseFile: ${SERVER_ROOT}/db/default_default.db
+    databaseFile: ${SERVER_ROOT}/db/Chinook.db
     migrations: true
     active: true
     rawAccess: true
