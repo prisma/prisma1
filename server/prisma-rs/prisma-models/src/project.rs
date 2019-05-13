@@ -118,6 +118,7 @@ mod tests {
     use std::fs::File;
 
     #[test]
+    #[ignore]
     fn test_relation_internal_data_model() {
         let file = File::open("./relation_internal_data_model.json").unwrap();
         let project_template: ProjectTemplate = serde_json::from_reader(file).unwrap();
