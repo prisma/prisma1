@@ -6,14 +6,16 @@ pub struct PrimaryDirectiveValidator { }
 impl<Types: dml::TypePack> DirectiveValidator<dml::Field<Types>, Types> for PrimaryDirectiveValidator {
     fn directive_name(&self) -> &'static str{ &"primary" }
     fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field<Types>) -> Option<Error> {
-        obj.is_id = true;
+        let mut id_info = dml::IdInfo { strategy: None, sequence: None } ;
 
         if let Ok(strategy) = args.arg("name").as_constant_literal() {
             match strategy.parse::<dml::IdStrategy>() {
-                Ok(strategy) => obj.id_strategy = Some(strategy),
+                Ok(strategy) => id_info.strategy = Some(strategy),
                 Err(err) => return Some(err)
             }
         }
+
+        obj.id_info = Some(id_info);
 
         return None
     }

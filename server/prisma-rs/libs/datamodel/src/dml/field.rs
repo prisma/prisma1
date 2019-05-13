@@ -24,6 +24,12 @@ pub enum FieldType<Types: TypePack> {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct IdInfo {
+    pub strategy: Option<IdStrategy>,
+    pub sequence: Option<Sequence>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct Field<Types: TypePack> {
     pub name: String,
     pub arity: FieldArity,
@@ -31,10 +37,7 @@ pub struct Field<Types: TypePack> {
     pub database_name: Option<String>,
     pub default_value: Option<Value>,
     pub is_unique: bool,
-    pub is_id: bool,
-    pub id_strategy: Option<IdStrategy>,
-    // TODO: Not sure if a sequence should be a member of field.
-    pub id_sequence: Option<Sequence>,
+    pub id_info: Option<IdInfo>,
     pub scalar_list_strategy: Option<ScalarListStrategy>,
     pub comments: Vec<Comment>,
     pub attachment: Types::FieldAttachment
@@ -67,9 +70,7 @@ impl<Types: TypePack> Field<Types> {
             database_name: None,
             default_value: None,
             is_unique: false,
-            is_id: false,
-            id_strategy: None,
-            id_sequence: None,
+            id_info: None,
             scalar_list_strategy: None,
             comments: vec![],
             attachment: Types::FieldAttachment::default(),
