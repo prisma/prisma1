@@ -211,6 +211,7 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
             default_value,
             directives,
             comments: vec![],
+            span: Span::from_pest(&token.as_span())
         },
         _ => panic!(
             "Encounterd impossible field declaration during parsing: {:?}",

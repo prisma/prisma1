@@ -2,8 +2,8 @@ pub mod parser;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Span {
-    start: usize,
-    end: usize,
+    pub start: usize,
+    pub end: usize,
 }
 
 impl Span {
@@ -79,6 +79,7 @@ pub struct Field {
     pub default_value: Option<Value>,
     pub directives: Vec<Directive>,
     pub comments: Vec<Comment>,
+    pub span: Span,
 }
 
 impl WithDirectives for Field {

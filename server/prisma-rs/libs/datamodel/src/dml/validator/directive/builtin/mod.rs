@@ -1,7 +1,7 @@
 use crate::ast;
 use crate::dml;
 use crate::dml::validator::argument::DirectiveArguments;
-use crate::dml::validator::directive::DirectiveValidator;
+use crate::dml::validator::directive::{DirectiveValidator, DirectiveValidationError};
 
 use std::collections::HashMap;
 
@@ -37,19 +37,25 @@ impl<T> DirectiveListValidator<T> {
         self.known_directives.insert(name, validator);
     }
 
-    pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) {
+    pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) -> Vec<DirectiveValidationError> {
+        let mut errors = Vec::<DirectiveValidationError>::new();
+
         for directive in ast.directives() {
             match self.known_directives.get(directive.name.as_str()) {
-                Some(validator) => validator.validate_and_apply(&DirectiveArguments::new(&directive.arguments, directive.span), t),
-                None => continue,
-                // TODO: Removed error for now, does not play well with attachment system.
-                //None => panic!("Encountered unknown directive: {:?}", directive.name)
+                Some(validator) => {
+                    if let Some(err) = validator.validate_and_apply(&DirectiveArguments::new(&directive.arguments, directive.span), t) {
+                        errors.push(err);   
+                    }   
+                }
+                None => errors.push(DirectiveValidationError::new("Encountered unknown directive", &directive.name, &directive.span))
             };
         }
+
+        errors
     }
 }
 
-pub fn new_field_directives() -> DirectiveListValidator<dml::Field> {
+pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
     let mut validator = DirectiveListValidator::<dml::Field> {
         known_directives: HashMap::new(),
     };
@@ -66,7 +72,7 @@ pub fn new_field_directives() -> DirectiveListValidator<dml::Field> {
     return validator;
 }
 
-pub fn new_model_directives() -> DirectiveListValidator<dml::Model> {
+pub fn new_builtin_model_directives() -> DirectiveListValidator<dml::Model> {
     let mut validator = DirectiveListValidator::<dml::Model> {
         known_directives: HashMap::new(),
     };
@@ -77,7 +83,7 @@ pub fn new_model_directives() -> DirectiveListValidator<dml::Model> {
     return validator;
 }
 
-pub fn new_enum_directives() -> DirectiveListValidator<dml::Enum> {
+pub fn new_builtin_enum_directives() -> DirectiveListValidator<dml::Enum> {
     let mut validator = DirectiveListValidator::<dml::Enum> {
         known_directives: HashMap::new(),
     };

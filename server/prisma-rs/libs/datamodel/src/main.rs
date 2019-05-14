@@ -4,9 +4,7 @@ pub mod ast;
 pub mod dmmf;
 use ast::parser;
 pub mod dml;
-use dml::validator::{BaseValidator, EmptyAttachmentValidator, Validator};
-
-mod postgres;
+use dml::validator::Validator;
 
 // Pest grammar generation on compile time.
 extern crate pest;
@@ -34,17 +32,41 @@ fn main() {
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
 
-    let ast = parser::parse(&file).expect("Unable to parse datamodel.");
+    match parser::parse(&file) {
+        Ok(ast) => {
+            let validator = Validator::new();
 
-    // Builtin Tooling
-    // let validator = BaseValidator::<dml::BuiltinTypePack, EmptyAttachmentValidator>::new();
+            match validator.validate(&ast) {
+                Ok(dml) => {
+                    let json = dmmf::render_to_dmmf(&dml);
+                    println!("{}", json);
+                }
+                Err(errors) => {
+                    for error in errors {
+                        println!("");
+                        println!("Error: {}", error.message);
+                        println!("File: {}:", file_name);
+                        println!("");
+                        let line = &file[..error.span.end].matches("\n").count();
+                        let text = &file[error.span.start..error.span.end];
+                        println!("{} |    {}", line, text);
+                        println!("");
+                    }
+                }
+            }
+        }
+        Err(error) => {
+            println!("");
+            println!("Error while parsing, unexpected token");
+            println!("File: {}:", file_name);
+            println!("");
+            let line = &file[..error.span.end].matches("\n").count();
+            let text = file.split("\n").collect::<Vec<&str>>()[*line];
+            println!("{} |    {}", line, text);
+            println!("");
+        }
+    }
 
-    // Postgres-Specific Tooling
-    let validator = BaseValidator::<postgres::PostgresAttachmentValidator>::new();
-
-    let dml = validator.validate(&ast);
-
-    let json = dmmf::render_to_dmmf(&dml);
-
-    println!("{}", json);
+   
+   
 }

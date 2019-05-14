@@ -6,6 +6,9 @@ use std::error;
 use std::error::Error;
 use std::fmt;
 
+
+// TODO: This class is terrible and should most likely return an instance of Result<>
+
 #[derive(Debug)]
 pub struct ValueParserError {
     pub message: String,
