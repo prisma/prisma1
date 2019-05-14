@@ -1,5 +1,5 @@
 use super::validator::value::ValueParserError;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use std::str::FromStr;
 
@@ -17,7 +17,7 @@ impl RelationInfo {
             to: String::from(to),
             to_field: String::from(to_field),
             name: None,
-            on_delete: OnDeleteStrategy::None
+            on_delete: OnDeleteStrategy::None,
         }
     }
 }

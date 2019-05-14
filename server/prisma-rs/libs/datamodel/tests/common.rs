@@ -13,7 +13,7 @@ pub trait FieldAsserts {
     fn assert_default_value(&self, t: dml::Value) -> &Self;
 }
 
-pub trait ModelAsserts{
+pub trait ModelAsserts {
     fn assert_has_field(&self, t: &str) -> &dml::Field;
     fn assert_is_embedded(&self, t: bool) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
@@ -23,7 +23,7 @@ pub trait EnumAsserts {
     fn assert_has_value(&self, t: &str) -> &Self;
 }
 
-pub trait SchemaAsserts{
+pub trait SchemaAsserts {
     fn assert_has_model(&self, t: &str) -> &dml::Model;
     fn assert_has_enum(&self, t: &str) -> &dml::Enum;
 }
@@ -130,7 +130,6 @@ impl EnumAsserts for dml::Enum {
 
 pub fn parse_and_validate(input: &str) -> dml::Schema {
     let ast = datamodel::parser::parse(&String::from(input));
-    let validator =
-        datamodel::validator::BaseValidator::<dml::validator::EmptyAttachmentValidator>::new();
+    let validator = datamodel::validator::BaseValidator::<dml::validator::EmptyAttachmentValidator>::new();
     validator.validate(&ast)
 }

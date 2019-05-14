@@ -1,6 +1,6 @@
 use super::traits::*;
 use super::validator::value::ValueParserError;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use std::str::FromStr;
 

@@ -3,11 +3,11 @@ use super::id::*;
 use super::relation::*;
 use super::scalar::*;
 use super::traits::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 // This is duplicate for now, but explicitely required
 // since we want to seperate ast and dml.
-#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub enum FieldArity {
     Required,
     Optional,
@@ -15,7 +15,7 @@ pub enum FieldArity {
 }
 
 // TODO: Maybe we include a seperate struct for relations which can be generic?
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum FieldType {
     Enum(String),
     Relation(RelationInfo),
@@ -42,7 +42,7 @@ pub struct Field {
     pub is_unique: bool,
     pub id_info: Option<IdInfo>,
     pub scalar_list_strategy: Option<ScalarListStrategy>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }
 
 impl WithName for Field {
@@ -74,7 +74,7 @@ impl Field {
             is_unique: false,
             id_info: None,
             scalar_list_strategy: None,
-            comments: vec![]
+            comments: vec![],
         }
     }
 }

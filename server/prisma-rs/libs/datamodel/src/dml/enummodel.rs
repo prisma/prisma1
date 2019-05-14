@@ -1,12 +1,12 @@
 use super::comment::*;
 use super::traits::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Enum {
     pub name: String,
     pub values: Vec<String>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }
 
 impl Enum {
@@ -14,7 +14,7 @@ impl Enum {
         Enum {
             name: String::from(name),
             values: values,
-            comments: vec![]
+            comments: vec![],
         }
     }
 }

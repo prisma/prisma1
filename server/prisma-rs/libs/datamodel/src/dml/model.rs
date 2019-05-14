@@ -1,7 +1,7 @@
 use super::comment::*;
 use super::field::*;
 use super::traits::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Model {
@@ -9,7 +9,7 @@ pub struct Model {
     fields: Vec<Field>,
     pub comments: Vec<Comment>,
     pub database_name: Option<String>,
-    pub is_embedded: bool
+    pub is_embedded: bool,
 }
 
 impl Model {
@@ -19,7 +19,7 @@ impl Model {
             fields: vec![],
             comments: vec![],
             database_name: None,
-            is_embedded: false
+            is_embedded: false,
         }
     }
 

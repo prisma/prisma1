@@ -1,4 +1,3 @@
-use std::env;
 use std::fs;
 
 pub mod ast;

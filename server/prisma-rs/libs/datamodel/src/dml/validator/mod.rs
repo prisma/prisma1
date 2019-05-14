@@ -8,12 +8,12 @@ use directive::builtin::{new_enum_directives, new_field_directives, new_model_di
 use value::{ValueValidator, WrappedValue};
 
 // TODO: Naming
-pub trait Validator{
+pub trait Validator {
     fn new() -> Self;
     fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema;
 }
 
-pub trait AttachmentValidator{
+pub trait AttachmentValidator {
     fn new() -> Self;
     fn validate_field_attachment(&self, ast_field: &ast::Field, field: &mut dml::Field);
     fn validate_model_attachment(&self, ast_field: &ast::Model, field: &mut dml::Model);
@@ -35,7 +35,7 @@ impl AttachmentValidator for EmptyAttachmentValidator {
     fn validate_relation_attachment(&self, ast_field: &ast::Field, field: &mut dml::RelationInfo) {}
 }
 
-pub trait AttachmentDirectiveSource{
+pub trait AttachmentDirectiveSource {
     fn add_field_directives(validator: &mut DirectiveListValidator<dml::Field>);
     fn add_model_directives(validator: &mut DirectiveListValidator<dml::Model>);
     fn add_enum_directives(validator: &mut DirectiveListValidator<dml::Enum>);
@@ -50,9 +50,7 @@ pub struct AttachmentDirectiveValidator<Attachments: AttachmentDirectiveSource> 
 }
 
 // TODO: Maybe dynamic dispatch is better than generic.
-impl<Attachments: AttachmentDirectiveSource> AttachmentValidator
-    for AttachmentDirectiveValidator<Attachments>
-{
+impl<Attachments: AttachmentDirectiveSource> AttachmentValidator for AttachmentDirectiveValidator<Attachments> {
     fn new() -> Self {
         let mut fields = DirectiveListValidator::<dml::Field>::new();
         let mut models = DirectiveListValidator::<dml::Model>::new();

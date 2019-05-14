@@ -1,14 +1,14 @@
 use super::comment::*;
 use super::enummodel::*;
 use super::model::*;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 // TODO: Is schema the right name here?
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Schema {
     enums: Vec<Enum>,
     models: Vec<Model>,
-    pub comments: Vec<Comment>
+    pub comments: Vec<Comment>,
 }
 
 impl Schema {
@@ -16,7 +16,7 @@ impl Schema {
         Schema {
             models: vec![],
             enums: vec![],
-            comments: vec![]
+            comments: vec![],
         }
     }
 

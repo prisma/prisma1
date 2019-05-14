@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum ScalarType {
