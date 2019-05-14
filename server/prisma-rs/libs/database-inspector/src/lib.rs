@@ -44,7 +44,7 @@ impl Table {
 pub struct Column {
     pub name: String,
     pub tpe: ColumnType,
-    pub required: bool,
+    pub is_required: bool,
     pub foreign_key: Option<ForeignKey>,
     pub sequence: Option<Sequence>,
 }

@@ -124,7 +124,7 @@ impl DatabaseSchemaDiffer {
         ColumnDescription {
             name: column.name.clone(),
             tpe: Self::convert_column_type(column.tpe),
-            required: column.required,
+            required: column.is_required,
         }
     }
 
