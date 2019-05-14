@@ -157,6 +157,7 @@ case class RelationField(
   override def userFriendlyTypeName = relatedModel_!.name
 
   lazy val dbName: String = relation.manifestation match {
+    case m: EmbeddedRelationLink if relation.isSelfRelation && isHidden                                                  => this.name
     case m: EmbeddedRelationLink if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => m.referencingColumn
     case m: EmbeddedRelationLink if relation.isSelfRelation && relationSide == RelationSide.A                            => this.name
     case m: EmbeddedRelationLink if m.inTableOfModelName == model.name                                                   => m.referencingColumn
@@ -165,6 +166,7 @@ case class RelationField(
   }
 
   lazy val relationIsInlinedInParent = relation.manifestation match {
+    case m: EmbeddedRelationLink if relation.isSelfRelation && isHidden                                                  => false
     case m: EmbeddedRelationLink if relation.isSelfRelation && (relationSide == RelationSide.B || relatedField.isHidden) => true
     case m: EmbeddedRelationLink if relation.isSelfRelation && relationSide == RelationSide.A                            => false
     case m: EmbeddedRelationLink if m.inTableOfModelName == model.name                                                   => true
