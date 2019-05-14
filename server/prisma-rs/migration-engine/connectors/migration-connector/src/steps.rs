@@ -65,7 +65,7 @@ pub struct CreateField {
     pub name: String,
 
     #[serde(rename = "type")]
-    pub tpe: FieldType<BuiltinTypePack>,
+    pub tpe: FieldType,
 
     pub arity: FieldArity,
 
@@ -108,7 +108,7 @@ pub struct UpdateField {
     pub new_name: Option<String>,
 
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
-    pub tpe: Option<FieldType<BuiltinTypePack>>,
+    pub tpe: Option<FieldType>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub arity: Option<FieldArity>,
