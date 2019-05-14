@@ -121,13 +121,12 @@ trait NodeSingleQueries extends BuilderBase with NodeManyQueries with FilterCond
   }
 
   private def parentIdConditionSubselect(parentField: RelationField, parentIds: Vector[Any]) = {
-    val relation      = parentField.relation
-    val childIdField  = relationColumn(relation, parentField.oppositeRelationSide)
-    val parentIdField = relationColumn(relation, parentField.relationSide)
+    val childIdField  = relationColumn(parentField.relatedField)
+    val parentIdField = relationColumn(parentField)
 
     sql
       .select(childIdField)
-      .from(relationTable(relation))
+      .from(relationTable(parentField.relation))
       .where(parentIdField.in(placeHolders(parentIds)))
   }
 }

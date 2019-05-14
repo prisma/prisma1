@@ -38,8 +38,8 @@ trait RelationActions extends BuilderBase {
         .insertInto(relationTable(relation))
         .columns(
           relationIdColumn(relation),
-          relationColumn(relation, relationField.relationSide),
-          relationColumn(relation, relationField.oppositeRelationSide)
+          relationColumn(relationField),
+          relationColumn(relationField.relatedField)
         )
         .values(placeHolder, placeHolder, placeHolder)
         .onConflictDoNothing()
@@ -55,8 +55,8 @@ trait RelationActions extends BuilderBase {
       val query = sql
         .insertInto(relationTable(relation))
         .columns(
-          relationColumn(relation, relationField.relationSide),
-          relationColumn(relation, relationField.oppositeRelationSide)
+          relationColumn(relationField),
+          relationColumn(relationField.relatedField)
         )
         .values(placeHolder, placeHolder)
         .onConflictDoNothing()
@@ -73,7 +73,7 @@ trait RelationActions extends BuilderBase {
   def deleteRelationRowByChildId(relationField: RelationField, childId: IdGCValue): DBIO[_] = {
     assert(!relationField.relatedField.isList)
     val relation  = relationField.relation
-    val condition = relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder)
+    val condition = relationColumn(relationField.relatedField).equal(placeHolder)
 
     relation.inlineManifestation match {
       case Some(manifestation) =>
@@ -100,9 +100,9 @@ trait RelationActions extends BuilderBase {
 
   def deleteRelationRowByChildIdAndParentId(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue): DBIO[_] = {
     val relation = relationField.relation
-    val condition = relationColumn(relation, relationField.oppositeRelationSide)
+    val condition = relationColumn(relationField.relatedField)
       .equal(placeHolder)
-      .and(relationColumn(relation, relationField.relationSide).equal(placeHolder))
+      .and(relationColumn(relationField).equal(placeHolder))
 
     relation.inlineManifestation match {
       case Some(manifestation) =>
@@ -133,7 +133,7 @@ trait RelationActions extends BuilderBase {
 
   def deleteRelationRowByParentId(relationField: RelationField, parentId: IdGCValue): DBIO[_] = {
     val relation  = relationField.relation
-    val condition = relationColumn(relation, relationField.relationSide).equal(placeHolder)
+    val condition = relationColumn(relationField).equal(placeHolder)
     relation.inlineManifestation match {
       case Some(manifestation) =>
         val query = sql
