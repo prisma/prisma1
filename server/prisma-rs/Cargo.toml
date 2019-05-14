@@ -11,4 +11,5 @@ members = [
   "query-engine/core",
   "libs/datamodel",
   "libs/prisma-inflector",
+  "libs/database-inspector"
 ]
