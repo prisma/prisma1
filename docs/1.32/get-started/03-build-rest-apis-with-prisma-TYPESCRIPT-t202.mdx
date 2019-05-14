@@ -45,8 +45,8 @@ Replace the current contents of `index.ts` with the following code:
 
 ```js lineNumbers,copy
 import { prisma } from './generated/prisma-client'
-import express from 'express'
-import bodyParser from 'body-parser'
+import * as express from 'express'
+import * as bodyParser from 'body-parser'
 
 const app = express()
 
@@ -121,11 +121,8 @@ curl -X POST \\
 
 ```bash copy
 curl -X PUT \\
-  http://localhost:3000/post/publish \\
+  http://localhost:3000/post/publish/__POST_ID__ \\
   -H 'Content-Type: application/json' \\
-  -d '{
-  "id": "__POST_ID__"
-}'
 ```
 
 ```bash copy
