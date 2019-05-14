@@ -1,48 +1,46 @@
-use super::attachment::*;
 use super::comment::*;
 use super::field::*;
 use super::traits::*;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Model<Types: TypePack> {
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Model {
     pub name: String,
-    fields: Vec<Field<Types>>,
+    fields: Vec<Field>,
     pub comments: Vec<Comment>,
     pub database_name: Option<String>,
-    pub is_embedded: bool,
-    pub attachment: Types::ModelAttachment,
+    pub is_embedded: bool
 }
 
-impl<Types: TypePack> Model<Types> {
-    pub fn new(name: &str) -> Model<Types> {
+impl Model {
+    pub fn new(name: &str) -> Model {
         Model {
             name: String::from(name),
             fields: vec![],
             comments: vec![],
             database_name: None,
-            is_embedded: false,
-            attachment: Types::ModelAttachment::default(),
+            is_embedded: false
         }
     }
 
-    pub fn add_field(&mut self, field: Field<Types>) {
+    pub fn add_field(&mut self, field: Field) {
         self.fields.push(field)
     }
 
-    pub fn fields(&self) -> std::slice::Iter<Field<Types>> {
+    pub fn fields(&self) -> std::slice::Iter<Field> {
         self.fields.iter()
     }
 
-    pub fn fields_mut(&mut self) -> std::slice::IterMut<Field<Types>> {
+    pub fn fields_mut(&mut self) -> std::slice::IterMut<Field> {
         self.fields.iter_mut()
     }
 
-    pub fn find_field(&self, name: &str) -> Option<&Field<Types>> {
+    pub fn find_field(&self, name: &str) -> Option<&Field> {
         self.fields().find(|f| f.name == *name)
     }
 }
 
-impl<Types: TypePack> WithName for Model<Types> {
+impl WithName for Model {
     fn name(&self) -> &String {
         &self.name
     }
@@ -51,7 +49,7 @@ impl<Types: TypePack> WithName for Model<Types> {
     }
 }
 
-impl<Types: TypePack> WithDatabaseName for Model<Types> {
+impl WithDatabaseName for Model {
     fn database_name(&self) -> &Option<String> {
         &self.database_name
     }

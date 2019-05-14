@@ -1,13 +1,13 @@
-use super::attachment::*;
 use super::comment::*;
 use super::id::*;
 use super::relation::*;
 use super::scalar::*;
 use super::traits::*;
+use serde::{Serialize, Deserialize};
 
 // This is duplicate for now, but explicitely required
 // since we want to seperate ast and dml.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum FieldArity {
     Required,
     Optional,
@@ -15,10 +15,10 @@ pub enum FieldArity {
 }
 
 // TODO: Maybe we include a seperate struct for relations which can be generic?
-#[derive(Debug, Clone, PartialEq)]
-pub enum FieldType<Types: TypePack> {
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum FieldType {
     Enum(String),
-    Relation(RelationInfo<Types>),
+    Relation(RelationInfo),
     ConnectorSpecific {
         base_type: ScalarType,
         connector_type: Option<String>,
@@ -26,27 +26,26 @@ pub enum FieldType<Types: TypePack> {
     Base(ScalarType),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct IdInfo {
     pub strategy: IdStrategy,
     pub sequence: Option<Sequence>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Field<Types: TypePack> {
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Field {
     pub name: String,
     pub arity: FieldArity,
-    pub field_type: FieldType<Types>,
+    pub field_type: FieldType,
     pub database_name: Option<String>,
     pub default_value: Option<Value>,
     pub is_unique: bool,
     pub id_info: Option<IdInfo>,
     pub scalar_list_strategy: Option<ScalarListStrategy>,
-    pub comments: Vec<Comment>,
-    pub attachment: Types::FieldAttachment,
+    pub comments: Vec<Comment>
 }
 
-impl<Types: TypePack> WithName for Field<Types> {
+impl WithName for Field {
     fn name(&self) -> &String {
         &self.name
     }
@@ -55,7 +54,7 @@ impl<Types: TypePack> WithName for Field<Types> {
     }
 }
 
-impl<Types: TypePack> WithDatabaseName for Field<Types> {
+impl WithDatabaseName for Field {
     fn database_name(&self) -> &Option<String> {
         &self.database_name
     }
@@ -64,8 +63,8 @@ impl<Types: TypePack> WithDatabaseName for Field<Types> {
     }
 }
 
-impl<Types: TypePack> Field<Types> {
-    pub fn new(name: &str, field_type: FieldType<Types>) -> Field<Types> {
+impl Field {
+    pub fn new(name: &str, field_type: FieldType) -> Field {
         Field {
             name: String::from(name),
             arity: FieldArity::Required,
@@ -75,8 +74,7 @@ impl<Types: TypePack> Field<Types> {
             is_unique: false,
             id_info: None,
             scalar_list_strategy: None,
-            comments: vec![],
-            attachment: Types::FieldAttachment::default(),
+            comments: vec![]
         }
     }
 }

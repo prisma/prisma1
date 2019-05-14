@@ -13,8 +13,8 @@ pub trait FieldAsserts {
     fn assert_default_value(&self, t: dml::Value) -> &Self;
 }
 
-pub trait ModelAsserts<Types: dml::TypePack> {
-    fn assert_has_field(&self, t: &str) -> &dml::Field<Types>;
+pub trait ModelAsserts{
+    fn assert_has_field(&self, t: &str) -> &dml::Field;
     fn assert_is_embedded(&self, t: bool) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
 }
@@ -23,12 +23,12 @@ pub trait EnumAsserts {
     fn assert_has_value(&self, t: &str) -> &Self;
 }
 
-pub trait SchemaAsserts<Types: dml::TypePack> {
-    fn assert_has_model(&self, t: &str) -> &dml::Model<Types>;
-    fn assert_has_enum(&self, t: &str) -> &dml::Enum<Types>;
+pub trait SchemaAsserts{
+    fn assert_has_model(&self, t: &str) -> &dml::Model;
+    fn assert_has_enum(&self, t: &str) -> &dml::Enum;
 }
 
-impl<Types: dml::TypePack> FieldAsserts for dml::Field<Types> {
+impl FieldAsserts for dml::Field {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self {
         if let dml::FieldType::Base(base_type) = &self.field_type {
             assert_eq!(base_type, t);
@@ -88,19 +88,19 @@ impl<Types: dml::TypePack> FieldAsserts for dml::Field<Types> {
     }
 }
 
-impl<Types: dml::TypePack> SchemaAsserts<Types> for dml::Schema<Types> {
-    fn assert_has_model(&self, t: &str) -> &dml::Model<Types> {
+impl SchemaAsserts for dml::Schema {
+    fn assert_has_model(&self, t: &str) -> &dml::Model {
         self.find_model(&String::from(t))
             .expect(format!("Model {} not found", t).as_str())
     }
-    fn assert_has_enum(&self, t: &str) -> &dml::Enum<Types> {
+    fn assert_has_enum(&self, t: &str) -> &dml::Enum {
         self.find_enum(&String::from(t))
             .expect(format!("Enum {} not found", t).as_str())
     }
 }
 
-impl<Types: dml::TypePack> ModelAsserts<Types> for dml::Model<Types> {
-    fn assert_has_field(&self, t: &str) -> &dml::Field<Types> {
+impl ModelAsserts for dml::Model {
+    fn assert_has_field(&self, t: &str) -> &dml::Field {
         self.find_field(&String::from(t))
             .expect(format!("Field {} not found", t).as_str())
     }
@@ -116,7 +116,7 @@ impl<Types: dml::TypePack> ModelAsserts<Types> for dml::Model<Types> {
     }
 }
 
-impl<Types: dml::TypePack> EnumAsserts for dml::Enum<Types> {
+impl EnumAsserts for dml::Enum {
     fn assert_has_value(&self, t: &str) -> &Self {
         let pred = String::from(t);
         self.values
@@ -128,9 +128,9 @@ impl<Types: dml::TypePack> EnumAsserts for dml::Enum<Types> {
     }
 }
 
-pub fn parse_and_validate(input: &str) -> dml::Schema<dml::BuiltinTypePack> {
+pub fn parse_and_validate(input: &str) -> dml::Schema {
     let ast = datamodel::parser::parse(&String::from(input));
     let validator =
-        datamodel::validator::BaseValidator::<dml::BuiltinTypePack, dml::validator::EmptyAttachmentValidator>::new();
+        datamodel::validator::BaseValidator::<dml::validator::EmptyAttachmentValidator>::new();
     validator.validate(&ast)
 }

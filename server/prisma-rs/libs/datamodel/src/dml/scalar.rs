@@ -1,6 +1,7 @@
 use chrono::{DateTime, Utc};
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Copy, PartialEq, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum ScalarType {
     Int,
     Float,
@@ -12,7 +13,7 @@ pub enum ScalarType {
 }
 
 // TODO, Check if data types are correct
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub enum Value {
     Int(i32),
     Float(f32),

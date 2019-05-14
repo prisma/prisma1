@@ -3,11 +3,11 @@ use crate::dml::validator::directive::{error, Args, DirectiveValidator, Error};
 
 pub struct RelationDirectiveValidator {}
 
-impl<Types: dml::TypePack> DirectiveValidator<dml::Field<Types>, Types> for RelationDirectiveValidator {
+impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"relation"
     }
-    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field<Types>) -> Option<Error> {
+    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Option<Error> {
         if let Ok(name) = args.arg("name").as_str() {
             match &mut field.field_type {
                 // TODO: Check if name is already set.

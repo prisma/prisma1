@@ -4,38 +4,12 @@ use crate::dml;
 use crate::dml::validator::directive::builtin::DirectiveListValidator;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 use crate::dml::validator::{AttachmentDirectiveSource, AttachmentDirectiveValidator};
-use crate::dml::{Attachment, EmptyAttachment, TypePack};
 
 use std::collections::HashMap;
 
-// Attachment struct for the specialized property.
-#[derive(Debug, PartialEq, Clone)]
-pub struct PostgresSpecialFieldProps {
-    special_prop: Option<String>,
-}
-
-impl Attachment for PostgresSpecialFieldProps {
-    fn default() -> Self {
-        PostgresSpecialFieldProps { special_prop: None }
-    }
-}
-
-// Type definitions for extending the datamodel.
-#[derive(Debug, PartialEq, Clone)]
-pub struct PostgresTypePack {}
-
-impl TypePack for PostgresTypePack {
-    type FieldAttachment = PostgresSpecialFieldProps;
-
-    type EnumAttachment = EmptyAttachment;
-    type ModelAttachment = EmptyAttachment;
-    type SchemaAttachment = EmptyAttachment;
-    type RelationAttachment = EmptyAttachment;
-}
-
 // Validator for the special directive.
 pub struct PostgresSpecialPropValidator {}
-impl<Types: dml::TypePack, T: dml::WithDatabaseName> DirectiveValidator<T, Types> for PostgresSpecialPropValidator {
+impl<T: dml::WithDatabaseName> DirectiveValidator<T> for PostgresSpecialPropValidator {
     fn directive_name(&self) -> &'static str {
         &"postgres.specialProp"
     }
@@ -54,12 +28,12 @@ impl<Types: dml::TypePack, T: dml::WithDatabaseName> DirectiveValidator<T, Types
 // Alternatively, we could use the AttachmendValidator trait to get more control.
 pub struct PostgresDirectives {}
 
-impl AttachmentDirectiveSource<PostgresTypePack> for PostgresDirectives {
-    fn add_field_directives(validator: &mut DirectiveListValidator<dml::Field<PostgresTypePack>, PostgresTypePack>) {
+impl AttachmentDirectiveSource for PostgresDirectives {
+    fn add_field_directives(validator: &mut DirectiveListValidator<dml::Field>) {
         validator.add(Box::new(PostgresSpecialPropValidator {}));
     }
-    fn add_model_directives(validator: &mut DirectiveListValidator<dml::Model<PostgresTypePack>, PostgresTypePack>) {}
-    fn add_enum_directives(validator: &mut DirectiveListValidator<dml::Enum<PostgresTypePack>, PostgresTypePack>) {}
+    fn add_model_directives(validator: &mut DirectiveListValidator<dml::Model>) {}
+    fn add_enum_directives(validator: &mut DirectiveListValidator<dml::Enum>) {}
 }
 
-pub type PostgresAttachmentValidator = AttachmentDirectiveValidator<PostgresTypePack, PostgresDirectives>;
+pub type PostgresAttachmentValidator = AttachmentDirectiveValidator<PostgresDirectives>;

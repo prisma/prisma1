@@ -11,12 +11,12 @@ pub fn error(msg: &str) -> Option<Error> {
 }
 
 // TODO Narrow to type, enum, field, if possible
-pub trait DirectiveValidator<T, Types: dml::TypePack> {
+pub trait DirectiveValidator<T> {
     fn directive_name(&self) -> &'static str;
     // TODO: Proper error type
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Option<Error>;
 }
 
-pub trait ModelDirectiveValidator<Types: dml::TypePack>: DirectiveValidator<dml::Model<Types>, Types> {}
-pub trait EnumDirectiveValidator<Types: dml::TypePack>: DirectiveValidator<dml::Enum<Types>, Types> {}
-pub trait FieldDirectiveValidator<Types: dml::TypePack>: DirectiveValidator<dml::Field<Types>, Types> {}
+pub trait ModelDirectiveValidator: DirectiveValidator<dml::Model> {}
+pub trait EnumDirectiveValidator: DirectiveValidator<dml::Enum> {}
+pub trait FieldDirectiveValidato: DirectiveValidator<dml::Field> {}

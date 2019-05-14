@@ -1,30 +1,28 @@
-use super::attachment::*;
 use super::validator::value::ValueParserError;
+use serde::{Serialize, Deserialize};
 
 use std::str::FromStr;
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct RelationInfo<Types: TypePack> {
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct RelationInfo {
     pub to: String,
     pub to_field: String,
     pub name: Option<String>,
     pub on_delete: OnDeleteStrategy,
-    pub attachment: Types::RelationAttachment,
 }
 
-impl<Types: TypePack> RelationInfo<Types> {
-    pub fn new(to: &str, to_field: &str) -> RelationInfo<Types> {
+impl RelationInfo {
+    pub fn new(to: &str, to_field: &str) -> RelationInfo {
         RelationInfo {
             to: String::from(to),
             to_field: String::from(to_field),
             name: None,
-            on_delete: OnDeleteStrategy::None,
-            attachment: Types::RelationAttachment::default(),
+            on_delete: OnDeleteStrategy::None
         }
     }
 }
 
-#[derive(Debug, Copy, PartialEq, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum OnDeleteStrategy {
     Cascade,
     None,

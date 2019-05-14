@@ -41,7 +41,7 @@ fn main() {
     // let validator = BaseValidator::<dml::BuiltinTypePack, EmptyAttachmentValidator>::new();
 
     // Postgres-Specific Tooling
-    let validator = BaseValidator::<postgres::PostgresTypePack, postgres::PostgresAttachmentValidator>::new();
+    let validator = BaseValidator::<postgres::PostgresAttachmentValidator>::new();
 
     let dml = validator.validate(&ast);
 

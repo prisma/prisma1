@@ -3,11 +3,11 @@ use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
 pub struct PrimaryDirectiveValidator {}
 
-impl<Types: dml::TypePack> DirectiveValidator<dml::Field<Types>, Types> for PrimaryDirectiveValidator {
+impl DirectiveValidator<dml::Field> for PrimaryDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"primary"
     }
-    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field<Types>) -> Option<Error> {
+    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field) -> Option<Error> {
         let mut id_info = dml::IdInfo {
             strategy: dml::IdStrategy::Auto,
             sequence: None,

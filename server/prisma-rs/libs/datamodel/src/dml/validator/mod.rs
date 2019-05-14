@@ -8,54 +8,55 @@ use directive::builtin::{new_enum_directives, new_field_directives, new_model_di
 use value::{ValueValidator, WrappedValue};
 
 // TODO: Naming
-pub trait Validator<Types: dml::TypePack> {
+pub trait Validator{
     fn new() -> Self;
-    fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema<Types>;
+    fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema;
 }
 
-pub trait AttachmentValidator<Types: dml::TypePack> {
+pub trait AttachmentValidator{
     fn new() -> Self;
-    fn validate_field_attachment(&self, ast_field: &ast::Field, field: &mut dml::Field<Types>);
-    fn validate_model_attachment(&self, ast_field: &ast::Model, field: &mut dml::Model<Types>);
-    fn validate_enum_attachment(&self, ast_field: &ast::Enum, field: &mut dml::Enum<Types>);
-    fn validate_schema_attachment(&self, ast_field: &ast::Schema, field: &mut dml::Schema<Types>);
-    fn validate_relation_attachment(&self, ast_field: &ast::Field, field: &mut dml::RelationInfo<Types>);
+    fn validate_field_attachment(&self, ast_field: &ast::Field, field: &mut dml::Field);
+    fn validate_model_attachment(&self, ast_field: &ast::Model, field: &mut dml::Model);
+    fn validate_enum_attachment(&self, ast_field: &ast::Enum, field: &mut dml::Enum);
+    fn validate_schema_attachment(&self, ast_field: &ast::Schema, field: &mut dml::Schema);
+    fn validate_relation_attachment(&self, ast_field: &ast::Field, field: &mut dml::RelationInfo);
 }
 
 pub struct EmptyAttachmentValidator {}
 
-impl<Types: dml::TypePack> AttachmentValidator<Types> for EmptyAttachmentValidator {
+impl AttachmentValidator for EmptyAttachmentValidator {
     fn new() -> Self {
         EmptyAttachmentValidator {}
     }
-    fn validate_field_attachment(&self, ast_field: &ast::Field, field: &mut dml::Field<Types>) {}
-    fn validate_model_attachment(&self, ast_field: &ast::Model, field: &mut dml::Model<Types>) {}
-    fn validate_enum_attachment(&self, ast_field: &ast::Enum, field: &mut dml::Enum<Types>) {}
-    fn validate_schema_attachment(&self, ast_field: &ast::Schema, field: &mut dml::Schema<Types>) {}
-    fn validate_relation_attachment(&self, ast_field: &ast::Field, field: &mut dml::RelationInfo<Types>) {}
+    fn validate_field_attachment(&self, ast_field: &ast::Field, field: &mut dml::Field) {}
+    fn validate_model_attachment(&self, ast_field: &ast::Model, field: &mut dml::Model) {}
+    fn validate_enum_attachment(&self, ast_field: &ast::Enum, field: &mut dml::Enum) {}
+    fn validate_schema_attachment(&self, ast_field: &ast::Schema, field: &mut dml::Schema) {}
+    fn validate_relation_attachment(&self, ast_field: &ast::Field, field: &mut dml::RelationInfo) {}
 }
 
-pub trait AttachmentDirectiveSource<Types: dml::TypePack> {
-    fn add_field_directives(validator: &mut DirectiveListValidator<dml::Field<Types>, Types>);
-    fn add_model_directives(validator: &mut DirectiveListValidator<dml::Model<Types>, Types>);
-    fn add_enum_directives(validator: &mut DirectiveListValidator<dml::Enum<Types>, Types>);
+pub trait AttachmentDirectiveSource{
+    fn add_field_directives(validator: &mut DirectiveListValidator<dml::Field>);
+    fn add_model_directives(validator: &mut DirectiveListValidator<dml::Model>);
+    fn add_enum_directives(validator: &mut DirectiveListValidator<dml::Enum>);
 }
 
 // TODO: Proably we can make this just "directive source and use it everywhere.
-pub struct AttachmentDirectiveValidator<Types: dml::TypePack, Attachments: AttachmentDirectiveSource<Types>> {
-    pub field_directives: DirectiveListValidator<dml::Field<Types>, Types>,
-    pub model_directives: DirectiveListValidator<dml::Model<Types>, Types>,
-    pub enum_directives: DirectiveListValidator<dml::Enum<Types>, Types>,
+pub struct AttachmentDirectiveValidator<Attachments: AttachmentDirectiveSource> {
+    pub field_directives: DirectiveListValidator<dml::Field>,
+    pub model_directives: DirectiveListValidator<dml::Model>,
+    pub enum_directives: DirectiveListValidator<dml::Enum>,
     placeholder: std::marker::PhantomData<Attachments>,
 }
 
-impl<Types: dml::TypePack, Attachments: AttachmentDirectiveSource<Types>> AttachmentValidator<Types>
-    for AttachmentDirectiveValidator<Types, Attachments>
+// TODO: Maybe dynamic dispatch is better than generic.
+impl<Attachments: AttachmentDirectiveSource> AttachmentValidator
+    for AttachmentDirectiveValidator<Attachments>
 {
     fn new() -> Self {
-        let mut fields = DirectiveListValidator::<dml::Field<Types>, Types>::new();
-        let mut models = DirectiveListValidator::<dml::Model<Types>, Types>::new();
-        let mut enums = DirectiveListValidator::<dml::Enum<Types>, Types>::new();
+        let mut fields = DirectiveListValidator::<dml::Field>::new();
+        let mut models = DirectiveListValidator::<dml::Model>::new();
+        let mut enums = DirectiveListValidator::<dml::Enum>::new();
 
         Attachments::add_field_directives(&mut fields);
         Attachments::add_model_directives(&mut models);
@@ -68,28 +69,28 @@ impl<Types: dml::TypePack, Attachments: AttachmentDirectiveSource<Types>> Attach
             placeholder: std::marker::PhantomData,
         }
     }
-    fn validate_field_attachment(&self, ast_field: &ast::Field, field: &mut dml::Field<Types>) {
+    fn validate_field_attachment(&self, ast_field: &ast::Field, field: &mut dml::Field) {
         self.field_directives.validate_and_apply(ast_field, field);
     }
-    fn validate_model_attachment(&self, ast_model: &ast::Model, model: &mut dml::Model<Types>) {
+    fn validate_model_attachment(&self, ast_model: &ast::Model, model: &mut dml::Model) {
         self.model_directives.validate_and_apply(ast_model, model);
     }
-    fn validate_enum_attachment(&self, ast_enum: &ast::Enum, en: &mut dml::Enum<Types>) {
+    fn validate_enum_attachment(&self, ast_enum: &ast::Enum, en: &mut dml::Enum) {
         self.enum_directives.validate_and_apply(ast_enum, en);
     }
-    fn validate_schema_attachment(&self, ast_field: &ast::Schema, field: &mut dml::Schema<Types>) {}
-    fn validate_relation_attachment(&self, ast_field: &ast::Field, field: &mut dml::RelationInfo<Types>) {}
+    fn validate_schema_attachment(&self, ast_field: &ast::Schema, field: &mut dml::Schema) {}
+    fn validate_relation_attachment(&self, ast_field: &ast::Field, field: &mut dml::RelationInfo) {}
 }
 
 // TODO: Naming
-pub struct BaseValidator<Types: dml::TypePack, AV: AttachmentValidator<Types>> {
-    field_directives: DirectiveListValidator<dml::Field<Types>, Types>,
-    model_directives: DirectiveListValidator<dml::Model<Types>, Types>,
-    enum_directives: DirectiveListValidator<dml::Enum<Types>, Types>,
+pub struct BaseValidator<AV: AttachmentValidator> {
+    field_directives: DirectiveListValidator<dml::Field>,
+    model_directives: DirectiveListValidator<dml::Model>,
+    enum_directives: DirectiveListValidator<dml::Enum>,
     attachment_validator: AV,
 }
 
-impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for BaseValidator<Types, AV> {
+impl<AV: AttachmentValidator> Validator for BaseValidator<AV> {
     fn new() -> Self {
         BaseValidator {
             field_directives: new_field_directives(),
@@ -100,7 +101,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
     }
 
     // TODO: Intro factory methods for creating DML nodes.
-    fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema<Types> {
+    fn validate(&self, ast_schema: &ast::Schema) -> dml::Schema {
         let mut schema = dml::Schema::new();
 
         for ast_obj in &ast_schema.models {
@@ -118,8 +119,8 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> Validator<Types> for 
     }
 }
 
-impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, AV> {
-    fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> dml::Model<Types> {
+impl<AV: AttachmentValidator> BaseValidator<AV> {
+    fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> dml::Model {
         let mut model = dml::Model::new(&ast_model.name);
 
         for ast_field in &ast_model.fields {
@@ -133,7 +134,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
         return model;
     }
 
-    fn validate_enum(&self, ast_enum: &ast::Enum) -> dml::Enum<Types> {
+    fn validate_enum(&self, ast_enum: &ast::Enum) -> dml::Enum {
         let mut en = dml::Enum::new(&ast_enum.name, ast_enum.values.clone());
 
         self.enum_directives.validate_and_apply(ast_enum, &mut en);
@@ -141,7 +142,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
         return en;
     }
 
-    fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> dml::Field<Types> {
+    fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> dml::Field {
         let field_type = self.validate_field_type(&ast_field.field_type, ast_schema);
 
         let mut field = dml::Field::new(&ast_field.name, field_type.clone());
@@ -178,7 +179,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
         }
     }
 
-    fn validate_field_type(&self, type_name: &str, ast_schema: &ast::Schema) -> dml::FieldType<Types> {
+    fn validate_field_type(&self, type_name: &str, ast_schema: &ast::Schema) -> dml::FieldType {
         match type_name {
             "ID" => dml::FieldType::Base(dml::ScalarType::Int),
             "Int" => dml::FieldType::Base(dml::ScalarType::Int),

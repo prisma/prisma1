@@ -2,7 +2,7 @@ mod migration_applier;
 pub mod steps;
 
 use chrono::{DateTime, Utc};
-use datamodel::Schema;
+use datamodel::{Schema, BuiltinTypePack};
 pub use migration_applier::*;
 use serde::Serialize;
 use std::fmt::Debug;
@@ -37,7 +37,7 @@ pub trait MigrationConnector {
 pub trait DatabaseMigrationStepExt: Debug + Serialize {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
-    fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<T>;
+    fn infer(&self, previous: &Schema<BuiltinTypePack>, next: &Schema<BuiltinTypePack>, steps: Vec<MigrationStep>) -> Vec<T>;
 }
 
 pub trait DatabaseMigrationStepApplier<T> {
@@ -88,7 +88,7 @@ pub struct Migration {
     pub status: MigrationStatus,
     pub applied: usize,
     pub rolled_back: usize,
-    pub datamodel: Schema,
+    pub datamodel: Schema<BuiltinTypePack>,
     pub datamodel_steps: Vec<MigrationStep>,
     pub database_steps: String,
     pub errors: Vec<String>,

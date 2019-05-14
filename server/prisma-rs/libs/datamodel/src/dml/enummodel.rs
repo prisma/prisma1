@@ -1,27 +1,25 @@
-use super::attachment::*;
 use super::comment::*;
 use super::traits::*;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Enum<Types: TypePack> {
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct Enum {
     pub name: String,
     pub values: Vec<String>,
-    pub comments: Vec<Comment>,
-    pub attachment: Types::EnumAttachment,
+    pub comments: Vec<Comment>
 }
 
-impl<Types: TypePack> Enum<Types> {
-    pub fn new(name: &str, values: Vec<String>) -> Enum<Types> {
+impl Enum {
+    pub fn new(name: &str, values: Vec<String>) -> Enum {
         Enum {
             name: String::from(name),
             values: values,
-            comments: vec![],
-            attachment: Types::EnumAttachment::default(),
+            comments: vec![]
         }
     }
 }
 
-impl<Types: TypePack> WithName for Enum<Types> {
+impl WithName for Enum {
     fn name(&self) -> &String {
         &self.name
     }

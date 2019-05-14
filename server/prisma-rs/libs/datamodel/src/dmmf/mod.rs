@@ -37,7 +37,7 @@ pub struct Datamodel {
     pub models: Vec<serde_json::Value>,
 }
 
-fn get_field_kind<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
+fn get_field_kind(field: &dml::Field) -> String {
     match field.field_type {
         dml::FieldType::Relation(_) => String::from("relation"),
         dml::FieldType::Enum(_) => String::from("enum"),
@@ -46,7 +46,7 @@ fn get_field_kind<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
     }
 }
 
-fn type_to_string<Types: dml::TypePack>(scalar: &dml::ScalarType) -> String {
+fn type_to_string(scalar: &dml::ScalarType) -> String {
     match scalar {
         dml::ScalarType::Int => String::from("Int"),
         dml::ScalarType::Decimal => String::from("Decimal"),
@@ -58,19 +58,19 @@ fn type_to_string<Types: dml::TypePack>(scalar: &dml::ScalarType) -> String {
     }
 }
 
-fn get_field_type<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
+fn get_field_type(field: &dml::Field) -> String {
     match &field.field_type {
         dml::FieldType::Relation(relation_info) => relation_info.to.clone(),
         dml::FieldType::Enum(t) => t.clone(),
-        dml::FieldType::Base(t) => type_to_string::<Types>(t),
+        dml::FieldType::Base(t) => type_to_string(t),
         dml::FieldType::ConnectorSpecific {
             base_type: t,
             connector_type: _,
-        } => type_to_string::<Types>(t),
+        } => type_to_string(t),
     }
 }
 
-fn get_field_arity<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
+fn get_field_arity(field: &dml::Field) -> String {
     match field.arity {
         dml::FieldArity::Required => String::from("required"),
         dml::FieldArity::Optional => String::from("optional"),
@@ -78,7 +78,7 @@ fn get_field_arity<Types: dml::TypePack>(field: &dml::Field<Types>) -> String {
     }
 }
 
-pub fn enum_to_dmmf<Types: dml::TypePack>(en: &dml::Enum<Types>) -> Enum {
+pub fn enum_to_dmmf(en: &dml::Enum) -> Enum {
     Enum {
         name: en.name.clone(),
         values: en.values.clone(),
@@ -86,7 +86,7 @@ pub fn enum_to_dmmf<Types: dml::TypePack>(en: &dml::Enum<Types>) -> Enum {
     }
 }
 
-pub fn field_to_dmmf<Types: dml::TypePack>(field: &dml::Field<Types>) -> Field {
+pub fn field_to_dmmf(field: &dml::Field) -> Field {
     Field {
         name: field.name.clone(),
         kind: get_field_kind(field),
@@ -97,7 +97,7 @@ pub fn field_to_dmmf<Types: dml::TypePack>(field: &dml::Field<Types>) -> Field {
     }
 }
 
-pub fn model_to_dmmf<Types: dml::TypePack>(model: &dml::Model<Types>) -> Model {
+pub fn model_to_dmmf(model: &dml::Model) -> Model {
     Model {
         name: model.name.clone(),
         dbName: model.database_name.clone(),
@@ -107,7 +107,7 @@ pub fn model_to_dmmf<Types: dml::TypePack>(model: &dml::Model<Types>) -> Model {
     }
 }
 
-pub fn schema_to_dmmf<Types: dml::TypePack>(schema: &dml::Schema<Types>) -> Datamodel {
+pub fn schema_to_dmmf(schema: &dml::Schema) -> Datamodel {
     let mut datamodel = Datamodel { models: vec![] };
 
     for model in schema.models() {
@@ -125,7 +125,7 @@ pub fn schema_to_dmmf<Types: dml::TypePack>(schema: &dml::Schema<Types>) -> Data
     return datamodel;
 }
 
-pub fn render_to_dmmf<Types: dml::TypePack>(schema: &dml::Schema<Types>) -> String {
+pub fn render_to_dmmf(schema: &dml::Schema) -> String {
     let dmmf = schema_to_dmmf(schema);
 
     return serde_json::to_string_pretty(&dmmf).expect("Failed to render JSON");

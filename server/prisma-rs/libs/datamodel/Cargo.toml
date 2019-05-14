@@ -8,6 +8,6 @@ edition = "2018"
 clap = "2.33.0"
 pest = "2.0"
 pest_derive = "2.0"
-chrono = "0.4.6"
+chrono = { version = "0.4.6", features = ["serde"] }
 serde = { version = "1.0.90", features = ["derive"] }
 serde_json = "1.0"
