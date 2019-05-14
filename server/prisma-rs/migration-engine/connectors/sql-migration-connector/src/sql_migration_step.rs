@@ -59,4 +59,11 @@ pub struct ColumnDescription {
     pub required: bool,
 }
 
-pub type ColumnType = ScalarType;
+#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize)]
+pub enum ColumnType {
+    Int,
+    Float,
+    Boolean,
+    String,
+    DateTime,
+}

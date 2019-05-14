@@ -1,4 +1,4 @@
-use crate::{MutationBuilder, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional};
+use crate::{MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional};
 use chrono::{DateTime, Utc};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
@@ -10,6 +10,7 @@ use rusqlite::{
     types::{FromSql, FromSqlResult, Type as SqliteType, ValueRef},
     Connection, Error as SqliteError, Row as SqliteRow, Transaction as SqliteTransaction, NO_PARAMS,
 };
+use serde_json::{Map, Number, Value};
 use std::collections::HashSet;
 use uuid::Uuid;
 
@@ -77,6 +78,47 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         self.write(Query::from("PRAGMA foreign_keys = ON"))?;
 
         Ok(())
+    }
+
+    fn raw(&mut self, q: RawQuery) -> SqlResult<Value> {
+        let columns: Vec<String> = self
+            .prepare_cached(&q.0)?
+            .column_names()
+            .into_iter()
+            .map(ToString::to_string)
+            .collect();
+
+        let mut stmt = self.prepare_cached(&q.0)?;
+
+        if q.is_select() {
+            let mut rows = stmt.query(NO_PARAMS)?;
+            let mut result = Vec::new();
+
+            while let Some(row) = rows.next() {
+                let mut object = Map::new();
+                let row = row?;
+
+                for (i, column) in columns.iter().enumerate() {
+                    let value = match row.get_raw(i) {
+                        ValueRef::Null => Value::Null,
+                        ValueRef::Integer(i) => Value::Number(Number::from(i)),
+                        ValueRef::Real(f) => Value::Number(Number::from_f64(f).unwrap()),
+                        ValueRef::Text(s) => Value::String(String::from(s)),
+                        ValueRef::Blob(b) => Value::String(String::from_utf8(b.to_vec()).unwrap()),
+                    };
+
+                    object.insert(String::from(column.as_ref()), value);
+                }
+
+                result.push(Value::Object(object));
+            }
+
+            Ok(Value::Array(result))
+        } else {
+            let changes = stmt.execute(NO_PARAMS)?;
+
+            Ok(Value::Number(Number::from(changes)))
+        }
     }
 }
 

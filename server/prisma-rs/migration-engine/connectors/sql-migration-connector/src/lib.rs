@@ -1,3 +1,4 @@
+mod database_schema_differ;
 mod sql_database_migration_steps_inferrer;
 mod sql_database_step_applier;
 mod sql_destructive_changes_checker;

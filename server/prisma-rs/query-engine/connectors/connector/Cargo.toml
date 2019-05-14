@@ -8,7 +8,7 @@ edition = "2018"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 once_cell = "0.1"
-prisma-query = { path = "../../../libs/prisma-query" }
+prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 prisma-models = { path = "../../../prisma-models" }
 prisma-common = { path = "../../../libs/prisma-common" }
 failure = "0.1"

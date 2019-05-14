@@ -5,7 +5,7 @@ authors = ["Marcus Böhm <boehm@prisma.io>"]
 edition = "2018"
 
 [dependencies]
-prisma-query = { path = "../prisma-query" }
+prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 barrel = { git = "https://github.com/spacekookie/barrel", features = ["sqlite3"] }
 rusqlite = { version = "0.16" }
 prisma-models = { path = "../../prisma-models" }
