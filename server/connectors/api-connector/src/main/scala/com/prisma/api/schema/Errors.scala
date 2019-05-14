@@ -100,7 +100,7 @@ object APIErrors {
       extends ClientApiError(s"No Node for the model ${where.model.name} with value ${where.value} for ${where.field.name} found.", 3039)
 
   case class NullProvidedForWhereError(modelName: String)
-      extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName.", 3040)
+      extends ClientApiError(s"You provided an invalid argument for the where selector on $modelName. Please provide exactly one unique field and value.", 3040)
 
   case class NodesNotConnectedError(relation: Relation, parent: Model, parentWhere: Option[NodeSelector], child: Model, childWhere: Option[NodeSelector])
       extends ClientApiError(pathErrorMessage(relation, parent, parentWhere, child, childWhere), 3041)
@@ -136,6 +136,12 @@ object APIErrors {
       extends ClientApiError(
         s"You provided an ID that was not a valid MongoObjectId: $id",
         3044
+      )
+
+  case class TwoManyUniquesForWhereError(modelName: String)
+      extends ClientApiError(
+        s"You provided more than one field for the unique selector on $modelName. If you want that behavior you can use the many query and combine fields with AND / OR.",
+        3045
       )
 
   case class ExecuteRawError(e: SQLException) extends ClientApiError(e.getMessage, e.getErrorCode)
