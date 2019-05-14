@@ -59,6 +59,16 @@ impl Column {
             sequence: None,
         }
     }
+
+    pub fn with_foreign_key(name: String, tpe: ColumnType, is_required: bool, foreign_key: ForeignKey) -> Column {
+        Column {
+            name,
+            tpe,
+            is_required,
+            foreign_key: Some(foreign_key),
+            sequence: None,
+        }
+    }
 }
 
 #[derive(Debug, Copy, PartialEq, Eq, Clone)]

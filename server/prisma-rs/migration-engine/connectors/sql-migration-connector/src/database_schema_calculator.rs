@@ -91,15 +91,23 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     let table = Table {
                         name: relation.table_name(),
                         columns: vec![
-                            Column::new(
+                            Column::with_foreign_key(
                                 model_a_column.to_string(),
                                 column_type(&scalar_type(id_field(&relation.model_a))),
                                 true,
+                                ForeignKey {
+                                    table: relation.model_a.name.to_string(),
+                                    column: id_field(&relation.model_a).name.to_string(),
+                                },
                             ),
-                            Column::new(
+                            Column::with_foreign_key(
                                 model_b_column.to_string(),
                                 column_type(&scalar_type(id_field(&relation.model_b))),
                                 true,
+                                ForeignKey {
+                                    table: relation.model_b.name.to_string(),
+                                    column: id_field(&relation.model_b).name.to_string(),
+                                },
                             ),
                         ],
                         indexes: Vec::new(),
