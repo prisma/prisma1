@@ -2,13 +2,18 @@ use crate::sql_database_migration_steps_inferrer::wrap_as_step;
 use crate::sql_migration_step::*;
 use database_inspector::{Column, DatabaseSchema, Table};
 
-struct DatabaseSchemaDiffer {
+pub struct DatabaseSchemaDiffer {
     previous: DatabaseSchema,
     next: DatabaseSchema,
 }
 
 impl DatabaseSchemaDiffer {
-    pub fn diff(&self) -> Vec<SqlMigrationStep> {
+    pub fn diff(previous: DatabaseSchema, next: DatabaseSchema) -> Vec<SqlMigrationStep> {
+        let differ = DatabaseSchemaDiffer { previous, next };
+        differ.diff_internal()
+    }
+
+    fn diff_internal(&self) -> Vec<SqlMigrationStep> {
         let mut result = Vec::new();
         result.append(&mut wrap_as_step(self.create_tables(), |x| {
             SqlMigrationStep::CreateTable(x)
@@ -47,7 +52,7 @@ impl DatabaseSchemaDiffer {
     fn drop_tables(&self) -> Vec<DropTable> {
         let mut result = Vec::new();
         for previous_table in &self.previous.tables {
-            if !self.next.has_table(&previous_table.name) {
+            if !self.next.has_table(&previous_table.name) && previous_table.name != "_Migration" {
                 let drop = DropTable {
                     name: previous_table.name.clone(),
                 };
@@ -66,11 +71,13 @@ impl DatabaseSchemaDiffer {
                 changes.append(&mut Self::add_columns(&previous_table, &next_table));
                 changes.append(&mut Self::alter_columns(&previous_table, &next_table));
 
-                let update = AlterTable {
-                    table: previous_table.name.clone(),
-                    changes: Vec::new(),
-                };
-                result.push(update);
+                if !changes.is_empty() {
+                    let update = AlterTable {
+                        table: previous_table.name.clone(),
+                        changes: changes,
+                    };
+                    result.push(update);
+                }
             }
         }
         result
@@ -106,11 +113,13 @@ impl DatabaseSchemaDiffer {
         let mut result = Vec::new();
         for next_column in &next.columns {
             if let Some(previous_column) = previous.column(&next_column.name) {
-                let change = AlterColumn {
-                    name: previous_column.name.clone(),
-                    column: Self::column_description(next_column),
-                };
-                result.push(TableChange::AlterColumn(change));
+                if previous_column != next_column {
+                    let change = AlterColumn {
+                        name: previous_column.name.clone(),
+                        column: Self::column_description(next_column),
+                    };
+                    result.push(TableChange::AlterColumn(change));
+                }
             }
         }
         result

@@ -5,7 +5,7 @@ pub use database_inspector_impl::*;
 pub use empty_impl::*;
 
 pub trait DatabaseInspector {
-    fn introspect(&self, schema: String) -> DatabaseSchema;
+    fn introspect(&self, schema: &String) -> DatabaseSchema;
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]

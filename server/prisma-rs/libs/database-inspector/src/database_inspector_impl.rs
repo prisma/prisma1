@@ -7,12 +7,12 @@ pub struct DatabaseInspectorImpl {
 }
 
 impl DatabaseInspector for DatabaseInspectorImpl {
-    fn introspect(&self, schema: String) -> DatabaseSchema {
+    fn introspect(&self, schema: &String) -> DatabaseSchema {
         DatabaseSchema {
             tables: self
-                .get_table_names(&schema)
+                .get_table_names(schema)
                 .into_iter()
-                .map(|t| self.get_table(&schema, &t))
+                .map(|t| self.get_table(schema, &t))
                 .collect(),
         }
     }

@@ -21,7 +21,7 @@ fn all_columns_types_must_work() {
         });
     });
 
-    let result = inspector.introspect(SCHEMA.to_string());
+    let result = inspector.introspect(&SCHEMA.to_string());
 
     let table = result.table("User").unwrap();
     let expected_columns = vec![
@@ -81,7 +81,7 @@ fn is_required_must_work() {
         });
     });
 
-    let result = inspector.introspect(SCHEMA.to_string());
+    let result = inspector.introspect(&SCHEMA.to_string());
 
     let user_table = result.table("User").unwrap();
     let expected_columns = vec![
@@ -114,7 +114,7 @@ fn foreign_keys_must_work() {
         });
     });
 
-    let result = inspector.introspect(SCHEMA.to_string());
+    let result = inspector.introspect(&SCHEMA.to_string());
 
     let user_table = result.table("User").unwrap();
     let expected_columns = vec![Column {

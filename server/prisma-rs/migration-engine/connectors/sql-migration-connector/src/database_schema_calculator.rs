@@ -1,12 +1,17 @@
 use database_inspector::*;
 use datamodel::*;
 
-struct DatabaseSchemaCalculator {
-    data_model: Schema,
+pub struct DatabaseSchemaCalculator<'a> {
+    data_model: &'a Schema,
 }
 
-impl DatabaseSchemaCalculator {
-    pub fn calculate(&self) -> DatabaseSchema {
+impl<'a> DatabaseSchemaCalculator<'a> {
+    pub fn calculate(data_model: &Schema) -> DatabaseSchema {
+        let calculator = DatabaseSchemaCalculator { data_model };
+        calculator.calculate_internal()
+    }
+
+    fn calculate_internal(&self) -> DatabaseSchema {
         let mut tables = Vec::new();
         let mut model_tables = self.calculate_model_tables();
         tables.append(&mut model_tables);
@@ -14,7 +19,7 @@ impl DatabaseSchemaCalculator {
         DatabaseSchema { tables }
     }
 
-    pub fn calculate_model_tables(&self) -> Vec<Table> {
+    fn calculate_model_tables(&self) -> Vec<Table> {
         self.data_model
             .models()
             .iter()
@@ -26,7 +31,7 @@ impl DatabaseSchemaCalculator {
                         (FieldType::Base(scalar), arity) if arity != &FieldArity::List => Some(Column {
                             name: f.name.clone(),
                             tpe: column_type(scalar),
-                            is_required: false,
+                            is_required: arity == &FieldArity::Required,
                             foreign_key: None,
                             sequence: None,
                         }),

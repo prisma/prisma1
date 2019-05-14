@@ -9,6 +9,7 @@ mod sql_migration_step;
 use barrel;
 use barrel::backend::Sqlite;
 use barrel::types;
+use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
 use rusqlite::{Connection, NO_PARAMS};
 use sql_database_migration_steps_inferrer::*;
@@ -31,7 +32,10 @@ impl SqlMigrationConnector {
     // FIXME: this must take the config as a param at some point
     pub fn new(schema_name: String) -> SqlMigrationConnector {
         let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn(&schema_name)));
-        let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {});
+        let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {
+            inspector: Box::new(DatabaseInspectorImpl::new(Self::new_conn(&schema_name))),
+            schema_name: schema_name.to_string(),
+        });
         let database_step_applier = Arc::new(SqlDatabaseStepApplier::new(
             Self::new_conn(&schema_name),
             schema_name.clone(),
