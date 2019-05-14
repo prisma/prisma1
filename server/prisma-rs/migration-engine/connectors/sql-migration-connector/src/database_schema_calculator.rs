@@ -14,7 +14,9 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     fn calculate_internal(&self) -> DatabaseSchema {
         let mut tables = Vec::new();
         let mut model_tables = self.calculate_model_tables();
+        let mut scalar_list_tables = self.calculate_scalar_list_tables();
         tables.append(&mut model_tables);
+        tables.append(&mut scalar_list_tables);
 
         DatabaseSchema { tables }
     }
@@ -45,6 +47,50 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                 }
             })
             .collect()
+    }
+
+    fn calculate_scalar_list_tables(&self) -> Vec<Table> {
+        let mut result = Vec::new();
+
+        for model in self.data_model.models() {
+            let list_fields: Vec<&Field> = model
+                .fields
+                .iter()
+                .filter(|f| f.arity == FieldArity::List && is_scalar(f))
+                .collect();
+            for field in list_fields {
+                let id_field = model.fields.iter().next().clone().unwrap(); // todo: find actual id field
+                let table = Table {
+                    name: format!("{}_{}", model.name.clone(), field.name.clone()),
+                    columns: vec![
+                        Column::new("nodeId".to_string(), column_type(&scalar_type(&id_field)), true),
+                        Column::new("position".to_string(), ColumnType::Int, true),
+                        Column::new("value".to_string(), column_type(&scalar_type(&field)), true),
+                    ],
+                    indexes: Vec::new(),
+                };
+                result.push(table);
+            }
+        }
+
+        result
+    }
+}
+
+fn is_scalar(field: &Field) -> bool {
+    match field.field_type {
+        FieldType::Base(_) => true,
+        _ => false,
+    }
+}
+
+fn scalar_type(field: &Field) -> &ScalarType {
+    match &field.field_type {
+        FieldType::Base(ref scalar) => scalar,
+        x => panic!(format!(
+            "only scalar types are suported here. Type is {:?} on field {}",
+            x, field.name
+        )),
     }
 }
 

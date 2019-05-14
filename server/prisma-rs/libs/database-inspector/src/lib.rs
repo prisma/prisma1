@@ -49,6 +49,18 @@ pub struct Column {
     pub sequence: Option<Sequence>,
 }
 
+impl Column {
+    pub fn new(name: String, tpe: ColumnType, is_required: bool) -> Column {
+        Column {
+            name,
+            tpe,
+            is_required,
+            foreign_key: None,
+            sequence: None,
+        }
+    }
+}
+
 #[derive(Debug, Copy, PartialEq, Eq, Clone)]
 pub enum ColumnType {
     Int,
