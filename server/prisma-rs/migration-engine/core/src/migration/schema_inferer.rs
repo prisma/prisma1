@@ -32,7 +32,8 @@ impl SchemaInferer for LegacySchemaInferer {
 
         println!("received from the schema-inferrer-bin: {}", &buffer);
 
-        let schema: InternalDataModelTemplate = serde_json::from_str(buffer.as_str()).expect("Deserializing the schema failed.");
+        let schema: InternalDataModelTemplate =
+            serde_json::from_str(buffer.as_str()).expect("Deserializing the schema failed.");
         schema.build("".to_string())
     }
 }

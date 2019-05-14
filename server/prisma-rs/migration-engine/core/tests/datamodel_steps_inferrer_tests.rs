@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use datamodel::dml::*;
-use datamodel::Validator;
+use datamodel::validator::Validator;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
 use nullable::*;
@@ -151,12 +151,12 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
         MigrationStep::CreateField(CreateField {
             model: "Blog".to_string(),
             name: "posts".to_string(),
-            tpe: FieldType::Relation {
+            tpe: FieldType::Relation(RelationInfo {
                 to: "Post".to_string(),
                 to_field: "".to_string(),
                 name: None,
                 on_delete: OnDeleteStrategy::None,
-            },
+            }),
             arity: FieldArity::List,
             db_name: None,
             is_created_at: None,
@@ -168,12 +168,12 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
         MigrationStep::CreateField(CreateField {
             model: "Post".to_string(),
             name: "blog".to_string(),
-            tpe: FieldType::Relation {
+            tpe: FieldType::Relation(RelationInfo {
                 to: "Blog".to_string(),
                 to_field: "".to_string(),
                 name: None,
                 on_delete: OnDeleteStrategy::None,
-            },
+            }),
             arity: FieldArity::Optional,
             db_name: None,
             is_created_at: None,
@@ -271,10 +271,11 @@ fn infer_CreateEnum() {
 
 // TODO: we will need this in a lot of test files. Extract it.
 fn parse(datamodel_string: &'static str) -> Schema {
-    let ast = datamodel::parser::parse(&datamodel_string.to_string());
+    let ast = datamodel::parser::parse(datamodel_string).unwrap();
     // TODO: this would need capabilities
+    // TODO: Special directives are injected via EmptyAttachmentValidator.
     let validator = Validator::new();
-    validator.validate(&ast)
+    validator.validate(&ast).unwrap()
 }
 
 fn infer(dm1: Schema, dm2: Schema) -> Vec<MigrationStep> {
