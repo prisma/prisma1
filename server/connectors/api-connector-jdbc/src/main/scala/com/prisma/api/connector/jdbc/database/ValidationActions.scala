@@ -13,11 +13,11 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   def ensureThatNodeIsNotConnected(relationField: RelationField, id: IdGCValue): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
-      .select(relationColumn(relation, relationField.oppositeRelationSide))
+      .select(relationColumn(relationField.relatedField))
       .from(relationTable(relation))
       .where(
-        relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder),
-        relationColumn(relation, relationField.relationSide).isNotNull
+        relationColumn(relationField.relatedField).equal(placeHolder),
+        relationColumn(relationField).isNotNull
       )
 
     queryToDBIO(idQuery)(
@@ -32,11 +32,11 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   def ensureThatNodesAreConnected(relationField: RelationField, childId: IdGCValue, parentId: IdGCValue)(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
-      .select(relationColumn(relation, relationField.oppositeRelationSide))
+      .select(relationColumn(relationField.relatedField))
       .from(relationTable(relation))
       .where(
-        relationColumn(relation, relationField.oppositeRelationSide).equal(placeHolder),
-        relationColumn(relation, relationField.relationSide).equal(placeHolder)
+        relationColumn(relationField.relatedField).equal(placeHolder),
+        relationColumn(relationField).equal(placeHolder)
       )
 
     queryToDBIO(idQuery)(
@@ -63,11 +63,11 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   )(implicit ec: ExecutionContext): DBIO[Unit] = {
     val relation = relationField.relation
     val idQuery = sql
-      .select(relationColumn(relation, relationField.relationSide))
+      .select(relationColumn(relationField))
       .from(relationTable(relation))
       .where(
-        relationColumn(relation, relationField.relationSide).equal(placeHolder),
-        relationColumn(relation, relationField.oppositeRelationSide).isNotNull
+        relationColumn(relationField).equal(placeHolder),
+        relationColumn(relationField.relatedField).isNotNull
       )
 
     queryToDBIO(idQuery)(
@@ -90,18 +90,17 @@ trait ValidationActions extends BuilderBase with FilterConditionBuilder {
   }
 
   def errorIfNodesAreInRelation(parentIds: Vector[IdGCValue], field: RelationField)(implicit ec: ExecutionContext): DBIO[Unit] = {
-    val relation = field.relation
     val query = sql
-      .select(relationColumn(relation, field.oppositeRelationSide))
-      .from(relationTable(relation))
+      .select(relationColumn(field.relatedField))
+      .from(relationTable(field.relation))
       .where(
-        relationColumn(relation, field.oppositeRelationSide).in(placeHolders(parentIds)),
-        relationColumn(relation, field.relationSide).isNotNull
+        relationColumn(field.relatedField).in(placeHolders(parentIds)),
+        relationColumn(field).isNotNull
       )
 
     queryToDBIO(query)(
       setParams = pp => parentIds.foreach(pp.setGcValue),
-      readResult = rs => if (rs.next) throw RequiredRelationWouldBeViolated(relation)
+      readResult = rs => if (rs.next) throw RequiredRelationWouldBeViolated(field.relation)
     )
   }
 }

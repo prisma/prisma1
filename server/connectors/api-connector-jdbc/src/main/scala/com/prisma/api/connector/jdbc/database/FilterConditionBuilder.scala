@@ -93,22 +93,22 @@ trait FilterConditionBuilder extends BuilderBase {
     relationFilter.nestedFilter match {
       case nested: RelationFilter =>
         val condition = inStatementForRelationCondition(
-          jooqField = relationColumn(relation, relationField.oppositeRelationSide),
+          jooqField = relationColumn(relationField.relatedField),
           condition = nested.condition,
           subSelect = relationFilterSubSelect(newAlias, nested)
         )
         sql
-          .select(relationColumn(relation, relationField.relationSide))
+          .select(relationColumn(relationField))
           .from(relationTable(relation))
           .where(condition.invert(invertConditionOfSubSelect))
 
       case nested =>
         val condition = buildConditionForFilter(nested, newAlias)
         sql
-          .select(relationColumn(relation, relationField.relationSide))
+          .select(relationColumn(relationField))
           .from(relationTable(relation))
           .innerJoin(modelTable(relationField.relatedModel_!).as(newAlias))
-          .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relation, relationField.oppositeRelationSide)))
+          .on(modelIdColumn(newAlias, relationField.relatedModel_!).eq(relationColumn(relationField.relatedField)))
           .where(condition.invert(invertConditionOfSubSelect))
     }
   }
@@ -131,7 +131,7 @@ trait FilterConditionBuilder extends BuilderBase {
 
       case false =>
         val select = sql
-          .select(relationColumn(relation, relationField.relationSide))
+          .select(relationColumn(relationField))
           .from(relationTable(relation))
 
         modelIdColumn(alias, relationField.relatedModel_!).notIn(select)
