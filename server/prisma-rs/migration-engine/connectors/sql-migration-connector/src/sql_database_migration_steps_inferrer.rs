@@ -72,17 +72,6 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
     }
 }
 
-struct Relation {
-    field_a: Field,
-    field_b: Field,
-    manifestation: RelationManifestation,
-}
-
-enum RelationManifestation {
-    Inline { in_table_of_model: String, column: String },
-    // Table { table: String, model_a_column: String, model_b_column }
-}
-
 fn column_type(ft: FieldType) -> ColumnType {
     match ft {
         FieldType::Base(scalar) => match scalar {
