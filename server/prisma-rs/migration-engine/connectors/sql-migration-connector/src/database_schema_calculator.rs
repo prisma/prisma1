@@ -28,11 +28,9 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     fn calculate_model_tables(&self) -> Vec<Table> {
         self.data_model
             .models()
-            .iter()
-            .map(|m| {
-                let columns = m
-                    .fields
-                    .iter()
+            .map(|model| {
+                let columns = model
+                    .fields()
                     .flat_map(|f| match (&f.field_type, &f.arity) {
                         (FieldType::Base(scalar), arity) if arity != &FieldArity::List => Some(Column {
                             name: f.name.clone(),
@@ -45,7 +43,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     })
                     .collect();
                 Table {
-                    name: m.name.clone(),
+                    name: model.name.clone(),
                     columns: columns,
                     indexes: Vec::new(),
                 }
@@ -58,8 +56,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
 
         for model in self.data_model.models() {
             let list_fields: Vec<&Field> = model
-                .fields
-                .iter()
+                .fields()
                 .filter(|f| f.arity == FieldArity::List && is_scalar(f))
                 .collect();
             for field in list_fields {
@@ -124,19 +121,19 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     fn calculate_relations(&self) -> Vec<Relation> {
         let mut result = Vec::new();
         for model in self.data_model.models() {
-            for field in model.fields.iter() {
+            for field in model.fields() {
                 match &field.field_type {
-                    FieldType::Relation {
-                        to,
-                        to_field,
-                        name,
-                        on_delete,
-                    } => {
-                        let related_model = self.data_model.find_model(to.to_string()).unwrap();
+                    FieldType::Relation(relation_info) => {
+                        let RelationInfo {
+                            to,
+                            to_field,
+                            name,
+                            on_delete,
+                        } = relation_info;
+                        let related_model = self.data_model.find_model(&to).unwrap();
                         // TODO: handle case of implicit back relation field
                         let related_field = related_model
-                            .fields
-                            .iter()
+                            .fields()
                             .find(|f| related_type(f) == Some(model.name.to_string()))
                             .unwrap()
                             .clone();
@@ -208,17 +205,20 @@ enum RelationManifestation {
 }
 
 fn id_field(model: &Model) -> &Field {
-    model.fields.iter().next().clone().unwrap()
+    model.fields().next().clone().unwrap()
 }
 
 fn related_type(field: &Field) -> Option<String> {
     match &field.field_type {
-        FieldType::Relation {
-            to,
-            to_field,
-            name,
-            on_delete,
-        } => Some(to.to_string()),
+        FieldType::Relation(relation_info) => {
+            let RelationInfo {
+                to,
+                to_field,
+                name,
+                on_delete,
+            } = relation_info;
+            Some(to.to_string())
+        }
         _ => None,
     }
 }
