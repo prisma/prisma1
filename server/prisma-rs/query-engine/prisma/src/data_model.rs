@@ -73,13 +73,21 @@ pub fn load_sdl_string() -> PrismaResult<String> {
 }
 
 /// Attempts to load a Prisma SDL string from env.
-/// Note that the content of the env var has to be base64 encoded.
-/// Returns: Decoded Prisma SDL string.
+/// Note that the content of the env var can be base64 encoded if necessary.
+/// Returns: (Decoded) Prisma SDL string.
 fn load_sdl_from_env() -> PrismaResult<String> {
     debug!("Trying to load Prisma SDL from env...");
     utilities::get_env("PRISMA_SDL").and_then(|sdl_b64| {
-        let bytes = base64::decode(&sdl_b64)?;
-        let sdl = String::from_utf8(bytes)?;
+        let sdl = match base64::decode(&sdl_b64) {
+            Ok(bytes) => {
+                trace!("Decoded SDL from Base64.");
+                String::from_utf8(bytes)?
+            }
+            Err(e) => {
+                trace!("Error decoding SDL Base64: {:?}", e);
+                sdl_b64
+            }
+        };
 
         debug!("Loaded Prisma SDL from env.");
         Ok(sdl)

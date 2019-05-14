@@ -89,7 +89,7 @@ pub fn load() -> Result<PrismaConfig, CommonError> {
     };
 
     let config = substitute_env_vars(config)?;
-    Ok(serde_yaml::from_str(&config).expect("Unable to parse YML config."))
+    Ok(serde_yaml::from_str(&config.replace("\\n", "\n")).expect("Unable to parse YML config."))
 }
 
 /// Attempts to find a valid Prisma config either via env var or file discovery.
