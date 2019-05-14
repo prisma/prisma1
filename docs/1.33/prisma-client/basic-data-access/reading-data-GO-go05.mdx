@@ -1,0 +1,746 @@
+import Collapse from "components/Markdown/Collapse"
+import Code from "components/Markdown/Code"
+import Warning from "components/Markdown/Warning"
+import Info from "components/Markdown/Info"
+
+export const meta = {
+  title: 'Reading Data (Go)',
+  position: 50,
+  technology: "go",
+  technologyOrder: 3,
+  articleGroup: "Reading Data",
+}
+
+## Overview
+
+The Prisma client is generated from your [datamodel](knul). Its API exposes CRUD and other operations for the models defined in the datamodel.
+
+For this page, we'll assume your Prisma project is based on the following datamodel:
+
+```graphql
+type Post {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+  title: String!
+  published: Boolean! @default(value: false)
+  author: User
+  comments: [Comment!]!
+}
+
+type User {
+  id: ID! @id
+  name: String
+  email: String! @unique
+  role: Role! @default(value: USER)
+  posts: [Post!]!
+  comments: [Comment!]!
+}
+
+type Comment {
+  id: ID! @id
+  createdAt: DateTime! @createdAt
+  text: String!
+  post: Post!
+  writtenBy: User!
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+```
+
+Whenever a database record is queried using the Prisma client, all _scalar_ fields of that record are fetched. This is true no matter if a single record or a list of records is queried.
+
+For example, the following query returns all scalar fields of a single `User`:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+email := "ada@prisma.io"
+user, err := client.User(prisma.UserWhereUniqueInput{
+  Email: &email,
+}).Exec(ctx)
+```
+
+```go
+&prisma.User{
+  ID:cjsx2j8bq028z0b253bstyggy 
+  Name:0xc0002e8940 // "Ada"
+  Email:ada@prisma.io
+}
+```
+
+</Code>
+
+In this case, the returned `user` record will have four properties (that correspond to the scalar fields of the `User` model): `id`, `name`, `email` and `role`. The `posts` and `comments` fields are both _relation_ fields and are therefore not included in the response.
+
+Here is an example of fetching a _list_ of `User` records:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+users, err := client.Users(nil).Exec(ctx)
+```
+
+```go
+[]prisma.User{
+	prisma.User{
+		ID:"cjsx2j8bq028z0b253bstyggy",
+		Name:(*string)(0xc0001202c0), 
+		Email:"ada@prisma.io"
+	},
+	prisma.User{
+		ID:"cjsx2j8cb029k0b25nwwo9bkg",
+		Name:(*string)(0xc000120420), 
+		Email:"grace@prisma.io"
+	}, 
+	prisma.User{
+		ID:"cjsx2j8cz02a70b25law6s8y2",
+		Name:(*string)(0xc0001205d0), 
+		Email:"lynn@prisma.io"
+	}
+}
+```
+
+</Code>
+
+Similar to the previous request, each object inside the `users` array only has the scalar and no relation fields.
+
+## Fetching single records
+
+For each model in your [datamodel](knul), there is a method generated in the Prisma client API that allows to fetch single records of that model. 
+
+The method is named after the model. For the sample datamodel from above, the three generated methods for fetching single records are:
+
+- `func (client *Client) User(params UserWhereUniqueInput) *UserExec` for `User`
+- `func (client *Client) Post(params PostWhereUniqueInput) *PostExec` for `Post`
+- `func (client *Client) Comment(params CommentWhereUniqueInput) *CommentExec` for `Comment`
+
+The `params` input argument for these methods is a struct that has as properties all [unique](knul#unique-scalar-fields) fields of the model. This means, for all three methods, the `id` field is accepted (as the corresponding models each have an `id` field annotated as `@unique`). The `params` struct for the `user` method additionaly has an `email` field.
+
+
+### Examples
+
+_Fetch a single post by its id_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+id := "cjsx2j8bw02920b25rl806l07"
+post, err := client.Post(prisma.PostWhereUniqueInput{
+  ID: &id,
+}).Exec(ctx)
+```
+
+```go
+&prisma.Post{
+	ID:"cjsx2j8bw02920b25rl806l07", 
+	CreatedAt:"2019-03-06T10:37:43.526Z", 
+	UpdatedAt:"2019-03-06T10:37:43.526Z", 
+	Title:"Building General-Purpose Computers", 
+	Published:true
+}
+```
+
+</Code>
+
+_Fetch a single user by their email_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+email := "ada@prisma.io"
+user, err := client.User(prisma.UserWhereUniqueInput{
+  Email: &email,
+}).Exec(ctx)
+```
+
+```go
+&prisma.User{
+  ID:cjsx2j8bq028z0b253bstyggy 
+  Name:0xc0002e8940 // "Ada"
+  Email:ada@prisma.io
+}
+```
+
+</Code>
+
+## Fetching lists
+
+For each model in your datamodel, there is a method generated in the Prisma client API that allows to fetch a list of the respective records. 
+
+The method is named after the model but starts uses the _plural_ form. For the sample datamodel from above, the three generated methods for fetching single records are:
+
+- `func (client *Client) Users(params *UsersParams) *UserExecArray` for `User`
+- `func (client *Client) Posts(params *PostsParamsExec) *PostExecArray` for `Post`
+- `func (client *Client) Comments(params *CommentsParamsExec) *CommentExecArray` for `Comment`
+
+The input arugment for these functions is a struct that has properties for:
+
+- [filtering](#basic-filters-for-lists): `where`
+- [ordering](#ordering): `orderBy`
+- [pagination](#pagination): `before`, `after`, `first`, `last`, `skip`
+
+
+### Examples
+
+_Fetch all comments_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+comments, err := client.Comments(nil).Exec(ctx)
+```
+
+```go
+[]prisma.Comment{
+	prisma.Comment{
+		ID:"cjsx2j8cm029r0b256m1qjc1z", 
+		CreatedAt:"2019-03-06T10:37:43.547Z", 
+		Text:"Great work!"
+	}, 
+	prisma.Comment{
+		ID:"cjsx2j8d502ac0b2573tfihhd", 
+		CreatedAt:"2019-03-06T10:37:43.570Z", 
+		Text:"I love this."
+	}, 
+	prisma.Comment{
+		ID:"cjsx2j8d902af0b256ye4f162", 
+		CreatedAt:"2019-03-06T10:37:43.571Z", 
+		Text:"Very interesting!"
+	}
+}
+```
+
+</Code>
+
+_Fetch a list of users_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+users, err := client.Users(nil).Exec(ctx)
+```
+
+```go
+[]prisma.User{
+	prisma.User{
+		ID:"cjsx2j8bq028z0b253bstyggy",
+		Name:(*string)(0xc0000102c0), 
+		Email:"ada@prisma.io"}, 
+	prisma.User{
+		ID:"cjsx2j8cb029k0b25nwwo9bkg",
+		Name:(*string)(0xc000010410), 
+		Email:"grace@prisma.io"}, 
+	prisma.User{
+		ID:"cjsx2j8cz02a70b25law6s8y2",
+		Name:(*string)(0xc0000105d0), 
+		Email:"lynn@prisma.io"
+	}
+}
+```
+
+</Code>
+
+
+## Relations
+
+Prisma client has a [fluent API](https://www.sitepoint.com/javascript-like-boss-understanding-fluent-apis/) to query relations in your database. Meaning you can simply _chain_ your method calls to navigate the relation properties of the returned records.
+
+### Examples
+
+_Fetch all the posts of a single user_:
+
+
+<Code languages={["Go", "Result"]}>
+
+```go
+posts, err := client.User(prisma.UserWhereUniqueInput{
+		Email: &email,
+	}).Posts(nil).Exec(ctx)
+```
+
+```go
+[]prisma.Post{
+	prisma.Post{
+		ID:"cjsx2j8bu02900b25uhpv083r", 
+		CreatedAt:"2019-03-06T10:37:43.526Z", 
+		UpdatedAt:"2019-03-06T10:37:43.526Z", 
+		Title:"Introducing the Analytical Engine", 
+		Published:false
+},
+	prisma.Post{
+		ID:"cjsx2j8bw02920b25rl806l07", 
+		CreatedAt:"2019-03-06T10:37:43.526Z", 
+		UpdatedAt:"2019-03-06T10:37:43.526Z", 
+		Title:"Building General-Purpose Computers", 
+		Published:true
+		}, 
+	prisma.Post{
+		ID:"cjsx2j8bz02940b25r5hy5jua", 
+		CreatedAt:"2019-03-06T10:37:43.526Z", 
+		UpdatedAt:"2019-03-06T10:37:43.526Z", 
+		Title:"RESTful APIs Considered Harmful", 
+		Published:false
+	}, 
+	prisma.Post{
+		ID:"cjsx2j8c102960b25z0d6ihel", 
+		CreatedAt:"2019-03-06T10:37:43.526Z", 
+		UpdatedAt:"2019-03-06T10:37:43.526Z", 
+		Title:"Why Algorithms are Awesome", 
+		Published:true
+	}
+}
+```
+
+</Code>
+
+## Basic filters for lists
+
+_Basic_ filters let you specify certain criteria to constrain which records should be returned in a list. The filters are specified in the `Where` struct of the `params` argument which is accepted by any list query.
+
+The type of the `Where` struct depends on the model for which it was generated.
+
+It is also possible to _combine_ multiple filters using the `AND` and `OR` fields.
+
+### Examples
+
+_Fetch users that have an `A` in their names_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+letter := "A"
+usersWithAInName, err := client.Users(&prisma.UsersParams{
+	Where: &prisma.UserWhereInput{
+		NameContains: &letter,
+	},
+}).Exec(ctx)
+```
+
+```go
+[]prisma.User{
+	prisma.User{
+		ID:"cjsx2j8bq028z0b253bstyggy", 
+		Name:(*string)(0xc00026da40), // Ada
+		Email:"ada@prisma.io"}, 
+	prisma.User{
+		ID:"cjsx2j8cb029k0b25nwwo9bkg", 
+		Name:(*string)(0xc00026dbb0), // Grace
+		Email:"grace@prisma.io"
+	}
+}
+```
+
+</Code>
+
+<Collapse title="Use auto-completion to explore the filter system">
+
+![](https://imgur.com/HItotr4.png)
+
+</Collapse>
+
+_Fetch users called `Ada` or `Grace`_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+names := []string{"Ada", "Grace"}
+users, err := client.Users(&prisma.UsersParams{
+  Where: &prisma.UserWhereInput{
+    NameIn: names,
+  },
+}).Exec(ctx)
+```
+
+```go
+[]prisma.User{
+	prisma.User{
+		ID:"cjsx2j8bq028z0b253bstyggy", 
+		Name:(*string)(0xc000093110), // Ada
+		Email:"ada@prisma.io"}, 
+	prisma.User{
+		ID:"cjsx2j8cb029k0b25nwwo9bkg", 
+		Name:(*string)(0xc000093470), // Grace
+		Email:"grace@prisma.io"
+	}
+}
+```
+
+</Code>
+
+_Fetch comments created before December 24, 2019_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+christmas := "2019-12-24"
+comments, err := client.Comments(&prisma.CommentsParams{
+  Where: &prisma.CommentWhereInput{
+    CreatedAtLt: &christmas,
+  },
+}).Exec(ctx)
+```
+
+```go
+[]prisma.Comment{
+	prisma.Comment{
+		ID:"cjsx2j8cm029r0b256m1qjc1z", 
+		CreatedAt:"2019-03-06T10:37:43.547Z", 
+		Text:"Great work!"}, 
+	prisma.Comment{
+		ID:"cjsx2j8d502ac0b2573tfihhd", 
+		CreatedAt:"2019-03-06T10:37:43.570Z", 
+		Text:"I love this."}, 
+	prisma.Comment{
+		ID:"cjsx2j8d902af0b256ye4f162", 
+		CreatedAt:"2019-03-06T10:37:43.571Z", 
+		Text:"Very interesting!"
+	}
+}
+```
+
+</Code>
+
+> Dates and times in the Prisma client API follow the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) standard which generally is of the form: `YYYY-MM-DDThh:mm:ss`. [Learn more](knul#datetime).
+
+_Fetch posts that have `prisma` **or** `graphql` in their title **and** were created in 2019_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+filter1 := "prisma"
+filter2 := "graphql"
+filteredPosts, err := client.Posts(&prisma.PostsParams{
+	Where: &prisma.PostWhereInput{
+		Or: []prisma.PostWhereInput{
+			prisma.PostWhereInput{
+				TitleContains: &filter1,
+			},
+			prisma.PostWhereInput{
+				TitleContains: &filter2,
+			},
+		},
+	},
+}).Exec(ctx)
+```
+
+```go
+[]prisma.Post{
+	prisma.Post{
+		ID:"cjsx2j8ci029n0b25iadtorzi", 
+		CreatedAt:"2019-03-06T10:37:43.547Z", 
+		UpdatedAt:"2019-03-06T10:37:43.547Z", 
+		Title:"GraphQL - The Query Language of the Future", 
+		Published:true
+	},
+	prisma.Post{
+		ID:"cjsviiljr0g9j0b43vntjbys1", 
+		CreatedAt:"2019-03-06T10:38:43.547Z", 
+		UpdatedAt:"2019-03-06T10:38:43.547Z", 
+		Title:"Prisma replaces traditional ORMs", 
+		Published:true
+	},
+}
+```
+
+</Code>
+
+## Relational filters for lists
+
+Relational filters can be used to constrain the returned records on a relation list field. The types used for filtering are similar to basic filters, the major difference is that the filters are not applied on the root level of the method call but when querying a relation (via the fluent API) on a later level.
+
+### Examples
+
+_Fetch posts by a certain user that were created before christmas_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+email := "ada@prisma.io"
+christmas := "2019-12-24"
+posts, err := client.User(prisma.UserWhereUniqueInput{
+	Email: &email,
+}).Posts(&prisma.PostsParamsExec{
+	Where: &prisma.PostWhereInput{
+		CreatedAtLt: &christmas,
+	},
+}).Exec(ctx)
+```
+
+```go
+[]prisma.Post{
+	prisma.Post{
+		ID:"cjsx2j8bu02900b25uhpv083r", 
+		CreatedAt:"2019-03-06T10:37:43.526Z", 
+		UpdatedAt:"2019-03-06T10:37:43.526Z", 
+		Title:"Introducing the Analytical Engine", 
+		Published:false
+	},
+	prisma.Post{
+		ID:"cjsx2j8bw02920b25rl806l07", 
+		CreatedAt:"2019-03-06T10:37:43.526Z", 
+		UpdatedAt:"2019-03-06T10:37:43.526Z", 
+		Title:"Building General-Purpose Computers", 
+		Published:true
+	}, 
+	prisma.Post{
+		ID:"cjsx2j8bz02940b25r5hy5jua", 
+		CreatedAt:"2019-03-06T10:37:43.526Z", 
+		UpdatedAt:"2019-03-06T10:37:43.526Z", 
+		Title:"RESTful APIs Considered Harmful", 
+		Published:false
+	}, 
+	prisma.Post{
+		ID:"cjsx2j8c102960b25z0d6ihel", 
+		CreatedAt:"2019-03-06T10:37:43.526Z", 
+		UpdatedAt:"2019-03-06T10:37:43.526Z", 
+		Title:"Why Algorithms are Awesome", 
+		Published:true
+	}
+}
+```
+
+</Code>
+
+## Ordering
+
+When querying a list of records, you can order (sort) the list by any scalar field of that model. Each generated method to query a list of records therefore accepts the `OrderBy` field on the `params` input struct.
+
+The type of the `OrderBy` field depends on the scalar fields of the model for which it was generated.
+
+Note that you can _always_ order by `createdAt` and `updatedAt`, even when the fields have not been added to your models.
+
+### Examples
+
+_Sort comments by their creation date (ascending)_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+orderBy := prisma.CommentOrderByInputCreatedAtAsc
+comments, err := client.Comments(&prisma.CommentsParams{
+  OrderBy: &orderBy,
+}).Exec(ctx)
+```
+
+```go
+[]prisma.Comment{
+	prisma.Comment{
+		ID:"cjsyqxws1001a0982d3kqnulb", 
+		CreatedAt:"2019-03-07T14:48:45.349Z", 
+		Text:"Great work!"}, 
+	prisma.Comment{
+		ID:"cjsyqxwsp001v098231rodyl5", 
+		CreatedAt:"2019-03-07T14:48:45.378Z", 
+		Text:"I love this."}, 
+	prisma.Comment{
+		ID:"cjsyqxwss001y0982eg18knnm", 
+		CreatedAt:"2019-03-07T14:48:45.378Z", 
+		Text:"Very interesting!"
+	}
+}
+```
+
+</Code>
+
+_Sort users alphabetically by their names (descending)_:
+
+<Code languages={["Go", "Result"]}>
+
+```go
+orderBy := prisma.UserOrderByInputNameDesc
+users, err := client.Users(&prisma.UsersParams{
+	OrderBy: &orderBy,
+}).Exec(ctx)
+```
+
+```go
+[]prisma.User{
+	prisma.User{
+		ID:"cjsyqxwsi001q09823az58z8v", 
+		Name:(*string)(0xc0000117f0), // "Lynn"
+		Email:"lynn@prisma.io"
+	}, 
+	prisma.User{
+		ID:"cjsyqxwrr0013098281m7ajy9", 
+		Name:(*string)(0xc000011920), // "Grace"
+		Email:"grace@prisma.io"
+	}, 
+	prisma.User{
+		ID:"cjsyqxwq2000i0982qumb1o55", 
+		Name:(*string)(0xc000011a50), // "Ada"
+		Email:"ada@prisma.io"
+	}
+}
+```
+
+</Code>
+
+## Pagination
+
+When querying a list of records, you can fetch certain parts (i.e. _pages_) of that list by supplying pagination arguments.
+
+### Seeking forward and backward with `first` and `last`
+
+You can seek forwards or backwards through the list and supply an optional starting point:
+
+- To seek **forward**, use `first`; specify the `id` of a starting record with `after`.
+- To seek **backward**, use `last`; specify the `id` of a starting record with `before`.
+
+You **cannot** combine `first` with `before` or `last` with `after`. If you do so, `before`/`after` will simply be ignored and only `first` or `last` is actually applied (at the very beginning or end of the list, depending on which you're using).
+
+Note that you can query for more records than actually exist in the database without an error message.
+
+### Skipping elements with `skip`
+
+You can also skip an arbitrary amount of records in whichever direction you are seeking by supplying the `skip` argument:
+
+- When using `first`, `skip` skips records at the beginning of the list.
+- When using `last`, `skip` skips records from the end of the list.
+
+For the following examples, we're assuming a list of exactly 30 records:
+
+![](https://i.imgur.com/Xh6Qjts.png)
+
+_Fetch the first 3 posts (seeking forward)_:
+
+![](https://i.imgur.com/O1Jj3Z2.png)
+
+<Code languages={["Go"]}>
+
+```go
+first := int32(3)
+posts, err := client.Posts(&prisma.PostsParams{
+	First: &first,
+}).Exec(ctx)
+```
+
+</Code>
+
+_Fetch the posts from position 6 to position 10 (seeking forward)_:
+
+![](https://i.imgur.com/PpI5X0X.png)
+
+<Code languages={["Go"]}>
+
+```go
+skip := int32(5)
+first := int32(5)
+posts, err := client.Posts(&prisma.PostsParams{
+	First: &first,
+	Skip:  &skip,
+}).Exec(ctx)
+```
+
+</Code>
+
+_Fetch the last 3 posts (seeking backward)_:
+
+![](https://i.imgur.com/pkuYCrV.png)
+
+<Code languages={["Go"]}>
+
+```go
+last := int32(3)
+posts, err := client.Posts(&prisma.PostsParams{
+	Last: &last,
+}).Exec(ctx)
+```
+
+</Code>
+
+_Fetch the posts from position 21 to position 27 (seeking backward)_:
+
+![](https://i.imgur.com/iSl9Y07.png)
+
+<Code languages={["Go"]}>
+
+```go
+skip := int32(3)
+last := int32(7)
+posts, err := client.Posts(&prisma.PostsParams{
+	Last: &last,
+	Skip:  &skip,
+}).Exec(ctx)
+```
+
+</Code>
+
+_Fetch the first 3 posts after the posts with `cixnen24p33lo0143bexvr52n` as `id`_:
+
+![](https://i.imgur.com/InYSSkQ.png)
+
+<Code languages={["Go"]}>
+
+```go
+first := int32(3)
+after := "cjsyqxwqo000j0982da8cvw7o"
+posts, err := client.Posts(&prisma.PostsParams{
+  First: &first,
+  After: &after,
+}).Exec(ctx)
+```
+
+</Code>
+
+_Fetch the first 5 posts after the post with `cixnen24p33lo0143bexvr52n` as `id` and skipping 3 posts_:
+
+![](https://i.imgur.com/u4WEAJv.png)
+
+<Code languages={["Go"]}>
+
+```go
+first := int32(5)
+skip := int32(3)
+after := "cjsyqxwqo000j0982da8cvw7o"
+posts, err := client.Posts(&prisma.PostsParams{
+  First: &first,
+  After: &after,
+  Skip: &skip,
+}).Exec(ctx)
+```
+
+</Code>
+
+_Fetch the last 5 posts before the post with `cixnen24p33lo0143bexvr52n` as `id`_:
+
+![](https://i.imgur.com/306eghw.png)
+
+<Code languages={["Go"]}>
+
+```go
+last := int32(5)
+before := "cixnen24p33lo0143bexvr52n"
+posts, err := client.Posts(&prisma.PostsParams{
+  Last:  &last,
+  Before: &before,
+}).Exec(ctx)
+```
+
+</Code>
+
+_Fetch the last 3 posts before the record with `cixnen24p33lo0143bexvr52n` as `id` and skipping 5 posts_:
+
+![](https://i.imgur.com/iZGUiHJ.png)
+
+<Code languages={["Go"]}>
+
+```go
+last := int32(3)
+before := "cixnen24p33lo0143bexvr52n"
+skip: := int32(5)
+posts, err := client.Posts(&prisma.PostsParams{
+  Last:  &last,
+  Before: &before,
+  Skip: &skip,
+}).Exec(ctx)
+```
+
+</Code>
+
+## Aggregations
+
+Aggregrations are currently not supported in the Prisma Go client. You can track the progress of this feature in [this](https://github.com/prisma/prisma/issues/4027) GitHub issue.
