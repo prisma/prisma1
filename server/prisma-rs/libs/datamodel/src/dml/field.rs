@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 // This is duplicate for now, but explicitely required
 // since we want to seperate ast and dml.
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub enum FieldArity {
     Required,
     Optional,

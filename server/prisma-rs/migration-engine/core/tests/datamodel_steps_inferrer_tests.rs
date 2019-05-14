@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use datamodel::dml::*;
-use datamodel::Validator;
+use datamodel::validator::{BaseValidator, EmptyAttachmentValidator, Validator};
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
 use nullable::*;
@@ -151,12 +151,12 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
         MigrationStep::CreateField(CreateField {
             model: "Blog".to_string(),
             name: "posts".to_string(),
-            tpe: FieldType::Relation {
+            tpe: FieldType::Relation(RelationInfo {
                 to: "Post".to_string(),
                 to_field: "".to_string(),
                 name: None,
                 on_delete: OnDeleteStrategy::None,
-            },
+            }),
             arity: FieldArity::List,
             db_name: None,
             is_created_at: None,
@@ -168,12 +168,12 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
         MigrationStep::CreateField(CreateField {
             model: "Post".to_string(),
             name: "blog".to_string(),
-            tpe: FieldType::Relation {
+            tpe: FieldType::Relation(RelationInfo {
                 to: "Blog".to_string(),
                 to_field: "".to_string(),
                 name: None,
                 on_delete: OnDeleteStrategy::None,
-            },
+            }),
             arity: FieldArity::Optional,
             db_name: None,
             is_created_at: None,
@@ -273,7 +273,7 @@ fn infer_CreateEnum() {
 fn parse(datamodel_string: &'static str) -> Schema {
     let ast = datamodel::parser::parse(&datamodel_string.to_string());
     // TODO: this would need capabilities
-    let validator = Validator::new();
+    let validator = BaseValidator::<EmptyAttachmentValidator>::new();
     validator.validate(&ast)
 }
 
