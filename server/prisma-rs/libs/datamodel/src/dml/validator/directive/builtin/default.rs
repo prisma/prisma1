@@ -1,5 +1,5 @@
 use crate::dml;
-use crate::dml::validator::directive::{error, Args, DirectiveValidator, Error};
+use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
 pub struct DefaultDirectiveValidator {}
 
@@ -13,10 +13,10 @@ impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
             match args.default_arg("value").as_type(&scalar_type) {
                 // TODO: Here, a default value directive can override the default value syntax sugar.
                 Ok(value) => field.default_value = Some(value),
-                Err(err) => return Some(err),
+                Err(err) => return self.parser_error(&err),
             }
         } else {
-            return error("Cannot set a default value on a non-scalar field.");
+            return self.error("Cannot set a default value on a non-scalar field.");
         }
 
         return None;

@@ -16,7 +16,7 @@ impl DirectiveValidator<dml::Field> for PrimaryDirectiveValidator {
         if let Ok(strategy) = args.arg("name").as_constant_literal() {
             match strategy.parse::<dml::IdStrategy>() {
                 Ok(strategy) => id_info.strategy = strategy,
-                Err(err) => return Some(err),
+                Err(err) => return self.parser_error(&err),
             }
         }
 

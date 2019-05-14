@@ -1,5 +1,5 @@
 use crate::dml;
-use crate::dml::validator::directive::{error, Args, DirectiveValidator, Error};
+use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
 pub struct OnDeleteDirectiveValidator {}
 
@@ -11,8 +11,8 @@ impl DirectiveValidator<dml::Field> for OnDeleteDirectiveValidator {
         if let Ok(strategy) = args.arg("strategy").as_constant_literal() {
             match (strategy.parse::<dml::OnDeleteStrategy>(), &mut field.field_type) {
                 (Ok(strategy), dml::FieldType::Relation(relation_info)) => relation_info.on_delete = strategy,
-                (Err(err), _) => return Some(err),
-                _ => return error("Invalid field type, not a relation."),
+                (Err(err), _) => return self.parser_error(&err),
+                _ => return self.error("Invalid field type, not a relation."),
             }
         }
 

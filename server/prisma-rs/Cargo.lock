@@ -1588,9 +1588,11 @@ name = "prisma-query"
 version = "0.1.0"
 source = "git+https://github.com/prisma/prisma-query.git#97b550a5162703099a79adf21c3ad3dd0b66edc0"
 dependencies = [
+ "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "postgres 0.16.0-rc.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "rusqlite 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rust_decimal 1.0.1 (git+https://github.com/pimeys/rust-decimal.git)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
- "sqlite 0.24.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

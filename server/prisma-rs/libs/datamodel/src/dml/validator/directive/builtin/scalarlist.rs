@@ -14,7 +14,7 @@ impl DirectiveValidator<dml::Field> for ScalarListDirectiveValidator {
         if let Ok(strategy) = args.arg("strategy").as_constant_literal() {
             match strategy.parse::<dml::ScalarListStrategy>() {
                 Ok(strategy) => obj.scalar_list_strategy = Some(strategy),
-                Err(err) => return Some(err),
+                Err(err) => return self.parser_error(&err),
             }
         }
 
