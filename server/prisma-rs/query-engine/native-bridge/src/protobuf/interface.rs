@@ -260,7 +260,11 @@ impl ExternalInterface for ProtoBufInterface {
     fn execute_raw(&self, payload: &mut [u8]) -> Vec<u8> {
         Self::protobuf_result(|| {
             let input = ExecuteRawInput::decode(payload)?;
-            let json = self.database_mutaction_executor.execute_raw(input.query)?;
+
+            let json = self
+                .database_mutaction_executor
+                .execute_raw(input.db_name, input.query)?;
+
             let json_as_string = serde_json::to_string(&json)?;
 
             let response = RpcResponse::ok_raw(prisma::ExecuteRawResult { json: json_as_string });

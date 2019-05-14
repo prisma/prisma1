@@ -6,7 +6,7 @@ mod relation;
 mod update;
 mod update_many;
 
-use crate::{database::SqlDatabase, error::SqlError, SqlResult, Transaction, Transactional};
+use crate::{database::SqlDatabase, error::SqlError, RawQuery, SqlResult, Transaction, Transactional};
 use connector::{mutaction::*, ConnectorResult, DatabaseMutactionExecutor};
 use serde_json::Value;
 use std::sync::Arc;
@@ -93,7 +93,11 @@ where
         Ok(result)
     }
 
-    fn execute_raw(&self, _query: String) -> ConnectorResult<Value> {
-        Ok(Value::String("hello world!".to_string()))
+    fn execute_raw(&self, db_name: String, query: String) -> ConnectorResult<Value> {
+        let result = self
+            .executor
+            .with_transaction(&db_name, |conn: &mut Transaction| conn.raw(RawQuery::from(query)))?;
+
+        Ok(result)
     }
 }

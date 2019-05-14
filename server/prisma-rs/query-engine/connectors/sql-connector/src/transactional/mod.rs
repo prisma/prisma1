@@ -4,13 +4,14 @@ mod mutaction_executor;
 pub use data_resolver::*;
 pub use mutaction_executor::*;
 
-use crate::{error::*, query_builder::QueryBuilder, AliasedCondition, SqlResult, SqlRow};
+use crate::{error::*, query_builder::QueryBuilder, AliasedCondition, RawQuery, SqlResult, SqlRow};
 use connector::{
     error::NodeSelectorInfo,
     filter::{Filter, NodeSelector},
 };
 use prisma_models::*;
 use prisma_query::ast::*;
+use serde_json::Value;
 use std::{convert::TryFrom, sync::Arc};
 
 /// A `Transactional` presents a database able to spawn transactions, execute
@@ -37,6 +38,11 @@ pub trait Transaction {
 
     /// Select multiple rows from the database.
     fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>>;
+
+    /// Executes a raw query string with no parameterization or safety,
+    /// resulting a Json value. Do not use internally anywhere in the code.
+    /// Provides user an escape hatch for using the database directly.
+    fn raw(&mut self, q: RawQuery) -> SqlResult<Value>;
 
     /// Insert to the database. On success returns the last insert row id.
     fn insert(&mut self, q: Insert) -> SqlResult<Option<GraphqlId>> {

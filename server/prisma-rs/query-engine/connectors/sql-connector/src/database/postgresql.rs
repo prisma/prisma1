@@ -1,4 +1,6 @@
-use crate::{error::SqlError, MutationBuilder, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional};
+use crate::{
+    error::SqlError, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional,
+};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
 use native_tls::TlsConnector;
@@ -14,6 +16,7 @@ use prisma_query::{
 };
 use r2d2_postgres::PostgresConnectionManager;
 use rust_decimal::Decimal;
+use serde_json::{Map, Number, Value};
 use std::{convert::TryFrom, str::FromStr};
 use tokio_postgres::config::SslMode;
 use tokio_postgres_native_tls::MakeTlsConnector;
@@ -167,6 +170,190 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         }
 
         Ok(())
+    }
+
+    fn raw(&mut self, q: RawQuery) -> SqlResult<Value> {
+        let stmt = self.prepare(dbg!(&q.0))?;
+
+        if q.is_select() {
+            let rows = self.query(&stmt, &[])?;
+            let mut result = Vec::new();
+
+            for row in rows {
+                let mut object = Map::new();
+                for (i, column) in row.columns().into_iter().enumerate() {
+                    let value = match *column.type_() {
+                        PostgresType::BOOL => match row.try_get(i)? {
+                            Some(val) => Value::Bool(val),
+                            None => Value::Null,
+                        },
+                        PostgresType::INT2 => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: i16 = val;
+                                Value::Number(Number::from(val))
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::INT4 => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: i32 = val;
+                                Value::Number(Number::from(val))
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::INT8 => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: i64 = val;
+                                Value::Number(Number::from(val))
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::NUMERIC => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Decimal = val;
+                                let val: f64 = val.to_string().parse().unwrap();
+                                Value::Number(Number::from_f64(val).unwrap())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::FLOAT4 => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: f32 = val;
+                                Value::Number(Number::from_f64(val as f64).unwrap())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::FLOAT8 => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: f64 = val;
+                                Value::Number(Number::from_f64(val).unwrap())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::TIMESTAMP => match row.try_get(i)? {
+                            Some(val) => {
+                                let ts: NaiveDateTime = val;
+                                let dt = DateTime::<Utc>::from_utc(ts, Utc);
+                                Value::String(dt.to_rfc3339())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::UUID => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Uuid = val;
+                                Value::String(val.to_hyphenated().to_string())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::INT2_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<i16> = val;
+                                Value::Array(val.into_iter().map(Value::from).collect())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::INT4_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<i32> = val;
+                                Value::Array(val.into_iter().map(Value::from).collect())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::INT8_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<i64> = val;
+                                Value::Array(val.into_iter().map(Value::from).collect())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::FLOAT4_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<f32> = val;
+                                Value::Array(
+                                    val.into_iter()
+                                        .map(|f| Number::from_f64(f as f64).unwrap())
+                                        .map(Value::Number)
+                                        .collect(),
+                                )
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::FLOAT8_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<f64> = val;
+                                Value::Array(
+                                    val.into_iter()
+                                        .map(|f| Value::Number(Number::from_f64(f).unwrap()))
+                                        .collect(),
+                                )
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::BOOL_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<bool> = val;
+                                Value::Array(val.into_iter().map(Value::from).collect())
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::TIMESTAMP_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<NaiveDateTime> = val;
+
+                                let val: Vec<Value> = val
+                                    .into_iter()
+                                    .map(|ts| DateTime::<Utc>::from_utc(ts, Utc))
+                                    .map(|dt| dt.to_rfc3339())
+                                    .map(Value::from)
+                                    .collect();
+
+                                Value::Array(val)
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::NUMERIC_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<Decimal> = val;
+
+                                let val: Vec<Value> = val
+                                    .into_iter()
+                                    .map(|d| d.to_string())
+                                    .map(|s| s.parse::<f64>().unwrap())
+                                    .map(|f| Number::from_f64(f).unwrap())
+                                    .map(Value::Number)
+                                    .collect();
+
+                                Value::Array(val)
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::TEXT_ARRAY | PostgresType::NAME_ARRAY | PostgresType::VARCHAR_ARRAY => {
+                            match row.try_get(i)? {
+                                Some(val) => {
+                                    let val: Vec<&str> = val;
+                                    Value::Array(val.into_iter().map(Value::from).collect())
+                                }
+                                None => Value::Null,
+                            }
+                        }
+                        _ => match row.try_get(i)? {
+                            Some(val) => Value::String(val),
+                            None => Value::Null,
+                        },
+                    };
+
+                    object.insert(String::from(column.name()), value);
+                }
+
+                result.push(Value::Object(object));
+            }
+
+            Ok(Value::Array(result))
+        } else {
+            let changes = self.execute(&stmt, &[])?;
+
+            Ok(Value::Number(Number::from(changes)))
+        }
     }
 }
 

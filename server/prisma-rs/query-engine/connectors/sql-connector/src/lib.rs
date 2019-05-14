@@ -13,11 +13,13 @@ mod filter_conversion;
 mod mutaction;
 mod ordering;
 mod query_builder;
+mod raw_query;
 mod row;
 mod transactional;
 
 use filter_conversion::*;
 use mutaction::*;
+use raw_query::*;
 use row::*;
 
 pub use database::*;
