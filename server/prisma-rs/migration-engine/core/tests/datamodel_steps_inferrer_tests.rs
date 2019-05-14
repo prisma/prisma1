@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use datamodel::dml::*;
-use datamodel::validator::{BaseValidator, EmptyAttachmentValidator, Validator};
+use datamodel::validator::Validator;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
 use nullable::*;
@@ -271,10 +271,11 @@ fn infer_CreateEnum() {
 
 // TODO: we will need this in a lot of test files. Extract it.
 fn parse(datamodel_string: &'static str) -> Schema {
-    let ast = datamodel::parser::parse(&datamodel_string.to_string());
+    let ast = datamodel::parser::parse(datamodel_string).unwrap();
     // TODO: this would need capabilities
-    let validator = BaseValidator::<EmptyAttachmentValidator>::new();
-    validator.validate(&ast)
+    // TODO: Special directives are injected via EmptyAttachmentValidator.
+    let validator = Validator::new();
+    validator.validate(&ast).unwrap()
 }
 
 fn infer(dm1: Schema, dm2: Schema) -> Vec<MigrationStep> {
