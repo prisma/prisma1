@@ -1,3 +1,4 @@
+mod database_schema_calculator;
 mod database_schema_differ;
 mod sql_database_migration_steps_inferrer;
 mod sql_database_step_applier;
