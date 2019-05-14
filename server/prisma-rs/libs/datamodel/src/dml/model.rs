@@ -14,9 +14,9 @@ pub struct Model<Types: TypePack> {
 }
 
 impl<Types: TypePack> Model<Types> {
-    pub fn new(name: &String) -> Model<Types> {
+    pub fn new(name: &str) -> Model<Types> {
         Model {
-            name: name.clone(),
+            name: String::from(name),
             fields: vec![],
             comments: vec![],
             database_name: None,
@@ -37,7 +37,7 @@ impl<Types: TypePack> Model<Types> {
         self.fields.iter_mut()
     }
 
-    pub fn find_field(&self, name: &String) -> Option<&Field<Types>> {
+    pub fn find_field(&self, name: &str) -> Option<&Field<Types>> {
         self.fields().find(|f| f.name == *name)
     }
 }
@@ -46,8 +46,8 @@ impl<Types: TypePack> WithName for Model<Types> {
     fn name(&self) -> &String {
         &self.name
     }
-    fn set_name(&mut self, name: &String) {
-        self.name = name.clone()
+    fn set_name(&mut self, name: &str) {
+        self.name = String::from(name)
     }
 }
 

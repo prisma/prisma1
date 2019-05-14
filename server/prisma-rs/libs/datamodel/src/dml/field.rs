@@ -50,8 +50,8 @@ impl<Types: TypePack> WithName for Field<Types> {
     fn name(&self) -> &String {
         &self.name
     }
-    fn set_name(&mut self, name: &String) {
-        self.name = name.clone()
+    fn set_name(&mut self, name: &str) {
+        self.name = String::from(name)
     }
 }
 
@@ -65,9 +65,9 @@ impl<Types: TypePack> WithDatabaseName for Field<Types> {
 }
 
 impl<Types: TypePack> Field<Types> {
-    pub fn new(name: String, field_type: FieldType<Types>) -> Field<Types> {
+    pub fn new(name: &str, field_type: FieldType<Types>) -> Field<Types> {
         Field {
-            name: name,
+            name: String::from(name),
             arity: FieldArity::Required,
             field_type: field_type,
             database_name: None,

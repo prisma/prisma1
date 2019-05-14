@@ -134,7 +134,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
     }
 
     fn validate_enum(&self, ast_enum: &ast::Enum) -> dml::Enum<Types> {
-        let mut en = dml::Enum::new(ast_enum.name.clone(), ast_enum.values.clone());
+        let mut en = dml::Enum::new(&ast_enum.name, ast_enum.values.clone());
 
         self.enum_directives.validate_and_apply(ast_enum, &mut en);
 
@@ -144,7 +144,7 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
     fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> dml::Field<Types> {
         let field_type = self.validate_field_type(&ast_field.field_type, ast_schema);
 
-        let mut field = dml::Field::new(ast_field.name.clone(), field_type.clone());
+        let mut field = dml::Field::new(&ast_field.name, field_type.clone());
 
         field.arity = self.validate_field_arity(&ast_field.arity);
 
@@ -178,8 +178,8 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
         }
     }
 
-    fn validate_field_type(&self, type_name: &String, ast_schema: &ast::Schema) -> dml::FieldType<Types> {
-        match type_name.as_ref() {
+    fn validate_field_type(&self, type_name: &str, ast_schema: &ast::Schema) -> dml::FieldType<Types> {
+        match type_name {
             "ID" => dml::FieldType::Base(dml::ScalarType::Int),
             "Int" => dml::FieldType::Base(dml::ScalarType::Int),
             "Float" => dml::FieldType::Base(dml::ScalarType::Float),
@@ -193,13 +193,10 @@ impl<Types: dml::TypePack, AV: AttachmentValidator<Types>> BaseValidator<Types, 
                     match &model {
                         // TODO: Get primary key field and hook up String::from.
                         ast::ModelOrEnum::Model(model) if model.name == *type_name => {
-                            return dml::FieldType::Relation(dml::RelationInfo::new(
-                                type_name.clone(),
-                                String::from(""),
-                            ))
+                            return dml::FieldType::Relation(dml::RelationInfo::new(&type_name, ""))
                         }
                         ast::ModelOrEnum::Enum(en) if en.name == *type_name => {
-                            return dml::FieldType::Enum(type_name.clone())
+                            return dml::FieldType::Enum(String::from(type_name))
                         }
                         _ => {}
                     }

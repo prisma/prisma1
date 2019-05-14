@@ -234,7 +234,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
 }
 
 // Whole datamodel parsing
-pub fn parse(datamodel_string: &String) -> Schema {
+pub fn parse(datamodel_string: &str) -> Schema {
     let datamodel = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string)
         .expect("Could not parse datamodel file.")
         .next()

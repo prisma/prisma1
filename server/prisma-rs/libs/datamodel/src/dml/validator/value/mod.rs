@@ -13,17 +13,17 @@ pub struct ValueParserError {
 }
 
 impl ValueParserError {
-    pub fn wrap<T, E: error::Error>(result: Result<T, E>, raw_value: &String) -> Result<T, ValueParserError> {
+    pub fn wrap<T, E: error::Error>(result: Result<T, E>, raw_value: &str) -> Result<T, ValueParserError> {
         match result {
             Ok(val) => Ok(val),
-            Err(err) => Err(ValueParserError::new(err.description().to_string(), raw_value.clone())),
+            Err(err) => Err(ValueParserError::new(err.description(), raw_value)),
         }
     }
 
-    pub fn new(message: String, raw: String) -> ValueParserError {
+    pub fn new(message: &str, raw: &str) -> ValueParserError {
         ValueParserError {
-            message: message,
-            raw: raw,
+            message: String::from(message),
+            raw: String::from(raw),
         }
     }
 }
@@ -48,7 +48,7 @@ macro_rules! wrap_value (
     ($value:expr, $wrapper:expr, $raw:expr) => ({
         match $value {
             Ok(val) => Ok($wrapper(val)),
-            Err(err) => Err(ValueParserError::new(err.description().to_string(), $raw))
+            Err(err) => Err(ValueParserError::new(err.description(), $raw))
         }
     })
 );
@@ -67,13 +67,13 @@ pub trait ValueValidator {
 
     fn as_type(&self, scalar_type: &dml::ScalarType) -> Result<dml::Value, ValueParserError> {
         match scalar_type {
-            dml::ScalarType::Int => wrap_value!(self.as_int(), dml::Value::Int, self.raw().clone()),
-            dml::ScalarType::Float => wrap_value!(self.as_float(), dml::Value::Float, self.raw().clone()),
-            dml::ScalarType::Decimal => wrap_value!(self.as_decimal(), dml::Value::Decimal, self.raw().clone()),
-            dml::ScalarType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self.raw().clone()),
-            dml::ScalarType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self.raw().clone()),
-            dml::ScalarType::Enum => wrap_value!(self.as_str(), dml::Value::ConstantLiteral, self.raw().clone()),
-            dml::ScalarType::String => wrap_value!(self.as_str(), dml::Value::String, self.raw().clone()),
+            dml::ScalarType::Int => wrap_value!(self.as_int(), dml::Value::Int, self.raw()),
+            dml::ScalarType::Float => wrap_value!(self.as_float(), dml::Value::Float, self.raw()),
+            dml::ScalarType::Decimal => wrap_value!(self.as_decimal(), dml::Value::Decimal, self.raw()),
+            dml::ScalarType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self.raw()),
+            dml::ScalarType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self.raw()),
+            dml::ScalarType::Enum => wrap_value!(self.as_str(), dml::Value::ConstantLiteral, self.raw()),
+            dml::ScalarType::String => wrap_value!(self.as_str(), dml::Value::String, self.raw()),
         }
     }
 }
@@ -102,8 +102,8 @@ impl ValueValidator for WrappedValue {
         match &self.value {
             ast::Value::StringValue(value) => Ok(value.to_string()),
             _ => Err(ValueParserError::new(
-                format!("Expected String Value, received {:?}", self.value),
-                self.raw().clone(),
+                &format!("Expected String Value, received {:?}", self.value),
+                self.raw(),
             )),
         }
     }
@@ -112,8 +112,8 @@ impl ValueValidator for WrappedValue {
         match &self.value {
             ast::Value::NumericValue(value) => ValueParserError::wrap(value.parse::<i32>(), value),
             _ => Err(ValueParserError::new(
-                format!("Expected Numeric Value, received {:?}", self.value),
-                self.raw().clone(),
+                &format!("Expected Numeric Value, received {:?}", self.value),
+                self.raw(),
             )),
         }
     }
@@ -122,8 +122,8 @@ impl ValueValidator for WrappedValue {
         match &self.value {
             ast::Value::NumericValue(value) => ValueParserError::wrap(value.parse::<f32>(), value),
             _ => Err(ValueParserError::new(
-                format!("Expected Numeric Value, received {:?}", self.value),
-                self.raw().clone(),
+                &format!("Expected Numeric Value, received {:?}", self.value),
+                self.raw(),
             )),
         }
     }
@@ -133,8 +133,8 @@ impl ValueValidator for WrappedValue {
         match &self.value {
             ast::Value::NumericValue(value) => ValueParserError::wrap(value.parse::<f32>(), value),
             _ => Err(ValueParserError::new(
-                format!("Expected Numeric Value, received {:?}", self.value),
-                self.raw().clone(),
+                &format!("Expected Numeric Value, received {:?}", self.value),
+                self.raw(),
             )),
         }
     }
@@ -143,8 +143,8 @@ impl ValueValidator for WrappedValue {
         match &self.value {
             ast::Value::BooleanValue(value) => ValueParserError::wrap(value.parse::<bool>(), value),
             _ => Err(ValueParserError::new(
-                format!("Expected Boolean Value, received {:?}", self.value),
-                self.raw().clone(),
+                &format!("Expected Boolean Value, received {:?}", self.value),
+                self.raw(),
             )),
         }
     }
@@ -154,8 +154,8 @@ impl ValueValidator for WrappedValue {
         match &self.value {
             ast::Value::StringValue(value) => ValueParserError::wrap(value.parse::<DateTime<Utc>>(), value),
             _ => Err(ValueParserError::new(
-                format!("Expected Boolean Value, received {:?}", self.value),
-                self.raw().clone(),
+                &format!("Expected Boolean Value, received {:?}", self.value),
+                self.raw(),
             )),
         }
     }
@@ -164,8 +164,8 @@ impl ValueValidator for WrappedValue {
         match &self.value {
             ast::Value::ConstantValue(value) => Ok(value.to_string()),
             _ => Err(ValueParserError::new(
-                format!("Expected Constant Value, received {:?}", self.value),
-                self.raw().clone(),
+                &format!("Expected Constant Value, received {:?}", self.value),
+                self.raw(),
             )),
         }
     }
@@ -187,24 +187,24 @@ impl ValueValidator for WrappedErrorValue {
     }
 
     fn as_str(&self) -> Result<String, ValueParserError> {
-        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+        Err(ValueParserError::new(&self.message, &self.raw))
     }
     fn as_int(&self) -> Result<i32, ValueParserError> {
-        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+        Err(ValueParserError::new(&self.message, &self.raw))
     }
     fn as_float(&self) -> Result<f32, ValueParserError> {
-        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+        Err(ValueParserError::new(&self.message, &self.raw))
     }
     fn as_decimal(&self) -> Result<f32, ValueParserError> {
-        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+        Err(ValueParserError::new(&self.message, &self.raw))
     }
     fn as_bool(&self) -> Result<bool, ValueParserError> {
-        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+        Err(ValueParserError::new(&self.message, &self.raw))
     }
     fn as_date_time(&self) -> Result<DateTime<Utc>, ValueParserError> {
-        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+        Err(ValueParserError::new(&self.message, &self.raw))
     }
     fn as_constant_literal(&self) -> Result<String, ValueParserError> {
-        Err(ValueParserError::new(self.message.clone(), self.raw.clone()))
+        Err(ValueParserError::new(&self.message, &self.raw))
     }
 }

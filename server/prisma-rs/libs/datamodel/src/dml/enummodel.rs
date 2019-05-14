@@ -11,9 +11,9 @@ pub struct Enum<Types: TypePack> {
 }
 
 impl<Types: TypePack> Enum<Types> {
-    pub fn new(name: String, values: Vec<String>) -> Enum<Types> {
+    pub fn new(name: &str, values: Vec<String>) -> Enum<Types> {
         Enum {
-            name: name,
+            name: String::from(name),
             values: values,
             comments: vec![],
             attachment: Types::EnumAttachment::default(),
@@ -25,7 +25,7 @@ impl<Types: TypePack> WithName for Enum<Types> {
     fn name(&self) -> &String {
         &self.name
     }
-    fn set_name(&mut self, name: &String) {
-        self.name = name.clone()
+    fn set_name(&mut self, name: &str) {
+        self.name = String::from(name)
     }
 }

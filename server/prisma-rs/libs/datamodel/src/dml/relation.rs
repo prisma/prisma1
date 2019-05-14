@@ -13,10 +13,10 @@ pub struct RelationInfo<Types: TypePack> {
 }
 
 impl<Types: TypePack> RelationInfo<Types> {
-    pub fn new(to: String, to_field: String) -> RelationInfo<Types> {
+    pub fn new(to: &str, to_field: &str) -> RelationInfo<Types> {
         RelationInfo {
-            to: to,
-            to_field: to_field,
+            to: String::from(to),
+            to_field: String::from(to_field),
             name: None,
             on_delete: OnDeleteStrategy::None,
             attachment: Types::RelationAttachment::default(),
@@ -37,10 +37,7 @@ impl FromStr for OnDeleteStrategy {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
-            _ => Err(ValueParserError::new(
-                format!("Invalid onDelete strategy {}.", s),
-                String::from(s),
-            )),
+            _ => Err(ValueParserError::new(&format!("Invalid onDelete strategy {}.", s), s)),
         }
     }
 }

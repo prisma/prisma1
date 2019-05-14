@@ -26,7 +26,7 @@ impl<Types: TypePack> Schema<Types> {
         Self::new()
     }
 
-    pub fn has_model(&self, name: &String) -> bool {
+    pub fn has_model(&self, name: &str) -> bool {
         match self.find_model(name) {
             Some(_) => true,
             None => false,
@@ -57,11 +57,11 @@ impl<Types: TypePack> Schema<Types> {
         self.enums.iter_mut()
     }
 
-    pub fn find_model(&self, name: &String) -> Option<&Model<Types>> {
+    pub fn find_model(&self, name: &str) -> Option<&Model<Types>> {
         self.models().find(|m| m.name == *name)
     }
 
-    pub fn find_enum(&self, name: &String) -> Option<&Enum<Types>> {
+    pub fn find_enum(&self, name: &str) -> Option<&Enum<Types>> {
         self.enums().find(|m| m.name == *name)
     }
 }

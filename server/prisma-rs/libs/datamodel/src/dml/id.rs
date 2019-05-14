@@ -16,10 +16,7 @@ impl FromStr for IdStrategy {
         match s {
             "AUTO" => Ok(IdStrategy::Auto),
             "NONE" => Ok(IdStrategy::None),
-            _ => Err(ValueParserError::new(
-                format!("Invalid id strategy {}.", s),
-                String::from(s),
-            )),
+            _ => Err(ValueParserError::new(&format!("Invalid id strategy {}.", s), s)),
         }
     }
 }
@@ -38,8 +35,8 @@ impl FromStr for ScalarListStrategy {
             "EMBEDDED" => Ok(ScalarListStrategy::Embedded),
             "RELATION" => Ok(ScalarListStrategy::Relation),
             _ => Err(ValueParserError::new(
-                format!("Invalid scalar list strategy {}.", s),
-                String::from(s),
+                &format!("Invalid scalar list strategy {}.", s),
+                s,
             )),
         }
     }
@@ -56,7 +53,7 @@ impl WithName for Sequence {
     fn name(&self) -> &String {
         &self.name
     }
-    fn set_name(&mut self, name: &String) {
-        self.name = name.clone()
+    fn set_name(&mut self, name: &str) {
+        self.name = String::from(name)
     }
 }

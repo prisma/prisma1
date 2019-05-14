@@ -2,7 +2,7 @@
 // but we want to have "composeable" struct creation.
 pub trait WithName {
     fn name(&self) -> &String;
-    fn set_name(&mut self, name: &String);
+    fn set_name(&mut self, name: &str);
 }
 
 pub trait WithDatabaseName {
