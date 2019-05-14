@@ -1,5 +1,6 @@
 use super::traits::*;
 use super::validator::value::ValueParserError;
+use crate::ast;
 use serde::{Deserialize, Serialize};
 
 use std::str::FromStr;
@@ -17,7 +18,11 @@ impl FromStr for IdStrategy {
         match s {
             "AUTO" => Ok(IdStrategy::Auto),
             "NONE" => Ok(IdStrategy::None),
-            _ => Err(ValueParserError::new(&format!("Invalid id strategy {}.", s), s)),
+            _ => Err(ValueParserError::new(
+                &format!("Invalid id strategy {}.", s),
+                s,
+                &ast::Span::empty(),
+            )),
         }
     }
 }
@@ -38,6 +43,7 @@ impl FromStr for ScalarListStrategy {
             _ => Err(ValueParserError::new(
                 &format!("Invalid scalar list strategy {}.", s),
                 s,
+                &ast::Span::empty(),
             )),
         }
     }

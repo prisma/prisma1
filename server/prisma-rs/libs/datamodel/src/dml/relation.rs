@@ -2,6 +2,7 @@ use super::validator::value::ValueParserError;
 use serde::{Deserialize, Serialize};
 
 use std::str::FromStr;
+use crate::ast;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RelationInfo {
@@ -35,7 +36,7 @@ impl FromStr for OnDeleteStrategy {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
-            _ => Err(ValueParserError::new(&format!("Invalid onDelete strategy {}.", s), s)),
+            _ => Err(ValueParserError::new(&format!("Invalid onDelete strategy {}.", s), s, &ast::Span::empty())),
         }
     }
 }

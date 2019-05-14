@@ -1,5 +1,6 @@
 use crate::dml;
 use std::fmt;
+use crate::ast;
 
 pub mod builtin;
 
@@ -7,13 +8,15 @@ pub mod builtin;
 pub struct DirectiveValidationError {
     pub message: String,
     pub directive_name: String,
+    pub span: ast::Span
 }
 
 impl DirectiveValidationError {
-    pub fn new(message: &str, directive_name: &str) -> DirectiveValidationError {
+    pub fn new(message: &str, directive_name: &str, span: &ast::Span) -> DirectiveValidationError {
         DirectiveValidationError {
             message: String::from(message),
             directive_name: String::from(directive_name),
+            span: span.clone()
         }
     }
 }
@@ -43,12 +46,12 @@ pub trait DirectiveValidator<T> {
     // TODO: Proper error type
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Option<Error>;
 
-    fn error(&self, msg: &str) -> Option<Error> {
-        Some(Error::new(msg, self.directive_name()))
+    fn error(&self, msg: &str, span: &ast::Span) -> Option<Error> {
+        Some(Error::new(msg, self.directive_name(), span))
     }
 
     fn parser_error(&self, err: &dml::validator::value::ValueParserError) -> Option<Error> {
-        Some(Error::new(&err.message, self.directive_name()))
+        Some(Error::new(&err.message, self.directive_name(), &err.span))
     }
 }
 

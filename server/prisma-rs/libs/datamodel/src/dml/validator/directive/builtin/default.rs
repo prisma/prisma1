@@ -16,7 +16,7 @@ impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
                 Err(err) => return self.parser_error(&err),
             }
         } else {
-            return self.error("Cannot set a default value on a non-scalar field.");
+            return self.error("Cannot set a default value on a non-scalar field.", &args.span());
         }
 
         return None;

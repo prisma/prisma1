@@ -12,7 +12,7 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
             match &mut field.field_type {
                 // TODO: Check if name is already set.
                 dml::FieldType::Relation(relation_info) => relation_info.name = Some(name),
-                _ => return self.error("Invalid field type, not a relation."),
+                _ => return self.error("Invalid field type, not a relation.", &args.span()),
             }
         }
 

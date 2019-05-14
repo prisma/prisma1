@@ -12,7 +12,7 @@ impl DirectiveValidator<dml::Field> for OnDeleteDirectiveValidator {
             match (strategy.parse::<dml::OnDeleteStrategy>(), &mut field.field_type) {
                 (Ok(strategy), dml::FieldType::Relation(relation_info)) => relation_info.on_delete = strategy,
                 (Err(err), _) => return self.parser_error(&err),
-                _ => return self.error("Invalid field type, not a relation."),
+                _ => return self.error("Invalid field type, not a relation.", &args.span()),
             }
         }
 

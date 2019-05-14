@@ -34,7 +34,7 @@ fn main() {
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
 
-    let ast = parser::parse(&file);
+    let ast = parser::parse(&file).expect("Unable to parse datamodel.");
 
     // Builtin Tooling
     // let validator = BaseValidator::<dml::BuiltinTypePack, EmptyAttachmentValidator>::new();

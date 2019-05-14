@@ -12,6 +12,37 @@ pub struct PrismaDatamodelParser;
 
 use crate::ast::*;
 
+#[derive(Debug)]
+pub struct ParserError {
+    pub message: String,
+    pub span: Span,
+}
+
+impl ParserError {
+    pub fn new(message: &str, span: &Span) -> ParserError {
+        ParserError {
+            message: String::from(message),
+            span: span.clone(),
+        }
+    }
+}
+
+impl std::fmt::Display for ParserError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}, {}", self.message, self.span)
+    }
+}
+
+impl std::error::Error for ParserError {
+    fn description(&self) -> &str {
+        self.message.as_str()
+    }
+
+    fn cause(&self) -> Option<&std::error::Error> {
+        None
+    }
+}
+
 // Macro to match all children in a parse tree
 macro_rules! match_children (
     ($token:ident, $current:ident, $($pattern:pat => $result:expr),*) => (
@@ -52,10 +83,10 @@ fn parse_string_literal(token: &pest::iterators::Pair<'_, Rule>) -> String {
 // Literals
 fn parse_literal(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     return match_first! { token, current,
-        Rule::numeric_literal => Value::NumericValue(current.as_str().to_string()),
-        Rule::string_literal => Value::StringValue(parse_string_literal(&current)),
-        Rule::boolean_literal => Value::BooleanValue(current.as_str().to_string()),
-        Rule::constant_Literal => Value::ConstantValue(current.as_str().to_string()),
+        Rule::numeric_literal => Value::NumericValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
+        Rule::string_literal => Value::StringValue(parse_string_literal(&current), Span::from_pest(&current.as_span())),
+        Rule::boolean_literal => Value::BooleanValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
+        Rule::constant_Literal => Value::ConstantValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
         _ => unreachable!("Encounterd impossible literal during parsing: {:?}", current.tokens())
     };
 }
@@ -70,7 +101,11 @@ fn parse_directive_arg_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
 
 fn parse_directive_default_arg(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<DirectiveArgument>) {
     match_children! { token, current,
-        Rule::directive_argument_value => arguments.push(DirectiveArgument { name: String::from(""), value: parse_directive_arg_value(&current) }),
+        Rule::directive_argument_value => arguments.push(DirectiveArgument {
+            name: String::from(""),
+            value: parse_directive_arg_value(&current),
+            span: Span::from_pest(&current.as_span())
+        }),
         _ => unreachable!("Encounterd impossible directive default argument during parsing: {:?}", current.tokens())
     };
 }
@@ -89,6 +124,7 @@ fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgu
         (Some(name), Some(value)) => DirectiveArgument {
             name: name,
             value: value,
+            span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
             "Encounterd impossible directive arg during parsing: {:?}",
@@ -116,7 +152,11 @@ fn parse_directive(token: &pest::iterators::Pair<'_, Rule>) -> Directive {
     };
 
     return match name {
-        Some(name) => Directive { name, arguments },
+        Some(name) => Directive {
+            name,
+            arguments,
+            span: Span::from_pest(&token.as_span()),
+        },
         _ => panic!("Encounterd impossible type during parsing: {:?}", token.as_str()),
     };
 }
@@ -234,23 +274,31 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
 }
 
 // Whole datamodel parsing
-pub fn parse(datamodel_string: &str) -> Schema {
-    let datamodel = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string)
-        .expect("Could not parse datamodel file.")
-        .next()
-        .unwrap();
+pub fn parse(datamodel_string: &str) -> Result<Schema, ParserError> {
+    let mut datamodel_result = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string);
 
-    let mut models: Vec<ModelOrEnum> = vec![];
+    match datamodel_result {
+        Ok(mut datamodel_wrapped) => {
+            let datamodel = datamodel_wrapped.next().unwrap();
+            let mut models: Vec<ModelOrEnum> = vec![];
 
-    match_children! { datamodel, current,
-        Rule::model_declaration => models.push(ModelOrEnum::Model(parse_model(&current))),
-        Rule::enum_declaration => models.push(ModelOrEnum::Enum(parse_enum(&current))),
-        Rule::EOI => {},
-        _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
+            match_children! { datamodel, current,
+                Rule::model_declaration => models.push(ModelOrEnum::Model(parse_model(&current))),
+                Rule::enum_declaration => models.push(ModelOrEnum::Enum(parse_enum(&current))),
+                Rule::EOI => {},
+                _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
+            }
+
+            Ok(Schema {
+                models,
+                comments: vec![],
+            })
+        }
+        Err(err) => match err.location {
+            pest::error::InputLocation::Pos(pos) => Err(ParserError::new("Error during parsing", &Span::new(pos, pos))),
+            pest::error::InputLocation::Span((from, to)) => {
+                Err(ParserError::new("Error during parsing", &Span::new(from, to)))
+            }
+        },
     }
-
-    return Schema {
-        models,
-        comments: vec![],
-    };
 }

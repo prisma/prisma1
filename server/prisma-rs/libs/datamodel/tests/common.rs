@@ -129,7 +129,7 @@ impl EnumAsserts for dml::Enum {
 }
 
 pub fn parse_and_validate(input: &str) -> dml::Schema {
-    let ast = datamodel::parser::parse(&String::from(input));
+    let ast = datamodel::parser::parse(&String::from(input)).expect("Unable to parse datamodel.");
     let validator = datamodel::validator::BaseValidator::<dml::validator::EmptyAttachmentValidator>::new();
     validator.validate(&ast)
 }

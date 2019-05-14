@@ -40,7 +40,7 @@ impl<T> DirectiveListValidator<T> {
     pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) {
         for directive in ast.directives() {
             match self.known_directives.get(directive.name.as_str()) {
-                Some(validator) => validator.validate_and_apply(&DirectiveArguments::new(&directive.arguments), t),
+                Some(validator) => validator.validate_and_apply(&DirectiveArguments::new(&directive.arguments, directive.span), t),
                 None => continue,
                 // TODO: Removed error for now, does not play well with attachment system.
                 //None => panic!("Encountered unknown directive: {:?}", directive.name)
