@@ -1,7 +1,8 @@
 use crate::ast;
 use crate::dml;
 use crate::dml::validator::argument::DirectiveArguments;
-use crate::dml::validator::directive::{DirectiveValidator, DirectiveValidationError};
+use crate::dml::validator::directive::DirectiveValidator;
+use crate::errors::DirectiveValidationError;
 
 use std::collections::HashMap;
 
@@ -43,11 +44,18 @@ impl<T> DirectiveListValidator<T> {
         for directive in ast.directives() {
             match self.known_directives.get(directive.name.as_str()) {
                 Some(validator) => {
-                    if let Some(err) = validator.validate_and_apply(&DirectiveArguments::new(&directive.arguments, directive.span), t) {
-                        errors.push(err);   
-                    }   
+                    if let Err(err) = validator.validate_and_apply(
+                        &DirectiveArguments::new(&directive.arguments, &directive.name, directive.span),
+                        t,
+                    ) {
+                        errors.push(err);
+                    }
                 }
-                None => errors.push(DirectiveValidationError::new("Encountered unknown directive", &directive.name, &directive.span))
+                None => errors.push(DirectiveValidationError::new(
+                    "Encountered unknown directive",
+                    &directive.name,
+                    &directive.span,
+                )),
             };
         }
 
@@ -84,7 +92,7 @@ pub fn new_builtin_model_directives() -> DirectiveListValidator<dml::Model> {
 }
 
 pub fn new_builtin_enum_directives() -> DirectiveListValidator<dml::Enum> {
-    let mut validator = DirectiveListValidator::<dml::Enum> {
+    let validator = DirectiveListValidator::<dml::Enum> {
         known_directives: HashMap::new(),
     };
 

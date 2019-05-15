@@ -12,7 +12,7 @@ extern crate pest;
 extern crate pest_derive;
 
 extern crate clap;
-use clap::{App, Arg, SubCommand};
+use clap::{App, Arg};
 
 fn main() {
     let formats = ["sorenbs", "matthewmueller"];
@@ -66,7 +66,4 @@ fn main() {
             println!("");
         }
     }
-
-   
-   
 }

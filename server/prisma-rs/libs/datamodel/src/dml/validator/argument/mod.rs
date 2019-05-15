@@ -1,43 +1,48 @@
 use crate::ast;
 use crate::dml::validator::value;
+use crate::errors::ArgumentNotFoundError;
 
 pub struct DirectiveArguments<'a> {
+    directive_name: String,
     arguments: &'a Vec<ast::DirectiveArgument>,
-    span: ast::Span
+    span: ast::Span,
 }
 
 impl<'a> DirectiveArguments<'a> {
-    pub fn new(arguments: &'a Vec<ast::DirectiveArgument>, span: ast::Span) -> DirectiveArguments {
-        DirectiveArguments { arguments: arguments, span: span.clone() }
+    pub fn new(
+        arguments: &'a Vec<ast::DirectiveArgument>,
+        directive_name: &str,
+        span: ast::Span,
+    ) -> DirectiveArguments<'a> {
+        DirectiveArguments {
+            directive_name: String::from(directive_name),
+            arguments: arguments,
+            span: span.clone(),
+        }
     }
 
     pub fn span(&self) -> &ast::Span {
         &self.span
     }
 
-    pub fn arg(&self, name: &str) -> Box<value::ValueValidator> {
+    pub fn arg(&self, name: &str) -> Result<value::ValueValidator, ArgumentNotFoundError> {
         for arg in self.arguments {
             if arg.name == name {
-                return Box::new(value::WrappedValue {
-                    value: arg.value.clone()
+                return Ok(value::ValueValidator {
+                    value: arg.value.clone(),
                 });
             }
         }
-        return Box::new(value::WrappedErrorValue {
-            message: format!("Argument '{:?}' not found", name),
-            raw: String::from(""),
-            span: self.span
-        });
+        return Err(ArgumentNotFoundError::new(name, &self.directive_name, &self.span));
     }
 
-    pub fn default_arg(&self, name: &str) -> Box<value::ValueValidator> {
+    pub fn default_arg(&self, name: &str) -> Result<value::ValueValidator, ArgumentNotFoundError> {
         let arg = self.arg(name);
 
-        if arg.is_valid() {
-            return arg;
-        } else {
-            // Fallback to default arg without name.
-            return self.arg("");
+        match arg {
+            Ok(arg) => Ok(arg),
+            // TODO: This will probably lead to a misleading err message.
+            Err(_) => self.arg(""),
         }
     }
 }

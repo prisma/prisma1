@@ -7,8 +7,8 @@ impl DirectiveValidator<dml::Model> for EmbeddedDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"embedded"
     }
-    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Model) -> Option<Error> {
+    fn validate_and_apply(&self, _args: &Args, obj: &mut dml::Model) -> Result<(), Error> {
         obj.is_embedded = true;
-        return None;
+        return Ok(());
     }
 }

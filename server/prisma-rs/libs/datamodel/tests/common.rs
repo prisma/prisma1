@@ -1,7 +1,6 @@
 extern crate datamodel;
 
 use datamodel::dml;
-use datamodel::Validator;
 
 pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;

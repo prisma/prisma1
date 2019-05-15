@@ -55,6 +55,15 @@ pub enum Value {
     ConstantValue(String, Span),
 }
 
+pub fn describe_value_type(val: &Value) -> &'static str {
+    match val {
+        Value::NumericValue(_, _) => "Numeric",
+        Value::BooleanValue(_, _) => "Boolean",
+        Value::StringValue(_, _) => "String",
+        Value::ConstantValue(_, _) => "Literal",
+    }
+}
+
 #[derive(Debug)]
 pub struct Directive {
     pub name: String,

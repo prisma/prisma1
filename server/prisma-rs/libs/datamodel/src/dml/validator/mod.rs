@@ -4,9 +4,11 @@ pub mod argument;
 pub mod directive;
 pub mod value;
 
-use directive::DirectiveValidationError;
-use directive::builtin::{new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives, DirectiveListValidator};
-use value::{ValueValidator, WrappedValue};
+use crate::errors::DirectiveValidationError;
+use directive::builtin::{
+    new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives, DirectiveListValidator,
+};
+use value::ValueValidator;
 
 pub trait DirectiveSource<T> {
     fn get_directives(validator: &mut DirectiveListValidator<T>);
@@ -24,7 +26,7 @@ impl Validator {
         Validator {
             field_directives: new_builtin_field_directives(),
             model_directives: new_builtin_model_directives(),
-            enum_directives: new_builtin_enum_directives()
+            enum_directives: new_builtin_enum_directives(),
         }
     }
 
@@ -41,7 +43,11 @@ impl Validator {
         return Ok(schema);
     }
 
-    fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> Result<dml::Model, Vec<DirectiveValidationError>> {
+    fn validate_model(
+        &self,
+        ast_model: &ast::Model,
+        ast_schema: &ast::Schema,
+    ) -> Result<dml::Model, Vec<DirectiveValidationError>> {
         let mut model = dml::Model::new(&ast_model.name);
 
         for ast_field in &ast_model.fields {
@@ -50,7 +56,7 @@ impl Validator {
 
         let errs = self.model_directives.validate_and_apply(ast_model, &mut model);
 
-        if(errs.len() > 0) {
+        if errs.len() > 0 {
             return Err(errs);
         }
 
@@ -62,14 +68,18 @@ impl Validator {
 
         let errs = self.enum_directives.validate_and_apply(ast_enum, &mut en);
 
-        if(errs.len() > 0) {
+        if errs.len() > 0 {
             return Err(errs);
         }
 
         return Ok(en);
     }
 
-    fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> Result<dml::Field, Vec<DirectiveValidationError>> {
+    fn validate_field(
+        &self,
+        ast_field: &ast::Field,
+        ast_schema: &ast::Schema,
+    ) -> Result<dml::Field, Vec<DirectiveValidationError>> {
         let field_type = self.validate_field_type(&ast_field.field_type, &ast_field.span, ast_schema)?;
 
         let mut field = dml::Field::new(&ast_field.name, field_type.clone());
@@ -82,7 +92,7 @@ impl Validator {
                 // TODO: WrappedValue is not the tool of choice here,
                 // there should be a static func for converting stuff.
                 field.default_value = Some(
-                    (WrappedValue { value: value.clone() })
+                    (ValueValidator { value: value.clone() })
                         .as_type(base_type)
                         .expect("Unable to parse."),
                 );
@@ -93,7 +103,7 @@ impl Validator {
 
         let errs = self.field_directives.validate_and_apply(ast_field, &mut field);
 
-        if(errs.len() > 0) {
+        if errs.len() > 0 {
             return Err(errs);
         }
 
@@ -108,7 +118,12 @@ impl Validator {
         }
     }
 
-    fn validate_field_type(&self, type_name: &str, span: &ast::Span, ast_schema: &ast::Schema) -> Result<dml::FieldType, Vec<DirectiveValidationError>> {
+    fn validate_field_type(
+        &self,
+        type_name: &str,
+        span: &ast::Span,
+        ast_schema: &ast::Schema,
+    ) -> Result<dml::FieldType, Vec<DirectiveValidationError>> {
         match type_name {
             "ID" => Ok(dml::FieldType::Base(dml::ScalarType::Int)),
             "Int" => Ok(dml::FieldType::Base(dml::ScalarType::Int)),
@@ -132,7 +147,11 @@ impl Validator {
                     }
                 }
 
-                Err(vec![DirectiveValidationError::new("Unknown type encountered.", "", span)])
+                Err(vec![DirectiveValidationError::new(
+                    "Unknown type encountered.",
+                    "",
+                    span,
+                )])
             }
         }
     }

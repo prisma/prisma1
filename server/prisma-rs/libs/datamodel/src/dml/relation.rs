@@ -1,8 +1,8 @@
-use super::validator::value::ValueParserError;
+use crate::errors::LiteralParseError;
 use serde::{Deserialize, Serialize};
 
-use std::str::FromStr;
 use crate::ast;
+use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RelationInfo {
@@ -30,13 +30,13 @@ pub enum OnDeleteStrategy {
 }
 
 impl FromStr for OnDeleteStrategy {
-    type Err = ValueParserError;
+    type Err = LiteralParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
-            _ => Err(ValueParserError::new(&format!("Invalid onDelete strategy {}.", s), s, &ast::Span::empty())),
+            _ => Err(LiteralParseError::new("onDelete strategy", s, &ast::Span::empty())),
         }
     }
 }
