@@ -1,5 +1,5 @@
 use crate::{data_model, exec_loader, PrismaResult};
-use core::{Executor, SchemaBuilder};
+use core::Executor;
 use prisma_common::config::{self, PrismaConfig};
 use prisma_models::InternalDataModelRef;
 
