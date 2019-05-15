@@ -1,0 +1,67 @@
+# Powered by: https://github.com/devautor/prisma-link-beta-bug-repro/blob/master/datamodel/customer.prisma
+
+type Customer {
+  id: ID! @id
+  uid: String! @unique
+  emailId: String! @unique
+  mobileNumber: String
+  name: String
+  wishlists: [CustomerWishlist!]!
+    @relation(name: "CustomerWishlistsRelation", link: INLINE)
+  cartItems: [CustomerCartItem!]!
+    @relation(name: "CustomerCartItemsRelation", link: INLINE)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type CustomerWishlist {
+  id: ID! @id
+  customer: Customer!
+    @relation(name: "CustomerWishlistsRelation", onDelete: SET_NULL)
+  listName: String!
+  products: [Product!]!
+    @relation(
+      link: INLINE
+      name: "WishlistedProductsRelation"
+      onDelete: SET_NULL
+    )
+}
+
+type CustomerCartItem {
+  id: ID! @id
+  customer: Customer!
+    @relation(name: "CustomerCartItemsRelation", onDelete: SET_NULL)
+  product: Product!
+    @relation(name: "ProductsInCartRelation", onDelete: SET_NULL, link: INLINE)
+  addedAtPrice: Int!
+  quantity: Int!
+  savedForLater: Boolean! @default(value: false)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type Product {
+  id: ID! @id
+  name: String!
+  brand: String!
+  tags: [String!] @scalarList(strategy: EMBEDDED)
+  description: String!
+  ratingsDistribution: [Int!]! @scalarList(strategy: EMBEDDED)
+  postedIn: [Post!]!
+    @relation(name: "PostsProductsRelation", onDelete: SET_NULL)
+  wishlistedIn: [CustomerWishlist!]!
+    @relation(name: "WishlistedProductsRelation", onDelete: SET_NULL)
+  cartedIn: [CustomerCartItem!]!
+    @relation(name: "ProductsInCartRelation", onDelete: SET_NULL)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}
+
+type Post {
+  id: ID! @id
+  text: String
+  products: [Product!]!
+    @relation(link: INLINE, name: "PostsProductsRelation", onDelete: SET_NULL)
+  createdAt: DateTime! @createdAt
+  updatedAt: DateTime! @updatedAt
+}

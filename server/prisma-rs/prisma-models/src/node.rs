@@ -1,10 +1,25 @@
 use crate::{DomainError as Error, DomainResult, GraphqlId, ModelRef, PrismaValue};
-use std::sync::Arc;
+use std::{convert::TryFrom, sync::Arc};
 
 #[derive(Debug, Clone)]
 pub struct SingleNode {
     pub node: Node,
     pub field_names: Vec<String>,
+}
+
+impl TryFrom<ManyNodes> for SingleNode {
+    type Error = Error;
+
+    fn try_from(mn: ManyNodes) -> DomainResult<SingleNode> {
+        let field_names = mn.field_names;
+
+        mn.nodes
+            .into_iter()
+            .rev()
+            .next()
+            .map(|node| SingleNode { node, field_names })
+            .ok_or(Error::ConversionFailure("ManyNodes", "SingleNode"))
+    }
 }
 
 impl SingleNode {
@@ -28,15 +43,6 @@ pub struct ManyNodes {
 }
 
 impl ManyNodes {
-    pub fn into_single_node(mut self) -> Option<SingleNode> {
-        self.nodes.reverse();
-        let node = self.nodes.pop();
-        node.map(|n| SingleNode {
-            node: n,
-            field_names: self.field_names,
-        })
-    }
-
     pub fn get_id_values(&self, model: ModelRef) -> DomainResult<Vec<GraphqlId>> {
         self.nodes
             .iter()
@@ -60,6 +66,23 @@ impl ManyNodes {
             })
             .collect()
     }
+
+    /// Reverses the wrapped records in place
+    pub fn reverse(&mut self) {
+        self.nodes.reverse();
+    }
+
+    /// Drops x records on the end of the wrapped records in place.
+    pub fn drop_right(&mut self, x: u32) {
+        self.nodes.truncate(self.nodes.len() - x as usize);
+    }
+
+    /// Drops x records on the start of the wrapped records in place.
+    pub fn drop_left(&mut self, x: u32) {
+        self.reverse();
+        self.drop_right(x);
+        self.reverse();
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -76,7 +99,6 @@ impl Node {
         }
     }
 
-    // FIXME: This function assumes that `id` was included in the query?!
     pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<&GraphqlId> {
         let id_field = model.fields().id();
         let index = field_names

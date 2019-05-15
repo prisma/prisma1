@@ -76,6 +76,8 @@ pub struct RelationTemplate {
     pub model_b_name: String,
 }
 
+/// A relation between two models. Can be either using a `RelationTable` or
+/// model a direct link between two `RelationField`s.
 #[derive(DebugStub)]
 pub struct Relation {
     pub name: String,
@@ -123,12 +125,8 @@ impl Relation {
     pub const MODEL_B_DEFAULT_COLUMN: &'static str = "B";
     pub const TABLE_ALIAS: &'static str = "RelationTable";
 
-    fn schema(&self) -> SchemaRef {
-        self.schema
-            .upgrade()
-            .expect("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
-    }
-
+    /// Returns `true` only if the `Relation` is just a link between two
+    /// `RelationField`s.
     pub fn is_inline_relation(&self) -> bool {
         self.manifestation
             .as_ref()
@@ -139,23 +137,20 @@ impl Relation {
             .unwrap_or(false)
     }
 
+    /// Returns `true` if the `Relation` is a table linking two models.
     pub fn is_relation_table(&self) -> bool {
         !self.is_inline_relation()
     }
 
+    /// A model that relates to itself. For example a `Person` that is a parent
+    /// can relate to people that are children.
     pub fn is_self_relation(&self) -> bool {
         self.model_a_name == self.model_b_name
     }
 
-    pub fn inline_manifestation(&self) -> Option<&InlineRelation> {
-        use RelationLinkManifestation::*;
-
-        match self.manifestation {
-            Some(Inline(ref m)) => Some(m),
-            _ => None,
-        }
-    }
-
+    /// A helper function to decide actions based on the `Relation` type. Inline
+    /// relation will return a column for updates, a relation table gives back
+    /// `None`.
     pub fn inline_relation_column(&self) -> Option<Column> {
         if let Some(mani) = self.inline_manifestation() {
             Some(Column::from(mani.referencing_column.as_ref()).table(self.relation_table()))
@@ -164,10 +159,7 @@ impl Relation {
         }
     }
 
-    pub fn both_sides_cascade(&self) -> bool {
-        self.model_a_on_delete == OnDelete::Cascade && self.model_b_on_delete == OnDelete::Cascade
-    }
-
+    /// A pointer to the first `Model` in the `Relation`.
     pub fn model_a(&self) -> ModelRef {
         self.model_a
             .get_or_init(|| {
@@ -178,7 +170,19 @@ impl Relation {
             .expect("Model A deleted without deleting the relations in schema.")
     }
 
-    pub fn field_a(&self) -> Arc<RelationField> {
+    /// A pointer to the second `Model` in the `Relation`.
+    pub fn model_b(&self) -> ModelRef {
+        self.model_b
+            .get_or_init(|| {
+                let model = self.schema().find_model(&self.model_b_name).unwrap();
+                Arc::downgrade(&model)
+            })
+            .upgrade()
+            .expect("Model B deleted without deleting the relations in schema.")
+    }
+
+    /// A pointer to the `RelationField` in the first `Model` in the `Relation`.
+    pub fn field_a(&self) -> RelationFieldRef {
         self.field_a
             .get_or_init(|| {
                 let field = self
@@ -193,17 +197,8 @@ impl Relation {
             .expect("Field A deleted without deleting the relations in schema.")
     }
 
-    pub fn model_b(&self) -> ModelRef {
-        self.model_b
-            .get_or_init(|| {
-                let model = self.schema().find_model(&self.model_b_name).unwrap();
-                Arc::downgrade(&model)
-            })
-            .upgrade()
-            .expect("Model B deleted without deleting the relations in schema.")
-    }
-
-    pub fn field_b(&self) -> Arc<RelationField> {
+    /// A pointer to the `RelationField` in the second `Model` in the `Relation`.
+    pub fn field_b(&self) -> RelationFieldRef {
         self.field_b
             .get_or_init(|| {
                 let field = self
@@ -216,16 +211,6 @@ impl Relation {
             })
             .upgrade()
             .expect("Field B deleted without deleting the relations in schema.")
-    }
-
-    pub fn relation_table(&self) -> Table {
-        use RelationLinkManifestation::*;
-
-        match self.manifestation {
-            Some(RelationTable(ref m)) => m.table.clone().into(),
-            Some(Inline(ref m)) => self.schema().find_model(&m.in_table_of_model_name).unwrap().table(),
-            None => format!("_{}", self.name).into(),
-        }
     }
 
     pub fn model_a_column(&self) -> Column {
@@ -277,6 +262,22 @@ impl Relation {
         }
     }
 
+    /// The `Table` with the foreign keys are written. Can either be:
+    ///
+    /// - A separate table for many-to-many relations.
+    /// - One of the model tables for one-to-many or one-to-one relations.
+    /// - A separate relation table for all relations, if using the deprecated
+    ///   data model syntax.
+    pub fn relation_table(&self) -> Table {
+        use RelationLinkManifestation::*;
+
+        match self.manifestation {
+            Some(RelationTable(ref m)) => m.table.clone().into(),
+            Some(Inline(ref m)) => self.schema().find_model(&m.in_table_of_model_name).unwrap().table(),
+            None => format!("_{}", self.name).into(),
+        }
+    }
+
     pub fn is_many_to_many(&self) -> bool {
         self.field_a().is_list && self.field_b().is_list
     }
@@ -320,5 +321,20 @@ impl Relation {
                 relation: self.name.clone(),
             })
         }
+    }
+
+    pub fn inline_manifestation(&self) -> Option<&InlineRelation> {
+        use RelationLinkManifestation::*;
+
+        match self.manifestation {
+            Some(Inline(ref m)) => Some(m),
+            _ => None,
+        }
+    }
+
+    fn schema(&self) -> SchemaRef {
+        self.schema
+            .upgrade()
+            .expect("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
     }
 }

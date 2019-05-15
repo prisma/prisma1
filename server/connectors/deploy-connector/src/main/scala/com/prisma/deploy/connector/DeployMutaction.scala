@@ -12,7 +12,7 @@ case class CreateColumn(project: Project, model: Model, field: ScalarField)     
 case class DeleteColumn(project: Project, oldModel: Model, field: ScalarField)                        extends DeployMutaction
 case class UpdateColumn(project: Project, model: Model, oldField: ScalarField, newField: ScalarField) extends DeployMutaction
 
-case class CreateScalarListTable(project: Project, model: Model, field: ScalarField)                                               extends DeployMutaction
+case class CreateScalarListTable(project: Project, model: Model, field: ScalarField, ignorePreviousSchema: Boolean = false)        extends DeployMutaction
 case class DeleteScalarListTable(project: Project, model: Model, field: ScalarField)                                               extends DeployMutaction
 case class UpdateScalarListTable(project: Project, oldModel: Model, newModel: Model, oldField: ScalarField, newField: ScalarField) extends DeployMutaction
 

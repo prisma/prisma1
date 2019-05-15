@@ -3,11 +3,7 @@ prototype: true
 databases:
   default:
     connector: sqlite-native
+    databaseFile: ${SERVER_ROOT}/db/default_default.db
     migrations: true
     active: true
-    host: 127.0.0.1
-    port: 3306
-    user: root
-    password: prisma
     rawAccess: true
-    database: default_default

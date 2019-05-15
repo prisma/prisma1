@@ -102,6 +102,7 @@ impl SelectedFields {
         Self::from(model.fields().id())
     }
 
+    #[deprecated]
     pub fn get_implicit_fields(&self) -> Vec<&SelectedScalarField> {
         self.scalar.iter().filter(|sf| sf.implicit).collect()
     }
@@ -154,16 +155,21 @@ impl SelectedFields {
             result.push(rf.type_identifier);
         }
 
+        // Related and parent id.
+        if self.from_field.is_some() {
+            result.push(TypeIdentifier::GraphQLID);
+            result.push(TypeIdentifier::GraphQLID);
+        };
+
         result
     }
 
     pub fn model(&self) -> ModelRef {
-        let field = self
-            .scalar
+        self.scalar
             .first()
-            .expect("Expected at least one scalar field to be present");
-
-        field.field.model()
+            .map(|s| s.field.model())
+            .or_else(|| self.relation.first().map(|r| r.field.model()))
+            .expect("Expected at least one field to be present.")
     }
 
     fn relation_inlined(&self) -> Vec<Arc<RelationField>> {
@@ -188,10 +194,18 @@ impl SelectedFields {
             .collect()
     }
 
-    fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
+    pub fn scalar_non_list(&self) -> Vec<Arc<ScalarField>> {
         self.scalar
             .iter()
             .filter(|sf| !sf.field.is_list)
+            .map(|sf| sf.field.clone())
+            .collect()
+    }
+
+    pub fn scalar_lists(&self) -> Vec<Arc<ScalarField>> {
+        self.scalar
+            .iter()
+            .filter(|sf| sf.field.is_list)
             .map(|sf| sf.field.clone())
             .collect()
     }

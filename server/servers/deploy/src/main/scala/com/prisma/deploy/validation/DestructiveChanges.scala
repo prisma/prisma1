@@ -204,22 +204,20 @@ case class DestructiveChanges(clientDbQueries: ClientDbQueries,
     val becomesUnique            = !oldField.isUnique && newField.isUnique
     def isIdTypeChange: Boolean  = oldField.isScalar && newField.isScalar && oldField.asScalarField_!.isId && newField.asScalarField_!.isId && typeChanges
 
-    def warnings: Future[Vector[DeployWarning]] = () match {
+    def warnings: Future[Vector[DeployResult]] = () match {
       case _ if cardinalityChanges || typeChanges || goesFromRelationToScalar || goesFromScalarToRelation =>
         clientDbQueries.existsByModel(model).map {
           case true if newField.isRequired && newField.isScalar && !isMongo =>
             Vector(
-              DeployWarnings.dataLossField(x.name, x.name),
-              DeployWarnings.migValueUsedOnExistingField(x.name, x.name, migrationValueForField(newField.asScalarField_!))
+              DeployWarnings.dataLossField(model.name, oldField.name),
+              DeployWarnings.migValueUsedOnExistingField(model.name, oldField.name, migrationValueForField(newField.asScalarField_!))
             )
 
           case true if newField.isRequired && newField.isScalar && isMongo =>
-            Vector(
-              DeployWarnings.dataLossField(x.name, x.name),
-              DeployWarnings.migValueUsedOnExistingField(x.name, x.name, migrationValueForField(newField.asScalarField_!)) //Fixme error for Mongo
-            )
+            Vector(DeployErrors.makingFieldRequiredMongo(model.name, oldField.name))
+
           case true =>
-            Vector(DeployWarnings.dataLossField(x.name, x.name))
+            Vector(DeployWarnings.dataLossField(model.name, oldField.name))
 
           case false =>
             Vector.empty

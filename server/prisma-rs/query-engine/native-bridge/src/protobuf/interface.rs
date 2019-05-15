@@ -7,7 +7,7 @@ use connector::{error::ConnectorError, filter::NodeSelector, DataResolver, Datab
 use prisma_common::config::*;
 use prisma_models::prelude::*;
 use prost::Message;
-use sqlite_connector::Sqlite;
+use sql_connector::{database::SqlDatabase, database::Sqlite};
 use std::sync::Arc;
 
 pub struct ProtoBufInterface {
@@ -21,10 +21,10 @@ impl ProtoBufInterface {
             Some(PrismaDatabase::Explicit(ref config))
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
             {
-                let test_mode = true;
-                let sqlite = Sqlite::new(config.limit(), test_mode).unwrap();
+                let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+                let sqlite = Sqlite::new(format!("{}/db", server_root).into(), config.limit(), true).unwrap();
 
-                Arc::new(sqlite)
+                Arc::new(SqlDatabase::new(sqlite))
             }
             _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
         };
@@ -48,11 +48,9 @@ impl ProtoBufInterface {
                 response_payload
             }
             _ => {
-                dbg!(&error);
-
                 let error_response = prisma::RpcResponse::error(error);
-
                 let mut payload = Vec::new();
+
                 error_response.encode(&mut payload).unwrap();
                 payload
             }
@@ -268,16 +266,12 @@ impl ExternalInterface for ProtoBufInterface {
             let project_template: ProjectTemplate = serde_json::from_reader(input.project_json.as_slice())?;
             let project: ProjectRef = project_template.into();
 
-            let parent_id = input.parent_id.clone().map(GraphqlId::from);
             let mutaction = convert_mutaction(input, Arc::clone(&project));
             let db_name = project.schema().db_name.to_string();
 
-            let mut results = self
-                .database_mutaction_executor
-                .execute(db_name, mutaction, parent_id)?;
-            let result = results.pop().expect("no mutaction results returned");
-
+            let result = self.database_mutaction_executor.execute(db_name, mutaction)?;
             let response = RpcResponse::ok_mutaction(convert_mutaction_result(result));
+
             let mut response_payload = Vec::new();
 
             response.encode(&mut response_payload).unwrap();

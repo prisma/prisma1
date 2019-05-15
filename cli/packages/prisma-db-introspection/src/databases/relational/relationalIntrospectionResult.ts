@@ -191,7 +191,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
     types: IGQLType[],
   ): IGQLType[] {
     for (const type of types) {
-      if (!type.isLinkTable) {
+      if (!type.isRelationTable) {
         const pkFields = type.fields.filter(field => field.isId)
         if (pkFields.length > 1) {
           for (const field of pkFields) {
@@ -427,7 +427,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
           typeB.fields = typeB.fields.filter(x => x.type !== type)
         } else {
           // Not a prisma link type. Mark as link table.
-          type.isLinkTable = true
+          type.isRelationTable = true
           // Drop ids. Compound PK indices are not supported yet.
           relA.isId = false
           relB.isId = false
@@ -567,7 +567,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       fields: values,
       isEnum: true,
       isEmbedded: false,
-      isLinkTable: false,
+      isRelationTable: false,
       databaseName: null,
       comments: [],
       directives: [],
@@ -616,7 +616,7 @@ export abstract class RelationalIntrospectionResult extends IntrospectionResult 
       name: model.name,
       isEmbedded: false, // Never
       isEnum: false, // Never
-      isLinkTable: false, // Resolved Later
+      isRelationTable: false, // Resolved Later
       fields,
       indices,
       directives: [],
