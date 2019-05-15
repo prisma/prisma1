@@ -29,7 +29,7 @@ trait BuilderBase extends JooqExtensions with JdbcExtensions with SlickExtension
   def modelColumn(fieldModel: com.prisma.shared.models.Field): Field[AnyRef] = field(name(project.dbName, fieldModel.model.dbName, fieldModel.dbName))
   def modelIdColumn(model: Model)                                            = field(name(project.dbName, model.dbName, model.dbNameOfIdField_!))
   def modelIdColumn(alias: String, model: Model)                             = field(name(alias, model.idField_!.dbName))
-  def relationColumn(relation: Relation, side: Value)                        = field(name(project.dbName, relation.relationTableName, relation.columnForRelationSide(side)))
+  def relationColumn(rf: RelationField)                                      = field(name(project.dbName, rf.relation.relationTableName, rf.relation.columnForRelationSide(rf.relationSide)))
   def relationIdColumn(relation: Relation)                                   = field(name(project.dbName, relation.relationTableName, relation.idColumn_!))
   def inlineRelationColumn(relation: Relation, mani: EmbeddedRelationLink)   = field(name(project.dbName, relation.relationTableName, mani.referencingColumn))
   def scalarListColumn(scalarField: ScalarField, column: String)             = field(name(project.dbName, scalarListTableName(scalarField), column))

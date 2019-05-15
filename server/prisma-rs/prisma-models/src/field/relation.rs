@@ -86,7 +86,9 @@ impl RelationField {
             Some(RelationLinkManifestation::Inline(ref m)) => {
                 let is_self_rel = relation.is_self_relation();
 
-                if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
+                if is_self_rel && self.is_hidden {
+                    self.name.clone()
+                } else if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
                     m.referencing_column.clone()
                 } else if is_self_rel && self.relation_side == RelationSide::A {
                     self.name.clone()
@@ -107,7 +109,9 @@ impl RelationField {
             Some(RelationLinkManifestation::Inline(ref m)) => {
                 let is_self_rel = relation.is_self_relation();
 
-                if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
+                if is_self_rel && self.is_hidden {
+                    false
+                } else if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
                     true
                 } else if is_self_rel && self.relation_side == RelationSide::A {
                     false

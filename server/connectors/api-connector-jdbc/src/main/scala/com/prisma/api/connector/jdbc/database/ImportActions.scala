@@ -88,8 +88,8 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
             .insertInto(relationTable(relation))
             .columns(
               relationIdColumn(relation),
-              relationColumn(relation, relation.modelAField.relationSide),
-              relationColumn(relation, relation.modelBField.relationSide)
+              relationColumn(relation.modelAField),
+              relationColumn(relation.modelBField)
             )
             .values(placeHolder, placeHolder, placeHolder)
 
@@ -106,8 +106,8 @@ trait ImportActions extends BuilderBase with SharedJdbcExtensions {
           val query = sql
             .insertInto(relationTable(relation))
             .columns(
-              relationColumn(relation, relation.modelAField.relationSide),
-              relationColumn(relation, relation.modelBField.relationSide)
+              relationColumn(relation.modelAField),
+              relationColumn(relation.modelBField)
             )
             .values(placeHolder, placeHolder)
 

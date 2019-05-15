@@ -58,13 +58,19 @@ case class Relation(
   }
 
   lazy val modelAColumn: String = manifestation match {
-    case m: RelationTable        => m.modelAColumn
-    case m: EmbeddedRelationLink => if (m.inTableOfModelName == modelAName && !isSelfRelation) modelA.idField_!.dbName else m.referencingColumn
+    case m: RelationTable                                                  => m.modelAColumn
+    case m: EmbeddedRelationLink if isSelfRelation && modelAField.isHidden => modelA.idField_!.dbName
+    case m: EmbeddedRelationLink if isSelfRelation && modelBField.isHidden => modelB.idField_!.dbName
+    case m: EmbeddedRelationLink if isSelfRelation                         => m.referencingColumn
+    case m: EmbeddedRelationLink                                           => if (m.inTableOfModelName == modelAName && !isSelfRelation) modelA.idField_!.dbName else m.referencingColumn
   }
 
   lazy val modelBColumn: String = manifestation match {
-    case m: RelationTable        => m.modelBColumn
-    case m: EmbeddedRelationLink => if (m.inTableOfModelName == modelBName) modelB.idField_!.dbName else m.referencingColumn
+    case m: RelationTable                                                  => m.modelBColumn
+    case m: EmbeddedRelationLink if isSelfRelation && modelAField.isHidden => m.referencingColumn
+    case m: EmbeddedRelationLink if isSelfRelation && modelBField.isHidden => m.referencingColumn
+    case m: EmbeddedRelationLink if isSelfRelation                         => modelB.idField_!.dbName
+    case m: EmbeddedRelationLink                                           => if (m.inTableOfModelName == modelBName && !isSelfRelation) modelB.idField_!.dbName else m.referencingColumn
   }
 
   lazy val isManyToMany: Boolean = {

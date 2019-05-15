@@ -1,7 +1,7 @@
 use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
-use datamodel::Validator;
+use datamodel::validator::Validator;
 use migration_connector::*;
 use sql_migration_connector::SqlMigrationConnector;
 use std::path::Path;
@@ -39,9 +39,10 @@ impl MigrationEngine {
     }
 
     pub fn parse_datamodel(&self, datamodel_string: &String) -> Schema {
-        let ast = datamodel::parser::parse(datamodel_string);
+        let ast = datamodel::parser::parse(datamodel_string).unwrap();
         // TODO: this would need capabilities
+        // TODO: Special directives are injected via EmptyAttachmentValidator.
         let validator = Validator::new();
-        validator.validate(&ast)
+        validator.validate(&ast).unwrap()
     }
 }

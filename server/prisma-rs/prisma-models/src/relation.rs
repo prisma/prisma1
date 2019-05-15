@@ -37,6 +37,15 @@ pub struct InlineRelation {
     pub referencing_column: String,
 }
 
+impl InlineRelation {
+    fn referencing_column(&self, table: Table) -> Column {
+        let column_name: &str = self.referencing_column.as_ref();
+        let column = Column::from(column_name);
+
+        column.table(table)
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTable {
@@ -210,15 +219,19 @@ impl Relation {
         match self.manifestation {
             Some(RelationTable(ref m)) => m.model_a_column.clone().into(),
             Some(Inline(ref m)) => {
-                let model = self.model_a();
+                let model_a = self.model_a();
+                let model_b = self.model_b();
 
-                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    model.fields().id().as_column()
+                if self.is_self_relation() && self.field_a().is_hidden {
+                    model_a.fields().id().as_column()
+                } else if self.is_self_relation() && self.field_b().is_hidden {
+                    model_b.fields().id().as_column()
+                } else if self.is_self_relation() {
+                    m.referencing_column(self.relation_table())
+                } else if m.in_table_of_model_name == model_a.name && !self.is_self_relation() {
+                    model_a.fields().id().as_column()
                 } else {
-                    let column_name: &str = m.referencing_column.as_ref();
-                    let column = Column::from(column_name);
-
-                    column.table(self.relation_table())
+                    m.referencing_column(self.relation_table())
                 }
             }
             None => Self::MODEL_A_DEFAULT_COLUMN.into(),
@@ -231,15 +244,18 @@ impl Relation {
         match self.manifestation {
             Some(RelationTable(ref m)) => m.model_b_column.clone().into(),
             Some(Inline(ref m)) => {
-                let model = self.model_b();
+                let model_b = self.model_b();
 
-                if m.in_table_of_model_name == model.name {
-                    model.fields().id().as_column()
+                if self.is_self_relation() && self.field_a().is_hidden {
+                    m.referencing_column(self.relation_table())
+                } else if self.is_self_relation() && self.field_b().is_hidden {
+                    m.referencing_column(self.relation_table())
+                } else if self.is_self_relation() {
+                    model_b.fields().id().as_column()
+                } else if m.in_table_of_model_name == model_b.name && !self.is_self_relation() {
+                    model_b.fields().id().as_column()
                 } else {
-                    let column_name: &str = m.referencing_column.as_ref();
-                    let column = Column::from(column_name);
-
-                    column.table(self.relation_table())
+                    m.referencing_column(self.relation_table())
                 }
             }
             None => Self::MODEL_B_DEFAULT_COLUMN.into(),
