@@ -47,7 +47,7 @@ fn query_tables(c: &mut Connection) -> Vec<String> {
     (|| -> Result<()> {
         let mut stmt = c.prepare(sql)?;
 
-        let name_iter = stmt.query_map(NO_PARAMS, |row| NameCol { name: row.get(0) })?;
+        let name_iter = stmt.query_map(NO_PARAMS, |row| Ok(NameCol { name: row.get(0)? }))?;
 
         name_iter
             .into_iter()
