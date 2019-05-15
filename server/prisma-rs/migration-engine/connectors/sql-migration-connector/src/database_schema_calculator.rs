@@ -33,7 +33,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                 let columns = model
                     .fields()
                     .flat_map(|f| match (&f.field_type, &f.arity) {
-                        (FieldType::Base(scalar), arity) if arity != &FieldArity::List => Some(Column {
+                        (FieldType::Base(_), arity) if arity != &FieldArity::List => Some(Column {
                             name: f.db_name(),
                             tpe: column_type(f),
                             is_required: arity == &FieldArity::Required,
@@ -177,9 +177,9 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     FieldType::Relation(relation_info) => {
                         let RelationInfo {
                             to,
-                            to_field,
-                            name,
-                            on_delete,
+                            to_field: _,
+                            name: _,
+                            on_delete: _,
                         } = relation_info;
                         let related_model = self.data_model.find_model(&to).unwrap();
                         // TODO: handle case of implicit back relation field
@@ -188,10 +188,6 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             .find(|f| related_type(f) == Some(model.name.to_string()))
                             .unwrap()
                             .clone();
-                        // let manifestation = RelationManifestation::Table {
-                        //     model_a_column: "A".to_string(),
-                        //     model_b_column: "B".to_string(),
-                        // };
 
                         let (model_a, model_b, field_a, field_b) = match () {
                             _ if &model.name < &related_model.name => {
@@ -259,8 +255,9 @@ impl Relation {
         format!("_{}", self.name())
     }
 
+    #[allow(unused)]
     fn is_many_to_many(&self) -> bool {
-        self.field_a.arity == FieldArity::List && self.field_b.arity == FieldArity::List
+        self.field_a.is_list() && self.field_b.is_list()
     }
 }
 
@@ -323,15 +320,7 @@ impl FieldExtensions for Field {
 
 fn related_type(field: &Field) -> Option<String> {
     match &field.field_type {
-        FieldType::Relation(relation_info) => {
-            let RelationInfo {
-                to,
-                to_field,
-                name,
-                on_delete,
-            } = relation_info;
-            Some(to.to_string())
-        }
+        FieldType::Relation(relation_info) => Some(relation_info.to.to_string()),
         _ => None,
     }
 }

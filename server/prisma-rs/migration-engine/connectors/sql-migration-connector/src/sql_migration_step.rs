@@ -1,4 +1,3 @@
-use datamodel::ScalarType;
 use migration_connector::DatabaseMigrationStepExt;
 use serde::Serialize;
 
