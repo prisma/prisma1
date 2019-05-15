@@ -2,7 +2,7 @@ use crate::errors::LiteralParseError;
 use serde::{Deserialize, Serialize};
 
 use crate::ast;
-use std::str::FromStr;
+use super::FromStrAndSpan;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RelationInfo {
@@ -29,14 +29,12 @@ pub enum OnDeleteStrategy {
     None,
 }
 
-impl FromStr for OnDeleteStrategy {
-    type Err = LiteralParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl FromStrAndSpan for OnDeleteStrategy {
+    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, LiteralParseError> {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
-            _ => Err(LiteralParseError::new("onDelete strategy", s, &ast::Span::empty())),
+            _ => Err(LiteralParseError::new("onDelete strategy", s, span)),
         }
     }
 }

@@ -2,7 +2,7 @@ use crate::ast;
 use crate::dml;
 use crate::dml::validator::argument::DirectiveArguments;
 use crate::dml::validator::directive::DirectiveValidator;
-use crate::errors::{DirectiveValidationError, ErrorCollection};
+use crate::errors::{DirectiveNotKnownError, ErrorCollection};
 
 use std::collections::HashMap;
 
@@ -51,8 +51,7 @@ impl<T> DirectiveListValidator<T> {
                         errors.push(Box::new(err));
                     }
                 }
-                None => errors.push(Box::new(DirectiveValidationError::new(
-                    "Encountered unknown directive",
+                None => errors.push(Box::new(DirectiveNotKnownError::new(
                     &directive.name,
                     &directive.span,
                 ))),

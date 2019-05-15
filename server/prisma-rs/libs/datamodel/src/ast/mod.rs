@@ -82,6 +82,7 @@ pub trait WithComments {
 #[derive(Debug)]
 pub struct Field {
     pub field_type: String,
+    pub field_type_span: Span,
     pub field_link: Option<String>,
     pub name: String,
     pub arity: FieldArity,

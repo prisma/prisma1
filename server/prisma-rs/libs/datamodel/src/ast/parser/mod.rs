@@ -160,12 +160,14 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut default_value: Option<Value> = None;
-    let mut field_type: Option<(FieldArity, String)> = None;
+    let mut field_type: Option<((FieldArity, String), Span)> = None;
     let mut field_link: Option<String> = None;
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
-        Rule::field_type => field_type = Some(parse_field_type(&current)),
+        Rule::field_type => {
+            field_type = Some((parse_field_type(&current), Span::from_pest(&current.as_span())))
+        },
         Rule::field_link => field_link = Some(current.as_str().to_string()),
         Rule::default_value => default_value = Some(parse_default_value(&current)),
         Rule::directive => directives.push(parse_directive(&current)),
@@ -173,8 +175,9 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     }
 
     return match (name, field_type) {
-        (Some(name), Some((arity, field_type))) => Field {
+        (Some(name), Some(((arity, field_type), field_type_span))) => Field {
             field_type: field_type,
+            field_type_span: field_type_span,
             field_link: field_link,
             name,
             arity,

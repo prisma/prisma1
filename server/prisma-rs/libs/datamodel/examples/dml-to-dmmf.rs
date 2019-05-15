@@ -33,27 +33,13 @@ fn main() {
                 Err(errors) => {
                     for error in errors.to_iter() {
                         println!("");
-                        println!("{}", error);
-                        println!("File: {}:", file_name);
-                        println!("");
-                        let span = error.span();
-                        let line = &file[..span.end].matches("\n").count();
-                        let text = &file[span.start..span.end];
-                        println!("{} |    {}", line, text);
-                        println!("");
+                        datamodel::errors::pretty_print_error(file_name, &file, &error.span(), &format!("{}", error));
                     }
                 }
             }
         }
         Err(error) => {
-            println!("");
-            println!("Error while parsing, unexpected token");
-            println!("File: {}:", file_name);
-            println!("");
-            let line = &file[..error.span.end].matches("\n").count();
-            let text = file.split("\n").collect::<Vec<&str>>()[*line];
-            println!("{} |    {}", line, text);
-            println!("");
+            datamodel::errors::pretty_print_error(file_name, &file, &error.span, &format!("{}", error));       
         }
     }
 }

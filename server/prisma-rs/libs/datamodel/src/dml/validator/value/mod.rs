@@ -1,7 +1,7 @@
 use crate::ast;
 use crate::dml;
 
-use crate::errors::ValueParserError;
+use crate::errors::{ValueParserError, LiteralParseError};
 use chrono::{DateTime, Utc};
 use std::error;
 
@@ -9,7 +9,7 @@ macro_rules! wrap_value (
     ($value:expr, $wrapper:expr, $validator:expr) => ({
         match $value {
             Ok(val) => Ok($wrapper(val)),
-            Err(err) => Err(ValueParserError::new_for_format_error(ast::describe_value_type($validator.value()), &format!("{}", err), $validator.raw(), $validator.span()))
+            Err(err) => Err(err)
         }
     })
 );
@@ -44,6 +44,17 @@ impl ValueValidator {
         }
     }
 
+    // TODO: This wrapper is super stupid.
+    fn wrap_error_from_literal<T>(
+        &self,
+        result: Result<T, LiteralParseError>,
+    ) -> Result<T, ValueParserError> {
+        match result {
+            Ok(val) => Ok(val),
+            Err(err) => Err(ValueParserError::new_from_literal_parser_error(&err)),
+        }
+    }
+
     pub fn value(&self) -> &ast::Value {
         &self.value
     }
@@ -58,6 +69,10 @@ impl ValueValidator {
             dml::ScalarType::Enum => wrap_value!(self.as_str(), dml::Value::ConstantLiteral, self),
             dml::ScalarType::String => wrap_value!(self.as_str(), dml::Value::String, self),
         }
+    }
+
+    pub fn parse_literal<T: dml::FromStrAndSpan>(&self) -> Result<T, ValueParserError> {
+        self.wrap_error_from_literal(T::from_str_and_span(&self.as_constant_literal()?, self.span()))
     }
 
     pub fn raw(&self) -> &String {

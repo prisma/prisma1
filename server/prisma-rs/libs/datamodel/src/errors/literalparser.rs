@@ -26,6 +26,6 @@ impl ErrorWithSpan for LiteralParseError {
 
 impl std::fmt::Display for LiteralParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{} is not a valid value for {}", self.raw_value, self.literal_type)
+        write!(f, "{} is not a valid value for {}.", self.raw_value, self.literal_type)
     }
 }

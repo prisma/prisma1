@@ -11,11 +11,9 @@ impl DirectiveValidator<dml::Field> for ScalarListDirectiveValidator {
         // TODO: Throw when field is not of type scalar and arity is list.
         // TODO: We can probably lift this pattern to a macro.
 
-        if let Ok(strategy) = args.arg("strategy")?.as_constant_literal() {
-            match strategy.parse::<dml::ScalarListStrategy>() {
-                Ok(strategy) => obj.scalar_list_strategy = Some(strategy),
-                Err(err) => return self.parser_error(&err),
-            }
+        match args.arg("strategy")?.parse_literal::<dml::ScalarListStrategy>() {
+            Ok(strategy) => obj.scalar_list_strategy = Some(strategy),
+            Err(err) => return self.parser_error(&err),
         }
 
         return Ok(());
