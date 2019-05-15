@@ -25,8 +25,9 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .order_by(REVISION_COLUMN.descend());
         let (sql_str, params) = Sqlite::build(query);
 
-        let result = self.connection.query_row(&sql_str, params, parse_row);
-        result.ok()
+        self.connection
+            .query_row(&sql_str, params, |row| Ok(parse_row(row)))
+            .ok()
     }
 
     fn load_all(&self) -> Vec<Migration> {
@@ -37,8 +38,8 @@ impl MigrationPersistence for SqlMigrationPersistence {
         let mut rows = stmt.query(params).unwrap();
         let mut result = Vec::new();
 
-        while let Some(row) = rows.next() {
-            result.push(parse_row(&row.unwrap()));
+        while let Some(row) = rows.next().unwrap() {
+            result.push(parse_row(&row));
         }
 
         result
@@ -112,24 +113,24 @@ fn timestamp_to_datetime(timestamp: i64) -> DateTime<Utc> {
 }
 
 fn parse_row(row: &Row) -> Migration {
-    let revision: u32 = row.get(REVISION_COLUMN);
-    let applied: u32 = row.get(APPLIED_COLUMN);
-    let rolled_back: u32 = row.get(ROLLED_BACK_COLUMN);
-    let errors_json: String = row.get(ERRORS_COLUMN);
+    let revision: u32 = row.get(REVISION_COLUMN).unwrap();
+    let applied: u32 = row.get(APPLIED_COLUMN).unwrap();
+    let rolled_back: u32 = row.get(ROLLED_BACK_COLUMN).unwrap();
+    let errors_json: String = row.get(ERRORS_COLUMN).unwrap();
     let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
-    let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN);
-    let database_steps_json: String = row.get(DATABASE_STEPS_COLUMN);
+    let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN).unwrap();
+    let database_steps_json: String = row.get(DATABASE_STEPS_COLUMN).unwrap();
     Migration {
-        name: row.get(NAME_COLUMN),
+        name: row.get(NAME_COLUMN).unwrap(),
         revision: revision as usize,
         datamodel: Schema::empty(),
-        status: MigrationStatus::from_str(row.get(STATUS_COLUMN)),
+        status: MigrationStatus::from_str(row.get(STATUS_COLUMN).unwrap()),
         applied: applied as usize,
         rolled_back: rolled_back as usize,
         datamodel_steps: Vec::new(),
         database_steps: database_steps_json,
         errors: errors,
-        started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN)),
+        started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN).unwrap()),
         finished_at: finished_at.map(timestamp_to_datetime),
     }
 }

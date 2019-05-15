@@ -40,8 +40,8 @@ impl DatabaseInspectorImpl {
         let mut rows = stmt.query(NO_PARAMS).unwrap();
         let mut result = Vec::new();
 
-        while let Some(row) = rows.next() {
-            let name: String = row.unwrap().get("name");
+        while let Some(row) = rows.next().unwrap() {
+            let name: String = row.get_unwrap("name");
             if name != "sqlite_sequence" {
                 result.push(name);
             }
@@ -69,14 +69,13 @@ impl DatabaseInspectorImpl {
         let mut rows = stmt.query(NO_PARAMS).unwrap();
         let mut result = Vec::new();
 
-        while let Some(row_result) = rows.next() {
-            let row = row_result.unwrap();
+        while let Some(row) = rows.next().unwrap() {
             result.push(IntrospectedColumn {
-                name: row.get("name"),
+                name: row.get_unwrap("name"),
                 table: table.to_string(),
-                tpe: row.get("type"),
-                is_required: row.get("notnull"),
-                default: row.get("dflt_value"),
+                tpe: row.get_unwrap("type"),
+                is_required: row.get_unwrap("notnull"),
+                default: row.get_unwrap("dflt_value"),
             });
         }
 
@@ -89,14 +88,13 @@ impl DatabaseInspectorImpl {
         let mut rows = stmt.query(NO_PARAMS).unwrap();
         let mut result = Vec::new();
 
-        while let Some(row_result) = rows.next() {
-            let row = row_result.unwrap();
+        while let Some(row) = rows.next().unwrap() {
             result.push(IntrospectedForeignKey {
                 name: "".to_string(),
                 table: table.to_string(),
-                column: row.get("from"),
-                referenced_table: row.get("table"),
-                referenced_column: row.get("to"),
+                column: row.get_unwrap("from"),
+                referenced_table: row.get_unwrap("table"),
+                referenced_column: row.get_unwrap("to"),
             });
         }
 
