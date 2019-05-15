@@ -1,25 +1,30 @@
 //! Query execution builders module
 
-mod filters;
+pub mod filters;
 mod inflector;
 mod many;
 mod many_rel;
 mod one_rel;
 mod root;
 mod single;
+mod mutations;
+
+pub(crate) mod utils;
 
 pub use many::*;
 pub use many_rel::*;
 pub use one_rel::*;
 pub use root::*;
 pub use single::*;
+pub use mutations::*;
 
-use self::inflector::Inflector;
+pub use self::inflector::Inflector;
+
 use crate::{CoreError, CoreResult, ReadQuery};
-use connector::{filter::NodeSelector, QueryArguments};
+use connector::QueryArguments;
 use graphql_parser::query::{Field, Selection, Value};
 use prisma_models::{
-    Field as ModelField, GraphqlId, ModelRef, OrderBy, PrismaValue, RelationFieldRef, SchemaRef, SelectedField,
+    Field as ModelField, GraphqlId, ModelRef, OrderBy, RelationFieldRef, InternalDataModelRef, SelectedField,
     SelectedFields, SelectedRelationField, SelectedScalarField, SortOrder,
 };
 use rust_inflector::Inflector as RustInflector;
@@ -37,9 +42,9 @@ pub enum Builder<'field> {
 }
 
 impl<'a> Builder<'a> {
-    fn new(schema: SchemaRef, root_field: &'a Field) -> CoreResult<Self> {
-        // Find model for field - this is a temporary workaround before we have a data model definition (/ schema builder).
-        let builder: Option<Builder> = schema
+    fn new(internal_data_model: InternalDataModelRef, root_field: &'a Field) -> CoreResult<Self> {
+        // Find model for field - this is a temporary workaround before we have a data model definition (/ internal_data_model builder).
+        let builder: Option<Builder> = internal_data_model
             .models()
             .iter()
             .filter_map(|model| Builder::infer(model, root_field, None))
@@ -73,7 +78,7 @@ impl<'a> Builder<'a> {
         } else {
             let normalized = match model.name.as_str() {
                 "AUser" => "aUser".to_owned(), // FIXME *quietly sobbing*
-                name => name.to_camel_case()
+                name => name.to_camel_case(),
             };
 
             if field.name == normalized {
@@ -105,38 +110,6 @@ pub trait BuilderExt {
 
     /// Last step that invokes query building
     fn build(self) -> CoreResult<Self::Output>;
-
-    /// Get node selector from field and model
-    fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResult<NodeSelector> {
-        println!("NODE SELECT");
-        // FIXME: this expects at least one query arg...
-        let (_, value) = field.arguments.first().expect("no arguments found");
-        match value {
-            Value::Object(obj) => {
-                let (field_name, value) = obj.iter().next().expect("object was empty");
-                let field = model.fields().find_from_scalar(field_name).unwrap();
-                let value = Self::value_to_prisma_value(value);
-
-                Ok(NodeSelector {
-                    field: Arc::clone(&field),
-                    value: value,
-                })
-            }
-            _ => unimplemented!(),
-        }
-    }
-
-    /// Turning a GraphQL value to a PrismaValue
-    fn value_to_prisma_value(val: &Value) -> PrismaValue {
-        match val {
-            Value::String(ref s) => match serde_json::from_str(s) {
-                Ok(val) => PrismaValue::Json(val),
-                _ => PrismaValue::String(s.clone()),
-            },
-            Value::Int(i) => PrismaValue::Int(i.as_i64().unwrap()),
-            _ => unimplemented!(),
-        }
-    }
 
     fn extract_query_args(field: &Field, model: ModelRef) -> CoreResult<QueryArguments> {
         field
@@ -258,7 +231,7 @@ pub trait BuilderExt {
     fn collect_nested_queries<'field>(
         model: ModelRef,
         ast_field: &'field Field,
-        _schema: SchemaRef,
+        _internal_data_model: InternalDataModelRef,
     ) -> CoreResult<Vec<Builder<'field>>> {
         ast_field
             .selection_set

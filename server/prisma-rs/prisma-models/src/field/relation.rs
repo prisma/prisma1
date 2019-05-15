@@ -74,7 +74,7 @@ impl RelationField {
 
     pub fn relation(&self) -> RelationRef {
         self.relation
-            .get_or_init(|| self.model().schema().find_relation(&self.relation_name).unwrap())
+            .get_or_init(|| self.model().internal_data_model().find_relation(&self.relation_name).unwrap())
             .upgrade()
             .unwrap()
     }
@@ -141,9 +141,9 @@ impl RelationField {
 
     pub fn as_column(&self) -> Column {
         let model = self.model();
-        let schema = model.schema();
+        let internal_data_model = model.internal_data_model();
         let db_name = self.db_name();
-        let parts = ((schema.db_name.as_ref(), model.db_name()), db_name.as_ref());
+        let parts = ((internal_data_model.db_name.as_ref(), model.db_name()), db_name.as_ref());
 
         parts.into()
     }

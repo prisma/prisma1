@@ -107,13 +107,12 @@ impl QueryBuilder {
     }
 
     pub fn get_scalar_list_values_by_node_ids(list_field: ScalarFieldRef, node_ids: Vec<GraphqlId>) -> Select {
-        let model = list_field.model();
-        let table_name = format!("{}_{}", model.db_name(), list_field.name);
+        let table = list_field.scalar_list_table().table();
 
-        // I vant to suk your blaad... - Vlad the Impaler
+        // I vant to saak your blaad... - Vlad the Impaler
         let vhere = "nodeId".in_selection(node_ids);
 
-        let query = Select::from_table(table_name)
+        let query = Select::from_table(table)
             .column("nodeId")
             .column("value")
             .so_that(vhere);

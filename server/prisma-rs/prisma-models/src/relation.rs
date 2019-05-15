@@ -96,12 +96,12 @@ pub struct Relation {
 
     pub manifestation: Option<RelationLinkManifestation>,
 
-    #[debug_stub = "#SchemaWeakRef#"]
-    pub schema: SchemaWeakRef,
+    #[debug_stub = "#InternalDataModelWeakRef#"]
+    pub internal_data_model: InternalDataModelWeakRef,
 }
 
 impl RelationTemplate {
-    pub fn build(self, schema: SchemaWeakRef) -> RelationRef {
+    pub fn build(self, internal_data_model: InternalDataModelWeakRef) -> RelationRef {
         let relation = Relation {
             name: self.name,
             manifestation: self.manifestation,
@@ -113,7 +113,7 @@ impl RelationTemplate {
             model_b: OnceCell::new(),
             field_a: OnceCell::new(),
             field_b: OnceCell::new(),
-            schema: schema,
+            internal_data_model: internal_data_model,
         };
 
         Arc::new(relation)
@@ -163,22 +163,22 @@ impl Relation {
     pub fn model_a(&self) -> ModelRef {
         self.model_a
             .get_or_init(|| {
-                let model = self.schema().find_model(&self.model_a_name).unwrap();
+                let model = self.internal_data_model().find_model(&self.model_a_name).unwrap();
                 Arc::downgrade(&model)
             })
             .upgrade()
-            .expect("Model A deleted without deleting the relations in schema.")
+            .expect("Model A deleted without deleting the relations in internal_data_model.")
     }
 
     /// A pointer to the second `Model` in the `Relation`.
     pub fn model_b(&self) -> ModelRef {
         self.model_b
             .get_or_init(|| {
-                let model = self.schema().find_model(&self.model_b_name).unwrap();
+                let model = self.internal_data_model().find_model(&self.model_b_name).unwrap();
                 Arc::downgrade(&model)
             })
             .upgrade()
-            .expect("Model B deleted without deleting the relations in schema.")
+            .expect("Model B deleted without deleting the relations in internal_data_model.")
     }
 
     /// A pointer to the `RelationField` in the first `Model` in the `Relation`.
@@ -194,7 +194,7 @@ impl Relation {
                 Arc::downgrade(&field)
             })
             .upgrade()
-            .expect("Field A deleted without deleting the relations in schema.")
+            .expect("Field A deleted without deleting the relations in internal_data_model.")
     }
 
     /// A pointer to the `RelationField` in the second `Model` in the `Relation`.
@@ -210,7 +210,7 @@ impl Relation {
                 Arc::downgrade(&field)
             })
             .upgrade()
-            .expect("Field B deleted without deleting the relations in schema.")
+            .expect("Field B deleted without deleting the relations in internal_data_model.")
     }
 
     pub fn model_a_column(&self) -> Column {
@@ -272,9 +272,19 @@ impl Relation {
         use RelationLinkManifestation::*;
 
         match self.manifestation {
-            Some(RelationTable(ref m)) => m.table.clone().into(),
-            Some(Inline(ref m)) => self.schema().find_model(&m.in_table_of_model_name).unwrap().table(),
-            None => format!("_{}", self.name).into(),
+            Some(RelationTable(ref m)) => {
+                let db = self.model_a().internal_data_model().db_name.clone();
+                (db, m.table.clone()).into()
+            }
+            Some(Inline(ref m)) => self
+                .internal_data_model()
+                .find_model(&m.in_table_of_model_name)
+                .unwrap()
+                .table(),
+            None => {
+                let db = self.model_a().internal_data_model().db_name.clone();
+                (db, format!("_{}", self.name)).into()
+            }
         }
     }
 
@@ -332,9 +342,9 @@ impl Relation {
         }
     }
 
-    fn schema(&self) -> SchemaRef {
-        self.schema
+    fn internal_data_model(&self) -> InternalDataModelRef {
+        self.internal_data_model
             .upgrade()
-            .expect("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
+            .expect("InternalDataModel does not exist anymore. Parent internal_data_model is deleted without deleting the child internal_data_model.")
     }
 }

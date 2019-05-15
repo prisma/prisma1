@@ -1,7 +1,7 @@
 package com.prisma.subscriptions
 
 import com.prisma.ConnectorTag
-import com.prisma.ConnectorTag.SQLiteConnectorTag
+import com.prisma.ConnectorTag.{PostgresConnectorTag, SQLiteConnectorTag}
 import com.prisma.api.ApiSpecBase
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models._
@@ -12,7 +12,7 @@ import org.scalatest.{FlatSpec, Matchers}
 class NonEmbeddedServerSideSubscriptionSpec extends FlatSpec with Matchers with ApiSpecBase with ScalaFutures {
 
   override def runOnlyForCapabilities: Set[ConnectorCapability] = Set(JoinRelationLinksCapability)
-  override def doNotRunForConnectors: Set[ConnectorTag]         = Set(SQLiteConnectorTag)
+  override def doNotRunForConnectors: Set[ConnectorTag]         = Set(SQLiteConnectorTag, PostgresConnectorTag)
 
   val webhookTestKit = testDependencies.webhookPublisher
 

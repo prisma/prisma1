@@ -1,5 +1,6 @@
 use super::*;
-use connector::{mutaction::NestedSet, ConnectorResult};
+use crate::SqlResult;
+use connector::mutaction::NestedSet;
 use prisma_models::*;
 use prisma_query::ast::*;
 
@@ -12,7 +13,7 @@ impl NestedActions for NestedSet {
         self.relation_field().relation()
     }
 
-    fn required_check(&self, _: &GraphqlId) -> ConnectorResult<Option<(Select, ResultCheck)>> {
+    fn required_check(&self, _: &GraphqlId) -> SqlResult<Option<(Select, ResultCheck)>> {
         Ok(None)
     }
 

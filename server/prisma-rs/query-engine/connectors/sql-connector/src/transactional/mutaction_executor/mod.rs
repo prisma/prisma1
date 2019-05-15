@@ -6,8 +6,8 @@ mod relation;
 mod update;
 mod update_many;
 
-use crate::{database::SqlDatabase, Transaction, Transactional};
-use connector::{error::ConnectorError, mutaction::*, ConnectorResult, DatabaseMutactionExecutor};
+use crate::{database::SqlDatabase, error::SqlError, RawQuery, SqlResult, Transaction, Transactional};
+use connector::{mutaction::*, ConnectorResult, DatabaseMutactionExecutor};
 use serde_json::Value;
 use std::sync::Arc;
 
@@ -20,8 +20,8 @@ where
         db_name: String,
         mutaction: TopLevelDatabaseMutaction,
     ) -> ConnectorResult<DatabaseMutactionResult> {
-        self.executor.with_transaction(&db_name, |conn: &mut Transaction| {
-            fn create(conn: &mut Transaction, cn: &CreateNode) -> ConnectorResult<DatabaseMutactionResult> {
+        let result = self.executor.with_transaction(&db_name, |conn: &mut Transaction| {
+            fn create(conn: &mut Transaction, cn: &CreateNode) -> SqlResult<DatabaseMutactionResult> {
                 let parent_id = create::execute(conn, Arc::clone(&cn.model), &cn.non_list_args, &cn.list_args)?;
                 nested::execute(conn, &cn.nested_mutactions, &parent_id)?;
 
@@ -31,7 +31,7 @@ where
                 })
             }
 
-            fn update(conn: &mut Transaction, un: &UpdateNode) -> ConnectorResult<DatabaseMutactionResult> {
+            fn update(conn: &mut Transaction, un: &UpdateNode) -> SqlResult<DatabaseMutactionResult> {
                 let parent_id = update::execute(conn, &un.where_, &un.non_list_args, &un.list_args)?;
                 nested::execute(conn, &un.nested_mutactions, &parent_id)?;
 
@@ -42,12 +42,12 @@ where
             }
 
             match mutaction {
-                TopLevelDatabaseMutaction::CreateNode(ref cn) => create(conn, cn),
-                TopLevelDatabaseMutaction::UpdateNode(ref un) => update(conn, un),
+                TopLevelDatabaseMutaction::CreateNode(ref cn) => Ok(create(conn, cn)?),
+                TopLevelDatabaseMutaction::UpdateNode(ref un) => Ok(update(conn, un)?),
                 TopLevelDatabaseMutaction::UpsertNode(ref ups) => match conn.find_id(&ups.where_) {
-                    Err(_e @ ConnectorError::NodeNotFoundForWhere { .. }) => create(conn, &ups.create),
-                    Err(e) => return Err(e),
-                    Ok(_) => update(conn, &ups.update),
+                    Err(_e @ SqlError::NodeNotFoundForWhere { .. }) => Ok(create(conn, &ups.create)?),
+                    Err(e) => return Err(e.into()),
+                    Ok(_) => Ok(update(conn, &ups.update)?),
                 },
                 TopLevelDatabaseMutaction::UpdateNodes(ref uns) => {
                     let count = update_many::execute(
@@ -88,10 +88,16 @@ where
                     })
                 }
             }
-        })
+        })?;
+
+        Ok(result)
     }
 
-    fn execute_raw(&self, _query: String) -> ConnectorResult<Value> {
-        Ok(Value::String("hello world!".to_string()))
+    fn execute_raw(&self, db_name: String, query: String) -> ConnectorResult<Value> {
+        let result = self
+            .executor
+            .with_transaction(&db_name, |conn: &mut Transaction| conn.raw(RawQuery::from(query)))?;
+
+        Ok(result)
     }
 }

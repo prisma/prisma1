@@ -9,7 +9,8 @@ pub type ProjectWeakRef = Weak<Project>;
 #[serde(rename_all = "camelCase")]
 pub struct ProjectTemplate {
     pub id: String,
-    pub schema: SchemaTemplate,
+    #[serde(rename = "schema")]
+    pub internal_data_model: InternalDataModelTemplate,
 
     #[serde(default)]
     pub manifestation: ProjectManifestation,
@@ -22,7 +23,7 @@ pub struct ProjectTemplate {
 #[derive(Debug)]
 pub struct Project {
     pub id: String,
-    pub schema: OnceCell<SchemaRef>,
+    pub internal_data_model: OnceCell<InternalDataModelRef>,
     pub revision: Revision,
 }
 
@@ -31,11 +32,14 @@ impl Into<ProjectRef> for ProjectTemplate {
         let db_name = self.db_name();
         let project = Arc::new(Project {
             id: self.id,
-            schema: OnceCell::new(),
+            internal_data_model: OnceCell::new(),
             revision: self.revision,
         });
 
-        project.schema.set(self.schema.build(db_name)).unwrap();
+        project
+            .internal_data_model
+            .set(self.internal_data_model.build(db_name))
+            .unwrap();
 
         project
     }
@@ -58,8 +62,10 @@ impl ProjectTemplate {
 }
 
 impl Project {
-    pub fn schema(&self) -> &Schema {
-        self.schema.get().expect("Project has no schema set!")
+    pub fn internal_data_model(&self) -> &InternalDataModel {
+        self.internal_data_model
+            .get()
+            .expect("Project has no internal_data_model set!")
     }
 }
 
@@ -118,7 +124,8 @@ mod tests {
     use std::fs::File;
 
     #[test]
-    fn test_relation_schema() {
+    #[ignore]
+    fn test_relation_internal_data_model() {
         let file = File::open("./relation_schema.json").unwrap();
         let project_template: ProjectTemplate = serde_json::from_reader(file).unwrap();
         let _project: ProjectRef = project_template.into();

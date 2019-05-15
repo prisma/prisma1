@@ -1,0 +1,17 @@
+[package]
+name = "sql-migration-connector"
+version = "0.1.0"
+authors = ["Marcus Böhm <boehm@prisma.io>"]
+edition = "2018"
+
+[dependencies]
+migration-connector = { path = "../migration-connector" }
+datamodel = { path = "../../../libs/datamodel" }
+chrono = { version = "0.4" }
+prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
+database-inspector = { path = "../../../libs/database-inspector" }
+serde_json = "1.0"
+serde = "1.0"
+rusqlite = { version = "0.16", features = ["chrono", "bundled"] }
+barrel = { version = "0.5.4", features = ["sqlite3"] }
+itertools = "0.8"

@@ -1,11 +1,11 @@
 use super::{create, delete, delete_many, relation, update, update_many};
-use crate::Transaction;
-use connector::{error::ConnectorError, mutaction::*, ConnectorResult};
+use crate::{error::SqlError, SqlResult, Transaction};
+use connector::mutaction::*;
 use prisma_models::GraphqlId;
 use std::sync::Arc;
 
-pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id: &GraphqlId) -> ConnectorResult<()> {
-    fn create(conn: &mut Transaction, parent_id: &GraphqlId, cn: &NestedCreateNode) -> ConnectorResult<()> {
+pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id: &GraphqlId) -> SqlResult<()> {
+    fn create(conn: &mut Transaction, parent_id: &GraphqlId, cn: &NestedCreateNode) -> SqlResult<()> {
         let parent_id = create::execute_nested(
             conn,
             parent_id,
@@ -20,7 +20,7 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
         Ok(())
     }
 
-    fn update(conn: &mut Transaction, parent_id: &GraphqlId, un: &NestedUpdateNode) -> ConnectorResult<()> {
+    fn update(conn: &mut Transaction, parent_id: &GraphqlId, un: &NestedUpdateNode) -> SqlResult<()> {
         let parent_id = update::execute_nested(
             conn,
             parent_id,
@@ -48,7 +48,7 @@ pub fn execute(conn: &mut Transaction, mutactions: &NestedMutactions, parent_id:
 
         match id_opt {
             Ok(_) => update(conn, parent_id, &upsert_node.update)?,
-            Err(_e @ ConnectorError::NodesNotConnected { .. }) => create(conn, parent_id, &upsert_node.create)?,
+            Err(_e @ SqlError::NodesNotConnected { .. }) => create(conn, parent_id, &upsert_node.create)?,
             Err(e) => return Err(e),
         }
     }

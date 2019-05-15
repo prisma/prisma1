@@ -256,6 +256,6 @@
   "functions": [],
   "manifestation": {
     "database": "FilterSpec_DB",
-    "schema": "FilterSpec_S"
+    "internal_data_model": "FilterSpec_S"
   }
 }

@@ -4,7 +4,7 @@ use graphql_parser::query::Value;
 use prisma_models::{Field, ModelRef, PrismaListValue, PrismaValue};
 use std::{collections::BTreeMap, convert::TryFrom, sync::Arc};
 
-#[derive(PartialEq)]
+#[derive(Debug, PartialEq)]
 enum FilterOp {
     In,
     NotIn,
@@ -146,16 +146,28 @@ pub fn extract_filter(map: &BTreeMap<String, Value>, model: ModelRef) -> CoreRes
                         }
                         Field::Relation(r) => {
                             let value = match v {
-                                Value::Object(o) => o,
-                                _ => panic!("Expected object value"),
+                                Value::Object(o) => Some(o),
+                                _ => None, // This handles `Null` values which might be valid!
                             };
 
-                            Ok(match op {
-                                FilterOp::Some => r.at_least_one_related(extract_filter(value, r.related_model())?),
-                                FilterOp::None => r.no_related(extract_filter(value, r.related_model())?),
-                                FilterOp::Every => r.every_related(extract_filter(value, r.related_model())?),
-                                FilterOp::Field => r.to_one_related(extract_filter(value, r.related_model())?),
-                                _ => unreachable!(),
+                            Ok(match (op, value) {
+                                (FilterOp::Some, Some(value)) => {
+                                    r.at_least_one_related(extract_filter(value, r.related_model())?)
+                                }
+                                (FilterOp::None, Some(value)) => {
+                                    r.no_related(extract_filter(value, r.related_model())?)
+                                }
+                                (FilterOp::Every, Some(value)) => {
+                                    r.every_related(extract_filter(value, r.related_model())?)
+                                }
+                                (FilterOp::Field, Some(value)) => {
+                                    r.to_one_related(extract_filter(value, r.related_model())?)
+                                }
+                                (FilterOp::Field, None) => r.one_relation_is_null(),
+                                (op, val) => Err(CoreError::QueryValidationError(format!(
+                                    "Invalid filter: Operation {:?} with {:?}",
+                                    op, val
+                                )))?,
                             })
                         }
                     }

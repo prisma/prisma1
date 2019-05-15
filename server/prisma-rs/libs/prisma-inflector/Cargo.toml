@@ -1,0 +1,10 @@
+[package]
+name = "prisma-inflector"
+version = "0.1.0"
+authors = ["Dominic Petrick <dompetrick@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+lazy_static = "1.3"
+regex = "1.1"
+unicode-segmentation = "1.2"

@@ -1,9 +1,12 @@
 //! Process a set of records into an IR List
 
-use super::{maps::build_map, Item, List, Map};
+use super::{maps::build_map, trim_records, Item, List, Map};
 use crate::{ManyReadQueryResults, ReadQueryResult};
 use prisma_models::{GraphqlId, PrismaValue};
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{hash_map::IterMut, HashMap},
+    sync::Arc,
+};
 
 #[derive(Debug)]
 enum ParentsWithRecords {
@@ -12,6 +15,13 @@ enum ParentsWithRecords {
 }
 
 impl ParentsWithRecords {
+    pub fn iter_mut(&mut self) -> IterMut<GraphqlId, Vec<Item>> {
+        match self {
+            ParentsWithRecords::Single(_) => panic!("Can't call iter_mut on single parent with record"),
+            ParentsWithRecords::Many(m) => m.iter_mut(),
+        }
+    }
+
     pub fn contains_key(&self, key: &GraphqlId) -> bool {
         match self {
             ParentsWithRecords::Single(m) => m.contains_key(key),
@@ -54,8 +64,6 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
     // We need the ParentsWithRecords indirection to preserve information if the nesting is to-one or to-many.
     let mut nested_fields_to_groups: HashMap<String, ParentsWithRecords> = HashMap::new();
 
-    // todo: The code below might have issues with empty results. To test.
-
     // Group nested results by parent ids and move them into the grouped map.
     nested.into_iter().for_each(|nested_result| match nested_result {
         ReadQueryResult::Single(single) => {
@@ -73,8 +81,10 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                     .get_mut(&single.name)
                     .expect("Parents with records mapping must contain entries for all nested queries.");;
 
-                let nested_build = build_map(single);
-                parents_with_records.insert(parent_id.clone(), vec![Item::Map(Some(parent_id), nested_build)]);
+                match build_map(single) {
+                    Some(m) => parents_with_records.insert(parent_id.clone(), vec![Item::Map(Some(parent_id), m)]),
+                    None => parents_with_records.insert(parent_id.clone(), vec![Item::Value(PrismaValue::Null)]),
+                };
             }
         }
         ReadQueryResult::Many(many) => {
@@ -86,7 +96,9 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                 .get_mut(&many.name)
                 .expect("Parents with records mapping must contain entries for all nested queries.");
 
+            let query_args = many.query_arguments.clone();
             let nested_build = build_list(many);
+
             nested_build.into_iter().for_each(|item| match item {
                 Item::Map(parent_opt, i) => {
                     let parent_id = parent_opt
@@ -104,6 +116,11 @@ pub fn build_list(mut result: ManyReadQueryResults) -> List {
                     records_for_parent.push(Item::Map(parent_opt, i));
                 }
                 _ => unreachable!(),
+            });
+
+            // Post process results for this query
+            parents_with_records.iter_mut().for_each(|(_, v)| {
+                trim_records(v, &query_args);
             });
         }
     });

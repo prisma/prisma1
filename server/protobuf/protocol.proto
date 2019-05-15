@@ -151,8 +151,9 @@ message GetScalarListValuesByNodeIds {
 }
 
 message ExecuteRawInput {
-  required Header header = 1;
-  required string query  = 2;
+  required Header header  = 1;
+  required string db_name = 2;
+  required string query   = 3;
 }
 
 message CountByModelInput {

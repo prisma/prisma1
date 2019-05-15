@@ -65,7 +65,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //region Recursion
   "A filter query" should "support the AND filter in one recursion level" in {
-
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -84,7 +83,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the AND filter in two recursion levels" in {
-
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -108,7 +106,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the OR filter in one recursion level" taggedAs (IgnoreMongo) in {
-
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -123,7 +120,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the OR filter in two recursion levels" taggedAs (IgnoreMongo) in {
-
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -143,7 +139,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
 
   //region null
   "A filter query" should "support filtering on null" in {
-
     createTest("id1", optString = null, 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", optString = "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", optString = null, 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -178,7 +173,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   //region String
 
   "A filter query" should "support the equality filter on strings" in {
-
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -191,7 +185,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not-equality filter on strings" in {
-
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -204,7 +197,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the contains filter on strings" in {
-
     createTest("id1", "bara", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -217,7 +209,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not_contains filter on strings" in {
-
     createTest("id1", "bara", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -230,7 +221,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the starts_with filter on strings" in {
-
     createTest("id1", "bara", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -243,7 +233,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not_starts_with filter on strings" in {
-
     createTest("id1", "bara", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -256,7 +245,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the ends_with filter on strings" in {
-
     createTest("id1", "bara", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -269,7 +257,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not_ends_with filter on strings" in {
-
     createTest("id1", "bara", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -282,7 +269,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the lt filter on strings" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -295,7 +281,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the lte filter on strings" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -308,7 +293,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the gt filter on strings" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -321,7 +305,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the gte filter on strings" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -334,7 +317,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the in filter on strings" in {
-
     createTest("id1", "a", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "ab", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "abc", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -361,7 +343,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not_in filter on strings" in {
-
     createTest("id1", "a", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "ab", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "abc", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -380,7 +361,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   //region Integer
 
   "A filter query" should "support the equality filter on integers" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -393,7 +373,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not equality filter on integers" in {
-
     createTest("id1", "a", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "ab", 2, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "abc", 3, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -406,7 +385,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the lt filter on integers" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -419,7 +397,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the lte filter on integers" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -432,7 +409,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the gt filter on integers" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -445,7 +421,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the gte filter on integers" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -458,7 +433,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the in filter on integers" in {
-
     createTest("id1", "a", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "ab", 2, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "abc", 3, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -471,7 +445,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not_in filter on integers" in {
-
     createTest("id1", "a", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "ab", 2, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "abc", 3, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -487,7 +460,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   //region Float
 
   "A filter query" should "support the equality filter on float" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -500,7 +472,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not equality filter on float" in {
-
     createTest("id1", "a", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "ab", 2, 2, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "abc", 3, 3, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -513,7 +484,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the lt filter on floats" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -526,7 +496,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the lte filter on floats" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -539,7 +508,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the gt filter on floats" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -552,7 +520,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the gte filter on floats" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -565,7 +532,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the in filter on floats" in {
-
     createTest("id1", "a", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "ab", 2, 2, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "abc", 3, 3, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -578,7 +544,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not_in filter on floats" in {
-
     createTest("id1", "a", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "ab", 2, 2, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "abc", 3, 3, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -594,7 +559,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   // region Boolean
 
   "A filter query" should "support the equality filter on booleans" in {
-
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -607,7 +571,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not-equality filter on booleans" in {
-
     createTest("id1", "bar", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "foo bar", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
     createTest("id3", "foo bar barz", 1, 1, optBoolean = false, "A", "2016-09-23T12:29:32.342")
@@ -623,7 +586,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   //region DateTime
 
   "A filter query" should "support the equality filter on DateTime" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-25T12:29:32.342")
@@ -636,7 +598,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not equality filter on DateTime" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-25T12:29:32.342")
@@ -649,7 +610,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the lt filter on DateTime" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-25T12:29:32.342")
@@ -662,7 +622,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the lte filter on DateTime" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-25T12:29:32.342")
@@ -675,7 +634,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the gt filter on DateTime" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-25T12:29:32.342")
@@ -688,7 +646,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the gte filter on DateTime" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-25T12:29:32.342")
@@ -701,7 +658,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the in filter on DateTime" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-25T12:29:32.342")
@@ -714,7 +670,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not_in filter on DateTime" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "A", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "A", "2016-09-25T12:29:32.342")
@@ -730,7 +685,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   //region Enum
 
   "A filter query" should "support the equality filter on Enum" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "B", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "B", "2016-09-25T12:29:32.342")
@@ -743,7 +697,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the not equality filter on Enum" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "B", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "B", "2016-09-25T12:29:32.342")
@@ -756,7 +709,6 @@ class PortedFiltersSpec extends FlatSpec with Matchers with ApiSpecBase {
   }
 
   "A filter query" should "support the in filter on Enum" in {
-
     createTest("id1", "1", 1, 1, optBoolean = true, "A", "2016-09-23T12:29:32.342")
     createTest("id2", "2", 2, 2, optBoolean = false, "B", "2016-09-24T12:29:32.342")
     createTest("id3", "3", 3, 3, optBoolean = false, "B", "2016-09-25T12:29:32.342")

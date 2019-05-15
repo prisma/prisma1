@@ -5,6 +5,7 @@ import com.prisma.api.util.TroubleCharacters
 import com.prisma.shared.models.ConnectorCapability.ScalarListsCapability
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
+import play.api.libs.json.{JsValue, Json}
 
 class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
 
@@ -57,10 +58,10 @@ class CreateMutationListSpec extends FlatSpec with Matchers with ApiSpecBase {
     res.toString should be(
       s"""{"data":{"createScalarModel":{"optEnums":["A","A"],"optBooleans":[true,false],"optDateTimes":["2016-07-31T23:59:01.000Z","2017-07-31T23:59:01.000Z"],"optStrings":["lala${TroubleCharacters.value}"],"optInts":[1337,12],"optJsons":[[1,2,3]],"optFloats":[1.234,1.45]}}}""")
 
-    val queryRes = server.query("""{ scalarModels{optStrings, optInts, optFloats, optBooleans, optEnums, optDateTimes, optJsons}}""", project = project)
+    val queryRes: JsValue = server.query("""{ scalarModels{optStrings, optInts, optFloats, optBooleans, optEnums, optDateTimes, optJsons}}""", project = project)
 
-    queryRes.toString should be(
-      s"""{"data":{"scalarModels":[{"optEnums":["A","A"],"optBooleans":[true,false],"optDateTimes":["2016-07-31T23:59:01.000Z","2017-07-31T23:59:01.000Z"],"optStrings":["lala${TroubleCharacters.value}"],"optInts":[1337,12],"optJsons":[[1,2,3]],"optFloats":[1.234,1.45]}]}}""")
+    queryRes should be(
+      Json.parse(s"""{"data":{"scalarModels":[{"optEnums":["A","A"],"optBooleans":[true,false],"optDateTimes":["2016-07-31T23:59:01.000Z","2017-07-31T23:59:01.000Z"],"optStrings":["lala${TroubleCharacters.value}"],"optInts":[1337,12],"optJsons":[[1,2,3]],"optFloats":[1.234,1.45]}]}}"""))
   }
 
   "A Create Mutation" should "create and return items with empty listvalues" in {

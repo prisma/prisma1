@@ -1,6 +1,9 @@
 use super::{PrismaRequest, RequestHandler};
 use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
-use core::{ir::Builder, ReadQuery, RootBuilder};
+use core::{
+    ir::{self, Builder},
+    RootBuilder,
+};
 use graphql_parser as gql;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -40,29 +43,37 @@ impl RequestHandler for GraphQlRequestHandler {
 
 fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> PrismaResult<Value> {
     debug!("Incoming GQL query: {:?}", &req.body.query);
+
     let query_doc = match gql::parse_query(&req.body.query) {
         Ok(doc) => doc,
         Err(e) => return Err(PrismaError::QueryParsingError(format!("{:?}", e))),
     };
 
     // Let's validate the schema!
-    if let Err(_) = ctx.schema.validate(&query_doc) {
+    if let Err(_) = ctx.internal_data_model.validate(&query_doc) {
         return Err(PrismaError::QueryValidationError(
-            "Schema validation failed for unknown reasons".into(),
+            "InternalDataModel validation failed for unknown reasons".into(),
         ));
     }
 
     let rb = RootBuilder {
         query: query_doc,
-        schema: ctx.schema.clone(),
+        internal_data_model: ctx.internal_data_model.clone(),
         operation_name: req.body.operation_name,
     };
 
-    let queries: Vec<ReadQuery> = rb.build()?;
-    let ir = dbg!(ctx.read_query_executor.execute(&queries)?)
-        .into_iter()
-        .fold(Builder::new(), |builder, result| builder.add(result))
-        .build();
+    let queries = rb.build();
+
+    let ir = match queries {
+        Ok(q) => match dbg!(ctx.executor.exec_all(q)) {
+            Ok(results) => results
+                .into_iter()
+                .fold(Builder::new(), |builder, result| builder.add(result))
+                .build(),
+            Err(err) => vec![ir::Response::Error(format!("{:?}", err))], // This is merely a workaround
+        },
+        Err(err) => vec![ir::Response::Error(format!("{:?}", err))], // This is merely a workaround
+    };
 
     Ok(json::serialize(ir))
 }
