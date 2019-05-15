@@ -130,10 +130,15 @@ impl DatabaseSchemaDiffer {
     }
 
     fn column_description(column: &Column) -> ColumnDescription {
+        let fk = column.foreign_key.as_ref().map(|fk| ForeignKey {
+            table: fk.table.clone(),
+            column: fk.column.clone(),
+        });
         ColumnDescription {
             name: column.name.clone(),
             tpe: Self::convert_column_type(column.tpe),
             required: column.is_required,
+            foreign_key: fk,
         }
     }
 

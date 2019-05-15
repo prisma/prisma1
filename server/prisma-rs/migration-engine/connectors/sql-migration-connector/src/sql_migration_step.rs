@@ -57,6 +57,13 @@ pub struct ColumnDescription {
     pub name: String,
     pub tpe: ColumnType,
     pub required: bool,
+    pub foreign_key: Option<ForeignKey>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+pub struct ForeignKey {
+    pub table: String,
+    pub column: String,
 }
 
 #[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize)]
