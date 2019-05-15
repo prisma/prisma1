@@ -6,5 +6,5 @@ edition = "2018"
 
 [dependencies]
 barrel = { git = "https://github.com/spacekookie/barrel", features = ["sqlite3"] }
-rusqlite = { version = "0.16" }
+rusqlite = { git = "https://github.com/pimeys/rusqlite" }
 time = "*"
