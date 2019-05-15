@@ -72,7 +72,7 @@ fn all_columns_types_must_work() {
     assert_eq!(table.columns, expected_columns);
 }
 
-#[ignore]
+#[test]
 fn is_required_must_work() {
     let inspector = setup(|mut migration| {
         migration.create_table("User", |t| {
@@ -103,7 +103,7 @@ fn is_required_must_work() {
     assert_eq!(user_table.columns, expected_columns);
 }
 
-#[ignore]
+#[test]
 fn foreign_keys_must_work() {
     let inspector = setup(|mut migration| {
         migration.create_table("City", |t| {
