@@ -4,6 +4,7 @@ pub mod dml;
 pub use dml::validator::Validator;
 pub use dml::*;
 pub mod errors;
+pub mod dmmf;
 
 // Pest grammar generation on compile time.
 extern crate pest;

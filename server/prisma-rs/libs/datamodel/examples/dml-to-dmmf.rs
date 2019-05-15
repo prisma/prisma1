@@ -1,15 +1,5 @@
 use std::fs;
-mod errors;
-pub mod ast;
-pub mod dmmf;
-use ast::parser;
-pub mod dml;
-use dml::validator::Validator;
-
-// Pest grammar generation on compile time.
-extern crate pest;
-#[macro_use]
-extern crate pest_derive;
+use datamodel::*;
 
 extern crate clap;
 use clap::{App, Arg};
@@ -30,13 +20,14 @@ fn main() {
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
 
+    // TODO: Cleanup the match.
     match parser::parse(&file) {
         Ok(ast) => {
             let validator = Validator::new();
 
             match validator.validate(&ast) {
                 Ok(dml) => {
-                    let json = dmmf::render_to_dmmf(&dml);
+                    let json = datamodel::dmmf::render_to_dmmf(&dml);
                     println!("{}", json);
                 }
                 Err(errors) => {
