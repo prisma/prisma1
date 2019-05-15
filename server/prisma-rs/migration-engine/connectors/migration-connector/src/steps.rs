@@ -13,8 +13,6 @@ pub enum MigrationStep {
     CreateEnum(CreateEnum),
     UpdateEnum(UpdateEnum),
     DeleteEnum(DeleteEnum),
-    // CreateRelation(CreateRelation),
-    // DeleteRelation(DeleteRelation),
 }
 
 pub trait WithDbName {
@@ -178,72 +176,3 @@ pub struct UpdateEnum {
 pub struct DeleteEnum {
     pub name: String,
 }
-
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct CreateRelation {
-//     pub name: String,
-//     pub model_a: RelationFieldSpec,
-//     pub model_b: RelationFieldSpec,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub table: Option<LinkTableSpec>,
-// }
-
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct UpdateRelation {
-//     pub name: String,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub new_name: Option<String>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub model_a: Option<RelationFieldSpec>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub model_b: Option<RelationFieldSpec>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub table: Option<LinkTableSpec>,
-// }
-
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct DeleteRelation {
-//     pub name: String,
-// }
-
-// // fixme: this data structure is used in create and update. It does not allow to set field to null though in update.
-// // fixme: the field inline_link does not allow to customize the underlying db name right now.
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct RelationFieldSpec {
-//     pub name: String,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub field: Option<String>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub is_list: Option<bool>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub is_optional: Option<bool>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub on_delete: Option<String>, // fixme: change to proper enum
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub inline_link: Option<bool>,
-// }
-
-// // fixme: this strucut does not allow to customize the db name of the link table.
-// #[derive(Debug, Deserialize, Serialize, PartialEq)]
-// #[serde(rename_all = "camelCase", deny_unknown_fields)]
-// pub struct LinkTableSpec {
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub model_a_column: Option<String>,
-
-//     #[serde(skip_serializing_if = "Option::is_none")]
-//     pub model_b_column: Option<String>,
-// }
