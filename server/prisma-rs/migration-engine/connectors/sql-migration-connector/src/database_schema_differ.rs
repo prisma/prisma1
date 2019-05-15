@@ -31,17 +31,10 @@ impl DatabaseSchemaDiffer {
         let mut result = Vec::new();
         for next_table in &self.next.tables {
             if !self.previous.has_table(&next_table.name) {
-                let primary_columns = next_table
-                    .indexes
-                    .iter()
-                    .find(|i| i.unique)
-                    .map(|i| i.columns.clone())
-                    .unwrap_or(Vec::new());
-
                 let create = CreateTable {
                     name: next_table.name.clone(),
                     columns: Self::column_descriptions(&next_table.columns),
-                    primary_columns: primary_columns,
+                    primary_columns: next_table.primary_key_columns.clone(),
                 };
                 result.push(create);
             }

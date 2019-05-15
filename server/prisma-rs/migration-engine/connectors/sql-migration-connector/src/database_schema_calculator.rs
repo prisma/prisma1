@@ -1,7 +1,6 @@
 use database_inspector::*;
 use datamodel::*;
 use itertools::Itertools;
-use std::collections::HashSet;
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Schema,
@@ -44,10 +43,12 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         _ => None,
                     })
                     .collect();
+
                 let table = Table {
                     name: model.db_name(),
                     columns: columns,
                     indexes: Vec::new(),
+                    primary_key_columns: vec![model.id_field().db_name()],
                 };
                 ModelTable {
                     model: model.clone(),
@@ -70,11 +71,20 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                 let table = Table {
                     name: format!("{}_{}", model.db_name(), field.db_name()),
                     columns: vec![
-                        Column::new("nodeId".to_string(), column_type(&id_field), true),
+                        Column::with_foreign_key(
+                            "nodeId".to_string(),
+                            column_type(&id_field),
+                            true,
+                            ForeignKey {
+                                table: model.db_name(),
+                                column: model.id_field().db_name(),
+                            },
+                        ),
                         Column::new("position".to_string(), ColumnType::Int, true),
                         Column::new("value".to_string(), column_type(&field), true),
                     ],
                     indexes: Vec::new(),
+                    primary_key_columns: vec!["nodeId".to_string(), "position".to_string()],
                 };
                 result.push(table);
             }
@@ -148,6 +158,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             ),
                         ],
                         indexes: Vec::new(),
+                        primary_key_columns: Vec::new(),
                     };
                     result.push(table);
                 }
