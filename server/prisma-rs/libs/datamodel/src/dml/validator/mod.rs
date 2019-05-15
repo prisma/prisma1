@@ -4,7 +4,7 @@ pub mod argument;
 pub mod directive;
 pub mod value;
 
-use crate::errors::DirectiveValidationError;
+use crate::errors::{DirectiveValidationError, ErrorCollection};
 use directive::builtin::{
     new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives, DirectiveListValidator,
 };
@@ -30,7 +30,7 @@ impl Validator {
         }
     }
 
-    pub fn validate(&self, ast_schema: &ast::Schema) -> Result<dml::Schema, Vec<DirectiveValidationError>> {
+    pub fn validate(&self, ast_schema: &ast::Schema) -> Result<dml::Schema, ErrorCollection> {
         let mut schema = dml::Schema::new();
 
         for ast_obj in &ast_schema.models {
@@ -43,43 +43,27 @@ impl Validator {
         return Ok(schema);
     }
 
-    fn validate_model(
-        &self,
-        ast_model: &ast::Model,
-        ast_schema: &ast::Schema,
-    ) -> Result<dml::Model, Vec<DirectiveValidationError>> {
+    fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> Result<dml::Model, ErrorCollection> {
         let mut model = dml::Model::new(&ast_model.name);
 
         for ast_field in &ast_model.fields {
             model.add_field(self.validate_field(ast_field, ast_schema)?);
         }
 
-        let errs = self.model_directives.validate_and_apply(ast_model, &mut model);
-
-        if errs.len() > 0 {
-            return Err(errs);
-        }
+        self.model_directives.validate_and_apply(ast_model, &mut model)?;
 
         return Ok(model);
     }
 
-    fn validate_enum(&self, ast_enum: &ast::Enum) -> Result<dml::Enum, Vec<DirectiveValidationError>> {
+    fn validate_enum(&self, ast_enum: &ast::Enum) -> Result<dml::Enum, ErrorCollection> {
         let mut en = dml::Enum::new(&ast_enum.name, ast_enum.values.clone());
 
-        let errs = self.enum_directives.validate_and_apply(ast_enum, &mut en);
-
-        if errs.len() > 0 {
-            return Err(errs);
-        }
+        self.enum_directives.validate_and_apply(ast_enum, &mut en)?;
 
         return Ok(en);
     }
 
-    fn validate_field(
-        &self,
-        ast_field: &ast::Field,
-        ast_schema: &ast::Schema,
-    ) -> Result<dml::Field, Vec<DirectiveValidationError>> {
+    fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> Result<dml::Field, ErrorCollection> {
         let field_type = self.validate_field_type(&ast_field.field_type, &ast_field.span, ast_schema)?;
 
         let mut field = dml::Field::new(&ast_field.name, field_type.clone());
@@ -101,11 +85,7 @@ impl Validator {
             }
         }
 
-        let errs = self.field_directives.validate_and_apply(ast_field, &mut field);
-
-        if errs.len() > 0 {
-            return Err(errs);
-        }
+        self.field_directives.validate_and_apply(ast_field, &mut field)?;
 
         return Ok(field);
     }
@@ -123,7 +103,7 @@ impl Validator {
         type_name: &str,
         span: &ast::Span,
         ast_schema: &ast::Schema,
-    ) -> Result<dml::FieldType, Vec<DirectiveValidationError>> {
+    ) -> Result<dml::FieldType, DirectiveValidationError> {
         match type_name {
             "ID" => Ok(dml::FieldType::Base(dml::ScalarType::Int)),
             "Int" => Ok(dml::FieldType::Base(dml::ScalarType::Int)),
@@ -146,12 +126,8 @@ impl Validator {
                         _ => {}
                     }
                 }
-
-                Err(vec![DirectiveValidationError::new(
-                    "Unknown type encountered.",
-                    "",
-                    span,
-                )])
+                // TODO: This is not a Directive Error!
+                Err(DirectiveValidationError::new("Unknown type encountered.", "", span))
             }
         }
     }

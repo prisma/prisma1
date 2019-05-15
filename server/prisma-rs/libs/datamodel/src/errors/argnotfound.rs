@@ -1,7 +1,7 @@
 use super::ErrorWithSpan;
 use crate::ast::Span;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ArgumentNotFoundError {
     pub argument_name: String,
     pub directive_name: String,

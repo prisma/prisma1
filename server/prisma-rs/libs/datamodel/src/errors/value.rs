@@ -1,7 +1,7 @@
 use super::ErrorWithSpan;
 use crate::ast::Span;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ValueParserError {
     expected_type: String,
     received_type: Option<String>,

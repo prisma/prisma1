@@ -1,5 +1,5 @@
-use std::fs;
 use datamodel::*;
+use std::fs;
 
 extern crate clap;
 use clap::{App, Arg};
@@ -31,13 +31,14 @@ fn main() {
                     println!("{}", json);
                 }
                 Err(errors) => {
-                    for error in errors {
+                    for error in errors.to_iter() {
                         println!("");
-                        println!("Error: {}", error.message);
+                        println!("{}", error);
                         println!("File: {}:", file_name);
                         println!("");
-                        let line = &file[..error.span.end].matches("\n").count();
-                        let text = &file[error.span.start..error.span.end];
+                        let span = error.span();
+                        let line = &file[..span.end].matches("\n").count();
+                        let text = &file[span.start..span.end];
                         println!("{} |    {}", line, text);
                         println!("");
                     }

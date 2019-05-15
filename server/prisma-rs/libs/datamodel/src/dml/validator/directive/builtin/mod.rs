@@ -2,7 +2,7 @@ use crate::ast;
 use crate::dml;
 use crate::dml::validator::argument::DirectiveArguments;
 use crate::dml::validator::directive::DirectiveValidator;
-use crate::errors::DirectiveValidationError;
+use crate::errors::{DirectiveValidationError, ErrorCollection};
 
 use std::collections::HashMap;
 
@@ -38,8 +38,8 @@ impl<T> DirectiveListValidator<T> {
         self.known_directives.insert(name, validator);
     }
 
-    pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) -> Vec<DirectiveValidationError> {
-        let mut errors = Vec::<DirectiveValidationError>::new();
+    pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) -> Result<(), ErrorCollection> {
+        let mut errors = ErrorCollection::new();
 
         for directive in ast.directives() {
             match self.known_directives.get(directive.name.as_str()) {
@@ -48,18 +48,22 @@ impl<T> DirectiveListValidator<T> {
                         &DirectiveArguments::new(&directive.arguments, &directive.name, directive.span),
                         t,
                     ) {
-                        errors.push(err);
+                        errors.push(Box::new(err));
                     }
                 }
-                None => errors.push(DirectiveValidationError::new(
+                None => errors.push(Box::new(DirectiveValidationError::new(
                     "Encountered unknown directive",
                     &directive.name,
                     &directive.span,
-                )),
+                ))),
             };
         }
 
-        errors
+        if errors.has_errors() {
+            Err(errors)
+        } else {
+            Ok(())
+        }
     }
 }
 

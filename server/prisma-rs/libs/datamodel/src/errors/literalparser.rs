@@ -1,7 +1,7 @@
 use super::ErrorWithSpan;
 use crate::ast::Span;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LiteralParseError {
     pub literal_type: String,
     pub raw_value: String,

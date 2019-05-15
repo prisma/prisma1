@@ -5,6 +5,6 @@ use std;
 // as parser errors should be handled and parsed differently than
 // conventional errors.
 
-pub trait ErrorWithSpan: std::fmt::Display {
+pub trait ErrorWithSpan: std::fmt::Display + std::fmt::Debug {
     fn span(&self) -> Span;
 }

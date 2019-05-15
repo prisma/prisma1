@@ -1,7 +1,7 @@
 use super::{ArgumentNotFoundError, ErrorWithSpan};
 use crate::ast::Span;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DirectiveValidationError {
     pub message: String,
     pub directive_name: String,
