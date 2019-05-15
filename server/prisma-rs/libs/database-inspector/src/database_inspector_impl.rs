@@ -1,6 +1,6 @@
 use crate::*;
 
-use rusqlite::{Connection, Result, NO_PARAMS};
+use rusqlite::{Connection, NO_PARAMS};
 
 pub struct DatabaseInspectorImpl {
     connection: Connection,
@@ -109,15 +109,15 @@ impl DatabaseInspectorImpl {
         result
     }
 
+    #[allow(unused)]
     fn get_sequence(&self, _schema: &String, _table: &String) -> Sequence {
         unimplemented!()
     }
 
+    #[allow(unused)]
     fn get_index(&self, _schema: &String, _table: &String) -> Index {
         unimplemented!()
     }
-
-    // fn query<F>(&self, schema: &String, parse: F) ->
 }
 
 fn convert_introspected_columns(
