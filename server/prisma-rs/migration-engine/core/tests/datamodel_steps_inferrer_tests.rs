@@ -7,6 +7,7 @@ use migration_core::migration::datamodel_migration_steps_inferrer::*;
 use nullable::*;
 
 #[test]
+#[ignore]
 fn infer_CreateModel_if_it_does_not_exit_yet() {
     let dm1 = Schema::empty();
     let dm2 = parse(
