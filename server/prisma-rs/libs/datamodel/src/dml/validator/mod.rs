@@ -118,7 +118,7 @@ impl Validator {
                     match &model {
                         // TODO: Get primary key field and hook up String::from.
                         ast::ModelOrEnum::Model(model) if model.name == *type_name => {
-                            return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&type_name, "")))
+                            return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&type_name)))
                         }
                         ast::ModelOrEnum::Enum(en) if en.name == *type_name => {
                             return Ok(dml::FieldType::Enum(String::from(type_name)))

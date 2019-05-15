@@ -7,16 +7,16 @@ use std::str::FromStr;
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RelationInfo {
     pub to: String,
-    pub to_field: String,
+    pub to_field: Option<String>,
     pub name: Option<String>,
     pub on_delete: OnDeleteStrategy,
 }
 
 impl RelationInfo {
-    pub fn new(to: &str, to_field: &str) -> RelationInfo {
+    pub fn new(to: &str) -> RelationInfo {
         RelationInfo {
             to: String::from(to),
-            to_field: String::from(to_field),
+            to_field: None,
             name: None,
             on_delete: OnDeleteStrategy::None,
         }
