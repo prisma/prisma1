@@ -1,0 +1,239 @@
+import QueryChooser from 'components/Markdown/QueryChooser'
+
+export const meta = {
+  title: 'Build an App',
+  position: 3,
+  gettingStartedOrder: 2,
+  gettingStartedTitle: 'REST API',
+  nextText: 'Congratulations! 🚀 You made it through the quickstart tutorial and learned how to use Prisma and the Prisma client to build a REST API.',
+  technology: 'go',
+  technologyOrder: 4,
+  articleGroup: 'Build an App',
+}
+
+## Goals
+
+On this page, you will learn how to:
+
+- Configure a Node app
+- Implement a REST API using [Gin](https://github.com/gin-gonic/gin) & Prisma client
+- Test your REST API using `curl`
+
+
+## Define and implement API
+
+There will be six routes that provide the API for a simple blogging application:
+
+- `GET`
+  - `/posts/published`: Returns all _published_ posts
+  - `/post/:postId`: Returns a specific post by its id
+  - `/posts/user/:userId`: Returns all the post written by a specific user
+- `POST`
+  - `/user`: Create a new user
+  - `/post/draft`: Create a new _unpublished_ post
+- `PUT`
+  - `/post/publish/:postId`: _Publish_ a post
+
+To implement those rouces, replace the current contents of `index.go` with the following code:
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	prisma "hello-world/generated/prisma-client"
+
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+
+	client := prisma.New(nil)
+
+	r := gin.Default()
+	ctx := context.Background()
+
+	r.GET("/posts/published", func(c *gin.Context) {
+		published := true
+		posts, err := client.Posts(&prisma.PostsParams{
+			Where: &prisma.PostWhereInput{
+				Published: &published,
+			},
+		},
+		).Exec(ctx)
+
+		if err != nil {
+			panic(err)
+		}
+
+		c.JSON(200, gin.H{
+			"posts": posts,
+		})
+	})
+
+	r.GET("/post/:id", func(c *gin.Context) {
+		id := c.Param("id")
+
+		post, err := client.Post(prisma.PostWhereUniqueInput{
+			ID: &id,
+		},
+		).Exec(ctx)
+
+		if err != nil {
+			log.Printf("%v", err)
+		}
+
+		c.JSON(200, gin.H{
+			"post": post,
+		})
+	})
+
+	r.GET("/posts/user/:userId", func(c *gin.Context) {
+		userId := c.Param("userId")
+
+		posts, err := client.Posts(&prisma.PostsParams{
+			Where: &prisma.PostWhereInput{
+				Author: &prisma.UserWhereInput{
+					ID: &userId,
+				},
+			},
+		},
+		).Exec(ctx)
+
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		c.JSON(200, gin.H{
+			"posts": posts,
+		})
+	})
+
+	r.POST("/post/draft", func(c *gin.Context) {
+		var p map[string]string
+		c.BindJSON(&p)
+
+		title := p["title"]
+		userId := p["userId"]
+
+		post, err := client.CreatePost(prisma.PostCreateInput{
+			Title: title,
+			Author: &prisma.UserCreateOneWithoutPostsInput{
+				Connect: &prisma.UserWhereUniqueInput{
+					ID: &userId,
+				},
+			},
+		},
+		).Exec(ctx)
+
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		c.JSON(200, gin.H{
+			"post": post,
+		})
+	})
+
+	r.POST("/user", func(c *gin.Context) {
+		var u map[string]string
+		c.BindJSON(&u)
+
+		name := u["name"]
+
+		user, err := client.CreateUser(prisma.UserCreateInput{
+			Name: name,
+		},
+		).Exec(ctx)
+
+		if err != nil {
+			log.Printf("%v", err)
+		}
+		c.JSON(200, gin.H{
+			"user": user,
+		})
+	})
+
+	r.PUT("/post/publish/:postId", func(c *gin.Context) {
+		postId := c.Param("postId")
+		published := true
+		post, err := client.UpdatePost(prisma.PostUpdateParams{
+			Where: prisma.PostWhereUniqueInput{
+				ID: &postId,
+			},
+			Data: prisma.PostUpdateInput{
+				Published: &published,
+			},
+		},
+		).Exec(ctx)
+
+		if err != nil {
+			log.Printf("%v", err)
+		}
+
+		c.JSON(200, gin.H{
+			"post": post,
+		})
+	})
+
+	fmt.Println("Server is running on http://localhost:8080")
+	r.Run()
+}
+```
+
+Finally, ensure all dependencies are available:
+
+```bash copy
+dep ensure -update
+```
+
+
+## Start the server
+
+Start the server with this command:
+
+```bash copy
+go run index.go
+```
+
+
+You can now use a tool like `curl` or [Postman](https://www.getpostman.com/) to explore your the functionlity of the routes.
+
+## Testing the REST API using `curl`
+
+<QueryChooser titles={["Create new draft", "Publish a draft", "Fetch post by ID", "Create user"]}>
+
+```bash copy
+curl -X POST \\
+  http://localhost:8080/post/draft \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "title": "Awesome Post",
+  "userId": "__USER_ID__"
+}'
+```
+
+```bash copy
+curl -X PUT \
+  http://localhost:8080/post/publish/__POST_ID__ \
+  -H 'Content-Type: application/json' \
+```
+
+```bash copy
+curl -X GET \\
+  http://localhost:8080/post/__POST_ID__
+```
+
+```bash copy
+curl -X POST \\
+  http://localhost:8080/user \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+  "name": "Alice"
+}'
+```
+
+</QueryChooser>
+
+> In some snippets, you need to replace the `__USER__ID__` or `__POST_ID__` placeholder with the ID of an actual user.
