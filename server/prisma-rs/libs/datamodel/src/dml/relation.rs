@@ -1,22 +1,22 @@
-use super::validator::value::ValueParserError;
+use crate::errors::LiteralParseError;
 use serde::{Deserialize, Serialize};
 
-use std::str::FromStr;
 use crate::ast;
+use super::FromStrAndSpan;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RelationInfo {
     pub to: String,
-    pub to_field: String,
+    pub to_field: Option<String>,
     pub name: Option<String>,
     pub on_delete: OnDeleteStrategy,
 }
 
 impl RelationInfo {
-    pub fn new(to: &str, to_field: &str) -> RelationInfo {
+    pub fn new(to: &str) -> RelationInfo {
         RelationInfo {
             to: String::from(to),
-            to_field: String::from(to_field),
+            to_field: None,
             name: None,
             on_delete: OnDeleteStrategy::None,
         }
@@ -29,14 +29,12 @@ pub enum OnDeleteStrategy {
     None,
 }
 
-impl FromStr for OnDeleteStrategy {
-    type Err = ValueParserError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl FromStrAndSpan for OnDeleteStrategy {
+    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, LiteralParseError> {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
-            _ => Err(ValueParserError::new(&format!("Invalid onDelete strategy {}.", s), s, &ast::Span::empty())),
+            _ => Err(LiteralParseError::new("onDelete strategy", s, span)),
         }
     }
 }

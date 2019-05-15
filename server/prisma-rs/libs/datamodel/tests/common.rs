@@ -1,7 +1,6 @@
 extern crate datamodel;
 
 use datamodel::dml;
-use datamodel::Validator;
 
 pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
@@ -61,7 +60,7 @@ impl FieldAsserts for dml::Field {
 
     fn assert_relation_to_field(&self, t: &str) -> &Self {
         if let dml::FieldType::Relation(info) = &self.field_type {
-            assert_eq!(info.to_field, t);
+            assert_eq!(info.to_field.clone().expect("To field expected but not found."), t);
         } else {
             panic!("Relation expected, but found {:?}", self.field_type);
         }

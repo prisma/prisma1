@@ -61,8 +61,8 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         let mut rows = stmt.query(params)?;
         let mut result = Vec::new();
 
-        while let Some(row) = rows.next() {
-            result.push(row?.to_prisma_row(idents)?);
+        while let Some(row) = rows.next()? {
+            result.push(row.to_prisma_row(idents)?);
         }
 
         Ok(result)
@@ -94,9 +94,8 @@ impl<'a> Transaction for SqliteTransaction<'a> {
             let mut rows = stmt.query(NO_PARAMS)?;
             let mut result = Vec::new();
 
-            while let Some(row) = rows.next() {
+            while let Some(row) = rows.next()? {
                 let mut object = Map::new();
-                let row = row?;
 
                 for (i, column) in columns.iter().enumerate() {
                     let value = match row.get_raw(i) {
@@ -137,30 +136,30 @@ impl FromSql for SqlId {
     }
 }
 
-impl<'a, 'stmt> ToSqlRow for SqliteRow<'a, 'stmt> {
+impl<'a> ToSqlRow for SqliteRow<'a> {
     fn to_prisma_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {
         fn convert(row: &SqliteRow, i: usize, typid: &TypeIdentifier) -> SqlResult<PrismaValue> {
             let result = match typid {
-                TypeIdentifier::String => row.get_checked(i).map(|val| PrismaValue::String(val)),
-                TypeIdentifier::GraphQLID | TypeIdentifier::Relation => row.get_checked(i).map(|val| {
+                TypeIdentifier::String => row.get(i).map(|val| PrismaValue::String(val)),
+                TypeIdentifier::GraphQLID | TypeIdentifier::Relation => row.get(i).map(|val| {
                     let id: SqlId = val;
                     PrismaValue::GraphqlId(GraphqlId::from(id))
                 }),
-                TypeIdentifier::Float => row.get_checked(i).map(|val| PrismaValue::Float(val)),
-                TypeIdentifier::Int => row.get_checked(i).map(|val| PrismaValue::Int(val)),
-                TypeIdentifier::Boolean => row.get_checked(i).map(|val| PrismaValue::Boolean(val)),
-                TypeIdentifier::Enum => row.get_checked(i).map(|val| PrismaValue::Enum(val)),
-                TypeIdentifier::Json => row.get_checked(i).and_then(|val| {
+                TypeIdentifier::Float => row.get(i).map(|val| PrismaValue::Float(val)),
+                TypeIdentifier::Int => row.get(i).map(|val| PrismaValue::Int(val)),
+                TypeIdentifier::Boolean => row.get(i).map(|val| PrismaValue::Boolean(val)),
+                TypeIdentifier::Enum => row.get(i).map(|val| PrismaValue::Enum(val)),
+                TypeIdentifier::Json => row.get(i).and_then(|val| {
                     let val: String = val;
                     serde_json::from_str(&val).map(|r| PrismaValue::Json(r)).map_err(|err| {
                         SqliteError::FromSqlConversionFailure(i as usize, SqliteType::Text, Box::new(err))
                     })
                 }),
                 TypeIdentifier::UUID => {
-                    let result: Result<String, _> = row.get_checked(i);
+                    let result: Result<String, _> = row.get(i);
 
                     if let Ok(val) = result {
                         let uuid = Uuid::parse_str(val.as_ref())?;
@@ -170,7 +169,7 @@ impl<'a, 'stmt> ToSqlRow for SqliteRow<'a, 'stmt> {
                         result.map(|s| PrismaValue::String(s))
                     }
                 }
-                TypeIdentifier::DateTime => row.get_checked(i).map(|ts: i64| {
+                TypeIdentifier::DateTime => row.get(i).map(|ts: i64| {
                     let nsecs = ((ts % 1000) * 1_000_000) as u32;
                     let secs = (ts / 1000) as i64;
                     let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
@@ -220,8 +219,9 @@ impl Sqlite {
 
         let databases: HashSet<String> = stmt
             .query_map(NO_PARAMS, |row| {
-                let name: String = row.get(1);
-                name
+                let name: String = row.get(1)?;
+
+                Ok(name)
             })?
             .map(|res| res.unwrap())
             .collect();

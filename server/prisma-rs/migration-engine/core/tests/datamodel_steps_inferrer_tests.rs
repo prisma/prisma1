@@ -155,7 +155,7 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
             name: "posts".to_string(),
             tpe: FieldType::Relation(RelationInfo {
                 to: "Post".to_string(),
-                to_field: "".to_string(),
+                to_field: None,
                 name: None,
                 on_delete: OnDeleteStrategy::None,
             }),
@@ -173,7 +173,7 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
             name: "blog".to_string(),
             tpe: FieldType::Relation(RelationInfo {
                 to: "Blog".to_string(),
-                to_field: "".to_string(),
+                to_field: None,
                 name: None,
                 on_delete: OnDeleteStrategy::None,
             }),
