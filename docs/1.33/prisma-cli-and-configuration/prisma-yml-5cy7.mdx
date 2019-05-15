@@ -102,7 +102,7 @@ generate:
     - generator: javascript-client
       output: ./generated/prisma-client
     - generator: graphql-schema
-      output: ./generated/
+      output: ./generated/prisma.graphql
 
 # A "post-deployment" hook that regenerates
 # the Prisma client.
@@ -338,7 +338,7 @@ generate:
     - generator: javascript-client
       output: ./generated/prisma-client
     - generator: graphql-schema
-      output: ./generated/prisma
+      output: ./generated/prisma/prisma.graphql
 ```
 
 ### databaseType (optional)
