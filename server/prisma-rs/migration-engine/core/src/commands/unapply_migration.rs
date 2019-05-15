@@ -6,7 +6,7 @@ use migration_connector::*;
 pub struct UnapplyMigrationCommand {
     input: UnapplyMigrationInput,
 }
-
+#[allow(unused)]
 impl MigrationCommand for UnapplyMigrationCommand {
     type Input = UnapplyMigrationInput;
     type Output = UnapplyMigrationOutput;

@@ -7,6 +7,7 @@ pub struct MigrationProgressCommand {
     input: MigrationProgressInput,
 }
 
+#[allow(unused)]
 impl MigrationCommand for MigrationProgressCommand {
     type Input = MigrationProgressInput;
     type Output = MigrationProgressOutput;
