@@ -1,5 +1,5 @@
 use std::fs;
-
+mod errors;
 pub mod ast;
 pub mod dmmf;
 use ast::parser;
@@ -15,8 +15,6 @@ extern crate clap;
 use clap::{App, Arg};
 
 fn main() {
-    let formats = ["sorenbs", "matthewmueller"];
-
     let matches = App::new("Prisma Datamodel Playgroung")
         .version("0.1")
         .author("Emanuel Jöbstl <emanuel.joebstl@gmail.com>")
