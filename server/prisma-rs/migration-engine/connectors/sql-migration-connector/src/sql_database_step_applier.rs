@@ -44,7 +44,10 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                     }
                 });
             }
-            x => panic!(format!("{:?} not implemented yet here", x)),
+            x => {
+                //panic!(format!("{:?} not implemented yet here", x)),
+                println!("{:?} not implemented yet here", x);
+            }
         };
         let sql_string = dbg!(self.make_sql_string(migration));
         dbg!(self.connection.execute(&sql_string, NO_PARAMS)).unwrap();
@@ -58,13 +61,39 @@ impl SqlDatabaseStepApplier {
     }
 }
 
+use barrel::backend::SqlGenerator;
+
 fn column_description_to_barrel_type(column_description: &ColumnDescription) -> barrel::types::Type {
-    let tpe = match column_description.tpe {
-        ColumnType::Boolean => barrel::types::boolean(),
-        ColumnType::DateTime => barrel::types::date(),
-        ColumnType::Float => barrel::types::float(),
-        ColumnType::Int => barrel::types::integer(),
-        ColumnType::String => barrel::types::text(),
+    // let references: &'static str = match &column_description.foreign_key {
+    //     Some(fk) => string_to_static_str(format!("REFERENCES {}({})", fk.table, fk.column)),
+    //     None => "",
+    // };
+    // let tpe = match column_description.tpe {
+    //     ColumnType::Boolean => barrel::types::boolean(),
+    //     ColumnType::DateTime => barrel::types::date(),
+    //     ColumnType::Float => barrel::types::float(),
+    //     ColumnType::Int => barrel::types::integer(),
+    //     ColumnType::String => barrel::types::text(),
+    // };
+    // let with_nullability = tpe.nullable(!column_description.required);
+    // let tpe_string = Sqlite::add_column(false, "", &with_nullability);
+    // let full_line = string_to_static_str(format!("{} {}", tpe_string, references));
+    // barrel::types::custom(full_line);
+
+    // TODO: add foreign keys for non integer types once this is available in barrel
+    let tpe = match &column_description.foreign_key {
+        Some(fk) => barrel::types::foreign(string_to_static_str(format!("{}({})", fk.table, fk.column))),
+        None => match column_description.tpe {
+            ColumnType::Boolean => barrel::types::boolean(),
+            ColumnType::DateTime => barrel::types::date(),
+            ColumnType::Float => barrel::types::float(),
+            ColumnType::Int => barrel::types::integer(),
+            ColumnType::String => barrel::types::text(),
+        },
     };
     tpe.nullable(!column_description.required)
+}
+
+fn string_to_static_str(s: String) -> &'static str {
+    Box::leak(s.into_boxed_str())
 }

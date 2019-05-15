@@ -62,7 +62,7 @@ fn DeleteModel_must_work() {
 #[test]
 fn minimal_CreateField_must_work() {
     let json =
-        r#"{"stepType":"CreateField","model":"Blog","name":"title","type":{"Base":"String"},"arity":"required"}"#;
+        r#"{"stepType":"CreateField","model":"Blog","name":"title","type":{"Base":"String"},"arity":"required","isUnique":false}"#;
     let expected_struct = MigrationStep::CreateField(CreateField {
         model: "Blog".to_string(),
         name: "title".to_string(),
@@ -71,6 +71,7 @@ fn minimal_CreateField_must_work() {
         db_name: None,
         is_created_at: None,
         is_updated_at: None,
+        is_unique: false,
         id: None,
         default: None,
         scalar_list: None,
@@ -90,6 +91,7 @@ fn full_CreateField_must_work() {
             "dbName":"blog",
             "isCreatedAt":true,
             "isUpdatedAt":true,
+            "isUnique": true,
             "default":{"String":"default"},
             "scalarList": "Embedded"
         }"#;
@@ -101,6 +103,7 @@ fn full_CreateField_must_work() {
         db_name: Some("blog".to_string()),
         is_created_at: Some(true),
         is_updated_at: Some(true),
+        is_unique: true,
         id: None, // TODO: adapt once added to CreateField
         default: Some(Value::String("default".to_string())),
         scalar_list: Some(ScalarListStrategy::Embedded),

@@ -207,13 +207,13 @@ dependencies = [
 
 [[package]]
 name = "barrel"
-version = "0.5.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
+version = "0.5.5-alpha.0"
+source = "git+https://github.com/spacekookie/barrel#538fae1f67c82d65768abf325113996d83cf9e47"
 
 [[package]]
 name = "barrel"
-version = "0.5.5-alpha.0"
-source = "git+https://github.com/spacekookie/barrel#538fae1f67c82d65768abf325113996d83cf9e47"
+version = "0.5.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "base64"
@@ -2176,7 +2176,7 @@ dependencies = [
 name = "sql-migration-connector"
 version = "0.1.0"
 dependencies = [
- "barrel 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "barrel 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "database-inspector 0.1.0",
  "datamodel 0.1.0",
@@ -2941,8 +2941,8 @@ dependencies = [
 "checksum autocfg 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "a6d640bee2da49f60a4068a7fae53acde8982514ab7bae8b8cea9e88cbcfd799"
 "checksum backtrace 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)" = "f106c02a3604afcdc0df5d36cc47b44b55917dbaf3d808f71c163a0ddba64637"
 "checksum backtrace-sys 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)" = "797c830ac25ccc92a7f8a7b9862bde440715531514594a6154e3d4a54dd769b6"
-"checksum barrel 0.5.4 (registry+https://github.com/rust-lang/crates.io-index)" = "5f3b2d22ff68d492d073dfc8d29fda59f208e56fbf477ccc97fbdb12158059f1"
 "checksum barrel 0.5.5-alpha.0 (git+https://github.com/spacekookie/barrel)" = "<none>"
+"checksum barrel 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)" = "0a34d5639355e6c00cdda541e5b2f0454c292b787646f6167f87fd5bd8dccc4a"
 "checksum base64 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0b25d992356d2eb0ed82172f5248873db5560c4721f564b13cb5193bda5e668e"
 "checksum base64 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)" = "489d6c0ed21b11d038c31b6ceccca973e65d73ba3bd8ecb9a2babf5546164643"
 "checksum bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)" = "228047a76f468627ca71776ecdebd732a3423081fcf5125585bcd7c49886ce12"

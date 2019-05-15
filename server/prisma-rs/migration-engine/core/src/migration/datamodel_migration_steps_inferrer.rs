@@ -85,9 +85,10 @@ impl DataModelMigrationStepsInferrerImpl {
                         arity: next_field.arity,
                         db_name: next_field.database_name.clone(),
                         default: next_field.default_value.clone(),
-                        id: None, //field.id_behaviour_clone(),
+                        id: next_field.id_info.clone(),
                         is_created_at: None,
                         is_updated_at: None,
+                        is_unique: next_field.is_unique,
                         scalar_list: next_field.scalar_list_strategy,
                     };
                     result.push(step);

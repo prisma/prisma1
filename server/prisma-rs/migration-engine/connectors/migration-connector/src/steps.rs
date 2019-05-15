@@ -78,8 +78,10 @@ pub struct CreateField {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_updated_at: Option<bool>,
 
+    pub is_unique: bool,
+
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<String>, // fixme: change to behaviour
+    pub id: Option<IdInfo>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<Value>,

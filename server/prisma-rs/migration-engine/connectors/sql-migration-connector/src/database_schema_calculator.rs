@@ -1,5 +1,6 @@
 use database_inspector::*;
 use datamodel::*;
+use itertools::Itertools;
 use std::collections::HashSet;
 
 pub struct DatabaseSchemaCalculator<'a> {
@@ -119,7 +120,6 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     fn calculate_relation_tables(&self) -> Vec<Table> {
         let mut result = Vec::new();
         for relation in self.calculate_relations().iter() {
-            dbg!(relation);
             match &relation.manifestation {
                 RelationManifestation::Table {
                     model_a_column,
@@ -219,8 +219,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                 }
             }
         }
-        result.dedup_by(|rel1, rel2| rel1 == rel2);
-        result
+        result.into_iter().unique_by(|rel| rel.name()).collect()
     }
 }
 
@@ -230,7 +229,7 @@ struct ModelTable {
     model: Model,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 struct Relation {
     model_a: Model,
     model_b: Model,
@@ -254,7 +253,7 @@ impl Relation {
     }
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone)]
 enum RelationManifestation {
     Inline {
         in_table_of_model: String,
