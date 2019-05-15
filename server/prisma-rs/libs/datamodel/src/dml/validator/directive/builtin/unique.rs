@@ -7,8 +7,8 @@ impl DirectiveValidator<dml::Field> for UniqueDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"unique"
     }
-    fn validate_and_apply(&self, args: &Args, obj: &mut dml::Field) -> Option<Error> {
+    fn validate_and_apply(&self, _args: &Args, obj: &mut dml::Field) -> Result<(), Error> {
         obj.is_unique = true;
-        return None;
+        return Ok(());
     }
 }

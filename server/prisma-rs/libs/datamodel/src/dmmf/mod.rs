@@ -5,29 +5,32 @@ use serde_json;
 // This is a simple JSON serialization using Serde.
 // The JSON format follows the DMMF spec, but is incomplete.
 
+#[serde(rename_all = "camelCase")]
 #[derive(Debug, serde::Serialize)]
 pub struct Field {
     pub name: String,
     pub kind: String,
-    pub dbName: Option<String>,
+    pub db_name: Option<String>,
     pub arity: String,
-    pub isUnique: bool,
+    pub is_unique: bool,
     #[serde(rename = "type")]
     pub field_type: String,
 }
 
+#[serde(rename_all = "camelCase")]
 #[derive(Debug, serde::Serialize)]
 pub struct Model {
-    pub isEnum: bool,
+    pub is_enum: bool,
     pub name: String,
-    pub isEmbedded: bool,
-    pub dbName: Option<String>,
+    pub is_embedded: bool,
+    pub db_name: Option<String>,
     pub fields: Vec<Field>,
 }
 
+#[serde(rename_all = "camelCase")]
 #[derive(Debug, serde::Serialize)]
 pub struct Enum {
-    pub isEnum: bool,
+    pub is_enum: bool,
     pub name: String,
     pub values: Vec<String>,
 }
@@ -82,7 +85,7 @@ pub fn enum_to_dmmf(en: &dml::Enum) -> Enum {
     Enum {
         name: en.name.clone(),
         values: en.values.clone(),
-        isEnum: true,
+        is_enum: true,
     }
 }
 
@@ -90,9 +93,9 @@ pub fn field_to_dmmf(field: &dml::Field) -> Field {
     Field {
         name: field.name.clone(),
         kind: get_field_kind(field),
-        dbName: field.database_name.clone(),
+        db_name: field.database_name.clone(),
         arity: get_field_arity(field),
-        isUnique: field.is_unique,
+        is_unique: field.is_unique,
         field_type: get_field_type(field),
     }
 }
@@ -100,10 +103,10 @@ pub fn field_to_dmmf(field: &dml::Field) -> Field {
 pub fn model_to_dmmf(model: &dml::Model) -> Model {
     Model {
         name: model.name.clone(),
-        dbName: model.database_name.clone(),
-        isEmbedded: model.is_embedded,
+        db_name: model.database_name.clone(),
+        is_embedded: model.is_embedded,
         fields: model.fields().map(&field_to_dmmf).collect(),
-        isEnum: false,
+        is_enum: false,
     }
 }
 

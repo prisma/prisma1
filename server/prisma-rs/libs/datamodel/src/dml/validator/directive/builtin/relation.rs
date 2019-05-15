@@ -7,8 +7,8 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"relation"
     }
-    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Option<Error> {
-        if let Ok(name) = args.arg("name").as_str() {
+    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Result<(), Error> {
+        if let Ok(name) = args.arg("name")?.as_str() {
             match &mut field.field_type {
                 // TODO: Check if name is already set.
                 dml::FieldType::Relation(relation_info) => relation_info.name = Some(name),
@@ -16,6 +16,6 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
             }
         }
 
-        return None;
+        return Ok(());
     }
 }

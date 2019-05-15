@@ -53,5 +53,5 @@ enum CategoryEnum {
     C
 }"#;
 
-    datamodel::parser::parse(&String::from(dml));
+    datamodel::parser::parse(&String::from(dml)).expect("Failed to parse");
 }

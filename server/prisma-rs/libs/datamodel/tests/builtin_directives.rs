@@ -1,6 +1,5 @@
 mod common;
 use common::*;
-use datamodel::dml;
 
 #[test]
 fn db_directive() {

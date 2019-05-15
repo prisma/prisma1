@@ -1,9 +1,9 @@
 use super::traits::*;
-use super::validator::value::ValueParserError;
 use crate::ast;
+use crate::errors::LiteralParseError;
 use serde::{Deserialize, Serialize};
 
-use std::str::FromStr;
+use super::FromStrAndSpan;
 
 #[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum IdStrategy {
@@ -11,18 +11,14 @@ pub enum IdStrategy {
     None,
 }
 
-impl FromStr for IdStrategy {
-    type Err = ValueParserError;
+// TODO: Cannot use FromStr, since we need to propagate span
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl FromStrAndSpan for IdStrategy {
+    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, LiteralParseError> {
         match s {
             "AUTO" => Ok(IdStrategy::Auto),
             "NONE" => Ok(IdStrategy::None),
-            _ => Err(ValueParserError::new(
-                &format!("Invalid id strategy {}.", s),
-                s,
-                &ast::Span::empty(),
-            )),
+            _ => Err(LiteralParseError::new("id strategy", s, span)),
         }
     }
 }
@@ -33,18 +29,12 @@ pub enum ScalarListStrategy {
     Relation,
 }
 
-impl FromStr for ScalarListStrategy {
-    type Err = ValueParserError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl FromStrAndSpan for ScalarListStrategy {
+    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, LiteralParseError> {
         match s {
             "EMBEDDED" => Ok(ScalarListStrategy::Embedded),
             "RELATION" => Ok(ScalarListStrategy::Relation),
-            _ => Err(ValueParserError::new(
-                &format!("Invalid scalar list strategy {}.", s),
-                s,
-                &ast::Span::empty(),
-            )),
+            _ => Err(LiteralParseError::new("id strategy", s, span)),
         }
     }
 }
