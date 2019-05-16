@@ -45,6 +45,18 @@ impl MigrationPersistence for SqlMigrationPersistence {
         result
     }
 
+    fn by_name(&self, name: &str) -> Option<Migration> {
+        let conditions = NAME_COLUMN.equals(name);
+        let query = Select::from_table(TABLE_NAME)
+            .so_that(conditions)
+            .order_by(REVISION_COLUMN.descend());
+        let (sql_str, params) = Sqlite::build(query);
+
+        self.connection
+            .query_row(&sql_str, params, |row| Ok(parse_row(row)))
+            .ok()
+    }
+
     fn create(&self, migration: Migration) -> Migration {
         let finished_at_value = match migration.finished_at {
             Some(x) => x.timestamp_millis().into(),

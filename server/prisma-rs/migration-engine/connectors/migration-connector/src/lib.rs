@@ -71,6 +71,8 @@ pub trait MigrationPersistence {
     // returns the last successful Migration
     fn last(&self) -> Option<Migration>;
 
+    fn by_name(&self, name: &str) -> Option<Migration>;
+
     // this power the listMigrations command
     fn load_all(&self) -> Vec<Migration>;
 

@@ -17,15 +17,16 @@ impl MigrationCommand for MigrationProgressCommand {
     }
 
     fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
-        println!("{:?}", self.input);
+        let migration_persistence = engine.connector().migration_persistence();
+        let migration = migration_persistence.by_name(&self.input.migration_id).unwrap();
         MigrationProgressOutput {
-            state: MigrationStatus::Pending,
-            steps: 1,
-            applied: 0,
-            rolled_back: 0,
-            errors: vec![],
-            started_at: Utc::now(),
-            finished_at: Utc::now(),
+            status: migration.status,
+            steps: migration.datamodel_steps.len(),
+            applied: migration.applied,
+            rolled_back: migration.rolled_back,
+            errors: migration.errors,
+            started_at: migration.started_at,
+            finished_at: migration.finished_at,
         }
     }
 }
@@ -40,11 +41,11 @@ pub struct MigrationProgressInput {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MigrationProgressOutput {
-    state: MigrationStatus,
-    steps: u32,
-    applied: u32,
-    rolled_back: u32,
+    status: MigrationStatus,
+    steps: usize,
+    applied: usize,
+    rolled_back: usize,
     errors: Vec<String>,
     started_at: DateTime<Utc>,
-    finished_at: DateTime<Utc>,
+    finished_at: Option<DateTime<Utc>>,
 }
