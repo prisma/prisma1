@@ -46,6 +46,24 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
             SqlMigrationStep::DropTable(DropTable { name }) => {
                 migration.drop_table(name);
             }
+            SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
+                migration.change_table(table, move |t| {
+                    for change in changes.clone() {
+                        match change {
+                            TableChange::AddColumn(AddColumn { column }) => {
+                                let tpe = column_description_to_barrel_type(&column);
+                                t.add_column(column.name, tpe);
+                            }
+                            TableChange::DropColumn(DropColumn { name }) => t.drop_column(name),
+                            TableChange::AlterColumn(AlterColumn { name, column }) => {
+                                t.drop_column(name);
+                                let tpe = column_description_to_barrel_type(&column);
+                                t.add_column(column.name, tpe);
+                            }
+                        }
+                    }
+                });
+            }
             x => {
                 //panic!(format!("{:?} not implemented yet here", x)),
                 println!("{:?} not implemented yet here", x);

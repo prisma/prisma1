@@ -198,20 +198,28 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             }
                             _ => (model.clone(), related_model.clone(), field.clone(), related_field),
                         };
+                        let inline_on_model_a = RelationManifestation::Inline {
+                            in_table_of_model: model_a.name.clone(),
+                            column: field_a.db_name(),
+                        };
+                        let inline_on_model_b = RelationManifestation::Inline {
+                            in_table_of_model: model_b.name.clone(),
+                            column: field_b.db_name(),
+                        };
                         let manifestation = match (field_a.is_list(), field_b.is_list()) {
                             (true, true) => RelationManifestation::Table {
                                 model_a_column: "A".to_string(),
                                 model_b_column: "B".to_string(),
                             },
-                            (false, true) => RelationManifestation::Inline {
-                                in_table_of_model: model_a.name.clone(),
-                                column: field_a.db_name(),
-                            },
-                            (true, false) => RelationManifestation::Inline {
-                                in_table_of_model: model_b.name.clone(),
-                                column: field_b.db_name(),
-                            },
-                            (false, false) => unimplemented!(), // 1 to 1. choose semi randomly
+                            (false, true) => inline_on_model_a,
+                            (true, false) => inline_on_model_b,
+                            (false, false) => {
+                                if model_a.name < model_b.name {
+                                    inline_on_model_a
+                                } else {
+                                    inline_on_model_b
+                                }
+                            }
                         };
 
                         result.push(Relation {
