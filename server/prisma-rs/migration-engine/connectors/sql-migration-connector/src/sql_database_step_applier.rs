@@ -51,7 +51,11 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 new_name,
                 changes,
             }) => {
-                migration.change_table(table, move |t| {
+                if let Some(new_name) = &new_name {
+                    migration.rename_table(table.to_string(), new_name.to_string());
+                };
+                let table_name = new_name.unwrap_or(table);
+                migration.change_table(table_name, move |t| {
                     for change in changes.clone() {
                         match change {
                             TableChange::AddColumn(AddColumn { column }) => {
