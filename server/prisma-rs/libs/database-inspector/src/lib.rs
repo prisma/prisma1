@@ -28,6 +28,7 @@ pub struct Table {
     pub name: String,
     pub columns: Vec<Column>,
     pub indexes: Vec<Index>,
+    pub primary_key_columns: Vec<String>,
 }
 
 impl Table {

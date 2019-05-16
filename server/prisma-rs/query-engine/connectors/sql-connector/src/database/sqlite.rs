@@ -1,5 +1,5 @@
 use crate::{MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDateTime};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
     ast::{Query, Select},
@@ -142,6 +142,8 @@ impl<'a> ToSqlRow for SqliteRow<'a> {
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {
         fn convert(row: &SqliteRow, i: usize, typid: &TypeIdentifier) -> SqlResult<PrismaValue> {
+            let column = &row.columns()[i];
+
             let result = match typid {
                 TypeIdentifier::String => row.get(i).map(|val| PrismaValue::String(val)),
                 TypeIdentifier::GraphQLID | TypeIdentifier::Relation => row.get(i).map(|val| {
@@ -169,14 +171,19 @@ impl<'a> ToSqlRow for SqliteRow<'a> {
                         result.map(|s| PrismaValue::String(s))
                     }
                 }
-                TypeIdentifier::DateTime => row.get(i).map(|ts: i64| {
-                    let nsecs = ((ts % 1000) * 1_000_000) as u32;
-                    let secs = (ts / 1000) as i64;
-                    let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
-                    let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+                TypeIdentifier::DateTime => match column.decl_type() {
+                    Some("DATETIME") => row
+                        .get(i)
+                        .map(|naive: NaiveDateTime| PrismaValue::DateTime(DateTime::from_utc(naive, Utc))),
+                    _ => row.get(i).map(|ts: i64| {
+                        let nsecs = ((ts % 1000) * 1_000_000) as u32;
+                        let secs = (ts / 1000) as i64;
+                        let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
+                        let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
 
-                    PrismaValue::DateTime(datetime)
-                }),
+                        PrismaValue::DateTime(datetime)
+                    }),
+                },
             };
 
             match result {

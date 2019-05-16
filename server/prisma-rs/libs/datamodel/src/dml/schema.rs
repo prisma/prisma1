@@ -39,6 +39,10 @@ impl Schema {
         self.models.push(model);
     }
 
+    pub fn remove_model(&mut self, name: &str) {
+        self.models.retain(|m| m.name != name);
+    }
+
     pub fn models(&self) -> std::slice::Iter<Model> {
         self.models.iter()
     }

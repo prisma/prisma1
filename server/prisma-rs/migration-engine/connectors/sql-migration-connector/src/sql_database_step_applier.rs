@@ -1,6 +1,5 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
-use datamodel::ScalarType;
 use migration_connector::*;
 use rusqlite::{Connection, NO_PARAMS};
 
@@ -44,7 +43,13 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                     }
                 });
             }
-            x => panic!(format!("{:?} not implemented yet here", x)),
+            SqlMigrationStep::DropTable(DropTable { name }) => {
+                migration.drop_table(name);
+            }
+            x => {
+                //panic!(format!("{:?} not implemented yet here", x)),
+                println!("{:?} not implemented yet here", x);
+            }
         };
         let sql_string = dbg!(self.make_sql_string(migration));
         dbg!(self.connection.execute(&sql_string, NO_PARAMS)).unwrap();
@@ -59,12 +64,20 @@ impl SqlDatabaseStepApplier {
 }
 
 fn column_description_to_barrel_type(column_description: &ColumnDescription) -> barrel::types::Type {
-    let tpe = match column_description.tpe {
-        ColumnType::Boolean => barrel::types::boolean(),
-        ColumnType::DateTime => barrel::types::date(),
-        ColumnType::Float => barrel::types::float(),
-        ColumnType::Int => barrel::types::integer(),
-        ColumnType::String => barrel::types::text(),
+    // TODO: add foreign keys for non integer types once this is available in barrel
+    let tpe = match &column_description.foreign_key {
+        Some(fk) => barrel::types::foreign(string_to_static_str(format!("{}({})", fk.table, fk.column))),
+        None => match column_description.tpe {
+            ColumnType::Boolean => barrel::types::boolean(),
+            ColumnType::DateTime => barrel::types::date(),
+            ColumnType::Float => barrel::types::float(),
+            ColumnType::Int => barrel::types::integer(),
+            ColumnType::String => barrel::types::text(),
+        },
     };
     tpe.nullable(!column_description.required)
+}
+
+fn string_to_static_str(s: String) -> &'static str {
+    Box::leak(s.into_boxed_str())
 }

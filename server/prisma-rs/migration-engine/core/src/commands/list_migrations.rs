@@ -7,6 +7,7 @@ pub struct ListMigrationStepsCommand {
     input: ListMigrationStepsInput,
 }
 
+#[allow(unused)]
 impl MigrationCommand for ListMigrationStepsCommand {
     type Input = ListMigrationStepsInput;
     type Output = Vec<ListMigrationStepsOutput>;

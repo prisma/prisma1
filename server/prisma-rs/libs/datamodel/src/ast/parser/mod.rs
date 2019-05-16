@@ -11,37 +11,7 @@ use pest::Parser;
 pub struct PrismaDatamodelParser;
 
 use crate::ast::*;
-
-#[derive(Debug)]
-pub struct ParserError {
-    pub message: String,
-    pub span: Span,
-}
-
-impl ParserError {
-    pub fn new(message: &str, span: &Span) -> ParserError {
-        ParserError {
-            message: String::from(message),
-            span: span.clone(),
-        }
-    }
-}
-
-impl std::fmt::Display for ParserError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}, {}", self.message, self.span)
-    }
-}
-
-impl std::error::Error for ParserError {
-    fn description(&self) -> &str {
-        self.message.as_str()
-    }
-
-    fn cause(&self) -> Option<&std::error::Error> {
-        None
-    }
-}
+use crate::errors::ParserError;
 
 // Macro to match all children in a parse tree
 macro_rules! match_children (
@@ -190,12 +160,14 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut default_value: Option<Value> = None;
-    let mut field_type: Option<(FieldArity, String)> = None;
+    let mut field_type: Option<((FieldArity, String), Span)> = None;
     let mut field_link: Option<String> = None;
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
-        Rule::field_type => field_type = Some(parse_field_type(&current)),
+        Rule::field_type => {
+            field_type = Some((parse_field_type(&current), Span::from_pest(&current.as_span())))
+        },
         Rule::field_link => field_link = Some(current.as_str().to_string()),
         Rule::default_value => default_value = Some(parse_default_value(&current)),
         Rule::directive => directives.push(parse_directive(&current)),
@@ -203,15 +175,16 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     }
 
     return match (name, field_type) {
-        (Some(name), Some((arity, field_type))) => Field {
+        (Some(name), Some(((arity, field_type), field_type_span))) => Field {
             field_type: field_type,
+            field_type_span: field_type_span,
             field_link: field_link,
             name,
             arity,
             default_value,
             directives,
             comments: vec![],
-            span: Span::from_pest(&token.as_span())
+            span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
             "Encounterd impossible field declaration during parsing: {:?}",
@@ -276,7 +249,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
 
 // Whole datamodel parsing
 pub fn parse(datamodel_string: &str) -> Result<Schema, ParserError> {
-    let mut datamodel_result = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string);
+    let datamodel_result = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string);
 
     match datamodel_result {
         Ok(mut datamodel_wrapped) => {
@@ -296,9 +269,9 @@ pub fn parse(datamodel_string: &str) -> Result<Schema, ParserError> {
             })
         }
         Err(err) => match err.location {
-            pest::error::InputLocation::Pos(pos) => Err(ParserError::new("Error during parsing", &Span::new(pos, pos))),
+            pest::error::InputLocation::Pos(pos) => Err(ParserError::new("Unexpected token.", &Span::new(pos, pos))),
             pest::error::InputLocation::Span((from, to)) => {
-                Err(ParserError::new("Error during parsing", &Span::new(from, to)))
+                Err(ParserError::new("Unexpected token.", &Span::new(from, to)))
             }
         },
     }

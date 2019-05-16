@@ -11,7 +11,9 @@ mod relation;
 mod scalar;
 mod schema;
 mod traits;
+mod fromstr;
 
+pub use fromstr::*;
 pub use comment::*;
 pub use enummodel::*;
 pub use field::*;

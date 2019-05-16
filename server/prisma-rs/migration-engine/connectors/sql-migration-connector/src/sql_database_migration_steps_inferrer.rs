@@ -3,10 +3,8 @@ use crate::database_schema_differ::DatabaseSchemaDiffer;
 use crate::sql_migration_step::*;
 use database_inspector::DatabaseInspector;
 use datamodel::*;
-use itertools::{Either, Itertools};
 use migration_connector::steps::*;
 use migration_connector::*;
-use std::collections::HashMap;
 
 pub struct SqlDatabaseMigrationStepsInferrer {
     pub inspector: Box<DatabaseInspector>,
@@ -72,28 +70,27 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
     }
 }
 
-fn column_type(ft: FieldType) -> ColumnType {
-    match ft {
-        FieldType::Base(scalar) => match scalar {
-            ScalarType::Boolean => ColumnType::Boolean,
-            ScalarType::String => ColumnType::String,
-            ScalarType::Int => ColumnType::Int,
-            ScalarType::Float => ColumnType::Float,
-            ScalarType::DateTime => ColumnType::DateTime,
-            _ => unimplemented!(),
-        },
-        _ => panic!("Only scalar types are supported here"),
-    }
-}
+// fn column_type(ft: FieldType) -> ColumnType {
+//     match ft {
+//         FieldType::Base(scalar) => match scalar {
+//             ScalarType::Boolean => ColumnType::Boolean,
+//             ScalarType::String => ColumnType::String,
+//             ScalarType::Int => ColumnType::Int,
+//             ScalarType::Float => ColumnType::Float,
+//             ScalarType::DateTime => ColumnType::DateTime,
+//             _ => unimplemented!(),
+//         },
+//         _ => panic!("Only scalar types are supported here"),
+//     }
+// }
+// enum CreateModelOrField {
+//     Model(CreateModel),
+//     Field(CreateField),
+// }
 
 pub fn wrap_as_step<T, F>(steps: Vec<T>, mut wrap_fn: F) -> Vec<SqlMigrationStep>
 where
     F: FnMut(T) -> SqlMigrationStep,
 {
     steps.into_iter().map(|x| wrap_fn(x)).collect()
-}
-
-enum CreateModelOrField {
-    Model(CreateModel),
-    Field(CreateField),
 }

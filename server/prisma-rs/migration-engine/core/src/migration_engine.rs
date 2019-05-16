@@ -18,7 +18,7 @@ impl MigrationEngine {
     pub fn new() -> Box<MigrationEngine> {
         let engine = MigrationEngine {
             datamodel_migration_steps_inferrer: Arc::new(DataModelMigrationStepsInferrerImplWrapper {}),
-            datamodel_calculator: Arc::new(DataModelCalculatorSingleton {}),
+            datamodel_calculator: Arc::new(DataModelCalculatorImpl {}),
         };
         engine.connector().initialize();
         Box::new(engine)
