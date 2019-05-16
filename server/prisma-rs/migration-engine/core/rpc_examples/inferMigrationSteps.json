@@ -1,0 +1,10 @@
+{
+    "id": 1,
+    "jsonrpc": "2.0",
+    "method": "inferMigrationSteps",
+    "params": {
+        "projectInfo": "the-project-id",
+        "migrationId": "the-migration_id",
+        "dataModel": "model Blog {\n    id: Int @primary\n    name: String\n    viewCount: Int\n    posts: Post[]\n    authors: Author[]\n}\n\nmodel Author {\n    id: Int @primary\n    name: String?\n    authors: Blog[]\n}\n\nmodel Post {\n    id: Int @primary\n    title: String\n    tags: String[]\n    blog: Blog\n}"
+    }
+}
