@@ -40,7 +40,7 @@ case class NativeDatabaseMutactionExecutor(
 
   private def execute(mutaction: TopLevelDatabaseMutaction): Future[MutactionResults] = {
     val actionsBuilder = JdbcActionsBuilder(mutaction.project, slickDatabaseArg)
-    val singleAction = executeTopLevelMutaction(mutaction, actionsBuilder)
+    val singleAction   = executeTopLevelMutaction(mutaction, actionsBuilder)
 
     runAttached(mutaction.project, singleAction)
   }

@@ -7,8 +7,7 @@ use migration_core::migration::datamodel_migration_steps_inferrer::*;
 use nullable::*;
 
 #[test]
-#[ignore]
-fn infer_CreateModel_if_it_does_not_exit_yet() {
+fn infer_CreateModel_if_it_does_not_exist_yet() {
     let dm1 = Schema::empty();
     let dm2 = parse(
         r#"
@@ -34,7 +33,7 @@ fn infer_CreateModel_if_it_does_not_exit_yet() {
             is_created_at: None,
             is_updated_at: None,
             is_unique: false,
-            id: None,
+            id: Some(IdInfo{ strategy: IdStrategy::Auto, sequence: None}),
             default: None,
             scalar_list: None,
         }),
