@@ -55,7 +55,6 @@ impl ValueValidator {
             dml::ScalarType::Decimal => wrap_value!(self.as_decimal(), dml::Value::Decimal, self),
             dml::ScalarType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self),
             dml::ScalarType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self),
-            dml::ScalarType::Enum => wrap_value!(self.as_str(), dml::Value::ConstantLiteral, self),
             dml::ScalarType::String => wrap_value!(self.as_str(), dml::Value::String, self),
         }
     }
