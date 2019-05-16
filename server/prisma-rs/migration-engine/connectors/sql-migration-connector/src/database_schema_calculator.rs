@@ -103,15 +103,15 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         in_table_of_model,
                         column,
                     } if in_table_of_model == &model_table.model.name => {
-                        let (field, related_model) = if model_table.model == relation.model_a {
-                            (&relation.field_a, &relation.model_b)
+                        let related_model = if model_table.model == relation.model_a {
+                            &relation.model_b
                         } else {
-                            (&relation.field_b, &relation.model_a)
+                            &relation.model_a
                         };
                         let column = Column::with_foreign_key(
                             column.to_string(),
                             column_type(&model_table.model.id_field()),
-                            field.is_required(),
+                            relation.field_a.is_required() || relation.field_b.is_required(),
                             ForeignKey {
                                 table: related_model.db_name(),
                                 column: related_model.id_field().db_name(),
@@ -178,7 +178,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         let RelationInfo {
                             to,
                             to_field: _,
-                            name: _,
+                            name,
                             on_delete: _,
                         } = relation_info;
                         let related_model = self.data_model.find_model(&to).unwrap();
@@ -223,6 +223,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         };
 
                         result.push(Relation {
+                            name: name.clone(),
                             model_a: model_a,
                             model_b: model_b,
                             field_a: field_a,
@@ -246,6 +247,7 @@ struct ModelTable {
 
 #[derive(PartialEq, Debug, Clone)]
 struct Relation {
+    name: Option<String>,
     model_a: Model,
     model_b: Model,
     field_a: Field,
@@ -256,7 +258,10 @@ struct Relation {
 impl Relation {
     fn name(&self) -> String {
         // TODO: must replicate behaviour of `generateRelationName` from `SchemaInferrer`
-        format!("{}To{}", &self.model_a.name, &self.model_b.name)
+        match &self.name {
+            Some(name) => name.clone(),
+            None => format!("{}To{}", &self.model_a.name, &self.model_b.name),
+        }
     }
 
     fn table_name(&self) -> String {
