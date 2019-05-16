@@ -46,7 +46,11 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
             SqlMigrationStep::DropTable(DropTable { name }) => {
                 migration.drop_table(name);
             }
-            SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
+            SqlMigrationStep::AlterTable(AlterTable {
+                table,
+                new_name,
+                changes,
+            }) => {
                 migration.change_table(table, move |t| {
                     for change in changes.clone() {
                         match change {

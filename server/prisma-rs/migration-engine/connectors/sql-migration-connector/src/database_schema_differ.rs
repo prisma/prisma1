@@ -2,13 +2,13 @@ use crate::sql_database_migration_steps_inferrer::wrap_as_step;
 use crate::sql_migration_step::*;
 use database_inspector::{Column, DatabaseSchema, Table};
 
-pub struct DatabaseSchemaDiffer {
-    previous: DatabaseSchema,
-    next: DatabaseSchema,
+pub struct DatabaseSchemaDiffer<'a> {
+    previous: &'a DatabaseSchema,
+    next: &'a DatabaseSchema,
 }
 
-impl DatabaseSchemaDiffer {
-    pub fn diff(previous: DatabaseSchema, next: DatabaseSchema) -> Vec<SqlMigrationStep> {
+impl<'a> DatabaseSchemaDiffer<'a> {
+    pub fn diff(previous: &DatabaseSchema, next: &DatabaseSchema) -> Vec<SqlMigrationStep> {
         let differ = DatabaseSchemaDiffer { previous, next };
         differ.diff_internal()
     }
@@ -74,6 +74,7 @@ impl DatabaseSchemaDiffer {
 
             let alter_table = AlterTable {
                 table: create_table.name.clone(),
+                new_name: None,
                 changes: changes,
             };
             if !alter_table.changes.is_empty() {
@@ -108,6 +109,7 @@ impl DatabaseSchemaDiffer {
                 if !changes.is_empty() {
                     let update = AlterTable {
                         table: previous_table.name.clone(),
+                        new_name: None,
                         changes: changes,
                     };
                     result.push(update);
@@ -159,7 +161,7 @@ impl DatabaseSchemaDiffer {
         result
     }
 
-    fn column_descriptions(columns: &Vec<Column>) -> Vec<ColumnDescription> {
+    pub fn column_descriptions(columns: &Vec<Column>) -> Vec<ColumnDescription> {
         columns.iter().map(Self::column_description).collect()
     }
 
