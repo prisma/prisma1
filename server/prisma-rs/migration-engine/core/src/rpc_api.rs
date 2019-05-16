@@ -1,5 +1,4 @@
-use crate::commands::command::MigrationCommand;
-use crate::commands::infer_migration_steps::InferMigrationStepsCommand;
+use crate::commands::*;
 use crate::migration_engine::*;
 use jsonrpc_core;
 use jsonrpc_core::IoHandler;
@@ -16,6 +15,10 @@ impl RpcApi {
             io_handler: IoHandler::new(),
         };
         rpc_api.add_command_handler::<InferMigrationStepsCommand>("inferMigrationSteps");
+        rpc_api.add_command_handler::<ListMigrationStepsCommand>("listMigrations");
+        rpc_api.add_command_handler::<MigrationProgressCommand>("migrationProgress");
+        rpc_api.add_command_handler::<ApplyMigrationCommand>("applyMigration");
+        rpc_api.add_command_handler::<UnapplyMigrationCommand>("unapplyMigration");
         rpc_api
     }
 
