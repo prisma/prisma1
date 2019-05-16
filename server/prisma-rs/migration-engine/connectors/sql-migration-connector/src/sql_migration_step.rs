@@ -51,7 +51,7 @@ pub struct AlterColumn {
     pub column: ColumnDescription,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct ColumnDescription {
     pub name: String,
     pub tpe: ColumnType,
@@ -59,7 +59,7 @@ pub struct ColumnDescription {
     pub foreign_key: Option<ForeignKey>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct ForeignKey {
     pub table: String,
     pub column: String,

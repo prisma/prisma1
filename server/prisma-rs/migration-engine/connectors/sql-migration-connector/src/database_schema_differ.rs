@@ -15,11 +15,13 @@ impl DatabaseSchemaDiffer {
 
     fn diff_internal(&self) -> Vec<SqlMigrationStep> {
         let mut result = Vec::new();
-        result.append(&mut wrap_as_step(self.create_tables(), |x| {
-            SqlMigrationStep::CreateTable(x)
-        }));
         result.append(&mut wrap_as_step(self.drop_tables(), |x| {
             SqlMigrationStep::DropTable(x)
+        }));
+        let (create_tables, delayed_foreign_keys) = self.delay_foreign_key_creation(self.create_tables());
+        result.append(&mut wrap_as_step(create_tables, |x| SqlMigrationStep::CreateTable(x)));
+        result.append(&mut wrap_as_step(delayed_foreign_keys, |x| {
+            SqlMigrationStep::AlterTable(x)
         }));
         result.append(&mut wrap_as_step(self.alter_tables(), |x| {
             SqlMigrationStep::AlterTable(x)
@@ -40,6 +42,45 @@ impl DatabaseSchemaDiffer {
             }
         }
         result
+    }
+
+    // this function caters for the case that a table gets created that has a foreign key to a table that still needs to be created
+    // Example: Table A has a reference to Table B and Table B has a reference to Table A.
+    // We therefore split the creation of foreign key columns into separate steps when the referenced tables are not existing yet.
+    fn delay_foreign_key_creation(&self, create_tables: Vec<CreateTable>) -> (Vec<CreateTable>, Vec<AlterTable>) {
+        let mut alter_tables = Vec::new();
+        let mut creates = create_tables;
+        let table_names_that_get_created: Vec<String> = creates.iter().map(|t| t.name.clone()).collect();
+        for create_table in creates.iter_mut() {
+            let mut column_that_need_to_be_done_later_for_this_table = Vec::new();
+            for column in &create_table.columns {
+                if let Some(ref foreign_key) = column.foreign_key {
+                    let references_non_existent_table = table_names_that_get_created.contains(&foreign_key.table);
+
+                    if references_non_existent_table {
+                        let change = column.clone();
+                        column_that_need_to_be_done_later_for_this_table.push(change);
+                    }
+                }
+            }
+            // remove columns from the create that will be instead added later
+            create_table
+                .columns
+                .retain(|c| !column_that_need_to_be_done_later_for_this_table.contains(&c));
+            let changes = column_that_need_to_be_done_later_for_this_table
+                .into_iter()
+                .map(|c| TableChange::AddColumn(AddColumn { column: c }))
+                .collect();
+
+            let alter_table = AlterTable {
+                table: create_table.name.clone(),
+                changes: changes,
+            };
+            if !alter_table.changes.is_empty() {
+                alter_tables.push(alter_table);
+            }
+        }
+        (creates, alter_tables)
     }
 
     fn drop_tables(&self) -> Vec<DropTable> {
