@@ -209,12 +209,12 @@ pub fn pretty_print_error(
     )?;
     if offending.len() == 0 {
         let spacing = std::iter::repeat(" ").take(start_in_line).collect::<String>();
-        write!(
+        writeln!(
             f,
             "{}{}{}",
             format_line_number(0),
             spacing,
-            "^ Unexpected Token".bold().bright_red()
+            "^ Unexpected token.".bold().bright_red()
         )?;
     }
     writeln!(f, "{}", format_line_number_with_line(line_number + 2, &file_lines))?;

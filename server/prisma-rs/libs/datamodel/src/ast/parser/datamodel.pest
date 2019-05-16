@@ -1,9 +1,10 @@
 // Global (builtin) expressions
 
 // Treat every whitespace the same
-WHITESPACE = _{ SPACE_SEPARATOR | LINE_SEPARATOR | PARAGRAPH_SEPARATOR | NEWLINE }
+WHITESPACE = _{ SPACE_SEPARATOR | NEWLINE }
 // Comment ignores everything until end of line.
-// COMMENT = @{ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+// TODO: As soon as we include the comments in the AST, we need to move from silent (_) to atomic (@)
+COMMENT = _{ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
 
 // Prisma Datamodel expressions
 
