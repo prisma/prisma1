@@ -1,7 +1,7 @@
 use crate::ast;
 use crate::dml;
 
-use crate::errors::{ValueParserError, LiteralParseError};
+use crate::errors::ValidationError;
 use chrono::{DateTime, Utc};
 use std::error;
 
@@ -19,8 +19,8 @@ pub struct ValueValidator {
 }
 
 impl ValueValidator {
-    fn construct_error(&self, expected_type: &str) -> ValueParserError {
-        ValueParserError::new(
+    fn construct_error(&self, expected_type: &str) -> ValidationError {
+        ValidationError::new_type_mismatch_error(
             expected_type,
             ast::describe_value_type(&self.value),
             self.raw(),
@@ -32,10 +32,10 @@ impl ValueValidator {
         &self,
         result: Result<T, E>,
         expected_type: &str,
-    ) -> Result<T, ValueParserError> {
+    ) -> Result<T, ValidationError> {
         match result {
             Ok(val) => Ok(val),
-            Err(err) => Err(ValueParserError::new_for_format_error(
+            Err(err) => Err(ValidationError::new_value_parser_error(
                 expected_type,
                 err.description(),
                 self.raw(),
@@ -44,22 +44,11 @@ impl ValueValidator {
         }
     }
 
-    // TODO: This wrapper is super stupid.
-    fn wrap_error_from_literal<T>(
-        &self,
-        result: Result<T, LiteralParseError>,
-    ) -> Result<T, ValueParserError> {
-        match result {
-            Ok(val) => Ok(val),
-            Err(err) => Err(ValueParserError::new_from_literal_parser_error(&err)),
-        }
-    }
-
     pub fn value(&self) -> &ast::Value {
         &self.value
     }
 
-    pub fn as_type(&self, scalar_type: &dml::ScalarType) -> Result<dml::Value, ValueParserError> {
+    pub fn as_type(&self, scalar_type: &dml::ScalarType) -> Result<dml::Value, ValidationError> {
         match scalar_type {
             dml::ScalarType::Int => wrap_value!(self.as_int(), dml::Value::Int, self),
             dml::ScalarType::Float => wrap_value!(self.as_float(), dml::Value::Float, self),
@@ -71,8 +60,8 @@ impl ValueValidator {
         }
     }
 
-    pub fn parse_literal<T: dml::FromStrAndSpan>(&self) -> Result<T, ValueParserError> {
-        self.wrap_error_from_literal(T::from_str_and_span(&self.as_constant_literal()?, self.span()))
+    pub fn parse_literal<T: dml::FromStrAndSpan>(&self) -> Result<T, ValidationError> {
+        T::from_str_and_span(&self.as_constant_literal()?, self.span())
     }
 
     pub fn raw(&self) -> &String {
@@ -93,21 +82,21 @@ impl ValueValidator {
         }
     }
 
-    pub fn as_str(&self) -> Result<String, ValueParserError> {
+    pub fn as_str(&self) -> Result<String, ValidationError> {
         match &self.value {
             ast::Value::StringValue(value, _) => Ok(value.to_string()),
             _ => Err(self.construct_error("String")),
         }
     }
 
-    pub fn as_int(&self) -> Result<i32, ValueParserError> {
+    pub fn as_int(&self) -> Result<i32, ValidationError> {
         match &self.value {
             ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<i32>(), "Numeric"),
             _ => Err(self.construct_error("Numeric")),
         }
     }
 
-    pub fn as_float(&self) -> Result<f32, ValueParserError> {
+    pub fn as_float(&self) -> Result<f32, ValidationError> {
         match &self.value {
             ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
             _ => Err(self.construct_error("Numeric")),
@@ -115,14 +104,14 @@ impl ValueValidator {
     }
 
     // TODO: Ask which decimal type to take.
-    pub fn as_decimal(&self) -> Result<f32, ValueParserError> {
+    pub fn as_decimal(&self) -> Result<f32, ValidationError> {
         match &self.value {
             ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
             _ => Err(self.construct_error("Numeric")),
         }
     }
 
-    pub fn as_bool(&self) -> Result<bool, ValueParserError> {
+    pub fn as_bool(&self) -> Result<bool, ValidationError> {
         match &self.value {
             ast::Value::BooleanValue(value, _) => self.wrap_error_from_result(value.parse::<bool>(), "Boolean"),
             _ => Err(self.construct_error("Boolean")),
@@ -130,7 +119,7 @@ impl ValueValidator {
     }
 
     // TODO: Ask which datetime type to use.
-    pub fn as_date_time(&self) -> Result<DateTime<Utc>, ValueParserError> {
+    pub fn as_date_time(&self) -> Result<DateTime<Utc>, ValidationError> {
         match &self.value {
             ast::Value::StringValue(value, _) => {
                 self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "String-Like")
@@ -139,7 +128,7 @@ impl ValueValidator {
         }
     }
 
-    pub fn as_constant_literal(&self) -> Result<String, ValueParserError> {
+    pub fn as_constant_literal(&self) -> Result<String, ValidationError> {
         match &self.value {
             ast::Value::ConstantValue(value, _) => Ok(value.to_string()),
             _ => Err(self.construct_error("Constant Literal")),
