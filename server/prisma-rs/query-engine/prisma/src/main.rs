@@ -84,8 +84,12 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
     serde_json::to_string(&result)
 }
 
-fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
-    data_model::load_sdl_string().unwrap()
+fn data_model_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
+    let request_context = req.state();
+
+    request_context
+        .graphql_request_handler
+        .handle_data_model(&request_context.context)
 }
 
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {
