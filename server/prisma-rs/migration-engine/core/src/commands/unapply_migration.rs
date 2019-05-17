@@ -15,7 +15,7 @@ impl MigrationCommand for UnapplyMigrationCommand {
         Box::new(UnapplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
         UnapplyMigrationOutput {
             rolled_back: ListMigrationStepsOutput {

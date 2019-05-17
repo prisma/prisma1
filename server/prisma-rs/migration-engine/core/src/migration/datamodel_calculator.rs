@@ -10,7 +10,7 @@ macro_rules! set (
     );
 );
 
-pub trait DataModelCalculator {
+pub trait DataModelCalculator: std::panic::RefUnwindSafe {
     fn infer(&self, current: &Schema, steps: Vec<MigrationStep>) -> Schema;
 }
 

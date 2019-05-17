@@ -1,17 +1,18 @@
+use datamodel;
 #[allow(dead_code)]
-
 use migration_connector::*;
+use migration_core::MigrationEngine;
 use sql_migration_connector::SqlMigrationConnector;
 use std::panic;
 use std::path::Path;
-use datamodel;
 
 pub fn parse(datamodel_string: &str) -> datamodel::Schema {
     match datamodel::parse(datamodel_string) {
         Ok(s) => s,
-        Err(errs) => { 
+        Err(errs) => {
             for err in errs.to_iter() {
-                err.pretty_print(&mut std::io::stderr().lock(), "", datamodel_string).unwrap();
+                err.pretty_print(&mut std::io::stderr().lock(), "", datamodel_string)
+                    .unwrap();
             }
             panic!("Schema parsing failed. Please see error above.")
         }
@@ -22,13 +23,21 @@ pub fn run_test<T>(test: T) -> ()
 where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
+    run_test_with_engine(|_| test());
+}
+
+pub fn run_test_with_engine<T>(test: T) -> ()
+where
+    T: FnOnce(Box<MigrationEngine>) -> () + panic::UnwindSafe,
+{
     // SETUP
-    let connector = connector();
+    let engine = MigrationEngine::new();
+    let connector = engine.connector();
     connector.initialize();
     connector.reset();
 
     // TEST
-    let result = panic::catch_unwind(|| test());
+    let result = panic::catch_unwind(|| test(engine));
     assert!(result.is_ok())
 }
 

@@ -14,6 +14,8 @@ pub struct MigrationEngine {
     datamodel_calculator: Arc<DataModelCalculator>,
 }
 
+impl std::panic::RefUnwindSafe for MigrationEngine {}
+
 impl MigrationEngine {
     pub fn new() -> Box<MigrationEngine> {
         let engine = MigrationEngine {
@@ -33,9 +35,13 @@ impl MigrationEngine {
     }
 
     pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepExt>> {
+        Arc::new(SqlMigrationConnector::new(self.schema_name()))
+    }
+
+    pub fn schema_name(&self) -> String {
         let file_path = file!(); // todo: the sqlite file name must be taken from the config
         let file_name = Path::new(file_path).file_stem().unwrap().to_str().unwrap();
-        Arc::new(SqlMigrationConnector::new(file_name.to_string()))
+        file_name.to_string()
     }
 
     pub fn parse_datamodel(&self, datamodel_string: &String) -> Schema {

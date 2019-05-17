@@ -9,6 +9,7 @@ mod sql_migration_step;
 use barrel;
 use barrel::backend::Sqlite;
 use barrel::types;
+use database_inspector::DatabaseInspector;
 use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
 use rusqlite::{Connection, NO_PARAMS};
@@ -52,12 +53,17 @@ impl SqlMigrationConnector {
 
     fn new_conn(name: &str) -> Connection {
         let conn = Connection::open_in_memory().unwrap();
-        let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-        let path = format!("{}/db", server_root);
-        let database_file_path = format!("{}/{}.db", path, name);
+        let database_file_path = Self::database_file_path(&name);
         conn.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), name])
             .unwrap();
         conn
+    }
+
+    fn database_file_path(name: &str) -> String {
+        let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+        let path = format!("{}/db", server_root);
+        let database_file_path = format!("{}/{}.db", path, name);
+        database_file_path
     }
 }
 
@@ -91,6 +97,7 @@ impl MigrationConnector for SqlMigrationConnector {
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
 
         dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
+        let _ = std::fs::remove_file(Self::database_file_path(&self.schema_name)); // ignore potential errors
     }
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence> {
@@ -107,5 +114,11 @@ impl MigrationConnector for SqlMigrationConnector {
 
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigrationStep>> {
         Arc::clone(&self.destructive_changes_checker)
+    }
+
+    fn database_inspector(&self) -> Box<DatabaseInspector> {
+        Box::new(DatabaseInspectorImpl::new(SqlMigrationConnector::new_conn(
+            &self.schema_name,
+        )))
     }
 }
