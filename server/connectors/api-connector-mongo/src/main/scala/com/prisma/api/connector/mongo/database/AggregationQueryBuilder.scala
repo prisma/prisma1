@@ -79,9 +79,10 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter => Seq(`match`(hackForTrue))
       case AndFilter(filters)     => sortFilters(filters).flatMap(f => buildJoinStagesForFilter(path, f))
-      case OrFilter(_)            => sys.error("This is not implemented for the Mongo connector")
-      case NotFilter(_)           => sys.error("This is not implemented for the Mongo connector")
-      case x: RelationFilter      => relationFilterJoinStage(path, x)
+      case OrFilter(filters) if filters.forall(f => f.isInstanceOf[ScalarFilter]) =>
+        Seq(`match`(or(filters.map(f => buildConditionForScalarFilter(path.combinedNames, Some(f))): _*)))
+      case NotFilter(_)      => sys.error("This is not implemented for the Mongo connector")
+      case x: RelationFilter => relationFilterJoinStage(path, x)
 
       //--------------------------------ANCHORS------------------------------------
       case TrueFilter                                            => Seq(`match`(hackForTrue))

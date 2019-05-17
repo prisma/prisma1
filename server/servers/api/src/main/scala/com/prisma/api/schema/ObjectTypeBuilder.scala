@@ -189,7 +189,7 @@ class ObjectTypeBuilder(
     }
 
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    val filterOpt                              = rawFilterOpt.map(FilterHelper.getUnoptimizedFilterAst(_, model, isSubscriptionFilter))
+    val filterOpt                              = rawFilterOpt.map(FilterHelper.getFilterAst(_, model, isSubscriptionFilter))
     val skipOpt                                = ctx.argOpt[Int]("skip")
     val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
     val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name).map(convertCursorToGcValue)
@@ -293,7 +293,7 @@ object FilterHelper {
   def optimizeFilter(filter: Filter): Filter = {
     val one   = LogicalOpt.transform(filter)
     val two   = InlineOpt.transform(one)
-    val three = MongoBugOpt.transform(one)
+    val three = MongoBugOpt.transform(two)
     three
   }
 
