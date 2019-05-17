@@ -83,6 +83,7 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
         };
         dbg!(&sql_string);
         let result = self.connection.execute(&sql_string, NO_PARAMS);
+        // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
         match dbg!(result) {
             Ok(_) => {}
             Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
