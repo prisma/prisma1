@@ -283,65 +283,11 @@ object FilterHelper {
   def getFilterAst(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
     val initial = generateFilterElement(input, model, isSubscriptionFilter)
 
-    optimizeFilter(initial)
+    Optimizations.FilterOptimizer.optimize(initial)
   }
 
   def getUnoptimizedFilterAst(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
     generateFilterElement(input, model, isSubscriptionFilter)
-  }
-
-  def optimizeFilter(filter: Filter): Filter = {
-    val one   = LogicalOpt.transform(filter)
-    val two   = InlineOpt.transform(one)
-    val three = MongoBugOpt.transform(two)
-    three
-  }
-
-  trait QueryOptimizer {
-    def transform(filter: Filter): Filter
-  }
-
-  object LogicalOpt extends QueryOptimizer {
-    override def transform(filter: Filter): Filter = {
-      filter match {
-        case AndFilter(filters) if filters.length == 1   => transform(filters.head)
-        case AndFilter(filters)                          => AndFilter(filters.map(transform))
-        case OrFilter(filters) if filters.length == 1    => transform(filters.head)
-        case OrFilter(filters)                           => OrFilter(filters.map(transform))
-        case NotFilter(filters)                          => NotFilter(filters.map(transform))
-        case RelationFilter(rf, nestedFilter, condition) => RelationFilter(rf, transform(nestedFilter), condition)
-        case x                                           => x
-      }
-    }
-  }
-
-  object InlineOpt extends QueryOptimizer {
-
-    //For Mongo this could also handle rf_some{id: "id"} => ScalarListFilter(ScalarListField, ListContains("id"))
-    override def transform(filter: Filter): Filter = {
-      filter match {
-        case AndFilter(filters) => AndFilter(filters.map(transform))
-        case OrFilter(filters)  => OrFilter(filters.map(transform))
-        case NotFilter(filters) => NotFilter(filters.map(transform))
-        case RelationFilter(rf, ScalarFilter(sf, scalarCondition), _) if rf.relationIsInlinedInParent && !rf.isList && sf.isId =>
-          ScalarFilter(rf.scalarCopy, scalarCondition)
-        case RelationFilter(rf, nestedFilter, cond) => RelationFilter(rf, transform(nestedFilter), cond)
-        case x                                      => x
-      }
-    }
-  }
-
-  object MongoBugOpt extends QueryOptimizer {
-
-    override def transform(filter: Filter): Filter = {
-      filter match {
-        case AndFilter(
-            Vector(RelationFilter(rf1, ScalarFilter(sf1, cond1), AtLeastOneRelatedNode), RelationFilter(rf2, ScalarFilter(sf2, cond2), AtLeastOneRelatedNode)))
-            if rf1 == rf2 && sf1 == sf2 && cond1.sameAs(cond2) =>
-          RelationFilter(rf1, OrFilter(Vector(ScalarFilter(sf1, cond1), ScalarFilter(sf1, cond2))), AtLeastOneRelatedNode)
-        case _ => filter
-      }
-    }
   }
 
   def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
