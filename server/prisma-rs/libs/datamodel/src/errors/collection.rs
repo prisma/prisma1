@@ -1,8 +1,8 @@
-use super::{DirectiveValidationError, ErrorWithSpan, TypeNotFoundError};
+use super::errors::ValidationError;
 
 #[derive(Debug)]
 pub struct ErrorCollection {
-    pub errors: Vec<Box<ErrorWithSpan>>,
+    pub errors: Vec<ValidationError>,
 }
 
 impl ErrorCollection {
@@ -10,7 +10,7 @@ impl ErrorCollection {
         ErrorCollection { errors: Vec::new() }
     }
 
-    pub fn push(&mut self, err: Box<ErrorWithSpan>) {
+    pub fn push(&mut self, err: ValidationError) {
         self.errors.push(err)
     }
 
@@ -18,7 +18,7 @@ impl ErrorCollection {
         self.errors.len() > 0
     }
 
-    pub fn to_iter(&self) -> std::slice::Iter<Box<ErrorWithSpan>> {
+    pub fn to_iter(&self) -> std::slice::Iter<ValidationError> {
         self.errors.iter()
     }
 
@@ -33,18 +33,10 @@ impl std::fmt::Display for ErrorCollection {
     }
 }
 
-impl std::convert::From<DirectiveValidationError> for ErrorCollection {
-    fn from(error: DirectiveValidationError) -> Self {
+impl std::convert::From<ValidationError> for ErrorCollection {
+    fn from(error: ValidationError) -> Self {
         let mut col = ErrorCollection::new();
-        col.push(Box::new(error));
-        col
-    }
-}
-
-impl std::convert::From<TypeNotFoundError> for ErrorCollection {
-    fn from(error: TypeNotFoundError) -> Self {
-        let mut col = ErrorCollection::new();
-        col.push(Box::new(error));
+        col.push(error);
         col
     }
 }

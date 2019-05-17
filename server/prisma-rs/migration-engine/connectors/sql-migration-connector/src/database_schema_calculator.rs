@@ -364,7 +364,6 @@ fn column_type_for_scalar_type(scalar_type: &ScalarType) -> ColumnType {
         ScalarType::Int => ColumnType::Int,
         ScalarType::Float => ColumnType::Float,
         ScalarType::Boolean => ColumnType::Boolean,
-        ScalarType::Enum => ColumnType::String,
         ScalarType::String => ColumnType::String,
         ScalarType::DateTime => ColumnType::DateTime,
         ScalarType::Decimal => unimplemented!(),

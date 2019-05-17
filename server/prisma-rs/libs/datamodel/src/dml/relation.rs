@@ -1,8 +1,8 @@
-use crate::errors::LiteralParseError;
+use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
 
-use crate::ast;
 use super::FromStrAndSpan;
+use crate::ast;
 
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct RelationInfo {
@@ -30,11 +30,11 @@ pub enum OnDeleteStrategy {
 }
 
 impl FromStrAndSpan for OnDeleteStrategy {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, LiteralParseError> {
+    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
         match s {
             "CASCADE" => Ok(OnDeleteStrategy::Cascade),
             "NONE" => Ok(OnDeleteStrategy::None),
-            _ => Err(LiteralParseError::new("onDelete strategy", s, span)),
+            _ => Err(ValidationError::new_literal_parser_error("onDelete strategy", s, span)),
         }
     }
 }

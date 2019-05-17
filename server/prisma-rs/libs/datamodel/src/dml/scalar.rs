@@ -9,7 +9,6 @@ pub enum ScalarType {
     Boolean,
     String,
     DateTime,
-    Enum,
 }
 
 // TODO, Check if data types are correct

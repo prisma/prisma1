@@ -4,7 +4,7 @@ pub mod argument;
 pub mod directive;
 pub mod value;
 
-use crate::errors::{ErrorCollection, TypeNotFoundError, ParserError};
+use crate::errors::{ErrorCollection, ValidationError};
 use directive::builtin::{
     new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives, DirectiveListValidator,
 };
@@ -38,12 +38,12 @@ impl Validator {
             match ast_obj {
                 ast::ModelOrEnum::Enum(en) => match self.validate_enum(&en) {
                     Ok(en) => schema.add_enum(en),
-                    Err(mut err) => errors.append(&mut err)
+                    Err(mut err) => errors.append(&mut err),
                 },
                 ast::ModelOrEnum::Model(ty) => match self.validate_model(&ty, ast_schema) {
                     Ok(md) => schema.add_model(md),
-                    Err(mut err) => errors.append(&mut err)   
-                }
+                    Err(mut err) => errors.append(&mut err),
+                },
             }
         }
 
@@ -61,7 +61,7 @@ impl Validator {
         for ast_field in &ast_model.fields {
             match self.validate_field(ast_field, ast_schema) {
                 Ok(field) => model.add_field(field),
-                Err(mut err) => errors.append(&mut err)
+                Err(mut err) => errors.append(&mut err),
             }
         }
 
@@ -104,15 +104,13 @@ impl Validator {
             if let dml::FieldType::Base(base_type) = &field_type {
                 match (ValueValidator { value: value.clone() }).as_type(base_type) {
                     Ok(val) => field.default_value = Some(val),
-                    Err(err) => errors.push(Box::new(err))
+                    Err(err) => errors.push(err),
                 };
             } else {
-                errors.push(
-                    Box::new(ParserError::new(
-                        "Found default value for a non-scalar type.",
-                        ValueValidator { value: value.clone() }.span()
-                    ))
-                )
+                errors.push(ValidationError::new_parser_error(
+                    "Found default value for a non-scalar type.",
+                    ValueValidator { value: value.clone() }.span(),
+                ))
             }
         }
 
@@ -140,7 +138,7 @@ impl Validator {
         type_name: &str,
         span: &ast::Span,
         ast_schema: &ast::Schema,
-    ) -> Result<dml::FieldType, TypeNotFoundError> {
+    ) -> Result<dml::FieldType, ValidationError> {
         match type_name {
             "ID" => Ok(dml::FieldType::Base(dml::ScalarType::Int)),
             "Int" => Ok(dml::FieldType::Base(dml::ScalarType::Int)),
@@ -163,7 +161,7 @@ impl Validator {
                         _ => {}
                     }
                 }
-                Err(TypeNotFoundError::new(type_name, span))
+                Err(ValidationError::new_type_not_found_error(type_name, span))
             }
         }
     }
