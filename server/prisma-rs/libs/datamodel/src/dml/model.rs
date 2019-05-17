@@ -42,6 +42,10 @@ impl Model {
     pub fn find_field(&self, name: &str) -> Option<&Field> {
         self.fields().find(|f| f.name == *name)
     }
+
+    pub fn find_field_mut(&mut self, name: &str) -> Option<&mut Field> {
+        self.fields_mut().find(|f| f.name == *name)
+    }
 }
 
 impl WithName for Model {
