@@ -28,7 +28,7 @@ impl Model {
     }
 
     pub fn remove_field(&mut self, name: &str) {
-        self.fields.retain(|f|f.name != name);
+        self.fields.retain(|f| f.name != name);
     }
 
     pub fn fields(&self) -> std::slice::Iter<Field> {

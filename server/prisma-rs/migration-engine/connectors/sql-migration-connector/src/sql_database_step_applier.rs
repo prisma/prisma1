@@ -22,7 +22,7 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
     fn apply(&self, step: SqlMigrationStep) {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
-        match dbg!(step) {
+        let sql_string = match dbg!(step) {
             SqlMigrationStep::CreateTable(CreateTable {
                 name,
                 columns,
@@ -42,20 +42,23 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                         t.inject_custom(format!("PRIMARY KEY ({})", column_names.join(",")));
                     }
                 });
+                self.make_sql_string(migration)
             }
             SqlMigrationStep::DropTable(DropTable { name }) => {
                 migration.drop_table(name);
+                self.make_sql_string(migration)
             }
-            SqlMigrationStep::AlterTable(AlterTable {
-                table,
-                new_name,
-                changes,
-            }) => {
-                if let Some(new_name) = &new_name {
-                    migration.rename_table(table.to_string(), new_name.to_string());
-                };
-                let table_name = new_name.unwrap_or(table);
-                migration.change_table(table_name, move |t| {
+            SqlMigrationStep::RenameTable { name, new_name } => {
+                // TODO: use barrel again when the rename bug is fixed;
+                // migration.rename_table(name.to_string(), new_name.to_string());
+                // self.make_sql_string(migration)
+                format!(
+                    r#"ALTER TABLE "{}"."{}" RENAME TO "{}";"#,
+                    &self.schema_name, name, new_name
+                )
+            }
+            SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
+                migration.change_table(table, move |t| {
                     for change in changes.clone() {
                         match change {
                             TableChange::AddColumn(AddColumn { column }) => {
@@ -71,14 +74,23 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                         }
                     }
                 });
+                self.make_sql_string(migration)
             }
+            SqlMigrationStep::RawSql(sql) => sql,
             x => {
-                //panic!(format!("{:?} not implemented yet here", x)),
-                println!("{:?} not implemented yet here", x);
+                unimplemented!("{:?} not implemented yet here", x);
             }
         };
-        let sql_string = dbg!(self.make_sql_string(migration));
-        dbg!(self.connection.execute(&sql_string, NO_PARAMS)).unwrap();
+        dbg!(&sql_string);
+        let result = self.connection.execute(&sql_string, NO_PARAMS);
+        match dbg!(result) {
+            Ok(_) => {}
+            Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
+            e @ Err(_) => {
+                e.unwrap();
+                {}
+            }
+        }
     }
 }
 

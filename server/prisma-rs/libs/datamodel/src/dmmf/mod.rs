@@ -57,7 +57,6 @@ fn type_to_string(scalar: &dml::ScalarType) -> String {
         dml::ScalarType::Boolean => String::from("Boolean"),
         dml::ScalarType::String => String::from("String"),
         dml::ScalarType::DateTime => String::from("DateTime"),
-        dml::ScalarType::Enum => panic!("Enum is an internally used type and should never be rendered."),
     }
 }
 

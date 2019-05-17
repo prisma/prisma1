@@ -11,7 +11,7 @@ use pest::Parser;
 pub struct PrismaDatamodelParser;
 
 use crate::ast::*;
-use crate::errors::ParserError;
+use crate::errors::ValidationError;
 
 // Macro to match all children in a parse tree
 macro_rules! match_children (
@@ -248,7 +248,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
 }
 
 // Whole datamodel parsing
-pub fn parse(datamodel_string: &str) -> Result<Schema, ParserError> {
+pub fn parse(datamodel_string: &str) -> Result<Schema, ValidationError> {
     let datamodel_result = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string);
 
     match datamodel_result {
@@ -269,10 +269,14 @@ pub fn parse(datamodel_string: &str) -> Result<Schema, ParserError> {
             })
         }
         Err(err) => match err.location {
-            pest::error::InputLocation::Pos(pos) => Err(ParserError::new("Unexpected token.", &Span::new(pos, pos))),
-            pest::error::InputLocation::Span((from, to)) => {
-                Err(ParserError::new("Unexpected token.", &Span::new(from, to)))
-            }
+            pest::error::InputLocation::Pos(pos) => Err(ValidationError::new_parser_error(
+                "Unexpected token.",
+                &Span::new(pos, pos),
+            )),
+            pest::error::InputLocation::Span((from, to)) => Err(ValidationError::new_parser_error(
+                "Unexpected token.",
+                &Span::new(from, to),
+            )),
         },
     }
 }

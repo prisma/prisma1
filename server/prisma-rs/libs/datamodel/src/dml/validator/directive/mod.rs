@@ -1,10 +1,10 @@
 use crate::ast;
 use crate::dml;
-use crate::errors::{DirectiveValidationError, ErrorWithSpan};
+use crate::errors::ValidationError;
 
 pub mod builtin;
 
-pub type Error = DirectiveValidationError;
+pub type Error = ValidationError;
 pub type Args<'a> = dml::validator::argument::DirectiveArguments<'a>;
 
 pub trait DirectiveValidator<T> {
@@ -12,11 +12,19 @@ pub trait DirectiveValidator<T> {
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Result<(), Error>;
 
     fn error(&self, msg: &str, span: &ast::Span) -> Result<(), Error> {
-        Err(Error::new(msg, self.directive_name(), span))
+        Err(ValidationError::new_directive_validation_error(
+            msg,
+            self.directive_name(),
+            span,
+        ))
     }
 
-    fn parser_error(&self, err: &ErrorWithSpan) -> Result<(), Error> {
-        Err(Error::new(&format!("{}", err), self.directive_name(), &err.span()))
+    fn parser_error(&self, err: &ValidationError) -> Result<(), Error> {
+        Err(ValidationError::new_directive_validation_error(
+            &format!("{}", err),
+            self.directive_name(),
+            &err.span(),
+        ))
     }
 }
 

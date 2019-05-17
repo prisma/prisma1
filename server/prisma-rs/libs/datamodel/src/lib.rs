@@ -16,3 +16,7 @@ pub fn parse(datamodel_string: &str) -> Schema {
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
+
+// Failure enum display derivation
+#[macro_use]
+extern crate failure;

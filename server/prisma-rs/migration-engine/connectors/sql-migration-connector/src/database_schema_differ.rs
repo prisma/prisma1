@@ -18,10 +18,14 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         result.append(&mut wrap_as_step(self.drop_tables(), |x| {
             SqlMigrationStep::DropTable(x)
         }));
-        let (create_tables, delayed_foreign_keys) = self.delay_foreign_key_creation(self.create_tables());
-        result.append(&mut wrap_as_step(create_tables, |x| SqlMigrationStep::CreateTable(x)));
-        result.append(&mut wrap_as_step(delayed_foreign_keys, |x| {
-            SqlMigrationStep::AlterTable(x)
+        // let (create_tables, delayed_foreign_keys) = self.delay_foreign_key_creation(self.create_tables());
+        // result.append(&mut wrap_as_step(create_tables, |x| SqlMigrationStep::CreateTable(x)));
+        // result.append(&mut wrap_as_step(delayed_foreign_keys, |x| {
+        //     SqlMigrationStep::AlterTable(x)
+        // }));
+
+        result.append(&mut wrap_as_step(self.create_tables(), |x| {
+            SqlMigrationStep::CreateTable(x)
         }));
         result.append(&mut wrap_as_step(self.alter_tables(), |x| {
             SqlMigrationStep::AlterTable(x)
@@ -47,6 +51,8 @@ impl<'a> DatabaseSchemaDiffer<'a> {
     // this function caters for the case that a table gets created that has a foreign key to a table that still needs to be created
     // Example: Table A has a reference to Table B and Table B has a reference to Table A.
     // We therefore split the creation of foreign key columns into separate steps when the referenced tables are not existing yet.
+    // FIXME: This does not work with SQLite. A required column might get delayed. SQLite then fails with: "Cannot add a NOT NULL column with default value NULL"
+    #[allow(unused)]
     fn delay_foreign_key_creation(&self, create_tables: Vec<CreateTable>) -> (Vec<CreateTable>, Vec<AlterTable>) {
         let mut alter_tables = Vec::new();
         let mut creates = create_tables;
@@ -56,8 +62,10 @@ impl<'a> DatabaseSchemaDiffer<'a> {
             for column in &create_table.columns {
                 if let Some(ref foreign_key) = column.foreign_key {
                     let references_non_existent_table = table_names_that_get_created.contains(&foreign_key.table);
+                    let is_part_of_primary_key = create_table.primary_columns.contains(&column.name);
+                    let is_relation_table = create_table.name.starts_with("_"); // todo: this is a very weak check. find a better one
 
-                    if references_non_existent_table {
+                    if references_non_existent_table && !is_part_of_primary_key && !is_relation_table {
                         let change = column.clone();
                         column_that_need_to_be_done_later_for_this_table.push(change);
                     }
@@ -74,7 +82,6 @@ impl<'a> DatabaseSchemaDiffer<'a> {
 
             let alter_table = AlterTable {
                 table: create_table.name.clone(),
-                new_name: None,
                 changes: changes,
             };
             if !alter_table.changes.is_empty() {
@@ -109,7 +116,6 @@ impl<'a> DatabaseSchemaDiffer<'a> {
                 if !changes.is_empty() {
                     let update = AlterTable {
                         table: previous_table.name.clone(),
-                        new_name: None,
                         changes: changes,
                     };
                     result.push(update);

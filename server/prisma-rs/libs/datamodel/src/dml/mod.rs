@@ -5,18 +5,18 @@
 mod comment;
 mod enummodel;
 mod field;
+mod fromstr;
 mod id;
 mod model;
 mod relation;
 mod scalar;
 mod schema;
 mod traits;
-mod fromstr;
 
-pub use fromstr::*;
 pub use comment::*;
 pub use enummodel::*;
 pub use field::*;
+pub use fromstr::*;
 pub use id::*;
 pub use model::*;
 pub use relation::*;

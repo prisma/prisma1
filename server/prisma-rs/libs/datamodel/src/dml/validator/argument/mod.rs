@@ -1,6 +1,6 @@
 use crate::ast;
 use crate::dml::validator::value;
-use crate::errors::ArgumentNotFoundError;
+use crate::errors::ValidationError;
 
 pub struct DirectiveArguments<'a> {
     directive_name: String,
@@ -25,7 +25,7 @@ impl<'a> DirectiveArguments<'a> {
         &self.span
     }
 
-    pub fn arg(&self, name: &str) -> Result<value::ValueValidator, ArgumentNotFoundError> {
+    pub fn arg(&self, name: &str) -> Result<value::ValueValidator, ValidationError> {
         for arg in self.arguments {
             if arg.name == name {
                 return Ok(value::ValueValidator {
@@ -33,10 +33,14 @@ impl<'a> DirectiveArguments<'a> {
                 });
             }
         }
-        return Err(ArgumentNotFoundError::new(name, &self.directive_name, &self.span));
+        return Err(ValidationError::new_argument_not_found_error(
+            name,
+            &self.directive_name,
+            &self.span,
+        ));
     }
 
-    pub fn default_arg(&self, name: &str) -> Result<value::ValueValidator, ArgumentNotFoundError> {
+    pub fn default_arg(&self, name: &str) -> Result<value::ValueValidator, ValidationError> {
         let arg = self.arg(name);
 
         match arg {

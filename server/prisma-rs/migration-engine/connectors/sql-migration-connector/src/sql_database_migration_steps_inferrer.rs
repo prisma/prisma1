@@ -71,13 +71,12 @@ fn fix(alter_table: &AlterTable, current: &Table, next: &Table) -> Vec<SqlMigrat
         SqlMigrationStep::DropTable(DropTable {
             name: current.name.clone(),
         }),
-        SqlMigrationStep::AlterTable(AlterTable {
-            table: name_of_temporary_table,
-            new_name: Some(next.name.clone()),
-            changes: Vec::new(),
-        }),
+        SqlMigrationStep::RenameTable {
+            name: name_of_temporary_table,
+            new_name: next.name.clone(),
+        },
         // todo: recreate indexes + triggers
-        SqlMigrationStep::RawSql("PRAGMA schema.foreign_key_check;".to_string()), // todo add right schema
+        // SqlMigrationStep::RawSql("PRAGMA schema.foreign_key_check;".to_string()), // todo add right schema
         // todo: commit transaction
         SqlMigrationStep::RawSql("PRAGMA foreign_keys=ON;".to_string()),
     ]
