@@ -54,6 +54,15 @@ pub struct UpdateModel {
     pub embedded: Option<bool>,
 }
 
+
+impl UpdateModel {
+    pub fn is_any_option_set(&self) -> bool {
+        self.new_name.is_some()
+            || self.embedded.is_some()
+            || self.db_name.is_some()
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DeleteModel {
@@ -188,6 +197,14 @@ pub struct UpdateEnum {
 
     #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
     pub db_name: Option<Option<String>>,
+}
+
+impl UpdateEnum {
+    pub fn is_any_option_set(&self) -> bool {
+        self.new_name.is_some()
+            || self.values.is_some()
+            || self.db_name.is_some()
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]

@@ -1,6 +1,8 @@
 #![allow(non_snake_case)]
+mod test_harness;
 
-use datamodel::{dml::*, parse};
+use datamodel::{dml::*};
+use test_harness::parse;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
 
@@ -61,7 +63,6 @@ fn infer_DeleteModel() {
 }
 
 #[test]
-#[ignore]
 fn infer_UpdateModel() {
     // TODO: add tests for other properties as well
     let dm1 = parse(
@@ -73,15 +74,16 @@ fn infer_UpdateModel() {
     );
     let dm2 = parse(
         r#"
-        type Post @embedded {
+        model Post{
             id: String
         }
+        @embedded 
     "#,
     );
 
     let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::UpdateModel(UpdateModel {
-        name: "Test".to_string(),
+        name: "Post".to_string(),
         new_name: None,
         db_name: None,
         embedded: Some(true),

@@ -6,10 +6,10 @@ pub use dml::*;
 pub mod dmmf;
 pub mod errors;
 
-pub fn parse(datamodel_string: &str) -> Schema {
-    let ast = parser::parse(datamodel_string).unwrap();
+pub fn parse(datamodel_string: &str) -> Result<Schema, errors::ErrorCollection> {
+    let ast = parser::parse(datamodel_string)?;
     let validator = Validator::new();
-    validator.validate(&ast).unwrap()
+    validator.validate(&ast)
 }
 
 // Pest grammar generation on compile time.

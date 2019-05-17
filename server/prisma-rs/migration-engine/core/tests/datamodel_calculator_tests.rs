@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
-
-use datamodel::{dml::*, parse};
+mod test_harness;
+use test_harness::parse;
+use datamodel::dml::*;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_calculator::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
@@ -32,13 +33,13 @@ fn add_DeleteModel_to_existing_schema() {
     );
     let dm2 = Schema::empty();
 
+
     test(dm1, dm2);
 }
 
 #[test]
-#[ignore]
 fn add_UpdateModel_to_existing_schema() {
-    let dm1 = parse(
+   let dm1 = parse(
         r#"
         model Post {
             id: String
@@ -47,13 +48,12 @@ fn add_UpdateModel_to_existing_schema() {
     );
     let dm2 = parse(
         r#"
-        embed Post {
+        model Post {
             id: String
         }
+        @embedded
     "#,
     );
-
-    let dm2 = Schema::empty();
 
     test(dm1, dm2);
 }

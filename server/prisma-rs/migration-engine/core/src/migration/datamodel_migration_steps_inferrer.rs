@@ -26,19 +26,23 @@ impl<'a> DataModelMigrationStepsInferrerImpl<'a> {
         let mut result: Vec<MigrationStep> = Vec::new();
         let models_to_create = self.models_to_create();
         let models_to_delete = self.models_to_delete();
+        let models_to_update = self.models_to_update();
         let fields_to_create = self.fields_to_create();
         let fields_to_delete = self.fields_to_delete(&models_to_delete);
         let fields_to_update = self.fields_to_update();
         let enums_to_create = self.enums_to_create();
         let enums_to_delete = self.enums_to_delete();
+        let enums_to_update = self.enums_to_update();
 
         result.append(&mut Self::wrap_as_step(models_to_create, MigrationStep::CreateModel));
         result.append(&mut Self::wrap_as_step(models_to_delete, MigrationStep::DeleteModel));
+        result.append(&mut Self::wrap_as_step(models_to_update, MigrationStep::UpdateModel));
         result.append(&mut Self::wrap_as_step(fields_to_create, MigrationStep::CreateField));
         result.append(&mut Self::wrap_as_step(fields_to_delete, MigrationStep::DeleteField));
         result.append(&mut Self::wrap_as_step(fields_to_update, MigrationStep::UpdateField));
         result.append(&mut Self::wrap_as_step(enums_to_create, MigrationStep::CreateEnum));
         result.append(&mut Self::wrap_as_step(enums_to_delete, MigrationStep::DeleteEnum));
+        result.append(&mut Self::wrap_as_step(enums_to_update, MigrationStep::UpdateEnum));
         result
     }
 
@@ -55,6 +59,24 @@ impl<'a> DataModelMigrationStepsInferrerImpl<'a> {
             }
         }
 
+        result
+    }
+
+    fn models_to_update(&self) -> Vec<UpdateModel> {
+        let mut result = Vec::new();
+        for previous_model in self.previous.models() {
+            if let Some(next_model) = self.next.find_model(&previous_model.name) {
+                let step = UpdateModel {
+                    name: next_model.name.clone(),
+                    new_name: None,
+                    db_name: Self::diff(&previous_model.database_name, &next_model.database_name),
+                    embedded: Self::diff(&previous_model.is_embedded, &next_model.is_embedded),
+                };
+                if step.is_any_option_set() {
+                    result.push(step);
+                }
+            }
+        }
         result
     }
 
@@ -186,6 +208,24 @@ impl<'a> DataModelMigrationStepsInferrerImpl<'a> {
             }
         }
 
+        result
+    }
+
+    fn enums_to_update(&self) -> Vec<UpdateEnum> {
+        let mut result = Vec::new();
+        for previous_enum in self.previous.enums() {
+            if let Some(next_enum) = self.next.find_enum(&previous_enum.name) {
+                let step = UpdateEnum {
+                    name: next_enum.name.clone(),
+                    new_name: None,
+                    db_name: Self::diff(&previous_enum.database_name, &next_enum.database_name),
+                    values: Self::diff(&previous_enum.values, &next_enum.values),
+                };
+                if step.is_any_option_set() {
+                    result.push(step);
+                }
+            }
+        }
         result
     }
 
