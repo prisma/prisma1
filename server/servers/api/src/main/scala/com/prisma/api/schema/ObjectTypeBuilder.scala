@@ -6,6 +6,7 @@ import com.prisma.api.mutations.BatchPayload
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
+import com.prisma.api.schema.FilterHelper.LogicalOpt.transform
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.ConnectorCapability.EmbeddedScalarListsCapability
@@ -189,7 +190,7 @@ class ObjectTypeBuilder(
     }
 
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    val filterOpt                              = rawFilterOpt.map(FilterHelper.generateFilterElement(_, model, isSubscriptionFilter))
+    val filterOpt                              = rawFilterOpt.map(FilterHelper.getFilterAst(_, model, isSubscriptionFilter))
     val skipOpt                                = ctx.argOpt[Int]("skip")
     val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
     val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name).map(convertCursorToGcValue)
@@ -279,6 +280,75 @@ class ObjectTypeBuilder(
 }
 
 object FilterHelper {
+
+  def getFilterAst(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
+    val initial = generateFilterElement(input, model, isSubscriptionFilter)
+
+    optimizeFilter(initial)
+  }
+
+  def optimizeFilter(filter: Filter): Filter = {
+    val one = LogicalOpt.transform(filter)
+    val two = InlineOpt.transform(one)
+    two
+  }
+
+  trait QueryOptimizer {
+    def transform(filter: Filter): Filter
+  }
+
+  object LogicalOpt extends QueryOptimizer {
+    override def transform(filter: Filter): Filter = {
+      filter match {
+        case AndFilter(filters) if filters.length == 1   => transform(filters.head)
+        case AndFilter(filters)                          => AndFilter(filters.map(transform))
+        case OrFilter(filters) if filters.length == 1    => transform(filters.head)
+        case OrFilter(filters)                           => OrFilter(filters.map(transform))
+        case NotFilter(filters)                          => NotFilter(filters.map(transform))
+        case RelationFilter(rf, nestedFilter, condition) => RelationFilter(rf, transform(nestedFilter), condition)
+        case x                                           => x
+      }
+    }
+  }
+
+  object InlineOpt extends QueryOptimizer {
+
+    //this does not yet handle
+    override def transform(filter: Filter): Filter = {
+      filter match {
+        case AndFilter(filters) => AndFilter(filters.map(transform))
+        case OrFilter(filters)  => OrFilter(filters.map(transform))
+        case NotFilter(filters) => NotFilter(filters.map(transform))
+        case RelationFilter(rf, ScalarFilter(sf, scalarCondition), _) if rf.relationIsInlinedInParent && !rf.isList && sf.isId =>
+          ScalarFilter(rf.scalarCopy, scalarCondition)
+        case RelationFilter(rf, nestedFilter, cond) => RelationFilter(rf, transform(nestedFilter), cond)
+        case x: ScalarFilter                        => x
+        case x: ScalarListFilter                    => x
+        case x: OneRelationIsNullFilter             => x
+        case x                                      => x
+      }
+    }
+  }
+
+//  object LogicalOpt extends QueryOptimizer {
+//    override def transform(filter: Filter): Filter = {
+//      filter match {
+//        case AndFilter(filters) =>
+//          filters match {
+//            case _ if filters.nonEmpty =>
+//              val f1 = filters.collectFirst {
+//                case rf: RelationFilter =>
+//              }
+//              val (filter, others) = (filters.head, filters.tail)
+//              val similarFilter    = others.find(f => f.con)
+//              AndFilter(Vector.empty)
+//            case _ => filter
+//          }
+//        case _ => filter
+//      }
+//    }
+//  }
+
   def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
     val filterArguments = new FilterArguments(model, isSubscriptionFilter)
 

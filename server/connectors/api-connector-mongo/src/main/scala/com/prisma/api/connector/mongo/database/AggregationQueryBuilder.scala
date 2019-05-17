@@ -211,8 +211,8 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
 
   //------------------------------Sort Filters - Join Relations Last --------------------------------
   private def sortFilters(filters: Seq[Filter]): Seq[Filter] = {
-    val withRelationFilter    = filters.collect { case x if needsAggregation(Some(x))  => x }
-    val withoutRelationFilter = filters.collect { case x if !needsAggregation(Some(x)) => x }
+    val withRelationFilter    = filters.collect { case x if needsAggregation(x)  => x }
+    val withoutRelationFilter = filters.collect { case x if !needsAggregation(x) => x }
 
     withoutRelationFilter ++ withRelationFilter
   }
