@@ -31,6 +31,13 @@ impl Schema {
         }
     }
 
+    pub fn has_enum(&self, name: &str) -> bool {
+        match self.find_enum(name) {
+            Some(_) => true,
+            None => false,
+        }
+    }
+
     pub fn add_enum(&mut self, en: Enum) {
         self.enums.push(en);
     }

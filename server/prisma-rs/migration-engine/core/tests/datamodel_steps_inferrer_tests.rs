@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 
-use datamodel::dml::*;
-use datamodel::validator::Validator;
+use datamodel::{dml::*, parse};
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
 
@@ -16,7 +15,7 @@ fn infer_CreateModel_if_it_does_not_exist_yet() {
     "#,
     );
 
-    let steps = infer(dm1, dm2);
+    let steps = infer(&dm1, &dm2);
     let expected = vec![
         MigrationStep::CreateModel(CreateModel {
             name: "Test".to_string(),
@@ -54,7 +53,7 @@ fn infer_DeleteModel() {
     );
     let dm2 = Schema::empty();
 
-    let steps = infer(dm1, dm2);
+    let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::DeleteModel(DeleteModel {
         name: "Test".to_string(),
     })];
@@ -74,13 +73,13 @@ fn infer_UpdateModel() {
     );
     let dm2 = parse(
         r#"
-        embed Post {
+        type Post @embedded {
             id: String
         }
     "#,
     );
 
-    let steps = infer(dm1, dm2);
+    let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::UpdateModel(UpdateModel {
         name: "Test".to_string(),
         new_name: None,
@@ -108,7 +107,7 @@ fn infer_CreateField_if_it_does_not_exist_yet() {
     "#,
     );
 
-    let steps = infer(dm1, dm2);
+    let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::CreateField(CreateField {
         model: "Test".to_string(),
         name: "field".to_string(),
@@ -150,7 +149,7 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
     "#,
     );
 
-    let steps = infer(dm1, dm2);
+    let steps = infer(&dm1, &dm2);
     let expected = vec![
         MigrationStep::CreateField(CreateField {
             model: "Blog".to_string(),
@@ -210,7 +209,7 @@ fn infer_DeleteField() {
     "#,
     );
 
-    let steps = infer(dm1, dm2);
+    let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::DeleteField(DeleteField {
         model: "Test".to_string(),
         name: "field".to_string(),
@@ -237,7 +236,7 @@ fn infer_UpdateField_simple() {
     "#,
     );
 
-    let steps = infer(dm1, dm2);
+    let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::UpdateField(UpdateField {
         model: "Test".to_string(),
         name: "field".to_string(),
@@ -255,19 +254,18 @@ fn infer_UpdateField_simple() {
 }
 
 #[test]
-#[ignore]
 fn infer_CreateEnum() {
     let dm1 = Schema::empty();
     let dm2 = parse(
         r#"
         enum Test {
-            A,
+            A
             B
         }
     "#,
     );
 
-    let steps = infer(dm1, dm2);
+    let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::CreateEnum(CreateEnum {
         name: "Test".to_string(),
         db_name: None,
@@ -276,16 +274,26 @@ fn infer_CreateEnum() {
     assert_eq!(steps, expected);
 }
 
-// TODO: we will need this in a lot of test files. Extract it.
-fn parse(datamodel_string: &'static str) -> Schema {
-    let ast = datamodel::parser::parse(datamodel_string).unwrap();
-    // TODO: this would need capabilities
-    // TODO: Special directives are injected via EmptyAttachmentValidator.
-    let validator = Validator::new();
-    validator.validate(&ast).unwrap()
+#[test]
+fn infer_DeleteEnum() {
+    let dm1 = parse(
+        r#"
+        enum Test {
+            A
+            B
+        }
+    "#,
+    );
+    let dm2 = Schema::empty();
+
+    let steps = infer(&dm1, &dm2);
+    let expected = vec![MigrationStep::DeleteEnum(DeleteEnum {
+        name: "Test".to_string(),
+    })];
+    assert_eq!(steps, expected);
 }
 
-fn infer(dm1: Schema, dm2: Schema) -> Vec<MigrationStep> {
+fn infer(dm1: &Schema, dm2: &Schema) -> Vec<MigrationStep> {
     let inferrer = DataModelMigrationStepsInferrerImplWrapper {};
-    inferrer.infer(dm1, dm2)
+    inferrer.infer(&dm1, &dm2)
 }
