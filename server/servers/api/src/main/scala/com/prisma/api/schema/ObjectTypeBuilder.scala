@@ -190,7 +190,7 @@ class ObjectTypeBuilder(
     }
 
     val rawFilterOpt: Option[Map[String, Any]] = ctx.argOpt[Map[String, Any]]("where")
-    val filterOpt                              = rawFilterOpt.map(FilterHelper.getFilterAst(_, model, isSubscriptionFilter))
+    val filterOpt                              = rawFilterOpt.map(FilterHelper.getUnoptimizedFilterAst(_, model, isSubscriptionFilter))
     val skipOpt                                = ctx.argOpt[Int]("skip")
     val orderByOpt                             = ctx.argOpt[OrderBy]("orderBy")
     val afterOpt                               = ctx.argOpt[String](IdBasedConnection.Args.After.name).map(convertCursorToGcValue)
@@ -287,6 +287,10 @@ object FilterHelper {
     optimizeFilter(initial)
   }
 
+  def getUnoptimizedFilterAst(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
+    generateFilterElement(input, model, isSubscriptionFilter)
+  }
+
   def optimizeFilter(filter: Filter): Filter = {
     val one = LogicalOpt.transform(filter)
     val two = InlineOpt.transform(one)
@@ -313,7 +317,7 @@ object FilterHelper {
 
   object InlineOpt extends QueryOptimizer {
 
-    //this does not yet handle
+    //For Mongo this could also handle rf_some{id: "id"} => ScalarListFilter(ScalarListField, ListContains("id"))
     override def transform(filter: Filter): Filter = {
       filter match {
         case AndFilter(filters) => AndFilter(filters.map(transform))
@@ -322,15 +326,12 @@ object FilterHelper {
         case RelationFilter(rf, ScalarFilter(sf, scalarCondition), _) if rf.relationIsInlinedInParent && !rf.isList && sf.isId =>
           ScalarFilter(rf.scalarCopy, scalarCondition)
         case RelationFilter(rf, nestedFilter, cond) => RelationFilter(rf, transform(nestedFilter), cond)
-        case x: ScalarFilter                        => x
-        case x: ScalarListFilter                    => x
-        case x: OneRelationIsNullFilter             => x
         case x                                      => x
       }
     }
   }
 
-//  object LogicalOpt extends QueryOptimizer {
+//  object MongoBugOpt extends QueryOptimizer {
 //    override def transform(filter: Filter): Filter = {
 //      filter match {
 //        case AndFilter(filters) =>
