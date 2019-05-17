@@ -1,6 +1,5 @@
 use datamodel::*;
 use migration_connector::steps::*;
-use nullable::Nullable;
 
 pub trait DataModelMigrationStepsInferrer {
     fn infer(&self, previous: Schema, next: Schema) -> Vec<MigrationStep>;
@@ -140,12 +139,12 @@ impl DataModelMigrationStepsInferrerImpl {
                         new_name: None,
                         tpe: Self::diff(&p.field_type, &n.field_type),
                         arity: Self::diff(&p.arity, &n.arity),
-                        db_name: Self::diff_nullable(&p.database_name, &n.database_name),
+                        db_name: Self::diff(&p.database_name, &n.database_name),
                         is_created_at: None,
                         is_updated_at: None,
-                        id: None,
-                        default: Self::diff_nullable(&p.default_value, &n.default_value),
-                        scalar_list: Self::diff_nullable(&p.scalar_list_strategy, &n.scalar_list_strategy),
+                        id_info: None,
+                        default: Self::diff(&p.default_value, &n.default_value),
+                        scalar_list: Self::diff(&p.scalar_list_strategy, &n.scalar_list_strategy),
                     };
                     if step.is_any_option_set() {
                         result.push(step);
@@ -161,17 +160,6 @@ impl DataModelMigrationStepsInferrerImpl {
             None
         } else {
             Some(updated.clone())
-        }
-    }
-
-    fn diff_nullable<T: PartialEq + Clone>(current: &Option<T>, updated: &Option<T>) -> Option<Nullable<T>> {
-        if current == updated {
-            None
-        } else {
-            match updated {
-                None => Some(Nullable::Null),
-                Some(x) => Some(Nullable::NotNull(x.clone())),
-            }
         }
     }
 

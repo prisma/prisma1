@@ -4,7 +4,6 @@ use datamodel::dml::*;
 use datamodel::validator::Validator;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
-use nullable::*;
 
 #[test]
 fn infer_CreateModel_if_it_does_not_exist_yet() {
@@ -33,7 +32,10 @@ fn infer_CreateModel_if_it_does_not_exist_yet() {
             is_created_at: None,
             is_updated_at: None,
             is_unique: false,
-            id: Some(IdInfo{ strategy: IdStrategy::Auto, sequence: None}),
+            id: Some(IdInfo {
+                strategy: IdStrategy::Auto,
+                sequence: None,
+            }),
             default: None,
             scalar_list: None,
         }),
@@ -245,8 +247,8 @@ fn infer_UpdateField_simple() {
         db_name: None,
         is_created_at: None,
         is_updated_at: None,
-        id: None,
-        default: Some(Nullable::NotNull(Value::Boolean(false))),
+        id_info: None,
+        default: Some(Some(Value::Boolean(false))),
         scalar_list: None,
     })];
     assert_eq!(steps, expected);
@@ -268,6 +270,7 @@ fn infer_CreateEnum() {
     let steps = infer(dm1, dm2);
     let expected = vec![MigrationStep::CreateEnum(CreateEnum {
         name: "Test".to_string(),
+        db_name: None,
         values: vec!["A".to_string(), "B".to_string()],
     })];
     assert_eq!(steps, expected);

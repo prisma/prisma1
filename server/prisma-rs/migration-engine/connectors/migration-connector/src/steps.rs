@@ -1,5 +1,5 @@
 use datamodel::*;
-use nullable::Nullable;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
 #[serde(tag = "stepType")]
@@ -17,6 +17,15 @@ pub enum MigrationStep {
 
 pub trait WithDbName {
     fn db_name(&self) -> String;
+}
+
+// Deserializes the cases undefined, null and Some(T) into an Option<Option<T>>
+fn some_option<'de, T, D>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    Option::<T>::deserialize(deserializer).map(Some)
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Hash, Clone)]
@@ -38,12 +47,8 @@ pub struct UpdateModel {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub new_name: Option<String>,
 
-    #[serde(
-        default,
-        skip_serializing_if = "Option::is_none",
-        deserialize_with = "nullable::optional_nullable_deserialize"
-    )]
-    pub db_name: Option<Nullable<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub db_name: Option<Option<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub embedded: Option<bool>,
@@ -113,8 +118,8 @@ pub struct UpdateField {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub arity: Option<FieldArity>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub db_name: Option<Nullable<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub db_name: Option<Option<String>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_created_at: Option<bool>,
@@ -122,14 +127,14 @@ pub struct UpdateField {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_updated_at: Option<bool>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub id: Option<Nullable<String>>, // fixme: change to behaviour
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub id_info: Option<Option<IdInfo>>, // fixme: change to behaviour
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub default: Option<Nullable<Value>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub default: Option<Option<Value>>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub scalar_list: Option<Nullable<ScalarListStrategy>>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub scalar_list: Option<Option<ScalarListStrategy>>,
 }
 
 impl UpdateField {
@@ -139,7 +144,7 @@ impl UpdateField {
             || self.db_name.is_some()
             || self.is_created_at.is_some()
             || self.is_updated_at.is_some()
-            || self.id.is_some()
+            || self.id_info.is_some()
             || self.default.is_some()
             || self.scalar_list.is_some()
     }
@@ -157,6 +162,17 @@ pub struct DeleteField {
 pub struct CreateEnum {
     pub name: String,
     pub values: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub db_name: Option<String>,
+}
+
+impl WithDbName for CreateEnum {
+    fn db_name(&self) -> String {
+        match self.db_name {
+            Some(ref db_name) => db_name.clone(),
+            None => self.name.clone(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
@@ -169,6 +185,9 @@ pub struct UpdateEnum {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub values: Option<Vec<String>>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "some_option")]
+    pub db_name: Option<Option<String>>,
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
