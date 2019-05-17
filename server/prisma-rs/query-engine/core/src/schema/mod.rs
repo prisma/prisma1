@@ -1,10 +1,12 @@
 #![warn(warnings)]
 
-mod builder;
+mod builders;
+mod capability;
 mod query_schema;
 mod utils;
 
-pub use builder::*;
+pub use builders::*;
+pub use capability::*;
 pub use query_schema::*;
 pub use utils::*;
 
