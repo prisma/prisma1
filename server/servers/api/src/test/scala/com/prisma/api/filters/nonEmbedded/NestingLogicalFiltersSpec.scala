@@ -118,7 +118,8 @@ class NestingLogicalFiltersSpec extends FlatSpec with Matchers with ApiSpecBase 
                    |    name
                    |  }
                    |}""",
-      project
+      project,
+      dataContains = """{"q1":[{"name":"blog"}]}"""
     )
 
     server.query(

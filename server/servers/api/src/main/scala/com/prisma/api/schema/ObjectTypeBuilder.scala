@@ -6,7 +6,6 @@ import com.prisma.api.mutations.BatchPayload
 import com.prisma.api.resolver.DeferredTypes._
 import com.prisma.api.resolver.{IdBasedConnection, IdBasedConnectionDefinition}
 import com.prisma.api.schema.CustomScalarTypes.{DateTimeType, JsonType, UUIDType}
-import com.prisma.api.schema.FilterHelper.LogicalOpt.transform
 import com.prisma.gc_values._
 import com.prisma.shared.models
 import com.prisma.shared.models.ConnectorCapability.EmbeddedScalarListsCapability
@@ -207,7 +206,7 @@ class ObjectTypeBuilder(
     val item: PrismaNode = unwrapDataItemFromContext(ctx)
 
     field match {
-      case f: ScalarField if f.isList => //Fixme have the way to resolve the field on the field itself
+      case f: ScalarField if f.isList =>
         if (capabilities.has(EmbeddedScalarListsCapability)) item.data.map(field.name).value else ScalarListDeferred(model, f, item.id)
 
       case f: ScalarField if !f.isList =>
@@ -292,9 +291,10 @@ object FilterHelper {
   }
 
   def optimizeFilter(filter: Filter): Filter = {
-    val one = LogicalOpt.transform(filter)
-    val two = InlineOpt.transform(one)
-    two
+    val one   = LogicalOpt.transform(filter)
+    val two   = InlineOpt.transform(one)
+    val three = MongoBugOpt.transform(one)
+    three
   }
 
   trait QueryOptimizer {
@@ -331,24 +331,18 @@ object FilterHelper {
     }
   }
 
-//  object MongoBugOpt extends QueryOptimizer {
-//    override def transform(filter: Filter): Filter = {
-//      filter match {
-//        case AndFilter(filters) =>
-//          filters match {
-//            case _ if filters.nonEmpty =>
-//              val f1 = filters.collectFirst {
-//                case rf: RelationFilter =>
-//              }
-//              val (filter, others) = (filters.head, filters.tail)
-//              val similarFilter    = others.find(f => f.con)
-//              AndFilter(Vector.empty)
-//            case _ => filter
-//          }
-//        case _ => filter
-//      }
-//    }
-//  }
+  object MongoBugOpt extends QueryOptimizer {
+
+    override def transform(filter: Filter): Filter = {
+      filter match {
+        case AndFilter(
+            Vector(RelationFilter(rf1, ScalarFilter(sf1, cond1), AtLeastOneRelatedNode), RelationFilter(rf2, ScalarFilter(sf2, cond2), AtLeastOneRelatedNode)))
+            if rf1 == rf2 && sf1 == sf2 && cond1.sameAs(cond2) =>
+          RelationFilter(rf1, OrFilter(Vector(ScalarFilter(sf1, cond1), ScalarFilter(sf1, cond2))), AtLeastOneRelatedNode)
+        case _ => filter
+      }
+    }
+  }
 
   def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
     val filterArguments = new FilterArguments(model, isSubscriptionFilter)

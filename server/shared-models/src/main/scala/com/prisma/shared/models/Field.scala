@@ -207,15 +207,6 @@ case class RelationField(
   }
 
   def isRelationWithNameAndSide(relationName: String, side: RelationSide.Value): Boolean = relation.name == relationName && this.relationSide == side
-//
-//  def scalarCopy: ScalarField = {
-//    model.idField_!.copy(
-//      name = this.name,
-//      typeIdentifier = this.relatedModel_!.idField_!.typeIdentifier,
-//      isList = this.isList,
-//      manifestation = this.relation.inlineManifestation.map(x => FieldManifestation(x.referencingColumn))
-//    )
-//  }
 
   def scalarCopy: ScalarField = {
     model.idField_!.copy(
