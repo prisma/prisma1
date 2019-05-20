@@ -1,18 +1,13 @@
 use crate::{ast, dml};
 
-pub mod argument;
 pub mod directive;
-pub mod value;
 
+use crate::common::value::ValueValidator;
+use crate::dml::fromstr::FromStrAndSpan;
 use crate::errors::{ErrorCollection, ValidationError};
-use directive::builtin::{
-    new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives, DirectiveListValidator,
-};
-use value::ValueValidator;
-
-pub trait DirectiveSource<T> {
-    fn get_directives(validator: &mut DirectiveListValidator<T>);
-}
+use crate::source;
+use directive::builtin::{new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives};
+use directive::DirectiveListValidator;
 
 // TODO: Naming
 pub struct Validator {
@@ -22,12 +17,30 @@ pub struct Validator {
 }
 
 impl Validator {
-    pub fn new() -> Self {
+    pub fn new() -> Validator {
         Validator {
             field_directives: new_builtin_field_directives(),
             model_directives: new_builtin_model_directives(),
             enum_directives: new_builtin_enum_directives(),
         }
+    }
+
+    pub fn with_sources(sources: &Vec<Box<source::Source>>) -> Validator {
+        let mut validator = Validator::new();
+
+        for source in sources {
+            validator
+                .enum_directives
+                .add_all_scoped(source.get_enum_directives(), source.name());
+            validator
+                .field_directives
+                .add_all_scoped(source.get_field_directives(), source.name());
+            validator
+                .model_directives
+                .add_all_scoped(source.get_model_directives(), source.name());
+        }
+
+        return validator;
     }
 
     pub fn validate(&self, ast_schema: &ast::Schema) -> Result<dml::Schema, ErrorCollection> {
@@ -36,14 +49,15 @@ impl Validator {
 
         for ast_obj in &ast_schema.models {
             match ast_obj {
-                ast::ModelOrEnum::Enum(en) => match self.validate_enum(&en) {
+                ast::Top::Enum(en) => match self.validate_enum(&en) {
                     Ok(en) => schema.add_enum(en),
                     Err(mut err) => errors.append(&mut err),
                 },
-                ast::ModelOrEnum::Model(ty) => match self.validate_model(&ty, ast_schema) {
+                ast::Top::Model(ty) => match self.validate_model(&ty, ast_schema) {
                     Ok(md) => schema.add_model(md),
                     Err(mut err) => errors.append(&mut err),
                 },
+                ast::Top::Source(_) => { /* Source blocks are explicitely ignored by the validator */ }
             }
         }
 
@@ -139,30 +153,23 @@ impl Validator {
         span: &ast::Span,
         ast_schema: &ast::Schema,
     ) -> Result<dml::FieldType, ValidationError> {
-        match type_name {
-            "ID" => Ok(dml::FieldType::Base(dml::ScalarType::Int)),
-            "Int" => Ok(dml::FieldType::Base(dml::ScalarType::Int)),
-            "Float" => Ok(dml::FieldType::Base(dml::ScalarType::Float)),
-            "Decimal" => Ok(dml::FieldType::Base(dml::ScalarType::Decimal)),
-            "Boolean" => Ok(dml::FieldType::Base(dml::ScalarType::Boolean)),
-            "String" => Ok(dml::FieldType::Base(dml::ScalarType::String)),
-            "DateTime" => Ok(dml::FieldType::Base(dml::ScalarType::DateTime)),
+        if let Ok(scalar_type) = dml::ScalarType::from_str_and_span(type_name, span) {
+            Ok(dml::FieldType::Base(scalar_type))
+        } else {
             // Distinguish between relation and enum.
-            _ => {
-                for model in &ast_schema.models {
-                    match &model {
-                        // TODO: Get primary key field and hook up String::from.
-                        ast::ModelOrEnum::Model(model) if model.name == *type_name => {
-                            return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&type_name)))
-                        }
-                        ast::ModelOrEnum::Enum(en) if en.name == *type_name => {
-                            return Ok(dml::FieldType::Enum(String::from(type_name)))
-                        }
-                        _ => {}
+            for model in &ast_schema.models {
+                match &model {
+                    // TODO: Get primary key field and hook up String::from.
+                    ast::Top::Model(model) if model.name == *type_name => {
+                        return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&type_name)))
                     }
+                    ast::Top::Enum(en) if en.name == *type_name => {
+                        return Ok(dml::FieldType::Enum(String::from(type_name)))
+                    }
+                    _ => {}
                 }
-                Err(ValidationError::new_type_not_found_error(type_name, span))
             }
+            Err(ValidationError::new_type_not_found_error(type_name, span))
         }
     }
 }

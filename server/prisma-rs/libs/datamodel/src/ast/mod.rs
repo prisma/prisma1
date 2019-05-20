@@ -41,7 +41,7 @@ pub struct Comment {
 }
 
 #[derive(Debug)]
-pub struct DirectiveArgument {
+pub struct Argument {
     pub name: String,
     pub value: Value,
     pub span: Span,
@@ -67,7 +67,7 @@ pub fn describe_value_type(val: &Value) -> &'static str {
 #[derive(Debug)]
 pub struct Directive {
     pub name: String,
-    pub arguments: Vec<DirectiveArgument>,
+    pub arguments: Vec<Argument>,
     pub span: Span,
 }
 
@@ -145,13 +145,31 @@ impl WithComments for Model {
 }
 
 #[derive(Debug)]
-pub enum ModelOrEnum {
+pub struct SourceConfig {
+    pub name: String,
+    // Top level config
+    pub properties: Vec<Argument>,
+    // Inner properties block
+    pub detail_configuration: Vec<Argument>,
+    pub comments: Vec<Comment>,
+    pub span: Span,
+}
+
+impl WithComments for SourceConfig {
+    fn comments(&self) -> &Vec<Comment> {
+        &self.comments
+    }
+}
+
+#[derive(Debug)]
+pub enum Top {
     Enum(Enum),
     Model(Model),
+    Source(SourceConfig),
 }
 
 #[derive(Debug)]
 pub struct Schema {
-    pub models: Vec<ModelOrEnum>,
+    pub models: Vec<Top>,
     pub comments: Vec<Comment>,
 }

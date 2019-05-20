@@ -1,21 +1,15 @@
 use crate::ast;
-use crate::dml::validator::value;
+use crate::common::value;
 use crate::errors::ValidationError;
 
-pub struct DirectiveArguments<'a> {
-    directive_name: String,
-    arguments: &'a Vec<ast::DirectiveArgument>,
+pub struct Arguments<'a> {
+    arguments: &'a Vec<ast::Argument>,
     span: ast::Span,
 }
 
-impl<'a> DirectiveArguments<'a> {
-    pub fn new(
-        arguments: &'a Vec<ast::DirectiveArgument>,
-        directive_name: &str,
-        span: ast::Span,
-    ) -> DirectiveArguments<'a> {
-        DirectiveArguments {
-            directive_name: String::from(directive_name),
+impl<'a> Arguments<'a> {
+    pub fn new(arguments: &'a Vec<ast::Argument>, span: ast::Span) -> Arguments<'a> {
+        Arguments {
             arguments: arguments,
             span: span.clone(),
         }
@@ -33,11 +27,7 @@ impl<'a> DirectiveArguments<'a> {
                 });
             }
         }
-        return Err(ValidationError::new_argument_not_found_error(
-            name,
-            &self.directive_name,
-            &self.span,
-        ));
+        return Err(ValidationError::new_argument_not_found_error(name, &self.span));
     }
 
     pub fn default_arg(&self, name: &str) -> Result<value::ValueValidator, ValidationError> {

@@ -1,9 +1,5 @@
-use crate::ast;
 use crate::dml;
-use crate::dml::validator::argument::DirectiveArguments;
-use crate::dml::validator::directive::DirectiveValidator;
-use crate::errors::{ErrorCollection, ValidationError};
-
+use crate::validator::directive::DirectiveListValidator;
 use std::collections::HashMap;
 
 mod db;
@@ -15,56 +11,6 @@ mod relation;
 mod scalarlist;
 mod sequence;
 mod unique;
-
-// TODO: This should not be in the builtin mod.
-pub struct DirectiveListValidator<T> {
-    known_directives: HashMap<&'static str, Box<DirectiveValidator<T>>>,
-}
-
-impl<T> DirectiveListValidator<T> {
-    pub fn new() -> Self {
-        DirectiveListValidator {
-            known_directives: HashMap::new(),
-        }
-    }
-
-    pub fn add(&mut self, validator: Box<DirectiveValidator<T>>) {
-        let name = validator.directive_name();
-
-        if self.known_directives.contains_key(name) {
-            panic!("Duplicate directive definition: {:?}", name);
-        }
-
-        self.known_directives.insert(name, validator);
-    }
-
-    pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) -> Result<(), ErrorCollection> {
-        let mut errors = ErrorCollection::new();
-
-        for directive in ast.directives() {
-            match self.known_directives.get(directive.name.as_str()) {
-                Some(validator) => {
-                    if let Err(err) = validator.validate_and_apply(
-                        &DirectiveArguments::new(&directive.arguments, &directive.name, directive.span),
-                        t,
-                    ) {
-                        errors.push(err);
-                    }
-                }
-                None => errors.push(ValidationError::new_directive_not_known_error(
-                    &directive.name,
-                    &directive.span,
-                )),
-            };
-        }
-
-        if errors.has_errors() {
-            Err(errors)
-        } else {
-            Ok(())
-        }
-    }
-}
 
 pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
     let mut validator = DirectiveListValidator::<dml::Field> {

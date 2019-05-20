@@ -3,10 +3,18 @@ use colored::Colorize;
 
 #[derive(Debug, Fail, Clone)]
 pub enum ValidationError {
-    #[fail(display = "Argument {} is missing in directive @{}", argument_name, directive_name)]
-    ArgumentNotFound {
+    #[fail(display = "Argument {} is missing.", argument_name)]
+    ArgumentNotFound { argument_name: String, span: Span },
+    #[fail(display = "Argument {} is missing in directive @{}.", argument_name, directive_name)]
+    DirectiveArgumentNotFound {
         argument_name: String,
         directive_name: String,
+        span: Span,
+    },
+    #[fail(display = "Argument {} is missing in source block {}", argument_name, source_name)]
+    SourceArgumentNotFound {
+        argument_name: String,
+        source_name: String,
         span: Span,
     },
 
@@ -20,6 +28,9 @@ pub enum ValidationError {
     #[fail(display = "Directive not known: @{}", directive_name)]
     DirectiveNotKnownError { directive_name: String, span: Span },
 
+    #[fail(display = "Source not known: {}", source_name)]
+    SourceNotKnownError { source_name: String, span: Span },
+
     #[fail(display = "{} is not a valid value for {}.", raw_value, literal_type)]
     LiteralParseError {
         literal_type: String,
@@ -32,6 +43,9 @@ pub enum ValidationError {
         type_name
     )]
     TypeNotFoundError { type_name: String, span: Span },
+
+    #[fail(display = "Type {} is not a built-in type.", type_name)]
+    ScalarTypeNotFoundError { type_name: String, span: Span },
 
     #[fail(display = "{}", message)]
     ParserError { message: String, span: Span },
@@ -65,10 +79,29 @@ impl ValidationError {
         };
     }
 
-    pub fn new_argument_not_found_error(argument_name: &str, directive_name: &str, span: &Span) -> ValidationError {
+    pub fn new_argument_not_found_error(argument_name: &str, span: &Span) -> ValidationError {
         return ValidationError::ArgumentNotFound {
             argument_name: String::from(argument_name),
+            span: span.clone(),
+        };
+    }
+
+    pub fn new_directive_argument_not_found_error(
+        argument_name: &str,
+        directive_name: &str,
+        span: &Span,
+    ) -> ValidationError {
+        return ValidationError::DirectiveArgumentNotFound {
+            argument_name: String::from(argument_name),
             directive_name: String::from(directive_name),
+            span: span.clone(),
+        };
+    }
+
+    pub fn new_source_argument_not_found_error(argument_name: &str, source_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::SourceArgumentNotFound {
+            argument_name: String::from(argument_name),
+            source_name: String::from(source_name),
             span: span.clone(),
         };
     }
@@ -92,9 +125,22 @@ impl ValidationError {
             span: span.clone(),
         };
     }
+    pub fn new_scalar_type_not_found_error(type_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::ScalarTypeNotFoundError {
+            type_name: String::from(type_name),
+            span: span.clone(),
+        };
+    }
     pub fn new_directive_not_known_error(directive_name: &str, span: &Span) -> ValidationError {
         return ValidationError::DirectiveNotKnownError {
             directive_name: String::from(directive_name),
+            span: span.clone(),
+        };
+    }
+
+    pub fn new_source_not_known_error(source_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::SourceNotKnownError {
+            source_name: String::from(source_name),
             span: span.clone(),
         };
     }
@@ -124,9 +170,15 @@ impl ValidationError {
 
     pub fn span(&self) -> &Span {
         match self {
-            ValidationError::ArgumentNotFound {
+            ValidationError::ArgumentNotFound { argument_name: _, span } => span,
+            ValidationError::DirectiveArgumentNotFound {
                 argument_name: _,
                 directive_name: _,
+                span,
+            } => span,
+            ValidationError::SourceArgumentNotFound {
+                argument_name: _,
+                source_name: _,
                 span,
             } => span,
             ValidationError::DirectiveValidationError {
@@ -138,12 +190,14 @@ impl ValidationError {
                 directive_name: _,
                 span,
             } => span,
+            ValidationError::SourceNotKnownError { source_name: _, span } => span,
             ValidationError::LiteralParseError {
                 literal_type: _,
                 raw_value: _,
                 span,
             } => span,
             ValidationError::TypeNotFoundError { type_name: _, span } => span,
+            ValidationError::ScalarTypeNotFoundError { type_name: _, span } => span,
             ValidationError::ParserError { message: _, span } => span,
             ValidationError::TypeMismatchError {
                 expected_type: _,

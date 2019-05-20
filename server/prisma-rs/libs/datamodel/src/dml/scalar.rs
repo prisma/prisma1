@@ -1,3 +1,6 @@
+use crate::ast;
+use crate::dml::FromStrAndSpan;
+use crate::errors::ValidationError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -21,4 +24,19 @@ pub enum Value {
     String(String),
     DateTime(DateTime<Utc>),
     ConstantLiteral(String),
+}
+
+impl FromStrAndSpan for ScalarType {
+    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
+        match s {
+            "ID" => Ok(ScalarType::Int),
+            "Int" => Ok(ScalarType::Int),
+            "Float" => Ok(ScalarType::Float),
+            "Decimal" => Ok(ScalarType::Decimal),
+            "Boolean" => Ok(ScalarType::Boolean),
+            "String" => Ok(ScalarType::String),
+            "DateTime" => Ok(ScalarType::DateTime),
+            _ => Err(ValidationError::new_type_not_found_error(s, span)),
+        }
+    }
 }

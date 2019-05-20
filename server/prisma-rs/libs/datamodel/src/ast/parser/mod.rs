@@ -69,9 +69,9 @@ fn parse_directive_arg_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     };
 }
 
-fn parse_directive_default_arg(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<DirectiveArgument>) {
+fn parse_directive_default_arg(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<Argument>) {
     match_children! { token, current,
-        Rule::directive_argument_value => arguments.push(DirectiveArgument {
+        Rule::directive_argument_value => arguments.push(Argument {
             name: String::from(""),
             value: parse_directive_arg_value(&current),
             span: Span::from_pest(&current.as_span())
@@ -80,7 +80,7 @@ fn parse_directive_default_arg(token: &pest::iterators::Pair<'_, Rule>, argument
     };
 }
 
-fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgument {
+fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
     let mut name: Option<String> = None;
     let mut argument: Option<Value> = None;
 
@@ -91,7 +91,7 @@ fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgu
     };
 
     return match (name, argument) {
-        (Some(name), Some(value)) => DirectiveArgument {
+        (Some(name), Some(value)) => Argument {
             name: name,
             value: value,
             span: Span::from_pest(&token.as_span()),
@@ -103,7 +103,7 @@ fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> DirectiveArgu
     };
 }
 
-fn parse_directive_args(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<DirectiveArgument>) {
+fn parse_directive_args(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<Argument>) {
     match_children! { token, current,
         Rule::directive_argument => arguments.push(parse_directive_arg(&current)),
         _ => unreachable!("Encounterd impossible directive argument during parsing: {:?}", current.tokens())
@@ -112,10 +112,10 @@ fn parse_directive_args(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut
 
 fn parse_directive(token: &pest::iterators::Pair<'_, Rule>) -> Directive {
     let mut name: Option<String> = None;
-    let mut arguments: Vec<DirectiveArgument> = vec![];
+    let mut arguments: Vec<Argument> = vec![];
 
     match_children! { token, current,
-        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::directive_name => name = Some(current.as_str().to_string()),
         Rule::directive_arguments => parse_directive_args(&current, &mut arguments),
         Rule::directive_single_argument => parse_directive_default_arg(&current, &mut arguments),
         _ => unreachable!("Encounterd impossible directive during parsing: {:?}", current.tokens())
@@ -192,7 +192,6 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
         ),
     };
 }
-
 // Model parsing
 fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
     let mut name: Option<String> = None;
@@ -241,7 +240,69 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
             comments: vec![],
         },
         _ => panic!(
-            "Encounterd impossible enum declaration during parsing: {:?}",
+            "Encounterd impossible enum declaration during parsing, name is missing: {:?}",
+            token.as_str()
+        ),
+    };
+}
+
+fn parse_source_property(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
+    let mut name: Option<String> = None;
+    let mut value: Option<Value> = None;
+
+    match_children! { token, current,
+        Rule::identifier => name = Some(String::from(current.as_str())),
+        Rule::any_literal => value = Some(parse_literal(&current)),
+        _ => unreachable!("Encounterd impossible source property declaration during parsing: {:?}", current.tokens())
+    }
+
+    return match (name, value) {
+        (Some(name), Some(value)) => Argument {
+            name: name,
+            value: value,
+            span: Span::from_pest(&token.as_span()),
+        },
+        _ => panic!(
+            "Encounterd impossible source property declaration during parsing: {:?}",
+            token.as_str()
+        ),
+    };
+}
+
+fn parse_source_property_block(token: &pest::iterators::Pair<'_, Rule>) -> Vec<Argument> {
+    let mut properties: Vec<Argument> = vec![];
+
+    match_children! { token, current,
+        Rule::source_key_value => properties.push(parse_source_property(&current)),
+        _ => unreachable!("Encounterd impossible source property block declaration during parsing: {:?}", current.tokens())
+    }
+
+    return properties;
+}
+
+// Source parsing
+fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
+    let mut name: Option<String> = None;
+    let mut properties: Vec<Argument> = vec![];
+    let mut detail_configuration: Vec<Argument> = vec![];
+
+    match_children! { token, current,
+        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::source_key_value => properties.push(parse_source_property(&current)),
+        Rule::source_properties => detail_configuration = parse_source_property_block(&current),
+        _ => unreachable!("Encounterd impossible source declaration during parsing: {:?}", current.tokens())
+    }
+
+    return match name {
+        Some(name) => SourceConfig {
+            name,
+            properties,
+            detail_configuration,
+            comments: vec![],
+            span: Span::from_pest(&token.as_span()),
+        },
+        _ => panic!(
+            "Encounterd impossible source declaration during parsing, name is missing: {:?}",
             token.as_str()
         ),
     };
@@ -254,11 +315,12 @@ pub fn parse(datamodel_string: &str) -> Result<Schema, ValidationError> {
     match datamodel_result {
         Ok(mut datamodel_wrapped) => {
             let datamodel = datamodel_wrapped.next().unwrap();
-            let mut models: Vec<ModelOrEnum> = vec![];
+            let mut models: Vec<Top> = vec![];
 
             match_children! { datamodel, current,
-                Rule::model_declaration => models.push(ModelOrEnum::Model(parse_model(&current))),
-                Rule::enum_declaration => models.push(ModelOrEnum::Enum(parse_enum(&current))),
+                Rule::model_declaration => models.push(Top::Model(parse_model(&current))),
+                Rule::enum_declaration => models.push(Top::Enum(parse_enum(&current))),
+                Rule::source_block => models.push(Top::Source(parse_source(&current))),
                 Rule::EOI => {},
                 _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
             }
