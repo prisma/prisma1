@@ -33,6 +33,7 @@ pub trait DirectiveValidator<T> {
 
 pub struct DirectiveScope<T> {
     inner: Box<DirectiveValidator<T>>,
+    #[allow(dead_code)]
     scope: String,
     name: String,
 }
