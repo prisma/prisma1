@@ -20,9 +20,9 @@ object ConnectorLoader {
     databaseConfig.connector match {
       case "mysql"                    => MySqlApiConnector(databaseConfig, drivers(SupportedDrivers.MYSQL))
       case "postgres"                 => PostgresApiConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
-      case "mysql-native"             => ApiConnectorNative(databaseConfig, MysqlBackup(drivers(SupportedDrivers.MYSQL)))
+      case "mysql-native"             => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
       case "sqlite-native"            => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
-      case "postgres-native"          => ApiConnectorNative(databaseConfig, PostgresBackup(drivers(SupportedDrivers.POSTGRES)))
+      case "postgres-native"          => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
       case "native-integration-tests" => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
       case "sqlite"                   => SQLiteApiConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
       case "mongo"                    => MongoApiConnector(databaseConfig)
