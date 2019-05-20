@@ -3,6 +3,9 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate debug_stub_derive;
+
 mod builders;
 mod error;
 mod executor;

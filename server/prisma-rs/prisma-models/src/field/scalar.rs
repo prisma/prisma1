@@ -24,6 +24,9 @@ pub struct ScalarFieldTemplate {
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
+
+    #[serde(alias = "enum")]
+    pub internal_enum: Option<InternalEnum>,
 }
 
 #[derive(DebugStub)]
@@ -36,6 +39,7 @@ pub struct ScalarField {
     pub is_hidden: bool,
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
+    pub internal_enum: Option<InternalEnum>,
     pub behaviour: Option<FieldBehaviour>,
     #[debug_stub = "#ModelWeakRef#"]
     pub model: ModelWeakRef,
@@ -135,7 +139,11 @@ impl ScalarField {
     }
 
     pub fn as_column(&self) -> Column {
-        ((self.internal_data_model().db_name.as_str(), self.model().db_name()), self.db_name()).into()
+        (
+            (self.internal_data_model().db_name.as_str(), self.model().db_name()),
+            self.db_name(),
+        )
+            .into()
     }
 
     pub fn id_behaviour_clone(&self) -> Option<FieldBehaviour> {

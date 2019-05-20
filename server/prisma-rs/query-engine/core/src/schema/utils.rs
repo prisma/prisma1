@@ -3,16 +3,17 @@ use prisma_models::{ModelRef, SortOrder};
 use std::sync::Arc;
 
 /// Object type convenience wrapper function.
-pub fn object_type<T>(name: T, fields: Vec<Field>) -> ObjectType
+pub fn object_type<T>(name: T, fields_fn: FieldsFn) -> ObjectType
 where
   T: Into<String>,
 {
   ObjectType {
     name: name.into(),
-    fields,
+    fields_fn,
   }
 }
 
+/// Enum type convenience wrapper function.
 pub fn enum_type<T>(name: T, values: Vec<EnumValue>) -> EnumType
 where
   T: Into<String>,
@@ -23,6 +24,7 @@ where
   }
 }
 
+/// Argument convenience wrapper function.
 pub fn argument<T>(name: T, arg_type: InputType) -> Argument
 where
   T: Into<String>,
@@ -30,6 +32,18 @@ where
   Argument {
     name: name.into(),
     argument_type: arg_type,
+  }
+}
+
+/// Field convenience wrapper function.
+pub fn field<T>(name: T, arguments: Vec<Argument>, field_type: OutputType) -> Field
+where
+  T: Into<String>,
+{
+  Field {
+    name: name.into(),
+    arguments,
+    field_type,
   }
 }
 
@@ -41,6 +55,7 @@ where
   prisma_inflector::default().pluralize(s.as_ref())
 }
 
+/// Lowercases first letter, essentially.
 pub fn camel_case<T>(s: T) -> String
 where
   T: Into<String>,

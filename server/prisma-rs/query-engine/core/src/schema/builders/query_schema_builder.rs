@@ -22,30 +22,33 @@ impl QuerySchemaBuilder {
 
   /// Builds the root query type.
   fn build_query_type(&self) -> ObjectType {
-    let non_embedded_models: Vec<&ModelRef> = self
+    let non_embedded_models: Vec<ModelRef> = self
       .internal_data_model
       .models()
       .iter()
       .filter(|m| !m.is_embedded)
+      .map(|m| Arc::clone(m))
       .collect();
 
-    let fields: Vec<Field> = non_embedded_models
-      .into_iter()
-      .filter_map(|m| {
-        Some(vec![
-          Self::all_items_field(Arc::clone(m)),
-          Self::single_item_field(Arc::clone(m)),
-        ])
-      })
-      .flatten()
-      .collect();
+    let fields_fn: FieldsFn = Box::new(|| {
+      non_embedded_models
+        .into_iter()
+        .filter_map(|m| {
+          Some(vec![
+            Self::all_items_field(Arc::clone(&m)),
+            Self::single_item_field(Arc::clone(&m)),
+          ])
+        })
+        .flatten()
+        .collect()
+    });
 
-    object_type("Query", fields)
+    object_type("Query", fields_fn)
   }
 
   /// Builds the root mutation type.
   fn build_mutation_type(&self) -> ObjectType {
-    object_type("Mutation", vec![])
+    object_type("Mutation", Box::new(|| vec![]))
   }
 
   /// Builds a "many" items field (e.g. users(args), posts(args), ...) for given model.

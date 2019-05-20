@@ -7,10 +7,19 @@ pub struct QuerySchema {
   pub mutation: ObjectType, // write(s)?
 }
 
-#[derive(Debug)]
+/// Fields evaluation function.
+pub type FieldsFn = Box<FnOnce() -> Vec<Field> + Send + Sync + 'static>;
+
+#[derive(DebugStub)]
 pub struct ObjectType {
   pub name: String,
-  pub fields: Vec<Field>,
+
+  /// Fields need to be lazy to break circular dependencies during query schema initialization.
+  /// E.g. Fields that initialize require other model object types to be calculated, which in turn might
+  /// require more. By first initializing the object types, then lazily evaluate the fields once needed,
+  /// this circle is broken.
+  #[debug_stub = "#FieldsFn#"]
+  pub fields_fn: FieldsFn,
 }
 
 #[derive(Debug)]
@@ -51,14 +60,40 @@ impl InputType {
     InputType::Opt(Box::new(containing))
   }
 
-  // pub fn enum(name: , )
-
   pub fn string() -> InputType {
     InputType::Scalar(ScalarType::String)
   }
 
   pub fn int() -> InputType {
     InputType::Scalar(ScalarType::Int)
+  }
+
+  pub fn float() -> OutputType {
+    OutputType::Scalar(ScalarType::Float)
+  }
+
+  pub fn boolean() -> OutputType {
+    OutputType::Scalar(ScalarType::Boolean)
+  }
+
+  pub fn enum_type() -> OutputType {
+    OutputType::Scalar(ScalarType::Enum)
+  }
+
+  pub fn date_time() -> OutputType {
+    OutputType::Scalar(ScalarType::DateTime)
+  }
+
+  pub fn json() -> OutputType {
+    OutputType::Scalar(ScalarType::Json)
+  }
+
+  pub fn uuid() -> OutputType {
+    OutputType::Scalar(ScalarType::UUID)
+  }
+
+  pub fn id() -> OutputType {
+    OutputType::Scalar(ScalarType::ID)
   }
 }
 
@@ -87,12 +122,43 @@ impl OutputType {
   pub fn int() -> OutputType {
     OutputType::Scalar(ScalarType::Int)
   }
+
+  pub fn float() -> OutputType {
+    OutputType::Scalar(ScalarType::Float)
+  }
+
+  pub fn boolean() -> OutputType {
+    OutputType::Scalar(ScalarType::Boolean)
+  }
+
+  pub fn date_time() -> OutputType {
+    OutputType::Scalar(ScalarType::DateTime)
+  }
+
+  pub fn json() -> OutputType {
+    OutputType::Scalar(ScalarType::Json)
+  }
+
+  pub fn uuid() -> OutputType {
+    OutputType::Scalar(ScalarType::UUID)
+  }
+
+  pub fn id() -> OutputType {
+    OutputType::Scalar(ScalarType::ID)
+  }
 }
 
 #[derive(Debug)]
 pub enum ScalarType {
   String,
   Int,
+  Float,
+  Boolean,
+  Enum,
+  DateTime,
+  Json,
+  UUID,
+  ID,
 }
 
 #[derive(Debug)]
@@ -119,11 +185,22 @@ impl EnumValue {
       value: SchemaEnumValues::OrderBy(OrderBy { field, sort_order }),
     }
   }
+
+  pub fn string<T>(name: T, value: String) -> Self
+  where
+    T: Into<String>,
+  {
+    EnumValue {
+      name: name.into(),
+      value: SchemaEnumValues::String(value),
+    }
+  }
 }
 
 #[derive(Debug)]
 enum SchemaEnumValues {
   OrderBy(OrderBy),
+  String(String),
 }
 
 impl From<EnumType> for OutputType {

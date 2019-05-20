@@ -72,6 +72,34 @@ impl Field {
             Field::Relation(ref rf) => rf.as_column(),
         }
     }
+
+    pub fn is_visible(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => !sf.is_hidden,
+            Field::Relation(ref rf) => !rf.is_hidden,
+        }
+    }
+
+    pub fn is_scalar(&self) -> bool {
+        match self {
+            Field::Scalar(_) => true,
+            Field::Relation(_) => false,
+        }
+    }
+
+    pub fn is_list(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => sf.is_list,
+            Field::Relation(ref rf) => rf.is_list,
+        }
+    }
+
+    pub fn is_required(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => sf.is_required,
+            Field::Relation(ref rf) => rf.is_required,
+        }
+    }
 }
 
 impl FieldTemplate {
@@ -88,6 +116,7 @@ impl FieldTemplate {
                     is_auto_generated: st.is_auto_generated,
                     manifestation: st.manifestation,
                     behaviour: st.behaviour,
+                    internal_enum: st.internal_enum,
                     model,
                 };
 
