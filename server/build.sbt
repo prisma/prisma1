@@ -303,6 +303,7 @@ lazy val apiConnectorNative = connectorProject("api-connector-native")
   .dependsOn(prismaRsBinding)
   .dependsOn(apiConnectorSQLite)
   .dependsOn(apiConnectorPostgres)
+  .dependsOn(apiConnectorMySql)
 
 
 // ##################

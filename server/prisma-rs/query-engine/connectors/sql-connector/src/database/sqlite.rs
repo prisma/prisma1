@@ -1,8 +1,11 @@
-use crate::{MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional};
-use chrono::{DateTime, Utc, NaiveDateTime};
+use crate::{
+    query_builder::RelatedNodesWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow,
+    Transaction, Transactional,
+};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
-    ast::{Query, Select},
+    ast::Query,
     visitor::{self, Visitor},
 };
 use r2d2_sqlite::SqliteConnectionManager;
@@ -25,6 +28,8 @@ pub struct Sqlite {
 }
 
 impl Transactional for Sqlite {
+    type RelatedNodesBuilder = RelatedNodesWithRowNumber;
+
     fn with_transaction<F, T>(&self, db: &str, f: F) -> SqlResult<T>
     where
         F: FnOnce(&mut Transaction) -> SqlResult<T>,
@@ -54,7 +59,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         Ok(Some(GraphqlId::Int(self.last_insert_rowid() as usize)))
     }
 
-    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
         let (sql, params) = dbg!(visitor::Sqlite::build(q));
 
         let mut stmt = self.prepare_cached(&sql)?;
@@ -62,7 +67,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         let mut result = Vec::new();
 
         while let Some(row) = rows.next()? {
-            result.push(row.to_prisma_row(idents)?);
+            result.push(row.to_sql_row(idents)?);
         }
 
         Ok(result)
@@ -103,7 +108,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
                         ValueRef::Integer(i) => Value::Number(Number::from(i)),
                         ValueRef::Real(f) => Value::Number(Number::from_f64(f).unwrap()),
                         ValueRef::Text(s) => Value::String(String::from(s)),
-                        ValueRef::Blob(b) => Value::String(String::from_utf8(b.to_vec()).unwrap()),
+                        ValueRef::Blob(b) => Value::String(String::from_utf8(b.to_vec())?),
                     };
 
                     object.insert(String::from(column.as_ref()), value);
@@ -137,7 +142,7 @@ impl FromSql for SqlId {
 }
 
 impl<'a> ToSqlRow for SqliteRow<'a> {
-    fn to_prisma_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
+    fn to_sql_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {

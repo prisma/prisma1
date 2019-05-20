@@ -1,5 +1,6 @@
 use crate::{
-    error::SqlError, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional,
+    error::SqlError, query_builder::RelatedNodesWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow,
+    ToSqlRow, Transaction, Transactional,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
@@ -11,7 +12,7 @@ use postgres::{
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
-    ast::{Query, Select},
+    ast::Query,
     visitor::{self, Visitor},
 };
 use r2d2_postgres::PostgresConnectionManager;
@@ -79,6 +80,8 @@ impl TryFrom<&ConnectionStringConfig> for PostgreSql {
 }
 
 impl Transactional for PostgreSql {
+    type RelatedNodesBuilder = RelatedNodesWithRowNumber;
+
     fn with_transaction<F, T>(&self, _: &str, f: F) -> SqlResult<T>
     where
         F: FnOnce(&mut Transaction) -> SqlResult<T>,
@@ -147,7 +150,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         Ok(id)
     }
 
-    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
         let (sql, params) = dbg!(visitor::Postgres::build(q));
         let params: Vec<&ToSql> = params.iter().map(|pv| pv as &ToSql).collect();
 
@@ -156,7 +159,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         let mut result = Vec::new();
 
         for row in rows {
-            result.push(row.to_prisma_row(idents)?);
+            result.push(row.to_sql_row(idents)?);
         }
 
         Ok(result)
@@ -358,7 +361,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
 }
 
 impl ToSqlRow for PostgresRow {
-    fn to_prisma_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
+    fn to_sql_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {

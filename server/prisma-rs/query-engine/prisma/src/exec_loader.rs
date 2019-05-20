@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 use std::sync::Arc;
 
 #[cfg(feature = "sql")]
-use sql_connector::{PostgreSql, SqlDatabase, Sqlite, Transactional};
+use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite, Transactional};
 
 pub fn load(config: &PrismaConfig) -> Executor {
     match config.databases.get("default") {
@@ -13,7 +13,13 @@ pub fn load(config: &PrismaConfig) -> Executor {
 
         #[cfg(feature = "sql")]
         Some(config) if config.connector() == "postgres-native" => postgres(config),
-        _ => panic!("Database connector is not supported. Supported"),
+
+        #[cfg(feature = "sql")]
+        Some(config) if config.connector() == "mysql-native" => mysql(config),
+
+        Some(config) => panic!("Database connector for {} is not supported.", config.connector()),
+
+        None => panic!("Default database not set."),
     }
 }
 
@@ -36,6 +42,14 @@ fn sqlite(config: &FileConfig) -> Executor {
 #[cfg(feature = "sql")]
 fn postgres(config: &PrismaDatabase) -> Executor {
     let postgres = PostgreSql::try_from(config).unwrap();
+    let connector = SqlDatabase::new(postgres);
+
+    sql_executor("".into(), connector)
+}
+
+#[cfg(feature = "sql")]
+fn mysql(config: &PrismaDatabase) -> Executor {
+    let postgres = Mysql::try_from(config).unwrap();
     let connector = SqlDatabase::new(postgres);
 
     sql_executor("".into(), connector)

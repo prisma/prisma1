@@ -1,6 +1,7 @@
 use connector::error::*;
 use failure::{Error, Fail};
 use prisma_models::prelude::DomainError;
+use std::string::FromUtf8Error;
 
 #[cfg(feature = "sqlite")]
 use rusqlite;
@@ -144,6 +145,7 @@ impl From<rusqlite::Error> for SqlError {
                 Some(description),
             ) => {
                 let splitted: Vec<&str> = description.split(": ").collect();
+                let splitted: Vec<&str> = splitted[1].split(".").collect();
 
                 SqlError::UniqueConstraintViolation {
                     field_name: splitted[1].into(),
@@ -158,6 +160,7 @@ impl From<rusqlite::Error> for SqlError {
                 Some(description),
             ) => {
                 let splitted: Vec<&str> = description.split(": ").collect();
+                let splitted: Vec<&str> = splitted[1].split(".").collect();
 
                 SqlError::UniqueConstraintViolation {
                     field_name: splitted[1].into(),
@@ -175,6 +178,18 @@ impl From<uuid::parser::ParseError> for SqlError {
     }
 }
 
+impl From<uuid::BytesError> for SqlError {
+    fn from(e: uuid::BytesError) -> SqlError {
+        SqlError::ColumnReadFailure(e.into())
+    }
+}
+
+impl From<FromUtf8Error> for SqlError {
+    fn from(e: FromUtf8Error) -> SqlError {
+        SqlError::ColumnReadFailure(e.into())
+    }
+}
+
 #[cfg(feature = "postgresql")]
 impl From<tokio_postgres::error::Error> for SqlError {
     fn from(e: tokio_postgres::error::Error) -> SqlError {
@@ -185,17 +200,13 @@ impl From<tokio_postgres::error::Error> for SqlError {
             Some("23505") => {
                 let error = e.into_source().unwrap(); // boom
                 let db_error = error.downcast_ref::<DbError>().unwrap(); // BOOM
-
-                let table = db_error.table().unwrap(); // BOOM
                 let detail = db_error.detail().unwrap(); // KA-BOOM
 
                 let splitted: Vec<&str> = detail.split(")=(").collect();
                 let splitted: Vec<&str> = splitted[0].split(" (").collect();
-                let field = splitted[1].replace("\"", "");
+                let field_name = splitted[1].replace("\"", "");
 
-                SqlError::UniqueConstraintViolation {
-                    field_name: format!("{}.{}", table, field),
-                }
+                SqlError::UniqueConstraintViolation { field_name }
             }
             _ => SqlError::QueryError(e.into()),
         }
@@ -206,5 +217,37 @@ impl From<tokio_postgres::error::Error> for SqlError {
 impl From<native_tls::Error> for SqlError {
     fn from(e: native_tls::Error) -> SqlError {
         SqlError::ConnectionError(e.into())
+    }
+}
+
+#[cfg(feature = "mysql")]
+impl From<mysql_client::error::Error> for SqlError {
+    fn from(e: mysql_client::error::Error) -> SqlError {
+        use mysql_client::error::Error;
+        use mysql_client::error::MySqlError;
+
+        match e {
+            Error::MySqlError(MySqlError {
+                state: _,
+                ref message,
+                code,
+            }) if code == 1062 => {
+                let splitted: Vec<&str> = message.split_whitespace().collect();
+                let splitted: Vec<&str> = splitted.last().map(|s| s.split("'").collect()).unwrap();
+                let splitted: Vec<&str> = splitted[1].split("_").collect();
+
+                let field_name: String = splitted[0].into();
+
+                SqlError::UniqueConstraintViolation { field_name }
+            }
+            e => SqlError::QueryError(e.into()),
+        }
+    }
+}
+
+#[cfg(feature = "mysql")]
+impl From<mysql_client::FromValueError> for SqlError {
+    fn from(e: mysql_client::FromValueError) -> SqlError {
+        SqlError::ColumnReadFailure(e.into())
     }
 }

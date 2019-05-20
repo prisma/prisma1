@@ -5,8 +5,9 @@ authors = []
 edition = "2018"
 
 [features]
-default = ["sqlite", "postgresql"]
+default = ["sqlite", "postgresql", "mysql"]
 sqlite = ["rusqlite", "libsqlite3-sys", "r2d2_sqlite"]
+mysql = ["mysql_client", "r2d2_mysql"]
 postgresql = ["postgres", "r2d2_postgres", "tokio-postgres-native-tls", "tokio-postgres", "native-tls", "rust_decimal"]
 
 [dependencies]
@@ -36,3 +37,6 @@ r2d2_postgres = { version = "0.15.0-rc.1", optional = true }
 tokio-postgres-native-tls = { version = "0.1.0-rc.1", optional = true }
 tokio-postgres = { version = "0.4.0-rc.2", optional = true }
 native-tls = { version = "0.2", optional = true }
+
+mysql_client = { version = "*", optional = true, package = "mysql", features = ["ssl"] }
+r2d2_mysql = { version = "*", optional = true }
