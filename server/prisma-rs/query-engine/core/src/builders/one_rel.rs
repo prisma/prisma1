@@ -1,4 +1,4 @@
-use super::BuilderExt;
+use super::{utils, BuilderExt};
 use crate::{query_ast::RelatedRecordQuery, CoreResult};
 
 use graphql_parser::query::Field;
@@ -36,14 +36,14 @@ impl<'f> BuilderExt for OneRelationBuilder<'f> {
         }
         .expect("`RelatedRecordQuery` builder not properly initialised!");
 
-        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
-        let nested = Self::build_nested_queries(nested_builders)?;
+        let nested_builders = utils::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
+        let nested = utils::build_nested_queries(nested_builders)?;
 
         let parent_field = Arc::clone(parent);
-        let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, Arc::clone(&parent))?;
-        let args = Self::extract_query_args(field, Arc::clone(model))?;
+        let selected_fields = utils::collect_selected_fields(Arc::clone(&model), field, Arc::clone(&parent))?;
+        let args = utils::extract_query_args(field, Arc::clone(model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
-        let fields = Self::collect_selection_order(&field);
+        let fields = utils::collect_selection_order(&field);
 
         Ok(RelatedRecordQuery {
             name,

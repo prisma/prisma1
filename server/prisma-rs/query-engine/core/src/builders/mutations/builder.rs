@@ -54,10 +54,15 @@ impl<'field> MutationBuilder<'field> {
             Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
                 where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
             }),
-            Operation::DeleteMany => TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes {
-                model,
-                filter: unsafe { std::mem::uninitialized() }, // BOOM
-            }),
+            Operation::DeleteMany => {
+                let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
+                let filter = query_args
+                    .filter
+                    .map(|f| Ok(f))
+                    .unwrap_or_else(|| Err(CoreError::QueryValidationError("Required filters not found!".into())))?;
+
+                TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
+            }
             Operation::Upsert => TopLevelDatabaseMutaction::UpsertNode(UpsertNode {
                 where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                 create: CreateNode {

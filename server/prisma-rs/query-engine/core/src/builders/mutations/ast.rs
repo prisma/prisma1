@@ -1,9 +1,9 @@
 //! Simple wrapper for WriteQueries
 
-use crate::{builders::utils, BuilderExt, ManyBuilder, ReadQuery, SingleBuilder};
+use crate::{builders::utils, BuilderExt, ReadQuery, SingleBuilder};
 use connector::mutaction::{
-    DatabaseMutactionResult as MutationResult, NestedDatabaseMutaction as NestedMutation,
-    TopLevelDatabaseMutaction as RootMutation, Identifier,
+    DatabaseMutactionResult as MutationResult, Identifier, NestedDatabaseMutaction as NestedMutation,
+    TopLevelDatabaseMutaction as RootMutation,
 };
 use graphql_parser::query::Field;
 use prisma_models::ModelRef;
@@ -56,11 +56,6 @@ impl WriteQuery {
                 .build()
                 .ok()
                 .map(|q| ReadQuery::RecordQuery(q)),
-            RootMutation::DeleteNodes(_) => ManyBuilder::new()
-                .setup(self.model(), &self.field)
-                .build()
-                .ok()
-                .map(|q| ReadQuery::ManyRecordsQuery(q)),
             _ => None,
         }
     }
@@ -70,6 +65,7 @@ impl WriteQuery {
     pub fn generate_read(&self, res: MutationResult) -> Option<ReadQuery> {
         let field = match res.identifier {
             Identifier::Id(gql_id) => utils::derive_field(&self.field, self.model(), gql_id),
+            Identifier::Count(_) => return None, // FIXME: We need to communicate count!
             _ => unimplemented!(),
         };
 
