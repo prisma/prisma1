@@ -1,7 +1,7 @@
 //! Providing an interface to build WriteQueries
 
 use crate::{builders::utils, CoreError, CoreResult, WriteQuery};
-use connector::mutaction::{CreateNode, DeleteNode, DeleteNodes, TopLevelDatabaseMutaction, UpdateNode, UpsertNode};
+use connector::mutaction::{CreateNode, DeleteNode, DeleteNodes, TopLevelDatabaseMutaction, NestedMutactions, UpdateNode, UpsertNode};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue};
 
@@ -13,21 +13,21 @@ use std::sync::Arc;
 
 /// A TopLevelMutation builder
 ///
-/// It takes a graphql field and internal_data_model
+/// It takes a graphql field and model
 /// and builds a mutation tree from it
 #[derive(Debug)]
 pub struct MutationBuilder<'field> {
     field: &'field Field,
-    internal_data_model: InternalDataModelRef,
+    model: InternalDataModelRef,
 }
 
 type PrismaListArgs = Vec<(String, Option<Vec<PrismaValue>>)>;
 
 impl<'field> MutationBuilder<'field> {
-    pub fn new(internal_data_model: InternalDataModelRef, field: &'field Field) -> Self {
+    pub fn new(model: InternalDataModelRef, field: &'field Field) -> Self {
         Self {
             field,
-            internal_data_model,
+            model,
         }
     }
 
@@ -35,21 +35,21 @@ impl<'field> MutationBuilder<'field> {
         let (non_list_args, list_args) = get_mutation_args(&self.field.arguments);
         let (op, model) = parse_model_action(
             self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
-            Arc::clone(&self.internal_data_model),
+            Arc::clone(&self.model),
         )?;
 
         let inner = match op {
             Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
-                model,
+                model: Arc::clone(&model),
                 non_list_args,
                 list_args,
-                nested_mutactions: Default::default(),
+                nested_mutactions: build_nested(self.field, Arc::clone(&model))?,
             }),
             Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
                 where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                 non_list_args,
                 list_args,
-                nested_mutactions: Default::default(),
+                nested_mutactions: build_nested(self.field, Arc::clone(&model))?,
             }),
             Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
                 where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
@@ -69,13 +69,13 @@ impl<'field> MutationBuilder<'field> {
                     model: Arc::clone(&model),
                     non_list_args: non_list_args.clone(),
                     list_args: list_args.clone(),
-                    nested_mutactions: Default::default(),
+                    nested_mutactions: build_nested(self.field, Arc::clone(&model))?,
                 },
                 update: UpdateNode {
                     where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                     non_list_args,
                     list_args,
-                    nested_mutactions: Default::default(),
+                    nested_mutactions: build_nested(self.field, Arc::clone(&model))?,
                 },
             }),
             _ => unimplemented!(),
@@ -153,7 +153,7 @@ impl From<&str> for Operation {
 }
 
 /// Parse the mutation name into an action and the model it should operate on
-fn parse_model_action(name: &String, internal_data_model: InternalDataModelRef) -> CoreResult<(Operation, ModelRef)> {
+fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<(Operation, ModelRef)> {
     let actions = vec!["create", "updateMany", "update", "deleteMany", "delete", "upsert"];
 
     let action = match actions.iter().find(|action| name.starts_with(*action)) {
@@ -172,7 +172,7 @@ fn parse_model_action(name: &String, internal_data_model: InternalDataModelRef) 
     };
 
     let normalized = dbg!(Inflector::singularize(model_name).to_pascal_case());
-    let model = match internal_data_model.models().iter().find(|m| m.name == normalized) {
+    let model = match model.models().iter().find(|m| m.name == normalized) {
         Some(m) => m,
         None => {
             return Err(CoreError::QueryValidationError(format!(
@@ -183,4 +183,9 @@ fn parse_model_action(name: &String, internal_data_model: InternalDataModelRef) 
     };
 
     Ok((Operation::from(*action), Arc::clone(&model)))
+}
+
+/// Build nested mutations for a given field/model (called recursively)
+fn build_nested(_field: &Field, _model: ModelRef) -> CoreResult<NestedMutactions> {
+    unimplemented!()
 }

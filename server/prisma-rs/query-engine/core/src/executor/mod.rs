@@ -61,13 +61,9 @@ impl Executor {
             .into_iter()
             .unzip();
 
-        // Debug print the pipeline for shits and giggles
-        dbg!(&pipeline);
-
         // Execute read queries created by write-queries
         let results = self.read_exec.execute(&reads)?;
         pipeline.store_reads(idx.into_iter().zip(results.into_iter()).collect());
-
 
         // Now execute all remaining reads
         let (idx, queries): (Vec<_>, Vec<_>) = pipeline.get_reads().into_iter().unzip();
