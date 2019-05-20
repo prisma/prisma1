@@ -2,14 +2,20 @@ use super::*;
 use prisma_models::{InternalDataModelRef, ModelRef};
 use std::sync::Arc;
 
-pub struct QuerySchemaBuilder {
+pub struct QuerySchemaBuilder<'a> {
   internal_data_model: InternalDataModelRef,
+  capabilities: &'a SupportedCapabilities,
+  object_type_builder: ObjectTypeBuilder<'a>,
 }
 
-impl QuerySchemaBuilder {
-  pub fn new(internal_data_model: &InternalDataModelRef) -> QuerySchemaBuilder {
+impl<'a> QuerySchemaBuilder<'a> {
+  pub fn new(internal_data_model: &InternalDataModelRef, capabilities: &'a SupportedCapabilities) -> Self {
+    let object_type_builder = ObjectTypeBuilder::new(Arc::clone(internal_data_model), true, false, capabilities);
+
     QuerySchemaBuilder {
       internal_data_model: Arc::clone(internal_data_model),
+      object_type_builder,
+      capabilities,
     }
   }
 
@@ -30,25 +36,23 @@ impl QuerySchemaBuilder {
       .map(|m| Arc::clone(m))
       .collect();
 
-    let fields_fn: FieldsFn = Box::new(|| {
-      non_embedded_models
-        .into_iter()
-        .filter_map(|m| {
-          Some(vec![
-            Self::all_items_field(Arc::clone(&m)),
-            Self::single_item_field(Arc::clone(&m)),
-          ])
-        })
-        .flatten()
-        .collect()
-    });
+    let fields = non_embedded_models
+      .into_iter()
+      .filter_map(|m| {
+        Some(vec![
+          Self::all_items_field(Arc::clone(&m)),
+          Self::single_item_field(Arc::clone(&m)),
+        ])
+      })
+      .flatten()
+      .collect();
 
-    object_type("Query", fields_fn)
+    object_type("Query", fields)
   }
 
   /// Builds the root mutation type.
   fn build_mutation_type(&self) -> ObjectType {
-    object_type("Mutation", Box::new(|| vec![]))
+    object_type("Mutation", vec![])
   }
 
   /// Builds a "many" items field (e.g. users(args), posts(args), ...) for given model.

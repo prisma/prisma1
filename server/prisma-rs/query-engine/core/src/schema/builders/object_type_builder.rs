@@ -5,12 +5,14 @@ use prisma_models::{
 };
 use std::{collections::HashMap, sync::Arc};
 
+type ObjectTypeCache = OnceCell<HashMap<String, ObjectTypeRef>>;
+
 pub struct ObjectTypeBuilder<'a> {
   internal_data_model: InternalDataModelRef,
   with_relations: bool,
   only_id: bool,
   capabilities: &'a SupportedCapabilities,
-  model_object_type_cache: OnceCell<HashMap<String, ObjectType>>, // Deduplicates computation
+  model_object_type_cache: ObjectTypeCache, // Deduplicates computation
 }
 
 impl<'a> ObjectTypeBuilder<'a> {
@@ -32,79 +34,73 @@ impl<'a> ObjectTypeBuilder<'a> {
 
   /// Initializes model object type cache on the query schema builder.
   fn compute_model_object_types(self) -> Self {
+    // Compute initial cache.
     self.model_object_type_cache.get_or_init(|| {
       self
         .internal_data_model
         .models()
         .iter()
-        .map(|m| (m.name.clone(), self.model_object_type(m.clone())))
+        .map(|m| (m.name.clone(), Arc::new(init_object_type(m.name.clone()))))
         .collect()
+    });
+
+    // Compute fields on all cached object types.
+    self.internal_data_model.models().iter().for_each(|m| {
+      let obj: &ObjectTypeRef = self
+        .model_object_type_cache
+        .get()
+        .expect("Invariant violation: Expected cache to be initialized before computing fields.")
+        .get(&m.name)
+        .expect("Invariant violation: Initialized object type skeleton for each model.");
+
+      let fields = self.compute_fields(m);
+      obj.fields.set(fields);
     });
 
     self
   }
 
+  /// This only initializes the model object type, but does not compute fields due to dependencies on other object types.
+  /// Make sure to compute fields as soon as all model object types are available.
+  // fn init_model_object_type(&self, model: ModelRef) -> ObjectType {
   // WIP: What about instance checks?
-  pub fn model_object_type(&self, model: ModelRef) -> ObjectType {
-    // new ObjectType(
-    //     name = model.name,
-    //     description = None,
-    //     fieldsFn = () => {
-    //       model.fields
-    //         .filter(_.isVisible)
-    //         .filter(field =>
-    //           field.isScalar match {
-    //             case true  => true
-    //             case false => withRelations
-    //         })
-    //         .map(mapClientField(model))
-    //     },
-    //     interfaces = {
-    //       val idFieldHasRightType = model.idField.exists(f =>
-    //         f.name == ReservedFields.idFieldName && (f.typeIdentifier == TypeIdentifier.String || f.typeIdentifier == TypeIdentifier.Cuid))
-    //       if (model.hasVisibleIdField && idFieldHasRightType) nodeInterface.toList else List.empty
-    //     },
-    //     instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
-    //       value match {
-    //         case PrismaNode(_, _, Some(tpe.name)) => true
-    //         case PrismaNode(_, _, Some(_))        => false
-    //         case _                                => valClass.isAssignableFrom(value.getClass)
-    //     },
-    //     astDirectives = Vector.empty
-    //   )
+  //     instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
+  //       value match {
+  //         case PrismaNode(_, _, Some(tpe.name)) => true
+  //         case PrismaNode(_, _, Some(_))        => false
+  //         case _                                => valClass.isAssignableFrom(value.getClass)
+  //     },
+  //     astDirectives = Vector.empty
 
-    let model = model.clone();
-    let name = model.name.clone();
-    let with_rel = self.with_relations;
+  //   object_type(model.name.clone(), fields_fn)
+  // }
 
-    let fields_fn: FieldsFn = Box::new(move || {
-      model
-        .fields()
-        .all
-        .iter()
-        .filter(|f| {
-          f.is_visible()
-            && match f {
-              ModelField::Scalar(_) => true,
-              ModelField::Relation(_) => with_rel,
-            }
-        })
-        .map(|f| Self::map_field(&model, f))
-        .collect()
-    });
-
-    ObjectType { name, fields_fn }
+  /// This assumes that the cache has already been initialized.
+  fn compute_fields(&self, model: &ModelRef) -> Vec<Field> {
+    model
+      .fields()
+      .all
+      .iter()
+      .filter(|f| {
+        f.is_visible()
+          && match f {
+            ModelField::Scalar(_) => true,
+            ModelField::Relation(_) => self.with_relations,
+          }
+      })
+      .map(|f| self.map_field(model, f))
+      .collect()
   }
 
-  pub fn map_field(model: &ModelRef, model_field: &ModelField) -> Field {
+  pub fn map_field(&self, model: &ModelRef, model_field: &ModelField) -> Field {
     field(
       model_field.name().clone(),
-      Self::many_records_field_arguments(&model, &model_field),
-      Self::map_output_type(&model_field),
+      self.many_records_field_arguments(&model, &model_field),
+      self.map_output_type(&model_field),
     )
   }
 
-  pub fn map_output_type(model_field: &ModelField) -> OutputType {
+  pub fn map_output_type(&self, model_field: &ModelField) -> OutputType {
     let output_type = match model_field {
       ModelField::Relation(rf) => {
         if rf.is_list {
@@ -151,7 +147,7 @@ impl<'a> ObjectTypeBuilder<'a> {
   // }
 
   /// Builds "many records where" arguments based on the given model and field.
-  pub fn many_records_field_arguments(model: &ModelRef, field: &ModelField) -> Vec<Argument> {
+  pub fn many_records_field_arguments(&self, model: &ModelRef, field: &ModelField) -> Vec<Argument> {
     unimplemented!()
   }
 

@@ -1,15 +1,28 @@
 use super::*;
-use prisma_models::{ModelRef, SortOrder};
-use std::sync::Arc;
+use once_cell::sync::OnceCell;
 
-/// Object type convenience wrapper function.
-pub fn object_type<T>(name: T, fields_fn: FieldsFn) -> ObjectType
+/// Object type initializer for cases where only the name is known, and fields are computed later.
+pub fn init_object_type<T>(name: T) -> ObjectType
 where
   T: Into<String>,
 {
   ObjectType {
     name: name.into(),
-    fields_fn,
+    fields: OnceCell::new(),
+  }
+}
+
+/// Object type convenience wrapper function.
+pub fn object_type<T>(name: T, fields: Vec<Field>) -> ObjectType
+where
+  T: Into<String>,
+{
+  let f = OnceCell::new();
+  f.set(fields);
+
+  ObjectType {
+    name: name.into(),
+    fields: f,
   }
 }
 

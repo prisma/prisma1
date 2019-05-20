@@ -1,3 +1,4 @@
+use once_cell::sync::OnceCell;
 use prisma_models::{OrderBy, ScalarField, SortOrder};
 use std::{boxed::Box, sync::Arc};
 
@@ -8,18 +9,14 @@ pub struct QuerySchema {
 }
 
 /// Fields evaluation function.
-pub type FieldsFn = Box<FnOnce() -> Vec<Field> + Send + Sync + 'static>;
+// pub type FieldsFn = Box<FnOnce() -> Vec<Field> + Send + Sync + 'static>;
 
 #[derive(DebugStub)]
 pub struct ObjectType {
   pub name: String,
 
-  /// Fields need to be lazy to break circular dependencies during query schema initialization.
-  /// E.g. Fields that initialize require other model object types to be calculated, which in turn might
-  /// require more. By first initializing the object types, then lazily evaluate the fields once needed,
-  /// this circle is broken.
-  #[debug_stub = "#FieldsFn#"]
-  pub fields_fn: FieldsFn,
+  #[debug_stub = "#Fields Cell#"]
+  pub fields: OnceCell<Vec<Field>>,
 }
 
 #[derive(Debug)]
@@ -97,11 +94,15 @@ impl InputType {
   }
 }
 
+pub type ObjectTypeRef = Arc<ObjectType>;
+pub type OutputTypeRef = Arc<OutputType>;
+pub type InputTypeRef = Arc<InputType>;
+
 #[derive(Debug)]
 pub enum OutputType {
   Enum(EnumType),
   List(Box<OutputType>),
-  Object(ObjectType),
+  Object(Arc<ObjectType>),
   Opt(Box<OutputType>),
   Scalar(ScalarType),
 }
@@ -113,6 +114,10 @@ impl OutputType {
 
   pub fn opt(containing: OutputType) -> OutputType {
     OutputType::Opt(Box::new(containing))
+  }
+
+  pub fn object(containing: &ObjectTypeRef) -> OutputType {
+    OutputType::Object(Arc::clone(containing))
   }
 
   pub fn string() -> OutputType {

@@ -5,6 +5,10 @@ pub struct SupportedCapabilities {
 }
 
 impl SupportedCapabilities {
+  pub fn empty() -> Self {
+    SupportedCapabilities { capabilities: vec![] }
+  }
+
   pub fn has(&self, capability: ConnectorCapability) -> bool {
     match capability {
       ConnectorCapability::ScalarLists(l) => self

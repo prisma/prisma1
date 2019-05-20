@@ -1,5 +1,5 @@
 use crate::{data_model, exec_loader, PrismaResult};
-use core::{Executor, QuerySchema, QuerySchemaBuilder};
+use core::{Executor, QuerySchema, QuerySchemaBuilder, SupportedCapabilities};
 use prisma_common::config::{self, PrismaConfig};
 use prisma_models::InternalDataModelRef;
 
@@ -32,7 +32,8 @@ impl PrismaContext {
 
         // Load internal data model and build schema
         let internal_data_model = data_model::load(db_name)?;
-        let schema_builder = QuerySchemaBuilder::new(&internal_data_model);
+        let capabilities = SupportedCapabilities::empty(); // todo connector capabilities.
+        let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities);
         let query_schema = dbg!(schema_builder.build());
         let sdl = data_model::load_sdl_string().ok(); // temporary
 
