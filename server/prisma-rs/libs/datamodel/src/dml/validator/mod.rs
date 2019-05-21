@@ -115,15 +115,16 @@ impl Validator {
         field.arity = self.validate_field_arity(&ast_field.arity);
 
         if let Some(value) = &ast_field.default_value {
+            let validator = ValueValidator::new(value)?;
             if let dml::FieldType::Base(base_type) = &field_type {
-                match (ValueValidator { value: value.clone() }).as_type(base_type) {
+                match validator.as_type(base_type) {
                     Ok(val) => field.default_value = Some(val),
                     Err(err) => errors.push(err),
                 };
             } else {
                 errors.push(ValidationError::new_parser_error(
                     "Found default value for a non-scalar type.",
-                    ValueValidator { value: value.clone() }.span(),
+                    validator.span(),
                 ))
             }
         }

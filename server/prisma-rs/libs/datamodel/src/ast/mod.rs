@@ -47,12 +47,14 @@ pub struct Argument {
     pub span: Span,
 }
 
+// TODO: Rename to expression.
 #[derive(Debug, Clone)]
 pub enum Value {
     NumericValue(String, Span),
     BooleanValue(String, Span),
     StringValue(String, Span),
     ConstantValue(String, Span),
+    Function(String, Vec<Value>, Span),
 }
 
 pub fn describe_value_type(val: &Value) -> &'static str {
@@ -61,6 +63,7 @@ pub fn describe_value_type(val: &Value) -> &'static str {
         Value::BooleanValue(_, _) => "Boolean",
         Value::StringValue(_, _) => "String",
         Value::ConstantValue(_, _) => "Literal",
+        Value::Function(_, _, _) => "Functional",
     }
 }
 

@@ -29,17 +29,25 @@ boolean_literal =  @{ boolean_true | boolean_false }
 
 constant_Literal = @{ ASCII_ALPHA+ }
 
-any_literal = { numeric_literal | string_literal | boolean_literal | constant_Literal }
+// ######################################
+// Expression support
+// ######################################
+
+function = { identifier ~ "(" ~ (argument_value ~ ("," ~ argument_value)*)? ~ ")" }
+expression = { function | numeric_literal | string_literal | boolean_literal | constant_Literal }
+
+// ######################################
+// Arguments
+// ######################################
+argument_name = { (!":" ~ identifier)+ }
+argument_value = { expression }
+argument = { (argument_name ~ ":" ~ argument_value) }
 
 // ######################################
 // Directives
 // ######################################
-
-directive_argument_name = { (!":" ~ identifier)+ }
-directive_argument_value = { any_literal }
-directive_argument = { (directive_argument_name ~ ":" ~ directive_argument_value) }
-directive_arguments = { "(" ~ ((directive_argument ~ ("," ~ directive_argument)*)?) ~ ")" }
-directive_single_argument = { "(" ~ directive_argument_value ~ ")" }
+directive_arguments = { "(" ~ ((argument ~ ("," ~ argument)*)?) ~ ")" }
+directive_single_argument = { "(" ~ argument_value ~ ")" }
 // This is a poor-mans version of namespacing
 directive_name = @{ (identifier ~ ".")? ~ identifier }
 // A directive either has one unnamed argument or any number of named arguments or no argument.
@@ -58,7 +66,7 @@ field_type = { list_type | optional_type | base_type }
 field_link = @{ identifier }
 
 // Field
-default_value = { "=" ~ any_literal }
+default_value = { "=" ~ expression }
 // TODO: We want to force a line break after a field declaration.
 // For this, we have to rely on pests new '-' operator.
 // Progress tracked here: https://github.com/pest-parser/pest/issues/271
@@ -78,7 +86,7 @@ enum_declaration = { "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" ~
 // ######################################
 // Source block
 // ######################################
-source_key_value = { identifier ~ "=" ~ any_literal }
+source_key_value = { identifier ~ "=" ~ expression }
 source_properties = { "properties" ~ "{" ~ source_key_value* ~ "}" }
 // Only allows ONE properties block.
 source_block = { "source" ~ identifier ~ "{" ~ source_key_value* ~ source_properties? ~ source_key_value* ~ "}" }

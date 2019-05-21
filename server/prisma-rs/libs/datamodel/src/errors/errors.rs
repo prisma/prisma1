@@ -5,6 +5,18 @@ use colored::Colorize;
 pub enum ValidationError {
     #[fail(display = "Argument {} is missing.", argument_name)]
     ArgumentNotFound { argument_name: String, span: Span },
+
+    #[fail(
+        display = "Function {} takes {} arguments, received {}",
+        function_name, required_count, given_count
+    )]
+    ArgumentCountMissmatch {
+        function_name: String,
+        required_count: usize,
+        given_count: usize,
+        span: Span,
+    },
+
     #[fail(display = "Argument {} is missing in directive @{}.", argument_name, directive_name)]
     DirectiveArgumentNotFound {
         argument_name: String,
@@ -28,6 +40,9 @@ pub enum ValidationError {
     #[fail(display = "Directive not known: @{}", directive_name)]
     DirectiveNotKnownError { directive_name: String, span: Span },
 
+    #[fail(display = "Function not known: {}", function_name)]
+    FunctionNotKnownError { function_name: String, span: Span },
+
     #[fail(display = "Source not known: {}", source_name)]
     SourceNotKnownError { source_name: String, span: Span },
 
@@ -49,6 +64,8 @@ pub enum ValidationError {
 
     #[fail(display = "{}", message)]
     ParserError { message: String, span: Span },
+    #[fail(display = "{}", message)]
+    FunctionalEvaluationError { message: String, span: Span },
 
     #[fail(display = "Expected {}, but received {} value {}", expected_type, received_type, raw)]
     TypeMismatchError {
@@ -86,6 +103,20 @@ impl ValidationError {
         };
     }
 
+    pub fn new_argument_count_missmatch_error(
+        function_name: &str,
+        required_count: usize,
+        given_count: usize,
+        span: &Span,
+    ) -> ValidationError {
+        return ValidationError::ArgumentCountMissmatch {
+            function_name: String::from(function_name),
+            required_count: required_count,
+            given_count: given_count,
+            span: span.clone(),
+        };
+    }
+
     pub fn new_directive_argument_not_found_error(
         argument_name: &str,
         directive_name: &str,
@@ -119,6 +150,12 @@ impl ValidationError {
             span: span.clone(),
         };
     }
+    pub fn new_functional_evaluation_error(message: &str, span: &Span) -> ValidationError {
+        return ValidationError::FunctionalEvaluationError {
+            message: String::from(message),
+            span: span.clone(),
+        };
+    }
     pub fn new_type_not_found_error(type_name: &str, span: &Span) -> ValidationError {
         return ValidationError::TypeNotFoundError {
             type_name: String::from(type_name),
@@ -134,6 +171,12 @@ impl ValidationError {
     pub fn new_directive_not_known_error(directive_name: &str, span: &Span) -> ValidationError {
         return ValidationError::DirectiveNotKnownError {
             directive_name: String::from(directive_name),
+            span: span.clone(),
+        };
+    }
+    pub fn new_function_not_known_error(function_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::FunctionNotKnownError {
+            function_name: String::from(function_name),
             span: span.clone(),
         };
     }
@@ -176,6 +219,12 @@ impl ValidationError {
                 directive_name: _,
                 span,
             } => span,
+            ValidationError::ArgumentCountMissmatch {
+                function_name: _,
+                required_count: _,
+                given_count: _,
+                span,
+            } => span,
             ValidationError::SourceArgumentNotFound {
                 argument_name: _,
                 source_name: _,
@@ -190,6 +239,7 @@ impl ValidationError {
                 directive_name: _,
                 span,
             } => span,
+            ValidationError::FunctionNotKnownError { function_name: _, span } => span,
             ValidationError::SourceNotKnownError { source_name: _, span } => span,
             ValidationError::LiteralParseError {
                 literal_type: _,
@@ -199,6 +249,7 @@ impl ValidationError {
             ValidationError::TypeNotFoundError { type_name: _, span } => span,
             ValidationError::ScalarTypeNotFoundError { type_name: _, span } => span,
             ValidationError::ParserError { message: _, span } => span,
+            ValidationError::FunctionalEvaluationError { message: _, span } => span,
             ValidationError::TypeMismatchError {
                 expected_type: _,
                 received_type: _,

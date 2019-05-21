@@ -2,6 +2,7 @@ use crate::ast;
 use crate::dml;
 
 use crate::errors::ValidationError;
+use crate::FunctionalEvaluator;
 use chrono::{DateTime, Utc};
 use std::error;
 
@@ -19,6 +20,12 @@ pub struct ValueValidator {
 }
 
 impl ValueValidator {
+    pub fn new(value: &ast::Value) -> Result<ValueValidator, ValidationError> {
+        Ok(ValueValidator {
+            value: FunctionalEvaluator::new(value).evaluate()?,
+        })
+    }
+
     fn construct_error(&self, expected_type: &str) -> ValidationError {
         ValidationError::new_type_mismatch_error(
             expected_type,
@@ -69,6 +76,7 @@ impl ValueValidator {
             ast::Value::NumericValue(x, _) => x,
             ast::Value::BooleanValue(x, _) => x,
             ast::Value::ConstantValue(x, _) => x,
+            ast::Value::Function(x, _, _) => x,
         }
     }
 
@@ -78,6 +86,7 @@ impl ValueValidator {
             ast::Value::NumericValue(_, s) => s,
             ast::Value::BooleanValue(_, s) => s,
             ast::Value::ConstantValue(_, s) => s,
+            ast::Value::Function(_, _, s) => s,
         }
     }
 

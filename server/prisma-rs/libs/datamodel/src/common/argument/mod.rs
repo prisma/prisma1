@@ -22,9 +22,7 @@ impl<'a> Arguments<'a> {
     pub fn arg(&self, name: &str) -> Result<value::ValueValidator, ValidationError> {
         for arg in self.arguments {
             if arg.name == name {
-                return Ok(value::ValueValidator {
-                    value: arg.value.clone(),
-                });
+                return value::ValueValidator::new(&arg.value);
             }
         }
         return Err(ValidationError::new_argument_not_found_error(name, &self.span));

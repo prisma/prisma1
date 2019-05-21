@@ -7,6 +7,7 @@ pub mod common;
 pub mod dmmf;
 pub mod errors;
 pub mod source;
+pub use common::functions::*;
 pub use dml::FromStrAndSpan;
 pub use source::*;
 
