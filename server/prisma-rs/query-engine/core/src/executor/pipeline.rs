@@ -150,7 +150,6 @@ impl QueryPipeline {
             let read_result = result.generate_result();
             let origin = result.origin;
             let inner = result.inner;
-            let _ = result.nested;
 
             match (idx, origin.generate_read(inner)) {
                 (Some(idx), Some(read)) => Some((idx, read)),

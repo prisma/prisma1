@@ -2,8 +2,8 @@
 
 use crate::{builders::utils, CoreError, CoreResult, WriteQuery};
 use connector::mutaction::{
-    CreateNode, DeleteNode, DeleteNodes, NestedMutactions, TopLevelDatabaseMutaction, ResetData, UpdateNode, UpdateNodes,
-    UpsertNode,
+    CreateNode, DeleteNode, DeleteNodes, NestedMutactions, ResetData, TopLevelDatabaseMutaction, UpdateNode,
+    UpdateNodes, UpsertNode,
 };
 use graphql_parser::query::{Field, Value};
 use prisma_models::{InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
@@ -105,7 +105,6 @@ impl<'field> MutationBuilder<'field> {
         Ok(WriteQuery {
             inner,
             field: self.field.clone(),
-            nested: vec![],
         })
     }
 }
@@ -117,7 +116,6 @@ fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<
             project: Arc::new(Project::from(data_model)),
         }),
         field: field.clone(),
-        nested: vec![],
     })
 }
 

@@ -17,7 +17,6 @@ impl WriteQueryExecutor {
             vec.push(WriteQueryResult {
                 inner: res,
                 origin: wq,
-                nested: vec![], // FIXME: Add nested mutations
             });
         }
 

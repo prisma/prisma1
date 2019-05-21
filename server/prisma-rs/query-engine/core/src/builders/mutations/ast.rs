@@ -2,8 +2,7 @@
 
 use crate::{builders::utils, BuilderExt, ReadQuery, SingleBuilder};
 use connector::mutaction::{
-    DatabaseMutactionResult as MutationResult, Identifier, NestedDatabaseMutaction as NestedMutation,
-    TopLevelDatabaseMutaction as RootMutation,
+    DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
 };
 use graphql_parser::query::Field;
 use prisma_models::ModelRef;
@@ -17,22 +16,6 @@ pub struct WriteQuery {
 
     /// Required to create following ReadQuery
     pub field: Field,
-
-    /// Nested mutations
-    pub nested: Vec<NestedWriteQuery>,
-}
-
-/// Nested mutations are slightly different than top-level mutations.
-#[derive(Debug, Clone)]
-pub struct NestedWriteQuery {
-    /// The nested mutation being built
-    pub inner: NestedMutation,
-
-    /// Required to create following ReadQuery
-    pub field: Field,
-
-    /// NestedWriteQueries can only have nested children
-    pub nested: Vec<NestedWriteQuery>,
 }
 
 impl WriteQuery {
@@ -83,18 +66,6 @@ impl WriteQuery {
                 .build()
                 .ok()
                 .map(|q| ReadQuery::RecordQuery(q)),
-            _ => unimplemented!(),
-        }
-    }
-}
-
-impl NestedWriteQuery {
-    pub fn model(&self) -> ModelRef {
-        match self.inner {
-            NestedMutation::CreateNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedMutation::UpdateNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedMutation::UpsertNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedMutation::DeleteNode(ref node) => node.relation_field.model.upgrade().unwrap(),
             _ => unimplemented!(),
         }
     }
