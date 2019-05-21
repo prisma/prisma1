@@ -1,6 +1,7 @@
 use crate::ast;
 use crate::dml;
 
+use crate::common::interpolation::StringInterpolator;
 use crate::errors::ValidationError;
 use crate::FunctionalEvaluator;
 use chrono::{DateTime, Utc};
@@ -21,9 +22,14 @@ pub struct ValueValidator {
 
 impl ValueValidator {
     pub fn new(value: &ast::Value) -> Result<ValueValidator, ValidationError> {
-        Ok(ValueValidator {
-            value: FunctionalEvaluator::new(value).evaluate()?,
-        })
+        match value {
+            ast::Value::StringValue(string, span) => Ok(ValueValidator {
+                value: StringInterpolator::interpolate(string, span)?,
+            }),
+            _ => Ok(ValueValidator {
+                value: FunctionalEvaluator::new(value).evaluate()?,
+            }),
+        }
     }
 
     fn construct_error(&self, expected_type: &str) -> ValidationError {

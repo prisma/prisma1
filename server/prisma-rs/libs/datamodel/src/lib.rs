@@ -1,3 +1,38 @@
+// Load macros first - Global Macros used for parsing.
+// Macro to match all children in a parse tree
+#[macro_use]
+macro_rules! match_children (
+    ($token:ident, $current:ident, $($pattern:pat => $result:expr),*) => (
+        // Explicit clone, as into_inner consumes the pair.
+        // We only need a reference to the pair later for logging.
+        for $current in $token.clone().into_inner() {
+            match $current.as_rule() {
+                $(
+                    $pattern => $result
+                ),*
+            }
+        }
+    );
+);
+
+// Macro to match the first child in a parse tree
+#[macro_use]
+macro_rules! match_first (
+    ($token:ident, $current:ident, $($pattern:pat => $result:expr),*) => ( {
+            // Explicit clone, as into_inner consumes the pair.
+        // We only need a reference to the pair later for logging.
+            let $current = $token.clone().into_inner().next().unwrap();
+            match $current.as_rule() {
+                $(
+                    $pattern => $result
+                ),*
+            }
+        }
+    );
+);
+
+// Lib exports.
+
 pub mod ast;
 pub use ast::parser;
 pub mod dml;
@@ -10,6 +45,8 @@ pub mod source;
 pub use common::functions::*;
 pub use dml::FromStrAndSpan;
 pub use source::*;
+
+// Helpers.
 
 pub fn parse_with_plugins(
     datamodel_string: &str,

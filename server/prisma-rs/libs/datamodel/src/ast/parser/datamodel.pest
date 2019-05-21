@@ -17,10 +17,13 @@ identifier = @{ ASCII_ALPHA ~ ( "_" | ASCII_ALPHANUMERIC)* }
 // Literals
 numeric_literal = @{ ("-")? ~ ASCII_DIGIT+ ~("." ~ ASCII_DIGIT+)? }
 
+// String, with support for escaped stuff and interpolations.
 string_escaped_predefined = { "n" | "r" | "t" | "\\" | "0" | "\"" | "'" }
 string_escape     = { "\\" ~ string_escaped_predefined }
-string_raw = { (!("\\" | "\"" | NEWLINE) ~ ANY)+ }
-string_content = @{ (string_raw | string_escape)* }
+// This is only used to escape the parser. The string above is still treated as atomic.
+string_interpolate_escape = !{ ("${" ~ expression ~ "}") }
+string_raw = { (!("\\" | "\"" | NEWLINE | "${") ~ ("\\${" | ANY))+ }
+string_content = @{ (string_raw | string_escape | string_interpolate_escape)* }
 string_literal = { "\"" ~ string_content ~ "\"" }
 
 boolean_true  = { "true" }
@@ -95,3 +98,16 @@ source_block = { "source" ~ identifier ~ "{" ~ source_key_value* ~ source_proper
 // Datamodel
 // ######################################
 datamodel = { SOI ~ (model_declaration | enum_declaration | source_block )* ~ EOI }
+
+
+// ######################################
+// String Interpolation
+// Called seperatedly, but falls back 
+// to expression.
+// ######################################
+// We can safely assume that our strings are stripped of their "s and 
+// that strings do not contain new lines.
+
+// Greedy match escaped interpolation or any char. Do not match interpolation.
+string_uninterpolated = @{ (!("${") ~ ("\\${" | ANY))+ }
+string_interpolated = { SOI ~ (string_uninterpolated | ("${" ~ expression ~ "}"))* ~ EOI }

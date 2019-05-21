@@ -13,36 +13,6 @@ pub struct PrismaDatamodelParser;
 use crate::ast::*;
 use crate::errors::ValidationError;
 
-// Macro to match all children in a parse tree
-macro_rules! match_children (
-    ($token:ident, $current:ident, $($pattern:pat => $result:expr),*) => (
-        // Explicit clone, as into_inner consumes the pair.
-        // We only need a reference to the pair later for logging.
-        for $current in $token.clone().into_inner() {
-            match $current.as_rule() {
-                $(
-                    $pattern => $result
-                ),*
-            }
-        }
-    );
-);
-
-// Macro to match the first child in a parse tree
-macro_rules! match_first (
-    ($token:ident, $current:ident, $($pattern:pat => $result:expr),*) => ( {
-            // Explicit clone, as into_inner consumes the pair.
-        // We only need a reference to the pair later for logging.
-            let $current = $token.clone().into_inner().next().unwrap();
-            match $current.as_rule() {
-                $(
-                    $pattern => $result
-                ),*
-            }
-        }
-    );
-);
-
 fn parse_string_literal(token: &pest::iterators::Pair<'_, Rule>) -> String {
     return match_first! { token, current,
         Rule::string_content => current.as_str().to_string(),
@@ -51,7 +21,7 @@ fn parse_string_literal(token: &pest::iterators::Pair<'_, Rule>) -> String {
 }
 
 // Expressions
-fn parse_expression(token: &pest::iterators::Pair<'_, Rule>) -> Value {
+pub fn parse_expression(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     return match_first! { token, current,
         Rule::numeric_literal => Value::NumericValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
         Rule::string_literal => Value::StringValue(parse_string_literal(&current), Span::from_pest(&current.as_span())),
