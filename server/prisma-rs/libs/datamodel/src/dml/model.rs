@@ -45,7 +45,7 @@ impl Model {
         self.fields.iter()
     }
 
-    // Gets a mutable iterator over all fields.
+    /// Gets a mutable iterator over all fields.
     pub fn fields_mut(&mut self) -> std::slice::IterMut<Field> {
         self.fields.iter_mut()
     }

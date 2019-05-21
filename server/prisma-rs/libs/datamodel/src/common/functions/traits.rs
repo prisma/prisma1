@@ -2,11 +2,15 @@ use crate::ast;
 use crate::common::value::ValueValidator;
 use crate::errors::ValidationError;
 
-/// Trait for functionals.
+/// Trait for functions which can be accessed from the datamodel.
 pub trait Functional {
+    /// Gets the name of the function.
     fn name(&self) -> &str;
+
+    /// Applies the function to the given arguments and returns the result.
     fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<ast::Value, ValidationError>;
 
+    /// Internal: Shorthand to check the count of arguments, and raise an error if applicable.
     fn check_arg_count(
         &self,
         values: &Vec<ValueValidator>,
