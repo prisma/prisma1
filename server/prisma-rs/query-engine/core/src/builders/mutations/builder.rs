@@ -2,11 +2,11 @@
 
 use crate::{builders::utils, CoreError, CoreResult, WriteQuery};
 use connector::mutaction::{
-    CreateNode, DeleteNode, DeleteNodes, NestedMutactions, TopLevelDatabaseMutaction, UpdateNode, UpdateNodes,
+    CreateNode, DeleteNode, DeleteNodes, NestedMutactions, TopLevelDatabaseMutaction, ResetData, UpdateNode, UpdateNodes,
     UpsertNode,
 };
 use graphql_parser::query::{Field, Value};
-use prisma_models::{InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue};
+use prisma_models::{InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
 
 use crate::Inflector;
 use rust_inflector::Inflector as RustInflector;
@@ -32,7 +32,11 @@ impl<'field> MutationBuilder<'field> {
     }
 
     pub fn build(self) -> CoreResult<WriteQuery> {
-        dbg!(&self.field);
+        // Handle `resetData` seperately
+        if &self.field.name == "resetData" {
+            return handle_reset(&self.field, &self.model);
+        }
+
         let (non_list_args, list_args) = dbg!(get_mutation_args(&self.field.arguments));
         let (op, model) = parse_model_action(
             self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
@@ -104,6 +108,17 @@ impl<'field> MutationBuilder<'field> {
             nested: vec![],
         })
     }
+}
+
+/// A trap-door function that handles `resetData` without doing a whole bunch of other stuff
+fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<WriteQuery> {
+    Ok(WriteQuery {
+        inner: TopLevelDatabaseMutaction::ResetData(ResetData {
+            project: Arc::new(Project::from(data_model)),
+        }),
+        field: field.clone(),
+        nested: vec![],
+    })
 }
 
 /// Extract String-Value pairs into usable mutation arguments

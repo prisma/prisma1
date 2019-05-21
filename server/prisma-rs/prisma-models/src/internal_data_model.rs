@@ -111,3 +111,17 @@ impl InternalDataModel {
             .as_slice()
     }
 }
+
+impl From<&InternalDataModelRef> for Project {
+    fn from(data_model: &InternalDataModelRef) -> Self {
+        let internal_data_model = OnceCell::new();
+        internal_data_model.set(Arc::clone(data_model)).unwrap();
+
+        Self {
+            id: data_model.db_name.clone(),
+            internal_data_model,
+            // This does _not_ seem correct
+            revision: Default::default(),
+        }
+    }
+}
