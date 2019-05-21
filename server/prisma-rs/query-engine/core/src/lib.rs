@@ -6,6 +6,9 @@ extern crate log;
 #[macro_use]
 extern crate debug_stub_derive;
 
+#[macro_use]
+extern crate lazy_static;
+
 mod builders;
 mod error;
 mod executor;

@@ -25,11 +25,11 @@ impl SupportedCapabilities {
   }
 }
 
-// WIP: The scala code has subtypes for lists, connectors, ids, etc. We might need to move that to separate enums.
 #[allow(dead_code)]
 #[derive(Debug, PartialEq)]
 pub enum ConnectorCapability {
   ScalarLists(ScalarListsCapability),
+  IdCapability(IdCapability),
   EmbeddedTypes,
   JoinRelationsFilter,
   ImportExport,
@@ -42,7 +42,6 @@ pub enum ConnectorCapability {
   MongoJoinRelationLinks,
   RelationLinkList,
   RelationLinkTable,
-  IdCapability(IdCapability),
 }
 
 #[derive(Debug, PartialEq)]

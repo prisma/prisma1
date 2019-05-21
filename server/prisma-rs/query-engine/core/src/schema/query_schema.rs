@@ -34,6 +34,22 @@ pub struct Argument {
   // FromInput conversion -> Take a look at that.
 }
 
+#[derive(DebugStub)]
+pub struct InputObjectType {
+  pub name: String,
+
+  #[debug_stub = "#Input Fields Cell#"]
+  pub fields: OnceCell<Vec<InputField>>,
+}
+
+#[derive(Debug)]
+pub struct InputField {
+  pub name: String,
+  pub field_type: InputType,
+  // pub default_value: Option<>... todo: Do we need that?
+  // FromInput conversion -> Take a look at that.
+}
+
 // On schema construction checks:
 // - field name uniqueness
 // - val NameRegexp = """^[_a-zA-Z][_a-zA-Z0-9]*$""".r match
@@ -43,7 +59,7 @@ pub struct Argument {
 pub enum InputType {
   Enum(EnumType),
   List(Box<InputType>),
-  Object(ObjectType),
+  Object(InputObjectTypeRef),
   Opt(Box<InputType>),
   Scalar(ScalarType),
 }
@@ -57,6 +73,10 @@ impl InputType {
     InputType::Opt(Box::new(containing))
   }
 
+  pub fn object(containing: InputObjectTypeRef) -> InputType {
+    InputType::Object(containing)
+  }
+
   pub fn string() -> InputType {
     InputType::Scalar(ScalarType::String)
   }
@@ -65,36 +85,37 @@ impl InputType {
     InputType::Scalar(ScalarType::Int)
   }
 
-  pub fn float() -> OutputType {
-    OutputType::Scalar(ScalarType::Float)
+  pub fn float() -> InputType {
+    InputType::Scalar(ScalarType::Float)
   }
 
-  pub fn boolean() -> OutputType {
-    OutputType::Scalar(ScalarType::Boolean)
+  pub fn boolean() -> InputType {
+    InputType::Scalar(ScalarType::Boolean)
   }
 
-  pub fn enum_type() -> OutputType {
-    OutputType::Scalar(ScalarType::Enum)
+  pub fn enum_type() -> InputType {
+    InputType::Scalar(ScalarType::Enum)
   }
 
-  pub fn date_time() -> OutputType {
-    OutputType::Scalar(ScalarType::DateTime)
+  pub fn date_time() -> InputType {
+    InputType::Scalar(ScalarType::DateTime)
   }
 
-  pub fn json() -> OutputType {
-    OutputType::Scalar(ScalarType::Json)
+  pub fn json() -> InputType {
+    InputType::Scalar(ScalarType::Json)
   }
 
-  pub fn uuid() -> OutputType {
-    OutputType::Scalar(ScalarType::UUID)
+  pub fn uuid() -> InputType {
+    InputType::Scalar(ScalarType::UUID)
   }
 
-  pub fn id() -> OutputType {
-    OutputType::Scalar(ScalarType::ID)
+  pub fn id() -> InputType {
+    InputType::Scalar(ScalarType::ID)
   }
 }
 
 pub type ObjectTypeRef = Arc<ObjectType>;
+pub type InputObjectTypeRef = Arc<InputObjectType>;
 pub type OutputTypeRef = Arc<OutputType>;
 pub type InputTypeRef = Arc<InputType>;
 
@@ -102,7 +123,7 @@ pub type InputTypeRef = Arc<InputType>;
 pub enum OutputType {
   Enum(EnumType),
   List(Box<OutputType>),
-  Object(Arc<ObjectType>),
+  Object(ObjectTypeRef),
   Opt(Box<OutputType>),
   Scalar(ScalarType),
 }
@@ -116,8 +137,8 @@ impl OutputType {
     OutputType::Opt(Box::new(containing))
   }
 
-  pub fn object(containing: &ObjectTypeRef) -> OutputType {
-    OutputType::Object(Arc::clone(containing))
+  pub fn object(containing: ObjectTypeRef) -> OutputType {
+    OutputType::Object(containing)
   }
 
   pub fn string() -> OutputType {

@@ -5,14 +5,14 @@ use prisma_models::{
 };
 use std::{collections::HashMap, sync::Arc};
 
-type ObjectTypeCache = OnceCell<HashMap<String, ObjectTypeRef>>;
+type ObjectTypeCache = HashMap<String, ObjectTypeRef>;
 
 pub struct ObjectTypeBuilder<'a> {
   internal_data_model: InternalDataModelRef,
   with_relations: bool,
   only_id: bool,
   capabilities: &'a SupportedCapabilities,
-  model_object_type_cache: ObjectTypeCache, // Deduplicates computation
+  model_object_type_cache: OnceCell<ObjectTypeCache>, // Deduplicates computation
 }
 
 impl<'a> ObjectTypeBuilder<'a> {
@@ -32,6 +32,15 @@ impl<'a> ObjectTypeBuilder<'a> {
     .compute_model_object_types()
   }
 
+  pub fn map_model_object_type(&self, model: &ModelRef) -> ObjectTypeRef {
+    Arc::clone(
+      self
+        .cache()
+        .get(&model.name)
+        .expect("Invariant violation: Initialized object type skeleton for each model."),
+    )
+  }
+
   /// Initializes model object type cache on the query schema builder.
   fn compute_model_object_types(self) -> Self {
     // Compute initial cache.
@@ -46,14 +55,9 @@ impl<'a> ObjectTypeBuilder<'a> {
 
     // Compute fields on all cached object types.
     self.internal_data_model.models().iter().for_each(|m| {
-      let obj: &ObjectTypeRef = self
-        .model_object_type_cache
-        .get()
-        .expect("Invariant violation: Expected cache to be initialized before computing fields.")
-        .get(&m.name)
-        .expect("Invariant violation: Initialized object type skeleton for each model.");
-
+      let obj: ObjectTypeRef = self.map_model_object_type(m);
       let fields = self.compute_fields(m);
+
       obj.fields.set(fields);
     });
 
@@ -120,7 +124,7 @@ impl<'a> ObjectTypeBuilder<'a> {
         TypeIdentifier::GraphQLID => OutputType::id(),
         TypeIdentifier::UUID => OutputType::uuid(),
         TypeIdentifier::Int => OutputType::int(),
-        TypeIdentifier::Relation => unreachable!(), // handled in ModelField::Relation case
+        TypeIdentifier::Relation => unreachable!(), // Scalar fields can't have a Relation type identifier.
       },
     };
 
@@ -152,10 +156,10 @@ impl<'a> ObjectTypeBuilder<'a> {
   }
 
   /// Builds "many records where" arguments solely based on the given model.
-  pub fn many_records_arguments(model: ModelRef) -> Vec<Argument> {
+  pub fn many_records_arguments(&self, model: &ModelRef) -> Vec<Argument> {
     vec![
-      // where_argument(&model, capabilities),
-      Self::order_by_argument(&model),
+      self.where_argument(&model),
+      self.order_by_argument(&model),
       argument("skip", InputType::opt(InputType::string())),
       argument("after", InputType::opt(InputType::string())),
       argument("before", InputType::opt(InputType::string())),
@@ -164,16 +168,14 @@ impl<'a> ObjectTypeBuilder<'a> {
     ]
   }
 
-  pub fn where_argument(model: &ModelRef, capabilities: &SupportedCapabilities) -> Argument {
-    let where_object = FilterObjectTypeBuilder {
-      model: Arc::clone(model),
-    }
-    .build(capabilities);
+  pub fn where_argument(&self, model: &ModelRef) -> Argument {
+    // let where_object = FilterObjectTypeBuilder::new(Arc::clone(model)).build(self.capabilities);
 
-    argument("where", InputType::opt(where_object))
+    // argument("where", InputType::opt(where_object))
+    unimplemented!()
   }
 
-  pub fn order_by_argument(model: &ModelRef) -> Argument {
+  pub fn order_by_argument(&self, model: &ModelRef) -> Argument {
     let enum_values: Vec<EnumValue> = model
       .fields()
       .scalar_non_list()
@@ -219,5 +221,12 @@ impl<'a> ObjectTypeBuilder<'a> {
       }
       _ => panic!("Invariant violation: map_enum_field can only be called on scalar enum fields."),
     }
+  }
+
+  fn cache(&self) -> &ObjectTypeCache {
+    &self
+      .model_object_type_cache
+      .get()
+      .expect("Invariant violation: Expected cache to be initialized before computing fields.")
   }
 }

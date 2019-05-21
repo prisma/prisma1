@@ -40,8 +40,8 @@ impl<'a> QuerySchemaBuilder<'a> {
       .into_iter()
       .filter_map(|m| {
         Some(vec![
-          Self::all_items_field(Arc::clone(&m)),
-          Self::single_item_field(Arc::clone(&m)),
+          self.all_items_field(Arc::clone(&m)),
+          self.single_item_field(Arc::clone(&m)),
         ])
       })
       .flatten()
@@ -56,27 +56,20 @@ impl<'a> QuerySchemaBuilder<'a> {
   }
 
   /// Builds a "many" items field (e.g. users(args), posts(args), ...) for given model.
-  fn all_items_field(model: ModelRef) -> Field {
-    // Field {
-    //     name: camel_case(pluralize(model.name)),
-    //     arguments: vec![],
-    //     field_type: OutputType::list(OutputType::opt(OutputType::Object))
-    // }
+  fn all_items_field(&self, model: ModelRef) -> Field {
+    let args = self.object_type_builder.many_records_arguments(&model);
 
-    // Field(
-    //     camelCase(pluralsCache.pluralName(model)),
-    //     fieldType = ListType(OptionType(objectTypes(model.name))),
-    //     arguments = objectTypeBuilder.mapToListConnectionArguments(model),
-    //     resolve = ctx => {
-    //         val arguments = objectTypeBuilder.extractQueryArgumentsFromContext(model, ctx)
-    //         DeferredValue(GetNodesDeferred(model, arguments, ctx.getSelectedFields(model))).map(_.toNodes.map(Some(_)))
-    //     }
-    // )
-    unimplemented!()
+    field(
+      camel_case(pluralize(model.name.clone())),
+      args,
+      OutputType::list(OutputType::opt(OutputType::object(
+        self.object_type_builder.map_model_object_type(&model),
+      ))),
+    )
   }
 
   /// Builds a "single" item field (e.g. user(args), post(args), ...) for given model.
-  fn single_item_field(model: ModelRef) -> Field {
+  fn single_item_field(&self, model: ModelRef) -> Field {
     unimplemented!()
   }
 }

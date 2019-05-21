@@ -18,11 +18,36 @@ where
   T: Into<String>,
 {
   let f = OnceCell::new();
-  f.set(fields);
+  f.set(fields).unwrap();
 
   ObjectType {
     name: name.into(),
     fields: f,
+  }
+}
+
+/// Input object type convenience wrapper function.
+pub fn input_object_type<T>(name: T, fields: Vec<InputField>) -> InputObjectType
+where
+  T: Into<String>,
+{
+  let f = OnceCell::new();
+  f.set(fields).unwrap();
+
+  InputObjectType {
+    name: name.into(),
+    fields: f,
+  }
+}
+
+/// Input object type initializer for cases where only the name is known, and fields are computed later.
+pub fn init_input_object_type<T>(name: T) -> InputObjectType
+where
+  T: Into<String>,
+{
+  InputObjectType {
+    name: name.into(),
+    fields: OnceCell::new(),
   }
 }
 
@@ -56,6 +81,17 @@ where
   Field {
     name: name.into(),
     arguments,
+    field_type,
+  }
+}
+
+/// Field convenience wrapper function.
+pub fn input_field<T>(name: T, field_type: InputType) -> InputField
+where
+  T: Into<String>,
+{
+  InputField {
+    name: name.into(),
     field_type,
   }
 }

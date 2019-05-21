@@ -100,6 +100,13 @@ impl Field {
             Field::Relation(ref rf) => rf.is_required,
         }
     }
+
+    pub fn type_identifier(&self) -> TypeIdentifier {
+        match self {
+            Field::Scalar(ref sf) => sf.type_identifier,
+            Field::Relation(ref rf) => rf.type_identifier,
+        }
+    }
 }
 
 impl FieldTemplate {
