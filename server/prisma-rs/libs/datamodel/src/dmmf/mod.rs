@@ -2,6 +2,9 @@ use crate::dml;
 use serde;
 use serde_json;
 
+/// This is a partial implementation of the DMMF format.
+/// No longer maintained. Don't use.
+
 // This is a simple JSON serialization using Serde.
 // The JSON format follows the DMMF spec, but is incomplete.
 

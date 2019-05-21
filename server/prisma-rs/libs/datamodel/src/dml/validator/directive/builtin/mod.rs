@@ -12,6 +12,7 @@ mod scalarlist;
 mod sequence;
 mod unique;
 
+/// Returns a directive list validator containing all builtin field directives.
 pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
     let mut validator = DirectiveListValidator::<dml::Field> {
         known_directives: HashMap::new(),
@@ -29,6 +30,7 @@ pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
     return validator;
 }
 
+/// Returns a directive list validator containing all builtin model directives.
 pub fn new_builtin_model_directives() -> DirectiveListValidator<dml::Model> {
     let mut validator = DirectiveListValidator::<dml::Model> {
         known_directives: HashMap::new(),
@@ -40,12 +42,13 @@ pub fn new_builtin_model_directives() -> DirectiveListValidator<dml::Model> {
     return validator;
 }
 
+/// Returns a directive list validator containing all builtin enum directives.
 pub fn new_builtin_enum_directives() -> DirectiveListValidator<dml::Enum> {
     let validator = DirectiveListValidator::<dml::Enum> {
         known_directives: HashMap::new(),
     };
 
-    // Adds are missing
+    // No enum derictives yet.
 
     return validator;
 }

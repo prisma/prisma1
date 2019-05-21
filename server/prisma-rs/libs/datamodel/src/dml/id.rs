@@ -5,13 +5,12 @@ use serde::{Deserialize, Serialize};
 
 use super::FromStrAndSpan;
 
+/// Represents a strategy for generating IDs.
 #[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum IdStrategy {
     Auto,
     None,
 }
-
-// TODO: Cannot use FromStr, since we need to propagate span
 
 impl FromStrAndSpan for IdStrategy {
     fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
@@ -23,26 +22,14 @@ impl FromStrAndSpan for IdStrategy {
     }
 }
 
-#[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
-pub enum ScalarListStrategy {
-    Embedded,
-    Relation,
-}
-
-impl FromStrAndSpan for ScalarListStrategy {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
-        match s {
-            "EMBEDDED" => Ok(ScalarListStrategy::Embedded),
-            "RELATION" => Ok(ScalarListStrategy::Relation),
-            _ => Err(ValidationError::new_literal_parser_error("id strategy", s, span)),
-        }
-    }
-}
-
+/// Represents a sequence. Can be used to seed IDs.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Sequence {
+    /// The name of the sequence.
     pub name: String,
+    /// The initial value of the sequence.
     pub initial_value: i32,
+    /// The allocation size of the sequence.
     pub allocation_size: i32,
 }
 

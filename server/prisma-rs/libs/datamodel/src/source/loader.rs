@@ -3,21 +3,25 @@ use crate::ast;
 use crate::common::argument::Arguments;
 use crate::errors::{ErrorCollection, ValidationError};
 
+/// Helper struct to load and validate source configuration blocks.
 pub struct SourceLoader {
     source_declarations: Vec<Box<SourceDefinition>>,
 }
 
 impl SourceLoader {
+    /// Creates a new, empty source loader.
     pub fn new() -> SourceLoader {
         SourceLoader {
             source_declarations: vec![],
         }
     }
 
+    /// Adds a source definition to this loader.
     pub fn add_source_definition(&mut self, source_definition: Box<SourceDefinition>) {
         self.source_declarations.push(source_definition);
     }
 
+    /// Internal: Loads a single source from a source config block in the datamodel.
     fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Box<Source>, ValidationError> {
         let args = Arguments::new(&ast_source.properties, ast_source.span);
         let url = args.arg("url")?.as_str()?;
@@ -41,6 +45,8 @@ impl SourceLoader {
         ))
     }
 
+    /// Loads all source config blocks form the given AST,
+    /// and returns a Source instance for each.
     pub fn load(&self, ast_schema: &ast::Schema) -> Result<Vec<Box<Source>>, ErrorCollection> {
         let mut sources: Vec<Box<Source>> = vec![];
         let mut errors = ErrorCollection::new();

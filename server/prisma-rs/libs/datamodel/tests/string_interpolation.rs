@@ -21,7 +21,7 @@ fn interpolate_expressions_in_strings() {
 }
 
 #[test]
-fn don_interpolate_escaped_expressions_in_strings() {
+fn dont_interpolate_escaped_expressions_in_strings() {
     let dml = r#"
     model User {
         firstName: String @default("user_\${3}")

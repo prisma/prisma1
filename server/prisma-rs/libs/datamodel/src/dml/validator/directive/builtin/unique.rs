@@ -1,6 +1,7 @@
 use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
+/// Prismas builtin `@unique` directive.
 pub struct UniqueDirectiveValidator {}
 
 impl DirectiveValidator<dml::Field> for UniqueDirectiveValidator {

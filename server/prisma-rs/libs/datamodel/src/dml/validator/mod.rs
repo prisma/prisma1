@@ -9,7 +9,11 @@ use crate::source;
 use directive::builtin::{new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives};
 use directive::DirectiveListValidator;
 
-// TODO: Naming
+/// Helper for validating a datamodel.
+///
+/// When validating, the
+/// AST is converted to the real datamodel, and
+/// additional semantics are attached.
 pub struct Validator {
     field_directives: DirectiveListValidator<dml::Field>,
     model_directives: DirectiveListValidator<dml::Model>,
@@ -17,6 +21,7 @@ pub struct Validator {
 }
 
 impl Validator {
+    /// Creates a new instance, with all builtin directives registered.
     pub fn new() -> Validator {
         Validator {
             field_directives: new_builtin_field_directives(),
@@ -25,6 +30,10 @@ impl Validator {
         }
     }
 
+    /// Creates a new instance, with all builtin directives and
+    /// the directives defined by the given sources registered.
+    ///
+    /// The directives defined by the given sources will be namespaced.
     pub fn with_sources(sources: &Vec<Box<source::Source>>) -> Validator {
         let mut validator = Validator::new();
 
@@ -43,6 +52,14 @@ impl Validator {
         return validator;
     }
 
+    /// Validates an AST semantically and promotes it to a datamodel/schema.
+    ///
+    /// This method will attempt to
+    /// * Resolve all directives
+    /// * Recursively evaluate all functions
+    /// * Perform string interpolation
+    /// * Resolve and check default values
+    /// * Resolve and check all field types
     pub fn validate(&self, ast_schema: &ast::Schema) -> Result<dml::Schema, ErrorCollection> {
         let mut schema = dml::Schema::new();
         let mut errors = ErrorCollection::new();
@@ -68,6 +85,7 @@ impl Validator {
         }
     }
 
+    /// Internal: Validates a model AST node.
     fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> Result<dml::Model, ErrorCollection> {
         let mut model = dml::Model::new(&ast_model.name);
         let mut errors = ErrorCollection::new();
@@ -90,6 +108,7 @@ impl Validator {
         }
     }
 
+    /// Internal: Validates an enum AST node.
     fn validate_enum(&self, ast_enum: &ast::Enum) -> Result<dml::Enum, ErrorCollection> {
         let mut en = dml::Enum::new(&ast_enum.name, ast_enum.values.clone());
         let mut errors = ErrorCollection::new();
@@ -105,6 +124,7 @@ impl Validator {
         }
     }
 
+    /// Internal: Validates a field AST node.
     fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> Result<dml::Field, ErrorCollection> {
         let mut errors = ErrorCollection::new();
         // If we cannot parse the field type, we exit right away.
@@ -140,6 +160,7 @@ impl Validator {
         }
     }
 
+    /// Internal: Validates a field's arity.
     fn validate_field_arity(&self, ast_field: &ast::FieldArity) -> dml::FieldArity {
         match ast_field {
             ast::FieldArity::Required => dml::FieldArity::Required,
@@ -148,6 +169,7 @@ impl Validator {
         }
     }
 
+    /// Internal: Validates a field's type.
     fn validate_field_type(
         &self,
         type_name: &str,

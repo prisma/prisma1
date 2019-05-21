@@ -1,6 +1,7 @@
 use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
+/// Prismas builtin `@scalarList` directive.
 pub struct ScalarListDirectiveValidator {}
 
 impl DirectiveValidator<dml::Field> for ScalarListDirectiveValidator {

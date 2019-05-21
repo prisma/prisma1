@@ -5,6 +5,10 @@ use colored::Colorize;
 // Line breaks make the declarations very hard to read.
 #[cfg_attr(rustfmt, rustfmt_skip)] 
 
+/// Enum for different errors which can happen during
+/// parsing or validation.
+/// 
+/// For fancy printing, please use the `pretty_print_error` function.
 #[derive(Debug, Fail, Clone)]
 pub enum ValidationError {
     #[fail(display = "Argument {} is missing.", argument_name)]
@@ -168,6 +172,8 @@ impl ValidationError {
     }
 }
 
+/// Given the datamodel text representation, pretty prints an error, including
+/// the offending portion of the source code, for human-friendly reading.
 #[cfg_attr(rustfmt, rustfmt_skip)]
 pub fn pretty_print_error(f: &mut std::io::Write, file_name: &str, text: &str, error_obj: &ValidationError) -> std::io::Result<()> {
     let span = error_obj.span();
