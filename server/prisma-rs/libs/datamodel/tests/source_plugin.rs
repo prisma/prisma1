@@ -1,7 +1,4 @@
-use datamodel::{
-    common::argument::Arguments, dml, dml::FromStrAndSpan, errors::ValidationError, source::*,
-    validator::directive::DirectiveValidator,
-};
+use datamodel::{dml, dml::FromStrAndSpan, errors::ValidationError, source::*, Arguments, DirectiveValidator};
 mod common;
 use common::*;
 

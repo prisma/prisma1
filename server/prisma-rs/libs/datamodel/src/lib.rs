@@ -39,12 +39,14 @@ pub mod dml;
 pub use dml::validator::Validator;
 pub use dml::*;
 pub mod common;
+pub use common::argument::Arguments;
 pub mod dmmf;
 pub mod errors;
 pub mod source;
-pub use common::functions::*;
+pub use common::functions::FunctionalEvaluator;
 pub use dml::FromStrAndSpan;
 pub use source::*;
+pub use validator::directive::DirectiveValidator;
 
 // Helpers.
 
