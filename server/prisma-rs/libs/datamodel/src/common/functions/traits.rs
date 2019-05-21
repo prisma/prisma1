@@ -2,6 +2,7 @@ use crate::ast;
 use crate::common::value::ValueValidator;
 use crate::errors::ValidationError;
 
+/// Trait for functionals.
 pub trait Functional {
     fn name(&self) -> &str;
     fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<ast::Value, ValidationError>;

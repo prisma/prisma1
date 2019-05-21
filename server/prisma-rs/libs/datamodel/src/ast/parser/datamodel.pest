@@ -18,11 +18,11 @@ identifier = @{ ASCII_ALPHA ~ ( "_" | ASCII_ALPHANUMERIC)* }
 numeric_literal = @{ ("-")? ~ ASCII_DIGIT+ ~("." ~ ASCII_DIGIT+)? }
 
 // String, with support for escaped stuff and interpolations.
-string_escaped_predefined = { "n" | "r" | "t" | "\\" | "0" | "\"" | "'" }
+string_escaped_predefined = { "n" | "r" | "t" | "\\" | "0" | "\"" | "'" | "${" }
 string_escape     = { "\\" ~ string_escaped_predefined }
 // This is only used to escape the parser. The string above is still treated as atomic.
 string_interpolate_escape = !{ ("${" ~ expression ~ "}") }
-string_raw = { (!("\\" | "\"" | NEWLINE | "${") ~ ("\\${" | ANY))+ }
+string_raw = { (!("\\" | "\"" | NEWLINE | "${") ~ (ANY))+ }
 string_content = @{ (string_raw | string_escape | string_interpolate_escape)* }
 string_literal = { "\"" ~ string_content ~ "\"" }
 
@@ -109,5 +109,11 @@ datamodel = { SOI ~ (model_declaration | enum_declaration | source_block )* ~ EO
 // that strings do not contain new lines.
 
 // Greedy match escaped interpolation or any char. Do not match interpolation.
-string_uninterpolated = @{ (!("${") ~ ("\\${" | ANY))+ }
-string_interpolated = { SOI ~ (string_uninterpolated | ("${" ~ expression ~ "}"))* ~ EOI }
+string_any = @{ ANY }
+string_escaped_interpolation = @{ "\\${" }
+string_interpolated = { SOI ~ (
+                            // This is basically everything except an expression, using the escape trick from above.
+                            (!("${") ~ ( string_escaped_interpolation | string_any))+ | 
+                            // This is an expression.
+                            ("${" ~ expression ~ "}")
+                        )* ~ EOI }

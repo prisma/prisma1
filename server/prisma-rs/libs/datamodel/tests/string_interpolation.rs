@@ -21,6 +21,25 @@ fn interpolate_expressions_in_strings() {
 }
 
 #[test]
+fn don_interpolate_escaped_expressions_in_strings() {
+    let dml = r#"
+    model User {
+        firstName: String @default("user_\${3}")
+        lastName: String
+    }
+    "#;
+
+    let schema = parse(dml);
+    let user_model = schema.assert_has_model("User");
+    user_model.assert_is_embedded(false);
+    user_model
+        .assert_has_field("firstName")
+        .assert_base_type(&dml::ScalarType::String)
+        .assert_default_value(dml::Value::String(String::from("user_${3}")));
+}
+
+
+#[test]
 fn interpolate_functionals_in_strings() {
     let dml = r#"
     model User {

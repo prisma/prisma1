@@ -6,6 +6,7 @@ use pest::Parser;
 
 pub struct StringInterpolator {}
 
+/// Adds an offset to a span.
 fn lift_span(span: &Span, offset: usize) -> Span {
     Span {
         start: offset + span.start,
@@ -25,7 +26,12 @@ fn parse_expr_and_lift_span(token: &pest::iterators::Pair<'_, Rule>, start: usiz
     }
 }
 
+/// Struct which helps with interpolating strings.
 impl StringInterpolator {
+    /// Interpolates expressions inside strings.alloc
+    ///
+    /// The string is re-parsed and all expressions found within `${...}` are
+    /// evaluated recursively.
     pub fn interpolate(text: &str, span: &Span) -> Result<Value, ValidationError> {
         let string_result = PrismaDatamodelParser::parse(Rule::string_interpolated, text);
         let mut parts: Vec<String> = Vec::new();
@@ -35,7 +41,9 @@ impl StringInterpolator {
                 let string_components = string_wrapped.next().unwrap();
 
                 match_children! { string_components, current,
-                    Rule::string_uninterpolated => parts.push(String::from(current.as_str())),
+                    // Explicit handling of escaped `${`, like `\${...}`.
+                    Rule::string_escaped_interpolation => parts.push(String::from("${")),
+                    Rule::string_any => parts.push(String::from(current.as_str())),
                     Rule::expression => {
                         let value = parse_expr_and_lift_span(&current, span.start);
                         parts.push(ValueValidator::new(&value)?.raw().clone())

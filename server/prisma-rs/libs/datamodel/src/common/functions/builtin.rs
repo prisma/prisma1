@@ -3,6 +3,7 @@ use crate::ast;
 use crate::common::value::ValueValidator;
 use crate::errors::ValidationError;
 
+/// Environment variable interpolating function (`env(...)`).
 pub struct EnvFunctional {}
 
 impl Functional for EnvFunctional {

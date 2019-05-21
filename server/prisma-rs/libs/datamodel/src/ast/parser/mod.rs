@@ -21,6 +21,8 @@ fn parse_string_literal(token: &pest::iterators::Pair<'_, Rule>) -> String {
 }
 
 // Expressions
+
+/// Parses an expression, given a Pest parser token.
 pub fn parse_expression(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     return match_first! { token, current,
         Rule::numeric_literal => Value::NumericValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
@@ -32,7 +34,6 @@ pub fn parse_expression(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     };
 }
 
-// Expressions
 fn parse_function(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     let mut name: Option<String> = None;
     let mut arguments: Vec<Value> = vec![];
@@ -297,6 +298,8 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
 }
 
 // Whole datamodel parsing
+
+/// Parses a Prisma V2 datamodel document into an internal AST representation.
 pub fn parse(datamodel_string: &str) -> Result<Schema, ValidationError> {
     let datamodel_result = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string);
 
