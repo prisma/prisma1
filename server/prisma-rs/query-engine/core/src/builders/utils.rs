@@ -36,6 +36,7 @@ pub(crate) fn extract_query_args(field: &Field, model: ModelRef) -> CoreResult<Q
     field
         .arguments
         .iter()
+        .filter(|(arg, _)| arg.as_str() != "data") // `data` is mutation specific and handled elsewhere!
         .fold(Ok(QueryArguments::default()), |result, (k, v)| {
             if let Ok(res) = result {
                 #[cfg_attr(rustfmt, rustfmt_skip)]
