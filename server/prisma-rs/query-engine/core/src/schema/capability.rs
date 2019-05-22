@@ -14,7 +14,7 @@ impl SupportedCapabilities {
       ConnectorCapability::ScalarLists(l) => self
         .capabilities
         .iter()
-        .find(|c| match l {
+        .find(|_| match l {
           ScalarListsCapability::EmbeddedScalarLists => true,
           ScalarListsCapability::NonEmbeddedScalarList => true,
           _ => false,

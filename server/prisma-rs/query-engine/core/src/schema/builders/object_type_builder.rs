@@ -140,7 +140,7 @@ impl<'a> ObjectTypeBuilder<'a> {
       ModelField::Scalar(_) => vec![],
       ModelField::Relation(rf) if rf.is_list && !rf.related_model().is_embedded => self.many_records_arguments(model),
       ModelField::Relation(rf) if rf.is_list && rf.related_model().is_embedded => vec![],
-      ModelField::Relation(rf) if rf.is_list => vec![],
+      ModelField::Relation(rf) if !rf.is_list => vec![],
       _ => unreachable!(),
     }
   }

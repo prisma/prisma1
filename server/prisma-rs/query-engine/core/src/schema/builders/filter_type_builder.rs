@@ -36,6 +36,29 @@ impl<'a> FilterObjectTypeBuilder<'a> {
       .collect()
   }
 
+  /// Maps relations to input fields.
+  ///
+  /// This code recurses into new FilterObjectTypeBuilders to build dependent filter types.
+  ///
+  /// This needs special consideration, due to circular dependencies.
+  /// Assume a data model looks like this, with arrows indicating some kind of relation between models:
+  ///
+  ///       +---+
+  ///   +---+ B +<---+
+  ///   |   +---+    |
+  ///   v            |
+  /// +-+-+        +-+-+      +---+
+  /// | A +------->+ C +<-----+ D |
+  /// +---+        +---+      +---+
+  ///
+  /// The above would cause infinite filter type builder to be instantiated due to the circular dependency (A -> B -> C -> A) in relations.
+  /// To break circles, all parents of the current recursion path are passed into the new FilterObjectTypeBuilder,
+  /// e.g. for C, B and A InputObjectTypes are passed.
+  ///
+  /// As soon as a related model is already in the list of "parents", we know that we can break and reuse the already computed type.
+  /// This will bubble up, allowing the field computation to finish.
+  ///
+  /// Model D in the graph illustrates that in the current solution, we would recompute
   fn map_relation_filter_input_field(&self, field: Arc<RelationField>) -> Vec<InputField> {
     let related_input_type = Self::new(Arc::clone(&field.related_model()), self.capabilities).build();
 

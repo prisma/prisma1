@@ -8,6 +8,8 @@ pub struct QuerySchemaBuilder<'a> {
   object_type_builder: ObjectTypeBuilder<'a>,
 }
 
+// WIP: The implementation uses Arcs liberally, which might cause memory leaks - this is not an issue at the moment as the schema
+// is supposed to live as long as the program lives _for now_.
 impl<'a> QuerySchemaBuilder<'a> {
   pub fn new(internal_data_model: &InternalDataModelRef, capabilities: &'a SupportedCapabilities) -> Self {
     let object_type_builder = ObjectTypeBuilder::new(Arc::clone(internal_data_model), true, capabilities);
@@ -41,7 +43,7 @@ impl<'a> QuerySchemaBuilder<'a> {
       .filter_map(|m| {
         Some(vec![
           self.all_items_field(Arc::clone(&m)),
-          self.single_item_field(Arc::clone(&m)),
+          // self.single_item_field(Arc::clone(&m)),
         ])
       })
       .flatten()
