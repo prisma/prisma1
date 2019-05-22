@@ -1,23 +1,91 @@
 use super::*;
 use prisma_models::{Field as ModelField, ModelRef, RelationField, ScalarField, TypeIdentifier};
-use std::sync::Arc;
+use std::{cell::RefCell, collections::HashMap, sync::Arc};
 
+/// Filter object and scalar filter object type builder.
+/// Not thread safe.
+/// RefCells are used to provide interior mutability to the cache without requiring mut refs to the builder.
 pub struct FilterObjectTypeBuilder<'a> {
-  pub model: ModelRef,
-  pub capabilities: &'a SupportedCapabilities,
+  capabilities: &'a SupportedCapabilities,
+  filter_cache: RefCell<HashMap<String, InputObjectTypeRef>>, // Caches "xWhereInput": Model name -> Object type ref
+  scalar_cache: RefCell<HashMap<String, InputObjectTypeRef>>, // Caches "xWhereScalarInput": Model name -> Object type ref
 }
 
 impl<'a> FilterObjectTypeBuilder<'a> {
-  pub fn new(model: ModelRef, capabilities: &'a SupportedCapabilities) -> Self {
-    FilterObjectTypeBuilder { model, capabilities }
+  pub fn new(capabilities: &'a SupportedCapabilities) -> Self {
+    FilterObjectTypeBuilder {
+      capabilities,
+      filter_cache: RefCell::new(HashMap::new()),
+      scalar_cache: RefCell::new(HashMap::new()),
+    }
   }
 
-  pub fn build(&self) -> InputObjectTypeRef {
+  // todo: scalarFilterObjectType
+
+  pub fn filter_object_type(&self, model: ModelRef) -> InputObjectTypeRef {
     if self.capabilities.has(ConnectorCapability::MongoJoinRelationLinks) {
-      self.mongo_filter_object()
+      self.build_mongo_filter_object(model)
     } else {
-      self.filter_object()
+      self.build_filter_object(model)
     }
+  }
+
+  fn build_filter_object(&self, model: ModelRef) -> InputObjectTypeRef {
+    let existing_entry = self.filter_cache.borrow().get(&model.name).cloned();
+
+    match existing_entry {
+      Some(entry) => entry,
+      None => {
+        let input_object = Arc::new(init_input_object_type(format!("{}WhereInput", model.name.clone())));
+        self
+          .filter_cache
+          .borrow_mut()
+          .insert(model.name.clone(), Arc::clone(&input_object));
+
+        // WIP: the field init below might need to be deferred...
+        let mut fields = vec![
+          input_field(
+            "AND",
+            InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
+          ),
+          input_field(
+            "OR",
+            InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
+          ),
+          input_field(
+            "NOT",
+            InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
+          ),
+        ];
+
+        let mut scalar_input_fields: Vec<InputField> = model
+          .fields()
+          .scalar()
+          .into_iter()
+          .filter(|sf| !sf.is_hidden)
+          .map(|sf| self.map_input_field(sf))
+          .flatten()
+          .collect();
+
+        let mut relational_input_fields: Vec<InputField> = model
+          .fields()
+          .relation()
+          .into_iter()
+          .map(|rf| self.map_relation_filter_input_field(rf))
+          .flatten()
+          .collect();
+
+        fields.append(&mut scalar_input_fields);
+        fields.append(&mut relational_input_fields);
+
+        input_object.fields.set(fields).unwrap();
+        input_object
+      }
+    }
+  }
+
+  fn build_mongo_filter_object(&self, model: ModelRef) -> InputObjectTypeRef {
+    unimplemented!()
   }
 
   fn map_input_field(&self, field: Arc<ScalarField>) -> Vec<InputField> {
@@ -38,7 +106,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
 
   /// Maps relations to input fields.
   ///
-  /// This code recurses into new FilterObjectTypeBuilders to build dependent filter types.
+  /// This function also triggers building dependent filter object types if they're not already cached.
   ///
   /// This needs special consideration, due to circular dependencies.
   /// Assume a data model looks like this, with arrows indicating some kind of relation between models:
@@ -51,16 +119,16 @@ impl<'a> FilterObjectTypeBuilder<'a> {
   /// | A +------->+ C +<-----+ D |
   /// +---+        +---+      +---+
   ///
-  /// The above would cause infinite filter type builder to be instantiated due to the circular dependency (A -> B -> C -> A) in relations.
-  /// To break circles, all parents of the current recursion path are passed into the new FilterObjectTypeBuilder,
-  /// e.g. for C, B and A InputObjectTypes are passed.
+  /// The above would cause infinite filter type builder to be instantiated due to the circular
+  /// dependency (A -> B -> C -> A) in relations without the cache to break circles.
   ///
-  /// As soon as a related model is already in the list of "parents", we know that we can break and reuse the already computed type.
-  /// This will bubble up, allowing the field computation to finish.
-  ///
-  /// Model D in the graph illustrates that in the current solution, we would recompute
+  /// Without caching, processing D (in fact, any type) would also trigger a complete recomputation of A, B, C.
   fn map_relation_filter_input_field(&self, field: Arc<RelationField>) -> Vec<InputField> {
-    let related_input_type = Self::new(Arc::clone(&field.related_model()), self.capabilities).build();
+    let related_model = field.related_model();
+
+    // We need to separate the two variables to drop the RefCell borrow in between.
+    let related_input_type_opt = self.filter_cache.borrow().get(&related_model.name).cloned();
+    let related_input_type = related_input_type_opt.unwrap_or_else(|| self.filter_object_type(related_model));
 
     match (field.is_hidden, field.is_list) {
       (true, _) => vec![],
@@ -108,54 +176,5 @@ impl<'a> FilterObjectTypeBuilder<'a> {
 
     let et: EnumType = internal_enum.into();
     et.into()
-  }
-
-  fn filter_object(&self) -> InputObjectTypeRef {
-    let input_object = Arc::new(init_input_object_type(format!("{}WhereInput", self.model.name.clone())));
-
-    // WIP: the field init below might need to be deferred...
-    let mut fields = vec![
-      input_field(
-        "AND",
-        InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
-      ),
-      input_field(
-        "OR",
-        InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
-      ),
-      input_field(
-        "NOT",
-        InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
-      ),
-    ];
-
-    let mut scalar_input_fields: Vec<InputField> = self
-      .model
-      .fields()
-      .scalar()
-      .into_iter()
-      .filter(|sf| !sf.is_hidden)
-      .map(|sf| self.map_input_field(sf))
-      .flatten()
-      .collect();
-
-    let mut relational_input_fields: Vec<InputField> = self
-      .model
-      .fields()
-      .relation()
-      .into_iter()
-      .map(|rf| self.map_relation_filter_input_field(rf))
-      .flatten()
-      .collect();
-
-    fields.append(&mut scalar_input_fields);
-    fields.append(&mut relational_input_fields);
-
-    input_object.fields.set(fields).unwrap();
-    input_object
-  }
-
-  fn mongo_filter_object(&self) -> InputObjectTypeRef {
-    unimplemented!()
   }
 }

@@ -1,7 +1,10 @@
 use super::*;
 use once_cell::sync::OnceCell;
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier};
-use std::{collections::HashMap, sync::Arc};
+use std::{
+  collections::HashMap,
+  sync::{Arc, Weak},
+};
 
 type ObjectTypeCache = HashMap<String, ObjectTypeRef>;
 
@@ -10,6 +13,7 @@ pub struct ObjectTypeBuilder<'a> {
   with_relations: bool,
   capabilities: &'a SupportedCapabilities,
   model_object_type_cache: OnceCell<ObjectTypeCache>, // Deduplicates computation
+  filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
 }
 
 impl<'a> ObjectTypeBuilder<'a> {
@@ -17,11 +21,13 @@ impl<'a> ObjectTypeBuilder<'a> {
     internal_data_model: InternalDataModelRef,
     with_relations: bool,
     capabilities: &'a SupportedCapabilities,
+    filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
   ) -> Self {
     ObjectTypeBuilder {
       internal_data_model,
       with_relations,
       capabilities,
+      filter_object_type_builder,
       model_object_type_cache: OnceCell::new(),
     }
     .compute_model_object_types()
@@ -159,7 +165,7 @@ impl<'a> ObjectTypeBuilder<'a> {
   }
 
   pub fn where_argument(&self, model: &ModelRef) -> Argument {
-    let where_object = FilterObjectTypeBuilder::new(Arc::clone(model), self.capabilities).build();
+    let where_object = self.filter_object_type_builder.filter_object_type(Arc::clone(model));
     argument("where", InputType::opt(InputType::object(where_object)))
   }
 

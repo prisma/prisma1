@@ -2,22 +2,31 @@ use super::*;
 use prisma_models::{InternalDataModelRef, ModelRef};
 use std::sync::Arc;
 
+/// Query schema builder. Root for query schema building.
 pub struct QuerySchemaBuilder<'a> {
   internal_data_model: InternalDataModelRef,
   capabilities: &'a SupportedCapabilities,
   object_type_builder: ObjectTypeBuilder<'a>,
+  pub filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
 }
 
 // WIP: The implementation uses Arcs liberally, which might cause memory leaks - this is not an issue at the moment as the schema
 // is supposed to live as long as the program lives _for now_.
 impl<'a> QuerySchemaBuilder<'a> {
   pub fn new(internal_data_model: &InternalDataModelRef, capabilities: &'a SupportedCapabilities) -> Self {
-    let object_type_builder = ObjectTypeBuilder::new(Arc::clone(internal_data_model), true, capabilities);
+    let filter_object_type_builder = Arc::new(FilterObjectTypeBuilder::new(capabilities));
+    let object_type_builder = ObjectTypeBuilder::new(
+      Arc::clone(internal_data_model),
+      true,
+      capabilities,
+      Arc::clone(&filter_object_type_builder),
+    );
 
     QuerySchemaBuilder {
       internal_data_model: Arc::clone(internal_data_model),
-      object_type_builder,
       capabilities,
+      object_type_builder,
+      filter_object_type_builder,
     }
   }
 
