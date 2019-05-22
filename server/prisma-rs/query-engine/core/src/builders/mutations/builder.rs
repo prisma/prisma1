@@ -43,7 +43,6 @@ impl<'field> MutationBuilder<'field> {
             Arc::clone(&self.model),
         )?;
 
-
         // NestedCreateNode {
         //     relation_field: Arc<RelationField>,
         //     non_list_args: PrismaArgs,
@@ -151,15 +150,11 @@ fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs
                                     _ => unimplemented!(), // or unreachable? dunn duuuuun!
                                 },
                             ));
-                        },
-                        // Deal with nested creates
-                        Value::Object(o) if o.contains_key("create") => {
-
-                        },
-                        // Deal with nested connects
-                        Value::Object(o) if o.contains_key("connect") => {
-
                         }
+                        // Deal with nested creates
+                        Value::Object(o) if o.contains_key("create") => {}
+                        // Deal with nested connects
+                        Value::Object(o) if o.contains_key("connect") => {}
                         v => {
                             map.insert(k.clone(), PrismaValue::from_value(v));
                         }

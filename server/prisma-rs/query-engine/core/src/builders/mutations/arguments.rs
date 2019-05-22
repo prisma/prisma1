@@ -2,14 +2,14 @@
 
 #![allow(warnings)]
 
-use std::collections::BTreeMap;
-use prisma_models::PrismaValue;
 use graphql_parser::query::Value;
+use prisma_models::PrismaValue;
+use std::collections::BTreeMap;
 
 /// Scoped arguments are either leafs or branches
 pub enum ScopedArg<'name> {
     Node(ScopedArgNode<'name>),
-    Value(PrismaValue)
+    Value(PrismaValue),
 }
 
 type ListArg<'name> = (String, Option<Vec<ScopedArg<'name>>>);
@@ -36,15 +36,14 @@ pub struct ScopedArgNode<'name> {
 impl<'name> ScopedArg<'name> {
     /// Parse a set of GraphQl input arguments
     pub fn parse(args: &'name Vec<(String, Value)>) -> Self {
-        args
-            .iter()
-            .filter(|(arg, _)| arg.as_str() != "where")
-            .fold(ScopedArg::Node(Default::default()), |mut node, (name, data)| {
+        args.iter().filter(|(arg, _)| arg.as_str() != "where").fold(
+            ScopedArg::Node(Default::default()),
+            |mut node, (name, data)| {
                 match (name.as_str(), data) {
-                    ("data", Value::Object(obj)) => {},
-                    ("set", Value::Object(obj)) => {},
-                    ("create", Value::Object(obj)) => {},
-                    ("connect", Value::Object(obj)) => {},
+                    ("data", Value::Object(obj)) => {}
+                    ("set", Value::Object(obj)) => {}
+                    ("create", Value::Object(obj)) => {}
+                    ("connect", Value::Object(obj)) => {}
                     _ => { /* ignore - maybe log? */ }
                 }
 
@@ -54,35 +53,42 @@ impl<'name> ScopedArg<'name> {
                 };
 
                 node
-            })
+            },
+        )
     }
 
-    fn evaluate_root(args: &'name Vec<(String, Value)>) {
-        args.iter().for_each(|(name, value)| {
-            match (name.as_str(), value) {
-                ("data", Value::Object(obj)) => {
-                    let s: ScopedArgNode = obj.iter().fold(Default::default(), |mut node, (key, value)| {
-                        match value {
-                            // Handle scalar-list arguments
-                            Value::Object(obj) if obj.contains_key("set") => {
-                                node.lists.push(handle_scalar_list(&key, obj));
-                            },
-                            // Handle nested arguments
-                            Value::Object(obj) => {
-                                node.data.insert(key.clone(), Self::evaluate_tree(key.as_str(), obj));
-                            },
-                            // Single data scalars
-                            value => {
-                                node.data.insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
+    /// The root of an argument tree is part of a top-level-mutation
+    ///
+    /// It can only contain the keys `data` and `where` but because
+    /// `where` clauses are handled elsewhere,
+    /// here we only care about `data`
+    fn evaluate_root(args: &'name Vec<(String, Value)>) -> ScopedArg<'name> {
+        args.iter()
+            .fold(ScopedArg::Node(Default::default()), |_, (name, value)| {
+                match (name.as_str(), value) {
+                    ("data", Value::Object(obj)) => {
+                        ScopedArg::Node(obj.iter().fold(Default::default(), |mut node, (key, value)| {
+                            match value {
+                                // Handle scalar-list arguments
+                                Value::Object(obj) if obj.contains_key("set") => {
+                                    node.lists.push(handle_scalar_list(&key, obj));
+                                }
+                                // Handle nested arguments
+                                Value::Object(obj) => {
+                                    node.data.insert(key.clone(), Self::evaluate_tree(key.as_str(), obj));
+                                }
+                                // Single data scalars
+                                value => {
+                                    node.data
+                                        .insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
+                                }
                             }
-                        }
-
-                        node
-                    });
-                },
-                _ => unreachable!(),
-            }
-        });
+                            node
+                        }))
+                    }
+                    (key, _) => panic!("Unexpected attribute key `{}`", key),
+                }
+            })
     }
 
     /// Determine whether a subtree needs to be expanded into it's own node
@@ -101,8 +107,6 @@ fn handle_scalar_list<'name>(name: &String, obj: &'name BTreeMap<String, Value>)
 
     unimplemented!()
 }
-
-
 
 //    let (args, lists) = dbg!(args)
 //         .iter()
