@@ -1,0 +1,41 @@
+use crate::*;
+use datamodel::dml;
+
+pub trait SpecializedRelationalIntrospectionResult {
+    fn database_type(&self) -> &str;
+    /*
+    // TODO: This should map a DB type to DML.
+    fn to_type_identifier(&self, field_type: &str) -> String;
+    // TODO
+    fn parse_default_value(&self, default_value_string: &str, field_type: &str) -> String;
+    // TODO: should map from a DML type.
+    fn is_type_reserved(&self, field_type: &str) -> bool;
+    // TODO:
+    fn resolve_sequences(&self) -> &String;
+    */
+}
+
+pub struct RelationalIntrospectionResult {
+    specialized: Box<SpecializedRelationalIntrospectionResult>,
+}
+
+// TODO: This should follow the RelationalIntrospectionResult class
+// from the TS implementation.
+impl IntrospectionResult for RelationalIntrospectionResult {
+    fn database_type(&self) -> &str {
+        self.specialized.database_type()
+    }
+
+    fn get_datamodel(&self) -> dml::Schema {
+        unimplemented!("Kick Emi to port from TS.")
+    }
+    fn get_normalized_datamodel(&self) -> dml::Schema {
+        unimplemented!("Kick Emi to port from TS.")
+    }
+    fn render_datamodel(&self) -> String {
+        unimplemented!("Kick Emi to port from TS.")
+    }
+    fn render_normalized_datamodel(&self) -> String {
+        unimplemented!("Kick Emi to port from TS.")
+    }
+}
