@@ -1,6 +1,6 @@
 extern crate datamodel;
 
-use datamodel::dml;
+use datamodel::{dml, source::SourceDefinition};
 
 pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
@@ -127,8 +127,20 @@ impl EnumAsserts for dml::Enum {
     }
 }
 
-pub fn parse_and_validate(input: &str) -> dml::Schema {
-    let ast = datamodel::parser::parse(&String::from(input)).expect("Unable to parse datamodel.");
-    let validator = datamodel::validator::Validator::new();
-    validator.validate(&ast).expect("Validation error")
+#[allow(dead_code)] // Not sure why the compiler thinks this is never used.
+pub fn parse(datamodel_string: &str) -> datamodel::Schema {
+    parse_with_plugins(datamodel_string, vec![])
+}
+
+pub fn parse_with_plugins(datamodel_string: &str, source_definitions: Vec<Box<SourceDefinition>>) -> datamodel::Schema {
+    match datamodel::parse_with_plugins(datamodel_string, source_definitions) {
+        Ok(s) => s,
+        Err(errs) => {
+            for err in errs.to_iter() {
+                err.pretty_print(&mut std::io::stderr().lock(), "", datamodel_string)
+                    .unwrap();
+            }
+            panic!("Schema parsing failed. Please see error above.")
+        }
+    }
 }

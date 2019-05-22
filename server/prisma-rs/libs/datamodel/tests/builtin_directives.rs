@@ -15,7 +15,7 @@ fn db_directive() {
     @db(name: "posti")
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let user_model = schema.assert_has_model("User").assert_with_db_name("user");
     user_model
         .assert_has_field("firstName")

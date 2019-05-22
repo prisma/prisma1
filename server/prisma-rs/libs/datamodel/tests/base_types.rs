@@ -14,7 +14,7 @@ fn parse_scalar_types() {
     }
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("firstName")
@@ -43,7 +43,7 @@ fn parse_field_arity() {
     }
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("text")
@@ -71,7 +71,7 @@ fn parse_defaults() {
     }
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("firstName")

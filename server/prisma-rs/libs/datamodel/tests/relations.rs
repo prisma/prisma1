@@ -16,7 +16,7 @@ fn resolve_relation() {
     }
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("firstName")
@@ -48,7 +48,7 @@ fn resolve_enum_field() {
     }
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("email")

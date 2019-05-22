@@ -1,6 +1,7 @@
 use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
+/// Prismas builtin `@db` directive.
 pub struct OnDeleteDirectiveValidator {}
 
 impl DirectiveValidator<dml::Field> for OnDeleteDirectiveValidator {

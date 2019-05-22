@@ -1,7 +1,9 @@
 use crate::ast;
 use crate::dml;
 
+use crate::common::interpolation::StringInterpolator;
 use crate::errors::ValidationError;
+use crate::FunctionalEvaluator;
 use chrono::{DateTime, Utc};
 use std::error;
 
@@ -14,11 +16,30 @@ macro_rules! wrap_value (
     })
 );
 
+/// Wraps a value and provides convenience methods for
+/// parsing it.
 pub struct ValueValidator {
     pub value: ast::Value,
 }
 
 impl ValueValidator {
+    /// Creates a new instance by wrapping a value.
+    ///
+    /// If the value is a function expression, it is evaluated
+    /// recursively.
+    pub fn new(value: &ast::Value) -> Result<ValueValidator, ValidationError> {
+        match value {
+            ast::Value::StringValue(string, span) => Ok(ValueValidator {
+                value: StringInterpolator::interpolate(string, span)?,
+            }),
+            _ => Ok(ValueValidator {
+                value: FunctionalEvaluator::new(value).evaluate()?,
+            }),
+        }
+    }
+
+    /// Creates a new type mismatch error for the
+    /// value wrapped by this instance.
     fn construct_error(&self, expected_type: &str) -> ValidationError {
         ValidationError::new_type_mismatch_error(
             expected_type,
@@ -28,6 +49,8 @@ impl ValueValidator {
         )
     }
 
+    /// Creates a value parser error
+    /// from some other parser error.
     fn wrap_error_from_result<T, E: error::Error>(
         &self,
         result: Result<T, E>,
@@ -44,10 +67,13 @@ impl ValueValidator {
         }
     }
 
+    /// The wrapped value.
     pub fn value(&self) -> &ast::Value {
         &self.value
     }
 
+    /// Attempts to parse the wrapped value
+    /// to a given prisma type.
     pub fn as_type(&self, scalar_type: &dml::ScalarType) -> Result<dml::Value, ValidationError> {
         match scalar_type {
             dml::ScalarType::Int => wrap_value!(self.as_int(), dml::Value::Int, self),
@@ -59,28 +85,35 @@ impl ValueValidator {
         }
     }
 
+    /// Parses the wrapped value as a given literal type.
     pub fn parse_literal<T: dml::FromStrAndSpan>(&self) -> Result<T, ValidationError> {
         T::from_str_and_span(&self.as_constant_literal()?, self.span())
     }
 
+    /// Accesses the raw string representation
+    /// of the wrapped value.
     pub fn raw(&self) -> &String {
         match &self.value {
             ast::Value::StringValue(x, _) => x,
             ast::Value::NumericValue(x, _) => x,
             ast::Value::BooleanValue(x, _) => x,
             ast::Value::ConstantValue(x, _) => x,
+            ast::Value::Function(x, _, _) => x,
         }
     }
 
+    /// Accesses the span of the wrapped value.
     pub fn span(&self) -> &ast::Span {
         match &self.value {
             ast::Value::StringValue(_, s) => s,
             ast::Value::NumericValue(_, s) => s,
             ast::Value::BooleanValue(_, s) => s,
             ast::Value::ConstantValue(_, s) => s,
+            ast::Value::Function(_, _, s) => s,
         }
     }
 
+    /// Tries to convert the wrapped value to a Prisma String.
     pub fn as_str(&self) -> Result<String, ValidationError> {
         match &self.value {
             ast::Value::StringValue(value, _) => Ok(value.to_string()),
@@ -88,6 +121,7 @@ impl ValueValidator {
         }
     }
 
+    /// Tries to convert the wrapped value to a Prisma Integer.
     pub fn as_int(&self) -> Result<i32, ValidationError> {
         match &self.value {
             ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<i32>(), "Numeric"),
@@ -95,6 +129,7 @@ impl ValueValidator {
         }
     }
 
+    /// Tries to convert the wrapped value to a Prisma Float.
     pub fn as_float(&self) -> Result<f32, ValidationError> {
         match &self.value {
             ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
@@ -103,6 +138,7 @@ impl ValueValidator {
     }
 
     // TODO: Ask which decimal type to take.
+    /// Tries to convert the wrapped value to a Prisma Decimal.
     pub fn as_decimal(&self) -> Result<f32, ValidationError> {
         match &self.value {
             ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
@@ -110,6 +146,7 @@ impl ValueValidator {
         }
     }
 
+    /// Tries to convert the wrapped value to a Prisma Boolean.
     pub fn as_bool(&self) -> Result<bool, ValidationError> {
         match &self.value {
             ast::Value::BooleanValue(value, _) => self.wrap_error_from_result(value.parse::<bool>(), "Boolean"),
@@ -118,6 +155,7 @@ impl ValueValidator {
     }
 
     // TODO: Ask which datetime type to use.
+    /// Tries to convert the wrapped value to a Prisma DateTime.
     pub fn as_date_time(&self) -> Result<DateTime<Utc>, ValidationError> {
         match &self.value {
             ast::Value::StringValue(value, _) => {
@@ -127,6 +165,7 @@ impl ValueValidator {
         }
     }
 
+    /// Unwraps the wrapped value as a constant literal..
     pub fn as_constant_literal(&self) -> Result<String, ValidationError> {
         match &self.value {
             ast::Value::ConstantValue(value, _) => Ok(value.to_string()),
