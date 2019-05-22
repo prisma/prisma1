@@ -17,7 +17,7 @@ struct StaticFilterArguments {
 }
 
 lazy_static! {
-    static ref filter_arguments: StaticFilterArguments = StaticFilterArguments {
+    static ref FILTER_ARGUMENTS: StaticFilterArguments = StaticFilterArguments {
         base: vec![
             FilterArgument { suffix: "", is_list: false },
             FilterArgument { suffix: "_not",is_list: false }, // All values that are not equal to given value.
@@ -55,7 +55,7 @@ lazy_static! {
 }
 
 pub fn get_field_filters<'a>(field: &Field) -> Vec<&'a FilterArgument> {
-    let args = &filter_arguments;
+    let args = &FILTER_ARGUMENTS;
 
     if field.is_list() {
         match field.type_identifier() {

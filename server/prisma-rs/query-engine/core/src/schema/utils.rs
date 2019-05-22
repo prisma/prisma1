@@ -1,5 +1,6 @@
 use super::*;
 use once_cell::sync::OnceCell;
+use prisma_models::InternalEnum;
 
 /// Object type initializer for cases where only the name is known, and fields are computed later.
 pub fn init_object_type<T>(name: T) -> ObjectType
@@ -116,4 +117,16 @@ where
   let first_char = s.chars().next().unwrap();
 
   format!("{}{}", first_char.to_lowercase(), s[1..].to_owned())
+}
+
+impl From<&InternalEnum> for EnumType {
+  fn from(internal_enum: &InternalEnum) -> EnumType {
+    let values = internal_enum
+      .values
+      .iter()
+      .map(|v| EnumValue::string(v.clone(), v.clone()))
+      .collect();
+
+    enum_type(internal_enum.name.clone(), values)
+  }
 }

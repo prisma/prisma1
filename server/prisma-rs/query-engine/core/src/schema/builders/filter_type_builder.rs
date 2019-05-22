@@ -77,41 +77,15 @@ impl<'a> FilterObjectTypeBuilder<'a> {
     }
   }
 
-  fn map_enum_input_type(&self, field: &Arc<ScalarField>) -> EnumType {
-    unimplemented!()
+  fn map_enum_input_type(&self, field: &Arc<ScalarField>) -> InputType {
+    let internal_enum = field
+      .internal_enum
+      .as_ref()
+      .expect("A field with TypeIdentifier Enum must always have an enum.");
+
+    let et: EnumType = internal_enum.into();
+    et.into()
   }
-
-  // def mapToRequiredInputType(field: models.ScalarField): InputType[Any] = {
-  //   assert(field.isScalar)
-
-  //   val inputType: InputType[Any] = field.typeIdentifier match {
-  //     case TypeIdentifier.String   => StringType
-  //     case TypeIdentifier.Int      => IntType
-  //     case TypeIdentifier.Float    => FloatType
-  //     case TypeIdentifier.Boolean  => BooleanType
-  //     case TypeIdentifier.Cuid     => IDType
-  //     case TypeIdentifier.UUID     => UUIDType
-  //     case TypeIdentifier.DateTime => DateTimeType
-  //     case TypeIdentifier.Json     => JsonType
-  //     case TypeIdentifier.Enum     => mapEnumFieldToInputType(field)
-  //   }
-
-  //   if (field.isList) {
-  //     ListInputType(inputType)
-  //   } else {
-  //     inputType
-  //   }
-  // }
-
-  // def mapEnumFieldToInputType(field: models.ScalarField): EnumType[Any] = {
-  //   require(field.typeIdentifier == TypeIdentifier.Enum, "This function must be called with Enum fields only!")
-  //   val enum = field.enum.getOrElse(sys.error("A field with TypeIdentifier Enum must always have an enum."))
-  //   EnumType(
-  //     name = enum.name,
-  //     description = None,
-  //     values = enum.values.map(enumValue => EnumValue(enumValue, value = enumValue, description = None)).toList
-  //   )
-  // }
 
   fn filter_object(&self) -> InputObjectTypeRef {
     let input_object = Arc::new(init_input_object_type(format!("{}WhereInput", self.model.name.clone())));

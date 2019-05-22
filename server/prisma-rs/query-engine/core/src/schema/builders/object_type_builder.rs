@@ -1,8 +1,6 @@
 use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{
-  Field as ModelField, InternalDataModelRef, ModelRef, RelationField, ScalarField, SortOrder, TypeIdentifier,
-};
+use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier};
 use std::{collections::HashMap, sync::Arc};
 
 type ObjectTypeCache = HashMap<String, ObjectTypeRef>;
@@ -10,7 +8,6 @@ type ObjectTypeCache = HashMap<String, ObjectTypeRef>;
 pub struct ObjectTypeBuilder<'a> {
   internal_data_model: InternalDataModelRef,
   with_relations: bool,
-  only_id: bool,
   capabilities: &'a SupportedCapabilities,
   model_object_type_cache: OnceCell<ObjectTypeCache>, // Deduplicates computation
 }
@@ -19,13 +16,11 @@ impl<'a> ObjectTypeBuilder<'a> {
   pub fn new(
     internal_data_model: InternalDataModelRef,
     with_relations: bool,
-    only_id: bool,
     capabilities: &'a SupportedCapabilities,
   ) -> Self {
     ObjectTypeBuilder {
       internal_data_model,
       with_relations,
-      only_id,
       capabilities,
       model_object_type_cache: OnceCell::new(),
     }
@@ -58,7 +53,7 @@ impl<'a> ObjectTypeBuilder<'a> {
       let obj: ObjectTypeRef = self.map_model_object_type(m);
       let fields = self.compute_fields(m);
 
-      obj.fields.set(fields);
+      obj.fields.set(fields).unwrap();
     });
 
     self
@@ -104,14 +99,15 @@ impl<'a> ObjectTypeBuilder<'a> {
     )
   }
 
-  pub fn map_output_type(&self, model_field: &ModelField) -> OutputType {
+  fn map_output_type(&self, model_field: &ModelField) -> OutputType {
     let output_type = match model_field {
       ModelField::Relation(rf) => {
+        let related_model_obj = OutputType::object(self.map_model_object_type(&rf.related_model()));
+
         if rf.is_list {
-          unimplemented!()
-        // OutputType::list(containing: OutputType)
+          OutputType::list(related_model_obj)
         } else {
-          unimplemented!()
+          related_model_obj
         }
       }
       ModelField::Scalar(sf) => match sf.type_identifier {
@@ -137,22 +133,16 @@ impl<'a> ObjectTypeBuilder<'a> {
     }
   }
 
-  // def resolveConnection(field: RelationField): OutputType[Any] = field.isList match {
-  //     case true  => ListType(modelObjectTypes(field.relatedModel_!.name))
-  //     case false => modelObjectTypes(field.relatedModel_!.name)
-  //   }
-
-  // mapToListConnectionArguments(model: models.Model, field: models.Field): List[Argument[Option[Any]]] = field match {
-  //   case f if f.isHidden                                              => List.empty
-  //   case _: ScalarField                                               => List.empty
-  //   case f: RelationField if f.isList && !f.relatedModel_!.isEmbedded => mapToListConnectionArguments(f.relatedModel_!)
-  //   case f: RelationField if f.isList && f.relatedModel_!.isEmbedded  => List.empty
-  //   case f: RelationField if !f.isList                                => List.empty
-  // }
-
   /// Builds "many records where" arguments based on the given model and field.
   pub fn many_records_field_arguments(&self, model: &ModelRef, field: &ModelField) -> Vec<Argument> {
-    unimplemented!()
+    match field {
+      f if !f.is_visible() => vec![],
+      ModelField::Scalar(_) => vec![],
+      ModelField::Relation(rf) if rf.is_list && !rf.related_model().is_embedded => self.many_records_arguments(model),
+      ModelField::Relation(rf) if rf.is_list && rf.related_model().is_embedded => vec![],
+      ModelField::Relation(rf) if rf.is_list => vec![],
+      _ => unreachable!(),
+    }
   }
 
   /// Builds "many records where" arguments solely based on the given model.
@@ -169,10 +159,8 @@ impl<'a> ObjectTypeBuilder<'a> {
   }
 
   pub fn where_argument(&self, model: &ModelRef) -> Argument {
-    // let where_object = FilterObjectTypeBuilder::new(Arc::clone(model)).build(self.capabilities);
-
-    // argument("where", InputType::opt(where_object))
-    unimplemented!()
+    let where_object = FilterObjectTypeBuilder::new(Arc::clone(model), self.capabilities).build();
+    argument("where", InputType::opt(InputType::object(where_object)))
   }
 
   pub fn order_by_argument(&self, model: &ModelRef) -> Argument {
@@ -211,13 +199,7 @@ impl<'a> ObjectTypeBuilder<'a> {
           .as_ref()
           .expect("Invariant violation: Enum fields are expected to have an internal_enum associated with them.");
 
-        let values = internal_enum
-          .values
-          .iter()
-          .map(|v| EnumValue::string(v.clone(), v.clone()))
-          .collect();
-
-        enum_type(internal_enum.name.clone(), values)
+        internal_enum.into()
       }
       _ => panic!("Invariant violation: map_enum_field can only be called on scalar enum fields."),
     }

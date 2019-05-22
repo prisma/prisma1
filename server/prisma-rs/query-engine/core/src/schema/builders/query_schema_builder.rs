@@ -10,7 +10,7 @@ pub struct QuerySchemaBuilder<'a> {
 
 impl<'a> QuerySchemaBuilder<'a> {
   pub fn new(internal_data_model: &InternalDataModelRef, capabilities: &'a SupportedCapabilities) -> Self {
-    let object_type_builder = ObjectTypeBuilder::new(Arc::clone(internal_data_model), true, false, capabilities);
+    let object_type_builder = ObjectTypeBuilder::new(Arc::clone(internal_data_model), true, capabilities);
 
     QuerySchemaBuilder {
       internal_data_model: Arc::clone(internal_data_model),

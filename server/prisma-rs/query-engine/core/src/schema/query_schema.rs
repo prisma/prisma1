@@ -93,7 +93,7 @@ impl InputType {
     InputType::Scalar(ScalarType::Boolean)
   }
 
-  pub fn enum_type() -> InputType {
+  pub fn scalar_enum() -> InputType {
     InputType::Scalar(ScalarType::Enum)
   }
 
