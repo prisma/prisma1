@@ -1,4 +1,6 @@
 mod graphql;
+mod renderer;
+
 use crate::context::PrismaContext;
 pub use graphql::{GraphQlBody, GraphQlRequestHandler};
 

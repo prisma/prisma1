@@ -14,9 +14,9 @@ mod error;
 mod executor;
 mod query_ast;
 mod query_results;
-mod schema;
 
 pub mod ir;
+pub mod schema;
 
 pub use builders::*;
 pub use error::*;

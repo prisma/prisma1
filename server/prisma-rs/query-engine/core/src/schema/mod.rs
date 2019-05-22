@@ -2,15 +2,12 @@
 
 mod builders;
 mod capability;
-mod query_schema;
+mod renderer;
 mod utils;
+mod query_schema;
 
 pub use builders::*;
 pub use capability::*;
 pub use query_schema::*;
+pub use renderer::*;
 pub use utils::*;
-
-/// Trait that should be implemented in order to be able to render a query schema.
-pub trait QuerySchemaRenderer {
-  fn render(query_schema: &QuerySchema) -> String;
-}
