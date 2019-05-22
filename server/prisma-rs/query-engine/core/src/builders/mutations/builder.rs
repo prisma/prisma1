@@ -43,19 +43,28 @@ impl<'field> MutationBuilder<'field> {
             Arc::clone(&self.model),
         )?;
 
+
+        // NestedCreateNode {
+        //     relation_field: Arc<RelationField>,
+        //     non_list_args: PrismaArgs,
+        //     list_args: Vec<(String, PrismaListValue)>,
+        //     top_is_create: bool,
+        //     nested_mutactions: NestedMutactions,
+        // }
+
         let inner =
             match op {
                 Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
                     model: Arc::clone(&model),
                     non_list_args,
                     list_args,
-                    nested_mutactions: build_nested(self.field, Arc::clone(&model))?,
+                    nested_mutactions: build_nested(self.field, Arc::clone(&model), &op)?,
                 }),
                 Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
                     where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                     non_list_args,
                     list_args,
-                    nested_mutactions: build_nested(self.field, Arc::clone(&model))?,
+                    nested_mutactions: build_nested(self.field, Arc::clone(&model), &op)?,
                 }),
                 Operation::UpdateMany => {
                     let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
@@ -89,13 +98,13 @@ impl<'field> MutationBuilder<'field> {
                         model: Arc::clone(&model),
                         non_list_args: non_list_args.clone(),
                         list_args: list_args.clone(),
-                        nested_mutactions: build_nested(self.field, Arc::clone(&model))?,
+                        nested_mutactions: build_nested(self.field, Arc::clone(&model), &op)?,
                     },
                     update: UpdateNode {
                         where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                         non_list_args,
                         list_args,
-                        nested_mutactions: build_nested(self.field, Arc::clone(&model))?,
+                        nested_mutactions: build_nested(self.field, Arc::clone(&model), &op)?,
                     },
                 }),
                 _ => unimplemented!(),
@@ -121,14 +130,14 @@ fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<
 
 /// Extract String-Value pairs into usable mutation arguments
 fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs) {
-    let (args, lists) = args
+    let (args, lists) = dbg!(args)
         .iter()
         .filter(|(arg, _)| arg.as_str() != "where") // `where` blocks are handled by filter logic!
         .fold((BTreeMap::new(), vec![]), |(mut map, mut vec), (_, v)| {
             match v {
                 Value::Object(o) => o.iter().for_each(|(k, v)| {
-                    // If the child is an object, we are probably dealing with ScalarList values
                     match v {
+                        // Deal with ScalarList initialisers
                         Value::Object(o) if o.contains_key("set") => {
                             vec.push((
                                 k.clone(),
@@ -142,6 +151,14 @@ fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs
                                     _ => unimplemented!(), // or unreachable? dunn duuuuun!
                                 },
                             ));
+                        },
+                        // Deal with nested creates
+                        Value::Object(o) if o.contains_key("create") => {
+
+                        },
+                        // Deal with nested connects
+                        Value::Object(o) if o.contains_key("connect") => {
+
                         }
                         v => {
                             map.insert(k.clone(), PrismaValue::from_value(v));
@@ -216,6 +233,6 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
 }
 
 /// Build nested mutations for a given field/model (called recursively)
-fn build_nested(_field: &Field, _model: ModelRef) -> CoreResult<NestedMutactions> {
+fn build_nested(_field: &Field, _model: ModelRef, _top_level: &Operation) -> CoreResult<NestedMutactions> {
     Ok(Default::default())
 }
