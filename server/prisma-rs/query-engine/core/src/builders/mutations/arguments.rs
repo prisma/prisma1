@@ -9,13 +9,13 @@ use std::collections::BTreeMap;
 
 /// Scoped arguments are either leafs or branches
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ScopedArg<'name> {
     Node(ScopedArgNode<'name>),
     Value(PrismaValue),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ListArg<'name>(String, Option<Vec<ScopedArg<'name>>>);
 
 impl<'name> From<&'name ListArg<'name>> for (String, PrismaListValue) {
@@ -50,7 +50,7 @@ pub fn convert_tree<'name>(inval: &BTreeMap<String, ScopedArg<'name>>) -> BTreeM
 }
 
 /// A node that holds some mutation arguments
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ScopedArgNode<'name> {
     // Scope debug information
     pub name: &'name str,
@@ -77,7 +77,9 @@ impl<'name> ScopedArgNode<'name> {
     ///
     /// This way it's possible to call `convert_tree` on a nested data set
     /// without having to do manual sorting or cleaning
-    pub fn pivot_root(&mut self) {
+    pub fn pivot_root(&self) -> Self {
+        let mut clone = self.clone();
+
         // Split an iterator, then filter out `Option` values and push to `data` vector
         macro_rules! split {
             ($target:expr, $data:ident) => {
@@ -97,12 +99,12 @@ impl<'name> ScopedArgNode<'name> {
 
         let mut root = vec![];
 
-        split!(self.create, root);
-        split!(self.update, root);
-        split!(self.upsert, root);
-        split!(self.delete, root);
-        split!(self.connect, root);
-        split!(self.disconnect, root);
+        split!(clone.create, root);
+        split!(clone.update, root);
+        split!(clone.upsert, root);
+        split!(clone.delete, root);
+        split!(clone.connect, root);
+        split!(clone.disconnect, root);
 
         // Split the scalars into `data` and `lists`
         let (data, _lists): (Vec<_>, Vec<_>) = root
@@ -115,12 +117,32 @@ impl<'name> ScopedArgNode<'name> {
             .unzip();
 
         // Then filter out the marker-Options and store data
-        self.data = data.into_iter().filter_map(|a| a).collect();
+        clone.data = data.into_iter().filter_map(|a| a).collect();
 
         // FIXME: self.lists isn't stored yet because in the nested parsing code
         //        we never actually invoke `handle_scalar_list` which is kinda essential
         //        to being able to make this re-association.
         //        For now it'll only work with normal Scalars
+
+        clone
+    }
+
+    /// Split a BTree of node-value mixes into seperate trees for values and nodes
+    pub fn filter_nested(
+        args: &BTreeMap<String, ScopedArg<'name>>,
+    ) -> (BTreeMap<String, ScopedArgNode<'name>>, BTreeMap<String, PrismaValue>) {
+        let (nested, vals): (Vec<_>, Vec<_>) = args
+            .into_iter()
+            .map(|(key, val)| match val {
+                ScopedArg::Node(node) => (Some((key.clone(), node.clone())), None),
+                ScopedArg::Value(val) => (None, Some((key.clone(), val.clone()))),
+            })
+            .unzip();
+
+        (
+            nested.into_iter().filter_map(|a| a).collect(),
+            vals.into_iter().filter_map(|a| a).collect(),
+        )
     }
 }
 
@@ -174,6 +196,7 @@ impl<'name> ScopedArg<'name> {
     /// Determine whether a subtree needs to be expanded into it's own node
     fn evaluate_tree(name: &'name str, obj: &'name BTreeMap<String, Value>) -> Self {
         ScopedArg::Node(obj.iter().fold(Default::default(), |mut node, (key, val)| {
+            node.name = name;
             match (key.as_str(), val) {
                 ("create", Value::Object(obj)) => obj.iter().for_each(|(key, val)| match val {
                     Value::Object(ref obj) => {
