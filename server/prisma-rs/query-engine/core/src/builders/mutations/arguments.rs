@@ -37,7 +37,7 @@ pub struct ScopedArgNode<'name> {
 
 impl<'name> ScopedArg<'name> {
     /// Parse a set of GraphQl input arguments
-    pub fn parse(args: &'name Vec<(String, Value)>) -> Self {
+    pub fn parse(args: &'name Vec<(String, Value)>) -> CoreResultSelf {
         Self::evaluate_root(args.iter().filter(|(arg, _)| arg.as_str() != "where").collect())
     }
 
@@ -46,7 +46,7 @@ impl<'name> ScopedArg<'name> {
     /// It can only contain the keys `data` and `where` but because
     /// `where` clauses are handled elsewhere,
     /// here we only care about `data`
-    fn evaluate_root(args: Vec<&'name (String, Value)>) -> Self {
+    fn evaluate_root(args: Vec<&'name (String, Value)>) -> CoreResultSelf {
         args.iter()
             .fold(ScopedArg::Node(Default::default()), |_, (name, value)| {
                 match (name.as_str(), value) {
@@ -76,7 +76,7 @@ impl<'name> ScopedArg<'name> {
     }
 
     /// Determine whether a subtree needs to be expanded into it's own node
-    fn evaluate_tree(name: &'name str, obj: &'name BTreeMap<String, Value>) -> Self {
+    fn evaluate_tree(name: &'name str, obj: &'name BTreeMap<String, Value>) -> CoreResultSelf {
         ScopedArg::Node(obj.iter().fold(Default::default(), |mut node, (key, val)| {
             match (key.as_str(), val) {
                 ("create", Value::Object(obj)) => obj.iter().for_each(|(key, val)| match val {
@@ -133,6 +133,7 @@ impl<'name> ScopedArg<'name> {
                             .insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
                     }
                 }),
+                // TODO: Make this not panic
                 (verb, _) => panic!("Unknown verb `{}`", verb),
             }
 

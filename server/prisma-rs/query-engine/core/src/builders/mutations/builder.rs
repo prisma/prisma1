@@ -1,6 +1,7 @@
 //! Providing an interface to build WriteQueries
+#![warn(warnings)]
 
-use crate::{builders::utils, CoreError, CoreResult, WriteQuery};
+use crate::{builders::{utils, ScopedArg, ScopedArgNode}, CoreError, CoreResult, WriteQuery};
 use connector::mutaction::{
     CreateNode, DeleteNode, DeleteNodes, NestedMutactions, ResetData, TopLevelDatabaseMutaction, UpdateNode,
     UpdateNodes, UpsertNode,
@@ -38,6 +39,9 @@ impl<'field> MutationBuilder<'field> {
         }
 
         let (non_list_args, list_args) = dbg!(get_mutation_args(&self.field.arguments));
+
+        let arguments: ScopedArg = ScopedArg::parse(&self.field.arguments);
+
         let (op, model) = parse_model_action(
             self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
             Arc::clone(&self.model),
@@ -128,11 +132,9 @@ fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<
 }
 
 /// Extract String-Value pairs into usable mutation arguments
-#[allow(warnings)]
+#[deprecated]
 fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs) {
     use crate::builders::{ScopedArg, ScopedArgNode};
-
-    let scoped_args = dbg!(ScopedArg::parse(args));
 
     let (args, lists) = dbg!(args)
         .iter()
