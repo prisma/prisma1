@@ -9,7 +9,7 @@ pub struct PrismaContext {
     pub internal_data_model: InternalDataModelRef,
 
     /// This is used later to render the SDL
-    // pub query_schema: QuerySchema,
+    pub query_schema: QuerySchema,
 
     /// This is currently used, as a temporary workaround.
     pub sdl: Option<String>,
@@ -40,7 +40,7 @@ impl PrismaContext {
         Ok(Self {
             config,
             internal_data_model,
-            // query_schema,
+            query_schema,
             sdl,
             executor,
         })
