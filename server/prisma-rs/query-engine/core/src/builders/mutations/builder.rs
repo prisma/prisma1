@@ -43,7 +43,6 @@ impl<'field> MutationBuilder<'field> {
             Arc::clone(&self.model),
         )?;
 
-
         // NestedCreateNode {
         //     relation_field: Arc<RelationField>,
         //     non_list_args: PrismaArgs,
@@ -129,7 +128,12 @@ fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<
 }
 
 /// Extract String-Value pairs into usable mutation arguments
+#[allow(warnings)]
 fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs) {
+    use crate::builders::{ScopedArg, ScopedArgNode};
+
+    let scoped_args = dbg!(ScopedArg::parse(args));
+
     let (args, lists) = dbg!(args)
         .iter()
         .filter(|(arg, _)| arg.as_str() != "where") // `where` blocks are handled by filter logic!
@@ -151,15 +155,11 @@ fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs
                                     _ => unimplemented!(), // or unreachable? dunn duuuuun!
                                 },
                             ));
-                        },
-                        // Deal with nested creates
-                        Value::Object(o) if o.contains_key("create") => {
-
-                        },
-                        // Deal with nested connects
-                        Value::Object(o) if o.contains_key("connect") => {
-
                         }
+                        // Deal with nested creates
+                        Value::Object(o) if o.contains_key("create") => {}
+                        // Deal with nested connects
+                        Value::Object(o) if o.contains_key("connect") => {}
                         v => {
                             map.insert(k.clone(), PrismaValue::from_value(v));
                         }
