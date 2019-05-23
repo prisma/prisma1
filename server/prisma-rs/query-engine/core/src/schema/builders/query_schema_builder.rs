@@ -38,7 +38,7 @@ impl<'a> QuerySchemaBuilder<'a> {
   }
 
   /// Builds the root query type.
-  fn build_query_type(&self) -> ObjectType {
+  fn build_query_type(&self) -> OutputType {
     let non_embedded_models: Vec<ModelRef> = self
       .internal_data_model
       .models()
@@ -58,12 +58,12 @@ impl<'a> QuerySchemaBuilder<'a> {
       .flatten()
       .collect();
 
-    object_type("Query", fields)
+    OutputType::Object(Arc::new(object_type("Query", fields)))
   }
 
   /// Builds the root mutation type.
-  fn build_mutation_type(&self) -> ObjectType {
-    object_type("Mutation", vec![])
+  fn build_mutation_type(&self) -> OutputType {
+    OutputType::Object(Arc::new(object_type("Mutation", vec![])))
   }
 
   /// Builds a "many" items field (e.g. users(args), posts(args), ...) for given model.

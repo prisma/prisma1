@@ -1,13 +1,15 @@
 use core::schema::*;
-use std::{cell::RefCell, collections::HashMap};
+use std::{cell::RefCell, collections::HashMap, sync::Arc};
 
 mod enum_renderer;
 mod field_renderer;
+mod object_renderer;
 mod schema_renderer;
 mod type_renderer;
 
 use enum_renderer::*;
 use field_renderer::*;
+use object_renderer::*;
 use schema_renderer::*;
 use type_renderer::*;
 
@@ -42,7 +44,7 @@ impl RenderContext {
         RenderContext {
             output_queue: RefCell::new(vec![]),
             rendered: RefCell::new(HashMap::new()),
-            indent: 4,
+            indent: 2,
         }
     }
 
@@ -65,6 +67,7 @@ impl RenderContext {
 
 enum GqlRenderer<'a> {
     Schema(GqlSchemaRenderer<'a>),
+    Object(GqlObjectRenderer),
     Type(GqlTypeRenderer<'a>),
     Field(GqlFieldRenderer<'a>),
     Enum(GqlEnumRenderer),
@@ -74,6 +77,7 @@ impl<'a> Renderer for GqlRenderer<'a> {
     fn render(&self, ctx: RenderContext) -> RenderContext {
         match self {
             GqlRenderer::Schema(s) => s.render(ctx),
+            GqlRenderer::Object(o) => o.render(ctx),
             GqlRenderer::Type(t) => t.render(ctx),
             GqlRenderer::Field(f) => f.render(ctx),
             GqlRenderer::Enum(e) => e.render(ctx),
@@ -82,7 +86,7 @@ impl<'a> Renderer for GqlRenderer<'a> {
 }
 
 trait IntoRenderer<'a> {
-    fn into_renderer(&self) -> GqlRenderer<'a>;
+    fn into_renderer(&'a self) -> GqlRenderer<'a>;
 }
 
 impl<'a> IntoRenderer<'a> for &'a QuerySchema {
@@ -97,8 +101,8 @@ impl<'a> IntoRenderer<'a> for &'a InputType {
     }
 }
 
-impl<'a> IntoRenderer<'a> for &'a OutputType {
-    fn into_renderer(&self) -> GqlRenderer<'a> {
+impl<'a> IntoRenderer<'a> for OutputType {
+    fn into_renderer(&'a self) -> GqlRenderer<'a> {
         GqlRenderer::Type(GqlTypeRenderer::Output(self))
     }
 }
@@ -112,5 +116,29 @@ impl<'a> IntoRenderer<'a> for &'a InputField {
 impl<'a> IntoRenderer<'a> for &'a Field {
     fn into_renderer(&self) -> GqlRenderer<'a> {
         GqlRenderer::Field(GqlFieldRenderer::Output(self))
+    }
+}
+
+// impl<'a> IntoRenderer<'a> for &'a EnumType {
+//     fn into_renderer(&self) -> GqlRenderer<'a> {
+//         GqlRenderer::Enum(GqlEnumRenderer::new(self))
+//     }
+// }
+
+impl<'a> IntoRenderer<'a> for EnumTypeRef {
+    fn into_renderer(&self) -> GqlRenderer<'a> {
+        GqlRenderer::Enum(GqlEnumRenderer::new(Arc::clone(self)))
+    }
+}
+
+impl<'a> IntoRenderer<'a> for &'a InputObjectTypeRef {
+    fn into_renderer(&self) -> GqlRenderer<'a> {
+        GqlRenderer::Object(GqlObjectRenderer::Input(Arc::clone(self)))
+    }
+}
+
+impl<'a> IntoRenderer<'a> for &'a ObjectTypeRef {
+    fn into_renderer(&self) -> GqlRenderer<'a> {
+        GqlRenderer::Object(GqlObjectRenderer::Output(Arc::clone(self)))
     }
 }

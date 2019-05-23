@@ -7,10 +7,10 @@ pub struct GqlSchemaRenderer<'schema> {
 
 impl<'schema> Renderer for GqlSchemaRenderer<'schema> {
     fn render(&self, ctx: RenderContext) -> RenderContext {
-        // self.render_type(&query_schema.query);
-        // self.render_type(&query_schema.mutation);
+        let queries = self.query_schema.query.into_renderer().render(ctx);
+        let all = self.query_schema.mutation.into_renderer().render(queries);
 
-        unimplemented!()
+        all
     }
 }
 

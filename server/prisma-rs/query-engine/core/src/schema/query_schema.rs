@@ -4,8 +4,8 @@ use std::{boxed::Box, sync::Arc};
 
 #[derive(Debug)]
 pub struct QuerySchema {
-  pub query: ObjectType,    // read(s)?
-  pub mutation: ObjectType, // write(s)?
+  pub query: OutputType,
+  pub mutation: OutputType,
 }
 
 /// Fields evaluation function.
@@ -57,7 +57,7 @@ pub struct InputField {
 
 #[derive(Debug)]
 pub enum InputType {
-  Enum(EnumType),
+  Enum(EnumTypeRef),
   List(Box<InputType>),
   Object(InputObjectTypeRef),
   Opt(Box<InputType>),
@@ -93,8 +93,8 @@ impl InputType {
     InputType::Scalar(ScalarType::Boolean)
   }
 
-  pub fn scalar_enum() -> InputType {
-    InputType::Scalar(ScalarType::Enum)
+  pub fn scalar_enum(referencing: EnumTypeRef) -> InputType {
+    InputType::Scalar(ScalarType::Enum(referencing))
   }
 
   pub fn date_time() -> InputType {
@@ -118,6 +118,7 @@ pub type ObjectTypeRef = Arc<ObjectType>;
 pub type InputObjectTypeRef = Arc<InputObjectType>;
 pub type OutputTypeRef = Arc<OutputType>;
 pub type InputTypeRef = Arc<InputType>;
+pub type EnumTypeRef = Arc<EnumType>;
 
 #[derive(Debug)]
 pub enum OutputType {
@@ -180,7 +181,7 @@ pub enum ScalarType {
   Int,
   Float,
   Boolean,
-  Enum,
+  Enum(EnumTypeRef),
   DateTime,
   Json,
   UUID,
@@ -237,6 +238,6 @@ impl From<EnumType> for OutputType {
 
 impl From<EnumType> for InputType {
   fn from(e: EnumType) -> Self {
-    InputType::Enum(e)
+    InputType::Enum(Arc::new(e))
   }
 }
