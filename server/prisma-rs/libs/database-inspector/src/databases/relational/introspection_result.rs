@@ -1,4 +1,5 @@
 use crate::*;
+use super::*;
 use datamodel::dml;
 
 pub trait SpecializedRelationalIntrospectionResult {
@@ -16,7 +17,11 @@ pub trait SpecializedRelationalIntrospectionResult {
 }
 
 pub struct RelationalIntrospectionResult {
-    specialized: Box<SpecializedRelationalIntrospectionResult>,
+    pub specialized: Box<SpecializedRelationalIntrospectionResult>,
+    pub models: Vec<TableInfo>,
+    pub relations: Vec<TableRelationInfo>,
+    pub enums: Vec<EnumInfo>,
+    pub sequences: Vec<SequenceInfo>
 }
 
 // TODO: This should follow the RelationalIntrospectionResult class

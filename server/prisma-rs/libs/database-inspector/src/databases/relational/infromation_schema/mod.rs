@@ -1,10 +1,10 @@
-use crate::{relational::TableRelationInfo, SqlError, Transaction};
+use crate::{relational::TableRelationInfo, Connection, SqlError};
 use prisma_query::ast::*;
 
 /// Contains several helpers which work
 /// for databases that support the information_schema table.
 
-fn query_tables(transaction: &mut Transaction, schema: &str) -> Vec<String> {
+fn query_tables(connection: &mut Connection, schema: &str) -> Vec<String> {
     let query = Select::from_table("information_schema.tables")
         // Needed because of different capitalization conventions between DBs
         .column(Column::from("table_name").alias("table_name"))
@@ -18,7 +18,7 @@ fn query_tables(transaction: &mut Transaction, schema: &str) -> Vec<String> {
     unimplemented!("Unimplemented")
 }
 
-fn query_relations(transaction: &mut Transaction, schema: &str) -> Vec<TableRelationInfo> {
+fn query_relations(connection: &mut Connection, schema: &str) -> Vec<TableRelationInfo> {
     let join_1 = Table::from("information_schema.key_column_usage")
         .alias("keyColumn1")
         .on(ConditionTree::and(
@@ -57,12 +57,12 @@ fn query_relations(transaction: &mut Transaction, schema: &str) -> Vec<TableRela
     unimplemented!("Unimplemented")
 }
 
-fn list_schemas(transaction: &mut Transaction) -> Result<Vec<String>, SqlError> {
+fn list_schemas(connection: &mut Connection) -> Result<Vec<String>, SqlError> {
     let query = Select::from_table("information_schema.schemata")
         .column("schema_name")
         .so_that("schema_name".not_like("information_schema"));
 
-    let res = transaction.query(Query::from(query))?;
+    let res = connection.query(Query::from(query))?;
 
     Ok(res.iter().map(|row| String::from(row.as_str(0).unwrap())).collect())
 }

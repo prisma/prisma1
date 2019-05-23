@@ -7,11 +7,13 @@ pub struct InternalIndexIntrospectionResult {
     pub is_primary_key: bool,
 }
 
+#[derive(Clone)]
 pub struct EnumInfo {
     pub name: String,
     pub values: Vec<String>,
 }
 
+#[derive(Clone)]
 pub struct TableInfo {
     pub name: String,
     pub columns: Vec<ColumnInfo>,
@@ -19,25 +21,31 @@ pub struct TableInfo {
     pub primary_key: Option<IndexInfo>,
 }
 
+#[derive(Clone)]
 pub struct ColumnInfo {
     pub name: String,
     pub is_unique: bool,
-    pub default_alue: Option<String>,
+    pub default_value: Option<String>,
     pub column_type: String,
     pub comment: Option<String>,
     pub is_nullable: bool,
     pub is_list: bool,
     pub is_auto_increment: bool,
+    pub is_primary_key: bool,
 }
 
+#[derive(Clone)]
 pub struct SequenceInfo {
     pub name: String,
     pub initial_value: u32,
     pub allocation_vize: u32,
 }
 
+#[derive(Clone)]
 pub struct TableRelationInfo {
+    /// Table that EMBEDS the foreign key.
     pub source_table: String,
+    /// Table that HOLDS the primary key.
     pub target_table: String,
     pub source_column: String,
     pub target_column: String,

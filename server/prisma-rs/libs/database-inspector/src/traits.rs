@@ -1,4 +1,4 @@
-use crate::{SqlError, Transaction};
+use crate::{Connection, SqlError};
 use datamodel::dml;
 
 /// This traits are for future use.
@@ -13,8 +13,8 @@ use datamodel::dml;
 /// Represents a database connector which is capable of introspecting a database.
 pub trait IntrospectionConnector<ResultType: IntrospectionResult> {
     fn database_type(&self) -> &str;
-    fn list_schemas(&self, transaction: &mut Transaction) -> Result<Vec<String>, SqlError>;
-    fn introspect(&self, transaction: &mut Transaction, schema: &str) -> Result<ResultType, SqlError>;
+    fn list_schemas(&self, connection: &mut Connection) -> Result<Vec<String>, SqlError>;
+    fn introspect(&self, connection: &mut Connection, schema: &str) -> Result<ResultType, SqlError>;
 }
 
 /// Represents the raw result of an introspection, which can be converted into a datamodel.
