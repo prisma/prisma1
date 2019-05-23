@@ -134,9 +134,7 @@ fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<
 /// Extract String-Value pairs into usable mutation arguments
 #[deprecated]
 fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs) {
-    use crate::builders::{ScopedArg, ScopedArgNode};
-
-    let (args, lists) = dbg!(args)
+    let (args, lists) = args
         .iter()
         .filter(|(arg, _)| arg.as_str() != "where") // `where` blocks are handled by filter logic!
         .fold((BTreeMap::new(), vec![]), |(mut map, mut vec), (_, v)| {
