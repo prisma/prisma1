@@ -50,9 +50,6 @@ impl Executor {
         let results = self.read_exec.execute(&queries)?;
         pipeline.store_prefetch(idx.into_iter().zip(results).collect());
 
-        // Debug print the pipeline for shits and giggles
-        dbg!(&pipeline);
-
         // Execute write queries and generate required read queries
         let (idx, writes): (Vec<_>, Vec<_>) = pipeline.get_writes().into_iter().unzip();
         let results = self.write_exec.execute(writes)?;

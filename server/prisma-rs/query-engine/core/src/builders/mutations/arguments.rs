@@ -38,10 +38,15 @@ impl<'name> From<&'name ListArg<'name>> for (String, PrismaListValue) {
 }
 
 pub fn convert_tree<'name>(inval: &BTreeMap<String, ScopedArg<'name>>) -> BTreeMap<String, PrismaValue> {
-    inval.iter().filter_map(|(key, val)| (match val {
-        ScopedArg::Value(val) => Some((key.clone(), val.clone())),
-        _ => None
-    })).collect()
+    inval
+        .iter()
+        .filter_map(|(key, val)| {
+            (match val {
+                ScopedArg::Value(val) => Some((key.clone(), val.clone())),
+                _ => None,
+            })
+        })
+        .collect()
 }
 
 /// A node that holds some mutation arguments
@@ -61,6 +66,62 @@ pub struct ScopedArgNode<'name> {
     pub delete: BTreeMap<String, ScopedArg<'name>>,
     pub connect: BTreeMap<String, ScopedArg<'name>>,
     pub disconnect: BTreeMap<String, ScopedArg<'name>>,
+}
+
+impl<'name> ScopedArgNode<'name> {
+    /// Take a non-root node and pivot it's data to pretend to be a root node
+    ///
+    /// What this means is that all Scalar-fields (single values and lists) are
+    /// associated into the `data` and `lists` fields, while all nested operations
+    /// remain the same.
+    ///
+    /// This way it's possible to call `convert_tree` on a nested data set
+    /// without having to do manual sorting or cleaning
+    pub fn pivot_root(&mut self) {
+        // Split an iterator, then filter out `Option` values and push to `data` vector
+        macro_rules! split {
+            ($target:expr, $data:ident) => {
+                let (swap, tmp): (Vec<_>, Vec<_>) = std::mem::replace(&mut $target, Default::default())
+                    .into_iter()
+                    .map(|(k, v)| match v {
+                        ScopedArg::Node(n) => (Some((k, ScopedArg::Node(n))), None),
+                        ScopedArg::Value(v) => (None, Some((k, v))),
+                    })
+                    .unzip();
+                $target = swap.into_iter().filter_map(|a| a).collect();
+                tmp.into_iter().for_each(|d| {
+                    $data.push(d);
+                });
+            };
+        }
+
+        let mut root = vec![];
+
+        split!(self.create, root);
+        split!(self.update, root);
+        split!(self.upsert, root);
+        split!(self.delete, root);
+        split!(self.connect, root);
+        split!(self.disconnect, root);
+
+        // Split the scalars into `data` and `lists`
+        let (data, _lists): (Vec<_>, Vec<_>) = root
+            .into_iter()
+            .filter_map(|a| a)
+            .map(|(key, val)| match val {
+                PrismaValue::List(l) => (None, Some((key, ScopedArg::Value(PrismaValue::List(l))))),
+                value => (Some((key, ScopedArg::Value(value))), None),
+            })
+            .unzip();
+
+        // Then filter out the marker-Options and store data
+        self.data = data.into_iter().filter_map(|a| a).collect();
+
+        // FIXME: self.lists isn't stored yet because in the nested parsing code
+        //        we never actually invoke `handle_scalar_list` which is kinda essential
+        //        to being able to make this re-association.
+        //        For now it'll only work with normal Scalars
+    }
 }
 
 impl<'name> ScopedArg<'name> {
@@ -86,6 +147,7 @@ impl<'name> ScopedArg<'name> {
                 match (name.as_str(), value) {
                     ("data", Value::Object(obj)) => {
                         ScopedArg::Node(obj.iter().fold(Default::default(), |mut node, (key, value)| {
+                            node.name = name.as_str();
                             match value {
                                 // Handle scalar-list arguments
                                 Value::Object(obj) if obj.contains_key("set") => {

@@ -1,21 +1,17 @@
 //! Providing an interface to build WriteQueries
-#![warn(warnings)]
+#![allow(warnings)]
 
 use crate::{
-    builders::{utils, ScopedArg, convert_tree},
+    builders::{convert_tree, utils, ScopedArg, ScopedArgNode},
     CoreError, CoreResult, WriteQuery,
 };
-use connector::mutaction::{
-    CreateNode, DeleteNode, DeleteNodes, NestedMutactions, ResetData, TopLevelDatabaseMutaction, UpdateNode,
-    UpdateNodes, UpsertNode,
-};
+use connector::mutaction::*; // ALL OF IT
 use graphql_parser::query::{Field, Value};
-use prisma_models::{InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue, Project};
+use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, Project};
 
 use crate::Inflector;
 use rust_inflector::Inflector as RustInflector;
 
-use std::collections::BTreeMap;
 use std::sync::Arc;
 
 /// A TopLevelMutation builder
@@ -28,8 +24,6 @@ pub struct MutationBuilder<'field> {
     model: InternalDataModelRef,
 }
 
-type PrismaListArgs = Vec<(String, Option<Vec<PrismaValue>>)>;
-
 impl<'field> MutationBuilder<'field> {
     pub fn new(model: InternalDataModelRef, field: &'field Field) -> Self {
         Self { field, model }
@@ -41,9 +35,7 @@ impl<'field> MutationBuilder<'field> {
             return handle_reset(&self.field, &self.model);
         }
 
-        // let (non_list_args, list_args) = dbg!(get_mutation_args(&self.field.arguments));
-
-        let args = ScopedArg::parse(&self.field.arguments)?;
+        let args = dbg!(ScopedArg::parse(&self.field.arguments)?);
         let non_list_args = convert_tree(&args.data).into();
         let list_args = args.lists.iter().map(|la| la.into()).collect();
 
@@ -52,13 +44,7 @@ impl<'field> MutationBuilder<'field> {
             Arc::clone(&self.model),
         )?;
 
-        // NestedCreateNode {
-        //     relation_field: Arc<RelationField>,
-        //     non_list_args: PrismaArgs,
-        //     list_args: Vec<(String, PrismaListValue)>,
-        //     top_is_create: bool,
-        //     nested_mutactions: NestedMutactions,
-        // }
+        let nested_mutactions = build_nested(&args, Arc::clone(&model), &op)?;
 
         let inner =
             match op {
@@ -66,13 +52,13 @@ impl<'field> MutationBuilder<'field> {
                     model: Arc::clone(&model),
                     non_list_args,
                     list_args,
-                    nested_mutactions: build_nested(self.field, Arc::clone(&model), &op)?,
+                    nested_mutactions,
                 }),
                 Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
                     where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                     non_list_args,
                     list_args,
-                    nested_mutactions: build_nested(self.field, Arc::clone(&model), &op)?,
+                    nested_mutactions,
                 }),
                 Operation::UpdateMany => {
                     let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
@@ -106,13 +92,13 @@ impl<'field> MutationBuilder<'field> {
                         model: Arc::clone(&model),
                         non_list_args: non_list_args.clone(),
                         list_args: list_args.clone(),
-                        nested_mutactions: build_nested(self.field, Arc::clone(&model), &op)?,
+                        nested_mutactions: nested_mutactions.clone(),
                     },
                     update: UpdateNode {
                         where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                         non_list_args,
                         list_args,
-                        nested_mutactions: build_nested(self.field, Arc::clone(&model), &op)?,
+                        nested_mutactions,
                     },
                 }),
                 _ => unimplemented!(),
@@ -181,7 +167,7 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
         }
     };
 
-    let normalized = dbg!(Inflector::singularize(model_name).to_pascal_case());
+    let normalized = Inflector::singularize(model_name).to_pascal_case();
     let model = match model.models().iter().find(|m| m.name == normalized) {
         Some(m) => m,
         None => {
@@ -196,6 +182,76 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
 }
 
 /// Build nested mutations for a given field/model (called recursively)
-fn build_nested(_field: &Field, _model: ModelRef, _top_level: &Operation) -> CoreResult<NestedMutactions> {
-    Ok(Default::default())
+fn build_nested<'f>(
+    args: &'f ScopedArgNode<'f>,
+    model: ModelRef,
+    top_level: &Operation,
+) -> CoreResult<NestedMutactions> {
+    let mut nested: NestedMutactions = Default::default();
+
+    // Filter out all non-nodes
+    let nodes: Vec<_> = args
+        .data
+        .iter()
+        .filter_map(|(k, v)| match v {
+            ScopedArg::Node(node) => Some((k, node)),
+            _ => None,
+        })
+        .collect();
+
+    nodes.into_iter().for_each(|(name, val)| {
+        let mut attrs = vec![];
+
+        // Handle `create` arguments
+        val.create.iter().for_each(|(i_key, i_val)| {
+            match i_val {
+                // Scalars are turned into non-list-arguments
+                ScopedArg::Value(val) => {
+                    attrs.push((i_key.clone(), val));
+                }
+                ScopedArg::Node(node) => {
+                    // For every sub-node just append all creates
+                    let inner = build_nested(&node, Arc::clone(&model), top_level).unwrap();
+                    inner.creates.into_iter().for_each(|create| {
+                        nested.creates.push(create);
+                    });
+                }
+            }
+        });
+
+        // Now take the `create` arguments and create an actual `NestedCreateNode`
+        // We do this here to end the recursion and pass up an actual value
+        use std::collections::BTreeMap;
+
+        let non_list_args = attrs
+            .into_iter()
+            .map(|(k, v)| (k, v.clone()))
+            .collect::<BTreeMap<_, _>>()
+            .into();
+
+        let field = model.fields().find_from_all(&name);
+
+        let relation_field = dbg!(match &field {
+            Ok(ModelField::Relation(f)) => {
+                let model = f.related_model();
+                Arc::clone(&f)
+            }
+            _ => unreachable!(),
+        });
+
+        let ncn = NestedCreateNode {
+            non_list_args,
+            list_args: Default::default(),
+            top_is_create: match top_level {
+                Operation::Create => true,
+                _ => false,
+            },
+            relation_field,
+            nested_mutactions: Default::default(),
+        };
+
+        nested.creates.push(ncn);
+    });
+
+    dbg!(Ok(nested))
 }
