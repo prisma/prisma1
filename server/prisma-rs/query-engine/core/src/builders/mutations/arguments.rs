@@ -2,8 +2,9 @@
 
 #![allow(warnings)]
 
+use crate::{CoreError, CoreResult};
 use graphql_parser::query::Value;
-use prisma_models::PrismaValue;
+use prisma_models::{PrismaListValue, PrismaValue};
 use std::collections::BTreeMap;
 
 /// Scoped arguments are either leafs or branches
@@ -14,7 +15,34 @@ pub enum ScopedArg<'name> {
     Value(PrismaValue),
 }
 
-type ListArg<'name> = (String, Option<Vec<ScopedArg<'name>>>);
+#[derive(Debug)]
+pub struct ListArg<'name>(String, Option<Vec<ScopedArg<'name>>>);
+
+impl<'name> From<&'name ListArg<'name>> for (String, PrismaListValue) {
+    fn from(vla: &'name ListArg<'name>) -> Self {
+        (
+            vla.0.clone(),
+            match vla.1 {
+                Some(ref vec) => Some(
+                    vec.iter()
+                        .filter_map(|sa| match sa {
+                            ScopedArg::Value(val) => Some(val.clone()),
+                            _ => None,
+                        })
+                        .collect(),
+                ),
+                None => None,
+            },
+        )
+    }
+}
+
+pub fn convert_tree<'name>(inval: &BTreeMap<String, ScopedArg<'name>>) -> BTreeMap<String, PrismaValue> {
+    inval.iter().filter_map(|(key, val)| (match val {
+        ScopedArg::Value(val) => Some((key.clone(), val.clone())),
+        _ => None
+    })).collect()
+}
 
 /// A node that holds some mutation arguments
 #[derive(Debug, Default)]
@@ -37,8 +65,14 @@ pub struct ScopedArgNode<'name> {
 
 impl<'name> ScopedArg<'name> {
     /// Parse a set of GraphQl input arguments
-    pub fn parse(args: &'name Vec<(String, Value)>) -> Self {
-        Self::evaluate_root(args.iter().filter(|(arg, _)| arg.as_str() != "where").collect())
+    pub fn parse(args: &'name Vec<(String, Value)>) -> CoreResult<ScopedArgNode> {
+        match Self::evaluate_root(args.iter().filter(|(arg, _)| arg.as_str() != "where").collect()) {
+            ScopedArg::Node(node) => Ok(node),
+            ScopedArg::Value(v) => Err(CoreError::QueryValidationError(format!(
+                "Invalid root attribute `{:?}`!",
+                v
+            ))),
+        }
     }
 
     /// The root of an argument tree is part of a top-level-mutation
@@ -143,7 +177,7 @@ impl<'name> ScopedArg<'name> {
 
 /// Parse a `{ "set": [...] }` structure into a ScalarListSet
 fn handle_scalar_list<'name>(name: &String, obj: &'name BTreeMap<String, Value>) -> ListArg<'name> {
-    (
+    ListArg(
         name.clone(),
         match obj.get("set") {
             Some(Value::List(l)) => Some(

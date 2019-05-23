@@ -1,7 +1,10 @@
 //! Providing an interface to build WriteQueries
 #![warn(warnings)]
 
-use crate::{builders::{utils, ScopedArg, ScopedArgNode}, CoreError, CoreResult, WriteQuery};
+use crate::{
+    builders::{utils, ScopedArg, convert_tree},
+    CoreError, CoreResult, WriteQuery,
+};
 use connector::mutaction::{
     CreateNode, DeleteNode, DeleteNodes, NestedMutactions, ResetData, TopLevelDatabaseMutaction, UpdateNode,
     UpdateNodes, UpsertNode,
@@ -38,9 +41,11 @@ impl<'field> MutationBuilder<'field> {
             return handle_reset(&self.field, &self.model);
         }
 
-        let (non_list_args, list_args) = dbg!(get_mutation_args(&self.field.arguments));
+        // let (non_list_args, list_args) = dbg!(get_mutation_args(&self.field.arguments));
 
-        let arguments: ScopedArg = ScopedArg::parse(&self.field.arguments);
+        let args = ScopedArg::parse(&self.field.arguments)?;
+        let non_list_args = convert_tree(&args.data).into();
+        let list_args = args.lists.iter().map(|la| la.into()).collect();
 
         let (op, model) = parse_model_action(
             self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
@@ -129,48 +134,6 @@ fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<
         }),
         field: field.clone(),
     })
-}
-
-/// Extract String-Value pairs into usable mutation arguments
-#[deprecated]
-fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs) {
-    let (args, lists) = args
-        .iter()
-        .filter(|(arg, _)| arg.as_str() != "where") // `where` blocks are handled by filter logic!
-        .fold((BTreeMap::new(), vec![]), |(mut map, mut vec), (_, v)| {
-            match v {
-                Value::Object(o) => o.iter().for_each(|(k, v)| {
-                    match v {
-                        // Deal with ScalarList initialisers
-                        Value::Object(o) if o.contains_key("set") => {
-                            vec.push((
-                                k.clone(),
-                                match o.get("set") {
-                                    Some(Value::List(l)) => Some(
-                                        l.iter()
-                                            .map(|v| PrismaValue::from_value(v))
-                                            .collect::<Vec<PrismaValue>>(),
-                                    ),
-                                    None => None,
-                                    _ => unimplemented!(), // or unreachable? dunn duuuuun!
-                                },
-                            ));
-                        }
-                        // Deal with nested creates
-                        Value::Object(o) if o.contains_key("create") => {}
-                        // Deal with nested connects
-                        Value::Object(o) if o.contains_key("connect") => {}
-                        v => {
-                            map.insert(k.clone(), PrismaValue::from_value(v));
-                        }
-                    }
-                }),
-                _ => panic!("Unknown argument structure!"),
-            }
-
-            (map, vec)
-        });
-    (args.into(), lists)
 }
 
 /// A simple enum to discriminate top-level actions
