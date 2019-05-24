@@ -12,7 +12,7 @@ pub trait TableAsserts {
 pub trait ColumnAsserts {
     fn assert_is_unique(&self, b: bool) -> &ColumnInfo;
     fn assert_default_value(&self, v: Option<String>) -> &ColumnInfo;
-    fn assert_column_type(&self, t: &str) -> &ColumnInfo;
+    fn assert_column_type(&self, t: ColumnType) -> &ColumnInfo;
     fn assert_is_nullable(&self, b: bool) -> &ColumnInfo;
     fn assert_is_list(&self, b: bool) -> &ColumnInfo;
     fn assert_is_auto_increment(&self, b: bool) -> &ColumnInfo;
@@ -47,8 +47,8 @@ impl ColumnAsserts for ColumnInfo {
         assert_eq!(self.default_value, v);
         self
     }
-    fn assert_column_type(&self, t: &str) -> &ColumnInfo {
-        assert_eq!(&self.column_type, t);
+    fn assert_column_type(&self, t: ColumnType) -> &ColumnInfo {
+        assert_eq!(self.column_type, t);
         self
     }
     fn assert_is_nullable(&self, b: bool) -> &ColumnInfo {

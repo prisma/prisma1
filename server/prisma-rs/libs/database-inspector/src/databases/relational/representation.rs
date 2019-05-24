@@ -26,7 +26,7 @@ pub struct ColumnInfo {
     pub name: String,
     pub is_unique: bool,
     pub default_value: Option<String>,
-    pub column_type: String,
+    pub column_type: ColumnType,
     pub comment: Option<String>,
     pub is_nullable: bool,
     pub is_list: bool,
@@ -74,4 +74,14 @@ impl From<InternalIndexIntrospectionResult> for IndexInfo {
             name: idx.name,
         }
     }
+}
+
+// TODO: This enum needs to be extended accordingly for more databases.
+#[derive(Debug, Copy, PartialEq, Eq, Clone)]
+pub enum ColumnType {
+    Int,
+    Float,
+    Boolean,
+    String,
+    DateTime
 }

@@ -11,7 +11,7 @@ pub const SCHEMA: &'static str = "RELATIONAL_INTROSPECTION_TEST_SCHEMA";
 /// on the connector internal logic of resolving DBs.
 pub fn remove_db(path: &str) {
     let database_file_path = format!("{}/{}.db", path, SCHEMA);
-    std::fs::remove_file(&database_file_path); // ignore potential errors
+    let _ = std::fs::remove_file(&database_file_path); // ignore potential errors
     std::thread::sleep(std::time::Duration::from_millis(100));
 }
 

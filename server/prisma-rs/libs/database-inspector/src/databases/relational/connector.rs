@@ -35,6 +35,8 @@ pub trait SpecializedRelationalIntrospectionConnector {
         enums: Vec<EnumInfo>,
         sequences: Vec<SequenceInfo>,
     ) -> RelationalIntrospectionResult;
+    fn column_type_to_native_type(&self, col: &ColumnType) -> &str;
+    fn native_type_to_column_type(&self, col: &str) -> ColumnType;
 }
 
 pub struct RelationalIntrospectionConnector {
@@ -91,6 +93,15 @@ impl RelationalIntrospectionConnector {
 
     fn list_sequences(&self, connection: &mut Connection, schema: &str) -> Result<Vec<SequenceInfo>, SqlError> {
         self.specialized.query_sequences(connection, schema)
+    }
+
+    pub fn column_type_to_native_type(&self, col: &ColumnType) -> &str {
+        self.specialized.column_type_to_native_type(col)
+    }
+
+    pub fn native_type_to_column_type(&self, col: &str) -> ColumnType {
+        self.specialized.native_type_to_column_type(col)
+
     }
 }
 

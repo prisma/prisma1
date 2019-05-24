@@ -86,7 +86,7 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
                 name: row.as_string(PRAGMA_NAME)?,
                 is_unique: false,
                 default_value: row.as_string(PRAGMA_DEFAULT).ok(),
-                column_type: row.as_string(PRAGMA_TYPE)?,
+                column_type: self.native_type_to_column_type(&row.as_string(PRAGMA_TYPE)?),
                 comment: None,
                 is_nullable: !(row.as_bool(PRAGMA_NOT_NULL)?),
                 is_list: false,
@@ -123,6 +123,28 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
                 enums: enums,
                 sequences: sequences
             }
+        }
+    }
+
+    fn column_type_to_native_type(&self, col: &ColumnType) -> &str {
+        match col {
+            ColumnType::Boolean => "BOOLEAN",
+            ColumnType::DateTime => "DATE",
+            ColumnType::Float => "REAL",
+            ColumnType::Int => "INTEGER",
+            ColumnType::String => "TEXT"
+        }
+    }
+
+    fn native_type_to_column_type(&self, col: &str) -> ColumnType {
+        match col {
+            "BOOLEAN" => ColumnType::Boolean,
+            "DATE" => ColumnType::DateTime,
+            "REAL" => ColumnType::Float,
+            "INTEGER" => ColumnType::Int,
+            "TEXT" => ColumnType::String,
+            // Everything else is text.
+            _ => ColumnType::String,
         }
     }
 

@@ -27,22 +27,22 @@ fn all_columns_types_must_work() {
             let user_table = result.schema.assert_has_table("User");
 
             user_table.assert_has_column("int")
-                .assert_column_type("INTEGER");
+                .assert_column_type(ColumnType::Int);
 
             user_table.assert_has_column("float")
-                .assert_column_type("REAL");
+                .assert_column_type(ColumnType::Float);
 
             user_table.assert_has_column("boolean")
-                .assert_column_type("BOOLEAN");
+                .assert_column_type(ColumnType::Boolean);
 
             user_table.assert_has_column("string1")
-                .assert_column_type("TEXT");
+                .assert_column_type(ColumnType::String);
 
             user_table.assert_has_column("string2")
-                .assert_column_type("VARCHAR(1)");
+                .assert_column_type(ColumnType::String);
 
             user_table.assert_has_column("date_time")
-                .assert_column_type("DATE");
+                .assert_column_type(ColumnType::DateTime);
 
             Ok(())
         },
@@ -80,7 +80,7 @@ fn is_required_must_work() {
 
 #[test]
 fn foreign_keys_must_work() {
-    run_test(|mut migration| {
+    run_test(|migration| {
         migration.create_table("City", |t| {
             t.add_column("id", types::primary());
         });
