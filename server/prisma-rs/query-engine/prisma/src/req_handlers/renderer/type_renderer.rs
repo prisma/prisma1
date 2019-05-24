@@ -6,10 +6,10 @@ pub enum GqlTypeRenderer<'a> {
 }
 
 impl<'a> Renderer for GqlTypeRenderer<'a> {
-    fn render(&self, ctx: RenderContext) -> RenderContext {
+    fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
         match self {
-            GqlTypeRenderer::Input(i) => self.render_input_type(i, ctx).1,
-            GqlTypeRenderer::Output(o) => self.render_output_type(o, ctx).1,
+            GqlTypeRenderer::Input(i) => self.render_input_type(i, ctx),
+            GqlTypeRenderer::Output(o) => self.render_output_type(o, ctx),
         }
     }
 }
@@ -24,10 +24,14 @@ impl<'a> GqlTypeRenderer<'a> {
     fn render_input_type(&self, i: &InputType, ctx: RenderContext) -> (String, RenderContext) {
         match i {
             InputType::Object(ref obj) => {
-                let subctx = obj.into_renderer().render(ctx);
+                let (_, subctx) = obj.into_renderer().render(ctx);
                 (format!("{}!", obj.name), subctx)
             }
-            InputType::Enum(et) => (format!("{}!", et.name), et.into_renderer().render(ctx)), // Not sure how this fits together with the enum handling below.
+            InputType::Enum(et) => {
+                // Not sure how this fits together with the enum handling below.
+                let (_, subctx) = et.into_renderer().render(ctx);
+                (format!("{}!", et.name), subctx)
+            }
             InputType::List(ref l) => {
                 let (substring, subctx) = self.render_input_type(l, ctx);
                 (format!("[{}]!", substring), subctx)
@@ -37,7 +41,7 @@ impl<'a> GqlTypeRenderer<'a> {
                 (substring.trim_end_matches("!").to_owned(), subctx)
             }
             InputType::Scalar(ScalarType::Enum(et)) => {
-                let subctx = et.into_renderer().render(ctx);
+                let (_, subctx) = et.into_renderer().render(ctx);
                 (format!("{}!", et.name), subctx)
             }
             InputType::Scalar(ref scalar) => {
@@ -61,10 +65,14 @@ impl<'a> GqlTypeRenderer<'a> {
     fn render_output_type(&self, o: &OutputType, ctx: RenderContext) -> (String, RenderContext) {
         match o {
             OutputType::Object(obj) => {
-                let subctx = obj.into_renderer().render(ctx);
+                let (_, subctx) = obj.into_renderer().render(ctx);
                 (format!("{}!", obj.name), subctx)
             }
-            OutputType::Enum(et) => unimplemented!(),
+            OutputType::Enum(et) => {
+                // Not sure how this fits together with the enum handling below.
+                let (_, subctx) = et.into_renderer().render(ctx);
+                (format!("{}!", et.name), subctx)
+            }
             OutputType::List(l) => {
                 let (substring, subctx) = self.render_output_type(l, ctx);
                 (format!("[{}]!", substring), subctx)
@@ -74,7 +82,7 @@ impl<'a> GqlTypeRenderer<'a> {
                 (substring.trim_end_matches("!").to_owned(), subctx)
             }
             OutputType::Scalar(ScalarType::Enum(et)) => {
-                let subctx = et.into_renderer().render(ctx);
+                let (_, subctx) = et.into_renderer().render(ctx);
                 (format!("{}!", et.name), subctx)
             }
             OutputType::Scalar(ref scalar) => {

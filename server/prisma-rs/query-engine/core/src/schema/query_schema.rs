@@ -126,7 +126,7 @@ pub type EnumTypeRef = Arc<EnumType>;
 
 #[derive(Debug)]
 pub enum OutputType {
-  Enum(EnumType),
+  Enum(EnumTypeRef),
   List(Box<OutputType>),
   Object(ObjectTypeRef),
   Opt(Box<OutputType>),
@@ -236,7 +236,7 @@ pub enum EnumValueWrapper {
 
 impl From<EnumType> for OutputType {
   fn from(e: EnumType) -> Self {
-    OutputType::Enum(e)
+    OutputType::Enum(Arc::new(e))
   }
 }
 

@@ -18,14 +18,14 @@ pub struct RootRenderer;
 impl QuerySchemaRenderer for RootRenderer {
     fn render(&self, query_schema: &QuerySchema) -> String {
         let context = RenderContext::new();
-        let result = query_schema.into_renderer().render(context);
+        let (_, result) = query_schema.into_renderer().render(context);
 
         result.format()
     }
 }
 
 pub trait Renderer {
-    fn render(&self, ctx: RenderContext) -> RenderContext;
+    fn render(&self, ctx: RenderContext) -> (String, RenderContext);
 }
 
 pub struct RenderContext {
@@ -82,7 +82,7 @@ enum GqlRenderer<'a> {
 }
 
 impl<'a> Renderer for GqlRenderer<'a> {
-    fn render(&self, ctx: RenderContext) -> RenderContext {
+    fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
         match self {
             GqlRenderer::Schema(s) => s.render(ctx),
             GqlRenderer::Object(o) => o.render(ctx),

@@ -5,7 +5,7 @@ pub struct GqlEnumRenderer {
 }
 
 impl Renderer for GqlEnumRenderer {
-    fn render(&self, ctx: RenderContext) -> RenderContext {
+    fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
         let values: Vec<String> = self
             .enum_type_ref
             .values
@@ -21,8 +21,8 @@ impl Renderer for GqlEnumRenderer {
             values.join("\n")
         );
 
-        ctx.add(self.enum_type_ref.name.clone(), rendered);
-        ctx
+        ctx.add(self.enum_type_ref.name.clone(), rendered.clone());
+        (rendered, ctx)
     }
 }
 

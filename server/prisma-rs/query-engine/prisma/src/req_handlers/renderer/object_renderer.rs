@@ -6,13 +6,11 @@ pub enum GqlObjectRenderer {
 }
 
 impl Renderer for GqlObjectRenderer {
-    fn render(&self, ctx: RenderContext) -> RenderContext {
+    fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
         match &self {
             GqlObjectRenderer::Input(input) => unimplemented!(),
             GqlObjectRenderer::Output(output) => unimplemented!(),
-        };
-
-        unimplemented!()
+        }
     }
 }
 

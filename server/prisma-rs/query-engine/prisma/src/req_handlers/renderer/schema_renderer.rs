@@ -6,11 +6,11 @@ pub struct GqlSchemaRenderer<'schema> {
 }
 
 impl<'schema> Renderer for GqlSchemaRenderer<'schema> {
-    fn render(&self, ctx: RenderContext) -> RenderContext {
-        let queries = self.query_schema.query.into_renderer().render(ctx);
-        let all = self.query_schema.mutation.into_renderer().render(queries);
+    fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
+        let (_, ctx) = self.query_schema.query.into_renderer().render(ctx);
+        let result = self.query_schema.mutation.into_renderer().render(ctx);
 
-        all
+        result
     }
 }
 
