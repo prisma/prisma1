@@ -39,7 +39,7 @@ impl GqlObjectRenderer {
             .map(|f| format!("{}{}", ctx.indent(), f))
             .collect();
 
-        let rendered = format!("type {} {{\n{}\n}}", input_object.name, indented.join("\n"));
+        let rendered = format!("input {} {{\n{}\n}}", input_object.name, indented.join("\n"));
 
         ctx.add(input_object.name.clone(), rendered.clone());
         (rendered, ctx)

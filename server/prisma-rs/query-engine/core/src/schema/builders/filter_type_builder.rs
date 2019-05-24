@@ -6,14 +6,16 @@ use std::{cell::RefCell, collections::HashMap, sync::Arc};
 /// Not thread safe.
 /// RefCells are used to provide interior mutability to the cache without requiring mut refs to the builder.
 pub struct FilterObjectTypeBuilder<'a> {
+  input_type_builder: Arc<InputTypeBuilder>,
   capabilities: &'a SupportedCapabilities,
   filter_cache: RefCell<HashMap<String, InputObjectTypeRef>>, // Caches "xWhereInput": Model name -> Object type ref
   scalar_cache: RefCell<HashMap<String, InputObjectTypeRef>>, // Caches "xWhereScalarInput": Model name -> Object type ref
 }
 
 impl<'a> FilterObjectTypeBuilder<'a> {
-  pub fn new(capabilities: &'a SupportedCapabilities) -> Self {
+  pub fn new(input_type_builder: Arc<InputTypeBuilder>, capabilities: &'a SupportedCapabilities) -> Self {
     FilterObjectTypeBuilder {
+      input_type_builder,
       capabilities,
       filter_cache: RefCell::new(HashMap::new()),
       scalar_cache: RefCell::new(HashMap::new()),
@@ -93,7 +95,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
       .into_iter()
       .map(|arg| {
         let field_name = format!("{}{}", field.name, arg.suffix);
-        let mapped = self.map_required_input_type(Arc::clone(&field));
+        let mapped = self.input_type_builder.map_required_input_type(Arc::clone(&field));
 
         if arg.is_list {
           input_field(field_name, InputType::opt(InputType::list(mapped)))
@@ -145,36 +147,5 @@ impl<'a> FilterObjectTypeBuilder<'a> {
         })
         .collect(),
     }
-  }
-
-  fn map_required_input_type(&self, field: Arc<ScalarField>) -> InputType {
-    let typ = match field.type_identifier {
-      TypeIdentifier::String => InputType::string(),
-      TypeIdentifier::Int => InputType::int(),
-      TypeIdentifier::Float => InputType::float(),
-      TypeIdentifier::Boolean => InputType::boolean(),
-      TypeIdentifier::GraphQLID => InputType::id(),
-      TypeIdentifier::UUID => InputType::uuid(),
-      TypeIdentifier::DateTime => InputType::date_time(),
-      TypeIdentifier::Json => InputType::json(),
-      TypeIdentifier::Enum => self.map_enum_input_type(&field).into(),
-      TypeIdentifier::Relation => unreachable!(), // A scalar field can't be a relation.
-    };
-
-    if field.is_list {
-      InputType::list(typ)
-    } else {
-      typ
-    }
-  }
-
-  fn map_enum_input_type(&self, field: &Arc<ScalarField>) -> InputType {
-    let internal_enum = field
-      .internal_enum
-      .as_ref()
-      .expect("A field with TypeIdentifier Enum must always have an enum.");
-
-    let et: EnumType = internal_enum.into();
-    et.into()
   }
 }
