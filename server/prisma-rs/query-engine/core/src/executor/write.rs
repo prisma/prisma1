@@ -14,10 +14,7 @@ impl WriteQueryExecutor {
         let mut vec = vec![];
         for wq in mutactions {
             let res = self.write_executor.execute(self.db_name.clone(), wq.inner.clone())?;
-            vec.push(WriteQueryResult {
-                inner: res,
-                origin: wq,
-            });
+            vec.push(WriteQueryResult { inner: res, origin: wq });
         }
 
         Ok(vec)

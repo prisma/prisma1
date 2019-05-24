@@ -190,8 +190,10 @@ fn build_nested_root<'f>(
 ) -> CoreResult<NestedMutactions> {
     dbg!(&args);
 
-    let (nested, attrs) = ScopedArgNode::filter_nested(&args.data);
-    Ok(eval_tree(&nested, Arc::clone(&model), top_level))
+    // let (nested, attrs) = ScopedArgNode::filter_nested(&args.data);
+    // Ok(eval_tree(&nested, Arc::clone(&model), top_level))
+
+    unimplemented!()
 }
 
 /// Evaluate a tree of mutations
