@@ -12,9 +12,9 @@ object Optimizations {
   object FilterOptimizer extends Optimizer {
 
     override def optimize(filter: Filter): Filter = {
-      val one   = LogicalOpt.transform(filter)
-      val two   = InlineOpt.transform(one)
-      val three = SameRelationFilterOpt.transform(two)
+      val one = LogicalOpt.transform(filter)
+//      val two   = InlineOpt.transform(one)
+      val three = SameRelationFilterOpt.transform(one)
       three
     }
 
@@ -39,6 +39,9 @@ object Optimizations {
     object InlineOpt extends Optimization {
 
       //For Mongo this could also handle rf_some{id: "id"} => ScalarListFilter(ScalarListField, ListContains("id"))
+      //We run into problems with the native versions when enabling this, since they actually verify that the scalarField is on the Model
+      //converting the Relationfilter to a ScalarFilter on a `virtual` ScalarField does not work for them
+
       override def transform(filter: Filter): Filter = {
         filter match {
           case AndFilter(filters) => AndFilter(filters.map(transform))
