@@ -235,18 +235,6 @@ impl<'name> ScopedArg<'name> {
     }
 }
 
-/// Parse a `{ "set": [...] }` structure into a ScalarListSet
-fn handle_scalar_list(name: &String, obj: &BTreeMap<String, Value>) -> ListArg {
-    ListArg(
-        name.clone(),
-        match obj.get("set") {
-            Some(Value::List(l)) => Some(l.iter().map(|v| PrismaValue::from_value(v)).collect::<Vec<_>>()),
-            None => None,
-            _ => None, // TODO: This should maybe return an error
-        },
-    )
-}
-
 pub enum ArgumentType {
     Create,
     Update,
@@ -258,34 +246,40 @@ pub struct Argument {
     name: String,
     tt: ArgumentType,
     data: BTreeMap<String, PrismaValue>,
-    lists: Vec<String>,
+    lists: Vec<ListArg>,
     nested: BTreeMap<String, Argument>,
 }
 
 impl Argument {
-    pub fn parse_into(root: String, args: &Vec<(String, Value)>) -> Self {
+    pub fn parse_into(name: String, tt: ArgumentType, args: &Vec<(String, Value)>) -> Self {
         /*
             name => Value
             Albums => Node
             Friends => Node
         */
 
-        let data = split_dataset(&args);
+        let DataSet { values, lists, nested } = split_dataset(&args);
 
-        unimplemented!()
+        nested.into_iter().map(|(key, val)| {
+
+        });
+
+        Argument {
+            name,
+            tt,
+            data: values.into_iter().collect(),
+            lists,
+            nested: Default::default(),
+        }
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct ListArgument(String, Option<Vec<Value>>);
-
+/// A temporary data return value
 struct DataSet {
-    values: Vec<(String, Value)>,
-    lists: Vec<ListArgument>,
+    values: Vec<(String, PrismaValue)>,
+    lists: Vec<ListArg>,
     nested: Vec<(String, Value)>,
 }
-
-// fn handle_scalar_list<'name>(name: &String, obj: &'name BTreeMap<String, Value>)
 
 /// Split a BTree of node-value mixes into seperate trees for values and nodes
 fn split_dataset(args: &Vec<(String, Value)>) -> DataSet {
@@ -316,10 +310,95 @@ fn split_dataset(args: &Vec<(String, Value)>) -> DataSet {
         values: values
             .into_iter()
             .filter_map(|a| a)
-            .map(|(a, b)| (a.clone(), b.clone()))
+            .map(|(a, b)| (a.clone(), PrismaValue::from_value(b)))
             .collect(),
-        lists,
+        lists: lists.into_iter().filter_map(|a| a).collect(),
     }
+}
+
+/// Parse a `{ "set": [...] }` structure into a ScalarListSet
+fn handle_scalar_list(name: &String, obj: &BTreeMap<String, Value>) -> ListArg {
+    ListArg(
+        name.clone(),
+        match obj.get("set") {
+            Some(Value::List(l)) => Some(l.iter().map(|v| PrismaValue::from_value(v)).collect::<Vec<_>>()),
+            None => None,
+            _ => None, // TODO: This should maybe return an error
+        },
+    )
+}
+
+/// Evaluate the action taken by a tree and return it's data
+fn evaluate_tree_node(obj: &Value) -> (BTreeMap<String, Value>, ArgumentType) {
+    match obj {
+        Value::Object(obj) => {
+            // obj.iter().fold(ArgumentType::, |mut node, (key, val)| {
+            //     node.name = name;
+            //     match (key.as_str(), val) {
+            //         ("create", Value::Object(obj)) => obj.iter().for_each(|(key, val)| match val {
+            //             Value::Object(ref obj) => {
+            //                 node.create.insert(key.clone(), Self::evaluate_tree(key, obj));
+            //             }
+            //             value => {
+            //                 node.create
+            //                     .insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
+            //             }
+            //         }),
+            //         ("update", Value::Object(obj)) => obj.iter().for_each(|(key, val)| match val {
+            //             Value::Object(ref obj) => {
+            //                 node.update.insert(key.clone(), Self::evaluate_tree(key, obj));
+            //             }
+            //             value => {
+            //                 node.update
+            //                     .insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
+            //             }
+            //         }),
+            //         ("upsert", Value::Object(obj)) => obj.iter().for_each(|(key, val)| match val {
+            //             Value::Object(ref obj) => {
+            //                 node.upsert.insert(key.clone(), Self::evaluate_tree(key, obj));
+            //             }
+            //             value => {
+            //                 node.upsert
+            //                     .insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
+            //             }
+            //         }),
+            //         ("delete", Value::Object(obj)) => obj.iter().for_each(|(key, val)| match val {
+            //             Value::Object(ref obj) => {
+            //                 node.delete.insert(key.clone(), Self::evaluate_tree(key, obj));
+            //             }
+            //             value => {
+            //                 node.delete
+            //                     .insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
+            //             }
+            //         }),
+            //         ("connect", Value::Object(obj)) => obj.iter().for_each(|(key, val)| match val {
+            //             Value::Object(ref obj) => {
+            //                 node.connect.insert(key.clone(), Self::evaluate_tree(key, obj));
+            //             }
+            //             value => {
+            //                 node.connect
+            //                     .insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
+            //             }
+            //         }),
+            //         ("disconnect", Value::Object(obj)) => obj.iter().for_each(|(key, val)| match val {
+            //             Value::Object(ref obj) => {
+            //                 node.disconnect.insert(key.clone(), Self::evaluate_tree(key, obj));
+            //             }
+            //             value => {
+            //                 node.disconnect
+            //                     .insert(key.clone(), ScopedArg::Value(PrismaValue::from_value(value)));
+            //             }
+            //         }),
+            //         (verb, _) => panic!("Unknown verb `{}`", verb),
+            //     }
+
+            //     node
+            // }))
+        },
+        _ => unreachable!(),
+    };
+
+    unimplemented!()
 }
 
 // pub fn split_dataset(
