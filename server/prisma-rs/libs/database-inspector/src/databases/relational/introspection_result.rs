@@ -17,11 +17,10 @@ pub trait SpecializedRelationalIntrospectionResult {
 }
 
 pub struct RelationalIntrospectionResult {
+    /// Any specialized connector specific results.
     pub specialized: Box<SpecializedRelationalIntrospectionResult>,
-    pub models: Vec<TableInfo>,
-    pub relations: Vec<TableRelationInfo>,
-    pub enums: Vec<EnumInfo>,
-    pub sequences: Vec<SequenceInfo>
+    /// The relational database schema without prisma abstractions.
+    pub schema: SchemaInfo
 }
 
 // TODO: This should follow the RelationalIntrospectionResult class

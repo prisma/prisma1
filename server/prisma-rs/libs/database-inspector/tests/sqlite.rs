@@ -24,7 +24,7 @@ fn all_columns_types_must_work() {
 
             let result = inspector.introspect(connection, SCHEMA)?;
 
-            let user_table = result.assert_has_table("User");
+            let user_table = result.schema.assert_has_table("User");
 
             user_table.assert_has_column("int")
                 .assert_column_type("INTEGER");
@@ -64,7 +64,7 @@ fn is_required_must_work() {
 
             let result = inspector.introspect(connection, SCHEMA)?;
 
-            let user_table = result.assert_has_table("User");
+            let user_table = result.schema.assert_has_table("User");
 
             user_table.assert_has_column("column1")
                 .assert_is_nullable(false);
@@ -92,7 +92,7 @@ fn foreign_keys_must_work() {
             let inspector = RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new()));
             let result = inspector.introspect(connection, SCHEMA)?;
 
-            result.assert_has_relation("User", "city", "City", "id");
+            result.schema.assert_has_relation("User", "city", "City", "id");
 
             Ok(())
         },

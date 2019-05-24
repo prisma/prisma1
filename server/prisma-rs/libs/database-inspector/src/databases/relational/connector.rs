@@ -30,10 +30,10 @@ pub trait SpecializedRelationalIntrospectionConnector {
     fn query_sequences(&self, connection: &mut Connection, schema: &str) -> Result<Vec<SequenceInfo>, SqlError>;
     fn create_introspection_result(
         &self,
-        models: &Vec<TableInfo>,
-        relations: &Vec<TableRelationInfo>,
-        enums: &Vec<EnumInfo>,
-        sequences: &Vec<SequenceInfo>,
+        models: Vec<TableInfo>,
+        relations: Vec<TableRelationInfo>,
+        enums: Vec<EnumInfo>,
+        sequences: Vec<SequenceInfo>,
     ) -> RelationalIntrospectionResult;
 }
 
@@ -105,10 +105,10 @@ impl IntrospectionConnector<RelationalIntrospectionResult> for RelationalIntrosp
 
     fn introspect(&self, connection: &mut Connection, schema: &str) -> Result<RelationalIntrospectionResult, SqlError> {
         Ok(self.specialized.create_introspection_result(
-            &self.list_models(connection, schema)?,
-            &self.list_relations(connection, schema)?,
-            &self.list_enums(connection, schema)?,
-            &self.list_sequences(connection, schema)?,
+            self.list_models(connection, schema)?,
+            self.list_relations(connection, schema)?,
+            self.list_enums(connection, schema)?,
+            self.list_sequences(connection, schema)?,
         ))
     }
 }

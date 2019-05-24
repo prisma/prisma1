@@ -114,13 +114,15 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
         Ok(vec![])
     }
 
-    fn create_introspection_result(&self, models: &Vec<TableInfo>, relations: &Vec<TableRelationInfo>, enums: &Vec<EnumInfo>, sequences: &Vec<SequenceInfo>) -> RelationalIntrospectionResult{
+    fn create_introspection_result(&self, models: Vec<TableInfo>, relations: Vec<TableRelationInfo>, enums: Vec<EnumInfo>, sequences: Vec<SequenceInfo>) -> RelationalIntrospectionResult{
         RelationalIntrospectionResult {
             specialized: Box::new(SqlLiteIntrospectionResult::new()),
-            models: models.clone(),
-            relations: relations.clone(),
-            enums: enums.clone(),
-            sequences: sequences.clone()
+            schema: SchemaInfo {
+                models: models,
+                relations: relations,
+                enums: enums,
+                sequences: sequences
+            }
         }
     }
 

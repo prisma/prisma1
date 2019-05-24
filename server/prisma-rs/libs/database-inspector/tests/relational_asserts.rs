@@ -19,7 +19,7 @@ pub trait ColumnAsserts {
     fn assert_is_primary_key(&self, b: bool) -> &ColumnInfo;
 }
 
-impl SchemaAsserts for RelationalIntrospectionResult {
+impl SchemaAsserts for SchemaInfo {
     fn assert_has_table(&self, t: &str) -> &TableInfo {
         self.models.iter().find(|m| &m.name == t)
             .expect(&format!("Table not found {}", t))
