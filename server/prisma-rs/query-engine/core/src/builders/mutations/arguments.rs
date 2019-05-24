@@ -16,21 +16,14 @@ pub enum ScopedArg<'name> {
 }
 
 #[derive(Debug, Clone)]
-pub struct ListArg<'name>(String, Option<Vec<ScopedArg<'name>>>);
+pub struct ListArg(String, Option<Vec<PrismaValue>>);
 
-impl<'name> From<&'name ListArg<'name>> for (String, PrismaListValue) {
-    fn from(vla: &'name ListArg<'name>) -> Self {
+impl<'name> From<&'name ListArg> for (String, PrismaListValue) {
+    fn from(vla: &'name ListArg) -> Self {
         (
             vla.0.clone(),
             match vla.1 {
-                Some(ref vec) => Some(
-                    vec.iter()
-                        .filter_map(|sa| match sa {
-                            ScopedArg::Value(val) => Some(val.clone()),
-                            _ => None,
-                        })
-                        .collect(),
-                ),
+                Some(ref vec) => Some(vec.iter().map(|val| val.clone()).collect()),
                 None => None,
             },
         )
@@ -57,7 +50,7 @@ pub struct ScopedArgNode<'name> {
 
     // Top-level attributes
     pub data: BTreeMap<String, ScopedArg<'name>>,
-    pub lists: Vec<ListArg<'name>>,
+    pub lists: Vec<ListArg>,
 
     // Nested attributes
     pub create: BTreeMap<String, ScopedArg<'name>>,
@@ -125,24 +118,6 @@ impl<'name> ScopedArgNode<'name> {
         //        For now it'll only work with normal Scalars
 
         clone
-    }
-
-    /// Split a BTree of node-value mixes into seperate trees for values and nodes
-    pub fn filter_nested(
-        args: &BTreeMap<String, ScopedArg<'name>>,
-    ) -> (BTreeMap<String, ScopedArgNode<'name>>, BTreeMap<String, PrismaValue>) {
-        let (nested, vals): (Vec<_>, Vec<_>) = args
-            .into_iter()
-            .map(|(key, val)| match val {
-                ScopedArg::Node(node) => (Some((key.clone(), node.clone())), None),
-                ScopedArg::Value(val) => (None, Some((key.clone(), val.clone()))),
-            })
-            .unzip();
-
-        (
-            nested.into_iter().filter_map(|a| a).collect(),
-            vals.into_iter().filter_map(|a| a).collect(),
-        )
     }
 }
 
@@ -261,18 +236,105 @@ impl<'name> ScopedArg<'name> {
 }
 
 /// Parse a `{ "set": [...] }` structure into a ScalarListSet
-fn handle_scalar_list<'name>(name: &String, obj: &'name BTreeMap<String, Value>) -> ListArg<'name> {
+fn handle_scalar_list(name: &String, obj: &BTreeMap<String, Value>) -> ListArg {
     ListArg(
         name.clone(),
         match obj.get("set") {
-            Some(Value::List(l)) => Some(
-                l.iter()
-                    .map(|v| PrismaValue::from_value(v))
-                    .map(|pv| ScopedArg::Value(pv))
-                    .collect::<Vec<_>>(),
-            ),
+            Some(Value::List(l)) => Some(l.iter().map(|v| PrismaValue::from_value(v)).collect::<Vec<_>>()),
             None => None,
             _ => None, // TODO: This should maybe return an error
         },
     )
 }
+
+pub enum ArgumentType {
+    Create,
+    Update,
+    Upsert,
+    Delete,
+}
+
+pub struct Argument {
+    name: String,
+    tt: ArgumentType,
+    data: BTreeMap<String, PrismaValue>,
+    lists: Vec<String>,
+    nested: BTreeMap<String, Argument>,
+}
+
+impl Argument {
+    pub fn parse_into(root: String, args: &Vec<(String, Value)>) -> Self {
+        /*
+            name => Value
+            Albums => Node
+            Friends => Node
+        */
+
+        let data = split_dataset(&args);
+
+        unimplemented!()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ListArgument(String, Option<Vec<Value>>);
+
+struct DataSet {
+    values: Vec<(String, Value)>,
+    lists: Vec<ListArgument>,
+    nested: Vec<(String, Value)>,
+}
+
+// fn handle_scalar_list<'name>(name: &String, obj: &'name BTreeMap<String, Value>)
+
+/// Split a BTree of node-value mixes into seperate trees for values and nodes
+fn split_dataset(args: &Vec<(String, Value)>) -> DataSet {
+    let (nested, vals): (Vec<_>, Vec<_>) = args
+        .iter()
+        .map(|(key, val)| match val {
+            Value::Object(obj) if obj.contains_key("set") => (None, Some((key, val))),
+            Value::Object(_) => (Some((key, val)), None),
+            value => (None, Some((key, value))),
+        })
+        .unzip();
+
+    let (values, lists): (Vec<_>, Vec<_>) = vals
+        .into_iter()
+        .filter_map(|a| a)
+        .map(|(key, val)| match val {
+            Value::Object(ref obj) if obj.contains_key("set") => (None, Some(handle_scalar_list(key, obj))),
+            value => (Some((key, value)), None),
+        })
+        .unzip();
+
+    DataSet {
+        nested: nested
+            .into_iter()
+            .filter_map(|a| a)
+            .map(|(a, b)| (a.clone(), b.clone()))
+            .collect(),
+        values: values
+            .into_iter()
+            .filter_map(|a| a)
+            .map(|(a, b)| (a.clone(), b.clone()))
+            .collect(),
+        lists,
+    }
+}
+
+// pub fn split_dataset(
+//     args: &BTreeMap<String, ScopedArg>,
+// ) -> (BTreeMap<String, ScopedArgNode>, BTreeMap<String, PrismaValue>) {
+//     let (nested, vals): (Vec<_>, Vec<_>) = args
+//         .into_iter()
+//         .map(|(key, val)| match val {
+//             ScopedArg::Node(node) => (Some((key.clone(), node.clone())), None),
+//             ScopedArg::Value(val) => (None, Some((key.clone(), val.clone()))),
+//         })
+//         .unzip();
+
+//     (
+//         nested.into_iter().filter_map(|a| a).collect(),
+//         vals.into_iter().filter_map(|a| a).collect(),
+//     )
+// }
