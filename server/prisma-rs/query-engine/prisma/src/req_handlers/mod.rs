@@ -2,7 +2,9 @@ mod graphql;
 mod renderer;
 
 use crate::context::PrismaContext;
+pub use core::QuerySchemaRenderer;
 pub use graphql::{GraphQlBody, GraphQlRequestHandler};
+pub use renderer::GraphQLSchemaRenderer;
 
 use crate::RequestContext;
 use actix_web::HttpRequest;

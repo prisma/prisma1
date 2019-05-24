@@ -6,6 +6,10 @@ pub struct GqlEnumRenderer {
 
 impl Renderer for GqlEnumRenderer {
     fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
+        if ctx.already_rendered(&self.enum_type_ref.name) {
+            return ("".into(), ctx);
+        }
+
         let values: Vec<String> = self
             .enum_type_ref
             .values

@@ -16,7 +16,7 @@ use type_renderer::*;
 pub struct GraphQLSchemaRenderer;
 
 impl QuerySchemaRenderer for GraphQLSchemaRenderer {
-    fn render(&self, query_schema: &QuerySchema) -> String {
+    fn render(query_schema: &QuerySchema) -> String {
         let context = RenderContext::new();
         let (_, result) = query_schema.into_renderer().render(context);
 
@@ -56,16 +56,21 @@ impl RenderContext {
         self.output_queue.borrow().join("\n\n")
     }
 
-    pub fn should_render(&self, cache_key: &str) -> bool {
+    pub fn already_rendered(&self, cache_key: &str) -> bool {
         self.rendered.borrow().contains_key(cache_key)
     }
 
-    pub fn add(&self, cache_key: String, output: String) {
+    pub fn mark_as_rendered(&self, cache_key: String) {
+        self.rendered.borrow_mut().insert(cache_key, ());
+    }
+
+    pub fn add_output(&self, output: String) {
         self.output_queue.borrow_mut().push(output);
-        self.rendered
-            .borrow_mut()
-            .insert(cache_key, ())
-            .expect("Expected render caching operation to always suceed/");
+    }
+
+    pub fn add(&self, cache_key: String, output: String) {
+        self.add_output(output);
+        self.mark_as_rendered(cache_key);
     }
 
     pub fn indent(&self) -> String {

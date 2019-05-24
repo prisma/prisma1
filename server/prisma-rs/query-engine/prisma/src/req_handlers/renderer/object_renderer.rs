@@ -16,6 +16,10 @@ impl Renderer for GqlObjectRenderer {
 
 impl GqlObjectRenderer {
     fn render_input_object(&self, input_object: &InputObjectTypeRef, ctx: RenderContext) -> (String, RenderContext) {
+        if ctx.already_rendered(&input_object.name) {
+            return ("".into(), ctx);
+        }
+
         let (rendered_fields, ctx): (Vec<String>, RenderContext) =
             input_object
                 .get_fields()
@@ -44,6 +48,13 @@ impl GqlObjectRenderer {
     }
 
     fn render_output_object(&self, output_object: &ObjectTypeRef, ctx: RenderContext) -> (String, RenderContext) {
+        if ctx.already_rendered(&output_object.name) {
+            return ("".into(), ctx);
+        } else {
+            // This short circuits recursive processing for fields.
+            ctx.mark_as_rendered(output_object.name.clone())
+        }
+
         let (rendered_fields, ctx): (Vec<String>, RenderContext) =
             output_object
                 .get_fields()
@@ -67,7 +78,7 @@ impl GqlObjectRenderer {
             indented.join("\n")
         );
 
-        ctx.add(output_object.name.clone(), rendered.clone());
+        ctx.add_output(rendered.clone());
         (rendered, ctx)
     }
 }
