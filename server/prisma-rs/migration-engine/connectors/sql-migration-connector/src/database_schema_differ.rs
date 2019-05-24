@@ -1,15 +1,17 @@
-use crate::sql_database_migration_steps_inferrer::wrap_as_step;
-use crate::sql_migration_step::*;
-use database_inspector::{Column, DatabaseSchema, Table};
+use crate::*;
+use database_inspector::relational::{
+    ColumnInfo as Column, ColumnType, SchemaInfo as DatabaseSchema, TableInfo as Table, TableRelationInfo,
+};
 
 pub struct DatabaseSchemaDiffer<'a> {
     previous: &'a DatabaseSchema,
     next: &'a DatabaseSchema,
+    schema_name: String,
 }
 
 impl<'a> DatabaseSchemaDiffer<'a> {
-    pub fn diff(previous: &DatabaseSchema, next: &DatabaseSchema) -> Vec<SqlMigrationStep> {
-        let differ = DatabaseSchemaDiffer { previous, next };
+    pub fn diff(previous: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str) -> Vec<SqlMigrationStep> {
+        let differ = DatabaseSchemaDiffer { previous, next, schema_name: String::from(schema_name) };
         differ.diff_internal()
     }
 
@@ -39,8 +41,11 @@ impl<'a> DatabaseSchemaDiffer<'a> {
             if !self.previous.has_table(&next_table.name) {
                 let create = CreateTable {
                     name: next_table.name.clone(),
-                    columns: Self::column_descriptions(&next_table.columns),
-                    primary_columns: next_table.primary_key_columns.clone(),
+                    columns: Self::column_descriptions(&next_table.columns, next_table, &self.next.relations),
+                    primary_columns: match next_table.primary_key {
+                        None => vec![],
+                        Some(idx) => idx.columns.clone(),
+                    },
                 };
                 result.push(create);
             }
@@ -109,9 +114,9 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         for previous_table in &self.previous.tables {
             if let Some(next_table) = self.next.table(&previous_table.name) {
                 let mut changes = Vec::new();
-                changes.append(&mut Self::drop_columns(&previous_table, &next_table));
-                changes.append(&mut Self::add_columns(&previous_table, &next_table));
-                changes.append(&mut Self::alter_columns(&previous_table, &next_table));
+                changes.append(&mut self.drop_columns(&previous_table, &next_table));
+                changes.append(&mut self.add_columns(&previous_table, &next_table));
+                changes.append(&mut self.alter_columns(&previous_table, &next_table));
 
                 if !changes.is_empty() {
                     let update = AlterTable {
@@ -125,7 +130,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         result
     }
 
-    fn drop_columns(previous: &Table, next: &Table) -> Vec<TableChange> {
+    fn drop_columns(&self, previous: &Table, next: &Table) -> Vec<TableChange> {
         let mut result = Vec::new();
         for previous_column in &previous.columns {
             if !next.has_column(&previous_column.name) {
@@ -138,12 +143,12 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         result
     }
 
-    fn add_columns(previous: &Table, next: &Table) -> Vec<TableChange> {
+    fn add_columns(&self, previous: &Table, next: &Table) -> Vec<TableChange> {
         let mut result = Vec::new();
         for next_column in &next.columns {
             if !previous.has_column(&next_column.name) {
                 let change = AddColumn {
-                    column: Self::column_description(next_column),
+                    column: Self::column_description(next_column, next, &self.next.relations),
                 };
                 result.push(TableChange::AddColumn(change));
             }
@@ -151,14 +156,14 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         result
     }
 
-    fn alter_columns(previous: &Table, next: &Table) -> Vec<TableChange> {
+    fn alter_columns(&self, previous: &Table, next: &Table) -> Vec<TableChange> {
         let mut result = Vec::new();
         for next_column in &next.columns {
             if let Some(previous_column) = previous.column(&next_column.name) {
                 if previous_column != next_column {
                     let change = AlterColumn {
                         name: previous_column.name.clone(),
-                        column: Self::column_description(next_column),
+                        column: Self::column_description(next_column, next, &self.next.relations),
                     };
                     result.push(TableChange::AlterColumn(change));
                 }
@@ -167,30 +172,21 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         result
     }
 
-    pub fn column_descriptions(columns: &Vec<Column>) -> Vec<ColumnDescription> {
-        columns.iter().map(Self::column_description).collect()
+    pub fn column_descriptions(columns: &Vec<Column>, table: &Table, relations: &Vec<TableRelationInfo>) -> Vec<ColumnDescription> {
+        columns.iter().map(|c| Self::column_description(c, table, relations)).collect()
     }
 
-    fn column_description(column: &Column) -> ColumnDescription {
-        let fk = column.foreign_key.as_ref().map(|fk| ForeignKey {
-            table: fk.table.clone(),
-            column: fk.column.clone(),
-        });
+    fn column_description(column: &Column, table: &Table, relations: &Vec<TableRelationInfo>) -> ColumnDescription {
+        let fk = relations.iter().find(|rel| rel.source_table == table.name && rel.source_column == column.name)
+            .map(|fk| ForeignKey {
+                table: fk.target_table.clone(),
+                column: fk.target_column.clone(),
+            });
         ColumnDescription {
             name: column.name.clone(),
-            tpe: Self::convert_column_type(column.tpe),
-            required: column.is_required,
+            tpe: column.column_type,
+            required: !column.is_nullable,
             foreign_key: fk,
-        }
-    }
-
-    fn convert_column_type(inspector_type: database_inspector::ColumnType) -> ColumnType {
-        match inspector_type {
-            database_inspector::ColumnType::Boolean => ColumnType::Boolean,
-            database_inspector::ColumnType::Int => ColumnType::Int,
-            database_inspector::ColumnType::Float => ColumnType::Float,
-            database_inspector::ColumnType::String => ColumnType::String,
-            database_inspector::ColumnType::DateTime => ColumnType::DateTime,
         }
     }
 }

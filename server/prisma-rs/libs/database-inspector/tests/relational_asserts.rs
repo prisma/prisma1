@@ -21,7 +21,7 @@ pub trait ColumnAsserts {
 
 impl SchemaAsserts for SchemaInfo {
     fn assert_has_table(&self, t: &str) -> &TableInfo {
-        self.models.iter().find(|m| &m.name == t)
+        self.tables.iter().find(|m| &m.name == t)
             .expect(&format!("Table not found {}", t))
     }
 

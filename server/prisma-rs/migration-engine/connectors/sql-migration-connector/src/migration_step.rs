@@ -1,3 +1,4 @@
+use database_inspector::relational::ColumnType;
 use migration_connector::DatabaseMigrationStepExt;
 use serde::Serialize;
 
@@ -65,13 +66,4 @@ pub struct ColumnDescription {
 pub struct ForeignKey {
     pub table: String,
     pub column: String,
-}
-
-#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize)]
-pub enum ColumnType {
-    Int,
-    Float,
-    Boolean,
-    String,
-    DateTime,
 }

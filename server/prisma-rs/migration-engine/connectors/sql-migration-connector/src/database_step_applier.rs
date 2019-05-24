@@ -1,25 +1,31 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
+use database_inspector::relational::ColumnType;
 use migration_connector::*;
+use prisma_query::error::Error as SqlError;
 use rusqlite::{Connection, NO_PARAMS};
 
-pub struct SqlDatabaseStepApplier {
-    connection: Connection,
+pub struct SqlDatabaseStepApplier<'a> {
+    connection: &'a Connection,
     schema_name: String,
 }
 
-impl SqlDatabaseStepApplier {
-    pub fn new(connection: Connection, schema_name: String) -> Self {
-        SqlDatabaseStepApplier {
-            connection,
-            schema_name,
-        }
+impl<'a> SqlDatabaseStepApplier<'a> {
+    pub fn new(connection: &'a Connection, schema_name: &str) -> SqlDatabaseStepApplier<'a> {
+        SqlDatabaseStepApplier { connection, schema_name: String::from(schema_name) }
+    }
+
+    fn make_sql_string(&self, migration: BarrelMigration) -> String {
+        // TODO: this should pattern match on the connector type once we have this information available
+        migration.make::<barrel::backend::Sqlite>()
     }
 }
 
 #[allow(unused, dead_code)]
-impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
-    fn apply(&self, step: SqlMigrationStep) {
+impl<'a> DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier<'a> {
+    type ErrorType = SqlError;
+
+    fn apply(&self, step: SqlMigrationStep) -> Result<(), SqlError> {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
         let sql_string = match dbg!(step) {
@@ -85,20 +91,13 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
         let result = self.connection.execute(&sql_string, NO_PARAMS);
         // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
         match dbg!(result) {
-            Ok(_) => {}
-            Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
+            Ok(_) => Ok(()),
+            Err(rusqlite::Error::ExecuteReturnedResults) => Ok(()), // renames return results and crash the driver ..
             e @ Err(_) => {
                 e.unwrap();
-                {}
+                Ok(())
             }
         }
-    }
-}
-
-impl SqlDatabaseStepApplier {
-    fn make_sql_string(&self, migration: BarrelMigration) -> String {
-        // TODO: this should pattern match on the connector type once we have this information available
-        migration.make::<barrel::backend::Sqlite>()
     }
 }
 

@@ -1,4 +1,6 @@
-use database_inspector::*;
+use database_inspector::relational::{
+    ColumnInfo, ColumnType, IndexInfo, SchemaInfo as DatabaseSchema, TableInfo, TableRelationInfo,
+};
 use datamodel::*;
 use itertools::Itertools;
 
@@ -13,293 +15,234 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     }
 
     fn calculate_internal(&self) -> DatabaseSchema {
-        let mut tables = Vec::new();
-        let model_tables_without_inline_relations = self.calculate_model_tables();
-        let mut model_tables = self.add_inline_relations_to_model_tables(model_tables_without_inline_relations);
-        let mut scalar_list_tables = self.calculate_scalar_list_tables();
-        let mut relation_tables = self.calculate_relation_tables();
+        let mut schema = DatabaseSchema::new();
 
-        tables.append(&mut model_tables);
-        tables.append(&mut scalar_list_tables);
-        tables.append(&mut relation_tables);
+        // TODO: It's probably better to move this into one loop.
+        schema.merge(self.calculate_model_tables());
+        schema.merge(self.calculate_scalar_list_tables());
+        schema.merge(self.calculate_relation_tables());
 
-        DatabaseSchema { tables }
+        schema
     }
 
-    fn calculate_model_tables(&self) -> Vec<ModelTable> {
-        self.data_model
-            .models()
-            .map(|model| {
-                let columns = model
-                    .fields()
-                    .flat_map(|f| match (&f.field_type, &f.arity) {
-                        (FieldType::Base(_), arity) if arity != &FieldArity::List => Some(Column {
-                            name: f.db_name(),
-                            tpe: column_type(f),
-                            is_required: arity == &FieldArity::Required,
-                            foreign_key: None,
-                            sequence: None,
-                        }),
-                        _ => None,
-                    })
-                    .collect();
+    /// Generates tables for models, includes inline relations.
+    fn calculate_model_tables(&self) -> DatabaseSchema {
+        let mut schema = DatabaseSchema::new();
 
-                let table = Table {
-                    name: model.db_name(),
-                    columns: columns,
-                    indexes: Vec::new(),
-                    primary_key_columns: vec![model.id_field().db_name()],
-                };
-                ModelTable {
-                    model: model.clone(),
-                    table: table,
+        for model in self.data_model.models() {
+            let mut table = TableInfo {
+                name: String::from(model.db_name()),
+                columns: Vec::new(),
+                indexes: Vec::new(),
+                primary_key: Some(IndexInfo::new_pk(&[model.id_field().db_name()])),
+            };
+
+            for field in model.fields() {
+                // TODO: Removing all list fields breaks for scalar fields if the
+                // db supports embedded lists.
+                if field.arity == FieldArity::List {
+                    continue;
                 }
-            })
-            .collect()
+
+                match field.field_type {
+                    FieldType::Base(scalar_type) => table.columns.push(ColumnInfo::new(
+                        field.db_name(),
+                        column_type_for_scalar_type(&scalar_type),
+                        field.arity != FieldArity::Required,
+                    )),
+                    FieldType::Enum(enum_name) => unimplemented!("No Enum support yet."),
+                    FieldType::Relation(relation_info) => {
+                        let related = self
+                            .data_model
+                            .find_model(&relation_info.to)
+                            .expect("Invalid related model. This should never happen.");
+                        let related_id_field = related.id_field();
+                        let to_field = match relation_info.to_field {
+                            Some(name) => related.find_field(&name),
+                            None => None,
+                        };
+
+                        // We removed all lists above,
+                        // therefore we can assume that we are never going to find an n:m field here,
+                        // and field is always the FK embedder.
+
+                        // Self Relations: We can embed, if either:
+                        // * There is no related field.
+                        // * The related field is a list.
+                        // * Our name is smaller than the related fields name (this is a tie breaker for an 1:1 self relation)
+                        let is_self_relation = related.name == model.name;
+                        let can_embed_self_relation = to_field.is_none()
+                            || to_field.unwrap().arity == FieldArity::List
+                            || field.name < to_field.unwrap().name;
+
+                        // 1:1 Relations: We embed if our name is smaller (tie breaker).
+                        let is_one_one_relation = to_field.is_some() && to_field.unwrap().arity != FieldArity::List;
+                        let can_embed_one_one_relation = is_one_one_relation && field.name < to_field.unwrap().name;
+
+                        // We can embed the ID into field if either:
+                        // * This is a self relation field and the check above passed.
+                        // * This is a 1:1 relation field and the check above passed.
+                        // * This is not a self relation or a 1:1 relation.
+                        if (is_self_relation && can_embed_self_relation)
+                            || (is_one_one_relation && can_embed_one_one_relation)
+                            || (!is_self_relation && !is_one_one_relation)
+                        {
+                            table.columns.push(ColumnInfo::new(
+                                field.db_name(),
+                                column_type(related_id_field),
+                                field.arity != FieldArity::Required,
+                            ));
+
+                            let fk = TableRelationInfo::new(
+                                related.db_name(),
+                                related_id_field.db_name(),
+                                &table.name,
+                                field.db_name(),
+                            );
+                            schema.relations.push(fk);
+                        }
+                    }
+                    FieldType::ConnectorSpecific {
+                        base_type: _,
+                        connector_type: _,
+                    } => unimplemented!("No connector specific support yet."),
+                }
+            }
+
+            schema.tables.push(table);
+        }
+
+        schema
     }
 
-    fn calculate_scalar_list_tables(&self) -> Vec<Table> {
-        let mut result = Vec::new();
+    /// Generates tables for scalar list fields.
+    fn calculate_scalar_list_tables(&self) -> DatabaseSchema {
+        let mut tables = Vec::new();
+        let mut relations = Vec::new();
+
+        let node_id_field = "nodeId";
+        let position_field = "position";
+        let value_field = "value";
 
         for model in self.data_model.models() {
             let list_fields: Vec<&Field> = model
                 .fields()
                 .filter(|f| f.arity == FieldArity::List && is_scalar(f))
                 .collect();
+
             for field in list_fields {
                 let id_field = model.id_field();
-                let table = Table {
+
+                let table = TableInfo {
                     name: format!("{}_{}", model.db_name(), field.db_name()),
                     columns: vec![
-                        Column::with_foreign_key(
-                            "nodeId".to_string(),
-                            column_type(&id_field),
-                            true,
-                            ForeignKey {
-                                table: model.db_name(),
-                                column: model.id_field().db_name(),
-                            },
-                        ),
-                        Column::new("position".to_string(), ColumnType::Int, true),
-                        Column::new("value".to_string(), column_type(&field), true),
+                        ColumnInfo::new(node_id_field, column_type(&id_field), false),
+                        ColumnInfo::new(position_field, ColumnType::Int, false),
+                        ColumnInfo::new(value_field, column_type(&field), false),
                     ],
                     indexes: Vec::new(),
-                    primary_key_columns: vec!["nodeId".to_string(), "position".to_string()],
+                    primary_key: Some(IndexInfo::new_pk(&[node_id_field, position_field])),
                 };
-                result.push(table);
+                tables.push(table);
+
+                let relation =
+                    TableRelationInfo::new(model.db_name(), id_field.db_name(), &table.name, node_id_field);
+                relations.push(relation);
             }
         }
 
-        result
-    }
-
-    fn add_inline_relations_to_model_tables(&self, model_tables: Vec<ModelTable>) -> Vec<Table> {
-        let mut result = Vec::new();
-        let relations = self.calculate_relations();
-        for mut model_table in model_tables {
-            for relation in relations.iter() {
-                match &relation.manifestation {
-                    RelationManifestation::Inline {
-                        in_table_of_model,
-                        column,
-                    } if in_table_of_model == &model_table.model.name => {
-                        let related_model = if model_table.model == relation.model_a {
-                            &relation.model_b
-                        } else {
-                            &relation.model_a
-                        };
-                        let column = Column::with_foreign_key(
-                            column.to_string(),
-                            column_type(&model_table.model.id_field()),
-                            relation.field_a.is_required() || relation.field_b.is_required(),
-                            ForeignKey {
-                                table: related_model.db_name(),
-                                column: related_model.id_field().db_name(),
-                            },
-                        );
-                        model_table.table.columns.push(column);
-                    }
-                    _ => {}
-                }
-            }
-            result.push(model_table.table);
+        DatabaseSchema {
+            tables,
+            relations,
+            enums: vec![],
+            sequences: vec![],
         }
-        result
     }
 
-    fn calculate_relation_tables(&self) -> Vec<Table> {
-        let mut result = Vec::new();
-        for relation in self.calculate_relations().iter() {
-            match &relation.manifestation {
-                RelationManifestation::Table {
-                    model_a_column,
-                    model_b_column,
-                } => {
-                    let table = Table {
-                        name: relation.table_name(),
-                        columns: vec![
-                            Column::with_foreign_key(
-                                model_a_column.to_string(),
-                                column_type(&relation.model_a.id_field()),
-                                true,
-                                ForeignKey {
-                                    table: relation.model_a.db_name(),
-                                    column: relation.model_a.id_field().db_name(),
-                                },
-                            ),
-                            Column::with_foreign_key(
-                                model_b_column.to_string(),
-                                column_type(&relation.model_b.id_field()),
-                                true,
-                                ForeignKey {
-                                    table: relation.model_b.db_name(),
-                                    column: relation.model_b.id_field().db_name(),
-                                },
-                            ),
-                        ],
-                        indexes: Vec::new(),
-                        primary_key_columns: Vec::new(),
-                    };
-                    result.push(table);
-                }
-                _ => {}
-            }
-        }
-        result
-    }
+    //// Generates tables for Many to Many relations.
+    fn calculate_relation_tables(&self) -> DatabaseSchema {
+        let mut schema = DatabaseSchema::new();
 
-    #[allow(unused)]
-    fn calculate_relations(&self) -> Vec<Relation> {
-        let mut result = Vec::new();
         for model in self.data_model.models() {
             for field in model.fields() {
-                match &field.field_type {
+                // We are only interested in lists for finding n:m rels.
+                if field.arity != FieldArity::List {
+                    continue;
+                }
+
+                match field.field_type {
                     FieldType::Relation(relation_info) => {
-                        let RelationInfo {
-                            to,
-                            to_field: _,
-                            name,
-                            on_delete: _,
-                        } = relation_info;
-                        let related_model = self.data_model.find_model(&to).unwrap();
-                        // TODO: handle case of implicit back relation field
-                        let related_field = related_model
-                            .fields()
-                            .find(|f| related_type(f) == Some(model.name.to_string()))
-                            .unwrap()
-                            .clone();
+                        let related = self
+                            .data_model
+                            .find_model(&relation_info.to)
+                            .expect("Invalid related model. This should never happen.");
 
-                        let (model_a, model_b, field_a, field_b) = match () {
-                            _ if &model.name < &related_model.name => {
-                                (model.clone(), related_model.clone(), field.clone(), related_field)
-                            }
-                            _ if &related_model.name < &model.name => {
-                                (related_model.clone(), model.clone(), related_field, field.clone())
-                            }
-                            _ => (model.clone(), related_model.clone(), field.clone(), related_field),
-                        };
-                        let inline_on_model_a = RelationManifestation::Inline {
-                            in_table_of_model: model_a.name.clone(),
-                            column: field_a.db_name(),
-                        };
-                        let inline_on_model_b = RelationManifestation::Inline {
-                            in_table_of_model: model_b.name.clone(),
-                            column: field_b.db_name(),
-                        };
-                        let manifestation = match (field_a.is_list(), field_b.is_list()) {
-                            (true, true) => RelationManifestation::Table {
-                                model_a_column: "A".to_string(),
-                                model_b_column: "B".to_string(),
-                            },
-                            (false, true) => inline_on_model_a,
-                            (true, false) => inline_on_model_b,
-                            (false, false) => {
-                                if model_a.name < model_b.name {
-                                    inline_on_model_a
-                                } else {
-                                    inline_on_model_b
-                                }
-                            }
+                        let my_id_field = model.id_field();
+                        let related_id_field = related.id_field();
+
+                        let to_field = match relation_info.to_field {
+                            Some(name) => related.find_field(&name),
+                            None => None,
                         };
 
-                        result.push(Relation {
-                            name: name.clone(),
-                            model_a: model_a,
-                            model_b: model_b,
-                            field_a: field_a,
-                            field_b: field_b,
-                            manifestation,
-                        })
+                        let is_many_many_relationship = to_field.is_some() && to_field.unwrap().is_list();
+                        // This is a tie-breaker again.
+                        // TODO: This can be very unstable with renaming.
+                        let can_create = field.name < to_field.unwrap().name;
+
+                        if !is_many_many_relationship || !can_create {
+                            continue;
+                        }
+
+                        let relation_name = relation_info
+                            .name
+                            .expect("Cannot create many to many relation with out a name");
+
+                        // Create Relation Table
+                        let table = TableInfo {
+                            name: String::from(relation_name),
+                            columns: vec![
+                                ColumnInfo::new("A", column_type(my_id_field), false),
+                                ColumnInfo::new("B", column_type(related_id_field), false),
+                            ],
+                            indexes: Vec::new(),
+                            primary_key: Some(IndexInfo::new_pk(&["A", "B"])),
+                        };
+
+                        schema.tables.push(table);
+
+                        // Create FKs
+                        let fk1 = TableRelationInfo::new(&relation_name, "A", model.db_name(), my_id_field.db_name());
+                        schema.relations.push(fk1);
+                        let fk2 =
+                            TableRelationInfo::new(&relation_name, "B", related.db_name(), related_id_field.db_name());
+                        schema.relations.push(fk2);
                     }
                     _ => {}
                 }
             }
         }
-        result.into_iter().unique_by(|rel| rel.name()).collect()
+
+        schema
     }
 }
 
-#[derive(PartialEq, Debug)]
-struct ModelTable {
-    table: Table,
-    model: Model,
-}
-
-#[derive(PartialEq, Debug, Clone)]
-struct Relation {
-    name: Option<String>,
-    model_a: Model,
-    model_b: Model,
-    field_a: Field,
-    field_b: Field,
-    manifestation: RelationManifestation,
-}
-
-impl Relation {
-    fn name(&self) -> String {
-        // TODO: must replicate behaviour of `generateRelationName` from `SchemaInferrer`
-        match &self.name {
-            Some(name) => name.clone(),
-            None => format!("{}To{}", &self.model_a.name, &self.model_b.name),
-        }
-    }
-
-    fn table_name(&self) -> String {
-        format!("_{}", self.name())
-    }
-
-    #[allow(unused)]
-    fn is_many_to_many(&self) -> bool {
-        self.field_a.is_list() && self.field_b.is_list()
-    }
-}
-
-#[derive(PartialEq, Debug, Clone)]
-enum RelationManifestation {
-    Inline {
-        in_table_of_model: String,
-        column: String,
-    },
-    Table {
-        model_a_column: String,
-        model_b_column: String,
-    },
-}
-
+// TODO: Move all this helper traits to datamodel.
 trait ModelExtensions {
     fn id_field(&self) -> &Field;
 
-    fn db_name(&self) -> String;
+    fn db_name(&self) -> &str;
 }
 
 impl ModelExtensions for Model {
     // todo: find actual id field
+    // TODO: This should be done by the validator on datamodel load.
     fn id_field(&self) -> &Field {
         self.fields().find(|f| f.is_id()).unwrap()
     }
 
-    fn db_name(&self) -> String {
-        self.database_name.clone().unwrap_or_else(|| self.name.clone())
+    fn db_name(&self) -> &str {
+        &self.database_name.unwrap_or_else(|| self.name)
     }
 }
 
@@ -310,7 +253,7 @@ trait FieldExtensions {
 
     fn is_required(&self) -> bool;
 
-    fn db_name(&self) -> String;
+    fn db_name(&self) -> &str;
 }
 
 impl FieldExtensions for Field {
@@ -326,8 +269,8 @@ impl FieldExtensions for Field {
         self.arity == FieldArity::Required
     }
 
-    fn db_name(&self) -> String {
-        self.database_name.clone().unwrap_or_else(|| self.name.clone())
+    fn db_name(&self) -> &str {
+        &self.database_name.clone().unwrap_or_else(|| self.name.clone())
     }
 }
 
@@ -345,18 +288,19 @@ fn is_scalar(field: &Field) -> bool {
     }
 }
 
-fn column_type(field: &Field) -> ColumnType {
-    column_type_for_scalar_type(scalar_type(field))
-}
-
+// TODO: Move to dml::FieldType.
 fn scalar_type(field: &Field) -> &ScalarType {
     match &field.field_type {
         FieldType::Base(ref scalar) => scalar,
         x => panic!(format!(
-            "only scalar types are suported here. Type is {:?} on field {}",
+            "Only scalar types are suported here. Type is {:?} on field {}.",
             x, field.name
         )),
     }
+}
+
+fn column_type(field: &Field) -> ColumnType {
+    column_type_for_scalar_type(scalar_type(field))
 }
 
 fn column_type_for_scalar_type(scalar_type: &ScalarType) -> ColumnType {
@@ -366,6 +310,6 @@ fn column_type_for_scalar_type(scalar_type: &ScalarType) -> ColumnType {
         ScalarType::Boolean => ColumnType::Boolean,
         ScalarType::String => ColumnType::String,
         ScalarType::DateTime => ColumnType::DateTime,
-        ScalarType::Decimal => unimplemented!(),
+        ScalarType::Decimal => unimplemented!("Decimal Column Type is Unimplemented"),
     }
 }

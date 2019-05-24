@@ -30,7 +30,7 @@ pub trait SpecializedRelationalIntrospectionConnector {
     fn query_sequences(&self, connection: &mut Connection, schema: &str) -> Result<Vec<SequenceInfo>, SqlError>;
     fn create_introspection_result(
         &self,
-        models: Vec<TableInfo>,
+        tables: Vec<TableInfo>,
         relations: Vec<TableRelationInfo>,
         enums: Vec<EnumInfo>,
         sequences: Vec<SequenceInfo>,
@@ -48,7 +48,7 @@ impl RelationalIntrospectionConnector {
         RelationalIntrospectionConnector { specialized }
     }
 
-    fn list_models(&self, connection: &mut Connection, schema: &str) -> Result<Vec<TableInfo>, SqlError> {
+    fn list_tables(&self, connection: &mut Connection, schema: &str) -> Result<Vec<TableInfo>, SqlError> {
         let mut tables: Vec<TableInfo> = vec![];
         let all_tables = self.specialized.query_tables(connection, schema)?;
 
@@ -75,7 +75,7 @@ impl RelationalIntrospectionConnector {
             tables.push(TableInfo {
                 name: table_name.clone(),
                 columns: columns,
-                inidices: secondary_inidices,
+                indexes: secondary_inidices,
                 primary_key: primary_key,
             })
         }
@@ -116,7 +116,7 @@ impl IntrospectionConnector<RelationalIntrospectionResult> for RelationalIntrosp
 
     fn introspect(&self, connection: &mut Connection, schema: &str) -> Result<RelationalIntrospectionResult, SqlError> {
         Ok(self.specialized.create_introspection_result(
-            self.list_models(connection, schema)?,
+            self.list_tables(connection, schema)?,
             self.list_relations(connection, schema)?,
             self.list_enums(connection, schema)?,
             self.list_sequences(connection, schema)?,

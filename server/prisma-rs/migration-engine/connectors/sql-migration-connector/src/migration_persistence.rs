@@ -2,62 +2,63 @@
 use chrono::*;
 use datamodel::Schema;
 use migration_connector::*;
-use prisma_query::{ast::*, visitor::*};
-use rusqlite::{Connection, Row};
+use prisma_query::{ast::*, error::Error as SqlError, transaction::Connection, visitor::*, ResultRow};
 use serde_json;
 
-pub struct SqlMigrationPersistence {
-    connection: Connection,
+pub struct SqlMigrationPersistence<'a> {
+    connection: &'a Connection,
 }
 
-impl SqlMigrationPersistence {
-    pub fn new(conn: Connection) -> SqlMigrationPersistence {
-        SqlMigrationPersistence { connection: conn }
+impl<'a> SqlMigrationPersistence<'a> {
+    pub fn new(connection: &'a Connection) -> SqlMigrationPersistence {
+        SqlMigrationPersistence { connection }
     }
 }
 
 #[allow(unused, dead_code)]
-impl MigrationPersistence for SqlMigrationPersistence {
-    fn last(&self) -> Option<Migration> {
+impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
+    type ErrorType = SqlError;
+
+    fn last(&self) -> Result<Migration, SqlError> {
         let conditions = STATUS_COLUMN.equals("Success");
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
-        let (sql_str, params) = Sqlite::build(query);
 
-        self.connection
-            .query_row(&sql_str, params, |row| Ok(parse_row(row)))
-            .ok()
+        for row in self.connection.query(Query::from(query))? {
+            return Ok(parse_row(&row));
+        }
+
+        Err(SqlError::NotFound)
     }
 
-    fn load_all(&self) -> Vec<Migration> {
+    fn load_all(&self) -> Result<Vec<Migration>, SqlError> {
         let query = Select::from_table(TABLE_NAME);
-        let (sql_str, params) = dbg!(Sqlite::build(query));
+        let res = self.connection.query(Query::from(query))?;
 
-        let mut stmt = self.connection.prepare_cached(&sql_str).unwrap();
-        let mut rows = stmt.query(params).unwrap();
-        let mut result = Vec::new();
+        const result: Vec<Migration> = vec![];
 
-        while let Some(row) = rows.next().unwrap() {
+        for row in res {
             result.push(parse_row(&row));
         }
 
-        result
+        Ok(result)
     }
 
-    fn by_name(&self, name: &str) -> Option<Migration> {
+    fn by_name(&self, name: &str) -> Result<Migration, SqlError> {
         let conditions = NAME_COLUMN.equals(name);
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
-        let (sql_str, params) = Sqlite::build(query);
 
-        self.connection
-            .query_row(&sql_str, params, |row| Ok(parse_row(row)))
-            .ok()
+        for row in self.connection.query(Query::from(query))? {
+            return Ok(parse_row(&row));
+        }
+
+        Err(SqlError::NotFound)
     }
 
-    fn create(&self, migration: Migration) -> Migration {
+    fn create(&self, migration: Migration) -> Result<Migration, SqlError> {
         let finished_at_value = match migration.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -83,15 +84,14 @@ impl MigrationPersistence for SqlMigrationPersistence {
             )
             .value(FINISHED_AT_COLUMN, finished_at_value);
 
-        let (sql_str, params) = dbg!(Sqlite::build(query));
-
-        let result = dbg!(self.connection.execute(&sql_str, params));
-
-        cloned.revision = self.connection.last_insert_rowid() as usize;
-        cloned
+        cloned.revision = match self.connection.execute(Query::from(query))? {
+            Some(Id::Int(val)) => val,
+            _ => panic!("Impossible ID")
+        };
+        Ok(cloned)
     }
 
-    fn update(&self, params: &MigrationUpdateParams) {
+    fn update(&self, params: &MigrationUpdateParams) -> Result<Migration, SqlError> {
         let finished_at_value = match params.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -105,13 +105,13 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .set(FINISHED_AT_COLUMN, finished_at_value)
             .so_that(
                 NAME_COLUMN
-                    .equals(params.name.clone())
+                    .equals(&params.name)
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
-        let (sql_str, params) = dbg!(Sqlite::build(query));
+        self.connection.execute(Query::from(query))?;
 
-        let result = dbg!(self.connection.execute(&sql_str, params));
+        self.by_name(self.connection, params.name)
     }
 }
 
@@ -124,7 +124,7 @@ fn timestamp_to_datetime(timestamp: i64) -> DateTime<Utc> {
     datetime
 }
 
-fn parse_row(row: &Row) -> Migration {
+fn parse_row(row: &ResultRow) -> Migration {
     let revision: u32 = row.get(REVISION_COLUMN).unwrap();
     let applied: u32 = row.get(APPLIED_COLUMN).unwrap();
     let rolled_back: u32 = row.get(ROLLED_BACK_COLUMN).unwrap();
