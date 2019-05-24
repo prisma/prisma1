@@ -37,6 +37,9 @@ pub struct RenderContext {
 
     /// General indent level in spaces.
     indent: usize,
+
+    /// Indent string.
+    indent_str: &'static str,
 }
 
 impl RenderContext {
@@ -45,6 +48,7 @@ impl RenderContext {
             output_queue: RefCell::new(vec![]),
             rendered: RefCell::new(HashMap::new()),
             indent: 2,
+            indent_str: " ",
         }
     }
 
@@ -62,6 +66,10 @@ impl RenderContext {
             .borrow_mut()
             .insert(cache_key, ())
             .expect("Expected render caching operation to always suceed/");
+    }
+
+    pub fn indent(&self) -> String {
+        self.indent_str.repeat(self.indent)
     }
 }
 

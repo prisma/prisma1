@@ -1,6 +1,10 @@
 use once_cell::sync::OnceCell;
 use prisma_models::{OrderBy, ScalarField, SortOrder};
-use std::{boxed::Box, sync::Arc};
+use std::{
+  boxed::Box,
+  fmt::{self, Display},
+  sync::Arc,
+};
 
 #[derive(Debug)]
 pub struct QuerySchema {
@@ -198,8 +202,8 @@ pub struct EnumType {
 /// to avoid cluttering all type defs in this file, essentially.
 #[derive(Debug)]
 pub struct EnumValue {
-  name: String,
-  value: SchemaEnumValues,
+  pub name: String,
+  pub value: EnumValueWrapper,
 }
 
 impl EnumValue {
@@ -209,7 +213,7 @@ impl EnumValue {
   {
     EnumValue {
       name: name.into(),
-      value: SchemaEnumValues::OrderBy(OrderBy { field, sort_order }),
+      value: EnumValueWrapper::OrderBy(OrderBy { field, sort_order }),
     }
   }
 
@@ -219,13 +223,13 @@ impl EnumValue {
   {
     EnumValue {
       name: name.into(),
-      value: SchemaEnumValues::String(value),
+      value: EnumValueWrapper::String(value),
     }
   }
 }
 
 #[derive(Debug)]
-enum SchemaEnumValues {
+pub enum EnumValueWrapper {
   OrderBy(OrderBy),
   String(String),
 }
