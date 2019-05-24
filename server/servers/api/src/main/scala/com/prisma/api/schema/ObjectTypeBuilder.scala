@@ -280,14 +280,9 @@ class ObjectTypeBuilder(
 
 object FilterHelper {
 
-  def getFilterAst(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
+  def getFilterAst(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): AndFilter = {
     val initial = generateFilterElement(input, model, isSubscriptionFilter)
-
-    Optimizations.FilterOptimizer.optimize(initial)
-  }
-
-  def getUnoptimizedFilterAst(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {
-    generateFilterElement(input, model, isSubscriptionFilter)
+    AndFilter(Vector(Optimizations.FilterOptimizer.optimize(initial)))
   }
 
   def generateFilterElement(input: Map[String, Any], model: Model, isSubscriptionFilter: Boolean = false): Filter = {

@@ -1,7 +1,6 @@
 package com.prisma.api.schema
 
 import com.prisma.api.connector._
-import com.prisma.api.schema.Optimizations.FilterOptimizer.InlineOpt.transform
 
 object Optimizations {
 
