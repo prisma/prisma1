@@ -102,11 +102,7 @@ object Optimizations {
             RelationFilter(head.field, nested, head.condition)
         }
 
-        val otherFilters = filters.collect {
-          case x: RelationFilter if (x.condition != ToOneRelatedNode && x.condition != AtLeastOneRelatedNode) || x.nestedFilter.isInstanceOf[ScalarFilter] =>
-            None
-          case other => Some(other)
-        }.flatten
+        val otherFilters = filters.filter(filter => !(toOneRelationFilters ++ atLeastOneRelationFilters).contains(filter))
 
         mergedToOneRelationFilters ++ mergedAtLeastOneFilters ++ otherFilters
       }
