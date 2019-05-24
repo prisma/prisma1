@@ -122,3 +122,49 @@ impl ValueMap {
             .collect()
     }
 }
+
+//////////////////////////////////////////////////
+
+#[derive(Debug, Clone)]
+pub enum NestedValue {
+    Simple {
+        name: String,
+        kind: String,
+        map: ValueMap,
+    },
+    Upsert {
+        name: String,
+        create: ValueMap,
+        update: ValueMap,
+    },
+}
+
+impl ValueMap {
+    /// Extract mutation arguments from a value map
+    pub fn eval_tree(&self) -> Vec<NestedValue> {
+        let mut vec = Vec::new();
+
+        // Go through all the objects on this level
+        for (name, value) in self.0.iter() {
+            // We KNOW that we are only dealing with objects
+            let obj = match value {
+                Value::Object(obj) => obj,
+                _ => unreachable!(),
+            };
+
+            // These are actions (create, update, ...)
+            for (action, nested) in obj.iter() {
+                vec.push(NestedValue::Simple {
+                    name: name.clone(),
+                    kind: action.clone(),
+                    map: match nested {
+                        Value::Object(obj) => ValueMap(obj.clone()),
+                        _ => unreachable!(),
+                    },
+                });
+            }
+        }
+
+        vec
+    }
+}
