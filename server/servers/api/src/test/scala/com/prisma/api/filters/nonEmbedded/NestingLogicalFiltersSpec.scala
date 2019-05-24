@@ -22,11 +22,13 @@ class NestingLogicalFiltersSpec extends FlatSpec with Matchers with ApiSpecBase 
           |type Label {
           |  id: ID! @id
           |  name: String! @unique
+          |  text: String
           |}
           |
           |type Author {
           |  id: ID! @id
           |  name: String! @unique
+          |  title: String
           |}
           |
           |"""
@@ -42,11 +44,13 @@ class NestingLogicalFiltersSpec extends FlatSpec with Matchers with ApiSpecBase 
           |type Label {
           |  id: ID! @id
           |  name: String! @unique
+          |  text: String!
           |}
           |
           |type Author {
           |  id: ID! @id
           |  name: String! @unique
+          |  title: String
           |}
           |
           |"""
@@ -59,12 +63,14 @@ class NestingLogicalFiltersSpec extends FlatSpec with Matchers with ApiSpecBase 
     server.query(
       """mutation {
                    |  l1: createLabel(data:{
-                   |    name: "x"
+                   |    name: "x",
+                   |    text: "a"
                    |  }) {
                    |    name
                    |  }
                    |  l2: createLabel(data:{
-                   |    name: "y"
+                   |    name: "y",
+                   |    text: "b"
                    |  }) {
                    |    name
                    |  }
@@ -85,7 +91,8 @@ class NestingLogicalFiltersSpec extends FlatSpec with Matchers with ApiSpecBase 
                    |    }
                    |    author:{
                    |      create:{
-                   |        name: "test"
+                   |        name: "test",
+                   |        title: "a"
                    |      }
                    |    }
                    |  }) {
@@ -104,6 +111,63 @@ class NestingLogicalFiltersSpec extends FlatSpec with Matchers with ApiSpecBase 
       .pathAsString("data.createBlog.author.id")
 
     server.query(
+      s"""query {
+         |  q1: blogs(where: {
+         |  AND:[
+         |    {author:{
+         |      name_starts_with: "te"
+         |    }},
+         |    {author:{
+         |      name_ends_with: "st"
+         |    }}]
+         |  }) {
+         |    name
+         |  }
+         |}""",
+      project,
+      dataContains = """{"q1":[{"name":"blog"}]}"""
+    )
+
+    server.query(
+      s"""query {
+         |  q1: blogs(where: {
+         |  AND:[
+         |    {author:{
+         |      name_starts_with: "te"
+         |    }},
+         |    {author:{
+         |      name_ends_with: "st"
+         |    }},
+         |    {AND:{author:{
+         |      name_contains: "t"
+         |    }}}]
+         |  }) {
+         |    name
+         |  }
+         |}""",
+      project,
+      dataContains = """{"q1":[{"name":"blog"}]}"""
+    )
+
+    server.query(
+      s"""query {
+         |  q1: blogs(where: {
+         |  AND:[
+         |    {author:{
+         |      name: "test"
+         |    }},
+         |    {author:{
+         |      title: "a"
+         |    }}]
+         |  }) {
+         |    name
+         |  }
+         |}""",
+      project,
+      dataContains = """{"q1":[{"name":"blog"}]}"""
+    )
+
+    server.query(
       """query {
                    |  q1: blogs(where: {
                    |    labels_some:{
@@ -118,6 +182,25 @@ class NestingLogicalFiltersSpec extends FlatSpec with Matchers with ApiSpecBase 
                    |    name
                    |  }
                    |}""",
+      project,
+      dataContains = """{"q1":[{"name":"blog"}]}"""
+    )
+
+    server.query(
+      """query {
+        |  q1: blogs(where: {
+        |    labels_some:{
+        |      name: "x"
+        |    },
+        |    AND:{
+        |      labels_some:{
+        |        name_starts_with: "y"
+        |      }
+        |    }
+        |  }) {
+        |    name
+        |  }
+        |}""",
       project,
       dataContains = """{"q1":[{"name":"blog"}]}"""
     )

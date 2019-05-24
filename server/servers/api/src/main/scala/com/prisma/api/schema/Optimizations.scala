@@ -1,6 +1,7 @@
 package com.prisma.api.schema
 
 import com.prisma.api.connector._
+import com.prisma.api.schema.Optimizations.FilterOptimizer.InlineOpt.transform
 
 object Optimizations {
 
@@ -53,14 +54,71 @@ object Optimizations {
     }
 
     object SameRelationFilterOpt extends Optimization {
+      //needs to be merged for Mongo since our join implementation returns wrong results otherwise
+      //merging can provide for simpler native queries in other connectors as well
+
+      //
+      //relationFilter / operator     AND                   OR                  NOT
+      //toOneRelation                 a: merge with AND
+      //_some                         b: merge with OR
+      //_every
+      //_none
+      //
+
+      def mergeRelationFilterGroups(filters: Vector[Filter]): Vector[Filter] = {
+
+        val toOneRelationFilters = filters.collect {
+          case x: RelationFilter if x.condition == ToOneRelatedNode && x.nestedFilter.isInstanceOf[ScalarFilter] => x
+        }
+
+        val toOneGroups = toOneRelationFilters.map { filter =>
+          toOneRelationFilters.filter { other =>
+            other.field == filter.field && other.condition == filter.condition
+          }
+        }.distinct
+
+        val mergedToOneRelationFilters = toOneGroups.map {
+          case group if group.length == 1 => group.head
+          case group =>
+            val head   = group.head
+            val nested = AndFilter(group.map(_.nestedFilter))
+            RelationFilter(head.field, nested, head.condition)
+        }
+
+        val atLeastOneRelationFilters = filters.collect {
+          case x: RelationFilter if x.condition == AtLeastOneRelatedNode && x.nestedFilter.isInstanceOf[ScalarFilter] => x
+        }
+
+        val atLeastOneGroups = atLeastOneRelationFilters.map { filter =>
+          atLeastOneRelationFilters.filter { other =>
+            other.field == filter.field && other.condition == filter.condition
+          }
+        }.distinct
+
+        val mergedAtLeastOneFilters = atLeastOneGroups.map {
+          case group if group.length == 1 => group.head
+          case group =>
+            val head   = group.head
+            val nested = OrFilter(group.map(_.nestedFilter))
+            RelationFilter(head.field, nested, head.condition)
+        }
+
+        val otherFilters = filters.collect {
+          case x: RelationFilter if (x.condition != ToOneRelatedNode && x.condition != AtLeastOneRelatedNode) || x.nestedFilter.isInstanceOf[ScalarFilter] =>
+            None
+          case other => Some(other)
+        }.flatten
+
+        mergedToOneRelationFilters ++ mergedAtLeastOneFilters ++ otherFilters
+      }
 
       override def transform(filter: Filter): Filter = {
         filter match {
-          case AndFilter(
-              Vector(RelationFilter(rf1, ScalarFilter(sf1, cond1), AtLeastOneRelatedNode),
-                     RelationFilter(rf2, ScalarFilter(sf2, cond2), AtLeastOneRelatedNode))) if rf1 == rf2 && sf1 == sf2 && cond1.sameAs(cond2) =>
-            RelationFilter(rf1, OrFilter(Vector(ScalarFilter(sf1, cond1), ScalarFilter(sf1, cond2))), AtLeastOneRelatedNode)
-          case _ => filter
+          case AndFilter(filters)                     => AndFilter(mergeRelationFilterGroups(filters.map(transform)))
+          case OrFilter(filters)                      => OrFilter(filters.map(transform))
+          case NotFilter(filters)                     => NotFilter(filters.map(transform))
+          case RelationFilter(rf, nestedFilter, cond) => RelationFilter(rf, transform(nestedFilter), cond)
+          case x                                      => x
         }
       }
     }
