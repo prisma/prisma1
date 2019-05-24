@@ -17,13 +17,7 @@ impl Renderer for GqlEnumRenderer {
             .map(|v| format!("{}{}", ctx.indent(), self.format_enum_value(v)))
             .collect();
 
-        let rendered = format!(
-            "enum {} {{
-            {}
-        }}",
-            self.enum_type_ref.name,
-            values.join("\n")
-        );
+        let rendered = format!("enum {} {{\n{}\n}}", self.enum_type_ref.name, values.join("\n"));
 
         ctx.add(self.enum_type_ref.name.clone(), rendered.clone());
         (rendered, ctx)

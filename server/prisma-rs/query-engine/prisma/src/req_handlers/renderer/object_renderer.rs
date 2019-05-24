@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Debug)]
 pub enum GqlObjectRenderer {
     Input(InputObjectTypeRef),
     Output(ObjectTypeRef),
@@ -18,6 +19,9 @@ impl GqlObjectRenderer {
     fn render_input_object(&self, input_object: &InputObjectTypeRef, ctx: RenderContext) -> (String, RenderContext) {
         if ctx.already_rendered(&input_object.name) {
             return ("".into(), ctx);
+        } else {
+            // This short circuits recursive processing for fields.
+            ctx.mark_as_rendered(input_object.name.clone())
         }
 
         let (rendered_fields, ctx): (Vec<String>, RenderContext) =
@@ -35,13 +39,7 @@ impl GqlObjectRenderer {
             .map(|f| format!("{}{}", ctx.indent(), f))
             .collect();
 
-        let rendered = format!(
-            "type {} {{
-            {}
-        }}",
-            input_object.name,
-            indented.join("\n")
-        );
+        let rendered = format!("type {} {{\n{}\n}}", input_object.name, indented.join("\n"));
 
         ctx.add(input_object.name.clone(), rendered.clone());
         (rendered, ctx)
@@ -70,13 +68,7 @@ impl GqlObjectRenderer {
             .map(|f| format!("{}{}", ctx.indent(), f))
             .collect();
 
-        let rendered = format!(
-            "type {} {{
-            {}
-        }}",
-            output_object.name,
-            indented.join("\n")
-        );
+        let rendered = format!("type {} {{\n{}\n}}", output_object.name, indented.join("\n"));
 
         ctx.add_output(rendered.clone());
         (rendered, ctx)
