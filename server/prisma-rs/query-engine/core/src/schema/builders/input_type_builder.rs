@@ -17,14 +17,9 @@ impl InputTypeBuilder {
             .fields()
             .scalar()
             .iter()
-            .filter(|f| {
-                dbg!(&f);
-                f.is_unique && !f.is_hidden
-            })
+            .filter(|f| (f.is_unique && !f.is_hidden) || f.is_id())
             .map(|f| Arc::clone(f))
             .collect();
-
-        dbg!(&unique_fields);
 
         if unique_fields.len() > 0 {
             let input_object = init_input_object_type(format!("{}WhereUniqueInput", model.name));
