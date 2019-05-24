@@ -2,7 +2,7 @@
 #![allow(warnings)]
 
 use crate::{
-    builders::{convert_tree, utils, DataSet, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit, NestedValue},
+    builders::{convert_tree, utils, DataSet, NestedValue, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit},
     CoreError, CoreResult, WriteQuery,
 };
 use connector::mutaction::*; // ALL OF IT
@@ -204,15 +204,11 @@ fn build_nested_root<'f>(
 
     for value in eval.into_iter() {
         let (name, kind, map) = match value {
-            NestedValue::Simple {name, kind, map} => (name, kind, map),
+            NestedValue::Simple { name, kind, map } => (name, kind, map),
             _ => unreachable!(),
         };
 
         let ValueSplit { values, lists, nested } = dbg!(map.split());
-
-        let non_list_args = values.to_prisma_values().into();
-        let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&model), top_level)?;
 
         let field = dbg!(model.fields().find_from_all(dbg!(&name)));
         let relation_field = dbg!(match &field {
@@ -222,6 +218,12 @@ fn build_nested_root<'f>(
             }
             _ => unimplemented!(),
         });
+
+        let model = Arc::clone(&relation_field.related_model());
+        let non_list_args = values.to_prisma_values().into();
+        let list_args = lists.into_iter().map(|la| la.convert()).collect();
+        let nested_mutactions =
+            build_nested_root(&name, &nested, model, top_level)?;
 
         match kind.as_str() {
             "create" => {
@@ -235,7 +237,7 @@ fn build_nested_root<'f>(
                     relation_field,
                     nested_mutactions,
                 });
-            },
+            }
             _ => unimplemented!(),
         }
     }
