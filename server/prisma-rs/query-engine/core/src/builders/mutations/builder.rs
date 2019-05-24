@@ -2,7 +2,7 @@
 #![allow(warnings)]
 
 use crate::{
-    builders::{convert_tree, utils, DataSet, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit},
+    builders::{convert_tree, utils, DataSet, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit, NestedValue},
     CoreError, CoreResult, WriteQuery,
 };
 use connector::mutaction::*; // ALL OF IT
@@ -36,20 +36,16 @@ impl<'field> MutationBuilder<'field> {
         }
 
         let data = shift_data(&self.field.arguments);
-        let ValueSplit { values, lists, nested } = dbg!(ValueMap::init(&data).split());
+        let ValueSplit { values, lists, nested } = ValueMap::init(&data).split();
         let non_list_args = values.to_prisma_values().into();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-
-        // let non_list_args = convert_tree(&args.data).into();
-        // let list_args = args.lists.iter().map(|la| la.into()).collect();
 
         let (op, model) = parse_model_action(
             self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
             Arc::clone(&self.model),
         )?;
 
-        // let nested_mutactions = build_nested_root(model.name.as_str(), &args, Arc::clone(&model), &op)?;
-        let nested_mutactions = Default::default();
+        let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
         let inner =
             match op {
@@ -196,18 +192,55 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
 /// Build nested mutations for a given field/model (called recursively)
 fn build_nested_root<'f>(
     name: &'f str,
-    args: &'f ScopedArgNode<'f>,
+    args: &'f ValueMap,
     model: ModelRef,
     top_level: &Operation,
 ) -> CoreResult<NestedMutactions> {
     dbg!(&args);
 
-    // let DataSet { values, lists, nested } = DataSet::from(&args.data);
+    let mut collection = NestedMutactions::default();
 
-    // let (nested, attrs) = ScopedArgNode::filter_nested(&args.data);
-    // Ok(eval_tree(&nested, Arc::clone(&model), top_level))
+    let eval = dbg!(args.eval_tree());
 
-    unimplemented!()
+    for value in eval.into_iter() {
+        let (name, kind, map) = match value {
+            NestedValue::Simple {name, kind, map} => (name, kind, map),
+            _ => unreachable!(),
+        };
+
+        let ValueSplit { values, lists, nested } = dbg!(map.split());
+
+        let non_list_args = values.to_prisma_values().into();
+        let list_args = lists.into_iter().map(|la| la.convert()).collect();
+        let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&model), top_level)?;
+
+        let field = dbg!(model.fields().find_from_all(dbg!(&name)));
+        let relation_field = dbg!(match &field {
+            Ok(ModelField::Relation(f)) => {
+                let model = f.related_model();
+                Arc::clone(&f)
+            }
+            _ => unimplemented!(),
+        });
+
+        match kind.as_str() {
+            "create" => {
+                collection.creates.push(NestedCreateNode {
+                    non_list_args,
+                    list_args,
+                    top_is_create: match top_level {
+                        Operation::Create => true,
+                        _ => false,
+                    },
+                    relation_field,
+                    nested_mutactions,
+                });
+            },
+            _ => unimplemented!(),
+        }
+    }
+
+    Ok(collection)
 }
 
 /// Evaluate a tree of mutations
