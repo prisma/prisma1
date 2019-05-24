@@ -28,7 +28,7 @@ impl<'a> GqlFieldRenderer<'a> {
         } else if rendered_args.len() > 1 {
             // Multiline - double indent.
             format!(
-                "{}\n{}",
+                "({}\n{})",
                 rendered_args
                     .into_iter()
                     .map(|arg| format!("\n{}{}", ctx.indent().repeat(2), arg))
@@ -38,11 +38,11 @@ impl<'a> GqlFieldRenderer<'a> {
             )
         } else {
             // Single line
-            rendered_args.join(", ")
+            format!("({})", rendered_args.join(", "))
         };
 
         let (rendered_type, ctx) = field.field_type.into_renderer().render(ctx);
-        (format!("{}({}): {}", field.name, rendered_args, rendered_type), ctx)
+        (format!("{}{}: {}", field.name, rendered_args, rendered_type), ctx)
     }
 
     fn render_arguments(&self, args: &Vec<Argument>, ctx: RenderContext) -> (Vec<String>, RenderContext) {
