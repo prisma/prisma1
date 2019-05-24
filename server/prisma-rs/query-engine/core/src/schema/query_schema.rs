@@ -23,6 +23,16 @@ pub struct ObjectType {
   pub fields: OnceCell<Vec<Field>>,
 }
 
+impl ObjectType {
+  pub fn get_fields(&self) -> &Vec<Field> {
+    self.fields.get().unwrap()
+  }
+
+  pub fn set_fields(&self, fields: Vec<Field>) {
+    self.fields.set(fields).unwrap();
+  }
+}
+
 #[derive(Debug)]
 pub struct Field {
   pub name: String,
@@ -44,6 +54,16 @@ pub struct InputObjectType {
 
   #[debug_stub = "#Input Fields Cell#"]
   pub fields: OnceCell<Vec<InputField>>,
+}
+
+impl InputObjectType {
+  pub fn get_fields(&self) -> &Vec<InputField> {
+    self.fields.get().unwrap()
+  }
+
+  pub fn set_fields(&self, fields: Vec<InputField>) {
+    self.fields.set(fields).unwrap();
+  }
 }
 
 #[derive(Debug)]

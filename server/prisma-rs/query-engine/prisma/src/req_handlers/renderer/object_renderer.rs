@@ -8,38 +8,66 @@ pub enum GqlObjectRenderer {
 impl Renderer for GqlObjectRenderer {
     fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
         match &self {
-            GqlObjectRenderer::Input(input) => unimplemented!(),
-            GqlObjectRenderer::Output(output) => unimplemented!(),
+            GqlObjectRenderer::Input(input) => self.render_input_object(input, ctx),
+            GqlObjectRenderer::Output(output) => self.render_output_object(output, ctx),
         }
     }
 }
 
 impl GqlObjectRenderer {
-    // fn render_fields<T>(&self, fields: &Vec<T>) -> Vec<String>
-    // where
-    //     T: IntoRenderer,
-    // {
-    //     fields.into_iter().map(|f| self.render_field::<T>(f)).collect()
-    // }
+    fn render_input_object(&self, input_object: &InputObjectTypeRef, ctx: RenderContext) -> (String, RenderContext) {
+        let (rendered_fields, ctx): (Vec<String>, RenderContext) =
+            input_object
+                .get_fields()
+                .iter()
+                .fold((vec![], ctx), |(mut acc, ctx), field| {
+                    let (rendered_field, ctx) = field.into_renderer().render(ctx);
+                    acc.push(rendered_field);
+                    (acc, ctx)
+                });
 
-    // let rendered_fields = self.render_fields(&typ.fields.get().unwrap());
-    // let indented: Vec<String> = rendered_fields
-    //     .into_iter()
-    //     .map(|s| format!("{}{}", " ".repeat(self.indent), s))
-    //     .collect();
+        let indented: Vec<String> = rendered_fields
+            .into_iter()
+            .map(|f| format!("{}{}", ctx.indent(), f))
+            .collect();
 
-    // let formatted = format!(
-    //     "type {} {{
-    //         {}
-    //     }}",
-    //     typ.name,
-    //     indented.join("\n")
-    // );
+        let rendered = format!(
+            "type {} {{
+            {}
+        }}",
+            input_object.name,
+            indented.join("\n")
+        );
 
-    // if self.rendered.contains_key(&typ.name) {
-    //     return;
-    // }
+        ctx.add(input_object.name.clone(), rendered.clone());
+        (rendered, ctx)
+    }
 
-    // self.rendered.insert(typ.name.clone(), ()).unwrap();
-    // self.output_queue.push(formatted);
+    fn render_output_object(&self, output_object: &ObjectTypeRef, ctx: RenderContext) -> (String, RenderContext) {
+        let (rendered_fields, ctx): (Vec<String>, RenderContext) =
+            output_object
+                .get_fields()
+                .iter()
+                .fold((vec![], ctx), |(mut acc, ctx), field| {
+                    let (rendered_field, ctx) = field.into_renderer().render(ctx);
+                    acc.push(rendered_field);
+                    (acc, ctx)
+                });
+
+        let indented: Vec<String> = rendered_fields
+            .into_iter()
+            .map(|f| format!("{}{}", ctx.indent(), f))
+            .collect();
+
+        let rendered = format!(
+            "type {} {{
+            {}
+        }}",
+            output_object.name,
+            indented.join("\n")
+        );
+
+        ctx.add(output_object.name.clone(), rendered.clone());
+        (rendered, ctx)
+    }
 }

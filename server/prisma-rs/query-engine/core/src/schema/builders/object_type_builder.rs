@@ -59,7 +59,7 @@ impl<'a> ObjectTypeBuilder<'a> {
       let obj: ObjectTypeRef = self.map_model_object_type(m);
       let fields = self.compute_fields(m);
 
-      obj.fields.set(fields).unwrap();
+      obj.set_fields(fields);
     });
 
     self

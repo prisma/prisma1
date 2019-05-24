@@ -78,7 +78,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
         fields.append(&mut scalar_input_fields);
         fields.append(&mut relational_input_fields);
 
-        input_object.fields.set(fields).unwrap();
+        input_object.set_fields(fields);
         input_object
       }
     }

@@ -13,9 +13,9 @@ use object_renderer::*;
 use schema_renderer::*;
 use type_renderer::*;
 
-pub struct RootRenderer;
+pub struct GraphQLSchemaRenderer;
 
-impl QuerySchemaRenderer for RootRenderer {
+impl QuerySchemaRenderer for GraphQLSchemaRenderer {
     fn render(&self, query_schema: &QuerySchema) -> String {
         let context = RenderContext::new();
         let (_, result) = query_schema.into_renderer().render(context);
@@ -53,7 +53,7 @@ impl RenderContext {
     }
 
     pub fn format(self) -> String {
-        self.output_queue.borrow().join("\n")
+        self.output_queue.borrow().join("\n\n")
     }
 
     pub fn should_render(&self, cache_key: &str) -> bool {
