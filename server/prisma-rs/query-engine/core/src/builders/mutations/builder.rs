@@ -2,7 +2,7 @@
 #![allow(warnings)]
 
 use crate::{
-    builders::{convert_tree, utils, ScopedArg, ScopedArgNode},
+    builders::{convert_tree, utils, DataSet, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit},
     CoreError, CoreResult, WriteQuery,
 };
 use connector::mutaction::*; // ALL OF IT
@@ -35,16 +35,21 @@ impl<'field> MutationBuilder<'field> {
             return handle_reset(&self.field, &self.model);
         }
 
-        let args = ScopedArg::parse(&self.field.arguments)?;
-        let non_list_args = convert_tree(&args.data).into();
-        let list_args = args.lists.iter().map(|la| la.into()).collect();
+        let data = shift_data(&self.field.arguments);
+        let ValueSplit { values, lists, nested } = dbg!(ValueMap::init(&data).split());
+        let non_list_args = values.to_prisma_values().into();
+        let list_args = lists.into_iter().map(|la| la.convert()).collect();
+
+        // let non_list_args = convert_tree(&args.data).into();
+        // let list_args = args.lists.iter().map(|la| la.into()).collect();
 
         let (op, model) = parse_model_action(
             self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
             Arc::clone(&self.model),
         )?;
 
-        let nested_mutactions = build_nested_root(model.name.as_str(), &args, Arc::clone(&model), &op)?;
+        // let nested_mutactions = build_nested_root(model.name.as_str(), &args, Arc::clone(&model), &op)?;
+        let nested_mutactions = Default::default();
 
         let inner =
             match op {
@@ -65,9 +70,6 @@ impl<'field> MutationBuilder<'field> {
                     let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
                         Err(CoreError::QueryValidationError("Required filters not found!".into()))
                     })?;
-
-                    dbg!(&filter);
-
                     TopLevelDatabaseMutaction::UpdateNodes(UpdateNodes {
                         model: Arc::clone(&model),
                         filter,
@@ -148,6 +150,16 @@ impl From<&str> for Operation {
     }
 }
 
+fn shift_data(from: &Vec<(String, Value)>) -> Vec<(String, Value)> {
+    from.iter()
+        .find(|(k, _)| k.as_str() == "data")
+        .map(|(_, v)| match v {
+            Value::Object(obj) => obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            _ => unimplemented!(),
+        })
+        .unwrap()
+}
+
 /// Parse the mutation name into an action and the model it should operate on
 fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<(Operation, ModelRef)> {
     let actions = vec!["create", "updateMany", "update", "deleteMany", "delete", "upsert"];
@@ -189,6 +201,8 @@ fn build_nested_root<'f>(
     top_level: &Operation,
 ) -> CoreResult<NestedMutactions> {
     dbg!(&args);
+
+    // let DataSet { values, lists, nested } = DataSet::from(&args.data);
 
     // let (nested, attrs) = ScopedArgNode::filter_nested(&args.data);
     // Ok(eval_tree(&nested, Arc::clone(&model), top_level))
