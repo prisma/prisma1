@@ -146,6 +146,8 @@ impl ValueMap {
 
         // Go through all the objects on this level
         for (name, value) in self.0.iter() {
+            println!("Evaluting name: {}", name);
+
             // We KNOW that we are only dealing with objects
             let obj = match value {
                 Value::Object(obj) => obj,
