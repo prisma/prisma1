@@ -62,7 +62,7 @@ fn list_schemas(connection: &mut Connection) -> Result<Vec<String>, SqlError> {
         .column("schema_name")
         .so_that("schema_name".not_like("information_schema"));
 
-    let res = connection.query(Query::from(query))?;
+    // Map to table schema list and return.
 
-    Ok(res.iter().map(|row| String::from(row.as_str(0).unwrap())).collect())
+    unimplemented!("Unimplemented")
 }

@@ -1,5 +1,5 @@
 use crate::relational::SpecializedRelationalIntrospectionConnector;
-use prisma_query::{ResultRow, ast::*};
+use prisma_query::{ast::*, convenience::*};
 use crate::{Connection, SqlError};
 use crate::databases::relational::*;
 use super::SqlLiteIntrospectionResult;
@@ -12,11 +12,11 @@ impl SqlLiteConnector {
     }
 }
 
-fn result_list_to_string_vec(res: &Vec<ResultRow>) -> Result<Vec<String>, SqlError> {
+fn result_list_to_string_vec(res: &ResultSet) -> Result<Vec<String>, SqlError> {
     let mut names: Vec<String> = vec![];
 
-    for row in res {
-        names.push(String::from(row.as_str(0)?))
+    for row in res.iter() {
+        names.push(String::from(row.at_as_str(0)?))
     }
 
     Ok(names)
@@ -36,7 +36,8 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
             .column("name")
             .so_that(Column::from("type").equals("table"));
 
-        let res = connection.query(Query::from(query))?;
+        let (cols, vals) = connection.query(Query::from(query))?;
+        let res = ResultSet::from((&cols, &vals));
 
         result_list_to_string_vec(&res)
     }
@@ -46,20 +47,21 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
 
         for table in self.query_tables(connection, schema)? {
             let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
-            let res = connection.query_raw(&sql, &[])?;
+            let (cols, vals) = connection.query_raw(&sql, &[])?;
+            let res = ResultSet::from((&cols, &vals));
 
             // Pragma foreign_key_list: id|seq|table|from|to|on_update|on_delete|match
             // prisma-query currently cannot access columns by name.
-            const PRAGMA_TABLE: usize = 2;
-            const PRAGMA_FROM: usize = 3;
-            const PRAGMA_TO: usize = 4;
+            let PRAGMA_TABLE = "table";
+            let PRAGMA_FROM = "from";
+            let PRAGMA_TO = "to";
 
-            for row in res {
+            for row in res.iter() {
                 rels.push(TableRelationInfo {
                     source_table: table.clone(),
-                    target_table: row.as_string(PRAGMA_TABLE)?,
-                    source_column: row.as_string(PRAGMA_FROM)?,
-                    target_column: row.as_string(PRAGMA_TO)?,
+                    target_table: row.get_as_string(PRAGMA_TABLE)?,
+                    source_column: row.get_as_string(PRAGMA_FROM)?,
+                    target_column: row.get_as_string(PRAGMA_TO)?,
                 })
             }
         }
@@ -69,29 +71,31 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
 
     fn query_columns(&self, connection: &mut Connection, schema: &str, table: &str) -> Result<Vec<ColumnInfo>, SqlError> {
         let sql = format!(r#"Pragma `{}`.table_info (`{}`)"#, schema, table);
-        let res = connection.query_raw(&sql, &[])?;
+        let (cols, vals) = connection.query_raw(&sql, &[])?;
+        let res = ResultSet::from((&cols, &vals));
+
 
         let mut cols: Vec<ColumnInfo> = vec![];
 
         // Pragma table_info output: cid|name|type|notnull|dflt_value|pk
         // prisma-query currently cannot access columns by name.
-        const PRAGMA_PK: usize = 5;
-        const PRAGMA_NOT_NULL: usize = 3;
-        const PRAGMA_DEFAULT: usize = 4;
-        const PRAGMA_TYPE: usize = 2;
-        const PRAGMA_NAME: usize = 1;
+        let PRAGMA_PK = "pk";
+        let PRAGMA_NOT_NULL = "notnull";
+        let PRAGMA_DEFAULT = "dflt_value";
+        let PRAGMA_TYPE = "type";
+        let PRAGMA_NAME = "name";
 
-        for row in res {
+        for row in res.iter() {
             cols.push(ColumnInfo {
-                name: row.as_string(PRAGMA_NAME)?,
+                name: row.get_as_string(PRAGMA_NAME)?,
                 is_unique: false,
-                default_value: row.as_string(PRAGMA_DEFAULT).ok(),
-                column_type: self.native_type_to_column_type(&row.as_string(PRAGMA_TYPE)?),
+                default_value: row.get_as_string(PRAGMA_DEFAULT).ok(),
+                column_type: self.native_type_to_column_type(&row.get_as_string(PRAGMA_TYPE)?),
                 comment: None,
-                is_nullable: !(row.as_bool(PRAGMA_NOT_NULL)?),
+                is_nullable: !(row.get_as_bool(PRAGMA_NOT_NULL)?),
                 is_list: false,
-                is_auto_increment: row.as_bool(PRAGMA_PK)?,
-                is_primary_key: row.as_bool(PRAGMA_PK)?
+                is_auto_increment: row.get_as_bool(PRAGMA_PK)?,
+                is_primary_key: row.get_as_bool(PRAGMA_PK)?
             })
         }
 
