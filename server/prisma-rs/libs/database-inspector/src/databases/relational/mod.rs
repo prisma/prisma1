@@ -1,5 +1,4 @@
 mod connector;
-mod infromation_schema;
 mod introspection_result;
 mod representation;
 pub mod sqlite;

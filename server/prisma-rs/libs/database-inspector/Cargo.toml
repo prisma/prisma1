@@ -1,11 +1,10 @@
 [package]
 name = "database-inspector"
 version = "0.1.0"
-authors = ["Marcus Böhm <boehm@prisma.io>"]
+authors = ["Marcus Böhm <boehm@prisma.io>", "Emanuel Jöbstl <emanuel.joebstl@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-barrel = { git = "https://github.com/spacekookie/barrel", features = ["sqlite3"] }
 rusqlite = { git = "https://github.com/pimeys/rusqlite" }
 time = "*"
 datamodel = { path = "../datamodel" }

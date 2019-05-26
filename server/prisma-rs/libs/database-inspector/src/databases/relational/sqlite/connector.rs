@@ -22,6 +22,9 @@ fn result_list_to_string_vec(res: &ResultSet) -> Result<Vec<String>, SqlError> {
     Ok(names)
 }
 
+// TODO: Remove silencing as soon as impl finishes.
+#[allow(unused)]
+
 // TODO: Implement and test.
 impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
     fn database_type(&self) -> &str {
@@ -52,9 +55,9 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
 
             // Pragma foreign_key_list: id|seq|table|from|to|on_update|on_delete|match
             // prisma-query currently cannot access columns by name.
-            let PRAGMA_TABLE = "table";
-            let PRAGMA_FROM = "from";
-            let PRAGMA_TO = "to";
+            const PRAGMA_TABLE: &str = "table";
+            const PRAGMA_FROM: &str = "from";
+            const PRAGMA_TO: &str = "to";
 
             for row in res.iter() {
                 rels.push(TableRelationInfo {
@@ -79,11 +82,11 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
 
         // Pragma table_info output: cid|name|type|notnull|dflt_value|pk
         // prisma-query currently cannot access columns by name.
-        let PRAGMA_PK = "pk";
-        let PRAGMA_NOT_NULL = "notnull";
-        let PRAGMA_DEFAULT = "dflt_value";
-        let PRAGMA_TYPE = "type";
-        let PRAGMA_NAME = "name";
+        const PRAGMA_PK: &str = "pk";
+        const PRAGMA_NOT_NULL: &str = "notnull";
+        const PRAGMA_DEFAULT: &str = "dflt_value";
+        const PRAGMA_TYPE: &str = "type";
+        const PRAGMA_NAME: &str = "name";
 
         for row in res.iter() {
             cols.push(ColumnInfo {
