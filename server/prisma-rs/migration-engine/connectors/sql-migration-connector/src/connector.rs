@@ -1,66 +1,54 @@
 
-use database_inspector::relational::{ RelationalIntrospectionResult, RelationalIntrospectionConnector, sqlite::SqlLiteConnector};
+use database_inspector::relational::{ RelationalIntrospectionResult, RelationalIntrospectionConnector };
+use prisma_query::{error::Error as SqlError, transaction::Connection};
 use crate::*;
+use migration_connector::*;
 
 #[allow(unused, dead_code)]
-pub struct SqlMigrationConnector {
+pub struct SqlMigrationConnector<'a> {
     schema_name: String,
-    migration_persistence: Box<MigrationPersistence>,
-    sql_database_migration_steps_inferrer: Box<DatabaseMigrationStepsInferrer<SqlMigrationStep>>,
-    database_step_applier: Box<DatabaseMigrationStepApplier<SqlMigrationStep>>,
-    destructive_changes_checker: Box<DestructiveChangesChecker<SqlMigrationStep>>,
+    migration_persistence: SqlMigrationPersistence<'a>,
+    sql_database_migration_steps_inferrer: SqlDatabaseMigrationStepsInferrer,
+    database_step_applier: SqlDatabaseStepApplier<'a>,
+    destructive_changes_checker: SqlDestructiveChangesChecker,
+    applier: SqlMigrationApplier
 }
+
 // TODO FIXME 
-impl SqlMigrationConnector {
-    pub fn new(schema_name: String) -> SqlMigrationConnector {
-        /*
-        let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn()));
-        let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {
-            inspector: Box::new(RelationalIntrospectionConnector::new(SqlLiteConnector::new()),
-            schema_name: schema_name.to_string(),
-        });
-        let database_step_applier = Arc::new(SqlDatabaseStepApplier::new(
-            Self::new_conn(&schema_name),
-            schema_name.clone(),
-        ));
-        let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
-        SqlMigrationConnector {
+impl<'a> SqlMigrationConnector<'a> {
+    pub fn new(schema_name: &'a str) -> SqlMigrationConnector<'a> {
+        let migration_persistence = SqlMigrationPersistence::new();
+        let sql_database_migration_steps_inferrer = SqlDatabaseMigrationStepsInferrer {
+            schema_name: String::from(schema_name),
+        };
+        let database_step_applier = SqlDatabaseStepApplier::new(
             schema_name,
+        );
+        let destructive_changes_checker = SqlDestructiveChangesChecker {};
+
+        SqlMigrationConnector {
+            schema_name: String::from(schema_name),
             migration_persistence,
             sql_database_migration_steps_inferrer,
             database_step_applier,
             destructive_changes_checker,
+            applier: SqlMigrationApplier { schema_name: String::from(schema_name) }
         }
-        */
-    }
 
-/*
-    fn new_conn(name: &str) -> Connection {
-        let conn = Connection::open_in_memory().unwrap();
-        let database_file_path = Self::database_file_path(&name);
-        conn.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), name])
-            .unwrap();
-        conn
     }
-
-    fn database_file_path(name: &str) -> String {
-        let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-        let path = format!("{}/db", server_root);
-        let database_file_path = format!("{}/{}.db", path, name);
-        database_file_path
-    }
-    */
 }
 
-impl MigrationConnector for SqlMigrationConnector {
+impl<'a> MigrationConnector<'a> for SqlMigrationConnector<'a> {
+    type ConnectionType = &'a mut Connection;
+    type ErrorType = SqlError;
     type DatabaseMigrationStep = SqlMigrationStep;
-    type IntrospectionResult = RelationalIntrospectionResult;
-    type IntrospectionConnector = RelationalIntrospectionConnector;
-    type MigrationPersistenceType = SqlMigrationPersistence;
+    type MigrationPersistenceType = SqlMigrationPersistence<'a>;
     type MigrationApplierType = SqlMigrationApplier;
+    type DatabaseMigrationStepsApplierType = SqlDatabaseStepApplier<'a>;
+    type DatabaseMigrationStepsInferrerType = SqlDatabaseMigrationStepsInferrer;
+    type DatabaseDestructiveChangesCheckerType = SqlDestructiveChangesChecker;
 
-    fn initialize(&self) {
-        let conn = Self::new_conn(&self.schema_name);
+    fn initialize(&self, connection: &mut Connection) -> Result<(), SqlError> {
         let mut m = barrel::Migration::new().schema(self.schema_name.clone());
         m.create_table_if_not_exists("_Migration", |t| {
             t.add_column("revision", types::primary());
@@ -78,36 +66,34 @@ impl MigrationConnector for SqlMigrationConnector {
 
         let sql_str = dbg!(m.make::<Sqlite>());
 
-        dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
+        dbg!(connection.query_raw(&sql_str, &[]))?;
+
+        Ok(())
     }
 
-    fn reset(&self) {
-        let conn = Self::new_conn(&self.schema_name);
+    fn reset(&self, connection: &mut Connection) -> Result<(), SqlError> {
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
 
-        dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
-        let _ = std::fs::remove_file(Self::database_file_path(&self.schema_name)); // ignore potential errors
+        Ok(())
     }
 
-    fn migration_persistence(&self) -> Arc<MigrationPersistence> {
-        Arc::clone(&self.migration_persistence)
+    fn migration_persistence(&self) -> &SqlMigrationPersistence<'a> {
+        &self.migration_persistence
     }
 
-    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<SqlMigrationStep>> {
-        Arc::clone(&self.sql_database_migration_steps_inferrer)
+    fn database_steps_inferrer(&self) -> &SqlDatabaseMigrationStepsInferrer {
+        &self.sql_database_migration_steps_inferrer
     }
 
-    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigrationStep>> {
-        Arc::clone(&self.database_step_applier)
+    fn database_step_applier(&self) -> &SqlDatabaseStepApplier<'a> {
+        &self.database_step_applier
     }
 
-    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigrationStep>> {
-        Arc::clone(&self.destructive_changes_checker)
+    fn destructive_changes_checker(&self) -> &SqlDestructiveChangesChecker {
+        &self.destructive_changes_checker
     }
 
-    fn database_inspector(&self) -> Box<DatabaseInspector> {
-        Box::new(DatabaseInspectorImpl::new(SqlMigrationConnector::new_conn(
-            &self.schema_name,
-        )))
+    fn migration_applier(&self) -> &SqlMigrationApplier {
+        &self.applier
     }
 }

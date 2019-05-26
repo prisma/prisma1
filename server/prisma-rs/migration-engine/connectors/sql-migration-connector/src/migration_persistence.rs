@@ -6,26 +6,30 @@ use prisma_query::{ast::*, error::Error as SqlError, transaction::Connection, vi
 use serde_json;
 
 pub struct SqlMigrationPersistence<'a> {
-    connection: &'a mut Connection,
+    // We need to tie the connection lifetime to the struct,
+    // and rust forces us to use the lifetime specifier in the
+    // struct declaration.
+    phantom: std::marker::PhantomData<&'a Connection>,
 }
 
 impl<'a> SqlMigrationPersistence<'a> {
-    pub fn new(connection: &'a mut Connection) -> SqlMigrationPersistence {
-        SqlMigrationPersistence { connection }
+    pub fn new() -> SqlMigrationPersistence<'a> {
+        SqlMigrationPersistence { phantom: std::marker::PhantomData }
     }
 }
 
 #[allow(unused, dead_code)]
 impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
     type ErrorType = SqlError;
+    type ConnectionType = &'a mut Connection;
 
-    fn last(&mut self) -> Result<Migration, SqlError> {
+    fn last(&self, connection: &'a mut Connection) -> Result<Migration, SqlError> {
         let conditions = STATUS_COLUMN.equals("Success");
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        let (cols, vals) = self.connection.query(Query::from(query))?;
+        let (cols, vals) = connection.query(Query::from(query))?;
         let res = ResultSet::new(&cols, &vals);
 
         for row in res.iter() {
@@ -35,10 +39,10 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
         Err(SqlError::NotFound)
     }
 
-    fn load_all(&mut self) -> Result<Vec<Migration>, SqlError> {
+    fn load_all(&self, connection: &mut Connection) -> Result<Vec<Migration>, SqlError> {
         let query = Select::from_table(TABLE_NAME);
 
-        let (cols, vals) = self.connection.query(Query::from(query))?;
+        let (cols, vals) = connection.query(Query::from(query))?;
         let res = ResultSet::new(&cols, &vals);
 
         let mut result: Vec<Migration> = vec![];
@@ -50,13 +54,13 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
         Ok(result)
     }
 
-    fn by_name(&mut self, name: &str) -> Result<Migration, SqlError> {
+    fn by_name(&self, connection: &mut Connection, name: &str) -> Result<Migration, SqlError> {
         let conditions = NAME_COLUMN.equals(name);
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        let (cols, vals) = self.connection.query(Query::from(query))?;
+        let (cols, vals) = connection.query(Query::from(query))?;
         let res = ResultSet::new(&cols, &vals);
 
         for row in res.iter() {
@@ -66,7 +70,7 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
         Err(SqlError::NotFound)
     }
 
-    fn create(&mut self, migration: Migration) -> Result<Migration, SqlError> {
+    fn create(&self, connection: &mut Connection, migration: Migration) -> Result<Migration, SqlError> {
         let finished_at_value = match migration.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -92,14 +96,14 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
             )
             .value(FINISHED_AT_COLUMN, finished_at_value);
 
-        cloned.revision = match self.connection.execute(Query::from(query))? {
+        cloned.revision = match connection.execute(Query::from(query))? {
             Some(Id::Int(val)) => val,
             _ => panic!("Impossible ID")
         };
         Ok(cloned)
     }
 
-    fn update(&mut self, params: &MigrationUpdateParams) -> Result<Migration, SqlError> {
+    fn update(&self, connection: &mut Connection, params: &MigrationUpdateParams) -> Result<Migration, SqlError> {
         let finished_at_value = match params.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -117,9 +121,9 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
-        self.connection.execute(Query::from(query))?;
+        connection.execute(Query::from(query))?;
 
-        self.by_name(&params.name)
+        self.by_name(connection, &params.name)
     }
 }
 

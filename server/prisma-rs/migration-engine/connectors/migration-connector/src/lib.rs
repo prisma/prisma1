@@ -12,38 +12,30 @@ use database_inspector::{IntrospectionResult as IntrospectionResultBase, Introsp
 #[macro_use]
 extern crate serde_derive;
 
-pub trait MigrationConnector {
+pub trait MigrationConnector<'a> {
     // TODO: Most of these associated types are dynamic
     // because of the result error type. It would be smart to introduce a
     // custom but fixed Error type for this crate.
-    type DatabaseMigrationStep: DatabaseMigrationStepExt + 'static;
-    type IntrospectionResult: IntrospectionResultBase + 'static;
-    type IntrospectionConnector: IntrospectionConnector<Self::IntrospectionResult> + 'static;
-    type MigrationPersistenceType: MigrationPersistence + 'static;
-    type MigrationApplierType: MigrationApplier<Self::DatabaseMigrationStep> + 'static;
-    type DatabaseMigrationStepsApplierType: DatabaseMigrationStepApplier<Self::DatabaseMigrationStep> + 'static;
-    type DatabaseMigrationStepsInferrerType: DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep> + 'static;
-    type DatabaseDestructiveChangesCheckerType: DestructiveChangesChecker<Self::DatabaseMigrationStep> + 'static;
+    type ConnectionType;
+    type ErrorType;
 
-    fn initialize(&self);
+    type DatabaseMigrationStep: DatabaseMigrationStepExt + 'a;
+    type MigrationPersistenceType: MigrationPersistence + 'a;
+    type MigrationApplierType: MigrationApplier<Self::DatabaseMigrationStep> + 'a;
+    type DatabaseMigrationStepsApplierType: DatabaseMigrationStepApplier<Self::DatabaseMigrationStep> + 'a;
+    type DatabaseMigrationStepsInferrerType: DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep> + 'a;
+    type DatabaseDestructiveChangesCheckerType: DestructiveChangesChecker<Self::DatabaseMigrationStep> + 'a;
 
-    fn reset(&self);
+    fn initialize(&self, connection: Self::ConnectionType) -> Result<(), Self::ErrorType>;
 
-    fn migration_persistence(&self) -> Box<Self::MigrationPersistenceType>;
-    fn database_inspector(&self) -> Box<Self::IntrospectionConnector>;
-    fn database_steps_inferrer(&self) -> Box<Self::DatabaseMigrationStepsInferrerType>;
-    fn database_step_applier(&self) -> Box<Self::DatabaseMigrationStepsApplierType>;
-    fn destructive_changes_checker(&self) -> Box<Self::DatabaseDestructiveChangesCheckerType>;
+    fn reset(&self, connection: Self::ConnectionType) -> Result<(), Self::ErrorType>;
 
-    fn migration_applier(&self) -> Box<Self::MigrationApplierType>;
-    
-    /* {
-        let applier = MigrationApplierImpl {
-            migration_persistence: self.migration_persistence(),
-            step_applier: self.database_step_applier(),
-        };
-        Box::new(applier)
-    }*/
+    fn migration_persistence(&self) -> &Self::MigrationPersistenceType;
+    fn database_steps_inferrer(&self) -> &Self::DatabaseMigrationStepsInferrerType;
+    fn database_step_applier(&self) -> &Self::DatabaseMigrationStepsApplierType;
+    fn destructive_changes_checker(&self) -> &Self::DatabaseDestructiveChangesCheckerType;
+
+    fn migration_applier(&self) -> &Self::MigrationApplierType;
 }
 
 pub trait DatabaseMigrationStepExt: Debug + Serialize {}
@@ -61,12 +53,15 @@ pub trait DatabaseMigrationStepsInferrer<T> {
 
 pub trait DatabaseMigrationStepApplier<T> {
     type ErrorType;
-    fn apply(&self, step: T) -> Result<(), Self::ErrorType>;
+    type ConnectionType;
+
+    fn apply(&self, connection: Self::ConnectionType, step: T) -> Result<(), Self::ErrorType>;
 }
 
 pub trait DestructiveChangesChecker<T> {
     type ErrorType;
-    fn check(&self, steps: Vec<T>) -> Result<Vec<MigrationResult>, Self::ErrorType>;
+    type ConnectionType;
+    fn check(&self, connection: Self::ConnectionType, steps: Vec<T>) -> Result<Vec<MigrationResult>, Self::ErrorType>;
 }
 
 pub enum MigrationResult {
@@ -90,23 +85,21 @@ pub struct MigrationError {
 
 pub trait MigrationPersistence {
     type ErrorType;
-
-    // This methods need to be &mut self, as some
-    // db connectors will require mutable self references.
+    type ConnectionType;
 
     // returns the last successful Migration
-    fn last(&mut self) -> Result<Migration, Self::ErrorType>;
+    fn last(&self, connection: Self::ConnectionType) -> Result<Migration, Self::ErrorType>;
 
-    fn by_name(&mut self, name: &str) -> Result<Migration, Self::ErrorType>;
+    fn by_name(&self, connection: Self::ConnectionType, name: &str) -> Result<Migration, Self::ErrorType>;
 
     // this power the listMigrations command
-    fn load_all(&mut self) -> Result<Vec<Migration>, Self::ErrorType>;
+    fn load_all(&self, connection: Self::ConnectionType) -> Result<Vec<Migration>, Self::ErrorType>;
 
     // writes the migration to the Migration table
-    fn create(&mut self, migration: Migration) -> Result<Migration, Self::ErrorType>;
+    fn create(&self, connection: Self::ConnectionType, migration: Migration) -> Result<Migration, Self::ErrorType>;
 
     // used by the MigrationApplier to write the progress of a Migration into the database
-    fn update(&mut self, params: &MigrationUpdateParams) -> Result<Migration, Self::ErrorType>;
+    fn update(&self, connection: Self::ConnectionType, params: &MigrationUpdateParams) -> Result<Migration, Self::ErrorType>;
 }
 
 #[derive(Debug, PartialEq, Clone)]

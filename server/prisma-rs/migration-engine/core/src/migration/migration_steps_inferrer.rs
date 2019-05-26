@@ -1,4 +1,4 @@
-use database_inspector::DatabaseSchema;
+use database_inspector::relational::SchemaInfo as DatabaseSchema;
 use migration_connector::steps::*;
 use prisma_models::*;
 

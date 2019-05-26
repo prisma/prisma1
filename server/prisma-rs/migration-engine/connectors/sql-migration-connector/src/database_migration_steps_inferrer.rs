@@ -11,7 +11,7 @@ use migration_connector::{steps::*, *};
 use prisma_query::{error::Error as SqlError, transaction::Connection};
 
 pub struct SqlDatabaseMigrationStepsInferrer {
-    schema_name: String,
+    pub schema_name: String,
 }
 
 #[allow(unused, dead_code)]

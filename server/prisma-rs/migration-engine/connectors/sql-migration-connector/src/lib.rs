@@ -6,6 +6,7 @@ mod destructive_changes_checker;
 mod migration_applier;
 mod migration_persistence;
 mod migration_step;
+mod connector;
 
 pub use database_migration_steps_inferrer::*;
 pub use database_schema_calculator::*;
@@ -15,6 +16,7 @@ pub use destructive_changes_checker::*;
 pub use migration_applier::*;
 pub use migration_persistence::*;
 pub use migration_step::*;
+pub use connector::*;
 
 use barrel;
 use barrel::backend::Sqlite;

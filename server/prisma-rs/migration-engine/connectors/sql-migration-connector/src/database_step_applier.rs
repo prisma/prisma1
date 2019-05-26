@@ -6,13 +6,16 @@ use prisma_query::error::Error as SqlError;
 use rusqlite::{Connection, NO_PARAMS};
 
 pub struct SqlDatabaseStepApplier<'a> {
-    connection: &'a Connection,
     schema_name: String,
+    // We need to tie the connection lifetime to the struct,
+    // and rust forces us to use the lifetime specifier in the
+    // struct declaration.
+    phantom: std::marker::PhantomData<&'a Connection>,
 }
 
 impl<'a> SqlDatabaseStepApplier<'a> {
-    pub fn new(connection: &'a Connection, schema_name: &str) -> SqlDatabaseStepApplier<'a> {
-        SqlDatabaseStepApplier { connection, schema_name: String::from(schema_name) }
+    pub fn new(schema_name: &str) -> SqlDatabaseStepApplier {
+        SqlDatabaseStepApplier { schema_name: String::from(schema_name), phantom: std::marker::PhantomData }
     }
 
     fn make_sql_string(&self, migration: BarrelMigration) -> String {
@@ -24,8 +27,9 @@ impl<'a> SqlDatabaseStepApplier<'a> {
 #[allow(unused, dead_code)]
 impl<'a> DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier<'a> {
     type ErrorType = SqlError;
+    type ConnectionType = &'a mut Connection;
 
-    fn apply(&self, step: SqlMigrationStep) -> Result<(), SqlError> {
+    fn apply(&self, connection: &mut Connection, step: SqlMigrationStep) -> Result<(), SqlError> {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
         let sql_string = match dbg!(step) {
@@ -88,7 +92,7 @@ impl<'a> DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepAppli
             }
         };
         dbg!(&sql_string);
-        let result = self.connection.execute(&sql_string, NO_PARAMS);
+        let result = connection.execute(&sql_string, NO_PARAMS);
         // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
         match dbg!(result) {
             Ok(_) => Ok(()),
