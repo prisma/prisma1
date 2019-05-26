@@ -4,14 +4,14 @@ use prisma_query::transaction::Connectional;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationApplier<'a> {
-    connection: &'a Connection,
+    connection: &'a mut Connection,
     schema_name: String
 }
 
 #[allow(unused, dead_code)]
 impl<'a> MigrationApplier<SqlMigrationStep> for SqlMigrationApplier<'a> {
-    fn apply_steps(&self, migration: Migration, steps: Vec<SqlMigrationStep>) {
-        let persistence = SqlMigrationPersistence::new(self.connection);
+    fn apply_steps(&mut self, migration: Migration, steps: Vec<SqlMigrationStep>) {
+        let mut persistence = SqlMigrationPersistence::new(self.connection);
         let applier = SqlDatabaseStepApplier::new(self.connection, &self.schema_name);
 
         // todo: refactor those procedural updates into proper domain methods on the Migration struct

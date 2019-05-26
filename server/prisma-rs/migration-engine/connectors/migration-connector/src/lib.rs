@@ -91,19 +91,22 @@ pub struct MigrationError {
 pub trait MigrationPersistence {
     type ErrorType;
 
-    // returns the last successful Migration
-    fn last(&self) -> Result<Migration, Self::ErrorType>;
+    // This methods need to be &mut self, as some
+    // db connectors will require mutable self references.
 
-    fn by_name(&self, name: &str) -> Result<Migration, Self::ErrorType>;
+    // returns the last successful Migration
+    fn last(&mut self) -> Result<Migration, Self::ErrorType>;
+
+    fn by_name(&mut self, name: &str) -> Result<Migration, Self::ErrorType>;
 
     // this power the listMigrations command
-    fn load_all(&self) -> Result<Vec<Migration>, Self::ErrorType>;
+    fn load_all(&mut self) -> Result<Vec<Migration>, Self::ErrorType>;
 
     // writes the migration to the Migration table
-    fn create(&self, migration: Migration) -> Result<Migration, Self::ErrorType>;
+    fn create(&mut self, migration: Migration) -> Result<Migration, Self::ErrorType>;
 
     // used by the MigrationApplier to write the progress of a Migration into the database
-    fn update(&self, params: &MigrationUpdateParams) -> Result<Migration, Self::ErrorType>;
+    fn update(&mut self, params: &MigrationUpdateParams) -> Result<Migration, Self::ErrorType>;
 }
 
 #[derive(Debug, PartialEq, Clone)]

@@ -157,8 +157,7 @@ impl From<InternalIndexIntrospectionResult> for IndexInfo {
     }
 }
 
-// TODO: This enum needs to be extended accordingly for more databases.
-#[derive(Debug, Copy, PartialEq, Eq, Clone)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, serde::Serialize)]
 pub enum ColumnType {
     Int,
     Float,

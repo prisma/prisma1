@@ -42,7 +42,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
                 let create = CreateTable {
                     name: next_table.name.clone(),
                     columns: Self::column_descriptions(&next_table.columns, next_table, &self.next.relations),
-                    primary_columns: match next_table.primary_key {
+                    primary_columns: match &next_table.primary_key {
                         None => vec![],
                         Some(idx) => idx.columns.clone(),
                     },

@@ -78,7 +78,7 @@ impl SqlDatabaseMigrationStepsInferrer {
             SqlMigrationStep::CreateTable(CreateTable {
                 name: format!("new_{}", next.name.clone()),
                 columns: DatabaseSchemaDiffer::column_descriptions(&next.columns, next, &next_schema.relations),
-                primary_columns: match next.primary_key {
+                primary_columns: match &next.primary_key {
                     None => vec![],
                     Some(idx) => idx.columns.clone(),
                 },

@@ -44,7 +44,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     continue;
                 }
 
-                match field.field_type {
+                match &field.field_type {
                     FieldType::Base(scalar_type) => table.columns.push(ColumnInfo::new(
                         field.db_name(),
                         column_type_for_scalar_type(&scalar_type),
@@ -57,7 +57,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             .find_model(&relation_info.to)
                             .expect("Invalid related model. This should never happen.");
                         let related_id_field = related.id_field();
-                        let to_field = match relation_info.to_field {
+                        let to_field = match &relation_info.to_field {
                             Some(name) => related.find_field(&name),
                             None => None,
                         };
@@ -143,11 +143,12 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     indexes: Vec::new(),
                     primary_key: Some(IndexInfo::new_pk(&[node_id_field, position_field])),
                 };
-                tables.push(table);
 
                 let relation =
                     TableRelationInfo::new(model.db_name(), id_field.db_name(), &table.name, node_id_field);
                 relations.push(relation);
+
+                tables.push(table);
             }
         }
 
@@ -170,7 +171,8 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     continue;
                 }
 
-                match field.field_type {
+                // TODO: Cleanup internal duplication.
+                match &field.field_type {
                     FieldType::Relation(relation_info) => {
                         let related = self
                             .data_model
@@ -180,7 +182,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         let my_id_field = model.id_field();
                         let related_id_field = related.id_field();
 
-                        let to_field = match relation_info.to_field {
+                        let to_field = match &relation_info.to_field {
                             Some(name) => related.find_field(&name),
                             None => None,
                         };
@@ -194,13 +196,12 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             continue;
                         }
 
-                        let relation_name = relation_info
-                            .name
-                            .expect("Cannot create many to many relation with out a name");
+                        let relation_name = &relation_info.name.clone()
+                            .expect("Cannot create many to many relation wittout a name");
 
                         // Create Relation Table
                         let table = TableInfo {
-                            name: String::from(relation_name),
+                            name: relation_name.clone(),
                             columns: vec![
                                 ColumnInfo::new("A", column_type(my_id_field), false),
                                 ColumnInfo::new("B", column_type(related_id_field), false),
@@ -242,7 +243,10 @@ impl ModelExtensions for Model {
     }
 
     fn db_name(&self) -> &str {
-        &self.database_name.unwrap_or_else(|| self.name)
+        match &self.database_name {
+            Some(name) => &name,
+            None => &self.name
+        }
     }
 }
 
@@ -270,7 +274,10 @@ impl FieldExtensions for Field {
     }
 
     fn db_name(&self) -> &str {
-        &self.database_name.clone().unwrap_or_else(|| self.name.clone())
+        match &self.database_name {
+            Some(name) => &name,
+            None => &self.name
+        }
     }
 }
 

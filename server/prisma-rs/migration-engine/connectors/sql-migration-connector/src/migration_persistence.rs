@@ -2,15 +2,15 @@
 use chrono::*;
 use datamodel::Schema;
 use migration_connector::*;
-use prisma_query::{ast::*, error::Error as SqlError, transaction::Connection, visitor::*, ResultRow};
+use prisma_query::{ast::*, error::Error as SqlError, transaction::Connection, visitor::*, convenience::*};
 use serde_json;
 
 pub struct SqlMigrationPersistence<'a> {
-    connection: &'a Connection,
+    connection: &'a mut Connection,
 }
 
 impl<'a> SqlMigrationPersistence<'a> {
-    pub fn new(connection: &'a Connection) -> SqlMigrationPersistence {
+    pub fn new(connection: &'a mut Connection) -> SqlMigrationPersistence {
         SqlMigrationPersistence { connection }
     }
 }
@@ -19,46 +19,54 @@ impl<'a> SqlMigrationPersistence<'a> {
 impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
     type ErrorType = SqlError;
 
-    fn last(&self) -> Result<Migration, SqlError> {
+    fn last(&mut self) -> Result<Migration, SqlError> {
         let conditions = STATUS_COLUMN.equals("Success");
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        for row in self.connection.query(Query::from(query))? {
-            return Ok(parse_row(&row));
+        let (cols, vals) = self.connection.query(Query::from(query))?;
+        let res = ResultSet::new(&cols, &vals);
+
+        for row in res.iter() {
+            return parse_row(&row);
         }
 
         Err(SqlError::NotFound)
     }
 
-    fn load_all(&self) -> Result<Vec<Migration>, SqlError> {
+    fn load_all(&mut self) -> Result<Vec<Migration>, SqlError> {
         let query = Select::from_table(TABLE_NAME);
-        let res = self.connection.query(Query::from(query))?;
 
-        const result: Vec<Migration> = vec![];
+        let (cols, vals) = self.connection.query(Query::from(query))?;
+        let res = ResultSet::new(&cols, &vals);
 
-        for row in res {
-            result.push(parse_row(&row));
+        let mut result: Vec<Migration> = vec![];
+
+        for row in res.iter() {
+            result.push(parse_row(&row)?);
         }
 
         Ok(result)
     }
 
-    fn by_name(&self, name: &str) -> Result<Migration, SqlError> {
+    fn by_name(&mut self, name: &str) -> Result<Migration, SqlError> {
         let conditions = NAME_COLUMN.equals(name);
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        for row in self.connection.query(Query::from(query))? {
-            return Ok(parse_row(&row));
+        let (cols, vals) = self.connection.query(Query::from(query))?;
+        let res = ResultSet::new(&cols, &vals);
+
+        for row in res.iter() {
+            return parse_row(&row);
         }
 
         Err(SqlError::NotFound)
     }
 
-    fn create(&self, migration: Migration) -> Result<Migration, SqlError> {
+    fn create(&mut self, migration: Migration) -> Result<Migration, SqlError> {
         let finished_at_value = match migration.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -91,7 +99,7 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
         Ok(cloned)
     }
 
-    fn update(&self, params: &MigrationUpdateParams) -> Result<Migration, SqlError> {
+    fn update(&mut self, params: &MigrationUpdateParams) -> Result<Migration, SqlError> {
         let finished_at_value = match params.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -104,14 +112,14 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
             .set(ERRORS_COLUMN, errors_json)
             .set(FINISHED_AT_COLUMN, finished_at_value)
             .so_that(
-                NAME_COLUMN
-                    .equals(&params.name)
+                Column::from(NAME_COLUMN)
+                    .equals(&params.name as &str)
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
         self.connection.execute(Query::from(query))?;
 
-        self.by_name(self.connection, params.name)
+        self.by_name(&params.name)
     }
 }
 
@@ -124,27 +132,27 @@ fn timestamp_to_datetime(timestamp: i64) -> DateTime<Utc> {
     datetime
 }
 
-fn parse_row(row: &ResultRow) -> Migration {
-    let revision: u32 = row.get(REVISION_COLUMN).unwrap();
-    let applied: u32 = row.get(APPLIED_COLUMN).unwrap();
-    let rolled_back: u32 = row.get(ROLLED_BACK_COLUMN).unwrap();
-    let errors_json: String = row.get(ERRORS_COLUMN).unwrap();
+fn parse_row(row: &ResultRowWithName) -> Result<Migration, SqlError> {
+    let revision: u32 = row.get_as_integer(REVISION_COLUMN)? as u32;
+    let applied: u32 = row.get_as_integer(APPLIED_COLUMN)?as u32;
+    let rolled_back: u32 = row.get_as_integer(ROLLED_BACK_COLUMN)? as u32;
+    let errors_json: String = row.get_as_string(ERRORS_COLUMN)?;
     let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
-    let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN).unwrap();
-    let database_steps_json: String = row.get(DATABASE_STEPS_COLUMN).unwrap();
-    Migration {
-        name: row.get(NAME_COLUMN).unwrap(),
+    let finished_at: Option<i64> = row.get_as_integer(FINISHED_AT_COLUMN).ok();
+    let database_steps_json: String = row.get_as_string(DATABASE_STEPS_COLUMN)?;
+    Ok(Migration {
+        name: row.get_as_string(NAME_COLUMN)?,
         revision: revision as usize,
         datamodel: Schema::empty(),
-        status: MigrationStatus::from_str(row.get(STATUS_COLUMN).unwrap()),
+        status: MigrationStatus::from_str(row.get_as_string(STATUS_COLUMN)?),
         applied: applied as usize,
         rolled_back: rolled_back as usize,
         datamodel_steps: Vec::new(),
         database_steps: database_steps_json,
         errors: errors,
-        started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN).unwrap()),
+        started_at: timestamp_to_datetime(row.get_as_integer(STARTED_AT_COLUMN)?),
         finished_at: finished_at.map(timestamp_to_datetime),
-    }
+    })
 }
 
 static TABLE_NAME: &str = "_Migration";
