@@ -45,6 +45,9 @@ pub enum ConnectorError {
     #[fail(display = "Unique constraint failed: {}", field_name)]
     UniqueConstraintViolation { field_name: String },
 
+    #[fail(display = "Null constraint failed: {}", field_name)]
+    NullConstraintViolation { field_name: String },
+
     #[fail(display = "Node does not exist.")]
     NodeDoesNotExist,
 
