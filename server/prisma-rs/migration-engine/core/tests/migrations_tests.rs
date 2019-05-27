@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 mod test_harness;
-use database_inspector::relational::{sqlite::*, *};
+use database_inspector::sql::{sqlite::*, *};
 use database_inspector::*;
 use migration_core::commands::*;
 use migration_core::*;
@@ -39,7 +39,7 @@ fn migrate_to(
     connection: &std::cell::RefCell<Connection>,
     engine: &Box<MigrationEngine<SqlMigrationStep>>,
     datamodel: &str,
-) -> SchemaInfo {
+) -> DatabaseSchemaInfo {
     let project_info = "the-project-info".to_string();
     let migration_id = "the-migration-id".to_string();
 
@@ -60,7 +60,7 @@ fn migrate_to(
     let cmd = ApplyMigrationCommand::new(input);
     let _output = cmd.execute(&engine);
 
-    let inspector = RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new()));
+    let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
     inspector
         .introspect(connection.borrow_mut().deref_mut(), &engine.schema_name())
         .unwrap()

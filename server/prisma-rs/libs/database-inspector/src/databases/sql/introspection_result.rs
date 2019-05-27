@@ -1,6 +1,6 @@
 use crate::*;
 use super::*;
-pub trait SpecializedRelationalIntrospectionResult {
+pub trait SpecializedSqlIntrospectionResult {
     fn database_type(&self) -> &str;
     /*
     // TODO: This should map a DB type to DML.
@@ -14,16 +14,16 @@ pub trait SpecializedRelationalIntrospectionResult {
     */
 }
 
-pub struct RelationalIntrospectionResult {
+pub struct SqlIntrospectionResult {
     /// Any specialized connector specific results.
-    pub specialized: Box<SpecializedRelationalIntrospectionResult>,
+    pub specialized: Box<SpecializedSqlIntrospectionResult>,
     /// The relational database schema without prisma abstractions.
-    pub schema: SchemaInfo
+    pub schema: DatabaseSchemaInfo
 }
 
 // TODO: This should follow the RelationalIntrospectionResult class
 // from the TS implementation.
-impl IntrospectionResult for RelationalIntrospectionResult {
+impl IntrospectionResult for SqlIntrospectionResult {
     fn database_type(&self) -> &str {
         self.specialized.database_type()
     }

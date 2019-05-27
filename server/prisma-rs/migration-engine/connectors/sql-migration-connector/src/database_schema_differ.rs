@@ -1,16 +1,16 @@
 use crate::*;
-use database_inspector::relational::{
-    ColumnInfo as Column, SchemaInfo as DatabaseSchema, TableInfo as Table, TableRelationInfo,
+use database_inspector::sql::{
+    ColumnInfo as Column, DatabaseSchemaInfo, TableInfo as Table, TableRelationInfo,
 };
 
 pub struct DatabaseSchemaDiffer<'a> {
-    previous: &'a DatabaseSchema,
-    next: &'a DatabaseSchema,
+    previous: &'a DatabaseSchemaInfo,
+    next: &'a DatabaseSchemaInfo,
     schema_name: String,
 }
 
 impl<'a> DatabaseSchemaDiffer<'a> {
-    pub fn diff(previous: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str) -> Vec<SqlMigrationStep> {
+    pub fn diff(previous: &DatabaseSchemaInfo, next: &DatabaseSchemaInfo, schema_name: &str) -> Vec<SqlMigrationStep> {
         let differ = DatabaseSchemaDiffer {
             previous,
             next,

@@ -1,8 +1,8 @@
-use crate::relational::*;
+use crate::sql::*;
 use crate::*;
 use crate::{Connection, SqlError};
 
-pub trait SpecializedRelationalIntrospectionConnector {
+pub trait SpecializedSqlIntrospectionConnector {
     fn database_type(&self) -> &str;
     fn list_schemas(&self, connection: &mut Connection) -> Result<Vec<String>, SqlError>;
     fn query_tables(&self, connection: &mut Connection, schema: &str) -> Result<Vec<String>, SqlError>;
@@ -34,18 +34,18 @@ pub trait SpecializedRelationalIntrospectionConnector {
         relations: Vec<TableRelationInfo>,
         enums: Vec<EnumInfo>,
         sequences: Vec<SequenceInfo>,
-    ) -> RelationalIntrospectionResult;
+    ) -> SqlIntrospectionResult;
     fn column_type_to_native_type(&self, col: &ColumnType) -> &str;
     fn native_type_to_column_type(&self, col: &str) -> ColumnType;
 }
 
-pub struct RelationalIntrospectionConnector {
-    specialized: Box<SpecializedRelationalIntrospectionConnector>,
+pub struct SqlIntrospectionConnector {
+    specialized: Box<SpecializedSqlIntrospectionConnector>,
 }
 
-impl RelationalIntrospectionConnector {
-    pub fn new(specialized: Box<SpecializedRelationalIntrospectionConnector>) -> RelationalIntrospectionConnector {
-        RelationalIntrospectionConnector { specialized }
+impl SqlIntrospectionConnector {
+    pub fn new(specialized: Box<SpecializedSqlIntrospectionConnector>) -> SqlIntrospectionConnector {
+        SqlIntrospectionConnector { specialized }
     }
 
     fn list_tables(&self, connection: &mut Connection, schema: &str) -> Result<Vec<TableInfo>, SqlError> {
@@ -105,7 +105,7 @@ impl RelationalIntrospectionConnector {
     }
 }
 
-impl IntrospectionConnector<RelationalIntrospectionResult> for RelationalIntrospectionConnector {
+impl IntrospectionConnector<SqlIntrospectionResult> for SqlIntrospectionConnector {
     fn database_type(&self) -> &str {
         self.specialized.database_type()
     }
@@ -114,7 +114,7 @@ impl IntrospectionConnector<RelationalIntrospectionResult> for RelationalIntrosp
         self.specialized.list_schemas(connection)
     }
 
-    fn introspect(&self, connection: &mut Connection, schema: &str) -> Result<RelationalIntrospectionResult, SqlError> {
+    fn introspect(&self, connection: &mut Connection, schema: &str) -> Result<SqlIntrospectionResult, SqlError> {
         Ok(self.specialized.create_introspection_result(
             self.list_tables(connection, schema)?,
             self.list_relations(connection, schema)?,

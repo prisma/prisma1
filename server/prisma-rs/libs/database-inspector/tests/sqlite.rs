@@ -1,6 +1,6 @@
 mod common;
 use common::*;
-use database_inspector::{IntrospectionConnector, relational::{*, sqlite::*}};
+use database_inspector::{IntrospectionConnector, sql::{*, sqlite::*}};
 use barrel::types;
 mod relational_asserts;
 use relational_asserts::*;
@@ -20,7 +20,7 @@ fn all_columns_types_must_work() {
         },
         |connection| {
 
-            let inspector = RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new()));
+            let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
 
             let result = inspector.introspect(connection, SCHEMA)?;
 
@@ -60,7 +60,7 @@ fn is_required_must_work() {
         },
         |connection| {
 
-            let inspector = RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new()));
+            let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
 
             let result = inspector.introspect(connection, SCHEMA)?;
 
@@ -89,7 +89,7 @@ fn foreign_keys_must_work() {
         });
     },
         |connection| {
-            let inspector = RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new()));
+            let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
             let result = inspector.introspect(connection, SCHEMA)?;
 
             result.schema.assert_has_relation("User", "city", "City", "id");

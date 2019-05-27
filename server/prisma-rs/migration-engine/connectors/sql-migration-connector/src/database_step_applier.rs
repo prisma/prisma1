@@ -1,6 +1,6 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
-use database_inspector::relational::ColumnType;
+use database_inspector::sql::ColumnType;
 use migration_connector::*;
 use prisma_query::{error::Error as SqlError, transaction::Connection};
 use std::cell::RefCell;

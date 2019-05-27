@@ -1,4 +1,4 @@
-use database_inspector::relational::ColumnType;
+use database_inspector::sql::ColumnType;
 use migration_connector::DatabaseMigrationStepExt;
 use serde::Serialize;
 

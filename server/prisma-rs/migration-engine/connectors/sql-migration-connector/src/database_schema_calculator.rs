@@ -1,5 +1,5 @@
-use database_inspector::relational::{
-    ColumnInfo, ColumnType, IndexInfo, SchemaInfo as DatabaseSchema, TableInfo, TableRelationInfo,
+use database_inspector::sql::{
+    ColumnInfo, ColumnType, IndexInfo, DatabaseSchemaInfo, TableInfo, TableRelationInfo,
 };
 use datamodel::*;
 
@@ -8,13 +8,13 @@ pub struct DatabaseSchemaCalculator<'a> {
 }
 
 impl<'a> DatabaseSchemaCalculator<'a> {
-    pub fn calculate(data_model: &Datamodel) -> DatabaseSchema {
+    pub fn calculate(data_model: &Datamodel) -> DatabaseSchemaInfo {
         let calculator = DatabaseSchemaCalculator { data_model };
         calculator.calculate_internal()
     }
 
-    fn calculate_internal(&self) -> DatabaseSchema {
-        let mut schema = DatabaseSchema::new();
+    fn calculate_internal(&self) -> DatabaseSchemaInfo {
+        let mut schema = DatabaseSchemaInfo::new();
 
         // TODO: It's probably better to move this into one loop.
         schema.merge(self.calculate_model_tables());
@@ -25,8 +25,8 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     }
 
     /// Generates tables for models, includes inline relations.
-    fn calculate_model_tables(&self) -> DatabaseSchema {
-        let mut schema = DatabaseSchema::new();
+    fn calculate_model_tables(&self) -> DatabaseSchemaInfo {
+        let mut schema = DatabaseSchemaInfo::new();
 
         for model in self.data_model.models() {
             let mut table = TableInfo {
@@ -115,7 +115,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     }
 
     /// Generates tables for scalar list fields.
-    fn calculate_scalar_list_tables(&self) -> DatabaseSchema {
+    fn calculate_scalar_list_tables(&self) -> DatabaseSchemaInfo {
         let mut tables = Vec::new();
         let mut relations = Vec::new();
 
@@ -150,7 +150,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
             }
         }
 
-        DatabaseSchema {
+        DatabaseSchemaInfo {
             tables,
             relations,
             enums: vec![],
@@ -159,8 +159,8 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     }
 
     //// Generates tables for Many to Many relations.
-    fn calculate_relation_tables(&self) -> DatabaseSchema {
-        let mut schema = DatabaseSchema::new();
+    fn calculate_relation_tables(&self) -> DatabaseSchemaInfo {
+        let mut schema = DatabaseSchemaInfo::new();
 
         for model in self.data_model.models() {
             for field in model.fields() {

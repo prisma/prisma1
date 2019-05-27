@@ -1,7 +1,7 @@
 use crate::*;
 use database_inspector::{
-    relational::{
-        sqlite::SqlLiteConnector, RelationalIntrospectionConnector, SchemaInfo as DatabaseSchema, TableInfo as Table,
+    sql::{
+        sqlite::SqliteConnector, SqlIntrospectionConnector, DatabaseSchemaInfo, TableInfo as Table,
     },
     IntrospectionConnector,
 };
@@ -14,7 +14,7 @@ use std::ops::DerefMut;
 pub struct SqlDatabaseMigrationStepsInferrer<'a> {
     schema_name: String,
     connection: &'a RefCell<Connection>,
-    introspector: RelationalIntrospectionConnector,
+    introspector: SqlIntrospectionConnector,
 }
 
 #[allow(unused, dead_code)]
@@ -45,15 +45,15 @@ impl<'a> SqlDatabaseMigrationStepsInferrer<'a> {
         SqlDatabaseMigrationStepsInferrer {
             schema_name: String::from(schema_name),
             connection: connection,
-            introspector: RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new())), // TODO: This should not be sqlite specific.
+            introspector: SqlIntrospectionConnector::new(Box::new(SqliteConnector::new())), // TODO: This should not be sqlite specific.
         }
     }
 
     fn fix_stupid_sqlite(
         &self,
         steps: Vec<SqlMigrationStep>,
-        current_database_schema: &DatabaseSchema,
-        next_database_schema: &DatabaseSchema,
+        current_database_schema: &DatabaseSchemaInfo,
+        next_database_schema: &DatabaseSchemaInfo,
     ) -> Vec<SqlMigrationStep> {
         let mut result = Vec::new();
         for step in steps {
@@ -84,7 +84,7 @@ impl<'a> SqlDatabaseMigrationStepsInferrer<'a> {
         _alter_table: &AlterTable,
         current: &Table,
         next: &Table,
-        next_schema: &DatabaseSchema,
+        next_schema: &DatabaseSchemaInfo,
     ) -> Vec<SqlMigrationStep> {
         // based on 'Making Other Kinds Of Table Schema Changes' from https://www.sqlite.org/lang_altertable.html
         let name_of_temporary_table = format!("new_{}", next.name.clone());

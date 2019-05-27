@@ -1,6 +1,6 @@
-use database_inspector::relational::*;
+use database_inspector::sql::*;
 
-pub trait SchemaAsserts {
+pub trait DatabaseSchemaAsserts {
     fn assert_has_table(&self, t: &str) -> &TableInfo;
     fn assert_has_relation(&self, source_table: &str, source_column: &str, target_table: &str, target_column: &str) -> &TableRelationInfo;
 }
@@ -19,7 +19,7 @@ pub trait ColumnAsserts {
     fn assert_is_primary_key(&self, b: bool) -> &ColumnInfo;
 }
 
-impl SchemaAsserts for SchemaInfo {
+impl DatabaseSchemaAsserts for DatabaseSchemaInfo {
     fn assert_has_table(&self, t: &str) -> &TableInfo {
         self.tables.iter().find(|m| &m.name == t)
             .expect(&format!("Table not found {}", t))

@@ -1,19 +1,19 @@
-use database_inspector::relational::SchemaInfo as DatabaseSchema;
+use database_inspector::sql::DatabaseSchemaInfo;
 use migration_connector::steps::*;
 use prisma_models::*;
 
 pub trait MigrationStepsInferrer {
-    fn infer(next: &InternalDataModel, database_schema: &DatabaseSchema) -> Vec<MigrationStep>;
+    fn infer(next: &InternalDataModel, database_schema: &DatabaseSchemaInfo) -> Vec<MigrationStep>;
 }
 
 #[allow(unused)]
 pub struct MigrationStepsInferrerImpl<'a> {
     schema: &'a InternalDataModel,
-    database_schema: &'a DatabaseSchema,
+    database_schema: &'a DatabaseSchemaInfo,
 }
 
 impl<'a> MigrationStepsInferrer for MigrationStepsInferrerImpl<'a> {
-    fn infer(next: &InternalDataModel, database_schema: &DatabaseSchema) -> Vec<MigrationStep> {
+    fn infer(next: &InternalDataModel, database_schema: &DatabaseSchemaInfo) -> Vec<MigrationStep> {
         let inferer = MigrationStepsInferrerImpl {
             schema: next,
             database_schema: database_schema,

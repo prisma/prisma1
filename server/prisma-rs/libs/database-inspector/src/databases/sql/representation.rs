@@ -114,16 +114,16 @@ impl IndexInfo {
 }
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct SchemaInfo {
+pub struct DatabaseSchemaInfo {
     pub tables: Vec<TableInfo>,
     pub relations: Vec<TableRelationInfo>,
     pub enums: Vec<EnumInfo>,
     pub sequences: Vec<SequenceInfo>
 }
 
-impl SchemaInfo {
-    pub fn new() -> SchemaInfo {
-        SchemaInfo {
+impl DatabaseSchemaInfo {
+    pub fn new() -> DatabaseSchemaInfo {
+        DatabaseSchemaInfo {
             tables: vec![],
             relations: vec![],
             enums: vec![],
@@ -131,7 +131,7 @@ impl SchemaInfo {
         }
     }
 
-    pub fn merge(&mut self, mut other: SchemaInfo) {
+    pub fn merge(&mut self, mut other: DatabaseSchemaInfo) {
         self.tables.append(&mut other.tables);
         self.relations.append(&mut other.relations);
         self.enums.append(&mut other.enums);

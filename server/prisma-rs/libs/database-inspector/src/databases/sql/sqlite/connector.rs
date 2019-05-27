@@ -1,14 +1,13 @@
-use crate::relational::SpecializedRelationalIntrospectionConnector;
 use prisma_query::{ast::*, convenience::*};
 use crate::{Connection, SqlError};
-use crate::databases::relational::*;
-use super::SqlLiteIntrospectionResult;
+use crate::databases::sql::*;
+use super::SqliteIntrospectionResult;
 
-pub struct SqlLiteConnector { }
+pub struct SqliteConnector { }
 
-impl SqlLiteConnector { 
-    pub fn new() -> SqlLiteConnector {
-      SqlLiteConnector { }
+impl SqliteConnector { 
+    pub fn new() -> SqliteConnector {
+      SqliteConnector { }
     }
 }
 
@@ -26,7 +25,7 @@ fn result_list_to_string_vec(res: &ResultSet) -> Result<Vec<String>, SqlError> {
 #[allow(unused)]
 
 // TODO: Implement and test.
-impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
+impl SpecializedSqlIntrospectionConnector for SqliteConnector {
     fn database_type(&self) -> &str {
         "sqlite"
     }
@@ -124,10 +123,10 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
         Ok(vec![])
     }
 
-    fn create_introspection_result(&self, tables: Vec<TableInfo>, relations: Vec<TableRelationInfo>, enums: Vec<EnumInfo>, sequences: Vec<SequenceInfo>) -> RelationalIntrospectionResult{
-        RelationalIntrospectionResult {
-            specialized: Box::new(SqlLiteIntrospectionResult::new()),
-            schema: SchemaInfo {
+    fn create_introspection_result(&self, tables: Vec<TableInfo>, relations: Vec<TableRelationInfo>, enums: Vec<EnumInfo>, sequences: Vec<SequenceInfo>) -> SqlIntrospectionResult{
+        SqlIntrospectionResult {
+            specialized: Box::new(SqliteIntrospectionResult::new()),
+            schema: DatabaseSchemaInfo {
                 tables: tables,
                 relations: relations,
                 enums: enums,
