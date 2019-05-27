@@ -128,7 +128,7 @@ impl Validator {
     fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> Result<dml::Field, ErrorCollection> {
         let mut errors = ErrorCollection::new();
         // If we cannot parse the field type, we exit right away.
-        let field_type = self.validate_field_type(&ast_field.field_type, &ast_field.field_type_span, ast_schema)?;
+        let field_type = self.validate_field_type(&ast_field, &ast_field.field_type_span, ast_schema)?;
 
         let mut field = dml::Field::new(&ast_field.name, field_type.clone());
 
@@ -172,27 +172,34 @@ impl Validator {
     /// Internal: Validates a field's type.
     fn validate_field_type(
         &self,
-        type_name: &str,
+        ast_field: &ast::Field,
         span: &ast::Span,
         ast_schema: &ast::Schema,
     ) -> Result<dml::FieldType, ValidationError> {
-        if let Ok(scalar_type) = dml::ScalarType::from_str_and_span(type_name, span) {
+        if let Ok(scalar_type) = dml::ScalarType::from_str_and_span(&ast_field.field_type, span) {
             Ok(dml::FieldType::Base(scalar_type))
         } else {
             // Distinguish between relation and enum.
             for model in &ast_schema.models {
                 match &model {
                     // TODO: Get primary key field and hook up String::from.
-                    ast::Top::Model(model) if model.name == *type_name => {
-                        return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&type_name)))
+                    ast::Top::Model(model) if model.name == ast_field.field_type => {
+                        if let Some(to_field) = &ast_field.field_link {
+                            return Ok(dml::FieldType::Relation(dml::RelationInfo::new_with_field(
+                                &ast_field.field_type,
+                                &to_field,
+                            )));
+                        } else {
+                            return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&ast_field.field_type)));
+                        }
                     }
-                    ast::Top::Enum(en) if en.name == *type_name => {
-                        return Ok(dml::FieldType::Enum(String::from(type_name)))
+                    ast::Top::Enum(en) if en.name == ast_field.field_type => {
+                        return Ok(dml::FieldType::Enum(ast_field.field_type.clone()))
                     }
                     _ => {}
                 }
             }
-            Err(ValidationError::new_type_not_found_error(type_name, span))
+            Err(ValidationError::new_type_not_found_error(&ast_field.field_type, span))
         }
     }
 }
