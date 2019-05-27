@@ -14,6 +14,9 @@ pub enum SqlError {
     #[fail(display = "Unique constraint failed: {}", field_name)]
     UniqueConstraintViolation { field_name: String },
 
+    #[fail(display = "Null constraint failed: {}", field_name)]
+    NullConstraintViolation { field_name: String },
+
     #[fail(display = "Node does not exist.")]
     NodeDoesNotExist,
 
@@ -76,6 +79,7 @@ impl From<SqlError> for ConnectorError {
             SqlError::UniqueConstraintViolation { field_name } => {
                 ConnectorError::UniqueConstraintViolation { field_name }
             }
+            SqlError::NullConstraintViolation { field_name } => ConnectorError::NullConstraintViolation { field_name },
             SqlError::NodeDoesNotExist => ConnectorError::NodeDoesNotExist,
             SqlError::ColumnDoesNotExist => ConnectorError::ColumnDoesNotExist,
             SqlError::ConnectionError(e) => ConnectorError::ConnectionError(e),
@@ -167,6 +171,21 @@ impl From<rusqlite::Error> for SqlError {
                 }
             }
 
+            rusqlite::Error::SqliteFailure(
+                ffi::Error {
+                    code: ffi::ErrorCode::ConstraintViolation,
+                    extended_code: 1299,
+                },
+                Some(description),
+            ) => {
+                let splitted: Vec<&str> = description.split(": ").collect();
+                let splitted: Vec<&str> = splitted[1].split(".").collect();
+
+                SqlError::NullConstraintViolation {
+                    field_name: splitted[1].into(),
+                }
+            }
+
             e => SqlError::QueryError(e.into()),
         }
     }
@@ -208,6 +227,18 @@ impl From<tokio_postgres::error::Error> for SqlError {
 
                 SqlError::UniqueConstraintViolation { field_name }
             }
+            // Even lipstick will not save this...
+            Some("23502") => {
+                let error = e.into_source().unwrap(); // boom
+                let db_error = error.downcast_ref::<DbError>().unwrap(); // BOOM
+                let detail = db_error.detail().unwrap(); // KA-BOOM
+
+                let splitted: Vec<&str> = detail.split(")=(").collect();
+                let splitted: Vec<&str> = splitted[0].split(" (").collect();
+                let field_name = splitted[1].replace("\"", "");
+
+                SqlError::NullConstraintViolation { field_name }
+            }
             _ => SqlError::QueryError(e.into()),
         }
     }
@@ -239,6 +270,19 @@ impl From<mysql_client::error::Error> for SqlError {
                 let field_name: String = splitted[0].into();
 
                 SqlError::UniqueConstraintViolation { field_name }
+            }
+            Error::MySqlError(MySqlError {
+                state: _,
+                ref message,
+                code,
+            }) if code == 1263 => {
+                let splitted: Vec<&str> = message.split_whitespace().collect();
+                let splitted: Vec<&str> = splitted.last().map(|s| s.split("'").collect()).unwrap();
+                let splitted: Vec<&str> = splitted[1].split("_").collect();
+
+                let field_name: String = splitted[0].into();
+
+                SqlError::NullConstraintViolation { field_name }
             }
             e => SqlError::QueryError(e.into()),
         }
