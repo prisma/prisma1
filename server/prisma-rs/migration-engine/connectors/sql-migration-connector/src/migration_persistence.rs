@@ -1,6 +1,6 @@
 #[allow(unused, dead_code)]
 use chrono::*;
-use datamodel::Schema;
+use datamodel::Datamodel;
 use migration_connector::*;
 use prisma_query::{ast::*, convenience::*, error::Error as SqlError, transaction::Connection};
 use serde_json;
@@ -142,7 +142,7 @@ fn parse_row(row: &ResultRowWithName) -> Result<Migration, SqlError> {
     Ok(Migration {
         name: row.get_as_string(NAME_COLUMN)?,
         revision: revision as usize,
-        datamodel: Schema::empty(),
+        datamodel: Datamodel::empty(),
         status: MigrationStatus::from_str(row.get_as_string(STATUS_COLUMN)?),
         applied: applied as usize,
         rolled_back: rolled_back as usize,

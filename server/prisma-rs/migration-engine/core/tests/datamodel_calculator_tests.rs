@@ -10,7 +10,7 @@ use test_harness::parse;
 
 #[test]
 fn add_CreateModel_to_existing_schema() {
-    let dm1 = Schema::empty();
+    let dm1 = Datamodel::empty();
     let dm2 = parse(
         r#"
         model Test {
@@ -31,7 +31,7 @@ fn add_DeleteModel_to_existing_schema() {
         }
     "#,
     );
-    let dm2 = Schema::empty();
+    let dm2 = Datamodel::empty();
 
     test(dm1, dm2);
 }
@@ -151,7 +151,7 @@ fn add_UpdateField_to_existing_schema() {
 
 #[test]
 fn add_CreateEnum_to_existing_schema() {
-    let dm1 = Schema::empty();
+    let dm1 = Datamodel::empty();
     let dm2 = parse(
         r#"
         enum Test {
@@ -174,23 +174,23 @@ fn add_DeleteEnum_to_existing_schema() {
         }
     "#,
     );
-    let dm2 = Schema::empty();
+    let dm2 = Datamodel::empty();
 
     test(dm1, dm2);
 }
 
 // This tests use inferrer to create an end-to-end situation.
-fn test(dm1: Schema, dm2: Schema) {
+fn test(dm1: Datamodel, dm2: Datamodel) {
     let steps = infer(&dm1, &dm2);
     let result = calculate(&dm1, steps);
     assert_eq!(dm2, result);
 }
-fn calculate(schema: &Schema, commands: Vec<MigrationStep>) -> Schema {
+fn calculate(schema: &Datamodel, commands: Vec<MigrationStep>) -> Datamodel {
     let calc = DataModelCalculatorImpl {};
     calc.infer(schema, commands)
 }
 
-fn infer(dm1: &Schema, dm2: &Schema) -> Vec<MigrationStep> {
+fn infer(dm1: &Datamodel, dm2: &Datamodel) -> Vec<MigrationStep> {
     let inferrer = DataModelMigrationStepsInferrerImplWrapper {};
     inferrer.infer(dm1, dm2)
 }

@@ -3,7 +3,7 @@ pub mod steps;
 
 use chrono::{DateTime, Utc};
 use database_inspector::SqlError;
-use datamodel::Schema;
+use datamodel::Datamodel;
 pub use migration_applier::*;
 use serde::Serialize;
 use std::fmt::Debug;
@@ -28,7 +28,7 @@ pub trait MigrationConnector<InternalStepType: DatabaseMigrationStepExt> {
 pub trait DatabaseMigrationStepExt: Debug + Serialize {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
-    fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Result<Vec<T>, SqlError>;
+    fn infer(&self, previous: &Datamodel, next: &Datamodel, steps: Vec<MigrationStep>) -> Result<Vec<T>, SqlError>;
 }
 
 pub trait DatabaseMigrationStepApplier<T> {
@@ -81,7 +81,7 @@ pub struct Migration {
     pub status: MigrationStatus,
     pub applied: usize,
     pub rolled_back: usize,
-    pub datamodel: Schema,
+    pub datamodel: Datamodel,
     pub datamodel_steps: Vec<MigrationStep>,
     pub database_steps: String,
     pub errors: Vec<String>,
@@ -108,7 +108,7 @@ impl Migration {
             status: MigrationStatus::Pending,
             applied: 0,
             rolled_back: 0,
-            datamodel: Schema::empty(),
+            datamodel: Datamodel::empty(),
             datamodel_steps: Vec::new(),
             database_steps: "[]".to_string(),
             errors: Vec::new(),

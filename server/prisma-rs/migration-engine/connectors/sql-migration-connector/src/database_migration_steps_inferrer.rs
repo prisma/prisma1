@@ -21,8 +21,8 @@ pub struct SqlDatabaseMigrationStepsInferrer<'a> {
 impl<'a> DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationStepsInferrer<'a> {
     fn infer(
         &self,
-        previous: &Schema,
-        next: &Schema,
+        previous: &Datamodel,
+        next: &Datamodel,
         steps: Vec<MigrationStep>,
     ) -> Result<Vec<SqlMigrationStep>, SqlError> {
         let current_database_schema = self

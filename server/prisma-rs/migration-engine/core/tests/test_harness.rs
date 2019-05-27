@@ -10,7 +10,7 @@ use sql_migration_connector::{SqlMigrationConnector, SqlMigrationStep};
 use std::panic;
 
 #[allow(unused)]
-pub fn parse(datamodel_string: &str) -> datamodel::Schema {
+pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     match datamodel::parse(datamodel_string) {
         Ok(s) => s,
         Err(errs) => {

@@ -1,7 +1,5 @@
 use crate::*;
 use super::*;
-use datamodel::dml;
-
 pub trait SpecializedRelationalIntrospectionResult {
     fn database_type(&self) -> &str;
     /*
@@ -28,18 +26,5 @@ pub struct RelationalIntrospectionResult {
 impl IntrospectionResult for RelationalIntrospectionResult {
     fn database_type(&self) -> &str {
         self.specialized.database_type()
-    }
-
-    fn get_datamodel(&self) -> dml::Schema {
-        unimplemented!("Kick Emi to port from TS.")
-    }
-    fn get_normalized_datamodel(&self) -> dml::Schema {
-        unimplemented!("Kick Emi to port from TS.")
-    }
-    fn render_datamodel(&self) -> String {
-        unimplemented!("Kick Emi to port from TS.")
-    }
-    fn render_normalized_datamodel(&self) -> String {
-        unimplemented!("Kick Emi to port from TS.")
     }
 }

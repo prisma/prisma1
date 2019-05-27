@@ -60,8 +60,8 @@ impl Validator {
     /// * Perform string interpolation
     /// * Resolve and check default values
     /// * Resolve and check all field types
-    pub fn validate(&self, ast_schema: &ast::Schema) -> Result<dml::Schema, ErrorCollection> {
-        let mut schema = dml::Schema::new();
+    pub fn validate(&self, ast_schema: &ast::Datamodel) -> Result<dml::Datamodel, ErrorCollection> {
+        let mut schema = dml::Datamodel::new();
         let mut errors = ErrorCollection::new();
 
         for ast_obj in &ast_schema.models {
@@ -86,7 +86,7 @@ impl Validator {
     }
 
     /// Internal: Validates a model AST node.
-    fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> Result<dml::Model, ErrorCollection> {
+    fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Datamodel) -> Result<dml::Model, ErrorCollection> {
         let mut model = dml::Model::new(&ast_model.name);
         let mut errors = ErrorCollection::new();
 
@@ -125,7 +125,7 @@ impl Validator {
     }
 
     /// Internal: Validates a field AST node.
-    fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> Result<dml::Field, ErrorCollection> {
+    fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Datamodel) -> Result<dml::Field, ErrorCollection> {
         let mut errors = ErrorCollection::new();
         // If we cannot parse the field type, we exit right away.
         let field_type = self.validate_field_type(&ast_field, &ast_field.field_type_span, ast_schema)?;
@@ -174,7 +174,7 @@ impl Validator {
         &self,
         ast_field: &ast::Field,
         span: &ast::Span,
-        ast_schema: &ast::Schema,
+        ast_schema: &ast::Datamodel,
     ) -> Result<dml::FieldType, ValidationError> {
         if let Ok(scalar_type) = dml::ScalarType::from_str_and_span(&ast_field.field_type, span) {
             Ok(dml::FieldType::Base(scalar_type))

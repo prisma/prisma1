@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 rusqlite = { git = "https://github.com/pimeys/rusqlite" }
 time = "*"
-datamodel = { path = "../datamodel" }
 prisma-query = { git = "https://github.com/prisma/prisma-query.git", branch="connector_interfaces" }
 serde = "1.0"
 barrel = { version = "0.5.6", features = ["sqlite3"] }

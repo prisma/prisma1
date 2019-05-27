@@ -1,5 +1,4 @@
 use crate::{Connection, SqlError};
-use datamodel::dml;
 
 /// This traits are for future use.
 ///
@@ -20,8 +19,4 @@ pub trait IntrospectionConnector<ResultType: IntrospectionResult> {
 /// Represents the raw result of an introspection, which can be converted into a datamodel.
 pub trait IntrospectionResult {
     fn database_type(&self) -> &str;
-    fn get_datamodel(&self) -> dml::Schema;
-    fn get_normalized_datamodel(&self) -> dml::Schema;
-    fn render_datamodel(&self) -> String;
-    fn render_normalized_datamodel(&self) -> String;
 }

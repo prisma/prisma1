@@ -569,7 +569,6 @@ name = "database-inspector"
 version = "0.1.0"
 dependencies = [
  "barrel 0.5.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "datamodel 0.1.0",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces)",
  "rusqlite 0.18.0 (git+https://github.com/pimeys/rusqlite)",
  "serde 1.0.91 (registry+https://github.com/rust-lang/crates.io-index)",
