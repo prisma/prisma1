@@ -11,7 +11,6 @@ pub struct ReadQueryExecutor {
 
 impl ReadQueryExecutor {
     pub fn execute(&self, queries: &[ReadQuery]) -> CoreResult<Vec<ReadQueryResult>> {
-        dbg!(queries);
         self.execute_internal(queries, vec![])
     }
 

@@ -31,6 +31,17 @@ where
                 });
             }
         }
+        Err(SqlError::NullConstraintViolation { field_name }) => {
+            if field_name == "PRIMARY" {
+                return Err(SqlError::NullConstraintViolation {
+                    field_name: format!("{}.{}", model.name, model.fields().id().name),
+                });
+            } else {
+                return Err(SqlError::NullConstraintViolation {
+                    field_name: format!("{}.{}", model.name, field_name),
+                });
+            }
+        }
         Err(e) => return Err(e),
     };
 
