@@ -4,32 +4,28 @@ use datamodel::Schema;
 use migration_connector::*;
 use prisma_query::{ast::*, error::Error as SqlError, transaction::Connection, visitor::*, convenience::*};
 use serde_json;
+use std::cell::RefCell;
 
 pub struct SqlMigrationPersistence<'a> {
-    // We need to tie the connection lifetime to the struct,
-    // and rust forces us to use the lifetime specifier in the
-    // struct declaration.
-    phantom: std::marker::PhantomData<&'a Connection>,
+    pub connection: &'a RefCell<Connection>
 }
 
 impl<'a> SqlMigrationPersistence<'a> {
-    pub fn new() -> SqlMigrationPersistence<'a> {
-        SqlMigrationPersistence { phantom: std::marker::PhantomData }
+    pub fn new(connection: &'a RefCell<Connection>) -> SqlMigrationPersistence<'a> {
+        SqlMigrationPersistence { connection }
     }
 }
 
 #[allow(unused, dead_code)]
 impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
-    type ErrorType = SqlError;
-    type ConnectionType = &'a mut Connection;
 
-    fn last(&self, connection: &'a mut Connection) -> Result<Migration, SqlError> {
+    fn last(&self) -> Result<Migration, SqlError> {
         let conditions = STATUS_COLUMN.equals("Success");
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        let (cols, vals) = connection.query(Query::from(query))?;
+        let (cols, vals) = self.connection.borrow_mut().query(Query::from(query))?;
         let res = ResultSet::new(&cols, &vals);
 
         for row in res.iter() {
@@ -39,10 +35,10 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
         Err(SqlError::NotFound)
     }
 
-    fn load_all(&self, connection: &mut Connection) -> Result<Vec<Migration>, SqlError> {
+    fn load_all(&self) -> Result<Vec<Migration>, SqlError> {
         let query = Select::from_table(TABLE_NAME);
 
-        let (cols, vals) = connection.query(Query::from(query))?;
+        let (cols, vals) = self.connection.borrow_mut().query(Query::from(query))?;
         let res = ResultSet::new(&cols, &vals);
 
         let mut result: Vec<Migration> = vec![];
@@ -54,13 +50,13 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
         Ok(result)
     }
 
-    fn by_name(&self, connection: &mut Connection, name: &str) -> Result<Migration, SqlError> {
+    fn by_name(&self, name: &str) -> Result<Migration, SqlError> {
         let conditions = NAME_COLUMN.equals(name);
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        let (cols, vals) = connection.query(Query::from(query))?;
+        let (cols, vals) = self.connection.borrow_mut().query(Query::from(query))?;
         let res = ResultSet::new(&cols, &vals);
 
         for row in res.iter() {
@@ -70,7 +66,7 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
         Err(SqlError::NotFound)
     }
 
-    fn create(&self, connection: &mut Connection, migration: Migration) -> Result<Migration, SqlError> {
+    fn create(&self, migration: Migration) -> Result<Migration, SqlError> {
         let finished_at_value = match migration.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -96,14 +92,14 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
             )
             .value(FINISHED_AT_COLUMN, finished_at_value);
 
-        cloned.revision = match connection.execute(Query::from(query))? {
+        cloned.revision = match self.connection.borrow_mut().execute(Query::from(query))? {
             Some(Id::Int(val)) => val,
             _ => panic!("Impossible ID")
         };
         Ok(cloned)
     }
 
-    fn update(&self, connection: &mut Connection, params: &MigrationUpdateParams) -> Result<Migration, SqlError> {
+    fn update(&self, params: &MigrationUpdateParams) -> Result<Migration, SqlError> {
         let finished_at_value = match params.finished_at {
             Some(x) => x.timestamp_millis().into(),
             None => ParameterizedValue::Null,
@@ -121,9 +117,9 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
-        connection.execute(Query::from(query))?;
+        self.connection.borrow_mut().execute(Query::from(query))?;
 
-        self.by_name(connection, &params.name)
+        self.by_name(&params.name)
     }
 }
 

@@ -16,7 +16,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
         Box::new(InferMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute<T: DatabaseMigrationStepExt>(&self, engine: &MigrationEngine<T>) -> Self::Output {
         let connector = engine.connector();
         let current_data_model = connector
             .migration_persistence()
@@ -34,7 +34,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
             &current_data_model,
             &next_data_model,
             model_migration_steps.clone(),
-        );
+        ).unwrap();
 
         let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
 

@@ -2,20 +2,17 @@ use crate::*;
 use barrel::Migration as BarrelMigration;
 use database_inspector::relational::ColumnType;
 use migration_connector::*;
-use prisma_query::error::Error as SqlError;
-use rusqlite::{Connection, NO_PARAMS};
+use prisma_query::{error::Error as SqlError, transaction::Connection};
+use std::cell::RefCell;
 
 pub struct SqlDatabaseStepApplier<'a> {
     schema_name: String,
-    // We need to tie the connection lifetime to the struct,
-    // and rust forces us to use the lifetime specifier in the
-    // struct declaration.
-    phantom: std::marker::PhantomData<&'a Connection>,
+    connection: &'a RefCell<Connection>
 }
 
 impl<'a> SqlDatabaseStepApplier<'a> {
-    pub fn new(schema_name: &str) -> SqlDatabaseStepApplier {
-        SqlDatabaseStepApplier { schema_name: String::from(schema_name), phantom: std::marker::PhantomData }
+    pub fn new(schema_name: &str, connection: &'a RefCell<Connection>) -> SqlDatabaseStepApplier<'a> {
+        SqlDatabaseStepApplier { schema_name: String::from(schema_name), connection }
     }
 
     fn make_sql_string(&self, migration: BarrelMigration) -> String {
@@ -26,10 +23,7 @@ impl<'a> SqlDatabaseStepApplier<'a> {
 
 #[allow(unused, dead_code)]
 impl<'a> DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier<'a> {
-    type ErrorType = SqlError;
-    type ConnectionType = &'a mut Connection;
-
-    fn apply(&self, connection: &mut Connection, step: SqlMigrationStep) -> Result<(), SqlError> {
+    fn apply(&self, step: SqlMigrationStep) -> Result<(), SqlError> {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
         let sql_string = match dbg!(step) {
@@ -92,16 +86,11 @@ impl<'a> DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepAppli
             }
         };
         dbg!(&sql_string);
-        let result = connection.execute(&sql_string, NO_PARAMS);
+
+        self.connection.borrow_mut().query_raw(&sql_string, &[])?;
         // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
-        match dbg!(result) {
-            Ok(_) => Ok(()),
-            Err(rusqlite::Error::ExecuteReturnedResults) => Ok(()), // renames return results and crash the driver ..
-            e @ Err(_) => {
-                e.unwrap();
-                Ok(())
-            }
-        }
+
+        Ok(())
     }
 }
 

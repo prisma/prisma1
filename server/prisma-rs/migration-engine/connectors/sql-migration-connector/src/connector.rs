@@ -3,52 +3,41 @@ use database_inspector::relational::{ RelationalIntrospectionResult, RelationalI
 use prisma_query::{error::Error as SqlError, transaction::Connection};
 use crate::*;
 use migration_connector::*;
+use std::cell::RefCell;
 
-#[allow(unused, dead_code)]
 pub struct SqlMigrationConnector<'a> {
     schema_name: String,
     migration_persistence: SqlMigrationPersistence<'a>,
-    sql_database_migration_steps_inferrer: SqlDatabaseMigrationStepsInferrer,
+    sql_database_migration_steps_inferrer: SqlDatabaseMigrationStepsInferrer<'a>,
     database_step_applier: SqlDatabaseStepApplier<'a>,
     destructive_changes_checker: SqlDestructiveChangesChecker,
-    applier: SqlMigrationApplier
+    applier: SqlMigrationApplier,
+    connection: &'a RefCell<Connection>
 }
 
-// TODO FIXME 
+
 impl<'a> SqlMigrationConnector<'a> {
-    pub fn new(schema_name: &'a str) -> SqlMigrationConnector<'a> {
-        let migration_persistence = SqlMigrationPersistence::new();
-        let sql_database_migration_steps_inferrer = SqlDatabaseMigrationStepsInferrer {
-            schema_name: String::from(schema_name),
-        };
-        let database_step_applier = SqlDatabaseStepApplier::new(
-            schema_name,
-        );
-        let destructive_changes_checker = SqlDestructiveChangesChecker {};
+    pub fn new(schema_name: &str, connection: &'a RefCell<Connection>) -> SqlMigrationConnector<'a> {
+        let migration_persistence = SqlMigrationPersistence::new(connection);
+        let sql_database_migration_steps_inferrer = SqlDatabaseMigrationStepsInferrer::new(schema_name, connection);
+        let database_step_applier = SqlDatabaseStepApplier::new(schema_name, connection);
+        let destructive_changes_checker = SqlDestructiveChangesChecker::new();
+        let applier = SqlMigrationApplier::new(schema_name);
 
         SqlMigrationConnector {
+            connection,
             schema_name: String::from(schema_name),
-            migration_persistence,
-            sql_database_migration_steps_inferrer,
-            database_step_applier,
-            destructive_changes_checker,
-            applier: SqlMigrationApplier { schema_name: String::from(schema_name) }
+            migration_persistence: migration_persistence,
+            sql_database_migration_steps_inferrer: sql_database_migration_steps_inferrer,
+            database_step_applier: database_step_applier,
+            destructive_changes_checker: destructive_changes_checker,
+            applier: applier
         }
-
     }
 }
 
-impl<'a> MigrationConnector<'a> for SqlMigrationConnector<'a> {
-    type ConnectionType = &'a mut Connection;
-    type ErrorType = SqlError;
-    type DatabaseMigrationStep = SqlMigrationStep;
-    type MigrationPersistenceType = SqlMigrationPersistence<'a>;
-    type MigrationApplierType = SqlMigrationApplier;
-    type DatabaseMigrationStepsApplierType = SqlDatabaseStepApplier<'a>;
-    type DatabaseMigrationStepsInferrerType = SqlDatabaseMigrationStepsInferrer;
-    type DatabaseDestructiveChangesCheckerType = SqlDestructiveChangesChecker;
-
-    fn initialize(&self, connection: &mut Connection) -> Result<(), SqlError> {
+impl<'a> MigrationConnector<SqlMigrationStep> for SqlMigrationConnector<'a> {
+    fn initialize(&self) -> Result<(), SqlError> {
         let mut m = barrel::Migration::new().schema(self.schema_name.clone());
         m.create_table_if_not_exists("_Migration", |t| {
             t.add_column("revision", types::primary());
@@ -66,34 +55,35 @@ impl<'a> MigrationConnector<'a> for SqlMigrationConnector<'a> {
 
         let sql_str = dbg!(m.make::<Sqlite>());
 
-        dbg!(connection.query_raw(&sql_str, &[]))?;
+        dbg!(self.connection.borrow_mut().query_raw(&sql_str, &[]))?;
 
         Ok(())
     }
 
-    fn reset(&self, connection: &mut Connection) -> Result<(), SqlError> {
+    fn reset(&self) -> Result<(), SqlError> {
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
 
+        // This should probably do something.
         Ok(())
     }
 
-    fn migration_persistence(&self) -> &SqlMigrationPersistence<'a> {
+    fn migration_persistence(&self) -> &MigrationPersistence {
         &self.migration_persistence
     }
 
-    fn database_steps_inferrer(&self) -> &SqlDatabaseMigrationStepsInferrer {
+    fn database_steps_inferrer(&self) -> &DatabaseMigrationStepsInferrer<SqlMigrationStep> {
         &self.sql_database_migration_steps_inferrer
     }
 
-    fn database_step_applier(&self) -> &SqlDatabaseStepApplier<'a> {
+    fn database_step_applier(&self) -> &DatabaseMigrationStepApplier<SqlMigrationStep> {
         &self.database_step_applier
     }
 
-    fn destructive_changes_checker(&self) -> &SqlDestructiveChangesChecker {
+    fn destructive_changes_checker(&self) -> &DestructiveChangesChecker<SqlMigrationStep> {
         &self.destructive_changes_checker
     }
 
-    fn migration_applier(&self) -> &SqlMigrationApplier {
+    fn migration_applier(&self) -> &MigrationApplier<SqlMigrationStep> {
         &self.applier
     }
 }

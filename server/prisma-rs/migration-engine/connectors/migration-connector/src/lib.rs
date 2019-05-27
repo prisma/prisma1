@@ -7,61 +7,40 @@ pub use migration_applier::*;
 use serde::Serialize;
 use std::fmt::Debug;
 pub use steps::MigrationStep;
-use database_inspector::{IntrospectionResult as IntrospectionResultBase, IntrospectionConnector};
+use database_inspector::{SqlError}; // TODO: Replace by own error type for this crate.
 
 #[macro_use]
 extern crate serde_derive;
 
-pub trait MigrationConnector<'a> {
-    // TODO: Most of these associated types are dynamic
-    // because of the result error type. It would be smart to introduce a
-    // custom but fixed Error type for this crate.
-    type ConnectionType;
-    type ErrorType;
+// TODO: Not sure if generic here is a good idea.
+pub trait MigrationConnector<InternalStepType: DatabaseMigrationStepExt> {
 
-    type DatabaseMigrationStep: DatabaseMigrationStepExt + 'a;
-    type MigrationPersistenceType: MigrationPersistence + 'a;
-    type MigrationApplierType: MigrationApplier<Self::DatabaseMigrationStep> + 'a;
-    type DatabaseMigrationStepsApplierType: DatabaseMigrationStepApplier<Self::DatabaseMigrationStep> + 'a;
-    type DatabaseMigrationStepsInferrerType: DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep> + 'a;
-    type DatabaseDestructiveChangesCheckerType: DestructiveChangesChecker<Self::DatabaseMigrationStep> + 'a;
+    fn initialize(&self) -> Result<(), SqlError>;
+    fn reset(&self) -> Result<(), SqlError>;
 
-    fn initialize(&self, connection: Self::ConnectionType) -> Result<(), Self::ErrorType>;
+    fn migration_persistence(&self) -> &MigrationPersistence;
+    fn database_steps_inferrer(&self) -> &DatabaseMigrationStepsInferrer<InternalStepType>;
+    fn database_step_applier(&self) -> &DatabaseMigrationStepApplier<InternalStepType>;
+    fn destructive_changes_checker(&self) -> &DestructiveChangesChecker<InternalStepType>;
 
-    fn reset(&self, connection: Self::ConnectionType) -> Result<(), Self::ErrorType>;
-
-    fn migration_persistence(&self) -> &Self::MigrationPersistenceType;
-    fn database_steps_inferrer(&self) -> &Self::DatabaseMigrationStepsInferrerType;
-    fn database_step_applier(&self) -> &Self::DatabaseMigrationStepsApplierType;
-    fn destructive_changes_checker(&self) -> &Self::DatabaseDestructiveChangesCheckerType;
-
-    fn migration_applier(&self) -> &Self::MigrationApplierType;
+    fn migration_applier(&self) -> &MigrationApplier<InternalStepType>;
 }
 
 pub trait DatabaseMigrationStepExt: Debug + Serialize {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
-    type DatabaseSchemaType;
-
     fn infer(&self, 
     previous: &Schema, 
-    next: &Schema, 
-    previous_database: &Self::DatabaseSchemaType, 
-    next_database: &Self::DatabaseSchemaType, 
-    steps: Vec<MigrationStep>) -> Vec<T>;
+    next: &Schema,
+    steps: Vec<MigrationStep>) -> Result<Vec<T>, SqlError>;
 }
 
 pub trait DatabaseMigrationStepApplier<T> {
-    type ErrorType;
-    type ConnectionType;
-
-    fn apply(&self, connection: Self::ConnectionType, step: T) -> Result<(), Self::ErrorType>;
+    fn apply(&self, step: T) -> Result<(), SqlError>;
 }
 
 pub trait DestructiveChangesChecker<T> {
-    type ErrorType;
-    type ConnectionType;
-    fn check(&self, connection: Self::ConnectionType, steps: Vec<T>) -> Result<Vec<MigrationResult>, Self::ErrorType>;
+    fn check(&self, steps: Vec<T>) -> Result<Vec<MigrationResult>, SqlError>;
 }
 
 pub enum MigrationResult {
@@ -84,22 +63,19 @@ pub struct MigrationError {
 }
 
 pub trait MigrationPersistence {
-    type ErrorType;
-    type ConnectionType;
-
     // returns the last successful Migration
-    fn last(&self, connection: Self::ConnectionType) -> Result<Migration, Self::ErrorType>;
+    fn last(&self) -> Result<Migration, SqlError>;
 
-    fn by_name(&self, connection: Self::ConnectionType, name: &str) -> Result<Migration, Self::ErrorType>;
+    fn by_name(&self, name: &str) -> Result<Migration, SqlError>;
 
     // this power the listMigrations command
-    fn load_all(&self, connection: Self::ConnectionType) -> Result<Vec<Migration>, Self::ErrorType>;
+    fn load_all(&self) -> Result<Vec<Migration>, SqlError>;
 
     // writes the migration to the Migration table
-    fn create(&self, connection: Self::ConnectionType, migration: Migration) -> Result<Migration, Self::ErrorType>;
+    fn create(&self, migration: Migration) -> Result<Migration, SqlError>;
 
     // used by the MigrationApplier to write the progress of a Migration into the database
-    fn update(&self, connection: Self::ConnectionType, params: &MigrationUpdateParams) -> Result<Migration, Self::ErrorType>;
+    fn update(&self, params: &MigrationUpdateParams) -> Result<Migration, SqlError>;
 }
 
 #[derive(Debug, PartialEq, Clone)]

@@ -568,6 +568,7 @@ dependencies = [
 name = "database-inspector"
 version = "0.1.0"
 dependencies = [
+ "barrel 0.5.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "datamodel 0.1.0",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces)",
  "rusqlite 0.18.0 (git+https://github.com/pimeys/rusqlite)",
@@ -1124,6 +1125,7 @@ dependencies = [
  "migration-connector 0.1.0",
  "nullable 0.1.0",
  "prisma-models 0.0.0",
+ "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces)",
  "serde 1.0.91 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.91 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1724,7 +1726,7 @@ dependencies = [
 [[package]]
 name = "prisma-query"
 version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces#d296dbcd31b28e50801f99620236a74c839759ec"
+source = "git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces#7131c180009e6452ec68222036f722113725ba0d"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -1,6 +1,7 @@
 use crate::migration_engine::MigrationEngine;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use migration_connector::*;
 
 pub trait MigrationCommand {
     type Input: DeserializeOwned;
@@ -8,5 +9,5 @@ pub trait MigrationCommand {
 
     fn new(input: Self::Input) -> Box<Self>;
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output;
+    fn execute<T: DatabaseMigrationStepExt>(&self, engine: &MigrationEngine<T>) -> Self::Output;
 }

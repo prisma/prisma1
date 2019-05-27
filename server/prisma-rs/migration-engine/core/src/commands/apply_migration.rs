@@ -15,7 +15,8 @@ impl MigrationCommand for ApplyMigrationCommand {
         Box::new(ApplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    // TODO: Use Result Type and Remove unwrap calls.
+    fn execute<T: DatabaseMigrationStepExt>(&self, engine: &MigrationEngine<T>) -> Self::Output {
         println!("{:?}", self.input);
         let connector = engine.connector();
         let current_data_model = connector
@@ -31,18 +32,18 @@ impl MigrationCommand for ApplyMigrationCommand {
         let database_migration_steps =
             connector
                 .database_steps_inferrer()
-                .infer(&current_data_model, &next_data_model, self.input.steps.clone());
+                .infer(&current_data_model, &next_data_model, self.input.steps.clone()).unwrap();
 
         let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
 
         let mut migration = Migration::new(self.input.migration_id.clone());
         migration.datamodel_steps = self.input.steps.clone();
         migration.database_steps = database_steps_json.to_string();
-        let saved_migration = connector.migration_persistence().create(migration);
+        let saved_migration = connector.migration_persistence().create(migration).unwrap();
 
         connector
             .migration_applier()
-            .apply_steps(saved_migration, database_migration_steps);
+            .apply_steps(saved_migration, database_migration_steps, connector);
 
         ApplyMigrationOutput {
             datamodel_steps: self.input.steps.clone(),

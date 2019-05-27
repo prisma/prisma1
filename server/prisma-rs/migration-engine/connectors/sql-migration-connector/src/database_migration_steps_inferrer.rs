@@ -3,42 +3,51 @@ use database_inspector::{
     relational::{
         RelationalIntrospectionConnector, RelationalIntrospectionResult, SchemaInfo as DatabaseSchema,
         TableInfo as Table,
+        sqlite::SqlLiteConnector
     },
     IntrospectionConnector,
 };
 use datamodel::*;
 use migration_connector::{steps::*, *};
 use prisma_query::{error::Error as SqlError, transaction::Connection};
+use std::cell::RefCell;
+use std::ops::DerefMut;
 
-pub struct SqlDatabaseMigrationStepsInferrer {
-    pub schema_name: String,
+pub struct SqlDatabaseMigrationStepsInferrer<'a> {
+    schema_name: String,
+    connection: &'a RefCell<Connection>,
+    introspector: RelationalIntrospectionConnector, 
 }
 
 #[allow(unused, dead_code)]
-impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationStepsInferrer {
-    type DatabaseSchemaType = DatabaseSchema;
-
+impl<'a> DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationStepsInferrer<'a> {
     fn infer(
         &self,
         previous: &Schema,
         next: &Schema,
-        previous_database: &DatabaseSchema,
-        next_database: &DatabaseSchema,
         steps: Vec<MigrationStep>,
-    ) -> Vec<SqlMigrationStep> {
-        //let current_database_schema = self.inspector.introspect(self.connection, &self.schema_name)?.schema;
-        //let expected_database_schema = DatabaseSchemaCalculator::calculate(next).schema;
-        let steps = DatabaseSchemaDiffer::diff(&previous_database, &next_database, &self.schema_name);
+    ) -> Result<Vec<SqlMigrationStep>, SqlError> {
+        let current_database_schema = self.introspector.introspect(self.connection.borrow_mut().deref_mut(), &self.schema_name)?.schema;
+        let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
+        let steps = DatabaseSchemaDiffer::diff(&current_database_schema, &expected_database_schema, &self.schema_name);
         let is_sqlite = true;
         if is_sqlite {
-            self.fix_stupid_sqlite(steps, &previous_database, &next_database)
+            Ok(self.fix_stupid_sqlite(steps, &current_database_schema, &expected_database_schema))
         } else {
-            steps
+            Ok(steps)
         }
     }
 }
 
-impl SqlDatabaseMigrationStepsInferrer {
+impl<'a> SqlDatabaseMigrationStepsInferrer<'a> {
+    pub fn new(schema_name: &str, connection: &'a RefCell<Connection>) -> SqlDatabaseMigrationStepsInferrer<'a> {
+        SqlDatabaseMigrationStepsInferrer {
+            schema_name: String::from(schema_name),
+            connection: connection,
+            introspector: RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new())) // TODO: This should not be sqlite specific.
+        }
+    }
+
     fn fix_stupid_sqlite(
         &self,
         steps: Vec<SqlMigrationStep>,
