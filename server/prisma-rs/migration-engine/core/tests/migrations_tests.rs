@@ -58,7 +58,7 @@ fn migrate_to(
         force: false,
     };
     let cmd = ApplyMigrationCommand::new(input);
-    let output = cmd.execute(&engine);
+    let _output = cmd.execute(&engine);
 
     let inspector = RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new()));
     inspector

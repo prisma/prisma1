@@ -9,6 +9,7 @@ use prisma_query::{
 use sql_migration_connector::{SqlMigrationConnector, SqlMigrationStep};
 use std::panic;
 
+#[allow(unused)]
 pub fn parse(datamodel_string: &str) -> datamodel::Schema {
     match datamodel::parse(datamodel_string) {
         Ok(s) => s,
@@ -22,8 +23,10 @@ pub fn parse(datamodel_string: &str) -> datamodel::Schema {
     }
 }
 
+#[allow(unused)]
 const SCHEMA: &str = "migration_tests";
 
+#[allow(unused)]
 pub fn run_test_with_engine<T>(test: T) -> ()
 where
     T: FnOnce(Box<MigrationEngine<SqlMigrationStep>>, &std::cell::RefCell<Connection>) -> () + panic::UnwindSafe,
@@ -36,33 +39,36 @@ where
     let client = Sqlite::new(path, 32, false).unwrap();
 
     // SETUP DATABASE
-    let mut migration = barrel::Migration::new().schema(SCHEMA);
+    let migration = barrel::Migration::new().schema(SCHEMA);
     let full_sql = migration.make::<barrel::backend::Sqlite>();
 
-    client.with_connection(SCHEMA, |connection| {
-        for sql in full_sql.split(";") {
-            if sql != "" {
-                connection.query_raw(&sql, &[]).unwrap();
+    client
+        .with_connection(SCHEMA, |connection| {
+            for sql in full_sql.split(";") {
+                if sql != "" {
+                    connection.query_raw(&sql, &[]).unwrap();
+                }
             }
-        }
-        Ok(())
-    });
+            Ok(())
+        })
+        .unwrap();
 
     // Actual test.
-    client.with_shared_connection(SCHEMA, |connection| {
-        // SETUP
+    client
+        .with_shared_connection(SCHEMA, |connection| {
+            // SETUP
 
-        let connector = SqlMigrationConnector::new(SCHEMA, connection);
-        let engine = MigrationEngine::<SqlMigrationStep>::new(&connector, SCHEMA);
-        let connector = engine.connector();
-        connector.reset();
-        connector.initialize();
+            let connector = SqlMigrationConnector::new(SCHEMA, connection);
+            let engine = MigrationEngine::<SqlMigrationStep>::new(&connector, SCHEMA);
+            let connector = engine.connector();
+            connector.initialize().unwrap();
 
-        // TEST
-        test(Box::new(engine), connection);
+            // TEST
+            test(Box::new(engine), connection);
 
-        Ok(())
-    });
+            Ok(())
+        })
+        .unwrap();
 }
 
 /// Removes the database file from disk.

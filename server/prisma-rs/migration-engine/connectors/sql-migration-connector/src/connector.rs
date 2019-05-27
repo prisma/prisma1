@@ -60,7 +60,7 @@ impl<'a> MigrationConnector<SqlMigrationStep> for SqlMigrationConnector<'a> {
     fn reset(&self) -> Result<(), SqlError> {
         // This should probably do something.
         // let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
-        unimplemented!("TODO");
+        unimplemented!("If the only purpose is for unit tests, reset should not exist on connector.");
     }
 
     fn migration_persistence(&self) -> &MigrationPersistence {

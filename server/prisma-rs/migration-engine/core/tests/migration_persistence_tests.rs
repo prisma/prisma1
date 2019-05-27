@@ -18,7 +18,7 @@ fn last_should_return_none_if_there_is_no_migration() {
 fn last_must_return_none_if_there_is_no_successful_migration() {
     run_test_with_engine(|engine, _| {
         let persistence = engine.connector().migration_persistence();
-        persistence.create(Migration::new("my_migration".to_string()));
+        persistence.create(Migration::new("my_migration".to_string())).unwrap();
         let loaded = persistence.last();
         assert_eq!(loaded.is_ok(), false);
     });
@@ -83,7 +83,7 @@ fn update_must_work() {
         params.errors = vec!["err1".to_string(), "err2".to_string()];
         params.finished_at = Some(Migration::timestamp_without_nanos());
 
-        persistence.update(&params);
+        persistence.update(&params).unwrap();
 
         let loaded = persistence.last().unwrap();
         assert_eq!(loaded.status, params.status);
