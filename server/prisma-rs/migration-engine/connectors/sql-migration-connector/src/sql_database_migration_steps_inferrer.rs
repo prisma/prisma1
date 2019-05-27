@@ -50,7 +50,12 @@ impl SqlDatabaseMigrationStepsInferrer {
 
     fn needs_fix(&self, alter_table: &AlterTable) -> bool {
         let change_that_does_not_work_on_sqlite = alter_table.changes.iter().find(|change| match change {
-            TableChange::AddColumn(_) => false,
+            TableChange::AddColumn(add_column) => {
+                // sqlite does not allow adding not null columns without a default value even if the table is empty
+                // hence we just use our normal migration process
+                // https://laracasts.com/discuss/channels/general-discussion/migrations-sqlite-general-error-1-cannot-add-a-not-null-column-with-default-value-null
+                add_column.column.required
+            },
             TableChange::DropColumn(_) => true,
             TableChange::AlterColumn(_) => true,
         });

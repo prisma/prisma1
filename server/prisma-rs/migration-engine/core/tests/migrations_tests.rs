@@ -1,8 +1,6 @@
 #![allow(non_snake_case)]
 mod test_harness;
 use database_inspector::*;
-use migration_core::commands::*;
-use migration_core::*;
 use test_harness::*;
 
 #[test]
@@ -323,33 +321,6 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
         let scalar_list_table = result.table_bang("A_strings");
         let node_id_column = scalar_list_table.column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::Int);
+        assert_eq!(scalar_list_table.primary_key_columns, vec!["nodeId", "position"]);
     });
-}
-
-
-
-fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema {
-    let project_info = "the-project-info".to_string();
-    let migration_id = "the-migration-id".to_string();
-
-    let input = InferMigrationStepsInput {
-        project_info: project_info.clone(),
-        migration_id: migration_id.clone(),
-        data_model: datamodel.to_string(),
-    };
-    let cmd = InferMigrationStepsCommand::new(input);
-    let output = cmd.execute(&engine);
-
-    let input = ApplyMigrationInput {
-        project_info: project_info,
-        migration_id: migration_id,
-        steps: output.datamodel_steps,
-        force: false,
-    };
-    let cmd = ApplyMigrationCommand::new(input);
-    let engine = MigrationEngine::new();
-    let output = cmd.execute(&engine);
-
-    let inspector = engine.connector().database_inspector();
-    inspector.introspect(&engine.schema_name())
 }

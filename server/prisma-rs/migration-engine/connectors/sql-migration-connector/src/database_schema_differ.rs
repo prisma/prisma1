@@ -105,6 +105,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
     }
 
     fn alter_tables(&self) -> Vec<AlterTable> {
+        // TODO: this does not diff primary key columns yet
         let mut result = Vec::new();
         for previous_table in &self.previous.tables {
             if let Some(next_table) = self.next.table(&previous_table.name) {
