@@ -132,6 +132,10 @@ pub enum NestedValue {
         kind: String,
         map: ValueMap,
     },
+    Connect {
+        name: String,
+        list: Vec<ValueMap>,
+    },
     Upsert {
         name: String,
         create: ValueMap,
@@ -156,14 +160,40 @@ impl ValueMap {
 
             // These are actions (create, update, ...)
             for (action, nested) in obj.iter() {
-                vec.push(NestedValue::Simple {
-                    name: name.clone(),
-                    kind: action.clone(),
-                    map: match nested {
-                        Value::Object(obj) => ValueMap(obj.clone()),
-                        _ => unreachable!(),
+                vec.push(match nested {
+                    Value::Object(obj) => NestedValue::Simple {
+                        name: name.clone(),
+                        kind: action.clone(),
+                        map: ValueMap(obj.clone())
                     },
+                    Value::List(list) => NestedValue::Connect {
+                        name: name.clone(),
+                        list: list.iter().map(|item| match item {
+                            Value::Object(obj) => ValueMap(obj.clone()),
+                            _ => unreachable!(),
+                        }).collect(),
+                    },
+                    _ => unreachable!(),
                 });
+
+                // vec.push(NestedValue::Simple {
+                //     name: name.clone(),
+                //     kind: action.clone(),
+                //     map: match dbg!(nested) {
+                //         Value::Object(obj) => ValueMap(obj.clone()),
+                //         Value::List(value) => ValueMap::init(
+                //             &value
+                //                 .iter()
+                //                 .zip(0..)
+                //                 .fold(vec![], |mut vec, (item, n)| {
+                //                     vec.push((format!("{}_{}", action, n), item.clone()));
+                //                     vec
+                //                 })),
+                //         _ => unreachable!()
+                //         // Value::List(list) => ValueMap::init(&list.iter().map(|v| (name.clone(), v.clone())).collect()),
+                //         // value => ValueMap::init(&vec![(name.clone(), value.clone())]),
+                //     },
+                // });
             }
         }
 

@@ -222,8 +222,7 @@ fn build_nested_root<'f>(
         let model = Arc::clone(&relation_field.related_model());
         let non_list_args = values.to_prisma_values().into();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_mutactions =
-            build_nested_root(&name, &nested, model, top_level)?;
+        let nested_mutactions = build_nested_root(&name, &nested, model, top_level)?;
 
         match kind.as_str() {
             "create" => {
@@ -238,6 +237,9 @@ fn build_nested_root<'f>(
                     nested_mutactions,
                 });
             }
+            "connect" => {
+                panic!("I'm not great with human connection");
+            }
             _ => unimplemented!(),
         }
     }
@@ -245,58 +247,6 @@ fn build_nested_root<'f>(
     Ok(collection)
 }
 
-/// Evaluate a tree of mutations
-fn eval_tree<'f>(
-    args: &'f BTreeMap<String, ScopedArgNode<'f>>,
-    model: ModelRef,
-    top_level: &Operation,
-) -> NestedMutactions {
-    let mut mutations: NestedMutactions = Default::default();
+fn handle_simple_nested(nested: NestedValue, model: ModelRef, top_level: &Operation) {
 
-    for (name, node) in args.iter() {
-        dbg!(&name);
-        let creates: &BTreeMap<_, _> = &node.create;
-        // let (nested, attrs) = ScopedArgNode::filter_nested(&creates);
-
-        mutations.creates.push(build_nested_create(
-            &name,
-            Arc::clone(&model),
-            top_level,
-            unimplemented!(),
-            unimplemented!(),
-        ));
-    }
-
-    mutations
-}
-
-/// Build a single NestedCreateNode
-fn build_nested_create<'f>(
-    name: &'f str,
-    model: ModelRef,
-    top_level: &Operation,
-    attrs: &'f BTreeMap<String, PrismaValue>,
-    nested: &'f BTreeMap<String, ScopedArgNode<'f>>,
-) -> NestedCreateNode {
-    let non_list_args = attrs.clone().into();
-
-    let field = dbg!(model.fields().find_from_all(dbg!(&name)));
-    let relation_field = dbg!(match &field {
-        Ok(ModelField::Relation(f)) => {
-            let model = f.related_model();
-            Arc::clone(&f)
-        }
-        _ => unreachable!(),
-    });
-
-    NestedCreateNode {
-        non_list_args,
-        list_args: Default::default(),
-        top_is_create: match top_level {
-            Operation::Create => true,
-            _ => false,
-        },
-        relation_field,
-        nested_mutactions: eval_tree(nested, Arc::clone(&model), top_level),
-    }
 }
