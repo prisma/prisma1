@@ -24,6 +24,7 @@ pub struct ScalarFieldTemplate {
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
+    pub default_value: Option<PrismaValue>,
 
     #[serde(alias = "enum")]
     pub internal_enum: Option<InternalEnum>,
@@ -35,7 +36,6 @@ pub struct ScalarField {
     pub type_identifier: TypeIdentifier,
     pub is_required: bool,
     pub is_list: bool,
-    pub is_unique: bool,
     pub is_hidden: bool,
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
@@ -43,6 +43,9 @@ pub struct ScalarField {
     pub behaviour: Option<FieldBehaviour>,
     #[debug_stub = "#ModelWeakRef#"]
     pub model: ModelWeakRef,
+    pub default_value: Option<PrismaValue>,
+
+    is_unique: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Eq, PartialEq)]
@@ -81,6 +84,36 @@ pub struct Sequence {
 }
 
 impl ScalarField {
+    pub fn new(
+        name: String,
+        type_identifier: TypeIdentifier,
+        is_required: bool,
+        is_list: bool,
+        is_hidden: bool,
+        is_auto_generated: bool,
+        is_unique: bool,
+        manifestation: Option<FieldManifestation>,
+        internal_enum: Option<InternalEnum>,
+        behaviour: Option<FieldBehaviour>,
+        model: ModelWeakRef,
+        default_value: Option<PrismaValue>,
+    ) -> Self {
+        ScalarField {
+            name,
+            type_identifier,
+            is_required,
+            is_list,
+            is_hidden,
+            is_auto_generated,
+            is_unique,
+            manifestation,
+            internal_enum,
+            behaviour,
+            model,
+            default_value,
+        }
+    }
+
     pub fn model(&self) -> ModelRef {
         self.model
             .upgrade()
@@ -128,6 +161,10 @@ impl ScalarField {
 
     pub fn is_writable(&self) -> bool {
         !self.is_id() && !self.is_created_at() && !self.is_updated_at()
+    }
+
+    pub fn is_unique(&self) -> bool {
+        self.is_unique || self.is_id()
     }
 
     pub fn db_name(&self) -> &str {

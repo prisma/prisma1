@@ -106,6 +106,7 @@ where
 }
 
 /// Lowercases first letter, essentially.
+/// Assumes 1-byte characters.
 pub fn camel_case<T>(s: T) -> String
 where
   T: Into<String>,
@@ -113,10 +114,25 @@ where
   let s = s.into();
 
   // This is safe to unwrap because of the validation regex for model / field
-  // names used in the data model, which guarantees ASCII.
+  // names used in the data model, which essentially guarantees ASCII.
   let first_char = s.chars().next().unwrap();
 
   format!("{}{}", first_char.to_lowercase(), s[1..].to_owned())
+}
+
+/// Capitalizes first character.
+/// Assumes 1-byte characters.
+pub fn capitalize<T>(s: T) -> String
+where
+  T: Into<String>,
+{
+  let s = s.into();
+
+  // This is safe to unwrap because of the validation regex for model / field
+  // names used in the data model, which essentially guarantees ASCII.
+  let first_char = s.chars().next().unwrap();
+
+  format!("{}{}", first_char.to_uppercase(), s[1..].to_owned())
 }
 
 impl From<&InternalEnum> for EnumType {

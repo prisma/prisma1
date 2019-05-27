@@ -20,4 +20,12 @@ impl ArgumentBuilder {
             .where_unique_object_type(model)
             .map(|input| argument("where", InputType::object(input)))
     }
+
+    pub fn create_arguments(&self, model: ModelRef) -> Option<Vec<Argument>> {
+        // inputTypesBuilder.inputObjectTypeForCreate(model).map { args =>
+        //   List(Argument[Any]("data", args))
+        // }
+        // self.input_type_builder.create_input_type()
+        unimplemented!()
+    }
 }

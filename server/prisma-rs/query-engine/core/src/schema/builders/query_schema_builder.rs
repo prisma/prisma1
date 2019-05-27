@@ -2,7 +2,7 @@ use super::*;
 use prisma_models::{InternalDataModelRef, ModelRef};
 use std::sync::Arc;
 
-/// Build mode for schema generation.
+/// WIP. Build mode for schema generation.
 #[derive(Debug, Copy, Clone)]
 pub enum BuildMode {
   /// Prisma 1 compatible schema generation.
@@ -139,23 +139,17 @@ impl<'a> QuerySchemaBuilder<'a> {
   }
 
   fn create_item_field(&self, model: ModelRef) -> Field {
-    // Field(
-    //   s"create${model.name}",
-    //   fieldType = objectTypes(model.name),
-    //   arguments = argumentsBuilder.getSangriaArgumentsForCreate(model).getOrElse(List.empty),
-    //   resolve = ctx => {
-    //     val mutation = Create(
-    //       model = model,
-    //       project = project,
-    //       args = ctx.args,
-    //       selectedFields = ctx.getSelectedFields(model),
-    //       dataResolver = masterDataResolver
-    //     )
-    //     val mutationResult = ClientMutationRunner.run(mutation, databaseMutactionExecutor, sideEffectMutactionExecutor, mutactionVerifier)
-    //     mapReturnValueResult(mutationResult, ctx.args)
-    //   }
-    // )
+    let args = self
+      .argument_builder
+      .create_arguments(Arc::clone(&model))
+      .unwrap_or_else(|| vec![]);
 
-    unimplemented!()
+    field(
+      format!("create{}", model.name),
+      args,
+      OutputType::opt(OutputType::object(
+        self.object_type_builder.map_model_object_type(&model),
+      )),
+    )
   }
 }
