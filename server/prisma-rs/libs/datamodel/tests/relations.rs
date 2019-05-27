@@ -34,6 +34,29 @@ fn resolve_relation() {
 }
 
 #[test]
+fn resolve_related_field() {
+    let dml = r#"
+    model User {
+        firstName: String
+        posts: Post[]
+    }
+
+    model Post {
+        text: String
+        user: User(firstName)
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    let post_model = schema.assert_has_model("Post");
+    post_model
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_relation_to_field("firstName");
+}
+
+#[test]
 fn resolve_enum_field() {
     let dml = r#"
     model User {
