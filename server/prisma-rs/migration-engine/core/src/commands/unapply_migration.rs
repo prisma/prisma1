@@ -15,7 +15,7 @@ impl MigrationCommand for UnapplyMigrationCommand {
         Box::new(UnapplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute<T: DatabaseMigrationStepExt>(&self, engine: &MigrationEngine<T>) -> Self::Output {
         println!("{:?}", self.input);
         UnapplyMigrationOutput {
             rolled_back: ListMigrationStepsOutput {

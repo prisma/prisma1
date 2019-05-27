@@ -232,7 +232,7 @@ pub enum Top {
 
 /// A prisma datamodel.
 #[derive(Debug)]
-pub struct Schema {
+pub struct Datamodel {
     /// All models, enums, or source config blocks.
     pub models: Vec<Top>,
     /// Top level comments.

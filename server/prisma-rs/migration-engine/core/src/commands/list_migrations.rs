@@ -16,11 +16,12 @@ impl MigrationCommand for ListMigrationStepsCommand {
         Box::new(ListMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute<T: DatabaseMigrationStepExt>(&self, engine: &MigrationEngine<T>) -> Self::Output {
         println!("{:?}", self.input);
         let migration_persistence = engine.connector().migration_persistence();
         migration_persistence
             .load_all()
+            .unwrap()
             .into_iter()
             .map(|mig| ListMigrationStepsOutput {
                 id: mig.name,

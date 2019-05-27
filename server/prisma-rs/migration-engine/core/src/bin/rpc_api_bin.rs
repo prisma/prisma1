@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use migration_core::rpc_api::RpcApi;
 
 fn main() {

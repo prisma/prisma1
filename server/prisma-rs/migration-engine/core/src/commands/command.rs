@@ -1,4 +1,5 @@
 use crate::migration_engine::MigrationEngine;
+use migration_connector::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
@@ -8,5 +9,5 @@ pub trait MigrationCommand {
 
     fn new(input: Self::Input) -> Box<Self>;
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output;
+    fn execute<T: DatabaseMigrationStepExt>(&self, engine: &MigrationEngine<T>) -> Self::Output;
 }

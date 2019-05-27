@@ -1,13 +1,17 @@
 #![allow(non_snake_case)]
 mod test_harness;
+use database_inspector::sql::{sqlite::*, *};
 use database_inspector::*;
 use migration_core::commands::*;
 use migration_core::*;
+use prisma_query::transaction::Connection;
+use sql_migration_connector::SqlMigrationStep;
+use std::ops::DerefMut;
 use test_harness::*;
 
 #[test]
 fn adding_a_scalar_field_must_work() {
-    run_test_with_engine(|engine| {
+    run_test_with_engine(|engine, connection| {
         let dm2 = r#"
             model Test {
                 id: String @primary
@@ -18,19 +22,24 @@ fn adding_a_scalar_field_must_work() {
                 dateTime: DateTime
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
-        let table = result.table_bang("Test");
-        table.columns.iter().for_each(|c| assert_eq!(c.is_required, true));
+        let result = migrate_to(connection, &engine, &dm2);
+        let table = result.table("Test").unwrap();
+        table.columns.iter().for_each(|c| assert_eq!(c.is_nullable, false));
 
-        assert_eq!(table.column_bang("int").tpe, ColumnType::Int);
-        assert_eq!(table.column_bang("float").tpe, ColumnType::Float);
-        assert_eq!(table.column_bang("boolean").tpe, ColumnType::Boolean);
-        assert_eq!(table.column_bang("string").tpe, ColumnType::String);
-        assert_eq!(table.column_bang("dateTime").tpe, ColumnType::DateTime);
+        // TODO: Add common test trait for column_bang
+        assert_eq!(table.column("int").unwrap().column_type, ColumnType::Int);
+        assert_eq!(table.column("float").unwrap().column_type, ColumnType::Float);
+        assert_eq!(table.column("boolean").unwrap().column_type, ColumnType::Boolean);
+        assert_eq!(table.column("string").unwrap().column_type, ColumnType::String);
+        assert_eq!(table.column("dateTime").unwrap().column_type, ColumnType::DateTime);
     });
 }
 
-fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema {
+fn migrate_to(
+    connection: &std::cell::RefCell<Connection>,
+    engine: &Box<MigrationEngine<SqlMigrationStep>>,
+    datamodel: &str,
+) -> DatabaseSchemaInfo {
     let project_info = "the-project-info".to_string();
     let migration_id = "the-migration-id".to_string();
 
@@ -49,9 +58,11 @@ fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema 
         force: false,
     };
     let cmd = ApplyMigrationCommand::new(input);
-    let engine = MigrationEngine::new();
-    let output = cmd.execute(&engine);
+    let _output = cmd.execute(&engine);
 
-    let inspector = engine.connector().database_inspector();
-    inspector.introspect(&engine.schema_name())
+    let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
+    inspector
+        .introspect(connection.borrow_mut().deref_mut(), &engine.schema_name())
+        .unwrap()
+        .schema
 }

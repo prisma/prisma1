@@ -1,26 +1,35 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
+use database_inspector::sql::ColumnType;
 use migration_connector::*;
-use rusqlite::{Connection, NO_PARAMS};
+use prisma_query::{error::Error as SqlError, transaction::Connection};
+use std::cell::RefCell;
 
-pub struct SqlDatabaseStepApplier {
-    connection: Connection,
+pub struct SqlDatabaseStepApplier<'a> {
     schema_name: String,
+    connection: &'a RefCell<Connection>,
 }
 
-impl SqlDatabaseStepApplier {
-    pub fn new(connection: Connection, schema_name: String) -> Self {
+impl<'a> SqlDatabaseStepApplier<'a> {
+    pub fn new(schema_name: &str, connection: &'a RefCell<Connection>) -> SqlDatabaseStepApplier<'a> {
         SqlDatabaseStepApplier {
+            schema_name: String::from(schema_name),
             connection,
-            schema_name,
         }
+    }
+
+    fn make_sql_string(&self, migration: BarrelMigration) -> String {
+        // TODO: this should pattern match on the connector type once we have this information available
+        migration.make::<barrel::backend::Sqlite>()
     }
 }
 
 #[allow(unused, dead_code)]
-impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
-    fn apply(&self, step: SqlMigrationStep) {
+impl<'a> DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier<'a> {
+    fn apply(&self, step: SqlMigrationStep) -> Result<(), SqlError> {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
+
+        dbg!("Calling migration step applier.");
 
         let sql_string = match dbg!(step) {
             SqlMigrationStep::CreateTable(CreateTable {
@@ -82,23 +91,11 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
             }
         };
         dbg!(&sql_string);
-        let result = self.connection.execute(&sql_string, NO_PARAMS);
-        // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
-        match dbg!(result) {
-            Ok(_) => {}
-            Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
-            e @ Err(_) => {
-                e.unwrap();
-                {}
-            }
-        }
-    }
-}
 
-impl SqlDatabaseStepApplier {
-    fn make_sql_string(&self, migration: BarrelMigration) -> String {
-        // TODO: this should pattern match on the connector type once we have this information available
-        migration.make::<barrel::backend::Sqlite>()
+        self.connection.borrow_mut().query_raw(&sql_string, &[])?;
+        // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
+
+        Ok(())
     }
 }
 

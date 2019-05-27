@@ -2,55 +2,41 @@ mod migration_applier;
 pub mod steps;
 
 use chrono::{DateTime, Utc};
-use datamodel::Schema;
+use database_inspector::SqlError;
+use datamodel::Datamodel;
 pub use migration_applier::*;
 use serde::Serialize;
 use std::fmt::Debug;
-use std::sync::Arc;
-pub use steps::MigrationStep;
-use database_inspector::DatabaseInspector;
+pub use steps::MigrationStep; // TODO: Replace by own error type for this crate.
 
 #[macro_use]
 extern crate serde_derive;
 
-pub trait MigrationConnector {
-    type DatabaseMigrationStep: DatabaseMigrationStepExt + 'static;
+// TODO: Not sure if generic here is a good idea.
+pub trait MigrationConnector<InternalStepType: DatabaseMigrationStepExt> {
+    fn initialize(&self) -> Result<(), SqlError>;
+    fn reset(&self) -> Result<(), SqlError>;
 
-    fn initialize(&self);
+    fn migration_persistence(&self) -> &MigrationPersistence;
+    fn database_steps_inferrer(&self) -> &DatabaseMigrationStepsInferrer<InternalStepType>;
+    fn database_step_applier(&self) -> &DatabaseMigrationStepApplier<InternalStepType>;
+    fn destructive_changes_checker(&self) -> &DestructiveChangesChecker<InternalStepType>;
 
-    fn reset(&self);
-
-    fn migration_persistence(&self) -> Arc<MigrationPersistence>;
-
-    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep>>;
-    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigrationStep>>;
-    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigrationStep>>;
-
-    fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigrationStep>> {
-        let applier = MigrationApplierImpl {
-            migration_persistence: self.migration_persistence(),
-            step_applier: self.database_step_applier(),
-        };
-        Box::new(applier)
-    }
-
-    fn database_inspector(&self) -> Box<DatabaseInspector> {
-        DatabaseInspector::empty()
-    }
+    fn migration_applier(&self) -> &MigrationApplier<InternalStepType>;
 }
 
 pub trait DatabaseMigrationStepExt: Debug + Serialize {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
-    fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<T>;
+    fn infer(&self, previous: &Datamodel, next: &Datamodel, steps: Vec<MigrationStep>) -> Result<Vec<T>, SqlError>;
 }
 
 pub trait DatabaseMigrationStepApplier<T> {
-    fn apply(&self, step: T);
+    fn apply(&self, step: T) -> Result<(), SqlError>;
 }
 
 pub trait DestructiveChangesChecker<T> {
-    fn check(&self, steps: Vec<T>) -> Vec<MigrationResult>;
+    fn check(&self, steps: Vec<T>) -> Result<Vec<MigrationResult>, SqlError>;
 }
 
 pub enum MigrationResult {
@@ -74,18 +60,18 @@ pub struct MigrationError {
 
 pub trait MigrationPersistence {
     // returns the last successful Migration
-    fn last(&self) -> Option<Migration>;
+    fn last(&self) -> Result<Migration, SqlError>;
 
-    fn by_name(&self, name: &str) -> Option<Migration>;
+    fn by_name(&self, name: &str) -> Result<Migration, SqlError>;
 
     // this power the listMigrations command
-    fn load_all(&self) -> Vec<Migration>;
+    fn load_all(&self) -> Result<Vec<Migration>, SqlError>;
 
     // writes the migration to the Migration table
-    fn create(&self, migration: Migration) -> Migration;
+    fn create(&self, migration: Migration) -> Result<Migration, SqlError>;
 
     // used by the MigrationApplier to write the progress of a Migration into the database
-    fn update(&self, params: &MigrationUpdateParams);
+    fn update(&self, params: &MigrationUpdateParams) -> Result<Migration, SqlError>;
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -95,7 +81,7 @@ pub struct Migration {
     pub status: MigrationStatus,
     pub applied: usize,
     pub rolled_back: usize,
-    pub datamodel: Schema,
+    pub datamodel: Datamodel,
     pub datamodel_steps: Vec<MigrationStep>,
     pub database_steps: String,
     pub errors: Vec<String>,
@@ -122,7 +108,7 @@ impl Migration {
             status: MigrationStatus::Pending,
             applied: 0,
             rolled_back: 0,
-            datamodel: Schema::empty(),
+            datamodel: Datamodel::empty(),
             datamodel_steps: Vec::new(),
             database_steps: "[]".to_string(),
             errors: Vec::new(),
