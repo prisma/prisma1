@@ -12,17 +12,19 @@ use std::sync::Arc;
 pub struct MigrationEngine<'a, T: DatabaseMigrationStepExt> {
     datamodel_migration_steps_inferrer: DataModelMigrationStepsInferrerImplWrapper,
     datamodel_calculator: DataModelCalculatorImpl,
-    connector: &'a MigrationConnector<T>
+    connector: &'a MigrationConnector<T>,
+    schema_name: String
 }
 
 impl<'a, T: DatabaseMigrationStepExt> std::panic::RefUnwindSafe for MigrationEngine<'a, T> {}
 
 impl<'a, T: DatabaseMigrationStepExt> MigrationEngine<'a, T> {
-    pub fn new(connector: &'a MigrationConnector<T>) -> MigrationEngine<'a, T> {
+    pub fn new(connector: &'a MigrationConnector<T>, schema_name: &str) -> MigrationEngine<'a, T> {
         let engine = MigrationEngine {
             datamodel_migration_steps_inferrer: DataModelMigrationStepsInferrerImplWrapper {},
             datamodel_calculator: DataModelCalculatorImpl {},
-            connector: connector
+            connector: connector,
+            schema_name: String::from(schema_name)
         };
         engine.connector().initialize().unwrap();
         engine
@@ -40,10 +42,8 @@ impl<'a, T: DatabaseMigrationStepExt> MigrationEngine<'a, T> {
         self.connector
     }
 
-    pub fn schema_name(&self) -> String {
-        let file_path = file!(); // todo: the sqlite file name must be taken from the config
-        let file_name = Path::new(file_path).file_stem().unwrap().to_str().unwrap();
-        file_name.to_string()
+    pub fn schema_name(&self) -> &str {
+        &self.schema_name
     }
 
     pub fn parse_datamodel(&self, datamodel_string: &String) -> Schema {

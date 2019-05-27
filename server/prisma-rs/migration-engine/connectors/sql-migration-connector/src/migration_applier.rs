@@ -28,6 +28,9 @@ impl MigrationApplier<SqlMigrationStep> for SqlMigrationApplier {
         migration_updates.status = MigrationStatus::InProgress;
         persistence.update(&migration_updates);
 
+        dbg!("Migration Steps");
+        dbg!(&steps);
+
         for step in steps {
             applier.apply(step)?;
             migration_updates.applied = migration_updates.applied + 1;

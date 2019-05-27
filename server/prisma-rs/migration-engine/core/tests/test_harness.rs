@@ -4,6 +4,7 @@ use migration_core::MigrationEngine;
 use std::panic;
 use sql_migration_connector::{SqlMigrationConnector, SqlMigrationStep};
 use prisma_query::{connector::*, transaction::{Connection, Connectional}};
+use barrel;
 
 pub fn parse(datamodel_string: &str) -> datamodel::Schema {
     match datamodel::parse(datamodel_string) {
@@ -31,11 +32,25 @@ where
     
     let client = Sqlite::new(path, 32, false).unwrap();
 
+    // SETUP DATABASE
+    let mut migration = barrel::Migration::new().schema(SCHEMA);
+    let full_sql = migration.make::<barrel::backend::Sqlite>();
+
+    client.with_connection(SCHEMA, |connection| {
+        for sql in full_sql.split(";") {
+            if sql != "" {
+                connection.query_raw(&sql, &[]).unwrap();
+            }
+        }
+        Ok(())
+    });
+
+    // Actual test.
     client.with_shared_connection(SCHEMA, |connection| {
         // SETUP
 
         let connector = SqlMigrationConnector::new(SCHEMA, connection);
-        let engine = MigrationEngine::<SqlMigrationStep>::new(&connector);
+        let engine = MigrationEngine::<SqlMigrationStep>::new(&connector, SCHEMA);
         let connector = engine.connector();
         connector.reset();
         connector.initialize();

@@ -43,7 +43,7 @@ impl MigrationCommand for ApplyMigrationCommand {
 
         connector
             .migration_applier()
-            .apply_steps(saved_migration, database_migration_steps, connector);
+            .apply_steps(saved_migration, database_migration_steps, connector).unwrap();
 
         ApplyMigrationOutput {
             datamodel_steps: self.input.steps.clone(),

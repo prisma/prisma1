@@ -28,8 +28,8 @@ fn last_must_return_none_if_there_is_no_successful_migration() {
 fn load_all_should_return_empty_if_there_is_no_migration() {
     run_test_with_engine(|engine, _| {
         let persistence = engine.connector().migration_persistence();
-        let result = persistence.load_all();
-        assert_eq!(result.is_err(), true);
+        let result = persistence.load_all().unwrap();
+        assert_eq!(result, vec![]);
     });
 }
 

@@ -50,7 +50,7 @@ impl RpcApi {
                 // TODO: At one point, we will need to distinguish the database type.
                 let connector = SqlMigrationConnector::new(schema_name, connection);
 
-                let engine = MigrationEngine::new(&connector);
+                let engine = MigrationEngine::new(&connector, schema_name);
 
                 let response_json = serde_json::to_value(&cmd.execute(&engine)).unwrap();
                 Ok(response_json)

@@ -26,6 +26,8 @@ impl<'a> DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepAppli
     fn apply(&self, step: SqlMigrationStep) -> Result<(), SqlError> {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
+        dbg!("Calling migration step applier.");
+
         let sql_string = match dbg!(step) {
             SqlMigrationStep::CreateTable(CreateTable {
                 name,

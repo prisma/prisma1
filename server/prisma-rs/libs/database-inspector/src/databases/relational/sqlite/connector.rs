@@ -37,7 +37,10 @@ impl SpecializedRelationalIntrospectionConnector for SqlLiteConnector {
     fn query_tables(&self, connection: &mut Connection, schema: &str) -> Result<Vec<String>, SqlError> {
         let query = Select::from_table((schema, "sqlite_master"))
             .column("name")
-            .so_that(Column::from("type").equals("table"));
+            .so_that(ConditionTree::and(
+                Column::from("type").equals("table"),
+                Column::from("name").not_equals("sqlite_sequence")
+            ));
 
         let (cols, vals) = connection.query(Query::from(query))?;
         let res = ResultSet::from((&cols, &vals));
