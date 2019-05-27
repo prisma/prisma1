@@ -18,7 +18,7 @@ impl<'a> Renderer for GqlTypeRenderer<'a> {
 /// - Render representations recursively (e.g. [TestInputType] would be Option(List(InputType))).
 /// - During that, render dependent types as well by calling the correct renderer, which will add the dependent type to the output queue.
 ///
-/// Important to note: The way the AST is build, it's easier to remove "!"" (required) suffixes instead of adding them, which is why you
+/// Important to note: The way the AST is build, it's easier to remove "!" (required) suffixes instead of adding them, which is why you
 /// will see types always appending "!" until optional removes them.
 impl<'a> GqlTypeRenderer<'a> {
     fn render_input_type(&self, i: &InputType, ctx: RenderContext) -> (String, RenderContext) {
