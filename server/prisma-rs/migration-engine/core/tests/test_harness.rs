@@ -1,10 +1,13 @@
+use barrel;
 use datamodel;
 #[allow(dead_code)]
 use migration_core::MigrationEngine;
-use std::panic;
+use prisma_query::{
+    connector::*,
+    transaction::{Connection, Connectional},
+};
 use sql_migration_connector::{SqlMigrationConnector, SqlMigrationStep};
-use prisma_query::{connector::*, transaction::{Connection, Connectional}};
-use barrel;
+use std::panic;
 
 pub fn parse(datamodel_string: &str) -> datamodel::Schema {
     match datamodel::parse(datamodel_string) {
@@ -29,7 +32,7 @@ where
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let path = format!("{}/db", server_root);
     remove_db(&path, SCHEMA);
-    
+
     let client = Sqlite::new(path, 32, false).unwrap();
 
     // SETUP DATABASE
@@ -62,9 +65,8 @@ where
     });
 }
 
-
 /// Removes the database file from disk.
-/// 
+///
 /// This should, at one point, move into prisma-query, since it depends
 /// on the connector internal logic of resolving DBs.
 pub fn remove_db(path: &str, schema: &str) {

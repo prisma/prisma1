@@ -2,7 +2,6 @@ use database_inspector::relational::{
     ColumnInfo, ColumnType, IndexInfo, SchemaInfo as DatabaseSchema, TableInfo, TableRelationInfo,
 };
 use datamodel::*;
-use itertools::Itertools;
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Schema,
@@ -50,7 +49,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         column_type_for_scalar_type(&scalar_type),
                         field.arity != FieldArity::Required,
                     )),
-                    FieldType::Enum(enum_name) => unimplemented!("No Enum support yet."),
+                    FieldType::Enum(_enum_name) => unimplemented!("No Enum support yet."),
                     FieldType::Relation(relation_info) => {
                         let related = self
                             .data_model
@@ -144,8 +143,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     primary_key: Some(IndexInfo::new_pk(&[node_id_field, position_field])),
                 };
 
-                let relation =
-                    TableRelationInfo::new(model.db_name(), id_field.db_name(), &table.name, node_id_field);
+                let relation = TableRelationInfo::new(model.db_name(), id_field.db_name(), &table.name, node_id_field);
                 relations.push(relation);
 
                 tables.push(table);
@@ -196,7 +194,9 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             continue;
                         }
 
-                        let relation_name = &relation_info.name.clone()
+                        let relation_name = &relation_info
+                            .name
+                            .clone()
                             .expect("Cannot create many to many relation wittout a name");
 
                         // Create Relation Table
@@ -245,7 +245,7 @@ impl ModelExtensions for Model {
     fn db_name(&self) -> &str {
         match &self.database_name {
             Some(name) => &name,
-            None => &self.name
+            None => &self.name,
         }
     }
 }
@@ -276,11 +276,13 @@ impl FieldExtensions for Field {
     fn db_name(&self) -> &str {
         match &self.database_name {
             Some(name) => &name,
-            None => &self.name
+            None => &self.name,
         }
     }
 }
 
+// TODO: Remove if no longer needed.
+#[allow(unused)]
 fn related_type(field: &Field) -> Option<String> {
     match &field.field_type {
         FieldType::Relation(relation_info) => Some(relation_info.to.to_string()),

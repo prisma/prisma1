@@ -1,7 +1,7 @@
-use migration_core::commands::command::*;
-use migration_core::commands::infer_migration_steps::*;
-use migration_core::migration_engine::MigrationEngine;
-use std::fs;
+//use migration_core::commands::command::*;
+//use migration_core::commands::infer_migration_steps::*;
+//use migration_core::migration_engine::MigrationEngine;
+//use std::fs;
 
 fn main() {
     unimplemented!("Disabled for now, need to parse and inject connection details.")

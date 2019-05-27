@@ -2,19 +2,18 @@ mod migration_applier;
 pub mod steps;
 
 use chrono::{DateTime, Utc};
+use database_inspector::SqlError;
 use datamodel::Schema;
 pub use migration_applier::*;
 use serde::Serialize;
 use std::fmt::Debug;
-pub use steps::MigrationStep;
-use database_inspector::{SqlError}; // TODO: Replace by own error type for this crate.
+pub use steps::MigrationStep; // TODO: Replace by own error type for this crate.
 
 #[macro_use]
 extern crate serde_derive;
 
 // TODO: Not sure if generic here is a good idea.
 pub trait MigrationConnector<InternalStepType: DatabaseMigrationStepExt> {
-
     fn initialize(&self) -> Result<(), SqlError>;
     fn reset(&self) -> Result<(), SqlError>;
 
@@ -29,10 +28,7 @@ pub trait MigrationConnector<InternalStepType: DatabaseMigrationStepExt> {
 pub trait DatabaseMigrationStepExt: Debug + Serialize {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
-    fn infer(&self, 
-    previous: &Schema, 
-    next: &Schema,
-    steps: Vec<MigrationStep>) -> Result<Vec<T>, SqlError>;
+    fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Result<Vec<T>, SqlError>;
 }
 
 pub trait DatabaseMigrationStepApplier<T> {

@@ -1,8 +1,6 @@
-
-use database_inspector::relational::{ RelationalIntrospectionResult, RelationalIntrospectionConnector };
-use prisma_query::{error::Error as SqlError, transaction::Connection};
 use crate::*;
 use migration_connector::*;
+use prisma_query::{error::Error as SqlError, transaction::Connection};
 use std::cell::RefCell;
 
 pub struct SqlMigrationConnector<'a> {
@@ -12,9 +10,8 @@ pub struct SqlMigrationConnector<'a> {
     database_step_applier: SqlDatabaseStepApplier<'a>,
     destructive_changes_checker: SqlDestructiveChangesChecker,
     applier: SqlMigrationApplier,
-    connection: &'a RefCell<Connection>
+    connection: &'a RefCell<Connection>,
 }
-
 
 impl<'a> SqlMigrationConnector<'a> {
     pub fn new(schema_name: &str, connection: &'a RefCell<Connection>) -> SqlMigrationConnector<'a> {
@@ -31,7 +28,7 @@ impl<'a> SqlMigrationConnector<'a> {
             sql_database_migration_steps_inferrer: sql_database_migration_steps_inferrer,
             database_step_applier: database_step_applier,
             destructive_changes_checker: destructive_changes_checker,
-            applier: applier
+            applier: applier,
         }
     }
 }
@@ -61,10 +58,9 @@ impl<'a> MigrationConnector<SqlMigrationStep> for SqlMigrationConnector<'a> {
     }
 
     fn reset(&self) -> Result<(), SqlError> {
-        let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
-
         // This should probably do something.
-        Ok(())
+        // let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
+        unimplemented!("TODO");
     }
 
     fn migration_persistence(&self) -> &MigrationPersistence {

@@ -1,6 +1,6 @@
 use crate::*;
 use database_inspector::relational::{
-    ColumnInfo as Column, ColumnType, SchemaInfo as DatabaseSchema, TableInfo as Table, TableRelationInfo,
+    ColumnInfo as Column, SchemaInfo as DatabaseSchema, TableInfo as Table, TableRelationInfo,
 };
 
 pub struct DatabaseSchemaDiffer<'a> {
@@ -11,8 +11,16 @@ pub struct DatabaseSchemaDiffer<'a> {
 
 impl<'a> DatabaseSchemaDiffer<'a> {
     pub fn diff(previous: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str) -> Vec<SqlMigrationStep> {
-        let differ = DatabaseSchemaDiffer { previous, next, schema_name: String::from(schema_name) };
+        let differ = DatabaseSchemaDiffer {
+            previous,
+            next,
+            schema_name: String::from(schema_name),
+        };
         differ.diff_internal()
+    }
+
+    pub fn schema_name(&self) -> &str {
+        &self.schema_name
     }
 
     fn diff_internal(&self) -> Vec<SqlMigrationStep> {
@@ -172,12 +180,21 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         result
     }
 
-    pub fn column_descriptions(columns: &Vec<Column>, table: &Table, relations: &Vec<TableRelationInfo>) -> Vec<ColumnDescription> {
-        columns.iter().map(|c| Self::column_description(c, table, relations)).collect()
+    pub fn column_descriptions(
+        columns: &Vec<Column>,
+        table: &Table,
+        relations: &Vec<TableRelationInfo>,
+    ) -> Vec<ColumnDescription> {
+        columns
+            .iter()
+            .map(|c| Self::column_description(c, table, relations))
+            .collect()
     }
 
     fn column_description(column: &Column, table: &Table, relations: &Vec<TableRelationInfo>) -> ColumnDescription {
-        let fk = relations.iter().find(|rel| rel.source_table == table.name && rel.source_column == column.name)
+        let fk = relations
+            .iter()
+            .find(|rel| rel.source_table == table.name && rel.source_column == column.name)
             .map(|fk| ForeignKey {
                 table: fk.target_table.clone(),
                 column: fk.target_column.clone(),

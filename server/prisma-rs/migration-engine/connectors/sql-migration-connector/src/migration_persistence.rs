@@ -2,12 +2,12 @@
 use chrono::*;
 use datamodel::Schema;
 use migration_connector::*;
-use prisma_query::{ast::*, error::Error as SqlError, transaction::Connection, visitor::*, convenience::*};
+use prisma_query::{ast::*, convenience::*, error::Error as SqlError, transaction::Connection};
 use serde_json;
 use std::cell::RefCell;
 
 pub struct SqlMigrationPersistence<'a> {
-    pub connection: &'a RefCell<Connection>
+    pub connection: &'a RefCell<Connection>,
 }
 
 impl<'a> SqlMigrationPersistence<'a> {
@@ -18,7 +18,6 @@ impl<'a> SqlMigrationPersistence<'a> {
 
 #[allow(unused, dead_code)]
 impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
-
     fn last(&self) -> Result<Migration, SqlError> {
         let conditions = STATUS_COLUMN.equals("Success");
         let query = Select::from_table(TABLE_NAME)
@@ -94,7 +93,7 @@ impl<'a> MigrationPersistence for SqlMigrationPersistence<'a> {
 
         cloned.revision = match self.connection.borrow_mut().execute(Query::from(query))? {
             Some(Id::Int(val)) => val,
-            _ => panic!("Impossible ID")
+            _ => panic!("Impossible ID"),
         };
         Ok(cloned)
     }
@@ -134,7 +133,7 @@ fn timestamp_to_datetime(timestamp: i64) -> DateTime<Utc> {
 
 fn parse_row(row: &ResultRowWithName) -> Result<Migration, SqlError> {
     let revision: u32 = row.get_as_integer(REVISION_COLUMN)? as u32;
-    let applied: u32 = row.get_as_integer(APPLIED_COLUMN)?as u32;
+    let applied: u32 = row.get_as_integer(APPLIED_COLUMN)? as u32;
     let rolled_back: u32 = row.get_as_integer(ROLLED_BACK_COLUMN)? as u32;
     let errors_json: String = row.get_as_string(ERRORS_COLUMN)?;
     let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();

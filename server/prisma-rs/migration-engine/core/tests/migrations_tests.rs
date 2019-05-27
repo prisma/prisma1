@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
 mod test_harness;
+use database_inspector::relational::{sqlite::*, *};
 use database_inspector::*;
 use migration_core::commands::*;
 use migration_core::*;
-use sql_migration_connector::SqlMigrationStep;
-use test_harness::*;
-use database_inspector::relational::{*, sqlite::*};
 use prisma_query::transaction::Connection;
+use sql_migration_connector::SqlMigrationStep;
 use std::ops::DerefMut;
+use test_harness::*;
 
 #[test]
 fn adding_a_scalar_field_must_work() {
@@ -35,7 +35,11 @@ fn adding_a_scalar_field_must_work() {
     });
 }
 
-fn migrate_to(connection: &std::cell::RefCell<Connection>, engine: &Box<MigrationEngine<SqlMigrationStep>>, datamodel: &str) -> SchemaInfo {
+fn migrate_to(
+    connection: &std::cell::RefCell<Connection>,
+    engine: &Box<MigrationEngine<SqlMigrationStep>>,
+    datamodel: &str,
+) -> SchemaInfo {
     let project_info = "the-project-info".to_string();
     let migration_id = "the-migration-id".to_string();
 
@@ -57,5 +61,8 @@ fn migrate_to(connection: &std::cell::RefCell<Connection>, engine: &Box<Migratio
     let output = cmd.execute(&engine);
 
     let inspector = RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new()));
-    inspector.introspect(connection.borrow_mut().deref_mut(), &engine.schema_name()).unwrap().schema
+    inspector
+        .introspect(connection.borrow_mut().deref_mut(), &engine.schema_name())
+        .unwrap()
+        .schema
 }

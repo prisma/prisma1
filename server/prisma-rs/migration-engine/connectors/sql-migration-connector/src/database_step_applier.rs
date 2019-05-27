@@ -7,12 +7,15 @@ use std::cell::RefCell;
 
 pub struct SqlDatabaseStepApplier<'a> {
     schema_name: String,
-    connection: &'a RefCell<Connection>
+    connection: &'a RefCell<Connection>,
 }
 
 impl<'a> SqlDatabaseStepApplier<'a> {
     pub fn new(schema_name: &str, connection: &'a RefCell<Connection>) -> SqlDatabaseStepApplier<'a> {
-        SqlDatabaseStepApplier { schema_name: String::from(schema_name), connection }
+        SqlDatabaseStepApplier {
+            schema_name: String::from(schema_name),
+            connection,
+        }
     }
 
     fn make_sql_string(&self, migration: BarrelMigration) -> String {

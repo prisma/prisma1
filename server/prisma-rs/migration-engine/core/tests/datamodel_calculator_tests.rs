@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 mod test_harness;
-use test_harness::parse;
 use datamodel::dml::*;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_calculator::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
+use test_harness::parse;
 
 // TODO: We could unify the tests for inferrer and calculator.
 
@@ -33,13 +33,12 @@ fn add_DeleteModel_to_existing_schema() {
     );
     let dm2 = Schema::empty();
 
-
     test(dm1, dm2);
 }
 
 #[test]
 fn add_UpdateModel_to_existing_schema() {
-   let dm1 = parse(
+    let dm1 = parse(
         r#"
         model Post {
             id: String

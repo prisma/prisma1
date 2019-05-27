@@ -29,10 +29,10 @@ impl MigrationCommand for ApplyMigrationCommand {
             .datamodel_calculator()
             .infer(&current_data_model, self.input.steps.clone());
 
-        let database_migration_steps =
-            connector
-                .database_steps_inferrer()
-                .infer(&current_data_model, &next_data_model, self.input.steps.clone()).unwrap();
+        let database_migration_steps = connector
+            .database_steps_inferrer()
+            .infer(&current_data_model, &next_data_model, self.input.steps.clone())
+            .unwrap();
 
         let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
 
@@ -43,7 +43,8 @@ impl MigrationCommand for ApplyMigrationCommand {
 
         connector
             .migration_applier()
-            .apply_steps(saved_migration, database_migration_steps, connector).unwrap();
+            .apply_steps(saved_migration, database_migration_steps, connector)
+            .unwrap();
 
         ApplyMigrationOutput {
             datamodel_steps: self.input.steps.clone(),

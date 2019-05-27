@@ -1,8 +1,8 @@
-use migration_connector::steps::*;
-use migration_core::commands::apply_migration::*;
-use migration_core::commands::command::*;
-use migration_core::migration_engine::MigrationEngine;
-use std::io::{self, Read};
+//use migration_connector::steps::*;
+//use migration_core::commands::apply_migration::*;
+//use migration_core::commands::command::*;
+//use migration_core::migration_engine::MigrationEngine;
+//use std::io::{self, Read};
 
 fn main() {
     unimplemented!("Disabled for now, need to parse and inject connection details.")

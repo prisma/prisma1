@@ -1,7 +1,7 @@
 use crate::migration_engine::MigrationEngine;
+use migration_connector::*;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use migration_connector::*;
 
 pub trait MigrationCommand {
     type Input: DeserializeOwned;

@@ -3,9 +3,6 @@ use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
 use datamodel::validator::Validator;
 use migration_connector::*;
-use sql_migration_connector::SqlMigrationConnector;
-use std::path::Path;
-use std::sync::Arc;
 
 // todo: add MigrationConnector. does not work  because of GAT shinenigans
 
@@ -13,7 +10,7 @@ pub struct MigrationEngine<'a, T: DatabaseMigrationStepExt> {
     datamodel_migration_steps_inferrer: DataModelMigrationStepsInferrerImplWrapper,
     datamodel_calculator: DataModelCalculatorImpl,
     connector: &'a MigrationConnector<T>,
-    schema_name: String
+    schema_name: String,
 }
 
 impl<'a, T: DatabaseMigrationStepExt> std::panic::RefUnwindSafe for MigrationEngine<'a, T> {}
@@ -24,7 +21,7 @@ impl<'a, T: DatabaseMigrationStepExt> MigrationEngine<'a, T> {
             datamodel_migration_steps_inferrer: DataModelMigrationStepsInferrerImplWrapper {},
             datamodel_calculator: DataModelCalculatorImpl {},
             connector: connector,
-            schema_name: String::from(schema_name)
+            schema_name: String::from(schema_name),
         };
         engine.connector().initialize().unwrap();
         engine

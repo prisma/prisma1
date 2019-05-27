@@ -20,7 +20,8 @@ impl MigrationCommand for ListMigrationStepsCommand {
         println!("{:?}", self.input);
         let migration_persistence = engine.connector().migration_persistence();
         migration_persistence
-            .load_all().unwrap()
+            .load_all()
+            .unwrap()
             .into_iter()
             .map(|mig| ListMigrationStepsOutput {
                 id: mig.name,

@@ -1,9 +1,7 @@
 use crate::*;
 use database_inspector::{
     relational::{
-        RelationalIntrospectionConnector, RelationalIntrospectionResult, SchemaInfo as DatabaseSchema,
-        TableInfo as Table,
-        sqlite::SqlLiteConnector
+        sqlite::SqlLiteConnector, RelationalIntrospectionConnector, SchemaInfo as DatabaseSchema, TableInfo as Table,
     },
     IntrospectionConnector,
 };
@@ -16,7 +14,7 @@ use std::ops::DerefMut;
 pub struct SqlDatabaseMigrationStepsInferrer<'a> {
     schema_name: String,
     connection: &'a RefCell<Connection>,
-    introspector: RelationalIntrospectionConnector, 
+    introspector: RelationalIntrospectionConnector,
 }
 
 #[allow(unused, dead_code)]
@@ -27,7 +25,10 @@ impl<'a> DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrati
         next: &Schema,
         steps: Vec<MigrationStep>,
     ) -> Result<Vec<SqlMigrationStep>, SqlError> {
-        let current_database_schema = self.introspector.introspect(self.connection.borrow_mut().deref_mut(), &self.schema_name)?.schema;
+        let current_database_schema = self
+            .introspector
+            .introspect(self.connection.borrow_mut().deref_mut(), &self.schema_name)?
+            .schema;
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
         let steps = DatabaseSchemaDiffer::diff(&current_database_schema, &expected_database_schema, &self.schema_name);
         let is_sqlite = true;
@@ -44,7 +45,7 @@ impl<'a> SqlDatabaseMigrationStepsInferrer<'a> {
         SqlDatabaseMigrationStepsInferrer {
             schema_name: String::from(schema_name),
             connection: connection,
-            introspector: RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new())) // TODO: This should not be sqlite specific.
+            introspector: RelationalIntrospectionConnector::new(Box::new(SqlLiteConnector::new())), // TODO: This should not be sqlite specific.
         }
     }
 
@@ -78,7 +79,13 @@ impl<'a> SqlDatabaseMigrationStepsInferrer<'a> {
         change_that_does_not_work_on_sqlite.is_some()
     }
 
-    fn fix(&self, _alter_table: &AlterTable, current: &Table, next: &Table, next_schema: &DatabaseSchema) -> Vec<SqlMigrationStep> {
+    fn fix(
+        &self,
+        _alter_table: &AlterTable,
+        current: &Table,
+        next: &Table,
+        next_schema: &DatabaseSchema,
+    ) -> Vec<SqlMigrationStep> {
         // based on 'Making Other Kinds Of Table Schema Changes' from https://www.sqlite.org/lang_altertable.html
         let name_of_temporary_table = format!("new_{}", next.name.clone());
         vec![
