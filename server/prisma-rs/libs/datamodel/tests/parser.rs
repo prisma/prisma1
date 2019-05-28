@@ -4,7 +4,7 @@ extern crate datamodel;
 fn test_parser_should_not_crash() {
     let dml = r#"
 model User {
-    id: ID @primary
+    id: ID @id
     createdAt: DateTime
     email: String @unique
     name: String?
@@ -15,14 +15,14 @@ model User {
 @db(name: "user")
 
 model Profile {
-    id: ID @primary
+    id: ID @id
     user: User
     bio: String
 }
 @db("profile")
 
 model Post {
-    id: ID @primary
+    id: ID @id
     createdAt: DateTime
     updatedAt: DateTime
     title: String @default("Default-Title")
@@ -34,7 +34,7 @@ model Post {
 @db(name: "post")
 
 model Category {
-    id ID @primary
+    id ID @id
     name String
     posts Post[]
     cat CategoryEnum

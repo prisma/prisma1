@@ -112,12 +112,14 @@ fn custom_plugin() {
 
 
     model User {
+        id: ID @id
         firstName: String @custom_1.mapToBase
         lastName: String @custom_1.mapToBase
         email: String
     }
 
     model Post {
+        id: ID @id
         likes: Int @custom_2.mapToBase
         comments: Int
     }

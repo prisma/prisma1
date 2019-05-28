@@ -55,6 +55,9 @@ pub enum ValidationError {
 
     #[fail(display = "Expected {}, but failed while parsing {}: {}", expected_type, raw, parser_error)]
     ValueParserError { expected_type: String, parser_error: String, raw: String, span: Span },
+
+    #[fail(display = "Error validating {}: {}", model_name, message)]
+    ModelValidationError { message: String, model_name: String, span: Span  },
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)] 
@@ -103,6 +106,15 @@ impl ValidationError {
             span: span.clone(),
         };
     }
+
+    pub fn new_model_validation_error(message: &str, model_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::ModelValidationError {
+            message: String::from(message),
+            model_name: String::from(model_name),
+            span: span.clone(),
+        };
+    }
+
     pub fn new_parser_error(message: &str, span: &Span) -> ValidationError {
         return ValidationError::ParserError { message: String::from(message), span: span.clone() };
     }
@@ -161,6 +173,7 @@ impl ValidationError {
             ValidationError::FunctionalEvaluationError { message: _, span } => span,
             ValidationError::TypeMismatchError { expected_type: _, received_type: _, raw: _, span } => span,
             ValidationError::ValueParserError { expected_type: _, parser_error: _, raw: _, span } => span,
+            ValidationError::ModelValidationError { model_name: _, message: _, span } => span
         }
     }
     pub fn description(&self) -> String {

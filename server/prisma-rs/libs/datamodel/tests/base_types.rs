@@ -6,6 +6,7 @@ use datamodel::dml;
 fn parse_scalar_types() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String
         age: Int
         isPro: Boolean
@@ -37,6 +38,7 @@ fn parse_scalar_types() {
 fn parse_field_arity() {
     let dml = r#"
     model Post {
+        id: ID @id
         text: String
         photo: String?
         comments: String[]
@@ -63,6 +65,7 @@ fn parse_field_arity() {
 fn parse_defaults() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String = "Hello"
         age: Int = 21
         isPro: Boolean = false

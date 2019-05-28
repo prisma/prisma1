@@ -6,11 +6,13 @@ use datamodel::dml;
 fn resolve_relation() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String
         posts: Post[]
     }
 
     model Post {
+        id: ID @id
         text: String
         user: User
     }
@@ -33,10 +35,61 @@ fn resolve_relation() {
     post_model.assert_has_field("user").assert_relation_to("User");
 }
 
+fn resolve_related_field() {
+    let dml = r#"
+    model User {
+        id: ID @id
+        firstName: String
+        posts: Post[]
+    }
+
+    model Post {
+        id: ID @id
+        text: String
+        user: User(firstName)
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    let post_model = schema.assert_has_model("Post");
+    post_model
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_relation_to_fields(&["firstName"]);
+}
+
+#[test]
+fn resolve_related_fields() {
+    let dml = r#"
+    model User {
+        id: ID @id
+        firstName: String
+        lastName: String
+        posts: Post[]
+    }
+
+    model Post {
+        id: ID @id
+        text: String
+        user: User @relation(references: [firstName, lastName])
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    let post_model = schema.assert_has_model("Post");
+    post_model
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_relation_to_fields(&["firstName", "lastName"]);
+}
+
 #[test]
 fn resolve_enum_field() {
     let dml = r#"
     model User {
+        id: ID @id
         email: String
         role: Role
     }

@@ -55,3 +55,21 @@ fn id_with_explicit_none_strategy() {
         .assert_id_sequence(None)
         .assert_id_strategy(IdStrategy::None);
 }
+
+#[test]
+fn id_should_also_work_on_embedded_types() {
+    let dml = r#"
+    model Model {
+        id: ID @id
+    }
+    @embedded
+    "#;
+
+    let datamodel = parse(dml);
+    let user_model = datamodel.assert_has_model("Model");
+    user_model
+        .assert_has_field("id")
+        .assert_is_id(true)
+        .assert_id_sequence(None)
+        .assert_id_strategy(IdStrategy::Auto);
+}

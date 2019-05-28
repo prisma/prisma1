@@ -160,6 +160,8 @@ pub struct Enum {
     pub directives: Vec<Directive>,
     /// The comments for this enum.
     pub comments: Vec<Comment>,
+    /// The location of this enum in the text representation.
+    pub span: Span,
 }
 
 impl WithDirectives for Enum {
@@ -185,6 +187,8 @@ pub struct Model {
     pub directives: Vec<Directive>,
     /// The comments for this model.
     pub comments: Vec<Comment>,
+    /// The location of this model in the text representation.
+    pub span: Span,
 }
 
 impl WithDirectives for Model {
@@ -209,9 +213,9 @@ pub struct SourceConfig {
     /// Detail configuration for this source, found inside the
     /// `properties` block.
     pub detail_configuration: Vec<Argument>,
-    /// The comments for this source bloc.
+    /// The comments for this source block.
     pub comments: Vec<Comment>,
-    /// The location of this source bloc in the text representation.
+    /// The location of this source block in the text representation.
     pub span: Span,
 }
 

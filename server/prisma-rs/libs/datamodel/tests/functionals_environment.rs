@@ -6,6 +6,7 @@ use datamodel::dml;
 fn interpolate_environment_variables() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String @default(env("TEST_USER"))
         lastName: String
     }
@@ -27,6 +28,7 @@ fn interpolate_environment_variables() {
 fn interpolate_nested_environment_variables() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String @default(env(env("TEST_USER_VAR")))
         lastName: String
     }

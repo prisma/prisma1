@@ -85,6 +85,17 @@ impl Validator {
         }
     }
 
+    fn ensure_model_has_id(&self, ast_model: &ast::Model, model: &dml::Model) -> Result<(), ValidationError> {
+        if model.fields().filter(|m| m.id_info.is_some()).count() == 0 {
+            Err(ValidationError::new_model_validation_error(
+                "One field must be marked as the id field with the `@id` directive.", 
+                &model.name,
+                &ast_model.span))
+        } else {
+            Ok(())
+        }
+    }
+
     /// Internal: Validates a model AST node.
     fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> Result<dml::Model, ErrorCollection> {
         let mut model = dml::Model::new(&ast_model.name);
@@ -102,10 +113,12 @@ impl Validator {
         }
 
         if errors.has_errors() {
-            Err(errors)
-        } else {
-            Ok(model)
+            return Err(errors);
         }
+
+        self.ensure_model_has_id(ast_model, &model)?;
+
+        Ok(model)
     }
 
     /// Internal: Validates an enum AST node.
