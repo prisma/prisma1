@@ -103,24 +103,20 @@ fn column_description_to_barrel_type(column_description: &ColumnDescription) -> 
     // TODO: add foreign keys for non integer types once this is available in barrel
     let tpe = match &column_description.foreign_key {
         Some(fk) => {
-            //barrel::types::foreign(string_to_static_str(format!("{}({})", fk.table, fk.column))),
-            let tpe_str = print_type(column_description.tpe);
+            let tpe_str = render_column_type(column_description.tpe);
             let complete = dbg!(format!("{} REFERENCES {}({})", tpe_str, fk.table, fk.column));
             barrel::types::custom(string_to_static_str(complete))
         }
-        None => match column_description.tpe {
-            ColumnType::Boolean => barrel::types::boolean(),
-            ColumnType::DateTime => barrel::types::date(),
-            ColumnType::Float => barrel::types::float(),
-            ColumnType::Int => barrel::types::integer(),
-            ColumnType::String => barrel::types::text(),
-        },
+        None => {
+            let tpe_str = render_column_type(column_description.tpe);
+            barrel::types::custom(string_to_static_str(tpe_str))
+        }
     };
     tpe.nullable(!column_description.required)
 }
-// TODO: this is copied from barrel
-// TODO: move completely to our own type rendering
-fn print_type(t: ColumnType) -> String {
+
+// TODO: this must become database specific akin to our TypeMappers in Scala
+fn render_column_type(t: ColumnType) -> String {
     match t {
         ColumnType::Boolean => format!("BOOLEAN"),
         ColumnType::DateTime => format!("DATE"),
@@ -128,26 +124,6 @@ fn print_type(t: ColumnType) -> String {
         ColumnType::Int => format!("INTEGER"),
         ColumnType::String => format!("TEXT"),
     }
-    // match t {
-    //     Text => format!("TEXT"),
-    //     Varchar(l) => match l {
-    //         0 => format!("VARCHAR"), // For "0" remove the limit
-    //         _ => format!("VARCHAR({})", l),
-    //     },
-    //     Primary => format!("INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"),
-    //     Integer => format!("INTEGER"),
-    //     Float => format!("REAL"),
-    //     Double => format!("DOUBLE"),
-    //     UUID => unimplemented!(),
-    //     Boolean => format!("BOOLEAN"),
-    //     Date => format!("DATE"),
-    //     Json => panic!("Json is not supported by Sqlite3"),
-    //     Binary => format!("BINARY"),
-    //     Foreign(t) => format!("INTEGER REFERENCES {}", t),
-    //     Custom(t) => format!("{}", t),
-    //     Array(meh) => format!("{}[]", Sqlite::print_type(*meh)),
-    //     Index(_) => unimplemented!(),
-    // }
 }
 
 fn string_to_static_str(s: String) -> &'static str {
