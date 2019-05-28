@@ -27,7 +27,7 @@ pub(crate) fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResul
                 value: value,
             })
         }
-        _ => unimplemented!(),
+        _ => unreachable!(),
     }
 }
 

@@ -5,7 +5,7 @@ use crate::{
     builders::{convert_tree, utils, DataSet, NestedValue, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit},
     CoreError, CoreResult, WriteQuery,
 };
-use connector::mutaction::*; // ALL OF IT
+use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaValue, Project};
 
@@ -49,12 +49,12 @@ impl<'field> MutationBuilder<'field> {
 
         let inner =
             match op {
-                Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
+                Operation::Create => dbg!(TopLevelDatabaseMutaction::CreateNode(CreateNode {
                     model: Arc::clone(&model),
                     non_list_args,
                     list_args,
                     nested_mutactions,
-                }),
+                })),
                 Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
                     where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                     non_list_args,
@@ -203,50 +203,80 @@ fn build_nested_root<'f>(
     let eval = dbg!(args.eval_tree());
 
     for value in eval.into_iter() {
-        let (name, kind, map) = match value {
-            NestedValue::Simple { name, kind, map } => (name, kind, map),
-            _ => unreachable!(),
-        };
+        match value {
+            NestedValue::Simple { name, kind, map } => {
+                let ValueSplit { values, lists, nested } = dbg!(map.split());
 
-        let ValueSplit { values, lists, nested } = dbg!(map.split());
-
-        let field = dbg!(model.fields().find_from_all(dbg!(&name)));
-        let relation_field = dbg!(match &field {
-            Ok(ModelField::Relation(f)) => {
-                let model = f.related_model();
-                Arc::clone(&f)
-            }
-            _ => unimplemented!(),
-        });
-
-        let model = Arc::clone(&relation_field.related_model());
-        let non_list_args = values.to_prisma_values().into();
-        let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_mutactions = build_nested_root(&name, &nested, model, top_level)?;
-
-        match kind.as_str() {
-            "create" => {
-                collection.creates.push(NestedCreateNode {
-                    non_list_args,
-                    list_args,
-                    top_is_create: match top_level {
-                        Operation::Create => true,
-                        _ => false,
-                    },
-                    relation_field,
-                    nested_mutactions,
+                let field = dbg!(model.fields().find_from_all(dbg!(&name)));
+                let relation_field = dbg!(match &field {
+                    Ok(ModelField::Relation(f)) => {
+                        let model = f.related_model();
+                        Arc::clone(&f)
+                    }
+                    _ => unimplemented!(),
                 });
+
+                let model = Arc::clone(&relation_field.related_model());
+                let non_list_args = values.to_prisma_values().into();
+                let list_args = lists.into_iter().map(|la| la.convert()).collect();
+                let nested_mutactions = build_nested_root(&name, &nested, model, top_level)?;
+
+                match kind.as_str() {
+                    "create" => {
+                        collection.creates.push(NestedCreateNode {
+                            non_list_args,
+                            list_args,
+                            top_is_create: match top_level {
+                                Operation::Create => true,
+                                _ => false,
+                            },
+                            relation_field,
+                            nested_mutactions,
+                        });
+                    }
+                    _ => unimplemented!(),
+                }
             }
-            "connect" => {
-                panic!("I'm not great with human connection");
+            NestedValue::Connect { name, list } => {
+                let field = dbg!(model.fields().find_from_all(dbg!(&name)).unwrap());
+                let relation_field = dbg!(match &field {
+                    ModelField::Relation(f) => {
+                        let model = f.related_model();
+                        Arc::clone(&f)
+                    }
+                    _ => unimplemented!(),
+                });
+
+                // Create a connect for every map
+                for obj in &list {
+                    // Get the first valid field name that is a scalar
+                    let where_ = obj
+                        .0
+                        .iter()
+                        .filter_map(|(field, value)| {
+                            model
+                                .fields()
+                                .find_from_scalar(&field)
+                                .ok()
+                                .map(|f| (f, PrismaValue::from_value(&value)))
+                        })
+                        .nth(0)
+                        .map(|(field, value)| NodeSelector { field, value })
+                        .unwrap();
+
+                    collection.connects.push(NestedConnect {
+                        relation_field: Arc::clone(&relation_field),
+                        where_,
+                        top_is_create: match top_level {
+                            Operation::Create => true,
+                            _ => false,
+                        },
+                    });
+                }
             }
-            _ => unimplemented!(),
+            NestedValue::Upsert { name, create, update } => unimplemented!(),
         }
     }
 
     Ok(collection)
-}
-
-fn handle_simple_nested(nested: NestedValue, model: ModelRef, top_level: &Operation) {
-
 }
