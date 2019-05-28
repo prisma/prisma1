@@ -11,13 +11,13 @@ The roadmap is updated every two weeks (i.e. with every Prisma release). If you 
 The following lists represent a number of smaller-scope issues and improvements that we are currently working on. While we're trying to be as accurate as possible, our priorities might shift and the list may be adjusted in a future release cycle.
 
 #### Improvements
-
+- [ ] [Unique constraint violated error on non-unique field #4440](https://github.com/prisma/prisma/issues/4440)
+- [ ] [prisma on json field with empty\invalid content throws internal error #4375](https://github.com/prisma/prisma/issues/4375)
+- [ ] [`prisma delete` doesn't actually delete the database #4451](https://github.com/prisma/prisma/issues/4451)
 - [ ] [Nested upsert in create mutations (correct: nested connectOrCreate) #2194](https://github.com/prisma/prisma/issues/2194)
-- [ ] [Use sensible migration values for existing nodes when adding required fields #2323](https://github.com/prisma/prisma/issues/2323)
 - [ ] [Allow for custom IDs to be submitted when creating new records in client API #3839](https://github.com/prisma/prisma/issues/4219)
 - [ ] [[Mongo] improve relational link design to enhance performance #3754](https://github.com/prisma/prisma/issues/3754)
 - [ ] [Add inner connection fields #1780](https://github.com/prisma/prisma/issues/1780)
-- [ ] [Order by multiple fields #62](https://github.com/prisma/prisma/issues/62)
 
 ### Specification phase
 
