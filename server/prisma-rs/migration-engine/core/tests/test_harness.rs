@@ -1,10 +1,11 @@
+use database_inspector::*;
 use datamodel;
+use migration_core::commands::*;
 #[allow(dead_code)]
 use migration_core::MigrationEngine;
 use std::panic;
-use migration_core::commands::*;
-use database_inspector::*;
 
+#[allow(unused)]
 pub fn parse(datamodel_string: &str) -> datamodel::Schema {
     match datamodel::parse(datamodel_string) {
         Ok(s) => s,
@@ -18,6 +19,7 @@ pub fn parse(datamodel_string: &str) -> datamodel::Schema {
     }
 }
 
+#[allow(unused)]
 pub fn run_test_with_engine<T>(test: T) -> ()
 where
     T: FnOnce(Box<MigrationEngine>) -> () + panic::UnwindSafe,
@@ -58,6 +60,6 @@ pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSch
     let inspector = engine.connector().database_inspector();
     let mut result = inspector.introspect(&engine.schema_name());
     // the presence of the _Migration table makes assertions harder. Therefore remove it.
-    result.tables = result.tables.into_iter().filter(|t|t.name != "_Migration").collect();
+    result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
     result
 }
