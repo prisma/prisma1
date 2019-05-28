@@ -1,13 +1,13 @@
 package com.prisma.api.mutations
 
-import com.prisma.{IgnoreMySql, IgnorePostgres, IgnoreSQLite}
+import com.prisma.{ConnectorTag, IgnoreMySql, IgnorePostgres, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
 import com.prisma.api.connector.native.NativeDatabaseMutactionExecutor
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RawAccessCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
-import org.jooq.Query
+import org.jooq.{Query, SQLDialect}
 import org.jooq.conf.{ParamType, Settings}
 import org.jooq.impl.DSL
 import org.jooq.impl.DSL.{field, name, table}
@@ -46,10 +46,18 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
     case m: NativeDatabaseMutactionExecutor => m.slickDatabaseArg
   }
 
-  lazy val isMySQL     = slickDatabase.isMySql
-  lazy val isPostgres  = slickDatabase.isPostgres
-  lazy val isSQLite    = slickDatabase.isSQLite
-  lazy val sql         = DSL.using(slickDatabase.dialect, new Settings().withRenderFormatted(true))
+  lazy val isMySQL     = connectorTag == ConnectorTag.MySqlConnectorTag
+  lazy val isPostgres  = connectorTag == ConnectorTag.PostgresConnectorTag
+  lazy val isSQLite    = connectorTag == ConnectorTag.SQLiteConnectorTag
+
+  lazy val dialect = connectorTag match {
+    case ConnectorTag.MySqlConnectorTag => SQLDialect.MYSQL_5_7
+    case ConnectorTag.PostgresConnectorTag => SQLDialect.POSTGRES
+    case ConnectorTag.SQLiteConnectorTag => SQLDialect.SQLITE
+    case ConnectorTag.MongoConnectorTag => sys.error("No raw queries for Mongo")
+  }
+
+  lazy val sql         = DSL.using(dialect, new Settings().withRenderFormatted(true))
   lazy val modelTable  = table(name(schemaName, model.dbName))
   lazy val idColumn    = model.idField_!.dbName
   lazy val titleColumn = model.getScalarFieldByName_!("title").dbName

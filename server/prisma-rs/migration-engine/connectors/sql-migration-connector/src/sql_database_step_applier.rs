@@ -1,6 +1,5 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
-use datamodel::ScalarType;
 use migration_connector::*;
 use rusqlite::{Connection, NO_PARAMS};
 
@@ -23,7 +22,7 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
     fn apply(&self, step: SqlMigrationStep) {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
-        match dbg!(step) {
+        let sql_string = match dbg!(step) {
             SqlMigrationStep::CreateTable(CreateTable {
                 name,
                 columns,
@@ -43,11 +42,48 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                         t.inject_custom(format!("PRIMARY KEY ({})", column_names.join(",")));
                     }
                 });
+                self.make_sql_string(migration)
             }
-            x => panic!(format!("{:?} not implemented yet here", x)),
+            SqlMigrationStep::DropTable(DropTable { name }) => {
+                migration.drop_table(name);
+                self.make_sql_string(migration)
+            }
+            SqlMigrationStep::RenameTable { name, new_name } => {
+                migration.rename_table(name.to_string(), new_name.to_string());
+                self.make_sql_string(migration)
+            }
+            SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
+                migration.change_table(table, move |t| {
+                    for change in changes.clone() {
+                        match change {
+                            TableChange::AddColumn(AddColumn { column }) => {
+                                let tpe = column_description_to_barrel_type(&column);
+                                t.add_column(column.name, tpe);
+                            }
+                            TableChange::DropColumn(DropColumn { name }) => t.drop_column(name),
+                            TableChange::AlterColumn(AlterColumn { name, column }) => {
+                                t.drop_column(name);
+                                let tpe = column_description_to_barrel_type(&column);
+                                t.add_column(column.name, tpe);
+                            }
+                        }
+                    }
+                });
+                self.make_sql_string(migration)
+            }
+            SqlMigrationStep::RawSql(sql) => sql,
         };
-        let sql_string = dbg!(self.make_sql_string(migration));
-        dbg!(self.connection.execute(&sql_string, NO_PARAMS)).unwrap();
+        dbg!(&sql_string);
+        let result = self.connection.execute(&sql_string, NO_PARAMS);
+        // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
+        match dbg!(result) {
+            Ok(_) => {}
+            Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
+            e @ Err(_) => {
+                e.unwrap();
+                {}
+            }
+        }
     }
 }
 
@@ -59,12 +95,32 @@ impl SqlDatabaseStepApplier {
 }
 
 fn column_description_to_barrel_type(column_description: &ColumnDescription) -> barrel::types::Type {
-    let tpe = match column_description.tpe {
-        ColumnType::Boolean => barrel::types::boolean(),
-        ColumnType::DateTime => barrel::types::date(),
-        ColumnType::Float => barrel::types::float(),
-        ColumnType::Int => barrel::types::integer(),
-        ColumnType::String => barrel::types::text(),
+    // TODO: add foreign keys for non integer types once this is available in barrel
+    let tpe = match &column_description.foreign_key {
+        Some(fk) => {
+            let tpe_str = render_column_type(column_description.tpe);
+            let complete = dbg!(format!("{} REFERENCES {}({})", tpe_str, fk.table, fk.column));
+            barrel::types::custom(string_to_static_str(complete))
+        }
+        None => {
+            let tpe_str = render_column_type(column_description.tpe);
+            barrel::types::custom(string_to_static_str(tpe_str))
+        }
     };
     tpe.nullable(!column_description.required)
+}
+
+// TODO: this must become database specific akin to our TypeMappers in Scala
+fn render_column_type(t: ColumnType) -> String {
+    match t {
+        ColumnType::Boolean => format!("BOOLEAN"),
+        ColumnType::DateTime => format!("DATE"),
+        ColumnType::Float => format!("REAL"),
+        ColumnType::Int => format!("INTEGER"),
+        ColumnType::String => format!("TEXT"),
+    }
+}
+
+fn string_to_static_str(s: String) -> &'static str {
+    Box::leak(s.into_boxed_str())
 }

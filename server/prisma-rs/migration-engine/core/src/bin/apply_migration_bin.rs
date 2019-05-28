@@ -18,7 +18,7 @@ fn main() {
     };
     let cmd = ApplyMigrationCommand::new(input);
     let engine = MigrationEngine::new();
-    let output = cmd.execute(engine);
+    let output = cmd.execute(&engine);
 
     let json = serde_json::to_string_pretty(&output).unwrap();
     println!("{}", json)

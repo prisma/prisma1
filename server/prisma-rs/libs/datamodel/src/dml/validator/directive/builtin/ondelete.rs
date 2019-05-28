@@ -1,21 +1,22 @@
 use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
+/// Prismas builtin `@db` directive.
 pub struct OnDeleteDirectiveValidator {}
 
 impl DirectiveValidator<dml::Field> for OnDeleteDirectiveValidator {
     fn directive_name(&self) -> &'static str {
         &"onDelete"
     }
-    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Option<Error> {
-        if let Ok(strategy) = args.arg("strategy").as_constant_literal() {
-            match (strategy.parse::<dml::OnDeleteStrategy>(), &mut field.field_type) {
-                (Ok(strategy), dml::FieldType::Relation(relation_info)) => relation_info.on_delete = strategy,
-                (Err(err), _) => return self.parser_error(&err),
+    fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Result<(), Error> {
+        match args.default_arg("strategy")?.parse_literal::<dml::OnDeleteStrategy>() {
+            Ok(strategy) => match &mut field.field_type {
+                dml::FieldType::Relation(relation_info) => relation_info.on_delete = strategy,
                 _ => return self.error("Invalid field type, not a relation.", &args.span()),
-            }
+            },
+            Err(err) => return self.parser_error(&err),
         }
 
-        return None;
+        return Ok(());
     }
 }

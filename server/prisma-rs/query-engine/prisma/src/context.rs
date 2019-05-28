@@ -1,5 +1,5 @@
 use crate::{data_model, exec_loader, PrismaResult};
-use core::{Executor, SchemaBuilder};
+use core::Executor;
 use prisma_common::config::{self, PrismaConfig};
 use prisma_models::InternalDataModelRef;
 
@@ -18,7 +18,9 @@ impl PrismaContext {
         let config = config::load().unwrap();
         let executor = exec_loader::load(&config);
 
-        // Find db name. This right here influences how
+        // Find db name. This right here influences how data is queried for postgres, for example.
+        // Specifically, this influences the schema part of: `database`.`schema`.`table`.
+        // Other connectors do not use schema and the database key of the config will be used instead.
         let db = config.databases.get("default").unwrap();
         let db_name = db.schema().or_else(|| db.db_name()).unwrap_or_else(|| "prisma".into());
 

@@ -1,4 +1,4 @@
-use super::BuilderExt;
+use super::{utils, BuilderExt};
 use crate::{query_ast::ManyRecordsQuery, CoreResult};
 
 use graphql_parser::query::Field;
@@ -34,14 +34,14 @@ impl<'f> BuilderExt for ManyBuilder<'f> {
         }
         .expect("`ManyQuery` builder not properly initialised!");
 
-        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
-        let nested = Self::build_nested_queries(nested_builders)?;
+        let nested_builders = utils::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
+        let nested = utils::build_nested_queries(nested_builders)?;
 
-        let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, None)?;
-        let args = Self::extract_query_args(field, Arc::clone(&model))?;
+        let selected_fields = utils::collect_selected_fields(Arc::clone(&model), field, None)?;
+        let args = utils::extract_query_args(field, Arc::clone(&model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
         let model = Arc::clone(model);
-        let fields = Self::collect_selection_order(&field);
+        let fields = utils::collect_selection_order(&field);
 
         Ok(ManyRecordsQuery {
             name,

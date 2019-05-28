@@ -1,4 +1,5 @@
 use crate::{
+    error::SqlError,
     mutaction::{MutationBuilder, NestedActions},
     SqlResult, Transaction,
 };
@@ -16,7 +17,33 @@ where
     S: AsRef<str>,
 {
     let (insert, returned_id) = MutationBuilder::create_node(Arc::clone(&model), non_list_args.clone());
-    let last_id = conn.insert(insert)?;
+
+    let last_id = match conn.insert(insert) {
+        Ok(id) => id,
+        Err(SqlError::UniqueConstraintViolation { field_name }) => {
+            if field_name == "PRIMARY" {
+                return Err(SqlError::UniqueConstraintViolation {
+                    field_name: format!("{}.{}", model.name, model.fields().id().name),
+                });
+            } else {
+                return Err(SqlError::UniqueConstraintViolation {
+                    field_name: format!("{}.{}", model.name, field_name),
+                });
+            }
+        }
+        Err(SqlError::NullConstraintViolation { field_name }) => {
+            if field_name == "PRIMARY" {
+                return Err(SqlError::NullConstraintViolation {
+                    field_name: format!("{}.{}", model.name, model.fields().id().name),
+                });
+            } else {
+                return Err(SqlError::NullConstraintViolation {
+                    field_name: format!("{}.{}", model.name, field_name),
+                });
+            }
+        }
+        Err(e) => return Err(e),
+    };
 
     let id = match returned_id {
         Some(id) => id,

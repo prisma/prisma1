@@ -1,12 +1,10 @@
 use crate::database_schema_calculator::DatabaseSchemaCalculator;
 use crate::database_schema_differ::DatabaseSchemaDiffer;
 use crate::sql_migration_step::*;
-use database_inspector::DatabaseInspector;
+use database_inspector::{DatabaseInspector, DatabaseSchema, Table};
 use datamodel::*;
-use itertools::{Either, Itertools};
 use migration_connector::steps::*;
 use migration_connector::*;
-use std::collections::HashMap;
 
 pub struct SqlDatabaseMigrationStepsInferrer {
     pub inspector: Box<DatabaseInspector>,
@@ -18,71 +16,93 @@ impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationSt
     fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<SqlMigrationStep> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
-        let steps = DatabaseSchemaDiffer::diff(current_database_schema, expected_database_schema);
-        steps
-        // let creates: Vec<CreateModelOrField> = steps
-        //     .into_iter()
-        //     .flat_map(|step| match step {
-        //         MigrationStep::CreateModel(x) => Some(CreateModelOrField::Model(x)),
-        //         MigrationStep::CreateField(x) => Some(CreateModelOrField::Field(x)),
-        //         _ => None,
-        //     })
-        //     .collect();
-        // let (create_models, create_fields): (Vec<CreateModel>, Vec<CreateField>) =
-        //     creates.into_iter().partition_map(|step| match step {
-        //         CreateModelOrField::Model(x) => Either::Left(x),
-        //         CreateModelOrField::Field(x) => Either::Right(x),
-        //     });
-        // let mut create_fields_map: HashMap<String, Vec<CreateField>> = HashMap::new();
-        // for (model_name, create_fieldses) in &create_fields.into_iter().group_by(|cf| cf.model.clone()) {
-        //     create_fields_map.insert(model_name, create_fieldses.into_iter().collect());
-        // }
-
-        // let mut grouped_steps: HashMap<CreateModel, Vec<CreateField>> = HashMap::new();
-
-        // for cm in create_models {
-        //     let cfs = create_fields_map.remove(&cm.name).unwrap_or(Vec::new());
-        //     grouped_steps.insert(cm, cfs);
-        // }
-
-        // let mut create_tables: Vec<CreateTable> = Vec::new();
-        // for (create_model, create_fields) in grouped_steps {
-        //     let id_column = create_fields.iter().find(|f| f.id.is_some()).map(|f| f.db_name());
-        //     let columns = create_fields
-        //         .into_iter()
-        //         .map(|cf| ColumnDescription {
-        //             name: cf.name,
-        //             tpe: column_type(cf.tpe),
-        //             required: cf.arity == FieldArity::Required,
-        //         })
-        //         .collect();
-        //     let primary_columns = id_column.map(|c| vec![c]).unwrap_or(Vec::new());
-
-        //     let create_table = CreateTable {
-        //         name: create_model.name,
-        //         columns: columns,
-        //         primary_columns: primary_columns,
-        //     };
-        //     create_tables.push(create_table);
-        // }
-
-        // let mut sql_steps = Vec::new();
-        // sql_steps.append(&mut wrap_as_step(create_tables, |x| SqlMigrationStep::CreateTable(x)));
-        // sql_steps
+        let steps = DatabaseSchemaDiffer::diff(&current_database_schema, &expected_database_schema);
+        let is_sqlite = true;
+        if is_sqlite {
+            self.fix_stupid_sqlite(steps, &current_database_schema, &expected_database_schema)
+        } else {
+            steps
+        }
     }
 }
 
-fn column_type(ft: FieldType) -> ColumnType {
-    match ft {
-        FieldType::Base(scalar) => match scalar {
-            ScalarType::Boolean => ColumnType::Boolean,
-            ScalarType::String => ColumnType::String,
-            ScalarType::Int => ColumnType::Int,
-            ScalarType::Float => ColumnType::Float,
-            ScalarType::DateTime => ColumnType::DateTime,
-            _ => unimplemented!(),
-        },
-        _ => panic!("Only scalar types are supported here"),
+impl SqlDatabaseMigrationStepsInferrer {
+    fn fix_stupid_sqlite(
+        &self,
+        steps: Vec<SqlMigrationStep>,
+        current_database_schema: &DatabaseSchema,
+        next_database_schema: &DatabaseSchema,
+    ) -> Vec<SqlMigrationStep> {
+        let mut result = Vec::new();
+        for step in steps {
+            match step {
+                SqlMigrationStep::AlterTable(ref alter_table) if self.needs_fix(&alter_table) => {
+                    let current_table = current_database_schema.table(&alter_table.table).unwrap();
+                    let next_table = next_database_schema.table(&alter_table.table).unwrap();
+                    let mut altered_steps = self.fix(&alter_table, &current_table, &next_table);
+                    result.append(&mut altered_steps);
+                }
+                x => result.push(x),
+            }
+        }
+        result
+    }
+
+    fn needs_fix(&self, alter_table: &AlterTable) -> bool {
+        let change_that_does_not_work_on_sqlite = alter_table.changes.iter().find(|change| match change {
+            TableChange::AddColumn(add_column) => {
+                // sqlite does not allow adding not null columns without a default value even if the table is empty
+                // hence we just use our normal migration process
+                // https://laracasts.com/discuss/channels/general-discussion/migrations-sqlite-general-error-1-cannot-add-a-not-null-column-with-default-value-null
+                add_column.column.required
+            }
+            TableChange::DropColumn(_) => true,
+            TableChange::AlterColumn(_) => true,
+        });
+        change_that_does_not_work_on_sqlite.is_some()
+    }
+
+    fn fix(&self, _alter_table: &AlterTable, current: &Table, next: &Table) -> Vec<SqlMigrationStep> {
+        // based on 'Making Other Kinds Of Table Schema Changes' from https://www.sqlite.org/lang_altertable.html
+        let name_of_temporary_table = format!("new_{}", next.name.clone());
+        vec![
+            SqlMigrationStep::RawSql("PRAGMA foreign_keys=OFF;".to_string()),
+            // todo: start transaction now
+            SqlMigrationStep::CreateTable(CreateTable {
+                name: format!("new_{}", next.name.clone()),
+                columns: DatabaseSchemaDiffer::column_descriptions(&next.columns),
+                primary_columns: next.primary_key_columns.clone(),
+            }),
+            // copy table contents
+            {
+                let current_columns: Vec<String> = current.columns.iter().map(|c| c.name.clone()).collect();
+                let next_columns: Vec<String> = next.columns.iter().map(|c| c.name.clone()).collect();
+                let intersection_columns: Vec<String> = current_columns
+                    .into_iter()
+                    .filter(|c| next_columns.contains(&c))
+                    .collect();
+                let columns_string = intersection_columns.join(",");
+                let sql = format!(
+                    "INSERT INTO {} ({}) SELECT {} from {}",
+                    name_of_temporary_table,
+                    columns_string,
+                    columns_string,
+                    next.name.clone()
+                );
+                SqlMigrationStep::RawSql(sql.to_string())
+            },
+            SqlMigrationStep::DropTable(DropTable {
+                name: current.name.clone(),
+            }),
+            SqlMigrationStep::RenameTable {
+                name: name_of_temporary_table,
+                new_name: next.name.clone(),
+            },
+            // todo: recreate indexes + triggers
+            SqlMigrationStep::RawSql(format!(r#"PRAGMA "{}".foreign_key_check;"#, self.schema_name)),
+            // todo: commit transaction
+            SqlMigrationStep::RawSql("PRAGMA foreign_keys=ON;".to_string()),
+        ]
     }
 }
 
@@ -91,9 +111,4 @@ where
     F: FnMut(T) -> SqlMigrationStep,
 {
     steps.into_iter().map(|x| wrap_fn(x)).collect()
-}
-
-enum CreateModelOrField {
-    Model(CreateModel),
-    Field(CreateField),
 }

@@ -1,5 +1,5 @@
 model Blog {
-    id: String @primary
+    id: Int @primary
     name: String
     viewCount: Int
     posts: Post[]
@@ -7,9 +7,15 @@ model Blog {
 }
 
 model Author {
-    id: String @primary
+    id: Int @primary
     name: String?
     authors: Blog[]
+    city: City?
+}
+
+model City {
+    id: Int @primary
+    author: Author?
 }
 
 model Post {

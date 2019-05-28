@@ -5,3 +5,5 @@ pub mod rpc_api;
 
 #[macro_use]
 extern crate serde_derive;
+
+pub use migration_engine::*;

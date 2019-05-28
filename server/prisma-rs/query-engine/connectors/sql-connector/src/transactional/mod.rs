@@ -4,7 +4,11 @@ mod mutaction_executor;
 pub use data_resolver::*;
 pub use mutaction_executor::*;
 
-use crate::{error::*, query_builder::QueryBuilder, AliasedCondition, RawQuery, SqlResult, SqlRow};
+use crate::{
+    error::*,
+    query_builder::{QueryBuilder, RelatedNodesQueryBuilder},
+    AliasedCondition, RawQuery, SqlResult, SqlRow,
+};
 use connector::{
     error::NodeSelectorInfo,
     filter::{Filter, NodeSelector},
@@ -18,6 +22,10 @@ use std::{convert::TryFrom, sync::Arc};
 /// queries in the transaction and commit the results to the database or do a
 /// rollback in case of an error.
 pub trait Transactional {
+    /// This we use to differentiate between databases with or without
+    /// `ROW_NUMBER` function for related nodes pagination.
+    type RelatedNodesBuilder: RelatedNodesQueryBuilder;
+
     /// Wrap a closure into a transaction. All actions done through the
     /// `Transaction` are commited automatically, or rolled back in case of any
     /// error.
@@ -37,7 +45,7 @@ pub trait Transaction {
     fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>>;
 
     /// Select multiple rows from the database.
-    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>>;
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>>;
 
     /// Executes a raw query string with no parameterization or safety,
     /// resulting a Json value. Do not use internally anywhere in the code.
@@ -82,7 +90,7 @@ pub trait Transaction {
 
     /// Select one row from the database.
     fn find(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<SqlRow> {
-        self.filter(q.limit(1), idents)?
+        self.filter(q.limit(1).into(), idents)?
             .into_iter()
             .next()
             .ok_or(SqlError::NodeDoesNotExist)
@@ -120,7 +128,7 @@ pub trait Transaction {
     }
 
     fn select_ids(&mut self, select: Select) -> SqlResult<Vec<GraphqlId>> {
-        let mut rows = self.filter(select, &[TypeIdentifier::GraphQLID])?;
+        let mut rows = self.filter(select.into(), &[TypeIdentifier::GraphQLID])?;
         let mut result = Vec::new();
 
         for mut row in rows.drain(0..) {

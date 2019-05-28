@@ -8,6 +8,12 @@ pub trait DatabaseInspector {
     fn introspect(&self, schema: &String) -> DatabaseSchema;
 }
 
+impl DatabaseInspector {
+    pub fn empty() -> Box<DatabaseInspector> {
+        Box::new(EmptyDatabaseInspectorImpl {})
+    }
+}
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct DatabaseSchema {
     pub tables: Vec<Table>,
@@ -18,8 +24,16 @@ impl DatabaseSchema {
         self.tables.iter().find(|t| t.name == name)
     }
 
+    pub fn table_bang(&self, name: &str) -> &Table {
+        self.table(&name).expect(&format!("Table {} not found", name))
+    }
+
     pub fn has_table(&self, name: &str) -> bool {
         self.table(name).is_some()
+    }
+
+    pub fn empty() -> DatabaseSchema {
+        DatabaseSchema { tables: Vec::new() }
     }
 }
 
@@ -28,9 +42,15 @@ pub struct Table {
     pub name: String,
     pub columns: Vec<Column>,
     pub indexes: Vec<Index>,
+    pub primary_key_columns: Vec<String>,
 }
 
 impl Table {
+    pub fn column_bang(&self, name: &str) -> &Column {
+        self.column(name)
+            .expect(&format!("Column {} not found in Table {}", name, self.name))
+    }
+
     pub fn column(&self, name: &str) -> Option<&Column> {
         self.columns.iter().find(|c| c.name == name)
     }

@@ -1,8 +1,11 @@
-use crate::{MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow, Transaction, Transactional};
-use chrono::{DateTime, Utc};
+use crate::{
+    query_builder::RelatedNodesWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow,
+    Transaction, Transactional,
+};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
-    ast::{Query, Select},
+    ast::Query,
     visitor::{self, Visitor},
 };
 use r2d2_sqlite::SqliteConnectionManager;
@@ -25,6 +28,8 @@ pub struct Sqlite {
 }
 
 impl Transactional for Sqlite {
+    type RelatedNodesBuilder = RelatedNodesWithRowNumber;
+
     fn with_transaction<F, T>(&self, db: &str, f: F) -> SqlResult<T>
     where
         F: FnOnce(&mut Transaction) -> SqlResult<T>,
@@ -54,15 +59,15 @@ impl<'a> Transaction for SqliteTransaction<'a> {
         Ok(Some(GraphqlId::Int(self.last_insert_rowid() as usize)))
     }
 
-    fn filter(&mut self, q: Select, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
+    fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
         let (sql, params) = dbg!(visitor::Sqlite::build(q));
 
         let mut stmt = self.prepare_cached(&sql)?;
         let mut rows = stmt.query(params)?;
         let mut result = Vec::new();
 
-        while let Some(row) = rows.next() {
-            result.push(row?.to_prisma_row(idents)?);
+        while let Some(row) = rows.next()? {
+            result.push(row.to_sql_row(idents)?);
         }
 
         Ok(result)
@@ -94,9 +99,8 @@ impl<'a> Transaction for SqliteTransaction<'a> {
             let mut rows = stmt.query(NO_PARAMS)?;
             let mut result = Vec::new();
 
-            while let Some(row) = rows.next() {
+            while let Some(row) = rows.next()? {
                 let mut object = Map::new();
-                let row = row?;
 
                 for (i, column) in columns.iter().enumerate() {
                     let value = match row.get_raw(i) {
@@ -104,7 +108,7 @@ impl<'a> Transaction for SqliteTransaction<'a> {
                         ValueRef::Integer(i) => Value::Number(Number::from(i)),
                         ValueRef::Real(f) => Value::Number(Number::from_f64(f).unwrap()),
                         ValueRef::Text(s) => Value::String(String::from(s)),
-                        ValueRef::Blob(b) => Value::String(String::from_utf8(b.to_vec()).unwrap()),
+                        ValueRef::Blob(b) => Value::String(String::from_utf8(b.to_vec())?),
                     };
 
                     object.insert(String::from(column.as_ref()), value);
@@ -137,30 +141,32 @@ impl FromSql for SqlId {
     }
 }
 
-impl<'a, 'stmt> ToSqlRow for SqliteRow<'a, 'stmt> {
-    fn to_prisma_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
+impl<'a> ToSqlRow for SqliteRow<'a> {
+    fn to_sql_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>,
     {
         fn convert(row: &SqliteRow, i: usize, typid: &TypeIdentifier) -> SqlResult<PrismaValue> {
+            let column = &row.columns()[i];
+
             let result = match typid {
-                TypeIdentifier::String => row.get_checked(i).map(|val| PrismaValue::String(val)),
-                TypeIdentifier::GraphQLID | TypeIdentifier::Relation => row.get_checked(i).map(|val| {
+                TypeIdentifier::String => row.get(i).map(|val| PrismaValue::String(val)),
+                TypeIdentifier::GraphQLID | TypeIdentifier::Relation => row.get(i).map(|val| {
                     let id: SqlId = val;
                     PrismaValue::GraphqlId(GraphqlId::from(id))
                 }),
-                TypeIdentifier::Float => row.get_checked(i).map(|val| PrismaValue::Float(val)),
-                TypeIdentifier::Int => row.get_checked(i).map(|val| PrismaValue::Int(val)),
-                TypeIdentifier::Boolean => row.get_checked(i).map(|val| PrismaValue::Boolean(val)),
-                TypeIdentifier::Enum => row.get_checked(i).map(|val| PrismaValue::Enum(val)),
-                TypeIdentifier::Json => row.get_checked(i).and_then(|val| {
+                TypeIdentifier::Float => row.get(i).map(|val| PrismaValue::Float(val)),
+                TypeIdentifier::Int => row.get(i).map(|val| PrismaValue::Int(val)),
+                TypeIdentifier::Boolean => row.get(i).map(|val| PrismaValue::Boolean(val)),
+                TypeIdentifier::Enum => row.get(i).map(|val| PrismaValue::Enum(val)),
+                TypeIdentifier::Json => row.get(i).and_then(|val| {
                     let val: String = val;
                     serde_json::from_str(&val).map(|r| PrismaValue::Json(r)).map_err(|err| {
                         SqliteError::FromSqlConversionFailure(i as usize, SqliteType::Text, Box::new(err))
                     })
                 }),
                 TypeIdentifier::UUID => {
-                    let result: Result<String, _> = row.get_checked(i);
+                    let result: Result<String, _> = row.get(i);
 
                     if let Ok(val) = result {
                         let uuid = Uuid::parse_str(val.as_ref())?;
@@ -170,14 +176,19 @@ impl<'a, 'stmt> ToSqlRow for SqliteRow<'a, 'stmt> {
                         result.map(|s| PrismaValue::String(s))
                     }
                 }
-                TypeIdentifier::DateTime => row.get_checked(i).map(|ts: i64| {
-                    let nsecs = ((ts % 1000) * 1_000_000) as u32;
-                    let secs = (ts / 1000) as i64;
-                    let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
-                    let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+                TypeIdentifier::DateTime => match column.decl_type() {
+                    Some("DATETIME") => row
+                        .get(i)
+                        .map(|naive: NaiveDateTime| PrismaValue::DateTime(DateTime::from_utc(naive, Utc))),
+                    _ => row.get(i).map(|ts: i64| {
+                        let nsecs = ((ts % 1000) * 1_000_000) as u32;
+                        let secs = (ts / 1000) as i64;
+                        let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
+                        let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
 
-                    PrismaValue::DateTime(datetime)
-                }),
+                        PrismaValue::DateTime(datetime)
+                    }),
+                },
             };
 
             match result {
@@ -220,8 +231,9 @@ impl Sqlite {
 
         let databases: HashSet<String> = stmt
             .query_map(NO_PARAMS, |row| {
-                let name: String = row.get(1);
-                name
+                let name: String = row.get(1)?;
+
+                Ok(name)
             })?
             .map(|res| res.unwrap())
             .collect();

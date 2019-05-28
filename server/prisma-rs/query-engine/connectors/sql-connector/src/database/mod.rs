@@ -1,7 +1,9 @@
+mod mysql;
 mod postgresql;
 mod sqlite;
 
 use crate::Transactional;
+pub use mysql::*;
 pub use postgresql::*;
 pub use sqlite::*;
 

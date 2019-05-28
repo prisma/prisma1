@@ -8,6 +8,7 @@ use serde::Serialize;
 use std::fmt::Debug;
 use std::sync::Arc;
 pub use steps::MigrationStep;
+use database_inspector::DatabaseInspector;
 
 #[macro_use]
 extern crate serde_derive;
@@ -31,6 +32,10 @@ pub trait MigrationConnector {
             step_applier: self.database_step_applier(),
         };
         Box::new(applier)
+    }
+
+    fn database_inspector(&self) -> Box<DatabaseInspector> {
+        DatabaseInspector::empty()
     }
 }
 
@@ -70,6 +75,8 @@ pub struct MigrationError {
 pub trait MigrationPersistence {
     // returns the last successful Migration
     fn last(&self) -> Option<Migration>;
+
+    fn by_name(&self, name: &str) -> Option<Migration>;
 
     // this power the listMigrations command
     fn load_all(&self) -> Vec<Migration>;

@@ -1,3 +1,4 @@
+use crate::{WriteQuery, WriteQueryResult};
 use connector::mutaction::{DatabaseMutactionResult, TopLevelDatabaseMutaction};
 use connector::{ConnectorResult, DatabaseMutactionExecutor};
 use std::sync::Arc;
@@ -9,7 +10,16 @@ pub struct WriteQueryExecutor {
 }
 
 impl WriteQueryExecutor {
-    pub fn execute(&self, mutaction: TopLevelDatabaseMutaction) -> ConnectorResult<DatabaseMutactionResult> {
-        self.write_executor.execute(self.db_name.clone(), mutaction)
+    pub fn execute(&self, mutactions: Vec<WriteQuery>) -> ConnectorResult<Vec<WriteQueryResult>> {
+        let mut vec = vec![];
+        for wq in mutactions {
+            let res = self.write_executor.execute(self.db_name.clone(), wq.inner.clone())?;
+            vec.push(WriteQueryResult {
+                inner: res,
+                origin: wq,
+            });
+        }
+
+        Ok(vec)
     }
 }

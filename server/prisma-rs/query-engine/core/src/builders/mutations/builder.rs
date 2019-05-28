@@ -1,124 +1,125 @@
 //! Providing an interface to build WriteQueries
+#![allow(warnings)]
 
-use crate::{builders::utils, CoreError, CoreResult, WriteQuery};
-use connector::mutaction::{CreateNode, DeleteNode, DeleteNodes, TopLevelDatabaseMutaction, UpdateNode, UpsertNode};
+use crate::{
+    builders::{convert_tree, utils, ScopedArg, ScopedArgNode},
+    CoreError, CoreResult, WriteQuery,
+};
+use connector::mutaction::*; // ALL OF IT
 use graphql_parser::query::{Field, Value};
-use prisma_models::{InternalDataModelRef, ModelRef, PrismaArgs, PrismaValue};
+use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, Project};
 
 use crate::Inflector;
 use rust_inflector::Inflector as RustInflector;
 
-use std::collections::BTreeMap;
 use std::sync::Arc;
 
 /// A TopLevelMutation builder
 ///
-/// It takes a graphql field and internal_data_model
+/// It takes a graphql field and model
 /// and builds a mutation tree from it
 #[derive(Debug)]
 pub struct MutationBuilder<'field> {
     field: &'field Field,
-    internal_data_model: InternalDataModelRef,
+    model: InternalDataModelRef,
 }
 
-type PrismaListArgs = Vec<(String, Option<Vec<PrismaValue>>)>;
-
 impl<'field> MutationBuilder<'field> {
-    pub fn new(internal_data_model: InternalDataModelRef, field: &'field Field) -> Self {
-        Self {
-            field,
-            internal_data_model,
-        }
+    pub fn new(model: InternalDataModelRef, field: &'field Field) -> Self {
+        Self { field, model }
     }
 
     pub fn build(self) -> CoreResult<WriteQuery> {
-        let (non_list_args, list_args) = get_mutation_args(&self.field.arguments);
+        // Handle `resetData` seperately
+        if &self.field.name == "resetData" {
+            return handle_reset(&self.field, &self.model);
+        }
+
+        let args = dbg!(ScopedArg::parse(&self.field.arguments)?);
+        let non_list_args = convert_tree(&args.data).into();
+        let list_args = args.lists.iter().map(|la| la.into()).collect();
+
         let (op, model) = parse_model_action(
             self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
-            Arc::clone(&self.internal_data_model),
+            Arc::clone(&self.model),
         )?;
 
-        let inner = match op {
-            Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
-                model,
-                non_list_args,
-                list_args,
-                nested_mutactions: Default::default(),
-            }),
-            Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
-                where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
-                non_list_args,
-                list_args,
-                nested_mutactions: Default::default(),
-            }),
-            Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
-                where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
-            }),
-            Operation::DeleteMany => TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes {
-                model,
-                filter: unsafe { std::mem::uninitialized() }, // BOOM
-            }),
-            Operation::Upsert => TopLevelDatabaseMutaction::UpsertNode(UpsertNode {
-                where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
-                create: CreateNode {
+        let nested_mutactions = build_nested(&args, Arc::clone(&model), &op)?;
+
+        let inner =
+            match op {
+                Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
                     model: Arc::clone(&model),
-                    non_list_args: non_list_args.clone(),
-                    list_args: list_args.clone(),
-                    nested_mutactions: Default::default(),
-                },
-                update: UpdateNode {
+                    non_list_args,
+                    list_args,
+                    nested_mutactions,
+                }),
+                Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
                     where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                     non_list_args,
                     list_args,
-                    nested_mutactions: Default::default(),
-                },
-            }),
-            _ => unimplemented!(),
-        };
+                    nested_mutactions,
+                }),
+                Operation::UpdateMany => {
+                    let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
+                    let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
+                        Err(CoreError::QueryValidationError("Required filters not found!".into()))
+                    })?;
+
+                    dbg!(&filter);
+
+                    TopLevelDatabaseMutaction::UpdateNodes(UpdateNodes {
+                        model: Arc::clone(&model),
+                        filter,
+                        non_list_args,
+                        list_args,
+                    })
+                }
+                Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
+                    where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
+                }),
+                Operation::DeleteMany => {
+                    let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
+                    let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
+                        Err(CoreError::QueryValidationError("Required filters not found!".into()))
+                    })?;
+
+                    TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
+                }
+                Operation::Upsert => TopLevelDatabaseMutaction::UpsertNode(UpsertNode {
+                    where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
+                    create: CreateNode {
+                        model: Arc::clone(&model),
+                        non_list_args: non_list_args.clone(),
+                        list_args: list_args.clone(),
+                        nested_mutactions: nested_mutactions.clone(),
+                    },
+                    update: UpdateNode {
+                        where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
+                        non_list_args,
+                        list_args,
+                        nested_mutactions,
+                    },
+                }),
+                _ => unimplemented!(),
+            };
 
         // FIXME: Cloning is unethical and should be avoided
         Ok(WriteQuery {
             inner,
             field: self.field.clone(),
-            nested: vec![],
         })
     }
 }
 
-/// Extract String-Value pairs into usable mutation arguments
-fn get_mutation_args(args: &Vec<(String, Value)>) -> (PrismaArgs, PrismaListArgs) {
-    let (args, lists) = args
-        .iter()
-        .fold((BTreeMap::new(), vec![]), |(mut map, mut vec), (_, v)| {
-            match v {
-                Value::Object(o) => o.iter().for_each(|(k, v)| {
-                    // If the child is an object, we are probably dealing with ScalarList values
-                    match v {
-                        Value::Object(o) if o.contains_key("set") => {
-                            vec.push((
-                                k.clone(),
-                                match o.get("set") {
-                                    Some(Value::List(l)) => Some(
-                                        l.iter()
-                                            .map(|v| PrismaValue::from_value(v))
-                                            .collect::<Vec<PrismaValue>>(),
-                                    ),
-                                    None => None,
-                                    _ => unimplemented!(), // or unreachable? dunn duuuuun!
-                                },
-                            ));
-                        }
-                        v => {
-                            map.insert(k.clone(), PrismaValue::from_value(v));
-                        }
-                    }
-                }),
-                _ => panic!("Unknown argument structure!"),
-            }
-
-            (map, vec)
-        });
-    (args.into(), lists)
+/// A trap-door function that handles `resetData` without doing a whole bunch of other stuff
+fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<WriteQuery> {
+    Ok(WriteQuery {
+        inner: TopLevelDatabaseMutaction::ResetData(ResetData {
+            project: Arc::new(Project::from(data_model)),
+        }),
+        field: field.clone(),
+    })
 }
 
 /// A simple enum to discriminate top-level actions
@@ -148,7 +149,7 @@ impl From<&str> for Operation {
 }
 
 /// Parse the mutation name into an action and the model it should operate on
-fn parse_model_action(name: &String, internal_data_model: InternalDataModelRef) -> CoreResult<(Operation, ModelRef)> {
+fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<(Operation, ModelRef)> {
     let actions = vec!["create", "updateMany", "update", "deleteMany", "delete", "upsert"];
 
     let action = match actions.iter().find(|action| name.starts_with(*action)) {
@@ -166,8 +167,8 @@ fn parse_model_action(name: &String, internal_data_model: InternalDataModelRef) 
         }
     };
 
-    let normalized = dbg!(Inflector::singularize(model_name).to_pascal_case());
-    let model = match internal_data_model.models().iter().find(|m| m.name == normalized) {
+    let normalized = Inflector::singularize(model_name).to_pascal_case();
+    let model = match model.models().iter().find(|m| m.name == normalized) {
         Some(m) => m,
         None => {
             return Err(CoreError::QueryValidationError(format!(
@@ -178,4 +179,79 @@ fn parse_model_action(name: &String, internal_data_model: InternalDataModelRef) 
     };
 
     Ok((Operation::from(*action), Arc::clone(&model)))
+}
+
+/// Build nested mutations for a given field/model (called recursively)
+fn build_nested<'f>(
+    args: &'f ScopedArgNode<'f>,
+    model: ModelRef,
+    top_level: &Operation,
+) -> CoreResult<NestedMutactions> {
+    let mut nested: NestedMutactions = Default::default();
+
+    // Filter out all non-nodes
+    let nodes: Vec<_> = args
+        .data
+        .iter()
+        .filter_map(|(k, v)| match v {
+            ScopedArg::Node(node) => Some((k, node)),
+            _ => None,
+        })
+        .collect();
+
+    nodes.into_iter().for_each(|(name, val)| {
+        let mut attrs = vec![];
+
+        // Handle `create` arguments
+        val.create.iter().for_each(|(i_key, i_val)| {
+            match i_val {
+                // Scalars are turned into non-list-arguments
+                ScopedArg::Value(val) => {
+                    attrs.push((i_key.clone(), val));
+                }
+                ScopedArg::Node(node) => {
+                    // For every sub-node just append all creates
+                    let inner = build_nested(&node, Arc::clone(&model), top_level).unwrap();
+                    inner.creates.into_iter().for_each(|create| {
+                        nested.creates.push(create);
+                    });
+                }
+            }
+        });
+
+        // Now take the `create` arguments and create an actual `NestedCreateNode`
+        // We do this here to end the recursion and pass up an actual value
+        use std::collections::BTreeMap;
+
+        let non_list_args = attrs
+            .into_iter()
+            .map(|(k, v)| (k, v.clone()))
+            .collect::<BTreeMap<_, _>>()
+            .into();
+
+        let field = model.fields().find_from_all(&name);
+
+        let relation_field = dbg!(match &field {
+            Ok(ModelField::Relation(f)) => {
+                let model = f.related_model();
+                Arc::clone(&f)
+            }
+            _ => unreachable!(),
+        });
+
+        let ncn = NestedCreateNode {
+            non_list_args,
+            list_args: Default::default(),
+            top_is_create: match top_level {
+                Operation::Create => true,
+                _ => false,
+            },
+            relation_field,
+            nested_mutactions: Default::default(),
+        };
+
+        nested.creates.push(ncn);
+    });
+
+    dbg!(Ok(nested))
 }

@@ -1,9 +1,8 @@
 //! Simple wrapper for WriteQueries
 
-use crate::{builders::utils, BuilderExt, ManyBuilder, ReadQuery, SingleBuilder};
+use crate::{builders::utils, BuilderExt, ReadQuery, SingleBuilder};
 use connector::mutaction::{
-    DatabaseMutactionResult as MutationResult, NestedDatabaseMutaction as NestedMutation,
-    TopLevelDatabaseMutaction as RootMutation, Identifier,
+    DatabaseMutactionResult as MutationResult, Identifier, TopLevelDatabaseMutaction as RootMutation,
 };
 use graphql_parser::query::Field;
 use prisma_models::ModelRef;
@@ -17,22 +16,6 @@ pub struct WriteQuery {
 
     /// Required to create following ReadQuery
     pub field: Field,
-
-    /// Nested mutations
-    pub nested: Vec<NestedWriteQuery>,
-}
-
-/// Nested mutations are slightly different than top-level mutations.
-#[derive(Debug, Clone)]
-pub struct NestedWriteQuery {
-    /// The nested mutation being built
-    pub inner: NestedMutation,
-
-    /// Required to create following ReadQuery
-    pub field: Field,
-
-    /// NestedWriteQueries can only have nested children
-    pub nested: Vec<NestedWriteQuery>,
 }
 
 impl WriteQuery {
@@ -56,11 +39,6 @@ impl WriteQuery {
                 .build()
                 .ok()
                 .map(|q| ReadQuery::RecordQuery(q)),
-            RootMutation::DeleteNodes(_) => ManyBuilder::new()
-                .setup(self.model(), &self.field)
-                .build()
-                .ok()
-                .map(|q| ReadQuery::ManyRecordsQuery(q)),
             _ => None,
         }
     }
@@ -70,6 +48,7 @@ impl WriteQuery {
     pub fn generate_read(&self, res: MutationResult) -> Option<ReadQuery> {
         let field = match res.identifier {
             Identifier::Id(gql_id) => utils::derive_field(&self.field, self.model(), gql_id),
+            Identifier::Count(_) => return None, // FIXME: We need to communicate count!
             _ => unimplemented!(),
         };
 
@@ -87,18 +66,6 @@ impl WriteQuery {
                 .build()
                 .ok()
                 .map(|q| ReadQuery::RecordQuery(q)),
-            _ => unimplemented!(),
-        }
-    }
-}
-
-impl NestedWriteQuery {
-    pub fn model(&self) -> ModelRef {
-        match self.inner {
-            NestedMutation::CreateNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedMutation::UpdateNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedMutation::UpsertNode(ref node) => node.relation_field.model.upgrade().unwrap(),
-            NestedMutation::DeleteNode(ref node) => node.relation_field.model.upgrade().unwrap(),
             _ => unimplemented!(),
         }
     }

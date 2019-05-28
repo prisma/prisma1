@@ -1,4 +1,9 @@
-use crate::{database::SqlDatabase, error::SqlError, query_builder::QueryBuilder, Transactional};
+use crate::{
+    database::SqlDatabase,
+    error::SqlError,
+    query_builder::{QueryBuilder, RelatedNodesBaseQuery, RelatedNodesQueryBuilder},
+    Transactional,
+};
 use connector::{error::ConnectorError, filter::NodeSelector, *};
 use itertools::Itertools;
 use prisma_models::*;
@@ -49,7 +54,7 @@ where
 
         let nodes = self
             .executor
-            .with_transaction(db_name, |conn| conn.filter(query, idents.as_slice()))?
+            .with_transaction(db_name, |conn| conn.filter(query.into(), idents.as_slice()))?
             .into_iter()
             .map(Node::from)
             .collect();
@@ -67,7 +72,17 @@ where
         let db_name = &from_field.model().internal_data_model().db_name;
         let idents = selected_fields.type_identifiers();
         let field_names = selected_fields.names();
-        let query = QueryBuilder::get_related_nodes(from_field, from_node_ids, query_arguments, selected_fields);
+
+        let query = {
+            let is_with_pagination = query_arguments.is_with_pagination();
+            let base = RelatedNodesBaseQuery::new(from_field, from_node_ids, query_arguments, selected_fields);
+
+            if is_with_pagination {
+                T::RelatedNodesBuilder::with_pagination(base)
+            } else {
+                T::RelatedNodesBuilder::without_pagination(base)
+            }
+        };
 
         let nodes: ConnectorResult<Vec<Node>> = self
             .executor
@@ -126,7 +141,7 @@ where
         let query = QueryBuilder::get_scalar_list_values_by_node_ids(list_field, node_ids);
 
         let results: Vec<ScalarListElement> = self.executor.with_transaction(db_name, |conn| {
-            let rows = conn.filter(query, &[TypeIdentifier::GraphQLID, type_identifier])?;
+            let rows = conn.filter(query.into(), &[TypeIdentifier::GraphQLID, type_identifier])?;
 
             rows.into_iter()
                 .map(|row| {

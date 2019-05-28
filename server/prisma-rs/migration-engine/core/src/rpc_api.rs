@@ -1,13 +1,9 @@
-use crate::commands::command::MigrationCommand;
-use crate::commands::infer_migration_steps::InferMigrationStepsCommand;
+use crate::commands::*;
 use crate::migration_engine::*;
 use jsonrpc_core;
 use jsonrpc_core::IoHandler;
 use jsonrpc_core::*;
-use migration_connector::*;
-use sql_migration_connector::*;
 use std::io;
-use std::path::Path;
 
 pub struct RpcApi {
     io_handler: jsonrpc_core::IoHandler<()>,
@@ -19,6 +15,10 @@ impl RpcApi {
             io_handler: IoHandler::new(),
         };
         rpc_api.add_command_handler::<InferMigrationStepsCommand>("inferMigrationSteps");
+        rpc_api.add_command_handler::<ListMigrationStepsCommand>("listMigrations");
+        rpc_api.add_command_handler::<MigrationProgressCommand>("migrationProgress");
+        rpc_api.add_command_handler::<ApplyMigrationCommand>("applyMigration");
+        rpc_api.add_command_handler::<UnapplyMigrationCommand>("unapplyMigration");
         rpc_api
     }
 
@@ -27,7 +27,7 @@ impl RpcApi {
             let input: T::Input = params.parse()?;
             let cmd = T::new(input);
             let engine = MigrationEngine::new();
-            let response_json = serde_json::to_value(&cmd.execute(engine)).unwrap();
+            let response_json = serde_json::to_value(&cmd.execute(&engine)).unwrap();
             Ok(response_json)
         });
     }
@@ -39,14 +39,3 @@ impl RpcApi {
         println!("{}", response);
     }
 }
-
-//
-//impl From<serde_json::Error> for jsonrpc_core::types::error::Error {
-//    fn from(serdeError: serde_json::Error) -> Self {
-//        jsonrpc_core::types::error::Error {
-//            code: ErrorCode::InternalError,
-//            message: "boo".to_owned(),
-//            data: None,
-//        }
-//    }
-//}

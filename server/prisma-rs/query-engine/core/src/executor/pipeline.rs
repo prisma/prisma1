@@ -16,7 +16,7 @@
 
 #![allow(warnings)]
 
-use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery};
+use crate::{Query, ReadQuery, ReadQueryResult, WriteQuery, WriteQueryResult};
 use indexmap::IndexMap;
 use std::mem::replace;
 
@@ -56,6 +56,7 @@ enum Stage {
 /// 5. `get_reads()`
 /// 6. `store_reads()`
 /// 7. `consume()`
+#[derive(Debug)]
 pub struct QueryPipeline(Vec<Stage>);
 
 impl From<Vec<Query>> for QueryPipeline {
@@ -141,6 +142,27 @@ impl QueryPipeline {
 
         self.0 = rest;
         writes
+    }
+
+    /// Store relevant WriteQuery return values and generate ReadQueries
+    pub fn process_writes(&mut self, writes: Vec<(Option<usize>, WriteQueryResult)>) -> Vec<(usize, ReadQuery)> {
+        writes.into_iter().filter_map(|(idx, result)| {
+            let read_result = result.generate_result();
+            let origin = result.origin;
+            let inner = result.inner;
+
+            match (idx, origin.generate_read(inner)) {
+                (Some(idx), Some(read)) => Some((idx, read)),
+                (Some(idx), None) => {
+                    self.0.remove(idx);
+                    self.0.insert(idx, Stage::Done(read_result.unwrap()));
+
+                    // Return None to exclude from the list
+                    None
+                },
+                (_, _) => unreachable!()
+            }
+        }).collect()
     }
 
     /// Store read results at placeholder locations in the pipeline
