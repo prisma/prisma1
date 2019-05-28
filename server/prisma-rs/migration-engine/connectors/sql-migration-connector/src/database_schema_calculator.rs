@@ -95,7 +95,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
 
     fn add_inline_relations_to_model_tables(&self, model_tables: Vec<ModelTable>) -> Vec<Table> {
         let mut result = Vec::new();
-        let relations = dbg!(self.calculate_relations());
+        let relations = self.calculate_relations();
         for mut model_table in model_tables {
             for relation in relations.iter() {
                 match &relation.manifestation {
@@ -110,7 +110,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         };
                         let column = Column::with_foreign_key(
                             column.to_string(),
-                            column_type(&model_table.model.id_field()),
+                            column_type(&related_model.id_field()),
                             relation.field_a.is_required() || relation.field_b.is_required(),
                             ForeignKey {
                                 table: related_model.db_name(),
@@ -195,13 +195,24 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         };
 
                         let (model_a, model_b, field_a, field_b) = match () {
-                            _ if &model.name < &related_model.name => {
-                                (model.clone(), related_model.clone(), field.clone(), related_field.clone())
-                            }
-                            _ if &related_model.name < &model.name => {
-                                (related_model.clone(), model.clone(), related_field.clone(), field.clone())
-                            }
-                            _ => (model.clone(), related_model.clone(), field.clone(), related_field.clone()),
+                            _ if &model.name < &related_model.name => (
+                                model.clone(),
+                                related_model.clone(),
+                                field.clone(),
+                                related_field.clone(),
+                            ),
+                            _ if &related_model.name < &model.name => (
+                                related_model.clone(),
+                                model.clone(),
+                                related_field.clone(),
+                                field.clone(),
+                            ),
+                            _ => (
+                                model.clone(),
+                                related_model.clone(),
+                                field.clone(),
+                                related_field.clone(),
+                            ),
                         };
                         let inline_on_model_a = RelationManifestation::Inline {
                             in_table_of_model: model_a.name.clone(),
@@ -226,20 +237,20 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             },
                             (false, true) => inline_on_model_a,
                             (true, false) => inline_on_model_b,
-                            (false, false) => {
-                                    match (to_field, &related_field_info.to_field) {
-                                        (Some(_), None) => inline_on_this_model,
-                                        (None, Some(_)) => inline_on_related_model,
-                                        (None, None) => {
-                                            if model_a.name < model_b.name {
-                                                inline_on_model_a
-                                            } else {
-                                                inline_on_model_b
-                                            }
-                                        },
-                                        (Some(_), Some(_)) => panic!("It's not allowed that both sides of a relation specify the inline policy")
+                            (false, false) => match (to_field, &related_field_info.to_field) {
+                                (Some(_), None) => inline_on_this_model,
+                                (None, Some(_)) => inline_on_related_model,
+                                (None, None) => {
+                                    if model_a.name < model_b.name {
+                                        inline_on_model_a
+                                    } else {
+                                        inline_on_model_b
                                     }
-                            }
+                                }
+                                (Some(_), Some(_)) => {
+                                    panic!("It's not allowed that both sides of a relation specify the inline policy")
+                                }
+                            },
                         };
 
                         result.push(Relation {

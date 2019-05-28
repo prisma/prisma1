@@ -108,40 +108,49 @@ fn update_type_of_scalar_field_must_work() {
 }
 
 #[test]
-#[ignore]
 fn changing_the_type_of_an_id_field_must_work() {
-    // TODO: this does not work because relation inlining is not supported yet.
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
                 id: Int @primary
-                b: B # remove once implicit back relation field is implemented
+                b: B(id) 
             }
             model B {
                 id: Int @primary
-                a: A(id)
+                a: A # remove once implicit back relation field is implemented
             }
         "#;
         let result = migrate_to(&engine, &dm1);
-        let column = result.table_bang("B").column_bang("a");
+        let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::Int);
-        assert_eq!(column.foreign_key, Some(ForeignKey{table: "A".to_string(), column: "id".to_string()}));
+        assert_eq!(
+            column.foreign_key,
+            Some(ForeignKey {
+                table: "B".to_string(),
+                column: "id".to_string()
+            })
+        );
 
         let dm2 = r#"
             model A {
-                id: String @primary
-                b: B # remove once implicit back relation field is implemented
+                id: Int @primary
+                b: B(id) 
             }
             model B {
-                id: Int @primary
-                a: A(id)
+                id: String @primary
+                a: A # remove once implicit back relation field is implemented
             }
         "#;
         let result = migrate_to(&engine, &dm2);
-        let column = result.table_bang("B").column_bang("a");
-        // TODO: bring this back once barrel supports string ids
-        // assert_eq!(column.tpe, ColumnType::String);
-        assert_eq!(column.foreign_key, Some(ForeignKey{table: "A".to_string(), column: "id".to_string()}));
+        let column = result.table_bang("A").column_bang("b");
+        assert_eq!(column.tpe, ColumnType::String);
+        assert_eq!(
+            column.foreign_key,
+            Some(ForeignKey {
+                table: "B".to_string(),
+                column: "id".to_string()
+            })
+        );
     });
 }
 
@@ -206,7 +215,36 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
 
 #[test]
 fn changing_a_scalar_field_to_a_relation_field_must_work() {
-    // this relies on link: INLINE which we don't support yet
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model A {
+                id: Int @primary
+                b: String
+            }
+            model B {
+                id: Int @primary
+            }
+        "#;
+        let result = migrate_to(&engine, &dm1);
+        let column = result.table_bang("A").column_bang("b");
+        assert_eq!(column.foreign_key.is_some(), false);
+        assert_eq!(column.tpe, ColumnType::String);
+
+        let dm2 = r#"
+            model A {
+                id: Int @primary
+                b: B(id)
+            }
+            model B {
+                id: Int @primary
+                a: A # remove this once the implicit back relation field is implemented
+            }
+        "#;
+        let result = migrate_to(&engine, &dm2);
+        let column = result.table_bang("A").column_bang("b");
+        assert_eq!(column.foreign_key.is_some(), true);
+        assert_eq!(column.tpe, ColumnType::Int);
+    });
 }
 
 #[test]
@@ -228,10 +266,22 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
         assert_eq!(relation_table.columns.len(), 2);
         let aColumn = relation_table.column_bang("A");
         assert_eq!(aColumn.tpe, ColumnType::Int);
-        assert_eq!(aColumn.foreign_key, Some(ForeignKey{table: "A".to_string(), column: "id".to_string()}));
+        assert_eq!(
+            aColumn.foreign_key,
+            Some(ForeignKey {
+                table: "A".to_string(),
+                column: "id".to_string()
+            })
+        );
         let bColumn = relation_table.column_bang("B");
         assert_eq!(bColumn.tpe, ColumnType::Int);
-        assert_eq!(bColumn.foreign_key, Some(ForeignKey{table: "B".to_string(), column: "id".to_string()}));
+        assert_eq!(
+            bColumn.foreign_key,
+            Some(ForeignKey {
+                table: "B".to_string(),
+                column: "id".to_string()
+            })
+        );
     });
 }
 
@@ -259,8 +309,171 @@ fn forcing_a_relation_table_for_a_one_to_many_relation_must_work() {
 #[test]
 #[ignore]
 fn providing_an_explicit_link_table_must_work() {
-     // TODO: implement this once we have decided if this is actually possible in dm v2
+    // TODO: implement this once we have decided if this is actually possible in dm v2
     unimplemented!();
+}
+
+#[test]
+fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model A {
+                id: Int @primary
+                b: B(id)
+            }
+
+            model B {
+                id: Int @primary
+                a: A # todo: remove when implicit back relation field is implemented
+            }
+        "#;
+        let result = dbg!(migrate_to(&engine, &dm1));
+        let column = result.table_bang("A").column_bang("b");
+        assert_eq!(column.tpe, ColumnType::Int);
+        assert_eq!(
+            column.foreign_key,
+            Some(ForeignKey {
+                table: "B".to_string(),
+                column: "id".to_string()
+            })
+        );
+    });
+}
+
+#[test]
+fn specifying_a_db_name_for_an_inline_relation_must_work() {
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model A {
+                id: Int @primary
+                b: B(id) @db(name: "b_column")
+            }
+
+            model B {
+                id: Int @primary
+                a: A # todo: remove when implicit back relation field is implemented
+            }
+        "#;
+        let result = dbg!(migrate_to(&engine, &dm1));
+        let column = result.table_bang("A").column_bang("b_column");
+        assert_eq!(column.tpe, ColumnType::Int);
+        assert_eq!(
+            column.foreign_key,
+            Some(ForeignKey {
+                table: "B".to_string(),
+                column: "id".to_string()
+            })
+        );
+    });
+}
+
+#[test]
+fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model A {
+                id: Int @primary
+                b: B(id) 
+            }
+
+            model B {
+                id: String @primary
+                a: A # todo: remove when implicit back relation field is implemented
+            }
+        "#;
+        let result = dbg!(migrate_to(&engine, &dm1));
+        let column = result.table_bang("A").column_bang("b");
+        assert_eq!(column.tpe, ColumnType::String);
+        assert_eq!(
+            column.foreign_key,
+            Some(ForeignKey {
+                table: "B".to_string(),
+                column: "id".to_string()
+            })
+        );
+    });
+}
+
+#[test]
+fn removing_an_inline_relation_must_work() {
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model A {
+                id: Int @primary
+                b: B(id)
+            }
+
+            model B {
+                id: Int @primary
+                a: A # todo: remove when implicit back relation field is implemented
+            }
+        "#;
+        let result = dbg!(migrate_to(&engine, &dm1));
+        let column = result.table_bang("A").column("b");
+        assert_eq!(column.is_some(), true);
+
+        let dm2 = r#"
+            model A {
+                id: Int @primary
+            }
+
+            model B {
+                id: Int @primary
+            }
+        "#;
+        let result = dbg!(migrate_to(&engine, &dm2));
+        let column = result.table_bang("A").column("b");
+        assert_eq!(column.is_some(), false);
+    });
+}
+
+#[test]
+#[ignore]
+fn moving_an_inline_relation_to_the_other_side_must_work() {
+    // TODO: bring this back when relation inlining works in the new datamodel
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model A {
+                id: Int @primary
+                b: B(id)
+            }
+
+            model B {
+                id: Int @primary
+                a: A # todo: remove when implicit back relation field is implemented
+            }
+        "#;
+        let result = dbg!(migrate_to(&engine, &dm1));
+        let column = result.table_bang("A").column_bang("b");
+        assert_eq!(
+            column.foreign_key,
+            Some(ForeignKey {
+                table: "B".to_string(),
+                column: "id".to_string()
+            })
+        );
+
+        let dm2 = r#"
+            model A {
+                id: Int @primary
+                b: B # todo: remove when implicit back relation field is implemented
+            }
+
+            model B {
+                id: Int @primary
+                a: A(id)
+            }
+        "#;
+        let result = dbg!(migrate_to(&engine, &dm2));
+        let column = result.table_bang("B").column_bang("a");
+        assert_eq!(
+            column.foreign_key,
+            Some(ForeignKey {
+                table: "A".to_string(),
+                column: "id".to_string()
+            })
+        );
+    });
 }
 
 #[test]
@@ -275,7 +488,11 @@ fn adding_a_unique_constraint_must_work() {
             }
         "#;
         let result = dbg!(migrate_to(&engine, &dm1));
-        let index = result.table_bang("A").indexes.iter().find(|i|i.columns == vec!["field"]);
+        let index = result
+            .table_bang("A")
+            .indexes
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), true);
         assert_eq!(index.unwrap().unique, true);
     });
@@ -293,7 +510,11 @@ fn removing_a_unique_constraint_must_work() {
             }
         "#;
         let result = migrate_to(&engine, &dm1);
-        let index = result.table_bang("A").indexes.iter().find(|i|i.columns == vec!["field"]);
+        let index = result
+            .table_bang("A")
+            .indexes
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), true);
         assert_eq!(index.unwrap().unique, true);
 
@@ -303,7 +524,11 @@ fn removing_a_unique_constraint_must_work() {
             }
         "#;
         let result = dbg!(migrate_to(&engine, &dm2));
-        let index = result.table_bang("A").indexes.iter().find(|i|i.columns == vec!["field"]);
+        let index = result
+            .table_bang("A")
+            .indexes
+            .iter()
+            .find(|i| i.columns == vec!["field"]);
         assert_eq!(index.is_some(), false);
     });
 }
@@ -322,5 +547,30 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
         let node_id_column = scalar_list_table.column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::Int);
         assert_eq!(scalar_list_table.primary_key_columns, vec!["nodeId", "position"]);
+    });
+}
+
+#[test]
+fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
+    run_test_with_engine(|engine| {
+        let dm = r#"
+            model A {
+                id: Int @primary
+                strings: String[]
+            }
+        "#;
+        let result = migrate_to(&engine, &dm);
+        let node_id_column = result.table_bang("A_strings").column_bang("nodeId");
+        assert_eq!(node_id_column.tpe, ColumnType::Int);
+
+        let dm = r#"
+            model A {
+                id: String @primary
+                strings: String[]
+            }
+        "#;
+        let result = migrate_to(&engine, &dm);
+        let node_id_column = result.table_bang("A_strings").column_bang("nodeId");
+        assert_eq!(node_id_column.tpe, ColumnType::String);
     });
 }

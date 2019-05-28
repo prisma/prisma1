@@ -105,7 +105,12 @@ impl SqlDatabaseStepApplier {
 fn column_description_to_barrel_type(column_description: &ColumnDescription) -> barrel::types::Type {
     // TODO: add foreign keys for non integer types once this is available in barrel
     let tpe = match &column_description.foreign_key {
-        Some(fk) => barrel::types::foreign(string_to_static_str(format!("{}({})", fk.table, fk.column))),
+        Some(fk) => {
+            //barrel::types::foreign(string_to_static_str(format!("{}({})", fk.table, fk.column))),
+            let tpe_str = print_type(column_description.tpe);
+            let complete = dbg!(format!("{} REFERENCES {}({})", tpe_str, fk.table, fk.column));
+            barrel::types::custom(string_to_static_str(complete))
+        }
         None => match column_description.tpe {
             ColumnType::Boolean => barrel::types::boolean(),
             ColumnType::DateTime => barrel::types::date(),
@@ -115,6 +120,36 @@ fn column_description_to_barrel_type(column_description: &ColumnDescription) -> 
         },
     };
     tpe.nullable(!column_description.required)
+}
+// TODO: this is copied from barrel
+fn print_type(t: ColumnType) -> String {
+    match t {
+        ColumnType::Boolean => format!("BOOLEAN"),
+        ColumnType::DateTime => format!("DATE"),
+        ColumnType::Float => format!("REAL"),
+        ColumnType::Int => format!("INTEGER"),
+        ColumnType::String => format!("TEXT"),
+    }
+    // match t {
+    //     Text => format!("TEXT"),
+    //     Varchar(l) => match l {
+    //         0 => format!("VARCHAR"), // For "0" remove the limit
+    //         _ => format!("VARCHAR({})", l),
+    //     },
+    //     Primary => format!("INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT"),
+    //     Integer => format!("INTEGER"),
+    //     Float => format!("REAL"),
+    //     Double => format!("DOUBLE"),
+    //     UUID => unimplemented!(),
+    //     Boolean => format!("BOOLEAN"),
+    //     Date => format!("DATE"),
+    //     Json => panic!("Json is not supported by Sqlite3"),
+    //     Binary => format!("BINARY"),
+    //     Foreign(t) => format!("INTEGER REFERENCES {}", t),
+    //     Custom(t) => format!("{}", t),
+    //     Array(meh) => format!("{}[]", Sqlite::print_type(*meh)),
+    //     Index(_) => unimplemented!(),
+    // }
 }
 
 fn string_to_static_str(s: String) -> &'static str {
