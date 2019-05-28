@@ -77,9 +77,6 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 self.make_sql_string(migration)
             }
             SqlMigrationStep::RawSql(sql) => sql,
-            x => {
-                unimplemented!("{:?} not implemented yet here", x);
-            }
         };
         dbg!(&sql_string);
         let result = self.connection.execute(&sql_string, NO_PARAMS);
@@ -122,6 +119,7 @@ fn column_description_to_barrel_type(column_description: &ColumnDescription) -> 
     tpe.nullable(!column_description.required)
 }
 // TODO: this is copied from barrel
+// TODO: move completely to our own type rendering
 fn print_type(t: ColumnType) -> String {
     match t {
         ColumnType::Boolean => format!("BOOLEAN"),
