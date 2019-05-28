@@ -33,7 +33,7 @@ use std::collections::BTreeMap;
 
 /// A set of values
 #[derive(Debug, Clone)]
-pub struct ValueMap(BTreeMap<String, Value>);
+pub struct ValueMap(pub BTreeMap<String, Value>);
 
 #[derive(Debug, Clone)]
 pub struct ValueList(String, Option<Vec<Value>>);
@@ -164,14 +164,17 @@ impl ValueMap {
                     Value::Object(obj) => NestedValue::Simple {
                         name: name.clone(),
                         kind: action.clone(),
-                        map: ValueMap(obj.clone())
+                        map: ValueMap(obj.clone()),
                     },
                     Value::List(list) => NestedValue::Connect {
                         name: name.clone(),
-                        list: list.iter().map(|item| match item {
-                            Value::Object(obj) => ValueMap(obj.clone()),
-                            _ => unreachable!(),
-                        }).collect(),
+                        list: list
+                            .iter()
+                            .map(|item| match item {
+                                Value::Object(obj) => ValueMap(obj.clone()),
+                                _ => unreachable!(),
+                            })
+                            .collect(),
                     },
                     _ => unreachable!(),
                 });
