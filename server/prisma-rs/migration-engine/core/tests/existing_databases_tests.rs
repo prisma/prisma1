@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 mod test_harness;
-use database_inspector::*;
-use test_harness::*;
 use barrel::{backend::Sqlite as Squirrel, types, Migration};
+use database_inspector::*;
 use rusqlite::{Connection, Result, NO_PARAMS};
 use std::{thread, time};
+use test_harness::*;
 
 const SCHEMA: &str = "migration_engine";
 
@@ -109,6 +109,30 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
 }
 
 #[test]
+fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional() {
+    run_test_with_engine(|engine| {
+        let initial_result = setup(|mut migration| {
+            migration.create_table("Blog", |t| {
+                t.add_column("id", types::primary());
+                t.add_column("title", types::text());
+            });
+        });
+        let initial_column = initial_result.table_bang("Blog").column_bang("title");
+        assert_eq!(initial_column.is_required, true);
+
+        let dm = r#"
+            model Blog {
+                id: Int @primary
+                title: String?
+            }
+        "#;
+        let result = migrate_to(&engine, &dm);
+        let column = result.table_bang("Blog").column_bang("title");
+        assert_eq!(column.is_required, false);
+    });
+}
+
+#[test]
 fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
@@ -154,7 +178,7 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
         let result = execute(|mut migration| {
             // sqlite does not support dropping columns. So we are emulating it..
             migration.drop_table("Blog");
-            migration.create_table("Blog", |t|{
+            migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
             });
         });
@@ -213,7 +237,7 @@ fn updating_a_field_for_a_non_existent_column() {
         let result = execute(|mut migration| {
             // sqlite does not support dropping columns. So we are emulating it..
             migration.drop_table("Blog");
-            migration.create_table("Blog", |t|{
+            migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
             });
         });
@@ -248,7 +272,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
         let result = execute(|mut migration| {
             // sqlite does not support renaming columns. So we are emulating it..
             migration.drop_table("Blog");
-            migration.create_table("Blog", |t|{
+            migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("new_title", types::text());
             });
@@ -318,6 +342,6 @@ where
     let inspector = DatabaseInspectorImpl::new(connection);
     let mut result = inspector.introspect(&SCHEMA.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it.
-    result.tables = result.tables.into_iter().filter(|t|t.name != "_Migration").collect();
+    result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
     result
 }
