@@ -12,17 +12,18 @@ object Optimizations {
   object FilterOptimizer extends Optimizer {
 
     override def optimize(filter: Filter): Filter = {
-      val one = LogicalOpt.transform(filter)
-//      val two   = InlineOpt.transform(one)
-      val three = SameRelationFilterOpt.transform(one)
-      three
+      val optimizations = Vector(RemoveSuperflousFilters, SameRelationFilterOpt)
+      optimizations.foldLeft(filter)((current, opt) => opt.transform(current))
     }
 
     trait Optimization {
       def transform(filter: Filter): Filter
     }
 
-    object LogicalOpt extends Optimization {
+    object RemoveSuperflousFilters extends Optimization {
+      // This removes Logical Filters AND/OR when they are only wrapping one nested filter
+      // Doing this first allows us to simplify the logic of all later Optimization stages
+      // since they do not need to handle these cases anymore
       override def transform(filter: Filter): Filter = {
         filter match {
           case AndFilter(filters) if filters.length == 1   => transform(filters.head)
@@ -41,6 +42,9 @@ object Optimizations {
       //For Mongo this could also handle rf_some{id: "id"} => ScalarListFilter(ScalarListField, ListContains("id"))
       //We run into problems with the native versions when enabling this, since they actually verify that the scalarField is on the Model
       //converting the Relationfilter to a ScalarFilter on a `virtual` ScalarField does not work for them
+
+      //  !!!!!!!! This is currently not active since the Rust side of things does not allow rf.scalarCopy since it actually checks for
+      // the ScalarField on the Model and then fails.
 
       override def transform(filter: Filter): Filter = {
         filter match {

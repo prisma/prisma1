@@ -79,6 +79,10 @@ trait AggregationQueryBuilder extends FilterConditionBuilder with ProjectionBuil
       //-------------------------------RECURSION------------------------------------
       case NodeSubscriptionFilter => Seq(`match`(hackForTrue))
       case AndFilter(filters)     => sortFilters(filters).flatMap(f => buildJoinStagesForFilter(path, f))
+      // The Mongo connector does not allow the usage of OR at the moment. Since we want to make use of Or for our filter
+      // optimizations this handles the case where we internally transformed a filter to use OR.
+      // We know that this will only occur to rewrite join relation filters at the moment
+      // This will create a pipeline stage that combines scalarfilters into one stage.
       case OrFilter(filters) if filters.forall(f => f.isInstanceOf[ScalarFilter]) =>
         Seq(`match`(or(filters.map(f => buildConditionForScalarFilter(path.combinedNames, Some(f))): _*)))
       case NotFilter(_)      => sys.error("This is not implemented for the Mongo connector")
