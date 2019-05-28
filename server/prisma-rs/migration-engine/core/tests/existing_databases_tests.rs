@@ -18,7 +18,7 @@ fn adding_a_model_for_an_existing_table_must_work() {
         });
         let dm = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
             }
         "#;
         let result = migrate_to(&engine, &dm);
@@ -36,11 +36,11 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
             }
 
             model Post {
-                id: Int @primary
+                id: Int @id
             }
         "#;
         let initial_result = migrate_to(&engine, &dm1);
@@ -53,7 +53,7 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
             }
         "#;
         let final_result = migrate_to(&engine, &dm2);
@@ -72,7 +72,7 @@ fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
         });
         let dm = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 title: String
             }
         "#;
@@ -96,7 +96,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
 
         let dm = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 title: String @unique
             }
         "#;
@@ -122,7 +122,7 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
 
         let dm = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 title: String?
             }
         "#;
@@ -137,7 +137,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
             }
         "#;
         let initial_result = migrate_to(&engine, &dm1);
@@ -154,7 +154,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 tags: String[]
             }
         "#;
@@ -168,7 +168,7 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 title: String
             }
         "#;
@@ -186,7 +186,7 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
             }
         "#;
         let final_result = migrate_to(&engine, &dm2);
@@ -199,7 +199,7 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 tags: String[]
             }
         "#;
@@ -213,7 +213,7 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
             }
         "#;
         let final_result = migrate_to(&engine, &dm2);
@@ -226,7 +226,7 @@ fn updating_a_field_for_a_non_existent_column() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 title: String
             }
         "#;
@@ -245,7 +245,7 @@ fn updating_a_field_for_a_non_existent_column() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 title: Int @unique
             }
         "#;
@@ -261,7 +261,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 title: String
             }
         "#;
@@ -281,7 +281,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @primary
+                id: Int @id
                 title: Float @db(name: "new_title")
             }
         "#;
