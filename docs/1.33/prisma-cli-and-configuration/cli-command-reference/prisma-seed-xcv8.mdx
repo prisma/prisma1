@@ -1,0 +1,62 @@
+import Code from 'components/Markdown/Code'
+
+export const meta = {
+  title: "prisma seed",
+  position: 200,
+}
+
+## `$ prisma seed`
+
+Seeds the service with data. 
+
+This command expects that the [`seed`](5cy7#seed-optional) property in `prisma.yml` is specified.
+
+#### Usage
+
+```sh
+prisma seed [flags]
+```
+
+#### Flags
+
+```
+-e, --env-file ENV-FILE    Path to .env file to inject env vars
+-r, --reset                Reset the service before seeding
+```
+
+#### Examples
+
+If you specified the `seed` property in your `prisma.yml`, you can run the `prisma seed` command. For example:
+
+<Code languages={["JavaScript", "TypeScript", "Go"]}>
+
+```yml
+seed:
+  run: node ./data/seed.js
+```
+
+```yml
+seed:
+  run: ts-node ./data/seed.ts
+```
+
+```yml
+seed:
+  run: go run ./data/seed.go
+```
+
+</Code>
+
+All sample projects in the [`prisma-examples`](https://www.github.com/prisma/prisma-examples) repository are based on this seeding mechanism.
+
+**Seed service with initial data**
+
+```sh
+prisma seed
+```
+
+**Seed service with initial data after deleting all of the service's data first**
+
+```sh
+prisma seed --reset
+```
