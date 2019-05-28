@@ -49,13 +49,8 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 self.make_sql_string(migration)
             }
             SqlMigrationStep::RenameTable { name, new_name } => {
-                // TODO: use barrel again when the rename bug is fixed;
-                // migration.rename_table(name.to_string(), new_name.to_string());
-                // self.make_sql_string(migration)
-                format!(
-                    r#"ALTER TABLE "{}"."{}" RENAME TO "{}";"#,
-                    &self.schema_name, name, new_name
-                )
+                migration.rename_table(name.to_string(), new_name.to_string());
+                self.make_sql_string(migration)
             }
             SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
                 migration.change_table(table, move |t| {
