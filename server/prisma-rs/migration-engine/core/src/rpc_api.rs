@@ -40,7 +40,7 @@ impl RpcApi {
             let input: T::Input = params.parse()?;
             let cmd = T::new(input);
 
-            let schema_name = "?";
+            let schema_name = "migration_engine";
 
             // Move out connection creation.
             let response_json = client
