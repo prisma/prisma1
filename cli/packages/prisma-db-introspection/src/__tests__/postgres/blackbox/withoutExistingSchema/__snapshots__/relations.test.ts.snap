@@ -63,7 +63,7 @@ exports[`Introspector relation with relation table 1`] = `
   billProduct: [BillProduct]
 }
 
-type BillProduct @linkTable @pgTable(name: \\"bill_product\\") {
+type BillProduct @pgTable(name: \\"bill_product\\") @relationTable {
   bill: Bill @pgColumn(name: \\"bill_id\\")
   product: Product @pgColumn(name: \\"product_id\\")
 }
@@ -82,7 +82,7 @@ exports[`Introspector relation with relation table 2`] = `
   billProduct: [BillProduct]
 }
 
-type BillProduct @db(name: \\"bill_product\\") @linkTable {
+type BillProduct @db(name: \\"bill_product\\") @relationTable {
   bill: Bill @db(name: \\"bill_id\\")
   product: Product @db(name: \\"product_id\\")
 }

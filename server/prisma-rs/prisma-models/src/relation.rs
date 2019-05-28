@@ -37,6 +37,15 @@ pub struct InlineRelation {
     pub referencing_column: String,
 }
 
+impl InlineRelation {
+    fn referencing_column(&self, table: Table) -> Column {
+        let column_name: &str = self.referencing_column.as_ref();
+        let column = Column::from(column_name);
+
+        column.table(table)
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTable {
@@ -67,6 +76,8 @@ pub struct RelationTemplate {
     pub model_b_name: String,
 }
 
+/// A relation between two models. Can be either using a `RelationTable` or
+/// model a direct link between two `RelationField`s.
 #[derive(DebugStub)]
 pub struct Relation {
     pub name: String,
@@ -85,12 +96,12 @@ pub struct Relation {
 
     pub manifestation: Option<RelationLinkManifestation>,
 
-    #[debug_stub = "#SchemaWeakRef#"]
-    pub schema: SchemaWeakRef,
+    #[debug_stub = "#InternalDataModelWeakRef#"]
+    pub internal_data_model: InternalDataModelWeakRef,
 }
 
 impl RelationTemplate {
-    pub fn build(self, schema: SchemaWeakRef) -> RelationRef {
+    pub fn build(self, internal_data_model: InternalDataModelWeakRef) -> RelationRef {
         let relation = Relation {
             name: self.name,
             manifestation: self.manifestation,
@@ -102,7 +113,7 @@ impl RelationTemplate {
             model_b: OnceCell::new(),
             field_a: OnceCell::new(),
             field_b: OnceCell::new(),
-            schema: schema,
+            internal_data_model: internal_data_model,
         };
 
         Arc::new(relation)
@@ -114,12 +125,8 @@ impl Relation {
     pub const MODEL_B_DEFAULT_COLUMN: &'static str = "B";
     pub const TABLE_ALIAS: &'static str = "RelationTable";
 
-    fn schema(&self) -> SchemaRef {
-        self.schema
-            .upgrade()
-            .expect("Schema does not exist anymore. Parent schema is deleted without deleting the child schema.")
-    }
-
+    /// Returns `true` only if the `Relation` is just a link between two
+    /// `RelationField`s.
     pub fn is_inline_relation(&self) -> bool {
         self.manifestation
             .as_ref()
@@ -130,23 +137,20 @@ impl Relation {
             .unwrap_or(false)
     }
 
+    /// Returns `true` if the `Relation` is a table linking two models.
     pub fn is_relation_table(&self) -> bool {
         !self.is_inline_relation()
     }
 
+    /// A model that relates to itself. For example a `Person` that is a parent
+    /// can relate to people that are children.
     pub fn is_self_relation(&self) -> bool {
         self.model_a_name == self.model_b_name
     }
 
-    pub fn inline_manifestation(&self) -> Option<&InlineRelation> {
-        use RelationLinkManifestation::*;
-
-        match self.manifestation {
-            Some(Inline(ref m)) => Some(m),
-            _ => None,
-        }
-    }
-
+    /// A helper function to decide actions based on the `Relation` type. Inline
+    /// relation will return a column for updates, a relation table gives back
+    /// `None`.
     pub fn inline_relation_column(&self) -> Option<Column> {
         if let Some(mani) = self.inline_manifestation() {
             Some(Column::from(mani.referencing_column.as_ref()).table(self.relation_table()))
@@ -155,21 +159,30 @@ impl Relation {
         }
     }
 
-    pub fn both_sides_cascade(&self) -> bool {
-        self.model_a_on_delete == OnDelete::Cascade && self.model_b_on_delete == OnDelete::Cascade
-    }
-
+    /// A pointer to the first `Model` in the `Relation`.
     pub fn model_a(&self) -> ModelRef {
         self.model_a
             .get_or_init(|| {
-                let model = self.schema().find_model(&self.model_a_name).unwrap();
+                let model = self.internal_data_model().find_model(&self.model_a_name).unwrap();
                 Arc::downgrade(&model)
             })
             .upgrade()
-            .expect("Model A deleted without deleting the relations in schema.")
+            .expect("Model A deleted without deleting the relations in internal_data_model.")
     }
 
-    pub fn field_a(&self) -> Arc<RelationField> {
+    /// A pointer to the second `Model` in the `Relation`.
+    pub fn model_b(&self) -> ModelRef {
+        self.model_b
+            .get_or_init(|| {
+                let model = self.internal_data_model().find_model(&self.model_b_name).unwrap();
+                Arc::downgrade(&model)
+            })
+            .upgrade()
+            .expect("Model B deleted without deleting the relations in internal_data_model.")
+    }
+
+    /// A pointer to the `RelationField` in the first `Model` in the `Relation`.
+    pub fn field_a(&self) -> RelationFieldRef {
         self.field_a
             .get_or_init(|| {
                 let field = self
@@ -181,20 +194,11 @@ impl Relation {
                 Arc::downgrade(&field)
             })
             .upgrade()
-            .expect("Field A deleted without deleting the relations in schema.")
+            .expect("Field A deleted without deleting the relations in internal_data_model.")
     }
 
-    pub fn model_b(&self) -> ModelRef {
-        self.model_b
-            .get_or_init(|| {
-                let model = self.schema().find_model(&self.model_b_name).unwrap();
-                Arc::downgrade(&model)
-            })
-            .upgrade()
-            .expect("Model B deleted without deleting the relations in schema.")
-    }
-
-    pub fn field_b(&self) -> Arc<RelationField> {
+    /// A pointer to the `RelationField` in the second `Model` in the `Relation`.
+    pub fn field_b(&self) -> RelationFieldRef {
         self.field_b
             .get_or_init(|| {
                 let field = self
@@ -206,17 +210,7 @@ impl Relation {
                 Arc::downgrade(&field)
             })
             .upgrade()
-            .expect("Field B deleted without deleting the relations in schema.")
-    }
-
-    pub fn relation_table(&self) -> Table {
-        use RelationLinkManifestation::*;
-
-        match self.manifestation {
-            Some(RelationTable(ref m)) => m.table.clone().into(),
-            Some(Inline(ref m)) => self.schema().find_model(&m.in_table_of_model_name).unwrap().table(),
-            None => format!("_{}", self.name).into(),
-        }
+            .expect("Field B deleted without deleting the relations in internal_data_model.")
     }
 
     pub fn model_a_column(&self) -> Column {
@@ -225,15 +219,19 @@ impl Relation {
         match self.manifestation {
             Some(RelationTable(ref m)) => m.model_a_column.clone().into(),
             Some(Inline(ref m)) => {
-                let model = self.model_a();
+                let model_a = self.model_a();
+                let model_b = self.model_b();
 
-                if m.in_table_of_model_name == model.name && !self.is_self_relation() {
-                    model.fields().id().as_column()
+                if self.is_self_relation() && self.field_a().is_hidden {
+                    model_a.fields().id().as_column()
+                } else if self.is_self_relation() && self.field_b().is_hidden {
+                    model_b.fields().id().as_column()
+                } else if self.is_self_relation() {
+                    m.referencing_column(self.relation_table())
+                } else if m.in_table_of_model_name == model_a.name && !self.is_self_relation() {
+                    model_a.fields().id().as_column()
                 } else {
-                    let column_name: &str = m.referencing_column.as_ref();
-                    let column = Column::from(column_name);
-
-                    column.table(self.relation_table())
+                    m.referencing_column(self.relation_table())
                 }
             }
             None => Self::MODEL_A_DEFAULT_COLUMN.into(),
@@ -246,18 +244,47 @@ impl Relation {
         match self.manifestation {
             Some(RelationTable(ref m)) => m.model_b_column.clone().into(),
             Some(Inline(ref m)) => {
-                let model = self.model_b();
+                let model_b = self.model_b();
 
-                if m.in_table_of_model_name == model.name {
-                    model.fields().id().as_column()
+                if self.is_self_relation() && self.field_a().is_hidden {
+                    m.referencing_column(self.relation_table())
+                } else if self.is_self_relation() && self.field_b().is_hidden {
+                    m.referencing_column(self.relation_table())
+                } else if self.is_self_relation() {
+                    model_b.fields().id().as_column()
+                } else if m.in_table_of_model_name == model_b.name && !self.is_self_relation() {
+                    model_b.fields().id().as_column()
                 } else {
-                    let column_name: &str = m.referencing_column.as_ref();
-                    let column = Column::from(column_name);
-
-                    column.table(self.relation_table())
+                    m.referencing_column(self.relation_table())
                 }
             }
             None => Self::MODEL_B_DEFAULT_COLUMN.into(),
+        }
+    }
+
+    /// The `Table` with the foreign keys are written. Can either be:
+    ///
+    /// - A separate table for many-to-many relations.
+    /// - One of the model tables for one-to-many or one-to-one relations.
+    /// - A separate relation table for all relations, if using the deprecated
+    ///   data model syntax.
+    pub fn relation_table(&self) -> Table {
+        use RelationLinkManifestation::*;
+
+        match self.manifestation {
+            Some(RelationTable(ref m)) => {
+                let db = self.model_a().internal_data_model().db_name.clone();
+                (db, m.table.clone()).into()
+            }
+            Some(Inline(ref m)) => self
+                .internal_data_model()
+                .find_model(&m.in_table_of_model_name)
+                .unwrap()
+                .table(),
+            None => {
+                let db = self.model_a().internal_data_model().db_name.clone();
+                (db, format!("_{}", self.name)).into()
+            }
         }
     }
 
@@ -304,5 +331,20 @@ impl Relation {
                 relation: self.name.clone(),
             })
         }
+    }
+
+    pub fn inline_manifestation(&self) -> Option<&InlineRelation> {
+        use RelationLinkManifestation::*;
+
+        match self.manifestation {
+            Some(Inline(ref m)) => Some(m),
+            _ => None,
+        }
+    }
+
+    fn internal_data_model(&self) -> InternalDataModelRef {
+        self.internal_data_model
+            .upgrade()
+            .expect("InternalDataModel does not exist anymore. Parent internal_data_model is deleted without deleting the child internal_data_model.")
     }
 }

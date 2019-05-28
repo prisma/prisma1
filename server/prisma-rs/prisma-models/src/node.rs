@@ -1,5 +1,5 @@
 use crate::{DomainError as Error, DomainResult, GraphqlId, ModelRef, PrismaValue};
-use std::sync::Arc;
+use std::{convert::TryFrom, sync::Arc};
 
 #[derive(Debug, Clone)]
 pub struct SingleNode {
@@ -7,12 +7,27 @@ pub struct SingleNode {
     pub field_names: Vec<String>,
 }
 
+impl TryFrom<ManyNodes> for SingleNode {
+    type Error = Error;
+
+    fn try_from(mn: ManyNodes) -> DomainResult<SingleNode> {
+        let field_names = mn.field_names;
+
+        mn.nodes
+            .into_iter()
+            .rev()
+            .next()
+            .map(|node| SingleNode { node, field_names })
+            .ok_or(Error::ConversionFailure("ManyNodes", "SingleNode"))
+    }
+}
+
 impl SingleNode {
     pub fn new(node: Node, field_names: Vec<String>) -> Self {
         Self { node, field_names }
     }
 
-    pub fn get_id_value(&self, model: ModelRef) -> DomainResult<&GraphqlId> {
+    pub fn get_id_value(&self, model: ModelRef) -> DomainResult<GraphqlId> {
         self.node.get_id_value(&self.field_names, model)
     }
 
@@ -28,15 +43,6 @@ pub struct ManyNodes {
 }
 
 impl ManyNodes {
-    pub fn into_single_node(mut self) -> Option<SingleNode> {
-        self.nodes.reverse();
-        let node = self.nodes.pop();
-        node.map(|n| SingleNode {
-            node: n,
-            field_names: self.field_names,
-        })
-    }
-
     pub fn get_id_values(&self, model: ModelRef) -> DomainResult<Vec<GraphqlId>> {
         self.nodes
             .iter()
@@ -60,6 +66,11 @@ impl ManyNodes {
             })
             .collect()
     }
+
+    /// Reverses the wrapped records in place
+    pub fn reverse(&mut self) {
+        self.nodes.reverse();
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -76,8 +87,7 @@ impl Node {
         }
     }
 
-    // FIXME: This function assumes that `id` was included in the query?!
-    pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<&GraphqlId> {
+    pub fn get_id_value(&self, field_names: &Vec<String>, model: ModelRef) -> DomainResult<GraphqlId> {
         let id_field = model.fields().id();
         let index = field_names
             .iter()
@@ -90,10 +100,7 @@ impl Node {
                 })
             })?;
 
-        Ok(match &self.values[index] {
-            PrismaValue::GraphqlId(ref id) => id,
-            _ => unimplemented!(),
-        })
+        Ok(GraphqlId::try_from(&self.values[index])?)
     }
 
     pub fn get_field_value(&self, field_names: &Vec<String>, field: &str) -> DomainResult<&PrismaValue> {

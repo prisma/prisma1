@@ -2,6 +2,7 @@
 
 #[macro_use]
 extern crate serde_derive;
+
 #[macro_use]
 extern crate debug_stub_derive;
 
@@ -16,7 +17,7 @@ mod prisma_value;
 mod project;
 mod relation;
 mod scalar_list_table;
-mod schema;
+mod internal_data_model;
 mod selected_fields;
 
 pub mod prelude;
@@ -33,7 +34,7 @@ pub use prisma_value::*;
 pub use project::*;
 pub use relation::*;
 pub use scalar_list_table::*;
-pub use schema::*;
+pub use internal_data_model::*;
 pub use selected_fields::*;
 
 pub type DomainResult<T> = Result<T, DomainError>;

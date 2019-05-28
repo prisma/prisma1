@@ -22,8 +22,8 @@ impl<'a> ScalarListTable<'a> {
     }
 
     pub fn table(&self) -> Table {
-        let schema = self.parent_field.schema();
-        let database_name = schema.db_name.as_ref();
+        let internal_data_model = self.parent_field.internal_data_model();
+        let database_name = internal_data_model.db_name.as_ref();
 
         Table::from((database_name, self.table_name.as_ref()))
     }

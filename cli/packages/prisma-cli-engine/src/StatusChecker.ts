@@ -51,7 +51,7 @@ export class StatusChecker {
       globalBin,
       hashDate,
     })
-    const secret = 'epiGheezoh5eogoachiu9tie9'
+    const secret = 'loTheeChaxaiPhahsa8Aifiel'
 
     const hash = crypto
       .createHmac('sha256', secret)
@@ -178,7 +178,7 @@ export function getFid() {
     return fidCache
   }
   const mac = getMac()
-  const fidSecret = 'yeiB6sooy6eedahgooj0shiez'
+  const fidSecret = 'AhTheeR7Pee0haebui1viemoe'
   const fid = mac
     ? crypto
         .createHmac('sha256', fidSecret)

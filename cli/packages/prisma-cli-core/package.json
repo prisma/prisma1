@@ -11,7 +11,7 @@
   "devDependencies": {
     "@types/aws-lambda": "^0.0.17",
     "@types/fs-extra": "^5.0.0",
-    "@types/graphql": "^14.0.3",
+    "@types/graphql": "14.2.0",
     "@types/node": "^8.0.22",
     "@types/semver": "^5.5.0",
     "faker": "^4.1.0",
@@ -89,7 +89,7 @@
     "figures": "^2.0.0",
     "fs-extra": "^7.0.0",
     "globby": "^8.0.1",
-    "graphql": "^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0",
+    "graphql": "^14.3.0",
     "graphql-config": "2.2.1",
     "graphql-config-extension-prisma": "0.2.5",
     "graphql-playground-middleware-express": "^1.6.2",

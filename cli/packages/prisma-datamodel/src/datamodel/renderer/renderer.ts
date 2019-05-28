@@ -45,8 +45,8 @@ export default abstract class Renderer {
     return { name: DirectiveKeys.isEmbedded, arguments: {} }
   }
 
-  protected createIsLinkTableTypeDirective(type: IGQLType) {
-    return { name: DirectiveKeys.linkTable, arguments: {} }
+  protected createIsRelationTableTypeDirective(type: IGQLType) {
+    return { name: DirectiveKeys.relationTable, arguments: {} }
   }
 
   protected createDatabaseNameTypeDirective(type: IGQLType) {
@@ -118,8 +118,8 @@ export default abstract class Renderer {
     return type.isEmbedded
   }
 
-  protected shouldCreateIsLinkTableTypeDirective(type: IGQLType) {
-    return type.isLinkTable
+  protected shouldCreateIsRelationTableTypeDirective(type: IGQLType) {
+    return type.isRelationTable
   }
 
   protected shouldCreateDatabaseNameTypeDirective(type: IGQLType) {
@@ -140,8 +140,8 @@ export default abstract class Renderer {
     if (this.shouldCreateDatabaseNameTypeDirective(type)) {
       typeDirectives.push(this.createDatabaseNameTypeDirective(type))
     }
-    if (this.shouldCreateIsLinkTableTypeDirective(type)) {
-      typeDirectives.push(this.createIsLinkTableTypeDirective(type))
+    if (this.shouldCreateIsRelationTableTypeDirective(type)) {
+      typeDirectives.push(this.createIsRelationTableTypeDirective(type))
     }
     if (this.shouldRenderIndexDirectives(type)) {
       this.createIndexDirectives(type, typeDirectives)

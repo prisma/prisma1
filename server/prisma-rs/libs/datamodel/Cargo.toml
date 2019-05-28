@@ -1,0 +1,13 @@
+[package]
+name = "datamodel"
+version = "0.1.0"
+authors = ["Emanuel Joebstl <emanuel.joebstl@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+clap = "2.33.0"
+pest = "2.0"
+pest_derive = "2.0"
+chrono = { version = "0.4.6", features = ["serde"] }
+serde = { version = "1.0.90", features = ["derive"] }
+serde_json = "1.0"

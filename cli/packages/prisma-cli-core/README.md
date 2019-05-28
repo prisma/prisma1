@@ -154,4 +154,3 @@ Prisma has a community of thousands of amazing developers and contributors. Welc
 
 Contributions are **welcome and extremely helpful** 🙌
 Please refer [to the contribution guide](https://github.com/prisma/prisma/blob/master/CONTRIBUTING.md) for more information.
-

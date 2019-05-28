@@ -1,22 +1,32 @@
-use super::{Builder as SuperBuilder, BuilderExt};
-use crate::{query_ast::MultiRelatedRecordQuery, CoreError, CoreResult};
+use super::BuilderExt;
+use crate::{query_ast::ManyRelatedRecordsQuery, CoreResult};
 
-use connector::filter::NodeSelector;
 use graphql_parser::query::Field;
-use prisma_models::{ModelRef, RelationFieldRef, SelectedFields};
+use prisma_models::{ModelRef, RelationFieldRef};
 use std::sync::Arc;
 
-pub struct Builder<'f> {
+#[derive(Default, Debug)]
+pub struct ManyRelationBuilder<'f> {
     model: Option<ModelRef>,
     field: Option<&'f Field>,
     parent: Option<RelationFieldRef>,
 }
 
-impl<'f> BuilderExt for Builder<'f> {
-    type Output = MultiRelatedRecordQuery;
+impl<'f> ManyRelationBuilder<'f> {
+    pub fn setup(self, model: ModelRef, field: &'f Field, parent: RelationFieldRef) -> Self {
+        Self {
+            model: Some(model),
+            field: Some(field),
+            parent: Some(parent),
+        }
+    }
+}
+
+impl<'f> BuilderExt for ManyRelationBuilder<'f> {
+    type Output = ManyRelatedRecordsQuery;
 
     fn new() -> Self {
-        unimplemented!()
+        Default::default()
     }
 
     fn build(self) -> CoreResult<Self::Output> {
@@ -24,32 +34,24 @@ impl<'f> BuilderExt for Builder<'f> {
             (Some(m), Some(f), Some(p)) => Some((m, f, p)),
             _ => None,
         }
-        .expect("`RelatedRecordQuery` builder not properly initialised!");
+        .expect("`ManyRelatedRecordsQuery` builder not properly initialized!");
 
-        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.schema())?;
+        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
         let nested = Self::build_nested_queries(nested_builders)?;
 
         let parent_field = Arc::clone(parent);
         let selected_fields = Self::collect_selected_fields(Arc::clone(&model), field, Arc::clone(&parent))?;
         let args = Self::extract_query_args(field, Arc::clone(&model))?;
         let name = field.alias.as_ref().unwrap_or(&field.name).clone();
+        let fields = Self::collect_selection_order(&field);
 
-        Ok(MultiRelatedRecordQuery {
+        Ok(ManyRelatedRecordsQuery {
             name,
             parent_field,
             args,
             selected_fields,
             nested,
+            fields,
         })
-    }
-}
-
-impl<'f> Builder<'f> {
-    pub fn setup(self, model: ModelRef, field: &'f Field, parent: RelationFieldRef) -> Self {
-        Self {
-            model: Some(model),
-            field: Some(field),
-            parent: Some(parent),
-        }
     }
 }

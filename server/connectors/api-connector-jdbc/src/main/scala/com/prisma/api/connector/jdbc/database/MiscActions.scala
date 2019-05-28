@@ -29,5 +29,4 @@ trait MiscActions extends BuilderBase with BooleanUtils {
 
     if (isMySql) DBIO.seq(disableForeignKeyChecks, truncatesAction, enableForeignKeyChecks) else truncatesAction
   }
-
 }

@@ -1,6 +1,5 @@
 package com.prisma.api.mutations.nonEmbedded.nestedMutations
 
-import com.prisma.IgnoreSQLite
 import com.prisma.api.{ApiSpecBase, TestDataModels}
 import com.prisma.shared.models.ConnectorCapability
 import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
@@ -52,8 +51,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  updateParent(
          |  where: {id: "$parentId2"}
          |  data:{
@@ -118,8 +116,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  updateParent(
          |  where: {id: "$parentId2"}
          |  data:{
@@ -688,8 +685,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  updateParent(
          |  where: {p: "p2"} 
          |  data:{
@@ -945,7 +941,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
     }
   }
 
-  "a P1! to CM  relation with the child not already in a relation" should "be connectable through a nested mutation by unique" taggedAs IgnoreSQLite in { // TODO: Remove when enabling transactions
+  "a P1! to CM  relation with the child not already in a relation" should "be connectable through a nested mutation by unique" in {
     schemaP1reqToCM.test { dataModel =>
       val project = SchemaDsl.fromStringV11() { dataModel }
       database.setup(project)

@@ -23,4 +23,6 @@ pub enum DomainError {
     #[fail(display = "Model id `{}` for relation `{}` not found", model_id, relation)]
     ModelForRelationNotFound { model_id: String, relation: String },
 
+    #[fail(display = "Conversion from `{}` to `{}` failed.", _0, _1)]
+    ConversionFailure(&'static str, &'static str),
 }

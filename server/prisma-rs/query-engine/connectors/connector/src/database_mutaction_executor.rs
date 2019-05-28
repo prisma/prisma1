@@ -1,17 +1,19 @@
 use crate::{
-    mutaction::{DatabaseMutaction, DatabaseMutactionResults},
+    mutaction::{DatabaseMutactionResult, TopLevelDatabaseMutaction},
     ConnectorResult,
 };
-use prisma_models::*;
 use serde_json::Value;
 
+/// Methods for writing data.
 pub trait DatabaseMutactionExecutor {
-    fn execute_raw(&self, _query: String) -> ConnectorResult<Value>;
+    /// Execute raw SQL string without any safety guarantees, returning the result as JSON.
+    fn execute_raw(&self, db_name: String, query: String) -> ConnectorResult<Value>;
 
+    /// Executes the mutaction and all nested mutactions, returning the result
+    /// of the topmost mutaction.
     fn execute(
         &self,
         db_name: String,
-        mutaction: DatabaseMutaction,
-        parent_id: Option<GraphqlId>, // TODO: we don't need this when we handle the whole mutaction in here.
-    ) -> ConnectorResult<DatabaseMutactionResults>;
+        mutaction: TopLevelDatabaseMutaction,
+    ) -> ConnectorResult<DatabaseMutactionResult>;
 }

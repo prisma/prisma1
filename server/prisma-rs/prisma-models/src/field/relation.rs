@@ -74,7 +74,7 @@ impl RelationField {
 
     pub fn relation(&self) -> RelationRef {
         self.relation
-            .get_or_init(|| self.model().schema().find_relation(&self.relation_name).unwrap())
+            .get_or_init(|| self.model().internal_data_model().find_relation(&self.relation_name).unwrap())
             .upgrade()
             .unwrap()
     }
@@ -86,7 +86,9 @@ impl RelationField {
             Some(RelationLinkManifestation::Inline(ref m)) => {
                 let is_self_rel = relation.is_self_relation();
 
-                if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
+                if is_self_rel && self.is_hidden {
+                    self.name.clone()
+                } else if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
                     m.referencing_column.clone()
                 } else if is_self_rel && self.relation_side == RelationSide::A {
                     self.name.clone()
@@ -107,7 +109,9 @@ impl RelationField {
             Some(RelationLinkManifestation::Inline(ref m)) => {
                 let is_self_rel = relation.is_self_relation();
 
-                if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
+                if is_self_rel && self.is_hidden {
+                    false
+                } else if is_self_rel && (self.relation_side == RelationSide::B || self.related_field().is_hidden) {
                     true
                 } else if is_self_rel && self.relation_side == RelationSide::A {
                     false
@@ -137,9 +141,9 @@ impl RelationField {
 
     pub fn as_column(&self) -> Column {
         let model = self.model();
-        let schema = model.schema();
+        let internal_data_model = model.internal_data_model();
         let db_name = self.db_name();
-        let parts = ((schema.db_name.as_ref(), model.db_name()), db_name.as_ref());
+        let parts = ((internal_data_model.db_name.as_ref(), model.db_name()), db_name.as_ref());
 
         parts.into()
     }

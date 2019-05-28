@@ -36,7 +36,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'Test',
       isEmbedded: true,
-      isLinkTable: false,
+      isRelationTable: false,
       // This will be ignored since we are dealing with an embedded type
       databaseName: 'testType',
       isEnum: false,
@@ -80,7 +80,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'Test',
       isEmbedded: false,
-      isLinkTable: false,
+      isRelationTable: false,
       databaseName: 'testType',
       isEnum: false,
       fields: [field1, field2, field3, field4],
@@ -130,7 +130,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'User',
       isEmbedded: false,
-      isLinkTable: false,
+      isRelationTable: false,
       isEnum: false,
       fields: [
         idField,
@@ -192,7 +192,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'User',
       isEmbedded: false,
-      isLinkTable: false,
+      isRelationTable: false,
       isEnum: false,
       fields: [
         idField,
@@ -226,7 +226,7 @@ describe(`Renderer directives test`, () => {
         lastName: String!
       }
       
-      type UserToUser @linkTable {
+      type UserToUser @relationTable {
         A: User!
         B: User!
       }`)
@@ -238,7 +238,7 @@ describe(`Renderer directives test`, () => {
     const type: IGQLType = {
       name: 'User',
       isEmbedded: false,
-      isLinkTable: false,
+      isRelationTable: false,
       isEnum: false,
       fields: [idField, lastNameField],
       indices: [],
@@ -250,7 +250,7 @@ describe(`Renderer directives test`, () => {
     const linkType: IGQLType = {
       name: 'UserToUser',
       isEmbedded: false,
-      isLinkTable: true,
+      isRelationTable: true,
       isEnum: false,
       fields: [
         new GQLOneRelationField('A', type, true),

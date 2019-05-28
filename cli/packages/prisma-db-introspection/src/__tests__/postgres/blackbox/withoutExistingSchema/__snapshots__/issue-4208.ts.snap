@@ -73,7 +73,7 @@ type Question @pgTable(name: \\"questions\\") {
   timeEntered: DateTime! @pgColumn(name: \\"time_entered\\")
 }
 
-type QuestionTag @linkTable @pgTable(name: \\"question_tags\\") {
+type QuestionTag @pgTable(name: \\"question_tags\\") @relationTable {
   question: Question! @pgColumn(name: \\"question_id\\")
   tag: Tag! @pgColumn(name: \\"tag_id\\")
 }
@@ -91,7 +91,7 @@ type Session @pgTable(name: \\"sessions\\") {
   title: String
 }
 
-type SessionSeriesTa @linkTable @pgTable(name: \\"session_series_tas\\") {
+type SessionSeriesTa @pgTable(name: \\"session_series_tas\\") @relationTable {
   sessionSeries: SessionSery! @pgColumn(name: \\"session_series_id\\")
   user: User! @pgColumn(name: \\"user_id\\")
 }
@@ -108,7 +108,7 @@ type SessionSery @pgTable(name: \\"session_series\\") {
   title: String
 }
 
-type SessionTa @linkTable @pgTable(name: \\"session_tas\\") {
+type SessionTa @pgTable(name: \\"session_tas\\") @relationTable {
   session: Session! @pgColumn(name: \\"session_id\\")
   user: User! @pgColumn(name: \\"user_id\\")
 }
@@ -132,7 +132,7 @@ type Tag @pgTable(name: \\"tags\\") {
   # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
 }
 
-type TagRelation @linkTable @pgTable(name: \\"tag_relations\\") {
+type TagRelation @pgTable(name: \\"tag_relations\\") @relationTable {
   child: Tag! @pgColumn(name: \\"child_id\\") @relation(name: \\"TagTagRelationsToTagRelationChild\\")
   parent: Tag! @pgColumn(name: \\"parent_id\\") @relation(name: \\"TagTagRelationsToTagRelationParent\\")
 }
@@ -241,7 +241,7 @@ type Question @db(name: \\"questions\\") {
   timeEntered: DateTime! @db(name: \\"time_entered\\")
 }
 
-type QuestionTag @db(name: \\"question_tags\\") @linkTable {
+type QuestionTag @db(name: \\"question_tags\\") @relationTable {
   question: Question! @db(name: \\"question_id\\")
   tag: Tag! @db(name: \\"tag_id\\")
 }
@@ -259,7 +259,7 @@ type Session @db(name: \\"sessions\\") {
   title: String
 }
 
-type SessionSeriesTa @db(name: \\"session_series_tas\\") @linkTable {
+type SessionSeriesTa @db(name: \\"session_series_tas\\") @relationTable {
   sessionSeries: SessionSery! @db(name: \\"session_series_id\\")
   user: User! @db(name: \\"user_id\\")
 }
@@ -276,7 +276,7 @@ type SessionSery @db(name: \\"session_series\\") {
   title: String
 }
 
-type SessionTa @db(name: \\"session_tas\\") @linkTable {
+type SessionTa @db(name: \\"session_tas\\") @relationTable {
   session: Session! @db(name: \\"session_id\\")
   user: User! @db(name: \\"user_id\\")
 }
@@ -300,7 +300,7 @@ type Tag @db(name: \\"tags\\") {
   # tagRelations: [TagRelation] @relation(name: \\"TagTagRelationsToTagRelationParent\\")
 }
 
-type TagRelation @db(name: \\"tag_relations\\") @linkTable {
+type TagRelation @db(name: \\"tag_relations\\") @relationTable {
   child: Tag! @db(name: \\"child_id\\") @relation(name: \\"TagTagRelationsToTagRelationChild\\")
   parent: Tag! @db(name: \\"parent_id\\") @relation(name: \\"TagTagRelationsToTagRelationParent\\")
 }

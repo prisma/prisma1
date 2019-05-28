@@ -114,13 +114,13 @@ trait NodeManyQueries extends FilterConditionBuilder with AggregationQueryBuilde
         }
     }
 
-  //Fixme this does not use all queryarguments
   def countFromModel(model: Model, queryArguments: QueryArguments) = SimpleMongoAction { database =>
     if (needsAggregation(queryArguments.filter)) {
       aggregationQueryForId(database, model, queryArguments).map { x =>
         x.length match {
-          case 0 => 0
-          case x => x - 1 // we always fetch one more item for the page info we need to subtract that
+          case 0                                                                    => 0
+          case z if queryArguments.first.isDefined || queryArguments.last.isDefined => z - 1 // we fetch one more item than asked for for the page info
+          case z                                                                    => z
         }
       }
     } else {

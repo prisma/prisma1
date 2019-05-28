@@ -1,0 +1,20 @@
+model Blog {
+    id: String @primary
+    name: String
+    viewCount: Int
+    posts: Post[]
+    authors: Author[]
+}
+
+model Author {
+    id: String @primary
+    name: String?
+    authors: Blog[]
+}
+
+model Post {
+    id: Int @primary
+    title: String
+    tags: String[]
+    blog: Blog
+}

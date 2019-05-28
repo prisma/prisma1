@@ -57,7 +57,7 @@ class FilterSpec extends FlatSpec with Matchers with ApiSpecBase {
     userUniques(filter) should be(Vector(4))
   }
 
-  //todo Null and lists is weird
+  // todo Null and lists is weird
 
   "Using _in with null" should "return all nodes with null for that field" in {
 

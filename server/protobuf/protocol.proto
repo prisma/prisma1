@@ -151,8 +151,9 @@ message GetScalarListValuesByNodeIds {
 }
 
 message ExecuteRawInput {
-  required Header header = 1;
-  required string query  = 2;
+  required Header header  = 1;
+  required string db_name = 2;
+  required string query   = 3;
 }
 
 message CountByModelInput {
@@ -282,8 +283,7 @@ message RelationFilter {
 }
 
 message DatabaseMutaction {
-  required bytes          project_json      = 1;
-  optional GraphqlId      parent_id         = 2;
+  required bytes           project_json      = 1;
 
   oneof type {
     CreateNode        create              = 3;
@@ -293,16 +293,6 @@ message DatabaseMutaction {
     ResetData         reset               = 7;
     DeleteNodes       delete_nodes        = 8;
     UpdateNodes       update_nodes        = 9;
-    NestedConnect     nested_connect      = 10;
-    NestedDisconnect  nested_disconnect   = 11;
-    NestedSet         nested_set          = 12;
-    NestedCreateNode  nested_create       = 13;
-    NestedUpdateNode  nested_update       = 14;
-    NestedUpsertNode  nested_upsert       = 15;
-    NestedDeleteNode  nested_delete       = 16;
-    NestedUpdateNodes nested_update_nodes = 17;
-    NestedDeleteNodes nested_delete_nodes = 18;
-
   }
 }
 

@@ -41,7 +41,7 @@ impl RelationCompare for Arc<RelationField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: InternalDataModelTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let user = schema.find_model("User").unwrap();
     /// # let site = schema.find_model("Site").unwrap();
@@ -92,7 +92,7 @@ impl RelationCompare for Arc<RelationField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: InternalDataModelTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let user = schema.find_model("User").unwrap();
     /// # let site = schema.find_model("Site").unwrap();
@@ -135,6 +135,57 @@ impl RelationCompare for Arc<RelationField> {
         })
     }
 
+    /// To one related node. FIXME
+    /// ```rust
+    /// # use connector::{*, filter::*};
+    /// # use prisma_models::*;
+    /// # use prisma_query::ast::*;
+    /// # use serde_json;
+    /// # use std::{fs::File, sync::Arc};
+    /// #
+    /// # let tmp: InternalDataModelTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
+    /// # let schema = tmp.build(String::from("test"));
+    /// # let user = schema.find_model("User").unwrap();
+    /// # let site = schema.find_model("Site").unwrap();
+    /// #
+    /// let rel_field = user.fields().find_from_relation_fields("sites").unwrap();
+    /// let site_name = site.fields().find_from_scalar("name").unwrap();
+    /// let filter = rel_field.to_one_related(site_name.equals("Blog"));
+    ///
+    /// match filter {
+    ///     Filter::Relation(RelationFilter {
+    ///         field: relation_field,
+    ///         nested_filter: nested,
+    ///         condition: condition,
+    ///     }) => {
+    ///         assert_eq!(String::from("sites"), relation_field.name);
+    ///         assert_eq!(RelationCondition::ToOneRelatedNode, condition);
+    ///
+    ///         match *nested {
+    ///             Filter::Scalar(ScalarFilter {
+    ///                 field: scalar_field,
+    ///                 condition: ScalarCondition::Equals(scalar_val),
+    ///             }) => {
+    ///                 assert_eq!(String::from("name"), scalar_field.name);
+    ///                 assert_eq!(PrismaValue::from("Blog"), scalar_val);
+    ///             }
+    ///             _ => unreachable!()
+    ///         }
+    ///     }
+    ///     _ => unreachable!()
+    /// }
+    /// ```
+    fn to_one_related<T>(&self, filter: T) -> Filter
+    where
+        T: Into<Filter>,
+    {
+        Filter::from(RelationFilter {
+            field: Arc::clone(self),
+            nested_filter: Box::new(filter.into()),
+            condition: RelationCondition::ToOneRelatedNode,
+        })
+    }
+
     /// None of the related records matches the filter.
     /// ```rust
     /// # use connector::{*, filter::*};
@@ -143,7 +194,7 @@ impl RelationCompare for Arc<RelationField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: InternalDataModelTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let user = schema.find_model("User").unwrap();
     /// # let site = schema.find_model("Site").unwrap();
@@ -194,7 +245,7 @@ impl RelationCompare for Arc<RelationField> {
     /// # use serde_json;
     /// # use std::{fs::File, sync::Arc};
     /// #
-    /// # let tmp: SchemaTemplate = serde_json::from_reader(File::open("../sqlite-connector/test_schema.json").unwrap()).unwrap();
+    /// # let tmp: InternalDataModelTemplate = serde_json::from_reader(File::open("../sql-connector/test_schema.json").unwrap()).unwrap();
     /// # let schema = tmp.build(String::from("test"));
     /// # let user = schema.find_model("User").unwrap();
     /// #

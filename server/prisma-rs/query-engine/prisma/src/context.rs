@@ -1,42 +1,35 @@
-use crate::{schema, PrismaResult};
-use core::QueryExecutor;
-use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
-use prisma_models::SchemaRef;
-use sqlite_connector::Sqlite;
-use std::sync::Arc;
+use crate::{data_model, exec_loader, PrismaResult};
+use core::{Executor, SchemaBuilder};
+use prisma_common::config::{self, PrismaConfig};
+use prisma_models::InternalDataModelRef;
 
+#[derive(DebugStub)]
 pub struct PrismaContext {
     pub config: PrismaConfig,
-    pub schema: SchemaRef,
-    pub query_executor: QueryExecutor,
+    pub internal_data_model: InternalDataModelRef,
+
+    #[debug_stub = "#Executor#"]
+    pub executor: Executor,
 }
 
 impl PrismaContext {
     pub fn new() -> PrismaResult<Self> {
+        // Load config and executors
         let config = config::load().unwrap();
-        let data_resolver = match config.databases.get("default") {
-            Some(PrismaDatabase::Explicit(ref config)) if config.connector == "sqlite-native" => {
-                let test_mode = false;
-                let sqlite = Sqlite::new(config.limit(), test_mode).unwrap();
-                Arc::new(sqlite)
-            }
-            _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
-        };
+        let executor = exec_loader::load(&config);
 
-        let query_executor: QueryExecutor = QueryExecutor { data_resolver };
+        // Find db name. This right here influences how
+        let db = config.databases.get("default").unwrap();
+        let db_name = db.schema().or_else(|| db.db_name()).unwrap_or_else(|| "prisma".into());
 
-        let db_name = config
-            .databases
-            .get("default")
-            .unwrap()
-            .db_name()
-            .expect("database was not set");
+        // Load internal data model
+        let internal_data_model = data_model::load(db_name)?;
+        // let _ = SchemaBuilder::build(internal_data_model.clone());
 
-        let schema = schema::load_schema(db_name)?;
         Ok(Self {
-            config: config,
-            schema: schema,
-            query_executor: query_executor,
+            config,
+            internal_data_model,
+            executor,
         })
     }
 }

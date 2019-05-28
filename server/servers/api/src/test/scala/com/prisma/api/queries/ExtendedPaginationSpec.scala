@@ -5,6 +5,7 @@ import com.prisma.shared.models.ConnectorCapability.JoinRelationLinksCapability
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
 import org.scalatest.{FlatSpec, Matchers}
+import play.api.libs.json.Json
 
 class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
 
@@ -65,8 +66,8 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         project
       )
 
-      result.toString() should be(
-        """{"data":{"tops":[{"t":"T1","middles":[{"m":"M11","bottoms":[{"b":"B111"},{"b":"B112"},{"b":"B113"}]},{"m":"M12","bottoms":[{"b":"B121"},{"b":"B122"},{"b":"B123"}]},{"m":"M13","bottoms":[{"b":"B131"},{"b":"B132"},{"b":"B133"}]}]},{"t":"T2","middles":[{"m":"M21","bottoms":[{"b":"B211"},{"b":"B212"},{"b":"B213"}]},{"m":"M22","bottoms":[{"b":"B221"},{"b":"B222"},{"b":"B223"}]},{"m":"M23","bottoms":[{"b":"B231"},{"b":"B232"},{"b":"B233"}]}]},{"t":"T3","middles":[{"m":"M31","bottoms":[{"b":"B311"},{"b":"B312"},{"b":"B313"}]},{"m":"M32","bottoms":[{"b":"B321"},{"b":"B322"},{"b":"B323"}]},{"m":"M33","bottoms":[{"b":"B331"},{"b":"B332"},{"b":"B333"}]}]}]}}""")
+      result should be(
+        Json.parse("""{"data":{"tops":[{"t":"T1","middles":[{"m":"M11","bottoms":[{"b":"B111"},{"b":"B112"},{"b":"B113"}]},{"m":"M12","bottoms":[{"b":"B121"},{"b":"B122"},{"b":"B123"}]},{"m":"M13","bottoms":[{"b":"B131"},{"b":"B132"},{"b":"B133"}]}]},{"t":"T2","middles":[{"m":"M21","bottoms":[{"b":"B211"},{"b":"B212"},{"b":"B213"}]},{"m":"M22","bottoms":[{"b":"B221"},{"b":"B222"},{"b":"B223"}]},{"m":"M23","bottoms":[{"b":"B231"},{"b":"B232"},{"b":"B233"}]}]},{"t":"T3","middles":[{"m":"M31","bottoms":[{"b":"B311"},{"b":"B312"},{"b":"B313"}]},{"m":"M32","bottoms":[{"b":"B321"},{"b":"B322"},{"b":"B323"}]},{"m":"M33","bottoms":[{"b":"B331"},{"b":"B332"},{"b":"B333"}]}]}]}}"""))
     }
   }
 
@@ -216,8 +217,8 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         project
       )
 
-      result.toString() should be(
-        """{"data":{"tops":[{"middles":[{"bottoms":[{"b":"B111"},{"b":"B112"},{"b":"B113"}]},{"bottoms":[{"b":"B121"},{"b":"B122"},{"b":"B123"}]},{"bottoms":[{"b":"B131"},{"b":"B132"},{"b":"B133"}]}]},{"middles":[{"bottoms":[{"b":"B211"},{"b":"B212"},{"b":"B213"}]},{"bottoms":[{"b":"B221"},{"b":"B222"},{"b":"B223"}]},{"bottoms":[{"b":"B231"},{"b":"B232"},{"b":"B233"}]}]},{"middles":[{"bottoms":[{"b":"B311"},{"b":"B312"},{"b":"B313"}]},{"bottoms":[{"b":"B321"},{"b":"B322"},{"b":"B323"}]},{"bottoms":[{"b":"B331"},{"b":"B332"},{"b":"B333"}]}]}]}}""")
+      result should be(
+        Json.parse("""{"data":{"tops":[{"middles":[{"bottoms":[{"b":"B111"},{"b":"B112"},{"b":"B113"}]},{"bottoms":[{"b":"B121"},{"b":"B122"},{"b":"B123"}]},{"bottoms":[{"b":"B131"},{"b":"B132"},{"b":"B133"}]}]},{"middles":[{"bottoms":[{"b":"B211"},{"b":"B212"},{"b":"B213"}]},{"bottoms":[{"b":"B221"},{"b":"B222"},{"b":"B223"}]},{"bottoms":[{"b":"B231"},{"b":"B232"},{"b":"B233"}]}]},{"middles":[{"bottoms":[{"b":"B311"},{"b":"B312"},{"b":"B313"}]},{"bottoms":[{"b":"B321"},{"b":"B322"},{"b":"B323"}]},{"bottoms":[{"b":"B331"},{"b":"B332"},{"b":"B333"}]}]}]}}"""))
     }
   }
 
@@ -233,8 +234,8 @@ class ExtendedPaginationSpec extends FlatSpec with Matchers with ApiSpecBase {
         project
       )
 
-      result.toString() should be(
-        """{"data":{"tops":[{"middles":[{"bottoms":[{"b":"B112"},{"b":"B113"}]},{"bottoms":[{"b":"B122"},{"b":"B123"}]},{"bottoms":[{"b":"B132"},{"b":"B133"}]}]},{"middles":[{"bottoms":[{"b":"B212"},{"b":"B213"}]},{"bottoms":[{"b":"B222"},{"b":"B223"}]},{"bottoms":[{"b":"B232"},{"b":"B233"}]}]},{"middles":[{"bottoms":[{"b":"B312"},{"b":"B313"}]},{"bottoms":[{"b":"B322"},{"b":"B323"}]},{"bottoms":[{"b":"B332"},{"b":"B333"}]}]}]}}""")
+      result should be(
+        Json.parse("""{"data":{"tops":[{"middles":[{"bottoms":[{"b":"B112"},{"b":"B113"}]},{"bottoms":[{"b":"B122"},{"b":"B123"}]},{"bottoms":[{"b":"B132"},{"b":"B133"}]}]},{"middles":[{"bottoms":[{"b":"B212"},{"b":"B213"}]},{"bottoms":[{"b":"B222"},{"b":"B223"}]},{"bottoms":[{"b":"B232"},{"b":"B233"}]}]},{"middles":[{"bottoms":[{"b":"B312"},{"b":"B313"}]},{"bottoms":[{"b":"B322"},{"b":"B323"}]},{"bottoms":[{"b":"B332"},{"b":"B333"}]}]}]}}"""))
     }
   }
 

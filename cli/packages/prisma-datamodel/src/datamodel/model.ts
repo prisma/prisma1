@@ -170,7 +170,7 @@ export interface IGQLType {
    * the two foreign key fields. The indices are hidden
    * when introspecting.
    */
-  isLinkTable: boolean
+  isRelationTable: boolean
 
   /**
    * The name of this type.

@@ -2,4 +2,4 @@
 set -e
 
 git submodule update --init || true
-cargo test
+cargo test -- --test-threads 1
