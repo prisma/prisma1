@@ -101,7 +101,6 @@ impl SqlIntrospectionConnector {
 
     pub fn native_type_to_column_type(&self, col: &str) -> ColumnType {
         self.specialized.native_type_to_column_type(col)
-
     }
 }
 

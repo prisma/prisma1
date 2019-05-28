@@ -2,11 +2,19 @@ use database_inspector::sql::*;
 
 pub trait DatabaseSchemaAsserts {
     fn assert_has_table(&self, t: &str) -> &TableInfo;
-    fn assert_has_relation(&self, source_table: &str, source_column: &str, target_table: &str, target_column: &str) -> &TableRelationInfo;
+    fn assert_has_relation(
+        &self,
+        source_table: &str,
+        source_column: &str,
+        target_table: &str,
+        target_column: &str,
+    ) -> &TableRelationInfo;
 }
 
 pub trait TableAsserts {
     fn assert_has_column(&self, t: &str) -> &ColumnInfo;
+    fn assert_has_pk(&self, b: bool) -> &Self;
+    fn assert_has_pk_columns(&self, t: &[&str]) -> &Self;
 }
 
 pub trait ColumnAsserts {
@@ -21,20 +29,60 @@ pub trait ColumnAsserts {
 
 impl DatabaseSchemaAsserts for DatabaseSchemaInfo {
     fn assert_has_table(&self, t: &str) -> &TableInfo {
-        self.tables.iter().find(|m| &m.name == t)
+        self.tables
+            .iter()
+            .find(|m| &m.name == t)
             .expect(&format!("Table not found {}", t))
     }
 
-    fn assert_has_relation(&self, source_table: &str, source_column: &str, target_table: &str, target_column: &str) -> &TableRelationInfo {
-        self.relations.iter().find(|t| &t.source_table == source_table && &t.source_column == source_column && &t.target_table == target_table &&t.target_column == target_column)
-            .expect(&format!("Relation not found {}.{} -> {}.{}", source_table, source_column, target_table, target_column))
+    fn assert_has_relation(
+        &self,
+        source_table: &str,
+        source_column: &str,
+        target_table: &str,
+        target_column: &str,
+    ) -> &TableRelationInfo {
+        self.relations
+            .iter()
+            .find(|t| {
+                &t.source_table == source_table
+                    && &t.source_column == source_column
+                    && &t.target_table == target_table
+                    && t.target_column == target_column
+            })
+            .expect(&format!(
+                "Relation not found {}.{} -> {}.{}",
+                source_table, source_column, target_table, target_column
+            ))
     }
 }
 
 impl TableAsserts for TableInfo {
     fn assert_has_column(&self, t: &str) -> &ColumnInfo {
-        self.columns.iter().find(|m| &m.name == t)
+        self.columns
+            .iter()
+            .find(|m| &m.name == t)
             .expect(&format!("Column not found {}", t))
+    }
+
+    fn assert_has_pk(&self, b: bool) -> &TableInfo {
+        if let Some(_) = &self.primary_key {
+            assert_eq!(true, b);
+        } else {
+            assert_eq!(false, b);
+        }
+
+        return self;
+    }
+
+    fn assert_has_pk_columns(&self, t: &[&str]) -> &TableInfo {
+        if let Some(primary_key) = &self.primary_key {
+            assert_eq!(primary_key.columns, t)
+        } else {
+            panic!("Expected primary key, but none found.")
+        }
+
+        return self;
     }
 }
 

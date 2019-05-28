@@ -1,10 +1,10 @@
 use crate::sql::SpecializedSqlIntrospectionResult;
 
-pub struct SqliteIntrospectionResult { }
+pub struct SqliteIntrospectionResult {}
 
-impl SqliteIntrospectionResult { 
+impl SqliteIntrospectionResult {
     pub fn new() -> SqliteIntrospectionResult {
-      SqliteIntrospectionResult { }
+        SqliteIntrospectionResult {}
     }
 }
 

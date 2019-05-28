@@ -1,7 +1,10 @@
 mod common;
-use common::*;
-use database_inspector::{IntrospectionConnector, sql::{*, sqlite::*}};
 use barrel::types;
+use common::*;
+use database_inspector::{
+    sql::{sqlite::*, *},
+    IntrospectionConnector,
+};
 mod relational_asserts;
 use relational_asserts::*;
 
@@ -19,34 +22,40 @@ fn all_columns_types_must_work() {
             });
         },
         |connection| {
-
             let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
 
             let result = inspector.introspect(connection, SCHEMA)?;
 
             let user_table = result.schema.assert_has_table("User");
 
-            user_table.assert_has_column("int")
-                .assert_column_type(ColumnType::Int);
+            user_table.assert_has_pk(false);
 
-            user_table.assert_has_column("float")
+            user_table.assert_has_column("int").assert_column_type(ColumnType::Int);
+
+            user_table
+                .assert_has_column("float")
                 .assert_column_type(ColumnType::Float);
 
-            user_table.assert_has_column("boolean")
+            user_table
+                .assert_has_column("boolean")
                 .assert_column_type(ColumnType::Boolean);
 
-            user_table.assert_has_column("string1")
+            user_table
+                .assert_has_column("string1")
                 .assert_column_type(ColumnType::String);
 
-            user_table.assert_has_column("string2")
+            user_table
+                .assert_has_column("string2")
                 .assert_column_type(ColumnType::String);
 
-            user_table.assert_has_column("date_time")
+            user_table
+                .assert_has_column("date_time")
                 .assert_column_type(ColumnType::DateTime);
 
             Ok(())
         },
-    ).unwrap();
+    )
+    .unwrap();
 }
 
 #[test]
@@ -59,35 +68,34 @@ fn is_required_must_work() {
             });
         },
         |connection| {
-
             let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
 
             let result = inspector.introspect(connection, SCHEMA)?;
 
             let user_table = result.schema.assert_has_table("User");
+            user_table.assert_has_pk(false);
 
-            user_table.assert_has_column("column1")
-                .assert_is_nullable(false);
+            user_table.assert_has_column("column1").assert_is_nullable(false);
 
-            user_table.assert_has_column("column2")
-                .assert_is_nullable(true);
+            user_table.assert_has_column("column2").assert_is_nullable(true);
 
             Ok(())
         },
-    ).unwrap();
+    )
+    .unwrap();
 }
-
 
 #[test]
 fn foreign_keys_must_work() {
-    run_test(|migration| {
-        migration.create_table("City", |t| {
-            t.add_column("id", types::primary());
-        });
-        migration.create_table("User", |t| {
-            t.add_column("city", types::foreign("City(id)"));
-        });
-    },
+    run_test(
+        |migration| {
+            migration.create_table("City", |t| {
+                t.add_column("id", types::primary());
+            });
+            migration.create_table("User", |t| {
+                t.add_column("city", types::foreign("City(id)"));
+            });
+        },
         |connection| {
             let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
             let result = inspector.introspect(connection, SCHEMA)?;
@@ -96,5 +104,34 @@ fn foreign_keys_must_work() {
 
             Ok(())
         },
-    ).unwrap();
+    )
+    .unwrap();
+}
+
+#[test]
+fn primary_key_indices_must_work() {
+    run_test(
+        |migration| {
+            migration.create_table("City", |t| {
+                t.add_column("id", types::primary());
+            });
+        },
+        |connection| {
+            let inspector = SqlIntrospectionConnector::new(Box::new(SqliteConnector::new()));
+            let result = inspector.introspect(connection, SCHEMA)?;
+
+            let city_table = result.schema.assert_has_table("City");
+            city_table.assert_has_pk(true);
+
+            city_table
+                .assert_has_column("id")
+                .assert_column_type(ColumnType::Int)
+                .assert_is_primary_key(true);
+
+            city_table.assert_has_pk_columns(&["id"]);
+
+            Ok(())
+        },
+    )
+    .unwrap();
 }

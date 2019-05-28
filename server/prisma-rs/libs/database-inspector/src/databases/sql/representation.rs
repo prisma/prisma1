@@ -55,7 +55,7 @@ impl ColumnInfo {
             is_nullable: is_nullable,
             is_list: false,
             is_auto_increment: false,
-            is_primary_key: false
+            is_primary_key: false,
         }
     }
 }
@@ -100,7 +100,7 @@ impl IndexInfo {
         IndexInfo {
             name: String::from(""),
             columns: cols.iter().map(|x| String::from(*x)).collect(),
-            is_unique: true
+            is_unique: true,
         }
     }
 
@@ -108,7 +108,7 @@ impl IndexInfo {
         IndexInfo {
             name: String::from(name),
             columns: cols.iter().map(|x| String::from(*x)).collect(),
-            is_unique: true
+            is_unique: true,
         }
     }
 }
@@ -118,7 +118,7 @@ pub struct DatabaseSchemaInfo {
     pub tables: Vec<TableInfo>,
     pub relations: Vec<TableRelationInfo>,
     pub enums: Vec<EnumInfo>,
-    pub sequences: Vec<SequenceInfo>
+    pub sequences: Vec<SequenceInfo>,
 }
 
 impl DatabaseSchemaInfo {
@@ -127,7 +127,7 @@ impl DatabaseSchemaInfo {
             tables: vec![],
             relations: vec![],
             enums: vec![],
-            sequences: vec![]
+            sequences: vec![],
         }
     }
 
@@ -163,5 +163,5 @@ pub enum ColumnType {
     Float,
     Boolean,
     String,
-    DateTime
+    DateTime,
 }

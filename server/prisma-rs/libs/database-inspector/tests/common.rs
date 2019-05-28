@@ -1,12 +1,11 @@
 use barrel;
 use database_inspector::*;
-use prisma_query::{transaction::Connectional, connector::Sqlite};
+use prisma_query::{connector::Sqlite, transaction::Connectional};
 
 pub const SCHEMA: &'static str = "RELATIONAL_INTROSPECTION_TEST_SCHEMA";
 
-
 /// Removes the database file from disk.
-/// 
+///
 /// This should, at one point, move into prisma-query, since it depends
 /// on the connector internal logic of resolving DBs.
 pub fn remove_db(path: &str) {
@@ -46,7 +45,5 @@ where
 
     // Executes introspection and tests the result
 
-    client.with_connection(SCHEMA, |connection| {
-        test_fn(connection)
-    })
+    client.with_connection(SCHEMA, |connection| test_fn(connection))
 }

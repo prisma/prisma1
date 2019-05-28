@@ -1,5 +1,5 @@
-use crate::*;
 use super::*;
+use crate::*;
 pub trait SpecializedSqlIntrospectionResult {
     fn database_type(&self) -> &str;
     /*
@@ -18,7 +18,7 @@ pub struct SqlIntrospectionResult {
     /// Any specialized connector specific results.
     pub specialized: Box<SpecializedSqlIntrospectionResult>,
     /// The relational database schema without prisma abstractions.
-    pub schema: DatabaseSchemaInfo
+    pub schema: DatabaseSchemaInfo,
 }
 
 // TODO: This should follow the RelationalIntrospectionResult class

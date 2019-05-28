@@ -1,13 +1,13 @@
-use prisma_query::{ast::*, convenience::*};
-use crate::{Connection, SqlError};
-use crate::databases::sql::*;
 use super::SqliteIntrospectionResult;
+use crate::databases::sql::*;
+use crate::{Connection, SqlError};
+use prisma_query::{ast::*, convenience::*};
 
-pub struct SqliteConnector { }
+pub struct SqliteConnector {}
 
-impl SqliteConnector { 
+impl SqliteConnector {
     pub fn new() -> SqliteConnector {
-      SqliteConnector { }
+        SqliteConnector {}
     }
 }
 
@@ -38,7 +38,7 @@ impl SpecializedSqlIntrospectionConnector for SqliteConnector {
             .column("name")
             .so_that(ConditionTree::and(
                 Column::from("type").equals("table"),
-                Column::from("name").not_equals("sqlite_sequence")
+                Column::from("name").not_equals("sqlite_sequence"),
             ));
 
         let (cols, vals) = connection.query(Query::from(query))?;
@@ -46,7 +46,7 @@ impl SpecializedSqlIntrospectionConnector for SqliteConnector {
 
         result_list_to_string_vec(&res)
     }
-    
+
     fn query_relations(&self, connection: &mut Connection, schema: &str) -> Result<Vec<TableRelationInfo>, SqlError> {
         let mut rels: Vec<TableRelationInfo> = vec![];
 
@@ -74,11 +74,15 @@ impl SpecializedSqlIntrospectionConnector for SqliteConnector {
         Ok(rels)
     }
 
-    fn query_columns(&self, connection: &mut Connection, schema: &str, table: &str) -> Result<Vec<ColumnInfo>, SqlError> {
+    fn query_columns(
+        &self,
+        connection: &mut Connection,
+        schema: &str,
+        table: &str,
+    ) -> Result<Vec<ColumnInfo>, SqlError> {
         let sql = format!(r#"Pragma `{}`.table_info (`{}`)"#, schema, table);
         let (cols, vals) = connection.query_raw(&sql, &[])?;
         let res = ResultSet::from((&cols, &vals));
-
 
         let mut cols: Vec<ColumnInfo> = vec![];
 
@@ -100,19 +104,49 @@ impl SpecializedSqlIntrospectionConnector for SqliteConnector {
                 is_nullable: !(row.get_as_bool(PRAGMA_NOT_NULL)?),
                 is_list: false,
                 is_auto_increment: row.get_as_bool(PRAGMA_PK)?,
-                is_primary_key: row.get_as_bool(PRAGMA_PK)?
+                is_primary_key: row.get_as_bool(PRAGMA_PK)?,
             })
         }
 
         Ok(cols)
     }
-    fn query_column_comment(&self, connection: &mut Connection, schema: &str, table: &str, column: &str) -> Result<Option<String>, SqlError> {
+    fn query_column_comment(
+        &self,
+        connection: &mut Connection,
+        schema: &str,
+        table: &str,
+        column: &str,
+    ) -> Result<Option<String>, SqlError> {
         // TODO: Implement
         Ok(None)
     }
-    fn query_indices(&self, connection: &mut Connection, schema: &str, table: &str) -> Result<Vec<InternalIndexIntrospectionResult>, SqlError> {
-        // TODO: Implement
-        Ok(vec![])
+    fn query_indices(
+        &self,
+        connection: &mut Connection,
+        schema: &str,
+        table: &str,
+    ) -> Result<Vec<InternalIndexIntrospectionResult>, SqlError> {
+        // TODO: This is a hack which exposes only the primary key of each table.
+        // https://github.com/prisma/prisma/blob/27002e24774a17f4aea8a2d8d0ec834ce84d4c8d/server/prisma-rs/libs/database-inspector/src/database_inspector_impl.rs#L59
+
+        let pk_cols: Vec<String> = self
+            .query_columns(connection, schema, table)?
+            .iter()
+            .filter(|c| c.is_primary_key)
+            .map(|c| c.name.clone())
+            .collect();
+
+        if pk_cols.len() > 0 {
+            return Ok(vec![InternalIndexIntrospectionResult {
+                is_unique: true,
+                is_primary_key: true,
+                table_name: String::from(table),
+                name: String::from("pk"),
+                columns: pk_cols,
+            }]);
+        } else {
+            return Ok(vec![]);
+        }
     }
     fn query_enums(&self, connection: &mut Connection, schema: &str) -> Result<Vec<EnumInfo>, SqlError> {
         // TODO: Implement
@@ -123,15 +157,21 @@ impl SpecializedSqlIntrospectionConnector for SqliteConnector {
         Ok(vec![])
     }
 
-    fn create_introspection_result(&self, tables: Vec<TableInfo>, relations: Vec<TableRelationInfo>, enums: Vec<EnumInfo>, sequences: Vec<SequenceInfo>) -> SqlIntrospectionResult{
+    fn create_introspection_result(
+        &self,
+        tables: Vec<TableInfo>,
+        relations: Vec<TableRelationInfo>,
+        enums: Vec<EnumInfo>,
+        sequences: Vec<SequenceInfo>,
+    ) -> SqlIntrospectionResult {
         SqlIntrospectionResult {
             specialized: Box::new(SqliteIntrospectionResult::new()),
             schema: DatabaseSchemaInfo {
                 tables: tables,
                 relations: relations,
                 enums: enums,
-                sequences: sequences
-            }
+                sequences: sequences,
+            },
         }
     }
 
@@ -141,7 +181,7 @@ impl SpecializedSqlIntrospectionConnector for SqliteConnector {
             ColumnType::DateTime => "DATE",
             ColumnType::Float => "REAL",
             ColumnType::Int => "INTEGER",
-            ColumnType::String => "TEXT"
+            ColumnType::String => "TEXT",
         }
     }
 
@@ -156,5 +196,4 @@ impl SpecializedSqlIntrospectionConnector for SqliteConnector {
             _ => ColumnType::String,
         }
     }
-
 }
