@@ -35,6 +35,7 @@ fn resolve_relation() {
     post_model.assert_has_field("user").assert_relation_to("User");
 }
 
+#[test]
 fn resolve_related_field() {
     let dml = r#"
     model User {

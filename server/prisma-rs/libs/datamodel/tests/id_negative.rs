@@ -43,7 +43,9 @@ fn id_should_error_if_an_unknown_strategy_is_used() {
     );
 }
 
+// DISABLED until we decide on this.
 #[test]
+#[ignore]
 fn id_should_error_on_model_without_id() {
     let dml = r#"
     model Model {

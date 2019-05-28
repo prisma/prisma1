@@ -16,13 +16,17 @@ fn lift_span(span: &Span, offset: usize) -> Span {
 
 /// Parses an expression and adds an offset to the span start, so we have consistent error
 /// messages.
-fn parse_expr_and_lift_span(token: &pest::iterators::Pair<'_, Rule>, start: usize) -> Value {
+fn parse_expr_and_lift_span(token: &pest::iterators::Pair<'_, Rule>, start: usize) -> Result<Value, ValidationError> {
     match parse_expression(token) {
-        Value::NumericValue(v, s) => Value::NumericValue(v, lift_span(&s, start)),
-        Value::BooleanValue(v, s) => Value::BooleanValue(v, lift_span(&s, start)),
-        Value::StringValue(v, s) => Value::StringValue(v, lift_span(&s, start)),
-        Value::ConstantValue(v, s) => Value::ConstantValue(v, lift_span(&s, start)),
-        Value::Function(n, a, s) => Value::Function(n, a, lift_span(&s, start)),
+        Value::NumericValue(v, s) => Ok(Value::NumericValue(v, lift_span(&s, start))),
+        Value::BooleanValue(v, s) => Ok(Value::BooleanValue(v, lift_span(&s, start))),
+        Value::StringValue(v, s) => Ok(Value::StringValue(v, lift_span(&s, start))),
+        Value::ConstantValue(v, s) => Ok(Value::ConstantValue(v, lift_span(&s, start))),
+        Value::Function(n, a, s) => Ok(Value::Function(n, a, lift_span(&s, start))),
+        Value::Array(_, s) => Err(ValidationError::new_parser_error(
+            "Arrays cannot be interpolated into strings.",
+            &s,
+        )),
     }
 }
 
@@ -45,8 +49,8 @@ impl StringInterpolator {
                     Rule::string_escaped_interpolation => parts.push(String::from("${")),
                     Rule::string_any => parts.push(String::from(current.as_str())),
                     Rule::expression => {
-                        let value = parse_expr_and_lift_span(&current, span.start);
-                        parts.push(ValueValidator::new(&value)?.raw().clone())
+                        let value = parse_expr_and_lift_span(&current, span.start)?;
+                        parts.push(String::from(ValueValidator::new(&value)?.raw()))
                     },
                     Rule::EOI => {},
                     _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())

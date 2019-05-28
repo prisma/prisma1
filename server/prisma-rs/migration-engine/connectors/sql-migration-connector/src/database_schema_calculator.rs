@@ -177,7 +177,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     FieldType::Relation(relation_info) => {
                         let RelationInfo {
                             to,
-                            to_field,
+                            to_fields,
                             name,
                             on_delete: _,
                         } = relation_info;
@@ -230,6 +230,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             in_table_of_model: related_model.name.clone(),
                             column: related_field.db_name(),
                         };
+
                         let manifestation = match (field_a.is_list(), field_b.is_list()) {
                             (true, true) => RelationManifestation::Table {
                                 model_a_column: "A".to_string(),
@@ -237,7 +238,8 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             },
                             (false, true) => inline_on_model_a,
                             (true, false) => inline_on_model_b,
-                            (false, false) => match (to_field, &related_field_info.to_field) {
+                            // TODO: to_fields is now a list, please fix this line.
+                            (false, false) => match (to_fields.first(), &related_field_info.to_fields.first()) {
                                 (Some(_), None) => inline_on_this_model,
                                 (None, Some(_)) => inline_on_related_model,
                                 (None, None) => {

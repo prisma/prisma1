@@ -6,7 +6,7 @@ pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
     fn assert_enum_type(&self, en: &str) -> &Self;
     fn assert_relation_to(&self, t: &str) -> &Self;
-    fn assert_relation_to_field(&self, t: &str) -> &Self;
+    fn assert_relation_to_fields(&self, t: &[&str]) -> &Self;
     fn assert_arity(&self, arity: &dml::FieldArity) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
     fn assert_default_value(&self, t: dml::Value) -> &Self;
@@ -65,9 +65,9 @@ impl FieldAsserts for dml::Field {
         return self;
     }
 
-    fn assert_relation_to_field(&self, t: &str) -> &Self {
+    fn assert_relation_to_fields(&self, t: &[&str]) -> &Self {
         if let dml::FieldType::Relation(info) = &self.field_type {
-            assert_eq!(info.to_field.clone().expect("To field expected but not found."), t);
+            assert_eq!(info.to_fields, t);
         } else {
             panic!("Relation expected, but found {:?}", self.field_type);
         }

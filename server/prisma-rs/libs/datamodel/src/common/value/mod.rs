@@ -72,6 +72,8 @@ impl ValueValidator {
         &self.value
     }
 
+    // TODO: Array types might be convenient here, for lists.
+
     /// Attempts to parse the wrapped value
     /// to a given prisma type.
     pub fn as_type(&self, scalar_type: &dml::ScalarType) -> Result<dml::Value, ValidationError> {
@@ -92,13 +94,14 @@ impl ValueValidator {
 
     /// Accesses the raw string representation
     /// of the wrapped value.
-    pub fn raw(&self) -> &String {
+    pub fn raw(&self) -> &str {
         match &self.value {
             ast::Value::StringValue(x, _) => x,
             ast::Value::NumericValue(x, _) => x,
             ast::Value::BooleanValue(x, _) => x,
             ast::Value::ConstantValue(x, _) => x,
             ast::Value::Function(x, _, _) => x,
+            ast::Value::Array(_, _) => "(Array)",
         }
     }
 
@@ -110,6 +113,7 @@ impl ValueValidator {
             ast::Value::BooleanValue(_, s) => s,
             ast::Value::ConstantValue(_, s) => s,
             ast::Value::Function(_, _, s) => s,
+            ast::Value::Array(_, s) => s,
         }
     }
 
@@ -171,5 +175,48 @@ impl ValueValidator {
             ast::Value::ConstantValue(value, _) => Ok(value.to_string()),
             _ => Err(self.construct_error("Constant Literal")),
         }
+    }
+
+    /// Unwraps the wrapped value as a constant literal..
+    pub fn as_array(&self) -> Result<Vec<ValueValidator>, ValidationError> {
+        match &self.value {
+            ast::Value::Array(values, _) => {
+                let mut validators: Vec<ValueValidator> = Vec::new();
+
+                for value in values {
+                    validators.push(ValueValidator::new(value)?);
+                }
+
+                Ok(validators)
+            }
+            _ => Err(self.construct_error("Array")),
+        }
+    }
+}
+
+pub trait ValueListValidator {
+    fn to_str_vec(&self) -> Result<Vec<String>, ValidationError>;
+    fn to_literal_vec(&self) -> Result<Vec<String>, ValidationError>;
+}
+
+impl ValueListValidator for Vec<ValueValidator> {
+    fn to_str_vec(&self) -> Result<Vec<String>, ValidationError> {
+        let mut res: Vec<String> = Vec::new();
+
+        for val in self {
+            res.push(val.as_str()?);
+        }
+
+        Ok(res)
+    }
+
+    fn to_literal_vec(&self) -> Result<Vec<String>, ValidationError> {
+        let mut res: Vec<String> = Vec::new();
+
+        for val in self {
+            res.push(val.as_constant_literal()?);
+        }
+
+        Ok(res)
     }
 }

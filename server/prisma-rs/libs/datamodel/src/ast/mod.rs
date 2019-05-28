@@ -83,6 +83,8 @@ pub enum Value {
     ConstantValue(String, Span),
     /// A function with a name and arguments.
     Function(String, Vec<Value>, Span),
+    /// An array of other values.
+    Array(Vec<Value>, Span),
 }
 
 /// Creates a friendly readable representation for a value's type.
@@ -93,6 +95,7 @@ pub fn describe_value_type(val: &Value) -> &'static str {
         Value::StringValue(_, _) => "String",
         Value::ConstantValue(_, _) => "Literal",
         Value::Function(_, _, _) => "Functional",
+        Value::Array(_, _) => "Array",
     }
 }
 

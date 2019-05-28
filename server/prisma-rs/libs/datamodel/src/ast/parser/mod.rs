@@ -30,6 +30,7 @@ pub fn parse_expression(token: &pest::iterators::Pair<'_, Rule>) -> Value {
         Rule::boolean_literal => Value::BooleanValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
         Rule::constant_Literal => Value::ConstantValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
         Rule::function => parse_function(&current),
+        Rule::array_expression => parse_array(&current),
         _ => unreachable!("Encounterd impossible literal during parsing: {:?}", current.tokens())
     };
 }
@@ -48,6 +49,17 @@ fn parse_function(token: &pest::iterators::Pair<'_, Rule>) -> Value {
         Some(name) => Value::Function(name, arguments, Span::from_pest(&token.as_span())),
         _ => unreachable!("Encounterd impossible function during parsing: {:?}", token.as_str()),
     };
+}
+
+fn parse_array(token: &pest::iterators::Pair<'_, Rule>) -> Value {
+    let mut elements: Vec<Value> = vec![];
+
+    match_children! { token, current,
+        Rule::expression => elements.push(parse_expression(&current)),
+        _ => unreachable!("Encounterd impossible array during parsing: {:?}", current.tokens())
+    };
+
+    Value::Array(elements, Span::from_pest(&token.as_span()))
 }
 
 fn parse_arg_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
