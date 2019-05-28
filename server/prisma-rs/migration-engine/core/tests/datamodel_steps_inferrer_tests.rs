@@ -12,7 +12,7 @@ fn infer_CreateModel_if_it_does_not_exist_yet() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String @primary
+            id: String @id
         }
     "#,
     );

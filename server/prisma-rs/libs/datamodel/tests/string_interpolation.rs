@@ -40,7 +40,6 @@ fn dont_interpolate_escaped_expressions_in_strings() {
         .assert_default_value(dml::Value::String(String::from("user_${3}")));
 }
 
-
 #[test]
 fn interpolate_functionals_in_strings() {
     let dml = r#"

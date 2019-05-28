@@ -8,7 +8,7 @@ fn adding_a_scalar_field_must_work() {
     run_test_with_engine(|engine| {
         let dm2 = r#"
             model Test {
-                id: String @primary
+                id: String @id
                 int: Int
                 float: Float
                 boolean: Boolean

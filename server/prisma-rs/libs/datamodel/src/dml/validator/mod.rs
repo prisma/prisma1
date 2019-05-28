@@ -89,9 +89,10 @@ impl Validator {
     fn ensure_model_has_id(&self, ast_model: &ast::Model, model: &dml::Model) -> Result<(), ValidationError> {
         if model.fields().filter(|m| m.id_info.is_some()).count() == 0 {
             Err(ValidationError::new_model_validation_error(
-                "One field must be marked as the id field with the `@id` directive.", 
+                "One field must be marked as the id field with the `@id` directive.",
                 &model.name,
-                &ast_model.span))
+                &ast_model.span,
+            ))
         } else {
             Ok(())
         }
@@ -210,9 +211,7 @@ impl Validator {
                             return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&ast_field.field_type)));
                         }
                     }
-                    ast::Top::Enum(en) if en.name == *type_name => {
-                        return Ok(dml::FieldType::Enum(type_name.clone()))
-                    }
+                    ast::Top::Enum(en) if en.name == *type_name => return Ok(dml::FieldType::Enum(type_name.clone())),
                     _ => {}
                 }
             }

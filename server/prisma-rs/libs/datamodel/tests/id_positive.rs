@@ -2,7 +2,7 @@ mod common;
 use common::*;
 use datamodel::dml::*;
 
-// Ported from 
+// Ported from
 // https://github.com/prisma/prisma/blob/master/server/servers/deploy/src/test/scala/com/prisma/deploy/migration/validation/IdDirectiveSpec.scala
 
 #[test]

@@ -14,7 +14,7 @@ fn add_CreateModel_to_existing_schema() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String @primary
+            id: String @id
         }
     "#,
     );

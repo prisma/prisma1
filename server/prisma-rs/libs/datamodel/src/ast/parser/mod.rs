@@ -212,7 +212,7 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
             fields,
             directives,
             comments: vec![],
-            span: Span::from_pest(&token.as_span())
+            span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
             "Encounterd impossible model declaration during parsing: {:?}",
@@ -240,7 +240,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
             values,
             directives,
             comments: vec![],
-            span: Span::from_pest(&token.as_span())
+            span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
             "Encounterd impossible enum declaration during parsing, name is missing: {:?}",

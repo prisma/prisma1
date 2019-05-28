@@ -1,6 +1,6 @@
 extern crate datamodel;
 
-use datamodel::{dml, source::SourceDefinition, errors::*};
+use datamodel::{dml, errors::*, source::SourceDefinition};
 
 pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
@@ -167,11 +167,10 @@ impl ErrorAsserts for ErrorCollection {
         } else {
             panic!("Expected exactly one validation error.");
         }
-    
+
         return self;
     }
 }
-
 
 #[allow(dead_code)] // Not sure why the compiler thinks this is never used.
 pub fn parse(datamodel_string: &str) -> datamodel::Schema {
@@ -191,15 +190,17 @@ pub fn parse_with_plugins(datamodel_string: &str, source_definitions: Vec<Box<So
     }
 }
 
-
 #[allow(dead_code)] // Not sure why the compiler thinks this is never used.
 pub fn parse_error(datamodel_string: &str) -> ErrorCollection {
     parse_with_plugins_error(datamodel_string, vec![])
 }
 
-pub fn parse_with_plugins_error(datamodel_string: &str, source_definitions: Vec<Box<SourceDefinition>>) -> ErrorCollection {
+pub fn parse_with_plugins_error(
+    datamodel_string: &str,
+    source_definitions: Vec<Box<SourceDefinition>>,
+) -> ErrorCollection {
     match datamodel::parse_with_plugins(datamodel_string, source_definitions) {
         Ok(_) => panic!("Expected an error when parsing schema."),
-        Err(errs) => errs
+        Err(errs) => errs,
     }
 }
