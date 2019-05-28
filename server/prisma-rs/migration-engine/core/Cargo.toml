@@ -18,6 +18,10 @@ serde_derive = "1.0"
 boolinator = "2.4.0"
 sql-migration-connector = { path = "../connectors/sql-migration-connector" }
 
+[dev-dependencies]
+rusqlite = { git = "https://github.com/pimeys/rusqlite", features = ["chrono", "bundled"] }
+barrel = { version = "0.5.8", features = ["sqlite3"] }
+
 [[bin]]
 name = "migration-engine"
 path = "src/bin/rpc_api_bin.rs"

@@ -49,13 +49,8 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 self.make_sql_string(migration)
             }
             SqlMigrationStep::RenameTable { name, new_name } => {
-                // TODO: use barrel again when the rename bug is fixed;
-                // migration.rename_table(name.to_string(), new_name.to_string());
-                // self.make_sql_string(migration)
-                format!(
-                    r#"ALTER TABLE "{}"."{}" RENAME TO "{}";"#,
-                    &self.schema_name, name, new_name
-                )
+                migration.rename_table(name.to_string(), new_name.to_string());
+                self.make_sql_string(migration)
             }
             SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
                 migration.change_table(table, move |t| {
@@ -77,9 +72,6 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 self.make_sql_string(migration)
             }
             SqlMigrationStep::RawSql(sql) => sql,
-            x => {
-                unimplemented!("{:?} not implemented yet here", x);
-            }
         };
         dbg!(&sql_string);
         let result = self.connection.execute(&sql_string, NO_PARAMS);
@@ -105,16 +97,28 @@ impl SqlDatabaseStepApplier {
 fn column_description_to_barrel_type(column_description: &ColumnDescription) -> barrel::types::Type {
     // TODO: add foreign keys for non integer types once this is available in barrel
     let tpe = match &column_description.foreign_key {
-        Some(fk) => barrel::types::foreign(string_to_static_str(format!("{}({})", fk.table, fk.column))),
-        None => match column_description.tpe {
-            ColumnType::Boolean => barrel::types::boolean(),
-            ColumnType::DateTime => barrel::types::date(),
-            ColumnType::Float => barrel::types::float(),
-            ColumnType::Int => barrel::types::integer(),
-            ColumnType::String => barrel::types::text(),
-        },
+        Some(fk) => {
+            let tpe_str = render_column_type(column_description.tpe);
+            let complete = dbg!(format!("{} REFERENCES {}({})", tpe_str, fk.table, fk.column));
+            barrel::types::custom(string_to_static_str(complete))
+        }
+        None => {
+            let tpe_str = render_column_type(column_description.tpe);
+            barrel::types::custom(string_to_static_str(tpe_str))
+        }
     };
     tpe.nullable(!column_description.required)
+}
+
+// TODO: this must become database specific akin to our TypeMappers in Scala
+fn render_column_type(t: ColumnType) -> String {
+    match t {
+        ColumnType::Boolean => format!("BOOLEAN"),
+        ColumnType::DateTime => format!("DATE"),
+        ColumnType::Float => format!("REAL"),
+        ColumnType::Int => format!("INTEGER"),
+        ColumnType::String => format!("TEXT"),
+    }
 }
 
 fn string_to_static_str(s: String) -> &'static str {
