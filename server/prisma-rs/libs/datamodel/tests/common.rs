@@ -1,6 +1,6 @@
 extern crate datamodel;
 
-use datamodel::{dml, source::SourceDefinition};
+use datamodel::{dml, source::SourceDefinition, errors::*};
 
 pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
@@ -142,5 +142,18 @@ pub fn parse_with_plugins(datamodel_string: &str, source_definitions: Vec<Box<So
             }
             panic!("Schema parsing failed. Please see error above.")
         }
+    }
+}
+
+
+#[allow(dead_code)] // Not sure why the compiler thinks this is never used.
+pub fn parse_error(datamodel_string: &str) -> ErrorCollection {
+    parse_with_plugins_error(datamodel_string, vec![])
+}
+
+pub fn parse_with_plugins_error(datamodel_string: &str, source_definitions: Vec<Box<SourceDefinition>>) -> ErrorCollection {
+    match datamodel::parse_with_plugins(datamodel_string, source_definitions) {
+        Ok(_) => panic!("Expected an error when parsing schema."),
+        Err(errs) => errs
     }
 }
