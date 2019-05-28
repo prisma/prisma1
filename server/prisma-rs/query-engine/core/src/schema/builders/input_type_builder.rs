@@ -2,27 +2,57 @@ use super::*;
 use prisma_models::{
     FieldBehaviour, IdStrategy, InternalDataModelRef, ModelRef, RelationFieldRef, ScalarFieldRef, TypeIdentifier,
 };
-use std::sync::Arc;
+use std::{cell::RefCell, collections::HashMap, sync::Arc};
 
-pub struct InputTypeBuilder {
-    internal_data_model: InternalDataModelRef,
+/// Caching utility.
+macro_rules! cache {
+    ($sel:ident, $name:expr, $obj:expr) => {
+        $sel.input_type_cache.borrow_mut().insert($name, $obj);
+    };
 }
 
-// Wip: I assume that we need to cache intermediate objects again here to prevent infinite loops.
+/// Loads and returns cached input object type if it is already cached.
+macro_rules! return_cached {
+    ($sel:ident, $name:expr) => {
+        let existing_input_type = $sel.input_type_cache.borrow().get($name).cloned();
+        if existing_input_type.is_some() {
+            return existing_input_type.unwrap();
+        }
+    };
+}
+
+/// Central builder for input types.
+/// The InputTypeBuilder differs in one major aspect from the original implementation: It doesn't use options
+/// to represent if a type should be rendered or not.
+/// Instead, empty (i.e. without fields) will be
+pub struct InputTypeBuilder {
+    internal_data_model: InternalDataModelRef,
+
+    /// Cache acts as a circular dependency breaker.
+    input_type_cache: RefCell<HashMap<String, InputObjectTypeRef>>,
+}
+
 impl InputTypeBuilder {
     pub fn new(internal_data_model: InternalDataModelRef) -> Self {
-        InputTypeBuilder { internal_data_model }
+        InputTypeBuilder {
+            internal_data_model,
+            input_type_cache: RefCell::new(HashMap::new()),
+        }
     }
 
-    pub fn create_input_type(
-        &self,
-        model: ModelRef,
-        parent_field: Option<RelationFieldRef>,
-    ) -> Option<InputObjectTypeRef> {
+    /// Builds the create input type (xCreateInput / xCreateWithout<y>Input)
+    pub fn create_input_type(&self, model: ModelRef, parent_field: Option<RelationFieldRef>) -> InputObjectTypeRef {
         let name = match parent_field.as_ref().map(|pf| pf.related_field()) {
             Some(ref f) if !f.is_hidden => format!("{}CreateWithout{}Input", model.name, capitalize(f.name.as_ref())),
             _ => format!("{}CreateInput", model.name),
         };
+
+        return_cached!(self, &name);
+
+        let input_object = Arc::new(init_input_object_type(name.clone()));
+
+        // Cache empty object for circuit breaking
+        cache!(self, name, Arc::clone(&input_object));
 
         // Compute input fields for scalar fields.
         let scalar_fields: Vec<ScalarFieldRef> = model
@@ -61,14 +91,11 @@ impl InputTypeBuilder {
         let mut relational_fields = self.relation_input_fields_create(Arc::clone(&model), parent_field.as_ref());
         fields.append(&mut relational_fields);
 
-        if fields.len() > 1 {
-            Some(Arc::new(input_object_type(name, fields)))
-        } else {
-            None
-        }
+        input_object.set_fields(fields);
+        input_object
     }
 
-    /// Builds scalar input fields using the mapper and the (prefiltered) scalar fields.
+    /// Builds scalar input fields using the mapper and the given, prefiltered, scalar fields.
     /// The mapper is responsible for mapping the fields to input types.
     fn scalar_input_fields<T, F>(
         &self,
@@ -107,7 +134,8 @@ impl InputTypeBuilder {
         non_list_fields
     }
 
-    // For create mutations: Compute input fields for relational fields.
+    // For create input types only. Compute input fields for relational fields.
+    // This recurses into create_input_type (via nested_create_input_field).
     fn relation_input_fields_create(
         &self,
         model: ModelRef,
@@ -146,9 +174,12 @@ impl InputTypeBuilder {
                 if field_is_opposite_relation_field {
                     None
                 } else {
-                    // todo: fields - nested, connect (nestedCreateInputField(field).toList ++ nestedConnectInputField(field)
-                    let input_type = InputType::object(Arc::new(init_input_object_type(input_name)));
+                    let mut fields = vec![self.nested_create_input_field(Arc::clone(&rf))];
+                    let nested_connect = self.nested_connect_input_field(Arc::clone(&rf));
 
+                    append_opt(&mut fields, nested_connect);
+
+                    let input_type = InputType::object(Arc::new(input_object_type(input_name, fields)));
                     let input_field = if rf.is_required {
                         input_field(rf.name.clone(), input_type)
                     } else {
@@ -159,6 +190,40 @@ impl InputTypeBuilder {
                 }
             })
             .collect()
+    }
+
+    fn nested_create_input_field(&self, field: RelationFieldRef) -> InputField {
+        let input_object = self.create_input_type(field.related_model(), Some(Arc::clone(&field)));
+        let input_object = Self::wrap_list_input_object_type(input_object, field.is_list);
+
+        input_field("create", input_object)
+    }
+
+    fn nested_connect_input_field(&self, field: RelationFieldRef) -> Option<InputField> {
+        if field.related_model().is_embedded {
+            None
+        } else {
+            Some(self.where_input_field("connect", field))
+        }
+    }
+
+    fn where_input_field<T>(&self, name: T, field: RelationFieldRef) -> InputField
+    where
+        T: Into<String>,
+    {
+        let input_type = self.where_unique_object_type(field.related_model());
+        let input_type = Self::wrap_list_input_object_type(input_type, field.is_list);
+
+        input_field(name.into(), input_type)
+    }
+
+    /// Wraps an input object type into a list object type.
+    fn wrap_list_input_object_type(input: InputObjectTypeRef, as_list: bool) -> InputType {
+        if as_list {
+            InputType::opt(InputType::list(InputType::object(input)))
+        } else {
+            InputType::opt(InputType::object(input))
+        }
     }
 
     /// Returns true if the field should be filtered for create input type building.
@@ -186,7 +251,11 @@ impl InputTypeBuilder {
         }
     }
 
-    pub fn where_unique_object_type(&self, model: ModelRef) -> Option<InputObjectTypeRef> {
+    /// This function doesn't need to have caching (yet), because it doesn't trigger any code paths that recurse.
+    /// Todo make sure this is truly the case.
+    pub fn where_unique_object_type(&self, model: ModelRef) -> InputObjectTypeRef {
+        let name = format!("{}WhereUniqueInput", model.name);
+
         let unique_fields: Vec<ScalarFieldRef> = model
             .fields()
             .scalar()
@@ -195,18 +264,15 @@ impl InputTypeBuilder {
             .map(|f| Arc::clone(f))
             .collect();
 
-        if unique_fields.len() > 0 {
-            let input_object = init_input_object_type(format!("{}WhereUniqueInput", model.name));
-            let fields: Vec<InputField> = unique_fields
-                .into_iter()
-                .map(|f| input_field(f.name.clone(), self.map_optional_input_type(f)))
-                .collect();
+        let input_object = init_input_object_type(name);
 
-            input_object.set_fields(fields);
-            Some(Arc::new(input_object)) // wip: potential caching here
-        } else {
-            None
-        }
+        let fields: Vec<InputField> = unique_fields
+            .into_iter()
+            .map(|f| input_field(f.name.clone(), self.map_optional_input_type(f)))
+            .collect();
+
+        input_object.set_fields(fields);
+        Arc::new(input_object)
     }
 
     pub fn map_optional_input_type(&self, field: ScalarFieldRef) -> InputType {

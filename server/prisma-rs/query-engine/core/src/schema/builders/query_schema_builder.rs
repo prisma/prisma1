@@ -55,6 +55,7 @@ impl<'a> QuerySchemaBuilder<'a> {
     }
   }
 
+  /// TODO filter empty types
   pub fn build(&self) -> QuerySchema {
     QuerySchema {
       query: self.build_query_type(),
@@ -69,7 +70,7 @@ impl<'a> QuerySchemaBuilder<'a> {
       .into_iter()
       .map(|m| {
         let mut vec = vec![self.all_items_field(Arc::clone(&m))];
-        Self::append_opt(&mut vec, self.single_item_field(Arc::clone(&m)));
+        append_opt(&mut vec, self.single_item_field(Arc::clone(&m)));
 
         vec
       })
@@ -104,11 +105,6 @@ impl<'a> QuerySchemaBuilder<'a> {
       .collect()
   }
 
-  /// Appends an option of type T if opt is Some.
-  fn append_opt<T>(vec: &mut Vec<T>, opt: Option<T>) {
-    opt.into_iter().for_each(|t| vec.push(t));
-  }
-
   /// Builds a "multiple" query arity items field (e.g. "users", "posts", ...) for given model.
   fn all_items_field(&self, model: ModelRef) -> Field {
     let args = self.object_type_builder.many_records_arguments(&model);
@@ -138,6 +134,7 @@ impl<'a> QuerySchemaBuilder<'a> {
       })
   }
 
+  /// Builds a create mutation field (e.g. createUser) for given model.
   fn create_item_field(&self, model: ModelRef) -> Field {
     let args = self
       .argument_builder
@@ -147,9 +144,7 @@ impl<'a> QuerySchemaBuilder<'a> {
     field(
       format!("create{}", model.name),
       args,
-      OutputType::opt(OutputType::object(
-        self.object_type_builder.map_model_object_type(&model),
-      )),
+      OutputType::object(self.object_type_builder.map_model_object_type(&model)),
     )
   }
 }

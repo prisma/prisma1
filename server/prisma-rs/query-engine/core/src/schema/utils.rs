@@ -135,6 +135,11 @@ where
   format!("{}{}", first_char.to_uppercase(), s[1..].to_owned())
 }
 
+/// Appends an option of type T if opt is Some.
+pub fn append_opt<T>(vec: &mut Vec<T>, opt: Option<T>) {
+  opt.into_iter().for_each(|t| vec.push(t));
+}
+
 impl From<&InternalEnum> for EnumType {
   fn from(internal_enum: &InternalEnum) -> EnumType {
     let values = internal_enum

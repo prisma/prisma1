@@ -31,6 +31,11 @@ impl ObjectType {
   pub fn set_fields(&self, fields: Vec<Field>) {
     self.fields.set(fields).unwrap();
   }
+
+  /// True if fields are empty, false otherwise.
+  pub fn is_empty(&self) -> bool {
+    self.get_fields().is_empty()
+  }
 }
 
 #[derive(Debug)]
@@ -63,6 +68,11 @@ impl InputObjectType {
 
   pub fn set_fields(&self, fields: Vec<InputField>) {
     self.fields.set(fields).unwrap();
+  }
+
+  /// True if fields are empty, false otherwise.
+  pub fn is_empty(&self) -> bool {
+    self.get_fields().is_empty()
   }
 }
 

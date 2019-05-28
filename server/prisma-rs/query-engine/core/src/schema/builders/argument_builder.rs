@@ -16,16 +16,22 @@ impl ArgumentBuilder {
     }
 
     pub fn where_unique_argument(&self, model: ModelRef) -> Option<Argument> {
-        self.input_type_builder
-            .where_unique_object_type(model)
-            .map(|input| argument("where", InputType::object(input)))
+        let input_object_type = self.input_type_builder.where_unique_object_type(model);
+
+        if input_object_type.is_empty() {
+            None
+        } else {
+            Some(argument("where", InputType::object(input_object_type)))
+        }
     }
 
     pub fn create_arguments(&self, model: ModelRef) -> Option<Vec<Argument>> {
-        // inputTypesBuilder.inputObjectTypeForCreate(model).map { args =>
-        //   List(Argument[Any]("data", args))
-        // }
-        // self.input_type_builder.create_input_type()
-        unimplemented!()
+        let input_object_type = self.input_type_builder.create_input_type(model, None);
+
+        if input_object_type.is_empty() {
+            None
+        } else {
+            Some(vec![argument("data", InputType::object(input_object_type))])
+        }
     }
 }
