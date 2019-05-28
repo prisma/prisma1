@@ -10,7 +10,7 @@ pub mod parser;
 /// Basically, the AST is an object oriented representation of the datamodel's text.
 
 /// Represents a location in a datamodel's text representation.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,

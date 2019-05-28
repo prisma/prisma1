@@ -9,7 +9,7 @@ use colored::Colorize;
 /// parsing or validation.
 /// 
 /// For fancy printing, please use the `pretty_print_error` function.
-#[derive(Debug, Fail, Clone)]
+#[derive(Debug, Fail, Clone, PartialEq)]
 pub enum ValidationError {
     #[fail(display = "Argument {} is missing.", argument_name)]
     ArgumentNotFound { argument_name: String, span: Span },

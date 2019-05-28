@@ -10,6 +10,9 @@ pub trait FieldAsserts {
     fn assert_arity(&self, arity: &dml::FieldArity) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
     fn assert_default_value(&self, t: dml::Value) -> &Self;
+    fn assert_is_id(&self, b: bool) -> &Self;
+    fn assert_id_strategy(&self, strategy: dml::IdStrategy) -> &Self;
+    fn assert_id_sequence(&self, strategy: Option<dml::Sequence>) -> &Self;
 }
 
 pub trait ModelAsserts {
@@ -25,6 +28,10 @@ pub trait EnumAsserts {
 pub trait SchemaAsserts {
     fn assert_has_model(&self, t: &str) -> &dml::Model;
     fn assert_has_enum(&self, t: &str) -> &dml::Enum;
+}
+
+pub trait ErrorAsserts {
+    fn assert_is(&self, error: ValidationError) -> &Self;
 }
 
 impl FieldAsserts for dml::Field {
@@ -85,6 +92,32 @@ impl FieldAsserts for dml::Field {
 
         return self;
     }
+
+    fn assert_is_id(&self, b: bool) -> &Self {
+        assert_eq!(self.id_info.is_some(), b);
+
+        return self;
+    }
+
+    fn assert_id_strategy(&self, strategy: dml::IdStrategy) -> &Self {
+        if let Some(id_info) = &self.id_info {
+            assert_eq!(id_info.strategy, strategy)
+        } else {
+            panic!("Id field expected, but no id info given");
+        }
+
+        return self;
+    }
+
+    fn assert_id_sequence(&self, sequence: Option<dml::Sequence>) -> &Self {
+        if let Some(id_info) = &self.id_info {
+            assert_eq!(id_info.sequence, sequence)
+        } else {
+            panic!("Id field expected, but no id info given");
+        }
+
+        return self;
+    }
 }
 
 impl SchemaAsserts for dml::Schema {
@@ -126,6 +159,19 @@ impl EnumAsserts for dml::Enum {
         return self;
     }
 }
+
+impl ErrorAsserts for ErrorCollection {
+    fn assert_is(&self, error: ValidationError) -> &Self {
+        if self.errors.len() == 1 {
+            assert_eq!(self.errors[0], error);
+        } else {
+            panic!("Expected exactly one validation error.");
+        }
+    
+        return self;
+    }
+}
+
 
 #[allow(dead_code)] // Not sure why the compiler thinks this is never used.
 pub fn parse(datamodel_string: &str) -> datamodel::Schema {
