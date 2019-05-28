@@ -1,15 +1,13 @@
 package com.prisma.api
 
+import java.io.{BufferedReader, InputStreamReader}
 import java.net.{HttpURLConnection, URL}
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 import com.prisma.api.schema.{ApiUserContext, PrivateSchemaBuilder, SchemaBuilder}
 import com.prisma.graphql.{GraphQlClient, GraphQlResponse}
 import com.prisma.shared.models.Project
-import com.prisma.shared.models.{Schema => SchemaModel}
 import com.prisma.utils.json.PlayJsonExtensions
 import play.api.libs.json._
 import sangria.parser.QueryParser
@@ -19,7 +17,6 @@ import sangria.schema.Schema
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Awaitable, Future}
 import scala.reflect.io.File
-import scala.sys.process.{Process, ProcessLogger}
 
 trait ApiTestServer extends PlayJsonExtensions {
   System.setProperty("org.jooq.no-logo", "true")
@@ -86,8 +83,8 @@ trait ApiTestServer extends PlayJsonExtensions {
 }
 
 case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) extends ApiTestServer {
-  import dependencies.system.dispatcher
   import com.prisma.shared.models.ProjectJsonFormatter._
+  import dependencies.system.dispatcher
 
   implicit val system       = dependencies.system
   implicit val materializer = dependencies.materializer
@@ -208,8 +205,8 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
       )
 
       result.foreach(x => println(s"""Request Result:
-          |$x
-      """.stripMargin))
+         |$x
+     """.stripMargin))
       result
     } else {
       val prismaProcess = startPrismaProcess(project)

@@ -1,8 +1,9 @@
 package com.prisma.api.mutations
 
+import com.prisma.{IgnoreMySql, IgnorePostgres, IgnoreSQLite}
 import com.prisma.api.ApiSpecBase
 import com.prisma.api.connector.jdbc.impl.JdbcDatabaseMutactionExecutor
-import com.prisma.api.connector.sqlite.native.SQLiteDatabaseMutactionExecutor
+import com.prisma.api.connector.native.NativeDatabaseMutactionExecutor
 import com.prisma.shared.models.ConnectorCapability.{JoinRelationLinksCapability, RawAccessCapability}
 import com.prisma.shared.models.{ConnectorCapability, Project}
 import com.prisma.shared.schema_dsl.SchemaDsl
@@ -42,7 +43,7 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
 
   lazy val slickDatabase = testDependencies.databaseMutactionExecutor match {
     case m: JdbcDatabaseMutactionExecutor   => m.slickDatabase
-    case m: SQLiteDatabaseMutactionExecutor => m.slickDatabaseArg
+    case m: NativeDatabaseMutactionExecutor => m.slickDatabaseArg
   }
 
   lazy val isMySQL     = slickDatabase.isMySql
@@ -137,7 +138,7 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
     }
   }
 
-  "syntactic errors should bubble through to the user" in {
+  "syntactic errors should bubble through to the user" taggedAs (IgnoreSQLite, IgnoreMySql, IgnorePostgres) in {
     val (errorCode, errorContains) = () match {
       case _ if isPostgres => (0, "syntax error at end of input")
       case _ if isMySQL    => (1064, "check the manual that corresponds to your MySQL server version for the right syntax to use near")
@@ -156,7 +157,7 @@ class ExecuteRawSpec extends WordSpecLike with Matchers with ApiSpecBase {
     )
   }
 
-  "other errors should also bubble through to the user" in {
+  "other errors should also bubble through to the user" taggedAs (IgnoreSQLite, IgnoreMySql, IgnorePostgres) in {
     val id = createTodo("title")
     val (errorCode, errorContains) = () match {
       case _ if isPostgres => (0, "duplicate key value violates unique constraint")

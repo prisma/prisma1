@@ -13,6 +13,8 @@ import {
   GraphQLResolveInfo,
   GraphQLOutputType,
   print,
+  Kind,
+  ASTNode,
 } from 'graphql'
 
 import { Operation } from '../types'
@@ -77,13 +79,13 @@ export function printDocumentFromInfo(info: GraphQLResolveInfo) {
   const fragments = Object.keys(info.fragments).map(
     fragment => info.fragments[fragment],
   )
-  const doc = {
-    kind: 'Document',
+  const doc: ASTNode = {
+    kind: Kind.DOCUMENT,
     definitions: [
       {
-        kind: 'OperationDefinition',
+        kind: Kind.OPERATION_DEFINITION,
         operation: 'query',
-        selectionSet: info.fieldNodes[0].selectionSet,
+        selectionSet: info.fieldNodes[0].selectionSet!,
       },
       ...fragments,
     ],

@@ -11,23 +11,24 @@ pub use nested_disconnect::*;
 pub use nested_set::*;
 
 use crate::query_builder::QueryBuilder;
-use connector::{error::*, filter::NodeSelector, ConnectorResult};
+use crate::{error::*, SqlResult};
+use connector::{error::NodeSelectorInfo, filter::NodeSelector};
 use prisma_models::*;
 use prisma_query::ast::*;
 
 // TODO: Replace me with FnBox from std when it's stabilized in 1.35.
 // https://doc.rust-lang.org/std/boxed/trait.FnBox.html
 pub trait FnBox {
-    fn call_box(self: Box<Self>, exists: bool) -> ConnectorResult<()>;
+    fn call_box(self: Box<Self>, exists: bool) -> SqlResult<()>;
 }
 
 // TODO: Replace me with FnBox from std when it's stabilized in 1.35.
 // https://doc.rust-lang.org/std/boxed/trait.FnBox.html
 impl<F> FnBox for F
 where
-    F: FnOnce(bool) -> ConnectorResult<()>,
+    F: FnOnce(bool) -> SqlResult<()>,
 {
-    fn call_box(self: Box<F>, exists: bool) -> ConnectorResult<()> {
+    fn call_box(self: Box<F>, exists: bool) -> SqlResult<()> {
         (*self)(exists)
     }
 }
@@ -35,7 +36,7 @@ where
 pub type ResultCheck = Box<FnBox + Send + Sync + 'static>;
 
 pub trait NestedActions {
-    fn required_check(&self, parent_id: &GraphqlId) -> ConnectorResult<Option<(Select, ResultCheck)>>;
+    fn required_check(&self, parent_id: &GraphqlId) -> SqlResult<Option<(Select, ResultCheck)>>;
 
     fn parent_removal(&self, parent_id: &GraphqlId) -> Option<Query>;
     fn child_removal(&self, child_id: &GraphqlId) -> Option<Query>;
@@ -43,23 +44,23 @@ pub trait NestedActions {
     fn relation_field(&self) -> RelationFieldRef;
     fn relation(&self) -> RelationRef;
 
-    fn relation_violation(&self) -> ConnectorError {
+    fn relation_violation(&self) -> SqlError {
         let relation = self.relation();
 
-        ConnectorError::RelationViolation {
+        SqlError::RelationViolation {
             relation_name: relation.name.clone(),
             model_a_name: relation.model_a().name.clone(),
             model_b_name: relation.model_b().name.clone(),
         }
     }
 
-    fn nodes_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> ConnectorError {
+    fn nodes_not_connected(&self, parent_id: Option<GraphqlId>, child_id: Option<GraphqlId>) -> SqlError {
         let rf = self.relation_field();
 
         let parent_where = parent_id.map(|parent_id| NodeSelectorInfo::for_id(rf.model(), &parent_id));
         let child_where = child_id.map(|child_id| NodeSelectorInfo::for_id(rf.model(), &child_id));
 
-        ConnectorError::NodesNotConnected {
+        SqlError::NodesNotConnected {
             relation_name: rf.relation().name.clone(),
             parent_name: rf.model().name.clone(),
             parent_where,

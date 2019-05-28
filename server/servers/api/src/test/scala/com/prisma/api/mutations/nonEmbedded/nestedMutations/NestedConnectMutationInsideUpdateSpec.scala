@@ -51,8 +51,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  updateParent(
          |  where: {id: "$parentId2"}
          |  data:{
@@ -117,8 +116,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  updateParent(
          |  where: {id: "$parentId2"}
          |  data:{
@@ -687,8 +685,7 @@ class NestedConnectMutationInsideUpdateSpec extends FlatSpec with Matchers with 
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(2) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  updateParent(
          |  where: {p: "p2"} 
          |  data:{

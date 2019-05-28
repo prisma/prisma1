@@ -1,52 +1,35 @@
-use crate::{data_model, PrismaResult};
-use core::ReadQueryExecutor;
-use prisma_common::config::{self, ConnectionLimit, PrismaConfig, PrismaDatabase};
-use prisma_models::SchemaRef;
-use std::sync::Arc;
-
-#[cfg(feature = "sql")]
-use sql_connector::{database::SqlDatabase, database::Sqlite};
+use crate::{data_model, exec_loader, PrismaResult};
+use core::{Executor, SchemaBuilder};
+use prisma_common::config::{self, PrismaConfig};
+use prisma_models::InternalDataModelRef;
 
 #[derive(DebugStub)]
 pub struct PrismaContext {
     pub config: PrismaConfig,
-    pub schema: SchemaRef,
+    pub internal_data_model: InternalDataModelRef,
 
-    #[debug_stub = "#QueryExecutor#"]
-    pub read_query_executor: ReadQueryExecutor,
+    #[debug_stub = "#Executor#"]
+    pub executor: Executor,
 }
 
 impl PrismaContext {
     pub fn new() -> PrismaResult<Self> {
+        // Load config and executors
         let config = config::load().unwrap();
-        let data_resolver = match config.databases.get("default") {
-            Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => {
-                let db_name = config.db_name();
-                let db_folder = config
-                    .database_file
-                    .trim_end_matches(&format!("{}.db", db_name))
-                    .trim_end_matches("/");
+        let executor = exec_loader::load(&config);
 
-                let sqlite = Sqlite::new(db_folder.to_owned(), config.limit(), false).unwrap();
-                Arc::new(SqlDatabase::new(sqlite))
-            }
-            _ => panic!("Database connector is not supported, use sqlite with a file for now!"),
-        };
+        // Find db name. This right here influences how
+        let db = config.databases.get("default").unwrap();
+        let db_name = db.schema().or_else(|| db.db_name()).unwrap_or_else(|| "prisma".into());
 
-        let read_query_executor: ReadQueryExecutor = ReadQueryExecutor { data_resolver };
+        // Load internal data model
+        let internal_data_model = data_model::load(db_name)?;
+        // let _ = SchemaBuilder::build(internal_data_model.clone());
 
-        let db_name = config
-            .databases
-            .get("default")
-            .unwrap()
-            .db_name()
-            .expect("database was not set");
-
-        let schema = data_model::load(db_name)?;
         Ok(Self {
-            config: config,
-            schema: schema,
-            read_query_executor,
+            config,
+            internal_data_model,
+            executor,
         })
     }
 }

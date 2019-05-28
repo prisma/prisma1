@@ -1,4 +1,4 @@
-use connector::{error::ConnectorError, ConnectorResult};
+use crate::{error::SqlError, SqlResult};
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
 
@@ -14,11 +14,11 @@ impl DeleteActions {
     /// connector, giving the connector the possibility to return an optional
     /// `GraphqlID` from the database, such as trying to read a row from the
     /// `SELECT`.
-    pub fn check_relation_violations<F>(model: ModelRef, ids: &[&GraphqlId], mut f: F) -> ConnectorResult<()>
+    pub fn check_relation_violations<F>(model: ModelRef, ids: &[&GraphqlId], mut f: F) -> SqlResult<()>
     where
-        F: FnMut(Select) -> ConnectorResult<Option<GraphqlId>>,
+        F: FnMut(Select) -> SqlResult<Option<GraphqlId>>,
     {
-        for rf in model.schema().fields_requiring_model(model) {
+        for rf in model.internal_data_model().fields_requiring_model(model) {
             let relation = rf.relation();
 
             let condition = rf
@@ -31,7 +31,7 @@ impl DeleteActions {
                 .so_that(condition);
 
             if let Some(_) = f(select)? {
-                return Err(ConnectorError::RelationViolation {
+                return Err(SqlError::RelationViolation {
                     relation_name: relation.name.clone(),
                     model_a_name: relation.model_a().name.clone(),
                     model_b_name: relation.model_b().name.clone(),

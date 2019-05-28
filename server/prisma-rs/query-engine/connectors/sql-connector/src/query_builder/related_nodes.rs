@@ -77,7 +77,15 @@ impl<'a> RelatedNodesQueryBuilder<'a> {
             .and(cursor_condition);
 
         let base_with_conditions = match self.order_by {
-            Some(order_by) => base_query.column(order_by.field.as_column()).so_that(conditions),
+            Some(order_by) => {
+                let column = order_by.field.as_column();
+
+                if self.selected_fields.columns().contains(&column) {
+                    base_query.so_that(conditions)
+                } else {
+                    base_query.column(order_by.field.as_column()).so_that(conditions)
+                }
+            }
             None => base_query.so_that(conditions),
         };
 

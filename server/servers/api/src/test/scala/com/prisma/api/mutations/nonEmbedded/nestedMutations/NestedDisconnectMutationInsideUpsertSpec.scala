@@ -94,8 +94,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
       val res = server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  upsertParent(
          |  where:{id: "$parent1Id"}
          |  update:{
@@ -144,8 +143,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  upsertParent(
          |    where: {p: "p1"}
          |    update:{
@@ -191,8 +189,7 @@ class NestedDisconnectMutationInsideUpsertSpec extends FlatSpec with Matchers wi
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  upsertParent(
          |  where: {p: "p1"}
          |  update:{

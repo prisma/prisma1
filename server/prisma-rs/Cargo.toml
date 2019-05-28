@@ -1,9 +1,15 @@
 [workspace]
 members = [
   "prisma-models",
+  "migration-engine/connectors/migration-connector",
+  "migration-engine/connectors/sql-migration-connector",
+  "migration-engine/core",
   "query-engine/connectors/connector",
   "query-engine/connectors/sql-connector",
   "query-engine/prisma",
   "query-engine/native-bridge",
   "query-engine/core",
+  "libs/datamodel",
+  "libs/prisma-inflector",
+  "libs/database-inspector"
 ]

@@ -23,7 +23,7 @@
     "typescript": "^3.2.2"
   },
   "dependencies": {
-    "graphql": "^14.0.2",
+    "graphql": "^14.3.0",
     "pluralize": "^7.0.0",
     "popsicle": "10"
   },

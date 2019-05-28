@@ -36,8 +36,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  upsertParent(
          |  where: {id: "$parentId"}
          |  update:{
@@ -90,8 +89,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  upsertParent(
          |  where: {id: "$parentId"}
          |  update:{
@@ -201,8 +199,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(0) }
 
       val res = server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  upsertParent(
          |  where:{id: "$parent1Id"}
          |  update:{
@@ -400,8 +397,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
       ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
       server.queryThatMustFail(
-        s"""
-         |mutation {
+        s"""mutation {
          |  upsertParent(
          |  where: {p: "p1"}
          |  update:{
@@ -577,8 +573,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     ifConnectorIsActive { dataResolver(project).countByTable("_ChildToParent").await should be(1) }
 
     server.queryThatMustFail(
-      s"""
-         |mutation {
+      s"""mutation {
          |  upsertParent(
          |  where: { p: "p1"}
          |  update:{
@@ -1036,8 +1031,7 @@ class NestedDeleteMutationInsideUpsertSpec extends FlatSpec with Matchers with A
     val noteId = createResult.pathAsString("data.createNote.id")
 
     val result = server.queryThatMustFail(
-      s"""
-         |mutation {
+      s"""mutation {
          |  upsertNote(
          |    where: {id: "$noteId"}
          |    update: {

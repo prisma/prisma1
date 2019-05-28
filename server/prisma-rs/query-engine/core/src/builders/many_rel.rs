@@ -36,7 +36,7 @@ impl<'f> BuilderExt for ManyRelationBuilder<'f> {
         }
         .expect("`ManyRelatedRecordsQuery` builder not properly initialized!");
 
-        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.schema())?;
+        let nested_builders = Self::collect_nested_queries(Arc::clone(&model), field, model.internal_data_model())?;
         let nested = Self::build_nested_queries(nested_builders)?;
 
         let parent_field = Arc::clone(parent);

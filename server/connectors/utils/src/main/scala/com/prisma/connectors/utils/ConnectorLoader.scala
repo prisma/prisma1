@@ -2,9 +2,9 @@ package com.prisma.connectors.utils
 import com.prisma.api.connector.ApiConnector
 import com.prisma.api.connector.mongo.MongoApiConnector
 import com.prisma.api.connector.mysql.MySqlApiConnector
+import com.prisma.api.connector.native.{ApiConnectorNative, PostgresBackup, SqliteBackup}
 import com.prisma.api.connector.postgres.PostgresApiConnector
 import com.prisma.api.connector.sqlite.SQLiteApiConnector
-import com.prisma.api.connector.sqlite.native.SQLiteApiConnectorNative
 import com.prisma.config.PrismaConfig
 import com.prisma.deploy.connector.DeployConnector
 import com.prisma.deploy.connector.mongo.MongoDeployConnector
@@ -20,8 +20,9 @@ object ConnectorLoader {
     databaseConfig.connector match {
       case "mysql"                    => MySqlApiConnector(databaseConfig, drivers(SupportedDrivers.MYSQL))
       case "postgres"                 => PostgresApiConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
-      case "sqlite-native"            => SQLiteApiConnectorNative(databaseConfig)
-      case "native-integration-tests" => SQLiteApiConnectorNative(databaseConfig)
+      case "sqlite-native"            => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
+      case "postgres-native"          => ApiConnectorNative(databaseConfig, PostgresBackup(drivers(SupportedDrivers.POSTGRES)))
+      case "native-integration-tests" => ApiConnectorNative(databaseConfig, SqliteBackup(drivers(SupportedDrivers.SQLITE)))
       case "sqlite"                   => SQLiteApiConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
       case "mongo"                    => MongoApiConnector(databaseConfig)
       case conn                       => sys.error(s"Unknown connector $conn")
@@ -33,6 +34,7 @@ object ConnectorLoader {
     databaseConfig.connector match {
       case "mysql"                    => MySqlDeployConnector(databaseConfig, drivers(SupportedDrivers.MYSQL))
       case "postgres"                 => PostgresDeployConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
+      case "postgres-native"          => PostgresDeployConnector(databaseConfig, drivers(SupportedDrivers.POSTGRES))
       case "sqlite-native"            => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
       case "native-integration-tests" => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))
       case "sqlite"                   => SQLiteDeployConnector(databaseConfig, drivers(SupportedDrivers.SQLITE))

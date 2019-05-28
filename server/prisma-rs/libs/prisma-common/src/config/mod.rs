@@ -37,11 +37,27 @@ pub enum PrismaDatabase {
 }
 
 impl PrismaDatabase {
+    pub fn connector(&self) -> &str {
+        match self {
+            PrismaDatabase::Explicit(config) => &config.connector,
+            PrismaDatabase::ConnectionString(config) => &config.connector,
+            PrismaDatabase::File(config) => &config.connector,
+        }
+    }
+
     pub fn db_name(&self) -> Option<String> {
         match self {
             PrismaDatabase::Explicit(config) => config.database.clone(),
             PrismaDatabase::ConnectionString(config) => config.database.clone(),
             PrismaDatabase::File(config) => Some(config.db_name()),
+        }
+    }
+
+    pub fn schema(&self) -> Option<String> {
+        match self {
+            PrismaDatabase::Explicit(config) => config.schema.clone(),
+            PrismaDatabase::ConnectionString(config) => config.schema.clone(),
+            PrismaDatabase::File(config) => config.schema.clone(),
         }
     }
 }
@@ -73,7 +89,7 @@ pub fn load() -> Result<PrismaConfig, CommonError> {
     };
 
     let config = substitute_env_vars(config)?;
-    Ok(serde_yaml::from_str(&config).expect("Unable to parse YML config."))
+    Ok(serde_yaml::from_str(&config.replace("\\n", "\n")).expect("Unable to parse YML config."))
 }
 
 /// Attempts to find a valid Prisma config either via env var or file discovery.

@@ -145,7 +145,18 @@ impl SelectedFields {
     }
 
     pub fn names(&self) -> Vec<String> {
-        self.columns().iter().map(|c| c.name.clone()).collect()
+        let mut result: Vec<String> = self.scalar_non_list().iter().map(|f| f.name.clone()).collect();
+
+        for rf in self.relation_inlined().iter() {
+            result.push(rf.name.clone());
+        }
+
+        if let Some(ref from_field) = self.from_field {
+            result.push(from_field.related_field().name.clone());
+            result.push(from_field.name.clone());
+        };
+
+        result
     }
 
     pub fn type_identifiers(&self) -> Vec<TypeIdentifier> {

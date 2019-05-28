@@ -1,0 +1,9 @@
+port: 4466
+prototype: true
+databases:
+  default:
+    connector: sqlite-native
+    databaseFile: ${SERVER_ROOT}/db/Chinook.db
+    migrations: true
+    active: true
+    rawAccess: true
