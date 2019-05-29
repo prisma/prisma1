@@ -35,6 +35,7 @@ where
     assert!(result.is_ok())
 }
 
+#[allow(unused)]
 pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema {
     let project_info = "the-project-info".to_string();
     let migration_id = "the-migration-id".to_string();
