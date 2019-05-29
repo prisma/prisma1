@@ -36,15 +36,12 @@ impl<'field> MutationBuilder<'field> {
         }
 
         let data = shift_data(&self.field.arguments);
-        let ValueSplit { values, lists, nested } = ValueMap::init(&data).split();
+        let ValueSplit { values, lists, nested } = ValueMap::from(&data).split();
         let non_list_args = values.to_prisma_values().into();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
         let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
 
-        let (op, model) = parse_model_action(
-            &raw_name,
-            Arc::clone(&self.model),
-        )?;
+        let (op, model) = parse_model_action(&raw_name, Arc::clone(&self.model))?;
 
         let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
@@ -201,7 +198,6 @@ fn build_nested_root<'f>(
     model: ModelRef,
     top_level: &Operation,
 ) -> CoreResult<NestedMutactions> {
-
     let mut collection = NestedMutactions::default();
 
     let eval = args.eval_tree();
@@ -244,15 +240,12 @@ fn build_nested_root<'f>(
             NestedValue::Many { name, kind, list } => {
                 let field = model.fields().find_from_all(&name).unwrap();
                 let (relation_field, relation_model) = match &field {
-                    ModelField::Relation(f) => {
-                        (Arc::clone(&f), f.related_model())
-                    }
+                    ModelField::Relation(f) => (Arc::clone(&f), f.related_model()),
                     _ => unimplemented!(),
                 };
 
                 match kind.as_str() {
                     "connect" => {
-
                         // Create a connect for every map
                         for obj in list.into_iter() {
                             // Get the first valid field name that is a scalar
@@ -269,7 +262,12 @@ fn build_nested_root<'f>(
                         }
                     }
                     "updateMany" => {
-                        for obj in list.into_iter() {
+                        for mut obj in list.into_iter() {
+                            let data = obj.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
+                                Err(CoreError::QueryValidationError(
+                                    "Malformed mutation: `data` section not found!".into(),
+                                ))
+                            })?;
                             let filter = utils::extract_query_args_inner(
                                 obj.0
                                     .iter()
@@ -279,7 +277,7 @@ fn build_nested_root<'f>(
                             )?
                             .filter;
 
-                            let ValueSplit { values, lists, nested } = obj.split();
+                            let ValueSplit { values, lists, nested } = ValueMap::from(&data).split();
                             let non_list_args = values.to_prisma_values().into();
                             let list_args = lists.into_iter().map(|la| la.convert()).collect();
 
@@ -290,7 +288,7 @@ fn build_nested_root<'f>(
                                 list_args,
                             });
                         }
-                    },
+                    }
                     "create" => {
                         for obj in list.into_iter() {
                             let ValueSplit { values, lists, nested } = obj.split();
