@@ -49,7 +49,7 @@ fn infer_DeleteModel() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
@@ -68,14 +68,14 @@ fn infer_UpdateModel() {
     let dm1 = parse(
         r#"
         model Post {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Post{
-            id: String
+            id: String @id
         }
         @embedded 
     "#,
@@ -96,14 +96,14 @@ fn infer_CreateField_if_it_does_not_exist_yet() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -131,21 +131,21 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
     let dm1 = parse(
         r#"
         model Blog {
-            id: String
+            id: String @id
         }
         model Post {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Blog {
-            id: String
+            id: String @id
             posts: Post[]
         }
         model Post {
-            id: String
+            id: String @id
             blog: Blog?
         }
     "#,
@@ -198,7 +198,7 @@ fn infer_DeleteField() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -206,7 +206,7 @@ fn infer_DeleteField() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
@@ -224,7 +224,7 @@ fn infer_UpdateField_simple() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -232,7 +232,7 @@ fn infer_UpdateField_simple() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Boolean @default(false)
         }
     "#,
