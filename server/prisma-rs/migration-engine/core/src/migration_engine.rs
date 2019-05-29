@@ -4,7 +4,6 @@ use datamodel::dml::*;
 use datamodel::validator::Validator;
 use migration_connector::*;
 use sql_migration_connector::SqlMigrationConnector;
-use std::path::Path;
 use std::sync::Arc;
 
 // todo: add MigrationConnector. does not work  because of GAT shinenigans
