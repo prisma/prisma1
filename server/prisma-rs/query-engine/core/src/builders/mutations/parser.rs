@@ -63,11 +63,22 @@ impl ValueList {
     }
 }
 
-impl ValueMap {
-    pub fn init(from: &Vec<(String, Value)>) -> Self {
-        Self(from.into_iter().map(|k| k.clone()).collect())
+impl From<&Vec<(String, Value)>> for ValueMap {
+    fn from(vec: &Vec<(String, Value)>) -> Self {
+        Self(vec.into_iter().map(|k| k.clone()).collect())
     }
+}
 
+impl From<&Value> for ValueMap {
+    fn from(val: &Value) -> Self {
+        Self(match val {
+            Value::Object(obj) => obj.into_iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
+            _ => panic!("Unsupported `ValueMap` initiaisation!"),
+        })
+    }
+}
+
+impl ValueMap {
     pub fn split(self) -> ValueSplit {
         let (nested, vals): (Vec<_>, Vec<_>) = self
             .0
