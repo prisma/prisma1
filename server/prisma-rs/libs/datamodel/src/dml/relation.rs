@@ -10,7 +10,7 @@ pub struct RelationInfo {
     /// The target model of the relation.
     pub to: String,
     /// The target field of the relation.
-    pub to_field: Option<String>,
+    pub to_fields: Vec<String>,
     /// The name of the relation.
     pub name: Option<String>,
     /// A strategy indicating what happens when
@@ -24,7 +24,24 @@ impl RelationInfo {
     pub fn new(to: &str) -> RelationInfo {
         RelationInfo {
             to: String::from(to),
-            to_field: None,
+            to_fields: Vec::new(),
+            name: None,
+            on_delete: OnDeleteStrategy::None,
+        }
+    }
+    pub fn new_with_field(to: &str, to_field: &str) -> RelationInfo {
+        RelationInfo {
+            to: String::from(to),
+            to_fields: vec![String::from(to_field)],
+            name: None,
+            on_delete: OnDeleteStrategy::None,
+        }
+    }
+
+    pub fn new_with_fields(to: &str, to_fields: Vec<String>) -> RelationInfo {
+        RelationInfo {
+            to: String::from(to),
+            to_fields: to_fields,
             name: None,
             on_delete: OnDeleteStrategy::None,
         }

@@ -1,3 +1,4 @@
+use crate::common::value::ValueListValidator;
 use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 
@@ -9,14 +10,18 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
         &"relation"
     }
     fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Result<(), Error> {
-        if let Ok(name) = args.arg("name")?.as_str() {
-            match &mut field.field_type {
-                // TODO: Check if name is already set.
-                dml::FieldType::Relation(relation_info) => relation_info.name = Some(name),
-                _ => return self.error("Invalid field type, not a relation.", &args.span()),
+        if let dml::FieldType::Relation(relation_info) = &mut field.field_type {
+            // TODO: Check if name is already set.
+            if let Ok(name) = args.arg("name") {
+                relation_info.name = Some(name.as_str()?);
             }
+            // TODO: Check if fields are valid.
+            if let Ok(related_fields) = args.arg("references") {
+                relation_info.to_fields = related_fields.as_array()?.to_literal_vec()?;
+            }
+            return Ok(());
+        } else {
+            return self.error("Invalid field type, not a relation.", &args.span());
         }
-
-        return Ok(());
     }
 }

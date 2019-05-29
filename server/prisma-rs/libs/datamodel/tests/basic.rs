@@ -6,6 +6,7 @@ use datamodel::dml;
 fn parse_basic_model() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String
         lastName: String
     }

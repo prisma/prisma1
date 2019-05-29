@@ -37,7 +37,8 @@ constant_Literal = @{ ASCII_ALPHA+ }
 // ######################################
 
 function = { identifier ~ "(" ~ (argument_value ~ ("," ~ argument_value)*)? ~ ")" }
-expression = { function | numeric_literal | string_literal | boolean_literal | constant_Literal }
+array_expression = { "[" ~ expression ~ ( ", " ~ expression )* ~ "]" }
+expression = { array_expression | function | numeric_literal | string_literal | boolean_literal | constant_Literal }
 
 // ######################################
 // Arguments

@@ -5,11 +5,13 @@ use common::*;
 fn db_directive() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String @db("first_name")
     }
     @db("user")
 
     model Post {
+        id: ID @id
         text: String @db(name: "post_text")
     }
     @db(name: "posti")

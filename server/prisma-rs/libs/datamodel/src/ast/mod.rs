@@ -10,7 +10,7 @@ pub mod parser;
 /// Basically, the AST is an object oriented representation of the datamodel's text.
 
 /// Represents a location in a datamodel's text representation.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
@@ -83,6 +83,8 @@ pub enum Value {
     ConstantValue(String, Span),
     /// A function with a name and arguments.
     Function(String, Vec<Value>, Span),
+    /// An array of other values.
+    Array(Vec<Value>, Span),
 }
 
 /// Creates a friendly readable representation for a value's type.
@@ -93,6 +95,7 @@ pub fn describe_value_type(val: &Value) -> &'static str {
         Value::StringValue(_, _) => "String",
         Value::ConstantValue(_, _) => "Literal",
         Value::Function(_, _, _) => "Functional",
+        Value::Array(_, _) => "Array",
     }
 }
 
@@ -160,6 +163,8 @@ pub struct Enum {
     pub directives: Vec<Directive>,
     /// The comments for this enum.
     pub comments: Vec<Comment>,
+    /// The location of this enum in the text representation.
+    pub span: Span,
 }
 
 impl WithDirectives for Enum {
@@ -185,6 +190,8 @@ pub struct Model {
     pub directives: Vec<Directive>,
     /// The comments for this model.
     pub comments: Vec<Comment>,
+    /// The location of this model in the text representation.
+    pub span: Span,
 }
 
 impl WithDirectives for Model {
@@ -209,9 +216,9 @@ pub struct SourceConfig {
     /// Detail configuration for this source, found inside the
     /// `properties` block.
     pub detail_configuration: Vec<Argument>,
-    /// The comments for this source bloc.
+    /// The comments for this source block.
     pub comments: Vec<Comment>,
-    /// The location of this source bloc in the text representation.
+    /// The location of this source block in the text representation.
     pub span: Span,
 }
 

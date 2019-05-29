@@ -1,15 +1,18 @@
 extern crate datamodel;
 
-use datamodel::{dml, source::SourceDefinition};
+use datamodel::{dml, errors::*, source::SourceDefinition};
 
 pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
     fn assert_enum_type(&self, en: &str) -> &Self;
     fn assert_relation_to(&self, t: &str) -> &Self;
-    fn assert_relation_to_field(&self, t: &str) -> &Self;
+    fn assert_relation_to_fields(&self, t: &[&str]) -> &Self;
     fn assert_arity(&self, arity: &dml::FieldArity) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
     fn assert_default_value(&self, t: dml::Value) -> &Self;
+    fn assert_is_id(&self, b: bool) -> &Self;
+    fn assert_id_strategy(&self, strategy: dml::IdStrategy) -> &Self;
+    fn assert_id_sequence(&self, strategy: Option<dml::Sequence>) -> &Self;
 }
 
 pub trait ModelAsserts {
@@ -25,6 +28,10 @@ pub trait EnumAsserts {
 pub trait SchemaAsserts {
     fn assert_has_model(&self, t: &str) -> &dml::Model;
     fn assert_has_enum(&self, t: &str) -> &dml::Enum;
+}
+
+pub trait ErrorAsserts {
+    fn assert_is(&self, error: ValidationError) -> &Self;
 }
 
 impl FieldAsserts for dml::Field {
@@ -58,9 +65,9 @@ impl FieldAsserts for dml::Field {
         return self;
     }
 
-    fn assert_relation_to_field(&self, t: &str) -> &Self {
+    fn assert_relation_to_fields(&self, t: &[&str]) -> &Self {
         if let dml::FieldType::Relation(info) = &self.field_type {
-            assert_eq!(info.to_field.clone().expect("To field expected but not found."), t);
+            assert_eq!(info.to_fields, t);
         } else {
             panic!("Relation expected, but found {:?}", self.field_type);
         }
@@ -82,6 +89,32 @@ impl FieldAsserts for dml::Field {
 
     fn assert_default_value(&self, t: dml::Value) -> &Self {
         assert_eq!(self.default_value, Some(t));
+
+        return self;
+    }
+
+    fn assert_is_id(&self, b: bool) -> &Self {
+        assert_eq!(self.id_info.is_some(), b);
+
+        return self;
+    }
+
+    fn assert_id_strategy(&self, strategy: dml::IdStrategy) -> &Self {
+        if let Some(id_info) = &self.id_info {
+            assert_eq!(id_info.strategy, strategy)
+        } else {
+            panic!("Id field expected, but no id info given");
+        }
+
+        return self;
+    }
+
+    fn assert_id_sequence(&self, sequence: Option<dml::Sequence>) -> &Self {
+        if let Some(id_info) = &self.id_info {
+            assert_eq!(id_info.sequence, sequence)
+        } else {
+            panic!("Id field expected, but no id info given");
+        }
 
         return self;
     }
@@ -127,6 +160,18 @@ impl EnumAsserts for dml::Enum {
     }
 }
 
+impl ErrorAsserts for ErrorCollection {
+    fn assert_is(&self, error: ValidationError) -> &Self {
+        if self.errors.len() == 1 {
+            assert_eq!(self.errors[0], error);
+        } else {
+            panic!("Expected exactly one validation error.");
+        }
+
+        return self;
+    }
+}
+
 #[allow(dead_code)] // Not sure why the compiler thinks this is never used.
 pub fn parse(datamodel_string: &str) -> datamodel::Schema {
     parse_with_plugins(datamodel_string, vec![])
@@ -142,5 +187,20 @@ pub fn parse_with_plugins(datamodel_string: &str, source_definitions: Vec<Box<So
             }
             panic!("Schema parsing failed. Please see error above.")
         }
+    }
+}
+
+#[allow(dead_code)] // Not sure why the compiler thinks this is never used.
+pub fn parse_error(datamodel_string: &str) -> ErrorCollection {
+    parse_with_plugins_error(datamodel_string, vec![])
+}
+
+pub fn parse_with_plugins_error(
+    datamodel_string: &str,
+    source_definitions: Vec<Box<SourceDefinition>>,
+) -> ErrorCollection {
+    match datamodel::parse_with_plugins(datamodel_string, source_definitions) {
+        Ok(_) => panic!("Expected an error when parsing schema."),
+        Err(errs) => errs,
     }
 }

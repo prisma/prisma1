@@ -85,6 +85,19 @@ impl Validator {
         }
     }
 
+    #[allow(unused)]
+    fn ensure_model_has_id(&self, ast_model: &ast::Model, model: &dml::Model) -> Result<(), ValidationError> {
+        if model.fields().filter(|m| m.id_info.is_some()).count() == 0 {
+            Err(ValidationError::new_model_validation_error(
+                "One field must be marked as the id field with the `@id` directive.",
+                &model.name,
+                &ast_model.span,
+            ))
+        } else {
+            Ok(())
+        }
+    }
+
     /// Internal: Validates a model AST node.
     fn validate_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> Result<dml::Model, ErrorCollection> {
         let mut model = dml::Model::new(&ast_model.name);
@@ -102,10 +115,13 @@ impl Validator {
         }
 
         if errors.has_errors() {
-            Err(errors)
-        } else {
-            Ok(model)
+            return Err(errors);
         }
+
+        // Check disabled until we decide on it.
+        // self.ensure_model_has_id(ast_model, &model)?;
+
+        Ok(model)
     }
 
     /// Internal: Validates an enum AST node.
@@ -128,7 +144,7 @@ impl Validator {
     fn validate_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> Result<dml::Field, ErrorCollection> {
         let mut errors = ErrorCollection::new();
         // If we cannot parse the field type, we exit right away.
-        let field_type = self.validate_field_type(&ast_field.field_type, &ast_field.field_type_span, ast_schema)?;
+        let field_type = self.validate_field_type(&ast_field, &ast_field.field_type_span, ast_schema)?;
 
         let mut field = dml::Field::new(&ast_field.name, field_type.clone());
 
@@ -172,10 +188,11 @@ impl Validator {
     /// Internal: Validates a field's type.
     fn validate_field_type(
         &self,
-        type_name: &str,
+        ast_field: &ast::Field,
         span: &ast::Span,
         ast_schema: &ast::Schema,
     ) -> Result<dml::FieldType, ValidationError> {
+        let type_name = &ast_field.field_type;
         if let Ok(scalar_type) = dml::ScalarType::from_str_and_span(type_name, span) {
             Ok(dml::FieldType::Base(scalar_type))
         } else {
@@ -183,12 +200,18 @@ impl Validator {
             for model in &ast_schema.models {
                 match &model {
                     // TODO: Get primary key field and hook up String::from.
-                    ast::Top::Model(model) if model.name == *type_name => {
-                        return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&type_name)))
+                    ast::Top::Model(model) if model.name == ast_field.field_type => {
+                        // TODO: Support for embedded field_link will be droppped.
+                        if let Some(to_field) = &ast_field.field_link {
+                            return Ok(dml::FieldType::Relation(dml::RelationInfo::new_with_fields(
+                                &ast_field.field_type,
+                                vec![to_field.clone()],
+                            )));
+                        } else {
+                            return Ok(dml::FieldType::Relation(dml::RelationInfo::new(&ast_field.field_type)));
+                        }
                     }
-                    ast::Top::Enum(en) if en.name == *type_name => {
-                        return Ok(dml::FieldType::Enum(String::from(type_name)))
-                    }
+                    ast::Top::Enum(en) if en.name == *type_name => return Ok(dml::FieldType::Enum(type_name.clone())),
                     _ => {}
                 }
             }

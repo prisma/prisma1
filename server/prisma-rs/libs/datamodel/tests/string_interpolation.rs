@@ -6,6 +6,7 @@ use datamodel::dml;
 fn interpolate_expressions_in_strings() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String @default("user_${3}")
         lastName: String
     }
@@ -24,6 +25,7 @@ fn interpolate_expressions_in_strings() {
 fn dont_interpolate_escaped_expressions_in_strings() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String @default("user_\${3}")
         lastName: String
     }
@@ -38,11 +40,11 @@ fn dont_interpolate_escaped_expressions_in_strings() {
         .assert_default_value(dml::Value::String(String::from("user_${3}")));
 }
 
-
 #[test]
 fn interpolate_functionals_in_strings() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String @default("user_${env("TEST_USER")}")
         lastName: String
     }
@@ -63,6 +65,7 @@ fn interpolate_functionals_in_strings() {
 fn interpolate_nested_mess() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String @default("user_${ "number_${ "${ "really?_${3}" }" }" }")
         lastName: String
     }
