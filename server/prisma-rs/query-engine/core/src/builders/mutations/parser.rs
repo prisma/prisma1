@@ -27,8 +27,10 @@ data: {
 }
 */
 
+use crate::{CoreError, CoreResult};
+use connector::filter::NodeSelector;
 use graphql_parser::query::Value;
-use prisma_models::PrismaValue;
+use prisma_models::{ModelRef, PrismaValue};
 use std::collections::BTreeMap;
 
 /// A set of values
@@ -121,6 +123,27 @@ impl ValueMap {
             .map(|(k, v)| (k, PrismaValue::from_value(&v)))
             .collect()
     }
+
+    pub fn to_node_selector(&self, model: ModelRef) -> CoreResult<NodeSelector> {
+        match self
+            .0
+            .iter()
+            .filter_map(|(field, value)| {
+                model
+                    .fields()
+                    .find_from_scalar(&field)
+                    .ok()
+                    .map(|f| (f, PrismaValue::from_value(&value)))
+            })
+            .nth(0)
+            .map(|(field, value)| NodeSelector { field, value })
+        {
+            Some(s) => Ok(s),
+            None => Err(CoreError::QueryValidationError(
+                "Failed to resolve node selector".into(),
+            )),
+        }
+    }
 }
 
 //////////////////////////////////////////////////
@@ -132,8 +155,9 @@ pub enum NestedValue {
         kind: String,
         map: ValueMap,
     },
-    Connect {
+    Many {
         name: String,
+        kind: String,
         list: Vec<ValueMap>,
     },
     Upsert {
@@ -160,14 +184,16 @@ impl ValueMap {
 
             // These are actions (create, update, ...)
             for (action, nested) in obj.iter() {
+                dbg!(&action);
                 vec.push(match nested {
                     Value::Object(obj) => NestedValue::Simple {
                         name: name.clone(),
                         kind: action.clone(),
                         map: ValueMap(obj.clone()),
                     },
-                    Value::List(list) => NestedValue::Connect {
+                    Value::List(list) => NestedValue::Many {
                         name: name.clone(),
+                        kind: action.clone(),
                         list: list
                             .iter()
                             .map(|item| match item {

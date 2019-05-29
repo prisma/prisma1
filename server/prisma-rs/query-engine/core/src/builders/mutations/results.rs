@@ -18,13 +18,13 @@ impl WriteQueryResult {
     pub fn generate_result(&self) -> Option<ReadQueryResult> {
         match self.inner.identifier {
             Identifier::Count(c) => Some(ReadQueryResult::Single(SingleReadQueryResult {
-                name: self
+                name: dbg!(self
                     .origin
                     .field
                     .alias
                     .as_ref()
                     .unwrap_or(&self.origin.field.name)
-                    .clone(),
+                    .clone()),
                 fields: vec!["count".into()],
                 scalars: Some(SingleNode::new(
                     Node::new(vec![PrismaValue::Int(c as i64)]),
