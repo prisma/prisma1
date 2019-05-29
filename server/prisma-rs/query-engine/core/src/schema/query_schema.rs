@@ -1,15 +1,47 @@
 use super::visitor::*;
 use once_cell::sync::OnceCell;
 use prisma_models::{OrderBy, ScalarField, SortOrder};
-use std::{boxed::Box, sync::Arc};
+use std::{
+  boxed::Box,
+  sync::{Arc, Weak},
+};
+
+pub type ObjectTypeStrongRef = Arc<ObjectType>;
+pub type ObjectTypeRef = Weak<ObjectType>;
+
+pub type InputObjectTypeStrongRef = Arc<InputObjectType>;
+pub type InputObjectTypeRef = Weak<InputObjectType>;
+// pub type OutputTypeRef = Weak<OutputType>;
+// pub type InputTypeRef = Weak<InputType>;
+// pub type EnumTypeRef = Arc<EnumType>; WIP: It's not really necessary at the moment to store these as refs. It's not a problem if they're build multiple times.
 
 #[derive(Debug)]
 pub struct QuerySchema {
   pub query: OutputType,
   pub mutation: OutputType,
+
+  /// Stores all strong refs to the input object types.
+  input_object_types: Vec<InputObjectTypeStrongRef>,
+
+  /// Stores all strong refs to the output object types.
+  output_object_types: Vec<ObjectTypeStrongRef>,
 }
 
 impl QuerySchema {
+  pub fn new(
+    query: OutputType,
+    mutation: OutputType,
+    input_object_types: Vec<InputObjectTypeStrongRef>,
+    output_object_types: Vec<ObjectTypeStrongRef>,
+  ) -> Self {
+    QuerySchema {
+      query,
+      mutation,
+      input_object_types,
+      output_object_types,
+    }
+  }
+
   fn visit(&mut self, visitor: impl SchemaAstVisitor) {
     match visitor.visit_output_type(&self.query) {
       VisitorOperation::Remove => unimplemented!(),
@@ -92,7 +124,7 @@ pub struct InputField {
 
 #[derive(Debug)]
 pub enum InputType {
-  Enum(EnumTypeRef),
+  Enum(EnumType),
   List(Box<InputType>),
   Object(InputObjectTypeRef),
   Opt(Box<InputType>),
@@ -128,7 +160,7 @@ impl InputType {
     InputType::Scalar(ScalarType::Boolean)
   }
 
-  pub fn scalar_enum(referencing: EnumTypeRef) -> InputType {
+  pub fn scalar_enum(referencing: EnumType) -> InputType {
     InputType::Scalar(ScalarType::Enum(referencing))
   }
 
@@ -149,15 +181,9 @@ impl InputType {
   }
 }
 
-pub type ObjectTypeRef = Arc<ObjectType>;
-pub type InputObjectTypeRef = Arc<InputObjectType>;
-pub type OutputTypeRef = Arc<OutputType>;
-pub type InputTypeRef = Arc<InputType>;
-pub type EnumTypeRef = Arc<EnumType>;
-
 #[derive(Debug)]
 pub enum OutputType {
-  Enum(EnumTypeRef),
+  Enum(EnumType),
   List(Box<OutputType>),
   Object(ObjectTypeRef),
   Opt(Box<OutputType>),
@@ -216,7 +242,7 @@ pub enum ScalarType {
   Int,
   Float,
   Boolean,
-  Enum(EnumTypeRef),
+  Enum(EnumType),
   DateTime,
   Json,
   UUID,
@@ -267,12 +293,12 @@ pub enum EnumValueWrapper {
 
 impl From<EnumType> for OutputType {
   fn from(e: EnumType) -> Self {
-    OutputType::Enum(Arc::new(e))
+    OutputType::Enum(e)
   }
 }
 
 impl From<EnumType> for InputType {
   fn from(e: EnumType) -> Self {
-    InputType::Enum(Arc::new(e))
+    InputType::Enum(e)
   }
 }

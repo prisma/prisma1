@@ -1,22 +1,27 @@
 use super::*;
 use once_cell::sync::OnceCell;
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier};
-use std::{
-  collections::HashMap,
-  sync::{Arc, Weak},
-};
-
-type ObjectTypeCache = HashMap<String, ObjectTypeRef>;
+use std::sync::Arc;
 
 pub struct ObjectTypeBuilder<'a> {
   internal_data_model: InternalDataModelRef,
   with_relations: bool,
   capabilities: &'a SupportedCapabilities,
-  model_object_type_cache: OnceCell<ObjectTypeCache>, // Deduplicates computation
   filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
+  object_type_cache: OnceCell<TypeRefCache<ObjectType>>,
+}
+
+impl<'a> CachedBuilder<ObjectType> for ObjectTypeBuilder<'a> {
+  fn get_cache(&self) -> &TypeRefCache<ObjectType> {
+    &self
+      .object_type_cache
+      .get()
+      .expect("Invariant violation: Expected cache to be initialized before retrieving items.")
+  }
 }
 
 impl<'a> ObjectTypeBuilder<'a> {
+  /// Initializes a new ObjectTypeBuilder and constructs the
   pub fn new(
     internal_data_model: InternalDataModelRef,
     with_relations: bool,
@@ -28,30 +33,29 @@ impl<'a> ObjectTypeBuilder<'a> {
       with_relations,
       capabilities,
       filter_object_type_builder,
-      model_object_type_cache: OnceCell::new(),
+      object_type_cache: OnceCell::new(),
     }
     .compute_model_object_types()
   }
 
   pub fn map_model_object_type(&self, model: &ModelRef) -> ObjectTypeRef {
-    Arc::clone(
-      self
-        .cache()
-        .get(&model.name)
-        .expect("Invariant violation: Initialized object type skeleton for each model."),
-    )
+    self
+      .get_cache()
+      .get(&model.name)
+      .expect("Invariant violation: Initialized object type skeleton for each model.")
   }
 
   /// Initializes model object type cache on the query schema builder.
   fn compute_model_object_types(self) -> Self {
     // Compute initial cache.
-    self.model_object_type_cache.get_or_init(|| {
+    self.object_type_cache.get_or_init(|| {
       self
         .internal_data_model
         .models()
         .iter()
         .map(|m| (m.name.clone(), Arc::new(init_object_type(m.name.clone()))))
-        .collect()
+        .collect::<Vec<(String, Arc<ObjectType>)>>()
+        .into()
     });
 
     // Compute fields on all cached object types.
@@ -59,26 +63,11 @@ impl<'a> ObjectTypeBuilder<'a> {
       let obj: ObjectTypeRef = self.map_model_object_type(m);
       let fields = self.compute_fields(m);
 
-      obj.set_fields(fields);
+      obj.into_arc().set_fields(fields);
     });
 
     self
   }
-
-  /// This only initializes the model object type, but does not compute fields due to dependencies on other object types.
-  /// Make sure to compute fields as soon as all model object types are available.
-  // fn init_model_object_type(&self, model: ModelRef) -> ObjectType {
-  // WIP: What about instance checks?
-  //     instanceCheck = (value: Any, valClass: Class[_], tpe: ObjectType[ApiUserContext, _]) =>
-  //       value match {
-  //         case PrismaNode(_, _, Some(tpe.name)) => true
-  //         case PrismaNode(_, _, Some(_))        => false
-  //         case _                                => valClass.isAssignableFrom(value.getClass)
-  //     },
-  //     astDirectives = Vector.empty
-
-  //   object_type(model.name.clone(), fields_fn)
-  // }
 
   /// This assumes that the cache has already been initialized.
   fn compute_fields(&self, model: &ModelRef) -> Vec<Field> {
@@ -164,11 +153,13 @@ impl<'a> ObjectTypeBuilder<'a> {
     ]
   }
 
+  /// Builds "where" argument.
   pub fn where_argument(&self, model: &ModelRef) -> Argument {
     let where_object = self.filter_object_type_builder.filter_object_type(Arc::clone(model));
     argument("where", InputType::opt(InputType::object(where_object)))
   }
 
+  // Builds "orderBy" argument.
   pub fn order_by_argument(&self, model: &ModelRef) -> Argument {
     let enum_values: Vec<EnumValue> = model
       .fields()
@@ -209,12 +200,5 @@ impl<'a> ObjectTypeBuilder<'a> {
       }
       _ => panic!("Invariant violation: map_enum_field can only be called on scalar enum fields."),
     }
-  }
-
-  fn cache(&self) -> &ObjectTypeCache {
-    &self
-      .model_object_type_cache
-      .get()
-      .expect("Invariant violation: Expected cache to be initialized before computing fields.")
   }
 }

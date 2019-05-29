@@ -1,15 +1,18 @@
 use super::*;
 use prisma_models::{Field as ModelField, ModelRef, RelationField, ScalarField, TypeIdentifier};
-use std::{cell::RefCell, collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 /// Filter object and scalar filter object type builder.
-/// Not thread safe.
-/// RefCells are used to provide interior mutability to the cache without requiring mut refs to the builder.
 pub struct FilterObjectTypeBuilder<'a> {
   input_type_builder: Arc<InputTypeBuilder>,
   capabilities: &'a SupportedCapabilities,
-  filter_cache: RefCell<HashMap<String, InputObjectTypeRef>>, // Caches "xWhereInput": Model name -> Object type ref
-  scalar_cache: RefCell<HashMap<String, InputObjectTypeRef>>, // Caches "xWhereScalarInput": Model name -> Object type ref
+  input_object_cache: TypeRefCache<InputObjectType>, // Caches "xWhereInput" / "xWhereScalarInput" -> Object type ref
+}
+
+impl<'a> CachedBuilder<InputObjectType> for FilterObjectTypeBuilder<'a> {
+  fn get_cache(&self) -> &TypeRefCache<InputObjectType> {
+    &self.input_object_cache
+  }
 }
 
 impl<'a> FilterObjectTypeBuilder<'a> {
@@ -17,8 +20,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
     FilterObjectTypeBuilder {
       input_type_builder,
       capabilities,
-      filter_cache: RefCell::new(HashMap::new()),
-      scalar_cache: RefCell::new(HashMap::new()),
+      input_object_cache: TypeRefCache::new(),
     }
   }
 
@@ -33,57 +35,50 @@ impl<'a> FilterObjectTypeBuilder<'a> {
   }
 
   fn build_filter_object(&self, model: ModelRef) -> InputObjectTypeRef {
-    let existing_entry = self.filter_cache.borrow().get(&model.name).cloned();
+    let name = format!("{}WhereInput", model.name.clone());
+    return_cached!(self.input_object_cache, &name);
 
-    match existing_entry {
-      Some(entry) => entry,
-      None => {
-        let input_object = Arc::new(init_input_object_type(format!("{}WhereInput", model.name.clone())));
-        self
-          .filter_cache
-          .borrow_mut()
-          .insert(model.name.clone(), Arc::clone(&input_object));
+    let input_object = Arc::new(init_input_object_type(name.clone()));
+    self.cache(name, Arc::clone(&input_object));
 
-        // WIP: the field init below might need to be deferred...
-        let mut fields = vec![
-          input_field(
-            "AND",
-            InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
-          ),
-          input_field(
-            "OR",
-            InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
-          ),
-          input_field(
-            "NOT",
-            InputType::opt(InputType::list(InputType::object(Arc::clone(&input_object)))),
-          ),
-        ];
+    let weak_ref = Arc::downgrade(&input_object);
+    let mut fields = vec![
+      input_field(
+        "AND",
+        InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+      ),
+      input_field(
+        "OR",
+        InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+      ),
+      input_field(
+        "NOT",
+        InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+      ),
+    ];
 
-        let mut scalar_input_fields: Vec<InputField> = model
-          .fields()
-          .scalar()
-          .into_iter()
-          .filter(|sf| !sf.is_hidden)
-          .map(|sf| self.map_input_field(sf))
-          .flatten()
-          .collect();
+    let mut scalar_input_fields: Vec<InputField> = model
+      .fields()
+      .scalar()
+      .into_iter()
+      .filter(|sf| !sf.is_hidden)
+      .map(|sf| self.map_input_field(sf))
+      .flatten()
+      .collect();
 
-        let mut relational_input_fields: Vec<InputField> = model
-          .fields()
-          .relation()
-          .into_iter()
-          .map(|rf| self.map_relation_filter_input_field(rf))
-          .flatten()
-          .collect();
+    let mut relational_input_fields: Vec<InputField> = model
+      .fields()
+      .relation()
+      .into_iter()
+      .map(|rf| self.map_relation_filter_input_field(rf))
+      .flatten()
+      .collect();
 
-        fields.append(&mut scalar_input_fields);
-        fields.append(&mut relational_input_fields);
+    fields.append(&mut scalar_input_fields);
+    fields.append(&mut relational_input_fields);
 
-        input_object.set_fields(fields);
-        input_object
-      }
-    }
+    input_object.set_fields(fields);
+    weak_ref
   }
 
   fn build_mongo_filter_object(&self, model: ModelRef) -> InputObjectTypeRef {
@@ -127,22 +122,19 @@ impl<'a> FilterObjectTypeBuilder<'a> {
   /// Without caching, processing D (in fact, any type) would also trigger a complete recomputation of A, B, C.
   fn map_relation_filter_input_field(&self, field: Arc<RelationField>) -> Vec<InputField> {
     let related_model = field.related_model();
-
-    // We need to separate the two variables to drop the RefCell borrow in between.
-    let related_input_type_opt = self.filter_cache.borrow().get(&related_model.name).cloned();
-    let related_input_type = related_input_type_opt.unwrap_or_else(|| self.filter_object_type(related_model));
+    let related_input_type = self.filter_object_type(related_model);
 
     match (field.is_hidden, field.is_list) {
       (true, _) => vec![],
       (_, false) => vec![input_field(
         field.name.clone(),
-        InputType::opt(InputType::object(Arc::clone(&related_input_type))),
+        InputType::opt(InputType::object(Weak::clone(&related_input_type))),
       )],
       (_, true) => get_field_filters(&ModelField::Relation(Arc::clone(&field)))
         .into_iter()
         .map(|arg| {
           let field_name = format!("{}{}", field.name, arg.suffix);
-          let typ = InputType::opt(InputType::object(Arc::clone(&related_input_type)));
+          let typ = InputType::opt(InputType::object(Weak::clone(&related_input_type)));
           input_field(field_name, typ)
         })
         .collect(),

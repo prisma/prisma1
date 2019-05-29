@@ -1,8 +1,6 @@
 ///! Experimental visitor. WIP.
 use super::*;
 
-mod filter_visitor;
-
 /// Defines operations possible with visitors.
 pub enum VisitorOperation<T> {
   Replace(T),

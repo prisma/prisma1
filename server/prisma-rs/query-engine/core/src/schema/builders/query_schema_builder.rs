@@ -14,17 +14,18 @@ pub enum BuildMode {
 }
 
 /// Query schema builder. Root for query schema building.
+/// The schema builder creates all builders necessary for the process,
+/// and hands down references to the individual initializers as required.
 pub struct QuerySchemaBuilder<'a> {
   mode: BuildMode,
   internal_data_model: InternalDataModelRef,
   capabilities: &'a SupportedCapabilities,
   object_type_builder: ObjectTypeBuilder<'a>,
+  input_type_builder: Arc<InputTypeBuilder>,
   argument_builder: ArgumentBuilder,
-  pub filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
+  filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
 }
 
-// WIP: The implementation uses Arcs liberally, which might cause memory leaks - this is not an issue at the moment as the schema
-// is supposed to live as long as the program lives _for now_.
 impl<'a> QuerySchemaBuilder<'a> {
   pub fn new(
     internal_data_model: &InternalDataModelRef,
@@ -36,6 +37,7 @@ impl<'a> QuerySchemaBuilder<'a> {
       Arc::clone(&input_type_builder),
       capabilities,
     ));
+
     let object_type_builder = ObjectTypeBuilder::new(
       Arc::clone(internal_data_model),
       true,
@@ -50,21 +52,35 @@ impl<'a> QuerySchemaBuilder<'a> {
       internal_data_model: Arc::clone(internal_data_model),
       capabilities,
       object_type_builder,
+      input_type_builder,
       argument_builder,
       filter_object_type_builder,
     }
   }
 
+  /// Consumes the builders and collects all types from all builder caches to merge
+  /// them into the vectors required to finalize the query schema building.
+  fn collect_types(self) -> (Vec<InputObjectTypeRef>, Vec<ObjectTypeRef>) {
+    unimplemented!()
+  }
+
   /// TODO filter empty types
-  pub fn build(&self) -> QuerySchema {
-    QuerySchema {
-      query: self.build_query_type(),
-      mutation: self.build_mutation_type(),
-    }
+  /// Consumes the builder to create the query schema.
+  pub fn build(self) -> QuerySchema {
+    let (query_type, query_object_ref) = self.build_query_type();
+    let (mutation_type, mutation_object_ref) = self.build_mutation_type();
+    let types = self.collect_types();
+
+    QuerySchema::new(
+      query_type,
+      mutation_type,
+      vec![],
+      vec![query_object_ref, mutation_object_ref],
+    )
   }
 
   /// Builds the root query type.
-  fn build_query_type(&self) -> OutputType {
+  fn build_query_type(&self) -> (OutputType, ObjectTypeStrongRef) {
     let non_embedded_models = self.non_embedded_models();
     let fields = non_embedded_models
       .into_iter()
@@ -77,11 +93,13 @@ impl<'a> QuerySchemaBuilder<'a> {
       .flatten()
       .collect();
 
-    OutputType::Object(Arc::new(object_type("Query", fields)))
+    let strong_ref = Arc::new(object_type("Query", fields));
+
+    (OutputType::Object(Arc::downgrade(&strong_ref)), strong_ref)
   }
 
   /// Builds the root mutation type.
-  fn build_mutation_type(&self) -> OutputType {
+  fn build_mutation_type(&self) -> (OutputType, ObjectTypeStrongRef) {
     let non_embedded_models = self.non_embedded_models();
     let fields = non_embedded_models
       .into_iter()
@@ -92,7 +110,9 @@ impl<'a> QuerySchemaBuilder<'a> {
       .flatten()
       .collect();
 
-    OutputType::Object(Arc::new(object_type("Mutation", fields)))
+    let strong_ref = Arc::new(object_type("Mutation", fields));
+
+    (OutputType::Object(Arc::downgrade(&strong_ref)), strong_ref)
   }
 
   fn non_embedded_models(&self) -> Vec<ModelRef> {
