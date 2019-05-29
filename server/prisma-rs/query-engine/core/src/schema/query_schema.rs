@@ -1,10 +1,7 @@
+use super::visitor::*;
 use once_cell::sync::OnceCell;
 use prisma_models::{OrderBy, ScalarField, SortOrder};
-use std::{
-  boxed::Box,
-  fmt::{self, Display},
-  sync::Arc,
-};
+use std::{boxed::Box, sync::Arc};
 
 #[derive(Debug)]
 pub struct QuerySchema {
@@ -12,8 +9,17 @@ pub struct QuerySchema {
   pub mutation: OutputType,
 }
 
-/// Fields evaluation function.
-// pub type FieldsFn = Box<FnOnce() -> Vec<Field> + Send + Sync + 'static>;
+impl QuerySchema {
+  fn visit(&mut self, visitor: impl SchemaAstVisitor) {
+    match visitor.visit_output_type(&self.query) {
+      VisitorOperation::Remove => unimplemented!(),
+      VisitorOperation::Replace(t) => unimplemented!(),
+      VisitorOperation::None => unimplemented!(),
+    };
+
+    visitor.visit_output_type(&self.mutation);
+  }
+}
 
 #[derive(DebugStub)]
 pub struct ObjectType {
@@ -83,11 +89,6 @@ pub struct InputField {
   // pub default_value: Option<>... todo: Do we need that?
   // FromInput conversion -> Take a look at that.
 }
-
-// On schema construction checks:
-// - field name uniqueness
-// - val NameRegexp = """^[_a-zA-Z][_a-zA-Z0-9]*$""".r match
-// -
 
 #[derive(Debug)]
 pub enum InputType {

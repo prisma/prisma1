@@ -147,4 +147,8 @@ impl<'a> QuerySchemaBuilder<'a> {
       OutputType::object(self.object_type_builder.map_model_object_type(&model)),
     )
   }
+
+  fn update_item_field(&self, model: ModelRef) -> Field {
+    unimplemented!()
+  }
 }
