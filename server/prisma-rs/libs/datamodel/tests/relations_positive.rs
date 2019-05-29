@@ -15,6 +15,7 @@ fn allow_multiple_relations() {
         id: ID @id
         text: String
         user: User
+        posting_user: User @relation(name: "more_posts")
     }
     "#;
 

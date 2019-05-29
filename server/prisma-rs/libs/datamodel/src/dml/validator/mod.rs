@@ -2,7 +2,7 @@ use crate::{ast, dml};
 
 pub mod directive;
 
-use crate::common::value::ValueValidator;
+use crate::common::{names::NameNormalizer, value::ValueValidator};
 use crate::dml::fromstr::FromStrAndSpan;
 use crate::errors::{ErrorCollection, ValidationError};
 use crate::source;
@@ -78,19 +78,22 @@ impl Validator {
         // Phase 4: Validation
         self.validate_internal(ast_schema, &mut schema)?;
 
+        // TODO: Move consistency stuff into different module.
         // Phase 5: Consistency fixes. These don't fail.
-        self.make_consistent(&mut schema);
+        self.make_consistent(ast_schema, &mut schema)?;
 
         Ok(schema)
     }
 
-    fn make_consistent(&self, schema: &mut dml::Schema) {
+    fn make_consistent(&self, ast_schema: &ast::Schema, schema: &mut dml::Schema) -> Result<(), ErrorCollection> {
         // Model Consistency. THese ones do not fail.
         // TODO: Also need to hook up the id field with to.
-        self.add_missing_back_relations(schema);
+        self.add_missing_back_relations(ast_schema, schema)?;
 
         // No normalization of to_fields for now.
         // self.set_relation_to_field_to_id_if_missing(schema);
+
+        Ok(())
     }
 
     fn validate_internal(&self, ast_schema: &ast::Schema, schema: &mut dml::Schema) -> Result<(), ErrorCollection> {
@@ -244,7 +247,12 @@ impl Validator {
     }
 
     /// Identifies and adds missing back relations.
-    fn add_missing_back_relations(&self, schema: &mut dml::Schema) {
+    fn add_missing_back_relations(
+        &self,
+        ast_schema: &ast::Schema,
+        schema: &mut dml::Schema,
+    ) -> Result<(), ErrorCollection> {
+        let mut errors = ErrorCollection::new();
         let mut missing_back_relations = Vec::new();
 
         for model in schema.models() {
@@ -254,11 +262,26 @@ impl Validator {
         for (forward, backward) in missing_back_relations {
             let model = schema.find_model_mut(&forward.to).expect(STATE_ERROR);
 
-            // TODO: Ugly generated name for now.
-            model.add_field(dml::Field::new_generated(
-                &format!("generated_{}", backward.to),
-                dml::FieldType::Relation(backward),
-            ))
+            let name = backward.to.camel_case();
+
+            if let Some(conflicting_field) = model.find_field(&name) {
+                errors.push(ValidationError::new_model_validation_error(
+                    "Automatic back field generation would cause a naming conflict.",
+                    &model.name,
+                    &ast_schema
+                        .find_field(&model.name, &conflicting_field.name)
+                        .expect(STATE_ERROR)
+                        .span,
+                ));
+            }
+
+            model.add_field(dml::Field::new_generated(&name, dml::FieldType::Relation(backward)));
+        }
+
+        if errors.has_errors() {
+            Err(errors)
+        } else {
+            Ok(())
         }
     }
 

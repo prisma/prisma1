@@ -112,3 +112,27 @@ fn should_fail_on_ambiguous_named_self_relation() {
         &Span::new(45, 83),
     ));
 }
+
+#[test]
+fn should_fail_on_conflicting_back_relation_field_name() {
+    let dml = r#"
+    model User {
+        id: ID @id
+        posts: Post[] @relation(name: "test")
+        more_posts: Post[]
+    }
+
+    model Post {
+        post_id: ID @id
+        user: User@relation(name: "test")
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is(ValidationError::new_model_validation_error(
+        "Automatic back field generation would cause a naming conflict.",
+        "Post",
+        &Span::new(166, 199),
+    ));
+}
