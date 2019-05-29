@@ -1,32 +1,32 @@
 use super::*;
 
-pub struct GqlEnumRenderer {
-    enum_type_ref: EnumTypeRef,
+pub struct GqlEnumRenderer<'a> {
+    enum_type: &'a EnumType,
 }
 
-impl Renderer for GqlEnumRenderer {
+impl<'a> Renderer for GqlEnumRenderer<'a> {
     fn render(&self, ctx: RenderContext) -> (String, RenderContext) {
-        if ctx.already_rendered(&self.enum_type_ref.name) {
+        if ctx.already_rendered(&self.enum_type.name) {
             return ("".into(), ctx);
         }
 
         let values: Vec<String> = self
-            .enum_type_ref
+            .enum_type
             .values
             .iter()
             .map(|v| format!("{}{}", ctx.indent(), self.format_enum_value(v)))
             .collect();
 
-        let rendered = format!("enum {} {{\n{}\n}}", self.enum_type_ref.name, values.join("\n"));
+        let rendered = format!("enum {} {{\n{}\n}}", self.enum_type.name, values.join("\n"));
 
-        ctx.add(self.enum_type_ref.name.clone(), rendered.clone());
+        ctx.add(self.enum_type.name.clone(), rendered.clone());
         (rendered, ctx)
     }
 }
 
-impl GqlEnumRenderer {
-    pub fn new(enum_type_ref: EnumTypeRef) -> GqlEnumRenderer {
-        GqlEnumRenderer { enum_type_ref }
+impl<'a> GqlEnumRenderer<'a> {
+    pub fn new(enum_type: &EnumType) -> GqlEnumRenderer {
+        GqlEnumRenderer { enum_type }
     }
 
     fn format_enum_value(&self, value: &EnumValue) -> String {

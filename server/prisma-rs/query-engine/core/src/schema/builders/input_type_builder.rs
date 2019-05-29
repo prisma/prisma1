@@ -17,6 +17,10 @@ impl CachedBuilder<InputObjectType> for InputTypeBuilder {
     fn get_cache(&self) -> &TypeRefCache<InputObjectType> {
         &self.input_type_cache
     }
+
+    fn into_strong_refs(self) -> Vec<Arc<InputObjectType>> {
+        self.input_type_cache.into()
+    }
 }
 
 impl InputTypeBuilder {

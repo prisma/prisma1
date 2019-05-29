@@ -19,11 +19,16 @@ use std::{
 };
 
 pub trait CachedBuilder<T> {
+    /// Retrieve cache.
     fn get_cache(&self) -> &TypeRefCache<T>;
 
+    /// Caches the given arc.
     fn cache(&self, key: String, value: Arc<T>) {
         self.get_cache().insert(key, value);
     }
+
+    /// Consumes the implementing builder and returns all strong refs of type T that are cached on .
+    fn into_strong_refs(self) -> Vec<Arc<T>>;
 }
 
 /// Cache wrapper with internal mutability
@@ -61,6 +66,15 @@ impl<T> From<Vec<(String, Arc<T>)>> for TypeRefCache<T> {
         TypeRefCache {
             cache: RefCell::new(tuples.into_iter().collect()),
         }
+    }
+}
+
+impl<T> IntoIterator for TypeRefCache<T> {
+    type Item = (String, Arc<T>);
+    type IntoIter = ::std::collections::hash_map::IntoIter<String, Arc<T>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.cache.into_inner().into_iter()
     }
 }
 

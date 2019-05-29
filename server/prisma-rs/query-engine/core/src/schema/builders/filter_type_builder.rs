@@ -13,6 +13,10 @@ impl<'a> CachedBuilder<InputObjectType> for FilterObjectTypeBuilder<'a> {
   fn get_cache(&self) -> &TypeRefCache<InputObjectType> {
     &self.input_object_cache
   }
+
+  fn into_strong_refs(self) -> Vec<Arc<InputObjectType>> {
+    self.input_object_cache.into()
+  }
 }
 
 impl<'a> FilterObjectTypeBuilder<'a> {

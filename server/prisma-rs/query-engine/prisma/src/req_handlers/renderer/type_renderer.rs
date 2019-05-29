@@ -25,7 +25,7 @@ impl<'a> GqlTypeRenderer<'a> {
         match i {
             InputType::Object(ref obj) => {
                 let (_, subctx) = obj.into_renderer().render(ctx);
-                (format!("{}!", obj.name), subctx)
+                (format!("{}!", obj.into_arc().name), subctx)
             }
             InputType::Enum(et) => {
                 // Not sure how this fits together with the enum handling below.
@@ -66,7 +66,7 @@ impl<'a> GqlTypeRenderer<'a> {
         match o {
             OutputType::Object(obj) => {
                 let (_, subctx) = obj.into_renderer().render(ctx);
-                (format!("{}!", obj.name), subctx)
+                (format!("{}!", obj.into_arc().name), subctx)
             }
             OutputType::Enum(et) => {
                 // Not sure how this fits together with the enum handling below.

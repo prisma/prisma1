@@ -18,6 +18,10 @@ impl<'a> CachedBuilder<ObjectType> for ObjectTypeBuilder<'a> {
       .get()
       .expect("Invariant violation: Expected cache to be initialized before retrieving items.")
   }
+
+  fn into_strong_refs(self) -> Vec<Arc<ObjectType>> {
+    self.get_cache().iter().map(|(k, v)| v).collect()
+  }
 }
 
 impl<'a> ObjectTypeBuilder<'a> {

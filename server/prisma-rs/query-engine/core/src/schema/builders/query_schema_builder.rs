@@ -60,23 +60,26 @@ impl<'a> QuerySchemaBuilder<'a> {
 
   /// Consumes the builders and collects all types from all builder caches to merge
   /// them into the vectors required to finalize the query schema building.
-  fn collect_types(self) -> (Vec<InputObjectTypeRef>, Vec<ObjectTypeRef>) {
-    unimplemented!()
+  fn collect_types(self) -> (Vec<InputObjectTypeStrongRef>, Vec<ObjectTypeStrongRef>) {
+    let output_objects = self.object_type_builder.into_strong_refs();
+    let mut input_objects = self.input_type_builder.into_strong_refs();
+    let mut filter_objects = self.filter_object_type_builder.into_strong_refs();
+
+    input_objects.append(&mut filter_objects);
+    (input_objects, output_objects)
   }
 
-  /// TODO filter empty types
+  /// TODO filter empty input types
   /// Consumes the builder to create the query schema.
   pub fn build(self) -> QuerySchema {
     let (query_type, query_object_ref) = self.build_query_type();
     let (mutation_type, mutation_object_ref) = self.build_mutation_type();
-    let types = self.collect_types();
+    let (input_objects, mut output_objects) = self.collect_types();
 
-    QuerySchema::new(
-      query_type,
-      mutation_type,
-      vec![],
-      vec![query_object_ref, mutation_object_ref],
-    )
+    output_objects.push(query_object_ref);
+    output_objects.push(mutation_object_ref);
+
+    QuerySchema::new(query_type, mutation_type, input_objects, output_objects)
   }
 
   /// Builds the root query type.
