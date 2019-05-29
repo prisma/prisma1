@@ -184,7 +184,6 @@ impl ValueMap {
 
             // These are actions (create, update, ...)
             for (action, nested) in obj.iter() {
-                dbg!(&action);
                 vec.push(match nested {
                     Value::Object(obj) => NestedValue::Simple {
                         name: name.clone(),
@@ -204,25 +203,6 @@ impl ValueMap {
                     },
                     _ => unreachable!(),
                 });
-
-                // vec.push(NestedValue::Simple {
-                //     name: name.clone(),
-                //     kind: action.clone(),
-                //     map: match dbg!(nested) {
-                //         Value::Object(obj) => ValueMap(obj.clone()),
-                //         Value::List(value) => ValueMap::init(
-                //             &value
-                //                 .iter()
-                //                 .zip(0..)
-                //                 .fold(vec![], |mut vec, (item, n)| {
-                //                     vec.push((format!("{}_{}", action, n), item.clone()));
-                //                     vec
-                //                 })),
-                //         _ => unreachable!()
-                //         // Value::List(list) => ValueMap::init(&list.iter().map(|v| (name.clone(), v.clone())).collect()),
-                //         // value => ValueMap::init(&vec![(name.clone(), value.clone())]),
-                //     },
-                // });
             }
         }
 

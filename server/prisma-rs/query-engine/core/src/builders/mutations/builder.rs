@@ -50,12 +50,12 @@ impl<'field> MutationBuilder<'field> {
 
         let inner =
             match op {
-                Operation::Create => dbg!(TopLevelDatabaseMutaction::CreateNode(CreateNode {
+                Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
                     model: Arc::clone(&model),
                     non_list_args,
                     list_args,
                     nested_mutactions,
-                })),
+                }),
                 Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
                     where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                     non_list_args,
@@ -179,12 +179,8 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
         }
     };
 
-    dbg!(&model_name);
     let normalized = Inflector::singularize(&model_name).to_pascal_case();
-    dbg!(&normalized);
-    dbg!(model.models());
 
-    // let normalized = dbg!(Inflector::singularize(dbg!(model_name)).to_pascal_case());
     let model = match model.models().iter().find(|m| m.name == normalized) {
         Some(m) => m,
         None => {
@@ -205,25 +201,24 @@ fn build_nested_root<'f>(
     model: ModelRef,
     top_level: &Operation,
 ) -> CoreResult<NestedMutactions> {
-    dbg!(&args);
 
     let mut collection = NestedMutactions::default();
 
-    let eval = dbg!(args.eval_tree());
+    let eval = args.eval_tree();
 
     for value in eval.into_iter() {
         match value {
             NestedValue::Simple { name, kind, map } => {
-                let ValueSplit { values, lists, nested } = dbg!(map.split());
+                let ValueSplit { values, lists, nested } = map.split();
 
-                let field = dbg!(model.fields().find_from_all(dbg!(&name)));
-                let relation_field = dbg!(match &field {
+                let field = model.fields().find_from_all(&name);
+                let relation_field = match &field {
                     Ok(ModelField::Relation(f)) => {
                         let model = f.related_model();
                         Arc::clone(&f)
                     }
                     _ => unimplemented!(),
-                });
+                };
 
                 let model = Arc::clone(&relation_field.related_model());
                 let non_list_args = values.to_prisma_values().into();
@@ -247,13 +242,13 @@ fn build_nested_root<'f>(
                 }
             }
             NestedValue::Many { name, kind, list } => {
-                let field = dbg!(model.fields().find_from_all(dbg!(&name)).unwrap());
-                let (relation_field, relation_model) = dbg!(match &field {
+                let field = model.fields().find_from_all(&name).unwrap();
+                let (relation_field, relation_model) = match &field {
                     ModelField::Relation(f) => {
                         (Arc::clone(&f), f.related_model())
                     }
                     _ => unimplemented!(),
-                });
+                };
 
                 match kind.as_str() {
                     "connect" => {
@@ -284,7 +279,7 @@ fn build_nested_root<'f>(
                             )?
                             .filter;
 
-                            let ValueSplit { values, lists, nested } = dbg!(obj.split());
+                            let ValueSplit { values, lists, nested } = obj.split();
                             let non_list_args = values.to_prisma_values().into();
                             let list_args = lists.into_iter().map(|la| la.convert()).collect();
 
@@ -298,7 +293,7 @@ fn build_nested_root<'f>(
                     },
                     "create" => {
                         for obj in list.into_iter() {
-                            let ValueSplit { values, lists, nested } = dbg!(obj.split());
+                            let ValueSplit { values, lists, nested } = obj.split();
                             let non_list_args = values.to_prisma_values().into();
                             let list_args = lists.into_iter().map(|la| la.convert()).collect();
                             let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&model), top_level)?;

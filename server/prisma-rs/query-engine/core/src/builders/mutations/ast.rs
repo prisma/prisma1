@@ -49,7 +49,7 @@ impl WriteQuery {
     /// Generate a `ReadQuery` from the encapsulated `WriteQuery`
     pub fn generate_read(&self, res: MutationResult) -> Option<ReadQuery> {
         let field = match res.identifier {
-            Identifier::Id(gql_id) => dbg!(utils::derive_field(&self.field, self.model(), gql_id, &self.name)),
+            Identifier::Id(gql_id) => utils::derive_field(&self.field, self.model(), gql_id, &self.name),
             Identifier::Count(_) => return None, // FIXME: We need to communicate count!
             _ => unimplemented!(),
         };
