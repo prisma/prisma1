@@ -31,12 +31,11 @@ pub(crate) fn extract_node_selector(field: &Field, model: ModelRef) -> CoreResul
     }
 }
 
-/// Extract query arguments and filters from a field
-pub(crate) fn extract_query_args(field: &Field, model: ModelRef) -> CoreResult<QueryArguments> {
-    field
-        .arguments
-        .iter()
-        .filter(|(arg, _)| arg.as_str() != "data") // `data` is mutation specific and handled elsewhere!
+pub(crate) fn extract_query_args_inner<'a>(
+    iter: impl Iterator<Item = (&'a String, &'a Value)>,
+    model: ModelRef,
+) -> CoreResult<QueryArguments> {
+    iter
         .fold(Ok(QueryArguments::default()), |result, (k, v)| {
             if let Ok(res) = result {
                 #[cfg_attr(rustfmt, rustfmt_skip)]
@@ -73,6 +72,18 @@ pub(crate) fn extract_query_args(field: &Field, model: ModelRef) -> CoreResult<Q
                 result
             }
         })
+}
+
+/// Extract query arguments and filters from a field
+pub(crate) fn extract_query_args(field: &Field, model: ModelRef) -> CoreResult<QueryArguments> {
+    extract_query_args_inner(
+        field
+            .arguments
+            .iter()
+            .filter(|(arg, _)| arg.as_str() != "data")
+            .map(|(k, v)| (k, v)),
+        model,
+    )
 }
 
 pub(crate) fn extract_order_by(
@@ -217,12 +228,12 @@ pub(crate) fn collect_selection_order(field: &Field) -> Vec<String> {
 /// A function that derives a field given a field
 ///
 /// This function is used when creating ReadQueries after a WriteQuery has succeeded
-pub(crate) fn derive_field(field: &Field, model: ModelRef, id: GraphqlId) -> Field {
+pub(crate) fn derive_field(field: &Field, model: ModelRef, id: GraphqlId, mutation_name: &String) -> Field {
     let mut new = field.clone();
 
-    // Remove alias and override Name
+    // Set alias to query name and override field name
     new.name = model.name.to_lowercase();
-    new.alias = None;
+    new.alias = Some(mutation_name.clone());
 
     // Create a selection set for this ID
     let id_name = model.fields().id().name.clone();

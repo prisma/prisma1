@@ -14,6 +14,9 @@ pub struct WriteQuery {
     /// The actual mutation object being built
     pub inner: RootMutation,
 
+    /// The name of the WriteQuery
+    pub name: String,
+
     /// Required to create following ReadQuery
     pub field: Field,
 }
@@ -44,10 +47,9 @@ impl WriteQuery {
     }
 
     /// Generate a `ReadQuery` from the encapsulated `WriteQuery`
-    #[warn(warnings)]
     pub fn generate_read(&self, res: MutationResult) -> Option<ReadQuery> {
         let field = match res.identifier {
-            Identifier::Id(gql_id) => utils::derive_field(&self.field, self.model(), gql_id),
+            Identifier::Id(gql_id) => dbg!(utils::derive_field(&self.field, self.model(), gql_id, &self.name)),
             Identifier::Count(_) => return None, // FIXME: We need to communicate count!
             _ => unimplemented!(),
         };

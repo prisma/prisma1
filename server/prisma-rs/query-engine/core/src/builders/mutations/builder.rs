@@ -39,9 +39,10 @@ impl<'field> MutationBuilder<'field> {
         let ValueSplit { values, lists, nested } = ValueMap::init(&data).split();
         let non_list_args = values.to_prisma_values().into();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
+        let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
 
         let (op, model) = parse_model_action(
-            self.field.alias.as_ref().unwrap_or_else(|| &self.field.name),
+            &raw_name,
             Arc::clone(&self.model),
         )?;
 
@@ -105,6 +106,7 @@ impl<'field> MutationBuilder<'field> {
         // FIXME: Cloning is unethical and should be avoided
         Ok(WriteQuery {
             inner,
+            name: raw_name,
             field: self.field.clone(),
         })
     }
@@ -116,6 +118,7 @@ fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<
         inner: TopLevelDatabaseMutaction::ResetData(ResetData {
             project: Arc::new(Project::from(data_model)),
         }),
+        name: "resetData".into(),
         field: field.clone(),
     })
 }
@@ -164,9 +167,10 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
         Some(a) => a,
         None => return Err(CoreError::QueryValidationError(format!("Unknown action: {}", name))),
     };
+
     let split: Vec<&str> = name.split(action).collect();
     let model_name = match split.get(1) {
-        Some(mn) => mn,
+        Some(mn) => mn.to_lowercase(),
         None => {
             return Err(CoreError::QueryValidationError(format!(
                 "No model name for action `{}`",
@@ -175,7 +179,12 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
         }
     };
 
-    let normalized = Inflector::singularize(model_name).to_pascal_case();
+    dbg!(&model_name);
+    let normalized = Inflector::singularize(&model_name).to_pascal_case();
+    dbg!(&normalized);
+    dbg!(model.models());
+
+    // let normalized = dbg!(Inflector::singularize(dbg!(model_name)).to_pascal_case());
     let model = match model.models().iter().find(|m| m.name == normalized) {
         Some(m) => m,
         None => {
@@ -237,41 +246,76 @@ fn build_nested_root<'f>(
                     _ => unimplemented!(),
                 }
             }
-            NestedValue::Connect { name, list } => {
+            NestedValue::Many { name, kind, list } => {
                 let field = dbg!(model.fields().find_from_all(dbg!(&name)).unwrap());
-                let relation_field = dbg!(match &field {
+                let (relation_field, relation_model) = dbg!(match &field {
                     ModelField::Relation(f) => {
-                        let model = f.related_model();
-                        Arc::clone(&f)
+                        (Arc::clone(&f), f.related_model())
                     }
                     _ => unimplemented!(),
                 });
 
-                // Create a connect for every map
-                for obj in &list {
-                    // Get the first valid field name that is a scalar
-                    let where_ = obj
-                        .0
-                        .iter()
-                        .filter_map(|(field, value)| {
-                            model
-                                .fields()
-                                .find_from_scalar(&field)
-                                .ok()
-                                .map(|f| (f, PrismaValue::from_value(&value)))
-                        })
-                        .nth(0)
-                        .map(|(field, value)| NodeSelector { field, value })
-                        .unwrap();
+                match kind.as_str() {
+                    "connect" => {
 
-                    collection.connects.push(NestedConnect {
-                        relation_field: Arc::clone(&relation_field),
-                        where_,
-                        top_is_create: match top_level {
-                            Operation::Create => true,
-                            _ => false,
-                        },
-                    });
+                        // Create a connect for every map
+                        for obj in list.into_iter() {
+                            // Get the first valid field name that is a scalar
+                            let where_ = obj.to_node_selector(Arc::clone(&model))?;
+
+                            collection.connects.push(NestedConnect {
+                                relation_field: Arc::clone(&relation_field),
+                                where_,
+                                top_is_create: match top_level {
+                                    Operation::Create => true,
+                                    _ => false,
+                                },
+                            });
+                        }
+                    }
+                    "updateMany" => {
+                        for obj in list.into_iter() {
+                            let filter = utils::extract_query_args_inner(
+                                obj.0
+                                    .iter()
+                                    .filter(|(arg, _)| arg.as_str() != "data")
+                                    .map(|(a, b)| (a, b)),
+                                Arc::clone(&relation_model),
+                            )?
+                            .filter;
+
+                            let ValueSplit { values, lists, nested } = dbg!(obj.split());
+                            let non_list_args = values.to_prisma_values().into();
+                            let list_args = lists.into_iter().map(|la| la.convert()).collect();
+
+                            collection.update_manys.push(NestedUpdateNodes {
+                                relation_field: Arc::clone(&relation_field),
+                                filter,
+                                non_list_args,
+                                list_args,
+                            });
+                        }
+                    },
+                    "create" => {
+                        for obj in list.into_iter() {
+                            let ValueSplit { values, lists, nested } = dbg!(obj.split());
+                            let non_list_args = values.to_prisma_values().into();
+                            let list_args = lists.into_iter().map(|la| la.convert()).collect();
+                            let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&model), top_level)?;
+
+                            collection.creates.push(NestedCreateNode {
+                                non_list_args,
+                                list_args,
+                                top_is_create: match top_level {
+                                    Operation::Create => true,
+                                    _ => false,
+                                },
+                                relation_field: Arc::clone(&relation_field),
+                                nested_mutactions,
+                            });
+                        }
+                    }
+                    cmd => panic!("Not yet implemented `{}`!", cmd),
                 }
             }
             NestedValue::Upsert { name, create, update } => unimplemented!(),
