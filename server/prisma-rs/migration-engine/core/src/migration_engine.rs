@@ -39,9 +39,8 @@ impl MigrationEngine {
     }
 
     pub fn schema_name(&self) -> String {
-        let file_path = file!(); // todo: the sqlite file name must be taken from the config
-        let file_name = Path::new(file_path).file_stem().unwrap().to_str().unwrap();
-        file_name.to_string()
+        // todo: the sqlite file name must be taken from the config
+        "migration_engine".to_string()
     }
 
     pub fn parse_datamodel(&self, datamodel_string: &String) -> Schema {
