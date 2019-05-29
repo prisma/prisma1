@@ -59,6 +59,10 @@ impl Model {
     pub fn find_field_mut(&mut self, name: &str) -> Option<&mut Field> {
         self.fields_mut().find(|f| f.name == *name)
     }
+
+    pub fn id_fields(&self) -> impl std::iter::Iterator<Item = &String> {
+        self.fields().filter(|x| x.id_info.is_some()).map(|x| &x.name)
+    }
 }
 
 impl WithName for Model {
