@@ -16,7 +16,7 @@ pub use list_migrations::*;
 pub use migration_progress::*;
 pub use unapply_migration::*;
 
-use migration_connector::{MigrationStep, MigrationWarning, MigrationError};
+use migration_connector::{MigrationError, MigrationStep, MigrationWarning};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

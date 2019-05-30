@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 mod test_harness;
 
-use datamodel::{dml::*};
-use test_harness::parse;
+use datamodel::dml::*;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
+use test_harness::parse;
 
 #[test]
 fn infer_CreateModel_if_it_does_not_exist_yet() {
