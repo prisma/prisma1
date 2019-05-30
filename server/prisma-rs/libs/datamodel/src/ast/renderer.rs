@@ -2,13 +2,17 @@ use crate::ast;
 
 pub struct Renderer<'a> {
     stream: &'a mut std::io::Write,
+    indent: usize,
 }
 
 // TODO: It would be soooo cool if we could pass format strings around.
 
+/// Default indent width.
+const INDENT_WIDTH: usize = 4;
+
 impl<'a> Renderer<'a> {
     pub fn new(stream: &'a mut std::io::Write) -> Renderer<'a> {
-        Renderer { stream }
+        Renderer { stream, indent: 0 }
     }
 
     pub fn render(&mut self, datamodel: &ast::Datamodel) {
@@ -23,9 +27,10 @@ impl<'a> Renderer<'a> {
 
     pub fn render_model(&mut self, model: &ast::Model) {
         self.begin_line();
-        self.write(&"model ");
+        self.write("model ");
         self.write(&model.name);
-        self.write(&" {");
+        self.write(" {");
+        self.indent_up();
 
         for field in &model.fields {
             self.render_field(&field);
@@ -35,15 +40,18 @@ impl<'a> Renderer<'a> {
             self.render_block_directive(&directive);
         }
 
+        self.indent_down();
         self.begin_line();
-        self.write(&"}");
+        self.write("}");
+        self.begin_line();
     }
 
     pub fn render_enum(&mut self, enm: &ast::Enum) {
         self.begin_line();
-        self.write(&"enum ");
+        self.write("enum ");
         self.write(&enm.name);
-        self.write(&" {");
+        self.write(" {");
+        self.indent_up();
 
         for value in &enm.values {
             self.begin_line();
@@ -51,12 +59,14 @@ impl<'a> Renderer<'a> {
         }
 
         for directive in &enm.directives {
-            self.write(&" ");
+            self.write(" ");
             self.render_block_directive(&directive);
         }
 
+        self.indent_down();
         self.begin_line();
-        self.write(&"}");
+        self.write("}");
+        self.begin_line();
     }
 
     pub fn render_field(&mut self, field: &ast::Field) {
@@ -74,27 +84,33 @@ impl<'a> Renderer<'a> {
 
     pub fn render_field_arity(&mut self, field_arity: &ast::FieldArity) {
         match field_arity {
-            ast::FieldArity::List => self.write(&"[]"),
-            ast::FieldArity::Optional => self.write(&"?"),
+            ast::FieldArity::List => self.write("[]"),
+            ast::FieldArity::Optional => self.write("?"),
             ast::FieldArity::Required => {}
         };
     }
 
     pub fn render_field_directive(&mut self, directive: &ast::Directive) {
-        self.write(&"@");
+        self.write("@");
         self.write(&directive.name);
-        self.write(&"(");
-        self.render_arguments(&directive.arguments);
-        self.write(&")");
+
+        if directive.arguments.len() > 0 {
+            self.write("(");
+            self.render_arguments(&directive.arguments);
+            self.write(")");
+        }
     }
 
     pub fn render_block_directive(&mut self, directive: &ast::Directive) {
         self.begin_line();
-        self.write(&"@@");
+        self.write("@@");
         self.write(&directive.name);
-        self.write(&"(");
-        self.render_arguments(&directive.arguments);
-        self.write(&")");
+
+        if directive.arguments.len() > 0 {
+            self.write("(");
+            self.render_arguments(&directive.arguments);
+            self.write(")");
+        }
     }
 
     pub fn render_arguments(&mut self, args: &Vec<ast::Argument>) {
@@ -126,6 +142,17 @@ impl<'a> Renderer<'a> {
         };
     }
 
+    pub fn indent_up(&mut self) {
+        self.indent = self.indent + 1
+    }
+
+    pub fn indent_down(&mut self) {
+        if self.indent == 0 {
+            panic!("Indentation error.")
+        }
+        self.indent = self.indent - 1
+    }
+
     pub fn render_array(&mut self, vals: &Vec<ast::Value>) {
         self.write(&"[");
         for (idx, arg) in vals.iter().enumerate() {
@@ -137,18 +164,19 @@ impl<'a> Renderer<'a> {
         self.write(&"]");
     }
 
-    fn render_str(&mut self, param: &std::fmt::Display) {
-        self.write(&"\"");
+    fn render_str(&mut self, param: &str) {
+        self.write("\"");
         self.write(param);
-        self.write(&"\"");
+        self.write("\"");
     }
 
-    fn write(&mut self, param: &std::fmt::Display) {
+    fn write(&mut self, param: &str) {
         // TODO: Proper result handling.
         write!(self.stream, "{}", param).expect("Writer error.");
     }
 
     fn begin_line(&mut self) {
         writeln!(self.stream, "").expect("Writer error.");
+        write!(self.stream, "{}", " ".repeat(self.indent * INDENT_WIDTH)).expect("Writer error.");
     }
 }

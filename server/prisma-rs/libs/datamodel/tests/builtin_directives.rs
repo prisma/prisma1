@@ -7,14 +7,16 @@ fn db_directive() {
     model User {
         id: ID @id
         firstName: String @db("first_name")
+
+        @@db("user")
     }
-    @db("user")
 
     model Post {
         id: ID @id
         text: String @db(name: "post_text")
+
+        @@db(name: "posti")
     }
-    @db(name: "posti")
     "#;
 
     let schema = parse(dml);

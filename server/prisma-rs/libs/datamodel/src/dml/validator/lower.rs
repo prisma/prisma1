@@ -91,7 +91,6 @@ impl LowerDmlToAst {
             directives: self.directives.field.serialize(field)?,
             field_type: self.lower_type(&field.field_type),
             comments: vec![],
-            field_link: None, // Deprecated
             field_type_span: ast::Span::empty(),
             span: ast::Span::empty(),
         })

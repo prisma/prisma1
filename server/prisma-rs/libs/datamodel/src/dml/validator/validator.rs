@@ -432,14 +432,7 @@ impl Validator {
             Ok(dml::FieldType::Base(scalar_type))
         } else {
             if let Some(_) = ast_schema.find_model(type_name) {
-                if let Some(to_field) = &ast_field.field_link {
-                    return Ok(dml::FieldType::Relation(dml::RelationInfo::new_with_fields(
-                        &ast_field.field_type,
-                        vec![to_field.clone()],
-                    )));
-                } else {
-                    Ok(dml::FieldType::Relation(dml::RelationInfo::new(&ast_field.field_type)))
-                }
+                Ok(dml::FieldType::Relation(dml::RelationInfo::new(&ast_field.field_type)))
             } else if let Some(_) = ast_schema.find_enum(type_name) {
                 Ok(dml::FieldType::Enum(type_name.clone()))
             } else {

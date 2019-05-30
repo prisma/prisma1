@@ -47,7 +47,7 @@ fn resolve_related_field() {
     model Post {
         id: ID @id
         text: String
-        user: User(firstName)
+        user: User @relation(references: [firstName])
     }
     "#;
 

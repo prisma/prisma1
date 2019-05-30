@@ -55,7 +55,7 @@ directive_single_argument = { "(" ~ argument_value ~ ")" }
 // This is a poor-mans version of namespacing
 directive_name = @{ (identifier ~ ".")? ~ identifier }
 // A directive either has one unnamed argument or any number of named arguments or no argument.
-directive = { "@" ~ directive_name ~ (directive_arguments | directive_single_argument ) ? }
+directive = { directive_name ~ (directive_arguments | directive_single_argument ) ? }
 
 // ######################################
 // Field declarations
@@ -66,26 +66,24 @@ list_type = { identifier ~ "[]" }
 
 // Pest is greedy, order is very important here.
 field_type = { list_type | optional_type | base_type }
-// This is a field link identifier which comes in braces after the type.
-field_link = @{ identifier }
 
 // Field
 default_value = { "=" ~ expression }
 // TODO: We want to force a line break after a field declaration.
 // For this, we have to rely on pests new '-' operator.
 // Progress tracked here: https://github.com/pest-parser/pest/issues/271
-field_declaration = { identifier ~ (":")? ~ field_type ~ ("(" ~ field_link ~ ")")? ~ default_value? ~ directive* }
+field_declaration = { identifier ~ (":")? ~ field_type ~ default_value? ~ ( "@" ~ directive )* }
 
 // ######################################
 // Model declarations
 // ######################################
-model_declaration = { "model" ~ identifier ~ "{" ~ field_declaration+ ~ "}" ~ directive* }
+model_declaration = { "model" ~ identifier ~ "{" ~ ( field_declaration | ( "@@" ~ directive )  )* ~ "}" }
 
 // ######################################
 // Enum declarations
 // ######################################
 enum_field_declaration = @{ ASCII_ALPHA_UPPER+ }
-enum_declaration = { "enum" ~ identifier ~ "{" ~ enum_field_declaration+ ~ "}" ~ directive* }
+enum_declaration = { "enum" ~ identifier ~ "{" ~ (enum_field_declaration | ( "@@" ~ directive )  )* ~ "}" }
 
 // ######################################
 // Source block

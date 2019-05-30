@@ -35,6 +35,7 @@ macro_rules! match_first (
 
 pub mod ast;
 pub use ast::parser;
+pub use ast::renderer;
 pub mod dml;
 pub use dml::validator::Validator;
 pub use dml::*;

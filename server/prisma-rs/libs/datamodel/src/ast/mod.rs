@@ -169,8 +169,6 @@ pub struct Field {
     pub field_type: String,
     /// The location of the field's type in the text representation.
     pub field_type_span: Span,
-    /// The linked field, in case this is a relation.
-    pub field_link: Option<String>,
     /// The name of the field.
     pub name: String,
     /// The aritiy of the field.
