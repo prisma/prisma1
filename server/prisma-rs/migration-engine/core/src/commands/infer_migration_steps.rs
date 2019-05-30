@@ -1,6 +1,5 @@
 use crate::commands::command::MigrationCommand;
 use crate::migration_engine::MigrationEngine;
-use datamodel::dml::*;
 use migration_connector::steps::*;
 use migration_connector::*;
 
@@ -18,11 +17,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
         let connector = engine.connector();
-        let current_data_model = connector
-            .migration_persistence()
-            .last()
-            .map(|m| m.datamodel)
-            .unwrap_or(Datamodel::empty());
+        let current_data_model = connector.migration_persistence().current_datamodel();
 
         let next_data_model = engine.parse_datamodel(&self.input.data_model);
 

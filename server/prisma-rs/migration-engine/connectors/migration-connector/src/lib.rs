@@ -75,6 +75,11 @@ pub struct MigrationError {
 }
 
 pub trait MigrationPersistence {
+    // returns the currently active Datamodel
+    fn current_datamodel(&self) -> Datamodel {
+        self.last().map(|m| m.datamodel).unwrap_or(Datamodel::empty())
+    }
+
     // returns the last successful Migration
     fn last(&self) -> Option<Migration>;
 
