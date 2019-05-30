@@ -1,7 +1,7 @@
 [package]
 name = "prisma"
 version = "0.1.0"
-authors = ["Dominic Petrick <dompetrick@gmail.com>"]
+authors = ["Dominic Petrick <dompetrick@gmail.com>", "Katharina Fey <kookie@spacekookie.de>"]
 edition = "2018"
 
 [features]

@@ -1,31 +1,19 @@
+//! A mutation parser module
 //!
-#![allow(warnings)]
-
-/*
-data: {
-    Name: "Cool Artist"
-    Albums: {
-        create: {
-            Title: "Super Cool Album"
-            Tracks: {
-                create: {
-                    Name: "Cool Song"
-                    Milliseconds: 9001
-                }
-            }
-            Aliases: { set: [ "Awesome", "Gnarly" ] }
-        }
-    }
-    Friends: {
-        upsert: {
-            where: {},
-            create: {},
-            update: {},
-        }
-    }
-    Aliases: { set: [ "Bob" ] }
-}
-*/
+//! **Note** for whomever it may concearn: this parser module would potentially
+//! be interesting to expand for regular read-queries as well.
+//! It parses the graphql specific AST into our own data representation.
+//! While this is a slim conversion, it does make working with it easier
+//! and provide a single place to do error handling and validaiton.
+//!
+//! The module exposes a few wrapper types that map as follows
+//!
+//! | Module type       | Mapped type                     |
+//! |-------------------|---------------------------------|
+//! | ValueMap          | `BTreeMap<String, Value>`       |
+//! | ValueList         | `(String, Option<Vec<Value>>)`  |
+//! | ValueSplit        | Splitting `values`, `nested`,
+//!                       and `lists` into a `struct`     |
 
 use crate::{CoreError, CoreResult};
 use connector::filter::NodeSelector;
