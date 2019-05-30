@@ -1,10 +1,10 @@
-pub mod apply_migration;
+mod apply_migration;
 mod calculate_datamodel;
-pub mod command;
-pub mod infer_migration_steps;
-pub mod list_migrations;
-pub mod migration_progress;
-pub mod unapply_migration;
+mod command;
+mod infer_migration_steps;
+mod list_migrations;
+mod migration_progress;
+mod unapply_migration;
 
 pub use apply_migration::*;
 pub use calculate_datamodel::*;
