@@ -22,7 +22,7 @@ pub enum Field {
     Scalar(Arc<ScalarField>),
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct FieldManifestation {
     pub db_name: String,
