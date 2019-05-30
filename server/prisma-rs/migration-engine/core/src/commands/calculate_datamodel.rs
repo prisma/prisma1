@@ -1,6 +1,6 @@
 use crate::commands::command::MigrationCommand;
 use crate::migration_engine::MigrationEngine;
-use datamodel::dml::Schema;
+use datamodel::dml::Datamodel;
 use migration_connector::*;
 
 pub struct CalculateDatamodelCommand {
@@ -18,7 +18,7 @@ impl MigrationCommand for CalculateDatamodelCommand {
     fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
 
-        let base_datamodel = Schema::empty();
+        let base_datamodel = Datamodel::empty();
         let datamodel = engine.datamodel_calculator().infer(&base_datamodel, &self.input.steps);
         // todo: render the datamodel properly
         CalculateDatamodelOutput {

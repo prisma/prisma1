@@ -8,7 +8,7 @@ use test_harness::parse;
 
 #[test]
 fn infer_CreateModel_if_it_does_not_exist_yet() {
-    let dm1 = Schema::empty();
+    let dm1 = Datamodel::empty();
     let dm2 = parse(
         r#"
         model Test {
@@ -53,7 +53,7 @@ fn infer_DeleteModel() {
         }
     "#,
     );
-    let dm2 = Schema::empty();
+    let dm2 = Datamodel::empty();
 
     let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::DeleteModel(DeleteModel {
@@ -257,7 +257,7 @@ fn infer_UpdateField_simple() {
 
 #[test]
 fn infer_CreateEnum() {
-    let dm1 = Schema::empty();
+    let dm1 = Datamodel::empty();
     let dm2 = parse(
         r#"
         enum Test {
@@ -286,7 +286,7 @@ fn infer_DeleteEnum() {
         }
     "#,
     );
-    let dm2 = Schema::empty();
+    let dm2 = Datamodel::empty();
 
     let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::DeleteEnum(DeleteEnum {
@@ -295,7 +295,7 @@ fn infer_DeleteEnum() {
     assert_eq!(steps, expected);
 }
 
-fn infer(dm1: &Schema, dm2: &Schema) -> Vec<MigrationStep> {
+fn infer(dm1: &Datamodel, dm2: &Datamodel) -> Vec<MigrationStep> {
     let inferrer = DataModelMigrationStepsInferrerImplWrapper {};
     inferrer.infer(&dm1, &dm2)
 }

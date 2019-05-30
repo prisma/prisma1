@@ -1,7 +1,7 @@
 use super::MigrationStepsResultOutput;
 use crate::commands::command::MigrationCommand;
 use crate::migration_engine::MigrationEngine;
-use datamodel::dml::Schema;
+use datamodel::dml::Datamodel;
 use migration_connector::*;
 
 pub struct ApplyMigrationCommand {
@@ -25,7 +25,7 @@ impl MigrationCommand for ApplyMigrationCommand {
             .migration_persistence()
             .last()
             .map(|m| m.datamodel)
-            .unwrap_or(Schema::empty());
+            .unwrap_or(Datamodel::empty());
 
         let next_data_model = engine
             .datamodel_calculator()

@@ -53,7 +53,7 @@ pub use validator::directive::DirectiveValidator;
 pub fn parse_with_plugins(
     datamodel_string: &str,
     source_definitions: Vec<Box<source::SourceDefinition>>,
-) -> Result<Schema, errors::ErrorCollection> {
+) -> Result<Datamodel, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
     let mut source_loader = SourceLoader::new();
     for source in source_definitions {
@@ -64,7 +64,7 @@ pub fn parse_with_plugins(
     validator.validate(&ast)
 }
 
-pub fn parse(datamodel_string: &str) -> Result<Schema, errors::ErrorCollection> {
+pub fn parse(datamodel_string: &str) -> Result<Datamodel, errors::ErrorCollection> {
     return parse_with_plugins(datamodel_string, vec![]);
 }
 

@@ -1,7 +1,7 @@
 use super::MigrationStepsResultOutput;
 use crate::commands::command::MigrationCommand;
 use crate::migration_engine::MigrationEngine;
-use datamodel::dml::Schema;
+use datamodel::dml::Datamodel;
 use migration_connector::*;
 
 pub struct CalculateDatabaseStepsCommand {
@@ -25,7 +25,7 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
             .migration_persistence()
             .last()
             .map(|m| m.datamodel)
-            .unwrap_or(Schema::empty());
+            .unwrap_or(Datamodel::empty());
 
         let assumed_datamodel = engine
             .datamodel_calculator()

@@ -64,7 +64,7 @@ impl Validator {
     /// * Perform string interpolation
     /// * Resolve and check default values
     /// * Resolve and check all field types
-    pub fn validate(&self, ast_schema: &ast::Schema) -> Result<dml::Schema, ErrorCollection> {
+    pub fn validate(&self, ast_schema: &ast::Datamodel) -> Result<dml::Datamodel, ErrorCollection> {
         // Phase 0 is parsing.
         // Phase 1 is source block loading.
 
@@ -85,7 +85,7 @@ impl Validator {
         Ok(schema)
     }
 
-    fn make_consistent(&self, ast_schema: &ast::Schema, schema: &mut dml::Schema) -> Result<(), ErrorCollection> {
+    fn make_consistent(&self, ast_schema: &ast::Datamodel, schema: &mut dml::Datamodel) -> Result<(), ErrorCollection> {
         // Model Consistency. THese ones do not fail.
         // TODO: Also need to hook up the id field with to.
         self.add_missing_back_relations(ast_schema, schema)?;
@@ -96,7 +96,7 @@ impl Validator {
         Ok(())
     }
 
-    fn validate_internal(&self, ast_schema: &ast::Schema, schema: &mut dml::Schema) -> Result<(), ErrorCollection> {
+    fn validate_internal(&self, ast_schema: &ast::Datamodel, schema: &mut dml::Datamodel) -> Result<(), ErrorCollection> {
         let mut errors = ErrorCollection::new();
 
         // Model level validations.
@@ -133,7 +133,7 @@ impl Validator {
     /// Elegantly checks if any relations in the model are ambigious.
     fn validate_relations_not_ambiguous(
         &self,
-        ast_schema: &ast::Schema,
+        ast_schema: &ast::Datamodel,
         model: &dml::Model,
     ) -> Result<(), ValidationError> {
         for field_a in model.fields() {
@@ -190,7 +190,7 @@ impl Validator {
     /// For any relations which are missing to_fields, sets them to the @id fields
     /// of the foreign model.
     #[allow(unused)] // No normalization of to_fields for now.
-    fn set_relation_to_field_to_id_if_missing(&self, schema: &mut dml::Schema) {
+    fn set_relation_to_field_to_id_if_missing(&self, schema: &mut dml::Datamodel) {
         // Build up index structure first, because rust does not allow mutatble iteration.
         let mut id_per_model: HashMap<String, Vec<String>> = HashMap::new();
 
@@ -249,8 +249,8 @@ impl Validator {
     /// Identifies and adds missing back relations.
     fn add_missing_back_relations(
         &self,
-        ast_schema: &ast::Schema,
-        schema: &mut dml::Schema,
+        ast_schema: &ast::Datamodel,
+        schema: &mut dml::Datamodel,
     ) -> Result<(), ErrorCollection> {
         let mut errors = ErrorCollection::new();
         let mut missing_back_relations = Vec::new();
@@ -290,7 +290,7 @@ impl Validator {
     fn find_fields_with_missing_back_relation(
         &self,
         model: &dml::Model,
-        schema: &dml::Schema,
+        schema: &dml::Datamodel,
     ) -> Vec<(dml::RelationInfo, dml::RelationInfo)> {
         let mut fields: Vec<(dml::RelationInfo, dml::RelationInfo)> = Vec::new();
 
@@ -325,8 +325,8 @@ impl Validator {
         fields
     }
 
-    pub fn lift(&self, ast_schema: &ast::Schema) -> Result<dml::Schema, ErrorCollection> {
-        let mut schema = dml::Schema::new();
+    pub fn lift(&self, ast_schema: &ast::Datamodel) -> Result<dml::Datamodel, ErrorCollection> {
+        let mut schema = dml::Datamodel::new();
         let mut errors = ErrorCollection::new();
 
         for ast_obj in &ast_schema.models {
@@ -351,7 +351,7 @@ impl Validator {
     }
 
     /// Internal: Validates a model AST node and lifts it to a DML model.
-    fn lift_model(&self, ast_model: &ast::Model, ast_schema: &ast::Schema) -> Result<dml::Model, ErrorCollection> {
+    fn lift_model(&self, ast_model: &ast::Model, ast_schema: &ast::Datamodel) -> Result<dml::Model, ErrorCollection> {
         let mut model = dml::Model::new(&ast_model.name);
         let mut errors = ErrorCollection::new();
 
@@ -390,7 +390,7 @@ impl Validator {
     }
 
     /// Internal: Lift a field AST node to a DML field.
-    fn lift_field(&self, ast_field: &ast::Field, ast_schema: &ast::Schema) -> Result<dml::Field, ErrorCollection> {
+    fn lift_field(&self, ast_field: &ast::Field, ast_schema: &ast::Datamodel) -> Result<dml::Field, ErrorCollection> {
         let mut errors = ErrorCollection::new();
         // If we cannot parse the field type, we exit right away.
         let field_type = self.lift_field_type(&ast_field, &ast_field.field_type_span, ast_schema)?;
@@ -439,7 +439,7 @@ impl Validator {
         &self,
         ast_field: &ast::Field,
         span: &ast::Span,
-        ast_schema: &ast::Schema,
+        ast_schema: &ast::Datamodel,
     ) -> Result<dml::FieldType, ValidationError> {
         let type_name = &ast_field.field_type;
 
@@ -464,13 +464,13 @@ impl Validator {
     }
 }
 
-trait FindInAstSchema {
+trait FindInAstDatamodel {
     fn find_field(&self, model: &str, field: &str) -> Option<&ast::Field>;
     fn find_model(&self, model: &str) -> Option<&ast::Model>;
     fn find_enum(&self, enum_name: &str) -> Option<&ast::Enum>;
 }
 
-impl FindInAstSchema for ast::Schema {
+impl FindInAstDatamodel for ast::Datamodel {
     fn find_field(&self, model: &str, field: &str) -> Option<&ast::Field> {
         for ast_field in &self.find_model(model)?.fields {
             if ast_field.name == field {
