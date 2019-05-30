@@ -71,7 +71,7 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 });
                 self.make_sql_string(migration)
             }
-            SqlMigrationStep::RawSql(sql) => sql,
+            SqlMigrationStep::RawSql { raw } => raw,
         };
         dbg!(&sql_string);
         let result = self.connection.execute(&sql_string, NO_PARAMS);

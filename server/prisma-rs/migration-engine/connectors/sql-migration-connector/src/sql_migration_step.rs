@@ -9,7 +9,7 @@ pub enum SqlMigrationStep {
     AlterTable(AlterTable),
     DropTable(DropTable),
     RenameTable { name: String, new_name: String },
-    RawSql(String),
+    RawSql { raw: String },
 }
 
 #[derive(Debug, Serialize)]

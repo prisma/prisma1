@@ -65,7 +65,9 @@ impl SqlDatabaseMigrationStepsInferrer {
         // based on 'Making Other Kinds Of Table Schema Changes' from https://www.sqlite.org/lang_altertable.html
         let name_of_temporary_table = format!("new_{}", next.name.clone());
         vec![
-            SqlMigrationStep::RawSql("PRAGMA foreign_keys=OFF;".to_string()),
+            SqlMigrationStep::RawSql {
+                raw: "PRAGMA foreign_keys=OFF;".to_string(),
+            },
             // todo: start transaction now
             SqlMigrationStep::CreateTable(CreateTable {
                 name: format!("new_{}", next.name.clone()),
@@ -88,7 +90,7 @@ impl SqlDatabaseMigrationStepsInferrer {
                     columns_string,
                     next.name.clone()
                 );
-                SqlMigrationStep::RawSql(sql.to_string())
+                SqlMigrationStep::RawSql { raw: sql.to_string() }
             },
             SqlMigrationStep::DropTable(DropTable {
                 name: current.name.clone(),
@@ -98,9 +100,13 @@ impl SqlDatabaseMigrationStepsInferrer {
                 new_name: next.name.clone(),
             },
             // todo: recreate indexes + triggers
-            SqlMigrationStep::RawSql(format!(r#"PRAGMA "{}".foreign_key_check;"#, self.schema_name)),
+            SqlMigrationStep::RawSql {
+                raw: format!(r#"PRAGMA "{}".foreign_key_check;"#, self.schema_name),
+            },
             // todo: commit transaction
-            SqlMigrationStep::RawSql("PRAGMA foreign_keys=ON;".to_string()),
+            SqlMigrationStep::RawSql {
+                raw: "PRAGMA foreign_keys=ON;".to_string(),
+            },
         ]
     }
 }
