@@ -2,26 +2,26 @@ use crate::*;
 use datamodel::dml;
 use itertools::Itertools;
 
-trait DataModelConverter {
-    fn convert(datamodel: &dml::Schema) -> InternalDataModelTemplate;
+trait DatamodelConverter {
+    fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate;
 }
 
-struct DataModelConverterImpl<'a> {
-    datamodel: &'a dml::Schema,
+struct DatamodelConverterImpl<'a> {
+    datamodel: &'a dml::Datamodel,
     relations: Vec<TempRelationHolder>,
 }
 
 #[allow(unused)]
-impl<'a> DataModelConverter for DataModelConverterImpl<'a> {
-    fn convert(datamodel: &dml::Schema) -> InternalDataModelTemplate {
-        DataModelConverterImpl::new(datamodel).convert()
+impl<'a> DatamodelConverter for DatamodelConverterImpl<'a> {
+    fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate {
+        DatamodelConverterImpl::new(datamodel).convert()
     }
 }
 
 #[allow(unused)]
-impl<'a> DataModelConverterImpl<'a> {
-    fn new(datamodel: &dml::Schema) -> DataModelConverterImpl {
-        DataModelConverterImpl {
+impl<'a> DatamodelConverterImpl<'a> {
+    fn new(datamodel: &dml::Datamodel) -> DatamodelConverterImpl {
+        DatamodelConverterImpl {
             datamodel,
             relations: Self::calculate_relations(datamodel),
         }
@@ -112,7 +112,7 @@ impl<'a> DataModelConverterImpl<'a> {
             .collect()
     }
 
-    fn calculate_relations(datamodel: &dml::Schema) -> Vec<TempRelationHolder> {
+    fn calculate_relations(datamodel: &dml::Datamodel) -> Vec<TempRelationHolder> {
         let mut result = Vec::new();
         for model in datamodel.models() {
             for field in model.fields() {
