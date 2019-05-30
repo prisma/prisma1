@@ -65,3 +65,12 @@ impl FromStrAndSpan for OnDeleteStrategy {
         }
     }
 }
+
+impl ToString for OnDeleteStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            OnDeleteStrategy::Cascade => String::from("CASCADE"),
+            OnDeleteStrategy::None => String::from("NONE"),
+        }
+    }
+}

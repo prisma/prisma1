@@ -68,6 +68,40 @@ pub struct Argument {
     pub span: Span,
 }
 
+impl Argument {
+    pub fn new_string(name: &str, value: &str) -> Argument {
+        Argument {
+            name: String::from(name),
+            value: Value::StringValue(String::from(value), Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new_constant(name: &str, value: &str) -> Argument {
+        Argument {
+            name: String::from(name),
+            value: Value::ConstantValue(String::from(value), Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new_array(name: &str, value: Vec<Value>) -> Argument {
+        Argument {
+            name: String::from(name),
+            value: Value::Array(value, Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new(name: &str, value: Value) -> Argument {
+        Argument {
+            name: String::from(name),
+            value: value,
+            span: Span::empty(),
+        }
+    }
+}
+
 // TODO: Rename to expression.
 /// Represents arbitrary, even nested, expressions.
 #[derive(Debug, Clone)]
@@ -105,6 +139,16 @@ pub struct Directive {
     pub name: String,
     pub arguments: Vec<Argument>,
     pub span: Span,
+}
+
+impl Directive {
+    pub fn new(name: &str, arguments: Vec<Argument>) -> Directive {
+        Directive {
+            name: String::from(name),
+            arguments: arguments,
+            span: Span::empty(),
+        }
+    }
 }
 
 /// Trait for an AST node which can have directives.

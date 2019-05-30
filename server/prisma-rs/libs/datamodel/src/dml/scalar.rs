@@ -58,3 +58,11 @@ impl FromStrAndSpan for ScalarListStrategy {
         }
     }
 }
+impl ToString for ScalarListStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            ScalarListStrategy::Embedded => String::from("EMBEDDED"),
+            ScalarListStrategy::Relation => String::from("RELATION"),
+        }
+    }
+}

@@ -220,3 +220,24 @@ impl ValueListValidator for Vec<ValueValidator> {
         Ok(res)
     }
 }
+
+impl Into<ast::Value> for dml::Value {
+    fn into(self) -> ast::Value {
+        (&self).into()
+    }
+}
+
+impl Into<ast::Value> for &dml::Value {
+    fn into(self) -> ast::Value {
+        match self {
+            dml::Value::Boolean(true) => ast::Value::BooleanValue(String::from("true"), ast::Span::empty()),
+            dml::Value::Boolean(false) => ast::Value::BooleanValue(String::from("false"), ast::Span::empty()),
+            dml::Value::String(value) => ast::Value::StringValue(value.clone(), ast::Span::empty()),
+            dml::Value::ConstantLiteral(value) => ast::Value::ConstantValue(value.clone(), ast::Span::empty()),
+            dml::Value::DateTime(value) => ast::Value::ConstantValue(value.to_rfc3339(), ast::Span::empty()),
+            dml::Value::Decimal(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
+            dml::Value::Float(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
+            dml::Value::Int(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
+        }
+    }
+}

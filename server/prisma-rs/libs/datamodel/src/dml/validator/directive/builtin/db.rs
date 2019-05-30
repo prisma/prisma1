@@ -1,5 +1,5 @@
-use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
+use crate::{ast, dml};
 
 /// Prismas builtin `@db` directive.
 pub struct DbDirectiveValidator {}
@@ -22,5 +22,16 @@ impl<T: dml::WithDatabaseName> DirectiveValidator<T> for DbDirectiveValidator {
         };
 
         return Ok(());
+    }
+
+    fn serialize(&self, obj: &T) -> Result<Option<ast::Directive>, Error> {
+        if let Some(db_name) = obj.database_name() {
+            return Ok(Some(ast::Directive::new(
+                DirectiveValidator::<T>::directive_name(self),
+                vec![ast::Argument::new_string("name", db_name)],
+            )));
+        }
+
+        Ok(None)
     }
 }

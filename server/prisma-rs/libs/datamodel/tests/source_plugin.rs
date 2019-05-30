@@ -18,6 +18,10 @@ impl DirectiveValidator<dml::Field> for CustomDirective {
         obj.field_type = dml::FieldType::Base(self.base_type);
         return Ok(());
     }
+
+    fn serialize(&self, _obj: &dml::Field) -> Result<Option<datamodel::ast::Directive>, ValidationError> {
+        Ok(None)
+    }
 }
 
 //##########################
