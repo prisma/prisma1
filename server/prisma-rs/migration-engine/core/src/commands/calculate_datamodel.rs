@@ -19,9 +19,7 @@ impl MigrationCommand for CalculateDatamodelCommand {
         println!("{:?}", self.input);
 
         let base_datamodel = Schema::empty();
-        let datamodel = engine
-            .datamodel_calculator()
-            .infer(&base_datamodel, self.input.steps.clone());
+        let datamodel = engine.datamodel_calculator().infer(&base_datamodel, &self.input.steps);
         // todo: render the datamodel properly
         CalculateDatamodelOutput {
             datamodel: format!("{:?}", datamodel),

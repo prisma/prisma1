@@ -29,11 +29,11 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
 
         let assumed_datamodel = engine
             .datamodel_calculator()
-            .infer(&current_datamodel, self.input.assume_to_be_applied.clone());
+            .infer(&current_datamodel, &self.input.assume_to_be_applied);
 
         let next_datamodel = engine
             .datamodel_calculator()
-            .infer(&assumed_datamodel, self.input.steps_to_apply.clone());
+            .infer(&assumed_datamodel, &self.input.steps_to_apply);
 
         let database_migration_steps = connector.database_steps_inferrer().infer(
             &assumed_datamodel,

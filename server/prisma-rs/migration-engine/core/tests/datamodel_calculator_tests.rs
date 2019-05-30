@@ -185,9 +185,9 @@ fn test(dm1: Schema, dm2: Schema) {
     let result = calculate(&dm1, steps);
     assert_eq!(dm2, result);
 }
-fn calculate(schema: &Schema, commands: Vec<MigrationStep>) -> Schema {
+fn calculate(schema: &Schema, steps: Vec<MigrationStep>) -> Schema {
     let calc = DataModelCalculatorImpl {};
-    calc.infer(schema, commands)
+    calc.infer(schema, &steps)
 }
 
 fn infer(dm1: &Schema, dm2: &Schema) -> Vec<MigrationStep> {

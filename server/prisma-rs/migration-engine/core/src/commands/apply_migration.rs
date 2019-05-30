@@ -29,7 +29,7 @@ impl MigrationCommand for ApplyMigrationCommand {
 
         let next_data_model = engine
             .datamodel_calculator()
-            .infer(&current_data_model, self.input.steps.clone());
+            .infer(&current_data_model, &self.input.steps);
 
         let database_migration_steps =
             connector
