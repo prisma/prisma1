@@ -162,6 +162,7 @@ impl QueryPipeline {
                         // Return None to exclude from the list
                         None
                     }
+                    (None, None) => None, // We just filter out everything else
                     (_, _) => unreachable!(),
                 }
             })
