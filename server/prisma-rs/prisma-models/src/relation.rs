@@ -29,7 +29,7 @@ impl OnDelete {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct InlineRelation {
     #[serde(rename = "inTableOfModelId")]
@@ -46,7 +46,7 @@ impl InlineRelation {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTable {
     pub table: String,
@@ -55,7 +55,7 @@ pub struct RelationTable {
     pub id_column: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "snake_case", tag = "relationManifestationType")]
 pub enum RelationLinkManifestation {
     Inline(InlineRelation),

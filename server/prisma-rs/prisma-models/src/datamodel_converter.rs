@@ -2,11 +2,11 @@ use crate::*;
 use datamodel::dml;
 use itertools::Itertools;
 
-trait DatamodelConverter {
+pub trait DatamodelConverter {
     fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate;
 }
 
-struct DatamodelConverterImpl<'a> {
+pub struct DatamodelConverterImpl<'a> {
     datamodel: &'a dml::Datamodel,
     relations: Vec<TempRelationHolder>,
 }
@@ -14,7 +14,7 @@ struct DatamodelConverterImpl<'a> {
 #[allow(unused)]
 impl<'a> DatamodelConverter for DatamodelConverterImpl<'a> {
     fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate {
-        DatamodelConverterImpl::new(datamodel).convert()
+        DatamodelConverterImpl::new(datamodel).convert_internal()
     }
 }
 
@@ -27,7 +27,7 @@ impl<'a> DatamodelConverterImpl<'a> {
         }
     }
 
-    fn convert(&self) -> InternalDataModelTemplate {
+    fn convert_internal(&self) -> InternalDataModelTemplate {
         InternalDataModelTemplate {
             models: self.convert_models(),
             relations: self.convert_relations(),
@@ -317,7 +317,7 @@ impl DatamodelFieldExtensions for dml::Field {
         self.arity == dml::FieldArity::List
     }
     fn is_unique(&self) -> bool {
-        false
+        self.is_unique
     }
     fn is_auto_generated(&self) -> bool {
         false
@@ -328,8 +328,11 @@ impl DatamodelFieldExtensions for dml::Field {
     }
 
     fn behaviour(&self) -> Option<FieldBehaviour> {
-        // TODO: implement this once this is specced for the datamodel
-        None
+        // TODO: implement this properly once this is specced for the datamodel
+        self.id_info.as_ref().map(|_| FieldBehaviour::Id {
+            strategy: IdStrategy::None,
+            sequence: None,
+        })
     }
 
     fn final_db_name(&self) -> String {
