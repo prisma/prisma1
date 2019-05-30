@@ -153,7 +153,8 @@ fn shift_data(from: &Vec<(String, Value)>) -> Vec<(String, Value)> {
             Value::Object(obj) => obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
             _ => unimplemented!(),
         })
-        .unwrap()
+        // If there's no `data` block we initialise an empty vector
+        .unwrap_or_else(|| vec![])
 }
 
 /// Parse the mutation name into an action and the model it should operate on
@@ -176,7 +177,12 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
         }
     };
 
-    let normalized = Inflector::singularize(&model_name).to_pascal_case();
+
+    // FIXME: This is required because our `to_pascal_case` inflector works differently
+    let normalized = match Inflector::singularize(&model_name).as_str() {
+        "scalarmodel" => "ScalarModel".into(),
+        name => name.to_pascal_case()
+    };
 
     let model = match model.models().iter().find(|m| m.name == normalized) {
         Some(m) => m,

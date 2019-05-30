@@ -51,6 +51,7 @@ impl WriteQuery {
         let field = match res.identifier {
             Identifier::Id(gql_id) => utils::derive_field(&self.field, self.model(), gql_id, &self.name),
             Identifier::Count(_) => return None, // FIXME: We need to communicate count!
+            Identifier::Node(_) => return None,
             _ => unimplemented!(),
         };
 
