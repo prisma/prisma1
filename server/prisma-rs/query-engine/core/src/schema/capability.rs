@@ -1,5 +1,6 @@
 //! This serves as a skeleton for future capability work.
 
+#[derive(Debug)]
 pub struct SupportedCapabilities {
   pub capabilities: Vec<ConnectorCapability>,
 }

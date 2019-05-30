@@ -11,14 +11,14 @@
 ///! but also prevents issues with memory leaks in the schema, as well as issues that when all strong
 ///! arcs are dropped due to visitor operations, the schema can't be traversed anymore due to invalid references
 ///!
-use super::*;
 use std::{
     cell::RefCell,
     collections::HashMap,
+    fmt::Debug,
     sync::{Arc, Weak},
 };
 
-pub trait CachedBuilder<T> {
+pub trait CachedBuilder<T: Debug> {
     /// Retrieve cache.
     fn get_cache(&self) -> &TypeRefCache<T>;
 
@@ -32,11 +32,12 @@ pub trait CachedBuilder<T> {
 }
 
 /// Cache wrapper with internal mutability
+#[derive(Debug)]
 pub struct TypeRefCache<T> {
     cache: RefCell<HashMap<String, Arc<T>>>,
 }
 
-impl<T> TypeRefCache<T> {
+impl<T: Debug> TypeRefCache<T> {
     pub fn new() -> Self {
         TypeRefCache {
             cache: RefCell::new(HashMap::new()),
@@ -47,8 +48,19 @@ impl<T> TypeRefCache<T> {
         self.cache.borrow().get(key).map(|v| Arc::downgrade(v))
     }
 
+    /// Caches given value with key. This function panics if the cache key already exists.
+    /// The reason is that for the query schema to work, we need weak references to be valid.
+    /// This is not given anymore if we insert a new arc into the cache that replaces the old one,
+    /// because it invalidates all weak refs pointing to the replaced arc.
+    /// If a panic is encountered it is a programmer error.
     pub fn insert(&self, key: String, value: Arc<T>) {
-        self.cache.borrow_mut().insert(key, value);
+        match self.cache.borrow_mut().insert(key.clone(), value) {
+            Some(old) => panic!(format!(
+                "Invariant violation: Inserted key {} twice, this is a bug and invalidates Weak references. {:?}",
+                key, old
+            )),
+            None => (),
+        };
     }
 }
 
@@ -66,15 +78,6 @@ impl<T> From<Vec<(String, Arc<T>)>> for TypeRefCache<T> {
         TypeRefCache {
             cache: RefCell::new(tuples.into_iter().collect()),
         }
-    }
-}
-
-impl<T> IntoIterator for TypeRefCache<T> {
-    type Item = (String, Arc<T>);
-    type IntoIter = ::std::collections::hash_map::IntoIter<String, Arc<T>>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.cache.into_inner().into_iter()
     }
 }
 

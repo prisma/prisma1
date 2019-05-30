@@ -7,20 +7,17 @@ pub struct ObjectTypeBuilder<'a> {
   internal_data_model: InternalDataModelRef,
   with_relations: bool,
   capabilities: &'a SupportedCapabilities,
-  filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
-  object_type_cache: OnceCell<TypeRefCache<ObjectType>>,
+  filter_object_type_builder: Weak<FilterObjectTypeBuilder<'a>>,
+  object_type_cache: TypeRefCache<ObjectType>,
 }
 
 impl<'a> CachedBuilder<ObjectType> for ObjectTypeBuilder<'a> {
   fn get_cache(&self) -> &TypeRefCache<ObjectType> {
-    &self
-      .object_type_cache
-      .get()
-      .expect("Invariant violation: Expected cache to be initialized before retrieving items.")
+    &self.object_type_cache
   }
 
   fn into_strong_refs(self) -> Vec<Arc<ObjectType>> {
-    self.get_cache().iter().map(|(k, v)| v).collect()
+    self.object_type_cache.into()
   }
 }
 
@@ -30,14 +27,14 @@ impl<'a> ObjectTypeBuilder<'a> {
     internal_data_model: InternalDataModelRef,
     with_relations: bool,
     capabilities: &'a SupportedCapabilities,
-    filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
+    filter_object_type_builder: Weak<FilterObjectTypeBuilder<'a>>,
   ) -> Self {
     ObjectTypeBuilder {
       internal_data_model,
       with_relations,
       capabilities,
       filter_object_type_builder,
-      object_type_cache: OnceCell::new(),
+      object_type_cache: TypeRefCache::new(),
     }
     .compute_model_object_types()
   }
@@ -52,15 +49,11 @@ impl<'a> ObjectTypeBuilder<'a> {
   /// Initializes model object type cache on the query schema builder.
   fn compute_model_object_types(self) -> Self {
     // Compute initial cache.
-    self.object_type_cache.get_or_init(|| {
-      self
-        .internal_data_model
-        .models()
-        .iter()
-        .map(|m| (m.name.clone(), Arc::new(init_object_type(m.name.clone()))))
-        .collect::<Vec<(String, Arc<ObjectType>)>>()
-        .into()
-    });
+    self
+      .internal_data_model
+      .models()
+      .iter()
+      .for_each(|m| self.cache(m.name.clone(), Arc::new(init_object_type(m.name.clone()))));
 
     // Compute fields on all cached object types.
     self.internal_data_model.models().iter().for_each(|m| {
@@ -159,7 +152,10 @@ impl<'a> ObjectTypeBuilder<'a> {
 
   /// Builds "where" argument.
   pub fn where_argument(&self, model: &ModelRef) -> Argument {
-    let where_object = self.filter_object_type_builder.filter_object_type(Arc::clone(model));
+    let where_object = self
+      .filter_object_type_builder
+      .into_arc()
+      .filter_object_type(Arc::clone(model));
     argument("where", InputType::opt(InputType::object(where_object)))
   }
 

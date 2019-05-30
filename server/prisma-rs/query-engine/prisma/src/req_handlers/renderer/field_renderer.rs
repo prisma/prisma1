@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Debug)]
 pub enum GqlFieldRenderer<'a> {
     Input(&'a InputField),
     Output(&'a Field),

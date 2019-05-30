@@ -1,13 +1,15 @@
 use super::*;
-use prisma_models::{Field as ModelField, ModelRef, RelationField, ScalarField, TypeIdentifier};
+use prisma_models::{Field as ModelField, ModelRef, RelationField, ScalarField};
 use std::sync::Arc;
 
 /// Filter object and scalar filter object type builder.
+#[derive(Debug)]
 pub struct FilterObjectTypeBuilder<'a> {
-  input_type_builder: Arc<InputTypeBuilder>,
   capabilities: &'a SupportedCapabilities,
   input_object_cache: TypeRefCache<InputObjectType>, // Caches "xWhereInput" / "xWhereScalarInput" -> Object type ref
 }
+
+impl<'a> InputBuilderExtensions for FilterObjectTypeBuilder<'a> {}
 
 impl<'a> CachedBuilder<InputObjectType> for FilterObjectTypeBuilder<'a> {
   fn get_cache(&self) -> &TypeRefCache<InputObjectType> {
@@ -20,9 +22,8 @@ impl<'a> CachedBuilder<InputObjectType> for FilterObjectTypeBuilder<'a> {
 }
 
 impl<'a> FilterObjectTypeBuilder<'a> {
-  pub fn new(input_type_builder: Arc<InputTypeBuilder>, capabilities: &'a SupportedCapabilities) -> Self {
+  pub fn new(capabilities: &'a SupportedCapabilities) -> Self {
     FilterObjectTypeBuilder {
-      input_type_builder,
       capabilities,
       input_object_cache: TypeRefCache::new(),
     }
@@ -94,7 +95,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
       .into_iter()
       .map(|arg| {
         let field_name = format!("{}{}", field.name, arg.suffix);
-        let mapped = self.input_type_builder.map_required_input_type(Arc::clone(&field));
+        let mapped = self.map_required_input_type(Arc::clone(&field));
 
         if arg.is_list {
           input_field(field_name, InputType::opt(InputType::list(mapped)))

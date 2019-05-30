@@ -11,9 +11,6 @@ pub type ObjectTypeRef = Weak<ObjectType>;
 
 pub type InputObjectTypeStrongRef = Arc<InputObjectType>;
 pub type InputObjectTypeRef = Weak<InputObjectType>;
-// pub type OutputTypeRef = Weak<OutputType>;
-// pub type InputTypeRef = Weak<InputType>;
-// pub type EnumTypeRef = Arc<EnumType>; WIP: It's not really necessary at the moment to store these as refs. It's not a problem if they're build multiple times.
 
 #[derive(Debug)]
 pub struct QuerySchema {

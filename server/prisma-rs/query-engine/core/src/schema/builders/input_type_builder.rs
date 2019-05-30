@@ -7,10 +7,11 @@ use std::sync::Arc;
 /// Central builder for input types.
 /// The InputTypeBuilder differs in one major aspect from the original implementation: It doesn't use options
 /// to represent if a type should be rendered or not.
-/// Instead, empty (i.e. without fields) will be
+/// Instead, empty (i.e. without fields) will be rendered as empty input objects, that must be filtered on higher layers.
+#[derive(Debug)]
 pub struct InputTypeBuilder {
     internal_data_model: InternalDataModelRef,
-    input_type_cache: TypeRefCache<InputObjectType>, //RefCell<HashMap<String, InputObjectTypeRef>>,
+    input_type_cache: TypeRefCache<InputObjectType>,
 }
 
 impl CachedBuilder<InputObjectType> for InputTypeBuilder {
@@ -22,6 +23,8 @@ impl CachedBuilder<InputObjectType> for InputTypeBuilder {
         self.input_type_cache.into()
     }
 }
+
+impl InputBuilderExtensions for InputTypeBuilder {}
 
 impl InputTypeBuilder {
     pub fn new(internal_data_model: InternalDataModelRef) -> Self {
@@ -39,6 +42,7 @@ impl InputTypeBuilder {
         };
 
         return_cached!(self.input_type_cache, &name);
+
         let input_object = Arc::new(init_input_object_type(name.clone()));
 
         // Cache empty object for circuit breaking
@@ -87,8 +91,6 @@ impl InputTypeBuilder {
 
     /// Builds scalar input fields using the mapper and the given, prefiltered, scalar fields.
     /// The mapper is responsible for mapping the fields to input types.
-    /// No cache load is required because we're never hitting this code twice for one input type,
-    /// because the circular dependency is broken in previous calls.
     fn scalar_input_fields<T, F>(
         &self,
         model_name: String,
@@ -113,12 +115,17 @@ impl InputTypeBuilder {
             .map(|f| {
                 let name = f.name.clone();
                 let set_name = format!("{}{}{}Input", model_name, input_object_name, f.name);
-                let set_fields = vec![input_field("set", self.map_optional_input_type(f))];
+                let input_object = match self.get_cache().get(&name) {
+                    Some(t) => t,
+                    None => {
+                        let set_fields = vec![input_field("set", self.map_optional_input_type(f))];
+                        let input_object = Arc::new(input_object_type(set_name.clone(), set_fields));
+                        self.cache(set_name, Arc::clone(&input_object));
+                        Arc::downgrade(&input_object)
+                    }
+                };
 
-                let input_object = Arc::new(input_object_type(set_name.clone(), set_fields));
-                self.cache(set_name, Arc::clone(&input_object));
-
-                let set_input_type = InputType::opt(InputType::object(Arc::downgrade(&input_object)));
+                let set_input_type = InputType::opt(InputType::object(input_object));
                 input_field(name, set_input_type)
             })
             .collect();
@@ -129,8 +136,6 @@ impl InputTypeBuilder {
 
     /// For create input types only. Compute input fields for relational fields.
     /// This recurses into create_input_type (via nested_create_input_field).
-    /// No cache load is required because we're never hitting this code twice for one input type,
-    /// because the circular dependency is broken in previous calls.
     fn relation_input_fields_create(
         &self,
         model: ModelRef,
@@ -169,14 +174,22 @@ impl InputTypeBuilder {
                 if field_is_opposite_relation_field {
                     None
                 } else {
-                    let mut fields = vec![self.nested_create_input_field(Arc::clone(&rf))];
-                    let nested_connect = self.nested_connect_input_field(Arc::clone(&rf));
-                    append_opt(&mut fields, nested_connect);
+                    let input_object = match self.get_cache().get(&input_name) {
+                        Some(t) => t,
+                        None => {
+                            let input_object = Arc::new(init_input_object_type(input_name.clone()));
+                            self.cache(input_name, Arc::clone(&input_object));
 
-                    let input_object = Arc::new(input_object_type(input_name.clone(), fields));
-                    self.cache(input_name, Arc::clone(&input_object));
+                            let mut fields = vec![self.nested_create_input_field(Arc::clone(&rf))];
+                            let nested_connect = self.nested_connect_input_field(Arc::clone(&rf));
+                            append_opt(&mut fields, nested_connect);
 
-                    let input_type = InputType::object(Arc::downgrade(&input_object));
+                            input_object.set_fields(fields);
+                            Arc::downgrade(&input_object)
+                        }
+                    };
+
+                    let input_type = InputType::object(input_object);
                     let input_field = if rf.is_required {
                         input_field(rf.name.clone(), input_type)
                     } else {
@@ -248,10 +261,12 @@ impl InputTypeBuilder {
         }
     }
 
-    /// No cache load is required because we're never hitting this code twice for one input type,
-    /// because the circular dependency is broken in previous calls.
     pub fn where_unique_object_type(&self, model: ModelRef) -> InputObjectTypeRef {
         let name = format!("{}WhereUniqueInput", model.name);
+        return_cached!(self.input_type_cache, &name);
+
+        let input_object = Arc::new(init_input_object_type(name.clone()));
+        self.cache(name, Arc::clone(&input_object));
 
         let unique_fields: Vec<ScalarFieldRef> = model
             .fields()
@@ -261,9 +276,6 @@ impl InputTypeBuilder {
             .map(|f| Arc::clone(f))
             .collect();
 
-        let input_object = Arc::new(init_input_object_type(name.clone()));
-        self.cache(name, Arc::clone(&input_object));
-
         let fields: Vec<InputField> = unique_fields
             .into_iter()
             .map(|f| input_field(f.name.clone(), self.map_optional_input_type(f)))
@@ -271,40 +283,5 @@ impl InputTypeBuilder {
 
         input_object.set_fields(fields);
         Arc::downgrade(&input_object)
-    }
-
-    pub fn map_optional_input_type(&self, field: ScalarFieldRef) -> InputType {
-        InputType::opt(self.map_required_input_type(field))
-    }
-
-    pub fn map_required_input_type(&self, field: ScalarFieldRef) -> InputType {
-        let typ = match field.type_identifier {
-            TypeIdentifier::String => InputType::string(),
-            TypeIdentifier::Int => InputType::int(),
-            TypeIdentifier::Float => InputType::float(),
-            TypeIdentifier::Boolean => InputType::boolean(),
-            TypeIdentifier::GraphQLID => InputType::id(),
-            TypeIdentifier::UUID => InputType::uuid(),
-            TypeIdentifier::DateTime => InputType::date_time(),
-            TypeIdentifier::Json => InputType::json(),
-            TypeIdentifier::Enum => self.map_enum_input_type(&field).into(),
-            TypeIdentifier::Relation => unreachable!(), // A scalar field can't be a relation.
-        };
-
-        if field.is_list {
-            InputType::list(typ)
-        } else {
-            typ
-        }
-    }
-
-    pub fn map_enum_input_type(&self, field: &ScalarFieldRef) -> InputType {
-        let internal_enum = field
-            .internal_enum
-            .as_ref()
-            .expect("A field with TypeIdentifier Enum must always have an enum.");
-
-        let et: EnumType = internal_enum.into();
-        et.into()
     }
 }

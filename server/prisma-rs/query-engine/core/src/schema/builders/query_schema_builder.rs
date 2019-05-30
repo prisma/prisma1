@@ -33,19 +33,14 @@ impl<'a> QuerySchemaBuilder<'a> {
     mode: BuildMode,
   ) -> Self {
     let input_type_builder = Arc::new(InputTypeBuilder::new(Arc::clone(internal_data_model)));
-    let filter_object_type_builder = Arc::new(FilterObjectTypeBuilder::new(
-      Arc::clone(&input_type_builder),
-      capabilities,
-    ));
-
+    let argument_builder = ArgumentBuilder::new(Arc::clone(internal_data_model), Arc::downgrade(&input_type_builder));
+    let filter_object_type_builder = Arc::new(FilterObjectTypeBuilder::new(capabilities));
     let object_type_builder = ObjectTypeBuilder::new(
       Arc::clone(internal_data_model),
       true,
       capabilities,
-      Arc::clone(&filter_object_type_builder),
+      Arc::downgrade(&filter_object_type_builder),
     );
-
-    let argument_builder = ArgumentBuilder::new(Arc::clone(internal_data_model), Arc::clone(&input_type_builder));
 
     QuerySchemaBuilder {
       mode,
@@ -60,10 +55,14 @@ impl<'a> QuerySchemaBuilder<'a> {
 
   /// Consumes the builders and collects all types from all builder caches to merge
   /// them into the vectors required to finalize the query schema building.
+  /// Unwraps are safe because only the query schema builder holds the strong ref,
+  /// all other refs are weak refs.
   fn collect_types(self) -> (Vec<InputObjectTypeStrongRef>, Vec<ObjectTypeStrongRef>) {
     let output_objects = self.object_type_builder.into_strong_refs();
-    let mut input_objects = self.input_type_builder.into_strong_refs();
-    let mut filter_objects = self.filter_object_type_builder.into_strong_refs();
+    let mut input_objects = Arc::try_unwrap(self.input_type_builder).unwrap().into_strong_refs();
+    let mut filter_objects = Arc::try_unwrap(self.filter_object_type_builder)
+      .unwrap()
+      .into_strong_refs();
 
     input_objects.append(&mut filter_objects);
     (input_objects, output_objects)

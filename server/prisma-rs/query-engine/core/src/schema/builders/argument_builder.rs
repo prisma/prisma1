@@ -1,14 +1,13 @@
 use super::*;
 use prisma_models::{InternalDataModelRef, ModelRef};
-use std::sync::Arc;
 
 pub struct ArgumentBuilder {
     internal_data_model: InternalDataModelRef,
-    input_type_builder: Arc<InputTypeBuilder>,
+    input_type_builder: Weak<InputTypeBuilder>,
 }
 
 impl ArgumentBuilder {
-    pub fn new(internal_data_model: InternalDataModelRef, input_type_builder: Arc<InputTypeBuilder>) -> Self {
+    pub fn new(internal_data_model: InternalDataModelRef, input_type_builder: Weak<InputTypeBuilder>) -> Self {
         ArgumentBuilder {
             internal_data_model,
             input_type_builder,
@@ -16,7 +15,7 @@ impl ArgumentBuilder {
     }
 
     pub fn where_unique_argument(&self, model: ModelRef) -> Option<Argument> {
-        let input_object_type = self.input_type_builder.where_unique_object_type(model);
+        let input_object_type = self.input_type_builder.into_arc().where_unique_object_type(model);
 
         if input_object_type.into_arc().is_empty() {
             None
@@ -26,7 +25,7 @@ impl ArgumentBuilder {
     }
 
     pub fn create_arguments(&self, model: ModelRef) -> Option<Vec<Argument>> {
-        let input_object_type = self.input_type_builder.create_input_type(model, None);
+        let input_object_type = self.input_type_builder.into_arc().create_input_type(model, None);
 
         if input_object_type.into_arc().is_empty() {
             None

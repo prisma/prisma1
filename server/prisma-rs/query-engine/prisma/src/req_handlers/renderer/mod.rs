@@ -132,12 +132,6 @@ impl<'a> IntoRenderer<'a> for &'a Field {
     }
 }
 
-// impl<'a> IntoRenderer<'a> for &'a EnumType {
-//     fn into_renderer(&self) -> GqlRenderer<'a> {
-//         GqlRenderer::Enum(GqlEnumRenderer::new(self))
-//     }
-// }
-
 impl<'a> IntoRenderer<'a> for EnumType {
     fn into_renderer(&'a self) -> GqlRenderer<'a> {
         GqlRenderer::Enum(GqlEnumRenderer::new(self))

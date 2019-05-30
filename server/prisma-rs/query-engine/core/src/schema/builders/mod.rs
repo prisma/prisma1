@@ -5,20 +5,21 @@ mod cache;
 mod argument_builder;
 mod filter_arguments;
 mod filter_type_builder;
+mod input_builder_extensions;
 mod input_type_builder;
 mod object_type_builder;
 mod query_schema_builder;
 
+use argument_builder::*;
 use cache::*;
 use filter_arguments::*;
-
-pub use argument_builder::*;
-pub use filter_type_builder::*;
-pub use input_type_builder::*;
-pub use object_type_builder::*;
-pub use query_schema_builder::*;
-
+use filter_type_builder::*;
+use input_builder_extensions::*;
+use input_type_builder::*;
+use object_type_builder::*;
 use std::sync::{Arc, Weak};
+
+pub use query_schema_builder::*;
 
 /// Since we have the invariant that the weak refs that are used throughout the schema are always valid,
 /// we use this simple trait to keep the code clutter low.

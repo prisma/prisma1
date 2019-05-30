@@ -1,5 +1,6 @@
 use super::*;
 
+#[derive(Debug)]
 pub enum GqlTypeRenderer<'a> {
     Input(&'a InputType),
     Output(&'a OutputType),
