@@ -48,7 +48,7 @@ impl MigrationCommand for ApplyMigrationCommand {
 
             connector
                 .migration_applier()
-                .apply_steps(saved_migration, database_migration_steps);
+                .apply_steps(&saved_migration, &database_migration_steps);
         }
 
         MigrationStepsResultOutput {

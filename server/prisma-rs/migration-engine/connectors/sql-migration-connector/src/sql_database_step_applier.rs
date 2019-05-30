@@ -19,7 +19,7 @@ impl SqlDatabaseStepApplier {
 
 #[allow(unused, dead_code)]
 impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
-    fn apply(&self, step: SqlMigrationStep) {
+    fn apply(&self, step: &SqlMigrationStep) {
         let sql_string = self.render_raw_sql(&step);
         dbg!(&sql_string);
         let result = self.connection.execute(&sql_string, NO_PARAMS);

@@ -46,7 +46,7 @@ pub trait DatabaseMigrationStepsInferrer<T> {
 }
 
 pub trait DatabaseMigrationStepApplier<T> {
-    fn apply(&self, step: T);
+    fn apply(&self, step: &T);
 
     fn render_steps(&self, steps: &Vec<T>) -> serde_json::Value;
 }
