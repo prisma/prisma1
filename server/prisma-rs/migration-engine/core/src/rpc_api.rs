@@ -20,6 +20,7 @@ impl RpcApi {
         rpc_api.add_command_handler::<ApplyMigrationCommand>("applyMigration");
         rpc_api.add_command_handler::<UnapplyMigrationCommand>("unapplyMigration");
         rpc_api.add_command_handler::<CalculateDatamodelCommand>("calculateDatamodel");
+        rpc_api.add_command_handler::<CalculateDatabaseStepsCommand>("calculateDatabaseSteps");
         rpc_api
     }
 
