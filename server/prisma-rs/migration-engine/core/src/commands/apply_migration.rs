@@ -1,3 +1,4 @@
+use super::MigrationStepsResultOutput;
 use crate::commands::command::MigrationCommand;
 use crate::migration_engine::MigrationEngine;
 use datamodel::dml::Schema;
@@ -9,7 +10,7 @@ pub struct ApplyMigrationCommand {
 
 impl MigrationCommand for ApplyMigrationCommand {
     type Input = ApplyMigrationInput;
-    type Output = ApplyMigrationOutput;
+    type Output = MigrationStepsResultOutput;
 
     fn new(input: Self::Input) -> Box<Self> {
         Box::new(ApplyMigrationCommand { input })
@@ -48,7 +49,7 @@ impl MigrationCommand for ApplyMigrationCommand {
                 .apply_steps(saved_migration, database_migration_steps);
         }
 
-        ApplyMigrationOutput {
+        MigrationStepsResultOutput {
             datamodel_steps: self.input.steps.clone(),
             database_steps: database_steps_json,
             errors: Vec::new(),
@@ -66,14 +67,4 @@ pub struct ApplyMigrationInput {
     pub steps: Vec<MigrationStep>,
     pub force: Option<bool>,
     pub dry_run: Option<bool>,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ApplyMigrationOutput {
-    pub datamodel_steps: Vec<MigrationStep>,
-    pub database_steps: serde_json::Value,
-    pub warnings: Vec<MigrationWarning>,
-    pub errors: Vec<MigrationError>,
-    pub general_errors: Vec<String>,
 }
