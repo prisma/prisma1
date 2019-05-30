@@ -177,12 +177,15 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
         }
     };
 
+    dbg!(&model.models());
 
     // FIXME: This is required because our `to_pascal_case` inflector works differently
     let normalized = match Inflector::singularize(&model_name).as_str() {
         "scalarmodel" => "ScalarModel".into(),
         name => name.to_pascal_case()
     };
+
+    println!("{} ==> {}", &model_name, &normalized);
 
     let model = match model.models().iter().find(|m| m.name == normalized) {
         Some(m) => m,
