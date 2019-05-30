@@ -6,7 +6,7 @@ extern crate serde_derive;
 #[macro_use]
 extern crate debug_stub_derive;
 
-mod converter;
+mod datamodel_converter;
 mod error;
 mod field;
 mod fields;
@@ -23,6 +23,7 @@ mod selected_fields;
 
 pub mod prelude;
 
+pub use datamodel_converter::*;
 pub use error::*;
 pub use field::*;
 pub use fields::*;
