@@ -27,7 +27,7 @@ fn add_DeleteModel_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
@@ -42,14 +42,14 @@ fn add_UpdateModel_to_existing_schema() {
    let dm1 = parse(
         r#"
         model Post {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Post {
-            id: String
+            id: String @id
         }
         @embedded
     "#,
@@ -63,14 +63,14 @@ fn add_CreateField_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -84,21 +84,21 @@ fn add_CreateField_for_relation_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Blog {
-            id: String
+            id: String @id
         }
         model Post {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Blog {
-            id: String
+            id: String @id
             posts: Post[]
         }
         model Post {
-            id: String
+            id: String @id
             blog: Blog?
         }
     "#,
@@ -112,7 +112,7 @@ fn add_DeleteField_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -120,7 +120,7 @@ fn add_DeleteField_to_existing_schema() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
@@ -133,7 +133,7 @@ fn add_UpdateField_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -141,7 +141,7 @@ fn add_UpdateField_to_existing_schema() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Boolean @default(false)
         }
     "#,
