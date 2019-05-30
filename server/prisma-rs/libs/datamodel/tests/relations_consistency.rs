@@ -94,5 +94,7 @@ fn should_camel_case_back_relation_field_name() {
 
     let schema = parse(dml);
     let post_model = schema.assert_has_model("Post");
-    post_model.assert_has_field("ohWhatAUser").assert_relation_to("OhWhatAUser");
+    post_model
+        .assert_has_field("ohWhatAUser")
+        .assert_relation_to("OhWhatAUser");
 }

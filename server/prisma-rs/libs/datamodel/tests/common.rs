@@ -177,7 +177,10 @@ pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     parse_with_plugins(datamodel_string, vec![])
 }
 
-pub fn parse_with_plugins(datamodel_string: &str, source_definitions: Vec<Box<SourceDefinition>>) -> datamodel::Datamodel {
+pub fn parse_with_plugins(
+    datamodel_string: &str,
+    source_definitions: Vec<Box<SourceDefinition>>,
+) -> datamodel::Datamodel {
     match datamodel::parse_with_plugins(datamodel_string, source_definitions) {
         Ok(s) => s,
         Err(errs) => {

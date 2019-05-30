@@ -113,7 +113,7 @@ fn changing_the_type_of_an_id_field_must_work() {
         let dm1 = r#"
             model A {
                 id: Int @id
-                b: B(id) 
+                b: B @relation(references: [id])
             }
             model B {
                 id: Int @id
@@ -134,7 +134,7 @@ fn changing_the_type_of_an_id_field_must_work() {
         let dm2 = r#"
             model A {
                 id: Int @id
-                b: B(id) 
+                b: B @relation(references: [id])
             }
             model B {
                 id: String @id
@@ -185,7 +185,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
         let dm1 = r#"
             model A {
                 id: Int @id
-                b: B(id)
+                b: B @relation(references: [id])
             }
             model B {
                 id: Int @id
@@ -233,7 +233,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
         let dm2 = r#"
             model A {
                 id: Int @id
-                b: B(id)
+                b: B @relation(references: [id])
             }
             model B {
                 id: Int @id
@@ -319,7 +319,7 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
         let dm1 = r#"
             model A {
                 id: Int @id
-                b: B(id)
+                b: B @relation(references: [id])
             }
 
             model B {
@@ -346,7 +346,7 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
         let dm1 = r#"
             model A {
                 id: Int @id
-                b: B(id) @db(name: "b_column")
+                b: B @relation(references: [id]) @db(name: "b_column")
             }
 
             model B {
@@ -373,7 +373,7 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
         let dm1 = r#"
             model A {
                 id: Int @id
-                b: B(id) 
+                b: B @relation(references: [id])
             }
 
             model B {
@@ -400,7 +400,7 @@ fn removing_an_inline_relation_must_work() {
         let dm1 = r#"
             model A {
                 id: Int @id
-                b: B(id)
+                b: B @relation(references: [id])
             }
 
             model B {
@@ -435,7 +435,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
         let dm1 = r#"
             model A {
                 id: Int @id
-                b: B(id)
+                b: B @relation(references: [id])
             }
 
             model B {
@@ -461,7 +461,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
 
             model B {
                 id: Int @id
-                a: A(id)
+                a: A @relation(references: [id])
             }
         "#;
         let result = dbg!(migrate_to(&engine, &dm2));

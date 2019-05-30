@@ -22,6 +22,15 @@ impl FromStrAndSpan for IdStrategy {
     }
 }
 
+impl ToString for IdStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            IdStrategy::Auto => String::from("AUTO"),
+            IdStrategy::None => String::from("NONE"),
+        }
+    }
+}
+
 /// Represents a sequence. Can be used to seed IDs.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Sequence {

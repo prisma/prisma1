@@ -76,8 +76,9 @@ fn infer_UpdateModel() {
         r#"
         model Post{
             id: String @id
+            
+            @@embedded
         }
-        @embedded 
     "#,
     );
 

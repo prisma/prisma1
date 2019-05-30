@@ -1,4 +1,5 @@
 pub mod parser;
+pub mod renderer;
 
 /// AST representation of a prisma datamodel
 ///
@@ -68,6 +69,40 @@ pub struct Argument {
     pub span: Span,
 }
 
+impl Argument {
+    pub fn new_string(name: &str, value: &str) -> Argument {
+        Argument {
+            name: String::from(name),
+            value: Value::StringValue(String::from(value), Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new_constant(name: &str, value: &str) -> Argument {
+        Argument {
+            name: String::from(name),
+            value: Value::ConstantValue(String::from(value), Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new_array(name: &str, value: Vec<Value>) -> Argument {
+        Argument {
+            name: String::from(name),
+            value: Value::Array(value, Span::empty()),
+            span: Span::empty(),
+        }
+    }
+
+    pub fn new(name: &str, value: Value) -> Argument {
+        Argument {
+            name: String::from(name),
+            value: value,
+            span: Span::empty(),
+        }
+    }
+}
+
 // TODO: Rename to expression.
 /// Represents arbitrary, even nested, expressions.
 #[derive(Debug, Clone)]
@@ -107,6 +142,16 @@ pub struct Directive {
     pub span: Span,
 }
 
+impl Directive {
+    pub fn new(name: &str, arguments: Vec<Argument>) -> Directive {
+        Directive {
+            name: String::from(name),
+            arguments: arguments,
+            span: Span::empty(),
+        }
+    }
+}
+
 /// Trait for an AST node which can have directives.
 pub trait WithDirectives {
     fn directives(&self) -> &Vec<Directive>;
@@ -124,8 +169,6 @@ pub struct Field {
     pub field_type: String,
     /// The location of the field's type in the text representation.
     pub field_type_span: Span,
-    /// The linked field, in case this is a relation.
-    pub field_link: Option<String>,
     /// The name of the field.
     pub name: String,
     /// The aritiy of the field.

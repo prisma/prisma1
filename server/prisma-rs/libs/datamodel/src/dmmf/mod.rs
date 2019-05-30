@@ -14,16 +14,19 @@ pub struct Field {
     pub name: String,
     pub kind: String,
     pub db_name: Option<String>,
-    pub arity: String,
+    pub is_list: bool,
+    pub is_required: bool,
     pub is_unique: bool,
+    pub is_id: bool,
     #[serde(rename = "type")]
     pub field_type: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default: Option<serde_json::Value>,
 }
 
 #[serde(rename_all = "camelCase")]
 #[derive(Debug, serde::Serialize)]
 pub struct Model {
-    pub is_enum: bool,
     pub name: String,
     pub is_embedded: bool,
     pub db_name: Option<String>,
@@ -33,14 +36,14 @@ pub struct Model {
 #[serde(rename_all = "camelCase")]
 #[derive(Debug, serde::Serialize)]
 pub struct Enum {
-    pub is_enum: bool,
     pub name: String,
     pub values: Vec<String>,
 }
 
 #[derive(Debug, serde::Serialize)]
 pub struct Datamodel {
-    pub models: Vec<serde_json::Value>,
+    pub enums: Vec<Enum>,
+    pub models: Vec<Model>,
 }
 
 fn get_field_kind(field: &dml::Field) -> String {
@@ -75,19 +78,25 @@ fn get_field_type(field: &dml::Field) -> String {
     }
 }
 
-fn get_field_arity(field: &dml::Field) -> String {
-    match field.arity {
-        dml::FieldArity::Required => String::from("required"),
-        dml::FieldArity::Optional => String::from("optional"),
-        dml::FieldArity::List => String::from("list"),
-    }
-}
-
 pub fn enum_to_dmmf(en: &dml::Enum) -> Enum {
     Enum {
         name: en.name.clone(),
         values: en.values.clone(),
-        is_enum: true,
+    }
+}
+
+pub fn default_value_to_serde(container: &Option<dml::Value>) -> Option<serde_json::Value> {
+    match container {
+        Some(value) => Some(match value {
+            dml::Value::Boolean(val) => serde_json::Value::Bool(*val),
+            dml::Value::String(val) => serde_json::Value::String(val.clone()),
+            dml::Value::ConstantLiteral(val) => serde_json::Value::String(val.clone()),
+            dml::Value::Float(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
+            dml::Value::Int(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
+            dml::Value::Decimal(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
+            dml::Value::DateTime(val) => serde_json::Value::String(val.to_rfc3339()),
+        }),
+        None => None,
     }
 }
 
@@ -96,7 +105,10 @@ pub fn field_to_dmmf(field: &dml::Field) -> Field {
         name: field.name.clone(),
         kind: get_field_kind(field),
         db_name: field.database_name.clone(),
-        arity: get_field_arity(field),
+        is_required: field.arity == dml::FieldArity::Required,
+        is_list: field.arity == dml::FieldArity::List,
+        is_id: field.id_info.is_some(),
+        default: default_value_to_serde(&field.default_value),
         is_unique: field.is_unique,
         field_type: get_field_type(field),
     }
@@ -108,23 +120,21 @@ pub fn model_to_dmmf(model: &dml::Model) -> Model {
         db_name: model.database_name.clone(),
         is_embedded: model.is_embedded,
         fields: model.fields().map(&field_to_dmmf).collect(),
-        is_enum: false,
     }
 }
 
 pub fn schema_to_dmmf(schema: &dml::Datamodel) -> Datamodel {
-    let mut datamodel = Datamodel { models: vec![] };
+    let mut datamodel = Datamodel {
+        models: vec![],
+        enums: vec![],
+    };
 
     for model in schema.models() {
-        datamodel
-            .models
-            .push(serde_json::to_value(&model_to_dmmf(&model)).expect("Failed to render enum"))
+        datamodel.models.push(model_to_dmmf(&model));
     }
 
     for enum_model in schema.enums() {
-        datamodel
-            .models
-            .push(serde_json::to_value(&enum_to_dmmf(&enum_model)).expect("Failed to render enum"))
+        datamodel.enums.push(enum_to_dmmf(&enum_model));
     }
 
     return datamodel;

@@ -61,8 +61,9 @@ fn id_should_also_work_on_embedded_types() {
     let dml = r#"
     model Model {
         id: ID @id
+
+        @@embedded
     }
-    @embedded
     "#;
 
     let datamodel = parse(dml);

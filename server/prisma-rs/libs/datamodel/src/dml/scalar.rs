@@ -42,6 +42,19 @@ impl FromStrAndSpan for ScalarType {
     }
 }
 
+impl ToString for ScalarType {
+    fn to_string(&self) -> String {
+        match self {
+            ScalarType::Int => String::from("Int"),
+            ScalarType::Float => String::from("Float"),
+            ScalarType::Decimal => String::from("Decimal"),
+            ScalarType::Boolean => String::from("Boolean"),
+            ScalarType::String => String::from("String"),
+            ScalarType::DateTime => String::from("DateTime"),
+        }
+    }
+}
+
 /// Represents a strategy for embedding scalar lists.
 #[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum ScalarListStrategy {
@@ -55,6 +68,14 @@ impl FromStrAndSpan for ScalarListStrategy {
             "EMBEDDED" => Ok(ScalarListStrategy::Embedded),
             "RELATION" => Ok(ScalarListStrategy::Relation),
             _ => Err(ValidationError::new_literal_parser_error("id strategy", s, span)),
+        }
+    }
+}
+impl ToString for ScalarListStrategy {
+    fn to_string(&self) -> String {
+        match self {
+            ScalarListStrategy::Embedded => String::from("EMBEDDED"),
+            ScalarListStrategy::Relation => String::from("RELATION"),
         }
     }
 }

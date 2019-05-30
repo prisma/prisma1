@@ -1,5 +1,5 @@
-use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
+use crate::{ast, dml};
 
 /// Prismas builtin `@primary` directive.
 pub struct IdDirectiveValidator {}
@@ -25,5 +25,18 @@ impl DirectiveValidator<dml::Field> for IdDirectiveValidator {
         obj.id_info = Some(id_info);
 
         return Ok(());
+    }
+
+    fn serialize(&self, field: &dml::Field) -> Result<Option<ast::Directive>, Error> {
+        if let Some(id_info) = &field.id_info {
+            let mut args = Vec::new();
+
+            if id_info.strategy != dml::IdStrategy::Auto {
+                args.push(ast::Argument::new_constant("strategy", &id_info.strategy.to_string()));
+            }
+            return Ok(Some(ast::Directive::new(self.directive_name(), args)));
+        }
+
+        Ok(None)
     }
 }

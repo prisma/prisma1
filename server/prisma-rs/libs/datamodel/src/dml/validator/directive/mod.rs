@@ -20,9 +20,13 @@ pub type Args<'a> = common::argument::Arguments<'a>;
 pub trait DirectiveValidator<T> {
     /// Gets the directive name.
     fn directive_name(&self) -> &str;
+
     /// Validates a directive and applies the directive
     /// to the given object.
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Result<(), Error>;
+
+    /// Serilizes the given directive's arguments for rendering.
+    fn serialize(&self, obj: &T) -> Result<Option<ast::Directive>, Error>;
 
     /// Shorthand to construct an directive validation error.
     fn error(&self, msg: &str, span: &ast::Span) -> Result<(), Error> {
@@ -72,6 +76,9 @@ impl<T> DirectiveValidator<T> for DirectiveScope<T> {
     }
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Result<(), Error> {
         self.inner.validate_and_apply(args, obj)
+    }
+    fn serialize(&self, obj: &T) -> Result<Option<ast::Directive>, Error> {
+        self.inner.serialize(obj)
     }
 }
 
@@ -155,6 +162,25 @@ impl<T: 'static> DirectiveListValidator<T> {
             Err(errors)
         } else {
             Ok(())
+        }
+    }
+
+    pub fn serialize(&self, t: &T) -> Result<Vec<ast::Directive>, ErrorCollection> {
+        let mut errors = ErrorCollection::new();
+        let mut directives: Vec<ast::Directive> = Vec::new();
+
+        for directive in self.known_directives.values() {
+            match directive.serialize(t) {
+                Ok(Some(directive)) => directives.push(directive),
+                Ok(None) => {}
+                Err(err) => errors.push(err),
+            };
+        }
+
+        if errors.has_errors() {
+            Err(errors)
+        } else {
+            Ok(directives)
         }
     }
 }

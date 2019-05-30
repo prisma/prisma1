@@ -1,5 +1,5 @@
-use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
+use crate::{ast, dml};
 
 /// Prismas builtin `@db` directive.
 pub struct OnDeleteDirectiveValidator {}
@@ -18,5 +18,18 @@ impl DirectiveValidator<dml::Field> for OnDeleteDirectiveValidator {
         }
 
         return Ok(());
+    }
+
+    fn serialize(&self, obj: &dml::Field) -> Result<Option<ast::Directive>, Error> {
+        if let dml::FieldType::Relation(relation_info) = &obj.field_type {
+            if relation_info.on_delete != dml::OnDeleteStrategy::None {
+                return Ok(Some(ast::Directive::new(
+                    self.directive_name(),
+                    vec![ast::Argument::new_constant("", &relation_info.on_delete.to_string())],
+                )));
+            }
+        }
+
+        Ok(None)
     }
 }

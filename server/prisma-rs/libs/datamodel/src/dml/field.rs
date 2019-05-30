@@ -64,7 +64,7 @@ pub struct Field {
     pub comments: Vec<Comment>,
     /// If set, signals that this field was internally generated
     /// and should never be displayed to the user.
-    pub generated: bool,
+    pub is_generated: bool,
 }
 
 impl WithName for Field {
@@ -98,14 +98,14 @@ impl Field {
             id_info: None,
             scalar_list_strategy: None,
             comments: vec![],
-            generated: false,
+            is_generated: false,
         }
     }
-    /// Creates a new field with the given name and type, marked as generated.
+    /// Creates a new field with the given name and type, marked as generated and optional.
     pub fn new_generated(name: &str, field_type: FieldType) -> Field {
         Field {
             name: String::from(name),
-            arity: FieldArity::Required,
+            arity: FieldArity::Optional,
             field_type: field_type,
             database_name: None,
             default_value: None,
@@ -113,7 +113,7 @@ impl Field {
             id_info: None,
             scalar_list_strategy: None,
             comments: vec![],
-            generated: false,
+            is_generated: true,
         }
     }
 }
