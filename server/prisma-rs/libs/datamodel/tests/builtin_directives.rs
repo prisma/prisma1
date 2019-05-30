@@ -28,3 +28,26 @@ fn db_directive() {
     let post_model = schema.assert_has_model("Post").assert_with_db_name("posti");
     post_model.assert_has_field("text").assert_with_db_name("post_text");
 }
+
+#[test]
+fn unique_directive() {
+    let dml = r#"
+        model Test {
+            id: String @id
+            unique: String @unique
+        }
+    "#;
+
+    let schema = parse(dml);
+    let test_model = schema.assert_has_model("Test");
+
+    test_model
+        .assert_has_field("id")
+        .assert_base_type(&datamodel::ScalarType::String)
+        .assert_is_unique(false)
+        .assert_is_id(true);
+    test_model
+        .assert_has_field("unique")
+        .assert_base_type(&datamodel::ScalarType::String)
+        .assert_is_unique(true);
+}
