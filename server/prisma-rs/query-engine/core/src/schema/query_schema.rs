@@ -39,15 +39,40 @@ impl QuerySchema {
     }
   }
 
-  fn visit(&mut self, visitor: impl SchemaAstVisitor) {
-    match visitor.visit_output_type(&self.query) {
-      VisitorOperation::Remove => unimplemented!(),
-      VisitorOperation::Replace(t) => unimplemented!(),
-      VisitorOperation::None => unimplemented!(),
-    };
+  // WIP
+  pub fn compact(mut self) -> Self {
+    // Check if there are empty input objects and clean up the AST is there are any.
+    let (valid_objects, empty_input_objects) = self.input_object_types.into_iter().partition(|i| i.is_empty());
+    self.input_object_types = valid_objects;
 
-    visitor.visit_output_type(&self.mutation);
+    if empty_input_objects.len() > 0 {
+      // Walk the AST and discard any element where the weak ref upgrade fails.
+      self.visit_output_type(&self.query);
+      self.visit_output_type(&self.mutation);
+    }
+
+    self
   }
+
+  fn visit_output_type(&self, out: &OutputType) -> VisitorOperation<OutputType> {
+    match out {
+      OutputType::Object(obj) => unimplemented!(),
+      OutputType::Enum(enum_type) => unimplemented!(),
+      OutputType::List(out) => unimplemented!(),
+      OutputType::Opt(out) => unimplemented!(),
+      OutputType::Scalar(s) => unimplemented!(),
+    }
+  }
+
+  // fn visit(&mut self, visitor: impl SchemaAstVisitor) {
+  //   match visitor.visit_output_type(&self.query) {
+  //     VisitorOperation::Remove => unimplemented!(),
+  //     VisitorOperation::Replace(t) => unimplemented!(),
+  //     VisitorOperation::None => unimplemented!(),
+  //   };
+
+  //   visitor.visit_output_type(&self.mutation);
+  // }
 }
 
 #[derive(DebugStub)]
