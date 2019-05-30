@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 // TODO: Is schema the right name here?
 /// Represents a prisma-datamodel.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
-pub struct Schema {
+pub struct Datamodel {
     // All enums.
     enums: Vec<Enum>,
     // All models.
@@ -15,10 +15,10 @@ pub struct Schema {
     pub comments: Vec<Comment>,
 }
 
-impl Schema {
+impl Datamodel {
     /// Creates a new, empty schema.
-    pub fn new() -> Schema {
-        Schema {
+    pub fn new() -> Datamodel {
+        Datamodel {
             models: vec![],
             enums: vec![],
             comments: vec![],
@@ -26,7 +26,7 @@ impl Schema {
     }
 
     /// Creates a new, empty schema.
-    pub fn empty() -> Schema {
+    pub fn empty() -> Datamodel {
         Self::new()
     }
 

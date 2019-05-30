@@ -13,7 +13,7 @@ pub struct SqlDatabaseMigrationStepsInferrer {
 
 #[allow(unused, dead_code)]
 impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationStepsInferrer {
-    fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<SqlMigrationStep> {
+    fn infer(&self, previous: &Datamodel, next: &Datamodel, steps: Vec<MigrationStep>) -> Vec<SqlMigrationStep> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
         let steps = DatabaseSchemaDiffer::diff(&current_database_schema, &expected_database_schema);

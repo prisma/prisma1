@@ -314,7 +314,7 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
 // Whole datamodel parsing
 
 /// Parses a Prisma V2 datamodel document into an internal AST representation.
-pub fn parse(datamodel_string: &str) -> Result<Schema, ValidationError> {
+pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
     let datamodel_result = PrismaDatamodelParser::parse(Rule::datamodel, datamodel_string);
 
     match datamodel_result {
@@ -330,7 +330,7 @@ pub fn parse(datamodel_string: &str) -> Result<Schema, ValidationError> {
                 _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
             }
 
-            Ok(Schema {
+            Ok(Datamodel {
                 models,
                 comments: vec![],
             })

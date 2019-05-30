@@ -22,7 +22,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .migration_persistence()
             .last()
             .map(|m| m.datamodel)
-            .unwrap_or(Schema::empty());
+            .unwrap_or(Datamodel::empty());
 
         let next_data_model = engine.parse_datamodel(&self.input.data_model);
 

@@ -3,11 +3,11 @@ use datamodel::*;
 use itertools::Itertools;
 
 pub struct DatabaseSchemaCalculator<'a> {
-    data_model: &'a Schema,
+    data_model: &'a Datamodel,
 }
 
 impl<'a> DatabaseSchemaCalculator<'a> {
-    pub fn calculate(data_model: &Schema) -> DatabaseSchema {
+    pub fn calculate(data_model: &Datamodel) -> DatabaseSchema {
         let calculator = DatabaseSchemaCalculator { data_model };
         calculator.calculate_internal()
     }

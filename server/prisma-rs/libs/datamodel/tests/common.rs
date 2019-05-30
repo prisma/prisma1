@@ -25,7 +25,7 @@ pub trait EnumAsserts {
     fn assert_has_value(&self, t: &str) -> &Self;
 }
 
-pub trait SchemaAsserts {
+pub trait DatamodelAsserts {
     fn assert_has_model(&self, t: &str) -> &dml::Model;
     fn assert_has_enum(&self, t: &str) -> &dml::Enum;
 }
@@ -120,7 +120,7 @@ impl FieldAsserts for dml::Field {
     }
 }
 
-impl SchemaAsserts for dml::Schema {
+impl DatamodelAsserts for dml::Datamodel {
     fn assert_has_model(&self, t: &str) -> &dml::Model {
         self.find_model(&String::from(t))
             .expect(format!("Model {} not found", t).as_str())
@@ -173,11 +173,11 @@ impl ErrorAsserts for ErrorCollection {
 }
 
 #[allow(dead_code)] // Not sure why the compiler thinks this is never used.
-pub fn parse(datamodel_string: &str) -> datamodel::Schema {
+pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     parse_with_plugins(datamodel_string, vec![])
 }
 
-pub fn parse_with_plugins(datamodel_string: &str, source_definitions: Vec<Box<SourceDefinition>>) -> datamodel::Schema {
+pub fn parse_with_plugins(datamodel_string: &str, source_definitions: Vec<Box<SourceDefinition>>) -> datamodel::Datamodel {
     match datamodel::parse_with_plugins(datamodel_string, source_definitions) {
         Ok(s) => s,
         Err(errs) => {
@@ -185,7 +185,7 @@ pub fn parse_with_plugins(datamodel_string: &str, source_definitions: Vec<Box<So
                 err.pretty_print(&mut std::io::stderr().lock(), "", datamodel_string)
                     .unwrap();
             }
-            panic!("Schema parsing failed. Please see error above.")
+            panic!("Datamodel parsing failed. Please see error above.")
         }
     }
 }

@@ -112,7 +112,7 @@ pub fn model_to_dmmf(model: &dml::Model) -> Model {
     }
 }
 
-pub fn schema_to_dmmf(schema: &dml::Schema) -> Datamodel {
+pub fn schema_to_dmmf(schema: &dml::Datamodel) -> Datamodel {
     let mut datamodel = Datamodel { models: vec![] };
 
     for model in schema.models() {
@@ -130,7 +130,7 @@ pub fn schema_to_dmmf(schema: &dml::Schema) -> Datamodel {
     return datamodel;
 }
 
-pub fn render_to_dmmf(schema: &dml::Schema) -> String {
+pub fn render_to_dmmf(schema: &dml::Datamodel) -> String {
     let dmmf = schema_to_dmmf(schema);
 
     return serde_json::to_string_pretty(&dmmf).expect("Failed to render JSON");
