@@ -121,7 +121,6 @@ fn scalar_lists_work() {
 }
 
 #[test]
-#[ignore]
 fn unique_works() {
     let datamodel = convert(
         r#"
