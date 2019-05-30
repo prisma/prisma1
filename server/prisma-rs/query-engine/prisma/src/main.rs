@@ -9,6 +9,7 @@ extern crate debug_stub_derive;
 
 mod context;
 mod data_model;
+mod dmmf; // Temporary
 mod error;
 mod exec_loader;
 mod req_handlers;

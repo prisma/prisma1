@@ -15,7 +15,7 @@ use type_renderer::*;
 
 pub struct GraphQLSchemaRenderer;
 
-impl QuerySchemaRenderer for GraphQLSchemaRenderer {
+impl QuerySchemaRenderer<String> for GraphQLSchemaRenderer {
     fn render(query_schema: &QuerySchema) -> String {
         let context = RenderContext::new();
         let (_, result) = query_schema.into_renderer().render(context);
