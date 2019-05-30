@@ -42,7 +42,7 @@ pub trait MigrationConnector {
 pub trait DatabaseMigrationStepExt: Debug + Serialize {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
-    fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<T>;
+    fn infer(&self, previous: &Schema, next: &Schema, steps: &Vec<MigrationStep>) -> Vec<T>;
 }
 
 pub trait DatabaseMigrationStepApplier<T> {

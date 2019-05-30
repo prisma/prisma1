@@ -35,11 +35,10 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
             .datamodel_calculator()
             .infer(&assumed_datamodel, &self.input.steps_to_apply);
 
-        let database_migration_steps = connector.database_steps_inferrer().infer(
-            &assumed_datamodel,
-            &next_datamodel,
-            self.input.steps_to_apply.clone(),
-        );
+        let database_migration_steps =
+            connector
+                .database_steps_inferrer()
+                .infer(&assumed_datamodel, &next_datamodel, &self.input.steps_to_apply);
 
         let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
 
