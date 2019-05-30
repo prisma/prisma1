@@ -12,8 +12,17 @@
 //! |-------------------|---------------------------------|
 //! | ValueMap          | `BTreeMap<String, Value>`       |
 //! | ValueList         | `(String, Option<Vec<Value>>)`  |
-//! | ValueSplit        | Splitting `values`, `nested`,
-//!                       and `lists` into a `struct`     |
+//! | ValueSplit        | Splitting `values`, `nested`, and `lists` into a `struct` |
+//!
+//! Handled mutation arguments are then encoded in the `NestedValue`
+//! return type which specifies the type of mutation (query) being handled.
+//!
+//! A `ValueSplit` represents all data from a "level",
+//! but split into it's respective components to be easier to work with.
+//!
+//! - `values: Normal scalar values
+//! - `lists`: Scalarlist values that are passed seperately
+//! - `nested`: All nested child nodes
 
 use crate::{CoreError, CoreResult};
 use connector::filter::NodeSelector;
