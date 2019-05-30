@@ -101,11 +101,11 @@ impl Field {
             generated: false,
         }
     }
-    /// Creates a new field with the given name and type, marked as generated.
+    /// Creates a new field with the given name and type, marked as generated and optional.
     pub fn new_generated(name: &str, field_type: FieldType) -> Field {
         Field {
             name: String::from(name),
-            arity: FieldArity::Required,
+            arity: FieldArity::Optional,
             field_type: field_type,
             database_name: None,
             default_value: None,
