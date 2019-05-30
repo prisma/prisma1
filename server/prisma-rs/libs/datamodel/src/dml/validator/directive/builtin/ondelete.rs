@@ -25,10 +25,7 @@ impl DirectiveValidator<dml::Field> for OnDeleteDirectiveValidator {
             if relation_info.on_delete != dml::OnDeleteStrategy::None {
                 return Ok(Some(ast::Directive::new(
                     self.directive_name(),
-                    vec![ast::Argument::new_constant(
-                        "strategy",
-                        &relation_info.on_delete.to_string(),
-                    )],
+                    vec![ast::Argument::new_constant("", &relation_info.on_delete.to_string())],
                 )));
             }
         }

@@ -28,7 +28,7 @@ impl<T: dml::WithDatabaseName> DirectiveValidator<T> for DbDirectiveValidator {
         if let Some(db_name) = obj.database_name() {
             return Ok(Some(ast::Directive::new(
                 DirectiveValidator::<T>::directive_name(self),
-                vec![ast::Argument::new_string("name", db_name)],
+                vec![ast::Argument::new_string("", db_name)],
             )));
         }
 

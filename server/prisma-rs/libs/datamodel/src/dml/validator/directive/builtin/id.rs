@@ -31,8 +31,9 @@ impl DirectiveValidator<dml::Field> for IdDirectiveValidator {
         if let Some(id_info) = &field.id_info {
             let mut args = Vec::new();
 
-            args.push(ast::Argument::new_constant("strategy", &id_info.strategy.to_string()));
-
+            if id_info.strategy != dml::IdStrategy::Auto {
+                args.push(ast::Argument::new_constant("strategy", &id_info.strategy.to_string()));
+            }
             return Ok(Some(ast::Directive::new(self.directive_name(), args)));
         }
 

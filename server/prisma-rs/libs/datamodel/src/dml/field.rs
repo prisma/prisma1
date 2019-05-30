@@ -64,7 +64,7 @@ pub struct Field {
     pub comments: Vec<Comment>,
     /// If set, signals that this field was internally generated
     /// and should never be displayed to the user.
-    pub generated: bool,
+    pub is_generated: bool,
 }
 
 impl WithName for Field {
@@ -98,7 +98,7 @@ impl Field {
             id_info: None,
             scalar_list_strategy: None,
             comments: vec![],
-            generated: false,
+            is_generated: false,
         }
     }
     /// Creates a new field with the given name and type, marked as generated and optional.
@@ -113,7 +113,7 @@ impl Field {
             id_info: None,
             scalar_list_strategy: None,
             comments: vec![],
-            generated: false,
+            is_generated: true,
         }
     }
 }

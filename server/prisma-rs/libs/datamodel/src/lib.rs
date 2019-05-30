@@ -49,8 +49,9 @@ pub use dml::FromStrAndSpan;
 pub use source::*;
 pub use validator::directive::DirectiveValidator;
 
-// Helpers.
+// Convenience cHelpers.
 
+/// Parses and validates a datamodel string, using core attributes and the given plugins.
 pub fn parse_with_plugins(
     datamodel_string: &str,
     source_definitions: Vec<Box<source::SourceDefinition>>,
@@ -65,8 +66,40 @@ pub fn parse_with_plugins(
     validator.validate(&ast)
 }
 
+/// Parses and validates a datamodel string, using core attributes only.
 pub fn parse(datamodel_string: &str) -> Result<Datamodel, errors::ErrorCollection> {
     return parse_with_plugins(datamodel_string, vec![]);
+}
+
+/// Parses a datamodel string to an AST. For internal use only.
+pub fn parse_to_ast(datamodel_string: &str) -> Result<ast::Datamodel, errors::ValidationError> {
+    parser::parse(datamodel_string)
+}
+
+/// Renders an datamodel AST to a stream as datamodel string. For internal use only.
+pub fn render_ast_to(stream: &mut std::io::Write, datamodel: &ast::Datamodel) {
+    let mut renderer = renderer::Renderer::new(stream);
+    renderer.render(datamodel);
+}
+
+/// Renders a datamodel to a a stream as datamodel string.
+pub fn render_to(stream: &mut std::io::Write, datamodel: &dml::Datamodel) -> Result<(), errors::ErrorCollection> {
+    let lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
+    render_ast_to(stream, &lowered);
+    Ok(())
+}
+
+/// Renders an datamodel AST to a datamodel string. For internal use only.
+pub fn render_ast(datamodel: &ast::Datamodel) -> String {
+    let mut buffer = std::io::Cursor::new(Vec::<u8>::new());
+    render_ast_to(&mut buffer, datamodel);
+    String::from_utf8(buffer.into_inner()).unwrap()
+}
+
+/// Renders a datamodel to a datamodel string.
+pub fn render(datamodel: &dml::Datamodel) -> Result<String, errors::ErrorCollection> {
+    let lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
+    Ok(render_ast(&lowered))
 }
 
 // Pest grammar generation on compile time.

@@ -54,10 +54,12 @@ impl LowerDmlToAst {
         let mut fields: Vec<ast::Field> = Vec::new();
 
         for field in model.fields() {
-            match self.lower_field(field) {
-                Ok(ast_field) => fields.push(ast_field),
-                Err(mut err) => errors.append(&mut err),
-            };
+            if !field.is_generated {
+                match self.lower_field(field) {
+                    Ok(ast_field) => fields.push(ast_field),
+                    Err(mut err) => errors.append(&mut err),
+                };
+            }
         }
 
         if errors.has_errors() {

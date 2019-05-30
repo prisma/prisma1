@@ -27,7 +27,7 @@ impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
         if let Some(default_value) = &field.default_value {
             return Ok(Some(ast::Directive::new(
                 self.directive_name(),
-                vec![ast::Argument::new("value", default_value.into())],
+                vec![ast::Argument::new("", default_value.into())],
             )));
         }
 

@@ -1,50 +1,48 @@
 extern crate datamodel;
 
-#[test]
-fn test_parser_should_parse_and_renderer_should_render() {
-    let dml = r#"
+const DATAMODEL_STRING: &str = r#"
 model User {
-    id ID @id
+    id Int @id
     createdAt DateTime
     email String @unique
     name String?
-    role Role
     posts Post[] @onDelete(CASCADE)
     profile Profile?
-    @@db(name: "user")
+    @@db("user")
 }
 
 model Profile {
-    id ID @id
+    id Int @id
     user User
     bio String
     @@db("profile")
 }
 
 model Post {
-    id ID @id
+    id Int @id
     createdAt DateTime
     updatedAt DateTime
     title String @default("Default-Title")
-    wasLiked boolean @default(false)
-    author User @relation(name: "author")
+    wasLiked Boolean @default(false)
+    author User @relation("author")
     published Boolean @default(false)
     categories Category[]
-    @@db(name: "post")
+    @@db("post")
 }
 
 model Category {
-    id ID @id
+    id Int @id
     name String
     posts Post[]
     cat CategoryEnum
-    @@db(name: "category")
+    @@db("category")
 }
 
 model PostToCategory {
+    id Int @id
     post Post
     category Category
-    @@db(name: "post_to_category")
+    @@db("post_to_category")
 }
 
 enum CategoryEnum {
@@ -54,14 +52,20 @@ enum CategoryEnum {
 }
 "#;
 
-    let ast = datamodel::parser::parse(&String::from(dml)).expect("Failed to parse");
+#[test]
+fn test_parser_renderer_via_ast() {
+    let ast = datamodel::parse_to_ast(DATAMODEL_STRING).unwrap();
+    let rendered = datamodel::render_ast(&ast);
 
-    let mut buffer = std::io::Cursor::new(Vec::<u8>::new());
-    let mut renderer = datamodel::renderer::Renderer::new(&mut buffer);
+    assert_eq!(DATAMODEL_STRING, rendered);
+}
 
-    renderer.render(&ast);
+#[test]
+fn test_parser_renderer_via_dml() {
+    let dml = datamodel::parse(DATAMODEL_STRING).unwrap();
+    let rendered = datamodel::render(&dml).unwrap();
 
-    let rendered = String::from_utf8(buffer.into_inner()).unwrap();
+    print!("{}", rendered);
 
-    assert_eq!(dml, rendered);
+    assert_eq!(DATAMODEL_STRING, rendered);
 }
