@@ -14,7 +14,7 @@ pub use steps::MigrationStep;
 extern crate serde_derive;
 
 pub trait MigrationConnector {
-    type DatabaseMigrationStep: DatabaseMigrationStepExt + 'static;
+    type DatabaseMigrationStep: DatabaseMigrationStepMarker + 'static;
 
     fn initialize(&self);
 
@@ -39,7 +39,7 @@ pub trait MigrationConnector {
     }
 }
 
-pub trait DatabaseMigrationStepExt: Debug {}
+pub trait DatabaseMigrationStepMarker: Debug {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
     fn infer(&self, previous: &Schema, next: &Schema, steps: &Vec<MigrationStep>) -> Vec<T>;
