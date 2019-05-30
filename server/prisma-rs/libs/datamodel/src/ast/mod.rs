@@ -1,4 +1,5 @@
 pub mod parser;
+pub mod renderer;
 
 /// AST representation of a prisma datamodel
 ///
