@@ -42,6 +42,19 @@ impl FromStrAndSpan for ScalarType {
     }
 }
 
+impl ToString for ScalarType {
+    fn to_string(&self) -> String {
+        match self {
+            ScalarType::Int => String::from("Int"),
+            ScalarType::Float => String::from("Float"),
+            ScalarType::Decimal => String::from("Decimal"),
+            ScalarType::Boolean => String::from("Boolean"),
+            ScalarType::String => String::from("String"),
+            ScalarType::DateTime => String::from("DateTime"),
+        }
+    }
+}
+
 /// Represents a strategy for embedding scalar lists.
 #[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
 pub enum ScalarListStrategy {

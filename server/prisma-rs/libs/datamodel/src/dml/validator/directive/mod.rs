@@ -164,4 +164,23 @@ impl<T: 'static> DirectiveListValidator<T> {
             Ok(())
         }
     }
+
+    pub fn serialize(&self, t: &T) -> Result<Vec<ast::Directive>, ErrorCollection> {
+        let mut errors = ErrorCollection::new();
+        let mut directives: Vec<ast::Directive> = Vec::new();
+
+        for directive in self.known_directives.values() {
+            match directive.serialize(t) {
+                Ok(Some(directive)) => directives.push(directive),
+                Ok(None) => {}
+                Err(err) => errors.push(err),
+            };
+        }
+
+        if errors.has_errors() {
+            Err(errors)
+        } else {
+            Ok(directives)
+        }
+    }
 }

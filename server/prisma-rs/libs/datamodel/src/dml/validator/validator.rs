@@ -1,9 +1,6 @@
 use crate::{ast, dml};
 
-use super::directive::builtin::{
-    new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives,
-};
-use super::directive::DirectiveListValidator;
+use super::DirectiveBox;
 use crate::common::{names::NameNormalizer, value::ValueValidator};
 use crate::dml::fromstr::FromStrAndSpan;
 use crate::errors::{ErrorCollection, ValidationError};
@@ -16,9 +13,7 @@ use std::collections::HashMap;
 /// AST is converted to the real datamodel, and
 /// additional semantics are attached.
 pub struct Validator {
-    field_directives: DirectiveListValidator<dml::Field>,
-    model_directives: DirectiveListValidator<dml::Model>,
-    enum_directives: DirectiveListValidator<dml::Enum>,
+    directives: DirectiveBox,
 }
 
 /// State error message. Seeing this error means something went really wrong internally. It's the datamodel equivalent of a bluescreen.
@@ -28,9 +23,7 @@ impl Validator {
     /// Creates a new instance, with all builtin directives registered.
     pub fn new() -> Validator {
         Validator {
-            field_directives: new_builtin_field_directives(),
-            model_directives: new_builtin_model_directives(),
-            enum_directives: new_builtin_enum_directives(),
+            directives: DirectiveBox::new(),
         }
     }
 
@@ -39,21 +32,9 @@ impl Validator {
     ///
     /// The directives defined by the given sources will be namespaced.
     pub fn with_sources(sources: &Vec<Box<source::Source>>) -> Validator {
-        let mut validator = Validator::new();
-
-        for source in sources {
-            validator
-                .enum_directives
-                .add_all_scoped(source.get_enum_directives(), source.name());
-            validator
-                .field_directives
-                .add_all_scoped(source.get_field_directives(), source.name());
-            validator
-                .model_directives
-                .add_all_scoped(source.get_model_directives(), source.name());
+        Validator {
+            directives: DirectiveBox::with_sources(sources),
         }
-
-        return validator;
     }
 
     /// Validates an AST semantically and promotes it to a datamodel/schema.
@@ -366,7 +347,7 @@ impl Validator {
             }
         }
 
-        if let Err(mut err) = self.model_directives.validate_and_apply(ast_model, &mut model) {
+        if let Err(mut err) = self.directives.model.validate_and_apply(ast_model, &mut model) {
             errors.append(&mut err);
         }
 
@@ -382,7 +363,7 @@ impl Validator {
         let mut en = dml::Enum::new(&ast_enum.name, ast_enum.values.clone());
         let mut errors = ErrorCollection::new();
 
-        if let Err(mut err) = self.enum_directives.validate_and_apply(ast_enum, &mut en) {
+        if let Err(mut err) = self.directives.enm.validate_and_apply(ast_enum, &mut en) {
             errors.append(&mut err);
         }
 
@@ -418,7 +399,7 @@ impl Validator {
             }
         }
 
-        if let Err(mut err) = self.field_directives.validate_and_apply(ast_field, &mut field) {
+        if let Err(mut err) = self.directives.field.validate_and_apply(ast_field, &mut field) {
             errors.append(&mut err);
         }
 
