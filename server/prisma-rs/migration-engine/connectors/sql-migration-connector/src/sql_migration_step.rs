@@ -1,7 +1,7 @@
-use migration_connector::DatabaseMigrationStepExt;
+use migration_connector::DatabaseMigrationStepMarker;
 use serde::Serialize;
 
-impl DatabaseMigrationStepExt for SqlMigrationStep {}
+impl DatabaseMigrationStepMarker for SqlMigrationStep {}
 
 #[derive(Debug, Serialize)]
 pub enum SqlMigrationStep {
@@ -9,7 +9,7 @@ pub enum SqlMigrationStep {
     AlterTable(AlterTable),
     DropTable(DropTable),
     RenameTable { name: String, new_name: String },
-    RawSql(String),
+    RawSql { raw: String },
 }
 
 #[derive(Debug, Serialize)]

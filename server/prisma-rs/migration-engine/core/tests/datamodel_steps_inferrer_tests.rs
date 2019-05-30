@@ -1,14 +1,14 @@
 #![allow(non_snake_case)]
 mod test_harness;
 
-use datamodel::{dml::*};
-use test_harness::parse;
+use datamodel::dml::*;
 use migration_connector::steps::*;
 use migration_core::migration::datamodel_migration_steps_inferrer::*;
+use test_harness::parse;
 
 #[test]
 fn infer_CreateModel_if_it_does_not_exist_yet() {
-    let dm1 = Schema::empty();
+    let dm1 = Datamodel::empty();
     let dm2 = parse(
         r#"
         model Test {
@@ -49,11 +49,11 @@ fn infer_DeleteModel() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
-    let dm2 = Schema::empty();
+    let dm2 = Datamodel::empty();
 
     let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::DeleteModel(DeleteModel {
@@ -68,14 +68,14 @@ fn infer_UpdateModel() {
     let dm1 = parse(
         r#"
         model Post {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Post{
-            id: String
+            id: String @id
         }
         @embedded 
     "#,
@@ -96,14 +96,14 @@ fn infer_CreateField_if_it_does_not_exist_yet() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -131,21 +131,21 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
     let dm1 = parse(
         r#"
         model Blog {
-            id: String
+            id: String @id
         }
         model Post {
-            id: String
+            id: String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Blog {
-            id: String
+            id: String @id
             posts: Post[]
         }
         model Post {
-            id: String
+            id: String @id
             blog: Blog?
         }
     "#,
@@ -198,7 +198,7 @@ fn infer_DeleteField() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -206,7 +206,7 @@ fn infer_DeleteField() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
         }
     "#,
     );
@@ -224,7 +224,7 @@ fn infer_UpdateField_simple() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Int?
         }
     "#,
@@ -232,7 +232,7 @@ fn infer_UpdateField_simple() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String
+            id: String @id
             field: Boolean @default(false)
         }
     "#,
@@ -257,7 +257,7 @@ fn infer_UpdateField_simple() {
 
 #[test]
 fn infer_CreateEnum() {
-    let dm1 = Schema::empty();
+    let dm1 = Datamodel::empty();
     let dm2 = parse(
         r#"
         enum Test {
@@ -286,7 +286,7 @@ fn infer_DeleteEnum() {
         }
     "#,
     );
-    let dm2 = Schema::empty();
+    let dm2 = Datamodel::empty();
 
     let steps = infer(&dm1, &dm2);
     let expected = vec![MigrationStep::DeleteEnum(DeleteEnum {
@@ -295,7 +295,7 @@ fn infer_DeleteEnum() {
     assert_eq!(steps, expected);
 }
 
-fn infer(dm1: &Schema, dm2: &Schema) -> Vec<MigrationStep> {
+fn infer(dm1: &Datamodel, dm2: &Datamodel) -> Vec<MigrationStep> {
     let inferrer = DataModelMigrationStepsInferrerImplWrapper {};
     inferrer.infer(&dm1, &dm2)
 }

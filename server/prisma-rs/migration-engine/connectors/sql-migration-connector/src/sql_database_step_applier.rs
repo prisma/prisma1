@@ -19,17 +19,53 @@ impl SqlDatabaseStepApplier {
 
 #[allow(unused, dead_code)]
 impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
-    fn apply(&self, step: SqlMigrationStep) {
+    fn apply(&self, step: &SqlMigrationStep) {
+        let sql_string = self.render_raw_sql(&step);
+        dbg!(&sql_string);
+        let result = self.connection.execute(&sql_string, NO_PARAMS);
+        // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
+        match dbg!(result) {
+            Ok(_) => {}
+            Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
+            e @ Err(_) => {
+                e.unwrap();
+                {}
+            }
+        }
+    }
+
+    fn render_steps(&self, steps: &Vec<SqlMigrationStep>) -> serde_json::Value {
+        let jsons = steps
+            .into_iter()
+            .map(|step| {
+                let cloned = step.clone();
+                let mut json_value = serde_json::to_value(&step).unwrap();
+                let json_object = json_value.as_object_mut().unwrap();
+                json_object.insert(
+                    "raw".to_string(),
+                    serde_json::Value::String(self.render_raw_sql(cloned)),
+                );
+                json_value
+            })
+            .collect();
+        serde_json::Value::Array(jsons)
+    }
+}
+
+impl SqlDatabaseStepApplier {
+    fn render_raw_sql(&self, step: &SqlMigrationStep) -> String {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
-        let sql_string = match dbg!(step) {
+        match step {
             SqlMigrationStep::CreateTable(CreateTable {
                 name,
                 columns,
                 primary_columns,
             }) => {
-                migration.create_table(name, move |t| {
-                    for column in columns.clone() {
+                let cloned_columns = columns.clone();
+                let primary_columns = primary_columns.clone();
+                migration.create_table(name.to_string(), move |t| {
+                    for column in cloned_columns.clone() {
                         let tpe = column_description_to_barrel_type(&column);
                         t.add_column(column.name, tpe);
                     }
@@ -45,7 +81,7 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 self.make_sql_string(migration)
             }
             SqlMigrationStep::DropTable(DropTable { name }) => {
-                migration.drop_table(name);
+                migration.drop_table(name.to_string());
                 self.make_sql_string(migration)
             }
             SqlMigrationStep::RenameTable { name, new_name } => {
@@ -53,7 +89,8 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 self.make_sql_string(migration)
             }
             SqlMigrationStep::AlterTable(AlterTable { table, changes }) => {
-                migration.change_table(table, move |t| {
+                let changes = changes.clone();
+                migration.change_table(table.to_string(), move |t| {
                     for change in changes.clone() {
                         match change {
                             TableChange::AddColumn(AddColumn { column }) => {
@@ -71,23 +108,10 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 });
                 self.make_sql_string(migration)
             }
-            SqlMigrationStep::RawSql(sql) => sql,
-        };
-        dbg!(&sql_string);
-        let result = self.connection.execute(&sql_string, NO_PARAMS);
-        // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
-        match dbg!(result) {
-            Ok(_) => {}
-            Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
-            e @ Err(_) => {
-                e.unwrap();
-                {}
-            }
+            SqlMigrationStep::RawSql { raw } => raw.to_string(),
         }
     }
-}
 
-impl SqlDatabaseStepApplier {
     fn make_sql_string(&self, migration: BarrelMigration) -> String {
         // TODO: this should pattern match on the connector type once we have this information available
         migration.make::<barrel::backend::Sqlite>()

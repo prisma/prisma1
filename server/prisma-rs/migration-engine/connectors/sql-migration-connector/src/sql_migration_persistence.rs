@@ -1,6 +1,6 @@
 #[allow(unused, dead_code)]
 use chrono::*;
-use datamodel::Schema;
+use datamodel::Datamodel;
 use migration_connector::*;
 use prisma_query::{ast::*, visitor::*};
 use rusqlite::{Connection, Row};
@@ -135,7 +135,7 @@ fn parse_row(row: &Row) -> Migration {
     Migration {
         name: row.get(NAME_COLUMN).unwrap(),
         revision: revision as usize,
-        datamodel: Schema::empty(),
+        datamodel: Datamodel::empty(),
         status: MigrationStatus::from_str(row.get(STATUS_COLUMN).unwrap()),
         applied: applied as usize,
         rolled_back: rolled_back as usize,

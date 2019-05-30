@@ -4,19 +4,19 @@ use migration_connector::steps::*;
 // Macro to match all children in a parse tree
 macro_rules! set (
     ($model:ident, $step:ident, $model_field:ident, $step_field:ident) => (
-        if let Some(val) = $step.$step_field {
-            $model.$model_field = val;
+        if let Some(val) = &$step.$step_field {
+            $model.$model_field = val.clone();
         }
     );
 );
 
 pub trait DataModelCalculator: std::panic::RefUnwindSafe {
-    fn infer(&self, current: &Schema, steps: Vec<MigrationStep>) -> Schema;
+    fn infer(&self, current: &Datamodel, steps: &Vec<MigrationStep>) -> Datamodel;
 }
 
 pub struct DataModelCalculatorImpl {}
 impl DataModelCalculator for DataModelCalculatorImpl {
-    fn infer(&self, current: &Schema, steps: Vec<MigrationStep>) -> Schema {
+    fn infer(&self, current: &Datamodel, steps: &Vec<MigrationStep>) -> Datamodel {
         let mut result = current.clone();
         steps.into_iter().for_each(|step| match step {
             MigrationStep::DeleteModel(x) => apply_delete_model(&mut result, x),
@@ -33,11 +33,11 @@ impl DataModelCalculator for DataModelCalculatorImpl {
     }
 }
 
-fn apply_delete_model(data_model: &mut Schema, step: DeleteModel) {
+fn apply_delete_model(data_model: &mut Datamodel, step: &DeleteModel) {
     data_model.remove_model(&step.name);
 }
 
-fn apply_update_model(data_model: &mut Schema, step: UpdateModel) {
+fn apply_update_model(data_model: &mut Datamodel, step: &UpdateModel) {
     let model = data_model.find_model_mut(&step.name).unwrap();
 
     set!(model, step, name, new_name);
@@ -45,18 +45,18 @@ fn apply_update_model(data_model: &mut Schema, step: UpdateModel) {
     set!(model, step, database_name, db_name);
 }
 
-fn apply_create_model(data_model: &mut Schema, step: CreateModel) {
+fn apply_create_model(data_model: &mut Datamodel, step: &CreateModel) {
     let mut model = Model::new(&step.name);
     model.is_embedded = step.embedded;
-    model.database_name = step.db_name;
+    model.database_name = step.db_name.clone();
     data_model.add_model(model);
 }
 
-fn apply_delete_enum(data_model: &mut Schema, step: DeleteEnum) {
+fn apply_delete_enum(data_model: &mut Datamodel, step: &DeleteEnum) {
     data_model.remove_enum(&step.name);
 }
 
-fn apply_update_enum(data_model: &mut Schema, step: UpdateEnum) {
+fn apply_update_enum(data_model: &mut Datamodel, step: &UpdateEnum) {
     let model = data_model.find_enum_mut(&step.name).unwrap();
 
     set!(model, step, name, new_name);
@@ -64,18 +64,18 @@ fn apply_update_enum(data_model: &mut Schema, step: UpdateEnum) {
     set!(model, step, database_name, db_name);
 }
 
-fn apply_create_enum(data_model: &mut Schema, step: CreateEnum) {
-    let mut en = Enum::new(&step.name, step.values);
-    en.database_name = step.db_name;
+fn apply_create_enum(data_model: &mut Datamodel, step: &CreateEnum) {
+    let mut en = Enum::new(&step.name, step.values.clone());
+    en.database_name = step.db_name.clone();
     data_model.add_enum(en);
 }
 
-fn apply_delete_field(data_model: &mut Schema, step: DeleteField) {
+fn apply_delete_field(data_model: &mut Datamodel, step: &DeleteField) {
     let model = data_model.models_mut().find(|m| m.name == step.model).unwrap();
     model.remove_field(&step.name);
 }
 
-fn apply_update_field(data_model: &mut Schema, step: UpdateField) {
+fn apply_update_field(data_model: &mut Datamodel, step: &UpdateField) {
     let model = data_model.find_model_mut(&step.model).unwrap();
     let field = model.find_field_mut(&step.name).unwrap();
 
@@ -88,14 +88,14 @@ fn apply_update_field(data_model: &mut Schema, step: UpdateField) {
     set!(field, step, scalar_list_strategy, scalar_list);
 }
 
-fn apply_create_field(data_model: &mut Schema, step: CreateField) {
+fn apply_create_field(data_model: &mut Datamodel, step: &CreateField) {
     let model = data_model.find_model_mut(&step.model).unwrap();
-    let mut field = Field::new(&step.name, step.tpe);
+    let mut field = Field::new(&step.name, step.tpe.clone());
     field.arity = step.arity;
-    field.database_name = step.db_name;
-    field.default_value = step.default;
+    field.database_name = step.db_name.clone();
+    field.default_value = step.default.clone();
     field.is_unique = step.is_unique;
-    field.id_info = step.id;
+    field.id_info = step.id.clone();
     field.scalar_list_strategy = step.scalar_list;
 
     model.add_field(field);

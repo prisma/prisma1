@@ -11,9 +11,8 @@ pub struct SqlDatabaseMigrationStepsInferrer {
     pub schema_name: String,
 }
 
-#[allow(unused, dead_code)]
 impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationStepsInferrer {
-    fn infer(&self, previous: &Schema, next: &Schema, steps: Vec<MigrationStep>) -> Vec<SqlMigrationStep> {
+    fn infer(&self, previous: &Datamodel, next: &Datamodel, steps: &Vec<MigrationStep>) -> Vec<SqlMigrationStep> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
         let steps = DatabaseSchemaDiffer::diff(&current_database_schema, &expected_database_schema);
@@ -66,7 +65,9 @@ impl SqlDatabaseMigrationStepsInferrer {
         // based on 'Making Other Kinds Of Table Schema Changes' from https://www.sqlite.org/lang_altertable.html
         let name_of_temporary_table = format!("new_{}", next.name.clone());
         vec![
-            SqlMigrationStep::RawSql("PRAGMA foreign_keys=OFF;".to_string()),
+            SqlMigrationStep::RawSql {
+                raw: "PRAGMA foreign_keys=OFF;".to_string(),
+            },
             // todo: start transaction now
             SqlMigrationStep::CreateTable(CreateTable {
                 name: format!("new_{}", next.name.clone()),
@@ -89,7 +90,7 @@ impl SqlDatabaseMigrationStepsInferrer {
                     columns_string,
                     next.name.clone()
                 );
-                SqlMigrationStep::RawSql(sql.to_string())
+                SqlMigrationStep::RawSql { raw: sql.to_string() }
             },
             SqlMigrationStep::DropTable(DropTable {
                 name: current.name.clone(),
@@ -99,9 +100,13 @@ impl SqlDatabaseMigrationStepsInferrer {
                 new_name: next.name.clone(),
             },
             // todo: recreate indexes + triggers
-            SqlMigrationStep::RawSql(format!(r#"PRAGMA "{}".foreign_key_check;"#, self.schema_name)),
+            SqlMigrationStep::RawSql {
+                raw: format!(r#"PRAGMA "{}".foreign_key_check;"#, self.schema_name),
+            },
             // todo: commit transaction
-            SqlMigrationStep::RawSql("PRAGMA foreign_keys=ON;".to_string()),
+            SqlMigrationStep::RawSql {
+                raw: "PRAGMA foreign_keys=ON;".to_string(),
+            },
         ]
     }
 }

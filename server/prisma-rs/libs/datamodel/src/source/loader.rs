@@ -47,7 +47,7 @@ impl SourceLoader {
 
     /// Loads all source config blocks form the given AST,
     /// and returns a Source instance for each.
-    pub fn load(&self, ast_schema: &ast::Schema) -> Result<Vec<Box<Source>>, ErrorCollection> {
+    pub fn load(&self, ast_schema: &ast::Datamodel) -> Result<Vec<Box<Source>>, ErrorCollection> {
         let mut sources: Vec<Box<Source>> = vec![];
         let mut errors = ErrorCollection::new();
 

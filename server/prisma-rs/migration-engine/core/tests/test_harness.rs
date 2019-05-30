@@ -6,7 +6,7 @@ use migration_core::MigrationEngine;
 use std::panic;
 
 #[allow(unused)]
-pub fn parse(datamodel_string: &str) -> datamodel::Schema {
+pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     match datamodel::parse(datamodel_string) {
         Ok(s) => s,
         Err(errs) => {
@@ -52,7 +52,8 @@ pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSch
         project_info: project_info,
         migration_id: migration_id,
         steps: output.datamodel_steps,
-        force: false,
+        force: None,
+        dry_run: None,
     };
     let cmd = ApplyMigrationCommand::new(input);
     let engine = MigrationEngine::new();

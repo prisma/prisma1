@@ -33,7 +33,7 @@ impl MigrationEngine {
         Arc::clone(&self.datamodel_calculator)
     }
 
-    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepExt>> {
+    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepMarker>> {
         Arc::new(SqlMigrationConnector::new(self.schema_name()))
     }
 
@@ -42,7 +42,7 @@ impl MigrationEngine {
         "migration_engine".to_string()
     }
 
-    pub fn parse_datamodel(&self, datamodel_string: &String) -> Schema {
+    pub fn parse_datamodel(&self, datamodel_string: &String) -> Datamodel {
         let ast = datamodel::parser::parse(datamodel_string).unwrap();
         // TODO: this would need capabilities
         // TODO: Special directives are injected via EmptyAttachmentValidator.
