@@ -1,6 +1,5 @@
 use migration_connector::steps::*;
-use migration_core::commands::apply_migration::*;
-use migration_core::commands::command::*;
+use migration_core::commands::*;
 use migration_core::migration_engine::MigrationEngine;
 use std::io::{self, Read};
 
@@ -14,7 +13,8 @@ fn main() {
         project_info: "the-project-info".to_string(),
         migration_id: "the-migration-id".to_string(),
         steps: steps,
-        force: false,
+        force: None,
+        dry_run: None,
     };
     let cmd = ApplyMigrationCommand::new(input);
     let engine = MigrationEngine::new();
