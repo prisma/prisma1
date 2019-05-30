@@ -17,6 +17,8 @@ impl MigrationCommand for ApplyMigrationCommand {
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
+        let is_dry_run = self.input.dry_run.unwrap_or(false);
+
         let connector = engine.connector();
         let current_data_model = connector
             .migration_persistence()
@@ -35,14 +37,16 @@ impl MigrationCommand for ApplyMigrationCommand {
 
         let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
 
-        let mut migration = Migration::new(self.input.migration_id.clone());
-        migration.datamodel_steps = self.input.steps.clone();
-        migration.database_steps = database_steps_json.to_string();
-        let saved_migration = connector.migration_persistence().create(migration);
+        if !is_dry_run {
+            let mut migration = Migration::new(self.input.migration_id.clone());
+            migration.datamodel_steps = self.input.steps.clone();
+            migration.database_steps = database_steps_json.to_string();
+            let saved_migration = connector.migration_persistence().create(migration);
 
-        connector
-            .migration_applier()
-            .apply_steps(saved_migration, database_migration_steps);
+            connector
+                .migration_applier()
+                .apply_steps(saved_migration, database_migration_steps);
+        }
 
         ApplyMigrationOutput {
             datamodel_steps: self.input.steps.clone(),
@@ -60,7 +64,8 @@ pub struct ApplyMigrationInput {
     pub project_info: String,
     pub migration_id: String,
     pub steps: Vec<MigrationStep>,
-    pub force: bool,
+    pub force: Option<bool>,
+    pub dry_run: Option<bool>,
 }
 
 #[derive(Debug, Serialize)]

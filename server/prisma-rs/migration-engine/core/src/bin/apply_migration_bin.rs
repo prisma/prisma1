@@ -14,7 +14,8 @@ fn main() {
         project_info: "the-project-info".to_string(),
         migration_id: "the-migration-id".to_string(),
         steps: steps,
-        force: false,
+        force: None,
+        dry_run: None,
     };
     let cmd = ApplyMigrationCommand::new(input);
     let engine = MigrationEngine::new();
