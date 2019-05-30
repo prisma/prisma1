@@ -2,13 +2,13 @@ mod migration_applier;
 pub mod steps;
 
 use chrono::{DateTime, Utc};
+use database_inspector::DatabaseInspector;
 use datamodel::Schema;
 pub use migration_applier::*;
 use serde::Serialize;
 use std::fmt::Debug;
 use std::sync::Arc;
 pub use steps::MigrationStep;
-use database_inspector::DatabaseInspector;
 
 #[macro_use]
 extern crate serde_derive;
@@ -39,7 +39,7 @@ pub trait MigrationConnector {
     }
 }
 
-pub trait DatabaseMigrationStepExt: Debug + Serialize {}
+pub trait DatabaseMigrationStepExt: Debug {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
     fn infer(&self, previous: &Schema, next: &Schema, steps: &Vec<MigrationStep>) -> Vec<T>;
@@ -47,10 +47,12 @@ pub trait DatabaseMigrationStepsInferrer<T> {
 
 pub trait DatabaseMigrationStepApplier<T> {
     fn apply(&self, step: T);
+
+    fn render_steps(&self, steps: &Vec<T>) -> serde_json::Value;
 }
 
 pub trait DestructiveChangesChecker<T> {
-    fn check(&self, steps: Vec<T>) -> Vec<MigrationResult>;
+    fn check(&self, steps: &Vec<T>) -> Vec<MigrationResult>;
 }
 
 pub enum MigrationResult {

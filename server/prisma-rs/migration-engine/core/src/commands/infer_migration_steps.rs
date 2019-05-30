@@ -35,7 +35,9 @@ impl MigrationCommand for InferMigrationStepsCommand {
                 .database_steps_inferrer()
                 .infer(&current_data_model, &next_data_model, &model_migration_steps);
 
-        let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
+        let database_steps_json = connector
+            .database_step_applier()
+            .render_steps(&database_migration_steps);
 
         InferMigrationStepsOutput {
             datamodel_steps: model_migration_steps,

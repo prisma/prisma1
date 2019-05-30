@@ -36,7 +36,9 @@ impl MigrationCommand for ApplyMigrationCommand {
                 .database_steps_inferrer()
                 .infer(&current_data_model, &next_data_model, &self.input.steps);
 
-        let database_steps_json = serde_json::to_value(&database_migration_steps).unwrap();
+        let database_steps_json = connector
+            .database_step_applier()
+            .render_steps(&database_migration_steps);
 
         if !is_dry_run {
             let mut migration = Migration::new(self.input.migration_id.clone());
