@@ -62,6 +62,9 @@ pub struct Field {
     pub scalar_list_strategy: Option<ScalarListStrategy>,
     /// Comments associated with this field.
     pub comments: Vec<Comment>,
+    /// If set, signals that this field was internally generated
+    /// and should never be displayed to the user.
+    pub generated: bool,
 }
 
 impl WithName for Field {
@@ -95,6 +98,22 @@ impl Field {
             id_info: None,
             scalar_list_strategy: None,
             comments: vec![],
+            generated: false,
+        }
+    }
+    /// Creates a new field with the given name and type, marked as generated.
+    pub fn new_generated(name: &str, field_type: FieldType) -> Field {
+        Field {
+            name: String::from(name),
+            arity: FieldArity::Required,
+            field_type: field_type,
+            database_name: None,
+            default_value: None,
+            is_unique: false,
+            id_info: None,
+            scalar_list_strategy: None,
+            comments: vec![],
+            generated: false,
         }
     }
 }
