@@ -61,9 +61,16 @@ fn create_should_allow_to_create_a_new_migration() {
         let mut migration = Migration::new("my_migration".to_string());
         migration.status = MigrationStatus::Success;
         migration.datamodel = datamodel;
+        migration.datamodel_steps = vec![MigrationStep::CreateEnum(CreateEnum {
+            name: "MyEnum".to_string(),
+            values: vec!["A".to_string(), "B".to_string()],
+            db_name: None,
+        })];
+        migration.errors = vec!["error1".to_string(), "error2".to_string()];
 
         let result = persistence.create(migration.clone());
-        migration.revision = result.revision; // copy over the revision so that the assertion can work.`
+        migration.revision = result.revision; // copy over the generated revision so that the assertion can work.`
+
         assert_eq!(result, migration);
         let loaded = persistence.last().unwrap();
         assert_eq!(loaded, migration);

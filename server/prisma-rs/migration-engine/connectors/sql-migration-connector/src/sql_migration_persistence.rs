@@ -131,7 +131,10 @@ fn parse_row(row: &Row) -> Migration {
     let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
     let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN).unwrap();
     let database_steps_json: String = row.get(DATABASE_STEPS_COLUMN).unwrap();
+    let datamodel_steps_json: String = row.get(DATAMODEL_STEPS_COLUMN).unwrap();
     let datamodel_string: String = row.get(DATAMODEL_COLUMN).unwrap();
+
+    let datamodel_steps = serde_json::from_str(&datamodel_steps_json).unwrap();
     let datamodel = datamodel::parse(&datamodel_string).unwrap();
     Migration {
         name: row.get(NAME_COLUMN).unwrap(),
@@ -140,7 +143,7 @@ fn parse_row(row: &Row) -> Migration {
         status: MigrationStatus::from_str(row.get(STATUS_COLUMN).unwrap()),
         applied: applied as usize,
         rolled_back: rolled_back as usize,
-        datamodel_steps: Vec::new(),
+        datamodel_steps: datamodel_steps,
         database_steps: database_steps_json,
         errors: errors,
         started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN).unwrap()),
