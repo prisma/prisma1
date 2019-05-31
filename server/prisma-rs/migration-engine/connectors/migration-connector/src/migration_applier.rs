@@ -35,6 +35,7 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
     }
 
     fn unapply_steps(&self, migration: &Migration, steps: &Vec<T>) {
+        assert_eq!(migration.status, MigrationStatus::Success); // what other states are valid here?
         unimplemented!()
     }
 }
