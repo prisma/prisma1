@@ -1,7 +1,13 @@
 import chalk from 'chalk'
-import { Command, Commands } from './types'
-import { arg, isError, format } from './utils'
-import { HelpError, unknownCommand } from './Help'
+import {
+  Command,
+  Commands,
+  arg,
+  isError,
+  format,
+  HelpError,
+  unknownCommand,
+} from '@prisma/cli'
 
 /**
  * CLI command

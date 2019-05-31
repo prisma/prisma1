@@ -1,0 +1,34 @@
+{
+  "name": "@prisma/prototype",
+  "version": "0.0.2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": "git@github.com:prisma/prisma.git",
+  "author": "Tim Suchanek <suchanek@prisma.io>",
+  "license": "Apache-2.0",
+  "private": false,
+  "files": [
+    "build",
+    "download.js"
+  ],
+  "bin": {
+    "prisma2": "build/index.js"
+  },
+  "dependencies": {
+    "@prisma/fetch-engine": "^0.0.14"
+  },
+  "devDependencies": {
+    "@prisma/cli": "^0.0.4",
+    "@prisma/lift": "^0.0.2",
+    "@zeit/ncc": "^0.18.5",
+    "typescript": "^3.5.1"
+  },
+  "scripts": {
+    "install": "node scripts/download.js",
+    "build": "tsc -d",
+    "ncc": "ncc build dist/bin.js -o build",
+    "ncc:download": "ncc build scripts/download.js -o download-build -m",
+    "build-cli": "yarn build && yarn ncc && sed -i.bak 's/env ts-node/env node/g' 'build/index.js'",
+    "prepublishOnly": "yarn build"
+  }
+}

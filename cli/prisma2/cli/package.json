@@ -1,6 +1,6 @@
 {
   "name": "@prisma/cli",
-  "version": "0.0.0",
+  "version": "0.0.4",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "git@github.com:prisma/prisma.git",
@@ -16,5 +16,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "devDependencies": {
+    "typescript": "^3.5.1"
+  }
 }
