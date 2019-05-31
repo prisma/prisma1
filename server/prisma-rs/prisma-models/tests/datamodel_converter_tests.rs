@@ -1,5 +1,4 @@
 #![allow(non_snake_case)]
-use datamodel::validator::Validator;
 use prisma_models::*;
 use std::sync::Arc;
 
@@ -324,9 +323,7 @@ fn explicit_relation_names() {
 }
 
 fn convert(datamodel: &str) -> Arc<InternalDataModel> {
-    let ast = datamodel::parser::parse(datamodel).unwrap();
-    let validator = Validator::new();
-    let datamodel = validator.validate(&ast).unwrap();
+    let datamodel = datamodel::parse(datamodel).unwrap();
     let template = DatamodelConverter::convert(&datamodel);
     template.build("not_important".to_string())
 }
