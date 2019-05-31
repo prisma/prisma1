@@ -113,6 +113,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
   /// This needs special consideration, due to circular dependencies.
   /// Assume a data model looks like this, with arrows indicating some kind of relation between models:
   ///
+  /// ```text
   ///       +---+
   ///   +---+ B +<---+
   ///   |   +---+    |
@@ -120,6 +121,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
   /// +-+-+        +-+-+      +---+
   /// | A +------->+ C +<-----+ D |
   /// +---+        +---+      +---+
+  /// ```
   ///
   /// The above would cause infinite filter type builder to be instantiated due to the circular
   /// dependency (A -> B -> C -> A) in relations without the cache to break circles.
