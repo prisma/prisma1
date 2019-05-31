@@ -112,7 +112,7 @@ impl<'a> DatamodelConverterImpl<'a> {
             .collect()
     }
 
-    fn calculate_relations(datamodel: &dml::Datamodel) -> Vec<TempRelationHolder> {
+    pub fn calculate_relations(datamodel: &dml::Datamodel) -> Vec<TempRelationHolder> {
         let mut result = Vec::new();
         for model in datamodel.models() {
             for field in model.fields() {
@@ -213,17 +213,17 @@ impl<'a> DatamodelConverterImpl<'a> {
 }
 
 #[derive(Debug, Clone)]
-struct TempRelationHolder {
-    name: Option<String>,
-    model_a: dml::Model,
-    model_b: dml::Model,
-    field_a: dml::Field,
-    field_b: dml::Field,
-    manifestation: TempManifestationHolder,
+pub struct TempRelationHolder {
+    pub name: Option<String>,
+    pub model_a: dml::Model,
+    pub model_b: dml::Model,
+    pub field_a: dml::Field,
+    pub field_b: dml::Field,
+    pub manifestation: TempManifestationHolder,
 }
 
 #[derive(PartialEq, Debug, Clone)]
-enum TempManifestationHolder {
+pub enum TempManifestationHolder {
     Inline { in_table_of_model: String, column: String },
     Table,
 }
@@ -238,8 +238,16 @@ impl TempRelationHolder {
         }
     }
 
-    fn table_name(&self) -> String {
+    pub fn table_name(&self) -> String {
         format!("_{}", self.name())
+    }
+
+    pub fn model_a_column(&self) -> String {
+        "A".to_string()
+    }
+
+    pub fn model_b_column(&self) -> String {
+        "B".to_string()
     }
 
     fn is_many_to_many(&self) -> bool {
@@ -265,8 +273,8 @@ impl TempRelationHolder {
             // TODO: relation table columns must get renamed: lowercased type names instead of A and B
             TempManifestationHolder::Table => RelationLinkManifestation::RelationTable(RelationTable {
                 table: self.table_name(),
-                model_a_column: "A".to_string(),
-                model_b_column: "B".to_string(),
+                model_a_column: self.model_a_column(),
+                model_b_column: self.model_b_column(),
                 id_column: None,
             }),
             TempManifestationHolder::Inline {
