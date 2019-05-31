@@ -164,7 +164,7 @@ impl ScalarField {
     }
 
     pub fn is_unique(&self) -> bool {
-        self.is_unique //|| self.is_id()
+        self.is_unique || self.is_id()
     }
 
     pub fn db_name(&self) -> &str {
