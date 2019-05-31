@@ -1,6 +1,6 @@
 {
   "name": "@prisma/prototype",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "git@github.com:prisma/prisma.git",
@@ -9,26 +9,24 @@
   "private": false,
   "files": [
     "build",
-    "download.js"
+    "download-build"
   ],
   "bin": {
     "prisma2": "build/index.js"
   },
-  "dependencies": {
-    "@prisma/fetch-engine": "^0.0.14"
-  },
   "devDependencies": {
     "@prisma/cli": "^0.0.4",
+    "@prisma/fetch-engine": "^0.0.15",
     "@prisma/lift": "^0.0.2",
     "@zeit/ncc": "^0.18.5",
     "typescript": "^3.5.1"
   },
   "scripts": {
-    "install": "node scripts/download.js",
-    "build": "tsc -d",
+    "install": "node download-build/index.js",
+    "tsc": "tsc -d",
     "ncc": "ncc build dist/bin.js -o build",
     "ncc:download": "ncc build scripts/download.js -o download-build -m",
-    "build-cli": "yarn build && yarn ncc && sed -i.bak 's/env ts-node/env node/g' 'build/index.js'",
+    "build": "yarn tsc && yarn ncc:download && yarn ncc && sed -i.bak 's/env ts-node/env node/g' 'build/index.js'",
     "prepublishOnly": "yarn build"
   }
 }

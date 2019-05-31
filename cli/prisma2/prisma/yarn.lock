@@ -37,10 +37,10 @@
     p-retry "^4.1.0"
     progress "^2.0.3"
 
-"@prisma/fetch-engine@^0.0.14":
-  version "0.0.14"
-  resolved "https://registry.yarnpkg.com/@prisma/fetch-engine/-/fetch-engine-0.0.14.tgz#2ea7e6932f56a795817e28f90a76ac8362428e47"
-  integrity sha512-Td3QactBZG9n7e5Fu0pNSEQPE0xYUOSoRSzqkrpcA7JN7+AcjaGX6wl9QnDzUWepedNdlCIpiPKVcjqS4Wyj0w==
+"@prisma/fetch-engine@^0.0.15":
+  version "0.0.15"
+  resolved "https://registry.yarnpkg.com/@prisma/fetch-engine/-/fetch-engine-0.0.15.tgz#aae3152f6d021a44afce59662483459563370113"
+  integrity sha512-cPXhmK8cJIMT/L1JexHvkQ7hItGse1IubNTX0Qfijo8aoNHLQQrmOdGWK7TwKqg7y3svJE+5TbUPjd9mQMwQ/w==
   dependencies:
     chalk "^2.4.2"
     death "^1.1.0"
