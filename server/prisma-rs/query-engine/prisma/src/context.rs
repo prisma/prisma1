@@ -14,6 +14,9 @@ pub struct PrismaContext {
     /// This is currently used, as a temporary workaround.
     pub sdl: Option<String>,
 
+    /// DML based datamodel.
+    pub dm: Option<datamodel::Datamodel>,
+
     #[debug_stub = "#Executor#"]
     pub executor: Executor,
 }
@@ -37,6 +40,9 @@ impl PrismaContext {
         let query_schema = schema_builder.build();
         let sdl = data_model::load_v2_dml_string().ok(); // temporary
 
+        // Temporary
+        let dm = datamodel::parse(sdl.as_ref().unwrap()).ok();
+
         // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
 
         Ok(Self {
@@ -44,6 +50,7 @@ impl PrismaContext {
             internal_data_model,
             query_schema,
             sdl,
+            dm,
             executor,
         })
     }

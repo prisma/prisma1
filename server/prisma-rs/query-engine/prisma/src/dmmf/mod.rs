@@ -2,18 +2,18 @@ mod schema;
 
 use core::schema::{QuerySchema, QuerySchemaRenderer};
 use schema::*;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DataModelMetaFormat {
+pub struct DataModelMetaFormat<'a> {
     #[serde(rename = "datamodel")]
-    pub data_model: DataModel,
+    pub data_model: &'a datamodel::Datamodel,
     pub schema: DMMFSchema,
     pub mappings: Vec<DMMFMapping>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DMMFMapping {
     model: String,
@@ -24,7 +24,7 @@ pub struct DMMFMapping {
 }
 
 /// Dummy
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct DataModel {
     enums: Vec<()>,
     models: Vec<()>,
@@ -39,11 +39,11 @@ impl DataModel {
     }
 }
 
-pub fn render_dmmf(query_schema: &QuerySchema) -> DataModelMetaFormat {
+pub fn render_dmmf<'a>(dml: &'a datamodel::Datamodel, query_schema: &QuerySchema) -> DataModelMetaFormat<'a> {
     let schema = DMMFQuerySchemaRenderer::render(query_schema);
 
     DataModelMetaFormat {
-        data_model: DataModel::new(),
+        data_model: dml,
         schema,
         mappings: vec![],
     }
