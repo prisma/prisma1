@@ -8,7 +8,7 @@ pub use migration_applier::*;
 use serde::Serialize;
 use std::fmt::Debug;
 use std::sync::Arc;
-pub use steps::MigrationStep;
+pub use steps::*;
 
 #[macro_use]
 extern crate serde_derive;

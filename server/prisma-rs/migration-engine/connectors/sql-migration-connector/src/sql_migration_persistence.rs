@@ -1,6 +1,5 @@
 #[allow(unused, dead_code)]
 use chrono::*;
-use datamodel::Datamodel;
 use migration_connector::*;
 use prisma_query::{ast::*, visitor::*};
 use rusqlite::{Connection, Row};
@@ -63,14 +62,14 @@ impl MigrationPersistence for SqlMigrationPersistence {
             None => ParameterizedValue::Null,
         };
         let mut cloned = migration.clone();
-        // let status_value = serde_json::to_string(&migration.status).unwrap();
         let model_steps_json = serde_json::to_string(&migration.datamodel_steps).unwrap();
         let database_steps_json = migration.database_steps;
         let errors_json = serde_json::to_string(&migration.errors).unwrap();
+        let serialized_datamodel = datamodel::render(&migration.datamodel).unwrap();
 
         let query = Insert::single_into(TABLE_NAME)
             .value(NAME_COLUMN, migration.name)
-            .value(DATAMODEL_COLUMN, "".to_string()) // todo: serialize datamodel
+            .value(DATAMODEL_COLUMN, serialized_datamodel)
             .value(STATUS_COLUMN, migration.status.code())
             .value(APPLIED_COLUMN, migration.applied)
             .value(ROLLED_BACK_COLUMN, migration.rolled_back)
@@ -132,14 +131,19 @@ fn parse_row(row: &Row) -> Migration {
     let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
     let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN).unwrap();
     let database_steps_json: String = row.get(DATABASE_STEPS_COLUMN).unwrap();
+    let datamodel_steps_json: String = row.get(DATAMODEL_STEPS_COLUMN).unwrap();
+    let datamodel_string: String = row.get(DATAMODEL_COLUMN).unwrap();
+
+    let datamodel_steps = serde_json::from_str(&datamodel_steps_json).unwrap();
+    let datamodel = datamodel::parse(&datamodel_string).unwrap();
     Migration {
         name: row.get(NAME_COLUMN).unwrap(),
         revision: revision as usize,
-        datamodel: Datamodel::empty(),
+        datamodel: datamodel,
         status: MigrationStatus::from_str(row.get(STATUS_COLUMN).unwrap()),
         applied: applied as usize,
         rolled_back: rolled_back as usize,
-        datamodel_steps: Vec::new(),
+        datamodel_steps: datamodel_steps,
         database_steps: database_steps_json,
         errors: errors,
         started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN).unwrap()),
