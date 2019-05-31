@@ -16,9 +16,18 @@ impl MigrationCommand for ListMigrationStepsCommand {
         Box::new(ListMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
-        vec![]
+        let migration_persistence = engine.connector().migration_persistence();
+        migration_persistence
+            .load_all()
+            .into_iter()
+            .map(|mig| ListMigrationStepsOutput {
+                id: mig.name,
+                steps: mig.datamodel_steps,
+                status: mig.status,
+            })
+            .collect()
     }
 }
 

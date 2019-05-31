@@ -11,10 +11,10 @@ pub type ModelWeakRef = Weak<Model>;
 #[serde(rename_all = "camelCase")]
 pub struct ModelTemplate {
     pub name: String,
-    pub stable_identifier: String,
+    pub stable_identifier: String, // todo: remove once we fully switched to dm v2
     pub is_embedded: bool,
     pub fields: Vec<FieldTemplate>,
-    pub manifestation: Option<ModelManifestation>,
+    pub manifestation: Option<ModelManifestation>, // todo: convert to Option<String> once we fully switched to dm v2
 }
 
 #[derive(DebugStub)]

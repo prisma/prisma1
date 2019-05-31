@@ -19,7 +19,7 @@ pub trait ToSqlRow {
     /// Conversion from a database specific row to an allocated `SqlRow`. To
     /// help deciding the right types, the provided `TypeIdentifier`s should map
     /// to the returned columns in the right order.
-    fn to_prisma_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
+    fn to_sql_row<'b, T>(&'b self, idents: T) -> SqlResult<SqlRow>
     where
         T: IntoIterator<Item = &'b TypeIdentifier>;
 }

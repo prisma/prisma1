@@ -51,17 +51,15 @@ impl Executor {
         pipeline.store_prefetch(idx.into_iter().zip(results).collect());
 
         // Execute write queries and generate required read queries
-        let (mut idx, mut queries) = (vec![], vec![]);
-        for (index, write) in pipeline.get_writes() {
-            let res = self.write_exec.execute(write.inner.clone())?;
+        let (idx, writes): (Vec<_>, Vec<_>) = pipeline.get_writes().into_iter().unzip();
+        let results = self.write_exec.execute(writes)?;
+        let (idx, reads): (Vec<_>, Vec<_>) = pipeline
+            .process_writes(idx.into_iter().zip(results).collect())
+            .into_iter()
+            .unzip();
 
-            // Execute reads if they are required to be executed
-            if let (Some(index), Some(read)) = (index, write.generate_read(res)) {
-                idx.push(index);
-                queries.push(read);
-            }
-        }
-        let results = self.read_exec.execute(&queries)?;
+        // Execute read queries created by write-queries
+        let results = self.read_exec.execute(&reads)?;
         pipeline.store_reads(idx.into_iter().zip(results.into_iter()).collect());
 
         // Now execute all remaining reads

@@ -1,6 +1,7 @@
-use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
+use crate::{ast, dml};
 
+/// Prismas builtin `@scalarList` directive.
 pub struct ScalarListDirectiveValidator {}
 
 impl DirectiveValidator<dml::Field> for ScalarListDirectiveValidator {
@@ -17,5 +18,16 @@ impl DirectiveValidator<dml::Field> for ScalarListDirectiveValidator {
         }
 
         return Ok(());
+    }
+
+    fn serialize(&self, obj: &dml::Field) -> Result<Option<ast::Directive>, Error> {
+        if let Some(strategy) = &obj.scalar_list_strategy {
+            return Ok(Some(ast::Directive::new(
+                self.directive_name(),
+                vec![ast::Argument::new_constant("strategy", &strategy.to_string())],
+            )));
+        }
+
+        Ok(None)
     }
 }

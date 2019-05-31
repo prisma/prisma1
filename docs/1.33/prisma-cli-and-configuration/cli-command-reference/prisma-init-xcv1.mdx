@@ -1,0 +1,45 @@
+export const meta = {
+  title: "prisma init",
+  position: 110,
+}
+
+## `$ prisma init`
+
+Bootstraps the service configuration for a new Prisma service. The command launches an interactive CLI wizard by default, helping you to decide where (i.e. to which Prisma server) the service should be deployed later.
+
+If you already know the endpoint, you can pass it using the `--endpoint` flag and skip the interactive wizard.
+
+The generated files are:
+
+- `prisma.yml`
+- `datamodel.prisma`
+- `docker-compose.yml` (optional)
+
+If you provide a directory name as an argument to the command, the generated files will be placed inside a new directory with that name.
+
+
+### Flags
+
+```bash
+-e, --endpoint         The endpoint to be written into prisma.yml
+```
+
+### Usage
+
+```bash
+prisma init DIRNAME
+```
+
+### Examples
+
+**Create service configuration for Prisma service in a directory called `myapp` using the wizard**
+
+```bash
+prisma init myapp
+```
+
+**Skip wizard and create service configuration for Prisma service in a directory called `myapp`**
+
+```bash
+prisma init myapp --endpoint http://localhost:4466/myapp/dev
+```

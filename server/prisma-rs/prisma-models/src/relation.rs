@@ -29,7 +29,7 @@ impl OnDelete {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct InlineRelation {
     #[serde(rename = "inTableOfModelId")]
@@ -46,7 +46,7 @@ impl InlineRelation {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct RelationTable {
     pub table: String,
@@ -55,7 +55,7 @@ pub struct RelationTable {
     pub id_column: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 #[serde(rename_all = "snake_case", tag = "relationManifestationType")]
 pub enum RelationLinkManifestation {
     Inline(InlineRelation),
@@ -68,7 +68,7 @@ pub struct RelationTemplate {
     pub name: String,
     pub model_a_on_delete: OnDelete,
     pub model_b_on_delete: OnDelete,
-    pub manifestation: Option<RelationLinkManifestation>,
+    pub manifestation: Option<RelationLinkManifestation>, // TODO: remove the option after the switch to v2 is completed
 
     #[serde(rename = "modelAId")]
     pub model_a_name: String,

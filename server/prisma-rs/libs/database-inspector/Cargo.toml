@@ -5,6 +5,6 @@ authors = ["Marcus Böhm <boehm@prisma.io>"]
 edition = "2018"
 
 [dependencies]
-barrel = { git = "https://github.com/spacekookie/barrel", features = ["sqlite3"] }
+barrel = { version = "0.5.8", features = ["sqlite3"] }
 rusqlite = { git = "https://github.com/pimeys/rusqlite" }
 time = "*"

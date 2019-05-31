@@ -4,6 +4,10 @@ dev-mysql:
 	docker-compose -f docker-compose/mysql/dev-mysql.yml up -d --remove-orphans
 	cp ./docker-compose/mysql/prisma.yml .
 
+dev-mysql-native:
+	docker-compose -f docker-compose/mysql/dev-mysql.yml up -d --remove-orphans
+	cp ./docker-compose/mysql-native/prisma.yml .
+
 dev-postgres:
 	docker-compose -f docker-compose/postgres/dev-postgres.yml up -d --remove-orphans
 	cp ./docker-compose/postgres/prisma.yml ./prisma.yml

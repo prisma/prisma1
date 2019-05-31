@@ -1,6 +1,7 @@
-use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
+use crate::{ast, dml};
 
+/// Prismas builtin `@default` directive.
 pub struct DefaultDirectiveValidator {}
 
 impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
@@ -20,5 +21,16 @@ impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
         }
 
         return Ok(());
+    }
+
+    fn serialize(&self, field: &dml::Field) -> Result<Option<ast::Directive>, Error> {
+        if let Some(default_value) = &field.default_value {
+            return Ok(Some(ast::Directive::new(
+                self.directive_name(),
+                vec![ast::Argument::new("", default_value.into())],
+            )));
+        }
+
+        Ok(None)
     }
 }

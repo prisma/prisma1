@@ -1,27 +1,36 @@
-use super::{DirectiveValidationError, ErrorWithSpan, TypeNotFoundError};
+use super::errors::ValidationError;
 
+/// Represents a list of validation or parser errors.
+///
+/// This is uses to accumulate all errors and show them all at once.
 #[derive(Debug)]
 pub struct ErrorCollection {
-    pub errors: Vec<Box<ErrorWithSpan>>,
+    pub errors: Vec<ValidationError>,
 }
 
 impl ErrorCollection {
+    /// Creates a new, empty error collection.
     pub fn new() -> ErrorCollection {
         ErrorCollection { errors: Vec::new() }
     }
 
-    pub fn push(&mut self, err: Box<ErrorWithSpan>) {
+    /// Adds an error.
+    pub fn push(&mut self, err: ValidationError) {
         self.errors.push(err)
     }
 
+    /// Returns true, if there is at least one error
+    /// in this collection.
     pub fn has_errors(&self) -> bool {
         self.errors.len() > 0
     }
 
-    pub fn to_iter(&self) -> std::slice::Iter<Box<ErrorWithSpan>> {
+    /// Creates an iterator over all errors in this collection.
+    pub fn to_iter(&self) -> std::slice::Iter<ValidationError> {
         self.errors.iter()
     }
 
+    /// Appends all errors from another collection to this collection.
     pub fn append(&mut self, errs: &mut ErrorCollection) {
         self.errors.append(&mut errs.errors)
     }
@@ -33,18 +42,10 @@ impl std::fmt::Display for ErrorCollection {
     }
 }
 
-impl std::convert::From<DirectiveValidationError> for ErrorCollection {
-    fn from(error: DirectiveValidationError) -> Self {
+impl std::convert::From<ValidationError> for ErrorCollection {
+    fn from(error: ValidationError) -> Self {
         let mut col = ErrorCollection::new();
-        col.push(Box::new(error));
-        col
-    }
-}
-
-impl std::convert::From<TypeNotFoundError> for ErrorCollection {
-    fn from(error: TypeNotFoundError) -> Self {
-        let mut col = ErrorCollection::new();
-        col.push(Box::new(error));
+        col.push(error);
         col
     }
 }

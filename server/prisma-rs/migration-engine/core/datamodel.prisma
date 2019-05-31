@@ -10,6 +10,12 @@ model Author {
     id: Int @primary
     name: String?
     authors: Blog[]
+    city: City?
+}
+
+model City {
+    id: Int @primary
+    author: Author?
 }
 
 model Post {

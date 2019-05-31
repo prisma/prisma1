@@ -33,13 +33,17 @@ fn main() {
                 Err(errors) => {
                     for error in errors.to_iter() {
                         println!("");
-                        datamodel::errors::pretty_print_error(file_name, &file, &error.span(), &format!("{}", error));
+                        error
+                            .pretty_print(&mut std::io::stderr().lock(), file_name, &file)
+                            .expect("Failed to write errors to stderr");
                     }
                 }
             }
         }
         Err(error) => {
-            datamodel::errors::pretty_print_error(file_name, &file, &error.span, &format!("{}", error));       
+            error
+                .pretty_print(&mut std::io::stderr().lock(), file_name, &file)
+                .expect("Failed to write error to stderr");
         }
     }
 }

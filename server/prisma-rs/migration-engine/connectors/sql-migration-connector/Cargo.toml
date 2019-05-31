@@ -13,5 +13,5 @@ database-inspector = { path = "../../../libs/database-inspector" }
 serde_json = "1.0"
 serde = "1.0"
 rusqlite = { git = "https://github.com/pimeys/rusqlite", features = ["chrono", "bundled"] }
-barrel = { version = "0.5.6", features = ["sqlite3"] }
+barrel = { version = "0.5.8", features = ["sqlite3"] }
 itertools = "0.8"

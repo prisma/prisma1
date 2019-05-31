@@ -3,11 +3,11 @@ use datamodel::*;
 use itertools::Itertools;
 
 pub struct DatabaseSchemaCalculator<'a> {
-    data_model: &'a Schema,
+    data_model: &'a Datamodel,
 }
 
 impl<'a> DatabaseSchemaCalculator<'a> {
-    pub fn calculate(data_model: &Schema) -> DatabaseSchema {
+    pub fn calculate(data_model: &Datamodel) -> DatabaseSchema {
         let calculator = DatabaseSchemaCalculator { data_model };
         calculator.calculate_internal()
     }
@@ -103,15 +103,15 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         in_table_of_model,
                         column,
                     } if in_table_of_model == &model_table.model.name => {
-                        let (field, related_model) = if model_table.model == relation.model_a {
-                            (&relation.field_a, &relation.model_b)
+                        let related_model = if model_table.model == relation.model_a {
+                            &relation.model_b
                         } else {
-                            (&relation.field_b, &relation.model_a)
+                            &relation.model_a
                         };
                         let column = Column::with_foreign_key(
                             column.to_string(),
-                            column_type(&model_table.model.id_field()),
-                            field.is_required(),
+                            column_type(&related_model.id_field()),
+                            relation.field_a.is_required() || relation.field_b.is_required(),
                             ForeignKey {
                                 table: related_model.db_name(),
                                 column: related_model.id_field().db_name(),
@@ -177,8 +177,8 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     FieldType::Relation(relation_info) => {
                         let RelationInfo {
                             to,
-                            to_field: _,
-                            name: _,
+                            to_fields,
+                            name,
                             on_delete: _,
                         } = relation_info;
                         let related_model = self.data_model.find_model(&to).unwrap();
@@ -189,32 +189,74 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             .unwrap()
                             .clone();
 
-                        let (model_a, model_b, field_a, field_b) = match () {
-                            _ if &model.name < &related_model.name => {
-                                (model.clone(), related_model.clone(), field.clone(), related_field)
-                            }
-                            _ if &related_model.name < &model.name => {
-                                (related_model.clone(), model.clone(), related_field, field.clone())
-                            }
-                            _ => (model.clone(), related_model.clone(), field.clone(), related_field),
+                        let related_field_info = match &related_field.field_type {
+                            FieldType::Relation(info) => info,
+                            _ => panic!("this was not a relation field"),
                         };
+
+                        let (model_a, model_b, field_a, field_b) = match () {
+                            _ if &model.name < &related_model.name => (
+                                model.clone(),
+                                related_model.clone(),
+                                field.clone(),
+                                related_field.clone(),
+                            ),
+                            _ if &related_model.name < &model.name => (
+                                related_model.clone(),
+                                model.clone(),
+                                related_field.clone(),
+                                field.clone(),
+                            ),
+                            _ => (
+                                model.clone(),
+                                related_model.clone(),
+                                field.clone(),
+                                related_field.clone(),
+                            ),
+                        };
+                        let inline_on_model_a = RelationManifestation::Inline {
+                            in_table_of_model: model_a.name.clone(),
+                            column: field_a.db_name(),
+                        };
+                        let inline_on_model_b = RelationManifestation::Inline {
+                            in_table_of_model: model_b.name.clone(),
+                            column: field_b.db_name(),
+                        };
+                        let inline_on_this_model = RelationManifestation::Inline {
+                            in_table_of_model: model.name.clone(),
+                            column: field.db_name(),
+                        };
+                        let inline_on_related_model = RelationManifestation::Inline {
+                            in_table_of_model: related_model.name.clone(),
+                            column: related_field.db_name(),
+                        };
+
                         let manifestation = match (field_a.is_list(), field_b.is_list()) {
                             (true, true) => RelationManifestation::Table {
                                 model_a_column: "A".to_string(),
                                 model_b_column: "B".to_string(),
                             },
-                            (false, true) => RelationManifestation::Inline {
-                                in_table_of_model: model_a.name.clone(),
-                                column: field_a.db_name(),
+                            (false, true) => inline_on_model_a,
+                            (true, false) => inline_on_model_b,
+                            // TODO: to_fields is now a list, please fix this line.
+                            (false, false) => match (to_fields.first(), &related_field_info.to_fields.first()) {
+                                (Some(_), None) => inline_on_this_model,
+                                (None, Some(_)) => inline_on_related_model,
+                                (None, None) => {
+                                    if model_a.name < model_b.name {
+                                        inline_on_model_a
+                                    } else {
+                                        inline_on_model_b
+                                    }
+                                }
+                                (Some(_), Some(_)) => {
+                                    panic!("It's not allowed that both sides of a relation specify the inline policy")
+                                }
                             },
-                            (true, false) => RelationManifestation::Inline {
-                                in_table_of_model: model_b.name.clone(),
-                                column: field_b.db_name(),
-                            },
-                            (false, false) => unimplemented!(), // 1 to 1. choose semi randomly
                         };
 
                         result.push(Relation {
+                            name: name.clone(),
                             model_a: model_a,
                             model_b: model_b,
                             field_a: field_a,
@@ -238,6 +280,7 @@ struct ModelTable {
 
 #[derive(PartialEq, Debug, Clone)]
 struct Relation {
+    name: Option<String>,
     model_a: Model,
     model_b: Model,
     field_a: Field,
@@ -248,7 +291,10 @@ struct Relation {
 impl Relation {
     fn name(&self) -> String {
         // TODO: must replicate behaviour of `generateRelationName` from `SchemaInferrer`
-        format!("{}To{}", &self.model_a.name, &self.model_b.name)
+        match &self.name {
+            Some(name) => name.clone(),
+            None => format!("{}To{}", &self.model_a.name, &self.model_b.name),
+        }
     }
 
     fn table_name(&self) -> String {
@@ -351,7 +397,6 @@ fn column_type_for_scalar_type(scalar_type: &ScalarType) -> ColumnType {
         ScalarType::Int => ColumnType::Int,
         ScalarType::Float => ColumnType::Float,
         ScalarType::Boolean => ColumnType::Boolean,
-        ScalarType::Enum => ColumnType::String,
         ScalarType::String => ColumnType::String,
         ScalarType::DateTime => ColumnType::DateTime,
         ScalarType::Decimal => unimplemented!(),

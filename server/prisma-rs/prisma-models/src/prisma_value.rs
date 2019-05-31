@@ -3,7 +3,7 @@ use chrono::prelude::*;
 use graphql_parser::query::{Number, Value as GraphqlValue};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{convert::TryFrom, fmt};
+use std::{convert::TryFrom, fmt, string::FromUtf8Error};
 use uuid::Uuid;
 
 #[cfg(feature = "sql")]
@@ -276,6 +276,14 @@ impl From<String> for GraphqlId {
     }
 }
 
+impl TryFrom<Vec<u8>> for GraphqlId {
+    type Error = FromUtf8Error;
+
+    fn try_from(v: Vec<u8>) -> Result<GraphqlId, Self::Error> {
+        Ok(GraphqlId::String(String::from_utf8(v)?))
+    }
+}
+
 impl From<usize> for GraphqlId {
     fn from(id: usize) -> Self {
         GraphqlId::Int(id)
@@ -284,6 +292,12 @@ impl From<usize> for GraphqlId {
 
 impl From<i64> for GraphqlId {
     fn from(id: i64) -> Self {
+        GraphqlId::Int(id as usize)
+    }
+}
+
+impl From<u64> for GraphqlId {
+    fn from(id: u64) -> Self {
         GraphqlId::Int(id as usize)
     }
 }

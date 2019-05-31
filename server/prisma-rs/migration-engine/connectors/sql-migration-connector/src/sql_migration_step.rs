@@ -1,13 +1,15 @@
-use migration_connector::DatabaseMigrationStepExt;
+use migration_connector::DatabaseMigrationStepMarker;
 use serde::Serialize;
 
-impl DatabaseMigrationStepExt for SqlMigrationStep {}
+impl DatabaseMigrationStepMarker for SqlMigrationStep {}
 
 #[derive(Debug, Serialize)]
 pub enum SqlMigrationStep {
     CreateTable(CreateTable),
     AlterTable(AlterTable),
     DropTable(DropTable),
+    RenameTable { name: String, new_name: String },
+    RawSql { raw: String },
 }
 
 #[derive(Debug, Serialize)]
@@ -22,36 +24,36 @@ pub struct DropTable {
     pub name: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct AlterTable {
     pub table: String,
     pub changes: Vec<TableChange>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub enum TableChange {
     AddColumn(AddColumn),
     AlterColumn(AlterColumn),
     DropColumn(DropColumn),
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct AddColumn {
     pub column: ColumnDescription,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct DropColumn {
     pub name: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 pub struct AlterColumn {
     pub name: String,
     pub column: ColumnDescription,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct ColumnDescription {
     pub name: String,
     pub tpe: ColumnType,
@@ -59,7 +61,7 @@ pub struct ColumnDescription {
     pub foreign_key: Option<ForeignKey>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, PartialEq)]
 pub struct ForeignKey {
     pub table: String,
     pub column: String,

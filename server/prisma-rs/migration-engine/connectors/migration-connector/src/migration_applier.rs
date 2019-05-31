@@ -2,7 +2,7 @@ use crate::*;
 use std::sync::Arc;
 
 pub trait MigrationApplier<T> {
-    fn apply_steps(&self, migration: Migration, steps: Vec<T>);
+    fn apply_steps(&self, migration: &Migration, steps: &Vec<T>);
 }
 
 #[allow(unused, dead_code)]
@@ -13,7 +13,7 @@ pub struct MigrationApplierImpl<T> {
 
 #[allow(unused, dead_code)]
 impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
-    fn apply_steps(&self, migration: Migration, steps: Vec<T>) {
+    fn apply_steps(&self, migration: &Migration, steps: &Vec<T>) {
         // todo: refactor those procedural updates into proper domain methods on the Migration struct
         assert_eq!(migration.status, MigrationStatus::Pending); // what other states are valid here?
 
@@ -22,7 +22,7 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
         self.migration_persistence.update(&migration_updates);
 
         for step in steps {
-            self.step_applier.apply(step);
+            self.step_applier.apply(&step);
             migration_updates.applied = migration_updates.applied + 1;
             self.migration_persistence.update(&migration_updates);
         }

@@ -1,6 +1,7 @@
-use crate::dml;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
+use crate::{ast, dml};
 
+/// Prismas builtin `@sequence` directive.
 pub struct SequenceDirectiveValidator {}
 
 impl DirectiveValidator<dml::Field> for SequenceDirectiveValidator {
@@ -43,5 +44,27 @@ impl DirectiveValidator<dml::Field> for SequenceDirectiveValidator {
         }
 
         return Ok(());
+    }
+
+    fn serialize(&self, field: &dml::Field) -> Result<Option<ast::Directive>, Error> {
+        if let Some(id_info) = &field.id_info {
+            if let Some(seq_info) = &id_info.sequence {
+                let mut args = Vec::new();
+
+                args.push(ast::Argument::new_string("name", &seq_info.name));
+                args.push(ast::Argument::new(
+                    "allocationSize",
+                    dml::Value::Int(seq_info.allocation_size).into(),
+                ));
+                args.push(ast::Argument::new(
+                    "initialValie",
+                    dml::Value::Int(seq_info.initial_value).into(),
+                ));
+
+                return Ok(Some(ast::Directive::new(self.directive_name(), args)));
+            }
+        }
+
+        Ok(None)
     }
 }

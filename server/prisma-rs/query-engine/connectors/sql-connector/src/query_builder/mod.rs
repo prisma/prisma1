@@ -7,8 +7,9 @@ use connector::{
 };
 use prisma_models::prelude::*;
 use prisma_query::ast::*;
-use related_nodes::RelatedNodesQueryBuilder;
 use std::sync::Arc;
+
+pub use related_nodes::*;
 
 pub trait SelectDefinition {
     fn into_select(self, _: ModelRef) -> Select;
@@ -86,24 +87,6 @@ impl QueryBuilder {
             .columns()
             .into_iter()
             .fold(query.into_select(model), |acc, col| acc.column(col.clone()))
-    }
-
-    pub fn get_related_nodes(
-        from_field: RelationFieldRef,
-        from_node_ids: &[GraphqlId],
-        query_arguments: QueryArguments,
-        selected_fields: &SelectedFields,
-    ) -> Select {
-        let is_with_pagination = query_arguments.is_with_pagination();
-        let builder = RelatedNodesQueryBuilder::new(from_field, from_node_ids, query_arguments, selected_fields);
-
-        let select_ast = if is_with_pagination {
-            builder.with_pagination()
-        } else {
-            builder.without_pagination()
-        };
-
-        select_ast
     }
 
     pub fn get_scalar_list_values_by_node_ids(list_field: ScalarFieldRef, node_ids: Vec<GraphqlId>) -> Select {

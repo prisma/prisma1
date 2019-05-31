@@ -1,6 +1,12 @@
 use crate::filter::{Filter, NodeSelector};
 use prisma_models::*;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct SkipAndLimit {
+    pub skip: usize,
+    pub limit: Option<usize>,
+}
+
 #[derive(Debug, Default, Clone)]
 pub struct QueryArguments {
     pub skip: Option<u32>,
@@ -23,6 +29,19 @@ impl QueryArguments {
         match self.last.or(self.first) {
             Some(limited_count) => (skip, limited_count + skip),
             None => (skip, 100000000),
+        }
+    }
+
+    pub fn skip_and_limit(&self) -> SkipAndLimit {
+        match self.last.or(self.first) {
+            Some(limited_count) => SkipAndLimit {
+                skip: self.skip.unwrap_or(0) as usize,
+                limit: Some((limited_count + 1) as usize),
+            },
+            None => SkipAndLimit {
+                skip: self.skip.unwrap_or(0) as usize,
+                limit: None,
+            },
         }
     }
 }

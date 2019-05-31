@@ -7,7 +7,7 @@ use connector::{error::ConnectorError, filter::NodeSelector, DataResolver, Datab
 use prisma_common::config::*;
 use prisma_models::prelude::*;
 use prost::Message;
-use sql_connector::{PostgreSql, SqlDatabase, Sqlite};
+use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite};
 use std::{convert::TryFrom, sync::Arc};
 
 pub struct ProtoBufInterface {
@@ -35,6 +35,15 @@ impl ProtoBufInterface {
                 "postgres-native" => {
                     let postgres = PostgreSql::try_from(database).unwrap();
                     let connector = Arc::new(SqlDatabase::new(postgres));
+
+                    ProtoBufInterface {
+                        data_resolver: connector.clone(),
+                        database_mutaction_executor: connector,
+                    }
+                }
+                "mysql-native" => {
+                    let mysql = Mysql::try_from(database).unwrap();
+                    let connector = Arc::new(SqlDatabase::new(mysql));
 
                     ProtoBufInterface {
                         data_resolver: connector.clone(),

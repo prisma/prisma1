@@ -4,6 +4,7 @@ import java.sql.Driver
 
 import com.prisma.api.connector.postgres.PostgresApiConnector
 import com.prisma.api.connector.sqlite.SQLiteApiConnector
+import com.prisma.api.connector.mysql.MySqlApiConnector
 import com.prisma.api.connector.{ApiConnector, DataResolver, DatabaseMutactionExecutor}
 import com.prisma.config.DatabaseConfig
 import com.prisma.shared.models.{ConnectorCapabilities, Project, ProjectIdEncoder}
@@ -15,6 +16,7 @@ trait Backup {
 }
 
 case class SqliteBackup(driver: Driver) extends Backup
+case class MysqlBackup(driver: Driver) extends Backup
 case class PostgresBackup(driver: Driver) extends Backup
 
 case class ApiConnectorNative(config: DatabaseConfig, backup: Backup)(implicit ec: ExecutionContext) extends ApiConnector {
@@ -29,6 +31,10 @@ case class ApiConnectorNative(config: DatabaseConfig, backup: Backup)(implicit e
       }
       case PostgresBackup(driver) => {
         val base = PostgresApiConnector(config, driver)
+        NativeDatabaseMutactionExecutor(base.databaseMutactionExecutor.slickDatabase)
+      }
+      case MysqlBackup(driver) => {
+        val base = MySqlApiConnector(config, driver)
         NativeDatabaseMutactionExecutor(base.databaseMutactionExecutor.slickDatabase)
       }
     }

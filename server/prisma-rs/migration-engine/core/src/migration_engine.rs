@@ -4,7 +4,6 @@ use datamodel::dml::*;
 use datamodel::validator::Validator;
 use migration_connector::*;
 use sql_migration_connector::SqlMigrationConnector;
-use std::path::Path;
 use std::sync::Arc;
 
 // todo: add MigrationConnector. does not work  because of GAT shinenigans
@@ -13,6 +12,8 @@ pub struct MigrationEngine {
     datamodel_migration_steps_inferrer: Arc<DataModelMigrationStepsInferrer>,
     datamodel_calculator: Arc<DataModelCalculator>,
 }
+
+impl std::panic::RefUnwindSafe for MigrationEngine {}
 
 impl MigrationEngine {
     pub fn new() -> Box<MigrationEngine> {
@@ -32,13 +33,16 @@ impl MigrationEngine {
         Arc::clone(&self.datamodel_calculator)
     }
 
-    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepExt>> {
-        let file_path = file!(); // todo: the sqlite file name must be taken from the config
-        let file_name = Path::new(file_path).file_stem().unwrap().to_str().unwrap();
-        Arc::new(SqlMigrationConnector::new(file_name.to_string()))
+    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepMarker>> {
+        Arc::new(SqlMigrationConnector::new(self.schema_name()))
     }
 
-    pub fn parse_datamodel(&self, datamodel_string: &String) -> Schema {
+    pub fn schema_name(&self) -> String {
+        // todo: the sqlite file name must be taken from the config
+        "migration_engine".to_string()
+    }
+
+    pub fn parse_datamodel(&self, datamodel_string: &String) -> Datamodel {
         let ast = datamodel::parser::parse(datamodel_string).unwrap();
         // TODO: this would need capabilities
         // TODO: Special directives are injected via EmptyAttachmentValidator.

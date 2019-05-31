@@ -6,6 +6,7 @@ use datamodel::dml;
 fn parse_scalar_types() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String
         age: Int
         isPro: Boolean
@@ -14,7 +15,7 @@ fn parse_scalar_types() {
     }
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("firstName")
@@ -37,13 +38,14 @@ fn parse_scalar_types() {
 fn parse_field_arity() {
     let dml = r#"
     model Post {
+        id: ID @id
         text: String
         photo: String?
         comments: String[]
     }
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("text")
@@ -63,6 +65,7 @@ fn parse_field_arity() {
 fn parse_defaults() {
     let dml = r#"
     model User {
+        id: ID @id
         firstName: String = "Hello"
         age: Int = 21
         isPro: Boolean = false
@@ -71,7 +74,7 @@ fn parse_defaults() {
     }
     "#;
 
-    let schema = parse_and_validate(dml);
+    let schema = parse(dml);
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("firstName")

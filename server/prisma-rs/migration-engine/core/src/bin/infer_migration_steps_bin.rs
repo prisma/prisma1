@@ -1,5 +1,4 @@
-use migration_core::commands::command::*;
-use migration_core::commands::infer_migration_steps::*;
+use migration_core::commands::*;
 use migration_core::migration_engine::MigrationEngine;
 use std::fs;
 
@@ -12,7 +11,7 @@ fn main() {
     };
     let cmd = InferMigrationStepsCommand::new(input);
     let engine = MigrationEngine::new();
-    let output = cmd.execute(engine);
+    let output = cmd.execute(&engine);
 
     let json = serde_json::to_string_pretty(&output).unwrap();
     println!("{}", json)
