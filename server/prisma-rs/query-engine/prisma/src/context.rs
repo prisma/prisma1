@@ -41,7 +41,7 @@ impl PrismaContext {
         let query_schema = dbg!(schema_builder.build());
         let sdl = data_model::load_sdl_string().ok(); // temporary
 
-        println!("{}", GraphQLSchemaRenderer::render(&query_schema));
+        // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
 
         Ok(Self {
             config,

@@ -97,8 +97,9 @@ fn data_model_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
 fn dmmf_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
     let request_context = req.state();
     let dmmf = dmmf::render_dmmf(&request_context.context.query_schema);
+    let serialized = serde_json::to_string(&dmmf).unwrap();
 
-    serde_json::to_string(&dmmf)
+    HttpResponse::Ok().content_type("application/json").body(serialized)
 }
 
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {
