@@ -85,7 +85,9 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
 }
 
 fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
-    data_model::load_sdl_string().unwrap()
+    data_model::load_v2_dml_string()
+        .or_else(|_| data_model::load_v11_sdl_string())
+        .unwrap()
 }
 
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {

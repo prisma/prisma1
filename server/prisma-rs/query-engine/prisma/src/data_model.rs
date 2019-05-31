@@ -35,7 +35,7 @@ pub fn load(db_name: String) -> PrismaResult<InternalDataModelRef> {
     let template = match load_datamodel_v2_from_env() {
         Ok(template) => template,
         Err(_) => {
-            let data_model_json = load_string()?;
+            let data_model_json = load_v11_json()?;
             serde_json::from_str::<InternalDataModelTemplate>(&data_model_json)?
         }
     };
@@ -43,13 +43,14 @@ pub fn load(db_name: String) -> PrismaResult<InternalDataModelRef> {
 }
 
 fn load_datamodel_v2_from_env() -> PrismaResult<InternalDataModelTemplate> {
-    utilities::get_env("PRISMA_DML").map(|datamodel_v2| DatamodelConverter::convert_string(datamodel_v2))
+    let datamodel_string = load_v2_string_from_env()?;
+    Ok(DatamodelConverter::convert_string(datamodel_string))
 }
 
 /// Attempts to load the config as unparsed JSON string.
-fn load_string() -> PrismaResult<String> {
-    load_internal_from_env()
-        .or_else(|_| load_sdl_string().and_then(|sdl| resolve_internal_data_model_json(sdl)))
+fn load_v11_json() -> PrismaResult<String> {
+    load_v11_json_from_env()
+        .or_else(|_| load_v11_sdl_string().and_then(|sdl| infer_v11_json(sdl)))
         .map_err(|err| {
             PrismaError::ConfigurationError(format!(
                 "Unable to construct internal Prisma data model from any source. Last error: {}",
@@ -61,7 +62,7 @@ fn load_string() -> PrismaResult<String> {
 /// Attempts to resolve the internal data model from an env var.
 /// Note that the content of the env var has to be base64 encoded.
 /// Returns: Internal data model JSON string.
-fn load_internal_from_env() -> PrismaResult<String> {
+fn load_v11_json_from_env() -> PrismaResult<String> {
     debug!("Trying to load internal data model from env...");
 
     utilities::get_env("PRISMA_INTERNAL_DATA_MODEL_JSON").and_then(|internal_data_model_b64| {
@@ -73,41 +74,58 @@ fn load_internal_from_env() -> PrismaResult<String> {
     })
 }
 
-// let inferrer = resolve_internal_data_model_json(sdl)?;
+// let inferrer = infer_v11_json(sdl)?;
 
 /// Attempts to load a Prisma SDL string from either env or file.
 // TODO: rename to `load_datamodel_string`
-pub fn load_sdl_string() -> PrismaResult<String> {
-    load_sdl_from_env().or_else(|_| load_sdl_from_file()).map_err(|err| {
-        PrismaError::ConfigurationError(format!("Unable to load SDL from any source. Last error: {}", err))
+pub fn load_v11_sdl_string() -> PrismaResult<String> {
+    load_v11_sdl_from_env()
+        .or_else(|_| load_v11_sdl_from_file())
+        .map_err(|err| {
+            PrismaError::ConfigurationError(format!("Unable to load SDL from any source. Last error: {}", err))
+        })
+}
+
+pub fn load_v2_dml_string() -> PrismaResult<String> {
+    load_v2_string_from_env().map_err(|err| {
+        PrismaError::ConfigurationError(format!("Unable to load V2 from any source. Last error: {}", err))
     })
 }
 
-/// Attempts to load a Prisma SDL string from env.
+fn load_v11_sdl_from_env() -> PrismaResult<String> {
+    debug!("Trying to load Prisma v11 SDL from env...");
+    load_datamodel_from_env("PRISMA_SDL")
+}
+
+fn load_v2_string_from_env() -> PrismaResult<String> {
+    debug!("Trying to load Prisma v2 DML from env...");
+    load_datamodel_from_env("PRISMA_DML")
+}
+
+/// Attempts to load a Prisma Datamodel string from env.
 /// Note that the content of the env var can be base64 encoded if necessary.
-/// Returns: (Decoded) Prisma SDL string.
-fn load_sdl_from_env() -> PrismaResult<String> {
-    debug!("Trying to load Prisma SDL from env...");
-    utilities::get_env("PRISMA_SDL").and_then(|sdl_b64| {
+/// Returns: (Decoded) Prisma Datamodel string.
+fn load_datamodel_from_env(env_var: &str) -> PrismaResult<String> {
+    utilities::get_env(env_var).and_then(|sdl_b64| {
         let sdl = match base64::decode(&sdl_b64) {
             Ok(bytes) => {
-                trace!("Decoded SDL from Base64.");
+                trace!("Decoded Datamodel from Base64.");
                 String::from_utf8(bytes)?
             }
             Err(e) => {
-                trace!("Error decoding SDL Base64: {:?}", e);
+                trace!("Error decoding Datamodel Base64: {:?}", e);
                 sdl_b64
             }
         };
 
-        debug!("Loaded Prisma SDL from env.");
+        debug!("Loaded Prisma Datamodel from env.");
         Ok(sdl)
     })
 }
 
 /// Attempts to load a Prisma SDL string from file.
 /// Returns: Decoded Prisma SDL string.
-pub fn load_sdl_from_file() -> PrismaResult<String> {
+pub fn load_v11_sdl_from_file() -> PrismaResult<String> {
     debug!("Trying to load Prisma SDL from file...");
 
     let path = utilities::get_env("PRISMA_SDL_PATH")?;
@@ -125,7 +143,7 @@ pub fn load_sdl_from_file() -> PrismaResult<String> {
 }
 
 /// Transforms an SDL string into stringified JSON of the internal data model.
-fn resolve_internal_data_model_json(sdl: String) -> PrismaResult<String> {
+fn infer_v11_json(sdl: String) -> PrismaResult<String> {
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
     struct InternalDataModelInferrerJson {
