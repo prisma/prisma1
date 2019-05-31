@@ -39,9 +39,8 @@ impl DataModel {
     }
 }
 
-
 pub fn render_dmmf(query_schema: &QuerySchema) -> DataModelMetaFormat {
-    let schema = DMMFRenderer::render(query_schema);
+    let schema = DMMFQuerySchemaRenderer::render(query_schema);
 
     DataModelMetaFormat {
         data_model: DataModel::new(),
