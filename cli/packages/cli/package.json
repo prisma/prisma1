@@ -1,0 +1,22 @@
+{
+  "name": "@prisma/cli",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": "git@github.com:prisma/prisma.git",
+  "author": "Tim Suchanek <suchanek@prisma.io>",
+  "license": "Apache-2.0",
+  "private": false,
+  "dependencies": {
+    "arg": "^4.1.0"
+  },
+  "scripts": {
+    "install": "node download.js",
+    "run": "node dist/bin.js",
+    "build": "tsc -d",
+    "prepublishOnly": "yarn build"
+  },
+  "files": [
+    "dist"
+  ]
+}
