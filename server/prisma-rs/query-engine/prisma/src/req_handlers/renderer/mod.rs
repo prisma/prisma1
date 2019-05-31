@@ -13,6 +13,7 @@ use object_renderer::*;
 use schema_renderer::*;
 use type_renderer::*;
 
+#[allow(dead_code)]
 pub struct GraphQLSchemaRenderer;
 
 impl QuerySchemaRenderer<String> for GraphQLSchemaRenderer {

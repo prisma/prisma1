@@ -1,8 +1,4 @@
-use crate::{
-    data_model, exec_loader,
-    req_handlers::{GraphQLSchemaRenderer, QuerySchemaRenderer},
-    PrismaResult,
-};
+use crate::{data_model, exec_loader, PrismaResult};
 use core::{BuildMode, Executor, QuerySchema, QuerySchemaBuilder, SupportedCapabilities};
 use prisma_common::config::{self, PrismaConfig};
 use prisma_models::InternalDataModelRef;
