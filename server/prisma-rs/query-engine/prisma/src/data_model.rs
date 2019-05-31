@@ -43,7 +43,7 @@ pub fn load(db_name: String) -> PrismaResult<InternalDataModelRef> {
 }
 
 fn load_datamodel_v2_from_env() -> PrismaResult<InternalDataModelTemplate> {
-    let datamodel_string = load_v2_string_from_env()?;
+    let datamodel_string = load_v2_dml_string()?;
     Ok(DatamodelConverter::convert_string(datamodel_string))
 }
 
@@ -87,9 +87,11 @@ pub fn load_v11_sdl_string() -> PrismaResult<String> {
 }
 
 pub fn load_v2_dml_string() -> PrismaResult<String> {
-    load_v2_string_from_env().map_err(|err| {
-        PrismaError::ConfigurationError(format!("Unable to load V2 from any source. Last error: {}", err))
-    })
+    load_v2_string_from_env()
+        .or_else(|_| load_v2_dml_from_file())
+        .map_err(|err| {
+            PrismaError::ConfigurationError(format!("Unable to load V2 from any source. Last error: {}", err))
+        })
 }
 
 fn load_v11_sdl_from_env() -> PrismaResult<String> {
@@ -126,9 +128,17 @@ fn load_datamodel_from_env(env_var: &str) -> PrismaResult<String> {
 /// Attempts to load a Prisma SDL string from file.
 /// Returns: Decoded Prisma SDL string.
 pub fn load_v11_sdl_from_file() -> PrismaResult<String> {
-    debug!("Trying to load Prisma SDL from file...");
+    debug!("Trying to load Prisma v11 SDL from file...");
+    load_datamodel_from_file("PRISMA_SDL_PATH")
+}
 
-    let path = utilities::get_env("PRISMA_SDL_PATH")?;
+pub fn load_v2_dml_from_file() -> PrismaResult<String> {
+    debug!("Trying to load Prisma v2 Datamodel from file...");
+    load_datamodel_from_file("PRISMA_DML_PATH")
+}
+
+pub fn load_datamodel_from_file(env_var: &str) -> PrismaResult<String> {
+    let path = utilities::get_env(env_var)?;
     let mut f = File::open(&path)?;
     let mut sdl = String::new();
 

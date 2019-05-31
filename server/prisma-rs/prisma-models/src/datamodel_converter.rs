@@ -66,7 +66,10 @@ impl<'a> DatamodelConverter<'a> {
                         .relations
                         .iter()
                         .find(|r| r.is_for_model_and_field(model, field))
-                        .expect("Did not find a relation for those fields");
+                        .expect(&format!(
+                            "Did not find a relation for those for model {} and field {}",
+                            model.name, field.name
+                        ));
 
                     FieldTemplate::Relation(RelationFieldTemplate {
                         name: field.name.clone(),
@@ -122,12 +125,17 @@ impl<'a> DatamodelConverter<'a> {
                             name,
                             on_delete: _,
                         } = relation_info;
-                        let related_model = datamodel.find_model(&to).unwrap();
+                        let related_model = datamodel
+                            .find_model(&to)
+                            .expect(&format!("Related model {} not found", to));
                         // TODO: handle case of implicit back relation field
                         let related_field = related_model
                             .fields()
                             .find(|f| related_type(f) == Some(model.name.to_string()))
-                            .unwrap()
+                            .expect(&format!(
+                                "Related model for model {} and field {} not found",
+                                model.name, field.name
+                            ))
                             .clone();
 
                         let related_field_info = match &related_field.field_type {
