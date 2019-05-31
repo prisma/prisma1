@@ -49,9 +49,19 @@ fn load_all_must_return_all_created_migrations() {
 #[test]
 fn create_should_allow_to_create_a_new_migration() {
     run_test_with_engine(|engine| {
+        let datamodel = datamodel::parse(
+            r#"
+            model Test {
+                id: String @id
+            }
+        "#,
+        )
+        .unwrap();
         let persistence = engine.connector().migration_persistence();
         let mut migration = Migration::new("my_migration".to_string());
         migration.status = MigrationStatus::Success;
+        migration.datamodel = datamodel;
+
         let result = persistence.create(migration.clone());
         migration.revision = result.revision; // copy over the revision so that the assertion can work.`
         assert_eq!(result, migration);
