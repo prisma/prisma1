@@ -2,26 +2,19 @@ use crate::*;
 use datamodel::dml;
 use itertools::Itertools;
 
-pub trait DatamodelConverter {
-    fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate;
-}
-
-pub struct DatamodelConverterImpl<'a> {
+pub struct DatamodelConverter<'a> {
     datamodel: &'a dml::Datamodel,
     relations: Vec<TempRelationHolder>,
 }
 
 #[allow(unused)]
-impl<'a> DatamodelConverter for DatamodelConverterImpl<'a> {
-    fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate {
-        DatamodelConverterImpl::new(datamodel).convert_internal()
+impl<'a> DatamodelConverter<'a> {
+    pub fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate {
+        DatamodelConverter::new(datamodel).convert_internal()
     }
-}
 
-#[allow(unused)]
-impl<'a> DatamodelConverterImpl<'a> {
-    fn new(datamodel: &dml::Datamodel) -> DatamodelConverterImpl {
-        DatamodelConverterImpl {
+    fn new(datamodel: &dml::Datamodel) -> DatamodelConverter {
+        DatamodelConverter {
             datamodel,
             relations: Self::calculate_relations(datamodel),
         }

@@ -1,15 +1,14 @@
 #![allow(non_snake_case)]
-use datamodel::dml;
 use datamodel::validator::Validator;
 use prisma_models::*;
 use std::sync::Arc;
 
 #[test]
 fn an_empty_datamodel_must_work() {
-    let datamodel = DatamodelConverterImpl::convert(&dml::Datamodel::empty());
+    let datamodel = convert("");
     assert_eq!(datamodel.enums.is_empty(), true);
-    assert_eq!(datamodel.models.is_empty(), true);
-    assert_eq!(datamodel.relations.is_empty(), true);
+    assert_eq!(datamodel.models().is_empty(), true);
+    assert_eq!(datamodel.relations().is_empty(), true);
 }
 
 #[test]
@@ -328,7 +327,7 @@ fn convert(datamodel: &str) -> Arc<InternalDataModel> {
     let ast = datamodel::parser::parse(datamodel).unwrap();
     let validator = Validator::new();
     let datamodel = validator.validate(&ast).unwrap();
-    let template = DatamodelConverterImpl::convert(&datamodel);
+    let template = DatamodelConverter::convert(&datamodel);
     template.build("not_important".to_string())
 }
 
