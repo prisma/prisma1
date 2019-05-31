@@ -125,7 +125,7 @@ impl<'a> DatamodelConverterImpl<'a> {
                             on_delete: _,
                         } = relation_info;
                         let related_model = datamodel.find_model(&to).unwrap();
-                        // TODO: handle case of implicit back relation field
+                        // this assumes that the implicit back relation field is implemented in the parser
                         let related_field = related_model
                             .fields()
                             .find(|f| related_type(f) == Some(model.name.to_string()))
@@ -157,30 +157,25 @@ impl<'a> DatamodelConverterImpl<'a> {
                                 related_field.clone(),
                             ),
                         };
-                        let inline_on_model_a = RelationLinkManifestation::Inline(InlineRelation {
-                            in_table_of_model_name: model_a.name.clone(),
-                            referencing_column: field_a.final_db_name(),
-                        });
-                        let inline_on_model_b = RelationLinkManifestation::Inline(InlineRelation {
-                            in_table_of_model_name: model_b.name.clone(),
-                            referencing_column: field_b.final_db_name(),
-                        });
-                        let inline_on_this_model = RelationLinkManifestation::Inline(InlineRelation {
-                            in_table_of_model_name: model.name.clone(),
-                            referencing_column: field.final_db_name(),
-                        });
-                        let inline_on_related_model = RelationLinkManifestation::Inline(InlineRelation {
-                            in_table_of_model_name: related_model.name.clone(),
-                            referencing_column: related_field.final_db_name(),
-                        });
+                        let inline_on_model_a = TempManifestationHolder::Inline {
+                            in_table_of_model: model_a.name.clone(),
+                            column: field_a.final_db_name(),
+                        };
+                        let inline_on_model_b = TempManifestationHolder::Inline {
+                            in_table_of_model: model_b.name.clone(),
+                            column: field_b.final_db_name(),
+                        };
+                        let inline_on_this_model = TempManifestationHolder::Inline {
+                            in_table_of_model: model.name.clone(),
+                            column: field.final_db_name(),
+                        };
+                        let inline_on_related_model = TempManifestationHolder::Inline {
+                            in_table_of_model: related_model.name.clone(),
+                            column: related_field.final_db_name(),
+                        };
 
                         let manifestation = match (field_a.is_list(), field_b.is_list()) {
-                            (true, true) => RelationLinkManifestation::RelationTable(RelationTable {
-                                table: "".to_string(),
-                                model_a_column: "A".to_string(),
-                                model_b_column: "B".to_string(),
-                                id_column: None,
-                            }),
+                            (true, true) => TempManifestationHolder::Table,
                             (false, true) => inline_on_model_a,
                             (true, false) => inline_on_model_b,
                             // TODO: to_fields is now a list, please fix this line.
@@ -224,7 +219,13 @@ struct TempRelationHolder {
     model_b: dml::Model,
     field_a: dml::Field,
     field_b: dml::Field,
-    manifestation: RelationLinkManifestation,
+    manifestation: TempManifestationHolder,
+}
+
+#[derive(PartialEq, Debug, Clone)]
+enum TempManifestationHolder {
+    Inline { in_table_of_model: String, column: String },
+    Table,
 }
 
 #[allow(unused)]
@@ -261,12 +262,20 @@ impl TempRelationHolder {
 
     fn manifestation(&self) -> RelationLinkManifestation {
         match &self.manifestation {
-            RelationLinkManifestation::RelationTable(rt) => {
-                let mut cloned = rt.clone();
-                cloned.table = self.table_name();
-                RelationLinkManifestation::RelationTable(cloned)
-            }
-            m => m.clone(),
+            // TODO: relation table columns must get renamed: lowercased type names instead of A and B
+            TempManifestationHolder::Table => RelationLinkManifestation::RelationTable(RelationTable {
+                table: self.table_name(),
+                model_a_column: "A".to_string(),
+                model_b_column: "B".to_string(),
+                id_column: None,
+            }),
+            TempManifestationHolder::Inline {
+                in_table_of_model,
+                column,
+            } => RelationLinkManifestation::Inline(InlineRelation {
+                in_table_of_model_name: in_table_of_model.to_string(),
+                referencing_column: column.to_string(),
+            }),
         }
     }
 }
@@ -305,7 +314,7 @@ impl DatamodelFieldExtensions for dml::Field {
             dml::FieldType::ConnectorSpecific {
                 base_type: _,
                 connector_type: _,
-            } => unimplemented!("Connector Specific types are not supported"),
+            } => unimplemented!("Connector Specific types are not supported here yet"),
         }
     }
 
