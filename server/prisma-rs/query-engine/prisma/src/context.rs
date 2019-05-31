@@ -35,7 +35,7 @@ impl PrismaContext {
         let capabilities = SupportedCapabilities::empty(); // todo connector capabilities.
         let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, BuildMode::Legacy);
         let query_schema = schema_builder.build();
-        let sdl = data_model::load_sdl_string().ok(); // temporary
+        let sdl = data_model::load_v2_dml_string().ok(); // temporary
 
         // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
 

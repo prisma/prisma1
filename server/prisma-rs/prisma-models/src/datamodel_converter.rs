@@ -2,26 +2,24 @@ use crate::*;
 use datamodel::dml;
 use itertools::Itertools;
 
-pub trait DatamodelConverter {
-    fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate;
-}
-
-pub struct DatamodelConverterImpl<'a> {
+pub struct DatamodelConverter<'a> {
     datamodel: &'a dml::Datamodel,
     relations: Vec<TempRelationHolder>,
 }
 
 #[allow(unused)]
-impl<'a> DatamodelConverter for DatamodelConverterImpl<'a> {
-    fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate {
-        DatamodelConverterImpl::new(datamodel).convert_internal()
+impl<'a> DatamodelConverter<'a> {
+    pub fn convert_string(datamodel: String) -> InternalDataModelTemplate {
+        let datamodel = datamodel::parse(&datamodel).unwrap();
+        Self::convert(&datamodel)
     }
-}
 
-#[allow(unused)]
-impl<'a> DatamodelConverterImpl<'a> {
-    fn new(datamodel: &dml::Datamodel) -> DatamodelConverterImpl {
-        DatamodelConverterImpl {
+    pub fn convert(datamodel: &dml::Datamodel) -> InternalDataModelTemplate {
+        DatamodelConverter::new(datamodel).convert_internal()
+    }
+
+    fn new(datamodel: &dml::Datamodel) -> DatamodelConverter {
+        DatamodelConverter {
             datamodel,
             relations: Self::calculate_relations(datamodel),
         }
@@ -68,7 +66,10 @@ impl<'a> DatamodelConverterImpl<'a> {
                         .relations
                         .iter()
                         .find(|r| r.is_for_model_and_field(model, field))
-                        .expect("Did not find a relation for those fields");
+                        .expect(&format!(
+                            "Did not find a relation for those for model {} and field {}",
+                            model.name, field.name
+                        ));
 
                     FieldTemplate::Relation(RelationFieldTemplate {
                         name: field.name.clone(),
@@ -126,12 +127,18 @@ impl<'a> DatamodelConverterImpl<'a> {
                             name,
                             on_delete: _,
                         } = relation_info;
-                        let related_model = datamodel.find_model(&to).unwrap();
-                        // this assumes that the implicit back relation field is implemented in the parser
+                        let related_model = datamodel
+                            .find_model(&to)
+                            .expect(&format!("Related model {} not found", to));
+
+                        // TODO: handle case of implicit back relation field
                         let related_field = related_model
                             .fields()
                             .find(|f| related_type(f) == Some(model.name.to_string()))
-                            .unwrap()
+                            .expect(&format!(
+                                "Related model for model {} and field {} not found",
+                                model.name, field.name
+                            ))
                             .clone();
 
                         let related_field_info = match &related_field.field_type {
