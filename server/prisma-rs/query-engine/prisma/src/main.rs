@@ -57,6 +57,7 @@ fn main() {
                 r.method(Method::GET).with(playground_handler);
             })
             .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
+            .resource("/dmmf", |r| r.method(Method::GET).with(dmmf_handler))
     })
     .bind(address)
     .unwrap()
@@ -91,6 +92,13 @@ fn data_model_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
     request_context
         .graphql_request_handler
         .handle_data_model(&request_context.context)
+}
+
+fn dmmf_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
+    let request_context = req.state();
+    let dmmf = dmmf::render_dmmf(&request_context.context.query_schema);
+
+    serde_json::to_string(&dmmf)
 }
 
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {

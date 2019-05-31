@@ -5,7 +5,7 @@ pub use ast::*;
 use core::schema::*;
 use std::{cell::RefCell, collections::HashMap};
 
-struct DMMFRenderer;
+pub struct DMMFRenderer;
 
 impl QuerySchemaRenderer<DMMFSchema> for DMMFRenderer {
   fn render(query_schema: &QuerySchema) -> DMMFSchema {
@@ -15,7 +15,7 @@ impl QuerySchemaRenderer<DMMFSchema> for DMMFRenderer {
 
 pub struct RenderContext {
   /// Aggregator
-  result: DMMFSchema,
+  result: RefCell<DMMFSchema>,
 
   /// Prevents double rendering of elements that are referenced multiple times.
   /// Names of input / output types / enums / models are globally unique.
@@ -25,7 +25,7 @@ pub struct RenderContext {
 impl RenderContext {
   pub fn new() -> Self {
     RenderContext {
-      result: DMMFSchema::new(),
+      result: RefCell::new(DMMFSchema::new()),
       rendered: RefCell::new(HashMap::new()),
     }
   }

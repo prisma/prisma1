@@ -1,4 +1,3 @@
-use super::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -54,12 +53,14 @@ pub struct DMMFOutput {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DMMFInputType {
   name: String,
   args: Vec<DMMFArgument>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DMMFOutputType {
   name: String,
   fields: Vec<DMMFField>,
@@ -78,6 +79,7 @@ pub struct DMMFField {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DMMFEnum {
   name: String,
   values: Vec<String>,
