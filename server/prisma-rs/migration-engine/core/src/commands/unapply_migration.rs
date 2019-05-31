@@ -17,17 +17,45 @@ impl MigrationCommand for UnapplyMigrationCommand {
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
         println!("{:?}", self.input);
-        UnapplyMigrationOutput {
-            rolled_back: ListMigrationStepsOutput {
-                id: "foo".to_string(),
-                steps: Vec::new(),
-                status: MigrationStatus::Pending,
+        let connector = engine.connector();
+        match connector.migration_persistence().last() {
+            None => UnapplyMigrationOutput {
+                rolled_back: ListMigrationStepsOutput {
+                    id: "foo".to_string(),
+                    steps: Vec::new(),
+                    status: MigrationStatus::Pending,
+                },
+                active: ListMigrationStepsOutput {
+                    id: "bar".to_string(),
+                    steps: Vec::new(),
+                    status: MigrationStatus::Pending,
+                },
+                errors: vec!["There is no last migration that can be rolled back.".to_string()],
             },
-            active: ListMigrationStepsOutput {
-                id: "bar".to_string(),
-                steps: Vec::new(),
-                status: MigrationStatus::Pending,
-            },
+            Some(migration_to_rollback) => {
+                connector
+                    .migration_applier()
+                    .unapply_steps(&migration_to_rollback, &Vec::new()); // use actual database steps. but those are still JSON ..
+
+                let new_active_migration = match connector.migration_persistence().last() {
+                    Some(m) => m,
+                    None => Migration::new("no-migration".to_string()),
+                };
+
+                UnapplyMigrationOutput {
+                    rolled_back: ListMigrationStepsOutput {
+                        id: migration_to_rollback.name,
+                        steps: migration_to_rollback.datamodel_steps,
+                        status: migration_to_rollback.status,
+                    },
+                    active: ListMigrationStepsOutput {
+                        id: new_active_migration.name,
+                        steps: new_active_migration.datamodel_steps,
+                        status: new_active_migration.status,
+                    },
+                    errors: Vec::new(),
+                }
+            }
         }
     }
 }
@@ -43,4 +71,5 @@ pub struct UnapplyMigrationInput {
 pub struct UnapplyMigrationOutput {
     pub rolled_back: ListMigrationStepsOutput,
     pub active: ListMigrationStepsOutput,
+    pub errors: Vec<String>,
 }

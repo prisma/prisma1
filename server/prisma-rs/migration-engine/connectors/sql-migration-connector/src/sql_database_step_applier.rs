@@ -34,6 +34,10 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
         }
     }
 
+    fn unapply(&self, step: &SqlMigrationStep) {
+        unimplemented!()
+    }
+
     fn render_steps(&self, steps: &Vec<SqlMigrationStep>) -> serde_json::Value {
         let jsons = steps
             .into_iter()

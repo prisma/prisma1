@@ -3,6 +3,8 @@ use std::sync::Arc;
 
 pub trait MigrationApplier<T> {
     fn apply_steps(&self, migration: &Migration, steps: &Vec<T>);
+
+    fn unapply_steps(&self, migration: &Migration, steps: &Vec<T>);
 }
 
 #[allow(unused, dead_code)]
@@ -30,5 +32,9 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
         migration_updates.status = MigrationStatus::Success;
         migration_updates.finished_at = Some(Migration::timestamp_without_nanos());
         self.migration_persistence.update(&migration_updates);
+    }
+
+    fn unapply_steps(&self, migration: &Migration, steps: &Vec<T>) {
+        unimplemented!()
     }
 }
