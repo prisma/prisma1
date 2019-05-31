@@ -1,6 +1,6 @@
 use database_inspector::*;
 use datamodel::*;
-use itertools::Itertools;
+use prisma_models::{DatamodelConverterImpl, TempManifestationHolder, TempRelationHolder};
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Datamodel,
@@ -99,7 +99,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         for mut model_table in model_tables {
             for relation in relations.iter() {
                 match &relation.manifestation {
-                    RelationManifestation::Inline {
+                    TempManifestationHolder::Inline {
                         in_table_of_model,
                         column,
                     } if in_table_of_model == &model_table.model.name => {
@@ -131,15 +131,12 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         let mut result = Vec::new();
         for relation in self.calculate_relations().iter() {
             match &relation.manifestation {
-                RelationManifestation::Table {
-                    model_a_column,
-                    model_b_column,
-                } => {
+                TempManifestationHolder::Table => {
                     let table = Table {
                         name: relation.table_name(),
                         columns: vec![
                             Column::with_foreign_key(
-                                model_a_column.to_string(),
+                                relation.model_a_column(),
                                 column_type(&relation.model_a.id_field()),
                                 true,
                                 ForeignKey {
@@ -148,7 +145,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                                 },
                             ),
                             Column::with_foreign_key(
-                                model_b_column.to_string(),
+                                relation.model_b_column(),
                                 column_type(&relation.model_b.id_field()),
                                 true,
                                 ForeignKey {
@@ -168,107 +165,8 @@ impl<'a> DatabaseSchemaCalculator<'a> {
         result
     }
 
-    #[allow(unused)]
-    fn calculate_relations(&self) -> Vec<Relation> {
-        let mut result = Vec::new();
-        for model in self.data_model.models() {
-            for field in model.fields() {
-                match &field.field_type {
-                    FieldType::Relation(relation_info) => {
-                        let RelationInfo {
-                            to,
-                            to_fields,
-                            name,
-                            on_delete: _,
-                        } = relation_info;
-                        let related_model = self.data_model.find_model(&to).unwrap();
-                        // TODO: handle case of implicit back relation field
-                        let related_field = related_model
-                            .fields()
-                            .find(|f| related_type(f) == Some(model.name.to_string()))
-                            .unwrap()
-                            .clone();
-
-                        let related_field_info = match &related_field.field_type {
-                            FieldType::Relation(info) => info,
-                            _ => panic!("this was not a relation field"),
-                        };
-
-                        let (model_a, model_b, field_a, field_b) = match () {
-                            _ if &model.name < &related_model.name => (
-                                model.clone(),
-                                related_model.clone(),
-                                field.clone(),
-                                related_field.clone(),
-                            ),
-                            _ if &related_model.name < &model.name => (
-                                related_model.clone(),
-                                model.clone(),
-                                related_field.clone(),
-                                field.clone(),
-                            ),
-                            _ => (
-                                model.clone(),
-                                related_model.clone(),
-                                field.clone(),
-                                related_field.clone(),
-                            ),
-                        };
-                        let inline_on_model_a = RelationManifestation::Inline {
-                            in_table_of_model: model_a.name.clone(),
-                            column: field_a.db_name(),
-                        };
-                        let inline_on_model_b = RelationManifestation::Inline {
-                            in_table_of_model: model_b.name.clone(),
-                            column: field_b.db_name(),
-                        };
-                        let inline_on_this_model = RelationManifestation::Inline {
-                            in_table_of_model: model.name.clone(),
-                            column: field.db_name(),
-                        };
-                        let inline_on_related_model = RelationManifestation::Inline {
-                            in_table_of_model: related_model.name.clone(),
-                            column: related_field.db_name(),
-                        };
-
-                        let manifestation = match (field_a.is_list(), field_b.is_list()) {
-                            (true, true) => RelationManifestation::Table {
-                                model_a_column: "A".to_string(),
-                                model_b_column: "B".to_string(),
-                            },
-                            (false, true) => inline_on_model_a,
-                            (true, false) => inline_on_model_b,
-                            // TODO: to_fields is now a list, please fix this line.
-                            (false, false) => match (to_fields.first(), &related_field_info.to_fields.first()) {
-                                (Some(_), None) => inline_on_this_model,
-                                (None, Some(_)) => inline_on_related_model,
-                                (None, None) => {
-                                    if model_a.name < model_b.name {
-                                        inline_on_model_a
-                                    } else {
-                                        inline_on_model_b
-                                    }
-                                }
-                                (Some(_), Some(_)) => {
-                                    panic!("It's not allowed that both sides of a relation specify the inline policy")
-                                }
-                            },
-                        };
-
-                        result.push(Relation {
-                            name: name.clone(),
-                            model_a: model_a,
-                            model_b: model_b,
-                            field_a: field_a,
-                            field_b: field_b,
-                            manifestation,
-                        })
-                    }
-                    _ => {}
-                }
-            }
-        }
-        result.into_iter().unique_by(|rel| rel.name()).collect()
+    fn calculate_relations(&self) -> Vec<TempRelationHolder> {
+        DatamodelConverterImpl::calculate_relations(&self.data_model)
     }
 }
 
@@ -278,47 +176,6 @@ struct ModelTable {
     model: Model,
 }
 
-#[derive(PartialEq, Debug, Clone)]
-struct Relation {
-    name: Option<String>,
-    model_a: Model,
-    model_b: Model,
-    field_a: Field,
-    field_b: Field,
-    manifestation: RelationManifestation,
-}
-
-impl Relation {
-    fn name(&self) -> String {
-        // TODO: must replicate behaviour of `generateRelationName` from `SchemaInferrer`
-        match &self.name {
-            Some(name) => name.clone(),
-            None => format!("{}To{}", &self.model_a.name, &self.model_b.name),
-        }
-    }
-
-    fn table_name(&self) -> String {
-        format!("_{}", self.name())
-    }
-
-    #[allow(unused)]
-    fn is_many_to_many(&self) -> bool {
-        self.field_a.is_list() && self.field_b.is_list()
-    }
-}
-
-#[derive(PartialEq, Debug, Clone)]
-enum RelationManifestation {
-    Inline {
-        in_table_of_model: String,
-        column: String,
-    },
-    Table {
-        model_a_column: String,
-        model_b_column: String,
-    },
-}
-
 trait ModelExtensions {
     fn id_field(&self) -> &Field;
 
@@ -326,7 +183,6 @@ trait ModelExtensions {
 }
 
 impl ModelExtensions for Model {
-    // todo: find actual id field
     fn id_field(&self) -> &Field {
         self.fields().find(|f| f.is_id()).unwrap()
     }
@@ -361,13 +217,6 @@ impl FieldExtensions for Field {
 
     fn db_name(&self) -> String {
         self.database_name.clone().unwrap_or_else(|| self.name.clone())
-    }
-}
-
-fn related_type(field: &Field) -> Option<String> {
-    match &field.field_type {
-        FieldType::Relation(relation_info) => Some(relation_info.to.to_string()),
-        _ => None,
     }
 }
 
