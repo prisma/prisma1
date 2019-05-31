@@ -186,7 +186,7 @@ fn explicit_relation_fields() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
                 blog: Blog? @db(name:"blog_id")
             }
         "#,
@@ -223,7 +223,7 @@ fn many_to_many_relations() {
     let datamodel = convert(
         r#"
             model Post {
-                id: Int @id                
+                id: Int @id
                 blogs: Blog[]
             }
 
@@ -274,7 +274,7 @@ fn implicit_relation_fields() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
             }
         "#,
     );
@@ -305,7 +305,7 @@ fn explicit_relation_names() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
                 blog: Blog? @relation(name: "MyRelationName")
             }
         "#,
@@ -398,7 +398,7 @@ impl FieldAssertions for ScalarField {
     }
 
     fn assert_unique(&self) -> &Self {
-        assert!(self.is_unique);
+        assert!(self.is_unique());
         self
     }
 }
@@ -442,7 +442,7 @@ impl FieldAssertions for RelationField {
     }
 
     fn assert_unique(&self) -> &Self {
-        assert!(self.is_unique);
+        assert!(self.is_unique());
         self
     }
 }
