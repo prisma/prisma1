@@ -1,8 +1,7 @@
 import { IConnector } from '../../common/connector'
-import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
+import { DatabaseType, GQLAssert } from 'prisma-datamodel'
 import { RelationalIntrospectionResult } from './relationalIntrospectionResult'
 import IDatabaseClient from '../IDatabaseClient'
-import GQLAssert from '../../../../prisma-datamodel/dist/util/gqlAssert'
 
 export interface IInternalIndexInfo {
   tableName: string
