@@ -28,7 +28,6 @@ interface State {
   credentials: Partial<DatabaseCredentials>
   connectorData: Partial<ConnectorData>
   schemas: string[]
-  introspecting: boolean
 }
 
 type ActionChooseDB = {
@@ -60,7 +59,6 @@ const initialState: State = {
   credentials: {},
   connectorData: {},
   schemas: [],
-  introspecting: false,
 }
 
 const reducer: React.Reducer<State, ActionType> = (state, action) => {
