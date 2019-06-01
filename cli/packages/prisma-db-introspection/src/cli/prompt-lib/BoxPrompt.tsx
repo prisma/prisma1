@@ -24,8 +24,8 @@ export interface OnSubmitParams {
   formValues?: Record<string, any>
   selectedValue?: any
   goBack: boolean
-  startSpinner: () => void
-  stopSpinner: (state: Exclude<SpinnerState, 'running'>, error?: string) => void
+  startSpinner: (message?: string) => void
+  stopSpinner: (state: SpinnerState) => void
 }
 
 interface Props {
@@ -44,7 +44,6 @@ export const Prompt: React.FC<Props> = props => {
     Record<string, SpinnerState | undefined>
   >({})
   const [cursor, setCursor] = React.useState(0)
-  const [error, setError] = React.useState('')
   const elementsWithBack: PromptElement[] = props.withBackButton
     ? [
         ...props.elements,
@@ -108,19 +107,17 @@ export const Prompt: React.FC<Props> = props => {
   }
 
   const addSpinner = (spinnerCursor: number) => {
-    return () => {
-      setSpinnerByCursor(prev => ({ ...prev, [spinnerCursor]: 'running' }))
+    return (message?: string) => {
+      setSpinnerByCursor(prev => ({
+        ...prev,
+        [spinnerCursor]: { state: 'running', message },
+      }))
     }
   }
 
   const removeSpinner = (spinnerCursor: number) => {
-    return (state: Exclude<SpinnerState, 'running'>, error?: string) => {
+    return (state: Exclude<SpinnerState, 'running'>) => {
       setSpinnerByCursor(prev => ({ ...prev, [spinnerCursor]: state }))
-      if (state === 'failed' && error) {
-        setError(error.toString())
-      } else {
-        setError('')
-      }
     }
   }
 
@@ -189,7 +186,9 @@ export const Prompt: React.FC<Props> = props => {
                   focus={cursor === elemIndex}
                   spinnerState={spinnersByCursor[elemIndex]}
                   onSelect={async value => {
-                    if (spinnersByCursor[elemIndex] !== 'running') {
+                    const spinner = spinnersByCursor[elemIndex]
+
+                    if (!spinner || spinner.state !== 'running') {
                       return submitPrompt(value, false, elemIndex)
                     }
                   }}
@@ -211,9 +210,6 @@ export const Prompt: React.FC<Props> = props => {
           spinnerState={undefined}
         />
       )}
-      <Box marginTop={1}>
-        <Color red>{error}</Color>
-      </Box>
     </Box>
   )
 }

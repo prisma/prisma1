@@ -23,7 +23,7 @@ import {
   sanitizeMongoUri,
 } from './introspect/util'
 import { promptIntrospectionInteractively } from './prompts/CredentialPrompt'
-import { DatabaseCredentials } from './types'
+import { DatabaseCredentials, IntrospectionResult } from './types'
 
 type Args = {
   '--interactive': BooleanConstructor
@@ -137,13 +137,11 @@ export class Introspect implements Command {
       /**
        * Get connector and connect to database
        */
-      const connectorData = await this.getConnectorWithDatabase(args)
-
       const {
         sdl: newDatamodelSdl,
         numTables,
         referenceDatamodelExists,
-      } = await this.introspectWithSpinner(connectorData, !!sdl)
+      } = await this.getConnectorWithDatabase(args, sdl)
 
       if (!sdl) {
         /**
@@ -197,14 +195,9 @@ ${chalk.bold(
 
   async introspect({
     connector,
-    disconnect,
     databaseType,
     databaseName,
-  }: ConnectorData): Promise<{
-    sdl: string
-    numTables: number
-    referenceDatamodelExists: boolean
-  }> {
+  }: ConnectorData): Promise<IntrospectionResult> {
     const existingDatamodel = this.getExistingDatamodel(databaseType)
 
     const introspection = await connector.introspect(databaseName)
@@ -214,9 +207,6 @@ ${chalk.bold(
 
     const renderer = DefaultRenderer.create(introspection.databaseType, true)
     const renderedSdl = renderer.render(sdl)
-
-    // disconnect from database
-    await disconnect()
 
     const numTables = sdl.types.length
     if (numTables === 0) {
@@ -239,12 +229,17 @@ ${chalk.bold(
     return fileName
   }
 
-  async getConnectorWithDatabase(args: Result<Args>): Promise<ConnectorData> {
+  async getConnectorWithDatabase(
+    args: Result<Args>,
+    sdl: boolean | undefined,
+  ): Promise<IntrospectionResult> {
     const credentialsByFlag = this.getCredentialsByFlags(args)
 
     // Get everything interactively
     if (!credentialsByFlag) {
-      const connectorData = await promptIntrospectionInteractively()
+      const connectorData = await promptIntrospectionInteractively(
+        this.introspect.bind(this),
+      )
 
       return connectorData
     }
@@ -268,12 +263,18 @@ ${chalk.bold(
       schemas,
     )
 
-    return {
-      connector,
-      disconnect,
-      databaseType: credentialsByFlag.type,
-      databaseName: credentialsByFlag.schema,
-    }
+    const introspectionResult = await this.introspectWithSpinner(
+      {
+        connector,
+        disconnect,
+        databaseType: credentialsByFlag.type,
+        databaseName: credentialsByFlag.schema,
+      },
+      sdl,
+    )
+    await disconnect()
+
+    return introspectionResult
   }
 
   getCredentialsByFlags(args: Result<Args>): DatabaseCredentials | null {
@@ -375,7 +376,10 @@ ${chalk.bold(
   /**
    * Introspect the database
    */
-  async introspectWithSpinner(connectorData: ConnectorData, sdl: boolean) {
+  async introspectWithSpinner(
+    connectorData: ConnectorData,
+    sdl: boolean | undefined,
+  ) {
     const spinner = ora({ color: 'blue' })
 
     const before = Date.now()

@@ -19,7 +19,10 @@ export interface InputElement<T extends object = any> extends BaseStyle {
   mask?: string
 }
 
-export type SpinnerState = 'running' | 'succeeded' | 'failed'
+export type SpinnerState = {
+  state: 'running' | 'succeeded' | 'failed'
+  message?: string
+}
 
 export interface SelectElement<T extends object = any> extends BaseStyle {
   type: 'select'

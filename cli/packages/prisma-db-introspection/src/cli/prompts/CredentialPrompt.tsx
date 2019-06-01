@@ -9,7 +9,7 @@ import {
 } from '../introspect/util'
 import { OnSubmitParams, Prompt } from '../prompt-lib/BoxPrompt'
 import { SelectElement } from '../prompt-lib/types'
-import { DatabaseCredentials } from '../types'
+import { DatabaseCredentials, IntrospectionResult } from '../types'
 import { CHOOSE_DB_ELEMENTS, CONNECT_DB_ELEMENTS } from './prompts-elements'
 
 enum Steps {
@@ -19,7 +19,8 @@ enum Steps {
 }
 
 interface Props {
-  onSubmit: (connector: ConnectorData) => void
+  onSubmit: (introspectionResult: IntrospectionResult) => void
+  introspect: (connector: ConnectorData) => Promise<IntrospectionResult>
 }
 
 interface State {
@@ -27,6 +28,7 @@ interface State {
   credentials: Partial<DatabaseCredentials>
   connectorData: Partial<ConnectorData>
   schemas: string[]
+  introspecting: boolean
 }
 
 type ActionChooseDB = {
@@ -58,6 +60,7 @@ const initialState: State = {
   credentials: {},
   connectorData: {},
   schemas: [],
+  introspecting: false,
 }
 
 const reducer: React.Reducer<State, ActionType> = (state, action) => {
@@ -143,7 +146,12 @@ const IntrospectionPrompt: React.FC<Props> = props => {
         <Prompt
           key={Steps.CHOOSE_SCHEMA}
           title="Select the schema you want to introspect"
-          onSubmit={({ selectedValue, goBack }) => {
+          onSubmit={async ({
+            selectedValue,
+            goBack,
+            startSpinner,
+            stopSpinner,
+          }) => {
             if (goBack) {
               return dispatch({
                 type: 'back',
@@ -151,13 +159,19 @@ const IntrospectionPrompt: React.FC<Props> = props => {
               })
             }
 
-            props.onSubmit({
-              connector: state.connectorData.connector,
-              disconnect: state.connectorData.disconnect,
-              databaseName: selectedValue,
-              databaseType: state.credentials.type,
-            } as ConnectorData)
-            
+            try {
+              startSpinner(`Introspecting ${selectedValue!}`)
+              const introspectionResult = await props.introspect({
+                ...state.connectorData,
+                databaseName: selectedValue,
+              } as ConnectorData)
+
+              await state.connectorData.disconnect!()
+
+              props.onSubmit(introspectionResult)
+            } catch (e) {
+              stopSpinner({ state: 'failed', message: e.message })
+            }
           }}
           withBackButton
           elements={state.schemas.map(
@@ -216,7 +230,7 @@ async function onConnect(
     )
     const schemas = await getDatabaseSchemas(connectorAndDisconnect.connector)
 
-    params.stopSpinner('succeeded')
+    params.stopSpinner({ state: 'succeeded' })
 
     if (schemas) {
       dispatch({
@@ -229,7 +243,7 @@ async function onConnect(
       })
     }
   } catch (e) {
-    params.stopSpinner('failed', e.message) // TODO: Display error message on the prompt
+    params.stopSpinner({ state: 'failed', message: e.message }) // TODO: Display error message on the prompt
   }
 }
 
@@ -241,14 +255,16 @@ async function onTest(
 
   try {
     await getConnectedConnectorFromCredentials(credentials)
-    params.stopSpinner('succeeded')
+    params.stopSpinner({ state: 'succeeded' })
   } catch (e) {
-    params.stopSpinner('failed', e.message)
+    params.stopSpinner({ state: 'failed', message: e.message })
   }
 }
 
-export async function promptIntrospectionInteractively() {
-  return new Promise<ConnectorData>(async resolve => {
-    render(<IntrospectionPrompt onSubmit={resolve} />)
+export async function promptIntrospectionInteractively(
+  introspect: (connector: ConnectorData) => Promise<IntrospectionResult>,
+) {
+  return new Promise<IntrospectionResult>(async resolve => {
+    render(<IntrospectionPrompt introspect={introspect} onSubmit={resolve} />)
   })
 }

@@ -78,6 +78,8 @@ export async function getConnectedConnectorFromCredentials(
       disconnect = () => (client as PGClient).end()
       break
     }
+    case DatabaseType.sqlite:
+      throw new Error('sqlite not supported yet')
   }
 
   const connector = Connectors.create(credentials.type, client!)

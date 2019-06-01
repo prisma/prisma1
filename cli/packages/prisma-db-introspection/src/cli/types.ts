@@ -13,3 +13,9 @@ export interface DatabaseCredentials {
   uri?: string
   executeRaw?: boolean
 }
+
+export interface IntrospectionResult {
+  sdl: string
+  numTables: number
+  referenceDatamodelExists: boolean
+}
