@@ -24,9 +24,11 @@ pub struct ScalarFieldTemplate {
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
+
+    #[serde(default)]
     pub default_value: Option<PrismaValue>,
 
-    #[serde(alias = "enum")]
+    #[serde(default, alias = "enum")]
     pub internal_enum: Option<InternalEnum>,
 }
 
