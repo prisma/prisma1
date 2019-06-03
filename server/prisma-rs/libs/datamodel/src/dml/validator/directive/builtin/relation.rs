@@ -19,6 +19,10 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
             if let Ok(related_fields) = args.arg("references") {
                 relation_info.to_fields = related_fields.as_array()?.to_literal_vec()?;
             }
+
+            if let Ok(on_delete) = args.arg("onDelete") {
+                relation_info.on_delete = on_delete.parse_literal::<dml::OnDeleteStrategy>()?;
+            }
             return Ok(());
         } else {
             return self.error("Invalid field type, not a relation.", &args.span());
@@ -31,6 +35,10 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
 
             if let Some(name) = &relation_info.name {
                 args.push(ast::Argument::new_string("", &name));
+            }
+
+            if relation_info.on_delete != dml::OnDeleteStrategy::None {
+                args.push(ast::Argument::new_string("onDelete", &relation_info.on_delete.to_string()));
             }
 
             if relation_info.to_fields.len() > 0 {
