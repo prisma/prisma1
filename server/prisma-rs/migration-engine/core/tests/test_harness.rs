@@ -44,6 +44,7 @@ pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSch
         project_info: project_info.clone(),
         migration_id: migration_id.clone(),
         data_model: datamodel.to_string(),
+        assume_to_be_applied: Vec::new(),
     };
     let cmd = InferMigrationStepsCommand::new(input);
     let output = cmd.execute(&engine);

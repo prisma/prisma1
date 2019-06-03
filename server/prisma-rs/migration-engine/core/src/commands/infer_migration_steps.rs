@@ -2,6 +2,7 @@ use crate::commands::command::MigrationCommand;
 use crate::migration_engine::MigrationEngine;
 use migration_connector::steps::*;
 use migration_connector::*;
+use datamodel::Datamodel;
 
 pub struct InferMigrationStepsCommand {
     input: InferMigrationStepsInput,
@@ -17,7 +18,13 @@ impl MigrationCommand for InferMigrationStepsCommand {
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
         let connector = engine.connector();
-        let current_data_model = connector.migration_persistence().current_datamodel();
+        let current_data_model = if self.input.assume_to_be_applied.is_empty() {
+            connector.migration_persistence().current_datamodel()
+        } else {
+            engine
+                .datamodel_calculator()
+                .infer(&Datamodel::empty(), &self.input.assume_to_be_applied)
+        };
 
         let next_data_model = engine.parse_datamodel(&self.input.data_model);
 
@@ -50,6 +57,7 @@ pub struct InferMigrationStepsInput {
     pub project_info: String,
     pub migration_id: String,
     pub data_model: String,
+    pub assume_to_be_applied: Vec<MigrationStep>,
 }
 
 #[derive(Debug, Serialize)]
