@@ -18,8 +18,8 @@ pub enum FieldTemplate {
 
 #[derive(Debug)]
 pub enum Field {
-    Relation(Arc<RelationField>),
-    Scalar(Arc<ScalarField>),
+    Relation(RelationFieldRef),
+    Scalar(ScalarFieldRef),
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -72,41 +72,78 @@ impl Field {
             Field::Relation(ref rf) => rf.as_column(),
         }
     }
+
+    pub fn is_visible(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => !sf.is_hidden,
+            Field::Relation(ref rf) => !rf.is_hidden,
+        }
+    }
+
+    pub fn is_scalar(&self) -> bool {
+        match self {
+            Field::Scalar(_) => true,
+            Field::Relation(_) => false,
+        }
+    }
+
+    pub fn is_list(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => sf.is_list,
+            Field::Relation(ref rf) => rf.is_list,
+        }
+    }
+
+    pub fn is_required(&self) -> bool {
+        match self {
+            Field::Scalar(ref sf) => sf.is_required,
+            Field::Relation(ref rf) => rf.is_required,
+        }
+    }
+
+    pub fn type_identifier(&self) -> TypeIdentifier {
+        match self {
+            Field::Scalar(ref sf) => sf.type_identifier,
+            Field::Relation(ref rf) => rf.type_identifier,
+        }
+    }
 }
 
 impl FieldTemplate {
     pub fn build(self, model: ModelWeakRef) -> Field {
         match self {
             FieldTemplate::Scalar(st) => {
-                let scalar = ScalarField {
-                    name: st.name,
-                    type_identifier: st.type_identifier,
-                    is_required: st.is_required,
-                    is_list: st.is_list,
-                    is_unique: st.is_unique,
-                    is_hidden: st.is_hidden,
-                    is_auto_generated: st.is_auto_generated,
-                    manifestation: st.manifestation,
-                    behaviour: st.behaviour,
+                let scalar = ScalarField::new(
+                    st.name,
+                    st.type_identifier,
+                    st.is_required,
+                    st.is_list,
+                    st.is_hidden,
+                    st.is_auto_generated,
+                    st.is_unique,
+                    st.manifestation,
+                    st.internal_enum,
+                    st.behaviour,
                     model,
-                };
+                    st.default_value,
+                );
 
                 Field::Scalar(Arc::new(scalar))
             }
             FieldTemplate::Relation(rt) => {
-                let relation = RelationField {
-                    name: rt.name,
-                    type_identifier: rt.type_identifier,
-                    is_required: rt.is_required,
-                    is_list: rt.is_list,
-                    is_unique: rt.is_unique,
-                    is_hidden: rt.is_hidden,
-                    is_auto_generated: rt.is_auto_generated,
-                    relation_name: rt.relation_name,
-                    relation_side: rt.relation_side,
+                let relation = RelationField::new(
+                    rt.name,
+                    rt.type_identifier,
+                    rt.is_required,
+                    rt.is_list,
+                    rt.is_hidden,
+                    rt.is_auto_generated,
+                    rt.is_unique,
+                    rt.relation_name,
+                    rt.relation_side,
                     model,
-                    relation: OnceCell::new(),
-                };
+                    OnceCell::new(),
+                );
 
                 Field::Relation(Arc::new(relation))
             }

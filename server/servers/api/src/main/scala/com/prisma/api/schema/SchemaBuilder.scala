@@ -79,7 +79,6 @@ case class SchemaBuilderImpl(
   }
 
   def buildMutation(): Option[ObjectType[ApiUserContext, Unit]] = {
-
     val fields = project.nonEmbeddedModels.map(createItemField) ++
       project.nonEmbeddedModels.flatMap(updateItemField) ++
       project.nonEmbeddedModels.flatMap(deleteItemField) ++
@@ -87,6 +86,7 @@ case class SchemaBuilderImpl(
       project.nonEmbeddedModels.flatMap(updateManyField) ++
       project.nonEmbeddedModels.map(deleteManyField) ++
       rawAccessField
+
     Some(ObjectType("Mutation", fields))
   }
 

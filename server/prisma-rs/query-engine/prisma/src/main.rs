@@ -9,6 +9,7 @@ extern crate debug_stub_derive;
 
 mod context;
 mod data_model;
+mod dmmf; // Temporary
 mod error;
 mod exec_loader;
 mod req_handlers;
@@ -56,6 +57,7 @@ fn main() {
                 r.method(Method::GET).with(playground_handler);
             })
             .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
+            .resource("/dmmf", |r| r.method(Method::GET).with(dmmf_handler))
     })
     .bind(address)
     .unwrap()
@@ -85,7 +87,18 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
 }
 
 fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
-    data_model::load_sdl_string().unwrap()
+    data_model::load_v2_dml_string()
+        .or_else(|_| data_model::load_v11_sdl_string())
+        .unwrap()
+}
+
+fn dmmf_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
+    let request_context = req.state();
+    let dm = &request_context.context.dm.as_ref().unwrap();
+    let dmmf = dmmf::render_dmmf(dm, &request_context.context.query_schema);
+    let serialized = serde_json::to_string(&dmmf).unwrap();
+
+    HttpResponse::Ok().content_type("application/json").body(serialized)
 }
 
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {
