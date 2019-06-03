@@ -36,6 +36,17 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
 
     fn unapply_steps(&self, migration: &Migration, steps: &Vec<T>) {
         assert_eq!(migration.status, MigrationStatus::Success); // what other states are valid here?
-        unimplemented!()
+        let mut migration_updates = migration.update_params();
+        migration_updates.status = MigrationStatus::RollingBack;
+        self.migration_persistence.update(&migration_updates);
+
+        for step in steps {
+            self.step_applier.unapply(&step);
+            migration_updates.rolled_back = migration_updates.rolled_back + 1;
+            self.migration_persistence.update(&migration_updates);
+        }
+
+        migration_updates.status = MigrationStatus::RollbackSuccess;
+        self.migration_persistence.update(&migration_updates);
     }
 }

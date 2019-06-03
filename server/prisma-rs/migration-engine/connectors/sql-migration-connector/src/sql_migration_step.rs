@@ -1,9 +1,9 @@
 use migration_connector::DatabaseMigrationStepMarker;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 impl DatabaseMigrationStepMarker for SqlMigrationStep {}
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum SqlMigrationStep {
     CreateTable(CreateTable),
     AlterTable(AlterTable),
@@ -12,48 +12,48 @@ pub enum SqlMigrationStep {
     RawSql { raw: String },
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CreateTable {
     pub name: String,
     pub columns: Vec<ColumnDescription>,
     pub primary_columns: Vec<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DropTable {
     pub name: String,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlterTable {
     pub table: String,
     pub changes: Vec<TableChange>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TableChange {
     AddColumn(AddColumn),
     AlterColumn(AlterColumn),
     DropColumn(DropColumn),
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AddColumn {
     pub column: ColumnDescription,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DropColumn {
     pub name: String,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct AlterColumn {
     pub name: String,
     pub column: ColumnDescription,
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ColumnDescription {
     pub name: String,
     pub tpe: ColumnType,
@@ -61,13 +61,13 @@ pub struct ColumnDescription {
     pub foreign_key: Option<ForeignKey>,
 }
 
-#[derive(Debug, Serialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct ForeignKey {
     pub table: String,
     pub column: String,
 }
 
-#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize)]
+#[derive(Debug, Copy, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub enum ColumnType {
     Int,
     Float,

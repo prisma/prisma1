@@ -13,6 +13,7 @@ use database_inspector::DatabaseInspector;
 use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
 use rusqlite::{Connection, NO_PARAMS};
+use serde_json;
 use sql_database_migration_steps_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
@@ -114,6 +115,11 @@ impl MigrationConnector for SqlMigrationConnector {
 
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigrationStep>> {
         Arc::clone(&self.destructive_changes_checker)
+    }
+
+    fn deserialize_database_steps(&self, json: String) -> Vec<SqlMigrationStep> {
+        dbg!(&json);
+        serde_json::from_str(&json).unwrap()
     }
 
     fn database_inspector(&self) -> Box<DatabaseInspector> {

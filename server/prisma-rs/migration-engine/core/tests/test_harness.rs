@@ -59,6 +59,10 @@ pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSch
     let engine = MigrationEngine::new();
     let _output = cmd.execute(&engine);
 
+    introspect_database(&engine)
+}
+
+pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
     let inspector = engine.connector().database_inspector();
     let mut result = inspector.introspect(&engine.schema_name());
     // the presence of the _Migration table makes assertions harder. Therefore remove it.

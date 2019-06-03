@@ -26,6 +26,9 @@ pub trait MigrationConnector {
     fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigrationStep>>;
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigrationStep>>;
 
+    // TODO: figure out if this is the best way to do this or move to a better place/interface
+    fn deserialize_database_steps(&self, json: String) -> Vec<Self::DatabaseMigrationStep>;
+
     fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigrationStep>> {
         let applier = MigrationApplierImpl {
             migration_persistence: self.migration_persistence(),
