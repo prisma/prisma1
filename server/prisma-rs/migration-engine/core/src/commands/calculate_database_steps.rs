@@ -50,6 +50,7 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CalculateDatabaseStepsInput {
     pub project_info: String,
     pub assume_to_be_applied: Vec<MigrationStep>,

@@ -28,12 +28,14 @@ impl MigrationCommand for CalculateDatamodelCommand {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CalculateDatamodelInput {
     pub project_info: String,
     pub steps: Vec<MigrationStep>,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CalculateDatamodelOutput {
     pub datamodel: String,
 }
