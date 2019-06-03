@@ -323,8 +323,26 @@ fn explicit_relation_names() {
         .assert_relation_name(relation_name);
 }
 
+#[test]
+#[ignore]
+fn self_relations() {
+    let datamodel = convert(
+        r#"
+            model Employee {
+                id: Int @id
+                ReportsTo: Employee?
+            }
+        "#
+    );
+
+    let employee = datamodel.assert_model("Employee");
+
+    employee.assert_relation_field("ReportsTo").assert_relation_name("EmployeeToEmployee");
+    // employee.assert_relation_field("employee");
+}
+
 fn convert(datamodel: &str) -> Arc<InternalDataModel> {
-    let datamodel = datamodel::parse(datamodel).unwrap();
+    let datamodel = dbg!(datamodel::parse(datamodel).unwrap());
     let template = DatamodelConverter::convert(&datamodel);
     template.build("not_important".to_string())
 }

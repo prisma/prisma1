@@ -58,7 +58,6 @@ model Employee {
   FirstName: String
   LastName: String
   Title: String?
-  ReportsTo: Employee?
   BirthDate: DateTime?
   HireDate: DateTime?
   Address: String?
