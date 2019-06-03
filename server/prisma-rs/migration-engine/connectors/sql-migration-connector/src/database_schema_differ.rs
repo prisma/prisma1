@@ -2,6 +2,8 @@ use crate::sql_database_migration_steps_inferrer::wrap_as_step;
 use crate::sql_migration_step::*;
 use database_inspector::{Column, DatabaseSchema, Table};
 
+const MIGRATION_TABLE_NAME: &str = "_Migration";
+
 pub struct DatabaseSchemaDiffer<'a> {
     previous: &'a DatabaseSchema,
     next: &'a DatabaseSchema,
@@ -36,7 +38,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
     fn create_tables(&self) -> Vec<CreateTable> {
         let mut result = Vec::new();
         for next_table in &self.next.tables {
-            if !self.previous.has_table(&next_table.name) {
+            if !self.previous.has_table(&next_table.name) && next_table.name != MIGRATION_TABLE_NAME {
                 let create = CreateTable {
                     name: next_table.name.clone(),
                     columns: Self::column_descriptions(&next_table.columns),
@@ -94,7 +96,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
     fn drop_tables(&self) -> Vec<DropTable> {
         let mut result = Vec::new();
         for previous_table in &self.previous.tables {
-            if !self.next.has_table(&previous_table.name) && previous_table.name != "_Migration" {
+            if !self.next.has_table(&previous_table.name) && previous_table.name != MIGRATION_TABLE_NAME {
                 let drop = DropTable {
                     name: previous_table.name.clone(),
                 };

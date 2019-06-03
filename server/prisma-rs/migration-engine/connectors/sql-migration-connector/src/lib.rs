@@ -13,6 +13,7 @@ use database_inspector::DatabaseInspector;
 use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
 use rusqlite::{Connection, NO_PARAMS};
+use serde_json;
 use sql_database_migration_steps_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
@@ -24,9 +25,9 @@ use std::sync::Arc;
 pub struct SqlMigrationConnector {
     schema_name: String,
     migration_persistence: Arc<MigrationPersistence>,
-    sql_database_migration_steps_inferrer: Arc<DatabaseMigrationStepsInferrer<SqlMigrationStep>>,
-    database_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigrationStep>>,
-    destructive_changes_checker: Arc<DestructiveChangesChecker<SqlMigrationStep>>,
+    sql_database_migration_steps_inferrer: Arc<DatabaseMigrationStepsInferrer<SqlMigration>>,
+    database_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
+    destructive_changes_checker: Arc<DestructiveChangesChecker<SqlMigration>>,
 }
 
 impl SqlMigrationConnector {
@@ -68,7 +69,7 @@ impl SqlMigrationConnector {
 }
 
 impl MigrationConnector for SqlMigrationConnector {
-    type DatabaseMigrationStep = SqlMigrationStep;
+    type DatabaseMigration = SqlMigration;
 
     fn initialize(&self) {
         let conn = Self::new_conn(&self.schema_name);
@@ -104,16 +105,20 @@ impl MigrationConnector for SqlMigrationConnector {
         Arc::clone(&self.migration_persistence)
     }
 
-    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<SqlMigrationStep>> {
+    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<SqlMigration>> {
         Arc::clone(&self.sql_database_migration_steps_inferrer)
     }
 
-    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigrationStep>> {
+    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigration>> {
         Arc::clone(&self.database_step_applier)
     }
 
-    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigrationStep>> {
+    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigration>> {
         Arc::clone(&self.destructive_changes_checker)
+    }
+
+    fn deserialize_database_steps(&self, json: String) -> SqlMigration {
+        serde_json::from_str(&json).unwrap()
     }
 
     fn database_inspector(&self) -> Box<DatabaseInspector> {
