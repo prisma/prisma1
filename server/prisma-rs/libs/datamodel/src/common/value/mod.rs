@@ -189,7 +189,7 @@ impl ValueValidator {
 
                 Ok(validators)
             }
-            _ => Err(self.construct_error("Array")),
+            _ => Ok(vec![ValueValidator::new(&self.value)?]),
         }
     }
 }

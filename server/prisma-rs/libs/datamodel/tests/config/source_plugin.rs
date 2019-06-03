@@ -1,6 +1,5 @@
+use crate::common::*;
 use datamodel::{dml, dml::FromStrAndSpan, errors::ValidationError, source::*, Arguments, DirectiveValidator};
-mod common;
-use common::*;
 
 //##########################
 // Directive implementation
@@ -28,6 +27,8 @@ impl DirectiveValidator<dml::Field> for CustomDirective {
 // Definition Boilerplate
 //##########################
 
+const CONNECTOR_NAME: &str = "customDemoSource";
+
 struct CustomDbDefinition {}
 
 impl CustomDbDefinition {
@@ -46,7 +47,7 @@ impl CustomDbDefinition {
 
 impl SourceDefinition for CustomDbDefinition {
     fn name(&self) -> &'static str {
-        "customDemoSource"
+        CONNECTOR_NAME
     }
 
     fn create(&self, name: &str, url: &str, arguments: &Arguments) -> Result<Box<Source>, ValidationError> {
@@ -69,8 +70,18 @@ struct CustomDb {
 }
 
 impl Source for CustomDb {
+    fn connector_name(&self) -> &str {
+        CONNECTOR_NAME
+    }
     fn name(&self) -> &String {
         &self.name
+    }
+    fn config(&self) -> std::collections::HashMap<String, String> {
+        let mut config = std::collections::HashMap::new();
+
+        config.insert(String::from("base_type"), self.base_type.to_string());
+
+        config
     }
     fn url(&self) -> &String {
         &self.url
@@ -89,47 +100,47 @@ impl Source for CustomDb {
 }
 
 //##########################
-// Unit Test Boilerplate
+// Unit Test
 //##########################
+
+const DATAMODEL: &str = r#"
+
+source custom_1 {
+    name = "customDemoSource"
+    url = "https://localhost"
+
+    properties {
+        base_type = Int
+    }
+}
+
+source custom_2 {
+    name = "customDemoSource"
+    url = "https://localhost"
+
+    properties {
+        base_type = String
+    }
+}
+
+
+model User {
+    id: ID @id
+    firstName: String @custom_1.mapToBase
+    lastName: String @custom_1.mapToBase
+    email: String
+}
+
+model Post {
+    id: ID @id
+    likes: Int @custom_2.mapToBase
+    comments: Int
+}
+"#;
 
 #[test]
 fn custom_plugin() {
-    let dml = r#"
-
-    source custom_1 {
-        name = "customDemoSource"
-        url = "https://localhost"
-
-        properties {
-            base_type = Int
-        }
-    }
-
-    source custom_2 {
-        name = "customDemoSource"
-        url = "https://localhost"
-
-        properties {
-            base_type = String
-        }
-    }
-
-
-    model User {
-        id: ID @id
-        firstName: String @custom_1.mapToBase
-        lastName: String @custom_1.mapToBase
-        email: String
-    }
-
-    model Post {
-        id: ID @id
-        likes: Int @custom_2.mapToBase
-        comments: Int
-    }
-    "#;
-
-    let schema = parse_with_plugins(dml, vec![Box::new(CustomDbDefinition::new())]);
+    let schema = parse_with_plugins(DATAMODEL, vec![Box::new(CustomDbDefinition::new())]);
 
     let user_model = schema.assert_has_model("User");
 
@@ -151,4 +162,35 @@ fn custom_plugin() {
     post_model
         .assert_has_field("likes")
         .assert_base_type(&dml::ScalarType::String);
+}
+
+#[test]
+fn serialize_sources_to_dmmf() {
+    let sources =
+        datamodel::load_data_source_configuration_with_plugins(DATAMODEL, vec![Box::new(CustomDbDefinition::new())])
+            .unwrap();
+    let rendered = datamodel::dmmf::render_config_to_dmmf(&sources);
+
+    let expected = r#"[
+  {
+    "name": "custom_1",
+    "connectorName": "customDemoSource",
+    "url": "https://localhost",
+    "config": {
+      "base_type": "Int"
+    }
+  },
+  {
+    "name": "custom_2",
+    "connectorName": "customDemoSource",
+    "url": "https://localhost",
+    "config": {
+      "base_type": "String"
+    }
+  }
+]"#;
+
+    println!("{}", rendered);
+
+    assert_eq!(rendered, expected);
 }

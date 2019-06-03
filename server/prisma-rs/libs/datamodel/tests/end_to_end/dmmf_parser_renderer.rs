@@ -6,7 +6,7 @@ model User {
     createdAt DateTime
     email String @unique
     name String?
-    posts Post[] @onDelete(CASCADE)
+    posts Post[] @relation(onDelete: CASCADE)
     profile Profile?
     @@db("user")
 }
@@ -45,6 +45,16 @@ model PostToCategory {
     @@db("post_to_category")
 }
 
+model A {
+    id Int @id
+    b B @relation(references: [id])
+}
+
+model B {
+    id Int @id
+    a A
+}
+
 enum CategoryEnum {
     A
     B
@@ -53,19 +63,13 @@ enum CategoryEnum {
 "#;
 
 #[test]
-fn test_parser_renderer_via_ast() {
-    let ast = datamodel::parse_to_ast(DATAMODEL_STRING).unwrap();
-    let rendered = datamodel::render_ast(&ast);
+fn test_dmmf_roundtrip() {
+    let dml = datamodel::parse(&DATAMODEL_STRING).unwrap();
+    let dmmf = datamodel::dmmf::render_to_dmmf(&dml);
+    let dml2 = datamodel::dmmf::parse_from_dmmf(&dmmf);
+    let rendered = datamodel::render(&dml2).unwrap();
 
-    assert_eq!(DATAMODEL_STRING, rendered);
-}
-
-#[test]
-fn test_parser_renderer_via_dml() {
-    let dml = datamodel::parse(DATAMODEL_STRING).unwrap();
-    let rendered = datamodel::render(&dml).unwrap();
-
-    print!("{}", rendered);
+    println!("{}", rendered);
 
     assert_eq!(DATAMODEL_STRING, rendered);
 }

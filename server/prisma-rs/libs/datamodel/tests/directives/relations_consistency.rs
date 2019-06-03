@@ -1,5 +1,4 @@
-mod common;
-use common::*;
+use crate::common::*;
 
 #[test]
 fn should_add_back_relations() {

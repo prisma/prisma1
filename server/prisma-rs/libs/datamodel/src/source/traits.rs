@@ -2,6 +2,7 @@ use crate::common::argument::Arguments;
 use crate::dml;
 use crate::dml::validator::directive::DirectiveValidator;
 use crate::errors::ValidationError;
+use std::collections::HashMap;
 
 // TODO: Probably rename everything. Terminology here is messy.
 
@@ -9,10 +10,14 @@ use crate::errors::ValidationError;
 ///
 /// A source is basically the datamodel equivalent of a connector.
 pub trait Source {
+    /// Gets the name of the implementing connector.
+    fn connector_name(&self) -> &str;
     /// Gets the name of the source configuration block.
     fn name(&self) -> &String;
     /// Gets the source config URL.
     fn url(&self) -> &String;
+    /// Gets all custom configuration attributes.
+    fn config(&self) -> HashMap<String, String>;
     /// Gets all field directives defined by this source.
     ///
     /// The directives returned here are unscoped.
