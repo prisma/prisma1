@@ -1,6 +1,6 @@
+use super::dmmf::*;
 use crate::dml;
 use serde_json;
-use super::dmmf::*;
 
 fn get_field_kind(field: &dml::Field) -> String {
     match field.field_type {
@@ -38,7 +38,7 @@ pub fn enum_to_dmmf(en: &dml::Enum) -> Enum {
     Enum {
         name: en.name.clone(),
         values: en.values.clone(),
-        db_name: en.database_name.clone()
+        db_name: en.database_name.clone(),
     }
 }
 
@@ -57,6 +57,27 @@ pub fn default_value_to_serde(container: &Option<dml::Value>) -> Option<serde_js
     }
 }
 
+pub fn get_relation_name(field: &dml::Field) -> Option<String> {
+    match &field.field_type {
+        dml::FieldType::Relation(relation_info) => relation_info.name.clone(),
+        _ => None,
+    }
+}
+
+pub fn get_relation_to_fields(field: &dml::Field) -> Option<Vec<String>> {
+    match &field.field_type {
+        dml::FieldType::Relation(relation_info) => Some(relation_info.to_fields.clone()),
+        _ => None,
+    }
+}
+
+pub fn get_relation_delete_strategy(field: &dml::Field) -> Option<String> {
+    match &field.field_type {
+        dml::FieldType::Relation(relation_info) => Some(relation_info.on_delete.to_string()),
+        _ => None,
+    }
+}
+
 pub fn field_to_dmmf(field: &dml::Field) -> Field {
     Field {
         name: field.name.clone(),
@@ -67,7 +88,11 @@ pub fn field_to_dmmf(field: &dml::Field) -> Field {
         is_id: field.id_info.is_some(),
         default: default_value_to_serde(&field.default_value),
         is_unique: field.is_unique,
+        relation_name: get_relation_name(field),
+        relation_to_fields: get_relation_to_fields(field),
+        relation_on_delete: get_relation_delete_strategy(field),
         field_type: get_field_type(field),
+        is_generated: Some(field.is_generated)
     }
 }
 

@@ -17,6 +17,14 @@ pub struct Field {
     pub field_type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relation_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relation_to_fields: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relation_on_delete: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_generated: Option<bool>,
 }
 
 #[serde(rename_all = "camelCase")]

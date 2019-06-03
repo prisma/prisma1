@@ -54,11 +54,12 @@ enum CategoryEnum {
 
 #[test]
 fn test_dmmf_roundtrip() {
-
     let dml = datamodel::parse(&DATAMODEL_STRING).unwrap();
     let dmmf = datamodel::dmmf::render_to_dmmf(&dml);
     let dml2 = datamodel::dmmf::parse_from_dmmf(&dmmf);
     let rendered = datamodel::render(&dml2).unwrap();
+
+    println!("{}", rendered);
 
     assert_eq!(DATAMODEL_STRING, rendered);
 }
