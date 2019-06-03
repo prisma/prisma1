@@ -1,5 +1,4 @@
-mod common;
-use common::*;
+use crate::common::*;
 use datamodel::{ast::Span, errors::ValidationError};
 
 #[test]

@@ -1,5 +1,4 @@
-mod common;
-use common::*;
+use crate::common::*;
 
 #[test]
 fn should_treat_single_values_as_arrays_of_length_oneca() {

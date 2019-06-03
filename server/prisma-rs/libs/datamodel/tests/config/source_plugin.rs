@@ -1,6 +1,5 @@
 use datamodel::{dml, dml::FromStrAndSpan, errors::ValidationError, source::*, Arguments, DirectiveValidator};
-mod common;
-use common::*;
+use crate::common::*;
 
 //##########################
 // Directive implementation
