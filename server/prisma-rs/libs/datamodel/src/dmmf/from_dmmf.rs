@@ -1,9 +1,9 @@
 use super::dmmf::*;
+use crate::ast::Span;
 use crate::dml;
+use crate::dml::FromStrAndSpan;
 use chrono::{DateTime, Utc};
 use serde_json;
-use crate::dml::FromStrAndSpan;
-use crate::ast::Span;
 
 fn type_from_string(scalar: &str) -> dml::ScalarType {
     match scalar {
@@ -46,7 +46,7 @@ pub fn default_value_from_serde(
 fn get_on_delete_strategy(strategy: &Option<String>) -> dml::OnDeleteStrategy {
     match strategy {
         Some(val) => dml::OnDeleteStrategy::from_str_and_span(&val, &Span::empty()).unwrap(),
-        None => dml::OnDeleteStrategy::None
+        None => dml::OnDeleteStrategy::None,
     }
 }
 
@@ -56,7 +56,7 @@ fn get_field_type(field: &Field) -> dml::FieldType {
             to: field.field_type.clone(),
             to_fields: field.relation_to_fields.clone().unwrap_or_default(),
             name: field.relation_name.clone(),
-            on_delete: get_on_delete_strategy(&field.relation_on_delete)
+            on_delete: get_on_delete_strategy(&field.relation_on_delete),
         }),
         "enum" => dml::FieldType::Enum(field.field_type.clone()),
         "scalar" => dml::FieldType::Base(type_from_string(&field.field_type)),
