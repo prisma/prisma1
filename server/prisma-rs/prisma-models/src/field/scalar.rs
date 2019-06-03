@@ -2,6 +2,7 @@ use prisma_query::ast::*;
 
 use super::FieldManifestation;
 use crate::prelude::*;
+// use serde::Deserializer;
 use std::sync::{Arc, Weak};
 
 static ID_FIELD: &str = "id";
@@ -24,11 +25,9 @@ pub struct ScalarFieldTemplate {
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
-
-    #[serde(default)]
     pub default_value: Option<PrismaValue>,
 
-    #[serde(default, alias = "enum")]
+    #[serde(rename = "enum")]
     pub internal_enum: Option<InternalEnum>,
 }
 

@@ -29,6 +29,7 @@ impl GraphqlId {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(untagged)]
 pub enum PrismaValue {
     String(String),
     Float(f64),
