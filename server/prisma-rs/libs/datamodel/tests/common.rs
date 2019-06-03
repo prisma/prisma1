@@ -6,6 +6,7 @@ pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
     fn assert_enum_type(&self, en: &str) -> &Self;
     fn assert_relation_to(&self, t: &str) -> &Self;
+    fn assert_relation_delete_strategy(&self, t: dml::OnDeleteStrategy) -> &Self;
     fn assert_relation_to_fields(&self, t: &[&str]) -> &Self;
     fn assert_arity(&self, arity: &dml::FieldArity) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
@@ -59,6 +60,16 @@ impl FieldAsserts for dml::Field {
     fn assert_relation_to(&self, t: &str) -> &Self {
         if let dml::FieldType::Relation(info) = &self.field_type {
             assert_eq!(info.to, t);
+        } else {
+            panic!("Relation expected, but found {:?}", self.field_type);
+        }
+
+        return self;
+    }
+
+    fn assert_relation_delete_strategy(&self, t: dml::OnDeleteStrategy) -> &Self {
+        if let dml::FieldType::Relation(info) = &self.field_type {
+            assert_eq!(info.on_delete, t);
         } else {
             panic!("Relation expected, but found {:?}", self.field_type);
         }
