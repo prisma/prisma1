@@ -3,6 +3,9 @@ import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
 import { RelationalIntrospectionResult } from './relationalIntrospectionResult'
 import IDatabaseClient from '../IDatabaseClient'
 import GQLAssert from '../../../../prisma-datamodel/dist/util/gqlAssert'
+import * as debug from 'debug'
+
+let log = debug('RelationalIntrospection')
 
 export interface IInternalIndexInfo {
   tableName: string
@@ -39,11 +42,10 @@ export abstract class RelationalConnector implements IConnector {
   /**
    * Column comments are DB specific
    */
-  protected abstract async queryColumnComment(
+  protected abstract async queryColumnComments(
     schemaName: string,
     tableName: string,
-    columnName: string,
-  ): Promise<string | null>
+  ): Promise<{ text: string; column: string }[]>
 
   /**
    * Indices are DB specific
@@ -78,6 +80,7 @@ export abstract class RelationalConnector implements IConnector {
    * All queries below use the standardized information_schema table.
    */
   public async listSchemas(): Promise<string[]> {
+    log('Querying schemas.')
     const res = await this.query(
       `SELECT 
          schema_name
@@ -90,18 +93,24 @@ export abstract class RelationalConnector implements IConnector {
   }
 
   protected async listModels(schemaName: string): Promise<ITable[]> {
+    log(`Introspecting models in schema ${schemaName}.`)
     const tables: ITable[] = []
     const allTables = await this.queryTables(schemaName)
 
+    // Parallelizing this loop does not make introspection any faster.
+    // speeding up introspection could be done by an architecture change:
+    // Fetch introspection data for all tables at once and then aggregate at client side.
     for (const tableName of allTables) {
       const columns = await this.queryColumns(schemaName, tableName)
 
+      const comments = await this.queryColumnComments(schemaName, tableName)
+
       for (const column of columns) {
-        column.comment = await this.queryColumnComment(
-          schemaName,
-          tableName,
-          column.name,
-        )
+        for (const comment of comments) {
+          if (column.name === comment.column) {
+            column.comment = comment.text
+          }
+        }
       }
 
       const allIndices = await this.queryIndices(schemaName, tableName)
@@ -120,6 +129,7 @@ export abstract class RelationalConnector implements IConnector {
   }
 
   protected async queryTables(schemaName: string) {
+    log('Querying tables.')
     const allTablesQuery = `
       SELECT 
         table_name as table_name
@@ -162,6 +172,7 @@ export abstract class RelationalConnector implements IConnector {
   protected abstract parameter(count: number, type: string)
 
   protected async queryColumns(schemaName: string, tableName: string) {
+    log(`Querying columns for table ${tableName}.`)
     const allColumnsQuery = `
       SELECT
         ordinal_position as ordinal_postition,
@@ -205,6 +216,7 @@ export abstract class RelationalConnector implements IConnector {
   }
 
   protected async listRelations(schemaName: string): Promise<ITableRelation[]> {
+    log(`Querying relations in schema ${schemaName}.`)
     const fkQuery = `  
       SELECT 
         keyColumn1.constraint_name AS "fkConstraintName",
