@@ -2,12 +2,16 @@
 
 mod arguments;
 mod ast;
-mod builder;
+mod many;
 mod parser;
 mod results;
+mod root;
 
 pub use arguments::*;
 pub use ast::*;
-pub use builder::*;
 pub use parser::*;
 pub use results::*;
+
+// Mutation builder modules
+pub use many::*;
+pub use root::*;
