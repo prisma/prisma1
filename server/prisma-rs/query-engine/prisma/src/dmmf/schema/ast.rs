@@ -59,7 +59,9 @@ pub enum DMMFFieldWrapper {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DMMFTypeInfo {
+  #[serde(rename = "type")]
   pub typ: String,
   pub is_required: bool,
   pub is_list: bool,
