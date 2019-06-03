@@ -32,7 +32,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
 
         let database_steps_json = connector
             .database_step_applier()
-            .render_steps(&database_migration_steps);
+            .render_steps_pretty(&database_migration_steps);
 
         InferMigrationStepsOutput {
             datamodel_steps: model_migration_steps,

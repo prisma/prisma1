@@ -53,7 +53,9 @@ pub trait DatabaseMigrationStepApplier<T> {
 
     fn unapply(&self, step: &T);
 
-    fn render_steps(&self, steps: &Vec<T>) -> serde_json::Value;
+    fn render_steps_pretty(&self, steps: &Vec<T>) -> serde_json::Value;
+
+    fn render_steps_internal(&self, steps: &Vec<T>) -> serde_json::Value;
 }
 
 pub trait DestructiveChangesChecker<T> {

@@ -31,14 +31,18 @@ impl MigrationCommand for ApplyMigrationCommand {
                 .database_steps_inferrer()
                 .infer(&current_data_model, &next_data_model, &self.input.steps);
 
-        let database_steps_json = connector
+        let database_steps_json_pretty = connector
             .database_step_applier()
-            .render_steps(&database_migration_steps);
+            .render_steps_pretty(&database_migration_steps);
+
+        let database_steps_json_internal = connector
+            .database_step_applier()
+            .render_steps_internal(&database_migration_steps);
 
         if !is_dry_run {
             let mut migration = Migration::new(self.input.migration_id.clone());
             migration.datamodel_steps = self.input.steps.clone();
-            migration.database_steps = database_steps_json.to_string();
+            migration.database_steps = database_steps_json_internal.to_string();
             let saved_migration = connector.migration_persistence().create(migration);
 
             connector
@@ -48,7 +52,7 @@ impl MigrationCommand for ApplyMigrationCommand {
 
         MigrationStepsResultOutput {
             datamodel_steps: self.input.steps.clone(),
-            database_steps: database_steps_json,
+            database_steps: database_steps_json_pretty,
             errors: Vec::new(),
             warnings: Vec::new(),
             general_errors: Vec::new(),
