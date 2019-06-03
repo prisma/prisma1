@@ -1,33 +1,36 @@
 #![allow(non_snake_case)]
 mod test_harness;
 use database_inspector::*;
-use test_harness::*;
 use migration_core::commands::*;
 use migration_core::MigrationEngine;
+use test_harness::*;
 
 #[test]
 fn unapply_must_work() {
     run_test_with_engine(|engine| {
-        let dm = r#"
+        let dm1 = r#"
             model Test {
                 id: String @id
                 field: String
             }
         "#;
-        let result1 = migrate_to(&engine, &dm);
+        let result1 = migrate_to(&engine, &dm1);
         assert_eq!(result1.table_bang("Test").column("field").is_some(), true);
 
-        let dm = r#"
+        let dm2 = r#"
             model Test {
                 id: String @id
             }
         "#;
-        let result2 = migrate_to(&engine, &dm);
+        let result2 = migrate_to(&engine, &dm2);
         assert_eq!(result2.table_bang("Test").column("field").is_some(), false);
 
         let result3 = unapply_last_migration(&engine);
-
         assert_eq!(result1, result3);
+
+        // reapply the migration again
+        let result4 = migrate_to(&engine, &dm2);
+        assert_eq!(result2, result4);
     });
 }
 

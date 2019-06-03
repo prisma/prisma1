@@ -15,18 +15,30 @@ impl DatabaseMigrationStepsInferrer<SqlMigration> for SqlDatabaseMigrationStepsI
     fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> SqlMigration {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
-        let steps = DatabaseSchemaDiffer::diff(&current_database_schema, &expected_database_schema);
-        let is_sqlite = true;
-        let steps = if is_sqlite {
-            self.fix_stupid_sqlite(steps, &current_database_schema, &expected_database_schema)
-        } else {
-            steps
-        };
-        SqlMigration { steps: steps }
+        let steps = self.infer_database_migration_steps_and_fix(&current_database_schema, &expected_database_schema);
+        let rollback = self.infer_database_migration_steps_and_fix(&expected_database_schema, &current_database_schema);
+        SqlMigration {
+            steps: steps,
+            rollback: rollback,
+        }
     }
 }
 
 impl SqlDatabaseMigrationStepsInferrer {
+    fn infer_database_migration_steps_and_fix(
+        &self,
+        from: &DatabaseSchema,
+        to: &DatabaseSchema,
+    ) -> Vec<SqlMigrationStep> {
+        let steps = DatabaseSchemaDiffer::diff(&from, &to);
+        let is_sqlite = true;
+        if is_sqlite {
+            self.fix_stupid_sqlite(steps, &from, &to)
+        } else {
+            steps
+        }
+    }
+
     fn fix_stupid_sqlite(
         &self,
         steps: Vec<SqlMigrationStep>,

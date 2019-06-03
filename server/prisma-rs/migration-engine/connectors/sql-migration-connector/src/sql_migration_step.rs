@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SqlMigration {
     pub steps: Vec<SqlMigrationStep>,
+    pub rollback: Vec<SqlMigrationStep>,
 }
 
 impl DatabaseMigrationMarker for SqlMigration {}
