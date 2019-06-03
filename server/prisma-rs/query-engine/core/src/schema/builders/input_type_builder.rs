@@ -114,8 +114,8 @@ impl InputTypeBuilder {
             .filter(|f| f.is_list)
             .map(|f| {
                 let name = f.name.clone();
-                let set_name = format!("{}{}{}Input", model_name, input_object_name, f.name);
-                let input_object = match self.get_cache().get(&name) {
+                let set_name = dbg!(format!("{}{}{}Input", model_name, input_object_name, f.name));
+                let input_object = match self.get_cache().get(&set_name) {
                     Some(t) => t,
                     None => {
                         let set_fields = vec![input_field("set", self.map_optional_input_type(f))];
