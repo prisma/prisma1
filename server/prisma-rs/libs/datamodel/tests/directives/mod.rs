@@ -3,6 +3,6 @@ pub mod id_negative;
 pub mod id_positive;
 pub mod relations_basic;
 pub mod relations_consistency;
+pub mod relations_legacy;
 pub mod relations_negative;
 pub mod relations_positive;
-pub mod relations_legacy;

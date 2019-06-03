@@ -67,7 +67,7 @@ pub fn parse_with_plugins(
 }
 
 /// Loads all source configuration blocks from a datamodel using the given source definitions.
-pub fn load_data_source_configuration(
+pub fn load_data_source_configuration_with_plugins(
     datamodel_string: &str,
     source_definitions: Vec<Box<source::SourceDefinition>>,
 ) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
@@ -77,6 +77,11 @@ pub fn load_data_source_configuration(
         source_loader.add_source_definition(source);
     }
     source_loader.load(&ast)
+}
+
+/// Loads all source configuration blocks from a datamodel using the built-in source definitions.
+pub fn load_data_source_configuration(datamodel_string: &str) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
+    load_data_source_configuration_with_plugins(datamodel_string, vec![])
 }
 
 /// Parses and validates a datamodel string, using core attributes only.

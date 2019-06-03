@@ -76,7 +76,6 @@ impl Model {
             return false;
         })
     }
-
 }
 
 impl WithName for Model {

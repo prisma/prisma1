@@ -86,7 +86,8 @@ impl Validator {
 
         // Model level validations.
         for model in schema.models() {
-            if let Err(err) = self.validate_model_has_id(ast_schema.find_model(&model.name).expect(STATE_ERROR), model) {
+            if let Err(err) = self.validate_model_has_id(ast_schema.find_model(&model.name).expect(STATE_ERROR), model)
+            {
                 errors.push(err);
             }
             if let Err(err) = self.validate_relations_not_ambiguous(ast_schema, model) {
@@ -117,7 +118,6 @@ impl Validator {
         }
     }
 
-
     /// Ensures that embedded types do not have back relations
     /// to their parent types.
     fn validate_embedded_types_have_no_back_relation(
@@ -126,7 +126,6 @@ impl Validator {
         datamodel: &dml::Datamodel,
         model: &dml::Model,
     ) -> Result<(), ValidationError> {
-
         if model.is_embedded {
             for field in model.fields() {
                 if !field.is_generated {
@@ -137,12 +136,9 @@ impl Validator {
                         if rel.to_fields.len() == 0 && !related_field.is_generated {
                             // TODO: Refactor that out, it's way too much boilerplate.
                             return Err(ValidationError::new_model_validation_error(
-                                    "Embedded models cannot have back relation fields.",
-                                    &model.name,
-                                    &ast_schema
-                                        .find_field(&model.name, &field.name)
-                                        .expect(STATE_ERROR)
-                                        .span,
+                                "Embedded models cannot have back relation fields.",
+                                &model.name,
+                                &ast_schema.find_field(&model.name, &field.name).expect(STATE_ERROR).span,
                             ));
                         }
                     }

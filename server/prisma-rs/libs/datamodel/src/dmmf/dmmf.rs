@@ -1,5 +1,6 @@
 use serde;
 use serde_json;
+use std::collections::HashMap;
 
 // This is a simple JSON serialization using Serde.
 // The JSON format follows the DMMF spec.
@@ -48,4 +49,13 @@ pub struct Enum {
 pub struct Datamodel {
     pub enums: Vec<Enum>,
     pub models: Vec<Model>,
+}
+
+#[serde(rename_all = "camelCase")]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct SourceConfig {
+    pub name: String,
+    pub connector_name: String,
+    pub url: String,
+    pub config: HashMap<String, String>,
 }

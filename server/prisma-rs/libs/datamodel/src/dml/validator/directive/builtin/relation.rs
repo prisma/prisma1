@@ -48,7 +48,10 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
             }
 
             if relation_info.on_delete != dml::OnDeleteStrategy::None {
-                args.push(ast::Argument::new_constant("onDelete", &relation_info.on_delete.to_string()));
+                args.push(ast::Argument::new_constant(
+                    "onDelete",
+                    &relation_info.on_delete.to_string(),
+                ));
             }
 
             if args.len() > 0 {
