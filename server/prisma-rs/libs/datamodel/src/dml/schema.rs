@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Datamodel {
     // All enums.
-    enums: Vec<Enum>,
+    pub enums: Vec<Enum>,
     // All models.
-    models: Vec<Model>,
+    pub models: Vec<Model>,
     /// All comments.
     pub comments: Vec<Comment>,
 }
