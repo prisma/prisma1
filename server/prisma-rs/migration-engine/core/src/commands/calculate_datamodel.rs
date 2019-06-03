@@ -20,9 +20,8 @@ impl MigrationCommand for CalculateDatamodelCommand {
 
         let base_datamodel = Datamodel::empty();
         let datamodel = engine.datamodel_calculator().infer(&base_datamodel, &self.input.steps);
-        // todo: render the datamodel properly
         CalculateDatamodelOutput {
-            datamodel: format!("{:?}", datamodel),
+            datamodel: datamodel::render(&datamodel).unwrap(),
         }
     }
 }
