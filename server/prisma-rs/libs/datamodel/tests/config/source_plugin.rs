@@ -104,7 +104,6 @@ impl Source for CustomDb {
 //##########################
 
 const DATAMODEL: &str = r#"
-
 source custom_1 {
     name = "customDemoSource"
     url = "https://localhost"

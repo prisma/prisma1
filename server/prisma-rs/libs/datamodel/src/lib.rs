@@ -65,6 +65,9 @@ pub fn parse_with_plugins(
 ) -> Result<Datamodel, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
     let mut source_loader = SourceLoader::new();
+    for source in get_builtin_sources() {
+        source_loader.add_source_definition(source);
+    }
     for source in source_definitions {
         source_loader.add_source_definition(source);
     }
@@ -80,6 +83,9 @@ pub fn load_data_source_configuration_with_plugins(
 ) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
     let mut source_loader = SourceLoader::new();
+    for source in get_builtin_sources() {
+        source_loader.add_source_definition(source);
+    }
     for source in source_definitions {
         source_loader.add_source_definition(source);
     }
@@ -88,12 +94,12 @@ pub fn load_data_source_configuration_with_plugins(
 
 /// Loads all source configuration blocks from a datamodel using the built-in source definitions.
 pub fn load_data_source_configuration(datamodel_string: &str) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
-    load_data_source_configuration_with_plugins(datamodel_string, get_builtin_sources())
+    load_data_source_configuration_with_plugins(datamodel_string, vec![])
 }
 
 /// Parses and validates a datamodel string, using core attributes only.
 pub fn parse(datamodel_string: &str) -> Result<Datamodel, errors::ErrorCollection> {
-    return parse_with_plugins(datamodel_string, get_builtin_sources());
+    parse_with_plugins(datamodel_string, vec![])
 }
 
 /// Parses a datamodel string to an AST. For internal use only.
