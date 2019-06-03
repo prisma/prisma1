@@ -49,7 +49,14 @@ pub use dml::FromStrAndSpan;
 pub use source::*;
 pub use validator::directive::DirectiveValidator;
 
-// Convenience cHelpers.
+// Convenience Helpers
+fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
+    vec![
+        Box::new(source::builtin::MySqlSourceDefinition::new()),
+        Box::new(source::builtin::PostgresSourceDefinition::new()),
+        Box::new(source::builtin::SqliteSourceDefinition::new()),
+    ]
+}
 
 /// Parses and validates a datamodel string, using core attributes and the given plugins.
 pub fn parse_with_plugins(
@@ -81,12 +88,12 @@ pub fn load_data_source_configuration_with_plugins(
 
 /// Loads all source configuration blocks from a datamodel using the built-in source definitions.
 pub fn load_data_source_configuration(datamodel_string: &str) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
-    load_data_source_configuration_with_plugins(datamodel_string, vec![])
+    load_data_source_configuration_with_plugins(datamodel_string, get_builtin_sources())
 }
 
 /// Parses and validates a datamodel string, using core attributes only.
 pub fn parse(datamodel_string: &str) -> Result<Datamodel, errors::ErrorCollection> {
-    return parse_with_plugins(datamodel_string, vec![]);
+    return parse_with_plugins(datamodel_string, get_builtin_sources());
 }
 
 /// Parses a datamodel string to an AST. For internal use only.
