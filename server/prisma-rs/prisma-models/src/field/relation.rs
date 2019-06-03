@@ -28,7 +28,6 @@ pub struct RelationField {
     pub type_identifier: TypeIdentifier,
     pub is_required: bool,
     pub is_list: bool,
-    pub is_unique: bool,
     pub is_hidden: bool,
     pub is_auto_generated: bool,
     pub relation_name: String,
@@ -36,6 +35,8 @@ pub struct RelationField {
     #[debug_stub = "#ModelWeakRef#"]
     pub model: ModelWeakRef,
     pub relation: OnceCell<RelationWeakRef>,
+
+    is_unique: bool,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq)]
@@ -62,8 +63,40 @@ impl RelationSide {
 }
 
 impl RelationField {
+    pub fn new(
+        name: String,
+        type_identifier: TypeIdentifier,
+        is_required: bool,
+        is_list: bool,
+        is_hidden: bool,
+        is_auto_generated: bool,
+        is_unique: bool,
+        relation_name: String,
+        relation_side: RelationSide,
+        model: ModelWeakRef,
+        relation: OnceCell<RelationWeakRef>,
+    ) -> Self {
+        RelationField {
+            name,
+            type_identifier,
+            is_required,
+            is_list,
+            is_hidden,
+            is_auto_generated,
+            is_unique,
+            relation_name,
+            relation_side,
+            model,
+            relation,
+        }
+    }
+
     pub fn is_optional(&self) -> bool {
         !self.is_required
+    }
+
+    pub fn is_unique(&self) -> bool {
+        self.is_unique
     }
 
     pub fn model(&self) -> ModelRef {
@@ -74,7 +107,12 @@ impl RelationField {
 
     pub fn relation(&self) -> RelationRef {
         self.relation
-            .get_or_init(|| self.model().internal_data_model().find_relation(&self.relation_name).unwrap())
+            .get_or_init(|| {
+                self.model()
+                    .internal_data_model()
+                    .find_relation(&self.relation_name)
+                    .unwrap()
+            })
             .upgrade()
             .unwrap()
     }
@@ -143,7 +181,10 @@ impl RelationField {
         let model = self.model();
         let internal_data_model = model.internal_data_model();
         let db_name = self.db_name();
-        let parts = ((internal_data_model.db_name.as_ref(), model.db_name()), db_name.as_ref());
+        let parts = (
+            (internal_data_model.db_name.as_ref(), model.db_name()),
+            db_name.as_ref(),
+        );
 
         parts.into()
     }

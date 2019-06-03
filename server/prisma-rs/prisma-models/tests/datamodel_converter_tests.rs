@@ -1,15 +1,13 @@
 #![allow(non_snake_case)]
-use datamodel::dml;
-use datamodel::validator::Validator;
 use prisma_models::*;
 use std::sync::Arc;
 
 #[test]
 fn an_empty_datamodel_must_work() {
-    let datamodel = DatamodelConverterImpl::convert(&dml::Datamodel::empty());
+    let datamodel = convert("");
     assert_eq!(datamodel.enums.is_empty(), true);
-    assert_eq!(datamodel.models.is_empty(), true);
-    assert_eq!(datamodel.relations.is_empty(), true);
+    assert_eq!(datamodel.models().is_empty(), true);
+    assert_eq!(datamodel.relations().is_empty(), true);
 }
 
 #[test]
@@ -121,6 +119,7 @@ fn scalar_lists_work() {
 }
 
 #[test]
+#[ignore]
 fn unique_works() {
     let datamodel = convert(
         r#"
@@ -186,7 +185,7 @@ fn explicit_relation_fields() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
                 blog: Blog? @db(name:"blog_id")
             }
         "#,
@@ -223,7 +222,7 @@ fn many_to_many_relations() {
     let datamodel = convert(
         r#"
             model Post {
-                id: Int @id                
+                id: Int @id
                 blogs: Blog[]
             }
 
@@ -274,7 +273,7 @@ fn implicit_relation_fields() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
             }
         "#,
     );
@@ -305,7 +304,7 @@ fn explicit_relation_names() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
                 blog: Blog? @relation(name: "MyRelationName")
             }
         "#,
@@ -324,11 +323,27 @@ fn explicit_relation_names() {
         .assert_relation_name(relation_name);
 }
 
+#[test]
+#[ignore]
+fn self_relations() {
+    let datamodel = convert(
+        r#"
+            model Employee {
+                id: Int @id
+                ReportsTo: Employee?
+            }
+        "#
+    );
+
+    let employee = datamodel.assert_model("Employee");
+
+    employee.assert_relation_field("ReportsTo").assert_relation_name("EmployeeToEmployee");
+    // employee.assert_relation_field("employee");
+}
+
 fn convert(datamodel: &str) -> Arc<InternalDataModel> {
-    let ast = datamodel::parser::parse(datamodel).unwrap();
-    let validator = Validator::new();
-    let datamodel = validator.validate(&ast).unwrap();
-    let template = DatamodelConverterImpl::convert(&datamodel);
+    let datamodel = dbg!(datamodel::parse(datamodel).unwrap());
+    let template = DatamodelConverter::convert(&datamodel);
     template.build("not_important".to_string())
 }
 
@@ -398,7 +413,7 @@ impl FieldAssertions for ScalarField {
     }
 
     fn assert_unique(&self) -> &Self {
-        assert!(self.is_unique);
+        assert!(self.is_unique());
         self
     }
 }
@@ -442,7 +457,7 @@ impl FieldAssertions for RelationField {
     }
 
     fn assert_unique(&self) -> &Self {
-        assert!(self.is_unique);
+        assert!(self.is_unique());
         self
     }
 }

@@ -39,6 +39,14 @@ impl RequestHandler for GraphQlRequestHandler {
             }
         }
     }
+
+    fn handle_data_model(&self, ctx: &PrismaContext) -> String {
+        // todo: ctx.query_schema...
+        match ctx.sdl {
+            Some(ref sdl) => sdl.to_owned(),
+            None => "Unable to load SDL".into(),
+        }
+    }
 }
 
 fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> PrismaResult<Value> {

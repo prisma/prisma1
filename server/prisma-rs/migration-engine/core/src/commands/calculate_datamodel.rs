@@ -20,20 +20,21 @@ impl MigrationCommand for CalculateDatamodelCommand {
 
         let base_datamodel = Datamodel::empty();
         let datamodel = engine.datamodel_calculator().infer(&base_datamodel, &self.input.steps);
-        // todo: render the datamodel properly as DML
         CalculateDatamodelOutput {
-            datamodel: format!("{:?}", datamodel),
+            datamodel: datamodel::render(&datamodel).unwrap(),
         }
     }
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CalculateDatamodelInput {
     pub project_info: String,
     pub steps: Vec<MigrationStep>,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CalculateDatamodelOutput {
     pub datamodel: String,
 }

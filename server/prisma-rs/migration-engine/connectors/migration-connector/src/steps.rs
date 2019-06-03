@@ -54,12 +54,9 @@ pub struct UpdateModel {
     pub embedded: Option<bool>,
 }
 
-
 impl UpdateModel {
     pub fn is_any_option_set(&self) -> bool {
-        self.new_name.is_some()
-            || self.embedded.is_some()
-            || self.db_name.is_some()
+        self.new_name.is_some() || self.embedded.is_some() || self.db_name.is_some()
     }
 }
 
@@ -149,6 +146,7 @@ pub struct UpdateField {
 impl UpdateField {
     pub fn is_any_option_set(&self) -> bool {
         self.new_name.is_some()
+            || self.tpe.is_some()
             || self.arity.is_some()
             || self.db_name.is_some()
             || self.is_created_at.is_some()
@@ -201,9 +199,7 @@ pub struct UpdateEnum {
 
 impl UpdateEnum {
     pub fn is_any_option_set(&self) -> bool {
-        self.new_name.is_some()
-            || self.values.is_some()
-            || self.db_name.is_some()
+        self.new_name.is_some() || self.values.is_some() || self.db_name.is_some()
     }
 }
 

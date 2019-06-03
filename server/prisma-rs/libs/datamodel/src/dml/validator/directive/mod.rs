@@ -5,7 +5,7 @@ use crate::errors::{ErrorCollection, ValidationError};
 
 use std::collections::HashMap;
 
-pub mod builtin;
+pub mod core;
 
 /// The error type for directive validators.
 pub type Error = ValidationError;

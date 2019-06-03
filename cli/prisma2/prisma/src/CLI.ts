@@ -59,6 +59,7 @@ export class CLI implements Command {
     ${chalk.bold('Commands')}
 
           lift   Migrate your datamodel
+      generate   Generate Photon
            new   Setup Prisma for your app
           seed   Seed data into your database
 

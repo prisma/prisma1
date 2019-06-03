@@ -117,27 +117,27 @@ object NativeBinding {
       // Error cases
       case RpcResponse.Response.Error(error: Error) => {
         def defaultHandler(error: Error.Value): Throwable = error match {
-          case Error.Value.FieldCannotBeNull(err) => FieldCannotBeNull(err)
-          case Error.Value.ConnectionError(str) => ConnectionError(str)
-          case Error.Value.InvalidInputError(str) => InvalidInputError(str)
-          case Error.Value.JsonDecodeError(str) => JsonDecodeError(str)
-          case Error.Value.NoResultsError(str) => NoResultError(str)
-          case Error.Value.ProtobufDecodeError(str) => ProtobufDecodeError(str)
-          case Error.Value.QueryError(str) => QueryError(str)
+          case Error.Value.FieldCannotBeNull(err)          => FieldCannotBeNull(err)
+          case Error.Value.ConnectionError(str)            => ConnectionError(str)
+          case Error.Value.InvalidInputError(str)          => InvalidInputError(str)
+          case Error.Value.JsonDecodeError(str)            => JsonDecodeError(str)
+          case Error.Value.NoResultsError(str)             => NoResultError(str)
+          case Error.Value.ProtobufDecodeError(str)        => ProtobufDecodeError(str)
+          case Error.Value.QueryError(str)                 => QueryError(str)
           case Error.Value.InvalidConnectionArguments(str) => InvalidConnectionArguments(str)
-          case Error.Value.UniqueConstraintViolation(str) => UniqueConstraintViolation(str)
-          case Error.Value.InternalServerError(msg) => new NativeError(msg)
-          case Error.Value.Empty => sys.error("Empty RPC response error value")
-          case Error.Value.RelationViolation(err) => RelationViolation(err.relationName, err.modelAName, err.modelBName)
-          case Error.Value.NodeNotFoundForWhere(err) =>
-            NodeNotFoundForWhere(err.modelName, err.fieldName, toGcValue(err.value.prismaValue))
-          case Error.Value.NodesNotConnected(err) => NodesNotConnected(
-            err.relationName,
-            err.parentName,
-            err.parentWhere.map(w => NodeSelectorInfo(w.modelName, w.fieldName, toGcValue(w.value.prismaValue))),
-            err.childName,
-            err.childWhere.map(w => NodeSelectorInfo(w.modelName, w.fieldName, toGcValue(w.value.prismaValue)))
-          )
+          case Error.Value.UniqueConstraintViolation(str)  => UniqueConstraintViolation(str)
+          case Error.Value.InternalServerError(msg)        => new NativeError(msg)
+          case Error.Value.Empty                           => sys.error("Empty RPC response error value")
+          case Error.Value.RelationViolation(err)          => RelationViolation(err.relationName, err.modelAName, err.modelBName)
+          case Error.Value.NodeNotFoundForWhere(err)       => NodeNotFoundForWhere(err.modelName, err.fieldName, toGcValue(err.value.prismaValue))
+          case Error.Value.NodesNotConnected(err) =>
+            NodesNotConnected(
+              err.relationName,
+              err.parentName,
+              err.parentWhere.map(w => NodeSelectorInfo(w.modelName, w.fieldName, toGcValue(w.value.prismaValue))),
+              err.childName,
+              err.childWhere.map(w => NodeSelectorInfo(w.modelName, w.fieldName, toGcValue(w.value.prismaValue)))
+            )
           case x => sys.error(s"unhandled error: $x")
         }
 
@@ -173,7 +173,7 @@ object NativeBinding {
       case GraphqlId.IdValue.String(s) => StringIdGCValue(s)
       case GraphqlId.IdValue.Uuid(s)   => UuidGCValue.parse_!(s)
       case GraphqlId.IdValue.Int(i)    => IntGCValue(i.toInt)
-      case _                 => sys.error("empty protobuf")
+      case _                           => sys.error("empty protobuf")
     }
   }
 

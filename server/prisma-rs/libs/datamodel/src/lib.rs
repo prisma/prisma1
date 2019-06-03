@@ -49,7 +49,14 @@ pub use dml::FromStrAndSpan;
 pub use source::*;
 pub use validator::directive::DirectiveValidator;
 
-// Convenience cHelpers.
+// Convenience Helpers
+fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
+    vec![
+        Box::new(source::builtin::MySqlSourceDefinition::new()),
+        Box::new(source::builtin::PostgresSourceDefinition::new()),
+        Box::new(source::builtin::SqliteSourceDefinition::new()),
+    ]
+}
 
 /// Parses and validates a datamodel string, using core attributes and the given plugins.
 pub fn parse_with_plugins(
@@ -58,6 +65,9 @@ pub fn parse_with_plugins(
 ) -> Result<Datamodel, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
     let mut source_loader = SourceLoader::new();
+    for source in get_builtin_sources() {
+        source_loader.add_source_definition(source);
+    }
     for source in source_definitions {
         source_loader.add_source_definition(source);
     }
@@ -66,9 +76,30 @@ pub fn parse_with_plugins(
     validator.validate(&ast)
 }
 
+/// Loads all source configuration blocks from a datamodel using the given source definitions.
+pub fn load_data_source_configuration_with_plugins(
+    datamodel_string: &str,
+    source_definitions: Vec<Box<source::SourceDefinition>>,
+) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
+    let ast = parser::parse(datamodel_string)?;
+    let mut source_loader = SourceLoader::new();
+    for source in get_builtin_sources() {
+        source_loader.add_source_definition(source);
+    }
+    for source in source_definitions {
+        source_loader.add_source_definition(source);
+    }
+    source_loader.load(&ast)
+}
+
+/// Loads all source configuration blocks from a datamodel using the built-in source definitions.
+pub fn load_data_source_configuration(datamodel_string: &str) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
+    load_data_source_configuration_with_plugins(datamodel_string, vec![])
+}
+
 /// Parses and validates a datamodel string, using core attributes only.
 pub fn parse(datamodel_string: &str) -> Result<Datamodel, errors::ErrorCollection> {
-    return parse_with_plugins(datamodel_string, vec![]);
+    parse_with_plugins(datamodel_string, vec![])
 }
 
 /// Parses a datamodel string to an AST. For internal use only.

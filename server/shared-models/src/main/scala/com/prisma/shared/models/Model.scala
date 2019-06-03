@@ -68,14 +68,16 @@ class Model(
     case rf if rf.relation.isInlineRelation && rf.relation.inlineManifestation.get.inTableOfModelName == this.name => rf
   }
 
+  def getRelationFieldByName_!(name: String): RelationField = getFieldByName_!(name).asInstanceOf[RelationField]
+
   def filterScalarFields(fn: ScalarField => Boolean): Model = {
     val newFields         = this.scalarFields.filter(fn).map(_.template)
     val newModel          = copy(fieldTemplates = newFields)
     val newModelsInSchema = schema.models.filter(_.name != name).map(_.template) :+ newModel
+
     schema.copy(modelTemplates = newModelsInSchema).getModelByName_!(name)
   }
 
-  def getRelationFieldByName_!(name: String): RelationField   = getFieldByName_!(name).asInstanceOf[RelationField]
   def getScalarFieldByName_!(name: String): ScalarField       = getFieldByName_!(name).asInstanceOf[ScalarField]
   def getScalarFieldByName(name: String): Option[ScalarField] = getFieldByName(name).map(_.asInstanceOf[ScalarField])
   def getFieldByName_!(name: String): Field                   = getFieldByName(name).getOrElse(sys.error(s"field $name is not part of the model ${this.name}"))
