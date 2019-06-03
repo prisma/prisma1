@@ -18,8 +18,14 @@ impl SqlDatabaseStepApplier {
 }
 
 #[allow(unused, dead_code)]
-impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
-    fn apply(&self, step: &SqlMigrationStep) {
+impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
+    fn apply(&self, database_migration: &SqlMigration, index: usize) -> bool {
+        let has_this_one = database_migration.steps.get(index).is_some();
+        if !has_this_one {
+            return false;
+        }
+
+        let step = &database_migration.steps[index];
         let sql_string = self.render_raw_sql(&step);
         dbg!(&sql_string);
         let result = self.connection.execute(&sql_string, NO_PARAMS);
@@ -32,22 +38,26 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 {}
             }
         }
+
+        let has_more = database_migration.steps.get(index + 1).is_some();
+        has_more
     }
 
-    fn unapply(&self, step: &SqlMigrationStep) {
+    fn unapply(&self, database_migration: &SqlMigration, index: usize) -> bool {
         unimplemented!()
     }
 
-    fn render_steps_pretty(&self, steps: &Vec<SqlMigrationStep>) -> serde_json::Value {
-        let jsons = steps
-            .into_iter()
+    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> serde_json::Value {
+        let jsons = database_migration
+            .steps
+            .iter()
             .map(|step| {
                 let cloned = step.clone();
                 let mut json_value = serde_json::to_value(&step).unwrap();
                 let json_object = json_value.as_object_mut().unwrap();
                 json_object.insert(
                     "raw".to_string(),
-                    serde_json::Value::String(self.render_raw_sql(cloned)),
+                    serde_json::Value::String(self.render_raw_sql(&cloned)),
                 );
                 json_value
             })
@@ -55,8 +65,8 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
         serde_json::Value::Array(jsons)
     }
 
-    fn render_steps_internal(&self, steps: &Vec<SqlMigrationStep>) -> serde_json::Value {
-        serde_json::to_value(&steps).unwrap()
+    fn render_steps_internal(&self, database_migration: &SqlMigration) -> serde_json::Value {
+        serde_json::to_value(&database_migration).unwrap()
     }
 }
 

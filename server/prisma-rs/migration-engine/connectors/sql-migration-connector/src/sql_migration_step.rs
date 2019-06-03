@@ -1,9 +1,14 @@
-use migration_connector::DatabaseMigrationStepMarker;
+use migration_connector::DatabaseMigrationMarker;
 use serde::{Deserialize, Serialize};
 
-impl DatabaseMigrationStepMarker for SqlMigrationStep {}
-
 #[derive(Debug, Serialize, Deserialize)]
+pub struct SqlMigration {
+    pub steps: Vec<SqlMigrationStep>,
+}
+
+impl DatabaseMigrationMarker for SqlMigration {}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum SqlMigrationStep {
     CreateTable(CreateTable),
     AlterTable(AlterTable),
@@ -12,14 +17,14 @@ pub enum SqlMigrationStep {
     RawSql { raw: String },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct CreateTable {
     pub name: String,
     pub columns: Vec<ColumnDescription>,
     pub primary_columns: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DropTable {
     pub name: String,
 }

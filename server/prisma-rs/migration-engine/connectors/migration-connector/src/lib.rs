@@ -14,7 +14,7 @@ pub use steps::*;
 extern crate serde_derive;
 
 pub trait MigrationConnector {
-    type DatabaseMigrationStep: DatabaseMigrationStepMarker + 'static;
+    type DatabaseMigration: DatabaseMigrationMarker + 'static;
 
     fn initialize(&self);
 
@@ -22,14 +22,14 @@ pub trait MigrationConnector {
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence>;
 
-    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<Self::DatabaseMigrationStep>>;
-    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigrationStep>>;
-    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigrationStep>>;
+    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<Self::DatabaseMigration>>;
+    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigration>>;
+    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigration>>;
 
     // TODO: figure out if this is the best way to do this or move to a better place/interface
-    fn deserialize_database_steps(&self, json: String) -> Vec<Self::DatabaseMigrationStep>;
+    fn deserialize_database_steps(&self, json: String) -> Self::DatabaseMigration;
 
-    fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigrationStep>> {
+    fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigration>> {
         let applier = MigrationApplierImpl {
             migration_persistence: self.migration_persistence(),
             step_applier: self.database_step_applier(),
@@ -42,24 +42,24 @@ pub trait MigrationConnector {
     }
 }
 
-pub trait DatabaseMigrationStepMarker: Debug {}
+pub trait DatabaseMigrationMarker: Debug {}
 
 pub trait DatabaseMigrationStepsInferrer<T> {
-    fn infer(&self, previous: &Datamodel, next: &Datamodel, steps: &Vec<MigrationStep>) -> Vec<T>;
+    fn infer(&self, previous: &Datamodel, next: &Datamodel, steps: &Vec<MigrationStep>) -> T;
 }
 
 pub trait DatabaseMigrationStepApplier<T> {
-    fn apply(&self, step: &T);
+    fn apply(&self, database_migration: &T, index: usize) -> bool;
 
-    fn unapply(&self, step: &T);
+    fn unapply(&self, database_migration: &T, index: usize) -> bool;
 
-    fn render_steps_pretty(&self, steps: &Vec<T>) -> serde_json::Value;
+    fn render_steps_pretty(&self, database_migration: &T) -> serde_json::Value;
 
-    fn render_steps_internal(&self, steps: &Vec<T>) -> serde_json::Value;
+    fn render_steps_internal(&self, database_migration: &T) -> serde_json::Value;
 }
 
 pub trait DestructiveChangesChecker<T> {
-    fn check(&self, steps: &Vec<T>) -> Vec<MigrationResult>;
+    fn check(&self, database_migration: &T) -> Vec<MigrationResult>;
 }
 
 pub enum MigrationResult {

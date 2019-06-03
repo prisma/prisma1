@@ -11,17 +11,18 @@ pub struct SqlDatabaseMigrationStepsInferrer {
     pub schema_name: String,
 }
 
-impl DatabaseMigrationStepsInferrer<SqlMigrationStep> for SqlDatabaseMigrationStepsInferrer {
-    fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> Vec<SqlMigrationStep> {
+impl DatabaseMigrationStepsInferrer<SqlMigration> for SqlDatabaseMigrationStepsInferrer {
+    fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> SqlMigration {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
         let steps = DatabaseSchemaDiffer::diff(&current_database_schema, &expected_database_schema);
         let is_sqlite = true;
-        if is_sqlite {
+        let steps = if is_sqlite {
             self.fix_stupid_sqlite(steps, &current_database_schema, &expected_database_schema)
         } else {
             steps
-        }
+        };
+        SqlMigration { steps: steps }
     }
 }
 
