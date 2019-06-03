@@ -60,9 +60,23 @@ impl Model {
         self.fields_mut().find(|f| f.name == *name)
     }
 
+    /// Finds the name of all id fields
     pub fn id_fields(&self) -> impl std::iter::Iterator<Item = &String> {
         self.fields().filter(|x| x.id_info.is_some()).map(|x| &x.name)
     }
+
+    /// Finds a field with a certain relation guarantee.
+    pub fn related_field(&self, to: &str, name: &Option<String>) -> Option<&Field> {
+        self.fields().find(|f| {
+            if let FieldType::Relation(rel_info) = &f.field_type {
+                if rel_info.to == to && &rel_info.name == name {
+                    return true;
+                }
+            }
+            return false;
+        })
+    }
+
 }
 
 impl WithName for Model {

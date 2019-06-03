@@ -86,11 +86,13 @@ impl Validator {
 
         // Model level validations.
         for model in schema.models() {
-            if let Err(err) = self.validate_model_has_id(ast_schema.find_model(&model.name).expect(STATE_ERROR), model)
-            {
+            if let Err(err) = self.validate_model_has_id(ast_schema.find_model(&model.name).expect(STATE_ERROR), model) {
                 errors.push(err);
             }
             if let Err(err) = self.validate_relations_not_ambiguous(ast_schema, model) {
+                errors.push(err);
+            }
+            if let Err(err) = self.validate_embedded_types_have_no_back_relation(ast_schema, schema, model) {
                 errors.push(err);
             }
         }
@@ -113,6 +115,42 @@ impl Validator {
         } else {
             Ok(())
         }
+    }
+
+
+    /// Ensures that embedded types do not have back relations
+    /// to their parent types.
+    fn validate_embedded_types_have_no_back_relation(
+        &self,
+        ast_schema: &ast::Datamodel,
+        datamodel: &dml::Datamodel,
+        model: &dml::Model,
+    ) -> Result<(), ValidationError> {
+
+        if model.is_embedded {
+            for field in model.fields() {
+                if !field.is_generated {
+                    if let dml::FieldType::Relation(rel) = &field.field_type {
+                        // TODO: I am not sure if this check is d'accord with the query engine.
+                        let related = datamodel.find_model(&rel.to).unwrap();
+                        let related_field = related.related_field(&model.name, &rel.name).unwrap();
+                        if rel.to_fields.len() == 0 && !related_field.is_generated {
+                            // TODO: Refactor that out, it's way too much boilerplate.
+                            return Err(ValidationError::new_model_validation_error(
+                                    "Embedded models cannot have back relation fields.",
+                                    &model.name,
+                                    &ast_schema
+                                        .find_field(&model.name, &field.name)
+                                        .expect(STATE_ERROR)
+                                        .span,
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Elegantly checks if any relations in the model are ambigious.
