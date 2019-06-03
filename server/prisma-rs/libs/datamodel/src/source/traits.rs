@@ -11,7 +11,7 @@ use std::collections::HashMap;
 /// A source is basically the datamodel equivalent of a connector.
 pub trait Source {
     /// Gets the name of the implementing connector.
-    fn connector_name(&self) -> &str;
+    fn connector_type(&self) -> &str;
     /// Gets the name of the source configuration block.
     fn name(&self) -> &String;
     /// Gets the source config URL.
@@ -37,7 +37,7 @@ pub trait Source {
 /// It provides access to the source's name, as well as a factory method.
 pub trait SourceDefinition {
     /// Returns the name of the source.
-    fn name(&self) -> &'static str;
+    fn connector_type(&self) -> &'static str;
     /// Instantiates a new source, using the given name, url and detailed arguments.
     fn create(&self, name: &str, url: &str, arguments: &Arguments) -> Result<Box<Source>, ValidationError>;
 }

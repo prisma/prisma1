@@ -46,7 +46,7 @@ impl CustomDbDefinition {
 }
 
 impl SourceDefinition for CustomDbDefinition {
-    fn name(&self) -> &'static str {
+    fn connector_type(&self) -> &'static str {
         CONNECTOR_NAME
     }
 
@@ -70,7 +70,7 @@ struct CustomDb {
 }
 
 impl Source for CustomDb {
-    fn connector_name(&self) -> &str {
+    fn connector_type(&self) -> &str {
         CONNECTOR_NAME
     }
     fn name(&self) -> &String {
@@ -104,9 +104,8 @@ impl Source for CustomDb {
 //##########################
 
 const DATAMODEL: &str = r#"
-
 source custom_1 {
-    name = "customDemoSource"
+    type = "customDemoSource"
     url = "https://localhost"
 
     properties {
@@ -115,7 +114,7 @@ source custom_1 {
 }
 
 source custom_2 {
-    name = "customDemoSource"
+    type = "customDemoSource"
     url = "https://localhost"
 
     properties {
@@ -174,7 +173,7 @@ fn serialize_sources_to_dmmf() {
     let expected = r#"[
   {
     "name": "custom_1",
-    "connectorName": "customDemoSource",
+    "connectorType": "customDemoSource",
     "url": "https://localhost",
     "config": {
       "base_type": "Int"
@@ -182,7 +181,7 @@ fn serialize_sources_to_dmmf() {
   },
   {
     "name": "custom_2",
-    "connectorName": "customDemoSource",
+    "connectorType": "customDemoSource",
     "url": "https://localhost",
     "config": {
       "base_type": "String"

@@ -1,6 +1,4 @@
-use super::directive::builtin::{
-    new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives,
-};
+use super::directive::core::{new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives};
 use super::directive::DirectiveListValidator;
 use crate::{dml, source};
 

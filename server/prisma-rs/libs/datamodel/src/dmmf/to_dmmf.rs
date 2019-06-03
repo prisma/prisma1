@@ -131,7 +131,7 @@ pub fn render_to_dmmf(schema: &dml::Datamodel) -> String {
 fn source_to_dmmf(source: &Box<Source>) -> SourceConfig {
     SourceConfig {
         name: source.name().clone(),
-        connector_name: String::from(source.connector_name()),
+        connector_type: String::from(source.connector_type()),
         url: source.url().clone(),
         config: source.config().clone(),
     }
