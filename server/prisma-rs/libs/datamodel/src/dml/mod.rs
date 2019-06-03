@@ -10,7 +10,7 @@ mod id;
 mod model;
 mod relation;
 mod scalar;
-mod schema;
+mod datamodel;
 mod traits;
 
 pub use comment::*;
@@ -21,7 +21,7 @@ pub use id::*;
 pub use model::*;
 pub use relation::*;
 pub use scalar::*;
-pub use schema::*;
+pub use self::datamodel::*;
 pub use traits::*;
 
 pub mod validator;
