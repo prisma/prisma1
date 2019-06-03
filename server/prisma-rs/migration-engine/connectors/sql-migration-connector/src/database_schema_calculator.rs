@@ -1,6 +1,6 @@
 use database_inspector::*;
 use datamodel::*;
-use prisma_models::{DatamodelConverterImpl, TempManifestationHolder, TempRelationHolder};
+use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Datamodel,
@@ -166,7 +166,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     }
 
     fn calculate_relations(&self) -> Vec<TempRelationHolder> {
-        DatamodelConverterImpl::calculate_relations(&self.data_model)
+        DatamodelConverter::calculate_relations(&self.data_model)
     }
 }
 
