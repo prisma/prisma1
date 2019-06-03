@@ -6,7 +6,7 @@ model User {
     createdAt DateTime
     email String @unique
     name String?
-    posts Post[] @onDelete(CASCADE)
+    posts Post[] @relation(onDelete: CASCADE)
     profile Profile?
     @@db("user")
 }
@@ -43,6 +43,16 @@ model PostToCategory {
     post Post
     category Category
     @@db("post_to_category")
+}
+
+model A {
+    id Int @id
+    b B @relation(references: [id])
+}
+
+model B {
+    id Int @id
+    a A
 }
 
 enum CategoryEnum {

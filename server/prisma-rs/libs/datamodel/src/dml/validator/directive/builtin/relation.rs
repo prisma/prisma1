@@ -41,7 +41,7 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
                 let mut related_fields: Vec<ast::Value> = Vec::new();
 
                 for related_field in &relation_info.to_fields {
-                    related_fields.push(ast::Value::StringValue(related_field.clone(), ast::Span::empty()));
+                    related_fields.push(ast::Value::ConstantValue(related_field.clone(), ast::Span::empty()));
                 }
 
                 args.push(ast::Argument::new_array("references", related_fields));
