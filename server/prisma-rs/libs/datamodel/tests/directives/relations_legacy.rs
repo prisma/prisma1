@@ -100,8 +100,8 @@ fn fail_if_ambigous_relation_fields_do_not_sepecify_a_name() {
     let errors = parse_error(dml);
 
     errors.assert_is(ValidationError::new_model_validation_error(
-        "Embedded models cannot have back relation fields.",
-        "Comment",
-        &Span::new(154, 178),
+        "Ambiguous relation detected.",
+        "Todo",
+        &Span::new(41, 67),
     ));
 }
