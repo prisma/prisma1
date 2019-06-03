@@ -6,6 +6,7 @@
 import { isError, HelpError, Env } from '@prisma/cli'
 import { LiftCommand, LiftCreate, LiftUp } from '@prisma/lift'
 import { CLI } from './CLI'
+import { PhotonGenerate } from '@prisma/photon'
 
 /**
  * Main function
@@ -26,6 +27,7 @@ async function main(): Promise<number> {
       },
       env,
     ),
+    generate: PhotonGenerate.new(env),
   })
   // parse the arguments
   var result = await cli.parse(process.argv.slice(2))

@@ -39,6 +39,7 @@ impl MigrationCommand for ApplyMigrationCommand {
             let mut migration = Migration::new(self.input.migration_id.clone());
             migration.datamodel_steps = self.input.steps.clone();
             migration.database_steps = database_steps_json.to_string();
+            migration.datamodel = next_data_model;
             let saved_migration = connector.migration_persistence().create(migration);
 
             connector

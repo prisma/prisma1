@@ -6,6 +6,7 @@ mod infer_migration_steps;
 mod list_migrations;
 mod migration_progress;
 mod unapply_migration;
+mod dmmf_to_dml;
 
 pub use apply_migration::*;
 pub use calculate_database_steps::*;
@@ -15,6 +16,7 @@ pub use infer_migration_steps::*;
 pub use list_migrations::*;
 pub use migration_progress::*;
 pub use unapply_migration::*;
+pub use dmmf_to_dml::*;
 
 use migration_connector::{MigrationError, MigrationStep, MigrationWarning};
 
