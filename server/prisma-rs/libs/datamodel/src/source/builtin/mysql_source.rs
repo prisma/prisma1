@@ -7,7 +7,7 @@ pub struct MySqlSource {
 }
 
 impl Source for MySqlSource {
-    fn connector_name(&self) -> &str {
+    fn connector_type(&self) -> &str {
         MYSQL_SOURCE_NAME
     }
     fn name(&self) -> &String {

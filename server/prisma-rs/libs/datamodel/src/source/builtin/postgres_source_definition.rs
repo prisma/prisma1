@@ -10,7 +10,7 @@ impl PostgresSourceDefinition {
 }
 
 impl SourceDefinition for PostgresSourceDefinition {
-    fn name(&self) -> &'static str {
+    fn connector_type(&self) -> &'static str {
         POSTGRES_SOURCE_NAME
     }
 

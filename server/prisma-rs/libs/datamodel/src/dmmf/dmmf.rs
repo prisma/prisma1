@@ -55,7 +55,7 @@ pub struct Datamodel {
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct SourceConfig {
     pub name: String,
-    pub connector_name: String,
+    pub connector_type: String,
     pub url: String,
     pub config: HashMap<String, String>,
 }

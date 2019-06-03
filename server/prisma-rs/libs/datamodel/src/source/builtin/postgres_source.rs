@@ -7,7 +7,7 @@ pub struct PostgresSource {
 }
 
 impl Source for PostgresSource {
-    fn connector_name(&self) -> &str {
+    fn connector_type(&self) -> &str {
         POSTGRES_SOURCE_NAME
     }
     fn name(&self) -> &String {

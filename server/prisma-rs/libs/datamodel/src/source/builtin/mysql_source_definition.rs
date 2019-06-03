@@ -10,7 +10,7 @@ impl MySqlSourceDefinition {
 }
 
 impl SourceDefinition for MySqlSourceDefinition {
-    fn name(&self) -> &'static str {
+    fn connector_type(&self) -> &'static str {
         MYSQL_SOURCE_NAME
     }
 

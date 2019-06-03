@@ -3,22 +3,22 @@ use datamodel::errors::ValidationError;
 
 const DATAMODEL: &str = r#"
 source pg1 {
-    name = "Postgres"
+    type = "Postgres"
     url = "https://localhost/postgres1"
 }
 
 source pg2 {
-    name = "Postgres"
+    type = "Postgres"
     url = "https://localhost/postgres2"
 }
 
 source sqlite1 {
-    name = "Sqlite"
+    type = "Sqlite"
     url = "https://localhost/sqlite1"
 }
 
 source mysql1 {
-    name = "MySQL"
+    type = "MySQL"
     url = "https://localhost/mysql"
 }
 "#;
@@ -31,25 +31,25 @@ fn serialize_builtin_sources_to_dmmf() {
     let expected = r#"[
   {
     "name": "pg1",
-    "connectorName": "Postgres",
+    "connectorType": "Postgres",
     "url": "https://localhost/postgres1",
     "config": {}
   },
   {
     "name": "pg2",
-    "connectorName": "Postgres",
+    "connectorType": "Postgres",
     "url": "https://localhost/postgres2",
     "config": {}
   },
   {
     "name": "sqlite1",
-    "connectorName": "Sqlite",
+    "connectorType": "Sqlite",
     "url": "https://localhost/sqlite1",
     "config": {}
   },
   {
     "name": "mysql1",
-    "connectorName": "MySQL",
+    "connectorType": "MySQL",
     "url": "https://localhost/mysql",
     "config": {}
   }
@@ -60,7 +60,7 @@ fn serialize_builtin_sources_to_dmmf() {
 
 const INVALID_DATAMODEL: &str = r#"
 source pg1 {
-    name = "AStrangeHalfMongoDatabase"
+    type = "AStrangeHalfMongoDatabase"
     url = "https://localhost/postgres1"
 }
 "#;

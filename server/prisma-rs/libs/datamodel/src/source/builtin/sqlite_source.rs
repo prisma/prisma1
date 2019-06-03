@@ -7,7 +7,7 @@ pub struct SqliteSource {
 }
 
 impl Source for SqliteSource {
-    fn connector_name(&self) -> &str {
+    fn connector_type(&self) -> &str {
         SQLITE_SOURCE_NAME
     }
     fn name(&self) -> &String {

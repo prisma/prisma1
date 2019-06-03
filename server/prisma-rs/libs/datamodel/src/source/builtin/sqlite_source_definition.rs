@@ -10,7 +10,7 @@ impl SqliteSourceDefinition {
 }
 
 impl SourceDefinition for SqliteSourceDefinition {
-    fn name(&self) -> &'static str {
+    fn connector_type(&self) -> &'static str {
         SQLITE_SOURCE_NAME
     }
 
