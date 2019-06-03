@@ -6,7 +6,6 @@ mod db;
 mod default;
 mod embedded;
 mod id;
-mod ondelete;
 mod relation;
 mod scalarlist;
 mod sequence;
@@ -25,7 +24,6 @@ pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
     validator.add(Box::new(unique::UniqueDirectiveValidator {}));
     validator.add(Box::new(default::DefaultDirectiveValidator {}));
     validator.add(Box::new(relation::RelationDirectiveValidator {}));
-    validator.add(Box::new(ondelete::OnDeleteDirectiveValidator {}));
 
     return validator;
 }

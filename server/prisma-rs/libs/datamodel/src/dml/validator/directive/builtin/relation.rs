@@ -37,10 +37,6 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
                 args.push(ast::Argument::new_string("", &name));
             }
 
-            if relation_info.on_delete != dml::OnDeleteStrategy::None {
-                args.push(ast::Argument::new_string("onDelete", &relation_info.on_delete.to_string()));
-            }
-
             if relation_info.to_fields.len() > 0 {
                 let mut related_fields: Vec<ast::Value> = Vec::new();
 
@@ -49,6 +45,10 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
                 }
 
                 args.push(ast::Argument::new_array("references", related_fields));
+            }
+
+            if relation_info.on_delete != dml::OnDeleteStrategy::None {
+                args.push(ast::Argument::new_constant("onDelete", &relation_info.on_delete.to_string()));
             }
 
             if args.len() > 0 {
