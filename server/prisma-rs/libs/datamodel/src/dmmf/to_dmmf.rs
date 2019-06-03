@@ -128,6 +128,11 @@ pub fn render_to_dmmf(schema: &dml::Datamodel) -> String {
     return serde_json::to_string_pretty(&dmmf).expect("Failed to render JSON");
 }
 
+pub fn render_to_dmmf_value(schema: &dml::Datamodel) -> serde_json::Value {
+    let dmmf = schema_to_dmmf(schema);
+    return serde_json::to_value(&dmmf).expect("Failed to render JSON");
+}
+
 fn source_to_dmmf(source: &Box<Source>) -> SourceConfig {
     SourceConfig {
         name: source.name().clone(),
