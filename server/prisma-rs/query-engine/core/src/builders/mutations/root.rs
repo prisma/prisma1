@@ -3,7 +3,7 @@
 
 use crate::{
     builders::{convert_tree, utils, DataSet, NestedValue, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit},
-    CoreError, CoreResult, WriteQuery,
+    CoreError, CoreResult, ManyNestedBuilder, WriteQuery,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
@@ -121,8 +121,7 @@ fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<
 }
 
 /// A simple enum to discriminate top-level actions
-#[allow(dead_code)] // FIXME: Remove!
-enum Operation {
+pub enum Operation {
     Create,
     Update,
     Delete,
@@ -182,7 +181,7 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
     // FIXME: This is required because our `to_pascal_case` inflector works differently
     let normalized = match Inflector::singularize(&model_name).as_str() {
         "scalarmodel" => "ScalarModel".into(),
-        name => name.to_pascal_case()
+        name => name.to_pascal_case(),
     };
 
     println!("{} ==> {}", &model_name, &normalized);
@@ -201,7 +200,7 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
 }
 
 /// Build nested mutations for a given field/model (called recursively)
-fn build_nested_root<'f>(
+pub(crate) fn build_nested_root<'f>(
     name: &'f str,
     args: &'f ValueMap,
     model: ModelRef,
@@ -253,72 +252,17 @@ fn build_nested_root<'f>(
                     _ => unimplemented!(),
                 };
 
-                match kind.as_str() {
-                    "connect" => {
-                        // Create a connect for every map
-                        for obj in list.into_iter() {
-                            // Get the first valid field name that is a scalar
-                            let where_ = obj.to_node_selector(Arc::clone(&model))?;
-
-                            collection.connects.push(NestedConnect {
-                                relation_field: Arc::clone(&relation_field),
-                                where_,
-                                top_is_create: match top_level {
-                                    Operation::Create => true,
-                                    _ => false,
-                                },
-                            });
-                        }
-                    }
-                    "updateMany" => {
-                        for mut obj in list.into_iter() {
-                            let data = obj.0.remove("data").map(|s| Ok(s)).unwrap_or_else(|| {
-                                Err(CoreError::QueryValidationError(
-                                    "Malformed mutation: `data` section not found!".into(),
-                                ))
-                            })?;
-                            let filter = utils::extract_query_args_inner(
-                                obj.0
-                                    .iter()
-                                    .filter(|(arg, _)| arg.as_str() != "data")
-                                    .map(|(a, b)| (a, b)),
-                                Arc::clone(&relation_model),
-                            )?
-                            .filter;
-
-                            let ValueSplit { values, lists, nested } = ValueMap::from(&data).split();
-                            let non_list_args = values.to_prisma_values().into();
-                            let list_args = lists.into_iter().map(|la| la.convert()).collect();
-
-                            collection.update_manys.push(NestedUpdateNodes {
-                                relation_field: Arc::clone(&relation_field),
-                                filter,
-                                non_list_args,
-                                list_args,
-                            });
-                        }
-                    }
-                    "create" => {
-                        for obj in list.into_iter() {
-                            let ValueSplit { values, lists, nested } = obj.split();
-                            let non_list_args = values.to_prisma_values().into();
-                            let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                            let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&model), top_level)?;
-
-                            collection.creates.push(NestedCreateNode {
-                                non_list_args,
-                                list_args,
-                                top_is_create: match top_level {
-                                    Operation::Create => true,
-                                    _ => false,
-                                },
-                                relation_field: Arc::clone(&relation_field),
-                                nested_mutactions,
-                            });
-                        }
-                    }
-                    cmd => panic!("Not yet implemented `{}`!", cmd),
-                }
+                // Build and attach all nested "many" type mutations
+                ManyNestedBuilder::build(
+                    name.as_str(),
+                    kind.as_str(),
+                    list.into_iter(),
+                    &mut collection,
+                    Arc::clone(&model),
+                    relation_field,
+                    relation_model,
+                    top_level,
+                )?;
             }
             NestedValue::Upsert { name, create, update } => unimplemented!(),
         }
