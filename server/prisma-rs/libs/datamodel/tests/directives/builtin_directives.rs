@@ -1,5 +1,4 @@
-mod common;
-use common::*;
+use crate::common::*;
 
 #[test]
 fn db_directive() {
