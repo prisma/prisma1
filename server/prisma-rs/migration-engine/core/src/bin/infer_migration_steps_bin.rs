@@ -8,6 +8,7 @@ fn main() {
         project_info: "the-project-info".to_string(),
         migration_id: "the-migration-id".to_string(),
         data_model: data_model,
+        assume_to_be_applied: Vec::new(),
     };
     let cmd = InferMigrationStepsCommand::new(input);
     let engine = MigrationEngine::new();

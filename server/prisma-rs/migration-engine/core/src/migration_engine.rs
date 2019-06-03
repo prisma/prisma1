@@ -33,7 +33,7 @@ impl MigrationEngine {
         Arc::clone(&self.datamodel_calculator)
     }
 
-    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepMarker>> {
+    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigration = impl DatabaseMigrationMarker>> {
         Arc::new(SqlMigrationConnector::new(self.schema_name()))
     }
 

@@ -18,8 +18,46 @@ impl SqlDatabaseStepApplier {
 }
 
 #[allow(unused, dead_code)]
-impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
-    fn apply(&self, step: &SqlMigrationStep) {
+impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
+    fn apply(&self, database_migration: &SqlMigration, index: usize) -> bool {
+        self.apply_next_step(&database_migration.steps, index)
+    }
+
+    fn unapply(&self, database_migration: &SqlMigration, index: usize) -> bool {
+        self.apply_next_step(&database_migration.rollback, index)
+    }
+
+    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> serde_json::Value {
+        let jsons = database_migration
+            .steps
+            .iter()
+            .map(|step| {
+                let cloned = step.clone();
+                let mut json_value = serde_json::to_value(&step).unwrap();
+                let json_object = json_value.as_object_mut().unwrap();
+                json_object.insert(
+                    "raw".to_string(),
+                    serde_json::Value::String(self.render_raw_sql(&cloned)),
+                );
+                json_value
+            })
+            .collect();
+        serde_json::Value::Array(jsons)
+    }
+
+    fn render_steps_internal(&self, database_migration: &SqlMigration) -> serde_json::Value {
+        serde_json::to_value(&database_migration).unwrap()
+    }
+}
+
+impl SqlDatabaseStepApplier {
+    fn apply_next_step(&self, steps: &Vec<SqlMigrationStep>, index: usize) -> bool {
+        let has_this_one = steps.get(index).is_some();
+        if !has_this_one {
+            return false;
+        }
+
+        let step = &steps[index];
         let sql_string = self.render_raw_sql(&step);
         dbg!(&sql_string);
         let result = self.connection.execute(&sql_string, NO_PARAMS);
@@ -32,27 +70,11 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
                 {}
             }
         }
+
+        let has_more = steps.get(index + 1).is_some();
+        has_more
     }
 
-    fn render_steps(&self, steps: &Vec<SqlMigrationStep>) -> serde_json::Value {
-        let jsons = steps
-            .into_iter()
-            .map(|step| {
-                let cloned = step.clone();
-                let mut json_value = serde_json::to_value(&step).unwrap();
-                let json_object = json_value.as_object_mut().unwrap();
-                json_object.insert(
-                    "raw".to_string(),
-                    serde_json::Value::String(self.render_raw_sql(cloned)),
-                );
-                json_value
-            })
-            .collect();
-        serde_json::Value::Array(jsons)
-    }
-}
-
-impl SqlDatabaseStepApplier {
     fn render_raw_sql(&self, step: &SqlMigrationStep) -> String {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 
