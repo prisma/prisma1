@@ -9,7 +9,7 @@ pub struct Model {
     /// Name of the model.
     pub name: String,
     /// Fields of the model.
-    fields: Vec<Field>,
+    pub fields: Vec<Field>,
     /// Comments associated with this model.
     pub comments: Vec<Comment>,
     /// The database internal name of this model.
