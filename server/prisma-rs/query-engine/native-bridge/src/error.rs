@@ -13,9 +13,9 @@ pub enum BridgeError {
     DomainError(DomainError),
     #[fail(display = "Error decoding Protobuf input.")]
     ProtobufDecodeError(Error),
-    #[fail(display = "Error decoding JSON input.")]
+    #[fail(display = "Error decoding JSON input. {}", _0)]
     JsonDecodeError(Error),
-    #[fail(display = "Error decoding JSON input.")]
+    #[fail(display = "Incalid connection arguments.")]
     InvalidConnectionArguments(&'static str),
 }
 

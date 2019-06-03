@@ -23,22 +23,6 @@ pub struct DMMFMapping {
     update: String,
 }
 
-/// Dummy
-#[derive(Debug, Serialize)]
-pub struct DataModel {
-    enums: Vec<()>,
-    models: Vec<()>,
-}
-
-impl DataModel {
-    pub fn new() -> Self {
-        DataModel {
-            enums: vec![],
-            models: vec![],
-        }
-    }
-}
-
 pub fn render_dmmf<'a>(dml: &'a datamodel::Datamodel, query_schema: &QuerySchema) -> DataModelMetaFormat<'a> {
     let schema = DMMFQuerySchemaRenderer::render(query_schema);
 
