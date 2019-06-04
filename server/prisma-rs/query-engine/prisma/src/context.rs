@@ -41,7 +41,7 @@ impl PrismaContext {
         let sdl = data_model::load_v2_dml_string().ok(); // temporary
 
         // Temporary
-        let dm = datamodel::parse(sdl.as_ref().unwrap()).ok();
+        let dm = sdl.as_ref().and_then(|s| datamodel::parse(s).ok());
 
         // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
 
