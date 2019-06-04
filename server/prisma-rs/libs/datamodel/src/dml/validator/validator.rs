@@ -318,7 +318,6 @@ impl Validator {
 
         for field in model.fields() {
             if let dml::FieldType::Relation(rel) = &field.field_type {
-                
                 let mut back_field_exists = false;
 
                 let related_model = schema.find_model(&rel.to).expect(STATE_ERROR);
@@ -350,9 +349,12 @@ impl Validator {
 
         for (model_name, rel_info) in unnamed_relations {
             // Embedding side.
-            let field = datamodel.find_model_mut(&model_name).expect(STATE_ERROR)
-                .related_field_mut(&rel_info.to, &rel_info.name).expect(STATE_ERROR);
-            
+            let field = datamodel
+                .find_model_mut(&model_name)
+                .expect(STATE_ERROR)
+                .related_field_mut(&rel_info.to, &rel_info.name)
+                .expect(STATE_ERROR);
+
             if let dml::FieldType::Relation(rel) = &mut field.field_type {
                 rel.name = Some(DefaultNames::relation_name(&model_name, &rel_info.to));
             } else {
@@ -360,9 +362,12 @@ impl Validator {
             }
 
             // Foreign site.
-            let field = datamodel.find_model_mut(&rel_info.to).expect(STATE_ERROR)
-                .related_field_mut(&model_name, &rel_info.name).expect(STATE_ERROR);
-            
+            let field = datamodel
+                .find_model_mut(&rel_info.to)
+                .expect(STATE_ERROR)
+                .related_field_mut(&model_name, &rel_info.name)
+                .expect(STATE_ERROR);
+
             if let dml::FieldType::Relation(rel) = &mut field.field_type {
                 rel.name = Some(DefaultNames::relation_name(&model_name, &rel_info.to));
             } else {
@@ -373,7 +378,6 @@ impl Validator {
 
     // Returns list of model name and relation info.
     fn find_unnamed_relations(&self, datamodel: &dml::Datamodel) -> Vec<(String, dml::RelationInfo)> {
-
         let mut rels = Vec::new();
 
         for model in datamodel.models() {

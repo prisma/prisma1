@@ -1,5 +1,5 @@
-use crate::common::value::ValueListValidator;
 use crate::common::names::DefaultNames;
+use crate::common::value::ValueListValidator;
 use crate::dml::validator::directive::{Args, DirectiveValidator, Error};
 use crate::{ast, dml};
 
@@ -44,11 +44,10 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
                 }
             }
 
-            // We only add the references arg, 
-            // if we have references 
+            // We only add the references arg,
+            // if we have references
             // and we do only reference the IDs, which is the default case.
-            if relation_info.to_fields.len() > 0 && 
-               relation_info.to_fields.clone().sort() != all_related_ids.sort() {
+            if relation_info.to_fields.len() > 0 && relation_info.to_fields.clone().sort() != all_related_ids.sort() {
                 let mut related_fields: Vec<ast::Value> = Vec::new();
 
                 for related_field in &relation_info.to_fields {

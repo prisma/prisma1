@@ -12,7 +12,7 @@ impl NameNormalizer for String {
     }
 }
 
-pub struct DefaultNames { }
+pub struct DefaultNames {}
 
 impl DefaultNames {
     pub fn relation_name(from: &str, to: &str) -> String {

@@ -15,13 +15,135 @@ fn should_add_back_relations() {
 
     let schema = parse(dml);
     let post_model = schema.assert_has_model("Post");
-    post_model.assert_has_field("user").assert_relation_to("User");
-    // No normalization of to_fields for now.
-    //.assert_relation_to_fields(&["id"]);
+    post_model
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_relation_to_fields(&["id"]);
 }
 
 #[test]
-#[ignore] // No normalization of to_fields for now.
+fn should_add_back_relations_for_more_complex_cases() {
+    let dml = r#"
+    model User {
+        id: ID @id
+        posts: Post[]
+    }
+
+    model Post {
+        post_id: ID @id
+        comments: Comment[] @relation("Comments")
+        categories: PostToCategory[]
+    }
+
+    model Comment {
+        comment_id: ID @id
+    }
+
+    model Category {
+        category_id Int @id
+        posts: PostToCategory[]
+    }
+
+    model PostToCategory {
+        id Int @id
+        post Post
+        category Category
+        @@db("post_to_category")
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    // PostToUser
+
+    // Forward
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_relation_to_fields(&["id"])
+        .assert_relation_name("PostToUser")
+        .assert_is_generated(true)
+        .assert_arity(&datamodel::dml::FieldArity::Optional);
+
+    // Backward
+    schema
+        .assert_has_model("User")
+        .assert_has_field("posts")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&[])
+        .assert_relation_name("PostToUser")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    // Comments
+
+    // Forward
+    schema
+        .assert_has_model("Comment")
+        .assert_has_field("post")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&["post_id"])
+        .assert_relation_name("Comments")
+        .assert_is_generated(true)
+        .assert_arity(&datamodel::dml::FieldArity::Optional);
+
+    // Backward
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("comments")
+        .assert_relation_to("Comment")
+        .assert_relation_to_fields(&[])
+        .assert_relation_name("Comments")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    // CategoryToPostToCategory
+
+    // Backward
+    schema
+        .assert_has_model("Category")
+        .assert_has_field("posts")
+        .assert_relation_to("PostToCategory")
+        .assert_relation_to_fields(&[])
+        .assert_relation_name("CategoryToPostToCategory")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    // Forward
+    schema
+        .assert_has_model("PostToCategory")
+        .assert_has_field("category")
+        .assert_relation_to("Category")
+        .assert_relation_to_fields(&["category_id"])
+        .assert_relation_name("CategoryToPostToCategory")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+
+    // PostToPostToCategory
+
+    // Backward
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("categories")
+        .assert_relation_to("PostToCategory")
+        .assert_relation_to_fields(&[])
+        .assert_relation_name("PostToPostToCategory")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    // Forward
+    schema
+        .assert_has_model("PostToCategory")
+        .assert_has_field("post")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&["post_id"])
+        .assert_relation_name("PostToPostToCategory")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+}
+
+#[test]
 fn should_add_to_fields_on_the_correct_side_tie_breaker() {
     let dml = r#"
     model User {
@@ -50,7 +172,6 @@ fn should_add_to_fields_on_the_correct_side_tie_breaker() {
 }
 
 #[test]
-#[ignore] // No normalization of to_fields for now.
 fn should_add_to_fields_on_the_correct_side_list() {
     let dml = r#"
     model User {

@@ -1,8 +1,8 @@
 use crate::ast;
 use crate::common;
 use crate::common::argument::Arguments;
-use crate::errors::{ErrorCollection, ValidationError};
 use crate::dml;
+use crate::errors::{ErrorCollection, ValidationError};
 
 use std::collections::HashMap;
 
