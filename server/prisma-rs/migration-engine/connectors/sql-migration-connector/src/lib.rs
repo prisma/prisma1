@@ -23,7 +23,7 @@ use std::sync::Arc;
 pub struct SqlMigrationConnector {
     schema_name: String,
     migration_persistence: Arc<MigrationPersistence>,
-    sql_migration_persistence: Arc<SqlMigrationPersistence>,
+    sql_migration_persistence: Arc<SqlMigrationPersistence<SqliteDatabaseClient>>,
     database_migration_inferrer: Arc<DatabaseMigrationInferrer<SqlMigration>>,
     database_migration_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
     destructive_changes_checker: Arc<DestructiveChangesChecker<SqlMigration>>,
@@ -35,10 +35,11 @@ impl SqlMigrationConnector {
         let test_mode = true;
         let conn =
             std::sync::Arc::new(SqliteDatabaseClient::new(Self::databases_folder_path(), 32, test_mode).unwrap());
-        let migration_persistence = Arc::new(SqlMigrationPersistence::new(
-            Self::new_conn(&schema_name),
-            schema_name.clone(),
-        ));
+
+        let migration_persistence = Arc::new(SqlMigrationPersistence {
+            connection: Arc::clone(&conn),
+            schema_name: schema_name.clone(),
+        });
         let sql_migration_persistence = Arc::clone(&migration_persistence);
         let database_migration_inferrer = Arc::new(SqlDatabaseMigrationInferrer {
             inspector: Box::new(DatabaseInspectorImpl::new(Self::new_conn(&schema_name))),
@@ -46,7 +47,7 @@ impl SqlMigrationConnector {
         });
         let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier {
             schema_name: schema_name.clone(),
-            conn: conn,
+            conn: Arc::clone(&conn),
         });
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
         SqlMigrationConnector {
