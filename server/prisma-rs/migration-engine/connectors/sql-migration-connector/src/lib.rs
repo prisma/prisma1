@@ -79,10 +79,11 @@ impl MigrationConnector for SqlMigrationConnector {
     }
 
     fn reset(&self) {
+        println!("MigrationConnector.reset()");
         let conn = Self::new_conn(&self.schema_name);
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
 
-        dbg!(conn.execute(&sql_str, NO_PARAMS).unwrap());
+        let _ = conn.execute(&sql_str, NO_PARAMS);
         let _ = std::fs::remove_file(Self::database_file_path(&self.schema_name)); // ignore potential errors
     }
 

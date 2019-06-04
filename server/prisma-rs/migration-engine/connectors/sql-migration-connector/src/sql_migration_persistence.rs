@@ -35,7 +35,7 @@ impl SqlMigrationPersistence {
             t.add_column(FINISHED_AT_COLUMN, types::date().nullable(true));
         });
 
-        let sql_str = m.make::<barrel::backend::Sqlite>();
+        let sql_str = dbg!(m.make::<barrel::backend::Sqlite>());
 
         dbg!(self.connection.execute(&sql_str, NO_PARAMS).unwrap());
     }
