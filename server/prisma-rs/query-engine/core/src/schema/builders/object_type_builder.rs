@@ -155,6 +155,7 @@ impl<'a> ObjectTypeBuilder<'a> {
       .filter_object_type_builder
       .into_arc()
       .filter_object_type(Arc::clone(model));
+
     argument("where", InputType::opt(InputType::object(where_object)))
   }
 

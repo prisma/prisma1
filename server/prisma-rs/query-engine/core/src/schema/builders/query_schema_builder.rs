@@ -107,8 +107,7 @@ impl<'a> QuerySchemaBuilder<'a> {
       .into_iter()
       .map(|m| {
         let mut vec = vec![self.create_item_field(Arc::clone(&m))];
-
-        // append_opt(&mut vec, self.update_item_field(Arc::clone(&m)));
+        append_opt(&mut vec, self.update_item_field(Arc::clone(&m)));
 
         vec
       })

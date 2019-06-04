@@ -1,7 +1,7 @@
 use super::*;
 use prisma_models::{ModelRef, RelationFieldRef, ScalarFieldRef};
 
-pub trait UpdateInputTypeBuilderExtension: InputTypeBuilderBase {
+pub trait UpdateInputTypeBuilderExtension: InputTypeBuilderBase + CreateInputTypeBuilderExtension {
     fn update_input_type(&self, model: ModelRef) -> InputObjectTypeRef {
         let name = format!("{}UpdateInput", model.name.clone());
         return_cached!(self.get_cache(), &name);
@@ -10,6 +10,17 @@ pub trait UpdateInputTypeBuilderExtension: InputTypeBuilderBase {
         self.cache(name, Arc::clone(&input_object));
 
         // Compute input fields for scalar fields.
+        let mut fields = self.scalar_input_fields_for_update(Arc::clone(&model));
+
+        // Compute input fields for relational fields.
+        let mut relational_fields = self.relation_input_fields_for_update(Arc::clone(&model), None);
+        fields.append(&mut relational_fields);
+
+        input_object.set_fields(fields);
+        Arc::downgrade(&input_object)
+    }
+
+    fn scalar_input_fields_for_update(&self, model: ModelRef) -> Vec<InputField> {
         let scalar_fields: Vec<ScalarFieldRef> = model
             .fields()
             .scalar()
@@ -17,22 +28,15 @@ pub trait UpdateInputTypeBuilderExtension: InputTypeBuilderBase {
             .filter(|f| f.is_writable())
             .collect();
 
-        let mut fields = self.scalar_input_fields(model.name.clone(), "Update", scalar_fields, |f: ScalarFieldRef| {
+        self.scalar_input_fields(model.name.clone(), "Update", scalar_fields, |f: ScalarFieldRef| {
             self.map_optional_input_type(f)
-        });
-
-        // Compute input fields for relational fields.
-        let mut relational_fields = self.relation_input_fields_update(Arc::clone(&model), None);
-        fields.append(&mut relational_fields);
-
-        input_object.set_fields(fields);
-        Arc::downgrade(&input_object)
+        })
     }
 
     /// For update input types only. Compute input fields for relational fields.
     /// This recurses into create_input_type (via nested_create_input_field).
     /// Todo: This code is fairly similar to "create" relation computation. Let's see if we can dry it up.
-    fn relation_input_fields_update(
+    fn relation_input_fields_for_update(
         &self,
         model: ModelRef,
         parent_field: Option<&RelationFieldRef>,
@@ -81,10 +85,19 @@ pub trait UpdateInputTypeBuilderExtension: InputTypeBuilderBase {
                             let input_object = Arc::new(init_input_object_type(input_name.clone()));
                             self.cache(input_name, Arc::clone(&input_object));
 
-                            let mut fields = vec![];
+                            let mut fields = vec![self.nested_create_input_field(Arc::clone(&rf))];
 
-                            let nested_connect = self.nested_connect_input_field(Arc::clone(&rf));
-                            append_opt(&mut fields, nested_connect);
+                            append_opt(&mut fields, self.nested_connect_input_field(Arc::clone(&rf)));
+                            append_opt(&mut fields, self.nested_set_input_field(Arc::clone(&rf)));
+                            append_opt(&mut fields, self.nested_disconnect_input_field(Arc::clone(&rf)));
+
+                            // wip delete input field
+
+                            fields.push(self.nested_update_input_field(Arc::clone(&rf)));
+
+                            // wip nested update many input field
+                            // wip nested delete many input field
+                            // wip nested upsert input field
 
                             input_object.set_fields(fields);
                             Arc::downgrade(&input_object)
@@ -132,66 +145,69 @@ pub trait UpdateInputTypeBuilderExtension: InputTypeBuilderBase {
         }
     }
 
-    //     def nestedUpdateInputField(field: RelationField): Option[InputField[Any]] = {
-    //     val inputObjectType = computeInputObjectTypeForNestedUpdate(field)
-    //     generateInputType(inputObjectType, field.isList).map(x => InputField[Any]("update", x))
-    //   }
-
     fn nested_update_input_field(&self, field: RelationFieldRef) -> InputField {
-        let related_model = field.related_model();
+        let input_object = self.input_object_type_nested_update(Arc::clone(&field));
+        let input_object = Self::wrap_list_input_object_type(input_object, field.is_list);
 
-        // val subModel = parentField.relatedModel_!
-        // computeInputObjectTypeForNestedUpdateData(parentField).flatMap { updateDataInput =>
-        //   if (parentField.isList) {
-        //     for {
-        //       whereArg <- computeInputObjectTypeForWhereUnique(subModel)
-        //     } yield {
-        //       val typeName = parentField.relatedField.isHidden match {
-        //         case false => s"${subModel.name}UpdateWithWhereUniqueWithout${parentField.relatedField.name.capitalize}Input"
-        //         case true  => s"${subModel.name}UpdateWithWhereUniqueNestedInput"
-        //       }
-
-        //       InputObjectType[Any](
-        //         name = typeName,
-        //         fieldsFn = () => {
-        //           List(
-        //             InputField[Any]("where", whereArg),
-        //             InputField[Any]("data", updateDataInput)
-        //           )
-        //         }
-        //       )
-        //     }
-        //   } else {
-        //     Some(updateDataInput)
-        //   }
-        // }
-        // let input_object = Self::wrap_list_input_object_type(input_object, field.is_list);
-
-        // input_field("create", input_object)
-
-        unimplemented!()
+        input_field("update", input_object)
     }
 
-    fn nested_update_data(&self, field: RelationFieldRef) -> InputField {
-        let related_model = field.related_model();
-        //     val subModel = parentField.relatedModel_!
-        // val fields   = computeScalarInputFieldsForUpdate(subModel) ++ computeRelationalInputFieldsForUpdate(subModel, parentField = Some(parentField))
+    fn input_object_type_nested_update(&self, parent_field: RelationFieldRef) -> InputObjectTypeRef {
+        let related_model = parent_field.related_model();
+        let nested_input_object = self.nested_update_data(Arc::clone(&parent_field));
 
-        // if (fields.nonEmpty) {
-        //   val typeName = parentField.relatedField.isHidden match {
-        //     case false => s"${subModel.name}UpdateWithout${parentField.relatedField.name.capitalize}DataInput"
-        //     case true  => s"${subModel.name}UpdateDataInput"
-        //   }
+        if parent_field.is_list {
+            let where_input_object = self.where_unique_object_type(Arc::clone(&related_model));
+            let type_name = if parent_field.related_field().is_hidden {
+                format!("{}UpdateWithWhereUniqueNestedInput", related_model.name.clone())
+            } else {
+                format!(
+                    "{}UpdateWithWhereUniqueWithout{}Input",
+                    related_model.name.clone(),
+                    capitalize(parent_field.related_field().name.clone())
+                )
+            };
 
-        //   Some(
-        //     InputObjectType[Any](
-        //       name = typeName,
-        //       fieldsFn = () => { fields }
-        //     )
-        //   )
-        // } else {
-        //   None
-        // }
-        unimplemented!()
+            return_cached!(self.get_cache(), &type_name);
+            let input_object = Arc::new(init_input_object_type(type_name.clone()));
+            self.cache(type_name, Arc::clone(&input_object));
+
+            let fields = vec![
+                input_field("where", InputType::object(where_input_object)),
+                input_field("data", InputType::object(nested_input_object)),
+            ];
+
+            input_object.set_fields(fields);
+            Arc::downgrade(&input_object)
+        } else {
+            nested_input_object
+        }
+    }
+
+    fn nested_update_data(&self, parent_field: RelationFieldRef) -> InputObjectTypeRef {
+        let related_model = parent_field.related_model();
+        let type_name = if parent_field.related_field().is_hidden {
+            format!("{}UpdateDataInput", related_model.name.clone())
+        } else {
+            format!(
+                "{}UpdateWithout{}DataInput",
+                related_model.name.clone(),
+                capitalize(parent_field.related_field().name.clone())
+            )
+        };
+
+        return_cached!(self.get_cache(), &type_name);
+
+        let input_object = Arc::new(init_input_object_type(type_name.clone()));
+        self.cache(type_name, Arc::clone(&input_object));
+
+        let mut fields = self.scalar_input_fields_for_update(Arc::clone(&related_model));
+        let mut relational_input_fields =
+            self.relation_input_fields_for_update(Arc::clone(&related_model), Some(&parent_field));
+
+        fields.append(&mut relational_input_fields);
+        input_object.set_fields(fields);
+
+        Arc::downgrade(&input_object)
     }
 }

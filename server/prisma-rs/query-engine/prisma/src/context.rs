@@ -38,10 +38,8 @@ impl PrismaContext {
         let capabilities = SupportedCapabilities::empty(); // todo connector capabilities.
         let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, BuildMode::Legacy);
         let query_schema = schema_builder.build();
-        let sdl = data_model::load_v2_dml_string().ok(); // temporary
-
-        // Temporary
-        let dm = datamodel::parse(sdl.as_ref().unwrap()).ok();
+        let sdl = data_model::load_v11_sdl_string().ok();
+        let dm = Self::load_datamodel();
 
         // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
 
@@ -53,5 +51,24 @@ impl PrismaContext {
             dm,
             executor,
         })
+    }
+
+    fn load_datamodel() -> Option<datamodel::Datamodel> {
+        let dml_string = data_model::load_v2_dml_string().ok().unwrap();
+        let parsed = datamodel::parse(&dml_string);
+
+        if let Err(errors) = &parsed {
+            dbg!(&errors);
+            for error in errors.to_iter() {
+                println!("");
+                error
+                    .pretty_print(&mut std::io::stderr().lock(), "from env", &dml_string)
+                    .expect("Failed to write errors to stderr");
+            }
+
+            return None;
+        }
+
+        parsed.ok()
     }
 }
