@@ -223,7 +223,7 @@ impl<'a> DatamodelConverter<'a> {
 
 #[derive(Debug, Clone)]
 pub struct TempRelationHolder {
-    pub name: Option<String>,
+    pub name: String,
     pub model_a: dml::Model,
     pub model_b: dml::Model,
     pub field_a: dml::Field,
@@ -241,9 +241,9 @@ pub enum TempManifestationHolder {
 impl TempRelationHolder {
     fn name(&self) -> String {
         // TODO: must replicate behaviour of `generateRelationName` from `SchemaInferrer`
-        match &self.name {
-            Some(name) => name.clone(),
-            None => format!("{}To{}", &self.model_a.name, &self.model_b.name),
+        match &self.name as &str {
+            "" => format!("{}To{}", &self.model_a.name, &self.model_b.name),
+            _ => self.name.clone(),
         }
     }
 

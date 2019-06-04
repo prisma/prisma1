@@ -25,19 +25,19 @@ impl LowerDmlToAst {
         }
     }
 
-    pub fn lower(&self, schema: &dml::Datamodel) -> Result<ast::Datamodel, ErrorCollection> {
+    pub fn lower(&self, datamodel: &dml::Datamodel) -> Result<ast::Datamodel, ErrorCollection> {
         let mut tops: Vec<ast::Top> = Vec::new();
         let mut errors = ErrorCollection::new();
 
-        for model in schema.models() {
-            match self.lower_model(model) {
+        for model in datamodel.models() {
+            match self.lower_model(model, datamodel) {
                 Ok(res) => tops.push(ast::Top::Model(res)),
                 Err(mut err) => errors.append(&mut err),
             }
         }
 
-        for enm in schema.enums() {
-            match self.lower_enum(enm) {
+        for enm in datamodel.enums() {
+            match self.lower_enum(enm, datamodel) {
                 Ok(res) => tops.push(ast::Top::Enum(res)),
                 Err(mut err) => errors.append(&mut err),
             }
@@ -49,13 +49,13 @@ impl LowerDmlToAst {
         })
     }
 
-    fn lower_model(&self, model: &dml::Model) -> Result<ast::Model, ErrorCollection> {
+    fn lower_model(&self, model: &dml::Model, datamodel: &dml::Datamodel) -> Result<ast::Model, ErrorCollection> {
         let mut errors = ErrorCollection::new();
         let mut fields: Vec<ast::Field> = Vec::new();
 
         for field in model.fields() {
             if !field.is_generated {
-                match self.lower_field(field) {
+                match self.lower_field(field, datamodel) {
                     Ok(ast_field) => fields.push(ast_field),
                     Err(mut err) => errors.append(&mut err),
                 };
@@ -69,28 +69,28 @@ impl LowerDmlToAst {
         Ok(ast::Model {
             name: model.name.clone(),
             fields: fields,
-            directives: self.directives.model.serialize(model)?,
+            directives: self.directives.model.serialize(model, datamodel)?,
             comments: vec![],
             span: ast::Span::empty(),
         })
     }
 
-    fn lower_enum(&self, enm: &dml::Enum) -> Result<ast::Enum, ErrorCollection> {
+    fn lower_enum(&self, enm: &dml::Enum, datamodel: &dml::Datamodel) -> Result<ast::Enum, ErrorCollection> {
         Ok(ast::Enum {
             name: enm.name.clone(),
             values: enm.values.clone(),
-            directives: self.directives.enm.serialize(enm)?,
+            directives: self.directives.enm.serialize(enm, datamodel)?,
             comments: vec![],
             span: ast::Span::empty(),
         })
     }
 
-    fn lower_field(&self, field: &dml::Field) -> Result<ast::Field, ErrorCollection> {
+    fn lower_field(&self, field: &dml::Field, datamodel: &dml::Datamodel) -> Result<ast::Field, ErrorCollection> {
         Ok(ast::Field {
             name: field.name.clone(),
             arity: self.lower_field_arity(&field.arity),
             default_value: field.default_value.clone().map(|v| v.into()),
-            directives: self.directives.field.serialize(field)?,
+            directives: self.directives.field.serialize(field, datamodel)?,
             field_type: self.lower_type(&field.field_type),
             comments: vec![],
             field_type_span: ast::Span::empty(),

@@ -20,7 +20,7 @@ impl DirectiveValidator<dml::Field> for ScalarListDirectiveValidator {
         return Ok(());
     }
 
-    fn serialize(&self, obj: &dml::Field) -> Result<Option<ast::Directive>, Error> {
+    fn serialize(&self, obj: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
         if let Some(strategy) = &obj.scalar_list_strategy {
             return Ok(Some(ast::Directive::new(
                 self.directive_name(),

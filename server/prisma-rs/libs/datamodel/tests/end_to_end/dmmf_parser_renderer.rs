@@ -26,14 +26,14 @@ model Post {
     wasLiked Boolean @default(false)
     author User @relation("author")
     published Boolean @default(false)
-    categories Category[]
+    categories PostToCategory[]
     @@db("post")
 }
 
 model Category {
     id Int @id
     name String
-    posts Post[]
+    posts PostToCategory[]
     cat CategoryEnum
     @@db("category")
 }
@@ -47,7 +47,7 @@ model PostToCategory {
 
 model A {
     id Int @id
-    b B @relation(references: [id])
+    b B
 }
 
 model B {

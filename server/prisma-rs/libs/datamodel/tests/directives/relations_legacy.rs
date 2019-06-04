@@ -68,7 +68,7 @@ fn settings_must_be_deteced() {
     let dml = r#"
     model Todo {
       id: ID @id
-      todo: Todo? @relation(name: "MyRelation", onDelete: CASCADE)
+      parent_todo: Todo? @relation(name: "MyRelation", onDelete: CASCADE)
     }
     "#;
 
@@ -76,7 +76,7 @@ fn settings_must_be_deteced() {
 
     let todo_model = schema.assert_has_model("Todo");
     todo_model
-        .assert_has_field("todo")
+        .assert_has_field("parent_todo")
         .assert_relation_to("Todo")
         .assert_arity(&dml::FieldArity::Optional)
         .assert_relation_delete_strategy(dml::OnDeleteStrategy::Cascade);

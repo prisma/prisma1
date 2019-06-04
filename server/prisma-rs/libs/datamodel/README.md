@@ -4,12 +4,19 @@ Language: Rust
 
 Build System: Cargo
 
-**Please consider this a WIP prototype. API's might change.**
-
 ### Design goals
 
-* Strict parsing: A duplicate directive, unknown directive, unknown argument or extra argument is an error.
-* Accumulate errors to present them at the end instead of throwing (TODO)
+- Strict parsing: A duplicate directive, unknown directive, unknown argument or extra argument is an error.
+- Accumulate errors to present them at the end instead of throwing
+
+### Guarantees
+
+For a parsed and validated datmodel, the following guarantees hold:
+
+- Each referred model or enum does exist.
+- Each related field has a backwards related field on the related type with equal relation name. If the user did not specify any, a backwards field will be generated.
+- All relations are be named.
+- All relations have a valid list of `to_fields` on the referencing side. An empty list indicates the back relation field. If the user does not give any `references` argument, the `to_fields` will point to the related types id fields.
 
 ### Usage
 
