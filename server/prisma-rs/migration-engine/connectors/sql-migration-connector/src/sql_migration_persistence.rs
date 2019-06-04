@@ -17,6 +17,7 @@ pub struct SqlMigrationPersistence<C: Connectional> {
 
 impl<C: Connectional> SqlMigrationPersistence<C> {
     pub fn init(&self) {
+        println!("SqlMigrationPersistence.init()");
         let mut m = barrel::Migration::new().schema(self.schema_name.clone());
         m.create_table_if_not_exists(TABLE_NAME, |t| {
             t.add_column(REVISION_COLUMN, types::primary());
@@ -36,9 +37,10 @@ impl<C: Connectional> SqlMigrationPersistence<C> {
 
         // dbg!(self.connection.execute(&sql_str, NO_PARAMS).unwrap());
 
-        self.connection
+        dbg!(self
+            .connection
             .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]))
-            .unwrap();
+            .unwrap());
     }
 }
 
