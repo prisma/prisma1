@@ -33,4 +33,18 @@ impl ArgumentBuilder {
             Some(vec![argument("data", InputType::object(input_object_type))])
         }
     }
+
+    pub fn update_arguments(&self, model: ModelRef) -> Option<Vec<Argument>> {
+        // for {
+        //   whereArg <- whereUniqueArgument(model)
+        //   dataArg  <- inputTypesBuilder.inputObjectTypeForUpdate(model)
+        // } yield {
+        //   List(
+        //     Argument[Any]("data", dataArg),
+        //     whereArg
+        //   )
+        // }
+
+        unimplemented!()
+    }
 }

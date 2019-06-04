@@ -106,7 +106,10 @@ impl<'a> QuerySchemaBuilder<'a> {
     let fields = non_embedded_models
       .into_iter()
       .map(|m| {
-        let vec = vec![self.create_item_field(Arc::clone(&m))];
+        let vec = vec![
+          self.create_item_field(Arc::clone(&m)),
+          self.update_item_field(Arc::clone(&m)),
+        ];
         vec
       })
       .flatten()
@@ -170,7 +173,15 @@ impl<'a> QuerySchemaBuilder<'a> {
     )
   }
 
-  fn update_item_field(&self, model: ModelRef) -> Field {
-    unimplemented!()
+  fn update_item_field(&self, model: ModelRef) -> Option<Field> {
+    self.argument_builder.update_arguments(Arc::clone(&model)).map(|args| {
+      field(
+        format!("update{}", model.name),
+        args,
+        OutputType::opt(OutputType::object(
+          self.object_type_builder.map_model_object_type(&model),
+        )),
+      )
+    })
   }
 }
