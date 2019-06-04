@@ -748,7 +748,7 @@ Consider the following example:
 type User {
   id: ID! @id
   comments: [Comment!]! @relation(name: "CommentAuthor", onDelete: CASCADE, link: INLINE)
-  blog: Blog @relation(name: "BlogOwner", onDelete: CASCADE, link: INLINE
+  blog: Blog @relation(name: "BlogOwner", onDelete: CASCADE, link: INLINE)
 }
 
 type Blog {
