@@ -1,6 +1,6 @@
 {
   "name": "@prisma/prototype",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "git@github.com:prisma/prisma.git",
@@ -9,7 +9,8 @@
   "private": false,
   "files": [
     "build",
-    "download-build"
+    "download-build",
+    "runtime"
   ],
   "bin": {
     "prisma2": "build/index.js"
