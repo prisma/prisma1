@@ -106,10 +106,12 @@ impl<'a> QuerySchemaBuilder<'a> {
     let fields = non_embedded_models
       .into_iter()
       .map(|m| {
-        let vec = vec![
+        let mut vec = vec![
           self.create_item_field(Arc::clone(&m)),
-          self.update_item_field(Arc::clone(&m)),
         ];
+
+        append_opt(&mut vec, self.update_item_field(Arc::clone(&m)));
+
         vec
       })
       .flatten()

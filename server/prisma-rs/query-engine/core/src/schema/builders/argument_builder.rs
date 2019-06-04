@@ -35,16 +35,11 @@ impl ArgumentBuilder {
     }
 
     pub fn update_arguments(&self, model: ModelRef) -> Option<Vec<Argument>> {
-        // for {
-        //   whereArg <- whereUniqueArgument(model)
-        //   dataArg  <- inputTypesBuilder.inputObjectTypeForUpdate(model)
-        // } yield {
-        //   List(
-        //     Argument[Any]("data", dataArg),
-        //     whereArg
-        //   )
-        // }
+        self.where_unique_argument(Arc::clone(&model)).map(|unique_arg| {
+            let input_object = self.input_type_builder.into_arc().update_input_type(model);
+            let input_object_type = InputType::object(input_object);
 
-        unimplemented!()
+            vec![argument("data", input_object_type), unique_arg]
+        })
     }
 }
