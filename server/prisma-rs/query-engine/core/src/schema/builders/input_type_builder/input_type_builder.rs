@@ -25,10 +25,9 @@ impl CachedBuilder<InputObjectType> for InputTypeBuilder {
 }
 
 impl InputBuilderExtensions for InputTypeBuilder {}
-impl UpdateInputTypeBuilderExtension for InputTypeBuilder {}
-impl CreateInputTypeBuilderExtension for InputTypeBuilder {}
-
 impl InputTypeBuilderBase for InputTypeBuilder {}
+impl CreateInputTypeBuilderExtension for InputTypeBuilder {}
+impl UpdateInputTypeBuilderExtension for InputTypeBuilder {}
 
 impl InputTypeBuilder {
     pub fn new(internal_data_model: InternalDataModelRef) -> Self {
