@@ -18,7 +18,9 @@ impl MigrationCommand for MigrationProgressCommand {
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
         let migration_persistence = engine.connector().migration_persistence();
-        let migration = migration_persistence.by_name(&self.input.migration_id).unwrap();
+        let migration = migration_persistence
+            .by_name(&self.input.migration_id)
+            .expect("Could not load migration from database.");
         MigrationProgressOutput {
             status: migration.status,
             steps: migration.datamodel_steps.len(),
