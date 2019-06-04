@@ -30,6 +30,7 @@ impl RpcApi {
             let input: T::Input = params.parse()?;
             let cmd = T::new(input);
             let engine = MigrationEngine::new();
+            engine.init();
             let response_json = serde_json::to_value(&cmd.execute(&engine)).unwrap();
             Ok(response_json)
         });
