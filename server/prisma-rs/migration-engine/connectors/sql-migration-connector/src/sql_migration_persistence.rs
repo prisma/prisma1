@@ -1,17 +1,43 @@
 #[allow(unused, dead_code)]
+use barrel::types;
 use chrono::*;
 use migration_connector::*;
 use prisma_query::{ast::*, visitor::*};
-use rusqlite::{Connection, Row};
+use rusqlite::{Connection, Row, NO_PARAMS};
 use serde_json;
 
 pub struct SqlMigrationPersistence {
     connection: Connection,
+    schema_name: String,
 }
 
 impl SqlMigrationPersistence {
-    pub fn new(conn: Connection) -> SqlMigrationPersistence {
-        SqlMigrationPersistence { connection: conn }
+    pub fn new(conn: Connection, schema_name: String) -> SqlMigrationPersistence {
+        SqlMigrationPersistence {
+            connection: conn,
+            schema_name,
+        }
+    }
+
+    pub fn init(&self) {
+        let mut m = barrel::Migration::new().schema(self.schema_name.clone());
+        m.create_table_if_not_exists(TABLE_NAME, |t| {
+            t.add_column(REVISION_COLUMN, types::primary());
+            t.add_column(NAME_COLUMN, types::text());
+            t.add_column(DATAMODEL_COLUMN, types::text());
+            t.add_column(STATUS_COLUMN, types::text());
+            t.add_column(APPLIED_COLUMN, types::integer());
+            t.add_column(ROLLED_BACK_COLUMN, types::integer());
+            t.add_column(DATAMODEL_STEPS_COLUMN, types::text());
+            t.add_column(DATABASE_MIGRATION_COLUMN, types::text());
+            t.add_column(ERRORS_COLUMN, types::text());
+            t.add_column(STARTED_AT_COLUMN, types::date());
+            t.add_column(FINISHED_AT_COLUMN, types::date().nullable(true));
+        });
+
+        let sql_str = m.make::<barrel::backend::Sqlite>();
+
+        dbg!(self.connection.execute(&sql_str, NO_PARAMS).unwrap());
     }
 }
 
