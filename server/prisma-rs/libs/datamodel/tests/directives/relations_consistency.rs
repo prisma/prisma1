@@ -30,6 +30,44 @@ fn should_add_back_relations() {
 }
 
 #[test]
+fn should_not_add_back_relations_for_many_to_many() {
+    let dml = r#"
+    model User {
+        id: ID @id
+        posts: Post[]
+    }
+
+    model Post {
+        id: ID @id
+        users: User[]
+    }
+    "#;
+
+    let schema = parse(dml);
+    let post_model = schema.assert_has_model("Post");
+    post_model
+        .assert_has_field("users")
+        .assert_relation_to("User")
+        .assert_relation_to_fields(&[])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    post_model.assert_has_field("id");
+
+    let user_model = schema.assert_has_model("User");
+    user_model
+        .assert_has_field("posts")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&[])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    user_model.assert_has_field("id");
+
+    // Assert nothing else was generated.
+    assert_eq!(user_model.fields().count(), 2);
+    assert_eq!(post_model.fields().count(), 2);
+}
+
+#[test]
 fn should_add_back_relations_for_more_complex_cases() {
     let dml = r#"
     model User {
