@@ -11,3 +11,15 @@ impl NameNormalizer for String {
         }
     }
 }
+
+pub struct DefaultNames { }
+
+impl DefaultNames {
+    pub fn relation_name(from: &str, to: &str) -> String {
+        if from < to {
+            format!("{}To{}", from, to)
+        } else {
+            format!("{}To{}", to, from)
+        }
+    }
+}

@@ -1,6 +1,7 @@
 use super::comment::*;
 use super::enummodel::*;
 use super::model::*;
+use super::field::Field;
 use serde::{Deserialize, Serialize};
 
 // TODO: Is schema the right name here?
@@ -89,6 +90,12 @@ impl Datamodel {
     /// Finds a model by name.
     pub fn find_model(&self, name: &str) -> Option<&Model> {
         self.models().find(|m| m.name == *name)
+    }
+
+    /// Finds a model for a field reference by using reference comparison.
+    pub fn find_model_by_field_ref(&self, field: &Field) -> Option<&Model> {
+        // This uses the memory location of field for equality.
+        self.models().find(|m| m.fields().any(|f| f as *const Field == field as *const Field))
     }
 
     /// Finds an enum by name.

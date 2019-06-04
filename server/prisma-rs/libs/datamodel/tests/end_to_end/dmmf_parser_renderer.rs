@@ -47,7 +47,7 @@ model PostToCategory {
 
 model A {
     id Int @id
-    b B @relation(references: [id])
+    b B
 }
 
 model B {

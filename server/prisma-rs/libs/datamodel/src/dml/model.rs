@@ -76,6 +76,18 @@ impl Model {
             return false;
         })
     }
+
+    /// Finds a mutable field with a certain relation guarantee.
+    pub fn related_field_mut(&mut self, to: &str, name: &Option<String>) -> Option<&mut Field> {
+        self.fields_mut().find(|f| {
+            if let FieldType::Relation(rel_info) = &f.field_type {
+                if rel_info.to == to && &rel_info.name == name {
+                    return true;
+                }
+            }
+            return false;
+        })
+    }
 }
 
 impl WithName for Model {

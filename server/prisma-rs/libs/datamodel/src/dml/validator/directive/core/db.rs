@@ -24,7 +24,7 @@ impl<T: dml::WithDatabaseName> DirectiveValidator<T> for DbDirectiveValidator {
         return Ok(());
     }
 
-    fn serialize(&self, obj: &T) -> Result<Option<ast::Directive>, Error> {
+    fn serialize(&self, obj: &T, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
         if let Some(db_name) = obj.database_name() {
             return Ok(Some(ast::Directive::new(
                 DirectiveValidator::<T>::directive_name(self),

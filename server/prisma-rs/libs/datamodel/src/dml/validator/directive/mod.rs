@@ -2,6 +2,7 @@ use crate::ast;
 use crate::common;
 use crate::common::argument::Arguments;
 use crate::errors::{ErrorCollection, ValidationError};
+use crate::dml;
 
 use std::collections::HashMap;
 
@@ -26,7 +27,7 @@ pub trait DirectiveValidator<T> {
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Result<(), Error>;
 
     /// Serilizes the given directive's arguments for rendering.
-    fn serialize(&self, obj: &T) -> Result<Option<ast::Directive>, Error>;
+    fn serialize(&self, obj: &T, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error>;
 
     /// Shorthand to construct an directive validation error.
     fn error(&self, msg: &str, span: &ast::Span) -> Result<(), Error> {
@@ -77,8 +78,8 @@ impl<T> DirectiveValidator<T> for DirectiveScope<T> {
     fn validate_and_apply(&self, args: &Args, obj: &mut T) -> Result<(), Error> {
         self.inner.validate_and_apply(args, obj)
     }
-    fn serialize(&self, obj: &T) -> Result<Option<ast::Directive>, Error> {
-        self.inner.serialize(obj)
+    fn serialize(&self, obj: &T, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
+        self.inner.serialize(obj, datamodel)
     }
 }
 
@@ -165,12 +166,12 @@ impl<T: 'static> DirectiveListValidator<T> {
         }
     }
 
-    pub fn serialize(&self, t: &T) -> Result<Vec<ast::Directive>, ErrorCollection> {
+    pub fn serialize(&self, t: &T, datamodel: &dml::Datamodel) -> Result<Vec<ast::Directive>, ErrorCollection> {
         let mut errors = ErrorCollection::new();
         let mut directives: Vec<ast::Directive> = Vec::new();
 
         for directive in self.known_directives.values() {
-            match directive.serialize(t) {
+            match directive.serialize(t, datamodel) {
                 Ok(Some(directive)) => directives.push(directive),
                 Ok(None) => {}
                 Err(err) => errors.push(err),

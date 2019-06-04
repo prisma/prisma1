@@ -1,7 +1,7 @@
 use crate::{ast, dml};
 
 use super::DirectiveBox;
-use crate::common::{names::NameNormalizer, value::ValueValidator};
+use crate::common::{names::*, value::ValueValidator};
 use crate::dml::fromstr::FromStrAndSpan;
 use crate::errors::{ErrorCollection, ValidationError};
 use crate::source;
@@ -67,12 +67,15 @@ impl Validator {
     }
 
     fn make_consistent(&self, ast_schema: &ast::Datamodel, schema: &mut dml::Datamodel) -> Result<(), ErrorCollection> {
-        // Model Consistency. THese ones do not fail.
+        // Model Consistency. These ones do not fail.
         // TODO: Also need to hook up the id field with to.
         self.add_missing_back_relations(ast_schema, schema)?;
 
-        // No normalization of to_fields for now.
-        // self.set_relation_to_field_to_id_if_missing(schema);
+        // Always give relations a to_field.
+        self.set_relation_to_field_to_id_if_missing(schema);
+
+        // Always give relations some name.
+        self.name_unnamed_relations(schema);
 
         Ok(())
     }
@@ -208,7 +211,6 @@ impl Validator {
 
     /// For any relations which are missing to_fields, sets them to the @id fields
     /// of the foreign model.
-    #[allow(unused)] // No normalization of to_fields for now.
     fn set_relation_to_field_to_id_if_missing(&self, schema: &mut dml::Datamodel) {
         // Build up index structure first, because rust does not allow mutatble iteration.
         let mut id_per_model: HashMap<String, Vec<String>> = HashMap::new();
@@ -284,6 +286,7 @@ impl Validator {
             let name = backward.to.camel_case();
 
             if let Some(conflicting_field) = model.find_field(&name) {
+                println!("Error adding field");
                 errors.push(ValidationError::new_model_validation_error(
                     "Automatic back field generation would cause a naming conflict.",
                     &model.name,
@@ -315,14 +318,12 @@ impl Validator {
 
         for field in model.fields() {
             if let dml::FieldType::Relation(rel) = &field.field_type {
+                
                 let mut back_field_exists = false;
 
-                for back_field in schema.find_model(&rel.to).expect(STATE_ERROR).fields() {
-                    if let dml::FieldType::Relation(back_rel) = &back_field.field_type {
-                        if back_rel.name == rel.name {
-                            back_field_exists = true;
-                        }
-                    }
+                let related_model = schema.find_model(&rel.to).expect(STATE_ERROR);
+                if related_model.related_field(&model.name, &rel.name).is_some() {
+                    back_field_exists = true;
                 }
 
                 if !back_field_exists {
@@ -342,6 +343,50 @@ impl Validator {
         }
 
         fields
+    }
+
+    pub fn name_unnamed_relations(&self, datamodel: &mut dml::Datamodel) {
+        let unnamed_relations = self.find_unnamed_relations(&datamodel);
+
+        for (model_name, rel_info) in unnamed_relations {
+            // Embedding side.
+            let field = datamodel.find_model_mut(&model_name).expect(STATE_ERROR)
+                .related_field_mut(&rel_info.to, &rel_info.name).expect(STATE_ERROR);
+            
+            if let dml::FieldType::Relation(rel) = &mut field.field_type {
+                rel.name = Some(DefaultNames::relation_name(&model_name, &rel_info.to));
+            } else {
+                panic!("Tried to name a none existing-relation.");
+            }
+
+            // Foreign site.
+            let field = datamodel.find_model_mut(&rel_info.to).expect(STATE_ERROR)
+                .related_field_mut(&model_name, &rel_info.name).expect(STATE_ERROR);
+            
+            if let dml::FieldType::Relation(rel) = &mut field.field_type {
+                rel.name = Some(DefaultNames::relation_name(&model_name, &rel_info.to));
+            } else {
+                panic!("Tried to name a none existing-relation.");
+            }
+        }
+    }
+
+    // Returns list of model name and relation info.
+    fn find_unnamed_relations(&self, datamodel: &dml::Datamodel) -> Vec<(String, dml::RelationInfo)> {
+
+        let mut rels = Vec::new();
+
+        for model in datamodel.models() {
+            for field in model.fields() {
+                if let dml::FieldType::Relation(rel) = &field.field_type {
+                    if rel.name.is_none() && rel.to_fields.len() > 0 {
+                        rels.push((model.name.clone(), rel.clone()))
+                    }
+                }
+            }
+        }
+
+        rels
     }
 
     pub fn lift(&self, ast_schema: &ast::Datamodel) -> Result<dml::Datamodel, ErrorCollection> {
