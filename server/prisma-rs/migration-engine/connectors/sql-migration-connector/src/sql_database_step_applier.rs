@@ -1,24 +1,25 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
 use migration_connector::*;
-use rusqlite::{Connection, NO_PARAMS};
+use prisma_query::transaction::Connectional;
+use std::sync::Arc;
 
-pub struct SqlDatabaseStepApplier {
-    connection: Connection,
-    schema_name: String,
+pub struct SqlDatabaseStepApplier<C: Connectional> {
+    pub schema_name: String,
+    pub conn: Arc<C>,
 }
 
-impl SqlDatabaseStepApplier {
-    pub fn new(connection: Connection, schema_name: String) -> Self {
-        SqlDatabaseStepApplier {
-            connection,
-            schema_name,
-        }
-    }
-}
+// impl SqlDatabaseStepApplier {
+//     pub fn new(connection: Connection, schema_name: String) -> Self {
+//         SqlDatabaseStepApplier {
+//             connection,
+//             schema_name,
+//         }
+//     }
+// }
 
 #[allow(unused, dead_code)]
-impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
+impl<C: Connectional> DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier<C> {
     fn apply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
         self.apply_next_step(&database_migration.steps, index)
     }
@@ -46,7 +47,7 @@ impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
     }
 }
 
-impl SqlDatabaseStepApplier {
+impl<C: Connectional> SqlDatabaseStepApplier<C> {
     fn apply_next_step(&self, steps: &Vec<SqlMigrationStep>, index: usize) -> bool {
         let has_this_one = steps.get(index).is_some();
         if !has_this_one {
@@ -56,11 +57,14 @@ impl SqlDatabaseStepApplier {
         let step = &steps[index];
         let sql_string = self.render_raw_sql(&step);
         dbg!(&sql_string);
-        let result = self.connection.execute(&sql_string, NO_PARAMS);
+        let result = self
+            .conn
+            .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_string, &[]));
+        // let result = self.connection.execute(&sql_string, NO_PARAMS);
         // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
         match dbg!(result) {
             Ok(_) => {}
-            Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
+            // Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
             e @ Err(_) => {
                 e.unwrap();
                 {}

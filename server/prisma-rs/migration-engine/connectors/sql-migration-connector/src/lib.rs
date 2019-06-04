@@ -9,6 +9,7 @@ mod sql_migration_persistence;
 use database_inspector::DatabaseInspector;
 use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
+use prisma_query::connector::Sqlite as SqliteDatabaseClient;
 use rusqlite::{Connection, NO_PARAMS};
 use serde_json;
 use sql_database_migration_inferrer::*;
@@ -31,6 +32,9 @@ pub struct SqlMigrationConnector {
 impl SqlMigrationConnector {
     // FIXME: this must take the config as a param at some point
     pub fn new(schema_name: String) -> SqlMigrationConnector {
+        let test_mode = true;
+        let conn =
+            std::sync::Arc::new(SqliteDatabaseClient::new(Self::databases_folder_path(), 32, test_mode).unwrap());
         let migration_persistence = Arc::new(SqlMigrationPersistence::new(
             Self::new_conn(&schema_name),
             schema_name.clone(),
@@ -40,10 +44,10 @@ impl SqlMigrationConnector {
             inspector: Box::new(DatabaseInspectorImpl::new(Self::new_conn(&schema_name))),
             schema_name: schema_name.to_string(),
         });
-        let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier::new(
-            Self::new_conn(&schema_name),
-            schema_name.clone(),
-        ));
+        let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier {
+            schema_name: schema_name.clone(),
+            conn: conn,
+        });
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
         SqlMigrationConnector {
             schema_name,
@@ -64,10 +68,14 @@ impl SqlMigrationConnector {
     }
 
     fn database_file_path(name: &str) -> String {
-        let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-        let path = format!("{}/db", server_root);
+        let path = Self::databases_folder_path();
         let database_file_path = format!("{}/{}.db", path, name);
         database_file_path
+    }
+
+    fn databases_folder_path() -> String {
+        let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+        format!("{}/db", server_root)
     }
 }
 
