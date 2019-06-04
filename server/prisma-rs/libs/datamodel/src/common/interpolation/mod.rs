@@ -23,7 +23,7 @@ fn parse_expr_and_lift_span(token: &pest::iterators::Pair<'_, Rule>, start: usiz
         Value::StringValue(v, s) => Ok(Value::StringValue(v, lift_span(&s, start))),
         Value::ConstantValue(v, s) => Ok(Value::ConstantValue(v, lift_span(&s, start))),
         Value::Function(n, a, s) => Ok(Value::Function(n, a, lift_span(&s, start))),
-        Value::Array(_, s) => Err(ValidationError::new_parser_error(
+        Value::Array(_, s) => Err(ValidationError::new_validation_error(
             "Arrays cannot be interpolated into strings.",
             &s,
         )),
@@ -53,21 +53,27 @@ impl StringInterpolator {
                         parts.push(String::from(ValueValidator::new(&value)?.raw()))
                     },
                     Rule::EOI => {},
-                    _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
+                    _ => panic!("Encounterd impossible interpolated string during parsing: {:?}", current.tokens())
                 }
 
                 Ok(Value::StringValue(parts.join(""), span.clone()))
             }
-            Err(err) => match err.location {
-                pest::error::InputLocation::Pos(pos) => Err(ValidationError::new_parser_error(
-                    "Unexpected token while interpolating string.",
-                    &Span::new(pos + span.start, pos + span.start),
-                )),
-                pest::error::InputLocation::Span((from, to)) => Err(ValidationError::new_parser_error(
-                    "Unexpected token while interpolating string.",
-                    &Span::new(from + span.start, to + span.start),
-                )),
-            },
+            Err(err) => {
+                let location = match err.location {
+                    pest::error::InputLocation::Pos(pos) => Span::new(pos, pos),
+                    pest::error::InputLocation::Span((from, to)) => Span::new(from, to),
+                };
+
+                let expected = match err.variant {
+                    pest::error::ErrorVariant::ParsingError {
+                        positives,
+                        negatives: _,
+                    } => crate::ast::parser::get_expected_from_error(&positives),
+                    _ => panic!("Could not construct parsing error. This should never happend."),
+                };
+
+                Err(ValidationError::new_parser_error(&expected, &location))
+            }
         }
     }
 }

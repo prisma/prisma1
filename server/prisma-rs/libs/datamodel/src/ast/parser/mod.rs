@@ -28,7 +28,7 @@ pub fn parse_expression(token: &pest::iterators::Pair<'_, Rule>) -> Value {
         Rule::numeric_literal => Value::NumericValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
         Rule::string_literal => Value::StringValue(parse_string_literal(&current), Span::from_pest(&current.as_span())),
         Rule::boolean_literal => Value::BooleanValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
-        Rule::constant_Literal => Value::ConstantValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
+        Rule::constant_literal => Value::ConstantValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
         Rule::function => parse_function(&current),
         Rule::array_expression => parse_array(&current),
         _ => unreachable!("Encounterd impossible literal during parsing: {:?}", current.tokens())
@@ -332,15 +332,80 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 comments: vec![],
             })
         }
-        Err(err) => match err.location {
-            pest::error::InputLocation::Pos(pos) => Err(ValidationError::new_parser_error(
-                "Unexpected token.",
-                &Span::new(pos, pos),
-            )),
-            pest::error::InputLocation::Span((from, to)) => Err(ValidationError::new_parser_error(
-                "Unexpected token.",
-                &Span::new(from, to),
-            )),
-        },
+        Err(err) => {
+            let location = match err.location {
+                pest::error::InputLocation::Pos(pos) => Span::new(pos, pos),
+                pest::error::InputLocation::Span((from, to)) => Span::new(from, to),
+            };
+
+            let expected = match err.variant {
+                pest::error::ErrorVariant::ParsingError {
+                    positives,
+                    negatives: _,
+                } => get_expected_from_error(&positives),
+                _ => panic!("Could not construct parsing error. This should never happend."),
+            };
+
+            Err(ValidationError::new_parser_error(&expected, &location))
+        }
+    }
+}
+
+pub fn get_expected_from_error(positives: &Vec<Rule>) -> Vec<&'static str> {
+    dbg!(positives);
+    positives
+        .iter()
+        .map(|r| rule_to_string(r))
+        .filter(|s| s != &"")
+        .collect()
+}
+
+pub fn rule_to_string(rule: &Rule) -> &'static str {
+    match rule {
+        Rule::model_declaration => "model declaration",
+        Rule::enum_declaration => "enum declaration",
+        Rule::source_block => "source definition",
+        Rule::enum_field_declaration => "enum field declaration",
+        Rule::EOI => "end of input",
+        Rule::identifier => "alphanumeric identifier",
+        Rule::numeric_literal => "numeric literal",
+        Rule::string_literal => "string literal",
+        Rule::boolean_literal => "boolean literal",
+        Rule::constant_literal => "literal",
+        Rule::array_expression => "array",
+        Rule::expression => "expression",
+        Rule::argument_name => "argument name",
+        Rule::function => "function expression",
+        Rule::argument_value => "argument value",
+        Rule::argument => "argument",
+        Rule::directive_arguments => "attribute arguments",
+        Rule::directive_single_argument => "arttribute argument",
+        Rule::directive_name => "directive name",
+        Rule::directive => "directive",
+        Rule::optional_type => "optional type",
+        Rule::base_type => "type",
+        Rule::list_type => "list type",
+        Rule::field_type => "field type",
+        Rule::default_value => "default value",
+        Rule::field_declaration => "field declaration",
+        Rule::source_key_value => "source configuration property",
+        Rule::source_properties => "source property block",
+        Rule::string_any => "any character",
+        Rule::string_escaped_interpolation => "string interpolation",
+
+        // Those are top level things and will never surface.
+        Rule::datamodel => "datamodel declaration",
+        Rule::string_interpolated => "string interpolated",
+
+        // Atomic and helper rules should not surface, we still add them for debugging.
+        Rule::WHITESPACE => "whitespace",
+        Rule::string_escaped_predefined => "escaped unicode char",
+        Rule::string_escape => "escaped unicode char",
+        Rule::string_interpolate_escape => "string interpolation",
+        Rule::string_raw => "unescaped string",
+        Rule::string_content => "string contents",
+        Rule::boolean_true => "boolean true",
+        Rule::boolean_false => "boolean false",
+        Rule::COMMENT => "comment",
     }
 }

@@ -509,7 +509,7 @@ impl Validator {
                     Err(err) => errors.push(err),
                 };
             } else {
-                errors.push(ValidationError::new_parser_error(
+                errors.push(ValidationError::new_validation_error(
                     "Found default value for a non-scalar type.",
                     validator.span(),
                 ))

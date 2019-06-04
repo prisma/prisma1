@@ -30,7 +30,7 @@ boolean_true  = { "true" }
 boolean_false = { "false" }
 boolean_literal =  @{ boolean_true | boolean_false }
 
-constant_Literal = @{ ASCII_ALPHA+ }
+constant_literal = @{ ASCII_ALPHA+ }
 
 // ######################################
 // Expression support
@@ -38,7 +38,7 @@ constant_Literal = @{ ASCII_ALPHA+ }
 
 function = { identifier ~ "(" ~ (argument_value ~ ("," ~ argument_value)*)? ~ ")" }
 array_expression = { "[" ~ expression ~ ( ", " ~ expression )* ~ "]" }
-expression = { array_expression | function | numeric_literal | string_literal | boolean_literal | constant_Literal }
+expression = { array_expression | function | numeric_literal | string_literal | boolean_literal | constant_literal }
 
 // ######################################
 // Arguments
@@ -97,7 +97,6 @@ source_block = { "source" ~ identifier ~ "{" ~ source_key_value* ~ source_proper
 // Datamodel
 // ######################################
 datamodel = { SOI ~ (model_declaration | enum_declaration | source_block )* ~ EOI }
-
 
 // ######################################
 // String Interpolation
