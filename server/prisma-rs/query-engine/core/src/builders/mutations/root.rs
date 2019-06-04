@@ -207,7 +207,6 @@ pub(crate) fn build_nested_root<'f>(
     top_level: &Operation,
 ) -> CoreResult<NestedMutactions> {
     let mut collection = NestedMutactions::default();
-
     let eval = args.eval_tree();
 
     for value in eval.into_iter() {

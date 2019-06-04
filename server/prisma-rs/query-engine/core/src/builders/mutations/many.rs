@@ -34,6 +34,7 @@ impl ManyNestedBuilder {
             match kind {
                 "create" => attach_create(name, map, mutations, &model, &rel_field, top_level)?,
                 "connect" => attach_connect(map, mutations, &model, &rel_field, top_level)?,
+                "disconnect" => attach_disconnect(map, mutations, &model, &rel_field)?,
                 "updateMany" => attach_update_many(map, mutations, &rel_field, &rel_model)?,
                 _ => unimplemented!(),
             };
@@ -60,6 +61,23 @@ fn attach_connect(
             Operation::Create => true,
             _ => false,
         },
+    });
+
+    Ok(())
+}
+
+fn attach_disconnect(
+    map: ValueMap,
+    mutations: &mut NestedMutactions,
+    model: &ModelRef,
+    rel_field: &RelationFieldRef,
+) -> CoreResult<()> {
+    // Get the first valid field name that is a scalar
+    let where_ = map.to_node_selector(Arc::clone(&model)).map(|w| Some(w))?;
+
+    mutations.disconnects.push(NestedDisconnect {
+        relation_field: Arc::clone(&rel_field),
+        where_,
     });
 
     Ok(())
