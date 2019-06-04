@@ -110,7 +110,21 @@ impl Validator {
 
     #[allow(unused)]
     fn validate_model_has_id(&self, ast_model: &ast::Model, model: &dml::Model) -> Result<(), ValidationError> {
-        if model.fields().filter(|m| m.id_info.is_some()).count() == 0 {
+
+        let related_fields = model.fields().filter(|f| -> bool {
+            if let dml::FieldType::Relation(_) = f.field_type {
+                f.arity != dml::FieldArity::List
+            } else {
+                false
+            }
+        });
+
+        if related_fields.count() == 2 {
+            return Ok(())
+            // Extempt from the id rule, we have an relation table.
+        }
+
+        if model.id_fields().count() == 0 {
             Err(ValidationError::new_model_validation_error(
                 "One field must be marked as the id field with the `@id` directive.",
                 &model.name,
