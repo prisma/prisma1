@@ -27,7 +27,7 @@ impl DirectiveValidator<dml::Field> for IdDirectiveValidator {
         return Ok(());
     }
 
-    fn serialize(&self, field: &dml::Field, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
+    fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
         if let Some(id_info) = &field.id_info {
             let mut args = Vec::new();
 

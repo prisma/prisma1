@@ -52,7 +52,7 @@ fn get_on_delete_strategy(strategy: &Option<String>) -> dml::OnDeleteStrategy {
 
 fn get_field_type(field: &Field) -> dml::FieldType {
     match &field.kind as &str {
-        "relation" => dml::FieldType::Relation(dml::RelationInfo {
+        "object" => dml::FieldType::Relation(dml::RelationInfo {
             to: field.field_type.clone(),
             to_fields: field.relation_to_fields.clone().unwrap_or_default(),
             name: field.relation_name.clone(),

@@ -5,7 +5,7 @@ use serde_json;
 
 fn get_field_kind(field: &dml::Field) -> String {
     match field.field_type {
-        dml::FieldType::Relation(_) => String::from("relation"),
+        dml::FieldType::Relation(_) => String::from("object"),
         dml::FieldType::Enum(_) => String::from("enum"),
         dml::FieldType::Base(_) => String::from("scalar"),
         _ => unimplemented!("DMMF does not support field type {:?}", field.field_type),

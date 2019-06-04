@@ -14,7 +14,7 @@ impl DirectiveValidator<dml::Field> for UniqueDirectiveValidator {
         return Ok(());
     }
 
-    fn serialize(&self, field: &dml::Field, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
+    fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
         if field.is_unique {
             return Ok(Some(ast::Directive::new(self.directive_name(), vec![])));
         }

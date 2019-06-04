@@ -46,7 +46,7 @@ impl DirectiveValidator<dml::Field> for SequenceDirectiveValidator {
         return Ok(());
     }
 
-    fn serialize(&self, field: &dml::Field, datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
+    fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
         if let Some(id_info) = &field.id_info {
             if let Some(seq_info) = &id_info.sequence {
                 let mut args = Vec::new();
