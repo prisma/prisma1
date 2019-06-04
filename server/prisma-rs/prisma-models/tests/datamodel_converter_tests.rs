@@ -14,15 +14,31 @@ fn an_empty_datamodel_must_work() {
 fn converting_enums() {
     let datamodel = convert(
         r#"
-            enum Test {
+            model MyModel {
+                id: Int @id
+                field: MyEnum
+            }
+
+            enum MyEnum {
                 A
                 B
                 C
             }
         "#,
     );
-    let enm = datamodel.enums.iter().find(|e| e.name == "Test").unwrap();
+    let expected_values = vec!["A".to_string(), "B".to_string(), "C".to_string()];
+    let enm = datamodel.enums.iter().find(|e| e.name == "MyEnum").unwrap();
     assert_eq!(enm.values, vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+
+    let field = datamodel.assert_model("MyModel").assert_scalar_field("field");
+    assert_eq!(field.type_identifier, TypeIdentifier::Enum);
+    assert_eq!(
+        field.internal_enum,
+        Some(InternalEnum {
+            name: "MyEnum".to_string(),
+            values: expected_values
+        })
+    );
 }
 
 #[test]
@@ -331,12 +347,14 @@ fn self_relations() {
                 id: Int @id
                 ReportsTo: Employee?
             }
-        "#
+        "#,
     );
 
     let employee = datamodel.assert_model("Employee");
 
-    employee.assert_relation_field("ReportsTo").assert_relation_name("EmployeeToEmployee");
+    employee
+        .assert_relation_field("ReportsTo")
+        .assert_relation_name("EmployeeToEmployee");
     // employee.assert_relation_field("employee");
 }
 

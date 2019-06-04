@@ -25,7 +25,7 @@ pub struct InternalDataModel {
     relation_fields: OnceCell<Vec<RelationFieldRef>>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct InternalEnum {
     pub name: String,
