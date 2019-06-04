@@ -34,7 +34,7 @@ impl MigrationCommand for UnapplyMigrationCommand {
             },
             Some(migration_to_rollback) => {
                 let database_migration =
-                    connector.deserialize_database_steps(migration_to_rollback.database_steps.clone());
+                    connector.deserialize_database_migration(migration_to_rollback.database_migration.clone());
                 connector
                     .migration_applier()
                     .unapply(&migration_to_rollback, &database_migration);

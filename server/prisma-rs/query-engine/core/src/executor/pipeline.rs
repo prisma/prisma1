@@ -146,23 +146,27 @@ impl QueryPipeline {
 
     /// Store relevant WriteQuery return values and generate ReadQueries
     pub fn process_writes(&mut self, writes: Vec<(Option<usize>, WriteQueryResult)>) -> Vec<(usize, ReadQuery)> {
-        writes.into_iter().filter_map(|(idx, result)| {
-            let read_result = result.generate_result();
-            let origin = result.origin;
-            let inner = result.inner;
+        writes
+            .into_iter()
+            .filter_map(|(idx, result)| {
+                let read_result = result.generate_result();
+                let origin = result.origin;
+                let inner = result.inner;
 
-            match (idx, origin.generate_read(inner)) {
-                (Some(idx), Some(read)) => Some((idx, read)),
-                (Some(idx), None) => {
-                    self.0.remove(idx);
-                    self.0.insert(idx, Stage::Done(read_result.unwrap()));
+                match (idx, origin.generate_read(inner)) {
+                    (Some(idx), Some(read)) => Some((idx, read)),
+                    (Some(idx), None) => {
+                        self.0.remove(idx);
+                        self.0.insert(idx, Stage::Done(read_result.unwrap()));
 
-                    // Return None to exclude from the list
-                    None
-                },
-                (_, _) => unreachable!()
-            }
-        }).collect()
+                        // Return None to exclude from the list
+                        None
+                    }
+                    (None, None) => None, // We just filter out everything else
+                    (_, _) => unreachable!(),
+                }
+            })
+            .collect()
     }
 
     /// Store read results at placeholder locations in the pipeline

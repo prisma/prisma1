@@ -44,10 +44,6 @@ impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
             .collect();
         serde_json::Value::Array(jsons)
     }
-
-    fn render_steps_internal(&self, database_migration: &SqlMigration) -> serde_json::Value {
-        serde_json::to_value(&database_migration).unwrap()
-    }
 }
 
 impl SqlDatabaseStepApplier {

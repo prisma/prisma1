@@ -35,14 +35,12 @@ impl MigrationCommand for ApplyMigrationCommand {
             .database_migration_step_applier()
             .render_steps_pretty(&database_migration);
 
-        let database_steps_json_internal = connector
-            .database_migration_step_applier()
-            .render_steps_internal(&database_migration);
+        let database_migration_json = database_migration.serialize();
 
         if !is_dry_run {
             let mut migration = Migration::new(self.input.migration_id.clone());
             migration.datamodel_steps = self.input.steps.clone();
-            migration.database_steps = database_steps_json_internal.to_string();
+            migration.database_migration = database_migration_json;
             migration.datamodel = next_data_model;
             let saved_migration = connector.migration_persistence().create(migration);
 
