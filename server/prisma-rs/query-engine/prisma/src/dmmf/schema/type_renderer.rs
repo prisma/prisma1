@@ -22,6 +22,7 @@ impl<'a> DMMFTypeRenderer<'a> {
         let (_, subctx) = obj.into_renderer().render(ctx);
         let type_info = DMMFTypeInfo {
           typ: obj.into_arc().name.clone(),
+          kind: TypeKind::Object,
           is_required: true,
           is_list: false,
         };
@@ -32,6 +33,7 @@ impl<'a> DMMFTypeRenderer<'a> {
         let (_, subctx) = et.into_renderer().render(ctx);
         let type_info = DMMFTypeInfo {
           typ: et.name.clone(),
+          kind: TypeKind::Enum,
           is_required: true,
           is_list: false,
         };
@@ -54,6 +56,7 @@ impl<'a> DMMFTypeRenderer<'a> {
         let (_, subctx) = et.into_renderer().render(ctx);
         let type_info = DMMFTypeInfo {
           typ: et.name.clone(),
+          kind: TypeKind::Scalar,
           is_required: true,
           is_list: false,
         };
@@ -75,6 +78,7 @@ impl<'a> DMMFTypeRenderer<'a> {
 
         let type_info = DMMFTypeInfo {
           typ: stringified.into(),
+          kind: TypeKind::Scalar,
           is_required: true,
           is_list: false,
         };
@@ -91,6 +95,7 @@ impl<'a> DMMFTypeRenderer<'a> {
         let (_, subctx) = obj.into_renderer().render(ctx);
         let type_info = DMMFTypeInfo {
           typ: obj.into_arc().name.clone(),
+          kind: TypeKind::Object,
           is_required: true,
           is_list: false,
         };
@@ -101,6 +106,7 @@ impl<'a> DMMFTypeRenderer<'a> {
         let (_, subctx) = et.into_renderer().render(ctx);
         let type_info = DMMFTypeInfo {
           typ: et.name.clone(),
+          kind: TypeKind::Enum,
           is_required: true,
           is_list: false,
         };
@@ -123,6 +129,7 @@ impl<'a> DMMFTypeRenderer<'a> {
         let (_, subctx) = et.into_renderer().render(ctx);
         let type_info = DMMFTypeInfo {
           typ: et.name.clone(),
+          kind: TypeKind::Scalar,
           is_required: true,
           is_list: false,
         };
@@ -144,6 +151,7 @@ impl<'a> DMMFTypeRenderer<'a> {
 
         let type_info = DMMFTypeInfo {
           typ: stringified.into(),
+          kind: TypeKind::Scalar,
           is_required: true,
           is_list: false,
         };

@@ -63,8 +63,17 @@ pub enum DMMFFieldWrapper {
 pub struct DMMFTypeInfo {
   #[serde(rename = "type")]
   pub typ: String,
+  pub kind: TypeKind,
   pub is_required: bool,
   pub is_list: bool,
+}
+
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum TypeKind {
+  Scalar,
+  Object,
+  Enum,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

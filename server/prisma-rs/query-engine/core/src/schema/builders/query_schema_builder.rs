@@ -56,7 +56,7 @@ impl<'a> QuerySchemaBuilder<'a> {
   /// Consumes the builders and collects all types from all builder caches to merge
   /// them into the vectors required to finalize the query schema building.
   /// Unwraps are safe because only the query schema builder holds the strong ref,
-  /// all other refs are weak refs.
+  /// which makes the Arc counter 1, all other refs are weak refs.
   fn collect_types(self) -> (Vec<InputObjectTypeStrongRef>, Vec<ObjectTypeStrongRef>) {
     let output_objects = self.object_type_builder.into_strong_refs();
     let mut input_objects = Arc::try_unwrap(self.input_type_builder).unwrap().into_strong_refs();
