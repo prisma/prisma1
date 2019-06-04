@@ -18,7 +18,15 @@ fn should_add_back_relations() {
     post_model
         .assert_has_field("user")
         .assert_relation_to("User")
-        .assert_relation_to_fields(&["id"]);
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::Optional);
+
+    let user_model = schema.assert_has_model("User");
+    user_model
+        .assert_has_field("posts")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&[])
+        .assert_arity(&datamodel::dml::FieldArity::List);
 }
 
 #[test]
@@ -162,13 +170,13 @@ fn should_add_to_fields_on_the_correct_side_tie_breaker() {
     user_model
         .assert_has_field("post")
         .assert_relation_to("Post")
-        .assert_relation_to_fields(&[]);
+        .assert_relation_to_fields(&["post_id"]);
 
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("user")
         .assert_relation_to("User")
-        .assert_relation_to_fields(&["id"]);
+        .assert_relation_to_fields(&[]);
 }
 
 #[test]
@@ -176,12 +184,12 @@ fn should_add_to_fields_on_the_correct_side_list() {
     let dml = r#"
     model User {
         id: ID @id
-        post: Post
+        post: Post[]
     }
 
     model Post {
         post_id: ID @id
-        user: User[]
+        user: User
     }
     "#;
 
@@ -190,13 +198,13 @@ fn should_add_to_fields_on_the_correct_side_list() {
     user_model
         .assert_has_field("post")
         .assert_relation_to("Post")
-        .assert_relation_to_fields(&["post_id"]);
+        .assert_relation_to_fields(&[]);
 
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("user")
         .assert_relation_to("User")
-        .assert_relation_to_fields(&[]);
+        .assert_relation_to_fields(&["id"]);
 }
 
 #[test]
@@ -217,4 +225,102 @@ fn should_camel_case_back_relation_field_name() {
     post_model
         .assert_has_field("ohWhatAUser")
         .assert_relation_to("OhWhatAUser");
+}
+
+#[test]
+fn should_add_self_back_relation_fields_on_defined_site() {
+    let dml = r#"
+    model Human {
+        id: ID @id
+        son: Human?
+    }
+    "#;
+
+    let schema = parse(dml);
+    let model = schema.assert_has_model("Human");
+    model
+        .assert_has_field("son")
+        .assert_relation_to("Human")
+        .assert_relation_to_fields(&["id"]);
+
+    model
+        .assert_has_field("human")
+        .assert_relation_to("Human")
+        .assert_relation_to_fields(&[]);
+}
+
+#[test]
+fn should_add_embed_ids_on_self_relations() {
+    let dml = r#"
+    model Human {
+        id: ID @id
+        father: Human?
+        son: Human?
+    }
+    "#;
+
+    let schema = parse(dml);
+    let model = schema.assert_has_model("Human");
+    model
+        .assert_has_field("son")
+        .assert_relation_to("Human")
+        .assert_relation_to_fields(&[]);
+
+    model
+        .assert_has_field("father")
+        .assert_relation_to("Human")
+        // Fieldname tie breaker.
+        .assert_relation_to_fields(&["id"]);
+}
+
+#[test]
+fn should_not_get_confused_with_complicated_self_relations() {
+    let dml = r#"
+    model Human {
+        id: ID @id
+        wife: Human? @relation("Marrige")
+        husband: Human? @relation("Marrige")
+        father: Human?
+        son: Human?
+        children: Human[] @relation("Offspring")
+        parent: Human? @relation("Offspring")
+    }
+    "#;
+
+    let schema = parse(dml);
+    let model = schema.assert_has_model("Human");
+    model
+        .assert_has_field("son")
+        .assert_relation_to("Human")
+        .assert_relation_to_fields(&[]);
+
+    model
+        .assert_has_field("father")
+        .assert_relation_to("Human")
+        // Fieldname tie breaker.
+        .assert_relation_to_fields(&["id"]);
+
+    model
+        .assert_has_field("wife")
+        .assert_relation_to("Human")
+        .assert_relation_name("Marrige")
+        .assert_relation_to_fields(&[]);
+
+    model
+        .assert_has_field("husband")
+        .assert_relation_to("Human")
+        .assert_relation_name("Marrige")
+        .assert_relation_to_fields(&["id"]);
+
+    model
+        .assert_has_field("children")
+        .assert_relation_to("Human")
+        .assert_relation_name("Offspring")
+        .assert_relation_to_fields(&[]);
+
+    model
+        .assert_has_field("parent")
+        .assert_relation_to("Human")
+        .assert_relation_name("Offspring")
+        .assert_relation_to_fields(&["id"]);
 }

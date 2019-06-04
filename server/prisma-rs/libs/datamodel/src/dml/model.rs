@@ -66,10 +66,11 @@ impl Model {
     }
 
     /// Finds a field with a certain relation guarantee.
-    pub fn related_field(&self, to: &str, name: &Option<String>) -> Option<&Field> {
+    /// exclude_name is necessary to avoid corner cases with self-relations (e.g. we must not recognize a field as its own related field).
+    pub fn related_field(&self, to: &str, name: &Option<String>, exclude_name: &str) -> Option<&Field> {
         self.fields().find(|f| {
             if let FieldType::Relation(rel_info) = &f.field_type {
-                if rel_info.to == to && &rel_info.name == name {
+                if rel_info.to == to && &rel_info.name == name && &f.name != exclude_name {
                     return true;
                 }
             }
