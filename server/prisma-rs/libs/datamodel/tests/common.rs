@@ -5,12 +5,14 @@ use datamodel::{dml, errors::*, source::SourceDefinition};
 pub trait FieldAsserts {
     fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
     fn assert_enum_type(&self, en: &str) -> &Self;
+    fn assert_relation_name(&self, t: &str) -> &Self;
     fn assert_relation_to(&self, t: &str) -> &Self;
     fn assert_relation_delete_strategy(&self, t: dml::OnDeleteStrategy) -> &Self;
     fn assert_relation_to_fields(&self, t: &[&str]) -> &Self;
     fn assert_arity(&self, arity: &dml::FieldArity) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
     fn assert_default_value(&self, t: dml::Value) -> &Self;
+    fn assert_is_generated(&self, b: bool) -> &Self;
     fn assert_is_id(&self, b: bool) -> &Self;
     fn assert_is_unique(&self, b: bool) -> &Self;
     fn assert_id_strategy(&self, strategy: dml::IdStrategy) -> &Self;
@@ -67,6 +69,16 @@ impl FieldAsserts for dml::Field {
         return self;
     }
 
+    fn assert_relation_name(&self, t: &str) -> &Self {
+        if let dml::FieldType::Relation(info) = &self.field_type {
+            assert_eq!(info.name, String::from(t));
+        } else {
+            panic!("Relation expected, but found {:?}", self.field_type);
+        }
+
+        return self;
+    }
+
     fn assert_relation_delete_strategy(&self, t: dml::OnDeleteStrategy) -> &Self {
         if let dml::FieldType::Relation(info) = &self.field_type {
             assert_eq!(info.on_delete, t);
@@ -107,6 +119,12 @@ impl FieldAsserts for dml::Field {
 
     fn assert_is_id(&self, b: bool) -> &Self {
         assert_eq!(self.id_info.is_some(), b);
+
+        return self;
+    }
+
+    fn assert_is_generated(&self, b: bool) -> &Self {
+        assert_eq!(self.is_generated, b);
 
         return self;
     }

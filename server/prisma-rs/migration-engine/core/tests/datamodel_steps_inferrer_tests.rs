@@ -160,7 +160,7 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
             tpe: FieldType::Relation(RelationInfo {
                 to: "Post".to_string(),
                 to_fields: vec![],
-                name: None,
+                name: String::from("BlogToPost"),
                 on_delete: OnDeleteStrategy::None,
             }),
             arity: FieldArity::List,
@@ -177,8 +177,8 @@ fn infer_CreateField_if_relation_field_does_not_exist_yet() {
             name: "blog".to_string(),
             tpe: FieldType::Relation(RelationInfo {
                 to: "Blog".to_string(),
-                to_fields: vec![],
-                name: None,
+                to_fields: vec![String::from("id")],
+                name: String::from("BlogToPost"),
                 on_delete: OnDeleteStrategy::None,
             }),
             arity: FieldArity::Optional,

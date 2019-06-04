@@ -5,7 +5,7 @@ use serde_json;
 
 fn get_field_kind(field: &dml::Field) -> String {
     match field.field_type {
-        dml::FieldType::Relation(_) => String::from("relation"),
+        dml::FieldType::Relation(_) => String::from("object"),
         dml::FieldType::Enum(_) => String::from("enum"),
         dml::FieldType::Base(_) => String::from("scalar"),
         _ => unimplemented!("DMMF does not support field type {:?}", field.field_type),
@@ -60,7 +60,7 @@ pub fn default_value_to_serde(container: &Option<dml::Value>) -> Option<serde_js
 
 pub fn get_relation_name(field: &dml::Field) -> Option<String> {
     match &field.field_type {
-        dml::FieldType::Relation(relation_info) => relation_info.name.clone(),
+        dml::FieldType::Relation(relation_info) => Some(relation_info.name.clone()),
         _ => None,
     }
 }

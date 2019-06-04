@@ -95,7 +95,7 @@ impl<'a> DatamodelConverter<'a> {
                     manifestation: field.manifestation(),
                     behaviour: field.behaviour(),
                     default_value: None, // TODO: Handle default values.
-                    internal_enum: None, // TODO: Handle enums.
+                    internal_enum: field.internal_enum(self.datamodel),
                 }),
             })
             .collect()
@@ -223,7 +223,7 @@ impl<'a> DatamodelConverter<'a> {
 
 #[derive(Debug, Clone)]
 pub struct TempRelationHolder {
-    pub name: Option<String>,
+    pub name: String,
     pub model_a: dml::Model,
     pub model_b: dml::Model,
     pub field_a: dml::Field,
@@ -241,9 +241,9 @@ pub enum TempManifestationHolder {
 impl TempRelationHolder {
     fn name(&self) -> String {
         // TODO: must replicate behaviour of `generateRelationName` from `SchemaInferrer`
-        match &self.name {
-            Some(name) => name.clone(),
-            None => format!("{}To{}", &self.model_a.name, &self.model_b.name),
+        match &self.name as &str {
+            "" => format!("{}To{}", &self.model_a.name, &self.model_b.name),
+            _ => self.name.clone(),
         }
     }
 
@@ -313,6 +313,7 @@ trait DatamodelFieldExtensions {
     fn manifestation(&self) -> Option<FieldManifestation>;
     fn behaviour(&self) -> Option<FieldBehaviour>;
     fn final_db_name(&self) -> String;
+    fn internal_enum(&self, datamodel: &dml::Datamodel) -> Option<InternalEnum>;
 }
 
 impl DatamodelFieldExtensions for dml::Field {
@@ -363,5 +364,20 @@ impl DatamodelFieldExtensions for dml::Field {
 
     fn final_db_name(&self) -> String {
         self.database_name.clone().unwrap_or_else(|| self.name.clone())
+    }
+
+    fn internal_enum(&self, datamodel: &dml::Datamodel) -> Option<InternalEnum> {
+        match self.field_type {
+            dml::FieldType::Enum(ref name) => {
+                datamodel
+                    .enums()
+                    .find(|e| e.name == name.clone())
+                    .map(|e| InternalEnum {
+                        name: e.name.clone(),
+                        values: e.values.clone(),
+                    })
+            }
+            _ => None,
+        }
     }
 }
