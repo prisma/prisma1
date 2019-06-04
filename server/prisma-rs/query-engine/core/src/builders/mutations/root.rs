@@ -3,7 +3,7 @@
 
 use crate::{
     builders::{convert_tree, utils, DataSet, NestedValue, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit},
-    CoreError, CoreResult, ManyNestedBuilder, WriteQuery,
+    CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, WriteQuery,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
@@ -213,59 +213,18 @@ pub(crate) fn build_nested_root<'f>(
     for value in eval.into_iter() {
         match value {
             NestedValue::Simple { name, kind, map } => {
-                let ValueSplit { values, lists, nested } = map.split();
-
-                let field = model.fields().find_from_all(&name);
-                let relation_field = match &field {
-                    Ok(ModelField::Relation(f)) => {
-                        let model = f.related_model();
-                        Arc::clone(&f)
-                    }
-                    _ => unimplemented!(),
-                };
-
-                let model = Arc::clone(&relation_field.related_model());
-                let non_list_args = values.to_prisma_values().into();
-                let list_args = lists.into_iter().map(|la| la.convert()).collect();
-                let nested_mutactions = build_nested_root(&name, &nested, model, top_level)?;
-
-                match kind.as_str() {
-                    "create" => {
-                        collection.creates.push(NestedCreateNode {
-                            non_list_args,
-                            list_args,
-                            top_is_create: match top_level {
-                                Operation::Create => true,
-                                _ => false,
-                            },
-                            relation_field,
-                            nested_mutactions,
-                        });
-                    }
-                    _ => unimplemented!(),
-                }
+                SimpleNestedBuilder::build(name, kind, map, &mut collection, Arc::clone(&model), top_level)?
             }
-            NestedValue::Many { name, kind, list } => {
-                let field = model.fields().find_from_all(&name).unwrap();
-                let (relation_field, relation_model) = match &field {
-                    ModelField::Relation(f) => (Arc::clone(&f), f.related_model()),
-                    _ => unimplemented!(),
-                };
-
-                // Build and attach all nested "many" type mutations
-                ManyNestedBuilder::build(
-                    name.as_str(),
-                    kind.as_str(),
-                    list.into_iter(),
-                    &mut collection,
-                    Arc::clone(&model),
-                    relation_field,
-                    relation_model,
-                    top_level,
-                )?;
-            }
+            NestedValue::Many { name, kind, list } => ManyNestedBuilder::build(
+                name,
+                kind,
+                list.into_iter(),
+                &mut collection,
+                Arc::clone(&model),
+                top_level,
+            )?,
             NestedValue::Upsert { name, create, update } => unimplemented!(),
-        }
+        };
     }
 
     Ok(collection)

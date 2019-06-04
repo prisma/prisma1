@@ -5,7 +5,7 @@ use crate::{
     CoreError, CoreResult,
 };
 use connector::mutaction::*;
-use prisma_models::{ModelRef, RelationFieldRef};
+use prisma_models::{Field, ModelRef, RelationFieldRef};
 
 use std::sync::Arc;
 
@@ -14,15 +14,22 @@ pub struct ManyNestedBuilder;
 impl ManyNestedBuilder {
     /// Build a set of nested value map mutations and attach them to an existing mutation level
     pub fn build(
-        name: &str,
-        kind: &str,
+        name: String,
+        kind: String,
         many: impl Iterator<Item = ValueMap>,
         mutations: &mut NestedMutactions,
         model: ModelRef,
-        rel_field: RelationFieldRef,
-        rel_model: ModelRef,
         top_level: &Operation,
     ) -> CoreResult<()> {
+        let name = name.as_str();
+        let kind = kind.as_str();
+
+        let field = model.fields().find_from_all(&name).unwrap();
+        let (rel_field, rel_model) = match &field {
+            Field::Relation(f) => (Arc::clone(&f), f.related_model()),
+            _ => unimplemented!(),
+        };
+
         for map in many.into_iter() {
             match kind {
                 "create" => attach_create(name, map, mutations, &model, &rel_field, top_level)?,
