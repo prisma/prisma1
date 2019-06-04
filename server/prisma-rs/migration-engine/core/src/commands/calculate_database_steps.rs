@@ -29,14 +29,15 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
             .datamodel_calculator()
             .infer(&assumed_datamodel, &self.input.steps_to_apply);
 
-        let database_migration_steps =
-            connector
-                .database_steps_inferrer()
-                .infer(&assumed_datamodel, &next_datamodel, &self.input.steps_to_apply);
+        let database_migration = connector.database_migration_inferrer().infer(
+            &assumed_datamodel,
+            &next_datamodel,
+            &self.input.steps_to_apply,
+        );
 
         let database_steps_json = connector
-            .database_step_applier()
-            .render_steps_pretty(&database_migration_steps);
+            .database_migration_step_applier()
+            .render_steps_pretty(&database_migration);
 
         MigrationStepsResultOutput {
             datamodel_steps: self.input.steps_to_apply.clone(),

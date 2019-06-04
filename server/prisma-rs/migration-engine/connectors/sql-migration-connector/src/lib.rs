@@ -1,6 +1,6 @@
 mod database_schema_calculator;
 mod database_schema_differ;
-mod sql_database_migration_steps_inferrer;
+mod sql_database_migration_inferrer;
 mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration_persistence;
@@ -14,7 +14,7 @@ use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
 use rusqlite::{Connection, NO_PARAMS};
 use serde_json;
-use sql_database_migration_steps_inferrer::*;
+use sql_database_migration_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
 use sql_migration_persistence::*;
@@ -25,8 +25,8 @@ use std::sync::Arc;
 pub struct SqlMigrationConnector {
     schema_name: String,
     migration_persistence: Arc<MigrationPersistence>,
-    sql_database_migration_steps_inferrer: Arc<DatabaseMigrationStepsInferrer<SqlMigration>>,
-    database_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
+    database_migration_inferrer: Arc<DatabaseMigrationInferrer<SqlMigration>>,
+    database_migration_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
     destructive_changes_checker: Arc<DestructiveChangesChecker<SqlMigration>>,
 }
 
@@ -34,11 +34,11 @@ impl SqlMigrationConnector {
     // FIXME: this must take the config as a param at some point
     pub fn new(schema_name: String) -> SqlMigrationConnector {
         let migration_persistence = Arc::new(SqlMigrationPersistence::new(Self::new_conn(&schema_name)));
-        let sql_database_migration_steps_inferrer = Arc::new(SqlDatabaseMigrationStepsInferrer {
+        let database_migration_inferrer = Arc::new(SqlDatabaseMigrationInferrer {
             inspector: Box::new(DatabaseInspectorImpl::new(Self::new_conn(&schema_name))),
             schema_name: schema_name.to_string(),
         });
-        let database_step_applier = Arc::new(SqlDatabaseStepApplier::new(
+        let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier::new(
             Self::new_conn(&schema_name),
             schema_name.clone(),
         ));
@@ -46,8 +46,8 @@ impl SqlMigrationConnector {
         SqlMigrationConnector {
             schema_name,
             migration_persistence,
-            sql_database_migration_steps_inferrer,
-            database_step_applier,
+            database_migration_inferrer,
+            database_migration_step_applier,
             destructive_changes_checker,
         }
     }
@@ -105,12 +105,12 @@ impl MigrationConnector for SqlMigrationConnector {
         Arc::clone(&self.migration_persistence)
     }
 
-    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<SqlMigration>> {
-        Arc::clone(&self.sql_database_migration_steps_inferrer)
+    fn database_migration_inferrer(&self) -> Arc<DatabaseMigrationInferrer<SqlMigration>> {
+        Arc::clone(&self.database_migration_inferrer)
     }
 
-    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigration>> {
-        Arc::clone(&self.database_step_applier)
+    fn database_migration_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigration>> {
+        Arc::clone(&self.database_migration_step_applier)
     }
 
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigration>> {

@@ -33,11 +33,11 @@ impl MigrationCommand for UnapplyMigrationCommand {
                 errors: vec!["There is no last migration that can be rolled back.".to_string()],
             },
             Some(migration_to_rollback) => {
-                let database_migration_steps =
+                let database_migration =
                     connector.deserialize_database_steps(migration_to_rollback.database_steps.clone());
                 connector
                     .migration_applier()
-                    .unapply_steps(&migration_to_rollback, &database_migration_steps);
+                    .unapply(&migration_to_rollback, &database_migration);
 
                 let new_active_migration = match connector.migration_persistence().last() {
                     Some(m) => m,

@@ -26,18 +26,18 @@ impl MigrationCommand for ApplyMigrationCommand {
             .datamodel_calculator()
             .infer(&current_data_model, &self.input.steps);
 
-        let database_migration_steps =
+        let database_migration =
             connector
-                .database_steps_inferrer()
+                .database_migration_inferrer()
                 .infer(&current_data_model, &next_data_model, &self.input.steps);
 
         let database_steps_json_pretty = connector
-            .database_step_applier()
-            .render_steps_pretty(&database_migration_steps);
+            .database_migration_step_applier()
+            .render_steps_pretty(&database_migration);
 
         let database_steps_json_internal = connector
-            .database_step_applier()
-            .render_steps_internal(&database_migration_steps);
+            .database_migration_step_applier()
+            .render_steps_internal(&database_migration);
 
         if !is_dry_run {
             let mut migration = Migration::new(self.input.migration_id.clone());
@@ -48,7 +48,7 @@ impl MigrationCommand for ApplyMigrationCommand {
 
             connector
                 .migration_applier()
-                .apply_steps(&saved_migration, &database_migration_steps);
+                .apply(&saved_migration, &database_migration);
         }
 
         MigrationStepsResultOutput {

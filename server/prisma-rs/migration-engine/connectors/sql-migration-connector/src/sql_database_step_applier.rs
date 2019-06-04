@@ -19,11 +19,11 @@ impl SqlDatabaseStepApplier {
 
 #[allow(unused, dead_code)]
 impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
-    fn apply(&self, database_migration: &SqlMigration, index: usize) -> bool {
+    fn apply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
         self.apply_next_step(&database_migration.steps, index)
     }
 
-    fn unapply(&self, database_migration: &SqlMigration, index: usize) -> bool {
+    fn unapply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
         self.apply_next_step(&database_migration.rollback, index)
     }
 

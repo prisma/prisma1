@@ -1,4 +1,4 @@
-use crate::sql_database_migration_steps_inferrer::wrap_as_step;
+use crate::sql_database_migration_inferrer::wrap_as_step;
 use crate::sql_migration_step::*;
 use database_inspector::{Column, DatabaseSchema, Table};
 

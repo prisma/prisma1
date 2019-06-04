@@ -22,8 +22,8 @@ pub trait MigrationConnector {
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence>;
 
-    fn database_steps_inferrer(&self) -> Arc<DatabaseMigrationStepsInferrer<Self::DatabaseMigration>>;
-    fn database_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigration>>;
+    fn database_migration_inferrer(&self) -> Arc<DatabaseMigrationInferrer<Self::DatabaseMigration>>;
+    fn database_migration_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<Self::DatabaseMigration>>;
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigration>>;
 
     // TODO: figure out if this is the best way to do this or move to a better place/interface
@@ -32,7 +32,7 @@ pub trait MigrationConnector {
     fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigration>> {
         let applier = MigrationApplierImpl {
             migration_persistence: self.migration_persistence(),
-            step_applier: self.database_step_applier(),
+            step_applier: self.database_migration_step_applier(),
         };
         Box::new(applier)
     }
@@ -44,14 +44,18 @@ pub trait MigrationConnector {
 
 pub trait DatabaseMigrationMarker: Debug {}
 
-pub trait DatabaseMigrationStepsInferrer<T> {
+pub trait DatabaseMigrationInferrer<T> {
     fn infer(&self, previous: &Datamodel, next: &Datamodel, steps: &Vec<MigrationStep>) -> T;
 }
 
 pub trait DatabaseMigrationStepApplier<T> {
-    fn apply(&self, database_migration: &T, index: usize) -> bool;
+    // applies the step to the database
+    // returns true to signal to the caller that there are more steps to apply
+    fn apply_step(&self, database_migration: &T, step: usize) -> bool;
 
-    fn unapply(&self, database_migration: &T, index: usize) -> bool;
+    // applies the step to the database
+    // returns true to signal to the caller that there are more steps to unapply
+    fn unapply_step(&self, database_migration: &T, step: usize) -> bool;
 
     fn render_steps_pretty(&self, database_migration: &T) -> serde_json::Value;
 

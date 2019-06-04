@@ -6,12 +6,12 @@ use datamodel::*;
 use migration_connector::steps::*;
 use migration_connector::*;
 
-pub struct SqlDatabaseMigrationStepsInferrer {
+pub struct SqlDatabaseMigrationInferrer {
     pub inspector: Box<DatabaseInspector>,
     pub schema_name: String,
 }
 
-impl DatabaseMigrationStepsInferrer<SqlMigration> for SqlDatabaseMigrationStepsInferrer {
+impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
     fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> SqlMigration {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
@@ -24,7 +24,7 @@ impl DatabaseMigrationStepsInferrer<SqlMigration> for SqlDatabaseMigrationStepsI
     }
 }
 
-impl SqlDatabaseMigrationStepsInferrer {
+impl SqlDatabaseMigrationInferrer {
     fn infer_database_migration_steps_and_fix(
         &self,
         from: &DatabaseSchema,
