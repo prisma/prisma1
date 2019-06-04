@@ -3,8 +3,8 @@ mod database_schema_differ;
 mod sql_database_migration_inferrer;
 mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
+mod sql_migration;
 mod sql_migration_persistence;
-mod sql_migration_step;
 
 use barrel;
 use barrel::backend::Sqlite;
@@ -17,8 +17,8 @@ use serde_json;
 use sql_database_migration_inferrer::*;
 use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
+pub use sql_migration::*;
 use sql_migration_persistence::*;
-pub use sql_migration_step::*;
 use std::sync::Arc;
 
 #[allow(unused, dead_code)]
@@ -74,6 +74,7 @@ impl MigrationConnector for SqlMigrationConnector {
     fn initialize(&self) {
         let conn = Self::new_conn(&self.schema_name);
         let mut m = barrel::Migration::new().schema(self.schema_name.clone());
+        // TODO: use the constants for column names
         m.create_table_if_not_exists("_Migration", |t| {
             t.add_column("revision", types::primary());
             t.add_column("name", types::text());
@@ -82,7 +83,7 @@ impl MigrationConnector for SqlMigrationConnector {
             t.add_column("applied", types::integer());
             t.add_column("rolled_back", types::integer());
             t.add_column("datamodel_steps", types::text());
-            t.add_column("database_steps", types::text());
+            t.add_column("database_migration", types::text());
             t.add_column("errors", types::text());
             t.add_column("started_at", types::date());
             t.add_column("finished_at", types::date().nullable(true));
@@ -117,8 +118,8 @@ impl MigrationConnector for SqlMigrationConnector {
         Arc::clone(&self.destructive_changes_checker)
     }
 
-    fn deserialize_database_steps(&self, json: String) -> SqlMigration {
-        serde_json::from_str(&json).unwrap()
+    fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
+        serde_json::from_value(json).unwrap()
     }
 
     fn database_inspector(&self) -> Box<DatabaseInspector> {

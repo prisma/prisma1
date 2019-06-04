@@ -27,7 +27,8 @@ pub trait MigrationConnector {
     fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<Self::DatabaseMigration>>;
 
     // TODO: figure out if this is the best way to do this or move to a better place/interface
-    fn deserialize_database_steps(&self, json: String) -> Self::DatabaseMigration;
+    // this is placed here so i can use the associated type
+    fn deserialize_database_migration(&self, json: serde_json::Value) -> Self::DatabaseMigration;
 
     fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigration>> {
         let applier = MigrationApplierImpl {
@@ -42,7 +43,9 @@ pub trait MigrationConnector {
     }
 }
 
-pub trait DatabaseMigrationMarker: Debug {}
+pub trait DatabaseMigrationMarker: Debug {
+    fn serialize(&self) -> serde_json::Value;
+}
 
 pub trait DatabaseMigrationInferrer<T> {
     fn infer(&self, previous: &Datamodel, next: &Datamodel, steps: &Vec<MigrationStep>) -> T;
@@ -57,9 +60,8 @@ pub trait DatabaseMigrationStepApplier<T> {
     // returns true to signal to the caller that there are more steps to unapply
     fn unapply_step(&self, database_migration: &T, step: usize) -> bool;
 
+    // render steps for the CLI. It will contain the raw field
     fn render_steps_pretty(&self, database_migration: &T) -> serde_json::Value;
-
-    fn render_steps_internal(&self, database_migration: &T) -> serde_json::Value;
 }
 
 pub trait DestructiveChangesChecker<T> {
@@ -115,7 +117,7 @@ pub struct Migration {
     pub rolled_back: usize,
     pub datamodel: Datamodel,
     pub datamodel_steps: Vec<MigrationStep>,
-    pub database_steps: String,
+    pub database_migration: serde_json::Value,
     pub errors: Vec<String>,
     pub started_at: DateTime<Utc>,
     pub finished_at: Option<DateTime<Utc>>,
@@ -142,7 +144,7 @@ impl Migration {
             rolled_back: 0,
             datamodel: Datamodel::empty(),
             datamodel_steps: Vec::new(),
-            database_steps: "[]".to_string(),
+            database_migration: serde_json::to_value("{}").unwrap(),
             errors: Vec::new(),
             started_at: Self::timestamp_without_nanos(),
             finished_at: None,

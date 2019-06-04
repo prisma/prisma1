@@ -63,7 +63,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
         };
         let mut cloned = migration.clone();
         let model_steps_json = serde_json::to_string(&migration.datamodel_steps).unwrap();
-        let database_steps_json = migration.database_steps;
+        let database_migration_json = migration.database_migration;
         let errors_json = serde_json::to_string(&migration.errors).unwrap();
         let serialized_datamodel = datamodel::render(&migration.datamodel).unwrap();
 
@@ -74,7 +74,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .value(APPLIED_COLUMN, migration.applied)
             .value(ROLLED_BACK_COLUMN, migration.rolled_back)
             .value(DATAMODEL_STEPS_COLUMN, model_steps_json)
-            .value(DATABASE_STEPS_COLUMN, database_steps_json)
+            .value(DATABASE_MIGRATION_COLUMN, database_migration_json)
             .value(ERRORS_COLUMN, errors_json)
             .value(
                 STARTED_AT_COLUMN,
@@ -130,7 +130,8 @@ fn parse_row(row: &Row) -> Migration {
     let errors_json: String = row.get(ERRORS_COLUMN).unwrap();
     let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
     let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN).unwrap();
-    let database_steps_json: String = row.get(DATABASE_STEPS_COLUMN).unwrap();
+    let database_migration_string: String = row.get(DATABASE_MIGRATION_COLUMN).unwrap();
+    let database_migration_json = serde_json::from_str(&database_migration_string).unwrap();
     let datamodel_steps_json: String = row.get(DATAMODEL_STEPS_COLUMN).unwrap();
     let datamodel_string: String = row.get(DATAMODEL_COLUMN).unwrap();
 
@@ -144,7 +145,7 @@ fn parse_row(row: &Row) -> Migration {
         applied: applied as usize,
         rolled_back: rolled_back as usize,
         datamodel_steps: datamodel_steps,
-        database_steps: database_steps_json,
+        database_migration: database_migration_json,
         errors: errors,
         started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN).unwrap()),
         finished_at: finished_at.map(timestamp_to_datetime),
@@ -159,7 +160,7 @@ static STATUS_COLUMN: &str = "status";
 static APPLIED_COLUMN: &str = "applied";
 static ROLLED_BACK_COLUMN: &str = "rolled_back";
 static DATAMODEL_STEPS_COLUMN: &str = "datamodel_steps";
-static DATABASE_STEPS_COLUMN: &str = "database_steps";
+static DATABASE_MIGRATION_COLUMN: &str = "database_migration";
 static ERRORS_COLUMN: &str = "errors";
 static STARTED_AT_COLUMN: &str = "started_at";
 static FINISHED_AT_COLUMN: &str = "finished_at";
