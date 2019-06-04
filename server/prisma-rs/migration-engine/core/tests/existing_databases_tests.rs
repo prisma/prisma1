@@ -298,7 +298,7 @@ fn setup<F>(migrationFn: F) -> DatabaseSchema
 where
     F: FnMut(&mut Migration) -> (),
 {
-    execute_internal(migrationFn, true)
+    execute_internal(migrationFn, false)
 }
 
 fn execute<F>(migrationFn: F) -> DatabaseSchema

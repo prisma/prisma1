@@ -32,7 +32,7 @@ pub struct SqlMigrationConnector {
 impl SqlMigrationConnector {
     // FIXME: this must take the config as a param at some point
     pub fn new(schema_name: String) -> SqlMigrationConnector {
-        let test_mode = true;
+        let test_mode = false;
         let conn =
             std::sync::Arc::new(SqliteDatabaseClient::new(Self::databases_folder_path(), 32, test_mode).unwrap());
 
