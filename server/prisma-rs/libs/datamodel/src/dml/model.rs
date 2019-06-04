@@ -66,11 +66,11 @@ impl Model {
     }
 
     /// Finds a field with a certain relation guarantee.
-    /// exclude_name is necessary to avoid corner cases with self-relations (e.g. we must not recognize a field as its own related field).
-    pub fn related_field(&self, to: &str, name: &String, exclude_name: &str) -> Option<&Field> {
+    /// exclude_field are necessary to avoid corner cases with self-relations (e.g. we must not recognize a field as its own related field).
+    pub fn related_field(&self, to: &str, name: &str, exclude_field: &str) -> Option<&Field> {
         self.fields().find(|f| {
             if let FieldType::Relation(rel_info) = &f.field_type {
-                if rel_info.to == to && &rel_info.name == name && &f.name != exclude_name {
+                if rel_info.to == to && &rel_info.name == name && (self.name != to || &f.name != exclude_field) {
                     return true;
                 }
             }
@@ -79,10 +79,11 @@ impl Model {
     }
 
     /// Finds a mutable field with a certain relation guarantee.
-    pub fn related_field_mut(&mut self, to: &str, name: &String) -> Option<&mut Field> {
+    pub fn related_field_mut(&mut self, to: &str, name: &str, exclude_field: &str) -> Option<&mut Field> {
+        let self_name = self.name.clone();
         self.fields_mut().find(|f| {
             if let FieldType::Relation(rel_info) = &f.field_type {
-                if rel_info.to == to && &rel_info.name == name {
+                if rel_info.to == to && &rel_info.name == name && (self_name != to || &f.name != exclude_field) {
                     return true;
                 }
             }

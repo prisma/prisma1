@@ -31,40 +31,42 @@ fn should_add_back_relations() {
 
 #[test]
 fn should_not_add_back_relations_for_many_to_many() {
+    // Equal name for both fields was a bug triggerer.
     let dml = r#"
-    model User {
-        id: ID @id
-        posts: Post[]
-    }
+model Blog {
+  id: ID @id
+  authors: Author[]
+}
 
-    model Post {
-        id: ID @id
-        users: User[]
-    }
+model Author {
+  id: ID @id
+  authors: Blog[]
+}
     "#;
 
     let schema = parse(dml);
-    let post_model = schema.assert_has_model("Post");
-    post_model
-        .assert_has_field("users")
-        .assert_relation_to("User")
+
+    let author_model = schema.assert_has_model("Author");
+    author_model
+        .assert_has_field("authors")
+        .assert_relation_to("Blog")
         .assert_relation_to_fields(&[])
         .assert_arity(&datamodel::dml::FieldArity::List);
 
-    post_model.assert_has_field("id");
+    author_model.assert_has_field("id");
 
-    let user_model = schema.assert_has_model("User");
-    user_model
-        .assert_has_field("posts")
-        .assert_relation_to("Post")
+    let blog_model = schema.assert_has_model("Blog");
+    blog_model
+        .assert_has_field("authors")
+        .assert_relation_to("Author")
         .assert_relation_to_fields(&[])
         .assert_arity(&datamodel::dml::FieldArity::List);
 
-    user_model.assert_has_field("id");
+    blog_model.assert_has_field("id");
 
     // Assert nothing else was generated.
-    assert_eq!(user_model.fields().count(), 2);
-    assert_eq!(post_model.fields().count(), 2);
+    assert_eq!(author_model.fields().count(), 2);
+    assert_eq!(blog_model.fields().count(), 2);
 }
 
 #[test]

@@ -80,19 +80,21 @@ fn test_parser_renderer_via_dml() {
     assert_eq!(DATAMODEL_STRING, rendered);
 }
 
+// TODO: Test that N:M relation names are correctly handled as soon as we
+// get relation table support.
 const MANY_TO_MANY_DATAMODEL: &str = r#"
 model Blog {
     id Int @id
     name String
     viewCount Int
     posts Post[]
-    authors Author[]
+    authors Author[] @relation("AuthorToBlogs")
 }
 
 model Author {
     id Int @id
     name String?
-    authors Blog[]
+    authors Blog[] @relation("AuthorToBlogs")
 }
 
 model Post {
