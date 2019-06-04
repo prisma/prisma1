@@ -2,7 +2,7 @@
 #![allow(warnings)]
 
 use crate::{
-    builders::{convert_tree, utils, DataSet, NestedValue, ScopedArg, ScopedArgNode, ValueList, ValueMap, ValueSplit},
+    builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
     CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, WriteQuery,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
