@@ -390,7 +390,7 @@ impl Validator {
                 .expect(STATE_ERROR);
 
             if let dml::FieldType::Relation(rel) = &mut field.field_type {
-                rel.name = Some(DefaultNames::relation_name(&model_name, &rel_info.to));
+                rel.name = DefaultNames::relation_name(&model_name, &rel_info.to);
             } else {
                 panic!("Tried to name a none existing-relation.");
             }
@@ -403,7 +403,7 @@ impl Validator {
                 .expect(STATE_ERROR);
 
             if let dml::FieldType::Relation(rel) = &mut field.field_type {
-                rel.name = Some(DefaultNames::relation_name(&model_name, &rel_info.to));
+                rel.name = DefaultNames::relation_name(&model_name, &rel_info.to);
             } else {
                 panic!("Tried to name a none existing-relation.");
             }
@@ -417,7 +417,7 @@ impl Validator {
         for model in datamodel.models() {
             for field in model.fields() {
                 if let dml::FieldType::Relation(rel) = &field.field_type {
-                    if rel.name.is_none() && rel.to_fields.len() > 0 {
+                    if rel.name.len() == 0 && rel.to_fields.len() > 0 {
                         rels.push((model.name.clone(), rel.clone()))
                     }
                 }

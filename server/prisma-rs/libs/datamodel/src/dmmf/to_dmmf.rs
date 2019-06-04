@@ -60,7 +60,7 @@ pub fn default_value_to_serde(container: &Option<dml::Value>) -> Option<serde_js
 
 pub fn get_relation_name(field: &dml::Field) -> Option<String> {
     match &field.field_type {
-        dml::FieldType::Relation(relation_info) => relation_info.name.clone(),
+        dml::FieldType::Relation(relation_info) => Some(relation_info.name.clone()),
         _ => None,
     }
 }

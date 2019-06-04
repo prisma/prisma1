@@ -12,8 +12,12 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
     }
     fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Result<(), Error> {
         if let dml::FieldType::Relation(relation_info) = &mut field.field_type {
-            if let Ok(name) = args.default_arg("name") {
-                relation_info.name = Some(name.as_str()?);
+            if let Ok(name_arg) = args.default_arg("name") {
+                let name = name_arg.as_str()?;
+                if name.len() == 0 {
+                    return self.error("A relation cannot have an empty name.", &name_arg.span());
+                }
+                relation_info.name = name;
             }
 
             if let Ok(related_fields) = args.arg("references") {
@@ -38,10 +42,8 @@ impl DirectiveValidator<dml::Field> for RelationDirectiveValidator {
             let related_model = datamodel.find_model(&relation_info.to).unwrap();
             let mut all_related_ids: Vec<&String> = related_model.id_fields().collect();
 
-            if let Some(name) = &relation_info.name {
-                if name != &DefaultNames::relation_name(&relation_info.to, &parent_model.name) {
-                    args.push(ast::Argument::new_string("", &name));
-                }
+            if relation_info.name != DefaultNames::relation_name(&relation_info.to, &parent_model.name) {
+                args.push(ast::Argument::new_string("", &relation_info.name));
             }
 
             // We only add the references arg,

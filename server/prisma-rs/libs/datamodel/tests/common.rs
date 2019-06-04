@@ -71,7 +71,7 @@ impl FieldAsserts for dml::Field {
 
     fn assert_relation_name(&self, t: &str) -> &Self {
         if let dml::FieldType::Relation(info) = &self.field_type {
-            assert_eq!(info.name, Some(String::from(t)));
+            assert_eq!(info.name, String::from(t));
         } else {
             panic!("Relation expected, but found {:?}", self.field_type);
         }
