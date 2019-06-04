@@ -14,6 +14,12 @@ fn adding_a_scalar_field_must_work() {
                 boolean: Boolean
                 string: String
                 dateTime: DateTime
+                enum: MyEnum
+            }
+
+            enum MyEnum {
+                A
+                B
             }
         "#;
         let result = migrate_to(&engine, &dm2);
@@ -25,6 +31,7 @@ fn adding_a_scalar_field_must_work() {
         assert_eq!(table.column_bang("boolean").tpe, ColumnType::Boolean);
         assert_eq!(table.column_bang("string").tpe, ColumnType::String);
         assert_eq!(table.column_bang("dateTime").tpe, ColumnType::DateTime);
+        assert_eq!(table.column_bang("enum").tpe, ColumnType::String);
     });
 }
 

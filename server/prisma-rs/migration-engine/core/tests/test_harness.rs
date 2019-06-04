@@ -28,7 +28,7 @@ where
     let engine = MigrationEngine::new();
     let connector = engine.connector();
     connector.reset();
-    connector.initialize();
+    engine.init();
 
     // TEST
     let result = panic::catch_unwind(|| test(engine));

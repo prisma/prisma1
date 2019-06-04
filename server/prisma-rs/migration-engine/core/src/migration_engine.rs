@@ -21,8 +21,11 @@ impl MigrationEngine {
             datamodel_migration_steps_inferrer: Arc::new(DataModelMigrationStepsInferrerImplWrapper {}),
             datamodel_calculator: Arc::new(DataModelCalculatorImpl {}),
         };
-        engine.connector().initialize();
         Box::new(engine)
+    }
+
+    pub fn init(&self) {
+        self.connector().initialize()
     }
 
     pub fn datamodel_migration_steps_inferrer(&self) -> Arc<DataModelMigrationStepsInferrer> {

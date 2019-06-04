@@ -1,6 +1,6 @@
 use crate::database_schema_calculator::DatabaseSchemaCalculator;
 use crate::database_schema_differ::DatabaseSchemaDiffer;
-use crate::sql_migration_step::*;
+use crate::*;
 use database_inspector::{DatabaseInspector, DatabaseSchema, Table};
 use datamodel::*;
 use migration_connector::steps::*;
