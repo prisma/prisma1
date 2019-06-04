@@ -381,44 +381,44 @@ impl Validator {
     pub fn name_unnamed_relations(&self, datamodel: &mut dml::Datamodel) {
         let unnamed_relations = self.find_unnamed_relations(&datamodel);
 
-        for (model_name, rel_info) in unnamed_relations {
+        for (model_name, field_name, rel_info) in unnamed_relations {
             // Embedding side.
             let field = datamodel
                 .find_model_mut(&model_name)
                 .expect(STATE_ERROR)
-                .related_field_mut(&rel_info.to, &rel_info.name)
+                .find_field_mut(&field_name)
                 .expect(STATE_ERROR);
 
             if let dml::FieldType::Relation(rel) = &mut field.field_type {
                 rel.name = DefaultNames::relation_name(&model_name, &rel_info.to);
             } else {
-                panic!("Tried to name a none existing-relation.");
+                panic!("Tried to name a non-existing relation.");
             }
 
             // Foreign site.
             let field = datamodel
                 .find_model_mut(&rel_info.to)
                 .expect(STATE_ERROR)
-                .related_field_mut(&model_name, &rel_info.name)
+                .related_field_mut(&model_name, &rel_info.name, &field_name)
                 .expect(STATE_ERROR);
 
             if let dml::FieldType::Relation(rel) = &mut field.field_type {
                 rel.name = DefaultNames::relation_name(&model_name, &rel_info.to);
             } else {
-                panic!("Tried to name a none existing-relation.");
+                panic!("Tried to name a non-existing relation.");
             }
         }
     }
 
-    // Returns list of model name and relation info.
-    fn find_unnamed_relations(&self, datamodel: &dml::Datamodel) -> Vec<(String, dml::RelationInfo)> {
+    // Returns list of model name, field name and relation info.
+    fn find_unnamed_relations(&self, datamodel: &dml::Datamodel) -> Vec<(String, String, dml::RelationInfo)> {
         let mut rels = Vec::new();
 
         for model in datamodel.models() {
             for field in model.fields() {
                 if let dml::FieldType::Relation(rel) = &field.field_type {
                     if rel.name.len() == 0 && rel.to_fields.len() > 0 {
-                        rels.push((model.name.clone(), rel.clone()))
+                        rels.push((model.name.clone(), field.name.clone(), rel.clone()))
                     }
                 }
             }
@@ -509,7 +509,7 @@ impl Validator {
                     Err(err) => errors.push(err),
                 };
             } else {
-                errors.push(ValidationError::new_parser_error(
+                errors.push(ValidationError::new_validation_error(
                     "Found default value for a non-scalar type.",
                     validator.span(),
                 ))

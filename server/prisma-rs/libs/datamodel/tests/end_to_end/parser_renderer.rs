@@ -79,3 +79,48 @@ fn test_parser_renderer_via_dml() {
 
     assert_eq!(DATAMODEL_STRING, rendered);
 }
+
+// TODO: Test that N:M relation names are correctly handled as soon as we
+// get relation table support.
+const MANY_TO_MANY_DATAMODEL: &str = r#"
+model Blog {
+    id Int @id
+    name String
+    viewCount Int
+    posts Post[]
+    authors Author[] @relation("AuthorToBlogs")
+}
+
+model Author {
+    id Int @id
+    name String?
+    authors Blog[] @relation("AuthorToBlogs")
+}
+
+model Post {
+    id Int @id
+    title String
+    tags String[]
+    blog Blog
+}
+"#;
+
+#[test]
+fn test_parser_renderer_many_to_many_via_ast() {
+    let ast = datamodel::parse_to_ast(MANY_TO_MANY_DATAMODEL).unwrap();
+    let rendered = datamodel::render_ast(&ast);
+
+    print!("{}", rendered);
+
+    assert_eq!(rendered, MANY_TO_MANY_DATAMODEL);
+}
+
+#[test]
+fn test_parser_renderer_many_to_many_via_dml() {
+    let dml = datamodel::parse(MANY_TO_MANY_DATAMODEL).unwrap();
+    let rendered = datamodel::render(&dml).unwrap();
+
+    print!("{}", rendered);
+
+    assert_eq!(rendered, MANY_TO_MANY_DATAMODEL);
+}
