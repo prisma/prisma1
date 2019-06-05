@@ -2,6 +2,7 @@ use super::*;
 use prisma_models::{ModelRef, RelationFieldRef, ScalarFieldRef};
 
 pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + CreateInputTypeBuilderExtension<'a> {
+    /// Builds "<x>UpdateInput" input object type.
     fn update_input_type(&self, model: ModelRef) -> InputObjectTypeRef {
         let name = format!("{}UpdateInput", model.name.clone());
         return_cached!(self.get_cache(), &name);
@@ -17,6 +18,18 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
         fields.append(&mut relational_fields);
 
         input_object.set_fields(fields);
+        Arc::downgrade(&input_object)
+    }
+
+    /// Builds "<x>UpdateManyMutationInput" input object type.
+    fn update_many_input_type(&self, model: ModelRef) -> InputObjectTypeRef {
+        let object_name = format!("{}UpdateManyMutationInput", model.name);
+        return_cached!(self.get_cache(), &object_name);
+
+        let input_fields = self.scalar_input_fields_for_update(Arc::clone(&model));
+        let input_object = Arc::new(input_object_type(object_name.clone(), input_fields));
+
+        self.cache(object_name, Arc::clone(&input_object));
         Arc::downgrade(&input_object)
     }
 

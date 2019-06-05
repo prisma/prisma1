@@ -4,13 +4,19 @@ use prisma_models::{InternalDataModelRef, ModelRef};
 pub struct ArgumentBuilder<'a> {
     internal_data_model: InternalDataModelRef,
     input_type_builder: Weak<InputTypeBuilder<'a>>,
+    object_type_builder: Weak<ObjectTypeBuilder<'a>>,
 }
 
 impl<'a> ArgumentBuilder<'a> {
-    pub fn new(internal_data_model: InternalDataModelRef, input_type_builder: Weak<InputTypeBuilder<'a>>) -> Self {
+    pub fn new(
+        internal_data_model: InternalDataModelRef,
+        input_type_builder: Weak<InputTypeBuilder<'a>>,
+        object_type_builder: Weak<ObjectTypeBuilder<'a>>,
+    ) -> Self {
         ArgumentBuilder {
             internal_data_model,
             input_type_builder,
+            object_type_builder,
         }
     }
 
@@ -61,5 +67,22 @@ impl<'a> ArgumentBuilder<'a> {
                 argument("update", InputType::object(update_type)),
             ]
         })
+    }
+
+    pub fn update_many_arguments(&self, model: ModelRef) -> Vec<Argument> {
+        let update_object = self
+            .input_type_builder
+            .into_arc()
+            .update_many_input_type(Arc::clone(&model));
+
+        let where_arg = self.object_type_builder.into_arc().where_argument(&model);
+
+        vec![argument("data", InputType::object(update_object)), where_arg]
+    }
+
+    pub fn delete_many_arguments(&self, model: ModelRef) -> Vec<Argument> {
+        let where_arg = self.object_type_builder.into_arc().where_argument(&model);
+
+        vec![where_arg]
     }
 }

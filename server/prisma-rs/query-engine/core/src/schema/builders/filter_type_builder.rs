@@ -117,7 +117,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
     weak_ref
   }
 
-  fn build_mongo_filter_object(&self, model: ModelRef) -> InputObjectTypeRef {
+  fn build_mongo_filter_object(&self, _model: ModelRef) -> InputObjectTypeRef {
     unimplemented!()
   }
 

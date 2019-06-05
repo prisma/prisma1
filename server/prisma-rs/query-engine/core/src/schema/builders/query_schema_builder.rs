@@ -20,7 +20,7 @@ pub struct QuerySchemaBuilder<'a> {
   mode: BuildMode,
   internal_data_model: InternalDataModelRef,
   capabilities: &'a SupportedCapabilities,
-  object_type_builder: ObjectTypeBuilder<'a>,
+  object_type_builder: Arc<ObjectTypeBuilder<'a>>,
   input_type_builder: Arc<InputTypeBuilder<'a>>,
   argument_builder: ArgumentBuilder<'a>,
   filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
@@ -38,12 +38,17 @@ impl<'a> QuerySchemaBuilder<'a> {
       Arc::downgrade(&filter_object_type_builder),
     ));
 
-    let argument_builder = ArgumentBuilder::new(Arc::clone(internal_data_model), Arc::downgrade(&input_type_builder));
-    let object_type_builder = ObjectTypeBuilder::new(
+    let object_type_builder = Arc::new(ObjectTypeBuilder::new(
       Arc::clone(internal_data_model),
       true,
       capabilities,
       Arc::downgrade(&filter_object_type_builder),
+    ));
+
+    let argument_builder = ArgumentBuilder::new(
+      Arc::clone(internal_data_model),
+      Arc::downgrade(&input_type_builder),
+      Arc::downgrade(&object_type_builder),
     );
 
     QuerySchemaBuilder {
@@ -62,7 +67,7 @@ impl<'a> QuerySchemaBuilder<'a> {
   /// Unwraps are safe because only the query schema builder holds the strong ref,
   /// which makes the Arc counter 1, all other refs are weak refs.
   fn collect_types(self) -> (Vec<InputObjectTypeStrongRef>, Vec<ObjectTypeStrongRef>) {
-    let output_objects = self.object_type_builder.into_strong_refs();
+    let output_objects = Arc::try_unwrap(self.object_type_builder).unwrap().into_strong_refs();
     let mut input_objects = Arc::try_unwrap(self.input_type_builder).unwrap().into_strong_refs();
     let mut filter_objects = Arc::try_unwrap(self.filter_object_type_builder)
       .unwrap()
@@ -109,12 +114,15 @@ impl<'a> QuerySchemaBuilder<'a> {
     let non_embedded_models = self.non_embedded_models();
     let fields = non_embedded_models
       .into_iter()
-      .map(|m| {
-        let mut vec = vec![self.create_item_field(Arc::clone(&m))];
+      .map(|model| {
+        let mut vec = vec![self.create_item_field(Arc::clone(&model))];
 
-        append_opt(&mut vec, self.delete_item_field(Arc::clone(&m)));
-        append_opt(&mut vec, self.update_item_field(Arc::clone(&m)));
-        append_opt(&mut vec, self.upsert_item_field(Arc::clone(&m)));
+        append_opt(&mut vec, self.delete_item_field(Arc::clone(&model)));
+        append_opt(&mut vec, self.update_item_field(Arc::clone(&model)));
+        append_opt(&mut vec, self.upsert_item_field(Arc::clone(&model)));
+
+        vec.push(self.update_many_field(Arc::clone(&model)));
+        vec.push(self.delete_many_field(Arc::clone(&model)));
 
         vec
       })
@@ -214,5 +222,27 @@ impl<'a> QuerySchemaBuilder<'a> {
         OutputType::object(self.object_type_builder.map_model_object_type(&model)),
       )
     })
+  }
+
+  /// Builds an update many mutation field (e.g. updateManyUsers) for given model.
+  fn update_many_field(&self, model: ModelRef) -> Field {
+    let arguments = self.argument_builder.update_many_arguments(Arc::clone(&model));
+
+    field(
+      format!("updateMany{}", pluralize(model.name.clone())),
+      arguments,
+      OutputType::object(self.object_type_builder.batch_payload_object_type()),
+    )
+  }
+
+  /// Builds a delete many mutation field (e.g. deleteManyUsers) for given model.
+  fn delete_many_field(&self, model: ModelRef) -> Field {
+    let arguments = self.argument_builder.delete_many_arguments(Arc::clone(&model));
+
+    field(
+      format!("deleteMany{}", pluralize(model.name.clone())),
+      arguments,
+      OutputType::object(self.object_type_builder.batch_payload_object_type()),
+    )
   }
 }
