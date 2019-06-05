@@ -28,6 +28,6 @@ impl CommandError {
 
 impl From<datamodel::errors::ErrorCollection> for CommandError {
     fn from(errors: datamodel::errors::ErrorCollection) -> CommandError {
-        unimplemented!()
+        CommandError::new(1000, errors.to_string())
     }
 }
