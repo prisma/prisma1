@@ -6,7 +6,7 @@ use datamodel::errors::ValidationError;
 fn nice_error_for_missing_model_keyword() {
     let dml = r#"
     User {
-        id ID @id
+        id Int @id
     }
     "#;
 
@@ -26,10 +26,10 @@ fn nice_error_for_missing_model_keyword() {
 fn nice_error_for_missing_model_keyword_2() {
     let dml = r#"
     model User {
-        id ID @id
+        id Int @id
     }
     Todo {
-        id ID @id
+        id Int @id
     }
     "#;
 
@@ -42,7 +42,7 @@ fn nice_error_for_missing_model_keyword_2() {
             "enum declaration",
             "source definition",
         ],
-        &Span::new(46, 46),
+        &Span::new(47, 47),
     ));
 }
 

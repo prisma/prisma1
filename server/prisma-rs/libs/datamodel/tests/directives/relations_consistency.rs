@@ -4,12 +4,12 @@ use crate::common::*;
 fn should_add_back_relations() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         posts: Post[]
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
     }
     "#;
 
@@ -34,12 +34,12 @@ fn should_not_add_back_relations_for_many_to_many() {
     // Equal name for both fields was a bug triggerer.
     let dml = r#"
 model Blog {
-  id: ID @id
+  id: Int @id
   authors: Author[]
 }
 
 model Author {
-  id: ID @id
+  id: Int @id
   authors: Blog[]
 }
     "#;
@@ -73,18 +73,18 @@ model Author {
 fn should_add_back_relations_for_more_complex_cases() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         posts: Post[]
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
         comments: Comment[] @relation("Comments")
         categories: PostToCategory[]
     }
 
     model Comment {
-        comment_id: ID @id
+        comment_id: Int @id
     }
 
     model Category {
@@ -195,12 +195,12 @@ fn should_add_back_relations_for_more_complex_cases() {
 fn should_add_to_fields_on_the_correct_side_tie_breaker() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         post: Post
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
         user: User
     }
     "#;
@@ -223,12 +223,12 @@ fn should_add_to_fields_on_the_correct_side_tie_breaker() {
 fn should_add_to_fields_on_the_correct_side_list() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         post: Post[]
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
         user: User
     }
     "#;
@@ -251,12 +251,12 @@ fn should_add_to_fields_on_the_correct_side_list() {
 fn should_camel_case_back_relation_field_name() {
     let dml = r#"
     model OhWhatAUser {
-        id: ID @id
+        id: Int @id
         posts: Post[]
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
     }
     "#;
 
@@ -271,7 +271,7 @@ fn should_camel_case_back_relation_field_name() {
 fn should_add_self_back_relation_fields_on_defined_site() {
     let dml = r#"
     model Human {
-        id: ID @id
+        id: Int @id
         son: Human?
     }
     "#;
@@ -293,7 +293,7 @@ fn should_add_self_back_relation_fields_on_defined_site() {
 fn should_add_embed_ids_on_self_relations() {
     let dml = r#"
     model Human {
-        id: ID @id
+        id: Int @id
         father: Human?
         son: Human?
     }
@@ -317,7 +317,7 @@ fn should_add_embed_ids_on_self_relations() {
 fn should_not_get_confused_with_complicated_self_relations() {
     let dml = r#"
     model Human {
-        id: ID @id
+        id: Int @id
         wife: Human? @relation("Marrige")
         husband: Human? @relation("Marrige")
         father: Human?

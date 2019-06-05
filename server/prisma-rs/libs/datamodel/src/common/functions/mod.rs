@@ -2,14 +2,23 @@ mod traits;
 pub use traits::*;
 mod builtin;
 use crate::ast;
-use crate::common::value::ValueValidator;
+use crate::common::value::{MaybeExpression, ValueValidator};
 use crate::errors::ValidationError;
 pub use builtin::*;
 
+// Client side funcs
 const BUILTIN_ENV_FUNCTIONAL: builtin::EnvFunctional = builtin::EnvFunctional {};
 
+// Server side funcs
+const BUILTIN_NOW_FUNCTIONAL: builtin::NowFunctional = builtin::NowFunctional {};
+const BUILTIN_CUID_FUNCTIONAL: builtin::CuidFunctional = builtin::CuidFunctional {};
+
 /// Array of all builtin functionals.
-const BUILTIN_FUNCTIONALS: [&'static Functional; 1] = [&BUILTIN_ENV_FUNCTIONAL];
+const BUILTIN_FUNCTIONALS: [&'static Functional; 3] = [
+    &BUILTIN_ENV_FUNCTIONAL,
+    &BUILTIN_NOW_FUNCTIONAL,
+    &BUILTIN_CUID_FUNCTIONAL,
+];
 
 /// Evaluator for arbitrary expressions.
 pub struct FunctionalEvaluator {
@@ -28,10 +37,10 @@ impl FunctionalEvaluator {
     /// be identified and and executed.
     ///
     /// Otherwise, if the value is a constant, the value is returned as-is.
-    pub fn evaluate(&self) -> Result<ast::Value, ValidationError> {
+    pub fn evaluate(&self) -> Result<MaybeExpression, ValidationError> {
         match &self.value {
             ast::Value::Function(name, params, span) => self.evaluate_functional(&name, &params, &span),
-            _ => Ok(self.value.clone()),
+            _ => Ok(MaybeExpression::Value(self.value.clone())),
         }
     }
 
@@ -40,7 +49,7 @@ impl FunctionalEvaluator {
         name: &str,
         args: &Vec<ast::Value>,
         span: &ast::Span,
-    ) -> Result<ast::Value, ValidationError> {
+    ) -> Result<MaybeExpression, ValidationError> {
         for f in &BUILTIN_FUNCTIONALS {
             if f.name() == name {
                 let mut resolved_args: Vec<ValueValidator> = Vec::new();

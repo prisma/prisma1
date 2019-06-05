@@ -40,12 +40,12 @@ pub mod dml;
 pub use dml::validator::ValidationPipeline;
 pub use dml::*;
 pub mod common;
+pub use crate::common::FromStrAndSpan;
 pub use common::argument::Arguments;
 pub mod dmmf;
 pub mod errors;
 pub mod source;
 pub use common::functions::FunctionalEvaluator;
-pub use dml::FromStrAndSpan;
 pub use source::*;
 pub use validator::directive::DirectiveValidator;
 

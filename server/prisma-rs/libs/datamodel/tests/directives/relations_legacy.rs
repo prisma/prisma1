@@ -11,13 +11,13 @@ use datamodel::{ast::Span, errors::ValidationError};
 fn succeed_without_directive_if_unambigous() {
     let dml = r#"
     model Todo {
-      id: ID @id
+      id: Int @id
       title: String
       comments: Comment[]
     }
     
     model Comment {
-      id: ID @id
+      id: Int @id
       text: String
     }
     "#;
@@ -40,13 +40,13 @@ fn succeed_without_directive_if_unambigous() {
 fn fail_if_back_relation_for_embedded_type() {
     let dml = r#"
     model Todo {
-      id: ID @id
+      id: Int @id
       title: String
       comments: Comment[]
     }
     
     model Comment {
-      id: ID @id
+      id: Int @id
       text: String
       todo: Todo
       
@@ -59,7 +59,7 @@ fn fail_if_back_relation_for_embedded_type() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Embedded models cannot have back relation fields.",
         "Comment",
-        &Span::new(154, 178),
+        &Span::new(156, 180),
     ));
 }
 
@@ -67,7 +67,7 @@ fn fail_if_back_relation_for_embedded_type() {
 fn settings_must_be_deteced() {
     let dml = r#"
     model Todo {
-      id: ID @id
+      id: Int @id
       parent_todo: Todo? @relation(name: "MyRelation", onDelete: CASCADE)
     }
     "#;
@@ -83,16 +83,16 @@ fn settings_must_be_deteced() {
 }
 
 #[test]
-fn fail_if_ambigous_relation_fields_do_not_sepecify_a_name() {
+fn fail_if_ambigous_relation_fields_do_not_specify_a_name() {
     let dml = r#"
     model Todo {
-      id: ID @id
+      id: Int @id
       comments: Comment[]
       comments2: Comment[]
     }
     
     model Comment {
-      id: ID @id
+      id: Int @id
       text: String
     }
     "#;
@@ -102,6 +102,6 @@ fn fail_if_ambigous_relation_fields_do_not_sepecify_a_name() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "Todo",
-        &Span::new(41, 67),
+        &Span::new(42, 68),
     ));
 }

@@ -30,6 +30,14 @@ pub struct Field {
 
 #[serde(rename_all = "camelCase")]
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct Function {
+    pub name: String,
+    pub return_type: String,
+    pub args: Vec<serde_json::Value>,
+}
+
+#[serde(rename_all = "camelCase")]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct Model {
     pub name: String,
     pub is_embedded: bool,
