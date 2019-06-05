@@ -54,7 +54,7 @@ impl PrismaContext {
     }
 
     fn load_datamodel() -> Option<datamodel::Datamodel> {
-        let dml_string = data_model::load_v2_dml_string().ok().unwrap();
+        let dml_string = data_model::load_v2_dml_string().ok()?;
         let parsed = datamodel::parse(&dml_string);
 
         if let Err(errors) = &parsed {
