@@ -3,6 +3,7 @@ use super::id::*;
 use super::relation::*;
 use super::scalar::*;
 use super::traits::*;
+use crate::common::{PrismaType, PrismaValue};
 use serde::{Deserialize, Serialize};
 
 /// Datamodel field arity.
@@ -23,11 +24,11 @@ pub enum FieldType {
     Relation(RelationInfo),
     /// Connector specific field type.
     ConnectorSpecific {
-        base_type: ScalarType,
+        base_type: PrismaType,
         connector_type: Option<String>,
     },
     /// Base (built-in scalar) type.
-    Base(ScalarType),
+    Base(PrismaType),
 }
 
 /// Holds information about an id, or priamry key.
@@ -51,7 +52,7 @@ pub struct Field {
     /// The database internal name.
     pub database_name: Option<String>,
     /// The default value.
-    pub default_value: Option<Value>,
+    pub default_value: Option<PrismaValue>,
     /// Indicates if the field is unique.
     pub is_unique: bool,
     /// If set, signals that this field is an id field, or

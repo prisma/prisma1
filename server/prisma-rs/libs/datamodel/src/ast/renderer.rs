@@ -138,8 +138,17 @@ impl<'a> Renderer<'a> {
             ast::Value::ConstantValue(val, _) => self.write(&val),
             ast::Value::NumericValue(val, _) => self.write(&val),
             ast::Value::StringValue(val, _) => self.render_str(&val),
-            ast::Value::Function(_, _, _) => unimplemented!("Functions can not be rendered yet."),
+            ast::Value::Function(name, args, _) => self.render_func(&name, &args),
         };
+    }
+
+    pub fn render_func(&mut self, name: &str, vals: &Vec<ast::Value>) {
+        self.write(name);
+        self.write("(");
+        for val in vals {
+            self.render_value(val);
+        }
+        self.write(")");
     }
 
     pub fn indent_up(&mut self) {

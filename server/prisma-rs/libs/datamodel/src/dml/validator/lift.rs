@@ -2,8 +2,8 @@ use super::{common::*, DirectiveBox};
 use crate::{
     ast,
     common::value::ValueValidator,
+    common::{FromStrAndSpan, PrismaType},
     dml,
-    dml::fromstr::FromStrAndSpan,
     errors::{ErrorCollection, ValidationError},
     source,
 };
@@ -153,7 +153,7 @@ impl LiftAstToDml {
     ) -> Result<dml::FieldType, ValidationError> {
         let type_name = &ast_field.field_type;
 
-        if let Ok(scalar_type) = dml::ScalarType::from_str_and_span(type_name, span) {
+        if let Ok(scalar_type) = PrismaType::from_str_and_span(type_name, span) {
             Ok(dml::FieldType::Base(scalar_type))
         } else {
             if let Some(_) = ast_schema.find_model(type_name) {

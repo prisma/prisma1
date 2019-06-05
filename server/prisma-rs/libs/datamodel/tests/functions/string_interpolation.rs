@@ -1,11 +1,11 @@
 use crate::common::*;
-use datamodel::dml;
+use datamodel::{common::PrismaType, dml};
 
 #[test]
 fn interpolate_expressions_in_strings() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String @default("user_${3}")
         lastName: String
     }
@@ -16,7 +16,7 @@ fn interpolate_expressions_in_strings() {
     user_model.assert_is_embedded(false);
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_default_value(dml::Value::String(String::from("user_3")));
 }
 
@@ -24,7 +24,7 @@ fn interpolate_expressions_in_strings() {
 fn dont_interpolate_escaped_expressions_in_strings() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String @default("user_\${3}")
         lastName: String
     }
@@ -35,7 +35,7 @@ fn dont_interpolate_escaped_expressions_in_strings() {
     user_model.assert_is_embedded(false);
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_default_value(dml::Value::String(String::from("user_${3}")));
 }
 
@@ -43,7 +43,7 @@ fn dont_interpolate_escaped_expressions_in_strings() {
 fn interpolate_functionals_in_strings() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String @default("user_${env("TEST_USER")}")
         lastName: String
     }
@@ -56,7 +56,7 @@ fn interpolate_functionals_in_strings() {
     user_model.assert_is_embedded(false);
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_default_value(dml::Value::String(String::from("user_prisma-user")));
 }
 
@@ -64,7 +64,7 @@ fn interpolate_functionals_in_strings() {
 fn interpolate_nested_mess() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String @default("user_${ "number_${ "${ "really?_${3}" }" }" }")
         lastName: String
     }
@@ -77,6 +77,6 @@ fn interpolate_nested_mess() {
     user_model.assert_is_embedded(false);
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_default_value(dml::Value::String(String::from("user_number_really?_3")));
 }

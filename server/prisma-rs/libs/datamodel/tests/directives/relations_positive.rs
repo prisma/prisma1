@@ -1,17 +1,17 @@
 use crate::common::*;
-use datamodel::dml;
+use datamodel::{common::PrismaType, dml};
 
 #[test]
 fn allow_multiple_relations() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         more_posts: Post[] @relation(name: "more_posts")
         posts: Post[]
     }
 
     model Post {
-        id: ID @id
+        id: Int @id
         text: String
         user: User
         posting_user: User @relation(name: "more_posts")
@@ -32,7 +32,7 @@ fn allow_multiple_relations() {
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("text")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
     post_model.assert_has_field("user").assert_relation_to("User");
 }
 
@@ -40,7 +40,7 @@ fn allow_multiple_relations() {
 fn allow_complicated_self_relations() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         son: User @relation(name: "offspring")
         father: User @relation(name: "offspring")
         husband: User @relation(name: "spouse")

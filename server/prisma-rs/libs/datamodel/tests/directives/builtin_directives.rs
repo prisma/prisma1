@@ -1,17 +1,18 @@
 use crate::common::*;
+use datamodel::common::PrismaType;
 
 #[test]
 fn db_directive() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String @db("first_name")
 
         @@db("user")
     }
 
     model Post {
-        id: ID @id
+        id: Int @id
         text: String @db(name: "post_text")
 
         @@db(name: "posti")
@@ -42,11 +43,11 @@ fn unique_directive() {
 
     test_model
         .assert_has_field("id")
-        .assert_base_type(&datamodel::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_is_unique(false)
         .assert_is_id(true);
     test_model
         .assert_has_field("unique")
-        .assert_base_type(&datamodel::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_is_unique(true);
 }

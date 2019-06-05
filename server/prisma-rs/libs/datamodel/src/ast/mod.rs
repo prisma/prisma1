@@ -116,7 +116,7 @@ pub enum Value {
     /// Any literal constant, basically a string which was not inside "...".
     /// This is used for representing builtin enums.
     ConstantValue(String, Span),
-    /// A function with a name and arguments.
+    /// A function with a name and arguments, which is evaluated at client side.
     Function(String, Vec<Value>, Span),
     /// An array of other values.
     Array(Vec<Value>, Span),
@@ -131,6 +131,19 @@ pub fn describe_value_type(val: &Value) -> &'static str {
         Value::ConstantValue(_, _) => "Literal",
         Value::Function(_, _, _) => "Functional",
         Value::Array(_, _) => "Array",
+    }
+}
+
+impl ToString for Value {
+    fn to_string(&self) -> String {
+        match self {
+            Value::StringValue(x, _) => x.clone(),
+            Value::NumericValue(x, _) => x.clone(),
+            Value::BooleanValue(x, _) => x.clone(),
+            Value::ConstantValue(x, _) => x.clone(),
+            Value::Function(x, _, _) => x.clone(),
+            Value::Array(_, _) => String::from("(Array)"),
+        }
     }
 }
 
