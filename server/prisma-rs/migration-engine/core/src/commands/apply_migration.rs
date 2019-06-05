@@ -1,5 +1,5 @@
 use super::MigrationStepsResultOutput;
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use migration_connector::*;
 
@@ -15,7 +15,7 @@ impl MigrationCommand for ApplyMigrationCommand {
         Box::new(ApplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let is_dry_run = self.input.dry_run.unwrap_or(false);
 
@@ -49,13 +49,13 @@ impl MigrationCommand for ApplyMigrationCommand {
                 .apply(&saved_migration, &database_migration);
         }
 
-        MigrationStepsResultOutput {
+        Ok(MigrationStepsResultOutput {
             datamodel_steps: self.input.steps.clone(),
             database_steps: database_steps_json_pretty,
             errors: Vec::new(),
             warnings: Vec::new(),
             general_errors: Vec::new(),
-        }
+        })
     }
 }
 

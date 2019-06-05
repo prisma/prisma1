@@ -1,4 +1,4 @@
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use migration_connector::steps::*;
 use migration_connector::*;
@@ -16,10 +16,10 @@ impl MigrationCommand for ListMigrationStepsCommand {
         Box::new(ListMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let migration_persistence = engine.connector().migration_persistence();
-        migration_persistence
+        Ok(migration_persistence
             .load_all()
             .into_iter()
             .map(|mig| ListMigrationStepsOutput {
@@ -27,7 +27,7 @@ impl MigrationCommand for ListMigrationStepsCommand {
                 steps: mig.datamodel_steps,
                 status: mig.status,
             })
-            .collect()
+            .collect())
     }
 }
 

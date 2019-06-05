@@ -1,9 +1,8 @@
-
 pub trait DestructiveChangesChecker<T> {
-    fn check(&self, database_migration: &T) -> Vec<MigrationResult>;
+    fn check(&self, database_migration: &T) -> Vec<MigrationErrorOrWarning>;
 }
 
-pub enum MigrationResult {
+pub enum MigrationErrorOrWarning {
     Error(MigrationWarning),
     Warning(MigrationError),
 }

@@ -1,5 +1,5 @@
 use super::list_migrations::ListMigrationStepsOutput;
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use migration_connector::*;
 
@@ -15,10 +15,10 @@ impl MigrationCommand for UnapplyMigrationCommand {
         Box::new(UnapplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let connector = engine.connector();
-        match connector.migration_persistence().last() {
+        let result = match connector.migration_persistence().last() {
             None => UnapplyMigrationOutput {
                 rolled_back: ListMigrationStepsOutput {
                     id: "foo".to_string(),
@@ -58,7 +58,8 @@ impl MigrationCommand for UnapplyMigrationCommand {
                     errors: Vec::new(),
                 }
             }
-        }
+        };
+        Ok(result)
     }
 }
 

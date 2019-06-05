@@ -47,7 +47,7 @@ pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSch
         assume_to_be_applied: Vec::new(),
     };
     let cmd = InferMigrationStepsCommand::new(input);
-    let output = cmd.execute(&engine);
+    let output = cmd.execute(&engine).expect("inferMigrationSteps failed");
 
     let input = ApplyMigrationInput {
         project_info: project_info,
@@ -58,7 +58,7 @@ pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSch
     };
     let cmd = ApplyMigrationCommand::new(input);
     let engine = MigrationEngine::new();
-    let _output = cmd.execute(&engine);
+    let _output = cmd.execute(&engine).expect("applyMigration failed");
 
     introspect_database(&engine)
 }
