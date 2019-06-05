@@ -34,6 +34,10 @@ impl<'a> ArgumentBuilder<'a> {
         }
     }
 
+    pub fn delete_arguments(&self, model: ModelRef) -> Option<Vec<Argument>> {
+        self.where_unique_argument(model).map(|arg| vec![arg])
+    }
+
     pub fn update_arguments(&self, model: ModelRef) -> Option<Vec<Argument>> {
         self.where_unique_argument(Arc::clone(&model)).map(|unique_arg| {
             let input_object = self.input_type_builder.into_arc().update_input_type(model);

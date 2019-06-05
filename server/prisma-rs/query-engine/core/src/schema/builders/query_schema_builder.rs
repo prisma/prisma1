@@ -112,6 +112,7 @@ impl<'a> QuerySchemaBuilder<'a> {
       .map(|m| {
         let mut vec = vec![self.create_item_field(Arc::clone(&m))];
 
+        append_opt(&mut vec, self.delete_item_field(Arc::clone(&m)));
         append_opt(&mut vec, self.update_item_field(Arc::clone(&m)));
         append_opt(&mut vec, self.upsert_item_field(Arc::clone(&m)));
 
@@ -176,6 +177,19 @@ impl<'a> QuerySchemaBuilder<'a> {
       args,
       OutputType::object(self.object_type_builder.map_model_object_type(&model)),
     )
+  }
+
+  /// Builds a delete mutation field (e.g. deleteUser) for given model.
+  fn delete_item_field(&self, model: ModelRef) -> Option<Field> {
+    self.argument_builder.delete_arguments(Arc::clone(&model)).map(|args| {
+      field(
+        format!("delete{}", model.name),
+        args,
+        OutputType::opt(OutputType::object(
+          self.object_type_builder.map_model_object_type(&model),
+        )),
+      )
+    })
   }
 
   /// Builds an update mutation field (e.g. updateUser) for given model.
