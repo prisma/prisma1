@@ -24,7 +24,9 @@ impl Standardiser {
     pub fn standardise(&self, ast_schema: &ast::Datamodel, schema: &mut dml::Datamodel) -> Result<(), ErrorCollection> {
         self.add_missing_back_relations(ast_schema, schema)?;
 
-        self.add_missing_relation_tables(ast_schema, schema)?;
+        // This is intentionally disabled for now, since the generated types would surface in the
+        // client schema.
+        // self.add_missing_relation_tables(ast_schema, schema)?;
 
         self.set_relation_to_field_to_id_if_missing(schema);
 
@@ -56,9 +58,9 @@ impl Standardiser {
 
                     let mut embed_here = false;
 
-                    // If to_fields are already set or this is a list,
+                    // If to_fields are already set,
                     // we continue.
-                    if we_have_embedding || we_are_list {
+                    if we_have_embedding {
                         continue;
                     }
 
@@ -78,9 +80,9 @@ impl Standardiser {
                             continue;
                         }
 
-                        // Likewise, if this field is generated, and the related one is not a list,
+                        // Likewise, if this field is generated or a list, and the related one is not a list,
                         // we continue.
-                        if field.is_generated && related_field.arity != dml::FieldArity::List {
+                        if (field.is_generated || we_are_list) && related_field.arity != dml::FieldArity::List {
                             continue;
                         }
 
@@ -201,6 +203,9 @@ impl Standardiser {
         }
     }
 
+    // This is intentionally disabled for now, since the generated types would surface in the
+    // client schema.
+    #[allow(unused)]
     fn add_missing_relation_tables(
         &self,
         ast_schema: &ast::Datamodel,
@@ -351,8 +356,21 @@ impl Standardiser {
         for model in datamodel.models() {
             for field in model.fields() {
                 if let dml::FieldType::Relation(rel) = &field.field_type {
-                    if rel.name.len() == 0 && rel.to_fields.len() > 0 {
-                        rels.push((model.name.clone(), field.name.clone(), rel.clone()))
+                    let related_model = datamodel.find_model(&rel.to).expect(STATE_ERROR);
+                    let related_field = related_model
+                        .related_field(&model.name, &rel.name, &field.name)
+                        .expect(STATE_ERROR);
+
+                    if let dml::FieldType::Relation(related_rel) = &related_field.field_type {
+                        if rel.name.len() == 0
+                            && rel.to_fields.len() > 0
+                            // Tie is used to prevent duplicates on n:m relation.
+                            && (related_rel.to_fields.len() == 0 || tie(&model, &field, &related_model, &related_field))
+                        {
+                            rels.push((model.name.clone(), field.name.clone(), rel.clone()))
+                        }
+                    } else {
+                        panic!(STATE_ERROR);
                     }
                 }
             }

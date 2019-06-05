@@ -30,6 +30,7 @@ fn should_add_back_relations() {
 }
 
 #[test]
+#[ignore] // This feature is disabled intentionally, because it causes the generated type to surface in the client.
 fn should_add_a_relation_table_for_many_to_many_relations() {
     // Equal name for both fields was a bug triggerer.
     let dml = r#"
@@ -80,6 +81,47 @@ model Author {
         .assert_relation_to("Blog")
         .assert_relation_to_fields(&["id"])
         .assert_arity(&datamodel::dml::FieldArity::Required);
+}
+
+#[test]
+fn should_not_add_back_relation_fields_for_many_to_many_relations() {
+    // Equal name for both fields was a bug triggerer.
+    let dml = r#"
+model Blog {
+  id: ID @id
+  authors: Author[]
+}
+
+model Author {
+  id: ID @id
+  authors: Blog[]
+}
+    "#;
+
+    let schema = parse(dml);
+
+    let author_model = schema.assert_has_model("Author");
+    author_model
+        .assert_has_field("authors")
+        .assert_relation_to("Blog")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    author_model.assert_has_field("id");
+
+    let blog_model = schema.assert_has_model("Blog");
+    blog_model
+        .assert_has_field("authors")
+        .assert_relation_to("Author")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    blog_model.assert_has_field("id");
+
+    // Assert nothing else was generated.
+    // E.g. no erronous back relations.
+    assert_eq!(author_model.fields().count(), 2);
+    assert_eq!(blog_model.fields().count(), 2);
 }
 
 #[test]

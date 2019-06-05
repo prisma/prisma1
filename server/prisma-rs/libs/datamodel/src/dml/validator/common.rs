@@ -65,3 +65,8 @@ pub fn field_validation_error(
         &ast.find_field(&model.name, &field.name).expect(STATE_ERROR).span,
     )
 }
+
+pub fn tie(a_model: &dml::Model, a_field: &dml::Field, b_model: &dml::Model, b_field: &dml::Field) -> bool {
+    // Model with lower name wins, if name is equal fall back to field.
+    a_model.name < b_model.name || (a_model.name == b_model.name && a_field.name < b_field.name)
+}
