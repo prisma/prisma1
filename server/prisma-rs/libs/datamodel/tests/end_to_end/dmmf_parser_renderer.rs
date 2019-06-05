@@ -73,3 +73,23 @@ fn test_dmmf_roundtrip() {
 
     assert_eq!(DATAMODEL_STRING, rendered);
 }
+
+const DATAMODEL_STRING_WITH_FUNCTIONS: &str = r#"
+model User {
+    id Int @id
+    createdAt DateTime @default(now())
+    someId String @default(cuid()) @unique
+}
+"#;
+
+#[test]
+fn test_dmmf_roundtrip_with_functions() {
+    let dml = datamodel::parse(&DATAMODEL_STRING_WITH_FUNCTIONS).unwrap();
+    let dmmf = datamodel::dmmf::render_to_dmmf(&dml);
+    let dml2 = datamodel::dmmf::parse_from_dmmf(&dmmf);
+    let rendered = datamodel::render(&dml2).unwrap();
+
+    println!("{}", rendered);
+
+    assert_eq!(DATAMODEL_STRING_WITH_FUNCTIONS, rendered);
+}

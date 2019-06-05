@@ -39,18 +39,32 @@ pub fn enum_to_dmmf(en: &dml::Enum) -> Enum {
 
 pub fn default_value_to_serde(container: &Option<dml::Value>) -> Option<serde_json::Value> {
     match container {
-        Some(value) => Some(match value {
-            dml::Value::Boolean(val) => serde_json::Value::Bool(*val),
-            dml::Value::String(val) => serde_json::Value::String(val.clone()),
-            dml::Value::ConstantLiteral(val) => serde_json::Value::String(val.clone()),
-            dml::Value::Float(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
-            dml::Value::Int(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
-            dml::Value::Decimal(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
-            dml::Value::DateTime(val) => serde_json::Value::String(val.to_rfc3339()),
-            dml::Value::Expression(name, return_type, args) => unimplemented!("DMMF support missing."),
-        }),
+        Some(value) => Some(value_to_serde(value)),
         None => None,
     }
+}
+
+pub fn value_to_serde(value: &dml::Value) -> serde_json::Value {
+    match value {
+        dml::Value::Boolean(val) => serde_json::Value::Bool(*val),
+        dml::Value::String(val) => serde_json::Value::String(val.clone()),
+        dml::Value::ConstantLiteral(val) => serde_json::Value::String(val.clone()),
+        dml::Value::Float(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
+        dml::Value::Int(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
+        dml::Value::Decimal(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
+        dml::Value::DateTime(val) => serde_json::Value::String(val.to_rfc3339()),
+        dml::Value::Expression(name, return_type, args) => function_to_serde(&name, *return_type, &args),
+    }
+}
+
+pub fn function_to_serde(name: &str, return_type: PrismaType, args: &Vec<dml::Value>) -> serde_json::Value {
+    let func = Function {
+        name: String::from(name),
+        return_type: return_type.to_string(),
+        args: args.iter().map(|arg| value_to_serde(arg)).collect(),
+    };
+
+    serde_json::to_value(&func).expect("Failed to render function JSON")
 }
 
 pub fn get_relation_name(field: &dml::Field) -> Option<String> {

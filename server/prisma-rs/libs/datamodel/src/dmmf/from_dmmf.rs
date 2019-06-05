@@ -15,6 +15,7 @@ pub fn default_value_from_serde(
     field_type: &dml::FieldType,
 ) -> Option<dml::Value> {
     match (container, field_type) {
+        // Scalar.
         (Some(value), dml::FieldType::Base(scalar_type)) => Some(match (value, scalar_type) {
             (serde_json::Value::Bool(val), PrismaType::Boolean) => dml::Value::Boolean(*val),
             (serde_json::Value::String(val), PrismaType::String) => dml::Value::String(String::from(val.as_str())),
@@ -24,14 +25,36 @@ pub fn default_value_from_serde(
             (serde_json::Value::String(val), PrismaType::DateTime) => {
                 dml::Value::DateTime(String::from(val.as_str()).parse::<DateTime<Utc>>().unwrap())
             }
+            // Function.
+            (serde_json::Value::Object(_), _) => {
+                let func = serde_json::from_value::<Function>(value.clone()).expect("Failed to parse function JSON");
+                function_from_dmmf(&func, *scalar_type)
+            }
             _ => panic!("Invalid type/value combination for default value."),
         }),
+        // Enum.
         (Some(value), dml::FieldType::Enum(_)) => {
             Some(dml::Value::ConstantLiteral(String::from(value.as_str().unwrap())))
         }
         (Some(_), _) => panic!("Fields with non-scalar type cannot have default value"),
         _ => None,
     }
+}
+
+fn function_from_dmmf(func: &Function, expected_type: PrismaType) -> dml::Value {
+    if func.args.len() > 0 {
+        panic!("Function argument deserialization is not supported with DMMF. There are no type annotations yet, so it's not clear which is meant.");
+    }
+
+    if func.return_type != expected_type.to_string() {
+        panic!(
+            "Type missmatch during deserialization. Expected: {}, but got: {}.",
+            expected_type.to_string(),
+            func.return_type
+        );
+    }
+
+    dml::Value::Expression(func.name.clone(), expected_type, vec![])
 }
 
 fn get_on_delete_strategy(strategy: &Option<String>) -> dml::OnDeleteStrategy {
