@@ -1,10 +1,10 @@
 use super::dmmf::*;
 use crate::ast::Span;
-use crate::dml;
 use crate::common::FromStrAndSpan;
+use crate::common::PrismaType;
+use crate::dml;
 use chrono::{DateTime, Utc};
 use serde_json;
-use crate::common::PrismaType;
 
 fn type_from_string(scalar: &str) -> PrismaType {
     PrismaType::from_str_and_span(scalar, &crate::ast::Span::empty()).unwrap()
@@ -20,9 +20,7 @@ pub fn default_value_from_serde(
             (serde_json::Value::String(val), PrismaType::String) => dml::Value::String(String::from(val.as_str())),
             (serde_json::Value::Number(val), PrismaType::Float) => dml::Value::Float(val.as_f64().unwrap() as f32),
             (serde_json::Value::Number(val), PrismaType::Int) => dml::Value::Int(val.as_i64().unwrap() as i32),
-            (serde_json::Value::Number(val), PrismaType::Decimal) => {
-                dml::Value::Decimal(val.as_f64().unwrap() as f32)
-            }
+            (serde_json::Value::Number(val), PrismaType::Decimal) => dml::Value::Decimal(val.as_f64().unwrap() as f32),
             (serde_json::Value::String(val), PrismaType::DateTime) => {
                 dml::Value::DateTime(String::from(val.as_str()).parse::<DateTime<Utc>>().unwrap())
             }

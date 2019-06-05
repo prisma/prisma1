@@ -1,5 +1,5 @@
 use crate::common::*;
-use datamodel::{dml, common::PrismaType};
+use datamodel::{common::PrismaType, dml};
 
 #[test]
 fn parse_scalar_types() {
@@ -19,9 +19,7 @@ fn parse_scalar_types() {
     user_model
         .assert_has_field("firstName")
         .assert_base_type(&PrismaType::String);
-    user_model
-        .assert_has_field("age")
-        .assert_base_type(&PrismaType::Int);
+    user_model.assert_has_field("age").assert_base_type(&PrismaType::Int);
     user_model
         .assert_has_field("isPro")
         .assert_base_type(&PrismaType::Boolean);

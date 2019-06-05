@@ -1,5 +1,5 @@
 use crate::ast;
-use crate::common::value::{ValueValidator, MaybeExpression};
+use crate::common::value::{MaybeExpression, ValueValidator};
 use crate::errors::ValidationError;
 
 /// Trait for functions which can be accessed from the datamodel.

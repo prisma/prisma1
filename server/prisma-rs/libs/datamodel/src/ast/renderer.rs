@@ -138,7 +138,7 @@ impl<'a> Renderer<'a> {
             ast::Value::ConstantValue(val, _) => self.write(&val),
             ast::Value::NumericValue(val, _) => self.write(&val),
             ast::Value::StringValue(val, _) => self.render_str(&val),
-            ast::Value::Function(name, args, _) => self.render_func(&name, &args)
+            ast::Value::Function(name, args, _) => self.render_func(&name, &args),
         };
     }
 

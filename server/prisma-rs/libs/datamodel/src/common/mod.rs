@@ -7,9 +7,9 @@ pub mod value;
 mod fromstr;
 pub use fromstr::FromStrAndSpan;
 
-use chrono::{DateTime, Utc};
 use crate::ast;
 use crate::errors::ValidationError;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Prisma's builtin base types.
@@ -22,7 +22,7 @@ pub enum PrismaType {
     String,
     DateTime,
     // This is similar to a context-dependent enum.
-    ConstantLiteral
+    ConstantLiteral,
 }
 
 impl FromStrAndSpan for PrismaType {
@@ -63,7 +63,7 @@ pub enum PrismaValue {
     String(String),
     DateTime(DateTime<Utc>),
     ConstantLiteral(String),
-    Expression(String, PrismaType, Vec<PrismaValue>)
+    Expression(String, PrismaType, Vec<PrismaValue>),
 }
 
 impl PrismaValue {
@@ -76,11 +76,10 @@ impl PrismaValue {
             PrismaValue::String(_) => PrismaType::String,
             PrismaValue::DateTime(_) => PrismaType::DateTime,
             PrismaValue::ConstantLiteral(_) => PrismaType::ConstantLiteral,
-            PrismaValue::Expression(_, t, _) => *t
+            PrismaValue::Expression(_, t, _) => *t,
         }
     }
 }
-
 
 impl ToString for PrismaValue {
     fn to_string(&self) -> String {
@@ -92,7 +91,7 @@ impl ToString for PrismaValue {
             PrismaValue::String(val) => format!("{}", val),
             PrismaValue::DateTime(val) => format!("{}", val),
             PrismaValue::ConstantLiteral(val) => format!("{}", val),
-            PrismaValue::Expression(_, t, _) => format!("Function<{}>", t.to_string())
+            PrismaValue::Expression(_, t, _) => format!("Function<{}>", t.to_string()),
         }
     }
 }

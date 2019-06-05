@@ -2,12 +2,12 @@ use crate::ast;
 use crate::dml;
 
 use crate::common::interpolation::StringInterpolator;
+use crate::common::FromStrAndSpan;
+use crate::common::{PrismaType, PrismaValue};
 use crate::errors::ValidationError;
 use crate::FunctionalEvaluator;
 use chrono::{DateTime, Utc};
 use std::error;
-use crate::common::{PrismaType, PrismaValue};
-use crate::common::FromStrAndSpan;
 
 macro_rules! wrap_value (
     ($value:expr, $wrapper:expr, $validator:expr) => ({
@@ -21,7 +21,7 @@ macro_rules! wrap_value (
 #[derive(Debug, Clone)]
 pub enum MaybeExpression {
     Value(ast::Value),
-    Expression(PrismaValue, ast::Span)
+    Expression(PrismaValue, ast::Span),
 }
 
 /// Wraps a value and provides convenience methods for
@@ -49,18 +49,12 @@ impl ValueValidator {
     /// Creates a new type mismatch error for the
     /// value wrapped by this instance.
     fn construct_error(&self, expected_type: &str) -> ValidationError {
-
         let description = match &self.value {
             MaybeExpression::Value(val) => String::from(ast::describe_value_type(&val)),
-            MaybeExpression::Expression(val, _) => val.get_type().to_string()
+            MaybeExpression::Expression(val, _) => val.get_type().to_string(),
         };
 
-        ValidationError::new_type_mismatch_error(
-            expected_type,
-            &description,
-            &self.raw(),
-            self.span(),
-        )
+        ValidationError::new_type_mismatch_error(expected_type, &description, &self.raw(), self.span())
     }
 
     /// Creates a value parser error
@@ -107,7 +101,6 @@ impl ValueValidator {
                 }
             }
         }
-        
     }
 
     /// Parses the wrapped value as a given literal type.
@@ -120,7 +113,7 @@ impl ValueValidator {
     pub fn raw(&self) -> String {
         match &self.value {
             MaybeExpression::Value(val) => val.to_string(),
-            MaybeExpression::Expression(val, _) => val.to_string()
+            MaybeExpression::Expression(val, _) => val.to_string(),
         }
     }
 
@@ -135,7 +128,7 @@ impl ValueValidator {
                 ast::Value::Function(_, _, s) => s,
                 ast::Value::Array(_, s) => s,
             },
-            MaybeExpression::Expression(_, s) => s
+            MaybeExpression::Expression(_, s) => s,
         }
     }
 
@@ -150,7 +143,9 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma Integer.
     pub fn as_int(&self) -> Result<i32, ValidationError> {
         match &self.value {
-            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => self.wrap_error_from_result(value.parse::<i32>(), "Numeric"),
+            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
+                self.wrap_error_from_result(value.parse::<i32>(), "Numeric")
+            }
             _ => Err(self.construct_error("Numeric")),
         }
     }
@@ -158,7 +153,9 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma Float.
     pub fn as_float(&self) -> Result<f32, ValidationError> {
         match &self.value {
-            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
+            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
+                self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
+            }
             _ => Err(self.construct_error("Numeric")),
         }
     }
@@ -167,7 +164,9 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma Decimal.
     pub fn as_decimal(&self) -> Result<f32, ValidationError> {
         match &self.value {
-            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
+            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
+                self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
+            }
             _ => Err(self.construct_error("Numeric")),
         }
     }
@@ -175,7 +174,9 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma Boolean.
     pub fn as_bool(&self) -> Result<bool, ValidationError> {
         match &self.value {
-            MaybeExpression::Value(ast::Value::BooleanValue(value, _)) => self.wrap_error_from_result(value.parse::<bool>(), "Boolean"),
+            MaybeExpression::Value(ast::Value::BooleanValue(value, _)) => {
+                self.wrap_error_from_result(value.parse::<bool>(), "Boolean")
+            }
             _ => Err(self.construct_error("Boolean")),
         }
     }
@@ -211,7 +212,9 @@ impl ValueValidator {
 
                 Ok(validators)
             }
-            _ => Ok(vec![ValueValidator { value: self.value.clone() } ]),
+            _ => Ok(vec![ValueValidator {
+                value: self.value.clone(),
+            }]),
         }
     }
 }
@@ -260,13 +263,11 @@ impl Into<ast::Value> for &dml::Value {
             dml::Value::Decimal(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
             dml::Value::Float(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
             dml::Value::Int(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
-            dml::Value::Expression(name, _, args) => {
-                ast::Value::Function(
-                    name.clone(),
-                    args.iter().map(|a| a.into()).collect(),
-                    ast::Span::empty()
-                )
-            },
+            dml::Value::Expression(name, _, args) => ast::Value::Function(
+                name.clone(),
+                args.iter().map(|a| a.into()).collect(),
+                ast::Span::empty(),
+            ),
         }
     }
 }

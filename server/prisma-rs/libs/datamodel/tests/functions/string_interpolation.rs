@@ -1,5 +1,5 @@
 use crate::common::*;
-use datamodel::{dml, common::PrismaType};
+use datamodel::{common::PrismaType, dml};
 
 #[test]
 fn interpolate_expressions_in_strings() {

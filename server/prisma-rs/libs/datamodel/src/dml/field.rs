@@ -3,8 +3,8 @@ use super::id::*;
 use super::relation::*;
 use super::scalar::*;
 use super::traits::*;
-use serde::{Deserialize, Serialize};
 use crate::common::{PrismaType, PrismaValue};
+use serde::{Deserialize, Serialize};
 
 /// Datamodel field arity.
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]

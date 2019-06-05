@@ -2,7 +2,7 @@ mod traits;
 pub use traits::*;
 mod builtin;
 use crate::ast;
-use crate::common::value::{ValueValidator, MaybeExpression};
+use crate::common::value::{MaybeExpression, ValueValidator};
 use crate::errors::ValidationError;
 pub use builtin::*;
 
@@ -14,7 +14,11 @@ const BUILTIN_NOW_FUNCTIONAL: builtin::NowFunctional = builtin::NowFunctional {}
 const BUILTIN_CUID_FUNCTIONAL: builtin::CuidFunctional = builtin::CuidFunctional {};
 
 /// Array of all builtin functionals.
-const BUILTIN_FUNCTIONALS: [&'static Functional; 3] = [&BUILTIN_ENV_FUNCTIONAL, &BUILTIN_NOW_FUNCTIONAL, &BUILTIN_CUID_FUNCTIONAL];
+const BUILTIN_FUNCTIONALS: [&'static Functional; 3] = [
+    &BUILTIN_ENV_FUNCTIONAL,
+    &BUILTIN_NOW_FUNCTIONAL,
+    &BUILTIN_CUID_FUNCTIONAL,
+];
 
 /// Evaluator for arbitrary expressions.
 pub struct FunctionalEvaluator {

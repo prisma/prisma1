@@ -1,16 +1,15 @@
 use super::Functional;
 use crate::ast;
-use crate::common::{ PrismaType, PrismaValue, value::{ValueValidator, MaybeExpression} };
+use crate::common::{
+    value::{MaybeExpression, ValueValidator},
+    PrismaType, PrismaValue,
+};
 use crate::errors::ValidationError;
 
 fn server_functional_with(name: &str, return_type: PrismaType, span: &ast::Span) -> MaybeExpression {
     MaybeExpression::Expression(
-        PrismaValue::Expression(
-            String::from(name),
-            return_type,
-            vec![]
-        ),
-        span.clone()
+        PrismaValue::Expression(String::from(name), return_type, vec![]),
+        span.clone(),
     )
 }
 
@@ -36,7 +35,6 @@ impl Functional for EnvFunctional {
         }
     }
 }
-
 
 /// Server side now function (`now()`).
 pub struct NowFunctional {}

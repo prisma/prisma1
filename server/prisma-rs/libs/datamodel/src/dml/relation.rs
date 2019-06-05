@@ -1,8 +1,8 @@
 use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
 
-use crate::common::FromStrAndSpan;
 use crate::ast;
+use crate::common::FromStrAndSpan;
 
 /// Holds information about a relation field.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]

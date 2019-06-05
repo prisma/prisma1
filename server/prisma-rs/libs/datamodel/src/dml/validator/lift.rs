@@ -1,8 +1,8 @@
 use super::{common::*, DirectiveBox};
 use crate::{
     ast,
-    common::{FromStrAndSpan, PrismaType},
     common::value::ValueValidator,
+    common::{FromStrAndSpan, PrismaType},
     dml,
     errors::{ErrorCollection, ValidationError},
     source,

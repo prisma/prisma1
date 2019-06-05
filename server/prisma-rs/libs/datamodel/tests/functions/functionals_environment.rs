@@ -1,5 +1,5 @@
 use crate::common::*;
-use datamodel::common::{PrismaValue, PrismaType};
+use datamodel::common::{PrismaType, PrismaValue};
 
 #[test]
 fn interpolate_environment_variables() {

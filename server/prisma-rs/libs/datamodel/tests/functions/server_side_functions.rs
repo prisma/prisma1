@@ -1,5 +1,5 @@
 use crate::common::*;
-use datamodel::common::{PrismaValue, PrismaType};
+use datamodel::common::{PrismaType, PrismaValue};
 
 #[test]
 fn correctly_handle_server_side_now_function() {
@@ -21,7 +21,7 @@ fn correctly_handle_server_side_now_function() {
         .assert_default_value(PrismaValue::Expression(
             String::from("now"),
             PrismaType::DateTime,
-            vec![]
+            vec![],
         ));
 }
 
@@ -45,6 +45,6 @@ fn correctly_handle_server_side_cuid_function() {
         .assert_default_value(PrismaValue::Expression(
             String::from("cuid"),
             PrismaType::String,
-            vec![]
+            vec![],
         ));
 }
