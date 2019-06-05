@@ -31,15 +31,15 @@ impl RpcApi {
             let cmd = T::new(input);
             let engine = MigrationEngine::new();
             engine.init();
-            let response_json = serde_json::to_value(&cmd.execute(&engine)).unwrap();
+            let response_json = serde_json::to_value(&cmd.execute(&engine)).expect("Rendering of RPC response failed");
             Ok(response_json)
         });
     }
 
     pub fn handle(self) {
         let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let response = self.io_handler.handle_request_sync(&input).unwrap();
+        io::stdin().read_line(&mut input).expect("Reading from stdin failed.");
+        let response = self.io_handler.handle_request_sync(&input).expect("Handling the RPC request failed");
         println!("{}", response);
     }
 }

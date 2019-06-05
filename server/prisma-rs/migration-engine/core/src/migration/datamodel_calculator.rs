@@ -134,7 +134,10 @@ fn apply_update_field(data_model: &mut Datamodel, step: &UpdateField) {
 }
 
 fn apply_create_field(data_model: &mut Datamodel, step: &CreateField) {
-    let model = data_model.find_model_mut(&step.model).unwrap();
+    let model = data_model.find_model_mut(&step.model).expect(&format!(
+        "The model {} does not exist in this Datamodel. It is not possible to create a field in it.",
+        step.model
+    ));
     if model.find_field(&step.name).is_some() {
         panic!(
             "The field {} on model {} already exists in this Datamodel. It is not possible to create it once more.",
