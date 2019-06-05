@@ -27,6 +27,7 @@ pub struct SqlMigrationConnector {
     database_migration_inferrer: Arc<DatabaseMigrationInferrer<SqlMigration>>,
     database_migration_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
     destructive_changes_checker: Arc<DestructiveChangesChecker<SqlMigration>>,
+    database_inspector: Arc<DatabaseInspector>,
 }
 
 impl SqlMigrationConnector {
@@ -42,7 +43,9 @@ impl SqlMigrationConnector {
         });
         let sql_migration_persistence = Arc::clone(&migration_persistence);
         let database_migration_inferrer = Arc::new(SqlDatabaseMigrationInferrer {
-            inspector: Box::new(DatabaseInspectorImpl::new(Self::new_conn(&schema_name))),
+            inspector: Box::new(DatabaseInspectorImpl {
+                connection: Arc::clone(&conn),
+            }),
             schema_name: schema_name.to_string(),
         });
         let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier {
@@ -57,6 +60,9 @@ impl SqlMigrationConnector {
             database_migration_inferrer,
             database_migration_step_applier,
             destructive_changes_checker,
+            database_inspector: Arc::new(DatabaseInspectorImpl {
+                connection: Arc::clone(&conn),
+            }),
         }
     }
 
@@ -116,9 +122,7 @@ impl MigrationConnector for SqlMigrationConnector {
         serde_json::from_value(json).unwrap()
     }
 
-    fn database_inspector(&self) -> Box<DatabaseInspector> {
-        Box::new(DatabaseInspectorImpl::new(SqlMigrationConnector::new_conn(
-            &self.schema_name,
-        )))
+    fn database_inspector(&self) -> Arc<DatabaseInspector> {
+        Arc::clone(&self.database_inspector)
     }
 }
