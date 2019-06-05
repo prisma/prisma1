@@ -1,13 +1,13 @@
 use super::*;
 use prisma_models::{InternalDataModelRef, ModelRef};
 
-pub struct ArgumentBuilder {
+pub struct ArgumentBuilder<'a> {
     internal_data_model: InternalDataModelRef,
-    input_type_builder: Weak<InputTypeBuilder>,
+    input_type_builder: Weak<InputTypeBuilder<'a>>,
 }
 
-impl ArgumentBuilder {
-    pub fn new(internal_data_model: InternalDataModelRef, input_type_builder: Weak<InputTypeBuilder>) -> Self {
+impl<'a> ArgumentBuilder<'a> {
+    pub fn new(internal_data_model: InternalDataModelRef, input_type_builder: Weak<InputTypeBuilder<'a>>) -> Self {
         ArgumentBuilder {
             internal_data_model,
             input_type_builder,
@@ -40,6 +40,22 @@ impl ArgumentBuilder {
             let input_object_type = InputType::object(input_object);
 
             vec![argument("data", input_object_type), unique_arg]
+        })
+    }
+
+    pub fn upsert_arguments(&self, model: ModelRef) -> Option<Vec<Argument>> {
+        self.where_unique_argument(Arc::clone(&model)).map(|where_unique_arg| {
+            let update_type = self.input_type_builder.into_arc().update_input_type(Arc::clone(&model));
+            let create_type = self
+                .input_type_builder
+                .into_arc()
+                .create_input_type(Arc::clone(&model), None);
+
+            vec![
+                where_unique_arg,
+                argument("create", InputType::object(create_type)),
+                argument("update", InputType::object(update_type)),
+            ]
         })
     }
 }

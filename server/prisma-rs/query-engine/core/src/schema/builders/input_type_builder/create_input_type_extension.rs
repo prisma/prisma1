@@ -1,7 +1,7 @@
 use super::*;
 use prisma_models::{ModelRef, RelationFieldRef, ScalarFieldRef};
 
-pub trait CreateInputTypeBuilderExtension: InputTypeBuilderBase {
+pub trait CreateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> {
     /// Builds the create input type (<x>CreateInput / <x>CreateWithout<y>Input)
     fn create_input_type(&self, model: ModelRef, parent_field: Option<RelationFieldRef>) -> InputObjectTypeRef {
         let name = match parent_field.as_ref().map(|pf| pf.related_field()) {

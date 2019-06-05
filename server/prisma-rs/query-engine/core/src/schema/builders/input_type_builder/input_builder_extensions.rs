@@ -1,6 +1,7 @@
 use super::*;
 use prisma_models::{ScalarFieldRef, TypeIdentifier};
 
+/// Generic extension also used by the FilterInputTypeBuilder.
 pub trait InputBuilderExtensions {
     fn map_optional_input_type(&self, field: ScalarFieldRef) -> InputType {
         InputType::opt(self.map_required_input_type(field))

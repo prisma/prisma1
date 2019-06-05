@@ -21,8 +21,8 @@ pub struct QuerySchemaBuilder<'a> {
   internal_data_model: InternalDataModelRef,
   capabilities: &'a SupportedCapabilities,
   object_type_builder: ObjectTypeBuilder<'a>,
-  input_type_builder: Arc<InputTypeBuilder>,
-  argument_builder: ArgumentBuilder,
+  input_type_builder: Arc<InputTypeBuilder<'a>>,
+  argument_builder: ArgumentBuilder<'a>,
   filter_object_type_builder: Arc<FilterObjectTypeBuilder<'a>>,
 }
 
@@ -32,9 +32,13 @@ impl<'a> QuerySchemaBuilder<'a> {
     capabilities: &'a SupportedCapabilities,
     mode: BuildMode,
   ) -> Self {
-    let input_type_builder = Arc::new(InputTypeBuilder::new(Arc::clone(internal_data_model)));
-    let argument_builder = ArgumentBuilder::new(Arc::clone(internal_data_model), Arc::downgrade(&input_type_builder));
     let filter_object_type_builder = Arc::new(FilterObjectTypeBuilder::new(capabilities));
+    let input_type_builder = Arc::new(InputTypeBuilder::new(
+      Arc::clone(internal_data_model),
+      Arc::downgrade(&filter_object_type_builder),
+    ));
+
+    let argument_builder = ArgumentBuilder::new(Arc::clone(internal_data_model), Arc::downgrade(&input_type_builder));
     let object_type_builder = ObjectTypeBuilder::new(
       Arc::clone(internal_data_model),
       true,
@@ -107,7 +111,9 @@ impl<'a> QuerySchemaBuilder<'a> {
       .into_iter()
       .map(|m| {
         let mut vec = vec![self.create_item_field(Arc::clone(&m))];
+
         append_opt(&mut vec, self.update_item_field(Arc::clone(&m)));
+        append_opt(&mut vec, self.upsert_item_field(Arc::clone(&m)));
 
         vec
       })
@@ -172,6 +178,7 @@ impl<'a> QuerySchemaBuilder<'a> {
     )
   }
 
+  /// Builds an update mutation field (e.g. updateUser) for given model.
   fn update_item_field(&self, model: ModelRef) -> Option<Field> {
     self.argument_builder.update_arguments(Arc::clone(&model)).map(|args| {
       field(
@@ -180,6 +187,17 @@ impl<'a> QuerySchemaBuilder<'a> {
         OutputType::opt(OutputType::object(
           self.object_type_builder.map_model_object_type(&model),
         )),
+      )
+    })
+  }
+
+  /// Builds an upsert mutation field (e.g. upsertUser) for given model.
+  fn upsert_item_field(&self, model: ModelRef) -> Option<Field> {
+    self.argument_builder.upsert_arguments(Arc::clone(&model)).map(|args| {
+      field(
+        format!("upsert{}", model.name),
+        args,
+        OutputType::object(self.object_type_builder.map_model_object_type(&model)),
       )
     })
   }

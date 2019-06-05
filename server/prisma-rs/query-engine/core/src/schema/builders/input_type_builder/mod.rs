@@ -1,8 +1,10 @@
 mod create_input_type_extension;
+mod input_builder_extensions;
 mod input_type_builder;
 mod update_input_type_extension;
 
 pub use create_input_type_extension::*;
+pub use input_builder_extensions::*;
 pub use input_type_builder::*;
 pub use update_input_type_extension::*;
 
@@ -10,7 +12,7 @@ use super::*;
 use prisma_models::{FieldBehaviour, IdStrategy, ModelRef, RelationFieldRef, ScalarFieldRef, TypeIdentifier};
 use std::sync::Arc;
 
-pub trait InputTypeBuilderBase: CachedBuilder<InputObjectType> + InputBuilderExtensions {
+pub trait InputTypeBuilderBase<'a>: CachedBuilder<InputObjectType> + InputBuilderExtensions {
     /// Builds scalar input fields using the mapper and the given, prefiltered, scalar fields.
     /// The mapper is responsible for mapping the fields to input types.
     fn scalar_input_fields<T, F>(
@@ -107,4 +109,6 @@ pub trait InputTypeBuilderBase: CachedBuilder<InputObjectType> + InputBuilderExt
         input_object.set_fields(fields);
         Arc::downgrade(&input_object)
     }
+
+    fn get_filter_object_builder(&self) -> Arc<FilterObjectTypeBuilder<'a>>;
 }

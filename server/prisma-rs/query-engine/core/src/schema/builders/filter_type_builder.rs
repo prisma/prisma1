@@ -1,5 +1,5 @@
 use super::*;
-use prisma_models::{Field as ModelField, ModelRef, RelationField, ScalarField};
+use prisma_models::{Field as ModelField, ModelRef, RelationFieldRef, ScalarFieldRef};
 use std::sync::Arc;
 
 /// Filter object and scalar filter object type builder.
@@ -30,6 +30,37 @@ impl<'a> FilterObjectTypeBuilder<'a> {
   }
 
   // todo: scalarFilterObjectType
+  pub fn scalar_filter_object_type(&self, model: ModelRef) -> InputObjectTypeRef {
+    let object_name = format!("{}ScalarWhereInput", model.name);
+    return_cached!(self.get_cache(), &object_name);
+
+    let input_object = Arc::new(init_input_object_type(object_name.clone()));
+    self.cache(object_name, Arc::clone(&input_object));
+
+    let weak_ref = Arc::downgrade(&input_object);
+    let mut input_fields = vec![
+      input_field(
+        "AND",
+        InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+      ),
+      input_field(
+        "OR",
+        InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+      ),
+      input_field(
+        "NOT",
+        InputType::opt(InputType::list(InputType::object(Weak::clone(&weak_ref)))),
+      ),
+    ];
+
+    let fields: Vec<ScalarFieldRef> = model.fields().scalar().into_iter().filter(|f| !f.is_hidden).collect();
+    let mut fields: Vec<InputField> = fields.into_iter().flat_map(|f| self.map_input_field(f)).collect();
+
+    input_fields.append(&mut fields);
+    input_object.set_fields(input_fields);
+
+    weak_ref
+  }
 
   pub fn filter_object_type(&self, model: ModelRef) -> InputObjectTypeRef {
     if self.capabilities.has(ConnectorCapability::MongoJoinRelationLinks) {
@@ -90,7 +121,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
     unimplemented!()
   }
 
-  fn map_input_field(&self, field: Arc<ScalarField>) -> Vec<InputField> {
+  fn map_input_field(&self, field: ScalarFieldRef) -> Vec<InputField> {
     get_field_filters(&ModelField::Scalar(Arc::clone(&field))) // wip: take a look at required signatures
       .into_iter()
       .map(|arg| {
@@ -127,7 +158,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
   /// dependency (A -> B -> C -> A) in relations without the cache to break circles.
   ///
   /// Without caching, processing D (in fact, any type) would also trigger a complete recomputation of A, B, C.
-  fn map_relation_filter_input_field(&self, field: Arc<RelationField>) -> Vec<InputField> {
+  fn map_relation_filter_input_field(&self, field: RelationFieldRef) -> Vec<InputField> {
     let related_model = field.related_model();
     let related_input_type = self.filter_object_type(related_model);
 
