@@ -1,12 +1,12 @@
 use crate::common::*;
-use datamodel::{dml, dml::FromStrAndSpan, errors::ValidationError, source::*, Arguments, DirectiveValidator};
+use datamodel::{dml, common::FromStrAndSpan, common::PrismaType, errors::ValidationError, source::*, Arguments, DirectiveValidator};
 
 //##########################
 // Directive implementation
 //##########################
 
 struct CustomDirective {
-    base_type: dml::ScalarType,
+    base_type: PrismaType,
 }
 
 impl DirectiveValidator<dml::Field> for CustomDirective {
@@ -40,11 +40,11 @@ impl CustomDbDefinition {
         CustomDbDefinition {}
     }
 
-    fn get_base_type(&self, arguments: &Arguments) -> Result<dml::ScalarType, ValidationError> {
+    fn get_base_type(&self, arguments: &Arguments) -> Result<PrismaType, ValidationError> {
         if let Ok(arg) = arguments.arg("base_type") {
-            dml::ScalarType::from_str_and_span(&arg.as_constant_literal()?, arg.span())
+            PrismaType::from_str_and_span(&arg.as_constant_literal()?, arg.span())
         } else {
-            return Ok(dml::ScalarType::String);
+            return Ok(PrismaType::String);
         }
     }
 }
@@ -70,7 +70,7 @@ impl SourceDefinition for CustomDbDefinition {
 struct CustomDb {
     name: String,
     url: String,
-    base_type: dml::ScalarType,
+    base_type: PrismaType,
 }
 
 impl Source for CustomDb {
@@ -149,22 +149,22 @@ fn custom_plugin() {
 
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::Int);
+        .assert_base_type(&PrismaType::Int);
     user_model
         .assert_has_field("lastName")
-        .assert_base_type(&dml::ScalarType::Int);
+        .assert_base_type(&PrismaType::Int);
     user_model
         .assert_has_field("email")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
 
     let post_model = schema.assert_has_model("Post");
 
     post_model
         .assert_has_field("comments")
-        .assert_base_type(&dml::ScalarType::Int);
+        .assert_base_type(&PrismaType::Int);
     post_model
         .assert_has_field("likes")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
 }
 
 #[test]

@@ -1,9 +1,9 @@
 extern crate datamodel;
 
-use datamodel::{dml, errors::*, source::SourceDefinition};
+use datamodel::{dml, common::PrismaType, errors::*, source::SourceDefinition};
 
 pub trait FieldAsserts {
-    fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
+    fn assert_base_type(&self, t: &PrismaType) -> &Self;
     fn assert_enum_type(&self, en: &str) -> &Self;
     fn assert_relation_name(&self, t: &str) -> &Self;
     fn assert_relation_to(&self, t: &str) -> &Self;
@@ -39,7 +39,7 @@ pub trait ErrorAsserts {
 }
 
 impl FieldAsserts for dml::Field {
-    fn assert_base_type(&self, t: &dml::ScalarType) -> &Self {
+    fn assert_base_type(&self, t: &PrismaType) -> &Self {
         if let dml::FieldType::Base(base_type) = &self.field_type {
             assert_eq!(base_type, t);
         } else {

@@ -1,5 +1,5 @@
 use crate::common::*;
-use datamodel::dml;
+use datamodel::{dml, common::PrismaType};
 
 #[test]
 fn resolve_relation() {
@@ -21,7 +21,7 @@ fn resolve_relation() {
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
     user_model
         .assert_has_field("posts")
         .assert_relation_to("Post")
@@ -30,7 +30,7 @@ fn resolve_relation() {
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("text")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
     post_model.assert_has_field("user").assert_relation_to("User");
 }
 
@@ -105,7 +105,7 @@ fn resolve_enum_field() {
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("email")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
     user_model.assert_has_field("role").assert_enum_type("Role");
 
     let role_enum = schema.assert_has_enum("Role");

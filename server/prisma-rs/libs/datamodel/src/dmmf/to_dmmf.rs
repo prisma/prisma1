@@ -2,6 +2,7 @@ use super::dmmf::*;
 use crate::dml;
 use crate::source::Source;
 use serde_json;
+use crate::common::PrismaType;
 
 fn get_field_kind(field: &dml::Field) -> String {
     match field.field_type {
@@ -12,15 +13,8 @@ fn get_field_kind(field: &dml::Field) -> String {
     }
 }
 
-fn type_to_string(scalar: &dml::ScalarType) -> String {
-    match scalar {
-        dml::ScalarType::Int => String::from("Int"),
-        dml::ScalarType::Decimal => String::from("Decimal"),
-        dml::ScalarType::Float => String::from("Float"),
-        dml::ScalarType::Boolean => String::from("Boolean"),
-        dml::ScalarType::String => String::from("String"),
-        dml::ScalarType::DateTime => String::from("DateTime"),
-    }
+fn type_to_string(scalar: &PrismaType) -> String {
+    scalar.to_string()
 }
 
 fn get_field_type(field: &dml::Field) -> String {
@@ -53,6 +47,7 @@ pub fn default_value_to_serde(container: &Option<dml::Value>) -> Option<serde_js
             dml::Value::Int(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
             dml::Value::Decimal(val) => serde_json::Value::Number(serde_json::Number::from_f64(*val as f64).unwrap()),
             dml::Value::DateTime(val) => serde_json::Value::String(val.to_rfc3339()),
+            dml::Value::Expression(name, return_type, args) => unimplemented!("DMMF support missing.")
         }),
         None => None,
     }

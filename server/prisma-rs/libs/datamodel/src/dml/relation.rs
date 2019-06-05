@@ -1,7 +1,7 @@
 use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
 
-use super::FromStrAndSpan;
+use crate::common::FromStrAndSpan;
 use crate::ast;
 
 /// Holds information about a relation field.

@@ -1,5 +1,5 @@
 use crate::common::*;
-use datamodel::dml;
+use datamodel::{dml, common::PrismaType};
 
 #[test]
 fn parse_scalar_types() {
@@ -18,19 +18,19 @@ fn parse_scalar_types() {
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
     user_model
         .assert_has_field("age")
-        .assert_base_type(&dml::ScalarType::Int);
+        .assert_base_type(&PrismaType::Int);
     user_model
         .assert_has_field("isPro")
-        .assert_base_type(&dml::ScalarType::Boolean);
+        .assert_base_type(&PrismaType::Boolean);
     user_model
         .assert_has_field("balance")
-        .assert_base_type(&dml::ScalarType::Decimal);
+        .assert_base_type(&PrismaType::Decimal);
     user_model
         .assert_has_field("averageGrade")
-        .assert_base_type(&dml::ScalarType::Float);
+        .assert_base_type(&PrismaType::Float);
 }
 
 #[test]
@@ -48,15 +48,15 @@ fn parse_field_arity() {
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("text")
-        .assert_base_type(&dml::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_arity(&dml::FieldArity::Required);
     post_model
         .assert_has_field("photo")
-        .assert_base_type(&dml::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_arity(&dml::FieldArity::Optional);
     post_model
         .assert_has_field("comments")
-        .assert_base_type(&dml::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_arity(&dml::FieldArity::List);
 }
 
@@ -77,22 +77,22 @@ fn parse_defaults() {
     let user_model = schema.assert_has_model("User");
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String)
+        .assert_base_type(&PrismaType::String)
         .assert_default_value(dml::Value::String(String::from("Hello")));
     user_model
         .assert_has_field("age")
-        .assert_base_type(&dml::ScalarType::Int)
+        .assert_base_type(&PrismaType::Int)
         .assert_default_value(dml::Value::Int(21));
     user_model
         .assert_has_field("isPro")
-        .assert_base_type(&dml::ScalarType::Boolean)
+        .assert_base_type(&PrismaType::Boolean)
         .assert_default_value(dml::Value::Boolean(false));
     user_model
         .assert_has_field("balance")
-        .assert_base_type(&dml::ScalarType::Decimal)
+        .assert_base_type(&PrismaType::Decimal)
         .assert_default_value(dml::Value::Decimal(1.2));
     user_model
         .assert_has_field("averageGrade")
-        .assert_base_type(&dml::ScalarType::Float)
+        .assert_base_type(&PrismaType::Float)
         .assert_default_value(dml::Value::Float(3.4));
 }

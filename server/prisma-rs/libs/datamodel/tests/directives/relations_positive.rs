@@ -1,5 +1,5 @@
 use crate::common::*;
-use datamodel::dml;
+use datamodel::{dml, common::PrismaType};
 
 #[test]
 fn allow_multiple_relations() {
@@ -32,7 +32,7 @@ fn allow_multiple_relations() {
     let post_model = schema.assert_has_model("Post");
     post_model
         .assert_has_field("text")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
     post_model.assert_has_field("user").assert_relation_to("User");
 }
 

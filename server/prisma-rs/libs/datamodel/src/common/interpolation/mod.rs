@@ -27,6 +27,10 @@ fn parse_expr_and_lift_span(token: &pest::iterators::Pair<'_, Rule>, start: usiz
             "Arrays cannot be interpolated into strings.",
             &s,
         )),
+        Value::ServerSideFunction(_, _, _, s) => Err(ValidationError::new_validation_error(
+            "Functions cannot be interpolated into strings.",
+            &s,
+        )),
     }
 }
 

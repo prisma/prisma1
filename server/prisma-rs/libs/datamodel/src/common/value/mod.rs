@@ -6,6 +6,8 @@ use crate::errors::ValidationError;
 use crate::FunctionalEvaluator;
 use chrono::{DateTime, Utc};
 use std::error;
+use crate::common::PrismaType;
+use crate::common::FromStrAndSpan;
 
 macro_rules! wrap_value (
     ($value:expr, $wrapper:expr, $validator:expr) => ({
@@ -76,19 +78,20 @@ impl ValueValidator {
 
     /// Attempts to parse the wrapped value
     /// to a given prisma type.
-    pub fn as_type(&self, scalar_type: &dml::ScalarType) -> Result<dml::Value, ValidationError> {
+    pub fn as_type(&self, scalar_type: &PrismaType) -> Result<dml::Value, ValidationError> {
         match scalar_type {
-            dml::ScalarType::Int => wrap_value!(self.as_int(), dml::Value::Int, self),
-            dml::ScalarType::Float => wrap_value!(self.as_float(), dml::Value::Float, self),
-            dml::ScalarType::Decimal => wrap_value!(self.as_decimal(), dml::Value::Decimal, self),
-            dml::ScalarType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self),
-            dml::ScalarType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self),
-            dml::ScalarType::String => wrap_value!(self.as_str(), dml::Value::String, self),
+            PrismaType::Int => wrap_value!(self.as_int(), dml::Value::Int, self),
+            PrismaType::Float => wrap_value!(self.as_float(), dml::Value::Float, self),
+            PrismaType::Decimal => wrap_value!(self.as_decimal(), dml::Value::Decimal, self),
+            PrismaType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self),
+            PrismaType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self),
+            PrismaType::String => wrap_value!(self.as_str(), dml::Value::String, self),
+            PrismaType::ConstantLiteral => wrap_value!(self.as_constant_literal(), dml::Value::String, self),
         }
     }
 
     /// Parses the wrapped value as a given literal type.
-    pub fn parse_literal<T: dml::FromStrAndSpan>(&self) -> Result<T, ValidationError> {
+    pub fn parse_literal<T: FromStrAndSpan>(&self) -> Result<T, ValidationError> {
         T::from_str_and_span(&self.as_constant_literal()?, self.span())
     }
 
@@ -102,6 +105,7 @@ impl ValueValidator {
             ast::Value::ConstantValue(x, _) => x,
             ast::Value::Function(x, _, _) => x,
             ast::Value::Array(_, _) => "(Array)",
+            ast::Value::ServerSideFunction(_, _, _, _) => "(Function)",
         }
     }
 
@@ -114,6 +118,7 @@ impl ValueValidator {
             ast::Value::ConstantValue(_, s) => s,
             ast::Value::Function(_, _, s) => s,
             ast::Value::Array(_, s) => s,
+            ast::Value::ServerSideFunction(_, _, _, s) => s,
         }
     }
 
@@ -238,6 +243,14 @@ impl Into<ast::Value> for &dml::Value {
             dml::Value::Decimal(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
             dml::Value::Float(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
             dml::Value::Int(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
+            dml::Value::Expression(name, return_type, args) => {
+                ast::Value::ServerSideFunction(
+                    name.clone(),
+                    *return_type,
+                    args.iter().map(|a| a.into()).collect(),
+                    ast::Span::empty()
+                )
+            },
         }
     }
 }

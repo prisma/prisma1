@@ -1,19 +1,9 @@
 use crate::ast;
-use crate::dml::FromStrAndSpan;
+use crate::common::FromStrAndSpan;
 use crate::errors::ValidationError;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
-/// Prisma's builtin base types.
-#[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]
-pub enum ScalarType {
-    Int,
-    Float,
-    Decimal,
-    Boolean,
-    String,
-    DateTime,
-}
+use crate::common::PrismaType;
 
 /// Value types for Prisma's builtin base types.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -25,32 +15,20 @@ pub enum Value {
     String(String),
     DateTime(DateTime<Utc>),
     ConstantLiteral(String),
+    Expression(String, PrismaType, Vec<Value>)
 }
 
-impl FromStrAndSpan for ScalarType {
-    fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
-        match s {
-            "ID" => Ok(ScalarType::Int),
-            "Int" => Ok(ScalarType::Int),
-            "Float" => Ok(ScalarType::Float),
-            "Decimal" => Ok(ScalarType::Decimal),
-            "Boolean" => Ok(ScalarType::Boolean),
-            "String" => Ok(ScalarType::String),
-            "DateTime" => Ok(ScalarType::DateTime),
-            _ => Err(ValidationError::new_type_not_found_error(s, span)),
-        }
-    }
-}
-
-impl ToString for ScalarType {
-    fn to_string(&self) -> String {
+impl Value {
+    fn get_type(&self) -> PrismaType {
         match self {
-            ScalarType::Int => String::from("Int"),
-            ScalarType::Float => String::from("Float"),
-            ScalarType::Decimal => String::from("Decimal"),
-            ScalarType::Boolean => String::from("Boolean"),
-            ScalarType::String => String::from("String"),
-            ScalarType::DateTime => String::from("DateTime"),
+            Value::Int(_) => PrismaType::Int,
+            Value::Float(_) => PrismaType::Float,
+            Value::Decimal(_) => PrismaType::Decimal,
+            Value::Boolean(_) => PrismaType::Boolean,
+            Value::String(_) => PrismaType::String,
+            Value::DateTime(_) => PrismaType::DateTime,
+            Value::ConstantLiteral(_) => PrismaType::ConstantLiteral,
+            Value::Expression(_, t, _) => *t
         }
     }
 }

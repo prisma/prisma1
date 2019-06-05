@@ -4,6 +4,7 @@ use super::relation::*;
 use super::scalar::*;
 use super::traits::*;
 use serde::{Deserialize, Serialize};
+use crate::common::PrismaType;
 
 /// Datamodel field arity.
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
@@ -23,11 +24,11 @@ pub enum FieldType {
     Relation(RelationInfo),
     /// Connector specific field type.
     ConnectorSpecific {
-        base_type: ScalarType,
+        base_type: PrismaType,
         connector_type: Option<String>,
     },
     /// Base (built-in scalar) type.
-    Base(ScalarType),
+    Base(PrismaType),
 }
 
 /// Holds information about an id, or priamry key.

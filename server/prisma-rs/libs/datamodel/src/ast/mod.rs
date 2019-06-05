@@ -1,6 +1,8 @@
 pub mod parser;
 pub mod renderer;
 
+use crate::common::PrismaType;
+
 /// AST representation of a prisma datamodel
 ///
 /// This module is used internally to represent an AST. The AST's nodes can be used
@@ -116,8 +118,10 @@ pub enum Value {
     /// Any literal constant, basically a string which was not inside "...".
     /// This is used for representing builtin enums.
     ConstantValue(String, Span),
-    /// A function with a name and arguments.
+    /// A function with a name and arguments, which is evaluated at client side.
     Function(String, Vec<Value>, Span),
+    /// A server side function with a name, return type and arguments, which is evaluated at server side.
+    ServerSideFunction(String, PrismaType, Vec<Value>, Span),
     /// An array of other values.
     Array(Vec<Value>, Span),
 }
@@ -130,6 +134,13 @@ pub fn describe_value_type(val: &Value) -> &'static str {
         Value::StringValue(_, _) => "String",
         Value::ConstantValue(_, _) => "Literal",
         Value::Function(_, _, _) => "Functional",
+        Value::ServerSideFunction(_, PrismaType::Boolean, _, _) => "Function<Boolean>",
+        Value::ServerSideFunction(_, PrismaType::ConstantLiteral, _, _) => "Function<ConstantLiteral>",
+        Value::ServerSideFunction(_, PrismaType::DateTime, _, _) => "Function<DateTime>",
+        Value::ServerSideFunction(_, PrismaType::Decimal, _, _) => "Function<Decimal>",
+        Value::ServerSideFunction(_, PrismaType::Float, _, _) => "Function<Float>",
+        Value::ServerSideFunction(_, PrismaType::Int, _, _) => "Function<Int>",
+        Value::ServerSideFunction(_, PrismaType::String, _, _) => "Function<String>",
         Value::Array(_, _) => "Array",
     }
 }
