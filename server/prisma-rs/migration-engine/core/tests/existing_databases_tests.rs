@@ -4,7 +4,6 @@ use barrel::{backend::Sqlite as Squirrel, types, Migration};
 use database_inspector::*;
 use prisma_query::connector::Sqlite as SqliteDatabaseClient;
 use prisma_query::transaction::Connectional;
-use std::{thread, time};
 use test_harness::*;
 
 const SCHEMA: &str = "migration_engine";
@@ -12,7 +11,7 @@ const SCHEMA: &str = "migration_engine";
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {
     run_test_with_engine(|engine| {
-        let initial_result = setup(|migration| {
+        let initial_result = execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
             });
@@ -65,7 +64,7 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
 #[test]
 fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
     run_test_with_engine(|engine| {
-        let initial_result = setup(|migration| {
+        let initial_result = execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::text());
@@ -85,7 +84,7 @@ fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
 #[test]
 fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
     run_test_with_engine(|engine| {
-        let initial_result = setup(|migration| {
+        let initial_result = execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::integer().nullable(true));
@@ -112,7 +111,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
 #[test]
 fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional() {
     run_test_with_engine(|engine| {
-        let initial_result = setup(|migration| {
+        let initial_result = execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::text());
@@ -294,22 +293,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
     });
 }
 
-// FIXME: this was copy pasted from tests.rs from database-inspector
-fn setup<F>(migrationFn: F) -> DatabaseSchema
-where
-    F: FnMut(&mut Migration) -> (),
-{
-    execute_internal(migrationFn, false)
-}
-
-fn execute<F>(migrationFn: F) -> DatabaseSchema
-where
-    F: FnMut(&mut Migration) -> (),
-{
-    execute_internal(migrationFn, false)
-}
-
-fn execute_internal<F>(mut migrationFn: F, delete_db_file: bool) -> DatabaseSchema
+fn execute<F>(mut migrationFn: F) -> DatabaseSchema
 where
     F: FnMut(&mut Migration) -> (),
 {
@@ -349,11 +333,6 @@ where
 
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
-    let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
-    if delete_db_file {
-        let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
-        thread::sleep(time::Duration::from_millis(100));
-    }
 
     let test_mode = false;
     let conn = std::sync::Arc::new(SqliteDatabaseClient::new(database_folder_path, 32, test_mode).unwrap());
