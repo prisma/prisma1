@@ -20,7 +20,7 @@ pub enum PrismaType {
     Decimal,
     Boolean,
     String,
-    DateTime
+    DateTime,
 }
 
 impl FromStrAndSpan for PrismaType {
@@ -45,7 +45,7 @@ impl ToString for PrismaType {
             PrismaType::Decimal => String::from("Decimal"),
             PrismaType::Boolean => String::from("Boolean"),
             PrismaType::String => String::from("String"),
-            PrismaType::DateTime => String::from("DateTime")
+            PrismaType::DateTime => String::from("DateTime"),
         }
     }
 }
@@ -73,7 +73,9 @@ impl PrismaValue {
             PrismaValue::String(_) => PrismaType::String,
             PrismaValue::DateTime(_) => PrismaType::DateTime,
             PrismaValue::Expression(_, t, _) => *t,
-            PrismaValue::ConstantLiteral(_) => panic!("Constant literal values do not map to a base type and should never surface.")
+            PrismaValue::ConstantLiteral(_) => {
+                panic!("Constant literal values do not map to a base type and should never surface.")
+            }
         }
     }
 }
