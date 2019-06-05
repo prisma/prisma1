@@ -34,11 +34,20 @@ impl DataModelCalculator for DataModelCalculatorImpl {
 }
 
 fn apply_delete_model(data_model: &mut Datamodel, step: &DeleteModel) {
+    if !data_model.has_model(&step.name) {
+        panic!(
+            "The model {} does not exist in this Datamodel. It is not possible to delete it.",
+            &step.name
+        )
+    }
     data_model.remove_model(&step.name);
 }
 
 fn apply_update_model(data_model: &mut Datamodel, step: &UpdateModel) {
-    let model = data_model.find_model_mut(&step.name).unwrap();
+    let model = data_model.find_model_mut(&step.name).expect(&format!(
+        "The model {} does not exist in this Datamodel. It is not possible to update it.",
+        &step.name
+    ));
 
     set!(model, step, name, new_name);
     set!(model, step, is_embedded, embedded);
@@ -46,6 +55,12 @@ fn apply_update_model(data_model: &mut Datamodel, step: &UpdateModel) {
 }
 
 fn apply_create_model(data_model: &mut Datamodel, step: &CreateModel) {
+    if data_model.has_model(&step.name) {
+        panic!(
+            "The model {} already exists in this Datamodel. It is not possible to create it once more.",
+            &step.name
+        )
+    }
     let mut model = Model::new(&step.name);
     model.is_embedded = step.embedded;
     model.database_name = step.db_name.clone();
@@ -53,11 +68,20 @@ fn apply_create_model(data_model: &mut Datamodel, step: &CreateModel) {
 }
 
 fn apply_delete_enum(data_model: &mut Datamodel, step: &DeleteEnum) {
+    if !data_model.has_enum(&step.name) {
+        panic!(
+            "The enum {} does not exist in this Datamodel. It is not possible to delete it.",
+            &step.name
+        )
+    }
     data_model.remove_enum(&step.name);
 }
 
 fn apply_update_enum(data_model: &mut Datamodel, step: &UpdateEnum) {
-    let model = data_model.find_enum_mut(&step.name).unwrap();
+    let model = data_model.find_enum_mut(&step.name).expect(&format!(
+        "The enum {} does not exist in this Datamodel. It is not possible to update it.",
+        &step.name,
+    ));
 
     set!(model, step, name, new_name);
     set!(model, step, values, values);
@@ -65,19 +89,40 @@ fn apply_update_enum(data_model: &mut Datamodel, step: &UpdateEnum) {
 }
 
 fn apply_create_enum(data_model: &mut Datamodel, step: &CreateEnum) {
+    if data_model.has_enum(&step.name) {
+        panic!(
+            "The enum {} already exists in this Datamodel. It is not possible to create it once more.",
+            &step.name
+        )
+    }
     let mut en = Enum::new(&step.name, step.values.clone());
     en.database_name = step.db_name.clone();
     data_model.add_enum(en);
 }
 
 fn apply_delete_field(data_model: &mut Datamodel, step: &DeleteField) {
-    let model = data_model.models_mut().find(|m| m.name == step.model).unwrap();
+    let model = data_model.models_mut().find(|m| m.name == step.model).expect(&format!(
+        "The model {} does not exist in this Datamodel. It is not possible to delete a field in it.",
+        step.model
+    ));
+    if model.find_field(&step.name).is_none() {
+        panic!(
+            "The field {} on model {} does not exist in this Datamodel. It is not possible to delete it.",
+            &step.name, &step.model
+        )
+    }
     model.remove_field(&step.name);
 }
 
 fn apply_update_field(data_model: &mut Datamodel, step: &UpdateField) {
-    let model = data_model.find_model_mut(&step.model).unwrap();
-    let field = model.find_field_mut(&step.name).unwrap();
+    let model = data_model.find_model_mut(&step.model).expect(&format!(
+        "The model {} does not exist in this Datamodel. It is not possible to update a field in it.",
+        step.model
+    ));
+    let field = model.find_field_mut(&step.name).expect(&format!(
+        "The field {} on model {} does not exist in this Datamodel. It is not possible to update it.",
+        &step.name, &step.model
+    ));
 
     set!(field, step, name, new_name);
     set!(field, step, field_type, tpe);
@@ -90,6 +135,12 @@ fn apply_update_field(data_model: &mut Datamodel, step: &UpdateField) {
 
 fn apply_create_field(data_model: &mut Datamodel, step: &CreateField) {
     let model = data_model.find_model_mut(&step.model).unwrap();
+    if model.find_field(&step.name).is_some() {
+        panic!(
+            "The field {} on model {} already exists in this Datamodel. It is not possible to create it once more.",
+            &step.name, &step.model
+        )
+    }
     let mut field = Field::new(&step.name, step.tpe.clone());
     field.arity = step.arity;
     field.database_name = step.db_name.clone();

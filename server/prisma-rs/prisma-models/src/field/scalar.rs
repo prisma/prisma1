@@ -56,7 +56,7 @@ pub enum FieldBehaviour {
     UpdatedAt,
     Id {
         strategy: IdStrategy,
-        sequence: Option<Sequence>,
+        sequence: Option<Sequence>, // TODO: this can be removed when we have switched fully to datamodel v2. This is not of interested for the query engine.
     },
     ScalarList {
         strategy: ScalarListStrategy,

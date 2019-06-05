@@ -46,7 +46,7 @@ fn models_with_only_scalar_fields() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id
+                id: Int @id
                 int: Int
                 float: Float
                 boolean: Boolean
@@ -60,11 +60,12 @@ fn models_with_only_scalar_fields() {
     let model = datamodel.assert_model("Test");
     model
         .assert_scalar_field("id")
-        .assert_type_identifier(TypeIdentifier::String)
+        .assert_type_identifier(TypeIdentifier::Int)
         .assert_behaviour(FieldBehaviour::Id {
-            strategy: IdStrategy::None,
+            strategy: IdStrategy::Auto,
             sequence: None,
-        });
+        })
+        .assert_is_auto_generated_by_db();
     model
         .assert_scalar_field("int")
         .assert_type_identifier(TypeIdentifier::Int)
@@ -406,6 +407,7 @@ trait ScalarFieldAssertions {
     fn assert_created_at(&self) -> &Self;
     fn assert_behaviour(&self, behaviour: FieldBehaviour) -> &Self;
     fn assert_no_behaviour(&self) -> &Self;
+    fn assert_is_auto_generated_by_db(&self) -> &Self;
 }
 
 trait RelationFieldAssertions {
@@ -453,6 +455,11 @@ impl ScalarFieldAssertions for ScalarField {
 
     fn assert_no_behaviour(&self) -> &Self {
         assert!(self.behaviour.is_none());
+        self
+    }
+
+    fn assert_is_auto_generated_by_db(&self) -> &Self {
+        assert!(self.is_auto_generated);
         self
     }
 }
