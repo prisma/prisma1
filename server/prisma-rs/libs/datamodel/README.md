@@ -8,7 +8,7 @@ Build System: Cargo
 
 This module is responsible for parsing a string representation of a Prisma datamodel V2, as well as rendering a datamodel to Prisma datamodel V2. The datamodel might include source blocks, so those are loaded as well.
 
-![Architecture Overview](/home/emi/Projects/prisma/server/prisma-rs/libs/datamodel/doc/images/overview.png)
+![Architecture Overview](doc/images/overview.png?raw=true)
 
 The validated and standardised **Datamodel** structure is the primary output of this module. For TS/JS applications, a serialized form in DMMF format is provided.
 
