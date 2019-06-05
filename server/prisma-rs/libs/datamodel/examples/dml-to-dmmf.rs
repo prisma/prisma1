@@ -1,4 +1,4 @@
-use datamodel::*;
+use datamodel;
 use std::fs;
 
 extern crate clap;
@@ -20,30 +20,20 @@ fn main() {
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
 
-    let parsed = parser::parse(&file);
+    let validated = datamodel::parse(&file);
 
-    if let Err(error) = &parsed {
-        error
-            .pretty_print(&mut std::io::stderr().lock(), file_name, &file)
-            .expect("Failed to write error to stderr");
-
-        return;
-    }
-
-    let ast = parsed.unwrap();
-    let validator = ValidationPipeline::new();
-    let validated = validator.validate(&ast);
-
-    if let Err(errors) = &validated {
-        for error in errors.to_iter() {
-            println!("");
-            error
-                .pretty_print(&mut std::io::stderr().lock(), file_name, &file)
-                .expect("Failed to write errors to stderr");
+    match &validated {
+        Err(errors) => {
+            for error in errors.to_iter() {
+                println!("");
+                error
+                    .pretty_print(&mut std::io::stderr().lock(), file_name, &file)
+                    .expect("Failed to write errors to stderr");
+            }
+        }
+        Ok(dml) => {
+            let json = datamodel::dmmf::render_to_dmmf(&dml);
+            println!("{}", json);
         }
     }
-
-    let dml = validated.unwrap();
-    let json = datamodel::dmmf::render_to_dmmf(&dml);
-    println!("{}", json);
 }
