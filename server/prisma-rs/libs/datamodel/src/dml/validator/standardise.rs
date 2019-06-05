@@ -1,11 +1,5 @@
 use super::common::*;
-use crate::{
-    ast,
-    common::names::*,
-    dml,
-    errors::{ErrorCollection, ValidationError},
-    source,
-};
+use crate::{ast, common::names::*, dml, errors::ErrorCollection, source};
 
 /// Helper for standardsing a datamodel.
 ///
@@ -28,14 +22,12 @@ impl Standardiser {
     }
 
     pub fn standardise(&self, ast_schema: &ast::Datamodel, schema: &mut dml::Datamodel) -> Result<(), ErrorCollection> {
-        // Model Consistency. These ones do not fail.
-        // TODO: Also need to hook up the id field with to.
         self.add_missing_back_relations(ast_schema, schema)?;
 
-        // Always give relations a to_field.
+        self.add_missing_relation_tables(ast_schema, schema)?;
+
         self.set_relation_to_field_to_id_if_missing(schema);
 
-        // Always give relations some name.
         self.name_unnamed_relations(schema);
 
         Ok(())
@@ -118,7 +110,131 @@ impl Standardiser {
         }
     }
 
-    /// Identifies and adds missing back relations.
+    // Rel name, from field, to field.
+    fn identify_missing_relation_tables(
+        &self,
+        schema: &mut dml::Datamodel,
+    ) -> Vec<(String, dml::FieldRef, dml::FieldRef)> {
+        let mut res = vec![];
+
+        for model in schema.models() {
+            for field in model.fields() {
+                if field.arity == dml::FieldArity::List {
+                    if let dml::FieldType::Relation(rel) = &field.field_type {
+                        let related_model = schema.find_model(&rel.to).expect(STATE_ERROR);
+                        let related_field = related_model
+                            .related_field(&model.name, &rel.name, &field.name)
+                            .expect(STATE_ERROR);
+
+                        // Model names, field names are again used as a tie breaker.
+                        if related_field.arity == dml::FieldArity::List
+                            && (model.name < related_model.name
+                                || (model.name == related_model.name && field.name < related_field.name))
+                        {
+                            // N:M Relation, needs a relation table.
+                            res.push((
+                                rel.name.clone(),
+                                (model.name.clone(), field.name.clone()),
+                                (related_model.name.clone(), related_field.name.clone()),
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+
+        res
+    }
+
+    fn create_relation_table(
+        &self,
+        a: &dml::FieldRef,
+        b: &dml::FieldRef,
+        override_relation_name: &str,
+        datamodel: &dml::Datamodel,
+    ) -> dml::Model {
+        // A vs B tie breaking is done in identify_missing_relation_tables.
+        let a_model = datamodel.find_model(&a.0).expect(STATE_ERROR);
+        let b_model = datamodel.find_model(&b.0).expect(STATE_ERROR);
+
+        let relation_name = if override_relation_name != "" {
+            String::from(override_relation_name)
+        } else {
+            DefaultNames::relation_name(&a_model.name, &b_model.name)
+        };
+
+        let mut a_related_field = self.create_reference_field_for_model(a_model, &relation_name);
+        a_related_field.arity = dml::FieldArity::Required;
+        let mut b_related_field = self.create_reference_field_for_model(b_model, &relation_name);
+        b_related_field.arity = dml::FieldArity::Required;
+
+        dml::Model {
+            comments: vec![],
+            name: relation_name,
+            database_name: None,
+            is_embedded: false,
+            fields: vec![a_related_field, b_related_field],
+            is_generated: true,
+        }
+    }
+
+    fn create_reference_field_for_model(&self, model: &dml::Model, relation_name: &str) -> dml::Field {
+        dml::Field::new_generated(
+            &NameNormalizer::camel_case(&model.name),
+            dml::FieldType::Relation(dml::RelationInfo {
+                to: model.name.clone(),
+                to_fields: model.id_fields().map(|s| s.clone()).collect(),
+                name: String::from(relation_name), // Will be corrected in later step
+                on_delete: dml::OnDeleteStrategy::None,
+            }),
+        )
+    }
+
+    fn point_relation_to(&self, field_ref: &dml::FieldRef, to: &str, datamodel: &mut dml::Datamodel) {
+        let field = datamodel.find_field_mut(field_ref).expect(STATE_ERROR);
+
+        if let dml::FieldType::Relation(rel) = &mut field.field_type {
+            rel.to = String::from(to);
+            rel.to_fields = vec![];
+        } else {
+            panic!(STATE_ERROR);
+        }
+    }
+
+    fn add_missing_relation_tables(
+        &self,
+        ast_schema: &ast::Datamodel,
+        schema: &mut dml::Datamodel,
+    ) -> Result<(), ErrorCollection> {
+        let mut errors = ErrorCollection::new();
+
+        let all_missing = self.identify_missing_relation_tables(schema);
+
+        for missing in all_missing {
+            let rel_table = self.create_relation_table(&missing.1, &missing.2, &missing.0, schema);
+            if let Some(conflicting_model) = schema.find_model(&rel_table.name) {
+                errors.push(model_validation_error(
+                    "Automatic relation table generation would cause a naming conflict.",
+                    &conflicting_model,
+                    &ast_schema,
+                ));
+            }
+            // TODO: Relation name WILL clash if there is a N:M self relation.
+            self.point_relation_to(&missing.1, &rel_table.name, schema);
+            self.point_relation_to(&missing.2, &rel_table.name, schema);
+
+            schema.add_model(rel_table);
+        }
+
+        if errors.has_errors() {
+            Err(errors)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Identifies and adds missing back relations. For 1:1 and 1:N relations.
+    /// Explicit n:m relations are not touched, as they already have a back relation field.
     fn add_missing_back_relations(
         &self,
         ast_schema: &ast::Datamodel,
@@ -138,13 +254,11 @@ impl Standardiser {
 
             if let Some(conflicting_field) = model.find_field(&name) {
                 println!("Error adding field");
-                errors.push(ValidationError::new_model_validation_error(
+                errors.push(field_validation_error(
                     "Automatic back field generation would cause a naming conflict.",
-                    &model.name,
-                    &ast_schema
-                        .find_field(&model.name, &conflicting_field.name)
-                        .expect(STATE_ERROR)
-                        .span,
+                    &model,
+                    &conflicting_field,
+                    &ast_schema,
                 ));
             }
 

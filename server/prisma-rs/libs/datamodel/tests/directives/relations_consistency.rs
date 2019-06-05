@@ -30,7 +30,7 @@ fn should_add_back_relations() {
 }
 
 #[test]
-fn should_not_add_back_relations_for_many_to_many() {
+fn should_add_a_relation_table_for_many_to_many_relations() {
     // Equal name for both fields was a bug triggerer.
     let dml = r#"
 model Blog {
@@ -49,7 +49,7 @@ model Author {
     let author_model = schema.assert_has_model("Author");
     author_model
         .assert_has_field("authors")
-        .assert_relation_to("Blog")
+        .assert_relation_to("AuthorToBlog")
         .assert_relation_to_fields(&[])
         .assert_arity(&datamodel::dml::FieldArity::List);
 
@@ -58,15 +58,28 @@ model Author {
     let blog_model = schema.assert_has_model("Blog");
     blog_model
         .assert_has_field("authors")
-        .assert_relation_to("Author")
+        .assert_relation_to("AuthorToBlog")
         .assert_relation_to_fields(&[])
         .assert_arity(&datamodel::dml::FieldArity::List);
 
     blog_model.assert_has_field("id");
 
     // Assert nothing else was generated.
+    // E.g. no erronous back relations.
     assert_eq!(author_model.fields().count(), 2);
     assert_eq!(blog_model.fields().count(), 2);
+
+    let link_model = schema.assert_has_model("AuthorToBlog");
+    link_model
+        .assert_has_field("author")
+        .assert_relation_to("Author")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+    link_model
+        .assert_has_field("blog")
+        .assert_relation_to("Blog")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::Required);
 }
 
 #[test]

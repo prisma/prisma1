@@ -16,6 +16,9 @@ pub struct Datamodel {
     pub comments: Vec<Comment>,
 }
 
+/// Type alias for (ModelName, FieldName)
+pub type FieldRef = (String, String);
+
 impl Datamodel {
     /// Creates a new, empty schema.
     pub fn new() -> Datamodel {
@@ -97,6 +100,18 @@ impl Datamodel {
         // This uses the memory location of field for equality.
         self.models()
             .find(|m| m.fields().any(|f| f as *const Field == field as *const Field))
+    }
+
+    /// Finds a field reference by a model and field name.
+    pub fn find_field(&self, field: &FieldRef) -> Option<&Field> {
+        // This uses the memory location of field for equality.
+        self.find_model(&field.0)?.find_field(&field.1)
+    }
+
+    /// Finds a mutable field reference by a model and field name.
+    pub fn find_field_mut(&mut self, field: &FieldRef) -> Option<&mut Field> {
+        // This uses the memory location of field for equality.
+        self.find_model_mut(&field.0)?.find_field_mut(&field.1)
     }
 
     /// Finds an enum by name.
