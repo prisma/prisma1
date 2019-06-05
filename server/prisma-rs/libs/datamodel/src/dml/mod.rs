@@ -23,3 +23,7 @@ pub use scalar::*;
 pub use traits::*;
 
 pub mod validator;
+
+// Compatibility export.
+pub use crate::common::PrismaType as ScalarType;
+pub use crate::common::PrismaValue as Value;

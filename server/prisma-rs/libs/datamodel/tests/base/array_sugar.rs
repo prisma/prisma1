@@ -4,12 +4,12 @@ use crate::common::*;
 fn should_treat_single_values_as_arrays_of_length_oneca() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         posts: Post[]
     }
 
     model Post {
-        id: ID @id
+        id: Int @id
         user: User @relation(references: id)
     }
     "#;

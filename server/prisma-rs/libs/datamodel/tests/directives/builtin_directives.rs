@@ -5,14 +5,14 @@ use datamodel::common::PrismaType;
 fn db_directive() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String @db("first_name")
 
         @@db("user")
     }
 
     model Post {
-        id: ID @id
+        id: Int @id
         text: String @db(name: "post_text")
 
         @@db(name: "posti")

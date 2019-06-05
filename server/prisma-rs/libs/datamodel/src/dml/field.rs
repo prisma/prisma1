@@ -4,7 +4,7 @@ use super::relation::*;
 use super::scalar::*;
 use super::traits::*;
 use serde::{Deserialize, Serialize};
-use crate::common::PrismaType;
+use crate::common::{PrismaType, PrismaValue};
 
 /// Datamodel field arity.
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
@@ -52,7 +52,7 @@ pub struct Field {
     /// The database internal name.
     pub database_name: Option<String>,
     /// The default value.
-    pub default_value: Option<Value>,
+    pub default_value: Option<PrismaValue>,
     /// Indicates if the field is unique.
     pub is_unique: bool,
     /// If set, signals that this field is an id field, or

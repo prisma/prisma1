@@ -8,7 +8,7 @@ use datamodel::dml::*;
 fn id_without_strategy_should_use_defaults() {
     let dml = r#"
     model Model {
-        id: ID @id
+        id: Int @id
     }
     "#;
 
@@ -25,7 +25,7 @@ fn id_without_strategy_should_use_defaults() {
 fn id_with_explicit_auto_strategy() {
     let dml = r#"
     model Model {
-        id: ID @id(strategy: AUTO)
+        id: Int @id(strategy: AUTO)
     }
     "#;
 
@@ -42,7 +42,7 @@ fn id_with_explicit_auto_strategy() {
 fn id_with_explicit_none_strategy() {
     let dml = r#"
     model Model {
-        id: ID @id(strategy: NONE)
+        id: Int @id(strategy: NONE)
     }
     "#;
 
@@ -59,7 +59,7 @@ fn id_with_explicit_none_strategy() {
 fn id_should_also_work_on_embedded_types() {
     let dml = r#"
     model Model {
-        id: ID @id
+        id: Int @id
 
         @@embedded
     }

@@ -6,7 +6,7 @@ use crate::errors::ValidationError;
 use crate::FunctionalEvaluator;
 use chrono::{DateTime, Utc};
 use std::error;
-use crate::common::PrismaType;
+use crate::common::{PrismaType, PrismaValue};
 use crate::common::FromStrAndSpan;
 
 macro_rules! wrap_value (
@@ -18,10 +18,16 @@ macro_rules! wrap_value (
     })
 );
 
+#[derive(Debug, Clone)]
+pub enum MaybeExpression {
+    Value(ast::Value),
+    Expression(PrismaValue, ast::Span)
+}
+
 /// Wraps a value and provides convenience methods for
 /// parsing it.
 pub struct ValueValidator {
-    pub value: ast::Value,
+    pub value: MaybeExpression,
 }
 
 impl ValueValidator {
@@ -32,7 +38,7 @@ impl ValueValidator {
     pub fn new(value: &ast::Value) -> Result<ValueValidator, ValidationError> {
         match value {
             ast::Value::StringValue(string, span) => Ok(ValueValidator {
-                value: StringInterpolator::interpolate(string, span)?,
+                value: MaybeExpression::Value(StringInterpolator::interpolate(string, span)?),
             }),
             _ => Ok(ValueValidator {
                 value: FunctionalEvaluator::new(value).evaluate()?,
@@ -43,10 +49,16 @@ impl ValueValidator {
     /// Creates a new type mismatch error for the
     /// value wrapped by this instance.
     fn construct_error(&self, expected_type: &str) -> ValidationError {
+
+        let description = match &self.value {
+            MaybeExpression::Value(val) => String::from(ast::describe_value_type(&val)),
+            MaybeExpression::Expression(val, _) => val.get_type().to_string()
+        };
+
         ValidationError::new_type_mismatch_error(
             expected_type,
-            ast::describe_value_type(&self.value),
-            self.raw(),
+            &description,
+            &self.raw(),
             self.span(),
         )
     }
@@ -63,31 +75,39 @@ impl ValueValidator {
             Err(err) => Err(ValidationError::new_value_parser_error(
                 expected_type,
                 err.description(),
-                self.raw(),
+                &self.raw(),
                 self.span(),
             )),
         }
     }
 
     /// The wrapped value.
-    pub fn value(&self) -> &ast::Value {
+    pub fn value(&self) -> &MaybeExpression {
         &self.value
     }
-
-    // TODO: Array types might be convenient here, for lists.
 
     /// Attempts to parse the wrapped value
     /// to a given prisma type.
     pub fn as_type(&self, scalar_type: &PrismaType) -> Result<dml::Value, ValidationError> {
-        match scalar_type {
-            PrismaType::Int => wrap_value!(self.as_int(), dml::Value::Int, self),
-            PrismaType::Float => wrap_value!(self.as_float(), dml::Value::Float, self),
-            PrismaType::Decimal => wrap_value!(self.as_decimal(), dml::Value::Decimal, self),
-            PrismaType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self),
-            PrismaType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self),
-            PrismaType::String => wrap_value!(self.as_str(), dml::Value::String, self),
-            PrismaType::ConstantLiteral => wrap_value!(self.as_constant_literal(), dml::Value::String, self),
+        match &self.value {
+            MaybeExpression::Value(_) => match scalar_type {
+                PrismaType::Int => wrap_value!(self.as_int(), dml::Value::Int, self),
+                PrismaType::Float => wrap_value!(self.as_float(), dml::Value::Float, self),
+                PrismaType::Decimal => wrap_value!(self.as_decimal(), dml::Value::Decimal, self),
+                PrismaType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self),
+                PrismaType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self),
+                PrismaType::String => wrap_value!(self.as_str(), dml::Value::String, self),
+                PrismaType::ConstantLiteral => wrap_value!(self.as_constant_literal(), dml::Value::String, self),
+            },
+            MaybeExpression::Expression(expr, _) => {
+                if expr.get_type() == *scalar_type {
+                    Ok(expr.clone())
+                } else {
+                    Err(self.construct_error(&scalar_type.to_string()))
+                }
+            }
         }
+        
     }
 
     /// Parses the wrapped value as a given literal type.
@@ -97,35 +117,32 @@ impl ValueValidator {
 
     /// Accesses the raw string representation
     /// of the wrapped value.
-    pub fn raw(&self) -> &str {
+    pub fn raw(&self) -> String {
         match &self.value {
-            ast::Value::StringValue(x, _) => x,
-            ast::Value::NumericValue(x, _) => x,
-            ast::Value::BooleanValue(x, _) => x,
-            ast::Value::ConstantValue(x, _) => x,
-            ast::Value::Function(x, _, _) => x,
-            ast::Value::Array(_, _) => "(Array)",
-            ast::Value::ServerSideFunction(_, _, _, _) => "(Function)",
+            MaybeExpression::Value(val) => val.to_string(),
+            MaybeExpression::Expression(val, _) => val.to_string()
         }
     }
 
     /// Accesses the span of the wrapped value.
     pub fn span(&self) -> &ast::Span {
         match &self.value {
-            ast::Value::StringValue(_, s) => s,
-            ast::Value::NumericValue(_, s) => s,
-            ast::Value::BooleanValue(_, s) => s,
-            ast::Value::ConstantValue(_, s) => s,
-            ast::Value::Function(_, _, s) => s,
-            ast::Value::Array(_, s) => s,
-            ast::Value::ServerSideFunction(_, _, _, s) => s,
+            MaybeExpression::Value(val) => match val {
+                ast::Value::StringValue(_, s) => s,
+                ast::Value::NumericValue(_, s) => s,
+                ast::Value::BooleanValue(_, s) => s,
+                ast::Value::ConstantValue(_, s) => s,
+                ast::Value::Function(_, _, s) => s,
+                ast::Value::Array(_, s) => s,
+            },
+            MaybeExpression::Expression(_, s) => s
         }
     }
 
     /// Tries to convert the wrapped value to a Prisma String.
     pub fn as_str(&self) -> Result<String, ValidationError> {
         match &self.value {
-            ast::Value::StringValue(value, _) => Ok(value.to_string()),
+            MaybeExpression::Value(ast::Value::StringValue(value, _)) => Ok(value.to_string()),
             _ => Err(self.construct_error("String")),
         }
     }
@@ -133,7 +150,7 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma Integer.
     pub fn as_int(&self) -> Result<i32, ValidationError> {
         match &self.value {
-            ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<i32>(), "Numeric"),
+            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => self.wrap_error_from_result(value.parse::<i32>(), "Numeric"),
             _ => Err(self.construct_error("Numeric")),
         }
     }
@@ -141,7 +158,7 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma Float.
     pub fn as_float(&self) -> Result<f32, ValidationError> {
         match &self.value {
-            ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
+            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
             _ => Err(self.construct_error("Numeric")),
         }
     }
@@ -150,7 +167,7 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma Decimal.
     pub fn as_decimal(&self) -> Result<f32, ValidationError> {
         match &self.value {
-            ast::Value::NumericValue(value, _) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
+            MaybeExpression::Value(ast::Value::NumericValue(value, _)) => self.wrap_error_from_result(value.parse::<f32>(), "Numeric"),
             _ => Err(self.construct_error("Numeric")),
         }
     }
@@ -158,7 +175,7 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma Boolean.
     pub fn as_bool(&self) -> Result<bool, ValidationError> {
         match &self.value {
-            ast::Value::BooleanValue(value, _) => self.wrap_error_from_result(value.parse::<bool>(), "Boolean"),
+            MaybeExpression::Value(ast::Value::BooleanValue(value, _)) => self.wrap_error_from_result(value.parse::<bool>(), "Boolean"),
             _ => Err(self.construct_error("Boolean")),
         }
     }
@@ -167,7 +184,7 @@ impl ValueValidator {
     /// Tries to convert the wrapped value to a Prisma DateTime.
     pub fn as_date_time(&self) -> Result<DateTime<Utc>, ValidationError> {
         match &self.value {
-            ast::Value::StringValue(value, _) => {
+            MaybeExpression::Value(ast::Value::StringValue(value, _)) => {
                 self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "String-Like")
             }
             _ => Err(self.construct_error("String-Like")),
@@ -177,7 +194,7 @@ impl ValueValidator {
     /// Unwraps the wrapped value as a constant literal..
     pub fn as_constant_literal(&self) -> Result<String, ValidationError> {
         match &self.value {
-            ast::Value::ConstantValue(value, _) => Ok(value.to_string()),
+            MaybeExpression::Value(ast::Value::ConstantValue(value, _)) => Ok(value.to_string()),
             _ => Err(self.construct_error("Constant Literal")),
         }
     }
@@ -185,7 +202,7 @@ impl ValueValidator {
     /// Unwraps the wrapped value as a constant literal..
     pub fn as_array(&self) -> Result<Vec<ValueValidator>, ValidationError> {
         match &self.value {
-            ast::Value::Array(values, _) => {
+            MaybeExpression::Value(ast::Value::Array(values, _)) => {
                 let mut validators: Vec<ValueValidator> = Vec::new();
 
                 for value in values {
@@ -194,7 +211,7 @@ impl ValueValidator {
 
                 Ok(validators)
             }
-            _ => Ok(vec![ValueValidator::new(&self.value)?]),
+            _ => Ok(vec![ValueValidator { value: self.value.clone() } ]),
         }
     }
 }
@@ -243,10 +260,9 @@ impl Into<ast::Value> for &dml::Value {
             dml::Value::Decimal(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
             dml::Value::Float(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
             dml::Value::Int(value) => ast::Value::NumericValue(value.to_string(), ast::Span::empty()),
-            dml::Value::Expression(name, return_type, args) => {
-                ast::Value::ServerSideFunction(
+            dml::Value::Expression(name, _, args) => {
+                ast::Value::Function(
                     name.clone(),
-                    *return_type,
                     args.iter().map(|a| a.into()).collect(),
                     ast::Span::empty()
                 )

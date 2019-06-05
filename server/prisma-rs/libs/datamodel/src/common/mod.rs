@@ -7,6 +7,7 @@ pub mod value;
 mod fromstr;
 pub use fromstr::FromStrAndSpan;
 
+use chrono::{DateTime, Utc};
 use crate::ast;
 use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
@@ -27,7 +28,6 @@ pub enum PrismaType {
 impl FromStrAndSpan for PrismaType {
     fn from_str_and_span(s: &str, span: &ast::Span) -> Result<Self, ValidationError> {
         match s {
-            "ID" => Ok(PrismaType::Int),
             "Int" => Ok(PrismaType::Int),
             "Float" => Ok(PrismaType::Float),
             "Decimal" => Ok(PrismaType::Decimal),
@@ -49,6 +49,50 @@ impl ToString for PrismaType {
             PrismaType::String => String::from("String"),
             PrismaType::DateTime => String::from("DateTime"),
             PrismaType::ConstantLiteral => String::from("ConstantLiteral"),
+        }
+    }
+}
+
+/// Value types for Prisma's builtin base types.
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub enum PrismaValue {
+    Int(i32),
+    Float(f32),
+    Decimal(f32),
+    Boolean(bool),
+    String(String),
+    DateTime(DateTime<Utc>),
+    ConstantLiteral(String),
+    Expression(String, PrismaType, Vec<PrismaValue>)
+}
+
+impl PrismaValue {
+    fn get_type(&self) -> PrismaType {
+        match self {
+            PrismaValue::Int(_) => PrismaType::Int,
+            PrismaValue::Float(_) => PrismaType::Float,
+            PrismaValue::Decimal(_) => PrismaType::Decimal,
+            PrismaValue::Boolean(_) => PrismaType::Boolean,
+            PrismaValue::String(_) => PrismaType::String,
+            PrismaValue::DateTime(_) => PrismaType::DateTime,
+            PrismaValue::ConstantLiteral(_) => PrismaType::ConstantLiteral,
+            PrismaValue::Expression(_, t, _) => *t
+        }
+    }
+}
+
+
+impl ToString for PrismaValue {
+    fn to_string(&self) -> String {
+        match self {
+            PrismaValue::Int(val) => format!("{}", val),
+            PrismaValue::Float(val) => format!("{}", val),
+            PrismaValue::Decimal(val) => format!("{}", val),
+            PrismaValue::Boolean(val) => format!("{}", val),
+            PrismaValue::String(val) => format!("{}", val),
+            PrismaValue::DateTime(val) => format!("{}", val),
+            PrismaValue::ConstantLiteral(val) => format!("{}", val),
+            PrismaValue::Expression(_, t, _) => format!("Function<{}>", t.to_string())
         }
     }
 }

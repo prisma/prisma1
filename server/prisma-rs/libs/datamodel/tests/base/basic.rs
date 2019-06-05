@@ -1,11 +1,11 @@
 use crate::common::*;
-use datamodel::{dml, common::PrismaType};
+use datamodel::common::PrismaType;
 
 #[test]
 fn parse_basic_model() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String
         lastName: String
     }

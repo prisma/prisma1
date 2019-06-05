@@ -8,7 +8,7 @@ use datamodel::{ast::Span, errors::ValidationError};
 fn id_should_error_if_the_field_is_not_required() {
     let dml = r#"
     model Model {
-        id: ID? @id
+        id: Int? @id
     }
     "#;
 
@@ -17,7 +17,7 @@ fn id_should_error_if_the_field_is_not_required() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Fields that are marked as id must be required.",
         "id",
-        &Span::new(36, 43),
+        &Span::new(37, 44),
     ));
 }
 
@@ -25,7 +25,7 @@ fn id_should_error_if_the_field_is_not_required() {
 fn id_should_error_if_an_unknown_strategy_is_used() {
     let dml = r#"
     model Model {
-        id: ID @id(strategy: FOO)
+        id: Int @id(strategy: FOO)
     }
     "#;
 
@@ -34,7 +34,7 @@ fn id_should_error_if_an_unknown_strategy_is_used() {
     errors.assert_is(ValidationError::new_literal_parser_error(
         "id strategy",
         "FOO",
-        &Span::new(48, 51),
+        &Span::new(49, 52),
     ));
 }
 
