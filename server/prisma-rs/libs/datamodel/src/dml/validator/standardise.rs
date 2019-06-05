@@ -99,7 +99,7 @@ impl Standardiser {
                         }
 
                         // .. tie breaker if both are good candiates.
-                        if model_name < &rel.to || (model_name == &rel.to && field.name < related_field.name) {
+                        if tie_str(&model_name, &field.name, &rel.to, &related_field.name) {
                             embed_here = true;
                         }
                     }
@@ -130,8 +130,7 @@ impl Standardiser {
 
                         // Model names, field names are again used as a tie breaker.
                         if related_field.arity == dml::FieldArity::List
-                            && (model.name < related_model.name
-                                || (model.name == related_model.name && field.name < related_field.name))
+                            && tie(&model, &field, &related_model, &related_field)
                         {
                             // N:M Relation, needs a relation table.
                             res.push((

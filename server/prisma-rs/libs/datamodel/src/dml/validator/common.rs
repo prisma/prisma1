@@ -70,3 +70,8 @@ pub fn tie(a_model: &dml::Model, a_field: &dml::Field, b_model: &dml::Model, b_f
     // Model with lower name wins, if name is equal fall back to field.
     a_model.name < b_model.name || (a_model.name == b_model.name && a_field.name < b_field.name)
 }
+
+pub fn tie_str(a_model: &str, a_field: &str, b_model: &str, b_field: &str) -> bool {
+    // Model with lower name wins, if name is equal fall back to field.
+    a_model < b_model || (a_model == b_model && a_field < b_field)
+}
