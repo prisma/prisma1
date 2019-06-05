@@ -29,7 +29,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
     }
   }
 
-  // todo: scalarFilterObjectType
+  ///
   pub fn scalar_filter_object_type(&self, model: ModelRef) -> InputObjectTypeRef {
     let object_name = format!("{}ScalarWhereInput", model.name);
     return_cached!(self.get_cache(), &object_name);
@@ -137,27 +137,7 @@ impl<'a> FilterObjectTypeBuilder<'a> {
       .collect()
   }
 
-  /// Maps relations to input fields.
-  ///
-  /// This function also triggers building dependent filter object types if they're not already cached.
-  ///
-  /// This needs special consideration, due to circular dependencies.
-  /// Assume a data model looks like this, with arrows indicating some kind of relation between models:
-  ///
-  /// ```text
-  ///       +---+
-  ///   +---+ B +<---+
-  ///   |   +---+    |
-  ///   v            |
-  /// +-+-+        +-+-+      +---+
-  /// | A +------->+ C +<-----+ D |
-  /// +---+        +---+      +---+
-  /// ```
-  ///
-  /// The above would cause infinite filter type builder to be instantiated due to the circular
-  /// dependency (A -> B -> C -> A) in relations without the cache to break circles.
-  ///
-  /// Without caching, processing D (in fact, any type) would also trigger a complete recomputation of A, B, C.
+  /// Maps relations to (filter) input fields.
   fn map_relation_filter_input_field(&self, field: RelationFieldRef) -> Vec<InputField> {
     let related_model = field.related_model();
     let related_input_type = self.filter_object_type(related_model);
