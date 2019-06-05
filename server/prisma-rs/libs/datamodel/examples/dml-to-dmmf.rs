@@ -31,7 +31,7 @@ fn main() {
     }
 
     let ast = parsed.unwrap();
-    let validator = Validator::new();
+    let validator = ValidationPipeline::new();
     let validated = validator.validate(&ast);
 
     if let Err(errors) = &validated {

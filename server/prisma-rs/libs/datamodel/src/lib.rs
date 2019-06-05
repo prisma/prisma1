@@ -37,7 +37,7 @@ pub mod ast;
 pub use ast::parser;
 pub use ast::renderer;
 pub mod dml;
-pub use dml::validator::Validator;
+pub use dml::validator::ValidationPipeline;
 pub use dml::*;
 pub mod common;
 pub use common::argument::Arguments;
@@ -72,7 +72,7 @@ pub fn parse_with_plugins(
         source_loader.add_source_definition(source);
     }
     let sources = source_loader.load(&ast)?;
-    let validator = Validator::with_sources(&sources);
+    let validator = ValidationPipeline::with_sources(&sources);
     validator.validate(&ast)
 }
 
