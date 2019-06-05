@@ -90,8 +90,7 @@ impl ValueValidator {
                 PrismaType::Decimal => wrap_value!(self.as_decimal(), dml::Value::Decimal, self),
                 PrismaType::Boolean => wrap_value!(self.as_bool(), dml::Value::Boolean, self),
                 PrismaType::DateTime => wrap_value!(self.as_date_time(), dml::Value::DateTime, self),
-                PrismaType::String => wrap_value!(self.as_str(), dml::Value::String, self),
-                PrismaType::ConstantLiteral => wrap_value!(self.as_constant_literal(), dml::Value::String, self),
+                PrismaType::String => wrap_value!(self.as_str(), dml::Value::String, self)
             },
             MaybeExpression::Expression(expr, _) => {
                 if expr.get_type() == *scalar_type {

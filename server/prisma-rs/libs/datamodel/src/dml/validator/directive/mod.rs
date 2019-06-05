@@ -4,7 +4,9 @@ use crate::common::argument::Arguments;
 use crate::dml;
 use crate::errors::{ErrorCollection, ValidationError};
 
-use std::collections::HashMap;
+// BTreeMap has a strictly defined order.
+// That's important since rendering depends on that order.
+use std::collections::BTreeMap;
 
 pub mod core;
 
@@ -86,14 +88,14 @@ impl<T> DirectiveValidator<T> for DirectiveScope<T> {
 /// Struct which holds a list of directive validators and automatically
 /// picks the right one for each directive in the given object.
 pub struct DirectiveListValidator<T> {
-    known_directives: HashMap<String, Box<DirectiveValidator<T>>>,
+    known_directives: BTreeMap<String, Box<DirectiveValidator<T>>>,
 }
 
 impl<T: 'static> DirectiveListValidator<T> {
     /// Creates a new instance.
     pub fn new() -> Self {
         DirectiveListValidator {
-            known_directives: HashMap::new(),
+            known_directives: BTreeMap::new(),
         }
     }
 

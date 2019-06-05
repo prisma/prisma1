@@ -20,9 +20,7 @@ pub enum PrismaType {
     Decimal,
     Boolean,
     String,
-    DateTime,
-    // This is similar to a context-dependent enum.
-    ConstantLiteral,
+    DateTime
 }
 
 impl FromStrAndSpan for PrismaType {
@@ -47,8 +45,7 @@ impl ToString for PrismaType {
             PrismaType::Decimal => String::from("Decimal"),
             PrismaType::Boolean => String::from("Boolean"),
             PrismaType::String => String::from("String"),
-            PrismaType::DateTime => String::from("DateTime"),
-            PrismaType::ConstantLiteral => String::from("ConstantLiteral"),
+            PrismaType::DateTime => String::from("DateTime")
         }
     }
 }
@@ -75,8 +72,8 @@ impl PrismaValue {
             PrismaValue::Boolean(_) => PrismaType::Boolean,
             PrismaValue::String(_) => PrismaType::String,
             PrismaValue::DateTime(_) => PrismaType::DateTime,
-            PrismaValue::ConstantLiteral(_) => PrismaType::ConstantLiteral,
             PrismaValue::Expression(_, t, _) => *t,
+            PrismaValue::ConstantLiteral(_) => panic!("Constant literal values do not map to a base type and should never surface.")
         }
     }
 }

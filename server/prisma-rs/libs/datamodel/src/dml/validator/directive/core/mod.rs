@@ -1,6 +1,6 @@
 use crate::dml;
 use crate::validator::directive::DirectiveListValidator;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 mod db;
 mod default;
@@ -14,7 +14,7 @@ mod unique;
 /// Returns a directive list validator containing all builtin field directives.
 pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
     let mut validator = DirectiveListValidator::<dml::Field> {
-        known_directives: HashMap::new(),
+        known_directives: BTreeMap::new(),
     };
 
     validator.add(Box::new(db::DbDirectiveValidator {}));
@@ -31,7 +31,7 @@ pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
 /// Returns a directive list validator containing all builtin model directives.
 pub fn new_builtin_model_directives() -> DirectiveListValidator<dml::Model> {
     let mut validator = DirectiveListValidator::<dml::Model> {
-        known_directives: HashMap::new(),
+        known_directives: BTreeMap::new(),
     };
 
     validator.add(Box::new(db::DbDirectiveValidator {}));
@@ -43,7 +43,7 @@ pub fn new_builtin_model_directives() -> DirectiveListValidator<dml::Model> {
 /// Returns a directive list validator containing all builtin enum directives.
 pub fn new_builtin_enum_directives() -> DirectiveListValidator<dml::Enum> {
     let validator = DirectiveListValidator::<dml::Enum> {
-        known_directives: HashMap::new(),
+        known_directives: BTreeMap::new(),
     };
 
     // No enum derictives yet.
