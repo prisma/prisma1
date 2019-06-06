@@ -329,7 +329,15 @@ impl DatamodelFieldExtensions for dml::Field {
                 dml::ScalarType::Decimal => TypeIdentifier::Float,
                 dml::ScalarType::Float => TypeIdentifier::Float,
                 dml::ScalarType::Int => TypeIdentifier::Int,
-                dml::ScalarType::String => TypeIdentifier::String,
+                dml::ScalarType::String => match self.default_value {
+                    Some(datamodel::common::PrismaValue::Expression(ref expr, _, _)) if expr == "cuid" => {
+                        TypeIdentifier::GraphQLID
+                    }
+                    Some(datamodel::common::PrismaValue::Expression(ref expr, _, _)) if expr == "uuid" => {
+                        TypeIdentifier::UUID
+                    }
+                    _ => TypeIdentifier::String,
+                },
             },
             dml::FieldType::ConnectorSpecific {
                 base_type: _,
