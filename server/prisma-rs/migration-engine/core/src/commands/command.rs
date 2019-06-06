@@ -1,7 +1,7 @@
 use crate::migration_engine::MigrationEngine;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use std::convert::{From, Into};
+use std::convert::From;
 
 pub trait MigrationCommand {
     type Input: DeserializeOwned;
@@ -17,7 +17,7 @@ pub type CommandResult<T> = Result<T, CommandError>;
 #[derive(Debug)]
 pub struct CommandError {
     code: i64,
-    message: String
+    message: String,
 }
 
 impl CommandError {
