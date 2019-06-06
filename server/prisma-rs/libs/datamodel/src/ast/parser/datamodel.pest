@@ -87,7 +87,7 @@ model_declaration = { "model" ~ identifier ~ "{" ~ ( field_declaration | ( "@@" 
 // ######################################
 // Enum declarations
 // ######################################
-enum_field_declaration = @{ ASCII_ALPHA_UPPER+ }
+enum_field_declaration = @{ identifier }
 enum_declaration = { "enum" ~ identifier ~ "{" ~ (enum_field_declaration | ( "@@" ~ directive )  )* ~ "}" }
 
 // ######################################

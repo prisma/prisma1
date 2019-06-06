@@ -257,7 +257,6 @@ impl Standardiser {
             let name = backward.to.camel_case();
 
             if let Some(conflicting_field) = model.find_field(&name) {
-                println!("Error adding field");
                 errors.push(field_validation_error(
                     "Automatic back field generation would cause a naming conflict.",
                     &model,
