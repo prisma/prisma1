@@ -59,7 +59,7 @@ pub struct Comment {
 }
 
 /// An argument, either for directives, or for keys in source blocks.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Argument {
     /// Name of the argument.
     pub name: String,
@@ -148,7 +148,7 @@ impl ToString for Value {
 }
 
 /// A directive.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Directive {
     pub name: String,
     pub arguments: Vec<Argument>,

@@ -135,6 +135,19 @@ impl<T: 'static> DirectiveListValidator<T> {
     pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) -> Result<(), ErrorCollection> {
         let mut errors = ErrorCollection::new();
 
+
+        for directive in ast.directives() {
+            for other_directive in ast.directives() {
+                if directive as *const ast::Directive != other_directive as *const ast::Directive {
+                    if directive.name == other_directive.name {
+                        errors.push(ValidationError::new_duplicate_directive_error(&directive.name, &directive.span));
+                    }
+                }
+            }
+        }
+
+        errors.ok()?;
+
         for directive in ast.directives() {
             match self.known_directives.get(directive.name.as_str()) {
                 Some(validator) => {
@@ -161,11 +174,9 @@ impl<T: 'static> DirectiveListValidator<T> {
             };
         }
 
-        if errors.has_errors() {
-            Err(errors)
-        } else {
-            Ok(())
-        }
+        errors.ok()?;
+
+        Ok(())
     }
 
     pub fn serialize(&self, t: &T, datamodel: &dml::Datamodel) -> Result<Vec<ast::Directive>, ErrorCollection> {
@@ -180,10 +191,8 @@ impl<T: 'static> DirectiveListValidator<T> {
             };
         }
 
-        if errors.has_errors() {
-            Err(errors)
-        } else {
-            Ok(directives)
-        }
+        errors.ok()?;
+    
+        Ok(directives)
     }
 }

@@ -104,7 +104,7 @@ impl LiftAstToDml {
     fn lift_field(&self, ast_field: &ast::Field, ast_schema: &ast::Datamodel) -> Result<dml::Field, ErrorCollection> {
         let mut errors = ErrorCollection::new();
         // If we cannot parse the field type, we exit right away.
-        let field_type = self.lift_field_type(&ast_field, &ast_field.field_type_span, ast_schema)?;
+        let (field_type, extra_attributes) = self.lift_field_type(&ast_field, ast_schema, &mut Vec::new())?;
 
         let mut field = dml::Field::new(&ast_field.name, field_type.clone());
 
@@ -125,7 +125,10 @@ impl LiftAstToDml {
             }
         }
 
-        if let Err(mut err) = self.directives.field.validate_and_apply(ast_field, &mut field) {
+        // We merge arttributes so we can fail on duplicates.
+        let attributes = [&extra_attributes[..], &ast_field.directives[..]].concat();
+
+        if let Err(mut err) = self.directives.field.validate_and_apply(&attributes, &mut field) {
             errors.append(&mut err);
         }
 
@@ -146,24 +149,59 @@ impl LiftAstToDml {
     }
 
     /// Internal: Lift a field's type.
+    /// Auto resolves custom types and gathers directives, but without a stack overflow please.
     fn lift_field_type(
         &self,
         ast_field: &ast::Field,
-        span: &ast::Span,
         ast_schema: &ast::Datamodel,
-    ) -> Result<dml::FieldType, ValidationError> {
+        checked_types: &mut Vec<String>,
+    ) -> Result<(dml::FieldType, Vec<ast::Directive>), ValidationError> {
         let type_name = &ast_field.field_type;
 
-        if let Ok(scalar_type) = PrismaType::from_str_and_span(type_name, span) {
-            Ok(dml::FieldType::Base(scalar_type))
+        if let Ok(scalar_type) = PrismaType::from_str_and_span(type_name, &ast_field.field_type_span) {
+            Ok((dml::FieldType::Base(scalar_type), vec![]))
+        } else if let Some(_) = ast_schema.find_model(type_name) {
+            Ok((
+                dml::FieldType::Relation(dml::RelationInfo::new(&ast_field.field_type)),
+                vec![],
+            ))
+        } else if let Some(_) = ast_schema.find_enum(type_name) {
+            Ok((dml::FieldType::Enum(type_name.clone()), vec![]))
         } else {
-            if let Some(_) = ast_schema.find_model(type_name) {
-                Ok(dml::FieldType::Relation(dml::RelationInfo::new(&ast_field.field_type)))
-            } else if let Some(_) = ast_schema.find_enum(type_name) {
-                Ok(dml::FieldType::Enum(type_name.clone()))
-            } else {
-                Err(ValidationError::new_type_not_found_error(type_name, span))
-            }
+            self.resolve_custom_type(ast_field, ast_schema, checked_types)
+        }
+    }
+
+    fn resolve_custom_type(
+        &self,
+        ast_field: &ast::Field,
+        ast_schema: &ast::Datamodel,
+        checked_types: &mut Vec<String>,
+    ) -> Result<(dml::FieldType, Vec<ast::Directive>), ValidationError> {
+        let type_name = &ast_field.field_type;
+
+        if checked_types.iter().any(|x| x == type_name) {
+            // Recursive type.
+            return Err(ValidationError::new_validation_error(
+                &format!(
+                    "Recursive type definitions are not allowed. Recursive path was: {} -> {}",
+                    checked_types.join(" -> "),
+                    type_name
+                ),
+                &ast_field.field_type_span,
+            ));
+        }
+
+        if let Some(custom_type) = ast_schema.find_custom_type(&type_name) {
+            checked_types.push(custom_type.name.clone());
+            let (field_type, mut attrs) = self.lift_field_type(custom_type, ast_schema, checked_types)?;
+            attrs.append(&mut custom_type.directives.clone());
+            Ok((field_type, attrs))
+        } else {
+            Err(ValidationError::new_type_not_found_error(
+                type_name,
+                &ast_field.field_type_span,
+            ))
         }
     }
 }

@@ -311,7 +311,7 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
 // Custom type parsing
 fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     match_first! { token, current,
-        Rule::type_declaration => parse_field(&current),
+        Rule::field_declaration => parse_field(&current),
         _ => unreachable!("Encounterd impossible type declaration during parsing: {:?}", current.tokens())
     }
 }
