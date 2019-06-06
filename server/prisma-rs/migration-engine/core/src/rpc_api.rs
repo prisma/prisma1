@@ -38,8 +38,12 @@ impl RpcApi {
     }
 
     pub fn handle(&self) {
+        let mut json_is_complete = false;
         let mut input = String::new();
-        io::stdin().read_line(&mut input).expect("Reading from stdin failed.");
+        while !json_is_complete {
+            io::stdin().read_line(&mut input).expect("Reading from stdin failed.");
+            json_is_complete = serde_json::from_str::<serde_json::Value>(&input).is_ok();
+        }
         println!("{}", self.handle_input(&input));
     }
 
