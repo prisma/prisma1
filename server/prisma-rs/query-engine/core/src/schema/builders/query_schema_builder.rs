@@ -14,12 +14,40 @@ pub enum BuildMode {
 }
 
 /// Query schema builder. Root for query schema building.
+///
 /// The schema builder creates all builders necessary for the process,
 /// and hands down references to the individual initializers as required.
+///
+/// Circular dependency schema building requires special consideration.
+/// Assume a data model looks like this, with arrows indicating some kind of relation between models:
+///
+/// ```text
+///       +---+
+///   +---+ B +<---+
+///   |   +---+    |
+///   v            |
+/// +-+-+        +-+-+      +---+
+/// | A +------->+ C +<-----+ D |
+/// +---+        +---+      +---+
+/// ```
+///
+/// The above would cause infinite builder recursion circular
+/// dependency (A -> B -> C -> A) in relations (for example in filter building).
+///
+/// Without caching, processing D (in fact, visiting any type after the intial computation) would also
+/// trigger a complete recomputation of A, B, C.
+///
+/// Hence, all builders that produce input or output object types are required to
+/// implement CachedBuilder in some form to break recursive type building.
+///
+/// Additionally, the cache also acts as the component to prevent memory leaks from circular dependencies
+/// in the query schema later on, as described on the QuerySchema type.
+/// The cache can be consumed to produce a list of strong references to the individual input and output
+/// object types, which are then moved to the query schema to keep weak references alive (see TypeRefCache for additional infos).
 pub struct QuerySchemaBuilder<'a> {
-  mode: BuildMode,
+  _mode: BuildMode,
   internal_data_model: InternalDataModelRef,
-  capabilities: &'a SupportedCapabilities,
+  _capabilities: &'a SupportedCapabilities,
   object_type_builder: Arc<ObjectTypeBuilder<'a>>,
   input_type_builder: Arc<InputTypeBuilder<'a>>,
   argument_builder: ArgumentBuilder<'a>,
@@ -46,15 +74,14 @@ impl<'a> QuerySchemaBuilder<'a> {
     ));
 
     let argument_builder = ArgumentBuilder::new(
-      Arc::clone(internal_data_model),
       Arc::downgrade(&input_type_builder),
       Arc::downgrade(&object_type_builder),
     );
 
     QuerySchemaBuilder {
-      mode,
+      _mode: mode,
       internal_data_model: Arc::clone(internal_data_model),
-      capabilities,
+      _capabilities: capabilities,
       object_type_builder,
       input_type_builder,
       argument_builder,
@@ -134,6 +161,7 @@ impl<'a> QuerySchemaBuilder<'a> {
     (OutputType::Object(Arc::downgrade(&strong_ref)), strong_ref)
   }
 
+  /// Helper function to get all non-embedded models from the internal data model.
   fn non_embedded_models(&self) -> Vec<ModelRef> {
     self
       .internal_data_model

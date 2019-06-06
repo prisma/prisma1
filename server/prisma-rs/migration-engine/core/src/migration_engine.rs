@@ -48,4 +48,8 @@ impl MigrationEngine {
         // For capabilities, please see the parse_with_plugins method.
         datamodel::parse(datamodel_string).unwrap()
     }
+
+    pub fn render_datamodel(&self, datamodel: &Datamodel) -> String {
+        datamodel::render(&datamodel).expect("Rendering the Datamodel failed.")
+    }
 }

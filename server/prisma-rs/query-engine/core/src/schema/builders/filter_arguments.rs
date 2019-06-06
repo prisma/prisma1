@@ -1,6 +1,5 @@
 use prisma_models::{Field, TypeIdentifier};
 
-/// (Filter suffix, is list)
 pub struct FilterArgument {
     pub suffix: &'static str,
     pub is_list: bool,

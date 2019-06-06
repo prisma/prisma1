@@ -43,6 +43,8 @@ pub struct Model {
     pub is_embedded: bool,
     pub db_name: Option<String>,
     pub fields: Vec<Field>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_generated: Option<bool>,
 }
 
 #[serde(rename_all = "camelCase")]

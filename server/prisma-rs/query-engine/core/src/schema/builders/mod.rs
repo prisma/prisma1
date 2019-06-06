@@ -19,8 +19,8 @@ use std::sync::{Arc, Weak};
 
 pub use query_schema_builder::*;
 
-/// Since we have the invariant that the weak refs that are used throughout the schema are always valid,
-/// we use this simple trait to keep the code clutter low.
+/// Since we have the invariant that the weak refs that are used throughout the query
+/// schema have to be always valid, we use this simple trait to keep the code clutter low.
 pub trait IntoArc<T> {
     fn into_arc(&self) -> Arc<T>;
 }

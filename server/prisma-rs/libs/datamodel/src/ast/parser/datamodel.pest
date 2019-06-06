@@ -75,6 +75,11 @@ default_value = { "=" ~ expression }
 field_declaration = { identifier ~ (":")? ~ field_type ~ default_value? ~ ( "@" ~ directive )* }
 
 // ######################################
+// Custom type declarations
+// ######################################
+type_declaration = { "type" ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
+
+// ######################################
 // Model declarations
 // ######################################
 model_declaration = { "model" ~ identifier ~ "{" ~ ( field_declaration | ( "@@" ~ directive )  )* ~ "}" }
@@ -96,7 +101,7 @@ source_block = { "source" ~ identifier ~ "{" ~ source_key_value* ~ source_proper
 // ######################################
 // Datamodel
 // ######################################
-datamodel = { SOI ~ (model_declaration | enum_declaration | source_block )* ~ EOI }
+datamodel = { SOI ~ (model_declaration | enum_declaration | source_block | type_declaration )* ~ EOI }
 
 // ######################################
 // String Interpolation
