@@ -5,7 +5,7 @@ const DATAMODEL_STRING: &str = r#"model User {
     createdAt DateTime
     email String @unique
     name String?
-    posts Post[] @relation(onDelete: CASCADE)
+    posts Post[] @relation("author", onDelete: CASCADE)
     profile Profile?
     @@db("user")
 }

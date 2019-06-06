@@ -50,12 +50,11 @@ argument = { (argument_name ~ ":" ~ argument_value) }
 // ######################################
 // Directives
 // ######################################
-directive_arguments = { "(" ~ ((argument ~ ("," ~ argument)*)?) ~ ")" }
-directive_single_argument = { "(" ~ argument_value ~ ")" }
+directive_arguments = { "(" ~ (((argument | argument_value) ~ ("," ~ argument)*)?) ~ ")" }
 // This is a poor-mans version of namespacing
 directive_name = @{ (identifier ~ ".")? ~ identifier }
 // A directive either has one unnamed argument or any number of named arguments or no argument.
-directive = { directive_name ~ (directive_arguments | directive_single_argument ) ? }
+directive = { directive_name ~ directive_arguments? }
 
 // ######################################
 // Field declarations
