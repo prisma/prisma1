@@ -70,17 +70,6 @@ fn parse_arg_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
 }
 
 // Directive parsing
-fn parse_directive_default_arg(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<Argument>) {
-    match_children! { token, current,
-        Rule::argument_value => arguments.push(Argument {
-            name: String::from(""),
-            value: parse_arg_value(&current),
-            span: Span::from_pest(&current.as_span())
-        }),
-        _ => unreachable!("Encounterd impossible directive default argument during parsing: {:?}", current.tokens())
-    };
-}
-
 fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
     let mut name: Option<String> = None;
     let mut argument: Option<Value> = None;
@@ -106,7 +95,14 @@ fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
 
 fn parse_directive_args(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<Argument>) {
     match_children! { token, current,
+        // This is a named arg.
         Rule::argument => arguments.push(parse_directive_arg(&current)),
+        // This is a an unnamed arg.
+        Rule::argument_value => arguments.push(Argument {
+            name: String::from(""),
+            value: parse_arg_value(&current),
+            span: Span::from_pest(&current.as_span())
+        }),
         _ => unreachable!("Encounterd impossible directive argument during parsing: {:?}", current.tokens())
     }
 }
@@ -118,7 +114,6 @@ fn parse_directive(token: &pest::iterators::Pair<'_, Rule>) -> Directive {
     match_children! { token, current,
         Rule::directive_name => name = Some(current.as_str().to_string()),
         Rule::directive_arguments => parse_directive_args(&current, &mut arguments),
-        Rule::directive_single_argument => parse_directive_default_arg(&current, &mut arguments),
         _ => unreachable!("Encounterd impossible directive during parsing: {:?}", current.tokens())
     };
 
@@ -413,7 +408,6 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::argument_value => "argument value",
         Rule::argument => "argument",
         Rule::directive_arguments => "attribute arguments",
-        Rule::directive_single_argument => "arttribute argument",
         Rule::directive_name => "directive name",
         Rule::directive => "directive",
         Rule::optional_type => "optional type",

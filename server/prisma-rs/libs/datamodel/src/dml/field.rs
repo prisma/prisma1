@@ -66,6 +66,9 @@ pub struct Field {
     /// If set, signals that this field was internally generated
     /// and should never be displayed to the user.
     pub is_generated: bool,
+    /// If set, signals that this field is updated_at and will be updated to now()
+    /// automatically.
+    pub is_updated_at: bool,
 }
 
 impl WithName for Field {
@@ -100,6 +103,7 @@ impl Field {
             scalar_list_strategy: None,
             comments: vec![],
             is_generated: false,
+            is_updated_at: false,
         }
     }
     /// Creates a new field with the given name and type, marked as generated and optional.
@@ -115,6 +119,7 @@ impl Field {
             scalar_list_strategy: None,
             comments: vec![],
             is_generated: true,
+            is_updated_at: false,
         }
     }
 }

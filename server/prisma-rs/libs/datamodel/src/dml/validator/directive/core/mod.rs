@@ -10,6 +10,7 @@ mod relation;
 mod scalarlist;
 mod sequence;
 mod unique;
+mod updated_at;
 
 /// Returns a directive list validator containing all builtin field directives.
 pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
@@ -24,6 +25,7 @@ pub fn new_builtin_field_directives() -> DirectiveListValidator<dml::Field> {
     validator.add(Box::new(unique::UniqueDirectiveValidator {}));
     validator.add(Box::new(default::DefaultDirectiveValidator {}));
     validator.add(Box::new(relation::RelationDirectiveValidator {}));
+    validator.add(Box::new(updated_at::UpdatedAtDirectiveValidator {}));
 
     return validator;
 }

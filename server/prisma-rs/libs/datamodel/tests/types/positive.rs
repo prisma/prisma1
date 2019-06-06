@@ -90,46 +90,6 @@ fn should_be_able_to_handle_multiple_types() {
 }
 
 #[test]
-fn should_be_able_to_define_custom_related_types() {
-    let dml = r#"
-    type UserViaEmail = User @relation(references: email)
-    type UniqueString = String @unique
-
-    model User {
-        id Int @id
-        email UniqueString
-        posts Post[]
-    }
-
-    model Post {
-        id Int @id
-        user UserViaEmail
-    }
-    "#;
-
-    let datamodel = parse(dml);
-
-    let user_model = datamodel.assert_has_model("User");
-
-    user_model
-        .assert_has_field("email")
-        .assert_is_unique(true)
-        .assert_base_type(&PrismaType::String);
-
-    user_model
-        .assert_has_field("posts")
-        .assert_relation_to("Post")
-        .assert_arity(&datamodel::dml::FieldArity::List);
-
-    let post_model = datamodel.assert_has_model("Post");
-
-    post_model
-        .assert_has_field("user")
-        .assert_relation_to("User")
-        .assert_relation_to_fields(&["email"]);
-}
-
-#[test]
 fn should_be_able_to_define_custom_enum_types() {
     let dml = r#"
     type RoleWithDefault = Role @default(USER)

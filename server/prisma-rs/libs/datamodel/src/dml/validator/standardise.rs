@@ -248,23 +248,31 @@ impl Standardiser {
         let mut missing_back_relations = Vec::new();
 
         for model in schema.models() {
-            missing_back_relations.append(&mut self.find_fields_with_missing_back_relation(model, schema));
+            match &mut self.find_fields_with_missing_back_relation(model, ast_schema, schema) {
+                Ok(missing) => missing_back_relations.append(missing),
+                Err(errs) => errors.append(errs),
+            }
         }
 
         for (forward, backward) in missing_back_relations {
-            let model = schema.find_model_mut(&forward.to).expect(STATE_ERROR);
-
+            let model = schema.find_model(&forward.to).expect(STATE_ERROR);
             let name = backward.to.camel_case();
 
-            if let Some(conflicting_field) = model.find_field(&name) {
-                println!("Error adding field");
+            if let Some(_) = model.find_field(&name) {
+                let source_model = schema.find_model(&backward.to).expect(STATE_ERROR);
+                let source_field = source_model
+                    .related_field(&forward.to, &forward.name, "")
+                    .expect(STATE_ERROR);
+
                 errors.push(field_validation_error(
-                    "Automatic back field generation would cause a naming conflict.",
-                    &model,
-                    &conflicting_field,
+                    "Automatic opposite related field generation would cause a naming conflict. Please add an explicit opposite relation field.",
+                    &source_model,
+                    &source_field,
                     &ast_schema,
                 ));
             }
+
+            let model = schema.find_model_mut(&forward.to).expect(STATE_ERROR);
 
             model.add_field(dml::Field::new_generated(&name, dml::FieldType::Relation(backward)));
         }
@@ -281,9 +289,11 @@ impl Standardiser {
     fn find_fields_with_missing_back_relation(
         &self,
         model: &dml::Model,
+        ast_schema: &ast::Datamodel,
         schema: &dml::Datamodel,
-    ) -> Vec<(dml::RelationInfo, dml::RelationInfo)> {
+    ) -> Result<Vec<(dml::RelationInfo, dml::RelationInfo)>, ErrorCollection> {
         let mut fields: Vec<(dml::RelationInfo, dml::RelationInfo)> = Vec::new();
+        let mut errors = ErrorCollection::new();
 
         for field in model.fields() {
             if let dml::FieldType::Relation(rel) = &field.field_type {
@@ -298,22 +308,34 @@ impl Standardiser {
                 }
 
                 if !back_field_exists {
-                    fields.push((
-                        // Forward
-                        rel.clone(),
-                        // Backward
-                        dml::RelationInfo {
-                            to: model.name.clone(),
-                            to_fields: vec![],
-                            name: rel.name.clone(),
-                            on_delete: rel.on_delete,
-                        },
-                    ));
+                    // We only add back relations for unnamed relations.
+                    if rel.name.len() == 0 {
+                        fields.push((
+                            // Forward
+                            rel.clone(),
+                            // Backward
+                            dml::RelationInfo {
+                                to: model.name.clone(),
+                                to_fields: vec![],
+                                name: rel.name.clone(),
+                                on_delete: rel.on_delete,
+                            },
+                        ));
+                    } else {
+                        errors.push(field_validation_error(
+                            "Named relations require an opposite field.",
+                            model,
+                            &field,
+                            &ast_schema,
+                        ))
+                    }
                 }
             }
         }
 
-        fields
+        errors.ok()?;
+
+        Ok(fields)
     }
 
     fn name_unnamed_relations(&self, datamodel: &mut dml::Datamodel) {

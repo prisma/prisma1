@@ -136,7 +136,7 @@ fn should_add_back_relations_for_more_complex_cases() {
 
     model Post {
         post_id: Int @id
-        comments: Comment[] @relation("Comments")
+        comments: Comment[]
         categories: PostToCategory[]
     }
 
@@ -189,7 +189,7 @@ fn should_add_back_relations_for_more_complex_cases() {
         .assert_has_field("post")
         .assert_relation_to("Post")
         .assert_relation_to_fields(&["post_id"])
-        .assert_relation_name("Comments")
+        .assert_relation_name("CommentToPost")
         .assert_is_generated(true)
         .assert_arity(&datamodel::dml::FieldArity::Optional);
 
@@ -199,7 +199,7 @@ fn should_add_back_relations_for_more_complex_cases() {
         .assert_has_field("comments")
         .assert_relation_to("Comment")
         .assert_relation_to_fields(&[])
-        .assert_relation_name("Comments")
+        .assert_relation_name("CommentToPost")
         .assert_is_generated(false)
         .assert_arity(&datamodel::dml::FieldArity::List);
 
