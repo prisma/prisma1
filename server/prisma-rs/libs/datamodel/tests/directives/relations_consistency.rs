@@ -88,12 +88,12 @@ fn should_not_add_back_relation_fields_for_many_to_many_relations() {
     // Equal name for both fields was a bug triggerer.
     let dml = r#"
 model Blog {
-  id: ID @id
+  id: Int @id
   authors: Author[]
 }
 
 model Author {
-  id: ID @id
+  id: Int @id
   authors: Blog[]
 }
     "#;
