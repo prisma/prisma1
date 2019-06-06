@@ -39,7 +39,10 @@ impl RpcApi {
     pub fn handle(self) {
         let mut input = String::new();
         io::stdin().read_line(&mut input).expect("Reading from stdin failed.");
-        let response = self.io_handler.handle_request_sync(&input).expect("Handling the RPC request failed");
+        let response = self
+            .io_handler
+            .handle_request_sync(&input)
+            .expect("Handling the RPC request failed");
         println!("{}", response);
     }
 }

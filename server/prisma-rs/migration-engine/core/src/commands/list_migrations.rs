@@ -26,7 +26,7 @@ impl MigrationCommand for ListMigrationStepsCommand {
                 id: mig.name,
                 steps: mig.datamodel_steps,
                 status: mig.status,
-                datamodel: engine.render_datamodel(&mig.datamodel)
+                datamodel: engine.render_datamodel(&mig.datamodel),
             })
             .collect()
     }
