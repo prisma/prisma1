@@ -26,6 +26,7 @@ impl MigrationCommand for ListMigrationStepsCommand {
                 id: mig.name,
                 steps: mig.datamodel_steps,
                 status: mig.status,
+                datamodel: engine.render_datamodel(&mig.datamodel)
             })
             .collect()
     }
@@ -43,4 +44,5 @@ pub struct ListMigrationStepsOutput {
     pub id: String,
     pub steps: Vec<MigrationStep>,
     pub status: MigrationStatus,
+    pub datamodel: String,
 }
