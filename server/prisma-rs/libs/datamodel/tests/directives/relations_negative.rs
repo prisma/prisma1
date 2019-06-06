@@ -137,8 +137,8 @@ fn should_fail_on_conflicting_back_relation_field_name() {
 }
 
 #[test]
-#[ignore] 
-// This case is caught by the requirement that named relations 
+#[ignore]
+// This case is caught by the requirement that named relations
 // need to have an opposite field.
 fn should_fail_on_conflicting_generated_back_relation_fields() {
     // More specifically, this should not panic.
@@ -180,9 +180,12 @@ fn should_fail_on_named_generated_back_relation_fields() {
 
     let errors = parse_error(dml);
 
-    errors.assert_is_at(0, ValidationError::new_model_validation_error(
-        "Named relations require an opposite field.",
-        "Todo",
-        &Span::new(46, 89),
-    ));
+    errors.assert_is_at(
+        0,
+        ValidationError::new_model_validation_error(
+            "Named relations require an opposite field.",
+            "Todo",
+            &Span::new(46, 89),
+        ),
+    );
 }

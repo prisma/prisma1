@@ -250,7 +250,7 @@ impl Standardiser {
         for model in schema.models() {
             match &mut self.find_fields_with_missing_back_relation(model, ast_schema, schema) {
                 Ok(missing) => missing_back_relations.append(missing),
-                Err(errs) => errors.append(errs)
+                Err(errs) => errors.append(errs),
             }
         }
 
@@ -260,7 +260,9 @@ impl Standardiser {
 
             if let Some(_) = model.find_field(&name) {
                 let source_model = schema.find_model(&backward.to).expect(STATE_ERROR);
-                let source_field = source_model.related_field(&forward.to, &forward.name, "").expect(STATE_ERROR);
+                let source_field = source_model
+                    .related_field(&forward.to, &forward.name, "")
+                    .expect(STATE_ERROR);
 
                 errors.push(field_validation_error(
                     "Automatic opposite related field generation would cause a naming conflict. Please add an explicit opposite relation field.",
@@ -320,7 +322,12 @@ impl Standardiser {
                             },
                         ));
                     } else {
-                        errors.push(field_validation_error("Named relations require an opposite field.", model, &field, &ast_schema))
+                        errors.push(field_validation_error(
+                            "Named relations require an opposite field.",
+                            model,
+                            &field,
+                            &ast_schema,
+                        ))
                     }
                 }
             }
