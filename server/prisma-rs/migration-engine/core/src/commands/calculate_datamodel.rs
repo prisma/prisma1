@@ -1,4 +1,4 @@
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use datamodel::dml::Datamodel;
 use migration_connector::*;
@@ -15,14 +15,14 @@ impl MigrationCommand for CalculateDatamodelCommand {
         Box::new(CalculateDatamodelCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
 
         let base_datamodel = Datamodel::empty();
         let datamodel = engine.datamodel_calculator().infer(&base_datamodel, &self.input.steps);
-        CalculateDatamodelOutput {
+        Ok(CalculateDatamodelOutput {
             datamodel: datamodel::render(&datamodel).unwrap(),
-        }
+        })
     }
 }
 

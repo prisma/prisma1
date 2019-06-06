@@ -1,4 +1,4 @@
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use datamodel;
 
@@ -14,14 +14,14 @@ impl MigrationCommand for DmmfToDmlCommand {
         Box::new(DmmfToDmlCommand { input })
     }
 
-    fn execute(&self, _engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, _engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
 
         let datamodel = datamodel::dmmf::parse_from_dmmf(&self.input.dmmf);
 
-        DmmfToDmlCommandOutput {
-            datamodel: datamodel::render(&datamodel).unwrap(),
-        }
+        Ok(DmmfToDmlCommandOutput {
+            datamodel: datamodel::render(&datamodel)?,
+        })
     }
 }
 

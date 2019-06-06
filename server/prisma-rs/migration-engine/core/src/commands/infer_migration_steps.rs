@@ -1,4 +1,4 @@
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use datamodel::Datamodel;
 use migration_connector::steps::*;
@@ -16,7 +16,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
         Box::new(InferMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         let connector = engine.connector();
         let current_data_model = if self.input.assume_to_be_applied.is_empty() {
             connector.migration_persistence().current_datamodel()
@@ -42,13 +42,13 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .database_migration_step_applier()
             .render_steps_pretty(&database_migration);
 
-        InferMigrationStepsOutput {
+        Ok(InferMigrationStepsOutput {
             datamodel_steps: model_migration_steps,
             database_steps: database_steps_json,
             errors: vec![],
             warnings: vec![],
             general_errors: vec![],
-        }
+        })
     }
 }
 

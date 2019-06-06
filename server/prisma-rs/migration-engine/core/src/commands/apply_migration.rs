@@ -1,5 +1,5 @@
 use super::MigrationStepsResultOutput;
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{CommandResult, MigrationCommand};
 use crate::migration_engine::MigrationEngine;
 use migration_connector::*;
 
@@ -15,7 +15,7 @@ impl MigrationCommand for ApplyMigrationCommand {
         Box::new(ApplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
@@ -32,7 +32,7 @@ impl ApplyMigrationCommand {
         &self,
         engine: &Box<MigrationEngine>,
         migration: &Migration,
-    ) -> MigrationStepsResultOutput {
+    ) -> CommandResult<MigrationStepsResultOutput> {
         assert!(migration.is_watch_migration());
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
@@ -47,25 +47,25 @@ impl ApplyMigrationCommand {
                 .database_migration_step_applier()
                 .render_steps_pretty(&database_migration);
 
-            MigrationStepsResultOutput {
+            Ok(MigrationStepsResultOutput {
                 datamodel_steps: self.input.steps.clone(),
                 database_steps: database_steps_json_pretty,
                 errors: Vec::new(),
                 warnings: Vec::new(),
                 general_errors: Vec::new(),
-            }
+            })
         } else {
-            MigrationStepsResultOutput {
+            Ok(MigrationStepsResultOutput {
                 datamodel_steps: self.input.steps.clone(),
                 database_steps: serde_json::Value::Array(Vec::new()),
                 errors: Vec::new(),
                 warnings: Vec::new(),
                 general_errors: vec!["The last saved migration is a watch migration. The provided steps don't match the ones of this watch migration. This is disallowed.".to_string()],
-            }
+            })
         }
     }
 
-    fn handle_normal_migration(&self, engine: &Box<MigrationEngine>) -> MigrationStepsResultOutput {
+    fn handle_normal_migration(&self, engine: &Box<MigrationEngine>) -> CommandResult<MigrationStepsResultOutput> {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
         let current_datamodel = migration_persistence.current_datamodel();
@@ -98,13 +98,13 @@ impl ApplyMigrationCommand {
                 .apply(&saved_migration, &database_migration);
         }
 
-        MigrationStepsResultOutput {
+        Ok(MigrationStepsResultOutput {
             datamodel_steps: self.input.steps.clone(),
             database_steps: database_steps_json_pretty,
             errors: Vec::new(),
             warnings: Vec::new(),
             general_errors: Vec::new(),
-        }
+        })
     }
 }
 

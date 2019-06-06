@@ -31,14 +31,19 @@ impl RpcApi {
             let cmd = T::new(input);
             let engine = MigrationEngine::new();
             engine.init();
-            let response_json = serde_json::to_value(&cmd.execute(&engine)).expect("Rendering of RPC response failed");
+            let result = &cmd.execute(&engine).map_err(convert_error)?;
+            let response_json = serde_json::to_value(result).expect("Rendering of RPC response failed");
             Ok(response_json)
         });
     }
 
     pub fn handle(&self) {
+        let mut json_is_complete = false;
         let mut input = String::new();
-        io::stdin().read_line(&mut input).expect("Reading from stdin failed.");
+        while !json_is_complete {
+            io::stdin().read_line(&mut input).expect("Reading from stdin failed.");
+            json_is_complete = serde_json::from_str::<serde_json::Value>(&input).is_ok();
+        }
         println!("{}", self.handle_input(&input));
     }
 
@@ -46,5 +51,13 @@ impl RpcApi {
         self.io_handler
             .handle_request_sync(&input)
             .expect("Handling the RPC request failed")
+    }
+}
+
+fn convert_error(command_error: CommandError) -> jsonrpc_core::types::error::Error {
+    jsonrpc_core::types::error::Error {
+        code: jsonrpc_core::types::error::ErrorCode::ServerError(4466),
+        message: format!("{:?}", command_error),
+        data: None,
     }
 }
