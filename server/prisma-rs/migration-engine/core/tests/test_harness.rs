@@ -20,9 +20,9 @@ pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
 }
 
 #[allow(unused)]
-pub fn run_test_with_engine<T>(test: T) -> ()
+pub fn run_test_with_engine<T, X>(test: T) -> X
 where
-    T: FnOnce(Box<MigrationEngine>) -> () + panic::UnwindSafe,
+    T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
     let engine = MigrationEngine::new();
@@ -32,7 +32,8 @@ where
 
     // TEST
     let result = panic::catch_unwind(|| test(engine));
-    assert!(result.is_ok())
+    assert!(result.is_ok());
+    result.unwrap()
 }
 
 #[allow(unused)]
