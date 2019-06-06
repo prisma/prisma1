@@ -95,7 +95,7 @@ impl Migration {
     }
 }
 
-#[derive(Debug, Serialize, PartialEq, Clone)]
+#[derive(Debug, Serialize, PartialEq, Clone, Copy)]
 pub enum MigrationStatus {
     Pending,
     InProgress,
