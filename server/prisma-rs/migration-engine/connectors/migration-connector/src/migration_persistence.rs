@@ -16,6 +16,24 @@ pub trait MigrationPersistence {
     // this power the listMigrations command
     fn load_all(&self) -> Vec<Migration>;
 
+    // loads all current trailing watch migrations from Migration Event Log
+    fn load_current_watch_migrations(&self) -> Vec<Migration> {
+        let mut all_migrations = self.load_all();
+        let mut result = Vec::new();
+        // start to take all migrations from the back until we hit a migration that is not watch
+        all_migrations.reverse();
+        for migration in all_migrations {
+            if migration.is_watch_migration() {
+                result.push(migration);
+            } else {
+                break;
+            }
+        }
+        // reverse the result so the migrations are in the right order again
+        result.reverse();
+        result
+    }
+
     // writes the migration to the Migration table
     fn create(&self, migration: Migration) -> Migration;
 
@@ -50,6 +68,10 @@ pub struct MigrationUpdateParams {
     pub finished_at: Option<DateTime<Utc>>,
 }
 
+pub trait IsWatchMigration {
+    fn is_watch_migration(&self) -> bool;
+}
+
 impl Migration {
     pub fn new(name: String) -> Migration {
         Migration {
@@ -80,8 +102,9 @@ impl Migration {
         }
     }
 
-    pub fn is_watch_migration(&self) -> bool {
-        self.name == "watch"
+    pub fn mark_as_finished(&mut self) {
+        self.status = MigrationStatus::Success;
+        self.finished_at = Some(Self::timestamp_without_nanos());
     }
 
     // SQLite does not store nano precision. Therefore we cut it so we can assert equality in our tests.
@@ -92,6 +115,12 @@ impl Migration {
         let naive = chrono::NaiveDateTime::from_timestamp(secs, nsecs);
         let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
         datetime
+    }
+}
+
+impl IsWatchMigration for Migration {
+    fn is_watch_migration(&self) -> bool {
+        self.name.starts_with("watch")
     }
 }
 

@@ -21,7 +21,9 @@ impl MigrationCommand for ApplyMigrationCommand {
         let migration_persistence = connector.migration_persistence();
 
         match migration_persistence.last() {
-            Some(ref migration) if migration.is_watch_migration() => self.handle_watch_migration(&engine, &migration),
+            Some(ref migration) if migration.is_watch_migration() && !self.input.is_watch_migration() => {
+                self.handle_watch_migration(&engine, &migration)
+            }
             _ => self.handle_normal_migration(&engine),
         }
     }
@@ -37,15 +39,33 @@ impl ApplyMigrationCommand {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
 
-        if migration.datamodel_steps == self.input.steps {
-            let mut update_params = migration.update_params();
-            update_params.new_name = self.input.migration_id.clone();
-            migration_persistence.update(&update_params);
+        let all_watch_migrations = migration_persistence.load_current_watch_migrations();
+        let mut all_steps_from_all_watch_migrations = Vec::new();
+        for mut migration in all_watch_migrations.into_iter() {
+            all_steps_from_all_watch_migrations.append(&mut migration.datamodel_steps);
+        }
 
-            let database_migration = connector.deserialize_database_migration(migration.database_migration.clone());
+        if all_steps_from_all_watch_migrations == self.input.steps {
+            // let mut update_params = migration.update_params();
+            // update_params.new_name = self.input.migration_id.clone();
+            // migration_persistence.update(&update_params);
+
+            // let database_migration = connector.deserialize_database_migration(migration.database_migration.clone());
+            // let database_steps_json_pretty = connector
+            //     .database_migration_step_applier()
+            //     .render_steps_pretty(&database_migration);
+
+            let database_migration = connector.empty_database_migration();
             let database_steps_json_pretty = connector
                 .database_migration_step_applier()
                 .render_steps_pretty(&database_migration);
+
+            let mut migration = Migration::new(self.input.migration_id.clone());
+            migration.datamodel_steps = self.input.steps.clone();
+            migration.database_migration = database_migration.serialize();
+            migration.datamodel = migration_persistence.current_datamodel();
+            migration.mark_as_finished();
+            let _ = migration_persistence.create(migration);
 
             Ok(MigrationStepsResultOutput {
                 datamodel_steps: self.input.steps.clone(),
@@ -116,4 +136,10 @@ pub struct ApplyMigrationInput {
     pub steps: Vec<MigrationStep>,
     pub force: Option<bool>,
     pub dry_run: Option<bool>,
+}
+
+impl IsWatchMigration for ApplyMigrationInput {
+    fn is_watch_migration(&self) -> bool {
+        self.migration_id.starts_with("watch")
+    }
 }

@@ -3,12 +3,13 @@ mod test_harness;
 use database_inspector::*;
 use datamodel::dml::*;
 use migration_connector::steps::*;
+use migration_connector::*;
 use migration_core::commands::*;
 use migration_core::MigrationEngine;
 use test_harness::*;
 
 #[test]
-fn watch_mode_must_work() {
+fn single_watch_migrations_must_work() {
     run_test_with_engine(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
@@ -36,17 +37,91 @@ fn watch_mode_must_work() {
             }),
         ];
 
-        let db_schema_1 = up(&engine, steps.clone(), "watch");
+        let db_schema_1 = up(&engine, steps.clone(), "watch-0001");
         let migrations = migration_persistence.load_all();
         assert_eq!(migrations.len(), 1);
-        assert_eq!(migrations.first().unwrap().name, "watch");
+        assert_eq!(migrations.first().unwrap().name, "watch-0001");
 
         let custom_migration_id = "a-custom-migration-id";
         let db_schema_2 = up(&engine, steps.clone(), custom_migration_id);
         assert_eq!(db_schema_1, db_schema_2);
         let migrations = migration_persistence.load_all();
+
+        assert_eq!(migrations.len(), 2);
+        assert_eq!(migrations[0].name, "watch-0001");
+        assert_eq!(migrations[1].name, custom_migration_id);
+        assert_eq!(migrations[1].status, MigrationStatus::Success);
+        assert!(migrations[1].finished_at.is_some());
+    });
+}
+
+#[test]
+fn multiple_watch_migrations_must_work() {
+    run_test_with_engine(|engine| {
+        let migration_persistence = engine.connector().migration_persistence();
+
+        let steps1 = vec![
+            MigrationStep::CreateModel(CreateModel {
+                name: "Test".to_string(),
+                db_name: None,
+                embedded: false,
+            }),
+            MigrationStep::CreateField(CreateField {
+                model: "Test".to_string(),
+                name: "id".to_string(),
+                tpe: FieldType::Base(ScalarType::Int),
+                arity: FieldArity::Required,
+                db_name: None,
+                is_created_at: None,
+                is_updated_at: None,
+                is_unique: false,
+                id: Some(IdInfo {
+                    strategy: IdStrategy::Auto,
+                    sequence: None,
+                }),
+                default: None,
+                scalar_list: None,
+            }),
+        ];
+
+        let _ = up(&engine, steps1.clone(), "watch-0001");
+        let migrations = migration_persistence.load_all();
         assert_eq!(migrations.len(), 1);
-        assert_eq!(migrations.first().unwrap().name, custom_migration_id);
+        assert_eq!(migrations[0].name, "watch-0001");
+
+        let steps2 = vec![MigrationStep::CreateField(CreateField {
+            model: "Test".to_string(),
+            name: "field".to_string(),
+            tpe: FieldType::Base(ScalarType::Int),
+            arity: FieldArity::Required,
+            db_name: None,
+            is_created_at: None,
+            is_updated_at: None,
+            is_unique: false,
+            id: None,
+            default: None,
+            scalar_list: None,
+        })];
+        let db_schema_2 = up(&engine, steps2.clone(), "watch-0002");
+        let migrations = migration_persistence.load_all();
+        assert_eq!(migrations.len(), 2);
+        assert_eq!(migrations[0].name, "watch-0001");
+        assert_eq!(migrations[1].name, "watch-0002");
+
+        let custom_migration_id = "a-custom-migration-id";
+        let mut final_steps = Vec::new();
+        final_steps.append(&mut steps1.clone());
+        final_steps.append(&mut steps2.clone());
+
+        let final_db_schema = up(&engine, final_steps, custom_migration_id);
+        assert_eq!(db_schema_2, final_db_schema);
+        let migrations = migration_persistence.load_all();
+        assert_eq!(migrations.len(), 3);
+        assert_eq!(migrations[0].name, "watch-0001");
+        assert_eq!(migrations[1].name, "watch-0002");
+        assert_eq!(migrations[2].name, custom_migration_id);
+        assert_eq!(migrations[2].status, MigrationStatus::Success);
+        assert!(migrations[2].finished_at.is_some());
     });
 }
 
@@ -60,7 +135,11 @@ fn up(engine: &Box<MigrationEngine>, steps: Vec<MigrationStep>, migration_id: &s
         dry_run: None,
     };
     let cmd = ApplyMigrationCommand::new(input);
-    let _output = cmd.execute(&engine);
+    let output = cmd.execute(&engine).expect("ApplyMigration failed");
+    assert!(
+        output.general_errors.is_empty(),
+        format!("ApplyMigration returned unexpected errors: {:?}", output.general_errors)
+    );
 
     introspect_database(&engine)
 }
