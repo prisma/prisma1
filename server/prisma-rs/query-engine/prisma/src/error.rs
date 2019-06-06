@@ -30,6 +30,7 @@ pub enum PrismaError {
     IOError(Error),
 }
 
+/// Pretty print helper errors.
 pub trait PrettyPrint {
     fn pretty_print(&self);
 }

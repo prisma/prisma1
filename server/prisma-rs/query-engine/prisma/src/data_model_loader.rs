@@ -9,6 +9,13 @@ use std::{
     process::{Command, Stdio},
 };
 
+/// Private helper trait for operations on PrismaResult<Option<T>>.
+/// PrismaResult<Option<T>> expresses 3 states:
+/// - [Ok(Some)] Existing.
+/// - [Ok(None)] Not existing / not set.
+/// - [Err]      Existing, but processing error.
+///
+/// Err cases abort chaining, the other allow for further chaining.
 trait PrismaResultOption<T> {
     fn inner_map<F, U>(self, f: F) -> PrismaResult<Option<U>>
     where
@@ -56,6 +63,20 @@ impl<T> PrismaResultOption<T> for PrismaResult<Option<T>> {
 }
 
 /// Loads data model components (SDL string, v2 data model, internal data model).
+///
+/// The precendence order is:
+/// 1. The datamodel loading is bypassed by providing a pre-build internal data model template
+///    via PRISMA_INTERNAL_DATA_MODEL_JSON. This is only intended to be used by integration tests or in
+///    rare cases where we don't want to compute the data model.
+/// -> Returns (None, None, InternalDataModelRef)
+///
+/// 2. The v2 data model is provided either as file (PRISMA_DML_PATH) or as string in the env (PRISMA_DML).
+/// -> Returns (None, Some(Datamodel), InternalDataModelRef)
+///
+/// 3. The v1 data model is provided either as file (PRISMA_SDL_PATH) or as string in the env (PRISMA_SDL).
+/// -> Returns (Some(String), None, InternalDataModelRef)
+///
+/// Encountered Err results abort the chain, else Nones are chained until a Some is encountered in the load order.
 pub fn load_data_model_components(
     db_name: String,
 ) -> PrismaResult<(Option<String>, Option<Datamodel>, InternalDataModelRef)> {
@@ -123,6 +144,7 @@ fn load_v2_dml_string() -> PrismaResult<Option<String>> {
     load_v2_string_from_env().inner_or_else(|| load_v2_dml_from_file())
 }
 
+/// Attempts to load a Prisma DML (datamodel v2) string from env.
 fn load_v2_string_from_env() -> PrismaResult<Option<String>> {
     debug!("Trying to load Prisma v2 DML from env...");
     load_string_from_env("PRISMA_DML").on_success(|| debug!("Loaded Prisma v2 DML from env."))
@@ -203,7 +225,8 @@ fn load_from_file(env_var: &str) -> PrismaResult<Option<String>> {
     }
 }
 
-/// Transforms an SDL string into stringified JSON of the internal data model.
+/// Transforms an SDL string into stringified JSON of the internal data model template.
+/// Calls out to an external process. Requires SCHEMA_INFERRER_PATH to be set.
 fn infer_v11_json(sdl: &str) -> PrismaResult<String> {
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]

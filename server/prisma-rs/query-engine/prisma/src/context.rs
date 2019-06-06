@@ -5,19 +5,24 @@ use prisma_models::InternalDataModelRef;
 
 #[derive(DebugStub)]
 pub struct PrismaContext {
+    /// Prisma configuration (from prisma.yml).
     pub config: PrismaConfig,
+
+    /// Internal data model used throughout the query engine.
     pub internal_data_model: InternalDataModelRef,
 
     /// The api query schema.
     pub query_schema: QuerySchema,
 
     /// This is currently used as a temporary workaround.
-    /// Setting this option will make the /
+    /// Setting this option will make the /datamodel route available.
     pub sdl: Option<String>,
 
     /// DML based datamodel.
+    /// Setting this option will make the /dmmf route available.
     pub dm: Option<datamodel::Datamodel>,
 
+    /// Central executor for read and write queries.
     #[debug_stub = "#Executor#"]
     pub executor: Executor,
 }
@@ -25,15 +30,10 @@ pub struct PrismaContext {
 impl PrismaContext {
     /// Initializes a new Prisma context.
     /// Loads all immutable state for the query engine:
-    /// 1.   The Prisma configuration (prisma.yml) & dependent initialization like executors / connectors.
-    /// 2.   The data model. This has different options on how to initialize, in descending order of precedence:
-    /// 2.1. The datamodel loading is bypassed by providing a pre-build internal data model template
-    ///      via PRISMA_INTERNAL_DATA_MODEL_JSON. This is only intended to be used by integration tests or in
-    ///      rare cases where we don't want to compute the data model.
-    /// 2.2. The v2 data model is provided either as file (PRISMA_DML_PATH) or as string in the env (PRISMA_DML).
-    /// 2.3. The v1 data model is provided either as file (PRISMA_SDL_PATH) or as string in the env (PRISMA_SDL).
-    /// 3.   The data model is converted to the internal data model.
-    /// 4.   The api query schema is constructed from the internal data model.
+    /// 1. The Prisma configuration (prisma.yml) & dependent initialization like executors / connectors.
+    /// 2. The data model. This has different options on how to initialize. See data_model_loader module.
+    /// 3. The data model is converted to the internal data model.
+    /// 4. The api query schema is constructed from the internal data model.
     pub fn new() -> PrismaResult<Self> {
         // Load config and executors
         let config = config::load().unwrap();
