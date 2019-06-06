@@ -36,6 +36,7 @@ pub trait DatamodelAsserts {
 
 pub trait ErrorAsserts {
     fn assert_is(&self, error: ValidationError) -> &Self;
+    fn assert_is_at(&self, index: usize, error: ValidationError) -> &Self;
 }
 
 impl FieldAsserts for dml::Field {
@@ -204,6 +205,11 @@ impl ErrorAsserts for ErrorCollection {
             panic!("Expected exactly one validation error.");
         }
 
+        return self;
+    }
+
+    fn assert_is_at(&self, index: usize, error: ValidationError) -> &Self {
+        assert_eq!(self.errors[index], error);
         return self;
     }
 }

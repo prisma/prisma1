@@ -1,7 +1,6 @@
 extern crate datamodel;
 
-const DATAMODEL_STRING: &str = r#"
-model User {
+const DATAMODEL_STRING: &str = r#"model User {
     id Int @id
     createdAt DateTime
     email String @unique
@@ -59,8 +58,7 @@ enum CategoryEnum {
     A
     B
     C
-}
-"#;
+}"#;
 
 #[test]
 fn test_parser_renderer_via_ast() {
@@ -70,20 +68,7 @@ fn test_parser_renderer_via_ast() {
     assert_eq!(DATAMODEL_STRING, rendered);
 }
 
-#[test]
-fn test_parser_renderer_via_dml() {
-    let dml = datamodel::parse(DATAMODEL_STRING).unwrap();
-    let rendered = datamodel::render(&dml).unwrap();
-
-    print!("{}", rendered);
-
-    assert_eq!(DATAMODEL_STRING, rendered);
-}
-
-// TODO: Test that N:M relation names are correctly handled as soon as we
-// get relation table support.
-const MANY_TO_MANY_DATAMODEL: &str = r#"
-model Blog {
+const MANY_TO_MANY_DATAMODEL: &str = r#"model Blog {
     id Int @id
     name String
     viewCount Int
@@ -102,8 +87,7 @@ model Post {
     title String
     tags String[]
     blog Blog
-}
-"#;
+}"#;
 
 #[test]
 fn test_parser_renderer_many_to_many_via_ast() {
@@ -115,12 +99,20 @@ fn test_parser_renderer_many_to_many_via_ast() {
     assert_eq!(rendered, MANY_TO_MANY_DATAMODEL);
 }
 
+const DATAMODEL_WITH_TYPES: &str = r#"type ID = Int @id
+
+model Author {
+    id ID
+    name String?
+    authors Blog[] @relation("AuthorToBlogs")
+}"#;
+
 #[test]
-fn test_parser_renderer_many_to_many_via_dml() {
-    let dml = datamodel::parse(MANY_TO_MANY_DATAMODEL).unwrap();
-    let rendered = datamodel::render(&dml).unwrap();
+fn test_parser_renderer_types_via_ast() {
+    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_TYPES).unwrap();
+    let rendered = datamodel::render_ast(&ast);
 
     print!("{}", rendered);
 
-    assert_eq!(rendered, MANY_TO_MANY_DATAMODEL);
+    assert_eq!(rendered, DATAMODEL_WITH_TYPES);
 }

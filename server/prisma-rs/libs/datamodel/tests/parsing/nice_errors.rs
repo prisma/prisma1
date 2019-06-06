@@ -15,6 +15,7 @@ fn nice_error_for_missing_model_keyword() {
     error.assert_is(ValidationError::new_parser_error(
         &vec![
             "end of input",
+            "type declaration",
             "model declaration",
             "enum declaration",
             "source definition",
@@ -38,6 +39,7 @@ fn nice_error_for_missing_model_keyword_2() {
     error.assert_is(ValidationError::new_parser_error(
         &vec![
             "end of input",
+            "type declaration",
             "model declaration",
             "enum declaration",
             "source definition",
@@ -109,6 +111,7 @@ fn nice_error_missing_braces() {
     error.assert_is(ValidationError::new_parser_error(
         &vec![
             "end of input",
+            "type declaration",
             "model declaration",
             "enum declaration",
             "source definition",

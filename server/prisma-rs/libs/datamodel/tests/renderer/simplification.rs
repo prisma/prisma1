@@ -11,16 +11,14 @@ fn test_exclude_default_relation_names_from_rendering() {
         }
     "#;
 
-    let expected = r#"
-model Todo {
+    let expected = r#"model Todo {
     id Int @id
 }
 
 model User {
     id Int @id
     todo Todo
-}
-"#;
+}"#;
 
     let dml = datamodel::parse(input).unwrap();
     let rendered = datamodel::render(&dml).unwrap();
@@ -43,16 +41,14 @@ fn test_exclude_to_fields_id() {
         }
     "#;
 
-    let expected = r#"
-model Todo {
+    let expected = r#"model Todo {
     id Int @id
 }
 
 model User {
     id Int @id
     todo Todo
-}
-"#;
+}"#;
 
     let dml = datamodel::parse(input).unwrap();
     let rendered = datamodel::render(&dml).unwrap();

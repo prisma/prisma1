@@ -308,6 +308,39 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
     };
 }
 
+// Custom type parsing
+fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
+    let mut name: Option<String> = None;
+    let mut directives: Vec<Directive> = vec![];
+    let mut base_type: Option<(String, Span)> = None;
+
+    match_children! { token, current,
+        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::base_type => {
+            base_type = Some((parse_base_type(&current), Span::from_pest(&current.as_span())))
+        },
+        Rule::directive => directives.push(parse_directive(&current)),
+        _ => unreachable!("Encounterd impossible custom type during parsing: {:?}", current.tokens())
+    }
+
+    return match (name, base_type) {
+        (Some(name), Some((field_type, field_type_span))) => Field {
+            field_type: field_type,
+            field_type_span: field_type_span,
+            name,
+            arity: FieldArity::Required,
+            default_value: None,
+            directives,
+            comments: vec![],
+            span: Span::from_pest(&token.as_span()),
+        },
+        _ => panic!(
+            "Encounterd impossible custom type declaration during parsing: {:?}",
+            token.as_str()
+        ),
+    };
+}
+
 // Whole datamodel parsing
 
 /// Parses a Prisma V2 datamodel document into an internal AST representation.
@@ -323,6 +356,7 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 Rule::model_declaration => models.push(Top::Model(parse_model(&current))),
                 Rule::enum_declaration => models.push(Top::Enum(parse_enum(&current))),
                 Rule::source_block => models.push(Top::Source(parse_source(&current))),
+                Rule::type_declaration => models.push(Top::Type(parse_type(&current))),
                 Rule::EOI => {},
                 _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
             }
@@ -388,6 +422,7 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::field_type => "field type",
         Rule::default_value => "default value",
         Rule::field_declaration => "field declaration",
+        Rule::type_declaration => "type declaration",
         Rule::source_key_value => "source configuration property",
         Rule::source_properties => "source property block",
         Rule::string_any => "any character",
