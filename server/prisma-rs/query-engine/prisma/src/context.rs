@@ -1,4 +1,4 @@
-use crate::{data_model, exec_loader, PrismaResult};
+use crate::{data_model_loader::*, exec_loader, PrismaResult};
 use core::{BuildMode, Executor, QuerySchema, QuerySchemaBuilder, SupportedCapabilities};
 use prisma_common::config::{self, PrismaConfig};
 use prisma_models::InternalDataModelRef;
@@ -45,13 +45,13 @@ impl PrismaContext {
         let db = config.databases.get("default").unwrap();
         let db_name = db.schema().or_else(|| db.db_name()).unwrap_or_else(|| "prisma".into());
 
-        // Load internal data model and build schema
-        let internal_data_model = data_model::load(db_name)?;
+        // Load data model in order of precedence.
+        let (sdl, dm, internal_data_model) = load_data_model_components(db_name)?;
+
+        // Construct query schema
         let capabilities = SupportedCapabilities::empty(); // todo connector capabilities.
         let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, BuildMode::Legacy);
         let query_schema = schema_builder.build();
-        let sdl = data_model::load_v11_sdl_string().ok();
-        let dm = Self::load_datamodel();
 
         // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
 
@@ -63,24 +63,5 @@ impl PrismaContext {
             dm,
             executor,
         })
-    }
-
-    fn load_datamodel_v2() -> PrismaResult<datamodel::Datamodel> {
-        let dml_string = data_model::load_v2_dml_string().ok()?;
-        let parsed = datamodel::parse(&dml_string);
-
-        if let Err(errors) = &parsed {
-            dbg!(&errors);
-            for error in errors.to_iter() {
-                println!("");
-                error
-                    .pretty_print(&mut std::io::stderr().lock(), "from env", &dml_string)
-                    .expect("Failed to write errors to stderr");
-            }
-
-            return None;
-        }
-
-        parsed.ok()
     }
 }

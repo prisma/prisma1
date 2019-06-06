@@ -8,7 +8,7 @@ extern crate rust_embed;
 extern crate debug_stub_derive;
 
 mod context;
-mod data_model;
+mod data_model_loader;
 mod dmmf; // Temporary
 mod error;
 mod exec_loader;
@@ -21,10 +21,10 @@ use actix_web::{
     server, App, HttpRequest, HttpResponse, Json, Responder,
 };
 use context::PrismaContext;
-use error::PrismaError;
+use error::*;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
-use std::sync::Arc;
+use std::{process, sync::Arc};
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
 
@@ -43,7 +43,15 @@ struct RequestContext {
 fn main() {
     env_logger::init();
 
-    let context = PrismaContext::new().unwrap();
+    let context = match PrismaContext::new() {
+        Ok(ctx) => ctx,
+        Err(err) => {
+            info!("Encountered error during initialization:");
+            err.pretty_print();
+            process::exit(1);
+        }
+    };
+
     let port = context.config.port;
     let request_context = Arc::new(RequestContext {
         context: context,
@@ -96,7 +104,7 @@ fn data_model_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
     let request_context = req.state();
 
     match request_context.context.sdl {
-        Some(sdl) => HttpResponse::Ok().content_type("application/text").body(sdl),
+        Some(ref sdl) => HttpResponse::Ok().content_type("application/text").body(sdl),
         None => HttpResponse::with_body(
             StatusCode::UNPROCESSABLE_ENTITY,
             "This endpoint is only callable if Prisma was initialized with a SDL (v1) data model.",
