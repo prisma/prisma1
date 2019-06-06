@@ -16,6 +16,8 @@ pub struct Model {
     pub database_name: Option<String>,
     /// Indicates if this model is embedded or not.
     pub is_embedded: bool,
+    /// Indicates if this model is generated.
+    pub is_generated: bool,
 }
 
 impl Model {
@@ -27,6 +29,7 @@ impl Model {
             comments: vec![],
             database_name: None,
             is_embedded: false,
+            is_generated: false,
         }
     }
 
@@ -89,6 +92,26 @@ impl Model {
             }
             return false;
         })
+    }
+
+    /// Checks if this is a relation model. A relation model has exactly
+    /// two relations, which are required.
+    pub fn is_relation_model(&self) -> bool {
+        let related_fields = self.fields().filter(|f| -> bool {
+            if let FieldType::Relation(_) = f.field_type {
+                f.arity == FieldArity::Required
+            } else {
+                false
+            }
+        });
+
+        related_fields.count() == 2
+    }
+
+    /// Checks if this is a pure relation model.
+    /// It has only two fields, both of them are required relations.
+    pub fn is_pure_relation_model(&self) -> bool {
+        self.is_relation_model() && self.fields.len() == 2
     }
 }
 

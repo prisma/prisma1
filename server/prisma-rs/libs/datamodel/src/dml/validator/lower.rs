@@ -1,4 +1,4 @@
-use super::DirectiveBox;
+use super::{common::*, DirectiveBox};
 use crate::errors::ErrorCollection;
 use crate::source;
 use crate::{ast, dml};
@@ -30,9 +30,11 @@ impl LowerDmlToAst {
         let mut errors = ErrorCollection::new();
 
         for model in datamodel.models() {
-            match self.lower_model(model, datamodel) {
-                Ok(res) => tops.push(ast::Top::Model(res)),
-                Err(mut err) => errors.append(&mut err),
+            if !model.is_generated {
+                match self.lower_model(model, datamodel) {
+                    Ok(res) => tops.push(ast::Top::Model(res)),
+                    Err(mut err) => errors.append(&mut err),
+                }
             }
         }
 
@@ -55,7 +57,7 @@ impl LowerDmlToAst {
 
         for field in model.fields() {
             if !field.is_generated {
-                match self.lower_field(field, datamodel) {
+                match self.lower_field(field, model, datamodel) {
                     Ok(ast_field) => fields.push(ast_field),
                     Err(mut err) => errors.append(&mut err),
                 };
@@ -85,13 +87,18 @@ impl LowerDmlToAst {
         })
     }
 
-    fn lower_field(&self, field: &dml::Field, datamodel: &dml::Datamodel) -> Result<ast::Field, ErrorCollection> {
+    fn lower_field(
+        &self,
+        field: &dml::Field,
+        model: &dml::Model,
+        datamodel: &dml::Datamodel,
+    ) -> Result<ast::Field, ErrorCollection> {
         Ok(ast::Field {
             name: field.name.clone(),
             arity: self.lower_field_arity(&field.arity),
             default_value: field.default_value.clone().map(|v| v.into()),
             directives: self.directives.field.serialize(field, datamodel)?,
-            field_type: self.lower_type(&field.field_type),
+            field_type: self.lower_type(&field.field_type, field, model, &datamodel),
             comments: vec![],
             field_type_span: ast::Span::empty(),
             span: ast::Span::empty(),
@@ -108,11 +115,41 @@ impl LowerDmlToAst {
     }
 
     /// Internal: Lowers a field's arity.
-    fn lower_type(&self, field_type: &dml::FieldType) -> String {
+    fn lower_type(
+        &self,
+        field_type: &dml::FieldType,
+        field: &dml::Field,
+        model: &dml::Model,
+        datamodel: &dml::Datamodel,
+    ) -> String {
         match field_type {
             dml::FieldType::Base(tpe) => tpe.to_string(),
             dml::FieldType::Enum(tpe) => tpe.clone(),
-            dml::FieldType::Relation(rel) => rel.to.clone(),
+            dml::FieldType::Relation(rel) => {
+                let related_model = datamodel.find_model(&rel.to).expect(STATE_ERROR);
+
+                if related_model.is_generated && related_model.is_pure_relation_model() {
+                    // This is a special simplification case: We need to point to the original related field for rendering.
+                    // This hides auto-generated relation tables.
+                    let related_field = related_model
+                        .related_field(&model.name, &rel.name, &field.name)
+                        .expect(STATE_ERROR);
+                    let other_field = related_model
+                        .fields()
+                        .find(|f| f.name != related_field.name)
+                        .expect(STATE_ERROR);
+
+                    if let dml::FieldType::Relation(rel) = &other_field.field_type {
+                        rel.to.clone()
+                    } else {
+                        panic!(STATE_ERROR);
+                    }
+                } else if related_model.is_generated {
+                    panic!("Error during rendering model: We found a relation to a generated model, but we do not know how to handle it. This is an internal error.")
+                } else {
+                    rel.to.clone()
+                }
+            }
             _ => unimplemented!("Connector specific types are not supported atm."),
         }
     }
