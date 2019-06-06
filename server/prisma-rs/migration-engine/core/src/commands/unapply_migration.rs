@@ -1,5 +1,5 @@
-use super::list_migrations::ListMigrationStepsOutput;
-use crate::commands::command::MigrationCommand;
+use super::list_migrations::{convert_migration_to_list_migration_steps_output, ListMigrationStepsOutput};
+use crate::commands::command::{CommandResult, MigrationCommand};
 use crate::migration_engine::MigrationEngine;
 use migration_connector::*;
 
@@ -15,20 +15,24 @@ impl MigrationCommand for UnapplyMigrationCommand {
         Box::new(UnapplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let connector = engine.connector();
-        match connector.migration_persistence().last() {
+        let result = match connector.migration_persistence().last() {
             None => UnapplyMigrationOutput {
                 rolled_back: ListMigrationStepsOutput {
                     id: "foo".to_string(),
-                    steps: Vec::new(),
+                    datamodel_steps: Vec::new(),
+                    database_steps: serde_json::Value::Array(Vec::new()),
                     status: MigrationStatus::Pending,
+                    datamodel: "".to_string(),
                 },
                 active: ListMigrationStepsOutput {
                     id: "bar".to_string(),
-                    steps: Vec::new(),
+                    datamodel_steps: Vec::new(),
+                    database_steps: serde_json::Value::Array(Vec::new()),
                     status: MigrationStatus::Pending,
+                    datamodel: "".to_string(),
                 },
                 errors: vec!["There is no last migration that can be rolled back.".to_string()],
             },
@@ -45,20 +49,13 @@ impl MigrationCommand for UnapplyMigrationCommand {
                 };
 
                 UnapplyMigrationOutput {
-                    rolled_back: ListMigrationStepsOutput {
-                        id: migration_to_rollback.name,
-                        steps: migration_to_rollback.datamodel_steps,
-                        status: migration_to_rollback.status,
-                    },
-                    active: ListMigrationStepsOutput {
-                        id: new_active_migration.name,
-                        steps: new_active_migration.datamodel_steps,
-                        status: new_active_migration.status,
-                    },
+                    rolled_back: convert_migration_to_list_migration_steps_output(&engine, migration_to_rollback),
+                    active: convert_migration_to_list_migration_steps_output(&engine, new_active_migration),
                     errors: Vec::new(),
                 }
             }
-        }
+        };
+        Ok(result)
     }
 }
 

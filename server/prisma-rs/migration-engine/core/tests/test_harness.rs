@@ -20,9 +20,9 @@ pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
 }
 
 #[allow(unused)]
-pub fn run_test_with_engine<T>(test: T) -> ()
+pub fn run_test_with_engine<T, X>(test: T) -> X
 where
-    T: FnOnce(Box<MigrationEngine>) -> () + panic::UnwindSafe,
+    T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
     let engine = MigrationEngine::new();
@@ -32,33 +32,42 @@ where
 
     // TEST
     let result = panic::catch_unwind(|| test(engine));
-    assert!(result.is_ok())
+    assert!(result.is_ok());
+    result.unwrap()
 }
 
 #[allow(unused)]
 pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema {
+    migrate_to_with_migration_id(&engine, &datamodel, "the-migration-id")
+}
+
+#[allow(unused)]
+pub fn migrate_to_with_migration_id(
+    engine: &Box<MigrationEngine>,
+    datamodel: &str,
+    migration_id: &str,
+) -> DatabaseSchema {
     let project_info = "the-project-info".to_string();
-    let migration_id = "the-migration-id".to_string();
 
     let input = InferMigrationStepsInput {
         project_info: project_info.clone(),
-        migration_id: migration_id.clone(),
+        migration_id: migration_id.to_string(),
         data_model: datamodel.to_string(),
         assume_to_be_applied: Vec::new(),
     };
     let cmd = InferMigrationStepsCommand::new(input);
-    let output = cmd.execute(&engine);
+    let output = cmd.execute(&engine).expect("inferMigrationSteps failed");
 
     let input = ApplyMigrationInput {
         project_info: project_info,
-        migration_id: migration_id,
+        migration_id: migration_id.to_string(),
         steps: output.datamodel_steps,
         force: None,
         dry_run: None,
     };
     let cmd = ApplyMigrationCommand::new(input);
     let engine = MigrationEngine::new();
-    let _output = cmd.execute(&engine);
+    let _output = cmd.execute(&engine).expect("applyMigration failed");
 
     introspect_database(&engine)
 }

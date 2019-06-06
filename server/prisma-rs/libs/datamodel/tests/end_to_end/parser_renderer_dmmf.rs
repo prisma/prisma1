@@ -1,12 +1,11 @@
 extern crate datamodel;
 
-const DATAMODEL_STRING: &str = r#"
-model User {
+const DATAMODEL_STRING: &str = r#"model User {
     id Int @id
     createdAt DateTime
     email String @unique
     name String?
-    posts Post[] @relation(onDelete: CASCADE)
+    posts Post[] @relation("author", onDelete: CASCADE)
     profile Profile?
     @@db("user")
 }
@@ -59,8 +58,7 @@ enum CategoryEnum {
     A
     B
     C
-}
-"#;
+}"#;
 
 #[test]
 fn test_dmmf_roundtrip() {
@@ -74,13 +72,11 @@ fn test_dmmf_roundtrip() {
     assert_eq!(DATAMODEL_STRING, rendered);
 }
 
-const DATAMODEL_STRING_WITH_FUNCTIONS: &str = r#"
-model User {
+const DATAMODEL_STRING_WITH_FUNCTIONS: &str = r#"model User {
     id Int @id
     createdAt DateTime @default(now())
     someId String @default(cuid()) @unique
-}
-"#;
+}"#;
 
 #[test]
 fn test_dmmf_roundtrip_with_functions() {

@@ -36,30 +36,26 @@ impl Functional for EnvFunctional {
     }
 }
 
-/// Server side now function (`now()`).
-pub struct NowFunctional {}
+/// Shallow implementation for trivial server side functionals.
+pub struct ServerSideTrivialFunctional {
+    // Needed for const initializer.
+    pub(crate) name: &'static str,
+    pub(crate) return_type: PrismaType,
+}
 
-impl Functional for NowFunctional {
-    fn name(&self) -> &str {
-        "now"
-    }
-    fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<MaybeExpression, ValidationError> {
-        self.check_arg_count(values, 0, span)?;
-
-        Ok(server_functional_with(self.name(), PrismaType::DateTime, span))
+impl ServerSideTrivialFunctional {
+    pub fn new(name: &'static str, return_type: PrismaType) -> ServerSideTrivialFunctional {
+        ServerSideTrivialFunctional { name, return_type }
     }
 }
 
-/// Server side cuid function (`cuid()`).
-pub struct CuidFunctional {}
-
-impl Functional for CuidFunctional {
+impl Functional for ServerSideTrivialFunctional {
     fn name(&self) -> &str {
-        "cuid"
+        self.name
     }
     fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<MaybeExpression, ValidationError> {
         self.check_arg_count(values, 0, span)?;
 
-        Ok(server_functional_with(self.name(), PrismaType::String, span))
+        Ok(server_functional_with(self.name(), self.return_type, span))
     }
 }

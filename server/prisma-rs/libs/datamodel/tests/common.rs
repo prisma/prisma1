@@ -15,6 +15,7 @@ pub trait FieldAsserts {
     fn assert_is_generated(&self, b: bool) -> &Self;
     fn assert_is_id(&self, b: bool) -> &Self;
     fn assert_is_unique(&self, b: bool) -> &Self;
+    fn assert_is_updated_at(&self, b: bool) -> &Self;
     fn assert_id_strategy(&self, strategy: dml::IdStrategy) -> &Self;
     fn assert_id_sequence(&self, strategy: Option<dml::Sequence>) -> &Self;
 }
@@ -36,6 +37,7 @@ pub trait DatamodelAsserts {
 
 pub trait ErrorAsserts {
     fn assert_is(&self, error: ValidationError) -> &Self;
+    fn assert_is_at(&self, index: usize, error: ValidationError) -> &Self;
 }
 
 impl FieldAsserts for dml::Field {
@@ -135,6 +137,12 @@ impl FieldAsserts for dml::Field {
         return self;
     }
 
+    fn assert_is_updated_at(&self, b: bool) -> &Self {
+        assert_eq!(self.is_updated_at, b);
+
+        return self;
+    }
+
     fn assert_id_strategy(&self, strategy: dml::IdStrategy) -> &Self {
         if let Some(id_info) = &self.id_info {
             assert_eq!(id_info.strategy, strategy)
@@ -204,6 +212,11 @@ impl ErrorAsserts for ErrorCollection {
             panic!("Expected exactly one validation error.");
         }
 
+        return self;
+    }
+
+    fn assert_is_at(&self, index: usize, error: ValidationError) -> &Self {
+        assert_eq!(self.errors[index], error);
         return self;
     }
 }

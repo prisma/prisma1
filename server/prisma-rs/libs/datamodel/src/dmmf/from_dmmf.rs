@@ -119,6 +119,7 @@ pub fn field_from_dmmf(field: &Field) -> dml::Field {
         // TODO: Scalar List Strategy
         scalar_list_strategy: None,
         is_generated: field.is_generated.unwrap_or(false),
+        is_updated_at: field.is_updated_at.unwrap_or(false),
         comments: vec![],
     }
 }
@@ -130,6 +131,7 @@ pub fn model_from_dmmf(model: &Model) -> dml::Model {
         is_embedded: model.is_embedded,
         fields: model.fields.iter().map(&field_from_dmmf).collect(),
         comments: vec![],
+        is_generated: model.is_generated.unwrap_or(false),
     }
 }
 

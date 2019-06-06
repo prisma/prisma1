@@ -1,11 +1,5 @@
 use super::common::*;
-use crate::{
-    ast,
-    common::names::*,
-    dml,
-    errors::{ErrorCollection, ValidationError},
-    source,
-};
+use crate::{ast, common::names::*, dml, errors::ErrorCollection, source};
 
 /// Helper for standardsing a datamodel.
 ///
@@ -28,14 +22,14 @@ impl Standardiser {
     }
 
     pub fn standardise(&self, ast_schema: &ast::Datamodel, schema: &mut dml::Datamodel) -> Result<(), ErrorCollection> {
-        // Model Consistency. These ones do not fail.
-        // TODO: Also need to hook up the id field with to.
         self.add_missing_back_relations(ast_schema, schema)?;
 
-        // Always give relations a to_field.
+        // This is intentionally disabled for now, since the generated types would surface in the
+        // client schema.
+        // self.add_missing_relation_tables(ast_schema, schema)?;
+
         self.set_relation_to_field_to_id_if_missing(schema);
 
-        // Always give relations some name.
         self.name_unnamed_relations(schema);
 
         Ok(())
@@ -64,9 +58,9 @@ impl Standardiser {
 
                     let mut embed_here = false;
 
-                    // If to_fields are already set or this is a list,
+                    // If to_fields are already set,
                     // we continue.
-                    if we_have_embedding || we_are_list {
+                    if we_have_embedding {
                         continue;
                     }
 
@@ -86,9 +80,9 @@ impl Standardiser {
                             continue;
                         }
 
-                        // Likewise, if this field is generated, and the related one is not a list,
+                        // Likewise, if this field is generated or a list, and the related one is not a list,
                         // we continue.
-                        if field.is_generated && related_field.arity != dml::FieldArity::List {
+                        if (field.is_generated || we_are_list) && related_field.arity != dml::FieldArity::List {
                             continue;
                         }
 
@@ -105,7 +99,7 @@ impl Standardiser {
                         }
 
                         // .. tie breaker if both are good candiates.
-                        if model_name < &rel.to || (model_name == &rel.to && field.name < related_field.name) {
+                        if tie_str(&model_name, &field.name, &rel.to, &related_field.name) {
                             embed_here = true;
                         }
                     }
@@ -118,7 +112,133 @@ impl Standardiser {
         }
     }
 
-    /// Identifies and adds missing back relations.
+    // Rel name, from field, to field.
+    fn identify_missing_relation_tables(
+        &self,
+        schema: &mut dml::Datamodel,
+    ) -> Vec<(String, dml::FieldRef, dml::FieldRef)> {
+        let mut res = vec![];
+
+        for model in schema.models() {
+            for field in model.fields() {
+                if field.arity == dml::FieldArity::List {
+                    if let dml::FieldType::Relation(rel) = &field.field_type {
+                        let related_model = schema.find_model(&rel.to).expect(STATE_ERROR);
+                        let related_field = related_model
+                            .related_field(&model.name, &rel.name, &field.name)
+                            .expect(STATE_ERROR);
+
+                        // Model names, field names are again used as a tie breaker.
+                        if related_field.arity == dml::FieldArity::List
+                            && tie(&model, &field, &related_model, &related_field)
+                        {
+                            // N:M Relation, needs a relation table.
+                            res.push((
+                                rel.name.clone(),
+                                (model.name.clone(), field.name.clone()),
+                                (related_model.name.clone(), related_field.name.clone()),
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+
+        res
+    }
+
+    fn create_relation_table(
+        &self,
+        a: &dml::FieldRef,
+        b: &dml::FieldRef,
+        override_relation_name: &str,
+        datamodel: &dml::Datamodel,
+    ) -> dml::Model {
+        // A vs B tie breaking is done in identify_missing_relation_tables.
+        let a_model = datamodel.find_model(&a.0).expect(STATE_ERROR);
+        let b_model = datamodel.find_model(&b.0).expect(STATE_ERROR);
+
+        let relation_name = if override_relation_name != "" {
+            String::from(override_relation_name)
+        } else {
+            DefaultNames::relation_name(&a_model.name, &b_model.name)
+        };
+
+        let mut a_related_field = self.create_reference_field_for_model(a_model, &relation_name);
+        a_related_field.arity = dml::FieldArity::Required;
+        let mut b_related_field = self.create_reference_field_for_model(b_model, &relation_name);
+        b_related_field.arity = dml::FieldArity::Required;
+
+        dml::Model {
+            comments: vec![],
+            name: relation_name,
+            database_name: None,
+            is_embedded: false,
+            fields: vec![a_related_field, b_related_field],
+            is_generated: true,
+        }
+    }
+
+    fn create_reference_field_for_model(&self, model: &dml::Model, relation_name: &str) -> dml::Field {
+        dml::Field::new_generated(
+            &NameNormalizer::camel_case(&model.name),
+            dml::FieldType::Relation(dml::RelationInfo {
+                to: model.name.clone(),
+                to_fields: model.id_fields().map(|s| s.clone()).collect(),
+                name: String::from(relation_name), // Will be corrected in later step
+                on_delete: dml::OnDeleteStrategy::None,
+            }),
+        )
+    }
+
+    fn point_relation_to(&self, field_ref: &dml::FieldRef, to: &str, datamodel: &mut dml::Datamodel) {
+        let field = datamodel.find_field_mut(field_ref).expect(STATE_ERROR);
+
+        if let dml::FieldType::Relation(rel) = &mut field.field_type {
+            rel.to = String::from(to);
+            rel.to_fields = vec![];
+        } else {
+            panic!(STATE_ERROR);
+        }
+    }
+
+    // This is intentionally disabled for now, since the generated types would surface in the
+    // client schema.
+    #[allow(unused)]
+    fn add_missing_relation_tables(
+        &self,
+        ast_schema: &ast::Datamodel,
+        schema: &mut dml::Datamodel,
+    ) -> Result<(), ErrorCollection> {
+        let mut errors = ErrorCollection::new();
+
+        let all_missing = self.identify_missing_relation_tables(schema);
+
+        for missing in all_missing {
+            let rel_table = self.create_relation_table(&missing.1, &missing.2, &missing.0, schema);
+            if let Some(conflicting_model) = schema.find_model(&rel_table.name) {
+                errors.push(model_validation_error(
+                    "Automatic relation table generation would cause a naming conflict.",
+                    &conflicting_model,
+                    &ast_schema,
+                ));
+            }
+            // TODO: Relation name WILL clash if there is a N:M self relation.
+            self.point_relation_to(&missing.1, &rel_table.name, schema);
+            self.point_relation_to(&missing.2, &rel_table.name, schema);
+
+            schema.add_model(rel_table);
+        }
+
+        if errors.has_errors() {
+            Err(errors)
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Identifies and adds missing back relations. For 1:1 and 1:N relations.
+    /// Explicit n:m relations are not touched, as they already have a back relation field.
     fn add_missing_back_relations(
         &self,
         ast_schema: &ast::Datamodel,
@@ -128,25 +248,31 @@ impl Standardiser {
         let mut missing_back_relations = Vec::new();
 
         for model in schema.models() {
-            missing_back_relations.append(&mut self.find_fields_with_missing_back_relation(model, schema));
+            match &mut self.find_fields_with_missing_back_relation(model, ast_schema, schema) {
+                Ok(missing) => missing_back_relations.append(missing),
+                Err(errs) => errors.append(errs),
+            }
         }
 
         for (forward, backward) in missing_back_relations {
-            let model = schema.find_model_mut(&forward.to).expect(STATE_ERROR);
-
+            let model = schema.find_model(&forward.to).expect(STATE_ERROR);
             let name = backward.to.camel_case();
 
-            if let Some(conflicting_field) = model.find_field(&name) {
-                println!("Error adding field");
-                errors.push(ValidationError::new_model_validation_error(
-                    "Automatic back field generation would cause a naming conflict.",
-                    &model.name,
-                    &ast_schema
-                        .find_field(&model.name, &conflicting_field.name)
-                        .expect(STATE_ERROR)
-                        .span,
+            if let Some(_) = model.find_field(&name) {
+                let source_model = schema.find_model(&backward.to).expect(STATE_ERROR);
+                let source_field = source_model
+                    .related_field(&forward.to, &forward.name, "")
+                    .expect(STATE_ERROR);
+
+                errors.push(field_validation_error(
+                    "Automatic opposite related field generation would cause a naming conflict. Please add an explicit opposite relation field.",
+                    &source_model,
+                    &source_field,
+                    &ast_schema,
                 ));
             }
+
+            let model = schema.find_model_mut(&forward.to).expect(STATE_ERROR);
 
             model.add_field(dml::Field::new_generated(&name, dml::FieldType::Relation(backward)));
         }
@@ -163,9 +289,11 @@ impl Standardiser {
     fn find_fields_with_missing_back_relation(
         &self,
         model: &dml::Model,
+        ast_schema: &ast::Datamodel,
         schema: &dml::Datamodel,
-    ) -> Vec<(dml::RelationInfo, dml::RelationInfo)> {
+    ) -> Result<Vec<(dml::RelationInfo, dml::RelationInfo)>, ErrorCollection> {
         let mut fields: Vec<(dml::RelationInfo, dml::RelationInfo)> = Vec::new();
+        let mut errors = ErrorCollection::new();
 
         for field in model.fields() {
             if let dml::FieldType::Relation(rel) = &field.field_type {
@@ -180,22 +308,34 @@ impl Standardiser {
                 }
 
                 if !back_field_exists {
-                    fields.push((
-                        // Forward
-                        rel.clone(),
-                        // Backward
-                        dml::RelationInfo {
-                            to: model.name.clone(),
-                            to_fields: vec![],
-                            name: rel.name.clone(),
-                            on_delete: rel.on_delete,
-                        },
-                    ));
+                    // We only add back relations for unnamed relations.
+                    if rel.name.len() == 0 {
+                        fields.push((
+                            // Forward
+                            rel.clone(),
+                            // Backward
+                            dml::RelationInfo {
+                                to: model.name.clone(),
+                                to_fields: vec![],
+                                name: rel.name.clone(),
+                                on_delete: rel.on_delete,
+                            },
+                        ));
+                    } else {
+                        errors.push(field_validation_error(
+                            "Named relations require an opposite field.",
+                            model,
+                            &field,
+                            &ast_schema,
+                        ))
+                    }
                 }
             }
         }
 
-        fields
+        errors.ok()?;
+
+        Ok(fields)
     }
 
     fn name_unnamed_relations(&self, datamodel: &mut dml::Datamodel) {
@@ -237,8 +377,21 @@ impl Standardiser {
         for model in datamodel.models() {
             for field in model.fields() {
                 if let dml::FieldType::Relation(rel) = &field.field_type {
-                    if rel.name.len() == 0 && rel.to_fields.len() > 0 {
-                        rels.push((model.name.clone(), field.name.clone(), rel.clone()))
+                    let related_model = datamodel.find_model(&rel.to).expect(STATE_ERROR);
+                    let related_field = related_model
+                        .related_field(&model.name, &rel.name, &field.name)
+                        .expect(STATE_ERROR);
+
+                    if let dml::FieldType::Relation(related_rel) = &related_field.field_type {
+                        if rel.name.len() == 0
+                            && rel.to_fields.len() > 0
+                            // Tie is used to prevent duplicates on n:m relation.
+                            && (related_rel.to_fields.len() == 0 || tie(&model, &field, &related_model, &related_field))
+                        {
+                            rels.push((model.name.clone(), field.name.clone(), rel.clone()))
+                        }
+                    } else {
+                        panic!(STATE_ERROR);
                     }
                 }
             }

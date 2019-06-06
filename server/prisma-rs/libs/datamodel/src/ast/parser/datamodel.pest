@@ -50,12 +50,11 @@ argument = { (argument_name ~ ":" ~ argument_value) }
 // ######################################
 // Directives
 // ######################################
-directive_arguments = { "(" ~ ((argument ~ ("," ~ argument)*)?) ~ ")" }
-directive_single_argument = { "(" ~ argument_value ~ ")" }
+directive_arguments = { "(" ~ (((argument | argument_value) ~ ("," ~ argument)*)?) ~ ")" }
 // This is a poor-mans version of namespacing
 directive_name = @{ (identifier ~ ".")? ~ identifier }
 // A directive either has one unnamed argument or any number of named arguments or no argument.
-directive = { directive_name ~ (directive_arguments | directive_single_argument ) ? }
+directive = { directive_name ~ directive_arguments? }
 
 // ######################################
 // Field declarations
@@ -75,6 +74,11 @@ default_value = { "=" ~ expression }
 field_declaration = { identifier ~ (":")? ~ field_type ~ default_value? ~ ( "@" ~ directive )* }
 
 // ######################################
+// Custom type declarations
+// ######################################
+type_declaration = { "type" ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
+
+// ######################################
 // Model declarations
 // ######################################
 model_declaration = { "model" ~ identifier ~ "{" ~ ( field_declaration | ( "@@" ~ directive )  )* ~ "}" }
@@ -82,7 +86,7 @@ model_declaration = { "model" ~ identifier ~ "{" ~ ( field_declaration | ( "@@" 
 // ######################################
 // Enum declarations
 // ######################################
-enum_field_declaration = @{ ASCII_ALPHA_UPPER+ }
+enum_field_declaration = @{ identifier }
 enum_declaration = { "enum" ~ identifier ~ "{" ~ (enum_field_declaration | ( "@@" ~ directive )  )* ~ "}" }
 
 // ######################################
@@ -96,7 +100,7 @@ source_block = { "source" ~ identifier ~ "{" ~ source_key_value* ~ source_proper
 // ######################################
 // Datamodel
 // ######################################
-datamodel = { SOI ~ (model_declaration | enum_declaration | source_block )* ~ EOI }
+datamodel = { SOI ~ (model_declaration | enum_declaration | source_block | type_declaration )* ~ EOI }
 
 // ######################################
 // String Interpolation

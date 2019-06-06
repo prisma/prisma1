@@ -3,7 +3,7 @@ use super::errors::ValidationError;
 /// Represents a list of validation or parser errors.
 ///
 /// This is uses to accumulate all errors and show them all at once.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ErrorCollection {
     pub errors: Vec<ValidationError>,
 }
@@ -33,6 +33,14 @@ impl ErrorCollection {
     /// Appends all errors from another collection to this collection.
     pub fn append(&mut self, errs: &mut ErrorCollection) {
         self.errors.append(&mut errs.errors)
+    }
+
+    pub fn ok(&self) -> Result<(), ErrorCollection> {
+        if self.has_errors() {
+            Err(self.clone())
+        } else {
+            Ok(())
+        }
     }
 }
 

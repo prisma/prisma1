@@ -30,7 +30,61 @@ fn should_add_back_relations() {
 }
 
 #[test]
-fn should_not_add_back_relations_for_many_to_many() {
+#[ignore] // This feature is disabled intentionally, because it causes the generated type to surface in the client.
+fn should_add_a_relation_table_for_many_to_many_relations() {
+    // Equal name for both fields was a bug triggerer.
+    let dml = r#"
+model Blog {
+  id: Int @id
+  authors: Author[]
+}
+
+model Author {
+  id: Int @id
+  authors: Blog[]
+}
+    "#;
+
+    let schema = parse(dml);
+
+    let author_model = schema.assert_has_model("Author");
+    author_model
+        .assert_has_field("authors")
+        .assert_relation_to("AuthorToBlog")
+        .assert_relation_to_fields(&[])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    author_model.assert_has_field("id");
+
+    let blog_model = schema.assert_has_model("Blog");
+    blog_model
+        .assert_has_field("authors")
+        .assert_relation_to("AuthorToBlog")
+        .assert_relation_to_fields(&[])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    blog_model.assert_has_field("id");
+
+    // Assert nothing else was generated.
+    // E.g. no erronous back relations.
+    assert_eq!(author_model.fields().count(), 2);
+    assert_eq!(blog_model.fields().count(), 2);
+
+    let link_model = schema.assert_has_model("AuthorToBlog");
+    link_model
+        .assert_has_field("author")
+        .assert_relation_to("Author")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+    link_model
+        .assert_has_field("blog")
+        .assert_relation_to("Blog")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+}
+
+#[test]
+fn should_not_add_back_relation_fields_for_many_to_many_relations() {
     // Equal name for both fields was a bug triggerer.
     let dml = r#"
 model Blog {
@@ -50,7 +104,8 @@ model Author {
     author_model
         .assert_has_field("authors")
         .assert_relation_to("Blog")
-        .assert_relation_to_fields(&[])
+        .assert_relation_name("AuthorToBlog")
+        .assert_relation_to_fields(&["id"])
         .assert_arity(&datamodel::dml::FieldArity::List);
 
     author_model.assert_has_field("id");
@@ -59,12 +114,14 @@ model Author {
     blog_model
         .assert_has_field("authors")
         .assert_relation_to("Author")
-        .assert_relation_to_fields(&[])
+        .assert_relation_name("AuthorToBlog")
+        .assert_relation_to_fields(&["id"])
         .assert_arity(&datamodel::dml::FieldArity::List);
 
     blog_model.assert_has_field("id");
 
     // Assert nothing else was generated.
+    // E.g. no erronous back relations.
     assert_eq!(author_model.fields().count(), 2);
     assert_eq!(blog_model.fields().count(), 2);
 }
@@ -79,7 +136,7 @@ fn should_add_back_relations_for_more_complex_cases() {
 
     model Post {
         post_id: Int @id
-        comments: Comment[] @relation("Comments")
+        comments: Comment[]
         categories: PostToCategory[]
     }
 
@@ -132,7 +189,7 @@ fn should_add_back_relations_for_more_complex_cases() {
         .assert_has_field("post")
         .assert_relation_to("Post")
         .assert_relation_to_fields(&["post_id"])
-        .assert_relation_name("Comments")
+        .assert_relation_name("CommentToPost")
         .assert_is_generated(true)
         .assert_arity(&datamodel::dml::FieldArity::Optional);
 
@@ -142,7 +199,7 @@ fn should_add_back_relations_for_more_complex_cases() {
         .assert_has_field("comments")
         .assert_relation_to("Comment")
         .assert_relation_to_fields(&[])
-        .assert_relation_name("Comments")
+        .assert_relation_name("CommentToPost")
         .assert_is_generated(false)
         .assert_arity(&datamodel::dml::FieldArity::List);
 

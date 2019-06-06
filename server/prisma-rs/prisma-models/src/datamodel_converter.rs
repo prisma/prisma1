@@ -94,7 +94,7 @@ impl<'a> DatamodelConverter<'a> {
                     is_auto_generated: field.is_auto_generated(),
                     manifestation: field.manifestation(),
                     behaviour: field.behaviour(),
-                    default_value: None, // TODO: Handle default values.
+                    default_value: field.default_value(),
                     internal_enum: field.internal_enum(self.datamodel),
                 }),
             })
@@ -314,10 +314,12 @@ trait DatamodelFieldExtensions {
     fn behaviour(&self) -> Option<FieldBehaviour>;
     fn final_db_name(&self) -> String;
     fn internal_enum(&self, datamodel: &dml::Datamodel) -> Option<InternalEnum>;
+    fn default_value(&self) -> Option<PrismaValue>;
 }
 
 impl DatamodelFieldExtensions for dml::Field {
     fn type_identifier(&self) -> TypeIdentifier {
+        // todo: add support for CUID and UUID
         match self.field_type {
             dml::FieldType::Enum(_) => TypeIdentifier::Enum,
             dml::FieldType::Relation(_) => TypeIdentifier::Relation,
@@ -327,7 +329,15 @@ impl DatamodelFieldExtensions for dml::Field {
                 dml::ScalarType::Decimal => TypeIdentifier::Float,
                 dml::ScalarType::Float => TypeIdentifier::Float,
                 dml::ScalarType::Int => TypeIdentifier::Int,
-                dml::ScalarType::String => TypeIdentifier::String,
+                dml::ScalarType::String => match self.default_value {
+                    Some(datamodel::common::PrismaValue::Expression(ref expr, _, _)) if expr == "cuid" => {
+                        TypeIdentifier::GraphQLID
+                    }
+                    Some(datamodel::common::PrismaValue::Expression(ref expr, _, _)) if expr == "uuid" => {
+                        TypeIdentifier::UUID
+                    }
+                    _ => TypeIdentifier::String,
+                },
             },
             dml::FieldType::ConnectorSpecific {
                 base_type: _,
@@ -361,16 +371,35 @@ impl DatamodelFieldExtensions for dml::Field {
 
     fn behaviour(&self) -> Option<FieldBehaviour> {
         // TODO: implement this properly once this is specced for the datamodel
-        self.id_info.as_ref().map(|id_info| {
-            let strategy = match id_info.strategy {
-                dml::IdStrategy::Auto => IdStrategy::Auto,
-                dml::IdStrategy::None => IdStrategy::None,
-            };
-            FieldBehaviour::Id {
-                strategy: strategy,
-                sequence: None, // the sequence was just used by the migration engine. Now the models are only used by the query engine.
-            }
-        })
+        self.id_info
+            .as_ref()
+            .map(|id_info| {
+                let strategy = match id_info.strategy {
+                    dml::IdStrategy::Auto => IdStrategy::Auto,
+                    dml::IdStrategy::None => IdStrategy::None,
+                };
+                FieldBehaviour::Id {
+                    strategy: strategy,
+                    sequence: None, // the sequence was just used by the migration engine. Now those models are only used by the query engine. Hence we don't need it anyway.
+                }
+            })
+            // case: @default(now())
+            .or_else(|| match self.default_value {
+                Some(datamodel::common::PrismaValue::Expression(ref expr, _, _)) if expr == "now" => {
+                    Some(FieldBehaviour::CreatedAt)
+                }
+                _ => None,
+            })
+            .or_else(|| {
+                self.scalar_list_strategy.map(|sls| match sls {
+                    datamodel::ScalarListStrategy::Embedded => FieldBehaviour::ScalarList {
+                        strategy: ScalarListStrategy::Embedded,
+                    },
+                    datamodel::ScalarListStrategy::Relation => FieldBehaviour::ScalarList {
+                        strategy: ScalarListStrategy::Relation,
+                    },
+                })
+            })
     }
 
     fn final_db_name(&self) -> String {
@@ -390,5 +419,18 @@ impl DatamodelFieldExtensions for dml::Field {
             }
             _ => None,
         }
+    }
+
+    fn default_value(&self) -> Option<PrismaValue> {
+        self.default_value.as_ref().and_then(|v| match v {
+            datamodel::common::PrismaValue::Boolean(x) => Some(PrismaValue::Boolean(*x)),
+            datamodel::common::PrismaValue::Int(x) => Some(PrismaValue::Int(*x as i64)),
+            datamodel::common::PrismaValue::Float(x) => Some(PrismaValue::Float(*x as f64)),
+            datamodel::common::PrismaValue::String(x) => Some(PrismaValue::String(x.clone())),
+            datamodel::common::PrismaValue::DateTime(x) => Some(PrismaValue::DateTime(*x)),
+            datamodel::common::PrismaValue::Decimal(x) => Some(PrismaValue::Float(*x as f64)), // TODO: not sure if this mapping is correct
+            datamodel::common::PrismaValue::ConstantLiteral(x) => Some(PrismaValue::Enum(x.clone())),
+            datamodel::common::PrismaValue::Expression(_, _, _) => None, // expressions are handled in the behaviour function right now
+        })
     }
 }

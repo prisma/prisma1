@@ -5,7 +5,7 @@ pub struct SqlDestructiveChangesChecker {}
 
 #[allow(unused, dead_code)]
 impl DestructiveChangesChecker<SqlMigration> for SqlDestructiveChangesChecker {
-    fn check(&self, database_migration: &SqlMigration) -> Vec<MigrationResult> {
+    fn check(&self, database_migration: &SqlMigration) -> Vec<MigrationErrorOrWarning> {
         vec![]
     }
 }

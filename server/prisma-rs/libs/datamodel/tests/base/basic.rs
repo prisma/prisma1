@@ -26,8 +26,13 @@ fn parse_basic_model() {
 fn parse_basic_enum() {
     let dml = r#"
     enum Roles {
-        ADMIN
+        Admin
+        User
         USER
+        ADMIN
+        ADMIN_USER
+        Admin_User
+        HHorse99
     }
     "#;
 
@@ -35,4 +40,9 @@ fn parse_basic_enum() {
     let role_enum = schema.assert_has_enum("Roles");
     role_enum.assert_has_value("ADMIN");
     role_enum.assert_has_value("USER");
+    role_enum.assert_has_value("User");
+    role_enum.assert_has_value("Admin");
+    role_enum.assert_has_value("ADMIN_USER");
+    role_enum.assert_has_value("Admin_User");
+    role_enum.assert_has_value("HHorse99");
 }

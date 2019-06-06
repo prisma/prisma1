@@ -48,3 +48,27 @@ fn correctly_handle_server_side_cuid_function() {
             vec![],
         ));
 }
+
+#[test]
+fn correctly_handle_server_side_uuid_function() {
+    let dml = r#"
+    model User {
+        id: Int @id
+        someId: String @default(uuid())
+    }
+    "#;
+
+    std::env::set_var("TEST_USER", "prisma-user");
+
+    let schema = parse(dml);
+    let user_model = schema.assert_has_model("User");
+    user_model.assert_is_embedded(false);
+    user_model
+        .assert_has_field("someId")
+        .assert_base_type(&PrismaType::String)
+        .assert_default_value(PrismaValue::Expression(
+            String::from("uuid"),
+            PrismaType::String,
+            vec![],
+        ));
+}

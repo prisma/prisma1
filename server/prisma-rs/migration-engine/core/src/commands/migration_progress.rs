@@ -1,4 +1,4 @@
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use chrono::*;
 use migration_connector::*;
@@ -16,12 +16,13 @@ impl MigrationCommand for MigrationProgressCommand {
         Box::new(MigrationProgressCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         let migration_persistence = engine.connector().migration_persistence();
         let migration = migration_persistence
             .by_name(&self.input.migration_id)
             .expect("Could not load migration from database.");
-        MigrationProgressOutput {
+        
+        Ok(MigrationProgressOutput {
             status: migration.status,
             steps: migration.datamodel_steps.len(),
             applied: migration.applied,
@@ -29,7 +30,7 @@ impl MigrationCommand for MigrationProgressCommand {
             errors: migration.errors,
             started_at: migration.started_at,
             finished_at: migration.finished_at,
-        }
+        })
     }
 }
 
