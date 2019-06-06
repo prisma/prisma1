@@ -135,12 +135,14 @@ impl<T: 'static> DirectiveListValidator<T> {
     pub fn validate_and_apply(&self, ast: &ast::WithDirectives, t: &mut T) -> Result<(), ErrorCollection> {
         let mut errors = ErrorCollection::new();
 
-
         for directive in ast.directives() {
             for other_directive in ast.directives() {
                 if directive as *const ast::Directive != other_directive as *const ast::Directive {
                     if directive.name == other_directive.name {
-                        errors.push(ValidationError::new_duplicate_directive_error(&directive.name, &directive.span));
+                        errors.push(ValidationError::new_duplicate_directive_error(
+                            &directive.name,
+                            &directive.span,
+                        ));
                     }
                 }
             }
@@ -192,7 +194,7 @@ impl<T: 'static> DirectiveListValidator<T> {
         }
 
         errors.ok()?;
-    
+
         Ok(directives)
     }
 }
