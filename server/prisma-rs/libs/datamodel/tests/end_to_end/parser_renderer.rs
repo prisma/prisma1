@@ -1,7 +1,6 @@
 extern crate datamodel;
 
-const DATAMODEL_STRING: &str = r#"
-model User {
+const DATAMODEL_STRING: &str = r#"model User {
     id Int @id
     createdAt DateTime
     email String @unique
@@ -59,8 +58,7 @@ enum CategoryEnum {
     A
     B
     C
-}
-"#;
+}"#;
 
 #[test]
 fn test_parser_renderer_via_ast() {
@@ -82,8 +80,7 @@ fn test_parser_renderer_via_dml() {
 
 // TODO: Test that N:M relation names are correctly handled as soon as we
 // get relation table support.
-const MANY_TO_MANY_DATAMODEL: &str = r#"
-model Blog {
+const MANY_TO_MANY_DATAMODEL: &str = r#"model Blog {
     id Int @id
     name String
     viewCount Int
@@ -102,8 +99,7 @@ model Post {
     title String
     tags String[]
     blog Blog
-}
-"#;
+}"#;
 
 #[test]
 fn test_parser_renderer_many_to_many_via_ast() {

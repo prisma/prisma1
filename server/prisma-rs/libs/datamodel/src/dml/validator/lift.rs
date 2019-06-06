@@ -50,6 +50,7 @@ impl LiftAstToDml {
                     Err(mut err) => errors.append(&mut err),
                 },
                 ast::Top::Source(_) => { /* Source blocks are explicitely ignored by the validator */ }
+                ast::Top::Type(_) => unimplemented!("Not supported yet."),
             }
         }
 

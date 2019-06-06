@@ -291,6 +291,7 @@ pub enum Top {
     Enum(Enum),
     Model(Model),
     Source(SourceConfig),
+    Type(Field),
 }
 
 /// A prisma datamodel.
