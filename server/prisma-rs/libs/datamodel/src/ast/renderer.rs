@@ -37,7 +37,16 @@ impl<'a> Renderer<'a> {
 
     pub fn render_custom_type(&mut self, field: &ast::Field) {
         self.write("type ");
-        self.render_field(field);
+        self.write(&field.name);
+        self.write(&" = ");
+        self.write(&field.field_type);
+
+        for directive in &field.directives {
+            self.write(&" ");
+            self.render_field_directive(&directive);
+        }
+
+        self.end_line();
     }
 
     pub fn render_model(&mut self, model: &ast::Model) {

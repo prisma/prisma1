@@ -77,7 +77,7 @@ field_declaration = { identifier ~ (":")? ~ field_type ~ default_value? ~ ( "@" 
 // ######################################
 // Custom type declarations
 // ######################################
-type_declaration = { "type" ~ field_declaration }
+type_declaration = { "type" ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
 
 // ######################################
 // Model declarations

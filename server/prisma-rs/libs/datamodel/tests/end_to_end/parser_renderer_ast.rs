@@ -99,7 +99,7 @@ fn test_parser_renderer_many_to_many_via_ast() {
     assert_eq!(rendered, MANY_TO_MANY_DATAMODEL);
 }
 
-const DATAMODEL_WITH_TYPES: &str = r#"type ID Int @id
+const DATAMODEL_WITH_TYPES: &str = r#"type ID = Int @id
 
 model Author {
     id ID

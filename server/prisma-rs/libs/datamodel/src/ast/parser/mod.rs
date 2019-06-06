@@ -310,10 +310,35 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
 
 // Custom type parsing
 fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
-    match_first! { token, current,
-        Rule::field_declaration => parse_field(&current),
-        _ => unreachable!("Encounterd impossible type declaration during parsing: {:?}", current.tokens())
+    let mut name: Option<String> = None;
+    let mut directives: Vec<Directive> = vec![];
+    let mut base_type: Option<(String, Span)> = None;
+
+    match_children! { token, current,
+        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::base_type => {
+            base_type = Some((parse_base_type(&current), Span::from_pest(&current.as_span())))
+        },
+        Rule::directive => directives.push(parse_directive(&current)),
+        _ => unreachable!("Encounterd impossible custom type during parsing: {:?}", current.tokens())
     }
+
+    return match (name, base_type) {
+        (Some(name), Some((field_type, field_type_span))) => Field {
+            field_type: field_type,
+            field_type_span: field_type_span,
+            name,
+            arity: FieldArity::Required,
+            default_value: None,
+            directives,
+            comments: vec![],
+            span: Span::from_pest(&token.as_span()),
+        },
+        _ => panic!(
+            "Encounterd impossible custom type declaration during parsing: {:?}",
+            token.as_str()
+        ),
+    };
 }
 
 // Whole datamodel parsing
