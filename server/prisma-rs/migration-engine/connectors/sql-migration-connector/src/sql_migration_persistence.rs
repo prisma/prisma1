@@ -123,6 +123,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
         };
         let errors_json = serde_json::to_string(&params.errors).unwrap();
         let query = Update::table(TABLE_NAME)
+            .set(NAME_COLUMN, params.new_name.clone())
             .set(STATUS_COLUMN, params.status.code())
             .set(APPLIED_COLUMN, params.applied)
             .set(ROLLED_BACK_COLUMN, params.rolled_back)

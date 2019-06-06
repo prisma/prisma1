@@ -24,13 +24,13 @@ impl MigrationCommand for UnapplyMigrationCommand {
                     id: "foo".to_string(),
                     steps: Vec::new(),
                     status: MigrationStatus::Pending,
-                    datamodel: "".to_string()
+                    datamodel: "".to_string(),
                 },
                 active: ListMigrationStepsOutput {
                     id: "bar".to_string(),
                     steps: Vec::new(),
                     status: MigrationStatus::Pending,
-                    datamodel: "".to_string()
+                    datamodel: "".to_string(),
                 },
                 errors: vec!["There is no last migration that can be rolled back.".to_string()],
             },
@@ -51,13 +51,13 @@ impl MigrationCommand for UnapplyMigrationCommand {
                         id: migration_to_rollback.name,
                         steps: migration_to_rollback.datamodel_steps,
                         status: migration_to_rollback.status,
-                        datamodel: engine.render_datamodel(&migration_to_rollback.datamodel)
+                        datamodel: engine.render_datamodel(&migration_to_rollback.datamodel),
                     },
                     active: ListMigrationStepsOutput {
                         id: new_active_migration.name,
                         steps: new_active_migration.datamodel_steps,
                         status: new_active_migration.status,
-                        datamodel: engine.render_datamodel(&migration_to_rollback.datamodel)
+                        datamodel: engine.render_datamodel(&migration_to_rollback.datamodel),
                     },
                     errors: Vec::new(),
                 }

@@ -41,6 +41,7 @@ pub struct Migration {
 #[derive(Debug, Clone)]
 pub struct MigrationUpdateParams {
     pub name: String,
+    pub new_name: String,
     pub revision: usize,
     pub status: MigrationStatus,
     pub applied: usize,
@@ -69,6 +70,7 @@ impl Migration {
     pub fn update_params(&self) -> MigrationUpdateParams {
         MigrationUpdateParams {
             name: self.name.clone(),
+            new_name: self.name.clone(),
             revision: self.revision.clone(),
             status: self.status.clone(),
             applied: self.applied,
@@ -76,6 +78,10 @@ impl Migration {
             errors: self.errors.clone(),
             finished_at: self.finished_at.clone(),
         }
+    }
+
+    pub fn is_watch_migration(&self) -> bool {
+        self.name == "watch"
     }
 
     // SQLite does not store nano precision. Therefore we cut it so we can assert equality in our tests.
