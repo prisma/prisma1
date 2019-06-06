@@ -23,6 +23,9 @@ pub enum PrismaError {
     ConfigurationError(String),
 
     #[fail(display = "{}", _0)]
+    NotPresentError(String),
+
+    #[fail(display = "{}", _0)]
     IOError(Error),
 }
 

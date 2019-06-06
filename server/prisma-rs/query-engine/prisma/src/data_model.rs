@@ -9,43 +9,43 @@ use std::{
     process::{Command, Stdio},
 };
 
-pub enum ValidationError {
-    #[allow(dead_code)]
-    EverythingIsBroken,
-    #[allow(dead_code)]
-    Problematic(String),
-    #[allow(dead_code)]
-    Duplicate(String),
-}
+// pub enum ValidationError {
+//     #[allow(dead_code)]
+//     EverythingIsBroken,
+//     #[allow(dead_code)]
+//     Problematic(String),
+//     #[allow(dead_code)]
+//     Duplicate(String),
+// }
 
-// todo: Return crate::error errors, removing the above?
-pub trait Validatable {
-    fn validate(&self, doc: &query::Document) -> Result<(), ValidationError>;
-}
+// // todo: Return crate::error errors, removing the above?
+// pub trait Validatable {
+//     fn validate(&self, doc: &query::Document) -> Result<(), ValidationError>;
+// }
 
-impl Validatable for InternalDataModelRef {
-    fn validate(&self, _: &query::Document) -> Result<(), ValidationError> {
-        // It's not really ok 😭
-        Ok(())
-    }
-}
+// impl Validatable for InternalDataModelRef {
+//     fn validate(&self, _: &query::Document) -> Result<(), ValidationError> {
+//         // It's not really ok 😭
+//         Ok(())
+//     }
+// }
 
 /// Loads and builds the internal data model
-pub fn load(db_name: String) -> PrismaResult<InternalDataModelRef> {
-    let template = match load_datamodel_v2_from_env() {
-        Ok(template) => template,
-        Err(_) => {
-            let data_model_json = load_v11_json()?;
-            serde_json::from_str::<InternalDataModelTemplate>(&data_model_json)?
-        }
-    };
-    Ok(template.build(db_name))
-}
+// pub fn load(db_name: String) -> PrismaResult<InternalDataModelRef> {
+//     let template = match load_datamodel_v2_from_env() {
+//         Ok(template) => template,
+//         Err(_) => {
+//             let data_model_json = load_v11_json()?;
+//             serde_json::from_str::<InternalDataModelTemplate>(&data_model_json)?
+//         }
+//     };
+//     Ok(template.build(db_name))
+// }
 
-fn load_datamodel_v2_from_env() -> PrismaResult<InternalDataModelTemplate> {
-    let datamodel_string = load_v2_dml_string()?;
-    Ok(DatamodelConverter::convert_string(datamodel_string))
-}
+// fn load_datamodel_v2_from_env() -> PrismaResult<InternalDataModelTemplate> {
+//     let datamodel_string = load_v2_dml_string()?;
+//     Ok(DatamodelConverter::convert_string(datamodel_string))
+// }
 
 /// Attempts to load the config as unparsed JSON string.
 fn load_v11_json() -> PrismaResult<String> {
@@ -74,11 +74,9 @@ fn load_v11_json_from_env() -> PrismaResult<String> {
     })
 }
 
-// let inferrer = infer_v11_json(sdl)?;
-
-/// Attempts to load a Prisma SDL string from either env or file.
-// TODO: rename to `load_datamodel_string`
-pub fn load_v11_sdl_string() -> PrismaResult<String> {
+/// Attempts to load a Prisma SDL (datamodel v1) string from either env or file.
+/// Env has precedence over file.
+pub fn load_v1_sdl_string() -> PrismaResult<String> {
     load_v11_sdl_from_env()
         .or_else(|_| load_v11_sdl_from_file())
         .map_err(|err| {
@@ -86,6 +84,8 @@ pub fn load_v11_sdl_string() -> PrismaResult<String> {
         })
 }
 
+/// Attempts to load a Prisma DML (datamodel v2) string from either env or file.
+/// Env has precedence over file.
 pub fn load_v2_dml_string() -> PrismaResult<String> {
     load_v2_string_from_env()
         .or_else(|_| load_v2_dml_from_file())
@@ -96,17 +96,23 @@ pub fn load_v2_dml_string() -> PrismaResult<String> {
 
 fn load_v11_sdl_from_env() -> PrismaResult<String> {
     debug!("Trying to load Prisma v11 SDL from env...");
-    load_datamodel_from_env("PRISMA_SDL")
+    let sdl_string = load_datamodel_from_env("PRISMA_SDL");
+
+    debug!("Loaded Prisma v11 SDL from env.");
+    sdl_string
 }
 
 fn load_v2_string_from_env() -> PrismaResult<String> {
     debug!("Trying to load Prisma v2 DML from env...");
-    load_datamodel_from_env("PRISMA_DML")
+    let dml_string = load_datamodel_from_env("PRISMA_DML");
+
+    debug!("Loaded Prisma v2 DML from env.");
+    dml_string
 }
 
 /// Attempts to load a Prisma Datamodel string from env.
 /// Note that the content of the env var can be base64 encoded if necessary.
-/// Returns: (Decoded) Prisma Datamodel string.
+/// Returns: (Decoded) Prisma Datamodel string from given env var.
 fn load_datamodel_from_env(env_var: &str) -> PrismaResult<String> {
     utilities::get_env(env_var).and_then(|sdl_b64| {
         let sdl = match base64::decode(&sdl_b64) {
@@ -120,7 +126,6 @@ fn load_datamodel_from_env(env_var: &str) -> PrismaResult<String> {
             }
         };
 
-        debug!("Loaded Prisma Datamodel from env.");
         Ok(sdl)
     })
 }
