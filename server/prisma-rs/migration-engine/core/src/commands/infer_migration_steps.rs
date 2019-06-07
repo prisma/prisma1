@@ -62,7 +62,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
 pub struct InferMigrationStepsInput {
     pub project_info: String,
     pub migration_id: String,
-    #[serde(alias = "data_model")]
+    #[serde(alias = "dataModel")]
     pub datamodel: String,
     pub assume_to_be_applied: Vec<MigrationStep>,
 }
