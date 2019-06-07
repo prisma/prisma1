@@ -4,7 +4,7 @@
  * Dependencies
  */
 import { isError, HelpError, Env } from '@prisma/cli'
-import { Introspect } from './cli'
+import { Introspect } from './cli/Introspect'
 
 /**
  * Main function
