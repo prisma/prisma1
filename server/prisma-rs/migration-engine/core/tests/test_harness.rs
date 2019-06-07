@@ -134,6 +134,14 @@ pub fn create_field_step(model: &str, field: &str, scalar_type: ScalarType) -> M
 }
 
 #[allow(unused)]
+pub fn delete_field_step(model: &str, field: &str) -> MigrationStep {
+    MigrationStep::DeleteField(DeleteField{
+        model: model.to_string(), 
+        name: field.to_string()
+    })
+}
+
+#[allow(unused)]
 pub fn create_id_field_step(model: &str, field: &str, scalar_type: ScalarType) -> MigrationStep {
     MigrationStep::CreateField(CreateField {
         model: model.to_string(),

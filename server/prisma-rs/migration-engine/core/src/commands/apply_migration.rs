@@ -21,8 +21,8 @@ impl MigrationCommand for ApplyMigrationCommand {
         let migration_persistence = connector.migration_persistence();
 
         match migration_persistence.last() {
-            Some(ref migration) if migration.is_watch_migration() && !self.input.is_watch_migration() => {
-                self.handle_watch_migration(&engine, &migration)
+            Some(ref last_migration) if last_migration.is_watch_migration() && !self.input.is_watch_migration() => {
+                self.handle_transition_out_of_watch_mode(&engine)
             }
             _ => self.handle_normal_migration(&engine),
         }
@@ -30,28 +30,21 @@ impl MigrationCommand for ApplyMigrationCommand {
 }
 
 impl ApplyMigrationCommand {
-    fn handle_watch_migration(
+    fn handle_transition_out_of_watch_mode(
         &self,
         engine: &Box<MigrationEngine>,
-        migration: &Migration,
     ) -> CommandResult<MigrationStepsResultOutput> {
-        assert!(migration.is_watch_migration());
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
 
-        let all_steps_from_all_watch_migrations =
-            migration_persistence.load_all_datamodel_steps_from_all_current_watch_migrations();
+        let current_datamodel = migration_persistence.current_datamodel();
+        let last_non_watch_datamodel = migration_persistence.last_non_watch_datamodel();
+        let would_be_the_datamodel = engine
+            .datamodel_calculator()
+            .infer(&last_non_watch_datamodel, &self.input.steps);
 
-        if all_steps_from_all_watch_migrations == self.input.steps {
-            // let mut update_params = migration.update_params();
-            // update_params.new_name = self.input.migration_id.clone();
-            // migration_persistence.update(&update_params);
 
-            // let database_migration = connector.deserialize_database_migration(migration.database_migration.clone());
-            // let database_steps_json_pretty = connector
-            //     .database_migration_step_applier()
-            //     .render_steps_pretty(&database_migration);
-
+        if current_datamodel == would_be_the_datamodel {
             let database_migration = connector.empty_database_migration();
             let database_steps_json_pretty = connector
                 .database_migration_step_applier()
@@ -77,7 +70,7 @@ impl ApplyMigrationCommand {
                 database_steps: serde_json::Value::Array(Vec::new()),
                 errors: Vec::new(),
                 warnings: Vec::new(),
-                general_errors: vec!["The last saved migration is a watch migration. The provided steps don't match the ones of this watch migration. This is disallowed.".to_string()],
+                general_errors: vec!["The last saved migration is a watch migration. The provided steps don't result in the expected datamodel when applied on top of the last non watch datamodel. This is disallowed.".to_string()],
             })
         }
     }
