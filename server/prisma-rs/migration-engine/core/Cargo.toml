@@ -19,7 +19,7 @@ boolinator = "2.4.0"
 sql-migration-connector = { path = "../connectors/sql-migration-connector" }
 
 [dev-dependencies]
-rusqlite = { git = "https://github.com/pimeys/rusqlite", features = ["chrono", "bundled"] }
+prisma-query = { git = "https://github.com/prisma/prisma-query.git"}
 barrel = { version = "0.5.8", features = ["sqlite3"] }
 
 [[bin]]
