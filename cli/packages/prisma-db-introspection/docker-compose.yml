@@ -19,16 +19,16 @@ services:
       POSTGRES_PASSWORD: prisma
     volumes:
       - postgres:/var/lib/postgresql/data
-  # mongo:
-  #   image: mongo:3.6
-  #   restart: always
-  #   environment:
-  #     MONGO_INITDB_ROOT_USERNAME: prisma
-  #     MONGO_INITDB_ROOT_PASSWORD: prisma
-  #   ports:
-  #     - '27018:27017'
-  #   volumes:
-  #     - mongo:/var/lib/mongo
+  mongo:
+    image: mongo:3.6
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: prisma
+      MONGO_INITDB_ROOT_PASSWORD: prisma
+    ports:
+      - '27018:27017'
+    volumes:
+      - mongo:/var/lib/mongo
 
 volumes:
   ? mysql
