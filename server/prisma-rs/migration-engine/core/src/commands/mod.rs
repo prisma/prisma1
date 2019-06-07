@@ -7,6 +7,7 @@ mod infer_migration_steps;
 mod list_migrations;
 mod migration_progress;
 mod unapply_migration;
+mod list_datasources;
 
 pub use apply_migration::*;
 pub use calculate_database_steps::*;
@@ -17,6 +18,7 @@ pub use infer_migration_steps::*;
 pub use list_migrations::*;
 pub use migration_progress::*;
 pub use unapply_migration::*;
+pub use list_datasources::*;
 
 use migration_connector::{MigrationError, MigrationStep, MigrationWarning};
 
