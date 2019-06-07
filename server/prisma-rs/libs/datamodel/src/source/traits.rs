@@ -17,6 +17,7 @@ pub trait Source {
     /// Gets the source config URL.
     fn url(&self) -> &String;
     /// Gets all custom configuration attributes.
+    // TODO: String is probably a bad choice. Prisma value would be better.
     fn config(&self) -> HashMap<String, String>;
     /// Gets all field directives defined by this source.
     ///

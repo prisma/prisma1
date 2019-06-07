@@ -30,9 +30,44 @@ impl<'a> Renderer<'a> {
                 ast::Top::Model(model) => self.render_model(model),
                 ast::Top::Enum(enm) => self.render_enum(enm),
                 ast::Top::Type(custom_type) => self.render_custom_type(custom_type),
-                ast::Top::Source(_) => unimplemented!("Source block rendering is not implemented."),
+                ast::Top::Source(source) => self.render_source_block(source),
             };
         }
+    }
+
+    pub fn render_source_block(&mut self, source: &ast::SourceConfig) {
+        self.write("source ");
+        self.write(&source.name);
+        self.write(" {");
+        self.end_line();
+        self.indent_up();
+
+        for property in &source.properties {
+            self.write(&property.name);
+            self.write(" = ");
+            self.render_value(&property.value);
+            self.end_line();
+        }
+
+        if source.detail_configuration.len() > 0 {
+            self.write("properties {");
+            self.end_line();
+            self.indent_up();
+
+            for property in &source.detail_configuration {
+                self.write(&property.name);
+                self.write(" = ");
+                self.render_value(&property.value);
+                self.end_line();
+            }
+
+            self.indent_down();
+            self.write("}");
+        }
+
+        self.indent_down();
+        self.write("}");
+        self.end_line();
     }
 
     pub fn render_custom_type(&mut self, field: &ast::Field) {
