@@ -1,6 +1,6 @@
 {
   "name": "@prisma/prototype",
-  "version": "0.0.5",
+  "version": "0.0.11",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "git@github.com:prisma/prisma.git",
@@ -9,7 +9,8 @@
   "private": false,
   "files": [
     "build",
-    "download-build"
+    "download-build",
+    "runtime"
   ],
   "bin": {
     "prisma2": "build/index.js"
@@ -17,8 +18,8 @@
   "devDependencies": {
     "@prisma/cli": "^0.0.4",
     "@prisma/fetch-engine": "^0.0.19",
-    "@prisma/lift": "^0.0.7",
-    "@prisma/photon": "^0.0.5",
+    "@prisma/lift": "^0.0.9",
+    "@prisma/photon": "^0.0.11",
     "@zeit/ncc": "^0.18.5",
     "typescript": "^3.5.1"
   },

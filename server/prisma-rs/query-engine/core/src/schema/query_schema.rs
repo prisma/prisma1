@@ -1,4 +1,3 @@
-use super::visitor::*;
 use once_cell::sync::OnceCell;
 use prisma_models::{OrderBy, ScalarField, SortOrder};
 use std::{
@@ -13,8 +12,18 @@ pub type InputObjectTypeStrongRef = Arc<InputObjectType>;
 pub type InputObjectTypeRef = Weak<InputObjectType>;
 
 /// The query schema.
-/// Defines which operations (query/mutations) are possible on a database,
-/// based on the (internal) data model.
+/// Defines which operations (query/mutations) are possible on a database, based on the (internal) data model.
+///
+/// Conceptually, a query schema stores two trees (query / mutation) that consist of
+/// input and output types. Special consideration is required when dealing with object types.
+///
+/// Object types can be referenced multiple times throughout the schema, also recursively, which requires the use
+/// of weak references to prevent memory leaks. To simplify the overall management of Arcs and weaks, the
+/// query schema is subject to a number of invariants.
+/// The most important one is that the only strong references (Arc) to a single object types
+/// is only ever held by the top-level QuerySchema struct, never by the trees, which only ever hold weak refs.
+///
+/// Using a QuerySchema should never involve dealing with the strong references.
 #[derive(Debug)]
 pub struct QuerySchema {
   pub query: OutputType,

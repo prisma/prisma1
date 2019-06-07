@@ -10,20 +10,27 @@ impl DirectiveValidator<dml::Field> for DefaultDirectiveValidator {
     }
     fn validate_and_apply(&self, args: &Args, field: &mut dml::Field) -> Result<(), Error> {
         // TODO: This is most likely duplicate code.
-        if let dml::FieldType::Base(scalar_type) = field.field_type {
+
+        if let dml::FieldType::Base(scalar_type) = &field.field_type {
             match args.default_arg("value")?.as_type(&scalar_type) {
                 // TODO: Here, a default value directive can override the default value syntax sugar.
                 Ok(value) => field.default_value = Some(value),
                 Err(err) => return self.parser_error(&err),
             }
+        } else if let dml::FieldType::Enum(_) = &field.field_type {
+            match args.default_arg("value")?.as_constant_literal() {
+                // TODO: We should also check if this value is a valid enum value.
+                Ok(value) => field.default_value = Some(dml::Value::ConstantLiteral(value)),
+                Err(err) => return self.parser_error(&err),
+            }
         } else {
-            return self.error("Cannot set a default value on a non-scalar field.", &args.span());
+            return self.error("Cannot set a default value on a relation field.", &args.span());
         }
 
         return Ok(());
     }
 
-    fn serialize(&self, field: &dml::Field) -> Result<Option<ast::Directive>, Error> {
+    fn serialize(&self, field: &dml::Field, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
         if let Some(default_value) = &field.default_value {
             return Ok(Some(ast::Directive::new(
                 self.directive_name(),

@@ -32,11 +32,9 @@ fn sqlite(config: &FileConfig) -> Executor {
         .trim_end_matches("/");
 
     let sqlite = Sqlite::new(db_folder.to_owned(), config.limit(), false).unwrap();
-    // let arc = Arc::new(SqlDatabase::new(sqlite));
-    let wat = SqlDatabase::new(sqlite);
+    let db = SqlDatabase::new(sqlite);
 
-    // sql_executor(db_name.clone(), Arc::clone(&arc), arc)
-    sql_executor(db_name.clone(), wat)
+    sql_executor(db_name.clone(), db)
 }
 
 #[cfg(feature = "sql")]

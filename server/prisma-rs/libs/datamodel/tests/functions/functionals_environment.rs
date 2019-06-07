@@ -1,11 +1,11 @@
 use crate::common::*;
-use datamodel::dml;
+use datamodel::common::{PrismaType, PrismaValue};
 
 #[test]
 fn interpolate_environment_variables() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String @default(env("TEST_USER"))
         lastName: String
     }
@@ -18,8 +18,8 @@ fn interpolate_environment_variables() {
     user_model.assert_is_embedded(false);
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String)
-        .assert_default_value(dml::Value::String(String::from("prisma-user")));
+        .assert_base_type(&PrismaType::String)
+        .assert_default_value(PrismaValue::String(String::from("prisma-user")));
 }
 
 // This is very useless, except being a good test case.
@@ -27,7 +27,7 @@ fn interpolate_environment_variables() {
 fn interpolate_nested_environment_variables() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String @default(env(env("TEST_USER_VAR")))
         lastName: String
     }
@@ -41,6 +41,6 @@ fn interpolate_nested_environment_variables() {
     user_model.assert_is_embedded(false);
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String)
-        .assert_default_value(dml::Value::String(String::from("prisma-user")));
+        .assert_base_type(&PrismaType::String)
+        .assert_default_value(PrismaValue::String(String::from("prisma-user")));
 }

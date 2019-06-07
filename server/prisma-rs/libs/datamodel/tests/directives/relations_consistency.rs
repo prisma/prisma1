@@ -4,33 +4,288 @@ use crate::common::*;
 fn should_add_back_relations() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         posts: Post[]
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
     }
     "#;
 
     let schema = parse(dml);
     let post_model = schema.assert_has_model("Post");
-    post_model.assert_has_field("user").assert_relation_to("User");
-    // No normalization of to_fields for now.
-    //.assert_relation_to_fields(&["id"]);
+    post_model
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::Optional);
+
+    let user_model = schema.assert_has_model("User");
+    user_model
+        .assert_has_field("posts")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&[])
+        .assert_arity(&datamodel::dml::FieldArity::List);
 }
 
 #[test]
-#[ignore] // No normalization of to_fields for now.
+#[ignore] // This feature is disabled intentionally, because it causes the generated type to surface in the client.
+fn should_add_a_relation_table_for_many_to_many_relations() {
+    // Equal name for both fields was a bug triggerer.
+    let dml = r#"
+model Blog {
+  id: Int @id
+  authors: Author[]
+}
+
+model Author {
+  id: Int @id
+  authors: Blog[]
+}
+    "#;
+
+    let schema = parse(dml);
+
+    let author_model = schema.assert_has_model("Author");
+    author_model
+        .assert_has_field("authors")
+        .assert_relation_to("AuthorToBlog")
+        .assert_relation_to_fields(&[])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    author_model.assert_has_field("id");
+
+    let blog_model = schema.assert_has_model("Blog");
+    blog_model
+        .assert_has_field("authors")
+        .assert_relation_to("AuthorToBlog")
+        .assert_relation_to_fields(&[])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    blog_model.assert_has_field("id");
+
+    // Assert nothing else was generated.
+    // E.g. no erronous back relations.
+    assert_eq!(author_model.fields().count(), 2);
+    assert_eq!(blog_model.fields().count(), 2);
+
+    let link_model = schema.assert_has_model("AuthorToBlog");
+    link_model
+        .assert_has_field("author")
+        .assert_relation_to("Author")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+    link_model
+        .assert_has_field("blog")
+        .assert_relation_to("Blog")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+}
+
+#[test]
+fn should_not_add_back_relation_fields_for_many_to_many_relations() {
+    // Equal name for both fields was a bug triggerer.
+    let dml = r#"
+model Blog {
+  id: Int @id
+  authors: Author[]
+}
+
+model Author {
+  id: Int @id
+  authors: Blog[]
+}
+    "#;
+
+    let schema = parse(dml);
+
+    let author_model = schema.assert_has_model("Author");
+    author_model
+        .assert_has_field("authors")
+        .assert_relation_to("Blog")
+        .assert_relation_name("AuthorToBlog")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    author_model.assert_has_field("id");
+
+    let blog_model = schema.assert_has_model("Blog");
+    blog_model
+        .assert_has_field("authors")
+        .assert_relation_to("Author")
+        .assert_relation_name("AuthorToBlog")
+        .assert_relation_to_fields(&["id"])
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    blog_model.assert_has_field("id");
+
+    // Assert nothing else was generated.
+    // E.g. no erronous back relations.
+    assert_eq!(author_model.fields().count(), 2);
+    assert_eq!(blog_model.fields().count(), 2);
+}
+
+#[test]
+fn should_add_back_relations_for_more_complex_cases() {
+    let dml = r#"
+    model User {
+        id: Int @id
+        posts: Post[]
+    }
+
+    model Post {
+        post_id: Int @id
+        comments: Comment[]
+        categories: PostToCategory[]
+    }
+
+    model Comment {
+        comment_id: Int @id
+    }
+
+    model Category {
+        category_id Int @id
+        posts: PostToCategory[]
+    }
+
+    model PostToCategory {
+        id Int @id
+        post Post
+        category Category
+        @@db("post_to_category")
+    }
+    "#;
+
+    let schema = parse(dml);
+
+    // PostToUser
+
+    // Forward
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_relation_to_fields(&["id"])
+        .assert_relation_name("PostToUser")
+        .assert_is_generated(true)
+        .assert_arity(&datamodel::dml::FieldArity::Optional);
+
+    // Backward
+    schema
+        .assert_has_model("User")
+        .assert_has_field("posts")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&[])
+        .assert_relation_name("PostToUser")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    // Comments
+
+    // Forward
+    schema
+        .assert_has_model("Comment")
+        .assert_has_field("post")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&["post_id"])
+        .assert_relation_name("CommentToPost")
+        .assert_is_generated(true)
+        .assert_arity(&datamodel::dml::FieldArity::Optional);
+
+    // Backward
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("comments")
+        .assert_relation_to("Comment")
+        .assert_relation_to_fields(&[])
+        .assert_relation_name("CommentToPost")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    // CategoryToPostToCategory
+
+    // Backward
+    schema
+        .assert_has_model("Category")
+        .assert_has_field("posts")
+        .assert_relation_to("PostToCategory")
+        .assert_relation_to_fields(&[])
+        .assert_relation_name("CategoryToPostToCategory")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    // Forward
+    schema
+        .assert_has_model("PostToCategory")
+        .assert_has_field("category")
+        .assert_relation_to("Category")
+        .assert_relation_to_fields(&["category_id"])
+        .assert_relation_name("CategoryToPostToCategory")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+
+    // PostToPostToCategory
+
+    // Backward
+    schema
+        .assert_has_model("Post")
+        .assert_has_field("categories")
+        .assert_relation_to("PostToCategory")
+        .assert_relation_to_fields(&[])
+        .assert_relation_name("PostToPostToCategory")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::List);
+
+    // Forward
+    schema
+        .assert_has_model("PostToCategory")
+        .assert_has_field("post")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&["post_id"])
+        .assert_relation_name("PostToPostToCategory")
+        .assert_is_generated(false)
+        .assert_arity(&datamodel::dml::FieldArity::Required);
+}
+
+#[test]
 fn should_add_to_fields_on_the_correct_side_tie_breaker() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         post: Post
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
+        user: User
+    }
+    "#;
+
+    let schema = parse(dml);
+    let user_model = schema.assert_has_model("User");
+    user_model
+        .assert_has_field("post")
+        .assert_relation_to("Post")
+        .assert_relation_to_fields(&["post_id"]);
+
+    let post_model = schema.assert_has_model("Post");
+    post_model
+        .assert_has_field("user")
+        .assert_relation_to("User")
+        .assert_relation_to_fields(&[]);
+}
+
+#[test]
+fn should_add_to_fields_on_the_correct_side_list() {
+    let dml = r#"
+    model User {
+        id: Int @id
+        post: Post[]
+    }
+
+    model Post {
+        post_id: Int @id
         user: User
     }
     "#;
@@ -50,44 +305,15 @@ fn should_add_to_fields_on_the_correct_side_tie_breaker() {
 }
 
 #[test]
-#[ignore] // No normalization of to_fields for now.
-fn should_add_to_fields_on_the_correct_side_list() {
-    let dml = r#"
-    model User {
-        id: ID @id
-        post: Post
-    }
-
-    model Post {
-        post_id: ID @id
-        user: User[]
-    }
-    "#;
-
-    let schema = parse(dml);
-    let user_model = schema.assert_has_model("User");
-    user_model
-        .assert_has_field("post")
-        .assert_relation_to("Post")
-        .assert_relation_to_fields(&["post_id"]);
-
-    let post_model = schema.assert_has_model("Post");
-    post_model
-        .assert_has_field("user")
-        .assert_relation_to("User")
-        .assert_relation_to_fields(&[]);
-}
-
-#[test]
 fn should_camel_case_back_relation_field_name() {
     let dml = r#"
     model OhWhatAUser {
-        id: ID @id
+        id: Int @id
         posts: Post[]
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
     }
     "#;
 
@@ -96,4 +322,102 @@ fn should_camel_case_back_relation_field_name() {
     post_model
         .assert_has_field("ohWhatAUser")
         .assert_relation_to("OhWhatAUser");
+}
+
+#[test]
+fn should_add_self_back_relation_fields_on_defined_site() {
+    let dml = r#"
+    model Human {
+        id: Int @id
+        son: Human?
+    }
+    "#;
+
+    let schema = parse(dml);
+    let model = schema.assert_has_model("Human");
+    model
+        .assert_has_field("son")
+        .assert_relation_to("Human")
+        .assert_relation_to_fields(&["id"]);
+
+    model
+        .assert_has_field("human")
+        .assert_relation_to("Human")
+        .assert_relation_to_fields(&[]);
+}
+
+#[test]
+fn should_add_embed_ids_on_self_relations() {
+    let dml = r#"
+    model Human {
+        id: Int @id
+        father: Human?
+        son: Human?
+    }
+    "#;
+
+    let schema = parse(dml);
+    let model = schema.assert_has_model("Human");
+    model
+        .assert_has_field("son")
+        .assert_relation_to("Human")
+        .assert_relation_to_fields(&[]);
+
+    model
+        .assert_has_field("father")
+        .assert_relation_to("Human")
+        // Fieldname tie breaker.
+        .assert_relation_to_fields(&["id"]);
+}
+
+#[test]
+fn should_not_get_confused_with_complicated_self_relations() {
+    let dml = r#"
+    model Human {
+        id: Int @id
+        wife: Human? @relation("Marrige")
+        husband: Human? @relation("Marrige")
+        father: Human?
+        son: Human?
+        children: Human[] @relation("Offspring")
+        parent: Human? @relation("Offspring")
+    }
+    "#;
+
+    let schema = parse(dml);
+    let model = schema.assert_has_model("Human");
+    model
+        .assert_has_field("son")
+        .assert_relation_to("Human")
+        .assert_relation_to_fields(&[]);
+
+    model
+        .assert_has_field("father")
+        .assert_relation_to("Human")
+        // Fieldname tie breaker.
+        .assert_relation_to_fields(&["id"]);
+
+    model
+        .assert_has_field("wife")
+        .assert_relation_to("Human")
+        .assert_relation_name("Marrige")
+        .assert_relation_to_fields(&[]);
+
+    model
+        .assert_has_field("husband")
+        .assert_relation_to("Human")
+        .assert_relation_name("Marrige")
+        .assert_relation_to_fields(&["id"]);
+
+    model
+        .assert_has_field("children")
+        .assert_relation_to("Human")
+        .assert_relation_name("Offspring")
+        .assert_relation_to_fields(&[]);
+
+    model
+        .assert_has_field("parent")
+        .assert_relation_to("Human")
+        .assert_relation_name("Offspring")
+        .assert_relation_to_fields(&["id"]);
 }

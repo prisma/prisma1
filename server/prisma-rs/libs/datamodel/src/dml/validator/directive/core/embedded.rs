@@ -13,7 +13,7 @@ impl DirectiveValidator<dml::Model> for EmbeddedDirectiveValidator {
         return Ok(());
     }
 
-    fn serialize(&self, model: &dml::Model) -> Result<Option<ast::Directive>, Error> {
+    fn serialize(&self, model: &dml::Model, _datamodel: &dml::Datamodel) -> Result<Option<ast::Directive>, Error> {
         if model.is_embedded {
             return Ok(Some(ast::Directive::new(self.directive_name(), vec![])));
         }

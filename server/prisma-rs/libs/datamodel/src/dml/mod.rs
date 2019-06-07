@@ -6,7 +6,6 @@ mod comment;
 mod datamodel;
 mod enummodel;
 mod field;
-mod fromstr;
 mod id;
 mod model;
 mod relation;
@@ -17,7 +16,6 @@ pub use self::datamodel::*;
 pub use comment::*;
 pub use enummodel::*;
 pub use field::*;
-pub use fromstr::*;
 pub use id::*;
 pub use model::*;
 pub use relation::*;
@@ -25,3 +23,7 @@ pub use scalar::*;
 pub use traits::*;
 
 pub mod validator;
+
+// Compatibility export.
+pub use crate::common::PrismaType as ScalarType;
+pub use crate::common::PrismaValue as Value;

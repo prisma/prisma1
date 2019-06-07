@@ -3,7 +3,7 @@ use crate::ast;
 use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
 
-use super::FromStrAndSpan;
+use crate::common::FromStrAndSpan;
 
 /// Represents a strategy for generating IDs.
 #[derive(Debug, Copy, PartialEq, Clone, Serialize, Deserialize)]

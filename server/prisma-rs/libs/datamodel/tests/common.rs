@@ -1,18 +1,21 @@
 extern crate datamodel;
 
-use datamodel::{dml, errors::*, source::SourceDefinition};
+use datamodel::{common::PrismaType, dml, errors::*, source::SourceDefinition};
 
 pub trait FieldAsserts {
-    fn assert_base_type(&self, t: &dml::ScalarType) -> &Self;
+    fn assert_base_type(&self, t: &PrismaType) -> &Self;
     fn assert_enum_type(&self, en: &str) -> &Self;
+    fn assert_relation_name(&self, t: &str) -> &Self;
     fn assert_relation_to(&self, t: &str) -> &Self;
     fn assert_relation_delete_strategy(&self, t: dml::OnDeleteStrategy) -> &Self;
     fn assert_relation_to_fields(&self, t: &[&str]) -> &Self;
     fn assert_arity(&self, arity: &dml::FieldArity) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
     fn assert_default_value(&self, t: dml::Value) -> &Self;
+    fn assert_is_generated(&self, b: bool) -> &Self;
     fn assert_is_id(&self, b: bool) -> &Self;
     fn assert_is_unique(&self, b: bool) -> &Self;
+    fn assert_is_updated_at(&self, b: bool) -> &Self;
     fn assert_id_strategy(&self, strategy: dml::IdStrategy) -> &Self;
     fn assert_id_sequence(&self, strategy: Option<dml::Sequence>) -> &Self;
 }
@@ -34,10 +37,11 @@ pub trait DatamodelAsserts {
 
 pub trait ErrorAsserts {
     fn assert_is(&self, error: ValidationError) -> &Self;
+    fn assert_is_at(&self, index: usize, error: ValidationError) -> &Self;
 }
 
 impl FieldAsserts for dml::Field {
-    fn assert_base_type(&self, t: &dml::ScalarType) -> &Self {
+    fn assert_base_type(&self, t: &PrismaType) -> &Self {
         if let dml::FieldType::Base(base_type) = &self.field_type {
             assert_eq!(base_type, t);
         } else {
@@ -60,6 +64,16 @@ impl FieldAsserts for dml::Field {
     fn assert_relation_to(&self, t: &str) -> &Self {
         if let dml::FieldType::Relation(info) = &self.field_type {
             assert_eq!(info.to, t);
+        } else {
+            panic!("Relation expected, but found {:?}", self.field_type);
+        }
+
+        return self;
+    }
+
+    fn assert_relation_name(&self, t: &str) -> &Self {
+        if let dml::FieldType::Relation(info) = &self.field_type {
+            assert_eq!(info.name, String::from(t));
         } else {
             panic!("Relation expected, but found {:?}", self.field_type);
         }
@@ -111,8 +125,20 @@ impl FieldAsserts for dml::Field {
         return self;
     }
 
+    fn assert_is_generated(&self, b: bool) -> &Self {
+        assert_eq!(self.is_generated, b);
+
+        return self;
+    }
+
     fn assert_is_unique(&self, b: bool) -> &Self {
         assert_eq!(self.is_unique, b);
+
+        return self;
+    }
+
+    fn assert_is_updated_at(&self, b: bool) -> &Self {
+        assert_eq!(self.is_updated_at, b);
 
         return self;
     }
@@ -186,6 +212,11 @@ impl ErrorAsserts for ErrorCollection {
             panic!("Expected exactly one validation error.");
         }
 
+        return self;
+    }
+
+    fn assert_is_at(&self, index: usize, error: ValidationError) -> &Self {
+        assert_eq!(self.errors[index], error);
         return self;
     }
 }

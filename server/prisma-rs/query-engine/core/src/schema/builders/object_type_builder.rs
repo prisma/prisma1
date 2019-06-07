@@ -1,8 +1,8 @@
 use super::*;
-use once_cell::sync::OnceCell;
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, ScalarField, SortOrder, TypeIdentifier};
 use std::sync::Arc;
 
+#[derive(Debug)]
 pub struct ObjectTypeBuilder<'a> {
   internal_data_model: InternalDataModelRef,
   with_relations: bool,
@@ -156,6 +156,7 @@ impl<'a> ObjectTypeBuilder<'a> {
       .filter_object_type_builder
       .into_arc()
       .filter_object_type(Arc::clone(model));
+
     argument("where", InputType::opt(InputType::object(where_object)))
   }
 
@@ -200,5 +201,14 @@ impl<'a> ObjectTypeBuilder<'a> {
       }
       _ => panic!("Invariant violation: map_enum_field can only be called on scalar enum fields."),
     }
+  }
+
+  pub fn batch_payload_object_type(&self) -> ObjectTypeRef {
+    return_cached!(self.get_cache(), "BatchPayload");
+
+    let object_type = Arc::new(object_type("BatchPayload", vec![]));
+    self.cache("BatchPayload".into(), Arc::clone(&object_type));
+
+    Arc::downgrade(&object_type)
   }
 }

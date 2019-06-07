@@ -1,5 +1,5 @@
 use super::MigrationStepsResultOutput;
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use datamodel::Datamodel;
 use migration_connector::*;
@@ -16,7 +16,7 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
         Box::new(CalculateDatabaseStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
 
         let connector = engine.connector();
@@ -39,13 +39,13 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
             .database_migration_step_applier()
             .render_steps_pretty(&database_migration);
 
-        MigrationStepsResultOutput {
+        Ok(MigrationStepsResultOutput {
             datamodel_steps: self.input.steps_to_apply.clone(),
             database_steps: database_steps_json,
             errors: Vec::new(),
             warnings: Vec::new(),
             general_errors: Vec::new(),
-        }
+        })
     }
 }
 

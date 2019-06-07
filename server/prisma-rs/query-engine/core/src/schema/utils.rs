@@ -106,15 +106,15 @@ where
 }
 
 /// Lowercases first letter, essentially.
-/// Assumes 1-byte characters.
+/// Assumes 1-byte characters, panics otherwise.
 pub fn camel_case<T>(s: T) -> String
 where
   T: Into<String>,
 {
   let s = s.into();
 
-  // This is safe to unwrap because of the validation regex for model / field
-  // names used in the data model, which essentially guarantees ASCII.
+  // This is safe to unwrap, as the validation regex for model / field
+  // names used in the data model essentially guarantees ASCII.
   let first_char = s.chars().next().unwrap();
 
   format!("{}{}", first_char.to_lowercase(), s[1..].to_owned())
@@ -128,14 +128,14 @@ where
 {
   let s = s.into();
 
-  // This is safe to unwrap because of the validation regex for model / field
-  // names used in the data model, which essentially guarantees ASCII.
+  // This is safe to unwrap, as the validation regex for model / field
+  // names used in the data model essentially guarantees ASCII.
   let first_char = s.chars().next().unwrap();
 
   format!("{}{}", first_char.to_uppercase(), s[1..].to_owned())
 }
 
-/// Appends an option of type T if opt is Some.
+/// Appends an option of type T to a vector over T if the option is Some.
 pub fn append_opt<T>(vec: &mut Vec<T>, opt: Option<T>) {
   opt.into_iter().for_each(|t| vec.push(t));
 }

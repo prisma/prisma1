@@ -1,11 +1,11 @@
 use crate::common::*;
-use datamodel::dml;
+use datamodel::common::PrismaType;
 
 #[test]
 fn parse_basic_model() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         firstName: String
         lastName: String
     }
@@ -16,18 +16,23 @@ fn parse_basic_model() {
     user_model.assert_is_embedded(false);
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
     user_model
         .assert_has_field("lastName")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
 }
 
 #[test]
 fn parse_basic_enum() {
     let dml = r#"
     enum Roles {
-        ADMIN
+        Admin
+        User
         USER
+        ADMIN
+        ADMIN_USER
+        Admin_User
+        HHorse99
     }
     "#;
 
@@ -35,4 +40,9 @@ fn parse_basic_enum() {
     let role_enum = schema.assert_has_enum("Roles");
     role_enum.assert_has_value("ADMIN");
     role_enum.assert_has_value("USER");
+    role_enum.assert_has_value("User");
+    role_enum.assert_has_value("Admin");
+    role_enum.assert_has_value("ADMIN_USER");
+    role_enum.assert_has_value("Admin_User");
+    role_enum.assert_has_value("HHorse99");
 }

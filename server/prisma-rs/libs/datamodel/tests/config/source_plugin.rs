@@ -1,12 +1,14 @@
 use crate::common::*;
-use datamodel::{dml, dml::FromStrAndSpan, errors::ValidationError, source::*, Arguments, DirectiveValidator};
+use datamodel::{
+    common::FromStrAndSpan, common::PrismaType, dml, errors::ValidationError, source::*, Arguments, DirectiveValidator,
+};
 
 //##########################
 // Directive implementation
 //##########################
 
 struct CustomDirective {
-    base_type: dml::ScalarType,
+    base_type: PrismaType,
 }
 
 impl DirectiveValidator<dml::Field> for CustomDirective {
@@ -18,7 +20,11 @@ impl DirectiveValidator<dml::Field> for CustomDirective {
         return Ok(());
     }
 
-    fn serialize(&self, _obj: &dml::Field) -> Result<Option<datamodel::ast::Directive>, ValidationError> {
+    fn serialize(
+        &self,
+        _obj: &dml::Field,
+        _datamodel: &dml::Datamodel,
+    ) -> Result<Option<datamodel::ast::Directive>, ValidationError> {
         Ok(None)
     }
 }
@@ -36,11 +42,11 @@ impl CustomDbDefinition {
         CustomDbDefinition {}
     }
 
-    fn get_base_type(&self, arguments: &Arguments) -> Result<dml::ScalarType, ValidationError> {
+    fn get_base_type(&self, arguments: &Arguments) -> Result<PrismaType, ValidationError> {
         if let Ok(arg) = arguments.arg("base_type") {
-            dml::ScalarType::from_str_and_span(&arg.as_constant_literal()?, arg.span())
+            PrismaType::from_str_and_span(&arg.as_constant_literal()?, arg.span())
         } else {
-            return Ok(dml::ScalarType::String);
+            return Ok(PrismaType::String);
         }
     }
 }
@@ -66,7 +72,7 @@ impl SourceDefinition for CustomDbDefinition {
 struct CustomDb {
     name: String,
     url: String,
-    base_type: dml::ScalarType,
+    base_type: PrismaType,
 }
 
 impl Source for CustomDb {
@@ -124,14 +130,14 @@ source custom_2 {
 
 
 model User {
-    id: ID @id
+    id: Int @id
     firstName: String @custom_1.mapToBase
     lastName: String @custom_1.mapToBase
     email: String
 }
 
 model Post {
-    id: ID @id
+    id: Int @id
     likes: Int @custom_2.mapToBase
     comments: Int
 }
@@ -145,22 +151,22 @@ fn custom_plugin() {
 
     user_model
         .assert_has_field("firstName")
-        .assert_base_type(&dml::ScalarType::Int);
+        .assert_base_type(&PrismaType::Int);
     user_model
         .assert_has_field("lastName")
-        .assert_base_type(&dml::ScalarType::Int);
+        .assert_base_type(&PrismaType::Int);
     user_model
         .assert_has_field("email")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
 
     let post_model = schema.assert_has_model("Post");
 
     post_model
         .assert_has_field("comments")
-        .assert_base_type(&dml::ScalarType::Int);
+        .assert_base_type(&PrismaType::Int);
     post_model
         .assert_has_field("likes")
-        .assert_base_type(&dml::ScalarType::String);
+        .assert_base_type(&PrismaType::String);
 }
 
 #[test]

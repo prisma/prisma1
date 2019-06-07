@@ -3,6 +3,7 @@ use crate::ast;
 pub struct Renderer<'a> {
     stream: &'a mut std::io::Write,
     indent: usize,
+    new_line: bool,
 }
 
 // TODO: It would be soooo cool if we could pass format strings around.
@@ -12,24 +13,47 @@ const INDENT_WIDTH: usize = 4;
 
 impl<'a> Renderer<'a> {
     pub fn new(stream: &'a mut std::io::Write) -> Renderer<'a> {
-        Renderer { stream, indent: 0 }
+        Renderer {
+            stream,
+            indent: 0,
+            new_line: false,
+        }
     }
 
     pub fn render(&mut self, datamodel: &ast::Datamodel) {
-        for top in &datamodel.models {
-            match top {
+        for (i, top) in datamodel.models.iter().enumerate() {
+            if i != 0 {
+                // We put an extra line break in between top level structs.
+                self.end_line();
+            }
+            match &top {
                 ast::Top::Model(model) => self.render_model(model),
                 ast::Top::Enum(enm) => self.render_enum(enm),
+                ast::Top::Type(custom_type) => self.render_custom_type(custom_type),
                 ast::Top::Source(_) => unimplemented!("Source block rendering is not implemented."),
             };
         }
     }
 
+    pub fn render_custom_type(&mut self, field: &ast::Field) {
+        self.write("type ");
+        self.write(&field.name);
+        self.write(&" = ");
+        self.write(&field.field_type);
+
+        for directive in &field.directives {
+            self.write(&" ");
+            self.render_field_directive(&directive);
+        }
+
+        self.end_line();
+    }
+
     pub fn render_model(&mut self, model: &ast::Model) {
-        self.begin_line();
         self.write("model ");
         self.write(&model.name);
         self.write(" {");
+        self.end_line();
         self.indent_up();
 
         for field in &model.fields {
@@ -41,21 +65,20 @@ impl<'a> Renderer<'a> {
         }
 
         self.indent_down();
-        self.begin_line();
         self.write("}");
-        self.begin_line();
+        self.end_line();
     }
 
     pub fn render_enum(&mut self, enm: &ast::Enum) {
-        self.begin_line();
         self.write("enum ");
         self.write(&enm.name);
         self.write(" {");
+        self.end_line();
         self.indent_up();
 
         for value in &enm.values {
-            self.begin_line();
             self.write(&value);
+            self.end_line();
         }
 
         for directive in &enm.directives {
@@ -64,13 +87,11 @@ impl<'a> Renderer<'a> {
         }
 
         self.indent_down();
-        self.begin_line();
         self.write("}");
-        self.begin_line();
+        self.end_line();
     }
 
     pub fn render_field(&mut self, field: &ast::Field) {
-        self.begin_line();
         self.write(&field.name);
         self.write(&" ");
         self.write(&field.field_type);
@@ -80,6 +101,8 @@ impl<'a> Renderer<'a> {
             self.write(&" ");
             self.render_field_directive(&directive);
         }
+
+        self.end_line();
     }
 
     pub fn render_field_arity(&mut self, field_arity: &ast::FieldArity) {
@@ -102,7 +125,6 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_block_directive(&mut self, directive: &ast::Directive) {
-        self.begin_line();
         self.write("@@");
         self.write(&directive.name);
 
@@ -111,6 +133,7 @@ impl<'a> Renderer<'a> {
             self.render_arguments(&directive.arguments);
             self.write(")");
         }
+        self.end_line();
     }
 
     pub fn render_arguments(&mut self, args: &Vec<ast::Argument>) {
@@ -138,8 +161,17 @@ impl<'a> Renderer<'a> {
             ast::Value::ConstantValue(val, _) => self.write(&val),
             ast::Value::NumericValue(val, _) => self.write(&val),
             ast::Value::StringValue(val, _) => self.render_str(&val),
-            ast::Value::Function(_, _, _) => unimplemented!("Functions can not be rendered yet."),
+            ast::Value::Function(name, args, _) => self.render_func(&name, &args),
         };
+    }
+
+    pub fn render_func(&mut self, name: &str, vals: &Vec<ast::Value>) {
+        self.write(name);
+        self.write("(");
+        for val in vals {
+            self.render_value(val);
+        }
+        self.write(")");
     }
 
     pub fn indent_up(&mut self) {
@@ -172,11 +204,20 @@ impl<'a> Renderer<'a> {
 
     fn write(&mut self, param: &str) {
         // TODO: Proper result handling.
+        if self.new_line {
+            writeln!(self.stream, "").expect("Writer error.");
+            write!(self.stream, "{}", " ".repeat(self.indent * INDENT_WIDTH)).expect("Writer error.");
+            self.new_line = false;
+        }
         write!(self.stream, "{}", param).expect("Writer error.");
     }
 
-    fn begin_line(&mut self) {
-        writeln!(self.stream, "").expect("Writer error.");
-        write!(self.stream, "{}", " ".repeat(self.indent * INDENT_WIDTH)).expect("Writer error.");
+    fn end_line(&mut self) {
+        if self.new_line {
+            // If endline is called twice, we explicitely drop a new line without indent.
+            writeln!(self.stream, "").expect("Writer error.");
+        }
+        // Otherwise we just set a flag and wait for the next write.
+        self.new_line = true;
     }
 }

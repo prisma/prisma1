@@ -5,13 +5,13 @@ use datamodel::{ast::Span, errors::ValidationError};
 fn should_fail_on_ambiguous_relations() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         posts: Post[]
         more_posts: Post[]
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
     }
     "#;
 
@@ -20,7 +20,7 @@ fn should_fail_on_ambiguous_relations() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "User",
-        &Span::new(45, 67),
+        &Span::new(46, 68),
     ));
 }
 
@@ -28,13 +28,13 @@ fn should_fail_on_ambiguous_relations() {
 fn should_fail_on_ambiguous_named_relations() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         posts: Post[] @relation(name: "test")
         more_posts: Post[] @relation(name: "test")
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
     }
     "#;
 
@@ -43,7 +43,7 @@ fn should_fail_on_ambiguous_named_relations() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "User",
-        &Span::new(45, 82),
+        &Span::new(46, 83),
     ));
 }
 
@@ -51,7 +51,7 @@ fn should_fail_on_ambiguous_named_relations() {
 fn should_fail_on_ambiguous_named_relations_2() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         posts: Post[] @relation(name: "a")
         more_posts: Post[] @relation(name: "b")
         some_posts: Post[]
@@ -59,7 +59,7 @@ fn should_fail_on_ambiguous_named_relations_2() {
     }
 
     model Post {
-        post_id: ID @id
+        post_id: Int @id
     }
     "#;
 
@@ -68,7 +68,7 @@ fn should_fail_on_ambiguous_named_relations_2() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "User",
-        &Span::new(45, 79),
+        &Span::new(46, 80),
     ));
 }
 
@@ -76,7 +76,7 @@ fn should_fail_on_ambiguous_named_relations_2() {
 fn should_fail_on_ambiguous_self_relation() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         father: User
         son: User
         mother: User
@@ -88,7 +88,7 @@ fn should_fail_on_ambiguous_self_relation() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous self relation detected.",
         "User",
-        &Span::new(45, 66),
+        &Span::new(46, 67),
     ));
 }
 
@@ -96,7 +96,7 @@ fn should_fail_on_ambiguous_self_relation() {
 fn should_fail_on_ambiguous_named_self_relation() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         father: User @relation(name: "family")
         son: User @relation(name: "family")
         mother: User @relation(name: "family")
@@ -108,7 +108,7 @@ fn should_fail_on_ambiguous_named_self_relation() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous self relation detected.",
         "User",
-        &Span::new(45, 83),
+        &Span::new(46, 84),
     ));
 }
 
@@ -116,22 +116,76 @@ fn should_fail_on_ambiguous_named_self_relation() {
 fn should_fail_on_conflicting_back_relation_field_name() {
     let dml = r#"
     model User {
-        id: ID @id
+        id: Int @id
         posts: Post[] @relation(name: "test")
         more_posts: Post[]
     }
 
     model Post {
-        post_id: ID @id
-        user: User@relation(name: "test")
+        post_id: Int @id
+        user: User @relation(name: "test")
     }
     "#;
 
     let errors = parse_error(dml);
 
     errors.assert_is(ValidationError::new_model_validation_error(
-        "Automatic back field generation would cause a naming conflict.",
-        "Post",
-        &Span::new(166, 199),
+        "Automatic opposite related field generation would cause a naming conflict. Please add an explicit opposite relation field.",
+        "User",
+        &Span::new(92, 115),
     ));
+}
+
+#[test]
+#[ignore]
+// This case is caught by the requirement that named relations
+// need to have an opposite field.
+fn should_fail_on_conflicting_generated_back_relation_fields() {
+    // More specifically, this should not panic.
+    let dml = r#"
+    model Todo {
+        id: Int @id
+        author: Owner @relation(name: "AuthorTodo")
+        delegatedTo: Owner? @relation(name: "DelegatedToTodo")
+    }
+
+    model Owner {
+        id: Int @id
+        todos: Todo[]
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is_at(0, ValidationError::new_model_validation_error(
+        "Automatic opposite related field generation would cause a naming conflict. Please add an explicit opposite relation field.",
+        "Todo",
+        &Span::new(98, 152),
+    ));
+}
+
+#[test]
+fn should_fail_on_named_generated_back_relation_fields() {
+    // More specifically, this should not panic.
+    let dml = r#"
+    model Todo {
+        id: Int @id
+        author: Owner @relation(name: "AuthorTodo")
+    }
+
+    model Owner {
+        id: Int @id
+    }
+    "#;
+
+    let errors = parse_error(dml);
+
+    errors.assert_is_at(
+        0,
+        ValidationError::new_model_validation_error(
+            "Named relations require an opposite field.",
+            "Todo",
+            &Span::new(46, 89),
+        ),
+    );
 }
