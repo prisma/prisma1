@@ -1,5 +1,6 @@
 use database_inspector::*;
 use datamodel;
+use migration_connector::MigrationStep;
 use migration_core::commands::*;
 #[allow(dead_code)]
 use migration_core::MigrationEngine;
@@ -55,13 +56,12 @@ pub fn infer_and_apply_with_migration_id(
         data_model: datamodel.to_string(),
         assume_to_be_applied: Vec::new(),
     };
-    let cmd = InferMigrationStepsCommand::new(input);
-    let output = cmd.execute(&engine).expect("inferMigrationSteps failed");
+    let steps = run_infer_command(&engine, input);
 
     let input = ApplyMigrationInput {
         project_info: project_info,
         migration_id: migration_id.to_string(),
-        steps: output.datamodel_steps,
+        steps: steps,
         force: None,
         dry_run: None,
     };
@@ -70,6 +70,18 @@ pub fn infer_and_apply_with_migration_id(
     let _output = cmd.execute(&engine).expect("applyMigration failed");
 
     introspect_database(&engine)
+}
+
+#[allow(unused)]
+pub fn run_infer_command(engine: &Box<MigrationEngine>, input: InferMigrationStepsInput) -> Vec<MigrationStep> {
+    let cmd = InferMigrationStepsCommand::new(input);
+    let output = cmd.execute(&engine).expect("InferMigration failed");
+    assert!(
+        output.general_errors.is_empty(),
+        format!("InferMigration returned unexpected errors: {:?}", output.general_errors)
+    );
+
+    output.datamodel_steps
 }
 
 pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {

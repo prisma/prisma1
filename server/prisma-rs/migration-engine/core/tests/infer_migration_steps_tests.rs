@@ -3,7 +3,6 @@ mod test_harness;
 use datamodel::dml::*;
 use migration_connector::steps::*;
 use migration_core::commands::*;
-use migration_core::MigrationEngine;
 use test_harness::*;
 
 const PROJECT_INFO: &str = "the-project-info";
@@ -120,15 +119,4 @@ fn create_field_mock(model: &str, field: &str, scalar_type: ScalarType) -> Migra
         default: None,
         scalar_list: None,
     })
-}
-
-fn run_infer_command(engine: &Box<MigrationEngine>, input: InferMigrationStepsInput) -> Vec<MigrationStep> {
-    let cmd = InferMigrationStepsCommand::new(input);
-    let output = cmd.execute(&engine).expect("InferMigration failed");
-    assert!(
-        output.general_errors.is_empty(),
-        format!("InferMigration returned unexpected errors: {:?}", output.general_errors)
-    );
-
-    output.datamodel_steps
 }
