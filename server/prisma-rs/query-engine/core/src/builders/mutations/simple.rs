@@ -5,7 +5,7 @@ use crate::{
     CoreResult,
 };
 use connector::mutaction::*;
-use prisma_models::{Field, ModelRef};
+use prisma_models::{Field as ModelField, ModelRef};
 
 use std::sync::Arc;
 
@@ -24,11 +24,12 @@ impl SimpleNestedBuilder {
         let name = name.as_str();
         let kind = kind.as_str();
 
+        let where_ = map.to_node_selector(Arc::clone(&model));
         let ValueSplit { values, lists, nested } = map.split();
 
-        let field = model.fields().find_from_all(&name);
-        let (relation_field, _) = match &field {
-            Ok(Field::Relation(f)) => (Arc::clone(&f), f.related_model()),
+        let f = model.fields().find_from_all(&name);
+        let (relation_field, _) = match &f {
+            Ok(ModelField::Relation(f)) => (Arc::clone(&f), f.related_model()),
             _ => unimplemented!(),
         };
 
@@ -49,6 +50,9 @@ impl SimpleNestedBuilder {
                     relation_field,
                     nested_mutactions,
                 });
+            },
+            "delete" => {
+                mutations.deletes.push(NestedDeleteNode { relation_field, where_ });
             }
             _ => unimplemented!(),
         };

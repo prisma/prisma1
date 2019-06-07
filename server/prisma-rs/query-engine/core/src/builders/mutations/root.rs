@@ -35,6 +35,8 @@ impl<'field> MutationBuilder<'field> {
             return handle_reset(&self.field, &self.model);
         }
 
+        dbg!(self.field);
+
         let data = shift_data(&self.field.arguments);
         let ValueSplit { values, lists, nested } = ValueMap::from(&data).split();
         let non_list_args = values.to_prisma_values().into();

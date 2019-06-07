@@ -52,7 +52,7 @@ fn attach_connect(
     top_level: &Operation,
 ) -> CoreResult<()> {
     // Get the first valid field name that is a scalar
-    let where_ = map.to_node_selector(Arc::clone(&model))?;
+    let where_ = map.to_node_selector(Arc::clone(&model)).unwrap();
 
     mutations.connects.push(NestedConnect {
         relation_field: Arc::clone(&rel_field),
@@ -72,12 +72,9 @@ fn attach_disconnect(
     model: &ModelRef,
     rel_field: &RelationFieldRef,
 ) -> CoreResult<()> {
-    // Get the first valid field name that is a scalar
-    let where_ = map.to_node_selector(Arc::clone(&model)).map(|w| Some(w))?;
-
     mutations.disconnects.push(NestedDisconnect {
         relation_field: Arc::clone(&rel_field),
-        where_,
+        where_: map.to_node_selector(Arc::clone(&model)),
     });
 
     Ok(())

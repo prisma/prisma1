@@ -24,7 +24,6 @@
 //! - `lists`: Scalarlist values that are passed seperately
 //! - `nested`: All nested child nodes
 
-use crate::{CoreError, CoreResult};
 use connector::filter::NodeSelector;
 use graphql_parser::query::Value;
 use prisma_models::{ModelRef, PrismaValue};
@@ -132,8 +131,8 @@ impl ValueMap {
             .collect()
     }
 
-    pub fn to_node_selector(&self, model: ModelRef) -> CoreResult<NodeSelector> {
-        match self
+    pub fn to_node_selector(&self, model: ModelRef) -> Option<NodeSelector> {
+        self
             .0
             .iter()
             .filter_map(|(field, value)| {
@@ -145,12 +144,6 @@ impl ValueMap {
             })
             .nth(0)
             .map(|(field, value)| NodeSelector { field, value })
-        {
-            Some(s) => Ok(s),
-            None => Err(CoreError::QueryValidationError(
-                "Failed to resolve node selector".into(),
-            )),
-        }
     }
 }
 
@@ -208,6 +201,11 @@ impl ValueMap {
                                 _ => unreachable!(),
                             })
                             .collect(),
+                    },
+                    Value::Boolean(true) => NestedValue::Simple {
+                        name: name.clone(),
+                        kind: action.clone(),
+                        map: ValueMap::from(&vec![]),
                     },
                     value => panic!("Unreachable structure: {:?}", value),
                 });
