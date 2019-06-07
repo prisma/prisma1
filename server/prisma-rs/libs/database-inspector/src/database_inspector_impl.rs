@@ -1,8 +1,7 @@
 use crate::*;
 
 use prisma_query::ast::ParameterizedValue;
-use prisma_query::convenience::ResultSet;
-use prisma_query::transaction::Connectional;
+use prisma_query::{Connectional, ResultSet};
 use rusqlite::{Connection, NO_PARAMS};
 use std::sync::Arc;
 
