@@ -4,15 +4,10 @@
  * Dependencies
  */
 import { isError, HelpError, Env } from '@prisma/cli'
-import {
-  LiftCommand,
-  LiftCreate,
-  LiftUp,
-  LiftDown,
-  LiftWatch,
-} from '@prisma/lift'
+import { LiftCommand, LiftCreate, LiftUp, LiftDown, LiftWatch, Converter } from '@prisma/lift'
 import { CLI } from './CLI'
 import { PhotonGenerate } from '@prisma/photon'
+import { Introspect } from '@prisma/introspection'
 
 /**
  * Main function
@@ -34,6 +29,8 @@ async function main(): Promise<number> {
       },
       env,
     ),
+    introspect: Introspect.new(env),
+    convert: Converter.new(env),
     dev: LiftWatch.new(env, {
       afterUp: () => {
         PhotonGenerate.new(env).parse([], true)

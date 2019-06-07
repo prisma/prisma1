@@ -1,5 +1,5 @@
 import { IConnector } from '../../common/connector'
-import { TypeIdentifier, DatabaseType, GQLAssert } from 'prisma-datamodel'
+import { DatabaseType, GQLAssert } from 'prisma-datamodel'
 import { RelationalIntrospectionResult } from './relationalIntrospectionResult'
 import IDatabaseClient from '../IDatabaseClient'
 import * as debug from 'debug'
@@ -42,32 +42,29 @@ export abstract class RelationalConnector implements IConnector {
   ): RelationalIntrospectionResult
 
   protected async query(query: string, params: any[] = []): Promise<any[]> {
-    return await this.client.query(query, params)
+    const result: any = await this.client.query(query, params)
+    if (result.rows) {
+      return result.rows
+    }
+
+    return result
   }
 
   /**
    * Column comments are DB specific
    */
-  protected abstract async queryColumnComments(
-    schemaName: string,
-  ): Promise<IInternalColumnCommentInfo[]>
+  protected abstract async queryColumnComments(schemaName: string): Promise<IInternalColumnCommentInfo[]>
 
   /**
    * Indices are DB specific
    */
-  protected abstract async queryIndices(
-    schemaName: string,
-  ): Promise<IInternalIndexInfo[]>
+  protected abstract async queryIndices(schemaName: string): Promise<IInternalIndexInfo[]>
 
   protected abstract async queryEnums(schemaName: string): Promise<IEnum[]>
 
-  protected abstract async listSequences(
-    schemaName: string,
-  ): Promise<ISequenceInfo[]>
+  protected abstract async listSequences(schemaName: string): Promise<ISequenceInfo[]>
 
-  public async introspect(
-    schema: string,
-  ): Promise<RelationalIntrospectionResult> {
+  public async introspect(schema: string): Promise<RelationalIntrospectionResult> {
     const [models, relations, enums, sequences] = await Promise.all([
       this.listModels(schema),
       this.listRelations(schema),
@@ -135,9 +132,7 @@ export abstract class RelationalConnector implements IConnector {
 
       if (tableColumnComments !== undefined) {
         for (const column of columns) {
-          const comment = tableColumnComments[
-            column.name
-          ] as IInternalColumnCommentInfo
+          const comment = tableColumnComments[column.name] as IInternalColumnCommentInfo
 
           if (comment !== undefined) {
             column.comment = comment.text
@@ -174,10 +169,7 @@ export abstract class RelationalConnector implements IConnector {
       ORDER BY table_name`
 
     return (await this.query(allTablesQuery, [schemaName])).map(row => {
-      GQLAssert.raiseIf(
-        row.table_name === undefined,
-        'Received `undefined` as table name.',
-      )
+      GQLAssert.raiseIf(row.table_name === undefined, 'Received `undefined` as table name.')
       return row.table_name as string
     })
   }
@@ -225,14 +217,8 @@ export abstract class RelationalConnector implements IConnector {
      */
 
     return (await this.query(allColumnsQuery)).map(row => {
-      GQLAssert.raiseIf(
-        row.column_name === undefined,
-        'Received `undefined` as column name.',
-      )
-      GQLAssert.raiseIf(
-        row.udt_name === undefined,
-        'Received `undefined` as data type.',
-      )
+      GQLAssert.raiseIf(row.column_name === undefined, 'Received `undefined` as column name.')
+      GQLAssert.raiseIf(row.udt_name === undefined, 'Received `undefined` as data type.')
       return {
         name: row.column_name as string,
         type: row.udt_name as string,

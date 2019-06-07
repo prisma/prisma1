@@ -36,8 +36,7 @@
     "scuid": "^1.0.2"
   },
   "scripts": {
-    "test": "echo \"Skipping Tests\"",
-    "test-backup": "jest --runInBand --verbose=false",
+    "test": "jest --runInBand --verbose=false",
     "build": "tsc -d",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
