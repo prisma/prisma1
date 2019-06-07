@@ -169,8 +169,9 @@ pub enum NestedValue {
 
 impl ValueMap {
     /// Extract mutation arguments from a value map
-    pub fn eval_tree(&self) -> Vec<NestedValue> {
+    pub fn eval_tree(&self, self_name: &str) -> Vec<NestedValue> {
         let mut vec = Vec::new();
+        dbg!(&self);
 
         // Go through all the objects on this level
         for (name, value) in self.0.iter() {
@@ -206,6 +207,11 @@ impl ValueMap {
                         kind: action.clone(),
                         map: ValueMap::from(&vec![]),
                     },
+                    Value::String(s) => dbg!(NestedValue::Simple {
+                        name: self_name.to_owned(),
+                        kind: "update".into(),
+                        map: ValueMap::from(&vec![(action.clone(), Value::String(s.clone()))])
+                    }),
                     value => panic!("Unreachable structure: {:?}", value),
                 });
             }
