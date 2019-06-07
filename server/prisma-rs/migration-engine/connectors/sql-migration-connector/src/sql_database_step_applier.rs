@@ -1,7 +1,7 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
 use migration_connector::*;
-use prisma_query::{Connectional, ResultSet};
+use prisma_query::Connectional;
 use std::sync::Arc;
 
 pub struct SqlDatabaseStepApplier<C: Connectional> {

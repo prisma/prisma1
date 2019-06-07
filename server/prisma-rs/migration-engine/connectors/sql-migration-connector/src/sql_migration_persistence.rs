@@ -3,7 +3,7 @@ use barrel::types;
 use chrono::*;
 use migration_connector::*;
 use prisma_query::{Connectional, ResultSet};
-use prisma_query::{ast::*, visitor::*};
+use prisma_query::ast::*;
 use serde_json;
 use std::sync::Arc;
 
