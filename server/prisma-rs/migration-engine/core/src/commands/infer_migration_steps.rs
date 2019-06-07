@@ -2,7 +2,6 @@ use super::MigrationStepsResultOutput;
 use crate::commands::command::{CommandResult, MigrationCommand};
 use crate::migration_engine::MigrationEngine;
 use migration_connector::*;
-use migration_connector::steps::*;
 
 pub struct InferMigrationStepsCommand {
     input: InferMigrationStepsInput,
