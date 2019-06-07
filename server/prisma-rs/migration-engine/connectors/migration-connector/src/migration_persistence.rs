@@ -34,6 +34,15 @@ pub trait MigrationPersistence {
         result
     }
 
+    fn load_all_datamodel_steps_from_all_current_watch_migrations(&self) -> Vec<MigrationStep> {
+        let all_watch_migrations = self.load_current_watch_migrations();
+        let mut all_steps_from_all_watch_migrations = Vec::new();
+        for mut migration in all_watch_migrations.into_iter() {
+            all_steps_from_all_watch_migrations.append(&mut migration.datamodel_steps);
+        }
+        all_steps_from_all_watch_migrations
+    }
+
     // writes the migration to the Migration table
     fn create(&self, migration: Migration) -> Migration;
 

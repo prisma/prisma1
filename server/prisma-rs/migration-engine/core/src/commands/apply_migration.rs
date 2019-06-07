@@ -39,11 +39,8 @@ impl ApplyMigrationCommand {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
 
-        let all_watch_migrations = migration_persistence.load_current_watch_migrations();
-        let mut all_steps_from_all_watch_migrations = Vec::new();
-        for mut migration in all_watch_migrations.into_iter() {
-            all_steps_from_all_watch_migrations.append(&mut migration.datamodel_steps);
-        }
+        let all_steps_from_all_watch_migrations =
+            migration_persistence.load_all_datamodel_steps_from_all_current_watch_migrations();
 
         if all_steps_from_all_watch_migrations == self.input.steps {
             // let mut update_params = migration.update_params();
