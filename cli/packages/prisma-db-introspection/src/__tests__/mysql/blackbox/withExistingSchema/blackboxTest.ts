@@ -99,7 +99,7 @@ const testNames = fs
   )
 
 for (const testName of testNames) {
-  test(
+  test.skip(
     `Introspects ${testName}/mysql correctly`,
     async () => {
       await blackBoxTest(testName)
