@@ -14,27 +14,8 @@ fn single_watch_migrations_must_work() {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps = vec![
-            MigrationStep::CreateModel(CreateModel {
-                name: "Test".to_string(),
-                db_name: None,
-                embedded: false,
-            }),
-            MigrationStep::CreateField(CreateField {
-                model: "Test".to_string(),
-                name: "id".to_string(),
-                tpe: FieldType::Base(ScalarType::Int),
-                arity: FieldArity::Required,
-                db_name: None,
-                is_created_at: None,
-                is_updated_at: None,
-                is_unique: false,
-                id: Some(IdInfo {
-                    strategy: IdStrategy::Auto,
-                    sequence: None,
-                }),
-                default: None,
-                scalar_list: None,
-            }),
+            create_model_step("Test"),
+            create_id_field_step("Test", "id", ScalarType::Int),
         ];
 
         let db_schema_1 = up(&engine, steps.clone(), "watch-0001");
@@ -61,27 +42,8 @@ fn multiple_watch_migrations_must_work() {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps1 = vec![
-            MigrationStep::CreateModel(CreateModel {
-                name: "Test".to_string(),
-                db_name: None,
-                embedded: false,
-            }),
-            MigrationStep::CreateField(CreateField {
-                model: "Test".to_string(),
-                name: "id".to_string(),
-                tpe: FieldType::Base(ScalarType::Int),
-                arity: FieldArity::Required,
-                db_name: None,
-                is_created_at: None,
-                is_updated_at: None,
-                is_unique: false,
-                id: Some(IdInfo {
-                    strategy: IdStrategy::Auto,
-                    sequence: None,
-                }),
-                default: None,
-                scalar_list: None,
-            }),
+            create_model_step("Test"),
+            create_id_field_step("Test", "id", ScalarType::Int),
         ];
 
         let _ = up(&engine, steps1.clone(), "watch-0001");
@@ -89,19 +51,7 @@ fn multiple_watch_migrations_must_work() {
         assert_eq!(migrations.len(), 1);
         assert_eq!(migrations[0].name, "watch-0001");
 
-        let steps2 = vec![MigrationStep::CreateField(CreateField {
-            model: "Test".to_string(),
-            name: "field".to_string(),
-            tpe: FieldType::Base(ScalarType::Int),
-            arity: FieldArity::Required,
-            db_name: None,
-            is_created_at: None,
-            is_updated_at: None,
-            is_unique: false,
-            id: None,
-            default: None,
-            scalar_list: None,
-        })];
+        let steps2 = vec![create_field_step("Test", "field", ScalarType::String)];
         let db_schema_2 = up(&engine, steps2.clone(), "watch-0002");
         let migrations = migration_persistence.load_all();
         assert_eq!(migrations.len(), 2);

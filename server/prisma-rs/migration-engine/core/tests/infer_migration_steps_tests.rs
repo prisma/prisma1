@@ -1,7 +1,6 @@
 #![allow(non_snake_case)]
 mod test_harness;
 use datamodel::dml::*;
-use migration_connector::steps::*;
 use migration_core::commands::*;
 use test_harness::*;
 
@@ -31,7 +30,7 @@ fn assume_to_be_applied_must_work() {
             data_model: dm1.to_string(),
         };
         let steps1 = run_infer_command(&engine, input1);
-        assert_eq!(steps1, vec![create_field_mock("Blog", "field1", ScalarType::String)]);
+        assert_eq!(steps1, vec![create_field_step("Blog", "field1", ScalarType::String)]);
 
         let dm2 = r#"
             model Blog {
@@ -47,7 +46,7 @@ fn assume_to_be_applied_must_work() {
             data_model: dm2.to_string(),
         };
         let steps2 = run_infer_command(&engine, input2);
-        assert_eq!(steps2, vec![create_field_mock("Blog", "field2", ScalarType::String)]);
+        assert_eq!(steps2, vec![create_field_step("Blog", "field2", ScalarType::String)]);
     });
 }
 
@@ -97,26 +96,10 @@ fn special_handling_of_watch_migrations() {
         assert_eq!(
             steps,
             vec![
-                create_field_mock("Blog", "field1", ScalarType::String),
-                create_field_mock("Blog", "field2", ScalarType::String),
-                create_field_mock("Blog", "field3", ScalarType::Int),
+                create_field_step("Blog", "field1", ScalarType::String),
+                create_field_step("Blog", "field2", ScalarType::String),
+                create_field_step("Blog", "field3", ScalarType::Int),
             ]
         );
     });
-}
-
-fn create_field_mock(model: &str, field: &str, scalar_type: ScalarType) -> MigrationStep {
-    MigrationStep::CreateField(CreateField {
-        model: model.to_string(),
-        name: field.to_string(),
-        tpe: FieldType::Base(scalar_type),
-        arity: FieldArity::Required,
-        db_name: None,
-        is_created_at: None,
-        is_updated_at: None,
-        is_unique: false,
-        id: None,
-        default: None,
-        scalar_list: None,
-    })
 }
