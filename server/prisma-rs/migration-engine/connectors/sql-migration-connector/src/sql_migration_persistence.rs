@@ -32,8 +32,6 @@ impl<C: Connectional> SqlMigrationPersistence<C> {
 
         let sql_str = dbg!(m.make::<barrel::backend::Sqlite>());
 
-        // dbg!(self.connection.execute(&sql_str, NO_PARAMS).unwrap());
-
         self
             .connection
             .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]))
@@ -48,11 +46,6 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
-        // let (sql_str, params) = Sqlite::build(query);
-
-        // self.connection
-        //     .query_row(&sql_str, params, |row| Ok(parse_row(row)))
-        //     .ok();
 
         self.connection
             .with_connection(&self.schema_name, |conn| {
@@ -64,17 +57,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 
     fn load_all(&self) -> Vec<Migration> {
         let query = Select::from_table(TABLE_NAME);
-        // let (sql_str, params) = dbg!(Sqlite::build(query));
 
-        // let mut stmt = self.connection.prepare_cached(&sql_str).unwrap();
-        // let mut rows = stmt.query(params).unwrap();
-        // let mut result = Vec::new();
-
-        // while let Some(row) = rows.next().unwrap() {
-        //     result.push(parse_row(&row));
-        // }
-
-        // result
         self.connection
             .with_connection(&self.schema_name, |conn| {
                 let result_set = conn.query(query.into()).unwrap();
@@ -88,11 +71,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
         let query = Select::from_table(TABLE_NAME)
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
-        // let (sql_str, params) = Sqlite::build(query);
 
-        // self.connection
-        //     .query_row(&sql_str, params, |row| Ok(parse_row(row)))
-        //     .ok()
         self.connection
             .with_connection(&self.schema_name, |conn| {
                 let result_set = conn.query(query.into()).unwrap();
@@ -127,13 +106,6 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
             )
             .value(FINISHED_AT_COLUMN, finished_at_value);
 
-        // let (sql_str, params) = dbg!(Sqlite::build(query));
-
-        // let result = dbg!(self.connection.execute(&sql_str, params));
-
-        // cloned.revision = self.connection.last_insert_rowid() as usize;
-        // cloned
-
         self.connection
             .with_connection(&self.schema_name, |conn| {
                 let id = conn.execute(query.into())?;
@@ -164,10 +136,6 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
                     .equals(params.name.clone())
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
-
-        // let (sql_str, params) = dbg!(Sqlite::build(query));
-
-        // let result = dbg!(self.connection.execute(&sql_str, params));
 
         self.connection
             .with_connection(&self.schema_name, |conn| {

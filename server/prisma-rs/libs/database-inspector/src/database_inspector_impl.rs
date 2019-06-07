@@ -1,8 +1,7 @@
 use crate::*;
 
 use prisma_query::ast::ParameterizedValue;
-use prisma_query::{Connectional, ResultSet};
-use rusqlite::{Connection, NO_PARAMS};
+use prisma_query::Connectional;
 use std::sync::Arc;
 
 pub struct DatabaseInspectorImpl<C: Connectional> {
@@ -38,18 +37,6 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
         ",
             schema
         );
-
-        // let mut stmt = self.connection.prepare_cached(&sql).unwrap();
-        // let mut rows = stmt.query(NO_PARAMS).unwrap();
-        // let mut result = Vec::new();
-
-        // while let Some(row) = rows.next().unwrap() {
-        //     let name: String = row.get_unwrap("name");
-        //     if name != "sqlite_sequence" {
-        //         result.push(name);
-        //     }
-        // }
-        // result
 
         self.connection
             .with_connection(&schema, |conn| {
@@ -87,21 +74,6 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
 
     fn get_columns(&self, schema: &String, table: &String) -> Vec<IntrospectedColumn> {
         let sql = format!(r#"Pragma "{}".table_info ("{}")"#, schema, table);
-        // let mut stmt = self.connection.prepare_cached(&sql).unwrap();
-        // let mut rows = stmt.query(NO_PARAMS).unwrap();
-        // let mut result = Vec::new();
-
-        // while let Some(row) = rows.next().unwrap() {
-        //     result.push(IntrospectedColumn {
-        //         name: row.get_unwrap("name"),
-        //         table: table.to_string(),
-        //         tpe: row.get_unwrap("type"),
-        //         is_required: row.get_unwrap("notnull"),
-        //         default: row.get_unwrap("dflt_value"),
-        //         pk: row.get_unwrap("pk"),
-        //     });
-        // }
-        // result
 
         self.connection
             .with_connection(&schema, |conn| {
@@ -133,21 +105,6 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
 
     fn get_foreign_constraints(&self, schema: &String, table: &String) -> Vec<IntrospectedForeignKey> {
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
-        // let mut stmt = self.connection.prepare_cached(&sql).unwrap();
-        // let mut rows = stmt.query(NO_PARAMS).unwrap();
-        // let mut result = Vec::new();
-
-        // while let Some(row) = rows.next().unwrap() {
-        //     result.push(IntrospectedForeignKey {
-        //         name: "".to_string(),
-        //         table: table.to_string(),
-        //         column: row.get_unwrap("from"),
-        //         referenced_table: row.get_unwrap("table"),
-        //         referenced_column: row.get_unwrap("to"),
-        //     });
-        // }
-
-        // result
 
         self.connection
             .with_connection(&schema, |conn| {

@@ -60,16 +60,9 @@ impl<C: Connectional> SqlDatabaseStepApplier<C> {
         let result = self
             .conn
             .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_string, &[]));
-        // let result = self.connection.execute(&sql_string, NO_PARAMS);
-        // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
-        match result {
-            Ok(_) => {}
-            // Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
-            e @ Err(_) => {
-                e.unwrap();
-                {}
-            }
-        }
+
+        // TODO: this does not evaluate the results of SQLites PRAGMA foreign_key_check
+        result.unwrap();
 
         let has_more = steps.get(index + 1).is_some();
         has_more
