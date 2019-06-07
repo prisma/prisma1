@@ -14,11 +14,11 @@ pub struct PrismaContext {
     /// The api query schema.
     pub query_schema: QuerySchema,
 
-    /// This is currently used as a temporary workaround.
+    /// Prisma SDL (data model v1). Required for rendering playground.
     /// Setting this option will make the /datamodel route available.
     pub sdl: Option<String>,
 
-    /// DML based datamodel.
+    /// DML-based v2 datamodel.
     /// Setting this option will make the /dmmf route available.
     pub dm: Option<datamodel::Datamodel>,
 
