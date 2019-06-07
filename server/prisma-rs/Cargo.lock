@@ -1134,7 +1134,7 @@ dependencies = [
  "migration-connector 0.1.0",
  "nullable 0.1.0",
  "prisma-models 0.0.0",
- "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces)",
+ "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
  "serde 1.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1765,25 +1765,6 @@ dependencies = [
  "rand 0.6.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
- "uuid 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "prisma-query"
-version = "0.1.0"
-source = "git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces#6025d6f11e0cb22cc6b008b41fb24c959c1e9a9d"
-dependencies = [
- "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "libsqlite3-sys 0.14.0 (git+https://github.com/pimeys/rusqlite)",
- "mysql 16.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "postgres 0.16.0-rc.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "r2d2 0.8.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "r2d2_sqlite 0.10.0 (git+https://github.com/pimeys/r2d2-sqlite)",
- "rusqlite 0.18.0 (git+https://github.com/pimeys/rusqlite)",
- "rust_decimal 1.0.1 (git+https://github.com/pimeys/rust-decimal.git)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -2426,7 +2407,7 @@ dependencies = [
  "itertools 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "migration-connector 0.1.0",
  "prisma-models 0.0.0",
- "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces)",
+ "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
  "rusqlite 0.18.0 (git+https://github.com/pimeys/rusqlite)",
  "serde 1.0.92 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -3379,7 +3360,6 @@ dependencies = [
 "checksum postgres 0.16.0-rc.1 (registry+https://github.com/rust-lang/crates.io-index)" = "ecd478ee3885e956071eeb6462e477c93c2438ad8a7052388644f8fe7db9d276"
 "checksum postgres-protocol 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7f8a9ca2034ea1677ffc0ba134234e4beb383a0c6b5d2eda51b7f6951af30058"
 "checksum prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)" = "<none>"
-"checksum prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git?branch=connector_interfaces)" = "<none>"
 "checksum proc-macro2 0.4.30 (registry+https://github.com/rust-lang/crates.io-index)" = "cf3d2011ab5c909338f7887f4fc896d35932e29146c12c8d01da6b22a80ba759"
 "checksum prost 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b9f36c478cd43382388dfc3a3679af175c03d19ed8039e79a3e4447e944cd3f3"
 "checksum prost-build 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b6325275b85605f58f576456a47af44417edf5956a6f670bb59fbe12aff69597"

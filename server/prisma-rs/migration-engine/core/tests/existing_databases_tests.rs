@@ -3,7 +3,7 @@ mod test_harness;
 use barrel::{backend::Sqlite as Squirrel, types, Migration};
 use database_inspector::*;
 use prisma_query::connector::Sqlite as SqliteDatabaseClient;
-use prisma_query::transaction::Connectional;
+use prisma_query::Connectional;
 use test_harness::*;
 
 const SCHEMA: &str = "migration_engine";

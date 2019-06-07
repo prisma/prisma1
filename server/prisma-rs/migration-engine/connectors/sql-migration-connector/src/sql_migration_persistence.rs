@@ -2,11 +2,8 @@
 use barrel::types;
 use chrono::*;
 use migration_connector::*;
-use prisma_query::convenience::ResultSet;
-use prisma_query::transaction::Connectional;
-use prisma_query::transaction::{ColumnNames, ResultRow};
+use prisma_query::{Connectional, ResultSet};
 use prisma_query::{ast::*, visitor::*};
-use rusqlite::{Connection, Row, NO_PARAMS};
 use serde_json;
 use std::sync::Arc;
 
@@ -37,10 +34,10 @@ impl<C: Connectional> SqlMigrationPersistence<C> {
 
         // dbg!(self.connection.execute(&sql_str, NO_PARAMS).unwrap());
 
-        dbg!(self
+        self
             .connection
             .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]))
-            .unwrap());
+            .unwrap();
     }
 }
 
@@ -59,8 +56,8 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 
         self.connection
             .with_connection(&self.schema_name, |conn| {
-                let (cols, rows) = conn.query(query.into()).unwrap();
-                Ok(parse_rows_new(&cols, &rows).into_iter().next())
+                let result_set = conn.query(query.into()).unwrap();
+                Ok(parse_rows_new(&result_set).into_iter().next())
             })
             .unwrap()
     }
@@ -80,8 +77,8 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
         // result
         self.connection
             .with_connection(&self.schema_name, |conn| {
-                let (cols, rows) = conn.query(query.into()).unwrap();
-                Ok(parse_rows_new(&cols, &rows))
+                let result_set = conn.query(query.into()).unwrap();
+                Ok(parse_rows_new(&result_set))
             })
             .unwrap()
     }
@@ -98,8 +95,8 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
         //     .ok()
         self.connection
             .with_connection(&self.schema_name, |conn| {
-                let (cols, rows) = conn.query(query.into()).unwrap();
-                Ok(parse_rows_new(&cols, &rows).into_iter().next())
+                let result_set = conn.query(query.into()).unwrap();
+                Ok(parse_rows_new(&result_set).into_iter().next())
             })
             .unwrap()
     }
@@ -189,40 +186,10 @@ fn timestamp_to_datetime(timestamp: i64) -> DateTime<Utc> {
     datetime
 }
 
-fn parse_row(row: &Row) -> Migration {
-    let revision: u32 = row.get(REVISION_COLUMN).unwrap();
-    let applied: u32 = row.get(APPLIED_COLUMN).unwrap();
-    let rolled_back: u32 = row.get(ROLLED_BACK_COLUMN).unwrap();
-    let errors_json: String = row.get(ERRORS_COLUMN).unwrap();
-    let errors: Vec<String> = serde_json::from_str(&errors_json).unwrap();
-    let finished_at: Option<i64> = row.get(FINISHED_AT_COLUMN).unwrap();
-    let database_migration_string: String = row.get(DATABASE_MIGRATION_COLUMN).unwrap();
-    let database_migration_json = serde_json::from_str(&database_migration_string).unwrap();
-    let datamodel_steps_json: String = row.get(DATAMODEL_STEPS_COLUMN).unwrap();
-    let datamodel_string: String = row.get(DATAMODEL_COLUMN).unwrap();
-
-    let datamodel_steps = serde_json::from_str(&datamodel_steps_json).unwrap();
-    let datamodel = datamodel::parse(&datamodel_string).unwrap();
-    Migration {
-        name: row.get(NAME_COLUMN).unwrap(),
-        revision: revision as usize,
-        datamodel: datamodel,
-        status: MigrationStatus::from_str(row.get(STATUS_COLUMN).unwrap()),
-        applied: applied as usize,
-        rolled_back: rolled_back as usize,
-        datamodel_steps: datamodel_steps,
-        database_migration: database_migration_json,
-        errors: errors,
-        started_at: timestamp_to_datetime(row.get(STARTED_AT_COLUMN).unwrap()),
-        finished_at: finished_at.map(timestamp_to_datetime),
-    }
-}
-
-fn parse_rows_new(column_names: &ColumnNames, rows: &Vec<ResultRow>) -> Vec<Migration> {
-    let result_set = ResultSet::new(column_names, rows);
+fn parse_rows_new(result_set: &ResultSet) -> Vec<Migration> {
 
     result_set
-        .iter()
+        .into_iter()
         .map(|row| {
             let datamodel_string: String = row.get_as_string(DATAMODEL_COLUMN).unwrap();
             let datamodel_steps_json: String = row.get_as_string(DATAMODEL_STEPS_COLUMN).unwrap();

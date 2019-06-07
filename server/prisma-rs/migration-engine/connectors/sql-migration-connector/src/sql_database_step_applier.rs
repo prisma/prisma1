@@ -1,7 +1,7 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
 use migration_connector::*;
-use prisma_query::transaction::Connectional;
+use prisma_query::{Connectional, ResultSet};
 use std::sync::Arc;
 
 pub struct SqlDatabaseStepApplier<C: Connectional> {
@@ -62,7 +62,7 @@ impl<C: Connectional> SqlDatabaseStepApplier<C> {
             .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_string, &[]));
         // let result = self.connection.execute(&sql_string, NO_PARAMS);
         // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
-        match dbg!(result) {
+        match result {
             Ok(_) => {}
             // Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
             e @ Err(_) => {

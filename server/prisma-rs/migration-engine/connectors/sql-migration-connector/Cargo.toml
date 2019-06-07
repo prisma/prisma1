@@ -13,6 +13,6 @@ database-inspector = { path = "../../../libs/database-inspector" }
 serde_json = "1.0"
 serde = "1.0"
 rusqlite = { git = "https://github.com/pimeys/rusqlite", features = ["chrono", "bundled"] }
-prisma-query = { git = "https://github.com/prisma/prisma-query.git", branch = "connector_interfaces" }
+prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 barrel = { version = "0.5.8", features = ["sqlite3"] }
 itertools = "0.8"

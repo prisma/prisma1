@@ -53,11 +53,10 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
 
         self.connection
             .with_connection(&schema, |conn| {
-                let (cols, rows) = conn.query_raw(&sql, &[]).unwrap();
-                let result_set = ResultSet::new(&cols, &rows);
+                let result_set = conn.query_raw(&sql, &[]).unwrap();
 
                 let names = result_set
-                    .iter()
+                    .into_iter()
                     .map(|row| row.get_as_string("name").unwrap())
                     .filter(|n| n != "sqlite_sequence")
                     .collect();
@@ -106,11 +105,10 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
 
         self.connection
             .with_connection(&schema, |conn| {
-                let (cols, rows) = conn.query_raw(&sql, &[]).unwrap();
-                let result_set = ResultSet::new(&cols, &rows);
+                let result_set = conn.query_raw(&sql, &[]).unwrap();
 
                 let names = result_set
-                    .iter()
+                    .into_iter()
                     .map(|row| {
                         let default_value = match row.get("dflt_value") {
                             Ok(ParameterizedValue::Text(v)) => Some(v.clone()),
@@ -153,11 +151,10 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
 
         self.connection
             .with_connection(&schema, |conn| {
-                let (cols, rows) = conn.query_raw(&sql, &[]).unwrap();
-                let result_set = ResultSet::new(&cols, &rows);
+                let result_set= conn.query_raw(&sql, &[]).unwrap();
 
                 let names = result_set
-                    .iter()
+                    .into_iter()
                     .map(|row| IntrospectedForeignKey {
                         name: "".to_string(),
                         table: table.to_string(),
