@@ -54,32 +54,27 @@ export class MysqlConnector extends RelationalConnector {
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComment(
-    schemaName: string,
-    tableName: string,
-    columnName: string,
-  ) {
+  protected async queryColumnComments(schemaName: string, tableName: string) {
     const commentQuery = `
       SELECT
-        column_comment
+        column_comment,
+        column_name
       FROM
         information_schema.columns
       WHERE
         table_schema = ?
         AND table_name = ?
-        AND column_name = ?
+        AND column_comment != ''
     `
-    const [comment] = (await this.query(commentQuery, [
+    const comments = (await this.query(commentQuery, [
       schemaName,
       tableName,
-      columnName,
-    ])).map(row => row.column_comment as string)
+    ])).map(row => ({
+      text: row.column_comment as string,
+      column: row.column_name as string,
+    }))
 
-    if (comment === undefined || comment === '') {
-      return null
-    } else {
-      return comment
-    }
+    return comments
   }
 
   protected async queryIndices(schemaName: string, tableName: string) {

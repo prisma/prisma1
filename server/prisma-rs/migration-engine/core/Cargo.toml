@@ -19,17 +19,9 @@ boolinator = "2.4.0"
 sql-migration-connector = { path = "../connectors/sql-migration-connector" }
 
 [dev-dependencies]
-rusqlite = { git = "https://github.com/pimeys/rusqlite", features = ["chrono", "bundled"] }
+prisma-query = { git = "https://github.com/prisma/prisma-query.git"}
 barrel = { version = "0.5.8", features = ["sqlite3"] }
 
 [[bin]]
 name = "migration-engine"
 path = "src/bin/rpc_api_bin.rs"
-
-[[bin]]
-name = "infer-migrations-steps"
-path = "src/bin/infer_migration_steps_bin.rs"
-
-[[bin]]
-name = "apply-migration"
-path = "src/bin/apply_migration_bin.rs"

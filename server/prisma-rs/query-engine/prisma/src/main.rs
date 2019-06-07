@@ -8,19 +8,23 @@ extern crate rust_embed;
 extern crate debug_stub_derive;
 
 mod context;
-mod data_model;
+mod data_model_loader;
+mod dmmf; // Temporary
 mod error;
 mod exec_loader;
 mod req_handlers;
 mod serializer;
 mod utilities;
 
-use actix_web::{http::Method, server, App, HttpRequest, HttpResponse, Json, Responder};
+use actix_web::{
+    http::{Method, StatusCode},
+    server, App, HttpRequest, HttpResponse, Json, Responder,
+};
 use context::PrismaContext;
-use error::PrismaError;
+use error::*;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
-use std::sync::Arc;
+use std::{process, sync::Arc, time::Instant};
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
 
@@ -37,9 +41,18 @@ struct RequestContext {
 }
 
 fn main() {
+    let now = Instant::now();
     env_logger::init();
 
-    let context = PrismaContext::new().unwrap();
+    let context = match PrismaContext::new() {
+        Ok(ctx) => ctx,
+        Err(err) => {
+            info!("Encountered error during initialization:");
+            err.pretty_print();
+            process::exit(1);
+        }
+    };
+
     let port = context.config.port;
     let request_context = Arc::new(RequestContext {
         context: context,
@@ -56,15 +69,20 @@ fn main() {
                 r.method(Method::GET).with(playground_handler);
             })
             .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
+            .resource("/dmmf", |r| r.method(Method::GET).with(dmmf_handler))
+            .resource("/status", |r| r.method(Method::GET).with(status_handler))
     })
     .bind(address)
     .unwrap()
     .start();
 
-    println!("Started http server on {}:{}", address.0, address.1);
+    trace!("Initialized in {}ms", now.elapsed().as_millis());
+    info!("Started http server on {}:{}", address.0, address.1);
+
     let _ = sys.run();
 }
 
+/// Main handler for query engine requests.
 fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<RequestContext>>)) -> impl Responder {
     let request_context = req.state();
     let req: PrismaRequest<GraphQlBody> = PrismaRequest {
@@ -84,11 +102,47 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
     serde_json::to_string(&result)
 }
 
-fn data_model_handler<T>(_: HttpRequest<T>) -> impl Responder {
-    data_model::load_sdl_string().unwrap()
+/// Temporary route to serve a raw v1 SDL string to the playground.
+/// Only callable if Prisma was initialized using a v1 data model.
+fn data_model_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
+    let request_context = req.state();
+
+    match request_context.context.sdl {
+        Some(ref sdl) => HttpResponse::Ok().content_type("application/text").body(sdl),
+        None => HttpResponse::with_body(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "This endpoint is only callable if Prisma was initialized with a SDL (v1) data model.",
+        ),
+    }
 }
 
+/// Renders the Data Model Meta Format.
+/// Only callable if prisma was initialized using a v2 data model.
+fn dmmf_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
+    let request_context = req.state();
+    match request_context.context.dm {
+        Some(ref dm) => {
+            let dmmf = dmmf::render_dmmf(dm, &request_context.context.query_schema);
+            let serialized = serde_json::to_string(&dmmf).unwrap();
+
+            HttpResponse::Ok().content_type("application/json").body(serialized)
+        }
+        None => HttpResponse::with_body(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "This endpoint is only callable if Prisma was initialized with a v2 data model.",
+        ),
+    }
+}
+
+/// Serves playground html.
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {
     let index_html = StaticFiles::get("playground.html").unwrap();
     HttpResponse::Ok().content_type("text/html").body(index_html)
+}
+
+/// Simple status endpoint
+fn status_handler<T>(_: HttpRequest<T>) -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body("{\"status\": \"ok\"}")
 }

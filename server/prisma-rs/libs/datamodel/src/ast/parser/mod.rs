@@ -28,7 +28,7 @@ pub fn parse_expression(token: &pest::iterators::Pair<'_, Rule>) -> Value {
         Rule::numeric_literal => Value::NumericValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
         Rule::string_literal => Value::StringValue(parse_string_literal(&current), Span::from_pest(&current.as_span())),
         Rule::boolean_literal => Value::BooleanValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
-        Rule::constant_Literal => Value::ConstantValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
+        Rule::constant_literal => Value::ConstantValue(current.as_str().to_string(), Span::from_pest(&current.as_span())),
         Rule::function => parse_function(&current),
         Rule::array_expression => parse_array(&current),
         _ => unreachable!("Encounterd impossible literal during parsing: {:?}", current.tokens())
@@ -70,17 +70,6 @@ fn parse_arg_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
 }
 
 // Directive parsing
-fn parse_directive_default_arg(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<Argument>) {
-    match_children! { token, current,
-        Rule::argument_value => arguments.push(Argument {
-            name: String::from(""),
-            value: parse_arg_value(&current),
-            span: Span::from_pest(&current.as_span())
-        }),
-        _ => unreachable!("Encounterd impossible directive default argument during parsing: {:?}", current.tokens())
-    };
-}
-
 fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
     let mut name: Option<String> = None;
     let mut argument: Option<Value> = None;
@@ -106,7 +95,14 @@ fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
 
 fn parse_directive_args(token: &pest::iterators::Pair<'_, Rule>, arguments: &mut Vec<Argument>) {
     match_children! { token, current,
+        // This is a named arg.
         Rule::argument => arguments.push(parse_directive_arg(&current)),
+        // This is a an unnamed arg.
+        Rule::argument_value => arguments.push(Argument {
+            name: String::from(""),
+            value: parse_arg_value(&current),
+            span: Span::from_pest(&current.as_span())
+        }),
         _ => unreachable!("Encounterd impossible directive argument during parsing: {:?}", current.tokens())
     }
 }
@@ -118,7 +114,6 @@ fn parse_directive(token: &pest::iterators::Pair<'_, Rule>) -> Directive {
     match_children! { token, current,
         Rule::directive_name => name = Some(current.as_str().to_string()),
         Rule::directive_arguments => parse_directive_args(&current, &mut arguments),
-        Rule::directive_single_argument => parse_directive_default_arg(&current, &mut arguments),
         _ => unreachable!("Encounterd impossible directive during parsing: {:?}", current.tokens())
     };
 
@@ -308,6 +303,39 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
     };
 }
 
+// Custom type parsing
+fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
+    let mut name: Option<String> = None;
+    let mut directives: Vec<Directive> = vec![];
+    let mut base_type: Option<(String, Span)> = None;
+
+    match_children! { token, current,
+        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::base_type => {
+            base_type = Some((parse_base_type(&current), Span::from_pest(&current.as_span())))
+        },
+        Rule::directive => directives.push(parse_directive(&current)),
+        _ => unreachable!("Encounterd impossible custom type during parsing: {:?}", current.tokens())
+    }
+
+    return match (name, base_type) {
+        (Some(name), Some((field_type, field_type_span))) => Field {
+            field_type: field_type,
+            field_type_span: field_type_span,
+            name,
+            arity: FieldArity::Required,
+            default_value: None,
+            directives,
+            comments: vec![],
+            span: Span::from_pest(&token.as_span()),
+        },
+        _ => panic!(
+            "Encounterd impossible custom type declaration during parsing: {:?}",
+            token.as_str()
+        ),
+    };
+}
+
 // Whole datamodel parsing
 
 /// Parses a Prisma V2 datamodel document into an internal AST representation.
@@ -323,6 +351,7 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 Rule::model_declaration => models.push(Top::Model(parse_model(&current))),
                 Rule::enum_declaration => models.push(Top::Enum(parse_enum(&current))),
                 Rule::source_block => models.push(Top::Source(parse_source(&current))),
+                Rule::type_declaration => models.push(Top::Type(parse_type(&current))),
                 Rule::EOI => {},
                 _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
             }
@@ -332,15 +361,80 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 comments: vec![],
             })
         }
-        Err(err) => match err.location {
-            pest::error::InputLocation::Pos(pos) => Err(ValidationError::new_parser_error(
-                "Unexpected token.",
-                &Span::new(pos, pos),
-            )),
-            pest::error::InputLocation::Span((from, to)) => Err(ValidationError::new_parser_error(
-                "Unexpected token.",
-                &Span::new(from, to),
-            )),
-        },
+        Err(err) => {
+            let location = match err.location {
+                pest::error::InputLocation::Pos(pos) => Span::new(pos, pos),
+                pest::error::InputLocation::Span((from, to)) => Span::new(from, to),
+            };
+
+            let expected = match err.variant {
+                pest::error::ErrorVariant::ParsingError {
+                    positives,
+                    negatives: _,
+                } => get_expected_from_error(&positives),
+                _ => panic!("Could not construct parsing error. This should never happend."),
+            };
+
+            Err(ValidationError::new_parser_error(&expected, &location))
+        }
+    }
+}
+
+pub fn get_expected_from_error(positives: &Vec<Rule>) -> Vec<&'static str> {
+    dbg!(positives);
+    positives
+        .iter()
+        .map(|r| rule_to_string(r))
+        .filter(|s| s != &"")
+        .collect()
+}
+
+pub fn rule_to_string(rule: &Rule) -> &'static str {
+    match rule {
+        Rule::model_declaration => "model declaration",
+        Rule::enum_declaration => "enum declaration",
+        Rule::source_block => "source definition",
+        Rule::enum_field_declaration => "enum field declaration",
+        Rule::EOI => "end of input",
+        Rule::identifier => "alphanumeric identifier",
+        Rule::numeric_literal => "numeric literal",
+        Rule::string_literal => "string literal",
+        Rule::boolean_literal => "boolean literal",
+        Rule::constant_literal => "literal",
+        Rule::array_expression => "array",
+        Rule::expression => "expression",
+        Rule::argument_name => "argument name",
+        Rule::function => "function expression",
+        Rule::argument_value => "argument value",
+        Rule::argument => "argument",
+        Rule::directive_arguments => "attribute arguments",
+        Rule::directive_name => "directive name",
+        Rule::directive => "directive",
+        Rule::optional_type => "optional type",
+        Rule::base_type => "type",
+        Rule::list_type => "list type",
+        Rule::field_type => "field type",
+        Rule::default_value => "default value",
+        Rule::field_declaration => "field declaration",
+        Rule::type_declaration => "type declaration",
+        Rule::source_key_value => "source configuration property",
+        Rule::source_properties => "source property block",
+        Rule::string_any => "any character",
+        Rule::string_escaped_interpolation => "string interpolation",
+
+        // Those are top level things and will never surface.
+        Rule::datamodel => "datamodel declaration",
+        Rule::string_interpolated => "string interpolated",
+
+        // Atomic and helper rules should not surface, we still add them for debugging.
+        Rule::WHITESPACE => "whitespace",
+        Rule::string_escaped_predefined => "escaped unicode char",
+        Rule::string_escape => "escaped unicode char",
+        Rule::string_interpolate_escape => "string interpolation",
+        Rule::string_raw => "unescaped string",
+        Rule::string_content => "string contents",
+        Rule::boolean_true => "boolean true",
+        Rule::boolean_false => "boolean false",
+        Rule::COMMENT => "comment",
     }
 }

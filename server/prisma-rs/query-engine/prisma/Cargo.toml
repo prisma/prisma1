@@ -1,7 +1,7 @@
 [package]
 name = "prisma"
 version = "0.1.0"
-authors = ["Dominic Petrick <dompetrick@gmail.com>"]
+authors = ["Dominic Petrick <dompetrick@gmail.com>", "Katharina Fey <kookie@spacekookie.de>"]
 edition = "2018"
 
 [features]
@@ -15,6 +15,7 @@ actix = "0.7.5"
 lazy_static = "1.3"
 prisma-common = { path = "../../libs/prisma-common" }
 prisma-inflector = { path = "../../libs/prisma-inflector" }
+datamodel = { path = "../../libs/datamodel" }
 prisma-models = { path = "../../prisma-models" }
 core = { path = "../core" }
 connector = { path = "../connectors/connector" }

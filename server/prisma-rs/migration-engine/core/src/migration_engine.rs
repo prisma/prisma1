@@ -1,12 +1,11 @@
 use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
-use datamodel::validator::Validator;
 use migration_connector::*;
 use sql_migration_connector::SqlMigrationConnector;
 use std::sync::Arc;
 
-// todo: add MigrationConnector. does not work  because of GAT shinenigans
+// todo: add MigrationConnector as a field. does not work  because of GAT shinenigans
 
 pub struct MigrationEngine {
     datamodel_migration_steps_inferrer: Arc<DataModelMigrationStepsInferrer>,
@@ -21,8 +20,11 @@ impl MigrationEngine {
             datamodel_migration_steps_inferrer: Arc::new(DataModelMigrationStepsInferrerImplWrapper {}),
             datamodel_calculator: Arc::new(DataModelCalculatorImpl {}),
         };
-        engine.connector().initialize();
         Box::new(engine)
+    }
+
+    pub fn init(&self) {
+        self.connector().initialize()
     }
 
     pub fn datamodel_migration_steps_inferrer(&self) -> Arc<DataModelMigrationStepsInferrer> {
@@ -33,7 +35,7 @@ impl MigrationEngine {
         Arc::clone(&self.datamodel_calculator)
     }
 
-    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigrationStep = impl DatabaseMigrationStepMarker>> {
+    pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigration = impl DatabaseMigrationMarker>> {
         Arc::new(SqlMigrationConnector::new(self.schema_name()))
     }
 
@@ -42,11 +44,7 @@ impl MigrationEngine {
         "migration_engine".to_string()
     }
 
-    pub fn parse_datamodel(&self, datamodel_string: &String) -> Datamodel {
-        let ast = datamodel::parser::parse(datamodel_string).unwrap();
-        // TODO: this would need capabilities
-        // TODO: Special directives are injected via EmptyAttachmentValidator.
-        let validator = Validator::new();
-        validator.validate(&ast).unwrap()
+    pub fn render_datamodel(&self, datamodel: &Datamodel) -> String {
+        datamodel::render(&datamodel).expect("Rendering the Datamodel failed.")
     }
 }

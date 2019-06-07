@@ -14,6 +14,9 @@ pub struct WriteQuery {
     /// The actual mutation object being built
     pub inner: RootMutation,
 
+    /// The name of the WriteQuery
+    pub name: String,
+
     /// Required to create following ReadQuery
     pub field: Field,
 }
@@ -44,28 +47,24 @@ impl WriteQuery {
     }
 
     /// Generate a `ReadQuery` from the encapsulated `WriteQuery`
-    #[warn(warnings)]
     pub fn generate_read(&self, res: MutationResult) -> Option<ReadQuery> {
         let field = match res.identifier {
-            Identifier::Id(gql_id) => utils::derive_field(&self.field, self.model(), gql_id),
+            Identifier::Id(gql_id) => utils::derive_field(&self.field, self.model(), gql_id, &self.name),
             Identifier::Count(_) => return None, // FIXME: We need to communicate count!
+            Identifier::Node(_) => return None,
             _ => unimplemented!(),
         };
 
         match self.inner {
             // We ignore Deletes because they were already handled
             RootMutation::DeleteNode(_) | RootMutation::DeleteNodes(_) => None,
-            RootMutation::CreateNode(_) => SingleBuilder::new()
-                .setup(self.model(), &field)
-                .build()
-                .ok()
-                .map(|q| ReadQuery::RecordQuery(q)),
-
-            RootMutation::UpdateNode(_) => SingleBuilder::new()
-                .setup(self.model(), &field)
-                .build()
-                .ok()
-                .map(|q| ReadQuery::RecordQuery(q)),
+            RootMutation::CreateNode(_) | RootMutation::UpdateNode(_) | RootMutation::UpsertNode(_) => {
+                SingleBuilder::new()
+                    .setup(self.model(), &field)
+                    .build()
+                    .ok()
+                    .map(|q| ReadQuery::RecordQuery(q))
+            }
             _ => unimplemented!(),
         }
     }

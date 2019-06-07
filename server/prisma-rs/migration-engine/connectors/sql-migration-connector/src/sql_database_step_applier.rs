@@ -1,49 +1,44 @@
 use crate::*;
 use barrel::Migration as BarrelMigration;
 use migration_connector::*;
-use rusqlite::{Connection, NO_PARAMS};
+use prisma_query::Connectional;
+use std::sync::Arc;
 
-pub struct SqlDatabaseStepApplier {
-    connection: Connection,
-    schema_name: String,
+pub struct SqlDatabaseStepApplier<C: Connectional> {
+    pub schema_name: String,
+    pub conn: Arc<C>,
 }
 
-impl SqlDatabaseStepApplier {
-    pub fn new(connection: Connection, schema_name: String) -> Self {
-        SqlDatabaseStepApplier {
-            connection,
-            schema_name,
-        }
-    }
-}
+// impl SqlDatabaseStepApplier {
+//     pub fn new(connection: Connection, schema_name: String) -> Self {
+//         SqlDatabaseStepApplier {
+//             connection,
+//             schema_name,
+//         }
+//     }
+// }
 
 #[allow(unused, dead_code)]
-impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
-    fn apply(&self, step: &SqlMigrationStep) {
-        let sql_string = self.render_raw_sql(&step);
-        dbg!(&sql_string);
-        let result = self.connection.execute(&sql_string, NO_PARAMS);
-        // TODO: this does not evaluate the results of the PRAGMA foreign_key_check
-        match dbg!(result) {
-            Ok(_) => {}
-            Err(rusqlite::Error::ExecuteReturnedResults) => {} // renames return results and crash the driver ..
-            e @ Err(_) => {
-                e.unwrap();
-                {}
-            }
-        }
+impl<C: Connectional> DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier<C> {
+    fn apply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
+        self.apply_next_step(&database_migration.steps, index)
     }
 
-    fn render_steps(&self, steps: &Vec<SqlMigrationStep>) -> serde_json::Value {
-        let jsons = steps
-            .into_iter()
+    fn unapply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
+        self.apply_next_step(&database_migration.rollback, index)
+    }
+
+    fn render_steps_pretty(&self, database_migration: &SqlMigration) -> serde_json::Value {
+        let jsons = database_migration
+            .steps
+            .iter()
             .map(|step| {
                 let cloned = step.clone();
                 let mut json_value = serde_json::to_value(&step).unwrap();
                 let json_object = json_value.as_object_mut().unwrap();
                 json_object.insert(
                     "raw".to_string(),
-                    serde_json::Value::String(self.render_raw_sql(cloned)),
+                    serde_json::Value::String(self.render_raw_sql(&cloned)),
                 );
                 json_value
             })
@@ -52,7 +47,27 @@ impl DatabaseMigrationStepApplier<SqlMigrationStep> for SqlDatabaseStepApplier {
     }
 }
 
-impl SqlDatabaseStepApplier {
+impl<C: Connectional> SqlDatabaseStepApplier<C> {
+    fn apply_next_step(&self, steps: &Vec<SqlMigrationStep>, index: usize) -> bool {
+        let has_this_one = steps.get(index).is_some();
+        if !has_this_one {
+            return false;
+        }
+
+        let step = &steps[index];
+        let sql_string = self.render_raw_sql(&step);
+        dbg!(&sql_string);
+        let result = self
+            .conn
+            .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_string, &[]));
+
+        // TODO: this does not evaluate the results of SQLites PRAGMA foreign_key_check
+        result.unwrap();
+
+        let has_more = steps.get(index + 1).is_some();
+        has_more
+    }
+
     fn render_raw_sql(&self, step: &SqlMigrationStep) -> String {
         let mut migration = BarrelMigration::new().schema(self.schema_name.clone());
 

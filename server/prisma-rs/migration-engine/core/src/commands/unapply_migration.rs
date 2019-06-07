@@ -1,7 +1,5 @@
-use super::list_migrations::ListMigrationStepsOutput;
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{CommandResult, MigrationCommand};
 use crate::migration_engine::MigrationEngine;
-use migration_connector::*;
 
 pub struct UnapplyMigrationCommand {
     input: UnapplyMigrationInput,
@@ -15,20 +13,32 @@ impl MigrationCommand for UnapplyMigrationCommand {
         Box::new(UnapplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
-        UnapplyMigrationOutput {
-            rolled_back: ListMigrationStepsOutput {
-                id: "foo".to_string(),
-                steps: Vec::new(),
-                status: MigrationStatus::Pending,
+        let connector = engine.connector();
+        let result = match connector.migration_persistence().last() {
+            None => UnapplyMigrationOutput {
+                rolled_back: "not-applicable".to_string(),
+                active: None,
+                errors: vec!["There is no last migration that can be rolled back.".to_string()],
             },
-            active: ListMigrationStepsOutput {
-                id: "bar".to_string(),
-                steps: Vec::new(),
-                status: MigrationStatus::Pending,
-            },
-        }
+            Some(migration_to_rollback) => {
+                let database_migration =
+                    connector.deserialize_database_migration(migration_to_rollback.database_migration.clone());
+                connector
+                    .migration_applier()
+                    .unapply(&migration_to_rollback, &database_migration);
+
+                let new_active_migration = connector.migration_persistence().last().map(|m|m.name);
+
+                UnapplyMigrationOutput {
+                    rolled_back: migration_to_rollback.name,
+                    active: new_active_migration,
+                    errors: Vec::new(),
+                }
+            }
+        };
+        Ok(result)
     }
 }
 
@@ -41,6 +51,7 @@ pub struct UnapplyMigrationInput {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UnapplyMigrationOutput {
-    pub rolled_back: ListMigrationStepsOutput,
-    pub active: ListMigrationStepsOutput,
+    pub rolled_back: String,
+    pub active: Option<String>,
+    pub errors: Vec<String>,
 }

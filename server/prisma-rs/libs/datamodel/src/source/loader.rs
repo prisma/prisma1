@@ -22,14 +22,14 @@ impl SourceLoader {
     }
 
     /// Internal: Loads a single source from a source config block in the datamodel.
-    fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Box<Source>, ValidationError> {
+    pub fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Box<Source>, ValidationError> {
         let args = Arguments::new(&ast_source.properties, ast_source.span);
         let url = args.arg("url")?.as_str()?;
-        let name = args.arg("name")?.as_str()?;
+        let name = args.arg("type")?.as_str()?;
 
         for decl in &self.source_declarations {
             // The name given in the config block identifies the source type.
-            if name == decl.name() {
+            if name == decl.connector_type() {
                 return decl.create(
                     // The name in front of the block is the name of the concrete instantiation.
                     &ast_source.name,

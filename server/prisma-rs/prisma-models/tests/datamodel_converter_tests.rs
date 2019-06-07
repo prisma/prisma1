@@ -1,30 +1,44 @@
 #![allow(non_snake_case)]
-use datamodel::dml;
-use datamodel::validator::Validator;
 use prisma_models::*;
 use std::sync::Arc;
 
 #[test]
 fn an_empty_datamodel_must_work() {
-    let datamodel = DatamodelConverterImpl::convert(&dml::Datamodel::empty());
+    let datamodel = convert("");
     assert_eq!(datamodel.enums.is_empty(), true);
-    assert_eq!(datamodel.models.is_empty(), true);
-    assert_eq!(datamodel.relations.is_empty(), true);
+    assert_eq!(datamodel.models().is_empty(), true);
+    assert_eq!(datamodel.relations().is_empty(), true);
 }
 
 #[test]
 fn converting_enums() {
     let datamodel = convert(
         r#"
-            enum Test {
+            model MyModel {
+                id: Int @id
+                field: MyEnum
+            }
+
+            enum MyEnum {
                 A
                 B
                 C
             }
         "#,
     );
-    let enm = datamodel.enums.iter().find(|e| e.name == "Test").unwrap();
+    let expected_values = vec!["A".to_string(), "B".to_string(), "C".to_string()];
+    let enm = datamodel.enums.iter().find(|e| e.name == "MyEnum").unwrap();
     assert_eq!(enm.values, vec!["A".to_string(), "B".to_string(), "C".to_string()]);
+
+    let field = datamodel.assert_model("MyModel").assert_scalar_field("field");
+    assert_eq!(field.type_identifier, TypeIdentifier::Enum);
+    assert_eq!(
+        field.internal_enum,
+        Some(InternalEnum {
+            name: "MyEnum".to_string(),
+            values: expected_values
+        })
+    );
 }
 
 #[test]
@@ -32,7 +46,7 @@ fn models_with_only_scalar_fields() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id
+                id: Int @id
                 int: Int
                 float: Float
                 boolean: Boolean
@@ -46,11 +60,12 @@ fn models_with_only_scalar_fields() {
     let model = datamodel.assert_model("Test");
     model
         .assert_scalar_field("id")
-        .assert_type_identifier(TypeIdentifier::String)
+        .assert_type_identifier(TypeIdentifier::Int)
         .assert_behaviour(FieldBehaviour::Id {
-            strategy: IdStrategy::None,
+            strategy: IdStrategy::Auto,
             sequence: None,
-        });
+        })
+        .assert_is_auto_generated_by_db();
     model
         .assert_scalar_field("int")
         .assert_type_identifier(TypeIdentifier::Int)
@@ -139,7 +154,38 @@ fn unique_works() {
 }
 
 #[test]
-#[ignore]
+fn uuid_fields_must_work() {
+    let datamodel = convert(
+        r#"
+            model Test {
+                id: String @id @default(uuid())
+            }
+        "#,
+    );
+
+    let model = datamodel.assert_model("Test");
+    model
+        .assert_scalar_field("id")
+        .assert_type_identifier(TypeIdentifier::UUID);
+}
+
+#[test]
+fn cuid_fields_must_work() {
+    let datamodel = convert(
+        r#"
+            model Test {
+                id: String @id @default(cuid())
+            }
+        "#,
+    );
+
+    let model = datamodel.assert_model("Test");
+    model
+        .assert_scalar_field("id")
+        .assert_type_identifier(TypeIdentifier::GraphQLID);
+}
+
+#[test]
 fn createdAt_works() {
     let datamodel = convert(
         r#"
@@ -158,7 +204,6 @@ fn createdAt_works() {
 }
 
 #[test]
-#[ignore]
 fn updatedAt_works() {
     let datamodel = convert(
         r#"
@@ -186,7 +231,7 @@ fn explicit_relation_fields() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
                 blog: Blog? @db(name:"blog_id")
             }
         "#,
@@ -223,7 +268,7 @@ fn many_to_many_relations() {
     let datamodel = convert(
         r#"
             model Post {
-                id: Int @id                
+                id: Int @id
                 blogs: Blog[]
             }
 
@@ -264,7 +309,6 @@ fn many_to_many_relations() {
 }
 
 #[test]
-#[ignore]
 fn implicit_relation_fields() {
     let datamodel = convert(
         r#"
@@ -274,7 +318,7 @@ fn implicit_relation_fields() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
             }
         "#,
     );
@@ -305,7 +349,7 @@ fn explicit_relation_names() {
             }
 
             model Post {
-                id: Int @id                
+                id: Int @id
                 blog: Blog? @relation(name: "MyRelationName")
             }
         "#,
@@ -324,11 +368,29 @@ fn explicit_relation_names() {
         .assert_relation_name(relation_name);
 }
 
+#[test]
+#[ignore]
+fn self_relations() {
+    let datamodel = convert(
+        r#"
+            model Employee {
+                id: Int @id
+                ReportsTo: Employee?
+            }
+        "#,
+    );
+
+    let employee = datamodel.assert_model("Employee");
+
+    employee
+        .assert_relation_field("ReportsTo")
+        .assert_relation_name("EmployeeToEmployee");
+    // employee.assert_relation_field("employee");
+}
+
 fn convert(datamodel: &str) -> Arc<InternalDataModel> {
-    let ast = datamodel::parser::parse(datamodel).unwrap();
-    let validator = Validator::new();
-    let datamodel = validator.validate(&ast).unwrap();
-    let template = DatamodelConverterImpl::convert(&datamodel);
+    let datamodel = dbg!(datamodel::parse(datamodel).unwrap());
+    let template = DatamodelConverter::convert(&datamodel);
     template.build("not_important".to_string())
 }
 
@@ -374,6 +436,7 @@ trait ScalarFieldAssertions {
     fn assert_created_at(&self) -> &Self;
     fn assert_behaviour(&self, behaviour: FieldBehaviour) -> &Self;
     fn assert_no_behaviour(&self) -> &Self;
+    fn assert_is_auto_generated_by_db(&self) -> &Self;
 }
 
 trait RelationFieldAssertions {
@@ -398,7 +461,7 @@ impl FieldAssertions for ScalarField {
     }
 
     fn assert_unique(&self) -> &Self {
-        assert!(self.is_unique);
+        assert!(self.is_unique());
         self
     }
 }
@@ -423,6 +486,11 @@ impl ScalarFieldAssertions for ScalarField {
         assert!(self.behaviour.is_none());
         self
     }
+
+    fn assert_is_auto_generated_by_db(&self) -> &Self {
+        assert!(self.is_auto_generated);
+        self
+    }
 }
 
 impl FieldAssertions for RelationField {
@@ -442,7 +510,7 @@ impl FieldAssertions for RelationField {
     }
 
     fn assert_unique(&self) -> &Self {
-        assert!(self.is_unique);
+        assert!(self.is_unique());
         self
     }
 }

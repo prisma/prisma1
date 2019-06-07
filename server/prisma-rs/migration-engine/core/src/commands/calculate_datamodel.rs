@@ -1,4 +1,4 @@
-use crate::commands::command::MigrationCommand;
+use crate::commands::command::{MigrationCommand, CommandResult};
 use crate::migration_engine::MigrationEngine;
 use datamodel::dml::Datamodel;
 use migration_connector::*;
@@ -15,25 +15,26 @@ impl MigrationCommand for CalculateDatamodelCommand {
         Box::new(CalculateDatamodelCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output {
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
 
         let base_datamodel = Datamodel::empty();
         let datamodel = engine.datamodel_calculator().infer(&base_datamodel, &self.input.steps);
-        // todo: render the datamodel properly
-        CalculateDatamodelOutput {
-            datamodel: format!("{:?}", datamodel),
-        }
+        Ok(CalculateDatamodelOutput {
+            datamodel: datamodel::render(&datamodel).unwrap(),
+        })
     }
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CalculateDatamodelInput {
     pub project_info: String,
     pub steps: Vec<MigrationStep>,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CalculateDatamodelOutput {
     pub datamodel: String,
 }

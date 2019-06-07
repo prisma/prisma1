@@ -1,18 +1,39 @@
-use crate::{data_model, exec_loader, PrismaResult};
-use core::Executor;
+use crate::{data_model_loader::*, exec_loader, PrismaResult};
+use core::{BuildMode, Executor, QuerySchema, QuerySchemaBuilder, SupportedCapabilities};
 use prisma_common::config::{self, PrismaConfig};
 use prisma_models::InternalDataModelRef;
 
 #[derive(DebugStub)]
 pub struct PrismaContext {
+    /// Prisma configuration (from prisma.yml).
     pub config: PrismaConfig,
+
+    /// Internal data model used throughout the query engine.
     pub internal_data_model: InternalDataModelRef,
 
+    /// The api query schema.
+    pub query_schema: QuerySchema,
+
+    /// Prisma SDL (data model v1). Required for rendering playground.
+    /// Setting this option will make the /datamodel route available.
+    pub sdl: Option<String>,
+
+    /// DML-based v2 datamodel.
+    /// Setting this option will make the /dmmf route available.
+    pub dm: Option<datamodel::Datamodel>,
+
+    /// Central executor for read and write queries.
     #[debug_stub = "#Executor#"]
     pub executor: Executor,
 }
 
 impl PrismaContext {
+    /// Initializes a new Prisma context.
+    /// Loads all immutable state for the query engine:
+    /// 1. The Prisma configuration (prisma.yml) & dependent initialization like executors / connectors.
+    /// 2. The data model. This has different options on how to initialize. See data_model_loader module.
+    /// 3. The data model is converted to the internal data model.
+    /// 4. The api query schema is constructed from the internal data model.
     pub fn new() -> PrismaResult<Self> {
         // Load config and executors
         let config = config::load().unwrap();
@@ -24,13 +45,22 @@ impl PrismaContext {
         let db = config.databases.get("default").unwrap();
         let db_name = db.schema().or_else(|| db.db_name()).unwrap_or_else(|| "prisma".into());
 
-        // Load internal data model
-        let internal_data_model = data_model::load(db_name)?;
-        // let _ = SchemaBuilder::build(internal_data_model.clone());
+        // Load data model in order of precedence.
+        let (sdl, dm, internal_data_model) = load_data_model_components(db_name)?;
+
+        // Construct query schema
+        let capabilities = SupportedCapabilities::empty(); // todo connector capabilities.
+        let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, BuildMode::Legacy);
+        let query_schema = schema_builder.build();
+
+        // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
 
         Ok(Self {
             config,
             internal_data_model,
+            query_schema,
+            sdl,
+            dm,
             executor,
         })
     }

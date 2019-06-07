@@ -2,6 +2,7 @@ use prisma_query::ast::*;
 
 use super::FieldManifestation;
 use crate::prelude::*;
+// use serde::Deserializer;
 use std::sync::{Arc, Weak};
 
 static ID_FIELD: &str = "id";
@@ -24,6 +25,10 @@ pub struct ScalarFieldTemplate {
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
     pub behaviour: Option<FieldBehaviour>,
+    pub default_value: Option<PrismaValue>,
+
+    #[serde(rename = "enum")]
+    pub internal_enum: Option<InternalEnum>,
 }
 
 #[derive(DebugStub)]
@@ -32,13 +37,16 @@ pub struct ScalarField {
     pub type_identifier: TypeIdentifier,
     pub is_required: bool,
     pub is_list: bool,
-    pub is_unique: bool,
     pub is_hidden: bool,
     pub is_auto_generated: bool,
     pub manifestation: Option<FieldManifestation>,
+    pub internal_enum: Option<InternalEnum>,
     pub behaviour: Option<FieldBehaviour>,
     #[debug_stub = "#ModelWeakRef#"]
     pub model: ModelWeakRef,
+    pub default_value: Option<PrismaValue>,
+
+    is_unique: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone, Eq, PartialEq)]
@@ -48,7 +56,7 @@ pub enum FieldBehaviour {
     UpdatedAt,
     Id {
         strategy: IdStrategy,
-        sequence: Option<Sequence>,
+        sequence: Option<Sequence>, // TODO: this can be removed when we have switched fully to datamodel v2. This is not of interested for the query engine.
     },
     ScalarList {
         strategy: ScalarListStrategy,
@@ -77,6 +85,36 @@ pub struct Sequence {
 }
 
 impl ScalarField {
+    pub fn new(
+        name: String,
+        type_identifier: TypeIdentifier,
+        is_required: bool,
+        is_list: bool,
+        is_hidden: bool,
+        is_auto_generated: bool,
+        is_unique: bool,
+        manifestation: Option<FieldManifestation>,
+        internal_enum: Option<InternalEnum>,
+        behaviour: Option<FieldBehaviour>,
+        model: ModelWeakRef,
+        default_value: Option<PrismaValue>,
+    ) -> Self {
+        ScalarField {
+            name,
+            type_identifier,
+            is_required,
+            is_list,
+            is_hidden,
+            is_auto_generated,
+            is_unique,
+            manifestation,
+            internal_enum,
+            behaviour,
+            model,
+            default_value,
+        }
+    }
+
     pub fn model(&self) -> ModelRef {
         self.model
             .upgrade()
@@ -126,6 +164,10 @@ impl ScalarField {
         !self.is_id() && !self.is_created_at() && !self.is_updated_at()
     }
 
+    pub fn is_unique(&self) -> bool {
+        self.is_unique || self.is_id()
+    }
+
     pub fn db_name(&self) -> &str {
         self.db_name_opt().unwrap_or_else(|| self.name.as_ref())
     }
@@ -135,7 +177,11 @@ impl ScalarField {
     }
 
     pub fn as_column(&self) -> Column {
-        ((self.internal_data_model().db_name.as_str(), self.model().db_name()), self.db_name()).into()
+        (
+            (self.internal_data_model().db_name.as_str(), self.model().db_name()),
+            self.db_name(),
+        )
+            .into()
     }
 
     pub fn id_behaviour_clone(&self) -> Option<FieldBehaviour> {

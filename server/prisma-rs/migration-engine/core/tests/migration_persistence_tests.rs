@@ -99,6 +99,7 @@ fn update_must_work() {
         params.rolled_back = 11;
         params.errors = vec!["err1".to_string(), "err2".to_string()];
         params.finished_at = Some(Migration::timestamp_without_nanos());
+        params.new_name = "my_new_migration_name".to_string();
 
         persistence.update(&params);
 
@@ -108,5 +109,6 @@ fn update_must_work() {
         assert_eq!(loaded.rolled_back, params.rolled_back);
         assert_eq!(loaded.errors, params.errors);
         assert_eq!(loaded.finished_at, params.finished_at);
+        assert_eq!(loaded.name, params.new_name);
     });
 }

@@ -1,6 +1,6 @@
 use database_inspector::*;
 use datamodel::*;
-use prisma_models::{DatamodelConverterImpl, TempManifestationHolder, TempRelationHolder};
+use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Datamodel,
@@ -33,13 +33,15 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                 let columns = model
                     .fields()
                     .flat_map(|f| match (&f.field_type, &f.arity) {
-                        (FieldType::Base(_), arity) if arity != &FieldArity::List => Some(Column {
-                            name: f.db_name(),
-                            tpe: column_type(f),
-                            is_required: arity == &FieldArity::Required,
-                            foreign_key: None,
-                            sequence: None,
-                        }),
+                        (FieldType::Base(_), arity) | (FieldType::Enum(_), arity) if arity != &FieldArity::List => {
+                            Some(Column {
+                                name: f.db_name(),
+                                tpe: column_type(f),
+                                is_required: arity == &FieldArity::Required,
+                                foreign_key: None,
+                                sequence: None,
+                            })
+                        }
                         _ => None,
                     })
                     .collect();
@@ -166,7 +168,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
     }
 
     fn calculate_relations(&self) -> Vec<TempRelationHolder> {
-        DatamodelConverterImpl::calculate_relations(&self.data_model)
+        DatamodelConverter::calculate_relations(&self.data_model)
     }
 }
 
@@ -228,14 +230,11 @@ fn is_scalar(field: &Field) -> bool {
 }
 
 fn column_type(field: &Field) -> ColumnType {
-    column_type_for_scalar_type(scalar_type(field))
-}
-
-fn scalar_type(field: &Field) -> &ScalarType {
     match &field.field_type {
-        FieldType::Base(ref scalar) => scalar,
+        FieldType::Base(ref scalar) => column_type_for_scalar_type(&scalar),
+        FieldType::Enum(_) => ColumnType::String,
         x => panic!(format!(
-            "only scalar types are suported here. Type is {:?} on field {}",
+            "This field type is not suported here. Field type is {:?} on field {}",
             x, field.name
         )),
     }

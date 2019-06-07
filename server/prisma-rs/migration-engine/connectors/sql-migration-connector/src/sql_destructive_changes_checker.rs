@@ -1,11 +1,11 @@
-use crate::SqlMigrationStep;
+use crate::SqlMigration;
 use migration_connector::*;
 
 pub struct SqlDestructiveChangesChecker {}
 
 #[allow(unused, dead_code)]
-impl DestructiveChangesChecker<SqlMigrationStep> for SqlDestructiveChangesChecker {
-    fn check(&self, steps: &Vec<SqlMigrationStep>) -> Vec<MigrationResult> {
+impl DestructiveChangesChecker<SqlMigration> for SqlDestructiveChangesChecker {
+    fn check(&self, database_migration: &SqlMigration) -> Vec<MigrationErrorOrWarning> {
         vec![]
     }
 }

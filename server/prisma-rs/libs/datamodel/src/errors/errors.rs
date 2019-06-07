@@ -17,16 +17,19 @@ pub enum ValidationError {
     #[fail(display = "Function {} takes {} arguments, received {}", function_name, required_count, given_count)]
     ArgumentCountMissmatch { function_name: String, required_count: usize, given_count: usize, span: Span },
 
-    #[fail(display = "Argument {} is missing in directive @{}.", argument_name, directive_name)]
+    #[fail(display = "Argument {} is missing in attribute @{}.", argument_name, directive_name)]
     DirectiveArgumentNotFound { argument_name: String, directive_name: String, span: Span },
 
     #[fail(display = "Argument {} is missing in source block {}", argument_name, source_name)]
     SourceArgumentNotFound { argument_name: String, source_name: String, span: Span },
 
-    #[fail(display = "Error parsing directive @{}: {}", directive_name, message)]
+    #[fail(display = "Error parsing attribute @{}: {}", directive_name, message)]
     DirectiveValidationError { message: String, directive_name: String, span: Span },
 
-    #[fail(display = "Directive not known: @{}", directive_name)]
+    #[fail(display = "Attribute @{} is defined twice.", directive_name)]
+    DuplicateDirectiveError { directive_name: String, span: Span },
+
+    #[fail(display = "Attribute not known: @{}", directive_name)]
     DirectiveNotKnownError { directive_name: String, span: Span },
 
     #[fail(display = "Function not known: {}", function_name)]
@@ -44,8 +47,8 @@ pub enum ValidationError {
     #[fail(display = "Type {} is not a built-in type.", type_name)]
     ScalarTypeNotFoundError { type_name: String, span: Span },
 
-    #[fail(display = "{}", message)]
-    ParserError { message: String, span: Span },
+    #[fail(display = "Unexpected token. Expected one of: {}.", expected_str)]
+    ParserError { expected: Vec<&'static str>, expected_str: String, span: Span },
 
     #[fail(display = "{}", message)]
     FunctionalEvaluationError { message: String, span: Span },
@@ -58,6 +61,9 @@ pub enum ValidationError {
 
     #[fail(display = "Error validating {}: {}", model_name, message)]
     ModelValidationError { message: String, model_name: String, span: Span  },
+
+    #[fail(display = "Error validating: {}", message)]
+    ValidationError { message: String, span: Span  },
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)] 
@@ -107,6 +113,13 @@ impl ValidationError {
         };
     }
 
+    pub fn new_duplicate_directive_error(directive_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::DuplicateDirectiveError {
+            directive_name: String::from(directive_name),
+            span: span.clone(),
+        };
+    }
+
     pub fn new_model_validation_error(message: &str, model_name: &str, span: &Span) -> ValidationError {
         return ValidationError::ModelValidationError {
             message: String::from(message),
@@ -115,8 +128,15 @@ impl ValidationError {
         };
     }
 
-    pub fn new_parser_error(message: &str, span: &Span) -> ValidationError {
-        return ValidationError::ParserError { message: String::from(message), span: span.clone() };
+    pub fn new_validation_error(message: &str, span: &Span) -> ValidationError {
+        return ValidationError::ValidationError {
+            message: String::from(message),
+            span: span.clone(),
+        };
+    }
+
+    pub fn new_parser_error(expected: &Vec<&'static str>, span: &Span) -> ValidationError {
+        return ValidationError::ParserError { expected: expected.clone(), expected_str: expected.join(", "), span: span.clone() };
     }
     pub fn new_functional_evaluation_error(message: &str, span: &Span) -> ValidationError {
         return ValidationError::FunctionalEvaluationError { message: String::from(message), span: span.clone() };
@@ -169,11 +189,13 @@ impl ValidationError {
             ValidationError::LiteralParseError { literal_type: _, raw_value: _, span } => span,
             ValidationError::TypeNotFoundError { type_name: _, span } => span,
             ValidationError::ScalarTypeNotFoundError { type_name: _, span } => span,
-            ValidationError::ParserError { message: _, span } => span,
+            ValidationError::ParserError { expected: _, expected_str: _, span } => span,
             ValidationError::FunctionalEvaluationError { message: _, span } => span,
             ValidationError::TypeMismatchError { expected_type: _, received_type: _, raw: _, span } => span,
             ValidationError::ValueParserError { expected_type: _, parser_error: _, raw: _, span } => span,
-            ValidationError::ModelValidationError { model_name: _, message: _, span } => span
+            ValidationError::ValidationError { message: _, span } => span,
+            ValidationError::ModelValidationError { model_name: _, message: _, span } => span,
+            ValidationError::DuplicateDirectiveError { directive_name: _, span } => span
         }
     }
     pub fn description(&self) -> String {

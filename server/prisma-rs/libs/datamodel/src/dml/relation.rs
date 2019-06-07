@@ -1,8 +1,8 @@
 use crate::errors::ValidationError;
 use serde::{Deserialize, Serialize};
 
-use super::FromStrAndSpan;
 use crate::ast;
+use crate::common::FromStrAndSpan;
 
 /// Holds information about a relation field.
 #[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
@@ -11,8 +11,8 @@ pub struct RelationInfo {
     pub to: String,
     /// The target field of the relation.
     pub to_fields: Vec<String>,
-    /// The name of the relation.
-    pub name: Option<String>,
+    /// The name of the relation. Internally, an empty string signals no name.
+    pub name: String,
     /// A strategy indicating what happens when
     /// a related node is deleted.
     pub on_delete: OnDeleteStrategy,
@@ -25,7 +25,7 @@ impl RelationInfo {
         RelationInfo {
             to: String::from(to),
             to_fields: Vec::new(),
-            name: None,
+            name: String::new(),
             on_delete: OnDeleteStrategy::None,
         }
     }
@@ -33,7 +33,7 @@ impl RelationInfo {
         RelationInfo {
             to: String::from(to),
             to_fields: vec![String::from(to_field)],
-            name: None,
+            name: String::new(),
             on_delete: OnDeleteStrategy::None,
         }
     }
@@ -42,7 +42,7 @@ impl RelationInfo {
         RelationInfo {
             to: String::from(to),
             to_fields: to_fields,
-            name: None,
+            name: String::new(),
             on_delete: OnDeleteStrategy::None,
         }
     }

@@ -1,5 +1,5 @@
 use super::{PrismaRequest, RequestHandler};
-use crate::{context::PrismaContext, data_model::Validatable, error::PrismaError, PrismaResult};
+use crate::{context::PrismaContext, error::PrismaError, PrismaResult};
 use core::{
     ir::{self, Builder},
     RootBuilder,
@@ -48,13 +48,6 @@ fn handle_safely(req: PrismaRequest<GraphQlBody>, ctx: &PrismaContext) -> Prisma
         Ok(doc) => doc,
         Err(e) => return Err(PrismaError::QueryParsingError(format!("{:?}", e))),
     };
-
-    // Let's validate the schema!
-    if let Err(_) = ctx.internal_data_model.validate(&query_doc) {
-        return Err(PrismaError::QueryValidationError(
-            "InternalDataModel validation failed for unknown reasons".into(),
-        ));
-    }
 
     let rb = RootBuilder {
         query: query_doc,

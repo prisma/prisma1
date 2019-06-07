@@ -1,6 +1,7 @@
 use crate::migration_engine::MigrationEngine;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::convert::From;
 
 pub trait MigrationCommand {
     type Input: DeserializeOwned;
@@ -8,5 +9,25 @@ pub trait MigrationCommand {
 
     fn new(input: Self::Input) -> Box<Self>;
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> Self::Output;
+    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output>;
+}
+
+pub type CommandResult<T> = Result<T, CommandError>;
+
+#[derive(Debug, Serialize)]
+#[serde(tag = "type")]
+pub enum CommandError {
+    DataModelErrors{code: i64, errors: Vec<String>},
+}
+
+impl From<datamodel::errors::ErrorCollection> for CommandError {
+    fn from(errors: datamodel::errors::ErrorCollection) -> CommandError {
+        let errors_str = errors.errors.into_iter().map(|e|{
+            // let mut msg: Vec<u8> = Vec::new();
+            // e.pretty_print(&mut msg, "datamodel", "bla").unwrap();
+            // std::str::from_utf8(&msg).unwrap().to_string()
+            format!("{}", e)
+        }).collect();
+        CommandError::DataModelErrors{code: 1000, errors: errors_str}
+    }
 }

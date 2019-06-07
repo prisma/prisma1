@@ -1,5 +1,5 @@
 use crate::ast;
-use crate::common::value::ValueValidator;
+use crate::common::value::{MaybeExpression, ValueValidator};
 use crate::errors::ValidationError;
 
 /// Trait for functions which can be accessed from the datamodel.
@@ -8,7 +8,7 @@ pub trait Functional {
     fn name(&self) -> &str;
 
     /// Applies the function to the given arguments and returns the result.
-    fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<ast::Value, ValidationError>;
+    fn apply(&self, values: &Vec<ValueValidator>, span: &ast::Span) -> Result<MaybeExpression, ValidationError>;
 
     /// Internal: Shorthand to check the count of arguments, and raise an error if applicable.
     fn check_arg_count(
