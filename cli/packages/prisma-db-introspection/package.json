@@ -37,7 +37,7 @@
   },
   "scripts": {
     "test": "echo \"Skipping Tests\"",
-    "test-backup": "jest --runInBand --verbose=false || echo \"skip tests\"",
+    "test-backup": "jest --runInBand --verbose=false",
     "build": "tsc -d",
     "lint": "tslint src/**/*.ts",
     "precommit": "lint-staged",
