@@ -79,7 +79,6 @@ impl ApplyMigrationCommand {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
         let current_datamodel = migration_persistence.current_datamodel();
-        let is_dry_run = self.input.dry_run.unwrap_or(false);
 
         let next_datamodel = engine
             .datamodel_calculator()
@@ -95,18 +94,17 @@ impl ApplyMigrationCommand {
             .render_steps_pretty(&database_migration);
 
         let database_migration_json = database_migration.serialize();
+        
+        let mut migration = Migration::new(self.input.migration_id.clone());
+        migration.datamodel_steps = self.input.steps.clone();
+        migration.database_migration = database_migration_json;
+        migration.datamodel = next_datamodel;
+        let saved_migration = migration_persistence.create(migration);
 
-        if !is_dry_run {
-            let mut migration = Migration::new(self.input.migration_id.clone());
-            migration.datamodel_steps = self.input.steps.clone();
-            migration.database_migration = database_migration_json;
-            migration.datamodel = next_datamodel;
-            let saved_migration = migration_persistence.create(migration);
-
-            connector
-                .migration_applier()
-                .apply(&saved_migration, &database_migration);
-        }
+        connector
+            .migration_applier()
+            .apply(&saved_migration, &database_migration);
+        
 
         Ok(MigrationStepsResultOutput {
             datamodel_steps: self.input.steps.clone(),
@@ -125,7 +123,6 @@ pub struct ApplyMigrationInput {
     pub migration_id: String,
     pub steps: Vec<MigrationStep>,
     pub force: Option<bool>,
-    pub dry_run: Option<bool>,
 }
 
 impl IsWatchMigration for ApplyMigrationInput {

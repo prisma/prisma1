@@ -83,7 +83,6 @@ pub fn apply_migration(engine: &Box<MigrationEngine>, steps: Vec<MigrationStep>,
         migration_id: migration_id.to_string(),
         steps: steps,
         force: None,
-        dry_run: None,
     };
     let cmd = ApplyMigrationCommand::new(input);
     let output = cmd.execute(&engine).expect("ApplyMigration failed");
