@@ -59,7 +59,7 @@ fn convert_error(command_error: CommandError) -> jsonrpc_core::types::error::Err
     let json = serde_json::to_value(command_error).expect("rendering the errors as json failed.");
     jsonrpc_core::types::error::Error {
         code: jsonrpc_core::types::error::ErrorCode::ServerError(4466),
-        message: "".to_string(), //format!("{:?}", command_error),
+        message: "An error happened. Check the data field for details.".to_string(),
         data: Some(json),
     }
 }
