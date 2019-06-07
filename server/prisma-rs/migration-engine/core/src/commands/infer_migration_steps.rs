@@ -23,7 +23,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .datamodel_calculator()
             .infer(&current_datamodel, &self.input.assume_to_be_applied);
 
-        let next_datamodel = datamodel::parse(&self.input.data_model)?;
+        let next_datamodel = datamodel::parse(&self.input.datamodel)?;
 
         let model_migration_steps = engine
             .datamodel_migration_steps_inferrer()
@@ -62,7 +62,8 @@ impl MigrationCommand for InferMigrationStepsCommand {
 pub struct InferMigrationStepsInput {
     pub project_info: String,
     pub migration_id: String,
-    pub data_model: String,
+    #[serde(alias = "data_model")]
+    pub datamodel: String,
     pub assume_to_be_applied: Vec<MigrationStep>,
 }
 

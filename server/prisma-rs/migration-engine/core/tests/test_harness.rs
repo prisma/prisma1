@@ -55,7 +55,7 @@ pub fn infer_and_apply_with_migration_id(
     let input = InferMigrationStepsInput {
         project_info: project_info.clone(),
         migration_id: migration_id.to_string(),
-        data_model: datamodel.to_string(),
+        datamodel: datamodel.to_string(),
         assume_to_be_applied: Vec::new(),
     };
     let steps = run_infer_command(&engine, input);

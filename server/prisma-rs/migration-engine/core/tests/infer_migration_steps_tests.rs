@@ -27,7 +27,7 @@ fn assume_to_be_applied_must_work() {
             project_info: PROJECT_INFO.to_string(),
             migration_id: "mig0001".to_string(),
             assume_to_be_applied: Vec::new(),
-            data_model: dm1.to_string(),
+            datamodel: dm1.to_string(),
         };
         let steps1 = run_infer_command(&engine, input1);
         assert_eq!(steps1, vec![create_field_step("Blog", "field1", ScalarType::String)]);
@@ -43,7 +43,7 @@ fn assume_to_be_applied_must_work() {
             project_info: PROJECT_INFO.to_string(),
             migration_id: "mig0002".to_string(),
             assume_to_be_applied: steps1,
-            data_model: dm2.to_string(),
+            datamodel: dm2.to_string(),
         };
         let steps2 = run_infer_command(&engine, input2);
         assert_eq!(steps2, vec![create_field_step("Blog", "field2", ScalarType::String)]);
@@ -90,7 +90,7 @@ fn special_handling_of_watch_migrations() {
             project_info: PROJECT_INFO.to_string(),
             migration_id: "mig02".to_string(),
             assume_to_be_applied: Vec::new(),
-            data_model: dm.to_string(),
+            datamodel: dm.to_string(),
         };
         let steps = run_infer_command(&engine, input);
         assert_eq!(
