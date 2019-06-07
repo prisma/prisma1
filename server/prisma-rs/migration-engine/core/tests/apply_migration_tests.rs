@@ -114,7 +114,7 @@ fn must_handle_additional_steps_when_transitioning_out_of_watch_mode() {
             create_id_field_step("Test", "id", ScalarType::Int),
         ];
 
-        let db_schema1 = apply_migration(&engine, steps1.clone(), "watch-0001");
+        let _ = apply_migration(&engine, steps1.clone(), "watch-0001");
 
         let steps2 = vec![create_field_step("Test", "field1", ScalarType::String)];
         let _ = apply_migration(&engine, steps2.clone(), "watch-0002");
