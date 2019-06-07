@@ -103,6 +103,7 @@ pub fn field_to_dmmf(field: &dml::Field) -> Field {
         relation_on_delete: get_relation_delete_strategy(field),
         field_type: get_field_type(field),
         is_generated: Some(field.is_generated),
+        is_updated_at: Some(field.is_updated_at),
     }
 }
 

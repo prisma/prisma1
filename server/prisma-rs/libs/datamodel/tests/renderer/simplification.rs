@@ -3,6 +3,7 @@ fn test_exclude_default_relation_names_from_rendering() {
     let input = r#"
         model Todo {
             id Int @id
+            user User @relation("TodoToUser")
         }
 
         model User {
@@ -13,6 +14,7 @@ fn test_exclude_default_relation_names_from_rendering() {
 
     let expected = r#"model Todo {
     id Int @id
+    user User
 }
 
 model User {

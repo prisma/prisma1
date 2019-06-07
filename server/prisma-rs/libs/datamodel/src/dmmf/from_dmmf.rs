@@ -2,7 +2,7 @@ use super::dmmf::*;
 use crate::ast::Span;
 use crate::common::FromStrAndSpan;
 use crate::common::PrismaType;
-use crate::dml;
+use crate::{ast, dml, get_builtin_sources, source};
 use chrono::{DateTime, Utc};
 use serde_json;
 
@@ -119,6 +119,7 @@ pub fn field_from_dmmf(field: &Field) -> dml::Field {
         // TODO: Scalar List Strategy
         scalar_list_strategy: None,
         is_generated: field.is_generated.unwrap_or(false),
+        is_updated_at: field.is_updated_at.unwrap_or(false),
         comments: vec![],
     }
 }
@@ -155,4 +156,56 @@ pub fn schema_from_dmmf(schema: &Datamodel) -> dml::Datamodel {
 pub fn parse_from_dmmf(dmmf: &str) -> dml::Datamodel {
     let parsed_dmmf = serde_json::from_str::<Datamodel>(&dmmf).expect("Failed to parse JSON");
     schema_from_dmmf(&parsed_dmmf)
+}
+
+fn source_from_dmmf(source: &SourceConfig, loader: &source::SourceLoader) -> Box<source::Source> {
+    // Loader only works on AST. We should change that.
+    // TODO: This is code duplication with source serializer, the format is very similar.
+    // Maybe we can impl the Source trait.
+    let mut arguments: Vec<ast::Argument> = Vec::new();
+
+    arguments.push(ast::Argument::new_string("type", &source.connector_type));
+    arguments.push(ast::Argument::new_string("url", &source.url));
+
+    let mut detail_arguments: Vec<ast::Argument> = Vec::new();
+
+    for (key, value) in &source.config {
+        detail_arguments.push(ast::Argument::new_string(&key, &value));
+    }
+
+    let ast_source = ast::SourceConfig {
+        name: source.name.clone(),
+        properties: arguments,
+        detail_configuration: detail_arguments,
+        comments: Vec::new(),
+        span: ast::Span::empty(),
+    };
+
+    loader.load_source(&ast_source).expect("Source loading failed.")
+}
+
+pub fn sources_from_dmmf_with_plugins(
+    dmmf: &str,
+    source_definitions: Vec<Box<source::SourceDefinition>>,
+) -> Vec<Box<source::Source>> {
+    let dmmf_sources = serde_json::from_str::<Vec<SourceConfig>>(&dmmf).expect("Failed to parse JSON");
+    let mut res = Vec::new();
+
+    let mut source_loader = source::SourceLoader::new();
+    for source in get_builtin_sources() {
+        source_loader.add_source_definition(source);
+    }
+    for source in source_definitions {
+        source_loader.add_source_definition(source);
+    }
+
+    for source in dmmf_sources {
+        res.push(source_from_dmmf(&source, &source_loader))
+    }
+
+    res
+}
+
+pub fn sources_from_dmmf(dmmf: &str) -> Vec<Box<source::Source>> {
+    sources_from_dmmf_with_plugins(dmmf, Vec::new())
 }

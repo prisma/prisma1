@@ -2,7 +2,10 @@ mod traits;
 pub use traits::*;
 mod builtin;
 use crate::ast;
-use crate::common::value::{MaybeExpression, ValueValidator};
+use crate::common::{
+    value::{MaybeExpression, ValueValidator},
+    PrismaType,
+};
 use crate::errors::ValidationError;
 pub use builtin::*;
 
@@ -10,14 +13,25 @@ pub use builtin::*;
 const BUILTIN_ENV_FUNCTIONAL: builtin::EnvFunctional = builtin::EnvFunctional {};
 
 // Server side funcs
-const BUILTIN_NOW_FUNCTIONAL: builtin::NowFunctional = builtin::NowFunctional {};
-const BUILTIN_CUID_FUNCTIONAL: builtin::CuidFunctional = builtin::CuidFunctional {};
+const BUILTIN_NOW_FUNCTIONAL: builtin::ServerSideTrivialFunctional = builtin::ServerSideTrivialFunctional {
+    name: "now",
+    return_type: PrismaType::DateTime,
+};
+const BUILTIN_CUID_FUNCTIONAL: builtin::ServerSideTrivialFunctional = builtin::ServerSideTrivialFunctional {
+    name: "cuid",
+    return_type: PrismaType::String,
+};
+const BUILTIN_UUID_FUNCTIONAL: builtin::ServerSideTrivialFunctional = builtin::ServerSideTrivialFunctional {
+    name: "uuid",
+    return_type: PrismaType::String,
+};
 
 /// Array of all builtin functionals.
-const BUILTIN_FUNCTIONALS: [&'static Functional; 3] = [
+const BUILTIN_FUNCTIONALS: [&'static Functional; 4] = [
     &BUILTIN_ENV_FUNCTIONAL,
     &BUILTIN_NOW_FUNCTIONAL,
     &BUILTIN_CUID_FUNCTIONAL,
+    &BUILTIN_UUID_FUNCTIONAL,
 ];
 
 /// Evaluator for arbitrary expressions.

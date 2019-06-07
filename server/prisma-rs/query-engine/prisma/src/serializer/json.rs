@@ -1,4 +1,4 @@
-//! Json serialisation endpoint for IR
+//! Json serialisation for query engine IR
 
 use crate::{PrismaError, PrismaResult};
 use core::ir::{Item, Response, ResponseSet};

@@ -1,7 +1,8 @@
+use super::MigrationStepsResultOutput;
 use crate::commands::command::{CommandResult, MigrationCommand};
 use crate::migration_engine::MigrationEngine;
-use migration_connector::steps::*;
 use migration_connector::*;
+use migration_connector::steps::*;
 
 pub struct InferMigrationStepsCommand {
     input: InferMigrationStepsInput,
@@ -9,7 +10,7 @@ pub struct InferMigrationStepsCommand {
 
 impl MigrationCommand for InferMigrationStepsCommand {
     type Input = InferMigrationStepsInput;
-    type Output = InferMigrationStepsOutput;
+    type Output = MigrationStepsResultOutput;
 
     fn new(input: Self::Input) -> Box<Self> {
         Box::new(InferMigrationStepsCommand { input })
@@ -23,7 +24,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .datamodel_calculator()
             .infer(&current_datamodel, &self.input.assume_to_be_applied);
 
-        let next_data_model = engine.parse_datamodel(&self.input.data_model);
+        let next_data_model = datamodel::parse(&self.input.data_model)?;
 
         let model_migration_steps = engine
             .datamodel_migration_steps_inferrer()
@@ -46,7 +47,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
             steps
         };
 
-        Ok(InferMigrationStepsOutput {
+        Ok(MigrationStepsResultOutput {
             datamodel_steps: returned_datamodel_steps,
             database_steps: database_steps_json,
             errors: vec![],
@@ -69,14 +70,4 @@ impl IsWatchMigration for InferMigrationStepsInput {
     fn is_watch_migration(&self) -> bool {
         self.migration_id.starts_with("watch")
     }
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct InferMigrationStepsOutput {
-    pub datamodel_steps: Vec<MigrationStep>,
-    pub database_steps: serde_json::Value,
-    pub warnings: Vec<MigrationWarning>,
-    pub errors: Vec<MigrationError>,
-    pub general_errors: Vec<String>,
 }

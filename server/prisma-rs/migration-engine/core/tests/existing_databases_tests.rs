@@ -2,8 +2,8 @@
 mod test_harness;
 use barrel::{backend::Sqlite as Squirrel, types, Migration};
 use database_inspector::*;
-use rusqlite::{Connection, NO_PARAMS};
-use std::{thread, time};
+use prisma_query::connector::Sqlite as SqliteDatabaseClient;
+use prisma_query::Connectional;
 use test_harness::*;
 
 const SCHEMA: &str = "migration_engine";
@@ -11,7 +11,7 @@ const SCHEMA: &str = "migration_engine";
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {
     run_test_with_engine(|engine| {
-        let initial_result = setup(|migration| {
+        let initial_result = execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
             });
@@ -64,7 +64,7 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
 #[test]
 fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
     run_test_with_engine(|engine| {
-        let initial_result = setup(|migration| {
+        let initial_result = execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::text());
@@ -84,7 +84,7 @@ fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
 #[test]
 fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
     run_test_with_engine(|engine| {
-        let initial_result = setup(|migration| {
+        let initial_result = execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::integer().nullable(true));
@@ -111,7 +111,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
 #[test]
 fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional() {
     run_test_with_engine(|engine| {
-        let initial_result = setup(|migration| {
+        let initial_result = execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
                 t.add_column("title", types::text());
@@ -293,53 +293,63 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
     });
 }
 
-// FIXME: this was copy pasted from tests.rs from database-inspector
-fn setup<F>(migrationFn: F) -> DatabaseSchema
+fn execute<F>(mut migrationFn: F) -> DatabaseSchema
 where
     F: FnMut(&mut Migration) -> (),
 {
-    execute_internal(migrationFn, true)
-}
+    // let connection = Connection::open_in_memory()
+    //     .and_then(|c| {
+    //         let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+    //         let path = format!("{}/db", server_root);
+    //         let database_file_path = dbg!(format!("{}/{}.db", path, SCHEMA));
+    //         if delete_db_file {
+    //             let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
+    //             thread::sleep(time::Duration::from_millis(100));
+    //         }
 
-fn execute<F>(migrationFn: F) -> DatabaseSchema
-where
-    F: FnMut(&mut Migration) -> (),
-{
-    execute_internal(migrationFn, false)
-}
+    //         c.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), SCHEMA])
+    //             .map(|_| c)
+    //     })
+    //     .and_then(|c| {
+    //         let mut migration = Migration::new().schema(SCHEMA);
+    //         migrationFn(&mut migration);
+    //         let full_sql = migration.make::<Squirrel>();
+    //         for sql in full_sql.split(";") {
+    //             dbg!(sql);
+    //             if sql != "" {
+    //                 c.execute(&sql, NO_PARAMS).unwrap();
+    //             }
+    //         }
+    //         Ok(c)
+    //     })
+    //     .unwrap();
 
-fn execute_internal<F>(mut migrationFn: F, delete_db_file: bool) -> DatabaseSchema
-where
-    F: FnMut(&mut Migration) -> (),
-{
-    let connection = Connection::open_in_memory()
-        .and_then(|c| {
-            let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-            let path = format!("{}/db", server_root);
-            let database_file_path = dbg!(format!("{}/{}.db", path, SCHEMA));
-            if delete_db_file {
-                let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
-                thread::sleep(time::Duration::from_millis(100));
+    // let inspector = DatabaseInspectorImpl::new(connection);
+    // let mut result = inspector.introspect(&SCHEMA.to_string());
+    // // the presence of the _Migration table makes assertions harder. Therefore remove it.
+    // result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
+    // result
+    // ------------------------------------
+
+    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+    let database_folder_path = format!("{}/db", server_root);
+
+    let test_mode = false;
+    let conn = std::sync::Arc::new(SqliteDatabaseClient::new(database_folder_path, 32, test_mode).unwrap());
+    conn.with_connection(&SCHEMA, |c| {
+        let mut migration = Migration::new().schema(SCHEMA);
+        migrationFn(&mut migration);
+        let full_sql = migration.make::<Squirrel>();
+        for sql in full_sql.split(";") {
+            dbg!(sql);
+            if sql != "" {
+                c.query_raw(&sql, &[]).unwrap();
             }
-
-            c.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), SCHEMA])
-                .map(|_| c)
-        })
-        .and_then(|c| {
-            let mut migration = Migration::new().schema(SCHEMA);
-            migrationFn(&mut migration);
-            let full_sql = migration.make::<Squirrel>();
-            for sql in full_sql.split(";") {
-                dbg!(sql);
-                if sql != "" {
-                    c.execute(&sql, NO_PARAMS).unwrap();
-                }
-            }
-            Ok(c)
-        })
-        .unwrap();
-
-    let inspector = DatabaseInspectorImpl::new(connection);
+        }
+        Ok(())
+    })
+    .unwrap();
+    let inspector = DatabaseInspectorImpl { connection: conn };
     let mut result = inspector.introspect(&SCHEMA.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();

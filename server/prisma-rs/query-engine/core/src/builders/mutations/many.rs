@@ -33,10 +33,13 @@ impl ManyNestedBuilder {
         for map in many.into_iter() {
             match kind {
                 "create" => attach_create(name, map, mutations, &model, &rel_field, top_level)?,
+                "update" => attach_update(name, map, mutations, &model, &rel_field, top_level)?,
+                "updateMany" => attach_update_many(map, mutations, &rel_field, &rel_model)?,
+                "delete" => attach_delete(map, mutations, &rel_field, &model)?,
+                "deleteMany" => attach_delete_many(map, mutations, &rel_field, &rel_model)?,
                 "connect" => attach_connect(map, mutations, &model, &rel_field, top_level)?,
                 "disconnect" => attach_disconnect(map, mutations, &model, &rel_field)?,
-                "updateMany" => attach_update_many(map, mutations, &rel_field, &rel_model)?,
-                _ => unimplemented!(),
+                verb => panic!("Unimplemented {}", verb),
             };
         }
 
@@ -110,6 +113,31 @@ fn attach_create(
     Ok(())
 }
 
+fn attach_update(
+    name: &str,
+    map: ValueMap,
+    mutations: &mut NestedMutactions,
+    model: &ModelRef,
+    rel_field: &RelationFieldRef,
+    top_level: &Operation,
+) -> CoreResult<()> {
+    let where_ = map.to_node_selector(Arc::clone(&model)).ok();
+    let ValueSplit { values, lists, nested } = map.split();
+    let non_list_args = values.to_prisma_values().into();
+    let list_args = lists.into_iter().map(|la| la.convert()).collect();
+    let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&model), top_level)?;
+
+    mutations.updates.push(NestedUpdateNode {
+        relation_field: Arc::clone(&rel_field),
+        where_,
+        non_list_args,
+        list_args,
+        nested_mutactions,
+    });
+
+    Ok(())
+}
+
 fn attach_update_many(
     mut map: ValueMap,
     mutations: &mut NestedMutactions,
@@ -145,5 +173,42 @@ fn attach_update_many(
         non_list_args,
         list_args,
     });
+    Ok(())
+}
+
+fn attach_delete(
+    map: ValueMap,
+    mutations: &mut NestedMutactions,
+    rel_field: &RelationFieldRef,
+    model: &ModelRef,
+) -> CoreResult<()> {
+    let where_ = map.to_node_selector(Arc::clone(model)).ok();
+    mutations.deletes.push(NestedDeleteNode {
+        relation_field: Arc::clone(rel_field),
+        where_,
+    });
+    Ok(())
+}
+
+fn attach_delete_many(
+    map: ValueMap,
+    mutations: &mut NestedMutactions,
+    rel_field: &RelationFieldRef,
+    rel_model: &ModelRef,
+) -> CoreResult<()> {
+    let filter = utils::extract_query_args_inner(
+        map.0
+            .iter()
+            .filter(|(arg, _)| arg.as_str() != "data")
+            .map(|(a, b)| (a, b)),
+        Arc::clone(&rel_model),
+    )?
+    .filter;
+
+    mutations.delete_manys.push(NestedDeleteNodes {
+        relation_field: Arc::clone(rel_field),
+        filter,
+    });
+
     Ok(())
 }

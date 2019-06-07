@@ -196,6 +196,14 @@ impl LiftAstToDml {
         if let Some(custom_type) = ast_schema.find_custom_type(&type_name) {
             checked_types.push(custom_type.name.clone());
             let (field_type, mut attrs) = self.lift_field_type(custom_type, ast_schema, checked_types)?;
+
+            if let dml::FieldType::Relation(_) = field_type {
+                return Err(ValidationError::new_validation_error(
+                    "Only scalar types can be used for defining custom types.",
+                    &custom_type.field_type_span,
+                ));
+            }
+
             attrs.append(&mut custom_type.directives.clone());
             Ok((field_type, attrs))
         } else {

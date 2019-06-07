@@ -154,7 +154,38 @@ fn unique_works() {
 }
 
 #[test]
-#[ignore]
+fn uuid_fields_must_work() {
+    let datamodel = convert(
+        r#"
+            model Test {
+                id: String @id @default(uuid())
+            }
+        "#,
+    );
+
+    let model = datamodel.assert_model("Test");
+    model
+        .assert_scalar_field("id")
+        .assert_type_identifier(TypeIdentifier::UUID);
+}
+
+#[test]
+fn cuid_fields_must_work() {
+    let datamodel = convert(
+        r#"
+            model Test {
+                id: String @id @default(cuid())
+            }
+        "#,
+    );
+
+    let model = datamodel.assert_model("Test");
+    model
+        .assert_scalar_field("id")
+        .assert_type_identifier(TypeIdentifier::GraphQLID);
+}
+
+#[test]
 fn createdAt_works() {
     let datamodel = convert(
         r#"
@@ -173,7 +204,6 @@ fn createdAt_works() {
 }
 
 #[test]
-#[ignore]
 fn updatedAt_works() {
     let datamodel = convert(
         r#"
@@ -279,7 +309,6 @@ fn many_to_many_relations() {
 }
 
 #[test]
-#[ignore]
 fn implicit_relation_fields() {
     let datamodel = convert(
         r#"

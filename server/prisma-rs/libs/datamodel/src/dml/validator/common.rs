@@ -2,6 +2,7 @@ use crate::{ast, dml, errors::ValidationError};
 
 /// State error message. Seeing this error means something went really wrong internally. It's the datamodel equivalent of a bluescreen.
 pub (crate) const STATE_ERROR: &str = "Failed lookup of model or field during internal processing. This means that the internal representation was mutated incorrectly.";
+pub (crate) const ERROR_GEN_STATE_ERROR: &str = "Failed lookup of model or field during generating an error message. This often means that a generated field or model was the cause of an error.";
 
 pub(crate) trait FindInAstDatamodel {
     fn find_field(&self, field: &str, field: &str) -> Option<&ast::Field>;
@@ -68,7 +69,7 @@ pub fn model_validation_error(message: &str, model: &dml::Model, ast: &ast::Data
     ValidationError::new_model_validation_error(
         message,
         &model.name,
-        &ast.find_model(&model.name).expect(STATE_ERROR).span,
+        &ast.find_model(&model.name).expect(ERROR_GEN_STATE_ERROR).span,
     )
 }
 
@@ -81,7 +82,9 @@ pub fn field_validation_error(
     ValidationError::new_model_validation_error(
         message,
         &model.name,
-        &ast.find_field(&model.name, &field.name).expect(STATE_ERROR).span,
+        &ast.find_field(&model.name, &field.name)
+            .expect(ERROR_GEN_STATE_ERROR)
+            .span,
     )
 }
 

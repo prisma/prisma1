@@ -16,6 +16,10 @@ import {
   UnsupportedTypeError,
 } from './documentConnector'
 
+import * as debug from 'debug'
+
+let log = debug('DocumentConnector')
+
 /**
  * Sets how many items are queried when the `Random` sampling strategy is used.
  */
@@ -100,6 +104,8 @@ export abstract class DocumentConnector<InternalCollectionType>
   ): Promise<ISDL> {
     // First, we sample our collections to create a flat type schema.
     // Then, we attempt to find relations using sampling and a ratio test.
+
+    log('Listing models.')
 
     const sampler = new ModelSampler<InternalCollectionType>(
       modelSamplingStrategy,

@@ -5,7 +5,7 @@ const DATAMODEL_STRING: &str = r#"model User {
     createdAt DateTime
     email String @unique
     name String?
-    posts Post[] @relation(onDelete: CASCADE)
+    posts Post[] @relation("author", onDelete: CASCADE)
     profile Profile?
     @@db("user")
 }
@@ -88,4 +88,33 @@ fn test_dmmf_roundtrip_with_functions() {
     println!("{}", rendered);
 
     assert_eq!(DATAMODEL_STRING_WITH_FUNCTIONS, rendered);
+}
+
+const DATAMODEL_WITH_SOURCE: &str = r#"source pg1 {
+    type = "Postgres"
+    url = "https://localhost/postgres1"
+}
+
+model Author {
+    id Int @id
+    name String?
+    createdAt DateTime @default(now())
+}"#;
+
+#[test]
+fn test_dmmf_roundtrip_with_sources() {
+    let dml = datamodel::parse(&DATAMODEL_WITH_SOURCE).unwrap();
+    let sources = datamodel::load_data_source_configuration(&DATAMODEL_WITH_SOURCE).unwrap();
+
+    let dmmf = datamodel::dmmf::render_to_dmmf(&dml);
+    let dmmf_sources = datamodel::dmmf::render_config_to_dmmf(&sources);
+
+    let dml2 = datamodel::dmmf::parse_from_dmmf(&dmmf);
+    let sources = datamodel::dmmf::sources_from_dmmf(&dmmf_sources);
+
+    let rendered = datamodel::render_with_sources(&dml2, &sources).unwrap();
+
+    println!("{}", rendered);
+
+    assert_eq!(DATAMODEL_WITH_SOURCE, rendered);
 }

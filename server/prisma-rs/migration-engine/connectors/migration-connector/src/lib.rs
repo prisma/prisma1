@@ -45,8 +45,8 @@ pub trait MigrationConnector {
     }
 
     // TODO: this is just in tests currently and should not be part of this interface. Figure out a better way to handle this.
-    fn database_inspector(&self) -> Box<DatabaseInspector> {
-        DatabaseInspector::empty()
+    fn database_inspector(&self) -> Arc<DatabaseInspector> {
+        Arc::new(DatabaseInspector::empty())
     }
 }
 

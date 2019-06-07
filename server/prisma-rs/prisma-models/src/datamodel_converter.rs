@@ -391,6 +391,13 @@ impl DatamodelFieldExtensions for dml::Field {
                 _ => None,
             })
             .or_else(|| {
+                if self.is_updated_at {
+                    Some(FieldBehaviour::UpdatedAt)
+                } else {
+                    None
+                }
+            })
+            .or_else(|| {
                 self.scalar_list_strategy.map(|sls| match sls {
                     datamodel::ScalarListStrategy::Embedded => FieldBehaviour::ScalarList {
                         strategy: ScalarListStrategy::Embedded,

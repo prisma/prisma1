@@ -16,9 +16,6 @@ pub trait RequestHandler {
     type Body;
 
     fn handle<S: Into<PrismaRequest<Self::Body>>>(&self, req: S, ctx: &PrismaContext) -> serde_json::Value;
-
-    // This is likely to change to DMMF in the future
-    fn handle_data_model(&self, ctx: &PrismaContext) -> String;
 }
 
 pub struct PrismaRequest<T> {

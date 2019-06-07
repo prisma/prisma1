@@ -52,7 +52,7 @@ fn nice_error_for_missing_model_keyword_2() {
 fn nice_error_on_incorrect_enum_field() {
     let dml = r#"
     enum Role {
-        Admin
+        A-dmin
         User
     }
     "#;

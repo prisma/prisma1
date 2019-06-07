@@ -26,6 +26,8 @@ pub struct Field {
     pub relation_on_delete: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_generated: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub is_updated_at: Option<bool>,
 }
 
 #[serde(rename_all = "camelCase")]
