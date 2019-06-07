@@ -22,7 +22,7 @@ impl SourceLoader {
     }
 
     /// Internal: Loads a single source from a source config block in the datamodel.
-    fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Box<Source>, ValidationError> {
+    pub fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Box<Source>, ValidationError> {
         let args = Arguments::new(&ast_source.properties, ast_source.span);
         let url = args.arg("url")?.as_str()?;
         let name = args.arg("type")?.as_str()?;

@@ -209,7 +209,7 @@ impl ValueMap {
                             })
                             .collect(),
                     },
-                    _ => unreachable!(),
+                    value => panic!("Unreachable structure: {:?}", value),
                 });
             }
         }

@@ -50,7 +50,7 @@ pub use source::*;
 pub use validator::directive::DirectiveValidator;
 
 // Convenience Helpers
-fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
+pub fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
     vec![
         Box::new(source::builtin::MySqlSourceDefinition::new()),
         Box::new(source::builtin::PostgresSourceDefinition::new()),
@@ -113,9 +113,21 @@ pub fn render_ast_to(stream: &mut std::io::Write, datamodel: &ast::Datamodel) {
     renderer.render(datamodel);
 }
 
-/// Renders a datamodel to a a stream as datamodel string.
+/// Renders a datamodel to a stream as datamodel string.
 pub fn render_to(stream: &mut std::io::Write, datamodel: &dml::Datamodel) -> Result<(), errors::ErrorCollection> {
     let lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
+    render_ast_to(stream, &lowered);
+    Ok(())
+}
+
+/// Renders a datamodel and sources to a stream as datamodel string.
+pub fn render_with_sources_to(
+    stream: &mut std::io::Write,
+    datamodel: &dml::Datamodel,
+    sources: &Vec<Box<Source>>,
+) -> Result<(), errors::ErrorCollection> {
+    let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
+    SourceSerializer::add_sources_to_ast(sources, &mut lowered);
     render_ast_to(stream, &lowered);
     Ok(())
 }
@@ -130,6 +142,16 @@ pub fn render_ast(datamodel: &ast::Datamodel) -> String {
 /// Renders a datamodel to a datamodel string.
 pub fn render(datamodel: &dml::Datamodel) -> Result<String, errors::ErrorCollection> {
     let lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
+    Ok(render_ast(&lowered))
+}
+
+/// Renders a datamodel and sources to a datamodel string.
+pub fn render_with_sources(
+    datamodel: &dml::Datamodel,
+    sources: &Vec<Box<Source>>,
+) -> Result<String, errors::ErrorCollection> {
+    let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
+    SourceSerializer::add_sources_to_ast(sources, &mut lowered);
     Ok(render_ast(&lowered))
 }
 
