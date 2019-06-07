@@ -23,16 +23,16 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .datamodel_calculator()
             .infer(&current_datamodel, &self.input.assume_to_be_applied);
 
-        let next_data_model = datamodel::parse(&self.input.data_model)?;
+        let next_datamodel = datamodel::parse(&self.input.data_model)?;
 
         let model_migration_steps = engine
             .datamodel_migration_steps_inferrer()
-            .infer(&assumed_datamodel, &next_data_model);
+            .infer(&assumed_datamodel, &next_datamodel);
 
         let database_migration =
             connector
                 .database_migration_inferrer()
-                .infer(&assumed_datamodel, &next_data_model, &model_migration_steps);
+                .infer(&assumed_datamodel, &next_datamodel, &model_migration_steps);
 
         let database_steps_json = connector
             .database_migration_step_applier()
@@ -47,6 +47,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
         };
 
         Ok(MigrationStepsResultOutput {
+            datamodel: datamodel::render(&next_datamodel).unwrap(),
             datamodel_steps: returned_datamodel_steps,
             database_steps: database_steps_json,
             errors: vec![],

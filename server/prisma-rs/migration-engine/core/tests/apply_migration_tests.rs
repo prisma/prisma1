@@ -103,3 +103,42 @@ fn steps_equivalence_criteria_is_satisfied_when_leaving_watch_mode() {
         assert_eq!(migrations[3].name, custom_migration_id);
     });
 }
+
+#[test]
+fn must_handle_additional_steps_when_transitioning_out_of_watch_mode() {
+    run_test_with_engine(|engine| {
+        let migration_persistence = engine.connector().migration_persistence();
+
+        let steps1 = vec![
+            create_model_step("Test"),
+            create_id_field_step("Test", "id", ScalarType::Int),
+        ];
+
+        let db_schema1 = apply_migration(&engine, steps1.clone(), "watch-0001");
+
+        let steps2 = vec![create_field_step("Test", "field1", ScalarType::String)];
+        let _ = apply_migration(&engine, steps2.clone(), "watch-0002");
+
+
+
+        let custom_migration_id = "a-custom-migration-id";
+        let additional_steps = vec![create_field_step("Test", "field2", ScalarType::String)];
+        let mut final_steps = Vec::new();
+        final_steps.append(&mut steps1.clone());
+        final_steps.append(&mut steps2.clone());
+        final_steps.append(&mut additional_steps.clone());
+
+        let final_db_schema = apply_migration(&engine, final_steps, custom_migration_id);
+        assert_eq!(final_db_schema.tables.len(), 1);
+        let table = final_db_schema.table_bang("Test");
+        assert_eq!(table.columns.len(), 3);
+        table.column_bang("id");
+        table.column_bang("field1");
+        table.column_bang("field2");
+
+        let migrations = migration_persistence.load_all();
+        assert_eq!(migrations[0].name, "watch-0001");
+        assert_eq!(migrations[1].name, "watch-0002");
+        assert_eq!(migrations[2].name, custom_migration_id);
+    });
+}
