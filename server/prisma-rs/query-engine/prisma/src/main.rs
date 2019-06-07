@@ -24,7 +24,7 @@ use context::PrismaContext;
 use error::*;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
-use std::{process, sync::Arc};
+use std::{process, sync::Arc, time::Instant};
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
 
@@ -41,6 +41,7 @@ struct RequestContext {
 }
 
 fn main() {
+    let now = Instant::now();
     env_logger::init();
 
     let context = match PrismaContext::new() {
@@ -69,12 +70,15 @@ fn main() {
             })
             .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
             .resource("/dmmf", |r| r.method(Method::GET).with(dmmf_handler))
+            .resource("/status", |r| r.method(Method::GET).with(status_handler))
     })
     .bind(address)
     .unwrap()
     .start();
 
-    println!("Started http server on {}:{}", address.0, address.1);
+    trace!("Initialized in {}ms", now.elapsed().as_millis());
+    info!("Started http server on {}:{}", address.0, address.1);
+
     let _ = sys.run();
 }
 
@@ -134,4 +138,11 @@ fn dmmf_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
 fn playground_handler<T>(_: HttpRequest<T>) -> impl Responder {
     let index_html = StaticFiles::get("playground.html").unwrap();
     HttpResponse::Ok().content_type("text/html").body(index_html)
+}
+
+/// Simple status endpoint
+fn status_handler<T>(_: HttpRequest<T>) -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .body("{\"status\": \"ok\"}")
 }
