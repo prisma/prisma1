@@ -17,7 +17,7 @@ fn assume_to_be_applied_must_work() {
             }
         "#;
 
-        migrate_to_with_migration_id(&engine, &dm0, "mig0000");
+        infer_and_apply_with_migration_id(&engine, &dm0, "mig0000");
 
         let dm1 = r#"
             model Blog {
@@ -61,7 +61,7 @@ fn special_handling_of_watch_migrations() {
             }
         "#;
 
-        migrate_to_with_migration_id(&engine, &dm, "mig00");
+        infer_and_apply_with_migration_id(&engine, &dm, "mig00");
 
         let dm = r#"
             model Blog {
@@ -69,7 +69,7 @@ fn special_handling_of_watch_migrations() {
                 field1: String
             }
         "#;
-        migrate_to_with_migration_id(&engine, &dm, "watch01");
+        infer_and_apply_with_migration_id(&engine, &dm, "watch01");
 
         let dm = r#"
             model Blog {
@@ -78,7 +78,7 @@ fn special_handling_of_watch_migrations() {
                 field2: String
             }
         "#;
-        migrate_to_with_migration_id(&engine, &dm, "watch02");
+        infer_and_apply_with_migration_id(&engine, &dm, "watch02");
 
         let dm = r#"
             model Blog {

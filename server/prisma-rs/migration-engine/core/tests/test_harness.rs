@@ -37,12 +37,12 @@ where
 }
 
 #[allow(unused)]
-pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema {
-    migrate_to_with_migration_id(&engine, &datamodel, "the-migration-id")
+pub fn infer_and_apply(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema {
+    infer_and_apply_with_migration_id(&engine, &datamodel, "the-migration-id")
 }
 
 #[allow(unused)]
-pub fn migrate_to_with_migration_id(
+pub fn infer_and_apply_with_migration_id(
     engine: &Box<MigrationEngine>,
     datamodel: &str,
     migration_id: &str,
