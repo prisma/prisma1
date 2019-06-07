@@ -60,18 +60,7 @@ pub fn infer_and_apply_with_migration_id(
     };
     let steps = run_infer_command(&engine, input);
 
-    let input = ApplyMigrationInput {
-        project_info: project_info,
-        migration_id: migration_id.to_string(),
-        steps: steps,
-        force: None,
-        dry_run: None,
-    };
-    let cmd = ApplyMigrationCommand::new(input);
-    let engine = MigrationEngine::new();
-    let _output = cmd.execute(&engine).expect("applyMigration failed");
-
-    introspect_database(&engine)
+    apply_migration(&engine, steps, migration_id)
 }
 
 #[allow(unused)]
@@ -84,6 +73,39 @@ pub fn run_infer_command(engine: &Box<MigrationEngine>, input: InferMigrationSte
     );
 
     output.datamodel_steps
+}
+
+#[allow(unused)]
+pub fn apply_migration(engine: &Box<MigrationEngine>, steps: Vec<MigrationStep>, migration_id: &str) -> DatabaseSchema {
+    let project_info = "the-project-info".to_string();
+    let input = ApplyMigrationInput {
+        project_info: project_info,
+        migration_id: migration_id.to_string(),
+        steps: steps,
+        force: None,
+        dry_run: None,
+    };
+    let cmd = ApplyMigrationCommand::new(input);
+    let output = cmd.execute(&engine).expect("ApplyMigration failed");
+    assert!(
+        output.general_errors.is_empty(),
+        format!("ApplyMigration returned unexpected errors: {:?}", output.general_errors)
+    );
+
+    introspect_database(&engine)
+}
+
+#[allow(unused)]
+pub fn unapply_migration(engine: &Box<MigrationEngine>) -> DatabaseSchema {
+    let project_info = "the-project-info".to_string();
+
+    let input = UnapplyMigrationInput {
+        project_info: project_info.clone(),
+    };
+    let cmd = UnapplyMigrationCommand::new(input);
+    let _ = cmd.execute(&engine);
+
+    introspect_database(&engine)
 }
 
 pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
