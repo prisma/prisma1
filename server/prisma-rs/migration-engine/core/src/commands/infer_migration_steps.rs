@@ -1,8 +1,8 @@
-use crate::commands::command::{MigrationCommand, CommandResult};
+use super::MigrationStepsResultOutput;
+use crate::commands::command::{CommandResult, MigrationCommand};
 use crate::migration_engine::MigrationEngine;
 use datamodel::Datamodel;
 use migration_connector::steps::*;
-use migration_connector::*;
 
 pub struct InferMigrationStepsCommand {
     input: InferMigrationStepsInput,
@@ -10,7 +10,7 @@ pub struct InferMigrationStepsCommand {
 
 impl MigrationCommand for InferMigrationStepsCommand {
     type Input = InferMigrationStepsInput;
-    type Output = InferMigrationStepsOutput;
+    type Output = MigrationStepsResultOutput;
 
     fn new(input: Self::Input) -> Box<Self> {
         Box::new(InferMigrationStepsCommand { input })
@@ -42,7 +42,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .database_migration_step_applier()
             .render_steps_pretty(&database_migration);
 
-        Ok(InferMigrationStepsOutput {
+        Ok(MigrationStepsResultOutput {
             datamodel_steps: model_migration_steps,
             database_steps: database_steps_json,
             errors: vec![],
@@ -59,14 +59,4 @@ pub struct InferMigrationStepsInput {
     pub migration_id: String,
     pub data_model: String,
     pub assume_to_be_applied: Vec<MigrationStep>,
-}
-
-#[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct InferMigrationStepsOutput {
-    pub datamodel_steps: Vec<MigrationStep>,
-    pub database_steps: serde_json::Value,
-    pub warnings: Vec<MigrationWarning>,
-    pub errors: Vec<MigrationError>,
-    pub general_errors: Vec<String>,
 }
