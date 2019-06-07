@@ -1,18 +1,10 @@
-import { arg, Command, isError, format } from '@prisma/cli'
+import { arg, Command, isError, format, Env } from '@prisma/cli'
 import { Result } from 'arg'
 import chalk from 'chalk'
 import * as fs from 'fs'
 import ora from 'ora'
 import * as path from 'path'
-import { Config } from 'prisma-cli-engine'
-import {
-  DatabaseType,
-  DefaultParser,
-  DefaultRenderer,
-  ISDL,
-} from 'prisma-datamodel'
-import { Environment, Output } from 'prisma-yml'
-import { PrismaDefinitionClass } from './prisma-config/PrismaDefinition'
+import { DatabaseType, DefaultParser, ISDL } from 'prisma-datamodel'
 import {
   assertSchemaExists,
   ConnectorData,
@@ -24,6 +16,7 @@ import {
 } from './introspect/util'
 import { promptIntrospectionInteractively } from './prompts/CredentialPrompt'
 import { DatabaseCredentials, IntrospectionResult } from './types'
+import { isdlToDatamodel2 } from '@prisma/lift'
 
 type Args = {
   '--interactive': BooleanConstructor
@@ -63,26 +56,11 @@ type Args = {
 }
 
 export class Introspect implements Command {
-  protected definition: PrismaDefinitionClass
-  protected out: Output
-  protected config: Config
-  protected env: Environment
-
-  static new(): Introspect {
-    return new Introspect()
+  static new(env: Env): Introspect {
+    return new Introspect(env)
   }
 
-  private constructor() {
-    this.config = new Config()
-    this.out = new Output()
-    this.env = new Environment(this.config.home, this.out, this.config.version)
-    this.definition = new PrismaDefinitionClass(
-      this.env,
-      this.config.definitionPath,
-      process.env,
-      this.out,
-    )
-  }
+  private constructor(private readonly env: Env) {}
 
   async parse(argv: string[]): Promise<any> {
     // parse the arguments according to the spec
@@ -137,11 +115,10 @@ export class Introspect implements Command {
       /**
        * Get connector and connect to database
        */
-      const {
-        sdl: newDatamodelSdl,
-        numTables,
-        referenceDatamodelExists,
-      } = await this.getConnectorWithDatabase(args, sdl)
+      const { sdl: newDatamodelSdl, numTables, referenceDatamodelExists } = await this.getConnectorWithDatabase(
+        args,
+        sdl,
+      )
 
       if (!sdl) {
         /**
@@ -149,30 +126,13 @@ export class Introspect implements Command {
          */
         const fileName = this.writeDatamodel(newDatamodelSdl)
 
-        console.log(
-          `Created datamodel definition based on ${numTables} database tables.`,
-        )
-        const andDatamodelText = referenceDatamodelExists
-          ? ' and the existing datamodel'
-          : ''
+        console.log(`Created datamodel definition based on ${numTables} database tables.`)
+        const andDatamodelText = referenceDatamodelExists ? ' and the existing datamodel' : ''
         console.log(`\
-${chalk.bold(
-          'Created 1 new file:',
-        )}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
+${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
 
   ${chalk.cyan(fileName)}
 `)
-
-        if (
-          this.definition.definition &&
-          !this.definition.definition!.datamodel
-        ) {
-          await this.definition.load(args as any)
-          this.definition.addDatamodel(fileName)
-          console.log(
-            `Added ${chalk.bold(`datamodel: ${fileName}`)} to prisma.yml`,
-          )
-        }
       } else {
         console.log(newDatamodelSdl)
       }
@@ -184,62 +144,45 @@ ${chalk.bold(
     process.exit(0)
   }
 
-  getExistingDatamodel(databaseType: DatabaseType): ISDL | null {
-    if (this.definition.typesString) {
-      const ParserInstance = DefaultParser.create(databaseType!)
-      return ParserInstance.parseFromSchemaString(this.definition.typesString!)
+  getExistingDatamodel(): string | undefined {
+    const datamodelPath = path.join(this.env.cwd, 'datamodel.prisma')
+    if (!fs.existsSync(datamodelPath)) {
+      return undefined
     }
-
-    return null
+    return fs.readFileSync(datamodelPath, 'utf-8')
   }
 
-  async introspect({
-    connector,
-    databaseType,
-    databaseName,
-  }: ConnectorData): Promise<IntrospectionResult> {
-    const existingDatamodel = this.getExistingDatamodel(databaseType)
-
+  async introspect({ connector, databaseType, databaseName }: ConnectorData): Promise<IntrospectionResult> {
     const introspection = await connector.introspect(databaseName)
-    const sdl = existingDatamodel
-      ? await introspection.getNormalizedDatamodel(existingDatamodel)
-      : await introspection.getNormalizedDatamodel()
+    const sdl = await introspection.getNormalizedDatamodel()
 
-    const renderer = DefaultRenderer.create(introspection.databaseType, true)
-    const renderedSdl = renderer.render(sdl)
+    const renderedSdl = await isdlToDatamodel2(sdl)
 
     const numTables = sdl.types.length
     if (numTables === 0) {
-      throw new Error(
-        "The provided database doesn't contain any tables. Please provide another database.",
-      )
+      throw new Error("The provided database doesn't contain any tables. Please provide another database.")
     }
 
     return {
       sdl: renderedSdl,
       numTables,
-      referenceDatamodelExists: Boolean(existingDatamodel),
+      referenceDatamodelExists: false,
     }
   }
 
   writeDatamodel(renderedSdl: string): string {
-    const fileName = `datamodel-${new Date().getTime()}.prisma`
-    const fullFileName = path.join(this.config.definitionDir, fileName)
+    const fileName = `datamodel-${Math.round(new Date().getTime() / 1000)}.prisma`
+    const fullFileName = path.join(this.env.cwd, fileName)
     fs.writeFileSync(fullFileName, renderedSdl)
     return fileName
   }
 
-  async getConnectorWithDatabase(
-    args: Result<Args>,
-    sdl: boolean | undefined,
-  ): Promise<IntrospectionResult> {
+  async getConnectorWithDatabase(args: Result<Args>, sdl: boolean | undefined): Promise<IntrospectionResult> {
     const credentialsByFlag = this.getCredentialsByFlags(args)
 
     // Get everything interactively
     if (!credentialsByFlag) {
-      const connectorData = await promptIntrospectionInteractively(
-        this.introspect.bind(this),
-      )
+      const connectorData = await promptIntrospectionInteractively(this.introspect.bind(this))
 
       return connectorData
     }
@@ -250,18 +193,11 @@ ${chalk.bold(
       return process.exit(1)
     }
 
-    const {
-      connector,
-      disconnect,
-    } = await getConnectedConnectorFromCredentials(credentialsByFlag)
+    const { connector, disconnect } = await getConnectedConnectorFromCredentials(credentialsByFlag)
 
     const schemas = await getDatabaseSchemas(connector)
 
-    assertSchemaExists(
-      credentialsByFlag.schema,
-      credentialsByFlag.type,
-      schemas,
-    )
+    assertSchemaExists(credentialsByFlag.schema, credentialsByFlag.type, schemas)
 
     const introspectionResult = await this.introspectWithSpinner(
       {
@@ -278,42 +214,23 @@ ${chalk.bold(
   }
 
   getCredentialsByFlags(args: Result<Args>): DatabaseCredentials | null {
-    const requiredPostgresFlags: (keyof Args)[] = [
-      '--pg-host',
-      '--pg-user',
-      '--pg-password',
-      '--pg-db',
-    ]
-    const requiredMysqlFlags: (keyof Args)[] = [
-      '--mysql-host',
-      '--mysql-user',
-      '--mysql-password',
-    ]
+    const requiredPostgresFlags: (keyof Args)[] = ['--pg-host', '--pg-user', '--pg-password', '--pg-db']
+    const requiredMysqlFlags: (keyof Args)[] = ['--mysql-host', '--mysql-user', '--mysql-password']
 
     const flagsKeys = Object.keys(args) as (keyof Args)[]
 
     const mysqlFlags = flagsKeys.filter(f => requiredMysqlFlags.includes(f))
-    const postgresFlags = flagsKeys.filter(f =>
-      requiredPostgresFlags.includes(f),
-    )
+    const postgresFlags = flagsKeys.filter(f => requiredPostgresFlags.includes(f))
 
     if (mysqlFlags.length > 0 && postgresFlags.length > 0) {
-      throw new Error(
-        `You can't provide both MySQL and Postgres connection flags. Please provide either of both.`,
-      )
+      throw new Error(`You can't provide both MySQL and Postgres connection flags. Please provide either of both.`)
     }
 
-    if (
-      mysqlFlags.length > 0 &&
-      mysqlFlags.length < requiredMysqlFlags.length
-    ) {
+    if (mysqlFlags.length > 0 && mysqlFlags.length < requiredMysqlFlags.length) {
       this.handleMissingArgs(requiredMysqlFlags, mysqlFlags, 'mysql')
     }
 
-    if (
-      postgresFlags.length > 0 &&
-      postgresFlags.length < requiredPostgresFlags.length
-    ) {
+    if (postgresFlags.length > 0 && postgresFlags.length < requiredPostgresFlags.length) {
       this.handleMissingArgs(requiredPostgresFlags, postgresFlags, 'pg')
     }
 
@@ -357,14 +274,8 @@ ${chalk.bold(
     return null
   }
 
-  handleMissingArgs(
-    requiredArgs: string[],
-    providedArgs: string[],
-    prefix: string,
-  ) {
-    const missingArgs = requiredArgs.filter(
-      arg => !providedArgs.some(provided => arg === provided),
-    )
+  handleMissingArgs(requiredArgs: string[], providedArgs: string[], prefix: string) {
+    const missingArgs = requiredArgs.filter(arg => !providedArgs.some(provided => arg === provided))
 
     throw new Error(
       `If you provide one of the ${prefix}- arguments, you need to provide all of them. The arguments ${missingArgs.join(
@@ -376,27 +287,20 @@ ${chalk.bold(
   /**
    * Introspect the database
    */
-  async introspectWithSpinner(
-    connectorData: ConnectorData,
-    sdl: boolean | undefined,
-  ) {
+  async introspectWithSpinner(connectorData: ConnectorData, sdl: boolean | undefined) {
     const spinner = ora({ color: 'blue' })
 
     const before = Date.now()
 
     if (!sdl) {
-      spinner.start(
-        `Introspecting database ${chalk.bold(connectorData.databaseName)}`,
-      )
+      spinner.start(`Introspecting database ${chalk.bold(connectorData.databaseName)}`)
     }
 
     const introspectionResult = await this.introspect(connectorData)
 
     if (!sdl) {
       spinner.succeed(
-        `Introspecting database ${chalk.bold(
-          connectorData.databaseName,
-        )}: ${prettyTime(Date.now() - before)}`,
+        `Introspecting database ${chalk.bold(connectorData.databaseName)}: ${prettyTime(Date.now() - before)}`,
       )
     }
 

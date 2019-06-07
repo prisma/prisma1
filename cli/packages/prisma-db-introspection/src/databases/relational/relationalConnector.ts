@@ -35,7 +35,12 @@ export abstract class RelationalConnector implements IConnector {
   ): RelationalIntrospectionResult
 
   protected async query(query: string, params: any[] = []): Promise<any[]> {
-    return await this.client.query(query, params)
+    const result: any = await this.client.query(query, params)
+    if (result.rows) {
+      return result.rows
+    }
+
+    return result
   }
 
   /**

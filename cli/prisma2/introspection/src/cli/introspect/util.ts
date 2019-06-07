@@ -4,8 +4,7 @@ import { Connection, createConnection } from 'mysql'
 import { Client as PGClient } from 'pg'
 import { DatabaseType } from 'prisma-datamodel'
 import { URL } from 'url'
-import { Connectors } from '../..'
-import { IConnector } from '../../common/connector'
+import { Connectors, IConnector } from 'prisma-db-introspection'
 import { DatabaseCredentials } from '../types'
 
 function replaceLocalDockerHost(credentials: DatabaseCredentials) {
@@ -87,36 +86,25 @@ export async function getConnectedConnectorFromCredentials(
   return { connector, disconnect: disconnect! }
 }
 
-export async function getDatabaseSchemas(
-  connector: IConnector,
-): Promise<string[]> {
+export async function getDatabaseSchemas(connector: IConnector): Promise<string[]> {
   try {
     return await connector.listSchemas()
   } catch (e) {
-    throw new Error(`Could not connect to database. ${e.message}`)
+    throw new Error(`Could not connect to database. ${e.stack}`)
   }
 }
 
-export function assertSchemaExists(
-  databaseName: string,
-  databaseType: DatabaseType,
-  schemas: string[],
-) {
+export function assertSchemaExists(databaseName: string, databaseType: DatabaseType, schemas: string[]) {
   if (!schemas.includes(databaseName)) {
-    const schemaWord =
-      databaseType === DatabaseType.postgres ? 'schema' : 'database'
+    const schemaWord = databaseType === DatabaseType.postgres ? 'schema' : 'database'
 
     throw new Error(
-      `The provided ${schemaWord} "${databaseName}" does not exist. The following are available: ${schemas.join(
-        ', ',
-      )}`,
+      `The provided ${schemaWord} "${databaseName}" does not exist. The following are available: ${schemas.join(', ')}`,
     )
   }
 }
 
-async function getConnectedMysqlClient(
-  credentials: DatabaseCredentials,
-): Promise<Connection> {
+async function getConnectedMysqlClient(credentials: DatabaseCredentials): Promise<Connection> {
   const { ssl, ...credentialsWithoutSsl } = replaceLocalDockerHost(credentials)
   const client = createConnection(credentialsWithoutSsl)
 
@@ -133,37 +121,29 @@ async function getConnectedMysqlClient(
   return client
 }
 
-async function getConnectedPostgresClient(
-  credentials: DatabaseCredentials,
-): Promise<PGClient> {
+export async function getConnectedPostgresClient(credentials: DatabaseCredentials): Promise<PGClient> {
   const sanitizedCredentials = replaceLocalDockerHost(credentials)
   const client = new PGClient(sanitizedCredentials)
   await client.connect()
   return client
 }
 
-function getConnectedMongoClient(
-  credentials: DatabaseCredentials,
-): Promise<MongoClient> {
+function getConnectedMongoClient(credentials: DatabaseCredentials): Promise<MongoClient> {
   return new Promise((resolve, reject) => {
     if (!credentials.uri) {
       throw new Error(`Please provide the MongoDB connection string`)
     }
 
-    MongoClient.connect(
-      credentials.uri,
-      { useNewUrlParser: true },
-      (err, client) => {
-        if (err) {
-          reject(err)
-        } else {
-          if (credentials.database) {
-            client.db(credentials.database)
-          }
-          resolve(client)
+    MongoClient.connect(credentials.uri, { useNewUrlParser: true }, (err, client) => {
+      if (err) {
+        reject(err)
+      } else {
+        if (credentials.database) {
+          client.db(credentials.database)
         }
-      },
-    )
+        resolve(client)
+      }
+    })
   })
 }
 
@@ -201,7 +181,6 @@ export function populateMongoDatabase({
 }
 
 export function prettyTime(time: number): string {
-  const output =
-    time > 1000 ? (Math.round(time / 100) / 10).toFixed(1) + 's' : time + 'ms'
+  const output = time > 1000 ? (Math.round(time / 100) / 10).toFixed(1) + 's' : time + 'ms'
   return chalk.cyan(output)
 }
