@@ -28,15 +28,14 @@ impl SimpleNestedBuilder {
         let ValueSplit { values, lists, nested } = map.split();
 
         let f = model.fields().find_from_all(&name);
-        let (relation_field, _) = match &f {
+        let (relation_field, relation_model) = match &f {
             Ok(ModelField::Relation(f)) => (Arc::clone(&f), f.related_model()),
-            _ => unimplemented!(),
+            wat => panic!("{:#?}", wat),
         };
 
-        let model = Arc::clone(&relation_field.related_model());
         let non_list_args = values.to_prisma_values().into();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_mutactions = build_nested_root(&name, &nested, model, top_level)?;
+        let nested_mutactions = build_nested_root(&name, &nested, relation_model, top_level)?;
 
         match kind {
             "create" => {
@@ -50,7 +49,7 @@ impl SimpleNestedBuilder {
                     relation_field,
                     nested_mutactions,
                 });
-            },
+            }
             "delete" => {
                 mutations.deletes.push(NestedDeleteNode { relation_field, where_ });
             }

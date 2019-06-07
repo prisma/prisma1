@@ -132,8 +132,7 @@ impl ValueMap {
     }
 
     pub fn to_node_selector(&self, model: ModelRef) -> Option<NodeSelector> {
-        self
-            .0
+        self.0
             .iter()
             .filter_map(|(field, value)| {
                 model
