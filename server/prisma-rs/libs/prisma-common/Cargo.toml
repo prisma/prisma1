@@ -14,3 +14,4 @@ uuid = "0.7"
 failure = "0.1"
 failure_derive = "0.1"
 regex = "1.1"
+datamodel = { path = "../datamodel" }

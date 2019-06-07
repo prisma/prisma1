@@ -1720,6 +1720,7 @@ dependencies = [
 name = "prisma-common"
 version = "0.0.0"
 dependencies = [
+ "datamodel 0.1.0",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 1.1.6 (registry+https://github.com/rust-lang/crates.io-index)",

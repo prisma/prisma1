@@ -22,7 +22,7 @@ type Pool = r2d2::Pool<SqliteConnectionManager>;
 /// SQLite is a C-language library that implements a small, fast,
 /// self-contained, high-reliability, full-featured, SQL database engine.
 pub struct Sqlite {
-    databases_folder_path: String,
+    file_path: String,
     pool: Pool,
     test_mode: bool,
 }
@@ -210,13 +210,13 @@ impl<'a> ToSqlRow for SqliteRow<'a> {
 
 impl Sqlite {
     /// Creates a new SQLite pool connected into local memory.
-    pub fn new(databases_folder_path: String, connection_limit: u32, test_mode: bool) -> SqlResult<Sqlite> {
+    pub fn new(file_path: String, connection_limit: u32, test_mode: bool) -> SqlResult<Sqlite> {
         let pool = r2d2::Pool::builder()
             .max_size(connection_limit)
             .build(SqliteConnectionManager::memory())?;
 
         Ok(Sqlite {
-            databases_folder_path,
+            file_path,
             pool,
             test_mode,
         })
@@ -240,9 +240,8 @@ impl Sqlite {
 
         if !databases.contains(db_name) {
             // This is basically hacked until we have a full rust stack with a migration engine.
-            // Currently, the scala tests use the JNA library to write to the database. This
-            let database_file_path = format!("{}/{}.db", self.databases_folder_path, db_name);
-            conn.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), db_name])?;
+            // Currently, the scala tests use the JNA library to write to the database.
+            conn.execute("ATTACH DATABASE ? AS ?", &[self.file_path.as_ref(), db_name])?;
         }
 
         conn.execute("PRAGMA foreign_keys = ON", NO_PARAMS)?;

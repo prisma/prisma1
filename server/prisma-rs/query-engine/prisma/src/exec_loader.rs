@@ -1,12 +1,12 @@
 use core::{Executor, ReadQueryExecutor, WriteQueryExecutor};
-use prisma_common::config::{ConnectionLimit, FileConfig, PrismaConfig, PrismaDatabase};
+use datamodel::Source;
 use std::convert::TryFrom;
 use std::sync::Arc;
 
 #[cfg(feature = "sql")]
 use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite, Transactional};
 
-pub fn load(config: &PrismaConfig) -> Executor {
+pub fn load(config: &Vec<Source>) -> Executor {
     match config.databases.get("default") {
         #[cfg(feature = "sql")]
         Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => sqlite(config),

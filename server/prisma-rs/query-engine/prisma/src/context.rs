@@ -1,13 +1,13 @@
-use crate::{data_model_loader::*, exec_loader, PrismaResult};
+use crate::{data_model_loader::*, exec_loader, PrismaError, PrismaResult};
 use core::{BuildMode, Executor, QuerySchema, QuerySchemaBuilder, SupportedCapabilities};
-use prisma_common::config::{self, PrismaConfig};
+use datamodel::{Datamodel, Source};
+use prisma_common::config::load as load_config;
 use prisma_models::InternalDataModelRef;
 
+/// Prisma request context containing all immutable state of the process.
+/// There is usually only one context initialized per process.
 #[derive(DebugStub)]
 pub struct PrismaContext {
-    /// Prisma configuration (from prisma.yml).
-    pub config: PrismaConfig,
-
     /// Internal data model used throughout the query engine.
     pub internal_data_model: InternalDataModelRef,
 
@@ -35,18 +35,26 @@ impl PrismaContext {
     /// 3. The data model is converted to the internal data model.
     /// 4. The api query schema is constructed from the internal data model.
     pub fn new() -> PrismaResult<Self> {
-        // Load config and executors
-        let config = config::load().unwrap();
-        let executor = exec_loader::load(&config);
-
-        // Find db name. This right here influences how data is queried for postgres, for example.
-        // Specifically, this influences the schema part of: `database`.`schema`.`table`.
-        // Other connectors do not use schema and the database key of the config will be used instead.
-        let db = config.databases.get("default").unwrap();
-        let db_name = db.schema().or_else(|| db.db_name()).unwrap_or_else(|| "prisma".into());
-
         // Load data model in order of precedence.
-        let (sdl, dm, internal_data_model) = load_data_model_components(db_name)?;
+        let (sdl, v2components, template) = load_data_model_components()?;
+
+        // Deconstruct v2 components if present, and fall back to loading the legacy config
+        // to get data sources for connector initialization if no v2 data model was loaded.
+        let (dm, data_sources): (Option<Datamodel>, Vec<Box<dyn Source>>) = v2components
+            .map(|v2| Ok((Some(v2.datamodel), v2.data_sources)))
+            .unwrap_or_else(|| {
+                let data_sources = Self::data_sources_from_config()?;
+                Ok((None, data_sources))
+            })?;
+
+        // Load executors (connector)
+        let executor = exec_loader::load(&data_sources);
+
+        // Find DB name WIP
+        let db_name: String = "".into();
+
+        // Build internal data model
+        let internal_data_model = template.build(db_name);
 
         // Construct query schema
         let capabilities = SupportedCapabilities::empty(); // todo connector capabilities.
@@ -56,7 +64,6 @@ impl PrismaContext {
         // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
 
         Ok(Self {
-            config,
             internal_data_model,
             query_schema,
             sdl,
@@ -64,4 +71,26 @@ impl PrismaContext {
             executor,
         })
     }
+
+    /// Fallback function for legacy config.
+    fn data_sources_from_config() -> PrismaResult<Vec<Box<dyn Source>>> {
+        let config = load_config().map_err(|_| {
+            // Fallback failed
+            PrismaError::ConfigurationError(
+                "Unable to load Prisma configuration from any source.
+                 If Prisma was initialized using data model v1,
+                 make sure to provide PRISMA_CONFIG or PRISMA_CONFIG_PATH."
+                    .into(),
+            )
+        })?;
+
+        unimplemented!()
+    }
+
+    // Find db name. This right here influences how data is queried for postgres, for example.
+    // Specifically, this influences the schema part of: `database`.`schema`.`table`.
+    // Other connectors do not use schema and the database key of the config will be used instead.
+    // let db_name = db.schema().or_else(|| db.db_name()).unwrap_or_else(|| "prisma".into());
+
+    // fn db_name()
 }
