@@ -58,17 +58,13 @@ impl WriteQuery {
         match self.inner {
             // We ignore Deletes because they were already handled
             RootMutation::DeleteNode(_) | RootMutation::DeleteNodes(_) => None,
-            RootMutation::CreateNode(_) => SingleBuilder::new()
-                .setup(self.model(), &field)
-                .build()
-                .ok()
-                .map(|q| ReadQuery::RecordQuery(q)),
-
-            RootMutation::UpdateNode(_) => SingleBuilder::new()
-                .setup(self.model(), &field)
-                .build()
-                .ok()
-                .map(|q| ReadQuery::RecordQuery(q)),
+            RootMutation::CreateNode(_) | RootMutation::UpdateNode(_) | RootMutation::UpsertNode(_) => {
+                SingleBuilder::new()
+                    .setup(self.model(), &field)
+                    .build()
+                    .ok()
+                    .map(|q| ReadQuery::RecordQuery(q))
+            }
             _ => unimplemented!(),
         }
     }
