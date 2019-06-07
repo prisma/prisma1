@@ -56,9 +56,10 @@ impl RpcApi {
 }
 
 fn convert_error(command_error: CommandError) -> jsonrpc_core::types::error::Error {
+    let json = serde_json::to_value(command_error).expect("rendering the errors as json failed.");
     jsonrpc_core::types::error::Error {
         code: jsonrpc_core::types::error::ErrorCode::ServerError(4466),
-        message: format!("{:?}", command_error),
-        data: None,
+        message: "".to_string(), //format!("{:?}", command_error),
+        data: Some(json),
     }
 }

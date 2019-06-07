@@ -26,7 +26,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
                 .infer(&Datamodel::empty(), &self.input.assume_to_be_applied)
         };
 
-        let next_data_model = engine.parse_datamodel(&self.input.data_model);
+        let next_data_model = datamodel::parse(&self.input.data_model)?;
 
         let model_migration_steps = engine
             .datamodel_migration_steps_inferrer()
