@@ -37,10 +37,10 @@
     p-retry "^4.1.0"
     progress "^2.0.3"
 
-"@prisma/lift@^0.0.20":
-  version "0.0.20"
-  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.20.tgz#86c3cba2018a1a462701f8b4f7f770b28130577d"
-  integrity sha512-FLT8zjO9SOr/zWGfoTBID4m1kdKUBCi0r97rPMbDVs5+jbzdukBw9GsycHVZvJJsKfFPd/ycKCUhF1OdJiqJhg==
+"@prisma/lift@^0.0.22":
+  version "0.0.22"
+  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.22.tgz#afeb452bb4155fa1b65b7ac3492465e1e75e2ffa"
+  integrity sha512-PEbckqzC3+Y5glPqc1s5GRXJosKFKKqcUZqTs70X/G4PIYC2vMzkh6gBKh7MFoBGGPXfDsk1Z9MdDleNeDIdew==
   dependencies:
     "@prisma/cli" "^0.0.4"
     "@prisma/fetch-engine" "^0.0.13"
@@ -56,7 +56,7 @@
     indent-string "^4.0.0"
     log-update "^3.2.0"
     p-map "^2.1.0"
-    prisma-datamodel "^1.36.0-alpha.2"
+    prisma-datamodel "^1.36.0-test.1"
     prompts "^2.1.0"
     string-width "^4.1.0"
     strip-ansi "^5.2.0"
@@ -1877,7 +1877,7 @@ postgres-interval@^1.1.0:
   dependencies:
     xtend "^4.0.0"
 
-prisma-datamodel@1.36.0-alpha.6, prisma-datamodel@^1.36.0-alpha.6:
+prisma-datamodel@1.36.0-alpha.6:
   version "1.36.0-alpha.6"
   resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.36.0-alpha.6.tgz#c4d03d5018c055512b4c8f85b8a512598983e8f9"
   integrity sha512-xhB0HFKzBrJ04ErB9QbO4qheGHY1NYbgr7YFtd/zwPUbiRSFLKiO5BHf9JvtFPCRgV2JWAaWU0gOzqArrYNGRw==
@@ -1887,10 +1887,10 @@ prisma-datamodel@1.36.0-alpha.6, prisma-datamodel@^1.36.0-alpha.6:
     pluralize "^7.0.0"
     popsicle "10"
 
-prisma-datamodel@^1.36.0-alpha.2:
-  version "1.36.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.36.0-alpha.2.tgz#4ed0bdd70506436dc8540c15ce040f0b8e2e490d"
-  integrity sha512-6YLhLUB+eUCl98mmuim8ETmeAjwAqpYbMYrjPW8bPPX5fQbBg/cQNxD/X9opuTa+a+rJHaO1/Q2D6l6FWI7ZvQ==
+prisma-datamodel@^1.36.0-test.1:
+  version "1.36.0-test.1"
+  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.36.0-test.1.tgz#90aeed32679c1cc41f647a8af8c1ae65700889a2"
+  integrity sha512-2k5jJYhFR/5nTH739gPu8m3LQUbaUAn0J+pFnLU4yKClocR+Pi3f+5mh9tW3TSk1y74iVT+a5/y/1JKSdTy1cw==
   dependencies:
     debug "^4.1.1"
     graphql "^14.3.0"

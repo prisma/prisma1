@@ -112,48 +112,50 @@ export function isdlToDmmfDatamodel(
         name: type.name,
         isEmbedded: type.isEmbedded,
         dbName: type.databaseName,
-        fields: type.fields.map(field => {
-          const kind = getKind(field, enumMap)
-          let defaultValue
-          if (field.type === 'ID') {
-            defaultValue = {
-              name: 'cuid',
-              returnType: 'String',
-              args: [],
+        fields: type.fields
+          .filter(f => f.type !== 'Json')
+          .map(field => {
+            const kind = getKind(field, enumMap)
+            let defaultValue
+            if (field.type === 'ID') {
+              defaultValue = {
+                name: 'cuid',
+                returnType: 'String',
+                args: [],
+              }
             }
-          }
 
-          if (field.type === 'UUID') {
-            defaultValue = {
-              name: 'uuid',
-              returnType: 'String',
-              args: [],
+            if (field.type === 'UUID') {
+              defaultValue = {
+                name: 'uuid',
+                returnType: 'String',
+                args: [],
+              }
             }
-          }
 
-          if (field.isCreatedAt) {
-            defaultValue = {
-              name: 'now',
-              returnType: 'DateTime',
-              args: [],
+            if (field.isCreatedAt) {
+              defaultValue = {
+                name: 'now',
+                returnType: 'DateTime',
+                args: [],
+              }
             }
-          }
 
-          return {
-            name: field.name,
-            kind,
-            dbName: field.databaseName,
-            isGenerated: false,
-            isId: field.isId,
-            isList: field.isList,
-            isRequired: field.isRequired,
-            isUnique: field.isUnique,
-            relationName: field.relationName,
-            type: mapIdType(getType(field)),
-            default: defaultValue,
-            isUpdatedAt: field.isUpdatedAt,
-          } as DMMF.Field
-        }),
+            return {
+              name: field.name,
+              kind,
+              dbName: field.databaseName,
+              isGenerated: false,
+              isId: field.isId,
+              isList: field.isList,
+              isRequired: field.isRequired,
+              isUnique: field.isUnique,
+              relationName: field.relationName,
+              type: mapIdType(getType(field)),
+              default: defaultValue,
+              isUpdatedAt: field.isUpdatedAt,
+            } as DMMF.Field
+          }),
       }
     })
 

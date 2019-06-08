@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@prisma/cli": "^0.0.4",
-    "@prisma/lift": "^0.0.20",
+    "@prisma/lift": "^0.0.22",
     "ajv": "^6.10.0",
     "dotenv": "^8.0.0",
     "figures": "^3.0.0",
@@ -31,7 +31,7 @@
     "ink-text-input": "^3.2.0",
     "jsonwebtoken": "^8.5.1",
     "ora": "^3.4.0",
-    "prisma-datamodel": "^1.36.0-alpha.6",
+    "prisma-datamodel": "^1.36.0-test.1",
     "prisma-db-introspection": "^1.36.0-alpha.6",
     "react": "^16.8.6",
     "scuid": "^1.1.0",
