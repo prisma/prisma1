@@ -16,7 +16,7 @@ import {
 } from './introspect/util'
 import { promptIntrospectionInteractively } from './prompts/CredentialPrompt'
 import { DatabaseCredentials, IntrospectionResult } from './types'
-import { isdlToDatamodel2 } from '@prisma/lift'
+import { isdlToDatamodel2, LiftEngine } from '@prisma/lift'
 
 type Args = {
   '--interactive': BooleanConstructor
@@ -56,11 +56,16 @@ type Args = {
 }
 
 export class Introspect implements Command {
+  lift: LiftEngine
   static new(env: Env): Introspect {
     return new Introspect(env)
   }
 
-  private constructor(private readonly env: Env) {}
+  private constructor(private readonly env: Env) {
+    this.lift = new LiftEngine({
+      projectDir: env.cwd,
+    })
+  }
 
   async parse(argv: string[]): Promise<any> {
     // parse the arguments according to the spec
@@ -157,7 +162,7 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
     const introspection = await connector.introspect(databaseName)
     const sdl = await introspection.getNormalizedDatamodel()
 
-    const renderedSdl = await isdlToDatamodel2(sdl)
+    const renderedSdl = await isdlToDatamodel2(sdl, [])
     const after = Date.now()
 
     const numTables = sdl.types.length
@@ -181,7 +186,7 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
   }
 
   async introspectDatabase(args: Result<Args>, sdl: boolean | undefined): Promise<IntrospectionResult> {
-    const credentialsByFlag = this.getCredentialsByFlags(args)
+    const credentialsByFlag = this.getCredentialsByFlags(args) || (await this.getCredentialsFromExistingDatamodel())
 
     // Get everything interactively
     if (!credentialsByFlag) {

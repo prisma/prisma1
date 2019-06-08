@@ -1,4 +1,4 @@
-import { ISDL, IGQLField } from '../datamodel/model'
+import { ISDL, IGQLField, IGQLType } from '../datamodel/model'
 import { isTypeIdentifier } from '../datamodel/scalar'
 import { keyBy, Dictionary } from './util'
 
@@ -56,9 +56,12 @@ export namespace DMMF {
 function getKind(
   field: IGQLField,
   enumMap: Dictionary<DMMF.Enum>,
-): DMMF.FieldKind {
-  if (typeof field.type === 'string' && isTypeIdentifier(field.type)) {
-    return 'scalar'
+): DMMF.FieldKind | undefined {
+  if (typeof field.type === 'string') {
+    if (isTypeIdentifier(field.type)) {
+      return 'scalar'
+    }
+    return undefined
   }
 
   if (typeof field.type === 'string') {
@@ -106,14 +109,14 @@ export function isdlToDmmfDatamodel(
   const enumMap = keyBy(enums, e => e.name)
 
   const models: DMMF.Model[] = isdl.types
-    .filter(t => !t.isEnum)
+    .filter(t => !t.isEnum && hasId(t))
     .map(type => {
       return {
         name: type.name,
         isEmbedded: type.isEmbedded,
         dbName: type.databaseName,
         fields: type.fields
-          .filter(f => f.type !== 'Json')
+          .filter(f => f.type !== 'Json' && getKind(f, enumMap))
           .map(field => {
             const kind = getKind(field, enumMap)
             let defaultValue
@@ -160,4 +163,8 @@ export function isdlToDmmfDatamodel(
     })
 
   return { dmmf: { models, enums }, dataSources }
+}
+
+function hasId(type: IGQLType) {
+  return type.fields.some(f => f.isId)
 }
