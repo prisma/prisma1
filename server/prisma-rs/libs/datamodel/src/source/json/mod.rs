@@ -38,10 +38,10 @@ fn source_from_json(source: &SourceConfig, loader: &source::SourceLoader) -> Box
 }
 
 pub fn sources_from_json_with_plugins(
-    dmmf: &str,
+    json: &str,
     source_definitions: Vec<Box<source::SourceDefinition>>,
 ) -> Vec<Box<source::Source>> {
-    let dmmf_sources = serde_json::from_str::<Vec<SourceConfig>>(&dmmf).expect("Failed to parse JSON");
+    let json_sources = serde_json::from_str::<Vec<SourceConfig>>(&json).expect("Failed to parse JSON");
     let mut res = Vec::new();
 
     let mut source_loader = source::SourceLoader::new();
@@ -52,15 +52,15 @@ pub fn sources_from_json_with_plugins(
         source_loader.add_source_definition(source);
     }
 
-    for source in dmmf_sources {
+    for source in json_sources {
         res.push(source_from_json(&source, &source_loader))
     }
 
     res
 }
 
-pub fn sources_from_json(dmmf: &str) -> Vec<Box<source::Source>> {
-    sources_from_json_with_plugins(dmmf, Vec::new())
+pub fn sources_from_json(json: &str) -> Vec<Box<source::Source>> {
+    sources_from_json_with_plugins(json, Vec::new())
 }
 
 fn source_to_json(source: &Box<source::Source>) -> SourceConfig {
