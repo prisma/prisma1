@@ -75,7 +75,11 @@ function getKind(
 }
 
 function mapIdType(type: string): string {
-  return type === 'ID' ? 'String' : type
+  const map = {
+    ID: 'String',
+    UUID: 'String',
+  }
+  return map[type] || type
 }
 
 function getType(field: IGQLField): string {
@@ -114,6 +118,14 @@ export function isdlToDmmfDatamodel(
           if (field.type === 'ID') {
             defaultValue = {
               name: 'cuid',
+              returnType: 'String',
+              args: [],
+            }
+          }
+
+          if (field.type === 'UUID') {
+            defaultValue = {
+              name: 'uuid',
               returnType: 'String',
               args: [],
             }
