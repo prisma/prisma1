@@ -1877,21 +1877,12 @@ postgres-interval@^1.1.0:
   dependencies:
     xtend "^4.0.0"
 
-prisma-datamodel@1.36.0-alpha.3:
-  version "1.36.0-alpha.3"
-  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.36.0-alpha.3.tgz#7bda8ec1a945dacf2d6e6a467e4c29ca5fe4bff1"
-  integrity sha512-zDc2FoXRY1p44F3qYG0qXwCqco6aFbUSwiMkyzMTUx6jah82FaMWWx8WFVdw0wT0bm8SDdeQ6GBqRbgWPKCPHA==
+prisma-datamodel@1.36.0-alpha.6, prisma-datamodel@^1.36.0-alpha.6:
+  version "1.36.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.36.0-alpha.6.tgz#c4d03d5018c055512b4c8f85b8a512598983e8f9"
+  integrity sha512-xhB0HFKzBrJ04ErB9QbO4qheGHY1NYbgr7YFtd/zwPUbiRSFLKiO5BHf9JvtFPCRgV2JWAaWU0gOzqArrYNGRw==
   dependencies:
     debug "^4.1.1"
-    graphql "^14.3.0"
-    pluralize "^7.0.0"
-    popsicle "10"
-
-prisma-datamodel@^1.34.0:
-  version "1.34.0"
-  resolved "https://registry.yarnpkg.com/prisma-datamodel/-/prisma-datamodel-1.34.0.tgz#2a3d153845619e376efa48960a421d7c56f10b62"
-  integrity sha512-e5s4cBXJpmOREM6odIqQZEuVrqPFPO2inVERgebyzVNi6aOGcv2w4bB+FLqyDvsHZ+0hpSOQvhvw5JjF0+/nBQ==
-  dependencies:
     graphql "^14.3.0"
     pluralize "^7.0.0"
     popsicle "10"
@@ -1906,10 +1897,10 @@ prisma-datamodel@^1.36.0-alpha.2:
     pluralize "^7.0.0"
     popsicle "10"
 
-prisma-db-introspection@^1.36.0-alpha.3:
-  version "1.36.0-alpha.3"
-  resolved "https://registry.yarnpkg.com/prisma-db-introspection/-/prisma-db-introspection-1.36.0-alpha.3.tgz#37cd5c5753a5fa17a5ecfd133dd169165d3cd963"
-  integrity sha512-1kJjWs6IvLsp7xzRfslEeijx/5MqnYSgQEd1DKrgOMcc4h59zFE2ndrsFpQ7Hy6zdUgHKT8wEQQ7Qv7cMrfVAw==
+prisma-db-introspection@^1.36.0-alpha.6:
+  version "1.36.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/prisma-db-introspection/-/prisma-db-introspection-1.36.0-alpha.6.tgz#be8528c002f37b713e27cf2f1e82fbf3aa379530"
+  integrity sha512-ZzSqLWQHHFlg/Uny5Yl/bGyujH2U3+ljarZjng1KbngWwjJfru7ZiBWjB86tKfceK4/sx7AQhzgMpqP8ja58jQ==
   dependencies:
     "@types/mongodb" "^3.1.14"
     "@types/mysql" "^2.15.5"
@@ -1919,8 +1910,8 @@ prisma-db-introspection@^1.36.0-alpha.3:
     mysql "^2.16.0"
     pg "^7.4.1"
     pluralize "^7.0.0"
-    prisma-datamodel "1.36.0-alpha.3"
-    prisma-yml "1.36.0-alpha.3"
+    prisma-datamodel "1.36.0-alpha.6"
+    prisma-yml "1.36.0-alpha.6"
     scuid "^1.0.2"
 
 prisma-json-schema@0.1.3:
@@ -1928,10 +1919,10 @@ prisma-json-schema@0.1.3:
   resolved "https://registry.yarnpkg.com/prisma-json-schema/-/prisma-json-schema-0.1.3.tgz#6c302db8f464f8b92e8694d3f7dd3f41ac9afcbe"
   integrity sha512-XZrf2080oR81mY8/OC8al68HiwBm0nXlFE727JIia0ZbNqwuV4MyRYk6E0+OIa6/9KEYxZrcAmoBs3EW1cCvnA==
 
-prisma-yml@1.36.0-alpha.3:
-  version "1.36.0-alpha.3"
-  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.36.0-alpha.3.tgz#819e9a2d254dbe1d933319d4e2dea95611c9efe5"
-  integrity sha512-OUz90iEi90WEZ6dXWhAwaI+Q8KEOWVgCeTg2aorWCWYq5f8cG6C4ZitTmXJqVhmItjZ8CAOvPCqdx+5d2qWdQA==
+prisma-yml@1.36.0-alpha.6:
+  version "1.36.0-alpha.6"
+  resolved "https://registry.yarnpkg.com/prisma-yml/-/prisma-yml-1.36.0-alpha.6.tgz#0833ceda4f3554ffdcef5f870d1021102722c542"
+  integrity sha512-GGpETFFW04oXaZu5PaFIWlkY9d/E0APGEpXzQ9D00CAtG+ppPMx/IK2CI/IAv37NvK3JEEqctEvfiH5lgouASA==
   dependencies:
     ajv "5"
     bluebird "^3.5.1"

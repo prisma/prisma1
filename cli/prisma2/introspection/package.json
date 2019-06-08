@@ -31,8 +31,8 @@
     "ink-text-input": "^3.2.0",
     "jsonwebtoken": "^8.5.1",
     "ora": "^3.4.0",
-    "prisma-datamodel": "^1.34.0",
-    "prisma-db-introspection": "^1.36.0-alpha.3",
+    "prisma-datamodel": "^1.36.0-alpha.6",
+    "prisma-db-introspection": "^1.36.0-alpha.6",
     "react": "^16.8.6",
     "scuid": "^1.1.0",
     "string-width": "^4.1.0"
