@@ -113,9 +113,9 @@ export class Introspect implements Command {
     try {
       const sdl = args['--sdl']
       /**
-       * Get connector and connect to database
+       * Introspect
        */
-      const { sdl: newDatamodelSdl, numTables, referenceDatamodelExists } = await this.getConnectorWithDatabase(
+      const { sdl: newDatamodelSdl, numTables, referenceDatamodelExists, time } = await this.introspectDatabase(
         args,
         sdl,
       )
@@ -126,10 +126,10 @@ export class Introspect implements Command {
          */
         const fileName = this.writeDatamodel(newDatamodelSdl)
 
-        console.log(`Created datamodel definition based on ${numTables} database tables.`)
+        console.log(`\nCreated datamodel definition based on ${numTables} database tables`)
         const andDatamodelText = referenceDatamodelExists ? ' and the existing datamodel' : ''
         console.log(`\
-${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived from existing database${andDatamodelText})
+${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing database${andDatamodelText})
 
   ${chalk.cyan(fileName)}
 `)
@@ -153,10 +153,12 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
   }
 
   async introspect({ connector, databaseType, databaseName }: ConnectorData): Promise<IntrospectionResult> {
+    const before = Date.now()
     const introspection = await connector.introspect(databaseName)
     const sdl = await introspection.getNormalizedDatamodel()
 
     const renderedSdl = await isdlToDatamodel2(sdl)
+    const after = Date.now()
 
     const numTables = sdl.types.length
     if (numTables === 0) {
@@ -167,6 +169,7 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
       sdl: renderedSdl,
       numTables,
       referenceDatamodelExists: false,
+      time: after - before,
     }
   }
 
@@ -177,14 +180,14 @@ ${chalk.bold('Created 1 new file:')}    GraphQL SDL-based datamodel (derived fro
     return fileName
   }
 
-  async getConnectorWithDatabase(args: Result<Args>, sdl: boolean | undefined): Promise<IntrospectionResult> {
+  async introspectDatabase(args: Result<Args>, sdl: boolean | undefined): Promise<IntrospectionResult> {
     const credentialsByFlag = this.getCredentialsByFlags(args)
 
     // Get everything interactively
     if (!credentialsByFlag) {
-      const connectorData = await promptIntrospectionInteractively(this.introspect.bind(this))
+      const introspectionResult = await promptIntrospectionInteractively(this.introspect.bind(this))
 
-      return connectorData
+      return introspectionResult
     }
 
     // Get connector from flags

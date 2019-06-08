@@ -180,7 +180,9 @@ export function populateMongoDatabase({
   }
 }
 
+export function minimalPrettyTime(time: number): string {
+  return time > 1000 ? (Math.round(time / 100) / 10).toFixed(1) + 's' : time + 'ms'
+}
 export function prettyTime(time: number): string {
-  const output = time > 1000 ? (Math.round(time / 100) / 10).toFixed(1) + 's' : time + 'ms'
-  return chalk.cyan(output)
+  return chalk.cyan(minimalPrettyTime(time))
 }

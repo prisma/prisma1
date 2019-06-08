@@ -18,4 +18,5 @@ export interface IntrospectionResult {
   sdl: string
   numTables: number
   referenceDatamodelExists: boolean
+  time: number
 }

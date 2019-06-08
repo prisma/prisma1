@@ -6,11 +6,14 @@ import {
   ConnectorData,
   getConnectedConnectorFromCredentials,
   getDatabaseSchemas,
+  prettyTime,
+  minimalPrettyTime,
 } from '../introspect/util'
 import { OnSubmitParams, Prompt } from '../prompt-lib/BoxPrompt'
 import { SelectElement } from '../prompt-lib/types'
 import { DatabaseCredentials, IntrospectionResult } from '../types'
 import { CHOOSE_DB_ELEMENTS, CONNECT_DB_ELEMENTS } from './prompts-elements'
+import chalk from 'chalk'
 
 enum Steps {
   CHOOSE_DB,
@@ -105,10 +108,7 @@ const dbTypeTodbName: Record<DatabaseType, string> = {
  * WARNING: If you add more steps, make sure to add a `key` to the `<Prompt />`, otherwise the state between each prompt will be shared
  */
 const IntrospectionPrompt: React.FC<Props> = props => {
-  const [state, dispatch] = React.useReducer<React.Reducer<State, ActionType>>(
-    reducer,
-    initialState,
-  )
+  const [state, dispatch] = React.useReducer<React.Reducer<State, ActionType>>(reducer, initialState)
 
   switch (state.step) {
     case Steps.CHOOSE_DB:
@@ -131,9 +131,7 @@ const IntrospectionPrompt: React.FC<Props> = props => {
         <Prompt
           key={Steps.CONNECT_DB}
           elements={CONNECT_DB_ELEMENTS(state.credentials.type!)}
-          title={`Enter the ${
-            dbTypeTodbName[state.credentials.type!]
-          } credentials`}
+          title={`Enter the ${dbTypeTodbName[state.credentials.type!]} credentials`}
           initialFormValues={state.credentials}
           onSubmit={onConnectOrTest(state, dispatch)}
           withBackButton
@@ -144,12 +142,7 @@ const IntrospectionPrompt: React.FC<Props> = props => {
         <Prompt
           key={Steps.CHOOSE_SCHEMA}
           title="Select the schema you want to introspect"
-          onSubmit={async ({
-            selectedValue,
-            goBack,
-            startSpinner,
-            stopSpinner,
-          }) => {
+          onSubmit={async ({ selectedValue, goBack, startSpinner, stopSpinner }) => {
             if (goBack) {
               return dispatch({
                 type: 'back',
@@ -158,6 +151,7 @@ const IntrospectionPrompt: React.FC<Props> = props => {
             }
 
             try {
+              const before = Date.now()
               startSpinner(`Introspecting ${selectedValue!}`)
               const introspectionResult = await props.introspect({
                 ...state.connectorData,
@@ -165,6 +159,11 @@ const IntrospectionPrompt: React.FC<Props> = props => {
               } as ConnectorData)
 
               await state.connectorData.disconnect!()
+
+              stopSpinner({
+                state: 'succeeded',
+                message: `Introspecting ${selectedValue!} ${chalk.bold(minimalPrettyTime(Date.now() - before))}`,
+              })
 
               props.onSubmit(introspectionResult)
             } catch (e) {
@@ -185,10 +184,7 @@ const IntrospectionPrompt: React.FC<Props> = props => {
   }
 }
 
-function onConnectOrTest(
-  state: State,
-  dispatch: React.Dispatch<ActionType>,
-): (params: OnSubmitParams) => void {
+function onConnectOrTest(state: State, dispatch: React.Dispatch<ActionType>): (params: OnSubmitParams) => void {
   return async params => {
     const newCredentials = {
       ...state.credentials,
@@ -223,9 +219,7 @@ async function onConnect(
   params.startSpinner()
 
   try {
-    const connectorAndDisconnect = await getConnectedConnectorFromCredentials(
-      credentials,
-    )
+    const connectorAndDisconnect = await getConnectedConnectorFromCredentials(credentials)
     const schemas = await getDatabaseSchemas(connectorAndDisconnect.connector)
 
     params.stopSpinner({ state: 'succeeded' })
@@ -245,10 +239,7 @@ async function onConnect(
   }
 }
 
-async function onTest(
-  params: OnSubmitParams,
-  credentials: DatabaseCredentials,
-) {
+async function onTest(params: OnSubmitParams, credentials: DatabaseCredentials) {
   params.startSpinner()
 
   try {
