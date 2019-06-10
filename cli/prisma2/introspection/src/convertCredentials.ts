@@ -1,6 +1,7 @@
 import { DatabaseCredentials } from './types'
 import { DatabaseType } from 'prisma-datamodel'
 import { URL } from 'url'
+import { ConnectorType } from '@prisma/lift'
 
 export function credentialsToUri(credentials: DatabaseCredentials): string {
   const type = databaseTypeToProtocol(credentials.type)
@@ -10,11 +11,19 @@ export function credentialsToUri(credentials: DatabaseCredentials): string {
   const url = new URL(type + '//')
 
   if (credentials.host) {
-    url.host = credentials.host
+    url.hostname = credentials.host
   }
 
-  if (credentials.database) {
-    url.pathname = '/' + credentials.database
+  if (credentials.type === DatabaseType.postgres) {
+    if (credentials.database) {
+      url.pathname = '/' + credentials.database
+    }
+
+    if (credentials.schema) {
+      url.searchParams.set('schema', credentials.schema)
+    }
+  } else if (credentials.type === DatabaseType.mysql) {
+    url.pathname = '/' + (credentials.database || credentials.schema)
   }
 
   if (credentials.user) {
@@ -27,10 +36,6 @@ export function credentialsToUri(credentials: DatabaseCredentials): string {
 
   if (credentials.port) {
     url.port = String(credentials.port)
-  }
-
-  if (credentials.schema) {
-    url.searchParams.set('schema', credentials.schema)
   }
 
   return url.toString()
@@ -52,7 +57,7 @@ export function uriToCredentials(connectionString: string): DatabaseCredentials 
 
   return {
     type,
-    host: exists(uri.host) ? uri.host : undefined,
+    host: exists(uri.hostname) ? uri.hostname : undefined,
     user: exists(uri.username) ? uri.username : undefined,
     port: exists(uri.port) ? Number(uri.port) : undefined,
     password: exists(uri.password) ? uri.password : undefined,
@@ -88,4 +93,16 @@ function protocolToDatabaseType(protocol: string): DatabaseType {
   }
 
   throw new Error(`Unknown database type ${protocol}`)
+}
+
+export function databaseTypeToConnectorType(databaseType: DatabaseType): ConnectorType {
+  switch (databaseType) {
+    case DatabaseType.postgres:
+      return 'postgres'
+    case DatabaseType.mysql:
+      return 'mysql'
+    case DatabaseType.sqlite:
+      return 'sqlite'
+  }
+  throw new Error(`Mongo is not yet supported`)
 }

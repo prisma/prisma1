@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@prisma/cli": "^0.0.4",
-    "@prisma/lift": "^0.0.26",
+    "@prisma/lift": "^0.0.29",
     "ajv": "^6.10.0",
     "dotenv": "^8.0.0",
     "figures": "^3.0.0",
