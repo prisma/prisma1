@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
 use crate::migration_engine::MigrationEngine;
 
 pub struct UnapplyMigrationCommand {
@@ -54,4 +54,10 @@ pub struct UnapplyMigrationOutput {
     pub rolled_back: String,
     pub active: Option<String>,
     pub errors: Vec<String>,
+}
+
+impl MigrationCommandInput for UnapplyMigrationInput {
+    fn config(&self) -> &str {
+        &self.project_info
+    }
 }

@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
 use crate::migration_engine::MigrationEngine;
 
 pub struct ListDataSourcesCommand {
@@ -27,4 +27,10 @@ impl MigrationCommand for ListDataSourcesCommand {
 pub struct ListDataSourcesInput {
     pub project_info: String,
     pub datamodel: String,
+}
+
+impl MigrationCommandInput for ListDataSourcesInput {
+    fn config(&self) -> &str {
+        &self.project_info
+    }
 }

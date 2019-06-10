@@ -18,6 +18,8 @@ use sql_destructive_changes_checker::*;
 pub use sql_migration::*;
 use sql_migration_persistence::*;
 use std::sync::Arc;
+use url::Url;
+use std::path::Path;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
@@ -30,12 +32,29 @@ pub struct SqlMigrationConnector {
     database_inspector: Arc<DatabaseInspector>,
 }
 
+pub enum SqlFamily {
+    Sqlite,
+    Postgres,
+    Mysql
+}
+
 impl SqlMigrationConnector {
-    // FIXME: this must take the config as a param at some point
-    pub fn new(schema_name: String) -> SqlMigrationConnector {
-        let test_mode = false;
-        let conn =
-            std::sync::Arc::new(SqliteDatabaseClient::new(Self::databases_folder_path(), 32, test_mode).unwrap());
+    pub fn new(sql_family: SqlFamily, url: &str) -> SqlMigrationConnector {
+        // let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
+
+        let (conn, schema_name) = match sql_family { 
+            SqlFamily::Sqlite => {
+                // assert_eq!(parsed_url.scheme(), "file");
+                let path = Path::new(&url);
+                let schema_name = path.file_stem().expect("file url must contain a file name").to_str().unwrap().to_string();
+                // let folder_path = Self::databases_folder_path();
+                let folder_path = path.parent().unwrap().to_str().unwrap().to_string();
+                let test_mode = false;
+                let conn = Arc::new(SqliteDatabaseClient::new(folder_path, 32, test_mode).unwrap());
+                (conn, schema_name)
+            },
+            _ => unimplemented!()
+        };
 
         let migration_persistence = Arc::new(SqlMigrationPersistence {
             connection: Arc::clone(&conn),

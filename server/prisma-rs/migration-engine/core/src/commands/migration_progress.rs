@@ -1,4 +1,4 @@
-use crate::commands::command::{MigrationCommand, CommandResult};
+use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
 use crate::migration_engine::MigrationEngine;
 use chrono::*;
 use migration_connector::*;
@@ -51,4 +51,10 @@ pub struct MigrationProgressOutput {
     errors: Vec<String>,
     started_at: DateTime<Utc>,
     finished_at: Option<DateTime<Utc>>,
+}
+
+impl MigrationCommandInput for MigrationProgressInput {
+    fn config(&self) -> &str {
+        &self.project_info
+    }
 }

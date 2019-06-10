@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
 use crate::migration_engine::MigrationEngine;
 use datamodel;
 
@@ -38,4 +38,10 @@ pub struct DmmfToDmlCommandInput {
 #[serde(rename_all = "camelCase")]
 pub struct DmmfToDmlCommandOutput {
     pub datamodel: String,
+}
+
+impl MigrationCommandInput for DmmfToDmlCommandInput {
+    fn config(&self) -> &str {
+        &self.project_info
+    }
 }

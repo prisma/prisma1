@@ -4,12 +4,16 @@ use serde::Serialize;
 use std::convert::From;
 
 pub trait MigrationCommand {
-    type Input: DeserializeOwned;
+    type Input: MigrationCommandInput;
     type Output: Serialize;
 
     fn new(input: Self::Input) -> Box<Self>;
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output>;
+}
+
+pub trait MigrationCommandInput: DeserializeOwned {
+    fn config(&self) -> &str;
 }
 
 pub type CommandResult<T> = Result<T, CommandError>;

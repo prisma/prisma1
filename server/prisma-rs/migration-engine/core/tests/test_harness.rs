@@ -5,6 +5,8 @@ use migration_core::commands::*;
 use migration_core::MigrationEngine;
 use std::panic;
 
+const SCHEMA_NAME: &str = "migration_engine";
+
 #[allow(unused)]
 pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     match datamodel::parse(datamodel_string) {
@@ -25,7 +27,7 @@ where
     T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
-    let engine = MigrationEngine::new();
+    let engine = MigrationEngine::new(&sqlite_test_config());
     let connector = engine.connector();
     connector.reset();
     engine.init();
@@ -66,7 +68,7 @@ pub fn migrate_to_with_migration_id(
         dry_run: None,
     };
     let cmd = ApplyMigrationCommand::new(input);
-    let engine = MigrationEngine::new();
+    let engine = MigrationEngine::new(&sqlite_test_config());
     let _output = cmd.execute(&engine).expect("applyMigration failed");
 
     introspect_database(&engine)
@@ -74,8 +76,27 @@ pub fn migrate_to_with_migration_id(
 
 pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
     let inspector = engine.connector().database_inspector();
-    let mut result = inspector.introspect(&engine.schema_name());
+    let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
     result
+}
+
+#[allow(unused)]
+pub fn sqlite_test_config_json_escaped() -> String {
+    let config = sqlite_test_config();
+    serde_json::to_string(&serde_json::Value::String(config)).unwrap()
+}
+
+pub fn sqlite_test_config() -> String {
+    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+    let database_folder_path = format!("{}/db", server_root);
+    let file_path = format!("{}/{}.db", database_folder_path,"migration_engine");
+    format!(r#"
+        source my_db {{
+            type = "sqlite"
+            url = "file:{}"
+            default = true
+        }}
+    "#, file_path)
 }

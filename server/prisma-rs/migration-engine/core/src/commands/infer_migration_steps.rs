@@ -1,5 +1,5 @@
 use super::MigrationStepsResultOutput;
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
 use crate::migration_engine::MigrationEngine;
 use datamodel::Datamodel;
 use migration_connector::steps::*;
@@ -59,4 +59,10 @@ pub struct InferMigrationStepsInput {
     pub migration_id: String,
     pub data_model: String,
     pub assume_to_be_applied: Vec<MigrationStep>,
+}
+
+impl MigrationCommandInput for InferMigrationStepsInput {
+    fn config(&self) -> &str {
+        &self.project_info
+    }
 }

@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
 use crate::migration_engine::MigrationEngine;
 use migration_connector::steps::*;
 use migration_connector::*;
@@ -61,4 +61,10 @@ pub struct ListMigrationStepsOutput {
     pub database_steps: serde_json::Value,
     pub status: MigrationStatus,
     pub datamodel: String,
+}
+
+impl MigrationCommandInput for ListMigrationStepsInput {
+    fn config(&self) -> &str {
+        &self.project_info
+    }
 }

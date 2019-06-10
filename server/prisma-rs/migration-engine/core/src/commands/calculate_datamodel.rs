@@ -1,4 +1,4 @@
-use crate::commands::command::{MigrationCommand, CommandResult};
+use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
 use crate::migration_engine::MigrationEngine;
 use datamodel::dml::Datamodel;
 use migration_connector::*;
@@ -37,4 +37,10 @@ pub struct CalculateDatamodelInput {
 #[serde(rename_all = "camelCase")]
 pub struct CalculateDatamodelOutput {
     pub datamodel: String,
+}
+
+impl MigrationCommandInput for CalculateDatamodelInput {
+    fn config(&self) -> &str {
+        &self.project_info
+    }
 }

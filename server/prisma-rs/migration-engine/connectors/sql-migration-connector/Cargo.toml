@@ -16,3 +16,4 @@ rusqlite = { git = "https://github.com/pimeys/rusqlite", features = ["chrono", "
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 barrel = { version = "0.5.8", features = ["sqlite3"] }
 itertools = "0.8"
+url = "1.7.2"
