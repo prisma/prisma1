@@ -1,7 +1,11 @@
 use core::CoreError;
 use datamodel::errors::ErrorCollection;
 use failure::{Error, Fail};
+use prisma_common::error::CommonError;
 use serde_json;
+
+#[cfg(feature = "sql")]
+use sql_connector::SqlError;
 
 #[derive(Debug, Fail)]
 pub enum PrismaError {
@@ -57,6 +61,12 @@ impl From<CoreError> for PrismaError {
     }
 }
 
+impl From<CommonError> for PrismaError {
+    fn from(e: CommonError) -> PrismaError {
+        PrismaError::ConfigurationError(format!("{}", e))
+    }
+}
+
 impl From<serde_json::error::Error> for PrismaError {
     fn from(e: serde_json::error::Error) -> PrismaError {
         PrismaError::JsonDecodeError(e.into())
@@ -78,5 +88,12 @@ impl From<std::string::FromUtf8Error> for PrismaError {
 impl From<base64::DecodeError> for PrismaError {
     fn from(e: base64::DecodeError) -> PrismaError {
         PrismaError::ConfigurationError(format!("Invalid base64: {}", e))
+    }
+}
+
+#[cfg(feature = "sql")]
+impl From<SqlError> for PrismaError {
+    fn from(e: SqlError) -> PrismaError {
+        PrismaError::ConfigurationError(format!("{}", e))
     }
 }

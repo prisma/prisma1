@@ -18,6 +18,12 @@ pub struct InternalDataModelTemplate {
 pub struct InternalDataModel {
     pub enums: Vec<InternalEnum>,
     pub version: Option<String>,
+
+    /// Todo clarify / rename.
+    /// The db name influences how data is queried from the database.
+    /// E.g. this influences the schema part of a postgres query: `database`.`schema`.`table`.
+    /// Other connectors do not use `schema`, like postgres does, and this variable would
+    /// influence the `database` part instead.
     pub db_name: String,
 
     models: OnceCell<Vec<ModelRef>>,

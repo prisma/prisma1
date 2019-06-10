@@ -53,7 +53,7 @@ fn main() {
         }
     };
 
-    let port = context.config.port;
+    let port = 4466; //context.config.port;
     let request_context = Arc::new(RequestContext {
         context: context,
         graphql_request_handler: GraphQlRequestHandler,

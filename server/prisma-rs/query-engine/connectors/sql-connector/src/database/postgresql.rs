@@ -4,6 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
+use datamodel::source::Source;
 use native_tls::TlsConnector;
 use postgres::{
     types::{FromSql, ToSql, Type as PostgresType},
@@ -28,6 +29,16 @@ type Pool = r2d2::Pool<PostgresConnectionManager<MakeTlsConnector>>;
 /// The World's Most Advanced Open Source Relational Database
 pub struct PostgreSql {
     pool: Pool,
+}
+
+impl TryFrom<&Box<dyn Source>> for PostgreSql {
+    type Error = SqlError;
+
+    /// Todo connection limit configuration
+    fn try_from(source: &Box<dyn Source>) -> SqlResult<PostgreSql> {
+        // Sqlite::new(source.url().to_owned(), 10, false)
+        unimplemented!()
+    }
 }
 
 impl TryFrom<&PrismaDatabase> for PostgreSql {

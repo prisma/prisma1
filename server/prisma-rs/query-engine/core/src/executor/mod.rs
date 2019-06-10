@@ -70,4 +70,9 @@ impl Executor {
         // Consume pipeline into return value
         Ok(pipeline.consume())
     }
+
+    /// Returns db name used in the executor.
+    pub fn db_name(&self) -> String {
+        self.write_exec.db_name.clone()
+    }
 }

@@ -4,6 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
+use datamodel::source::Source;
 use mysql_client as my;
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
@@ -21,6 +22,16 @@ type Pool = r2d2::Pool<MysqlConnectionManager>;
 /// The World's Most Advanced Open Source Relational Database
 pub struct Mysql {
     pool: Pool,
+}
+
+impl TryFrom<&Box<dyn Source>> for Mysql {
+    type Error = SqlError;
+
+    /// Todo connection limit configuration
+    fn try_from(source: &Box<dyn Source>) -> SqlResult<Mysql> {
+        // Sqlite::new(source.url().to_owned(), 10, false)
+        unimplemented!()
+    }
 }
 
 impl TryFrom<&PrismaDatabase> for Mysql {
@@ -42,7 +53,6 @@ impl TryFrom<&ExplicitConfig> for Mysql {
 
     fn try_from(e: &ExplicitConfig) -> SqlResult<Self> {
         let db_name = e.database.as_ref().map(|x| x.as_str()).unwrap_or("mysql");
-
         let mut builder = my::OptsBuilder::new();
 
         builder.ip_or_hostname(Some(e.host.as_ref()));

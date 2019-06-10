@@ -1,8 +1,9 @@
 use crate::{
-    query_builder::RelatedNodesWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow, ToSqlRow,
-    Transaction, Transactional,
+    error::SqlError, query_builder::RelatedNodesWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow,
+    ToSqlRow, Transaction, Transactional,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
+use datamodel::source::Source;
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
     ast::Query,
@@ -14,7 +15,7 @@ use rusqlite::{
     Connection, Error as SqliteError, Row as SqliteRow, Transaction as SqliteTransaction, NO_PARAMS,
 };
 use serde_json::{Map, Number, Value};
-use std::collections::HashSet;
+use std::{collections::HashSet, convert::TryFrom, path::PathBuf};
 use uuid::Uuid;
 
 type Pool = r2d2::Pool<SqliteConnectionManager>;
@@ -52,8 +53,8 @@ impl Transactional for Sqlite {
 impl<'a> Transaction for SqliteTransaction<'a> {
     fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
         let (sql, params) = dbg!(visitor::Sqlite::build(q));
-
         let mut stmt = self.prepare_cached(&sql)?;
+
         stmt.execute(params)?;
 
         Ok(Some(GraphqlId::Int(self.last_insert_rowid() as usize)))
@@ -205,6 +206,25 @@ impl<'a> ToSqlRow for SqliteRow<'a> {
         }
 
         Ok(row)
+    }
+}
+
+impl TryFrom<&Box<dyn Source>> for Sqlite {
+    type Error = SqlError;
+
+    /// Todo connection limit configuration
+    fn try_from(source: &Box<dyn Source>) -> SqlResult<Sqlite> {
+        // For the moment, we don't support file urls directly.
+        let normalized = source.url().trim_start_matches("file:");
+        let file_path = PathBuf::from(normalized);
+
+        if file_path.exists() && !file_path.is_dir() {
+            Sqlite::new(normalized.into(), 10, false)
+        } else {
+            Err(SqlError::DatabaseCreationError(
+                "Sqlite data source must point to an existing file.",
+            ))
+        }
     }
 }
 

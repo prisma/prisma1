@@ -1,57 +1,73 @@
+use crate::{PrismaError, PrismaResult};
 use core::{Executor, ReadQueryExecutor, WriteQueryExecutor};
-use datamodel::Source;
-use std::convert::TryFrom;
+use datamodel::{
+    source::{MySqlSource, PostgresSource, SqliteSource, MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
+    Source,
+};
 use std::sync::Arc;
+use std::{convert::TryFrom, path::PathBuf};
 
 #[cfg(feature = "sql")]
 use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite, Transactional};
 
-pub fn load(config: &Vec<Source>) -> Executor {
-    match config.databases.get("default") {
+pub fn load(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+    match source.connector_type() {
         #[cfg(feature = "sql")]
-        Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => sqlite(config),
-
-        #[cfg(feature = "sql")]
-        Some(config) if config.connector() == "postgres-native" => postgres(config),
+        SQLITE_SOURCE_NAME => sqlite(source),
 
         #[cfg(feature = "sql")]
-        Some(config) if config.connector() == "mysql-native" => mysql(config),
+        MYSQL_SOURCE_NAME => unimplemented!(),
 
-        Some(config) => panic!("Database connector for {} is not supported.", config.connector()),
+        #[cfg(feature = "sql")]
+        POSTGRES_SOURCE_NAME => unimplemented!(),
 
-        None => panic!("Default database not set."),
+        x => Err(PrismaError::ConfigurationError(format!(
+            "Unsupported connector type: {}",
+            x
+        ))),
     }
+
+    // match config.databases.get("default") {
+    //     #[cfg(feature = "sql")]
+    //     Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => sqlite(config),
+
+    //     #[cfg(feature = "sql")]
+    //     Some(config) if config.connector() == "postgres-native" => postgres(config),
+
+    //     #[cfg(feature = "sql")]
+    //     Some(config) if config.connector() == "mysql-native" => mysql(config),
+
+    //     Some(config) => panic!("Database connector for {} is not supported.", config.connector()),
+
+    //     None => panic!("Default database not set."),
+    // }
 }
 
 #[cfg(feature = "sql")]
-fn sqlite(config: &FileConfig) -> Executor {
-    let db_name = config.db_name();
-    let db_folder = config
-        .database_file
-        .trim_end_matches(&format!("{}.db", db_name))
-        .trim_end_matches("/");
-
-    let sqlite = Sqlite::new(db_folder.to_owned(), config.limit(), false).unwrap();
+fn sqlite(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+    let sqlite = Sqlite::try_from(source)?;
     let db = SqlDatabase::new(sqlite);
+    let path = PathBuf::from(source.url());
+    let db_name = path.file_stem().unwrap(); // Safe due to previous validations.
 
-    sql_executor(db_name.clone(), db)
+    Ok(sql_executor(db_name.to_os_string().into_string().unwrap(), db))
 }
 
-#[cfg(feature = "sql")]
-fn postgres(config: &PrismaDatabase) -> Executor {
-    let postgres = PostgreSql::try_from(config).unwrap();
-    let connector = SqlDatabase::new(postgres);
+// #[cfg(feature = "sql")]
+// fn postgres(config: &PrismaDatabase) -> Executor {
+//     let postgres = PostgreSql::try_from(config).unwrap();
+//     let connector = SqlDatabase::new(postgres);
 
-    sql_executor("".into(), connector)
-}
+//     sql_executor("".into(), connector)
+// }
 
-#[cfg(feature = "sql")]
-fn mysql(config: &PrismaDatabase) -> Executor {
-    let postgres = Mysql::try_from(config).unwrap();
-    let connector = SqlDatabase::new(postgres);
+// #[cfg(feature = "sql")]
+// fn mysql(config: &PrismaDatabase) -> Executor {
+//     let postgres = Mysql::try_from(config).unwrap();
+//     let connector = SqlDatabase::new(postgres);
 
-    sql_executor("".into(), connector)
-}
+//     sql_executor("".into(), connector)
+// }
 
 #[cfg(feature = "sql")]
 fn sql_executor<T>(db_name: String, connector: SqlDatabase<T>) -> Executor

@@ -2,14 +2,16 @@ mod connection_string;
 mod explicit;
 mod file;
 
-use crate::error::CommonError;
 pub use connection_string::ConnectionStringConfig;
 pub use explicit::ExplicitConfig;
 pub use file::FileConfig;
 
+use crate::error::CommonError;
+use datamodel::Source;
 use serde_yaml;
 use std::{
     collections::{BTreeMap, HashMap},
+    convert::TryInto,
     env,
     fs::File,
     io::prelude::*,
@@ -71,6 +73,47 @@ pub struct PrismaConfig {
     pub rabbit_uri: Option<String>,
     pub enable_management_api: Option<bool>,
     pub databases: BTreeMap<String, PrismaDatabase>,
+}
+
+/// Allows a legacy config to be transformed into the new data sources format.
+/// WIP: Default is not yet supported in data sources.
+impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
+    type Error = CommonError;
+
+    fn try_into(self) -> Result<Vec<Box<dyn Source>>, Self::Error> {
+        self.databases
+            .into_iter()
+            .map(|(name, db)| match db {
+                #[cfg(feature = "sql")]
+                PrismaDatabase::File(ref config) if config.connector == "sqlite-native" => {
+                    let path = config.database_file;
+                    let ospath = PathBuf::from(&path);
+                    if ospath.exists() && !ospath.is_dir() {
+                        let dummy = vec![];
+                        let source = SqliteSourceDefinition::new().create(
+                            &name,
+                            format!("file:{}", path),
+                            &Arguments::empty(&dummy),
+                        );
+
+                        Ok(source)
+                    } else {
+                        Err(CommonError::ConfigurationError("Configuration error: Sqlite file configuration found, but path either doesn't exist or doens't point to a file.".into()));
+                    }
+                }
+
+                #[cfg(feature = "sql")]
+                config if config.connector() == "postgres-native" => unimplemented!(),
+
+                #[cfg(feature = "sql")]
+                config if config.connector() == "mysql-native" => unimplemented!(),
+
+                _ => Err(CommonError::ConfigurationError(format!("Database connector for configuration key {} is not supported.", name))),
+            })
+            .collect::<Vec<Result<Box<dyn Source>, Self::Error>>>()
+            .into_iter()
+            .collect()
+    }
 }
 
 /// Loads the config
