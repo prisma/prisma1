@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "lib": ["esnext", "esnext.asynciterable"],
+    "lib": ["esnext", "esnext.asynciterable", "dom"],
     "module": "commonjs",
-    "target": "es2016",
+    "target": "es2015",
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
@@ -11,5 +11,5 @@
     "rootDir": "src",
     "declaration": true
   },
-  "exclude": ["dist", "build"]
+  "exclude": ["dist", "build", "runtime"]
 }

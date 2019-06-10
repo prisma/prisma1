@@ -3,22 +3,22 @@ use datamodel::errors::ValidationError;
 
 const DATAMODEL: &str = r#"
 source pg1 {
-    type = "Postgres"
+    type = "postgres"
     url = "https://localhost/postgres1"
 }
 
 source pg2 {
-    type = "Postgres"
+    type = "postgres"
     url = "https://localhost/postgres2"
 }
 
 source sqlite1 {
-    type = "Sqlite"
+    type = "sqlite"
     url = "https://localhost/sqlite1"
 }
 
 source mysql1 {
-    type = "MySQL"
+    type = "mysql"
     url = "https://localhost/mysql"
 }
 "#;
@@ -26,34 +26,36 @@ source mysql1 {
 #[test]
 fn serialize_builtin_sources_to_dmmf() {
     let sources = datamodel::load_data_source_configuration(DATAMODEL).unwrap();
-    let rendered = datamodel::dmmf::render_config_to_dmmf(&sources);
+    let rendered = datamodel::render_sources_to_json(&sources);
 
     let expected = r#"[
   {
     "name": "pg1",
-    "connectorType": "Postgres",
+    "connectorType": "postgres",
     "url": "https://localhost/postgres1",
     "config": {}
   },
   {
     "name": "pg2",
-    "connectorType": "Postgres",
+    "connectorType": "postgres",
     "url": "https://localhost/postgres2",
     "config": {}
   },
   {
     "name": "sqlite1",
-    "connectorType": "Sqlite",
+    "connectorType": "sqlite",
     "url": "https://localhost/sqlite1",
     "config": {}
   },
   {
     "name": "mysql1",
-    "connectorType": "MySQL",
+    "connectorType": "mysql",
     "url": "https://localhost/mysql",
     "config": {}
   }
 ]"#;
+
+    print!("{}", &rendered);
 
     assert_eq!(rendered, expected);
 }
@@ -71,7 +73,7 @@ fn fail_to_load_sources_for_invalid_source() {
 
     if let Err(error) = res {
         error.assert_is(ValidationError::SourceNotKnownError {
-            source_name: String::from("pg1"),
+            source_name: String::from("AStrangeHalfMongoDatabase"),
             span: datamodel::ast::Span::new(1, 94),
         });
     } else {

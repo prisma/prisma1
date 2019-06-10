@@ -8,3 +8,4 @@ edition = "2018"
 barrel = { version = "0.5.8", features = ["sqlite3"] }
 rusqlite = { git = "https://github.com/pimeys/rusqlite" }
 time = "*"
+prisma-query = { git = "https://github.com/prisma/prisma-query.git" }

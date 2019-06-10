@@ -89,7 +89,56 @@ fn removing_a_scalar_field_must_work() {
 }
 
 #[test]
-#[ignore]
+fn can_handle_reserved_sql_keywords_for_model_name() {
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model Group {
+                id: String @id
+                field: String
+            }
+        "#;
+        let result = migrate_to(&engine, &dm1);
+        let column = result.table_bang("Group").column_bang("field");
+        assert_eq!(column.tpe, ColumnType::String);
+
+        let dm2 = r#"
+            model Group {
+                id: String @id
+                field: Int
+            }
+        "#;
+        let result = migrate_to(&engine, &dm2);
+        let column = result.table_bang("Group").column_bang("field");
+        assert_eq!(column.tpe, ColumnType::Int);
+    });
+}
+
+#[test]
+fn can_handle_reserved_sql_keywords_for_field_name() {
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model Test {
+                id: String @id
+                Group: String
+            }
+        "#;
+        let result = migrate_to(&engine, &dm1);
+        let column = result.table_bang("Test").column_bang("Group");
+        assert_eq!(column.tpe, ColumnType::String);
+
+        let dm2 = r#"
+            model Test {
+                id: String @id
+                Group: Int
+            }
+        "#;
+        let result = migrate_to(&engine, &dm2);
+        let column = result.table_bang("Test").column_bang("Group");
+        assert_eq!(column.tpe, ColumnType::Int);
+    });
+}
+
+#[test]
 fn update_type_of_scalar_field_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
@@ -110,7 +159,7 @@ fn update_type_of_scalar_field_must_work() {
         "#;
         let result = migrate_to(&engine, &dm2);
         let column2 = result.table_bang("Test").column_bang("field");
-        assert_eq!(column2.tpe, ColumnType::String);
+        assert_eq!(column2.tpe, ColumnType::Int);
     });
 }
 
@@ -435,7 +484,6 @@ fn removing_an_inline_relation_must_work() {
 }
 
 #[test]
-#[ignore]
 fn moving_an_inline_relation_to_the_other_side_must_work() {
     // TODO: bring this back when relation inlining works in the new datamodel
     run_test_with_engine(|engine| {

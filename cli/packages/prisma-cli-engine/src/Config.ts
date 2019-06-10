@@ -176,6 +176,7 @@ export class Config {
       }
     }
   }
+  
   private getDefinitionPathByGraphQLConfig(): string | null {
     // try to lookup with graphql config
     let definitionPath

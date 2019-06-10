@@ -54,42 +54,41 @@ export class MysqlConnector extends RelationalConnector {
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComments(schemaName: string, tableName: string) {
+  protected async queryColumnComments(schemaName: string) {
     const commentQuery = `
       SELECT
         column_comment,
-        column_name
+        column_name,
+        table_name
       FROM
         information_schema.columns
       WHERE
         table_schema = ?
-        AND table_name = ?
         AND column_comment != ''
     `
-    const comments = (await this.query(commentQuery, [
-      schemaName,
-      tableName,
-    ])).map(row => ({
-      text: row.column_comment as string,
-      column: row.column_name as string,
-    }))
+    const comments = (await this.query(commentQuery, [schemaName])).map(
+      row => ({
+        text: row.column_comment as string,
+        columnName: row.column_name as string,
+        tableName: row.table_name as string,
+      }),
+    )
 
     return comments
   }
 
-  protected async queryIndices(schemaName: string, tableName: string) {
+  protected async queryIndices(schemaName: string) {
     const indexQuery = `
       SELECT 
         table_name, 
         index_name, 
         GROUP_CONCAT(DISTINCT column_name SEPARATOR ', ') AS column_names, 
         NOT non_unique AS is_unique, 
-        index_name = 'PRIMARY' AS is_primary_key 
+        index_name = 'PRIMARY' AS is_primary_key
       FROM 
         information_schema.statistics
       WHERE
         table_schema = '${schemaName}'
-        AND table_name = '${tableName}'
       GROUP BY
         table_name, index_name, non_unique
     `

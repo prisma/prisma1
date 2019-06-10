@@ -1,13 +1,6 @@
 import chalk from 'chalk'
-import {
-  Command,
-  Commands,
-  arg,
-  isError,
-  format,
-  HelpError,
-  unknownCommand,
-} from '@prisma/cli'
+import { Command, Commands, arg, isError, format, HelpError, unknownCommand } from '@prisma/cli'
+import { Version } from './Version'
 
 /**
  * CLI command
@@ -23,14 +16,20 @@ export class CLI implements Command {
     const args = arg(argv, {
       '--help': Boolean,
       '-h': '--help',
+      '--version': Boolean,
+      '-v': '--version',
     })
     if (isError(args)) {
       return this.help(args.message)
+    }
+    if (args['--version']) {
+      return Version.new().parse(argv)
     }
     // display help for help flag or no subcommand
     if (args._.length === 0 || args['--help']) {
       return this.help()
     }
+
     // check if we have that subcommand
     const cmd = this.cmds[args._[0]]
     if (cmd) {
@@ -59,6 +58,8 @@ export class CLI implements Command {
     ${chalk.bold('Commands')}
 
           lift   Migrate your datamodel
+       convert   Converts a datamodel 1 to datamodel 2
+    introspect   Get the datamodel of your database
       generate   Generate Photon
            new   Setup Prisma for your app
           seed   Seed data into your database

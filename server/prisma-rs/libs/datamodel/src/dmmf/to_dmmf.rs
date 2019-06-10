@@ -1,7 +1,6 @@
 use super::dmmf::*;
 use crate::common::PrismaType;
 use crate::dml;
-use crate::source::Source;
 use serde_json;
 
 fn get_field_kind(field: &dml::Field) -> String {
@@ -136,29 +135,10 @@ pub fn schema_to_dmmf(schema: &dml::Datamodel) -> Datamodel {
 
 pub fn render_to_dmmf(schema: &dml::Datamodel) -> String {
     let dmmf = schema_to_dmmf(schema);
-    return serde_json::to_string_pretty(&dmmf).expect("Failed to render JSON");
+    serde_json::to_string_pretty(&dmmf).expect("Failed to render JSON")
 }
 
 pub fn render_to_dmmf_value(schema: &dml::Datamodel) -> serde_json::Value {
     let dmmf = schema_to_dmmf(schema);
     return serde_json::to_value(&dmmf).expect("Failed to render JSON");
-}
-
-fn source_to_dmmf(source: &Box<Source>) -> SourceConfig {
-    SourceConfig {
-        name: source.name().clone(),
-        connector_type: String::from(source.connector_type()),
-        url: source.url().clone(),
-        config: source.config().clone(),
-    }
-}
-
-pub fn render_config_to_dmmf(sources: &Vec<Box<Source>>) -> String {
-    let mut res: Vec<SourceConfig> = Vec::new();
-
-    for source in sources {
-        res.push(source_to_dmmf(source));
-    }
-
-    return serde_json::to_string_pretty(&res).expect("Failed to render JSON");
 }
