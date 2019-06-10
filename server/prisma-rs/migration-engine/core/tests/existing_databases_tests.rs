@@ -21,7 +21,7 @@ fn adding_a_model_for_an_existing_table_must_work() {
                 id: Int @id
             }
         "#;
-        let result = migrate_to(&engine, &dm);
+        let result = infer_and_apply(&engine, &dm);
         assert_eq!(initial_result, result);
     });
 }
@@ -43,7 +43,7 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
                 id: Int @id
             }
         "#;
-        let initial_result = migrate_to(&engine, &dm1);
+        let initial_result = infer_and_apply(&engine, &dm1);
         assert_eq!(initial_result.table("Post").is_some(), true);
 
         let result = execute(|migration| {
@@ -56,7 +56,7 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
                 id: Int @id
             }
         "#;
-        let final_result = migrate_to(&engine, &dm2);
+        let final_result = infer_and_apply(&engine, &dm2);
         assert_eq!(result, final_result);
     });
 }
@@ -76,7 +76,7 @@ fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
                 title: String
             }
         "#;
-        let result = migrate_to(&engine, &dm);
+        let result = infer_and_apply(&engine, &dm);
         assert_eq!(initial_result, result);
     });
 }
@@ -100,7 +100,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
                 title: String @unique
             }
         "#;
-        let result = migrate_to(&engine, &dm);
+        let result = infer_and_apply(&engine, &dm);
         let column = result.table_bang("Blog").column_bang("title");
         assert_eq!(column.tpe, ColumnType::String);
         assert_eq!(column.is_required, true);
@@ -126,7 +126,7 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
                 title: String?
             }
         "#;
-        let result = migrate_to(&engine, &dm);
+        let result = infer_and_apply(&engine, &dm);
         let column = result.table_bang("Blog").column_bang("title");
         assert_eq!(column.is_required, false);
     });
@@ -140,7 +140,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
                 id: Int @id
             }
         "#;
-        let initial_result = migrate_to(&engine, &dm1);
+        let initial_result = infer_and_apply(&engine, &dm1);
         assert_eq!(initial_result.table("Blog_tags").is_some(), false);
 
         let result = execute(|migration| {
@@ -158,7 +158,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
                 tags: String[]
             }
         "#;
-        let final_result = migrate_to(&engine, &dm2);
+        let final_result = infer_and_apply(&engine, &dm2);
         assert_eq!(result, final_result);
     });
 }
@@ -172,7 +172,7 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
                 title: String
             }
         "#;
-        let initial_result = migrate_to(&engine, &dm1);
+        let initial_result = infer_and_apply(&engine, &dm1);
         assert_eq!(initial_result.table_bang("Blog").column("title").is_some(), true);
 
         let result = execute(|migration| {
@@ -189,7 +189,7 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
                 id: Int @id
             }
         "#;
-        let final_result = migrate_to(&engine, &dm2);
+        let final_result = infer_and_apply(&engine, &dm2);
         assert_eq!(result, final_result);
     });
 }
@@ -203,7 +203,7 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
                 tags: String[]
             }
         "#;
-        let initial_result = migrate_to(&engine, &dm1);
+        let initial_result = infer_and_apply(&engine, &dm1);
         assert_eq!(initial_result.table("Blog_tags").is_some(), true);
 
         let result = execute(|migration| {
@@ -216,7 +216,7 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
                 id: Int @id
             }
         "#;
-        let final_result = migrate_to(&engine, &dm2);
+        let final_result = infer_and_apply(&engine, &dm2);
         assert_eq!(result, final_result);
     });
 }
@@ -230,7 +230,7 @@ fn updating_a_field_for_a_non_existent_column() {
                 title: String
             }
         "#;
-        let initial_result = migrate_to(&engine, &dm1);
+        let initial_result = infer_and_apply(&engine, &dm1);
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
         assert_eq!(initial_column.tpe, ColumnType::String);
 
@@ -249,7 +249,7 @@ fn updating_a_field_for_a_non_existent_column() {
                 title: Int @unique
             }
         "#;
-        let final_result = migrate_to(&engine, &dm2);
+        let final_result = infer_and_apply(&engine, &dm2);
         let final_column = final_result.table_bang("Blog").column_bang("title");
         assert_eq!(final_column.tpe, ColumnType::Int);
         // TODO: assert uniqueness
@@ -265,7 +265,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
                 title: String
             }
         "#;
-        let initial_result = migrate_to(&engine, &dm1);
+        let initial_result = infer_and_apply(&engine, &dm1);
         let initial_column = initial_result.table_bang("Blog").column_bang("title");
         assert_eq!(initial_column.tpe, ColumnType::String);
 
@@ -285,7 +285,7 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
                 title: Float @db(name: "new_title")
             }
         "#;
-        let final_result = migrate_to(&engine, &dm2);
+        let final_result = infer_and_apply(&engine, &dm2);
         let final_column = final_result.table_bang("Blog").column_bang("new_title");
         assert_eq!(final_column.tpe, ColumnType::Float);
         assert_eq!(final_result.table_bang("Blog").column("title").is_some(), false);
@@ -297,40 +297,6 @@ fn execute<F>(mut migrationFn: F) -> DatabaseSchema
 where
     F: FnMut(&mut Migration) -> (),
 {
-    // let connection = Connection::open_in_memory()
-    //     .and_then(|c| {
-    //         let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-    //         let path = format!("{}/db", server_root);
-    //         let database_file_path = dbg!(format!("{}/{}.db", path, SCHEMA));
-    //         if delete_db_file {
-    //             let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
-    //             thread::sleep(time::Duration::from_millis(100));
-    //         }
-
-    //         c.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), SCHEMA])
-    //             .map(|_| c)
-    //     })
-    //     .and_then(|c| {
-    //         let mut migration = Migration::new().schema(SCHEMA);
-    //         migrationFn(&mut migration);
-    //         let full_sql = migration.make::<Squirrel>();
-    //         for sql in full_sql.split(";") {
-    //             dbg!(sql);
-    //             if sql != "" {
-    //                 c.execute(&sql, NO_PARAMS).unwrap();
-    //             }
-    //         }
-    //         Ok(c)
-    //     })
-    //     .unwrap();
-
-    // let inspector = DatabaseInspectorImpl::new(connection);
-    // let mut result = inspector.introspect(&SCHEMA.to_string());
-    // // the presence of the _Migration table makes assertions harder. Therefore remove it.
-    // result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
-    // result
-    // ------------------------------------
-
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
 

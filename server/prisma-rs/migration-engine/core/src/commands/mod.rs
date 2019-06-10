@@ -34,6 +34,7 @@ pub struct DataModelWarningOrError {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MigrationStepsResultOutput {
+    pub datamodel: String,
     pub datamodel_steps: Vec<MigrationStep>,
     pub database_steps: serde_json::Value,
     pub warnings: Vec<MigrationWarning>,

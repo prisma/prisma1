@@ -122,6 +122,10 @@ impl MigrationConnector for SqlMigrationConnector {
         serde_json::from_value(json).unwrap()
     }
 
+    fn empty_database_migration(&self) -> SqlMigration {
+        SqlMigration::empty()
+    }
+
     fn database_inspector(&self) -> Arc<DatabaseInspector> {
         Arc::clone(&self.database_inspector)
     }
