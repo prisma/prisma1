@@ -10,7 +10,7 @@ use database_inspector::DatabaseInspector;
 use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
 use prisma_query::connector::Sqlite as SqliteDatabaseClient;
-use rusqlite::{Connection, NO_PARAMS};
+use prisma_query::Connectional;
 use serde_json;
 use sql_database_migration_inferrer::*;
 use sql_database_step_applier::*;
@@ -23,6 +23,7 @@ use std::path::Path;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
+    folder_path: Option<String>,
     schema_name: String,
     migration_persistence: Arc<MigrationPersistence>,
     sql_migration_persistence: Arc<SqlMigrationPersistence<SqliteDatabaseClient>>,
@@ -40,18 +41,16 @@ pub enum SqlFamily {
 
 impl SqlMigrationConnector {
     pub fn new(sql_family: SqlFamily, url: &str) -> SqlMigrationConnector {
-        // let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
+        let _ = Url::parse(url).expect("Parsing of the provided connector url failed.");
 
-        let (conn, schema_name) = match sql_family { 
+        let (conn, folder_path, schema_name) = match sql_family { 
             SqlFamily::Sqlite => {
-                // assert_eq!(parsed_url.scheme(), "file");
                 let path = Path::new(&url);
                 let schema_name = path.file_stem().expect("file url must contain a file name").to_str().unwrap().to_string();
-                // let folder_path = Self::databases_folder_path();
                 let folder_path = path.parent().unwrap().to_str().unwrap().to_string();
                 let test_mode = false;
-                let conn = Arc::new(SqliteDatabaseClient::new(folder_path, 32, test_mode).unwrap());
-                (conn, schema_name)
+                let conn = Arc::new(SqliteDatabaseClient::new(folder_path.clone(), 32, test_mode).unwrap());
+                (conn, Some(folder_path), schema_name)
             },
             _ => unimplemented!()
         };
@@ -73,6 +72,7 @@ impl SqlMigrationConnector {
         });
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
         SqlMigrationConnector {
+            folder_path,
             schema_name,
             migration_persistence,
             sql_migration_persistence,
@@ -83,25 +83,6 @@ impl SqlMigrationConnector {
                 connection: Arc::clone(&conn),
             }),
         }
-    }
-
-    fn new_conn(name: &str) -> Connection {
-        let conn = Connection::open_in_memory().unwrap();
-        let database_file_path = Self::database_file_path(&name);
-        conn.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), name])
-            .unwrap();
-        conn
-    }
-
-    fn database_file_path(name: &str) -> String {
-        let path = Self::databases_folder_path();
-        let database_file_path = format!("{}/{}.db", path, name);
-        database_file_path
-    }
-
-    fn databases_folder_path() -> String {
-        let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-        format!("{}/db", server_root)
     }
 }
 
@@ -114,11 +95,15 @@ impl MigrationConnector for SqlMigrationConnector {
 
     fn reset(&self) {
         println!("MigrationConnector.reset()");
-        let conn = Self::new_conn(&self.schema_name);
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
+        let _ = self.sql_migration_persistence.connection.with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]));
 
-        let _ = conn.execute(&sql_str, NO_PARAMS);
-        let _ = std::fs::remove_file(Self::database_file_path(&self.schema_name)); // ignore potential errors
+        if let Some(ref folder_path) = self.folder_path {
+            let mut file_path = format!("{}/{}.db", folder_path, self.schema_name);
+            file_path.replace_range(..5, ""); // remove the prefix "file:"
+            println!("FILE PATH {}", file_path);
+            let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
+        }
     }
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence> {

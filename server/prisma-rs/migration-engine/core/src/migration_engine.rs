@@ -2,7 +2,6 @@ use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
 use migration_connector::*;
-use sql_migration_connector::{SqlMigrationConnector, SqlFamily};
 use std::sync::Arc;
 use super::connector_loader::load_connector;
 

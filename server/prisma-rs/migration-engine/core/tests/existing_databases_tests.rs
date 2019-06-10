@@ -297,40 +297,6 @@ fn execute<F>(mut migrationFn: F) -> DatabaseSchema
 where
     F: FnMut(&mut Migration) -> (),
 {
-    // let connection = Connection::open_in_memory()
-    //     .and_then(|c| {
-    //         let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-    //         let path = format!("{}/db", server_root);
-    //         let database_file_path = dbg!(format!("{}/{}.db", path, SCHEMA));
-    //         if delete_db_file {
-    //             let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
-    //             thread::sleep(time::Duration::from_millis(100));
-    //         }
-
-    //         c.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), SCHEMA])
-    //             .map(|_| c)
-    //     })
-    //     .and_then(|c| {
-    //         let mut migration = Migration::new().schema(SCHEMA);
-    //         migrationFn(&mut migration);
-    //         let full_sql = migration.make::<Squirrel>();
-    //         for sql in full_sql.split(";") {
-    //             dbg!(sql);
-    //             if sql != "" {
-    //                 c.execute(&sql, NO_PARAMS).unwrap();
-    //             }
-    //         }
-    //         Ok(c)
-    //     })
-    //     .unwrap();
-
-    // let inspector = DatabaseInspectorImpl::new(connection);
-    // let mut result = inspector.introspect(&SCHEMA.to_string());
-    // // the presence of the _Migration table makes assertions harder. Therefore remove it.
-    // result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
-    // result
-    // ------------------------------------
-
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
 
