@@ -1,6 +1,6 @@
 {
   "name": "@prisma/prototype",
-  "version": "0.0.30",
+  "version": "0.0.33",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "repository": "git@github.com:prisma/prisma.git",
@@ -21,9 +21,9 @@
   "devDependencies": {
     "@prisma/cli": "^0.0.4",
     "@prisma/fetch-engine": "^0.0.19",
-    "@prisma/introspection": "^0.0.4",
-    "@prisma/lift": "^0.0.26",
-    "@prisma/photon": "^0.0.26",
+    "@prisma/introspection": "^0.0.12",
+    "@prisma/lift": "^0.0.31",
+    "@prisma/photon": "^0.0.30",
     "@zeit/ncc": "^0.18.5",
     "typescript": "^3.5.1"
   },
@@ -35,5 +35,11 @@
     "build": "yarn tsc && yarn ncc:download && yarn ncc && sed -i.bak 's/env ts-node/env node/g' 'build/index.js' && rm -f build/index.js.bak && scripts/copy-runtime.sh",
     "prepublishOnly": "yarn build"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "resolutions": {
+    "prisma-datamodel": "1.36.0-alpha.8",
+    "**/prisma-datamodel": "1.36.0-alpha.8",
+    "**/**/prisma-datamodel": "1.36.0-alpha.8",
+    "**/**/**/prisma-datamodel": "1.36.0-alpha.8"
+  }
 }

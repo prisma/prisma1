@@ -8,6 +8,7 @@ import { LiftCommand, LiftCreate, LiftUp, LiftDown, LiftWatch, Converter } from 
 import { CLI } from './CLI'
 import { PhotonGenerate } from '@prisma/photon'
 import { Introspect } from '@prisma/introspection'
+import { Version } from './Version'
 
 /**
  * Main function
@@ -37,6 +38,7 @@ async function main(): Promise<number> {
       },
     }),
     generate: PhotonGenerate.new(env),
+    version: Version.new(),
   })
   // parse the arguments
   var result = await cli.parse(process.argv.slice(2))
