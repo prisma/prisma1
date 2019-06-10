@@ -15,7 +15,7 @@ fn simple_end_to_end_test() {
                 "projectInfo": {}
             }}
         }}
-    "#, sqlite_test_config_json_escaped());
+    "#, test_config_json_escaped());
 
     let result = handle_command(&json);
     assert_eq!(result, r#"{"jsonrpc":"2.0","result":[],"id":1}"#);
@@ -35,7 +35,7 @@ fn error_if_the_datamodel_is_invalid() {
                 "dataModel": "model Blog {{ id: Int @id @default(cuid()) }}"
             }}
         }}
-    "#, sqlite_test_config_json_escaped());
+    "#, test_config_json_escaped());
 
     let result = handle_command(&json);
     let result_json = serde_json::from_str::<serde_json::Value>(&result).unwrap();

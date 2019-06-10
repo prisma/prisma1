@@ -27,7 +27,7 @@ where
     T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
-    let engine = MigrationEngine::new(&sqlite_test_config());
+    let engine = MigrationEngine::new(&test_config());
     let connector = engine.connector();
     connector.reset();
     engine.init();
@@ -68,7 +68,7 @@ pub fn migrate_to_with_migration_id(
         dry_run: None,
     };
     let cmd = ApplyMigrationCommand::new(input);
-    let engine = MigrationEngine::new(&sqlite_test_config());
+    let engine = MigrationEngine::new(&test_config());
     let _output = cmd.execute(&engine).expect("applyMigration failed");
 
     introspect_database(&engine)
@@ -83,12 +83,17 @@ pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
 }
 
 #[allow(unused)]
-pub fn sqlite_test_config_json_escaped() -> String {
-    let config = sqlite_test_config();
+pub fn test_config_json_escaped() -> String {
+    let config = test_config();
     serde_json::to_string(&serde_json::Value::String(config)).unwrap()
 }
 
-pub fn sqlite_test_config() -> String {
+fn test_config() -> String {
+    sqlite_test_config()
+    // postgres_test_config()
+}
+
+fn sqlite_test_config() -> String {
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
     let file_path = format!("{}/{}.db", database_folder_path,"migration_engine");
@@ -99,4 +104,15 @@ pub fn sqlite_test_config() -> String {
             default = true
         }}
     "#, file_path)
+}
+
+#[allow(unused)]
+fn postgres_test_config() -> String {
+    r#"
+        source my_db {
+            type = "postgres"
+            url = "postgresql://postgres:prisma@127.0.0.1:5432/db"
+            default = true
+        }
+    "#.to_string()
 }
