@@ -4,13 +4,11 @@ import {
   IGQLField,
   ISDL,
   capitalize,
-  plural,
   toposort,
   isTypeIdentifier,
   camelCase,
 } from 'prisma-datamodel'
-import { INormalizer, Normalizer } from './normalizer'
-import { groupBy, uniqBy } from 'lodash'
+import { Normalizer } from './normalizer'
 
 export default class ModelNameNormalizer extends Normalizer {
   public normalize(model: ISDL) {

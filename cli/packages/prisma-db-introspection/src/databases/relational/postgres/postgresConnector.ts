@@ -60,8 +60,8 @@ export class PostgresConnector extends RelationalConnector {
   }
 
   // TODO: Unit test for column comments
-  protected async queryColumnComments(schemaName: string, tableName: string) {
-    log(`Querying column comments for ${schemaName}.${tableName}`)
+  protected async queryColumnComments(schemaName: string) {
+    log(`Querying column comments for ${schemaName}`)
     const commentQuery = `
       SELECT
       (
@@ -71,26 +71,25 @@ export class PostgresConnector extends RelationalConnector {
         WHERE
           c.oid     = (SELECT ('"' || cols.table_schema || '"."' || cols.table_name || '"')::regclass::oid) AND
           c.relname = cols.table_name
-      ) as column_comment, cols.column_name as column_name
+      ) as column_comment, cols.column_name as column_name, cols.table_name as table_name
       FROM
         information_schema.columns cols
       WHERE
-        cols.table_schema  = $1::text AND
-        cols.table_name    = $2::text
+        cols.table_schema  = $1::text
     `
-    const comments = (await this.query(commentQuery, [
-      schemaName,
-      tableName,
-    ])).map(row => ({
-      text: row.column_comment as string,
-      column: row.column_name as string,
-    }))
+    const comments = (await this.query(commentQuery, [schemaName]))
+      .filter(row => row.column_comment != undefined)
+      .map(row => ({
+        text: row.column_comment as string,
+        columnName: row.column_name as string,
+        tableName: row.table_name as string,
+      }))
 
     return comments
   }
 
-  protected async queryIndices(schemaName: string, tableName: string) {
-    log(`Querying indices for table ${schemaName}.${tableName}.`)
+  protected async queryIndices(schemaName: string) {
+    log(`Querying indices for table ${schemaName}.`)
     const indexQuery = `
       SELECT
           tableInfos.relname as table_name,
@@ -121,14 +120,13 @@ export class PostgresConnector extends RelationalConnector {
           -- we only consider stuff out of one specific schema
           AND tableInfos.relnamespace = schemaInfo.oid
           AND schemaInfo.nspname = $1::text
-          AND tableInfos.relname = $2::text
       GROUP BY
           tableInfos.relname,
           indexInfos.relname,
           rawIndex.indisunique,
           rawIndex.indisprimary
     `
-    return (await this.query(indexQuery, [schemaName, tableName])).map(row => {
+    return (await this.query(indexQuery, [schemaName])).map(row => {
       return {
         tableName: row.table_name as string,
         name: row.index_name as string,
