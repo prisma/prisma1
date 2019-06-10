@@ -1,3 +1,8 @@
+source chinook {
+  type = "sqlite"
+  url = "file:../db/Chinook.db"
+}
+
 model Album {
   id: Int @id @db(name:"AlbumId")
   Title: String
