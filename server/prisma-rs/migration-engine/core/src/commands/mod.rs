@@ -20,10 +20,7 @@ pub use list_migrations::*;
 pub use migration_progress::*;
 pub use unapply_migration::*;
 
-use datamodel::dml::validator::directive::DirectiveValidator;
-use datamodel::Source;
 use migration_connector::{MigrationError, MigrationStep, MigrationWarning};
-use std::collections::HashMap;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,42 +39,4 @@ pub struct MigrationStepsResultOutput {
     pub warnings: Vec<MigrationWarning>,
     pub errors: Vec<MigrationError>,
     pub general_errors: Vec<String>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DataSource {
-    name: String,
-    #[serde(rename(serialize = "type"))]
-    tpe: String,
-    url: String,
-}
-impl DataSource {
-    fn as_dml_source(&self) -> Box<Source> {
-        Box::new(self.clone())
-    }
-}
-
-impl Source for DataSource {
-    fn connector_type(&self) -> &str {
-        &self.tpe
-    }
-    fn name(&self) -> &String {
-        &self.name
-    }
-    fn url(&self) -> &String {
-        &self.url
-    }
-    fn config(&self) -> HashMap<String, String> {
-        HashMap::new()
-    }
-    fn get_field_directives(&self) -> Vec<Box<DirectiveValidator<datamodel::dml::Field>>> {
-        Vec::new()
-    }
-    fn get_model_directives(&self) -> Vec<Box<DirectiveValidator<datamodel::dml::Model>>> {
-        Vec::new()
-    }
-    fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<datamodel::dml::Enum>>> {
-        Vec::new()
-    }
 }

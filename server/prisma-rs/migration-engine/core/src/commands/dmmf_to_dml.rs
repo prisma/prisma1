@@ -1,4 +1,3 @@
-use super::DataSource;
 use crate::commands::command::{CommandResult, MigrationCommand};
 use crate::migration_engine::MigrationEngine;
 use datamodel;
@@ -18,10 +17,11 @@ impl MigrationCommand for DmmfToDmlCommand {
     fn execute(&self, _engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let datamodel = datamodel::dmmf::parse_from_dmmf(&self.input.dmmf);
-        let boxed_sources = self.input.data_sources.iter().map(|s| s.as_dml_source()).collect();
+        let json_string = serde_json::to_string(&self.input.data_sources).unwrap();
+        let sources = datamodel::sources_from_json(&json_string);        
 
         Ok(DmmfToDmlCommandOutput {
-            datamodel: datamodel::render_with_sources(&datamodel, &boxed_sources).unwrap(),
+            datamodel: datamodel::render_with_sources(&datamodel, &sources).unwrap(),
         })
     }
 }
@@ -31,7 +31,7 @@ impl MigrationCommand for DmmfToDmlCommand {
 pub struct DmmfToDmlCommandInput {
     pub project_info: String,
     pub dmmf: String,
-    pub data_sources: Vec<DataSource>,
+    pub data_sources: serde_json::Value,
 }
 
 #[derive(Serialize)]
