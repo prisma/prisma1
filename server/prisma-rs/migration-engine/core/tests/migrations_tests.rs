@@ -97,7 +97,7 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
                 field: String
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let column = result.table_bang("Group").column_bang("field");
         assert_eq!(column.tpe, ColumnType::String);
 
@@ -107,7 +107,7 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
                 field: Int
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column = result.table_bang("Group").column_bang("field");
         assert_eq!(column.tpe, ColumnType::Int);
     });
@@ -122,7 +122,7 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
                 Group: String
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let column = result.table_bang("Test").column_bang("Group");
         assert_eq!(column.tpe, ColumnType::String);
 
@@ -132,7 +132,7 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
                 Group: Int
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column = result.table_bang("Test").column_bang("Group");
         assert_eq!(column.tpe, ColumnType::Int);
     });
