@@ -114,10 +114,35 @@
     strip-ansi "^5.2.0"
     strip-indent "^3.0.0"
 
-"@prisma/photon@^0.0.24":
-  version "0.0.24"
-  resolved "https://registry.yarnpkg.com/@prisma/photon/-/photon-0.0.24.tgz#8d72f98aa88dda8ed97762b22d53544177bc51d9"
-  integrity sha512-bFOPpwFbQKJvqvrrgYtts+NrIyVeOVM0sedQ+fiC4BksRfF1We73kUJarhqt0jXh/B9+KJOp8g1R01+JAEy64Q==
+"@prisma/lift@^0.0.26":
+  version "0.0.26"
+  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.26.tgz#01f7482a671a39caeed9fd70f5fb22d5556cb7c5"
+  integrity sha512-QdWLkbFvqmbvTMQS4s25oYCzZgDGqmBwgIHG/P7l9rzr2/s92voRrK9tvP+pK/J0qIp1L/eog6KRXT1+Pjh3VQ==
+  dependencies:
+    "@prisma/cli" "^0.0.4"
+    "@prisma/fetch-engine" "^0.0.13"
+    arg "^4.1.0"
+    cli-cursor "^3.0.0"
+    cli-truncate "^1.1.0"
+    debug "^4.1.1"
+    diff "^4.0.1"
+    fast-equals "^2.0.0"
+    git-user-email "^0.2.2"
+    git-user-name "^2.0.0"
+    globby "^9.2.0"
+    indent-string "^4.0.0"
+    log-update "^3.2.0"
+    p-map "^2.1.0"
+    prisma-datamodel "^1.36.0-test.2"
+    prompts "^2.1.0"
+    string-width "^4.1.0"
+    strip-ansi "^5.2.0"
+    strip-indent "^3.0.0"
+
+"@prisma/photon@^0.0.26":
+  version "0.0.26"
+  resolved "https://registry.yarnpkg.com/@prisma/photon/-/photon-0.0.26.tgz#5a293206bb42f7dc5742773ea439a56fa6bb14f1"
+  integrity sha512-tFnyevwaSLDB4DNWq61B75CEq6GHsG/Xk4SWZcRS02c4AwJfUDgjd1NgwtHyFEob2MSUc06mjJa+LXy/Z1pjEw==
   dependencies:
     "@prisma/cli" "^0.0.4"
     "@prisma/dmmf" "^0.1.26"
