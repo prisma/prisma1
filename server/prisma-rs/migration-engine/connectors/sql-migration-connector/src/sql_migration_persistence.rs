@@ -13,9 +13,6 @@ pub struct SqlMigrationPersistence<C: Connectional> {
     pub folder_path: Option<String>,
 }
 
-impl<C: Connectional> SqlMigrationPersistence<C> {
-}
-
 #[allow(unused, dead_code)]
 impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
     fn init(&self) {
@@ -45,7 +42,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 
     fn reset(&self) {
         println!("SqlMigrationPersistence.reset()");
-        let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
+        let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
         let _ = self.connection.with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]));
 
         if let Some(ref folder_path) = self.folder_path {
@@ -58,7 +55,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 
     fn last(&self) -> Option<Migration> {
         let conditions = STATUS_COLUMN.equals("Success");
-        let query = Select::from_table(TABLE_NAME)
+        let query = Select::from_table(self.table())
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
@@ -71,7 +68,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
     }
 
     fn load_all(&self) -> Vec<Migration> {
-        let query = Select::from_table(TABLE_NAME);
+        let query = Select::from_table(self.table());
 
         self.connection
             .with_connection(&self.schema_name, |conn| {
@@ -83,7 +80,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 
     fn by_name(&self, name: &str) -> Option<Migration> {
         let conditions = NAME_COLUMN.equals(name);
-        let query = Select::from_table(TABLE_NAME)
+        let query = Select::from_table(self.table())
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
@@ -106,7 +103,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
         let errors_json = serde_json::to_string(&migration.errors).unwrap();
         let serialized_datamodel = datamodel::render(&migration.datamodel).unwrap();
 
-        let query = Insert::single_into(TABLE_NAME)
+        let query = Insert::single_into(self.table())
             .value(NAME_COLUMN, migration.name)
             .value(DATAMODEL_COLUMN, serialized_datamodel)
             .value(STATUS_COLUMN, migration.status.code())
@@ -139,7 +136,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
             None => ParameterizedValue::Null,
         };
         let errors_json = serde_json::to_string(&params.errors).unwrap();
-        let query = Update::table(TABLE_NAME)
+        let query = Update::table(self.table())
             .set(NAME_COLUMN, params.new_name.clone())
             .set(STATUS_COLUMN, params.status.code())
             .set(APPLIED_COLUMN, params.applied)
@@ -158,6 +155,17 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
                 Ok(())
             })
             .unwrap()
+    }    
+}
+
+impl<C: Connectional> SqlMigrationPersistence<C> {
+    fn table(&self) -> Table {
+        if self.folder_path.is_some() {
+            // sqlite case
+            TABLE_NAME.to_string().into()
+        } else {
+            (self.schema_name.to_string(), TABLE_NAME.to_string()).into()
+        }
     }
 }
 
