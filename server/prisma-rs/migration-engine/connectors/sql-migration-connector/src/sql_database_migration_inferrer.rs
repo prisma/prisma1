@@ -83,11 +83,11 @@ impl SqlDatabaseMigrationInferrer {
             },
             // todo: start transaction now
             SqlMigrationStep::CreateTable(CreateTable {
-                name: format!("new_{}", next.name.clone()),
+                name: name_of_temporary_table.clone(),
                 columns: DatabaseSchemaDiffer::column_descriptions(&next.columns),
                 primary_columns: next.primary_key_columns.clone(),
             }),
-            // copy table contents
+            // copy table contents; Here we have to handle escpaing ourselves.
             {
                 let current_columns: Vec<String> = current.columns.iter().map(|c| c.name.clone()).collect();
                 let next_columns: Vec<String> = next.columns.iter().map(|c| c.name.clone()).collect();
@@ -95,9 +95,9 @@ impl SqlDatabaseMigrationInferrer {
                     .into_iter()
                     .filter(|c| next_columns.contains(&c))
                     .collect();
-                let columns_string = intersection_columns.join(",");
+                let columns_string = intersection_columns.iter().map(|c|format!("\"{}\"", c)).collect::<Vec<String>>().join(",");
                 let sql = format!(
-                    "INSERT INTO {} ({}) SELECT {} from {}",
+                    "INSERT INTO \"{}\" ({}) SELECT {} from \"{}\"",
                     name_of_temporary_table,
                     columns_string,
                     columns_string,
