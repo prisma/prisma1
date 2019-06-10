@@ -13,6 +13,10 @@ pub fn load_connector(config: &str) -> CommandResult<Arc<MigrationConnector<Data
             let url = source.url();
             Ok(Arc::new(SqlMigrationConnector::new(SqlFamily::Sqlite, &url)))
         },
+        "postgres" => {
+            let url = source.url();
+            Ok(Arc::new(SqlMigrationConnector::new(SqlFamily::Postgres, &url)))
+        }
         x => unimplemented!("Connector {} is not supported yet", x)
     }
 }

@@ -3,6 +3,9 @@ use chrono::{DateTime, Utc};
 use datamodel::Datamodel;
 
 pub trait MigrationPersistence {
+    fn init(&self);
+    fn reset(&self);
+
     // returns the currently active Datamodel
     fn current_datamodel(&self) -> Datamodel {
         self.last().map(|m| m.datamodel).unwrap_or(Datamodel::empty())

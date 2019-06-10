@@ -10,10 +10,15 @@ use std::sync::Arc;
 pub struct SqlMigrationPersistence<C: Connectional> {
     pub connection: Arc<C>,
     pub schema_name: String,
+    pub folder_path: Option<String>,
 }
 
 impl<C: Connectional> SqlMigrationPersistence<C> {
-    pub fn init(&self) {
+}
+
+#[allow(unused, dead_code)]
+impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
+    fn init(&self) {
         println!("SqlMigrationPersistence.init()");
         let mut m = barrel::Migration::new().schema(self.schema_name.clone());
         m.create_table_if_not_exists(TABLE_NAME, |t| {
@@ -37,10 +42,20 @@ impl<C: Connectional> SqlMigrationPersistence<C> {
             .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]))
             .unwrap();
     }
-}
 
-#[allow(unused, dead_code)]
-impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
+    fn reset(&self) {
+        println!("SqlMigrationPersistence.reset()");
+        let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name);
+        let _ = self.connection.with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]));
+
+        if let Some(ref folder_path) = self.folder_path {
+            let mut file_path = format!("{}/{}.db", folder_path, self.schema_name);
+            file_path.replace_range(..5, ""); // remove the prefix "file:"
+            println!("FILE PATH {}", file_path);
+            let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
+        }
+    }
+
     fn last(&self) -> Option<Migration> {
         let conditions = STATUS_COLUMN.equals("Success");
         let query = Select::from_table(TABLE_NAME)
