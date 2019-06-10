@@ -31,5 +31,3 @@ export { toposort } from './util/sort'
 export { TypeIdentifier, TypeIdentifiers } from './datamodel/scalar'
 export { SdlExpect } from './test-helpers'
 export { isTypeIdentifier } from './datamodel/scalar'
-
-export { isdlToDmmfDatamodel } from './util/isdlToDmmf'
