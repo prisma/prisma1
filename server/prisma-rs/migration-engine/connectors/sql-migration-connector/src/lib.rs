@@ -21,6 +21,7 @@ use std::sync::Arc;
 use url::Url;
 use std::path::Path;
 use postgres::{ Config as PostgresConfig };
+use std::time::Duration;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
@@ -64,6 +65,7 @@ impl SqlMigrationConnector {
                 let mut db_name = parsed_url.path().to_string();
                 db_name.replace_range(..1, ""); // strip leading slash
                 config.dbname(&db_name);
+                config.connect_timeout(Duration::from_secs(5));
 
                 let conn = Arc::new(PostgreSql::new(config, 32).unwrap());
                 Self::create_connector(conn, db_name, None)
