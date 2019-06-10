@@ -24,3 +24,9 @@ impl From<serde_yaml::Error> for CommonError {
         CommonError::YamlError(e.into())
     }
 }
+
+impl From<datamodel::errors::ValidationError> for CommonError {
+    fn from(e: datamodel::errors::ValidationError) -> CommonError {
+        CommonError::ConfigurationError(format!("{}", e))
+    }
+}

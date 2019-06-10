@@ -1,6 +1,7 @@
 mod json;
 mod loader;
 mod serializer;
+mod traits;
 
 pub mod builtin;
 

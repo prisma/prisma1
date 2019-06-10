@@ -4,6 +4,7 @@ use datamodel::{
     source::{MySqlSource, PostgresSource, SqliteSource, MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
     Source,
 };
+use url::Url;
 use std::sync::Arc;
 use std::{convert::TryFrom, path::PathBuf};
 
@@ -16,31 +17,16 @@ pub fn load(source: &Box<dyn Source>) -> PrismaResult<Executor> {
         SQLITE_SOURCE_NAME => sqlite(source),
 
         #[cfg(feature = "sql")]
-        MYSQL_SOURCE_NAME => unimplemented!(),
+        MYSQL_SOURCE_NAME => mysql(source),
 
         #[cfg(feature = "sql")]
-        POSTGRES_SOURCE_NAME => unimplemented!(),
+        POSTGRES_SOURCE_NAME => postgres(source),
 
         x => Err(PrismaError::ConfigurationError(format!(
             "Unsupported connector type: {}",
             x
         ))),
     }
-
-    // match config.databases.get("default") {
-    //     #[cfg(feature = "sql")]
-    //     Some(PrismaDatabase::File(ref config)) if config.connector == "sqlite-native" => sqlite(config),
-
-    //     #[cfg(feature = "sql")]
-    //     Some(config) if config.connector() == "postgres-native" => postgres(config),
-
-    //     #[cfg(feature = "sql")]
-    //     Some(config) if config.connector() == "mysql-native" => mysql(config),
-
-    //     Some(config) => panic!("Database connector for {} is not supported.", config.connector()),
-
-    //     None => panic!("Default database not set."),
-    // }
 }
 
 #[cfg(feature = "sql")]
@@ -53,21 +39,29 @@ fn sqlite(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     Ok(sql_executor(db_name.to_os_string().into_string().unwrap(), db))
 }
 
-// #[cfg(feature = "sql")]
-// fn postgres(config: &PrismaDatabase) -> Executor {
-//     let postgres = PostgreSql::try_from(config).unwrap();
-//     let connector = SqlDatabase::new(postgres);
+#[cfg(feature = "sql")]
+fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+    let psql = PostgreSql::try_from(source)?;
+    let db = SqlDatabase::new(psql);
+    let url = Url::parse(source.url())?;
+    let err_str = "No database found in connection string";
+    let mut db_name = url.path_segments().ok_or(PrismaError::ConfigurationError(err_str.into()))?;
+    let db_name = db_name.next().expect(err_str);
 
-//     sql_executor("".into(), connector)
-// }
+    Ok(sql_executor(db_name.into(), db))
+}
 
-// #[cfg(feature = "sql")]
-// fn mysql(config: &PrismaDatabase) -> Executor {
-//     let postgres = Mysql::try_from(config).unwrap();
-//     let connector = SqlDatabase::new(postgres);
+#[cfg(feature = "sql")]
+fn mysql(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+    let psql = Mysql::try_from(source)?;
+    let db = SqlDatabase::new(psql);
+    let url = Url::parse(source.url())?;
+    let err_str = "No database found in connection string";
+    let mut db_name = url.path_segments().ok_or(PrismaError::ConfigurationError(err_str.into()))?;
+    let db_name = db_name.next().expect(err_str);
 
-//     sql_executor("".into(), connector)
-// }
+    Ok(sql_executor(db_name.into(), db))
+}
 
 #[cfg(feature = "sql")]
 fn sql_executor<T>(db_name: String, connector: SqlDatabase<T>) -> Executor

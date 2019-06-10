@@ -16,6 +16,7 @@ use r2d2_mysql::pool::MysqlConnectionManager;
 use serde_json::{Map, Number, Value};
 use std::convert::TryFrom;
 use uuid::Uuid;
+use url::Url;
 
 type Pool = r2d2::Pool<MysqlConnectionManager>;
 
@@ -29,8 +30,26 @@ impl TryFrom<&Box<dyn Source>> for Mysql {
 
     /// Todo connection limit configuration
     fn try_from(source: &Box<dyn Source>) -> SqlResult<Mysql> {
-        // Sqlite::new(source.url().to_owned(), 10, false)
-        unimplemented!()
+        let mut builder = my::OptsBuilder::new();
+        let url = Url::parse(source.url())?;
+        let db_name = match url.path_segments() {
+            Some(mut segments) => segments.next().unwrap_or("mysql"),
+            None => "mysql",
+        };
+
+
+        builder.ip_or_hostname(url.host_str());
+        builder.tcp_port(url.port().unwrap_or(3306));
+        builder.user(Some(url.username()));
+        builder.pass(url.password());
+        builder.db_name(Some(db_name));
+        builder.verify_peer(false);
+        builder.stmt_cache_size(Some(1000));
+
+        let manager = MysqlConnectionManager::new(builder);
+        let pool = r2d2::Pool::builder().max_size(10).build(manager)?;
+
+        Ok(Self { pool })
     }
 }
 

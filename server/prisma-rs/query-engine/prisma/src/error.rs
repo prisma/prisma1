@@ -61,6 +61,12 @@ impl From<CoreError> for PrismaError {
     }
 }
 
+impl From<url::ParseError> for PrismaError {
+    fn from(e: url::ParseError) -> PrismaError {
+        PrismaError::ConfigurationError(format!("Error parsing connection string: {}", e))
+    }
+}
+
 impl From<CommonError> for PrismaError {
     fn from(e: CommonError) -> PrismaError {
         PrismaError::ConfigurationError(format!("{}", e))
