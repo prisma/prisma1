@@ -23,7 +23,6 @@ impl ProtoBufInterface {
             {
                 let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
                 let sqlite = Sqlite::new(format!("{}/db", server_root).into(), config.limit(), true).unwrap();
-
                 let connector = Arc::new(SqlDatabase::new(sqlite));
 
                 ProtoBufInterface {

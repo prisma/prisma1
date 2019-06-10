@@ -1,12 +1,11 @@
 use crate::{PrismaError, PrismaResult};
 use core::{Executor, ReadQueryExecutor, WriteQueryExecutor};
 use datamodel::{
-    source::{MySqlSource, PostgresSource, SqliteSource, MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
+    source::{MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
     Source,
 };
+use std::{convert::TryFrom, path::PathBuf, sync::Arc};
 use url::Url;
-use std::sync::Arc;
-use std::{convert::TryFrom, path::PathBuf};
 
 #[cfg(feature = "sql")]
 use sql_connector::{Mysql, PostgreSql, SqlDatabase, Sqlite, Transactional};
@@ -45,7 +44,9 @@ fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     let db = SqlDatabase::new(psql);
     let url = Url::parse(source.url())?;
     let err_str = "No database found in connection string";
-    let mut db_name = url.path_segments().ok_or(PrismaError::ConfigurationError(err_str.into()))?;
+    let mut db_name = url
+        .path_segments()
+        .ok_or(PrismaError::ConfigurationError(err_str.into()))?;
     let db_name = db_name.next().expect(err_str);
 
     Ok(sql_executor(db_name.into(), db))
@@ -57,7 +58,9 @@ fn mysql(source: &Box<dyn Source>) -> PrismaResult<Executor> {
     let db = SqlDatabase::new(psql);
     let url = Url::parse(source.url())?;
     let err_str = "No database found in connection string";
-    let mut db_name = url.path_segments().ok_or(PrismaError::ConfigurationError(err_str.into()))?;
+    let mut db_name = url
+        .path_segments()
+        .ok_or(PrismaError::ConfigurationError(err_str.into()))?;
     let db_name = db_name.next().expect(err_str);
 
     Ok(sql_executor(db_name.into(), db))

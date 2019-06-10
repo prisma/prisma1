@@ -136,8 +136,8 @@ impl From<r2d2::Error> for SqlError {
 }
 
 impl From<url::ParseError> for SqlError {
-    fn from(e: url::ParseError) -> SqlError {
-        SqlError::DatabaseCreationError("Error parsing database connection string")
+    fn from(_: url::ParseError) -> SqlError {
+        SqlError::DatabaseCreationError("Error parsing database connection string.")
     }
 }
 
