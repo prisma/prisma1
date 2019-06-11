@@ -11,6 +11,7 @@ pub trait FieldAsserts {
     fn assert_relation_to_fields(&self, t: &[&str]) -> &Self;
     fn assert_arity(&self, arity: &dml::FieldArity) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
+    fn assert_with_documentation(&self, t: &str) -> &Self;
     fn assert_default_value(&self, t: dml::Value) -> &Self;
     fn assert_is_generated(&self, b: bool) -> &Self;
     fn assert_is_id(&self, b: bool) -> &Self;
@@ -24,6 +25,7 @@ pub trait ModelAsserts {
     fn assert_has_field(&self, t: &str) -> &dml::Field;
     fn assert_is_embedded(&self, t: bool) -> &Self;
     fn assert_with_db_name(&self, t: &str) -> &Self;
+    fn assert_with_documentation(&self, t: &str) -> &Self;
 }
 
 pub trait EnumAsserts {
@@ -113,6 +115,12 @@ impl FieldAsserts for dml::Field {
         return self;
     }
 
+    fn assert_with_documentation(&self, t: &str) -> &Self {
+        assert_eq!(self.documentation, Some(String::from(t)));
+
+        return self;
+    }
+
     fn assert_default_value(&self, t: dml::Value) -> &Self {
         assert_eq!(self.default_value, Some(t));
 
@@ -187,6 +195,11 @@ impl ModelAsserts for dml::Model {
     }
     fn assert_with_db_name(&self, t: &str) -> &Self {
         assert_eq!(self.database_name, Some(String::from(t)));
+
+        return self;
+    }
+    fn assert_with_documentation(&self, t: &str) -> &Self {
+        assert_eq!(self.documentation, Some(String::from(t)));
 
         return self;
     }

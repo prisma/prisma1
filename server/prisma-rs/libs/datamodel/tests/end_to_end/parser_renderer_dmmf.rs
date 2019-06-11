@@ -118,3 +118,35 @@ fn test_dmmf_roundtrip_with_sources() {
 
     assert_eq!(DATAMODEL_WITH_SOURCE, rendered);
 }
+
+const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
+source pg1 {
+    type = "postgres"
+    url = "https://localhost/postgres1"
+}
+
+/// My author model.
+model Author {
+    id Int @id
+    /// Name of the author.
+    name String?
+    createdAt DateTime @default(now())
+}"#;
+
+#[test]
+fn test_dmmf_roundtrip_with_sources_and_comments() {
+    let dml = datamodel::parse(&DATAMODEL_WITH_SOURCE_AND_COMMENTS).unwrap();
+    let sources = datamodel::load_data_source_configuration(&DATAMODEL_WITH_SOURCE_AND_COMMENTS).unwrap();
+
+    let dmmf = datamodel::dmmf::render_to_dmmf(&dml);
+    let json_sources = datamodel::render_sources_to_json(&sources);
+
+    let dml2 = datamodel::dmmf::parse_from_dmmf(&dmmf);
+    let sources = datamodel::sources_from_json(&json_sources);
+
+    let rendered = datamodel::render_with_sources(&dml2, &sources).unwrap();
+
+    println!("{}", rendered);
+
+    assert_eq!(DATAMODEL_WITH_SOURCE_AND_COMMENTS, rendered);
+}

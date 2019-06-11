@@ -2,11 +2,14 @@
 // Global (builtin) expressions
 // ######################################
 
-// Treat every whitespace the same
+// Treat every whitespace the same for now.
 WHITESPACE = _{ SPACE_SEPARATOR | NEWLINE }
 // Comment ignores everything until end of line.
 // TODO: As soon as we include the comments in the AST, we need to move from silent (_) to atomic (@)
-COMMENT = _{ "#" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+COMMENT = _{ (!"///") ~ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+
+doc_content = @{ (!NEWLINE ~ ANY)* ~ NEWLINE }
+doc_comment = { "///" ~ doc_content }
 
 // ######################################
 // Base building blocks
@@ -71,23 +74,23 @@ default_value = { "=" ~ expression }
 // TODO: We want to force a line break after a field declaration.
 // For this, we have to rely on pests new '-' operator.
 // Progress tracked here: https://github.com/pest-parser/pest/issues/271
-field_declaration = { identifier ~ (":")? ~ field_type ~ default_value? ~ ( "@" ~ directive )* }
+field_declaration = { doc_comment* ~ identifier ~ (":")? ~ field_type ~ default_value? ~ ( "@" ~ directive )* }
 
 // ######################################
 // Custom type declarations
 // ######################################
-type_declaration = { "type" ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
+type_declaration = { doc_comment* ~ "type" ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
 
 // ######################################
 // Model declarations
 // ######################################
-model_declaration = { "model" ~ identifier ~ "{" ~ ( field_declaration | ( "@@" ~ directive )  )* ~ "}" }
+model_declaration = { doc_comment* ~ "model" ~ identifier ~ "{" ~ ( field_declaration | ( "@@" ~ directive )  )* ~ "}" }
 
 // ######################################
 // Enum declarations
 // ######################################
 enum_field_declaration = @{ identifier }
-enum_declaration = { "enum" ~ identifier ~ "{" ~ (enum_field_declaration | ( "@@" ~ directive )  )* ~ "}" }
+enum_declaration = { doc_comment* ~ "enum" ~ identifier ~ "{" ~ (enum_field_declaration | ( "@@" ~ directive )  )* ~ "}" }
 
 // ######################################
 // Source block
@@ -95,7 +98,7 @@ enum_declaration = { "enum" ~ identifier ~ "{" ~ (enum_field_declaration | ( "@@
 source_key_value = { identifier ~ "=" ~ expression }
 source_properties = { "properties" ~ "{" ~ source_key_value* ~ "}" }
 // Only allows ONE properties block.
-source_block = { "source" ~ identifier ~ "{" ~ source_key_value* ~ source_properties? ~ source_key_value* ~ "}" }
+source_block = { doc_comment* ~ "source" ~ identifier ~ "{" ~ source_key_value* ~ source_properties? ~ source_key_value* ~ "}" }
 
 // ######################################
 // Datamodel

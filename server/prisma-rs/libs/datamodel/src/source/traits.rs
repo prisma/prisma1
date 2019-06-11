@@ -31,6 +31,9 @@ pub trait Source {
     ///
     /// The directives returned here are unscoped.
     fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>>;
+
+    /// Documentation of this source.
+    fn documentation(&self) -> &Option<String>;
 }
 
 /// Trait for source definitions.
@@ -40,5 +43,11 @@ pub trait SourceDefinition {
     /// Returns the name of the source.
     fn connector_type(&self) -> &'static str;
     /// Instantiates a new source, using the given name, url and detailed arguments.
-    fn create(&self, name: &str, url: &str, arguments: &Arguments) -> Result<Box<Source>, ValidationError>;
+    fn create(
+        &self,
+        name: &str,
+        url: &str,
+        arguments: &Arguments,
+        documentation: &Option<String>,
+    ) -> Result<Box<Source>, ValidationError>;
 }

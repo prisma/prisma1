@@ -56,11 +56,18 @@ impl SourceDefinition for CustomDbDefinition {
         CONNECTOR_NAME
     }
 
-    fn create(&self, name: &str, url: &str, arguments: &Arguments) -> Result<Box<Source>, ValidationError> {
+    fn create(
+        &self,
+        name: &str,
+        url: &str,
+        arguments: &Arguments,
+        documentation: &Option<String>,
+    ) -> Result<Box<Source>, ValidationError> {
         Ok(Box::new(CustomDb {
             name: String::from(name),
             url: String::from(url),
             base_type: self.get_base_type(arguments)?,
+            documentation: documentation.clone(),
         }))
     }
 }
@@ -73,6 +80,7 @@ struct CustomDb {
     name: String,
     url: String,
     base_type: PrismaType,
+    documentation: Option<String>,
 }
 
 impl Source for CustomDb {
@@ -102,6 +110,9 @@ impl Source for CustomDb {
     }
     fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>> {
         vec![]
+    }
+    fn documentation(&self) -> &Option<String> {
+        &self.documentation
     }
 }
 

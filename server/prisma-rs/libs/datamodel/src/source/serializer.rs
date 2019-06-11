@@ -20,7 +20,7 @@ impl SourceSerializer {
             name: source.name().clone(),
             properties: arguments,
             detail_configuration: detail_arguments,
-            comments: Vec::new(),
+            documentation: source.documentation().clone().map(|text| ast::Comment { text }),
             span: ast::Span::empty(),
         }
     }

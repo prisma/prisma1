@@ -35,6 +35,7 @@ impl SourceLoader {
                     &ast_source.name,
                     &url,
                     &Arguments::new(&ast_source.detail_configuration, ast_source.span),
+                    &ast_source.documentation.clone().map(|comment| comment.text),
                 );
             }
         }

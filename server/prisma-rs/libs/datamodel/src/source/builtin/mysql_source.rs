@@ -4,6 +4,7 @@ pub const MYSQL_SOURCE_NAME: &str = "mysql";
 pub struct MySqlSource {
     pub(super) name: String,
     pub(super) url: String,
+    pub(super) documentation: Option<String>,
 }
 
 impl Source for MySqlSource {
@@ -27,5 +28,8 @@ impl Source for MySqlSource {
     }
     fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>> {
         vec![]
+    }
+    fn documentation(&self) -> &Option<String> {
+        &self.documentation
     }
 }
