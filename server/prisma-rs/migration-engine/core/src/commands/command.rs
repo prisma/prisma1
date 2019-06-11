@@ -14,6 +14,10 @@ pub trait MigrationCommand {
     fn has_source_config() -> bool {
         true
     }
+
+    fn underlying_database_must_exist() -> bool {
+        false
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -28,6 +32,7 @@ pub type CommandResult<T> = Result<T, CommandError>;
 #[serde(tag = "type")]
 pub enum CommandError {
     DataModelErrors{code: i64, errors: Vec<String>},
+    InitializationError { code: i64, error: String },
 }
 
 impl From<datamodel::errors::ErrorCollection> for CommandError {

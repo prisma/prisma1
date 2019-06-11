@@ -31,12 +31,12 @@ impl RpcApi {
             let input: T::Input = params.clone().parse()?;
             let engine = if T::has_source_config() {
                 let source_config: SourceConfigInput = params.parse()?;
-                let engine = MigrationEngine::new(&source_config.source_config);
+                let engine = MigrationEngine::new(&source_config.source_config, T::underlying_database_must_exist());
                 engine.init();
                 engine
             } else {
                 // FIXME: this is ugly
-                MigrationEngine::new("")
+                MigrationEngine::new("", T::underlying_database_must_exist())
             };
             let cmd = T::new(input);
             let result = &cmd.execute(&engine).map_err(convert_error)?;

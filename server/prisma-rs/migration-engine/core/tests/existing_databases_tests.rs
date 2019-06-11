@@ -295,12 +295,9 @@ fn execute<F>(mut migrationFn: F) -> DatabaseSchema
 where
     F: FnMut(&mut Migration) -> (),
 {
-    let database_folder_path = sqlite_test_folder();
-    // TODO: this name is duplication from the misc helpers
-    let schema_name = "migration_engine";
-
     let test_mode = false;
-    let conn = std::sync::Arc::new(SqliteDatabaseClient::new(database_folder_path, 32, test_mode).unwrap());
+    let schema_name = "existing_db_tests";
+    let conn = std::sync::Arc::new(SqliteDatabaseClient::new(sqlite_test_file(), 32, test_mode).unwrap());
     conn.with_connection(&schema_name, |c| {
         let mut migration = Migration::new().schema(schema_name);
         migrationFn(&mut migration);

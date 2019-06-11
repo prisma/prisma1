@@ -10,7 +10,7 @@ use std::sync::Arc;
 pub struct SqlMigrationPersistence<C: Connectional> {
     pub connection: Arc<C>,
     pub schema_name: String,
-    pub folder_path: Option<String>,
+    pub file_path: Option<String>,
 }
 
 #[allow(unused, dead_code)]
@@ -45,8 +45,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
         let _ = self.connection.with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]));
 
-        if let Some(ref folder_path) = self.folder_path {
-            let mut file_path = format!("{}/{}.db", folder_path, self.schema_name);
+        if let Some(ref file_path) = self.file_path {
             let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
         }
     }
@@ -158,8 +157,8 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 
 impl<C: Connectional> SqlMigrationPersistence<C> {
     fn table(&self) -> Table {
-        if self.folder_path.is_some() {
-            // sqlite case
+        if self.file_path.is_some() {
+            // sqlite case. Otherwise prisma-query produces invalid SQL
             TABLE_NAME.to_string().into()
         } else {
             (self.schema_name.to_string(), TABLE_NAME.to_string()).into()

@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 pub trait DestructiveChangesChecker<T> {
     fn check(&self, database_migration: &T) -> Vec<MigrationErrorOrWarning>;
 }
@@ -19,4 +21,22 @@ pub struct MigrationError {
     pub tpe: String,
     pub description: String,
     pub field: Option<String>,
+}
+
+
+pub struct EmptyDestructiveChangesChecker<T>{
+    database_migration: PhantomData<T>
+}
+impl<T> EmptyDestructiveChangesChecker<T> {
+    pub fn new() -> EmptyDestructiveChangesChecker<T> {
+        EmptyDestructiveChangesChecker {
+            database_migration: PhantomData
+        }
+    }
+}
+
+impl<T> DestructiveChangesChecker<T> for EmptyDestructiveChangesChecker<T> {
+    fn check(&self, _database_migration: &T) -> Vec<MigrationErrorOrWarning> {
+        Vec::new()
+    }
 }

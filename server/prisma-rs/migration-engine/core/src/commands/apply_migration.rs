@@ -28,6 +28,10 @@ impl MigrationCommand for ApplyMigrationCommand {
             _ => self.handle_normal_migration(&engine),
         }
     }
+
+    fn underlying_database_must_exist() -> bool {
+        true
+    }
 }
 
 impl ApplyMigrationCommand {

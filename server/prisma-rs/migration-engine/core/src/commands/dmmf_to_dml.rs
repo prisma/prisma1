@@ -17,11 +17,10 @@ impl MigrationCommand for DmmfToDmlCommand {
     fn execute(&self, _engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let datamodel = datamodel::dmmf::parse_from_dmmf(&self.input.dmmf);
-        let json_string = serde_json::to_string(&self.input.data_sources).unwrap();
-        let sources = datamodel::sources_from_json(&json_string);        
+        let config = datamodel::config_from_mcf_json_value(self.input.data_sources.clone());        
 
         Ok(DmmfToDmlCommandOutput {
-            datamodel: datamodel::render_with_sources(&datamodel, &sources).unwrap(),
+            datamodel: datamodel::render_with_config(&datamodel, &config).unwrap(),
         })
     }
 

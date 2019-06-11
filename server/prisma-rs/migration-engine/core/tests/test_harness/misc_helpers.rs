@@ -23,7 +23,8 @@ where
     T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
-    let engine = MigrationEngine::new(&test_config());
+    let underlying_db_must_exist = true;
+    let engine = MigrationEngine::new(&test_config(), underlying_db_must_exist);
     let connector = engine.connector();
     connector.reset();
     engine.init();
@@ -53,21 +54,20 @@ fn test_config() -> String {
 }
 
 fn sqlite_test_config() -> String {
-    let database_folder_path = sqlite_test_folder();
-    let file_path = format!("{}/{}.db", database_folder_path, SCHEMA_NAME);
     format!(r#"
         datasource my_db {{
             provider = "sqlite"
             url = "file:{}"
             default = true
         }}
-    "#, file_path)
+    "#, sqlite_test_file())
 }
 
-pub fn sqlite_test_folder() -> String {
+pub fn sqlite_test_file() -> String {
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
-    database_folder_path
+    let file_path = format!("{}/{}.db", database_folder_path, SCHEMA_NAME);
+    file_path
 }
 
 fn postgres_test_config() -> String {
