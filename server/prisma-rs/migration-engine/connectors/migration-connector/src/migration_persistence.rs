@@ -14,7 +14,11 @@ pub trait MigrationPersistence {
     fn last_non_watch_datamodel(&self) -> Datamodel {
         let mut all_migrations = self.load_all();
         all_migrations.reverse();
-        all_migrations.into_iter().find(|m|!m.is_watch_migration()).map(|m|m.datamodel).unwrap_or(Datamodel::empty())
+        all_migrations
+            .into_iter()
+            .find(|m| !m.is_watch_migration())
+            .map(|m| m.datamodel)
+            .unwrap_or(Datamodel::empty())
     }
 
     // returns the last successful Migration
@@ -177,8 +181,7 @@ impl MigrationStatus {
     }
 }
 
-
-pub struct EmptyMigrationPersistence{}
+pub struct EmptyMigrationPersistence {}
 impl MigrationPersistence for EmptyMigrationPersistence {
     fn init(&self) {}
 

@@ -23,14 +23,13 @@ pub struct MigrationError {
     pub field: Option<String>,
 }
 
-
-pub struct EmptyDestructiveChangesChecker<T>{
-    database_migration: PhantomData<T>
+pub struct EmptyDestructiveChangesChecker<T> {
+    database_migration: PhantomData<T>,
 }
 impl<T> EmptyDestructiveChangesChecker<T> {
     pub fn new() -> EmptyDestructiveChangesChecker<T> {
         EmptyDestructiveChangesChecker {
-            database_migration: PhantomData
+            database_migration: PhantomData,
         }
     }
 }

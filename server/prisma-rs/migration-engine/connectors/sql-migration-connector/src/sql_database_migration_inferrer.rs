@@ -19,8 +19,8 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
     }
 }
 
-pub struct VirtualSqlDatabaseMigrationInferrer{
-    pub schema_name: String
+pub struct VirtualSqlDatabaseMigrationInferrer {
+    pub schema_name: String,
 }
 impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInferrer {
     fn infer(&self, previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> SqlMigration {
@@ -30,11 +30,7 @@ impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInfe
     }
 }
 
-fn infer(
-    current: &DatabaseSchema,
-    next: &DatabaseSchema,
-    schema_name: &str
-) -> SqlMigration {
+fn infer(current: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str) -> SqlMigration {
     let steps = infer_database_migration_steps_and_fix(&current, &next, &schema_name);
     let rollback = infer_database_migration_steps_and_fix(&next, &current, &schema_name);
     SqlMigration {
@@ -46,7 +42,7 @@ fn infer(
 fn infer_database_migration_steps_and_fix(
     from: &DatabaseSchema,
     to: &DatabaseSchema,
-    schema_name: &str
+    schema_name: &str,
 ) -> Vec<SqlMigrationStep> {
     let steps = DatabaseSchemaDiffer::diff(&from, &to);
     let is_sqlite = true;
@@ -61,7 +57,7 @@ fn fix_stupid_sqlite(
     steps: Vec<SqlMigrationStep>,
     current_database_schema: &DatabaseSchema,
     next_database_schema: &DatabaseSchema,
-    schema_name: &str
+    schema_name: &str,
 ) -> Vec<SqlMigrationStep> {
     let mut result = Vec::new();
     for step in steps {
@@ -113,7 +109,11 @@ fn fix(_alter_table: &AlterTable, current: &Table, next: &Table, schema_name: &s
                 .into_iter()
                 .filter(|c| next_columns.contains(&c))
                 .collect();
-            let columns_string = intersection_columns.iter().map(|c|format!("\"{}\"", c)).collect::<Vec<String>>().join(",");
+            let columns_string = intersection_columns
+                .iter()
+                .map(|c| format!("\"{}\"", c))
+                .collect::<Vec<String>>()
+                .join(",");
             let sql = format!(
                 "INSERT INTO \"{}\" ({}) SELECT {} from \"{}\"",
                 name_of_temporary_table,
@@ -140,7 +140,6 @@ fn fix(_alter_table: &AlterTable, current: &Table, next: &Table, schema_name: &s
         },
     ]
 }
-
 
 pub fn wrap_as_step<T, F>(steps: Vec<T>, mut wrap_fn: F) -> Vec<SqlMigrationStep>
 where

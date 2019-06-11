@@ -1,8 +1,8 @@
 use super::MigrationStepsResultOutput;
 use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
-use migration_connector::*;
 use datamodel::Datamodel;
+use migration_connector::*;
 
 pub struct ApplyMigrationCommand {
     input: ApplyMigrationInput,
@@ -48,7 +48,6 @@ impl ApplyMigrationCommand {
             .datamodel_calculator()
             .infer(&last_non_watch_datamodel, &self.input.steps);
 
-
         self.handle_migration(&engine, current_datamodel, next_datamodel)
     }
 
@@ -64,7 +63,12 @@ impl ApplyMigrationCommand {
         self.handle_migration(&engine, current_datamodel, next_datamodel)
     }
 
-    fn handle_migration(&self, engine: &Box<MigrationEngine>, current_datamodel: Datamodel, next_datamodel: Datamodel) -> CommandResult<MigrationStepsResultOutput> {
+    fn handle_migration(
+        &self,
+        engine: &Box<MigrationEngine>,
+        current_datamodel: Datamodel,
+        next_datamodel: Datamodel,
+    ) -> CommandResult<MigrationStepsResultOutput> {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
 
@@ -78,7 +82,7 @@ impl ApplyMigrationCommand {
             .render_steps_pretty(&database_migration);
 
         let database_migration_json = database_migration.serialize();
-        
+
         let mut migration = Migration::new(self.input.migration_id.clone());
         migration.datamodel_steps = self.input.steps.clone();
         migration.database_migration = database_migration_json;
@@ -88,7 +92,6 @@ impl ApplyMigrationCommand {
         connector
             .migration_applier()
             .apply(&saved_migration, &database_migration);
-        
 
         Ok(MigrationStepsResultOutput {
             datamodel: datamodel::render(&next_datamodel).unwrap(),

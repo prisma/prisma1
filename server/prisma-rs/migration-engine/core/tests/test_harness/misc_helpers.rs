@@ -54,13 +54,16 @@ fn test_config() -> String {
 }
 
 fn sqlite_test_config() -> String {
-    format!(r#"
+    format!(
+        r#"
         datasource my_db {{
             provider = "sqlite"
             url = "file:{}"
             default = true
         }}
-    "#, sqlite_test_file())
+    "#,
+        sqlite_test_file()
+    )
 }
 
 pub fn sqlite_test_file() -> String {
@@ -77,5 +80,6 @@ fn postgres_test_config() -> String {
             url = "postgresql://postgres:prisma@127.0.0.1:5432/db"
             default = true
         }
-    "#.to_string()
+    "#
+    .to_string()
 }

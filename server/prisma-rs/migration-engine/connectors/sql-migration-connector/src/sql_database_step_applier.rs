@@ -63,10 +63,13 @@ impl<C: Connectional> SqlDatabaseStepApplier<C> {
         let has_more = steps.get(index + 1).is_some();
         has_more
     }
-
 }
 
-fn render_steps_pretty(database_migration: &SqlMigration, sql_family: SqlFamily, schema_name: &str) -> serde_json::Value {
+fn render_steps_pretty(
+    database_migration: &SqlMigration,
+    sql_family: SqlFamily,
+    schema_name: &str,
+) -> serde_json::Value {
     let jsons = database_migration
         .steps
         .iter()

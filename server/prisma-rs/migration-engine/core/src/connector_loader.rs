@@ -1,17 +1,21 @@
+use crate::commands::{CommandError, CommandResult};
 use migration_connector::*;
+use sql_migration_connector::{SqlFamily, SqlMigrationConnector};
 use std::sync::Arc;
-use crate::commands::{CommandResult, CommandError};
-use sql_migration_connector::{SqlMigrationConnector, SqlFamily};
 
-pub fn load_connector(config: &str, must_exist: bool) -> CommandResult<Arc<MigrationConnector<DatabaseMigration = impl DatabaseMigrationMarker>>> {
+pub fn load_connector(
+    config: &str,
+    must_exist: bool,
+) -> CommandResult<Arc<MigrationConnector<DatabaseMigration = impl DatabaseMigrationMarker>>> {
     let config = datamodel::load_configuration(config)?;
-    let source = config.datasources.first().ok_or(CommandError::DataModelErrors{code: 1000, errors: vec![
-        "There is no datasource in the configuration.".to_string()
-    ]})?;
+    let source = config.datasources.first().ok_or(CommandError::DataModelErrors {
+        code: 1000,
+        errors: vec!["There is no datasource in the configuration.".to_string()],
+    })?;
     let sql_family = match source.connector_type().as_ref() {
         "sqlite" => SqlFamily::Sqlite,
         "postgres" => SqlFamily::Postgres,
-        x => unimplemented!("Connector {} is not supported yet", x)
+        x => unimplemented!("Connector {} is not supported yet", x),
     };
     let url = source.url();
     let exists = SqlMigrationConnector::exists(sql_family, &url);

@@ -9,7 +9,8 @@ mod sql_migration_persistence;
 use database_inspector::DatabaseInspector;
 use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
-use prisma_query::connector::{Sqlite, PostgreSql};
+use postgres::Config as PostgresConfig;
+use prisma_query::connector::{PostgreSql, Sqlite};
 use prisma_query::Connectional;
 use serde_json;
 use sql_database_migration_inferrer::*;
@@ -17,14 +18,13 @@ use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
 pub use sql_migration::*;
 use sql_migration_persistence::*;
-use std::sync::Arc;
-use url::Url;
-use std::path::Path;
-use postgres::{ Config as PostgresConfig };
-use std::time::Duration;
-use std::fs;
 use std::convert::TryFrom;
+use std::fs;
+use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::time::Duration;
+use url::Url;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
@@ -42,7 +42,7 @@ pub struct SqlMigrationConnector {
 pub enum SqlFamily {
     Sqlite,
     Postgres,
-    Mysql
+    Mysql,
 }
 
 impl SqlMigrationConnector {
@@ -52,30 +52,30 @@ impl SqlMigrationConnector {
             SqlFamily::Sqlite => {
                 let sqlite = Sqlite::try_from(url).expect("Loading SQLite failed");
                 sqlite.does_file_exist()
-            },
+            }
             _ => unimplemented!(),
         }
-    }    
+    }
 
     pub fn new(sql_family: SqlFamily, url: &str) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
         let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
         let connection_limit = 10;
 
-        match sql_family { 
+        match sql_family {
             SqlFamily::Sqlite => {
                 assert!(url.starts_with("file:"), "the url for sqlite must start with 'file:'");
                 let conn = Arc::new(Sqlite::try_from(url).expect("Loading SQLite failed"));
                 let schema_name = "lift".to_string();
                 let file_path = url.trim_start_matches("file:").to_string();
                 Self::create_connector(conn, sql_family, schema_name, Some(file_path))
-            },
+            }
             SqlFamily::Postgres => {
                 let mut config = PostgresConfig::new();
                 if let Some(host) = parsed_url.host_str() {
                     config.host(host);
                 }
                 config.user(parsed_url.username());
-                if let Some(password) = parsed_url.password(){
+                if let Some(password) = parsed_url.password() {
                     config.password(password);
                 }
                 let mut db_name = parsed_url.path().to_string();
@@ -85,22 +85,35 @@ impl SqlMigrationConnector {
 
                 let conn = Arc::new(PostgreSql::new(config, connection_limit).unwrap());
                 Self::create_connector(conn, sql_family, db_name, None)
-            },
-            _ => unimplemented!()
+            }
+            _ => unimplemented!(),
         }
     }
 
-    pub fn virtual_variant(sql_family: SqlFamily, url: &str) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
+    pub fn virtual_variant(
+        sql_family: SqlFamily,
+        url: &str,
+    ) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
         // TODO: duplicated from above
         let path = Path::new(&url);
-        let schema_name = path.file_stem().expect("file url must contain a file name").to_str().unwrap().to_string();
-        Arc::new(VirtualSqlMigrationConnector{
+        let schema_name = path
+            .file_stem()
+            .expect("file url must contain a file name")
+            .to_str()
+            .unwrap()
+            .to_string();
+        Arc::new(VirtualSqlMigrationConnector {
             sql_family: sql_family,
             schema_name: schema_name,
         })
     }
 
-    fn create_connector<C: Connectional + 'static>(conn: Arc<C>, sql_family: SqlFamily, schema_name: String, file_path: Option<String>) -> Arc<SqlMigrationConnector> {
+    fn create_connector<C: Connectional + 'static>(
+        conn: Arc<C>,
+        sql_family: SqlFamily,
+        schema_name: String,
+        file_path: Option<String>,
+    ) -> Arc<SqlMigrationConnector> {
         let migration_persistence = Arc::new(SqlMigrationPersistence {
             connection: Arc::clone(&conn),
             schema_name: schema_name.clone(),
@@ -118,7 +131,7 @@ impl SqlMigrationConnector {
             conn: Arc::clone(&conn),
         });
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
-        Arc::new(SqlMigrationConnector {            
+        Arc::new(SqlMigrationConnector {
             file_path,
             sql_family,
             schema_name,
@@ -140,8 +153,10 @@ impl MigrationConnector for SqlMigrationConnector {
         if let Some(file_path) = &self.file_path {
             let path_buf = PathBuf::from(&file_path);
             match path_buf.parent() {
-                Some(parent_directory) => fs::create_dir_all(parent_directory).expect("creating the database folders failed"),
-                None => {},
+                Some(parent_directory) => {
+                    fs::create_dir_all(parent_directory).expect("creating the database folders failed")
+                }
+                None => {}
             }
         }
         self.migration_persistence.init();
@@ -183,23 +198,22 @@ struct VirtualSqlMigrationConnector {
 impl MigrationConnector for VirtualSqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
 
-    fn initialize(&self) {
-    }
+    fn initialize(&self) {}
 
     fn reset(&self) {}
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence> {
-        Arc::new(EmptyMigrationPersistence{})
+        Arc::new(EmptyMigrationPersistence {})
     }
 
     fn database_migration_inferrer(&self) -> Arc<DatabaseMigrationInferrer<SqlMigration>> {
-        Arc::new(VirtualSqlDatabaseMigrationInferrer{
+        Arc::new(VirtualSqlDatabaseMigrationInferrer {
             schema_name: self.schema_name.clone(),
         })
     }
 
     fn database_migration_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigration>> {
-        Arc::new(VirtualSqlDatabaseStepApplier{
+        Arc::new(VirtualSqlDatabaseStepApplier {
             sql_family: self.sql_family.clone(),
             schema_name: self.schema_name.clone(),
         })

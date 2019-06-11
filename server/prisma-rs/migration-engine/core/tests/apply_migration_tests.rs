@@ -89,7 +89,6 @@ fn steps_equivalence_criteria_is_satisfied_when_leaving_watch_mode() {
         let steps3 = vec![delete_field_step("Test", "field")];
         let _ = apply_migration(&engine, steps3.clone(), "watch-0003");
 
-
         let custom_migration_id = "a-custom-migration-id";
         let mut final_steps = Vec::new();
         final_steps.append(&mut steps1.clone()); // steps2 and steps3 eliminate each other
@@ -118,8 +117,6 @@ fn must_handle_additional_steps_when_transitioning_out_of_watch_mode() {
 
         let steps2 = vec![create_field_step("Test", "field1", ScalarType::String)];
         let _ = apply_migration(&engine, steps2.clone(), "watch-0002");
-
-
 
         let custom_migration_id = "a-custom-migration-id";
         let additional_steps = vec![create_field_step("Test", "field2", ScalarType::String)];

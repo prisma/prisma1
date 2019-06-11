@@ -3,10 +3,10 @@ mod test_harness;
 use migration_core::rpc_api::RpcApi;
 use test_harness::*;
 
-
 #[test]
 fn simple_end_to_end_test() {
-    let json = format!(r#"
+    let json = format!(
+        r#"
         {{
             "id": 1,
             "jsonrpc": "2.0",
@@ -15,7 +15,9 @@ fn simple_end_to_end_test() {
                 "sourceConfig": {}
             }}
         }}
-    "#, test_config_json_escaped());
+    "#,
+        test_config_json_escaped()
+    );
 
     let result = handle_command(&json);
     assert_eq!(result, r#"{"jsonrpc":"2.0","result":[],"id":1}"#);
@@ -23,7 +25,8 @@ fn simple_end_to_end_test() {
 
 #[test]
 fn error_if_the_datamodel_is_invalid() {
-    let json = format!(r#"
+    let json = format!(
+        r#"
         {{
             "id": 1,
             "jsonrpc": "2.0",
@@ -35,7 +38,9 @@ fn error_if_the_datamodel_is_invalid() {
                 "dataModel": "model Blog {{ id Int @id @default(cuid()) }}"
             }}
         }}
-    "#, test_config_json_escaped());
+    "#,
+        test_config_json_escaped()
+    );
 
     let result = handle_command(&json);
     let result_json = serde_json::from_str::<serde_json::Value>(&result).unwrap();

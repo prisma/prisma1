@@ -1,9 +1,9 @@
+use super::connector_loader::load_connector;
 use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
 use migration_connector::*;
 use std::sync::Arc;
-use super::connector_loader::load_connector;
 
 // todo: add MigrationConnector as a field. does not work  because of GAT shinenigans
 
