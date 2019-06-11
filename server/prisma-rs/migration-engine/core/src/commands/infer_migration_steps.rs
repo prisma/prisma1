@@ -1,5 +1,5 @@
 use super::MigrationStepsResultOutput;
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 use migration_connector::*;
 
@@ -58,9 +58,8 @@ impl MigrationCommand for InferMigrationStepsCommand {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct InferMigrationStepsInput {
-    pub project_info: String,
     pub migration_id: String,
     #[serde(alias = "dataModel")]
     pub datamodel: String,

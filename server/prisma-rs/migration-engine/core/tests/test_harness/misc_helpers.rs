@@ -1,9 +1,9 @@
-
-
 use database_inspector::*;
 use datamodel;
 use migration_core::MigrationEngine;
 use std::panic;
+
+const SCHEMA_NAME: &str = "migration_engine";
 
 pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     match datamodel::parse(datamodel_string) {
@@ -23,7 +23,7 @@ where
     T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
-    let engine = MigrationEngine::new();
+    let engine = MigrationEngine::new(&test_config());
     let connector = engine.connector();
     connector.reset();
     engine.init();
@@ -36,8 +36,46 @@ where
 
 pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
     let inspector = engine.connector().database_inspector();
-    let mut result = inspector.introspect(&engine.schema_name());
-    // the presence of the _Migration table makes assertions harder. Therefore remove it.
+    let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
+    // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
     result
+}
+
+pub fn test_config_json_escaped() -> String {
+    let config = test_config();
+    serde_json::to_string(&serde_json::Value::String(config)).unwrap()
+}
+
+fn test_config() -> String {
+    sqlite_test_config()
+    // postgres_test_config()
+}
+
+fn sqlite_test_config() -> String {
+    let database_folder_path = sqlite_test_folder();
+    let file_path = format!("{}/{}.db", database_folder_path, SCHEMA_NAME);
+    format!(r#"
+        source my_db {{
+            type = "sqlite"
+            url = "file:{}"
+            default = true
+        }}
+    "#, file_path)
+}
+
+pub fn sqlite_test_folder() -> String {
+    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+    let database_folder_path = format!("{}/db", server_root);
+    database_folder_path
+}
+
+fn postgres_test_config() -> String {
+    r#"
+        source my_db {
+            type = "postgres"
+            url = "postgresql://postgres:prisma@127.0.0.1:5432/db"
+            default = true
+        }
+    "#.to_string()
 }

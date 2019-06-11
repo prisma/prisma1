@@ -2,12 +2,13 @@ use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
 use datamodel::dml::*;
 use migration_connector::*;
-use sql_migration_connector::SqlMigrationConnector;
 use std::sync::Arc;
+use super::connector_loader::load_connector;
 
 // todo: add MigrationConnector as a field. does not work  because of GAT shinenigans
 
 pub struct MigrationEngine {
+    config: String,
     datamodel_migration_steps_inferrer: Arc<DataModelMigrationStepsInferrer>,
     datamodel_calculator: Arc<DataModelCalculator>,
 }
@@ -15,8 +16,9 @@ pub struct MigrationEngine {
 impl std::panic::RefUnwindSafe for MigrationEngine {}
 
 impl MigrationEngine {
-    pub fn new() -> Box<MigrationEngine> {
+    pub fn new(config: &str) -> Box<MigrationEngine> {
         let engine = MigrationEngine {
+            config: config.to_string(),
             datamodel_migration_steps_inferrer: Arc::new(DataModelMigrationStepsInferrerImplWrapper {}),
             datamodel_calculator: Arc::new(DataModelCalculatorImpl {}),
         };
@@ -36,12 +38,7 @@ impl MigrationEngine {
     }
 
     pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigration = impl DatabaseMigrationMarker>> {
-        Arc::new(SqlMigrationConnector::new(self.schema_name()))
-    }
-
-    pub fn schema_name(&self) -> String {
-        // todo: the sqlite file name must be taken from the config
-        "migration_engine".to_string()
+        load_connector(&self.config).expect("loading the connector failed.")
     }
 
     pub fn render_datamodel(&self, datamodel: &Datamodel) -> String {

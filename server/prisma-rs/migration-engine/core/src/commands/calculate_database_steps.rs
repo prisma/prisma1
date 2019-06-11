@@ -1,5 +1,5 @@
 use super::MigrationStepsResultOutput;
-use crate::commands::command::{MigrationCommand, CommandResult};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 use datamodel::Datamodel;
 use migration_connector::*;
@@ -51,9 +51,8 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct CalculateDatabaseStepsInput {
-    pub project_info: String,
     pub assume_to_be_applied: Vec<MigrationStep>,
     pub steps_to_apply: Vec<MigrationStep>,
 }
