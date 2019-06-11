@@ -1,4 +1,4 @@
-// #![deny(warnings)]
+#![deny(warnings)]
 #![recursion_limit = "128"]
 
 #[macro_use]
@@ -11,16 +11,15 @@ use error::*;
 use prisma_common::config::{self, PrismaConfig};
 use protobuf::{ProtoBufEnvelope, ProtoBufInterface};
 use lazy_static::lazy_static;
-use std::{ffi::CStr, env, os::raw::c_char, slice};
+use std::{ffi::CStr, os::raw::c_char, slice};
 
 pub type BridgeResult<T> = Result<T, BridgeError>;
 
 lazy_static! {
-    // pub static ref PBI: ProtoBufInterface = ProtoBufInterface::new(&CONFIG);
-    pub static ref SERVER_ROOT: String = env::var("SERVER_ROOT").unwrap_or_else(|_| String::from("."));
     pub static ref CONFIG: PrismaConfig = config::load().unwrap();
 }
 
+#[no_mangle]
 pub unsafe extern "C" fn create_interface(database_file: *const c_char) -> *mut ProtoBufInterface {
     let database_file = CStr::from_ptr(database_file).to_str().unwrap();
     let database_file: Option<String> = if database_file == "" {
@@ -33,6 +32,7 @@ pub unsafe extern "C" fn create_interface(database_file: *const c_char) -> *mut 
     Box::into_raw(Box::new(pbi))
 }
 
+#[no_mangle]
 pub unsafe extern "C" fn destroy_interface(ptr: *mut ProtoBufInterface) {
     Box::from_raw(ptr);
 }
