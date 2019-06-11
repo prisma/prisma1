@@ -3,9 +3,8 @@ use crate::{
     ast,
     common::value::ValueValidator,
     common::{FromStrAndSpan, PrismaType},
-    dml,
+    configuration, dml,
     errors::{ErrorCollection, ValidationError},
-    configuration,
 };
 
 /// Helper for lifting a datamodel.
@@ -50,6 +49,7 @@ impl LiftAstToDml {
                     Err(mut err) => errors.append(&mut err),
                 },
                 ast::Top::Source(_) => { /* Source blocks are explicitely ignored by the validator */ }
+                ast::Top::Generator(_) => { /* Generator blocks are explicitely ignored by the validator */ }
                 // TODO: For now, type blocks are never checked on their own.
                 ast::Top::Type(_) => { /* Type blocks are inlined */ }
             }

@@ -1,4 +1,4 @@
-use crate::{dml, dml::validator::directive::DirectiveValidator, configuration::*};
+use crate::{configuration::*, dml, dml::validator::directive::DirectiveValidator};
 pub const MYSQL_SOURCE_NAME: &str = "mysql";
 
 pub struct MySqlSource {

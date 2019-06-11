@@ -31,6 +31,7 @@ impl<'a> Renderer<'a> {
                 ast::Top::Enum(enm) => self.render_enum(enm),
                 ast::Top::Type(custom_type) => self.render_custom_type(custom_type),
                 ast::Top::Source(source) => self.render_source_block(source),
+                ast::Top::Generator(generator) => self.render_generator_block(generator),
             };
         }
     }
@@ -55,6 +56,27 @@ impl<'a> Renderer<'a> {
         self.indent_up();
 
         for property in &source.properties {
+            self.write(&property.name);
+            self.write(" = ");
+            self.render_value(&property.value);
+            self.end_line();
+        }
+
+        self.indent_down();
+        self.write("}");
+        self.end_line();
+    }
+
+    pub fn render_generator_block(&mut self, generator: &ast::GeneratorConfig) {
+        self.render_documentation(generator);
+
+        self.write("generator ");
+        self.write(&generator.name);
+        self.write(" {");
+        self.end_line();
+        self.indent_up();
+
+        for property in &generator.properties {
             self.write(&property.name);
             self.write(" = ");
             self.render_value(&property.value);

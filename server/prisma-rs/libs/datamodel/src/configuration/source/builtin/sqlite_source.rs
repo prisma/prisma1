@@ -1,4 +1,4 @@
-use crate::{dml, dml::validator::directive::DirectiveValidator, configuration::*};
+use crate::{configuration::*, dml, dml::validator::directive::DirectiveValidator};
 pub const SQLITE_SOURCE_NAME: &str = "sqlite";
 
 pub struct SqliteSource {

@@ -1,5 +1,5 @@
 use super::*;
-use crate::{ast, dml, errors::ErrorCollection, configuration};
+use crate::{ast, configuration, dml, errors::ErrorCollection};
 
 /// Wrapper for all lift and validation steps
 pub struct ValidationPipeline {

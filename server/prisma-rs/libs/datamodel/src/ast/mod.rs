@@ -284,6 +284,25 @@ impl WithDocumentation for SourceConfig {
     }
 }
 
+/// A Generator block declaration.
+#[derive(Debug)]
+pub struct GeneratorConfig {
+    /// Name of this generator.
+    pub name: String,
+    /// Top-level configuration properties for this generator.
+    pub properties: Vec<Argument>,
+    /// The comments for this generator block.
+    pub documentation: Option<Comment>,
+    /// The location of this generator block in the text representation.
+    pub span: Span,
+}
+
+impl WithDocumentation for GeneratorConfig {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
+    }
+}
+
 /// Enum for distinguishing between top-level nodes
 /// Enum, Model and SourceConfig.
 #[derive(Debug)]
@@ -291,6 +310,7 @@ pub enum Top {
     Enum(Enum),
     Model(Model),
     Source(SourceConfig),
+    Generator(GeneratorConfig),
     Type(Field),
 }
 
