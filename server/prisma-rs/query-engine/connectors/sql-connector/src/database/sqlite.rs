@@ -52,7 +52,9 @@ impl Transactional for Sqlite {
 
 impl<'a> Transaction for SqliteTransaction<'a> {
     fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
-        let (sql, params) = dbg!(visitor::Sqlite::build(q));
+        let (sql, params) = visitor::Sqlite::build(q);
+        debug!("{}\n{:?}", sql, params);
+
         let mut stmt = self.prepare_cached(&sql)?;
 
         stmt.execute(params)?;
@@ -61,7 +63,8 @@ impl<'a> Transaction for SqliteTransaction<'a> {
     }
 
     fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
-        let (sql, params) = dbg!(visitor::Sqlite::build(q));
+        let (sql, params) = visitor::Sqlite::build(q);
+        debug!("{} (params: {:?})", sql, params);
 
         let mut stmt = self.prepare_cached(&sql)?;
         let mut rows = stmt.query(params)?;
