@@ -29,11 +29,12 @@ impl RpcApi {
     fn add_command_handler<T: MigrationCommand>(&mut self, name: &str) {
         self.io_handler.add_method(name, |params: Params| {
             let input: T::Input = params.parse()?;
-            let engine = MigrationEngine::new(input.config());
-            let cmd = T::new(input);
-            if cmd.must_initialize_engine() {
+            // FIXME: this is ugly
+            let engine = MigrationEngine::new(input.source_config().unwrap_or(""));
+            if input.must_initialize_engine() {
                 engine.init();
             }
+            let cmd = T::new(input);
             let result = &cmd.execute(&engine).map_err(convert_error)?;
             let response_json = serde_json::to_value(result).expect("Rendering of RPC response failed");
             Ok(response_json)

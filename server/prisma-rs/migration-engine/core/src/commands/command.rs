@@ -11,14 +11,18 @@ pub trait MigrationCommand {
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output>;
 
-    // determines if the command needs an initialized migration engine
     fn must_initialize_engine(&self) -> bool {
         true
     }
 }
 
 pub trait MigrationCommandInput: DeserializeOwned {
-    fn config(&self) -> &str;
+    fn source_config(&self) -> Option<&str>;
+
+    // determines if the command needs an initialized migration engine
+    fn must_initialize_engine(&self) -> bool { 
+        self.source_config().is_some()
+    }
 }
 
 pub type CommandResult<T> = Result<T, CommandError>;

@@ -60,7 +60,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InferMigrationStepsInput {
-    pub project_info: String,
+    pub source_config: String,
     pub migration_id: String,
     #[serde(alias = "dataModel")]
     pub datamodel: String,
@@ -68,8 +68,8 @@ pub struct InferMigrationStepsInput {
 }
 
 impl MigrationCommandInput for InferMigrationStepsInput {
-    fn config(&self) -> &str {
-        &self.project_info
+    fn source_config(&self) -> Option<&str> {
+        Some(&self.source_config)
     }
 }
 

@@ -24,7 +24,7 @@ fn assume_to_be_applied_must_work() {
             }
         "#;
         let input1 = InferMigrationStepsInput {
-            project_info: PROJECT_INFO.to_string(),
+            source_config: PROJECT_INFO.to_string(),
             migration_id: "mig0001".to_string(),
             assume_to_be_applied: Vec::new(),
             datamodel: dm1.to_string(),
@@ -40,7 +40,7 @@ fn assume_to_be_applied_must_work() {
             }
         "#;
         let input2 = InferMigrationStepsInput {
-            project_info: PROJECT_INFO.to_string(),
+            source_config: PROJECT_INFO.to_string(),
             migration_id: "mig0002".to_string(),
             assume_to_be_applied: steps1,
             datamodel: dm2.to_string(),
@@ -87,7 +87,7 @@ fn special_handling_of_watch_migrations() {
             }
         "#;
         let input = InferMigrationStepsInput {
-            project_info: PROJECT_INFO.to_string(),
+            source_config: PROJECT_INFO.to_string(),
             migration_id: "mig02".to_string(),
             assume_to_be_applied: Vec::new(),
             datamodel: dm.to_string(),

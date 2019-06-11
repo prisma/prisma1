@@ -33,7 +33,6 @@ impl MigrationCommand for DmmfToDmlCommand {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DmmfToDmlCommandInput {
-    pub project_info: String,
     pub dmmf: String,
     pub data_sources: serde_json::Value,
 }
@@ -45,7 +44,7 @@ pub struct DmmfToDmlCommandOutput {
 }
 
 impl MigrationCommandInput for DmmfToDmlCommandInput {
-    fn config(&self) -> &str {
-        &self.project_info
+    fn source_config(&self) -> Option<&str> {
+        None
     }
 }

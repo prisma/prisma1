@@ -45,7 +45,7 @@ impl MigrationCommand for UnapplyMigrationCommand {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct UnapplyMigrationInput {
-    pub project_info: String,
+    pub source_config: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -57,7 +57,7 @@ pub struct UnapplyMigrationOutput {
 }
 
 impl MigrationCommandInput for UnapplyMigrationInput {
-    fn config(&self) -> &str {
-        &self.project_info
+    fn source_config(&self) -> Option<&str> {
+        Some(&self.source_config)
     }
 }

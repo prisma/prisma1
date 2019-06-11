@@ -12,7 +12,7 @@ fn simple_end_to_end_test() {
             "jsonrpc": "2.0",
             "method": "listMigrations",
             "params": {{
-                "projectInfo": {}
+                "sourceConfig": {}
             }}
         }}
     "#, test_config_json_escaped());
@@ -29,7 +29,7 @@ fn error_if_the_datamodel_is_invalid() {
             "jsonrpc": "2.0",
             "method": "inferMigrationSteps",
             "params": {{
-                "projectInfo": {},
+                "sourceConfig": {},
                 "migrationId": "the-migration_id",
                 "assumeToBeApplied": [],
                 "dataModel": "model Blog {{ id: Int @id @default(cuid()) }}"

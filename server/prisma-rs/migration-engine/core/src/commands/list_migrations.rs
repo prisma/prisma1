@@ -50,7 +50,7 @@ pub fn convert_migration_to_list_migration_steps_output(
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ListMigrationStepsInput {
-    pub project_info: String,
+    pub source_config: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -64,7 +64,7 @@ pub struct ListMigrationStepsOutput {
 }
 
 impl MigrationCommandInput for ListMigrationStepsInput {
-    fn config(&self) -> &str {
-        &self.project_info
+    fn source_config(&self) -> Option<&str> {
+        Some(&self.source_config)
     }
 }

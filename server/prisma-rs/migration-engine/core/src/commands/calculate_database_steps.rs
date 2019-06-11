@@ -53,13 +53,13 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CalculateDatabaseStepsInput {
-    pub project_info: String,
+    pub source_config: String,
     pub assume_to_be_applied: Vec<MigrationStep>,
     pub steps_to_apply: Vec<MigrationStep>,
 }
 
 impl MigrationCommandInput for CalculateDatabaseStepsInput {
-    fn config(&self) -> &str {
-        &self.project_info
+    fn source_config(&self) -> Option<&str> {
+        Some(&self.source_config)
     }
 }

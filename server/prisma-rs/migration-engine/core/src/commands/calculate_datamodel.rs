@@ -33,7 +33,6 @@ impl MigrationCommand for CalculateDatamodelCommand {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CalculateDatamodelInput {
-    pub project_info: String,
     pub steps: Vec<MigrationStep>,
 }
 
@@ -44,7 +43,7 @@ pub struct CalculateDatamodelOutput {
 }
 
 impl MigrationCommandInput for CalculateDatamodelInput {
-    fn config(&self) -> &str {
-        &self.project_info
+    fn source_config(&self) -> Option<&str> {
+        None
     }
 }

@@ -37,7 +37,7 @@ impl MigrationCommand for MigrationProgressCommand {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MigrationProgressInput {
-    pub project_info: String,
+    pub source_config: String,
     pub migration_id: String,
 }
 
@@ -54,7 +54,7 @@ pub struct MigrationProgressOutput {
 }
 
 impl MigrationCommandInput for MigrationProgressInput {
-    fn config(&self) -> &str {
-        &self.project_info
+    fn source_config(&self) -> Option<&str> {
+        Some(&self.source_config)
     }
 }

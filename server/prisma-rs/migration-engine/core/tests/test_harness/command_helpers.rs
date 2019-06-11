@@ -20,7 +20,7 @@ pub fn infer_and_apply_with_migration_id(
     let project_info = "the-project-info".to_string();
 
     let input = InferMigrationStepsInput {
-        project_info: project_info.clone(),
+        source_config: project_info.clone(),
         migration_id: migration_id.to_string(),
         datamodel: datamodel.to_string(),
         assume_to_be_applied: Vec::new(),
@@ -46,7 +46,7 @@ pub fn run_infer_command(engine: &Box<MigrationEngine>, input: InferMigrationSte
 pub fn apply_migration(engine: &Box<MigrationEngine>, steps: Vec<MigrationStep>, migration_id: &str) -> DatabaseSchema {
     let project_info = "the-project-info".to_string();
     let input = ApplyMigrationInput {
-        project_info: project_info,
+        source_config: project_info,
         migration_id: migration_id.to_string(),
         steps: steps,
         force: None,
@@ -66,7 +66,7 @@ pub fn unapply_migration(engine: &Box<MigrationEngine>) -> DatabaseSchema {
     let project_info = "the-project-info".to_string();
 
     let input = UnapplyMigrationInput {
-        project_info: project_info.clone(),
+        source_config: project_info.clone(),
     };
     let cmd = UnapplyMigrationCommand::new(input);
     let _ = cmd.execute(&engine);
