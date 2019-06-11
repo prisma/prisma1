@@ -23,10 +23,12 @@ use std::path::Path;
 use postgres::{ Config as PostgresConfig };
 use std::time::Duration;
 use std::fs;
+use std::convert::TryFrom;
+use std::path::PathBuf;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
-    pub folder_path: Option<String>,
+    pub file_path: Option<String>,
     pub sql_family: SqlFamily,
     pub schema_name: String,
     pub migration_persistence: Arc<MigrationPersistence>,
@@ -46,9 +48,13 @@ pub enum SqlFamily {
 impl SqlMigrationConnector {
     #[allow(unused)]
     pub fn exists(sql_family: SqlFamily, url: &str) -> bool {
-        // todo: actually check the underlying db
-        let path = url.trim_start_matches("file:");
-        Path::new(&path).exists()
+        match sql_family {
+            SqlFamily::Sqlite => {
+                let sqlite = Sqlite::try_from(url).expect("Loading SQLite failed");
+                sqlite.does_file_exist()
+            },
+            _ => unimplemented!(),
+        }
     }    
 
     pub fn new(sql_family: SqlFamily, url: &str) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
@@ -58,14 +64,10 @@ impl SqlMigrationConnector {
         match sql_family { 
             SqlFamily::Sqlite => {
                 assert!(url.starts_with("file:"), "the url for sqlite must start with 'file:'");
-                let path = Path::new(&url);
-                let schema_name = path.file_stem().expect("file url must contain a file name").to_str().unwrap().to_string();
-                let folder_path = path.parent().unwrap().to_str().unwrap().to_string();
-                let mut stripped_path = folder_path.clone();
-                stripped_path.replace_range(..5, "");  // remove the prefix "file:"
-                let test_mode = false;
-                let conn = Arc::new(Sqlite::new(stripped_path.clone(), connection_limit, test_mode).unwrap());
-                Self::create_connector(conn, sql_family, schema_name, Some(stripped_path))
+                let conn = Arc::new(Sqlite::try_from(url).expect("Loading SQLite failed"));
+                let schema_name = "lift".to_string();
+                let file_path = url.trim_start_matches("file:").to_string();
+                Self::create_connector(conn, sql_family, schema_name, Some(file_path))
             },
             SqlFamily::Postgres => {
                 let mut config = PostgresConfig::new();
@@ -98,11 +100,11 @@ impl SqlMigrationConnector {
         })
     }
 
-    fn create_connector<C: Connectional + 'static>(conn: Arc<C>, sql_family: SqlFamily, schema_name: String, folder_path: Option<String>) -> Arc<SqlMigrationConnector> {
+    fn create_connector<C: Connectional + 'static>(conn: Arc<C>, sql_family: SqlFamily, schema_name: String, file_path: Option<String>) -> Arc<SqlMigrationConnector> {
         let migration_persistence = Arc::new(SqlMigrationPersistence {
             connection: Arc::clone(&conn),
             schema_name: schema_name.clone(),
-            folder_path: folder_path.clone(),
+            file_path: file_path.clone(),
         });
         let database_migration_inferrer = Arc::new(SqlDatabaseMigrationInferrer {
             inspector: Box::new(DatabaseInspectorImpl {
@@ -117,7 +119,7 @@ impl SqlMigrationConnector {
         });
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
         Arc::new(SqlMigrationConnector {            
-            folder_path,
+            file_path,
             sql_family,
             schema_name,
             migration_persistence,
@@ -135,8 +137,12 @@ impl MigrationConnector for SqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
 
     fn initialize(&self) {
-        if let Some(folder_path) = &self.folder_path {
-            fs::create_dir_all(folder_path).expect("creating the database folder failed");
+        if let Some(file_path) = &self.file_path {
+            let path_buf = PathBuf::from(&file_path);
+            match path_buf.parent() {
+                Some(parent_directory) => fs::create_dir_all(parent_directory).expect("creating the database folders failed"),
+                None => {},
+            }
         }
         self.migration_persistence.init();
     }

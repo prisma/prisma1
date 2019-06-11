@@ -188,7 +188,7 @@ impl MigrationPersistence for EmptyMigrationPersistence {
         None
     }
 
-    fn by_name(&self, name: &str) -> Option<Migration> {
+    fn by_name(&self, _name: &str) -> Option<Migration> {
         None
     }
 
@@ -196,11 +196,11 @@ impl MigrationPersistence for EmptyMigrationPersistence {
         Vec::new()
     }
 
-    fn create(&self, migration: Migration) -> Migration {
+    fn create(&self, _migration: Migration) -> Migration {
         unimplemented!("Not allowed on a EmptyMigrationPersistence")
     }
 
-    fn update(&self, params: &MigrationUpdateParams) {
+    fn update(&self, _params: &MigrationUpdateParams) {
         unimplemented!("Not allowed on a EmptyMigrationPersistence")
     }
 }
