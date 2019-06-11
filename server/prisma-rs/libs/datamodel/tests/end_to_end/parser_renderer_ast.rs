@@ -117,8 +117,8 @@ fn test_parser_renderer_types_via_ast() {
     assert_eq!(rendered, DATAMODEL_WITH_TYPES);
 }
 
-const DATAMODEL_WITH_SOURCE: &str = r#"source pg1 {
-    type = "Postgres"
+const DATAMODEL_WITH_SOURCE: &str = r#"datasource pg1 {
+    provider = "Postgres"
     url = "https://localhost/postgres1"
 }
 
@@ -139,8 +139,8 @@ fn test_parser_renderer_sources_via_ast() {
 }
 
 const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
-source pg1 {
-    type = "postgres"
+datasource pg1 {
+    provider = "postgres"
     url = "https://localhost/postgres1"
 }
 

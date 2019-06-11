@@ -7,7 +7,7 @@ impl SourceSerializer {
     pub fn source_to_ast(source: &Box<Source>) -> ast::SourceConfig {
         let mut arguments: Vec<ast::Argument> = Vec::new();
 
-        arguments.push(ast::Argument::new_string("type", source.connector_type()));
+        arguments.push(ast::Argument::new_string("provider", source.connector_type()));
         arguments.push(ast::Argument::new_string("url", source.url()));
 
         let mut detail_arguments: Vec<ast::Argument> = Vec::new();

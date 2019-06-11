@@ -2,23 +2,23 @@ use crate::common::ErrorAsserts;
 use datamodel::errors::ValidationError;
 
 const DATAMODEL: &str = r#"
-source pg1 {
-    type = "postgres"
+datasource pg1 {
+    provider = "postgres"
     url = "https://localhost/postgres1"
 }
 
-source pg2 {
-    type = "postgres"
+datasource pg2 {
+    provider = "postgres"
     url = "https://localhost/postgres2"
 }
 
-source sqlite1 {
-    type = "sqlite"
+datasource sqlite1 {
+    provider = "sqlite"
     url = "https://localhost/sqlite1"
 }
 
-source mysql1 {
-    type = "mysql"
+datasource mysql1 {
+    provider = "mysql"
     url = "https://localhost/mysql"
 }
 "#;
@@ -61,8 +61,8 @@ fn serialize_builtin_sources_to_dmmf() {
 }
 
 const INVALID_DATAMODEL: &str = r#"
-source pg1 {
-    type = "AStrangeHalfMongoDatabase"
+datasource pg1 {
+    provider = "AStrangeHalfMongoDatabase"
     url = "https://localhost/postgres1"
 }
 "#;
@@ -74,7 +74,7 @@ fn fail_to_load_sources_for_invalid_source() {
     if let Err(error) = res {
         error.assert_is(ValidationError::SourceNotKnownError {
             source_name: String::from("AStrangeHalfMongoDatabase"),
-            span: datamodel::ast::Span::new(1, 94),
+            span: datamodel::ast::Span::new(1, 102),
         });
     } else {
         panic!("Expected error.")
@@ -82,8 +82,8 @@ fn fail_to_load_sources_for_invalid_source() {
 }
 
 const CRASHING_SOURCE: &str = r#"
-source chinook {
-  type = "sqlite"
+datasource chinook {
+  provider = "sqlite"
   url = "file:../db/Chinook.db"
 }
 "#;

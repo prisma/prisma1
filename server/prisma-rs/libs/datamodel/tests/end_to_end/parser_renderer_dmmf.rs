@@ -90,8 +90,8 @@ fn test_dmmf_roundtrip_with_functions() {
     assert_eq!(DATAMODEL_STRING_WITH_FUNCTIONS, rendered);
 }
 
-const DATAMODEL_WITH_SOURCE: &str = r#"source pg1 {
-    type = "postgres"
+const DATAMODEL_WITH_SOURCE: &str = r#"datasource pg1 {
+    provider = "postgres"
     url = "https://localhost/postgres1"
 }
 
@@ -120,8 +120,8 @@ fn test_dmmf_roundtrip_with_sources() {
 }
 
 const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
-source pg1 {
-    type = "postgres"
+datasource pg1 {
+    provider = "postgres"
     url = "https://localhost/postgres1"
 }
 

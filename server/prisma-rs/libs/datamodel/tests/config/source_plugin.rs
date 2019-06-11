@@ -121,8 +121,8 @@ impl Source for CustomDb {
 //##########################
 
 const DATAMODEL: &str = r#"
-source custom_1 {
-    type = "customDemoSource"
+datasource custom_1 {
+    provider = "customDemoSource"
     url = "https://localhost"
 
     properties {
@@ -130,8 +130,8 @@ source custom_1 {
     }
 }
 
-source custom_2 {
-    type = "customDemoSource"
+datasource custom_2 {
+    provider = "customDemoSource"
     url = "https://localhost"
 
     properties {

@@ -98,7 +98,7 @@ enum_declaration = { doc_comment* ~ "enum" ~ identifier ~ "{" ~ (enum_field_decl
 source_key_value = { identifier ~ "=" ~ expression }
 source_properties = { "properties" ~ "{" ~ source_key_value* ~ "}" }
 // Only allows ONE properties block.
-source_block = { doc_comment* ~ "source" ~ identifier ~ "{" ~ source_key_value* ~ source_properties? ~ source_key_value* ~ "}" }
+source_block = { doc_comment* ~ "datasource" ~ identifier ~ "{" ~ source_key_value* ~ source_properties? ~ source_key_value* ~ "}" }
 
 // ######################################
 // Datamodel
