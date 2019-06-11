@@ -1,9 +1,9 @@
 import { IConnector } from '../../common/connector'
-import { TypeIdentifier, DatabaseType } from 'prisma-datamodel'
+import { DatabaseType, GQLAssert } from 'prisma-datamodel'
 import { RelationalIntrospectionResult } from './relationalIntrospectionResult'
 import IDatabaseClient from '../IDatabaseClient'
-import GQLAssert from '../../../../prisma-datamodel/dist/util/gqlAssert'
 import * as debug from 'debug'
+import { aggregateBy } from '../../common/aggregate'
 
 let log = debug('RelationalIntrospection')
 
@@ -18,6 +18,12 @@ export interface IInternalIndexInfo {
 export interface IInternalEnumInfo {
   name: string
   values: string[]
+}
+
+export interface IInternalColumnCommentInfo {
+  tableName: string
+  columnName: string
+  text: string
 }
 
 export abstract class RelationalConnector implements IConnector {
@@ -36,40 +42,37 @@ export abstract class RelationalConnector implements IConnector {
   ): RelationalIntrospectionResult
 
   protected async query(query: string, params: any[] = []): Promise<any[]> {
-    return await this.client.query(query, params)
+    const result: any = await this.client.query(query, params)
+    if (result.rows) {
+      return result.rows
+    }
+
+    return result
   }
 
   /**
    * Column comments are DB specific
    */
-  protected abstract async queryColumnComments(
-    schemaName: string,
-    tableName: string,
-  ): Promise<{ text: string; column: string }[]>
+  protected abstract async queryColumnComments(schemaName: string): Promise<IInternalColumnCommentInfo[]>
 
   /**
    * Indices are DB specific
    */
-  protected abstract async queryIndices(
-    schemaName: string,
-    tableName: string,
-  ): Promise<IInternalIndexInfo[]>
+  protected abstract async queryIndices(schemaName: string): Promise<IInternalIndexInfo[]>
 
   protected abstract async queryEnums(schemaName: string): Promise<IEnum[]>
 
-  protected abstract async listSequences(
-    schemaName: string,
-  ): Promise<ISequenceInfo[]>
+  protected abstract async listSequences(schemaName: string): Promise<ISequenceInfo[]>
 
-  public async introspect(
-    schema: string,
-  ): Promise<RelationalIntrospectionResult> {
-    return this.createIntrospectionResult(
-      await this.listModels(schema),
-      await this.listRelations(schema),
-      await this.listEnums(schema),
-      await this.listSequences(schema),
-    )
+  public async introspect(schema: string): Promise<RelationalIntrospectionResult> {
+    const [models, relations, enums, sequences] = await Promise.all([
+      this.listModels(schema),
+      this.listRelations(schema),
+      this.listEnums(schema),
+      this.listSequences(schema),
+    ])
+
+    return this.createIntrospectionResult(models, relations, enums, sequences)
   }
 
   public async listEnums(schemaName: string): Promise<IEnum[]> {
@@ -95,27 +98,51 @@ export abstract class RelationalConnector implements IConnector {
   protected async listModels(schemaName: string): Promise<ITable[]> {
     log(`Introspecting models in schema ${schemaName}.`)
     const tables: ITable[] = []
-    const allTables = await this.queryTables(schemaName)
 
-    // Parallelizing this loop does not make introspection any faster.
-    // speeding up introspection could be done by an architecture change:
-    // Fetch introspection data for all tables at once and then aggregate at client side.
+    const [allTables, allComments, allColumns, allIndices] = await Promise.all([
+      this.queryTables(schemaName),
+      this.queryColumnComments(schemaName),
+      this.queryColumns(schemaName),
+      this.queryIndices(schemaName),
+    ])
+
+    // Aggregate for fast lookup
+    const columnsByTable = aggregateBy(allColumns, c => c.tableName)
+    const indexByTable = aggregateBy(allIndices, c => c.tableName)
+
+    // Columns have double aggregation.
+    const commentsByColumnByTable = {}
+
+    for (const comment of allComments) {
+      let commentsByColumn = commentsByColumnByTable[comment.tableName]
+      if (!commentsByColumn) {
+        commentsByColumn = {}
+        commentsByColumnByTable[comment.tableName] = commentsByColumn
+      }
+
+      // There can be only one comment per column.
+      commentsByColumn[comment.columnName] = comment
+    }
+
+    // Actual aggregation
+
     for (const tableName of allTables) {
-      const columns = await this.queryColumns(schemaName, tableName)
+      const columns = columnsByTable[tableName] as IColumn[]
+      const tableColumnComments = commentsByColumnByTable[tableName]
 
-      const comments = await this.queryColumnComments(schemaName, tableName)
+      if (tableColumnComments !== undefined) {
+        for (const column of columns) {
+          const comment = tableColumnComments[column.name] as IInternalColumnCommentInfo
 
-      for (const column of columns) {
-        for (const comment of comments) {
-          if (column.name === comment.column) {
+          if (comment !== undefined) {
             column.comment = comment.text
           }
         }
       }
 
-      const allIndices = await this.queryIndices(schemaName, tableName)
-      const secondaryIndices = allIndices.filter(x => !x.isPrimaryKey)
-      const [primaryKey] = allIndices.filter(x => x.isPrimaryKey)
+      const indices = (indexByTable[tableName] || []) as IInternalIndexInfo[]
+      const secondaryIndices = indices.filter(x => !x.isPrimaryKey)
+      const [primaryKey] = indices.filter(x => x.isPrimaryKey)
 
       tables.push({
         name: tableName,
@@ -142,10 +169,7 @@ export abstract class RelationalConnector implements IConnector {
       ORDER BY table_name`
 
     return (await this.query(allTablesQuery, [schemaName])).map(row => {
-      GQLAssert.raiseIf(
-        row.table_name === undefined,
-        'Received `undefined` as table name.',
-      )
+      GQLAssert.raiseIf(row.table_name === undefined, 'Received `undefined` as table name.')
       return row.table_name as string
     })
   }
@@ -171,8 +195,8 @@ export abstract class RelationalConnector implements IConnector {
    */
   protected abstract parameter(count: number, type: string)
 
-  protected async queryColumns(schemaName: string, tableName: string) {
-    log(`Querying columns for table ${tableName}.`)
+  protected async queryColumns(schemaName: string) {
+    log(`Querying columns for schema ${schemaName}.`)
     const allColumnsQuery = `
       SELECT
         ordinal_position as ordinal_postition,
@@ -180,12 +204,12 @@ export abstract class RelationalConnector implements IConnector {
         ${this.getTypeColumnName()} as udt_name,
         column_default as column_default,
         is_nullable = 'YES' as is_nullable,
+        table_name as table_name, 
         ${this.getAutoIncrementCondition()} as is_auto_increment
       FROM
         information_schema.columns
       WHERE
         table_schema = '${schemaName}'
-        AND table_name  = '${tableName}'
       ORDER BY column_name`
 
     /**
@@ -193,14 +217,8 @@ export abstract class RelationalConnector implements IConnector {
      */
 
     return (await this.query(allColumnsQuery)).map(row => {
-      GQLAssert.raiseIf(
-        row.column_name === undefined,
-        'Received `undefined` as column name.',
-      )
-      GQLAssert.raiseIf(
-        row.udt_name === undefined,
-        'Received `undefined` as data type.',
-      )
+      GQLAssert.raiseIf(row.column_name === undefined, 'Received `undefined` as column name.')
+      GQLAssert.raiseIf(row.udt_name === undefined, 'Received `undefined` as data type.')
       return {
         name: row.column_name as string,
         type: row.udt_name as string,
@@ -211,6 +229,7 @@ export abstract class RelationalConnector implements IConnector {
         defaultValue: row.column_default as string,
         isNullable: row.is_nullable as boolean,
         comment: null as string | null,
+        tableName: row.table_name as string,
       }
     })
   }
@@ -274,6 +293,7 @@ export interface IColumn {
   comment: string | null
   isNullable: boolean
   isList: boolean
+  tableName: string
   /**
    * Indicates an auto_increment column. Only use this if the
    * database DOES NOT support sequences.

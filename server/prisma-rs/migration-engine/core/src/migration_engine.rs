@@ -5,7 +5,7 @@ use migration_connector::*;
 use sql_migration_connector::SqlMigrationConnector;
 use std::sync::Arc;
 
-// todo: add MigrationConnector. does not work  because of GAT shinenigans
+// todo: add MigrationConnector as a field. does not work  because of GAT shinenigans
 
 pub struct MigrationEngine {
     datamodel_migration_steps_inferrer: Arc<DataModelMigrationStepsInferrer>,
@@ -42,11 +42,6 @@ impl MigrationEngine {
     pub fn schema_name(&self) -> String {
         // todo: the sqlite file name must be taken from the config
         "migration_engine".to_string()
-    }
-
-    pub fn parse_datamodel(&self, datamodel_string: &String) -> Datamodel {
-        // For capabilities, please see the parse_with_plugins method.
-        datamodel::parse(datamodel_string).unwrap()
     }
 
     pub fn render_datamodel(&self, datamodel: &Datamodel) -> String {

@@ -91,7 +91,7 @@ fn test_dmmf_roundtrip_with_functions() {
 }
 
 const DATAMODEL_WITH_SOURCE: &str = r#"source pg1 {
-    type = "Postgres"
+    type = "postgres"
     url = "https://localhost/postgres1"
 }
 
@@ -107,10 +107,10 @@ fn test_dmmf_roundtrip_with_sources() {
     let sources = datamodel::load_data_source_configuration(&DATAMODEL_WITH_SOURCE).unwrap();
 
     let dmmf = datamodel::dmmf::render_to_dmmf(&dml);
-    let dmmf_sources = datamodel::dmmf::render_config_to_dmmf(&sources);
+    let json_sources = datamodel::render_sources_to_json(&sources);
 
     let dml2 = datamodel::dmmf::parse_from_dmmf(&dmmf);
-    let sources = datamodel::dmmf::sources_from_dmmf(&dmmf_sources);
+    let sources = datamodel::sources_from_json(&json_sources);
 
     let rendered = datamodel::render_with_sources(&dml2, &sources).unwrap();
 

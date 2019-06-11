@@ -3,7 +3,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 describe('Introspector', () => {
-  test(
+  test.skip(
     'allsquare',
     async () => {
       await testSchema(

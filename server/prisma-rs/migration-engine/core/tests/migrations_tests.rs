@@ -22,7 +22,7 @@ fn adding_a_scalar_field_must_work() {
                 B
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let table = result.table_bang("Test");
         table.columns.iter().for_each(|c| assert_eq!(c.is_required, true));
 
@@ -44,7 +44,7 @@ fn adding_an_optional_field_must_work() {
                 field: String?
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column = result.table_bang("Test").column_bang("field");
         assert_eq!(column.is_required, false);
     });
@@ -58,7 +58,7 @@ fn adding_an_id_field_with_a_special_name_must_work() {
                 specialName: String @id
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column = result.table_bang("Test").column("specialName");
         assert_eq!(column.is_some(), true);
     });
@@ -73,7 +73,7 @@ fn removing_a_scalar_field_must_work() {
                 field: String
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let column1 = result.table_bang("Test").column("field");
         assert_eq!(column1.is_some(), true);
 
@@ -82,14 +82,63 @@ fn removing_a_scalar_field_must_work() {
                 id: String @id
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column2 = result.table_bang("Test").column("field");
         assert_eq!(column2.is_some(), false);
     });
 }
 
 #[test]
-#[ignore]
+fn can_handle_reserved_sql_keywords_for_model_name() {
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model Group {
+                id: String @id
+                field: String
+            }
+        "#;
+        let result = infer_and_apply(&engine, &dm1);
+        let column = result.table_bang("Group").column_bang("field");
+        assert_eq!(column.tpe, ColumnType::String);
+
+        let dm2 = r#"
+            model Group {
+                id: String @id
+                field: Int
+            }
+        "#;
+        let result = infer_and_apply(&engine, &dm2);
+        let column = result.table_bang("Group").column_bang("field");
+        assert_eq!(column.tpe, ColumnType::Int);
+    });
+}
+
+#[test]
+fn can_handle_reserved_sql_keywords_for_field_name() {
+    run_test_with_engine(|engine| {
+        let dm1 = r#"
+            model Test {
+                id: String @id
+                Group: String
+            }
+        "#;
+        let result = infer_and_apply(&engine, &dm1);
+        let column = result.table_bang("Test").column_bang("Group");
+        assert_eq!(column.tpe, ColumnType::String);
+
+        let dm2 = r#"
+            model Test {
+                id: String @id
+                Group: Int
+            }
+        "#;
+        let result = infer_and_apply(&engine, &dm2);
+        let column = result.table_bang("Test").column_bang("Group");
+        assert_eq!(column.tpe, ColumnType::Int);
+    });
+}
+
+#[test]
 fn update_type_of_scalar_field_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
@@ -98,7 +147,7 @@ fn update_type_of_scalar_field_must_work() {
                 field: String
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let column1 = result.table_bang("Test").column_bang("field");
         assert_eq!(column1.tpe, ColumnType::String);
 
@@ -108,9 +157,9 @@ fn update_type_of_scalar_field_must_work() {
                 field: Int
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column2 = result.table_bang("Test").column_bang("field");
-        assert_eq!(column2.tpe, ColumnType::String);
+        assert_eq!(column2.tpe, ColumnType::Int);
     });
 }
 
@@ -127,7 +176,7 @@ fn changing_the_type_of_an_id_field_must_work() {
                 a: A # remove once implicit back relation field is implemented
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
@@ -148,7 +197,7 @@ fn changing_the_type_of_an_id_field_must_work() {
                 a: A # remove once implicit back relation field is implemented
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::String);
         assert_eq!(
@@ -170,7 +219,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
                 field: String @db(name:"name1")
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         assert_eq!(result.table_bang("A").column("name1").is_some(), true);
 
         let dm2 = r#"
@@ -179,7 +228,7 @@ fn updating_db_name_of_a_scalar_field_must_work() {
                 field: String @db(name:"name2")
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         assert_eq!(result.table_bang("A").column("name1").is_some(), false);
         assert_eq!(result.table_bang("A").column("name2").is_some(), true);
     });
@@ -199,7 +248,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
                 a: A # remove this once the implicit back relation field is implemented
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.foreign_key.is_some(), true);
         assert_eq!(column.tpe, ColumnType::Int);
@@ -213,7 +262,7 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
                 id: Int @id
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.foreign_key.is_some(), false);
         assert_eq!(column.tpe, ColumnType::String);
@@ -232,7 +281,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
                 id: Int @id
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.foreign_key.is_some(), false);
         assert_eq!(column.tpe, ColumnType::String);
@@ -247,7 +296,7 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
                 a: A # remove this once the implicit back relation field is implemented
             }
         "#;
-        let result = migrate_to(&engine, &dm2);
+        let result = infer_and_apply(&engine, &dm2);
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.foreign_key.is_some(), true);
         assert_eq!(column.tpe, ColumnType::Int);
@@ -268,7 +317,7 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
                 as: A[]
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let relation_table = result.table_bang("_AToB");
         assert_eq!(relation_table.columns.len(), 2);
         let aColumn = relation_table.column_bang("A");
@@ -334,7 +383,7 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
                 a: A # todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm1));
+        let result = dbg!(infer_and_apply(&engine, &dm1));
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
@@ -361,7 +410,7 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
                 a: A # todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm1));
+        let result = dbg!(infer_and_apply(&engine, &dm1));
         let column = result.table_bang("A").column_bang("b_column");
         assert_eq!(column.tpe, ColumnType::Int);
         assert_eq!(
@@ -388,7 +437,7 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
                 a: A # todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm1));
+        let result = dbg!(infer_and_apply(&engine, &dm1));
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(column.tpe, ColumnType::String);
         assert_eq!(
@@ -415,7 +464,7 @@ fn removing_an_inline_relation_must_work() {
                 a: A # todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm1));
+        let result = dbg!(infer_and_apply(&engine, &dm1));
         let column = result.table_bang("A").column("b");
         assert_eq!(column.is_some(), true);
 
@@ -428,14 +477,13 @@ fn removing_an_inline_relation_must_work() {
                 id: Int @id
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm2));
+        let result = dbg!(infer_and_apply(&engine, &dm2));
         let column = result.table_bang("A").column("b");
         assert_eq!(column.is_some(), false);
     });
 }
 
 #[test]
-#[ignore]
 fn moving_an_inline_relation_to_the_other_side_must_work() {
     // TODO: bring this back when relation inlining works in the new datamodel
     run_test_with_engine(|engine| {
@@ -450,7 +498,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
                 a: A # todo: remove when implicit back relation field is implemented
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm1));
+        let result = dbg!(infer_and_apply(&engine, &dm1));
         let column = result.table_bang("A").column_bang("b");
         assert_eq!(
             column.foreign_key,
@@ -471,7 +519,7 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
                 a: A @relation(references: [id])
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm2));
+        let result = dbg!(infer_and_apply(&engine, &dm2));
         let column = result.table_bang("B").column_bang("a");
         assert_eq!(
             column.foreign_key,
@@ -494,7 +542,7 @@ fn adding_a_unique_constraint_must_work() {
                 field: String @unique
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm1));
+        let result = dbg!(infer_and_apply(&engine, &dm1));
         let index = result
             .table_bang("A")
             .indexes
@@ -516,7 +564,7 @@ fn removing_a_unique_constraint_must_work() {
                 field: String @unique
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let index = result
             .table_bang("A")
             .indexes
@@ -530,7 +578,7 @@ fn removing_a_unique_constraint_must_work() {
                 id: Int @id
             }
         "#;
-        let result = dbg!(migrate_to(&engine, &dm2));
+        let result = dbg!(infer_and_apply(&engine, &dm2));
         let index = result
             .table_bang("A")
             .indexes
@@ -549,7 +597,7 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
                 strings: String[]
             }
         "#;
-        let result = migrate_to(&engine, &dm1);
+        let result = infer_and_apply(&engine, &dm1);
         let scalar_list_table = result.table_bang("A_strings");
         let node_id_column = scalar_list_table.column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::Int);
@@ -566,7 +614,7 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
                 strings: String[]
             }
         "#;
-        let result = migrate_to(&engine, &dm);
+        let result = infer_and_apply(&engine, &dm);
         let node_id_column = result.table_bang("A_strings").column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::Int);
 
@@ -576,7 +624,7 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
                 strings: String[]
             }
         "#;
-        let result = migrate_to(&engine, &dm);
+        let result = infer_and_apply(&engine, &dm);
         let node_id_column = result.table_bang("A_strings").column_bang("nodeId");
         assert_eq!(node_id_column.tpe, ColumnType::String);
     });

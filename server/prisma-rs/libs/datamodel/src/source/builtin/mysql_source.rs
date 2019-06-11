@@ -1,5 +1,5 @@
 use crate::{dml, dml::validator::directive::DirectiveValidator, source::*};
-pub const MYSQL_SOURCE_NAME: &str = "MySQL";
+pub const MYSQL_SOURCE_NAME: &str = "mysql";
 
 pub struct MySqlSource {
     pub(super) name: String,

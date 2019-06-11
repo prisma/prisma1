@@ -9,8 +9,8 @@ pub trait DatabaseInspector {
 }
 
 impl DatabaseInspector {
-    pub fn empty() -> Box<DatabaseInspector> {
-        Box::new(EmptyDatabaseInspectorImpl {})
+    pub fn empty() -> EmptyDatabaseInspectorImpl {
+        EmptyDatabaseInspectorImpl {}
     }
 }
 

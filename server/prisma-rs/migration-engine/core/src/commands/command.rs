@@ -14,20 +14,20 @@ pub trait MigrationCommand {
 
 pub type CommandResult<T> = Result<T, CommandError>;
 
-#[derive(Debug)]
-pub struct CommandError {
-    code: i64,
-    message: String,
-}
-
-impl CommandError {
-    pub fn new(code: i64, message: String) -> CommandError {
-        CommandError { code, message }
-    }
+#[derive(Debug, Serialize)]
+#[serde(tag = "type")]
+pub enum CommandError {
+    DataModelErrors{code: i64, errors: Vec<String>},
 }
 
 impl From<datamodel::errors::ErrorCollection> for CommandError {
     fn from(errors: datamodel::errors::ErrorCollection) -> CommandError {
-        CommandError::new(1000, errors.to_string())
+        let errors_str = errors.errors.into_iter().map(|e|{
+            // let mut msg: Vec<u8> = Vec::new();
+            // e.pretty_print(&mut msg, "datamodel", "bla").unwrap();
+            // std::str::from_utf8(&msg).unwrap().to_string()
+            format!("{}", e)
+        }).collect();
+        CommandError::DataModelErrors{code: 1000, errors: errors_str}
     }
 }

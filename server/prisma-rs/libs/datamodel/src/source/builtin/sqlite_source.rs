@@ -1,5 +1,5 @@
 use crate::{dml, dml::validator::directive::DirectiveValidator, source::*};
-pub const SQLITE_SOURCE_NAME: &str = "Sqlite";
+pub const SQLITE_SOURCE_NAME: &str = "sqlite";
 
 pub struct SqliteSource {
     pub(super) name: String,
