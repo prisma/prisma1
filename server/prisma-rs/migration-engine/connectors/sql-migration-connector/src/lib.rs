@@ -44,6 +44,7 @@ pub enum SqlFamily {
 impl SqlMigrationConnector {
     pub fn new(sql_family: SqlFamily, url: &str) -> SqlMigrationConnector {
         let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
+        let connection_limit = 10;
 
         match sql_family { 
             SqlFamily::Sqlite => {
@@ -54,7 +55,7 @@ impl SqlMigrationConnector {
                 let mut stripped_path = folder_path.clone();
                 stripped_path.replace_range(..5, "");  // remove the prefix "file:"
                 let test_mode = false;
-                let conn = Arc::new(Sqlite::new(stripped_path.clone(), 32, test_mode).unwrap());
+                let conn = Arc::new(Sqlite::new(stripped_path.clone(), connection_limit, test_mode).unwrap());
                 Self::create_connector(conn, schema_name, Some(stripped_path))
             },
             SqlFamily::Postgres => {
@@ -71,7 +72,7 @@ impl SqlMigrationConnector {
                 config.dbname(&db_name);
                 config.connect_timeout(Duration::from_secs(5));
 
-                let conn = Arc::new(PostgreSql::new(config, 32).unwrap());
+                let conn = Arc::new(PostgreSql::new(config, connection_limit).unwrap());
                 Self::create_connector(conn, db_name, None)
             },
             _ => unimplemented!()
