@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 use migration_connector::steps::*;
 use migration_connector::*;
@@ -48,7 +48,7 @@ pub fn convert_migration_to_list_migration_steps_output(
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ListMigrationStepsInput {
     pub source_config: String,
 }
@@ -61,10 +61,4 @@ pub struct ListMigrationStepsOutput {
     pub database_steps: serde_json::Value,
     pub status: MigrationStatus,
     pub datamodel: String,
-}
-
-impl MigrationCommandInput for ListMigrationStepsInput {
-    fn source_config(&self) -> Option<&str> {
-        Some(&self.source_config)
-    }
 }

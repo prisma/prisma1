@@ -4,8 +4,6 @@ use datamodel::dml::*;
 use migration_core::commands::*;
 use test_harness::*;
 
-const DUMMY_SOURCE_CONFIG: &str = ""; // all commands already run against an initialised engine. Hence the content of this field is not used anymore.
-
 #[test]
 fn assume_to_be_applied_must_work() {
     run_test_with_engine(|engine| {
@@ -24,7 +22,6 @@ fn assume_to_be_applied_must_work() {
             }
         "#;
         let input1 = InferMigrationStepsInput {
-            source_config: DUMMY_SOURCE_CONFIG.to_string(),
             migration_id: "mig0001".to_string(),
             assume_to_be_applied: Vec::new(),
             datamodel: dm1.to_string(),
@@ -40,7 +37,6 @@ fn assume_to_be_applied_must_work() {
             }
         "#;
         let input2 = InferMigrationStepsInput {
-            source_config: DUMMY_SOURCE_CONFIG.to_string(),
             migration_id: "mig0002".to_string(),
             assume_to_be_applied: steps1,
             datamodel: dm2.to_string(),
@@ -87,7 +83,6 @@ fn special_handling_of_watch_migrations() {
             }
         "#;
         let input = InferMigrationStepsInput {
-            source_config: DUMMY_SOURCE_CONFIG.to_string(),
             migration_id: "mig02".to_string(),
             assume_to_be_applied: Vec::new(),
             datamodel: dm.to_string(),

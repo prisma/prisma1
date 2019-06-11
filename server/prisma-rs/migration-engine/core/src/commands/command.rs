@@ -4,21 +4,22 @@ use serde::Serialize;
 use std::convert::From;
 
 pub trait MigrationCommand {
-    type Input: MigrationCommandInput;
+    type Input: DeserializeOwned;
     type Output: Serialize;
 
     fn new(input: Self::Input) -> Box<Self>;
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output>;
+
+    fn has_source_config() -> bool {
+        true
+    }
 }
 
-pub trait MigrationCommandInput: DeserializeOwned {
-    fn source_config(&self) -> Option<&str>;
-
-    // determines if the command needs an initialized migration engine
-    fn must_initialize_engine(&self) -> bool { 
-        self.source_config().is_some()
-    }
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceConfigInput {
+    pub source_config: String,
 }
 
 pub type CommandResult<T> = Result<T, CommandError>;

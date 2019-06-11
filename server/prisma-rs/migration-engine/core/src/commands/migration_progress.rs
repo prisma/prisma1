@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 use chrono::*;
 use migration_connector::*;
@@ -35,9 +35,8 @@ impl MigrationCommand for MigrationProgressCommand {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct MigrationProgressInput {
-    pub source_config: String,
     pub migration_id: String,
 }
 
@@ -51,10 +50,4 @@ pub struct MigrationProgressOutput {
     errors: Vec<String>,
     started_at: DateTime<Utc>,
     finished_at: Option<DateTime<Utc>>,
-}
-
-impl MigrationCommandInput for MigrationProgressInput {
-    fn source_config(&self) -> Option<&str> {
-        Some(&self.source_config)
-    }
 }

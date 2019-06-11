@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand, MigrationCommandInput};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 
 pub struct UnapplyMigrationCommand {
@@ -43,10 +43,8 @@ impl MigrationCommand for UnapplyMigrationCommand {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct UnapplyMigrationInput {
-    pub source_config: String,
-}
+#[serde(rename_all = "camelCase")]
+pub struct UnapplyMigrationInput {}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -54,10 +52,4 @@ pub struct UnapplyMigrationOutput {
     pub rolled_back: String,
     pub active: Option<String>,
     pub errors: Vec<String>,
-}
-
-impl MigrationCommandInput for UnapplyMigrationInput {
-    fn source_config(&self) -> Option<&str> {
-        Some(&self.source_config)
-    }
 }
