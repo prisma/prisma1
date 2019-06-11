@@ -10,16 +10,13 @@ impl SourceSerializer {
         arguments.push(ast::Argument::new_string("provider", source.connector_type()));
         arguments.push(ast::Argument::new_string("url", source.url()));
 
-        let mut detail_arguments: Vec<ast::Argument> = Vec::new();
-
         for (key, value) in &source.config() {
-            detail_arguments.push(ast::Argument::new_string(&key, &value));
+            arguments.push(ast::Argument::new_string(&key, &value));
         }
 
         ast::SourceConfig {
             name: source.name().clone(),
             properties: arguments,
-            detail_configuration: detail_arguments,
             documentation: source.documentation().clone().map(|text| ast::Comment { text }),
             span: ast::Span::empty(),
         }

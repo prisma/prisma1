@@ -272,7 +272,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
     };
 }
 
-fn parse_source_property(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
+fn parse_key_value(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
     let mut name: Option<String> = None;
     let mut value: Option<Value> = None;
 
@@ -295,28 +295,15 @@ fn parse_source_property(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
     };
 }
 
-fn parse_source_property_block(token: &pest::iterators::Pair<'_, Rule>) -> Vec<Argument> {
-    let mut properties: Vec<Argument> = vec![];
-
-    match_children! { token, current,
-        Rule::source_key_value => properties.push(parse_source_property(&current)),
-        _ => unreachable!("Encounterd impossible source property block declaration during parsing: {:?}", current.tokens())
-    }
-
-    return properties;
-}
-
 // Source parsing
 fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
     let mut name: Option<String> = None;
     let mut properties: Vec<Argument> = vec![];
-    let mut detail_configuration: Vec<Argument> = vec![];
     let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
-        Rule::source_key_value => properties.push(parse_source_property(&current)),
-        Rule::source_properties => detail_configuration = parse_source_property_block(&current),
+        Rule::key_value => properties.push(parse_key_value(&current)),
         Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible source declaration during parsing: {:?}", current.tokens())
     };
@@ -325,7 +312,6 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
         Some(name) => SourceConfig {
             name,
             properties,
-            detail_configuration,
             documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
         },
@@ -426,6 +412,7 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::model_declaration => "model declaration",
         Rule::enum_declaration => "enum declaration",
         Rule::source_block => "source definition",
+        Rule::generator_block => "generator definition",
         Rule::enum_field_declaration => "enum field declaration",
         Rule::EOI => "end of input",
         Rule::identifier => "alphanumeric identifier",
@@ -449,8 +436,7 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::default_value => "default value",
         Rule::field_declaration => "field declaration",
         Rule::type_declaration => "type declaration",
-        Rule::source_key_value => "source configuration property",
-        Rule::source_properties => "source property block",
+        Rule::key_value => "configuration property",
         Rule::string_any => "any character",
         Rule::string_escaped_interpolation => "string interpolation",
         Rule::doc_comment => "documentation comment",

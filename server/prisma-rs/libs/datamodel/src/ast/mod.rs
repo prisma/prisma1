@@ -272,9 +272,6 @@ pub struct SourceConfig {
     pub name: String,
     /// Top-level configuration properties for this source.
     pub properties: Vec<Argument>,
-    /// Detail configuration for this source, found inside the
-    /// `properties` block.
-    pub detail_configuration: Vec<Argument>,
     /// The comments for this source block.
     pub documentation: Option<Comment>,
     /// The location of this source block in the text representation.
