@@ -80,3 +80,24 @@ fn fail_to_load_sources_for_invalid_source() {
         panic!("Expected error.")
     }
 }
+
+const CRASHING_SOURCE: &str = r#"
+source chinook {
+  type = "sqlite"
+  url = "file:../db/Chinook.db"
+}
+"#;
+
+
+#[test]
+fn load_a_sqlite_source() {
+    let sources = datamodel::load_data_source_configuration(CRASHING_SOURCE).unwrap();
+
+    assert_eq!(sources.len(), 1);
+
+    let source = &sources[0];
+
+    assert_eq!(source.name(), "chinook");
+    assert_eq!(source.connector_type(), "sqlite");
+    assert_eq!(source.url(), "file:../db/Chinook.db");
+}
