@@ -1,4 +1,4 @@
-use crate::commands::command::{MigrationCommand, CommandResult};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 use chrono::*;
 use migration_connector::*;
@@ -35,9 +35,8 @@ impl MigrationCommand for MigrationProgressCommand {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct MigrationProgressInput {
-    pub project_info: String,
     pub migration_id: String,
 }
 

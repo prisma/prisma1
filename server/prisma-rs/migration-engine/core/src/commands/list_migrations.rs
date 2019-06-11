@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 use migration_connector::steps::*;
 use migration_connector::*;
@@ -48,9 +48,9 @@ pub fn convert_migration_to_list_migration_steps_output(
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ListMigrationStepsInput {
-    pub project_info: String,
+    pub source_config: String,
 }
 
 #[derive(Debug, Serialize)]

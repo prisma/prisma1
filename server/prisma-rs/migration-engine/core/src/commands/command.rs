@@ -10,6 +10,16 @@ pub trait MigrationCommand {
     fn new(input: Self::Input) -> Box<Self>;
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output>;
+
+    fn has_source_config() -> bool {
+        true
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceConfigInput {
+    pub source_config: String,
 }
 
 pub type CommandResult<T> = Result<T, CommandError>;

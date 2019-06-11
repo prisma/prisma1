@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 use datamodel;
 
@@ -24,12 +24,15 @@ impl MigrationCommand for DmmfToDmlCommand {
             datamodel: datamodel::render_with_sources(&datamodel, &sources).unwrap(),
         })
     }
+
+    fn has_source_config() -> bool {
+        false
+    }
 }
 
 #[derive(Deserialize, Debug)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct DmmfToDmlCommandInput {
-    pub project_info: String,
     pub dmmf: String,
     pub data_sources: serde_json::Value,
 }

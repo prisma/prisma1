@@ -1,4 +1,4 @@
-use crate::commands::command::{CommandResult, MigrationCommand};
+use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 
 pub struct ListDataSourcesCommand {
@@ -20,11 +20,14 @@ impl MigrationCommand for ListDataSourcesCommand {
         let json = datamodel::render_sources_to_json_value(&sources);
         Ok(json)
     }
+
+    fn has_source_config() -> bool {
+        false
+    }
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[serde(rename_all = "camelCase")]
 pub struct ListDataSourcesInput {
-    pub project_info: String,
     pub datamodel: String,
 }
