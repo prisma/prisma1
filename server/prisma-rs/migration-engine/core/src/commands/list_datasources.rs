@@ -20,6 +20,10 @@ impl MigrationCommand for ListDataSourcesCommand {
         let json = datamodel::render_sources_to_json_value(&sources);
         Ok(json)
     }
+
+    fn must_initialize_engine(&self) -> bool { 
+        false
+    }
 }
 
 #[derive(Debug, Deserialize)]

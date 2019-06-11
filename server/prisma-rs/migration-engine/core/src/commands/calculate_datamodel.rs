@@ -24,6 +24,10 @@ impl MigrationCommand for CalculateDatamodelCommand {
             datamodel: datamodel::render(&datamodel).unwrap(),
         })
     }
+
+    fn must_initialize_engine(&self) -> bool { 
+        false
+    }
 }
 
 #[derive(Deserialize, Debug)]

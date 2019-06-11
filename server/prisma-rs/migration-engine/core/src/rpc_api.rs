@@ -31,7 +31,9 @@ impl RpcApi {
             let input: T::Input = params.parse()?;
             let engine = MigrationEngine::new(input.config());
             let cmd = T::new(input);
-            engine.init();
+            if cmd.must_initialize_engine() {
+                engine.init();
+            }
             let result = &cmd.execute(&engine).map_err(convert_error)?;
             let response_json = serde_json::to_value(result).expect("Rendering of RPC response failed");
             Ok(response_json)

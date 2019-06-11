@@ -10,6 +10,11 @@ pub trait MigrationCommand {
     fn new(input: Self::Input) -> Box<Self>;
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output>;
+
+    // determines if the command needs an initialized migration engine
+    fn must_initialize_engine(&self) -> bool {
+        true
+    }
 }
 
 pub trait MigrationCommandInput: DeserializeOwned {
