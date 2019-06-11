@@ -74,7 +74,7 @@ fn fail_to_load_sources_for_invalid_source() {
     if let Err(error) = res {
         error.assert_is(ValidationError::SourceNotKnownError {
             source_name: String::from("AStrangeHalfMongoDatabase"),
-            span: datamodel::ast::Span::new(1, 102),
+            span: datamodel::ast::Span::new(33, 60),
         });
     } else {
         panic!("Expected error.")

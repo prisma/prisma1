@@ -38,7 +38,7 @@ pub enum ValidationError {
     #[fail(display = "Function not known: {}", function_name)]
     FunctionNotKnownError { function_name: String, span: Span },
 
-    #[fail(display = "Source not known: {}", source_name)]
+    #[fail(display = "Datasource provider not known: {}", source_name)]
     SourceNotKnownError { source_name: String, span: Span },
 
     #[fail(display = "{} is not a valid value for {}.", raw_value, literal_type)]
