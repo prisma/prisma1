@@ -176,3 +176,31 @@ impl MigrationStatus {
         }
     }
 }
+
+
+pub struct EmptyMigrationPersistence{}
+impl MigrationPersistence for EmptyMigrationPersistence {
+    fn init(&self) {}
+
+    fn reset(&self) {}
+
+    fn last(&self) -> Option<Migration> {
+        None
+    }
+
+    fn by_name(&self, name: &str) -> Option<Migration> {
+        None
+    }
+
+    fn load_all(&self) -> Vec<Migration> {
+        Vec::new()
+    }
+
+    fn create(&self, migration: Migration) -> Migration {
+        unimplemented!("Not allowed on a EmptyMigrationPersistence")
+    }
+
+    fn update(&self, params: &MigrationUpdateParams) {
+        unimplemented!("Not allowed on a EmptyMigrationPersistence")
+    }
+}

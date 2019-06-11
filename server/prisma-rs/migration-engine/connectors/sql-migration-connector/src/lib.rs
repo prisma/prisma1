@@ -26,15 +26,17 @@ use std::fs;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
-    folder_path: Option<String>,
-    schema_name: String,
-    migration_persistence: Arc<MigrationPersistence>,
-    database_migration_inferrer: Arc<DatabaseMigrationInferrer<SqlMigration>>,
-    database_migration_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
-    destructive_changes_checker: Arc<DestructiveChangesChecker<SqlMigration>>,
-    database_inspector: Arc<DatabaseInspector>,
+    pub folder_path: Option<String>,
+    pub sql_family: SqlFamily,
+    pub schema_name: String,
+    pub migration_persistence: Arc<MigrationPersistence>,
+    pub database_migration_inferrer: Arc<DatabaseMigrationInferrer<SqlMigration>>,
+    pub database_migration_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
+    pub destructive_changes_checker: Arc<DestructiveChangesChecker<SqlMigration>>,
+    pub database_inspector: Arc<DatabaseInspector>,
 }
 
+#[derive(Copy, Clone)]
 pub enum SqlFamily {
     Sqlite,
     Postgres,
@@ -42,7 +44,14 @@ pub enum SqlFamily {
 }
 
 impl SqlMigrationConnector {
-    pub fn new(sql_family: SqlFamily, url: &str) -> SqlMigrationConnector {
+    #[allow(unused)]
+    pub fn exists(sql_family: SqlFamily, url: &str) -> bool {
+        // todo: actually check the underlying db
+        let path = url.trim_start_matches("file:");
+        Path::new(&path).exists()
+    }    
+
+    pub fn new(sql_family: SqlFamily, url: &str) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
         let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
         let connection_limit = 10;
 
@@ -56,7 +65,7 @@ impl SqlMigrationConnector {
                 stripped_path.replace_range(..5, "");  // remove the prefix "file:"
                 let test_mode = false;
                 let conn = Arc::new(Sqlite::new(stripped_path.clone(), connection_limit, test_mode).unwrap());
-                Self::create_connector(conn, schema_name, Some(stripped_path))
+                Self::create_connector(conn, sql_family, schema_name, Some(stripped_path))
             },
             SqlFamily::Postgres => {
                 let mut config = PostgresConfig::new();
@@ -73,13 +82,23 @@ impl SqlMigrationConnector {
                 config.connect_timeout(Duration::from_secs(5));
 
                 let conn = Arc::new(PostgreSql::new(config, connection_limit).unwrap());
-                Self::create_connector(conn, db_name, None)
+                Self::create_connector(conn, sql_family, db_name, None)
             },
             _ => unimplemented!()
         }
     }
 
-    fn create_connector<C: Connectional + 'static>(conn: Arc<C>, schema_name: String, folder_path: Option<String>) -> SqlMigrationConnector {
+    pub fn virtual_variant(sql_family: SqlFamily, url: &str) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
+        // TODO: duplicated from above
+        let path = Path::new(&url);
+        let schema_name = path.file_stem().expect("file url must contain a file name").to_str().unwrap().to_string();
+        Arc::new(VirtualSqlMigrationConnector{
+            sql_family: sql_family,
+            schema_name: schema_name,
+        })
+    }
+
+    fn create_connector<C: Connectional + 'static>(conn: Arc<C>, sql_family: SqlFamily, schema_name: String, folder_path: Option<String>) -> Arc<SqlMigrationConnector> {
         let migration_persistence = Arc::new(SqlMigrationPersistence {
             connection: Arc::clone(&conn),
             schema_name: schema_name.clone(),
@@ -92,12 +111,14 @@ impl SqlMigrationConnector {
             schema_name: schema_name.to_string(),
         });
         let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier {
+            sql_family: sql_family,
             schema_name: schema_name.clone(),
             conn: Arc::clone(&conn),
         });
         let destructive_changes_checker = Arc::new(SqlDestructiveChangesChecker {});
-        SqlMigrationConnector {
+        Arc::new(SqlMigrationConnector {            
             folder_path,
+            sql_family,
             schema_name,
             migration_persistence,
             database_migration_inferrer,
@@ -106,7 +127,7 @@ impl SqlMigrationConnector {
             database_inspector: Arc::new(DatabaseInspectorImpl {
                 connection: Arc::clone(&conn),
             }),
-        }
+        })
     }
 }
 
@@ -144,11 +165,49 @@ impl MigrationConnector for SqlMigrationConnector {
         serde_json::from_value(json).unwrap()
     }
 
-    fn empty_database_migration(&self) -> SqlMigration {
-        SqlMigration::empty()
+    fn database_inspector(&self) -> Arc<DatabaseInspector> {
+        Arc::clone(&self.database_inspector)
+    }
+}
+
+struct VirtualSqlMigrationConnector {
+    sql_family: SqlFamily,
+    schema_name: String,
+}
+impl MigrationConnector for VirtualSqlMigrationConnector {
+    type DatabaseMigration = SqlMigration;
+
+    fn initialize(&self) {
+    }
+
+    fn reset(&self) {}
+
+    fn migration_persistence(&self) -> Arc<MigrationPersistence> {
+        Arc::new(EmptyMigrationPersistence{})
+    }
+
+    fn database_migration_inferrer(&self) -> Arc<DatabaseMigrationInferrer<SqlMigration>> {
+        Arc::new(VirtualSqlDatabaseMigrationInferrer{
+            schema_name: self.schema_name.clone(),
+        })
+    }
+
+    fn database_migration_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigration>> {
+        Arc::new(VirtualSqlDatabaseStepApplier{
+            sql_family: self.sql_family.clone(),
+            schema_name: self.schema_name.clone(),
+        })
+    }
+
+    fn destructive_changes_checker(&self) -> Arc<DestructiveChangesChecker<SqlMigration>> {
+        Arc::new(EmptyDestructiveChangesChecker::new())
+    }
+
+    fn deserialize_database_migration(&self, json: serde_json::Value) -> SqlMigration {
+        serde_json::from_value(json).unwrap()
     }
 
     fn database_inspector(&self) -> Arc<DatabaseInspector> {
-        Arc::clone(&self.database_inspector)
+        Arc::new(DatabaseInspector::empty())
     }
 }

@@ -9,6 +9,7 @@ use super::connector_loader::load_connector;
 
 pub struct MigrationEngine {
     config: String,
+    underlying_database_must_exist: bool,
     datamodel_migration_steps_inferrer: Arc<DataModelMigrationStepsInferrer>,
     datamodel_calculator: Arc<DataModelCalculator>,
 }
@@ -16,9 +17,10 @@ pub struct MigrationEngine {
 impl std::panic::RefUnwindSafe for MigrationEngine {}
 
 impl MigrationEngine {
-    pub fn new(config: &str) -> Box<MigrationEngine> {
+    pub fn new(config: &str, underlying_database_must_exist: bool) -> Box<MigrationEngine> {
         let engine = MigrationEngine {
             config: config.to_string(),
+            underlying_database_must_exist: underlying_database_must_exist,
             datamodel_migration_steps_inferrer: Arc::new(DataModelMigrationStepsInferrerImplWrapper {}),
             datamodel_calculator: Arc::new(DataModelCalculatorImpl {}),
         };
@@ -38,7 +40,7 @@ impl MigrationEngine {
     }
 
     pub fn connector(&self) -> Arc<MigrationConnector<DatabaseMigration = impl DatabaseMigrationMarker>> {
-        load_connector(&self.config).expect("loading the connector failed.")
+        load_connector(&self.config, self.underlying_database_must_exist).expect("loading the connector failed.")
     }
 
     pub fn render_datamodel(&self, datamodel: &Datamodel) -> String {

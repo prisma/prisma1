@@ -40,6 +40,10 @@ impl MigrationCommand for UnapplyMigrationCommand {
         };
         Ok(result)
     }
+
+    fn underlying_database_must_exist() -> bool {
+        true
+    }
 }
 
 #[derive(Debug, Deserialize)]

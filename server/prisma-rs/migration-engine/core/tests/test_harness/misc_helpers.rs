@@ -23,7 +23,8 @@ where
     T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
-    let engine = MigrationEngine::new(&test_config());
+    let underlying_db_must_exist = true;
+    let engine = MigrationEngine::new(&test_config(), underlying_db_must_exist);
     let connector = engine.connector();
     connector.reset();
     engine.init();
