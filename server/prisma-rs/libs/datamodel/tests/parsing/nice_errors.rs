@@ -117,6 +117,21 @@ fn nice_error_broken_field_type_legacy_list() {
     ));
 }
 
+#[test]
+fn nice_error_broken_field_type_legacy_colon() {
+    let dml = r#"
+    model User {
+        id: Int @id
+    }"#;
+
+    let error = parse_error(dml);
+
+    error.assert_is(ValidationError::new_parser_error(
+        &vec!["field type"],
+        &Span::new(28, 28),
+    ));
+}
+
 // TODO: This error is not good.
 #[test]
 fn nice_error_broken_field_type_legacy_required() {
