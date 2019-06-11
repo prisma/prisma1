@@ -3,7 +3,7 @@ use crate::{
     ToSqlRow, Transaction, Transactional,
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
-use datamodel::source::Source;
+use datamodel::configuration::Source;
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
     ast::Query,

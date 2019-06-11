@@ -1,7 +1,7 @@
 use crate::{PrismaError, PrismaResult};
 use core::{Executor, ReadQueryExecutor, WriteQueryExecutor};
 use datamodel::{
-    source::{MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
+    configuration::{MYSQL_SOURCE_NAME, POSTGRES_SOURCE_NAME, SQLITE_SOURCE_NAME},
     Source,
 };
 use std::{convert::TryFrom, path::PathBuf, sync::Arc};

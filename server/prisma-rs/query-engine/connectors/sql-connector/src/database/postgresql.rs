@@ -4,7 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
-use datamodel::source::Source;
+use datamodel::configuration::Source;
 use native_tls::TlsConnector;
 use postgres::{
     types::{FromSql, ToSql, Type as PostgresType},

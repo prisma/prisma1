@@ -136,13 +136,13 @@ fn load_datamodel_v2() -> PrismaResult<Option<DatamodelV2Components>> {
 
     load_v2_dml_string().inner_map(|dml_string| match datamodel::parse(&dml_string) {
         Err(errors) => Err(PrismaError::ConversionError(errors, dml_string.clone())),
-        Ok(dm) => match datamodel::load_data_source_configuration(&dml_string) {
+        Ok(dm) => match datamodel::load_configuration(&dml_string) {
             Err(errors) => Err(PrismaError::ConversionError(errors, dml_string.clone())),
-            Ok(data_sources) => {
+            Ok(configuration) => {
                 debug!("Loaded Prisma v2 data model.");
                 Ok(Some(DatamodelV2Components {
                     datamodel: dm,
-                    data_sources,
+                    data_sources: configuration.datasources,
                 }))
             }
         },

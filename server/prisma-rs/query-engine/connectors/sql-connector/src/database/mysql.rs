@@ -4,7 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
-use datamodel::source::Source;
+use datamodel::configuration::Source;
 use mysql_client as my;
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};

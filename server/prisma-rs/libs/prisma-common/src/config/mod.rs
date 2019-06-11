@@ -94,6 +94,7 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                             &name,
                             format!("file:{}", path),
                             &Arguments::empty(&vec![]),
+                            None
                         );
 
                         source.map_err(|err| err.into())
@@ -111,13 +112,13 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                     };
 
                     let url = format!("postgresql://{}@{}:{}/{}?sslmode=prefer", auth_pair, config.host, config.port, db_name);
-                    let source = PostgresSourceDefinition::new().create(&self, &name, &url, &Arguments::empty(&vec![]));
+                    let source = PostgresSourceDefinition::new().create(&self, &name, &url, &Arguments::empty(&vec![]), &None);
 
                     source.map_err(|err| err.into())
                 },
 
                 PrismaDatabase::ConnectionString(ref config) if config.connector == "postgres-native" => {
-                    let source = PostgresSourceDefinition::new().create(&name, &config.uri.to_string(), &Arguments::empty(&vec![]));
+                    let source = PostgresSourceDefinition::new().create(&name, &config.uri.to_string(), &Arguments::empty(&vec![]), &None);
                     source.map_err(|err| err.into())
                 },
 
@@ -130,13 +131,13 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                     };
 
                     let url = format!("mysql://{}@{}:{}/{}", auth_pair, config.host, config.port, db_name);
-                    let source = MySqlSourceDefinition::new().create(&self, &name, &url, &Arguments::empty(&vec![]));
+                    let source = MySqlSourceDefinition::new().create(&self, &name, &url, &Arguments::empty(&vec![]), None);
 
                     source.map_err(|err| err.into())
                 },
 
                 PrismaDatabase::ConnectionString(ref config) if config.connector == "mysql-native" => {
-                    let source = MySqlSourceDefinition::new().create(&name, &config.uri.to_string(), &Arguments::empty(&vec![]));
+                    let source = MySqlSourceDefinition::new().create(&name, &config.uri.to_string(), &Arguments::empty(&vec![]), &None);
                     source.map_err(|err| err.into())
                 },
 
