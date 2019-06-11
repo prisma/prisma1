@@ -36,7 +36,10 @@ fn source_from_json(source: &SourceConfig, loader: &source::SourceLoader) -> Box
         span: ast::Span::empty(),
     };
 
-    loader.load_source(&ast_source).expect("Source loading failed.")
+    loader
+        .load_source(&ast_source)
+        .expect("Source loading failed.") // Result
+        .expect("Source was disabled. That should not be possible.") // Option
 }
 
 pub fn sources_from_json_with_plugins(

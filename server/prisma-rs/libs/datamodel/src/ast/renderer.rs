@@ -217,6 +217,7 @@ impl<'a> Renderer<'a> {
             ast::Value::NumericValue(val, _) => self.write(&val),
             ast::Value::StringValue(val, _) => self.render_str(&val),
             ast::Value::Function(name, args, _) => self.render_func(&name, &args),
+            ast::Value::Any(_, _) => unimplemented!("Value of 'Any' type cannot be rendered."),
         };
     }
 

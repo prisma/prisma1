@@ -26,7 +26,7 @@ impl Functional for EnvFunctional {
         let var_wrapped = &values[0];
         let var_name = var_wrapped.as_str()?;
         if let Ok(var) = std::env::var(&var_name) {
-            Ok(MaybeExpression::Value(ast::Value::StringValue(var, span.clone())))
+            Ok(MaybeExpression::Value(ast::Value::Any(var, span.clone())))
         } else {
             Err(ValidationError::new_functional_evaluation_error(
                 &format!("Environment variable not found: {}", var_name),

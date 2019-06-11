@@ -22,6 +22,7 @@ fn parse_expr_and_lift_span(token: &pest::iterators::Pair<'_, Rule>, start: usiz
         Value::BooleanValue(v, s) => Ok(Value::BooleanValue(v, lift_span(&s, start))),
         Value::StringValue(v, s) => Ok(Value::StringValue(v, lift_span(&s, start))),
         Value::ConstantValue(v, s) => Ok(Value::ConstantValue(v, lift_span(&s, start))),
+        Value::Any(v, s) => Ok(Value::Any(v, lift_span(&s, start))),
         Value::Function(n, a, s) => Ok(Value::Function(n, a, lift_span(&s, start))),
         Value::Array(_, s) => Err(ValidationError::new_validation_error(
             "Arrays cannot be interpolated into strings.",
