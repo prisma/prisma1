@@ -53,6 +53,11 @@ async function main(): Promise<number> {
 
   return 0
 }
+
+process.on('SIGINT', function() {
+  process.exit(0) // now the "exit" event will fire
+})
+
 /**
  * Run our program
  */

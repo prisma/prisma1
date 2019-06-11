@@ -208,19 +208,19 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
   async getCredentialsFromExistingDatamodel(): Promise<undefined | DatabaseCredentials> {
     if (fs.existsSync(path.join(this.env.cwd, 'datamodel.prisma'))) {
       const datamodel = fs.readFileSync(path.join(this.env.cwd, 'datamodel.prisma'), 'utf-8')
-      const dataSources = await this.lift.listDataSources({
+      const { datasources } = await this.lift.getConfig({
         datamodel,
       })
       // For now just take the first data source
-      if (dataSources && dataSources.length > 1) {
+      if (datasources && datasources.length > 1) {
         console.error(
-          `There are more than 1 datasources listed in the datamodel ${dataSources
+          `There are more than 1 datasources listed in the datamodel ${datasources
             .map(d => d.name)
-            .join(', ')}, taking ${dataSources[0].name}`,
+            .join(', ')}, taking ${datasources[0].name}`,
         )
       }
-      if (dataSources && dataSources.length > 0) {
-        const uri = dataSources[0].url
+      if (datasources && datasources.length > 0) {
+        const uri = datasources[0].url
         return uriToCredentials(uri)
       }
     }
