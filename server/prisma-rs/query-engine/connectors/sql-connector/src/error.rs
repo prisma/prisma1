@@ -135,6 +135,12 @@ impl From<r2d2::Error> for SqlError {
     }
 }
 
+impl From<url::ParseError> for SqlError {
+    fn from(_: url::ParseError) -> SqlError {
+        SqlError::DatabaseCreationError("Error parsing database connection string.")
+    }
+}
+
 #[cfg(feature = "sqlite")]
 impl From<rusqlite::Error> for SqlError {
     fn from(e: rusqlite::Error) -> SqlError {

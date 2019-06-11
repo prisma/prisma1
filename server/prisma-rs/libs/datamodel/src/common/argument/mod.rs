@@ -20,6 +20,15 @@ impl<'a> Arguments<'a> {
         }
     }
 
+    /// Creates empty arguments. The vec is a dummy that needs to be handed in
+    /// due of the shape of the struct.
+    pub fn empty(vec: &'a Vec<ast::Argument>) -> Self {
+        Arguments {
+            arguments: vec,
+            span: ast::Span::empty(),
+        }
+    }
+
     /// Gets the span of all arguments wrapped by this instance.
     pub fn span(&self) -> &ast::Span {
         &self.span

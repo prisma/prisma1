@@ -1,6 +1,6 @@
 use crate::{utilities, PrismaError, PrismaResult};
-use datamodel::Datamodel;
-use prisma_models::{DatamodelConverter, InternalDataModelRef, InternalDataModelTemplate};
+use datamodel::{Datamodel, Source};
+use prisma_models::{DatamodelConverter, InternalDataModelTemplate};
 use serde::Serialize;
 use serde_json;
 use std::{
@@ -8,6 +8,12 @@ use std::{
     io::{Read, Write},
     process::{Command, Stdio},
 };
+
+/// Wrapper type to unclutter the interface
+pub struct DatamodelV2Components {
+    pub datamodel: Datamodel,
+    pub data_sources: Vec<Box<dyn Source>>,
+}
 
 /// Private helper trait for operations on PrismaResult<Option<T>>.
 /// PrismaResult<Option<T>> expresses 3 states:
@@ -68,31 +74,30 @@ impl<T> PrismaResultOption<T> for PrismaResult<Option<T>> {
 /// 1. The datamodel loading is bypassed by providing a pre-build internal data model template
 ///    via PRISMA_INTERNAL_DATA_MODEL_JSON. This is only intended to be used by integration tests or in
 ///    rare cases where we don't want to compute the data model.
-/// -> Returns (None, None, InternalDataModelRef)
+/// -> Returns (None, None, InternalDataModelTemplate)
 ///
 /// 2. The v2 data model is provided either as file (PRISMA_DML_PATH) or as string in the env (PRISMA_DML).
-/// -> Returns (None, Some(Datamodel), InternalDataModelRef)
+/// -> Returns (None, Some(DatamodelV2Components), InternalDataModelTemplate)
 ///
 /// 3. The v1 data model is provided either as file (PRISMA_SDL_PATH) or as string in the env (PRISMA_SDL).
-/// -> Returns (Some(String), None, InternalDataModelRef)
+/// -> Returns (Some(String), None, InternalDataModelTemplate)
 ///
 /// Encountered Err results abort the chain, else Nones are chained until a Some is encountered in the load order.
 pub fn load_data_model_components(
-    db_name: String,
-) -> PrismaResult<(Option<String>, Option<Datamodel>, InternalDataModelRef)> {
+) -> PrismaResult<(Option<String>, Option<DatamodelV2Components>, InternalDataModelTemplate)> {
     // Load data model in order of precedence.
     let triple = match load_v11_from_env_json()? {
-        Some(internal_data_model) => (None, None, internal_data_model.build(db_name)),
+        Some(template) => (None, None, template),
         None => match load_datamodel_v2()? {
-            Some(dm) => {
-                let converted = DatamodelConverter::convert(&dm);
-                (None, Some(dm), converted.build(db_name))
+            Some(v2components) => {
+                let template = DatamodelConverter::convert(&v2components.datamodel);
+                (None, Some(v2components), template)
             }
             None => match load_v1_sdl_string()? {
                 Some(sdl) => {
                     let inferred = infer_v11_json(sdl.as_ref())?;
-                    let parsed = serde_json::from_str::<InternalDataModelTemplate>(&inferred)?;
-                    (Some(sdl), None, parsed.build(db_name))
+                    let template = serde_json::from_str::<InternalDataModelTemplate>(&inferred)?;
+                    (Some(sdl), None, template)
                 }
                 None => {
                     return Err(PrismaError::ConfigurationError(
@@ -122,19 +127,25 @@ fn load_v11_from_env_json() -> PrismaResult<Option<InternalDataModelTemplate>> {
 }
 
 /// Attempts to construct a Prisma v2 datamodel.
-/// Returns: Datamodel
+/// Returns: DatamodelV2Components
 ///     Err      If a source for v2 was found, but conversion failed.
 ///     Ok(Some) If a source for v2 was found, and the conversion suceeded.
 ///     Ok(None) If no source for a v2 data model was found.
-fn load_datamodel_v2() -> PrismaResult<Option<Datamodel>> {
+fn load_datamodel_v2() -> PrismaResult<Option<DatamodelV2Components>> {
     debug!("Trying to load v2 data model...");
 
     load_v2_dml_string().inner_map(|dml_string| match datamodel::parse(&dml_string) {
         Err(errors) => Err(PrismaError::ConversionError(errors, dml_string.clone())),
-        Ok(dm) => {
-            debug!("Loaded Prisma v2 data model.");
-            Ok(Some(dm))
-        }
+        Ok(dm) => match datamodel::load_configuration(&dml_string) {
+            Err(errors) => Err(PrismaError::ConversionError(errors, dml_string.clone())),
+            Ok(configuration) => {
+                debug!("Loaded Prisma v2 data model.");
+                Ok(Some(DatamodelV2Components {
+                    datamodel: dm,
+                    data_sources: configuration.datasources,
+                }))
+            }
+        },
     })
 }
 

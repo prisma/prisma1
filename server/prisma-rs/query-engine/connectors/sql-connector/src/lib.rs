@@ -6,6 +6,9 @@
 //! - [DatabaseMutactionExecutor](../connector/trait.DatabaseMutactionExecutor.html) to write
 //!   data.
 
+#[macro_use]
+extern crate log;
+
 mod cursor_condition;
 mod database;
 mod error;
@@ -24,5 +27,6 @@ use row::*;
 
 pub use database::*;
 pub use transactional::*;
+pub use error::SqlError;
 
 type SqlResult<T> = Result<T, error::SqlError>;

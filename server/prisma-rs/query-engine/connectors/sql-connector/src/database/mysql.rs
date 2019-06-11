@@ -4,6 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
+use datamodel::configuration::Source;
 use mysql_client as my;
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
 use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
@@ -15,12 +16,41 @@ use r2d2_mysql::pool::MysqlConnectionManager;
 use serde_json::{Map, Number, Value};
 use std::convert::TryFrom;
 use uuid::Uuid;
+use url::Url;
 
 type Pool = r2d2::Pool<MysqlConnectionManager>;
 
 /// The World's Most Advanced Open Source Relational Database
 pub struct Mysql {
     pool: Pool,
+}
+
+impl TryFrom<&Box<dyn Source>> for Mysql {
+    type Error = SqlError;
+
+    /// Todo connection limit configuration
+    fn try_from(source: &Box<dyn Source>) -> SqlResult<Mysql> {
+        let mut builder = my::OptsBuilder::new();
+        let url = Url::parse(source.url())?;
+        let db_name = match url.path_segments() {
+            Some(mut segments) => segments.next().unwrap_or("mysql"),
+            None => "mysql",
+        };
+
+
+        builder.ip_or_hostname(url.host_str());
+        builder.tcp_port(url.port().unwrap_or(3306));
+        builder.user(Some(url.username()));
+        builder.pass(url.password());
+        builder.db_name(Some(db_name));
+        builder.verify_peer(false);
+        builder.stmt_cache_size(Some(1000));
+
+        let manager = MysqlConnectionManager::new(builder);
+        let pool = r2d2::Pool::builder().max_size(10).build(manager)?;
+
+        Ok(Self { pool })
+    }
 }
 
 impl TryFrom<&PrismaDatabase> for Mysql {
@@ -42,7 +72,6 @@ impl TryFrom<&ExplicitConfig> for Mysql {
 
     fn try_from(e: &ExplicitConfig) -> SqlResult<Self> {
         let db_name = e.database.as_ref().map(|x| x.as_str()).unwrap_or("mysql");
-
         let mut builder = my::OptsBuilder::new();
 
         builder.ip_or_hostname(Some(e.host.as_ref()));

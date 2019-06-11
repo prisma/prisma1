@@ -4,6 +4,7 @@ use crate::{
 };
 use chrono::{DateTime, NaiveDateTime, Utc};
 use connector::{error::*, ConnectorResult};
+use datamodel::configuration::Source;
 use native_tls::TlsConnector;
 use postgres::{
     types::{FromSql, ToSql, Type as PostgresType},
@@ -30,6 +31,20 @@ pub struct PostgreSql {
     pool: Pool,
 }
 
+impl TryFrom<&Box<dyn Source>> for PostgreSql {
+    type Error = SqlError;
+
+    /// Todo connection limit configuration
+    fn try_from(source: &Box<dyn Source>) -> SqlResult<PostgreSql> {
+        let mut config = Config::from_str(source.url())?;
+        config.ssl_mode(SslMode::Prefer);
+
+        dbg!(&config);
+        Ok(Self::new(config, 10)?)
+    }
+}
+
+/// Legacy config converter
 impl TryFrom<&PrismaDatabase> for PostgreSql {
     type Error = ConnectorError;
 
@@ -44,6 +59,7 @@ impl TryFrom<&PrismaDatabase> for PostgreSql {
     }
 }
 
+/// Legacy config converter
 impl TryFrom<&ExplicitConfig> for PostgreSql {
     type Error = SqlError;
 
@@ -65,6 +81,7 @@ impl TryFrom<&ExplicitConfig> for PostgreSql {
     }
 }
 
+/// Legacy config converter
 impl TryFrom<&ConnectionStringConfig> for PostgreSql {
     type Error = SqlError;
 
@@ -456,7 +473,6 @@ impl PostgreSql {
         tls_builder.danger_accept_invalid_certs(true); // For Heroku
 
         let tls = MakeTlsConnector::new(tls_builder.build()?);
-
         let manager = PostgresConnectionManager::new(config, tls);
         let pool = r2d2::Pool::builder().max_size(connections).build(manager)?;
 

@@ -2,14 +2,16 @@ mod connection_string;
 mod explicit;
 mod file;
 
-use crate::error::CommonError;
 pub use connection_string::ConnectionStringConfig;
 pub use explicit::ExplicitConfig;
 pub use file::FileConfig;
 
+use crate::error::CommonError;
 use serde_yaml;
+use datamodel::{PostgresSourceDefinition, Arguments, Source, SourceDefinition, MySqlSourceDefinition};
 use std::{
     collections::{BTreeMap, HashMap},
+    convert::TryInto,
     env,
     fs::File,
     io::prelude::*,
@@ -71,6 +73,82 @@ pub struct PrismaConfig {
     pub rabbit_uri: Option<String>,
     pub enable_management_api: Option<bool>,
     pub databases: BTreeMap<String, PrismaDatabase>,
+}
+
+/// Allows a legacy config to be transformed into the new data sources format.
+/// WIP: Default is not yet supported in data sources.
+impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
+    type Error = CommonError;
+
+    fn try_into(self) -> Result<Vec<Box<dyn Source>>, Self::Error> {
+        let result: Vec<Result<Box<dyn Source>, Self::Error>> = self.databases
+            .into_iter()
+            .map(|(name, db)| match db {
+                #[cfg(feature = "sql")]
+                PrismaDatabase::File(ref config) if config.connector == "sqlite-native" => {
+                    let path = config.database_file;
+                    let ospath = PathBuf::from(&path);
+
+                    if ospath.exists() && !ospath.is_dir() {
+                        let source = SqliteSourceDefinition::new().create(
+                            &name,
+                            format!("file:{}", path),
+                            &Arguments::empty(&vec![]),
+                            None
+                        );
+
+                        source.map_err(|err| err.into())
+                    } else {
+                        Err(CommonError::ConfigurationError("Configuration error: Sqlite file configuration found, but path either doesn't exist or doens't point to a file.".into()));
+                    }
+                }
+
+                #[cfg(feature = "sql")]
+                PrismaDatabase::Explicit(ref config) if config.connector == "postgres-native" => {
+                    let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
+                    let auth_pair = match config.password {
+                        Some(pw) => format!("{}:{}", config.user, pw),
+                        None => config.user,
+                    };
+
+                    let url = format!("postgresql://{}@{}:{}/{}?sslmode=prefer", auth_pair, config.host, config.port, db_name);
+                    let source = PostgresSourceDefinition::new().create(&self, &name, &url, &Arguments::empty(&vec![]), &None);
+
+                    source.map_err(|err| err.into())
+                },
+
+                PrismaDatabase::ConnectionString(ref config) if config.connector == "postgres-native" => {
+                    let source = PostgresSourceDefinition::new().create(&name, &config.uri.to_string(), &Arguments::empty(&vec![]), &None);
+                    source.map_err(|err| err.into())
+                },
+
+                #[cfg(feature = "sql")]
+                PrismaDatabase::Explicit(ref config) if config.connector == "mysql-native" => {
+                    let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
+                    let auth_pair = match config.password {
+                        Some(pw) => format!("{}:{}", config.user, pw),
+                        None => config.user,
+                    };
+
+                    let url = format!("mysql://{}@{}:{}/{}", auth_pair, config.host, config.port, db_name);
+                    let source = MySqlSourceDefinition::new().create(&self, &name, &url, &Arguments::empty(&vec![]), None);
+
+                    source.map_err(|err| err.into())
+                },
+
+                PrismaDatabase::ConnectionString(ref config) if config.connector == "mysql-native" => {
+                    let source = MySqlSourceDefinition::new().create(&name, &config.uri.to_string(), &Arguments::empty(&vec![]), &None);
+                    source.map_err(|err| err.into())
+                },
+
+                _ => Err(CommonError::ConfigurationError(format!("Database connector for configuration key {} is not supported.", name))),
+            })
+            .collect();
+
+        result
+            .into_iter()
+            .collect()
+    }
 }
 
 /// Loads the config

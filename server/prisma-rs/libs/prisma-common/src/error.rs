@@ -5,8 +5,10 @@ use std::io;
 pub enum CommonError {
     #[fail(display = "Failed to parse the config YAML")]
     YamlError(Error),
+
     #[fail(display = "{}", _0)]
     ConfigurationError(String),
+
     #[fail(display = "{}", _0)]
     IoError(Error),
 }
@@ -20,5 +22,11 @@ impl From<io::Error> for CommonError {
 impl From<serde_yaml::Error> for CommonError {
     fn from(e: serde_yaml::Error) -> CommonError {
         CommonError::YamlError(e.into())
+    }
+}
+
+impl From<datamodel::errors::ValidationError> for CommonError {
+    fn from(e: datamodel::errors::ValidationError) -> CommonError {
+        CommonError::ConfigurationError(format!("{}", e))
     }
 }
