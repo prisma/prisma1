@@ -24,7 +24,6 @@
 //! - `lists`: Scalarlist values that are passed seperately
 //! - `nested`: All nested child nodes
 
-use crate::{CoreError, CoreResult};
 use connector::filter::NodeSelector;
 use graphql_parser::query::Value;
 use prisma_models::{ModelRef, PrismaValue};
@@ -132,9 +131,10 @@ impl ValueMap {
             .collect()
     }
 
-    pub fn to_node_selector(&self, model: ModelRef) -> CoreResult<NodeSelector> {
-        match self
-            .0
+    pub fn to_node_selector(&self, model: ModelRef) -> Option<NodeSelector> {
+        dbg!(&model.fields().scalar());
+
+        self.0
             .iter()
             .filter_map(|(field, value)| {
                 model
@@ -145,12 +145,6 @@ impl ValueMap {
             })
             .nth(0)
             .map(|(field, value)| NodeSelector { field, value })
-        {
-            Some(s) => Ok(s),
-            None => Err(CoreError::QueryValidationError(
-                "Failed to resolve node selector".into(),
-            )),
-        }
     }
 }
 
@@ -177,8 +171,9 @@ pub enum NestedValue {
 
 impl ValueMap {
     /// Extract mutation arguments from a value map
-    pub fn eval_tree(&self) -> Vec<NestedValue> {
+    pub fn eval_tree(&self, self_name: &str) -> Vec<NestedValue> {
         let mut vec = Vec::new();
+        dbg!(&self);
 
         // Go through all the objects on this level
         for (name, value) in self.0.iter() {
@@ -192,6 +187,8 @@ impl ValueMap {
 
             // These are actions (create, update, ...)
             for (action, nested) in obj.iter() {
+                dbg!(&action);
+
                 vec.push(match nested {
                     Value::Object(obj) => NestedValue::Simple {
                         name: name.clone(),
@@ -209,6 +206,18 @@ impl ValueMap {
                             })
                             .collect(),
                     },
+                    Value::Boolean(true) => NestedValue::Simple {
+                        name: name.clone(),
+                        kind: action.clone(),
+                        map: ValueMap::from(&vec![]),
+                    },
+                    // FIXME: The problem here is that we don't have information about what mutation "kind" we are dealing with
+                    //        anymore. That's why we just make some assumptions and call it "update" here
+                    Value::String(s) => dbg!(NestedValue::Simple {
+                        name: self_name.to_owned(),
+                        kind: "update".into(),
+                        map: ValueMap::from(&vec![(action.clone(), Value::String(s.clone()))])
+                    }),
                     value => panic!("Unreachable structure: {:?}", value),
                 });
             }
