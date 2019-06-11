@@ -1,6 +1,6 @@
 extern crate datamodel;
 
-use datamodel::{common::PrismaType, dml, errors::*, configuration::SourceDefinition};
+use datamodel::{common::PrismaType, configuration::SourceDefinition, dml, errors::*};
 
 pub trait FieldAsserts {
     fn assert_base_type(&self, t: &PrismaType) -> &Self;

@@ -121,6 +121,7 @@ pub fn render_to(stream: &mut std::io::Write, datamodel: &dml::Datamodel) -> Res
 }
 
 /// Renders a datamodel and sources to a stream as datamodel string.
+#[deprecated(note = "please use `render_with_config_to` instead")]
 pub fn render_with_sources_to(
     stream: &mut std::io::Write,
     datamodel: &dml::Datamodel,
@@ -128,6 +129,19 @@ pub fn render_with_sources_to(
 ) -> Result<(), errors::ErrorCollection> {
     let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     SourceSerializer::add_sources_to_ast(sources, &mut lowered);
+    render_ast_to(stream, &lowered);
+    Ok(())
+}
+
+/// Renders a datamodel, generators and sources to a stream as datamodel string.
+pub fn render_with_config_to(
+    stream: &mut std::io::Write,
+    datamodel: &dml::Datamodel,
+    config: Configuration,
+) -> Result<(), errors::ErrorCollection> {
+    let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
+    SourceSerializer::add_sources_to_ast(&config.datasources, &mut lowered);
+    GeneratorLoader::add_generators_to_ast(&config.generators, &mut lowered);
     render_ast_to(stream, &lowered);
     Ok(())
 }
@@ -146,12 +160,24 @@ pub fn render(datamodel: &dml::Datamodel) -> Result<String, errors::ErrorCollect
 }
 
 /// Renders a datamodel and sources to a datamodel string.
+#[deprecated(note = "please use `render_with_config` instead")]
 pub fn render_with_sources(
     datamodel: &dml::Datamodel,
     sources: &Vec<Box<Source>>,
 ) -> Result<String, errors::ErrorCollection> {
     let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     SourceSerializer::add_sources_to_ast(sources, &mut lowered);
+    Ok(render_ast(&lowered))
+}
+
+/// Renders a datamodel, sources and generators to a datamodel string.
+pub fn render_with_config(
+    datamodel: &dml::Datamodel,
+    config: &configuration::Configuration,
+) -> Result<String, errors::ErrorCollection> {
+    let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
+    SourceSerializer::add_sources_to_ast(&config.datasources, &mut lowered);
+    GeneratorLoader::add_generators_to_ast(&config.generators, &mut lowered);
     Ok(render_ast(&lowered))
 }
 

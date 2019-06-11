@@ -1,4 +1,4 @@
-use crate::{ast, get_builtin_sources, configuration};
+use crate::{ast, configuration, get_builtin_sources};
 use serde_json;
 use std::collections::HashMap;
 
@@ -44,8 +44,14 @@ pub fn sources_from_json_with_plugins(
     source_definitions: Vec<Box<configuration::SourceDefinition>>,
 ) -> Vec<Box<configuration::Source>> {
     let json_sources = serde_json::from_str::<Vec<SourceConfig>>(&json).expect("Failed to parse JSON");
-    let mut res = Vec::new();
+    sources_from_vec(json_sources, source_definitions)
+}
 
+fn sources_from_vec(
+    sources: Vec<SourceConfig>,
+    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+) -> Vec<Box<configuration::Source>> {
+    let mut res = Vec::new();
     let mut source_loader = configuration::SourceLoader::new();
     for source in get_builtin_sources() {
         source_loader.add_source_definition(source);
@@ -54,11 +60,19 @@ pub fn sources_from_json_with_plugins(
         source_loader.add_source_definition(source);
     }
 
-    for source in json_sources {
+    for source in sources {
         res.push(source_from_json(&source, &source_loader))
     }
 
     res
+}
+
+pub fn sources_from_json_value_with_plugins(
+    json: serde_json::Value,
+    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+) -> Vec<Box<configuration::Source>> {
+    let json_sources = serde_json::from_value::<Vec<SourceConfig>>(json).expect("Failed to parse JSON");
+    sources_from_vec(json_sources, source_definitions)
 }
 
 pub fn sources_from_json(json: &str) -> Vec<Box<configuration::Source>> {

@@ -322,6 +322,33 @@ fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
     };
 }
 
+// Generator parsing
+fn parse_generator(token: &pest::iterators::Pair<'_, Rule>) -> GeneratorConfig {
+    let mut name: Option<String> = None;
+    let mut properties: Vec<Argument> = vec![];
+    let mut comments: Vec<String> = Vec::new();
+
+    match_children! { token, current,
+        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::key_value => properties.push(parse_key_value(&current)),
+        Rule::doc_comment => comments.push(parse_doc_comment(&current)),
+        _ => unreachable!("Encounterd impossible generator declaration during parsing: {:?}", current.tokens())
+    };
+
+    return match name {
+        Some(name) => GeneratorConfig {
+            name,
+            properties,
+            documentation: doc_comments_to_string(&comments),
+            span: Span::from_pest(&token.as_span()),
+        },
+        _ => panic!(
+            "Encounterd impossible generator declaration during parsing, name is missing: {:?}",
+            token.as_str()
+        ),
+    };
+}
+
 // Custom type parsing
 fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     let mut name: Option<String> = None;
@@ -372,6 +399,7 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 Rule::model_declaration => models.push(Top::Model(parse_model(&current))),
                 Rule::enum_declaration => models.push(Top::Enum(parse_enum(&current))),
                 Rule::source_block => models.push(Top::Source(parse_source(&current))),
+                Rule::generator_block => models.push(Top::Generator(parse_generator(&current))),
                 Rule::type_declaration => models.push(Top::Type(parse_type(&current))),
                 Rule::EOI => {},
                 _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
