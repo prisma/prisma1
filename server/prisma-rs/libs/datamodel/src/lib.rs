@@ -121,6 +121,7 @@ pub fn load_configuration_with_plugins(
 /// Loads all source configuration blocks from a datamodel using the built-in source definitions.
 #[deprecated(note = "please use `load_configuration` instead")]
 pub fn load_data_source_configuration(datamodel_string: &str) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
+    #[allow(deprecated)]
     load_data_source_configuration_with_plugins(datamodel_string, vec![])
 }
 
