@@ -24,7 +24,7 @@ impl SimpleNestedBuilder {
         let name = name.as_str();
         let kind = kind.as_str();
 
-        let where_ = map.to_node_selector(Arc::clone(&model));
+        let where_ = map.to_node_selector(Arc::clone(dbg!(&model)));
         let ValueSplit { values, lists, nested } = map.split();
 
         let f = model.fields().find_from_all(&name);
@@ -33,9 +33,9 @@ impl SimpleNestedBuilder {
             wat => panic!("{:#?}", wat),
         };
 
-        let non_list_args = values.to_prisma_values().into();
+        let non_list_args = values.clone().to_prisma_values().into();
         let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let nested_mutactions = build_nested_root(&name, &nested, relation_model, top_level)?;
+        let nested_mutactions = build_nested_root(&name, &nested, Arc::clone(&relation_model), top_level)?;
 
         match kind {
             "create" => {
@@ -52,6 +52,17 @@ impl SimpleNestedBuilder {
             }
             "delete" => {
                 mutations.deletes.push(NestedDeleteNode { relation_field, where_ });
+            }
+            "connect" => {
+                let where_ = dbg!(&values).to_node_selector(Arc::clone(dbg!(&relation_model))).unwrap();
+                mutations.connects.push(NestedConnect {
+                    relation_field,
+                    where_,
+                    top_is_create: match top_level {
+                        Operation::Create => true,
+                        _ => false,
+                    }
+                });
             }
             _ => unimplemented!(),
         };
