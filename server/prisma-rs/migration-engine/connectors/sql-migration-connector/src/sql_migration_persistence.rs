@@ -47,8 +47,6 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 
         if let Some(ref folder_path) = self.folder_path {
             let mut file_path = format!("{}/{}.db", folder_path, self.schema_name);
-            file_path.replace_range(..5, ""); // remove the prefix "file:"
-            println!("FILE PATH {}", file_path);
             let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
         }
     }

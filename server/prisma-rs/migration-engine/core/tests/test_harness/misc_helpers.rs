@@ -37,7 +37,7 @@ where
 pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
     let inspector = engine.connector().database_inspector();
     let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
-    // the presence of the _Migration table makes assertions harder. Therefore remove it.
+    // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
     result
 }
@@ -53,9 +53,8 @@ fn test_config() -> String {
 }
 
 fn sqlite_test_config() -> String {
-    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-    let database_folder_path = format!("{}/db", server_root);
-    let file_path = format!("{}/{}.db", database_folder_path,"migration_engine");
+    let database_folder_path = sqlite_test_folder();
+    let file_path = format!("{}/{}.db", database_folder_path, SCHEMA_NAME);
     format!(r#"
         source my_db {{
             type = "sqlite"
@@ -63,6 +62,12 @@ fn sqlite_test_config() -> String {
             default = true
         }}
     "#, file_path)
+}
+
+pub fn sqlite_test_folder() -> String {
+    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
+    let database_folder_path = format!("{}/db", server_root);
+    database_folder_path
 }
 
 fn postgres_test_config() -> String {

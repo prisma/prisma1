@@ -22,6 +22,7 @@ use url::Url;
 use std::path::Path;
 use postgres::{ Config as PostgresConfig };
 use std::time::Duration;
+use std::fs;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
@@ -46,12 +47,15 @@ impl SqlMigrationConnector {
 
         match sql_family { 
             SqlFamily::Sqlite => {
+                assert!(url.starts_with("file:"), "the url for sqlite must start with 'file:'");
                 let path = Path::new(&url);
                 let schema_name = path.file_stem().expect("file url must contain a file name").to_str().unwrap().to_string();
                 let folder_path = path.parent().unwrap().to_str().unwrap().to_string();
+                let mut stripped_path = folder_path.clone();
+                stripped_path.replace_range(..5, "");  // remove the prefix "file:"
                 let test_mode = false;
-                let conn = Arc::new(Sqlite::new(folder_path.clone(), 32, test_mode).unwrap());
-                Self::create_connector(conn, schema_name, Some(folder_path))
+                let conn = Arc::new(Sqlite::new(stripped_path.clone(), 32, test_mode).unwrap());
+                Self::create_connector(conn, schema_name, Some(stripped_path))
             },
             SqlFamily::Postgres => {
                 let mut config = PostgresConfig::new();
@@ -109,6 +113,9 @@ impl MigrationConnector for SqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
 
     fn initialize(&self) {
+        if let Some(folder_path) = &self.folder_path {
+            fs::create_dir_all(folder_path).expect("creating the database folder failed");
+        }
         self.migration_persistence.init();
     }
 

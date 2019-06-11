@@ -6,8 +6,6 @@ use prisma_query::connector::Sqlite as SqliteDatabaseClient;
 use prisma_query::Connectional;
 use test_harness::*;
 
-const SCHEMA: &str = "migration_engine";
-
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {
     run_test_with_engine(|engine| {
@@ -297,13 +295,14 @@ fn execute<F>(mut migrationFn: F) -> DatabaseSchema
 where
     F: FnMut(&mut Migration) -> (),
 {
-    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-    let database_folder_path = format!("{}/db", server_root);
+    let database_folder_path = sqlite_test_folder();
+    // TODO: this name is duplication from the misc helpers
+    let schema_name = "migration_engine";
 
     let test_mode = false;
     let conn = std::sync::Arc::new(SqliteDatabaseClient::new(database_folder_path, 32, test_mode).unwrap());
-    conn.with_connection(&SCHEMA, |c| {
-        let mut migration = Migration::new().schema(SCHEMA);
+    conn.with_connection(&schema_name, |c| {
+        let mut migration = Migration::new().schema(schema_name);
         migrationFn(&mut migration);
         let full_sql = migration.make::<Squirrel>();
         for sql in full_sql.split(";") {
@@ -316,7 +315,7 @@ where
     })
     .unwrap();
     let inspector = DatabaseInspectorImpl { connection: conn };
-    let mut result = inspector.introspect(&SCHEMA.to_string());
+    let mut result = inspector.introspect(&schema_name.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
     result
