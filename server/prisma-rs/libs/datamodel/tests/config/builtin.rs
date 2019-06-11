@@ -81,16 +81,24 @@ fn fail_to_load_sources_for_invalid_source() {
     }
 }
 
-const CRASHING_SOURCE: &str = r#"
+const ENABLED_DISABLED_SOURCE: &str = r#"
 datasource chinook {
   provider = "sqlite"
-  url = "file:../db/Chinook.db"
+  url = "file:../db/production.db"
+  enabled = true
 }
+
+datasource chinook {
+  provider = "sqlite"
+  url = "file:../db/staging.db"
+  enabled = false
+}
+
 "#;
 
 #[test]
-fn load_a_sqlite_source() {
-    let sources = datamodel::load_data_source_configuration(CRASHING_SOURCE).unwrap();
+fn enable_disable_source_flag() {
+    let sources = datamodel::load_data_source_configuration(ENABLED_DISABLED_SOURCE).unwrap();
 
     assert_eq!(sources.len(), 1);
 
@@ -98,5 +106,36 @@ fn load_a_sqlite_source() {
 
     assert_eq!(source.name(), "chinook");
     assert_eq!(source.connector_type(), "sqlite");
-    assert_eq!(source.url(), "file:../db/Chinook.db");
+    assert_eq!(source.url(), "file:../db/production.db");
+}
+
+const ENABLED_DISABLED_SOURCE_ENV: &str = r#"
+datasource chinook {
+  provider = "sqlite"
+  url = "file:../db/production.db"
+  enabled = env("PRODUCTION")
+}
+
+datasource chinook {
+  provider = "sqlite"
+  url = "file:../db/staging.db"
+  enabled = env("STAGING")
+}
+
+"#;
+
+#[test]
+fn enable_disable_source_flag_from_env() {
+    std::env::set_var("PRODUCTION", "false");
+    std::env::set_var("STAGING", "true");
+
+    let sources = datamodel::load_data_source_configuration(ENABLED_DISABLED_SOURCE_ENV).unwrap();
+
+    assert_eq!(sources.len(), 1);
+
+    let source = &sources[0];
+
+    assert_eq!(source.name(), "chinook");
+    assert_eq!(source.connector_type(), "sqlite");
+    assert_eq!(source.url(), "file:../db/staging.db");
 }
