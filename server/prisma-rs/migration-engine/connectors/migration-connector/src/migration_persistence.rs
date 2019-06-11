@@ -14,7 +14,11 @@ pub trait MigrationPersistence {
     fn last_non_watch_datamodel(&self) -> Datamodel {
         let mut all_migrations = self.load_all();
         all_migrations.reverse();
-        all_migrations.into_iter().find(|m|!m.is_watch_migration()).map(|m|m.datamodel).unwrap_or(Datamodel::empty())
+        all_migrations
+            .into_iter()
+            .find(|m| !m.is_watch_migration())
+            .map(|m| m.datamodel)
+            .unwrap_or(Datamodel::empty())
     }
 
     // returns the last successful Migration
@@ -174,5 +178,32 @@ impl MigrationStatus {
             "RollbackFailure" => MigrationStatus::RollbackFailure,
             _ => panic!("MigrationStatus {:?} is not known", s),
         }
+    }
+}
+
+pub struct EmptyMigrationPersistence {}
+impl MigrationPersistence for EmptyMigrationPersistence {
+    fn init(&self) {}
+
+    fn reset(&self) {}
+
+    fn last(&self) -> Option<Migration> {
+        None
+    }
+
+    fn by_name(&self, _name: &str) -> Option<Migration> {
+        None
+    }
+
+    fn load_all(&self) -> Vec<Migration> {
+        Vec::new()
+    }
+
+    fn create(&self, _migration: Migration) -> Migration {
+        unimplemented!("Not allowed on a EmptyMigrationPersistence")
+    }
+
+    fn update(&self, _params: &MigrationUpdateParams) {
+        unimplemented!("Not allowed on a EmptyMigrationPersistence")
     }
 }

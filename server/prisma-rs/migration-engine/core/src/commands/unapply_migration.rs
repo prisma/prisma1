@@ -29,7 +29,7 @@ impl MigrationCommand for UnapplyMigrationCommand {
                     .migration_applier()
                     .unapply(&migration_to_rollback, &database_migration);
 
-                let new_active_migration = connector.migration_persistence().last().map(|m|m.name);
+                let new_active_migration = connector.migration_persistence().last().map(|m| m.name);
 
                 UnapplyMigrationOutput {
                     rolled_back: migration_to_rollback.name,
@@ -39,6 +39,10 @@ impl MigrationCommand for UnapplyMigrationCommand {
             }
         };
         Ok(result)
+    }
+
+    fn underlying_database_must_exist() -> bool {
+        true
     }
 }
 

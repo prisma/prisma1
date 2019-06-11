@@ -34,7 +34,6 @@ pub trait MigrationConnector {
     // TODO: figure out if this is the best way to do this or move to a better place/interface
     // this is placed here so i can use the associated type
     fn deserialize_database_migration(&self, json: serde_json::Value) -> Self::DatabaseMigration;
-    fn empty_database_migration(&self) -> Self::DatabaseMigration;
 
     fn migration_applier(&self) -> Box<MigrationApplier<Self::DatabaseMigration>> {
         let applier = MigrationApplierImpl {

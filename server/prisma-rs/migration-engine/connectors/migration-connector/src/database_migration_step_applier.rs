@@ -1,5 +1,3 @@
-
-
 pub trait DatabaseMigrationStepApplier<T> {
     // applies the step to the database
     // returns true to signal to the caller that there are more steps to apply

@@ -21,7 +21,7 @@ impl MigrationCommand for MigrationProgressCommand {
         let migration = migration_persistence
             .by_name(&self.input.migration_id)
             .expect("Could not load migration from database.");
-        
+
         Ok(MigrationProgressOutput {
             status: migration.status,
             steps: migration.datamodel_steps.len(),

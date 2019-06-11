@@ -135,39 +135,14 @@ fn foreign_keys_must_work() {
 fn setup<F>(mut migrationFn: F) -> Box<DatabaseInspector>
 where
     F: FnMut(&mut Migration) -> (),
-{
-    // let connection = Connection::open_in_memory()
-    //     .and_then(|c| {
-    //         let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-    //         let path = format!("{}/db", server_root);
-    //         let database_file_path = dbg!(format!("{}/{}.db", path, SCHEMA));
-    //         std::fs::remove_file(database_file_path.clone()); // ignore potential errors
-    //         thread::sleep(time::Duration::from_millis(100));
-
-    //         c.execute("ATTACH DATABASE ? AS ?", &[database_file_path.as_ref(), SCHEMA])
-    //             .map(|_| c)
-    //     })
-    //     .and_then(|c| {
-    //         let mut migration = Migration::new().schema(SCHEMA);
-    //         migrationFn(&mut migration);
-    //         let full_sql = migration.make::<Squirrel>();
-    //         for sql in full_sql.split(";") {
-    //             dbg!(sql);
-    //             if (sql != "") {
-    //                 c.execute(&sql, NO_PARAMS).unwrap();
-    //             }
-    //         }
-    //         Ok(c)
-    //     })
-    //     .unwrap();
-
+{    
     let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
     let database_folder_path = format!("{}/db", server_root);
     let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
     let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
 
     let test_mode = false;
-    let conn = std::sync::Arc::new(SqliteDatabaseClient::new(database_folder_path, 32, test_mode).unwrap());
+    let conn = std::sync::Arc::new(SqliteDatabaseClient::new(database_file_path, 32, test_mode).unwrap());
     conn.with_connection(&SCHEMA, |c| {
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn(&mut migration);

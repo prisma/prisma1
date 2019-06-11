@@ -14,6 +14,10 @@ pub trait MigrationCommand {
     fn has_source_config() -> bool {
         true
     }
+
+    fn underlying_database_must_exist() -> bool {
+        false
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -27,17 +31,25 @@ pub type CommandResult<T> = Result<T, CommandError>;
 #[derive(Debug, Serialize)]
 #[serde(tag = "type")]
 pub enum CommandError {
-    DataModelErrors{code: i64, errors: Vec<String>},
+    DataModelErrors { code: i64, errors: Vec<String> },
+    InitializationError { code: i64, error: String },
 }
 
 impl From<datamodel::errors::ErrorCollection> for CommandError {
     fn from(errors: datamodel::errors::ErrorCollection) -> CommandError {
-        let errors_str = errors.errors.into_iter().map(|e|{
-            // let mut msg: Vec<u8> = Vec::new();
-            // e.pretty_print(&mut msg, "datamodel", "bla").unwrap();
-            // std::str::from_utf8(&msg).unwrap().to_string()
-            format!("{}", e)
-        }).collect();
-        CommandError::DataModelErrors{code: 1000, errors: errors_str}
+        let errors_str = errors
+            .errors
+            .into_iter()
+            .map(|e| {
+                // let mut msg: Vec<u8> = Vec::new();
+                // e.pretty_print(&mut msg, "datamodel", "bla").unwrap();
+                // std::str::from_utf8(&msg).unwrap().to_string()
+                format!("{}", e)
+            })
+            .collect();
+        CommandError::DataModelErrors {
+            code: 1000,
+            errors: errors_str,
+        }
     }
 }
