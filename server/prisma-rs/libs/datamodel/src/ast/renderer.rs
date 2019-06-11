@@ -48,7 +48,7 @@ impl<'a> Renderer<'a> {
     pub fn render_source_block(&mut self, source: &ast::SourceConfig) {
         self.render_documentation(source);
 
-        self.write("source ");
+        self.write("datasource ");
         self.write(&source.name);
         self.write(" {");
         self.end_line();

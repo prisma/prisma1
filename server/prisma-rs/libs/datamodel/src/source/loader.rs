@@ -25,7 +25,7 @@ impl SourceLoader {
     pub fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Box<Source>, ValidationError> {
         let args = Arguments::new(&ast_source.properties, ast_source.span);
         let url = args.arg("url")?.as_str()?;
-        let name = args.arg("type")?.as_str()?;
+        let name = args.arg("provider")?.as_str()?;
 
         for decl in &self.source_declarations {
             // The name given in the config block identifies the source type.

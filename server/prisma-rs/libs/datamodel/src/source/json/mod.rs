@@ -19,7 +19,7 @@ fn source_from_json(source: &SourceConfig, loader: &source::SourceLoader) -> Box
     // Maybe we can impl the Source trait.
     let mut arguments: Vec<ast::Argument> = Vec::new();
 
-    arguments.push(ast::Argument::new_string("type", &source.connector_type));
+    arguments.push(ast::Argument::new_string("provider", &source.connector_type));
     arguments.push(ast::Argument::new_string("url", &source.url));
 
     let mut detail_arguments: Vec<ast::Argument> = Vec::new();
