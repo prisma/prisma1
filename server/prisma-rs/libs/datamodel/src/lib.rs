@@ -42,26 +42,26 @@ pub use dml::*;
 pub mod common;
 pub use crate::common::FromStrAndSpan;
 pub use common::argument::Arguments;
+pub mod configuration;
 pub mod dmmf;
 pub mod errors;
-pub mod source;
 pub use common::functions::FunctionalEvaluator;
-pub use source::*;
+pub use configuration::*;
 pub use validator::directive::DirectiveValidator;
 
 // Convenience Helpers
 pub fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
     vec![
-        Box::new(source::builtin::MySqlSourceDefinition::new()),
-        Box::new(source::builtin::PostgresSourceDefinition::new()),
-        Box::new(source::builtin::SqliteSourceDefinition::new()),
+        Box::new(configuration::builtin::MySqlSourceDefinition::new()),
+        Box::new(configuration::builtin::PostgresSourceDefinition::new()),
+        Box::new(configuration::builtin::SqliteSourceDefinition::new()),
     ]
 }
 
 /// Parses and validates a datamodel string, using core attributes and the given plugins.
 pub fn parse_with_plugins(
     datamodel_string: &str,
-    source_definitions: Vec<Box<source::SourceDefinition>>,
+    source_definitions: Vec<Box<configuration::SourceDefinition>>,
 ) -> Result<Datamodel, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
     let mut source_loader = SourceLoader::new();
@@ -79,7 +79,7 @@ pub fn parse_with_plugins(
 /// Loads all source configuration blocks from a datamodel using the given source definitions.
 pub fn load_data_source_configuration_with_plugins(
     datamodel_string: &str,
-    source_definitions: Vec<Box<source::SourceDefinition>>,
+    source_definitions: Vec<Box<configuration::SourceDefinition>>,
 ) -> Result<Vec<Box<Source>>, errors::ErrorCollection> {
     let ast = parser::parse(datamodel_string)?;
     let mut source_loader = SourceLoader::new();

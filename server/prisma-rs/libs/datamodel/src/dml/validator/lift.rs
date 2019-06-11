@@ -5,7 +5,7 @@ use crate::{
     common::{FromStrAndSpan, PrismaType},
     dml,
     errors::{ErrorCollection, ValidationError},
-    source,
+    configuration,
 };
 
 /// Helper for lifting a datamodel.
@@ -29,7 +29,7 @@ impl LiftAstToDml {
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<source::Source>>) -> LiftAstToDml {
+    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> LiftAstToDml {
         LiftAstToDml {
             directives: DirectiveBox::with_sources(sources),
         }

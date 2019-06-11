@@ -1,4 +1,4 @@
-use crate::{ast, get_builtin_sources, source};
+use crate::{ast, get_builtin_sources, configuration};
 use serde_json;
 use std::collections::HashMap;
 
@@ -13,7 +13,7 @@ pub struct SourceConfig {
     pub documentation: Option<String>,
 }
 
-fn source_from_json(source: &SourceConfig, loader: &source::SourceLoader) -> Box<source::Source> {
+fn source_from_json(source: &SourceConfig, loader: &configuration::SourceLoader) -> Box<configuration::Source> {
     // Loader only works on AST. We should change that.
     // TODO: This is code duplication with source serializer, the format is very similar.
     // Maybe we can impl the Source trait.
@@ -41,12 +41,12 @@ fn source_from_json(source: &SourceConfig, loader: &source::SourceLoader) -> Box
 
 pub fn sources_from_json_with_plugins(
     json: &str,
-    source_definitions: Vec<Box<source::SourceDefinition>>,
-) -> Vec<Box<source::Source>> {
+    source_definitions: Vec<Box<configuration::SourceDefinition>>,
+) -> Vec<Box<configuration::Source>> {
     let json_sources = serde_json::from_str::<Vec<SourceConfig>>(&json).expect("Failed to parse JSON");
     let mut res = Vec::new();
 
-    let mut source_loader = source::SourceLoader::new();
+    let mut source_loader = configuration::SourceLoader::new();
     for source in get_builtin_sources() {
         source_loader.add_source_definition(source);
     }
@@ -61,11 +61,11 @@ pub fn sources_from_json_with_plugins(
     res
 }
 
-pub fn sources_from_json(json: &str) -> Vec<Box<source::Source>> {
+pub fn sources_from_json(json: &str) -> Vec<Box<configuration::Source>> {
     sources_from_json_with_plugins(json, Vec::new())
 }
 
-fn source_to_json(source: &Box<source::Source>) -> SourceConfig {
+fn source_to_json(source: &Box<configuration::Source>) -> SourceConfig {
     SourceConfig {
         name: source.name().clone(),
         connector_type: String::from(source.connector_type()),
@@ -75,7 +75,7 @@ fn source_to_json(source: &Box<source::Source>) -> SourceConfig {
     }
 }
 
-fn sources_to_json(sources: &Vec<Box<source::Source>>) -> Vec<SourceConfig> {
+fn sources_to_json(sources: &Vec<Box<configuration::Source>>) -> Vec<SourceConfig> {
     let mut res: Vec<SourceConfig> = Vec::new();
 
     for source in sources {
@@ -85,12 +85,12 @@ fn sources_to_json(sources: &Vec<Box<source::Source>>) -> Vec<SourceConfig> {
     res
 }
 
-pub fn render_sources_to_json_value(sources: &Vec<Box<source::Source>>) -> serde_json::Value {
+pub fn render_sources_to_json_value(sources: &Vec<Box<configuration::Source>>) -> serde_json::Value {
     let res = sources_to_json(sources);
     serde_json::to_value(&res).expect("Failed to render JSON.")
 }
 
-pub fn render_sources_to_json(sources: &Vec<Box<source::Source>>) -> String {
+pub fn render_sources_to_json(sources: &Vec<Box<configuration::Source>>) -> String {
     let res = sources_to_json(sources);
     serde_json::to_string_pretty(&res).expect("Failed to render JSON.")
 }

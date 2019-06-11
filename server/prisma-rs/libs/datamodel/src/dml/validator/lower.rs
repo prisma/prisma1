@@ -1,6 +1,6 @@
 use super::{common::*, DirectiveBox};
 use crate::errors::ErrorCollection;
-use crate::source;
+use crate::configuration;
 use crate::{ast, dml};
 
 pub struct LowerDmlToAst {
@@ -19,7 +19,7 @@ impl LowerDmlToAst {
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<source::Source>>) -> LowerDmlToAst {
+    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> LowerDmlToAst {
         LowerDmlToAst {
             directives: DirectiveBox::with_sources(sources),
         }
