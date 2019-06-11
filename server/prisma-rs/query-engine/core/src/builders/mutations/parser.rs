@@ -132,6 +132,8 @@ impl ValueMap {
     }
 
     pub fn to_node_selector(&self, model: ModelRef) -> Option<NodeSelector> {
+        dbg!(&model.fields().scalar());
+
         self.0
             .iter()
             .filter_map(|(field, value)| {
@@ -185,6 +187,8 @@ impl ValueMap {
 
             // These are actions (create, update, ...)
             for (action, nested) in obj.iter() {
+                dbg!(&action);
+
                 vec.push(match nested {
                     Value::Object(obj) => NestedValue::Simple {
                         name: name.clone(),
@@ -207,6 +211,8 @@ impl ValueMap {
                         kind: action.clone(),
                         map: ValueMap::from(&vec![]),
                     },
+                    // FIXME: The problem here is that we don't have information about what mutation "kind" we are dealing with
+                    //        anymore. That's why we just make some assumptions and call it "update" here
                     Value::String(s) => dbg!(NestedValue::Simple {
                         name: self_name.to_owned(),
                         kind: "update".into(),

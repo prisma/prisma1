@@ -37,74 +37,109 @@ impl<'field> MutationBuilder<'field> {
 
         dbg!(self.field);
 
-        let data = shift_data(&self.field.arguments);
-        let ValueSplit { values, lists, nested } = ValueMap::from(&data).split();
-        let non_list_args = values.to_prisma_values().into();
-        let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
+        let args = into_tree(&self.field.arguments);
+        dbg!(&args);
 
+        let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
         let (op, model) = parse_model_action(&raw_name, Arc::clone(&self.model))?;
 
-        let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
+        // let data = shift_data(&self.field.arguments);
+        // let ValueSplit { values, lists, nested } = dbg!(ValueMap::from(&data).split());
+        // let non_list_args = values.to_prisma_values().into();
+        // let list_args = lists.into_iter().map(|la| la.convert()).collect();
+        // let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
-        let inner =
-            match op {
-                Operation::Create => TopLevelDatabaseMutaction::CreateNode(CreateNode {
+        let inner = match op {
+            Operation::Create => {
+                let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
+                let non_list_args = values.to_prisma_values().into();
+                let list_args = lists.into_iter().map(|la| la.convert()).collect();
+                let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
+
+                TopLevelDatabaseMutaction::CreateNode(CreateNode {
                     model: Arc::clone(&model),
                     non_list_args,
                     list_args,
                     nested_mutactions,
-                }),
-                Operation::Update => TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
+                })
+            }
+            Operation::Update => {
+                let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
+                let non_list_args = values.to_prisma_values().into();
+                let list_args = lists.into_iter().map(|la| la.convert()).collect();
+                let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
+
+                TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
                     where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
                     non_list_args,
                     list_args,
                     nested_mutactions,
-                }),
-                Operation::UpdateMany => {
-                    let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
-                    let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
-                        Err(CoreError::QueryValidationError("Required filters not found!".into()))
-                    })?;
-                    TopLevelDatabaseMutaction::UpdateNodes(UpdateNodes {
-                        model: Arc::clone(&model),
-                        filter,
-                        non_list_args,
-                        list_args,
-                    })
-                }
-                Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
-                    where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
-                }),
-                Operation::DeleteMany => {
-                    let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
-                    let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
-                        Err(CoreError::QueryValidationError("Required filters not found!".into()))
-                    })?;
+                })
+            },
+            Operation::UpdateMany => {
+                let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
+                let non_list_args = values.to_prisma_values().into();
+                let list_args = lists.into_iter().map(|la| la.convert()).collect();
+                let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
-                    TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
-                }
-                Operation::Upsert => TopLevelDatabaseMutaction::UpsertNode(UpsertNode {
-                    where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
-                    create: CreateNode {
-                        model: Arc::clone(&model),
-                        non_list_args: non_list_args.clone(),
-                        list_args: list_args.clone(),
-                        nested_mutactions: nested_mutactions.clone(),
-                    },
-                    update: UpdateNode {
-                        where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
-                        non_list_args,
-                        list_args,
-                        nested_mutactions,
-                    },
-                }),
-                _ => unimplemented!(),
-            };
+                let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
+                let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
+                    Err(CoreError::QueryValidationError("Required filters not found!".into()))
+                })?;
+
+                TopLevelDatabaseMutaction::UpdateNodes(UpdateNodes {
+                    model: Arc::clone(&model),
+                    filter,
+                    non_list_args,
+                    list_args,
+                })
+            }
+            Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
+                where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
+            }),
+            Operation::DeleteMany => {
+                let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
+                let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
+                    Err(CoreError::QueryValidationError("Required filters not found!".into()))
+                })?;
+
+                TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
+            }
+            Operation::Upsert => {
+                let where_ = utils::extract_node_selector(self.field, Arc::clone(&model))?;
+
+                let create = {
+                    let ValueSplit { values, lists, nested } = dbg!(ValueMap(shift_data(&args, "create")?).split());
+                    let non_list_args = values.to_prisma_values().into();
+                    let list_args = lists.into_iter().map(|la| la.convert()).collect();
+                    let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
+                    let model = Arc::clone(&model);
+
+                    CreateNode { model, non_list_args, list_args, nested_mutactions }
+                };
+
+                let update = {
+                    let ValueSplit { values, lists, nested } = dbg!(ValueMap(shift_data(&args, "update")?).split());
+                    let non_list_args = values.to_prisma_values().into();
+                    let list_args = lists.into_iter().map(|la| la.convert()).collect();
+                    let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
+                    let where_ = where_.clone();
+
+                    UpdateNode { where_, non_list_args, list_args, nested_mutactions }
+                };
+
+                TopLevelDatabaseMutaction::UpsertNode(UpsertNode {
+                    where_,
+                    create,
+                    update,
+                })
+            },
+            _ => unimplemented!(),
+        };
 
         // FIXME: Cloning is unethical and should be avoided
         Ok(WriteQuery {
-            inner,
+            inner: dbg!(inner),
             name: raw_name,
             field: self.field.clone(),
         })
@@ -147,15 +182,26 @@ impl From<&str> for Operation {
     }
 }
 
-fn shift_data(from: &Vec<(String, Value)>) -> Vec<(String, Value)> {
-    from.iter()
-        .find(|(k, _)| k.as_str() == "data")
-        .map(|(_, v)| match v {
-            Value::Object(obj) => obj.iter().map(|(k, v)| (k.clone(), v.clone())).collect(),
-            _ => unimplemented!(),
-        })
-        // If there's no `data` block we initialise an empty vector
-        .unwrap_or_else(|| vec![])
+/// Convert arguments provided by graphql-ast into a tree
+fn into_tree(from: &Vec<(String, Value)>) -> BTreeMap<String, Value> {
+    from.into_iter().map(|(a, b)| (a.clone(), b.clone())).collect()
+}
+
+/// Shift into a sub-tree of arguments
+fn shift_data(from: &BTreeMap<String, Value>, idx: &str) -> CoreResult<BTreeMap<String, Value>> {
+    from.get(idx).map_or(
+        Err(CoreError::QueryValidationError(format!(
+            "Failed to resolve `{}` block!",
+            idx
+        ))),
+        |c| match c {
+            Value::Object(obj) => Ok(obj.clone()),
+            child => Err(CoreError::QueryValidationError(format!(
+                "Invalid child type for `{}`: `{}`",
+                idx, child
+            ))),
+        },
+    )
 }
 
 /// Parse the mutation name into an action and the model it should operate on
