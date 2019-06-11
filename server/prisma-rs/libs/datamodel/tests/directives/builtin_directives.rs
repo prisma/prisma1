@@ -5,15 +5,15 @@ use datamodel::{ast, common::PrismaType, errors::ValidationError};
 fn db_directive() {
     let dml = r#"
     model User {
-        id: Int @id
-        firstName: String @db("first_name")
+        id Int @id
+        firstName String @db("first_name")
 
         @@db("user")
     }
 
     model Post {
-        id: Int @id
-        text: String @db(name: "post_text")
+        id Int @id
+        text String @db(name: "post_text")
 
         @@db(name: "posti")
     }
@@ -33,8 +33,8 @@ fn db_directive() {
 fn unique_directive() {
     let dml = r#"
         model Test {
-            id: String @id
-            unique: String @unique
+            id String @id
+            unique String @unique
         }
     "#;
 
@@ -56,8 +56,8 @@ fn unique_directive() {
 fn duplicate_directives_should_error() {
     let dml = r#"
         model Test {
-            id: String @id
-            unique: String @unique @unique
+            id String @id
+            unique String @unique @unique
         }
     "#;
 
@@ -65,10 +65,10 @@ fn duplicate_directives_should_error() {
 
     error.assert_is_at(
         0,
-        ValidationError::new_duplicate_directive_error("unique", &ast::Span::new(77, 84)),
+        ValidationError::new_duplicate_directive_error("unique", &ast::Span::new(75, 82)),
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("unique", &ast::Span::new(85, 100)),
+        ValidationError::new_duplicate_directive_error("unique", &ast::Span::new(83, 98)),
     );
 }

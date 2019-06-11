@@ -391,8 +391,6 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
             }
 
-            dbg!(&models);
-
             Ok(Datamodel { models })
         }
         Err(err) => {

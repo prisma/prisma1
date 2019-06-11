@@ -5,7 +5,7 @@ use datamodel::common::PrismaType;
 fn should_apply_updated_at_directive() {
     let dml = r#"
     model User {
-        id: Int @id
+        id Int @id
         lastSeen DateTime @updatedAt
     }
     "#;

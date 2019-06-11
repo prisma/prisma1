@@ -5,9 +5,9 @@ use datamodel::common::PrismaType;
 fn parse_basic_model() {
     let dml = r#"
     model User {
-        id: Int @id
-        firstName: String
-        lastName: String
+        id Int @id
+        firstName String
+        lastName String
     }
     "#;
 
@@ -52,11 +52,11 @@ fn parse_comments() {
     let dml = r#"
     /// The user model.
     model User {
-        id: Int @id
+        id Int @id
         /// The first name.
         /// Can be multi-line.
-        firstName: String
-        lastName: String
+        firstName String
+        lastName String
     }
     "#;
 
