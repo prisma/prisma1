@@ -17,7 +17,7 @@ impl MigrationCommand for DmmfToDmlCommand {
     fn execute(&self, _engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let datamodel = datamodel::dmmf::parse_from_dmmf(&self.input.dmmf);
-        let config = datamodel::config_from_mcf_json_value(self.input.data_sources.clone());        
+        let config = datamodel::config_from_mcf_json_value(self.input.config.clone());        
 
         Ok(DmmfToDmlCommandOutput {
             datamodel: datamodel::render_with_config(&datamodel, &config).unwrap(),
@@ -33,7 +33,7 @@ impl MigrationCommand for DmmfToDmlCommand {
 #[serde(rename_all = "camelCase")]
 pub struct DmmfToDmlCommandInput {
     pub dmmf: String,
-    pub data_sources: serde_json::Value,
+    pub config: serde_json::Value,
 }
 
 #[derive(Serialize)]

@@ -1,17 +1,17 @@
 use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 
-pub struct ListDataSourcesCommand {
-    input: ListDataSourcesInput,
+pub struct GetConfigCommand {
+    input: GetConfigInput,
 }
 
 #[allow(unused)]
-impl MigrationCommand for ListDataSourcesCommand {
-    type Input = ListDataSourcesInput;
+impl MigrationCommand for GetConfigCommand {
+    type Input = GetConfigInput;
     type Output = serde_json::Value;
 
     fn new(input: Self::Input) -> Box<Self> {
-        Box::new(ListDataSourcesCommand { input })
+        Box::new(GetConfigCommand { input })
     }
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
@@ -28,6 +28,6 @@ impl MigrationCommand for ListDataSourcesCommand {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ListDataSourcesInput {
+pub struct GetConfigInput {
     pub datamodel: String,
 }
