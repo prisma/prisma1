@@ -16,8 +16,8 @@ impl MigrationCommand for ListDataSourcesCommand {
 
     fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
-        let sources = datamodel::load_data_source_configuration(&self.input.datamodel)?;
-        let json = datamodel::render_sources_to_json_value(&sources);
+        let config = datamodel::load_configuration(&self.input.datamodel)?;
+        let json = datamodel::config_to_mcf_json_value(&config);
         Ok(json)
     }
 

@@ -4,8 +4,8 @@ use crate::commands::{CommandResult, CommandError};
 use sql_migration_connector::{SqlMigrationConnector, SqlFamily};
 
 pub fn load_connector(config: &str, must_exist: bool) -> CommandResult<Arc<MigrationConnector<DatabaseMigration = impl DatabaseMigrationMarker>>> {
-    let sources = datamodel::load_data_source_configuration(config)?;
-    let source = sources.first().ok_or(CommandError::DataModelErrors{code: 1000, errors: vec![
+    let config = datamodel::load_configuration(config)?;
+    let source = config.datasources.first().ok_or(CommandError::DataModelErrors{code: 1000, errors: vec![
         "There is no datasource in the configuration.".to_string()
     ]})?;
     let sql_family = match source.connector_type().as_ref() {
