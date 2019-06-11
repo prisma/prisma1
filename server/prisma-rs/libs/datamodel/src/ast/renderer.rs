@@ -61,22 +61,6 @@ impl<'a> Renderer<'a> {
             self.end_line();
         }
 
-        if source.detail_configuration.len() > 0 {
-            self.write("properties {");
-            self.end_line();
-            self.indent_up();
-
-            for property in &source.detail_configuration {
-                self.write(&property.name);
-                self.write(" = ");
-                self.render_value(&property.value);
-                self.end_line();
-            }
-
-            self.indent_down();
-            self.write("}");
-        }
-
         self.indent_down();
         self.write("}");
         self.end_line();

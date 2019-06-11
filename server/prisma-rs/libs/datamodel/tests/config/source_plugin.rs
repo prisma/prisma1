@@ -124,19 +124,13 @@ const DATAMODEL: &str = r#"
 datasource custom_1 {
     provider = "customDemoSource"
     url = "https://localhost"
-
-    properties {
-        base_type = Int
-    }
+    base_type = Int
 }
 
 datasource custom_2 {
     provider = "customDemoSource"
     url = "https://localhost"
-
-    properties {
-        base_type = String
-    }
+    base_type = String
 }
 
 

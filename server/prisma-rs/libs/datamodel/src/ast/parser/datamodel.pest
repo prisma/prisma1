@@ -32,7 +32,6 @@ string_literal = { "\"" ~ string_content ~ "\"" }
 boolean_true  = { "true" }
 boolean_false = { "false" }
 boolean_literal =  @{ boolean_true | boolean_false }
-
 constant_literal = @{ ASCII_ALPHA+ }
 
 // ######################################
@@ -95,10 +94,13 @@ enum_declaration = { doc_comment* ~ "enum" ~ identifier ~ "{" ~ (enum_field_decl
 // ######################################
 // Source block
 // ######################################
-source_key_value = { identifier ~ "=" ~ expression }
-source_properties = { "properties" ~ "{" ~ source_key_value* ~ "}" }
-// Only allows ONE properties block.
-source_block = { doc_comment* ~ "datasource" ~ identifier ~ "{" ~ source_key_value* ~ source_properties? ~ source_key_value* ~ "}" }
+key_value = { identifier ~ "=" ~ expression }
+source_block = { doc_comment* ~ "datasource" ~ identifier ~ "{" ~ key_value* ~ "}" }
+
+// ######################################
+// Generator block
+// ######################################
+generator_block = { doc_comment* ~ "datasource" ~ identifier ~ "{" ~ key_value* ~ "}" }
 
 // ######################################
 // Datamodel

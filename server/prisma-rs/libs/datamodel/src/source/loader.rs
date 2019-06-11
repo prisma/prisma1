@@ -41,7 +41,7 @@ impl SourceLoader {
                     // The name in front of the block is the name of the concrete instantiation.
                     &ast_source.name,
                     &url,
-                    &Arguments::new(&ast_source.detail_configuration, ast_source.span),
+                    &Arguments::new(&ast_source.properties, ast_source.span),
                     &ast_source.documentation.clone().map(|comment| comment.text),
                 )?));
             }
