@@ -54,7 +54,7 @@ impl SimpleNestedBuilder {
                 mutations.deletes.push(NestedDeleteNode { relation_field, where_ });
             }
             "connect" => {
-                let where_ = dbg!(&values).to_node_selector(Arc::clone(dbg!(&relation_model))).unwrap();
+                let where_ = values.to_node_selector(Arc::clone(&relation_model)).unwrap();
                 mutations.connects.push(NestedConnect {
                     relation_field,
                     where_,
@@ -62,6 +62,13 @@ impl SimpleNestedBuilder {
                         Operation::Create => true,
                         _ => false,
                     }
+                });
+            },
+            "disconnect" => {
+                let where_ = values.to_node_selector(Arc::clone(&relation_model));
+                mutations.disconnects.push(NestedDisconnect {
+                    relation_field,
+                    where_,
                 });
             }
             _ => unimplemented!(),
