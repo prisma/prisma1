@@ -90,8 +90,8 @@ fn test_dmmf_roundtrip_with_functions() {
     assert_eq!(DATAMODEL_STRING_WITH_FUNCTIONS, rendered);
 }
 
-const DATAMODEL_WITH_SOURCE: &str = r#"source pg1 {
-    type = "postgres"
+const DATAMODEL_WITH_SOURCE: &str = r#"datasource pg1 {
+    provider = "postgres"
     url = "https://localhost/postgres1"
 }
 
@@ -103,18 +103,64 @@ model Author {
 
 #[test]
 fn test_dmmf_roundtrip_with_sources() {
-    let dml = datamodel::parse(&DATAMODEL_WITH_SOURCE).unwrap();
-    let sources = datamodel::load_data_source_configuration(&DATAMODEL_WITH_SOURCE).unwrap();
+    let rendered = dmmf_roundtrip(DATAMODEL_WITH_SOURCE);
+
+    assert_eq!(DATAMODEL_WITH_SOURCE, rendered);
+}
+
+const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
+datasource pg1 {
+    provider = "postgres"
+    url = "https://localhost/postgres1"
+}
+
+/// My author model.
+model Author {
+    id Int @id
+    /// Name of the author.
+    name String?
+    createdAt DateTime @default(now())
+}"#;
+
+#[test]
+fn test_dmmf_roundtrip_with_sources_and_comments() {
+    let rendered = dmmf_roundtrip(DATAMODEL_WITH_SOURCE_AND_COMMENTS);
+
+    assert_eq!(DATAMODEL_WITH_SOURCE_AND_COMMENTS, rendered);
+}
+
+const DATAMODEL_WITH_GENERATOR: &str = r#"generator js {
+    provider = "javascript"
+    output = "./client"
+    extra_config = "test"
+}
+
+model Author {
+    id Int @id
+    name String?
+    createdAt DateTime @default(now())
+}"#;
+
+#[test]
+fn test_dmmf_roundtrip_with_generator() {
+    let rendered = dmmf_roundtrip(DATAMODEL_WITH_GENERATOR);
+
+    assert_eq!(DATAMODEL_WITH_GENERATOR, rendered);
+}
+
+fn dmmf_roundtrip(input: &str) -> String {
+    let dml = datamodel::parse(input).unwrap();
+    let config = datamodel::load_configuration(input).unwrap();
 
     let dmmf = datamodel::dmmf::render_to_dmmf(&dml);
-    let json_sources = datamodel::render_sources_to_json(&sources);
+    let mcf = datamodel::config_to_mcf_json(&config);
 
     let dml2 = datamodel::dmmf::parse_from_dmmf(&dmmf);
-    let sources = datamodel::sources_from_json(&json_sources);
+    let config = datamodel::config_from_mcf_json(&mcf);
 
-    let rendered = datamodel::render_with_sources(&dml2, &sources).unwrap();
+    let rendered = datamodel::render_with_config(&dml2, &config).unwrap();
 
     println!("{}", rendered);
 
-    assert_eq!(DATAMODEL_WITH_SOURCE, rendered);
+    rendered
 }

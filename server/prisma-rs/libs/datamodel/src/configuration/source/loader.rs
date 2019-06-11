@@ -22,24 +22,33 @@ impl SourceLoader {
     }
 
     /// Internal: Loads a single source from a source config block in the datamodel.
-    pub fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Box<Source>, ValidationError> {
+    pub fn load_source(&self, ast_source: &ast::SourceConfig) -> Result<Option<Box<Source>>, ValidationError> {
         let args = Arguments::new(&ast_source.properties, ast_source.span);
         let url = args.arg("url")?.as_str()?;
-        let name = args.arg("type")?.as_str()?;
+        let provider_arg = args.arg("provider")?;
+        let provider = provider_arg.as_str()?;
 
-        for decl in &self.source_declarations {
-            // The name given in the config block identifies the source type.
-            if name == decl.connector_type() {
-                return decl.create(
-                    // The name in front of the block is the name of the concrete instantiation.
-                    &ast_source.name,
-                    &url,
-                    &Arguments::new(&ast_source.detail_configuration, ast_source.span),
-                );
+        if let Ok(arg) = args.arg("enabled") {
+            if false == arg.as_bool()? {
+                // This source was disabled.
+                return Ok(None);
             }
         }
 
-        Err(ValidationError::new_source_not_known_error(&name, &ast_source.span))
+        for decl in &self.source_declarations {
+            // The provider given in the config block identifies the source type.
+            if provider == decl.connector_type() {
+                return Ok(Some(decl.create(
+                    // The name in front of the block is the name of the concrete instantiation.
+                    &ast_source.name,
+                    &url,
+                    &Arguments::new(&ast_source.properties, ast_source.span),
+                    &ast_source.documentation.clone().map(|comment| comment.text),
+                )?));
+            }
+        }
+
+        Err(ValidationError::new_source_not_known_error(&provider, &provider_arg.span()))
     }
 
     /// Loads all source config blocks form the given AST,
@@ -51,7 +60,8 @@ impl SourceLoader {
         for ast_obj in &ast_schema.models {
             match ast_obj {
                 ast::Top::Source(src) => match self.load_source(&src) {
-                    Ok(loaded_src) => sources.push(loaded_src),
+                    Ok(Some(loaded_src)) => sources.push(loaded_src),
+                    Ok(None) => { /* Source was disabled. */ }
                     // Lift error to source.
                     Err(ValidationError::ArgumentNotFound { argument_name, span }) => errors.push(
                         ValidationError::new_source_argument_not_found_error(&argument_name, &src.name, &span),

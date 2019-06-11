@@ -32,7 +32,7 @@ fn error_if_the_datamodel_is_invalid() {
                 "sourceConfig": {},
                 "migrationId": "the-migration_id",
                 "assumeToBeApplied": [],
-                "dataModel": "model Blog {{ id: Int @id @default(cuid()) }}"
+                "dataModel": "model Blog {{ id Int @id @default(cuid()) }}"
             }}
         }}
     "#, test_config_json_escaped());

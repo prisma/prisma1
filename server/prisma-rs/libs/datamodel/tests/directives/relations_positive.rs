@@ -5,16 +5,16 @@ use datamodel::{common::PrismaType, dml};
 fn allow_multiple_relations() {
     let dml = r#"
     model User {
-        id: Int @id
-        more_posts: Post[] @relation(name: "more_posts")
-        posts: Post[]
+        id Int @id
+        more_posts Post[] @relation(name: "more_posts")
+        posts Post[]
     }
 
     model Post {
-        id: Int @id
-        text: String
-        user: User
-        posting_user: User @relation(name: "more_posts")
+        id Int @id
+        text String
+        user User
+        posting_user User @relation(name: "more_posts")
     }
     "#;
 
@@ -40,11 +40,11 @@ fn allow_multiple_relations() {
 fn allow_complicated_self_relations() {
     let dml = r#"
     model User {
-        id: Int @id
-        son: User @relation(name: "offspring")
-        father: User @relation(name: "offspring")
-        husband: User @relation(name: "spouse")
-        wife: User @relation(name: "spouse")
+        id Int @id
+        son User @relation(name: "offspring")
+        father User @relation(name: "offspring")
+        husband User @relation(name: "spouse")
+        wife User @relation(name: "spouse")
     }
     "#;
 

@@ -1,6 +1,6 @@
 use super::{common::*, DirectiveBox};
+use crate::configuration;
 use crate::errors::ErrorCollection;
-use crate::source;
 use crate::{ast, dml};
 
 pub struct LowerDmlToAst {
@@ -19,7 +19,7 @@ impl LowerDmlToAst {
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<source::Source>>) -> LowerDmlToAst {
+    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> LowerDmlToAst {
         LowerDmlToAst {
             directives: DirectiveBox::with_sources(sources),
         }
@@ -45,10 +45,7 @@ impl LowerDmlToAst {
             }
         }
 
-        Ok(ast::Datamodel {
-            models: tops,
-            comments: vec![],
-        })
+        Ok(ast::Datamodel { models: tops })
     }
 
     fn lower_model(&self, model: &dml::Model, datamodel: &dml::Datamodel) -> Result<ast::Model, ErrorCollection> {
@@ -72,7 +69,7 @@ impl LowerDmlToAst {
             name: model.name.clone(),
             fields: fields,
             directives: self.directives.model.serialize(model, datamodel)?,
-            comments: vec![],
+            documentation: model.documentation.clone().map(|text| ast::Comment { text }),
             span: ast::Span::empty(),
         })
     }
@@ -82,7 +79,7 @@ impl LowerDmlToAst {
             name: enm.name.clone(),
             values: enm.values.clone(),
             directives: self.directives.enm.serialize(enm, datamodel)?,
-            comments: vec![],
+            documentation: enm.documentation.clone().map(|text| ast::Comment { text }),
             span: ast::Span::empty(),
         })
     }
@@ -99,7 +96,7 @@ impl LowerDmlToAst {
             default_value: field.default_value.clone().map(|v| v.into()),
             directives: self.directives.field.serialize(field, datamodel)?,
             field_type: self.lower_type(&field.field_type, field, model, &datamodel),
-            comments: vec![],
+            documentation: field.documentation.clone().map(|text| ast::Comment { text }),
             field_type_span: ast::Span::empty(),
             span: ast::Span::empty(),
         })

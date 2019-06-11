@@ -126,6 +126,7 @@ impl ValueValidator {
                 ast::Value::ConstantValue(_, s) => s,
                 ast::Value::Function(_, _, s) => s,
                 ast::Value::Array(_, s) => s,
+                ast::Value::Any(_, s) => s,
             },
             MaybeExpression::Expression(_, s) => s,
         }
@@ -135,6 +136,7 @@ impl ValueValidator {
     pub fn as_str(&self) -> Result<String, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::StringValue(value, _)) => Ok(value.to_string()),
+            MaybeExpression::Value(ast::Value::Any(value, _)) => Ok(value.to_string()),
             _ => Err(self.construct_error("String")),
         }
     }
@@ -145,6 +147,9 @@ impl ValueValidator {
             MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
                 self.wrap_error_from_result(value.parse::<i32>(), "Numeric")
             }
+            MaybeExpression::Value(ast::Value::Any(value, _)) => {
+                self.wrap_error_from_result(value.parse::<i32>(), "Numeric")
+            }
             _ => Err(self.construct_error("Numeric")),
         }
     }
@@ -153,6 +158,9 @@ impl ValueValidator {
     pub fn as_float(&self) -> Result<f32, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
+                self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
+            }
+            MaybeExpression::Value(ast::Value::Any(value, _)) => {
                 self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
             }
             _ => Err(self.construct_error("Numeric")),
@@ -166,6 +174,9 @@ impl ValueValidator {
             MaybeExpression::Value(ast::Value::NumericValue(value, _)) => {
                 self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
             }
+            MaybeExpression::Value(ast::Value::Any(value, _)) => {
+                self.wrap_error_from_result(value.parse::<f32>(), "Numeric")
+            }
             _ => Err(self.construct_error("Numeric")),
         }
     }
@@ -174,6 +185,9 @@ impl ValueValidator {
     pub fn as_bool(&self) -> Result<bool, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::BooleanValue(value, _)) => {
+                self.wrap_error_from_result(value.parse::<bool>(), "Boolean")
+            }
+            MaybeExpression::Value(ast::Value::Any(value, _)) => {
                 self.wrap_error_from_result(value.parse::<bool>(), "Boolean")
             }
             _ => Err(self.construct_error("Boolean")),
@@ -185,9 +199,12 @@ impl ValueValidator {
     pub fn as_date_time(&self) -> Result<DateTime<Utc>, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::StringValue(value, _)) => {
-                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "String-Like")
+                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "DateTime")
             }
-            _ => Err(self.construct_error("String-Like")),
+            MaybeExpression::Value(ast::Value::Any(value, _)) => {
+                self.wrap_error_from_result(value.parse::<DateTime<Utc>>(), "DateTime")
+            }
+            _ => Err(self.construct_error("DateTime")),
         }
     }
 
@@ -195,6 +212,7 @@ impl ValueValidator {
     pub fn as_constant_literal(&self) -> Result<String, ValidationError> {
         match &self.value {
             MaybeExpression::Value(ast::Value::ConstantValue(value, _)) => Ok(value.to_string()),
+            MaybeExpression::Value(ast::Value::Any(value, _)) => Ok(value.to_string()),
             _ => Err(self.construct_error("Constant Literal")),
         }
     }

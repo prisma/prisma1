@@ -166,7 +166,7 @@ case class ExternalApiTestServer()(implicit val dependencies: ApiDependencies) e
     pb.redirectOutput(Redirect.INHERIT)
 
     val p = pb.start
-    Thread.sleep(50) // Offsets process startup latency
+    Thread.sleep(100) // Offsets process startup latency
     p
   }
 

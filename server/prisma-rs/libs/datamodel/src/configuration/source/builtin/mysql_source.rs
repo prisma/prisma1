@@ -1,14 +1,15 @@
-use crate::{dml, dml::validator::directive::DirectiveValidator, source::*};
-pub const POSTGRES_SOURCE_NAME: &str = "postgres";
+use crate::{configuration::*, dml, dml::validator::directive::DirectiveValidator};
+pub const MYSQL_SOURCE_NAME: &str = "mysql";
 
-pub struct PostgresSource {
+pub struct MySqlSource {
     pub(super) name: String,
     pub(super) url: String,
+    pub(super) documentation: Option<String>,
 }
 
-impl Source for PostgresSource {
+impl Source for MySqlSource {
     fn connector_type(&self) -> &str {
-        POSTGRES_SOURCE_NAME
+        MYSQL_SOURCE_NAME
     }
     fn name(&self) -> &String {
         &self.name
@@ -27,5 +28,8 @@ impl Source for PostgresSource {
     }
     fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>> {
         vec![]
+    }
+    fn documentation(&self) -> &Option<String> {
+        &self.documentation
     }
 }

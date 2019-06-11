@@ -16,7 +16,7 @@ fn adding_a_model_for_an_existing_table_must_work() {
         });
         let dm = r#"
             model Blog {
-                id: Int @id
+                id Int @id
             }
         "#;
         let result = infer_and_apply(&engine, &dm);
@@ -34,11 +34,11 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @id
+                id Int @id
             }
 
             model Post {
-                id: Int @id
+                id Int @id
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
@@ -51,7 +51,7 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @id
+                id Int @id
             }
         "#;
         let final_result = infer_and_apply(&engine, &dm2);
@@ -70,8 +70,8 @@ fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
         });
         let dm = r#"
             model Blog {
-                id: Int @id
-                title: String
+                id Int @id
+                title String
             }
         "#;
         let result = infer_and_apply(&engine, &dm);
@@ -94,8 +94,8 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
 
         let dm = r#"
             model Blog {
-                id: Int @id
-                title: String @unique
+                id Int @id
+                title String @unique
             }
         "#;
         let result = infer_and_apply(&engine, &dm);
@@ -120,8 +120,8 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
 
         let dm = r#"
             model Blog {
-                id: Int @id
-                title: String?
+                id Int @id
+                title String?
             }
         "#;
         let result = infer_and_apply(&engine, &dm);
@@ -135,7 +135,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @id
+                id Int @id
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
@@ -152,8 +152,8 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @id
-                tags: String[]
+                id Int @id
+                tags String[]
             }
         "#;
         let final_result = infer_and_apply(&engine, &dm2);
@@ -166,8 +166,8 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @id
-                title: String
+                id Int @id
+                title String
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
@@ -184,7 +184,7 @@ fn delete_a_field_for_a_non_existent_column_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @id
+                id Int @id
             }
         "#;
         let final_result = infer_and_apply(&engine, &dm2);
@@ -197,8 +197,8 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @id
-                tags: String[]
+                id Int @id
+                tags String[]
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
@@ -211,7 +211,7 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @id
+                id Int @id
             }
         "#;
         let final_result = infer_and_apply(&engine, &dm2);
@@ -224,8 +224,8 @@ fn updating_a_field_for_a_non_existent_column() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @id
-                title: String
+                id Int @id
+                title String
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
@@ -243,8 +243,8 @@ fn updating_a_field_for_a_non_existent_column() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @id
-                title: Int @unique
+                id Int @id
+                title Int @unique
             }
         "#;
         let final_result = infer_and_apply(&engine, &dm2);
@@ -259,8 +259,8 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Blog {
-                id: Int @id
-                title: String
+                id Int @id
+                title String
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
@@ -279,8 +279,8 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @id
-                title: Float @db(name: "new_title")
+                id Int @id
+                title Float @db(name: "new_title")
             }
         "#;
         let final_result = infer_and_apply(&engine, &dm2);

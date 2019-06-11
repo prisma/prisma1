@@ -13,13 +13,7 @@ fn nice_error_for_missing_model_keyword() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec![
-            "end of input",
-            "type declaration",
-            "model declaration",
-            "enum declaration",
-            "source definition",
-        ],
+        &vec!["end of input", "documentation comment"],
         &Span::new(5, 5),
     ));
 }
@@ -37,13 +31,7 @@ fn nice_error_for_missing_model_keyword_2() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec![
-            "end of input",
-            "type declaration",
-            "model declaration",
-            "enum declaration",
-            "source definition",
-        ],
+        &vec!["end of input", "documentation comment"],
         &Span::new(47, 47),
     ));
 }
@@ -109,13 +97,7 @@ fn nice_error_missing_braces() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec![
-            "end of input",
-            "type declaration",
-            "model declaration",
-            "enum declaration",
-            "source definition",
-        ],
+        &vec!["end of input", "documentation comment"],
         &Span::new(5, 5),
     ));
 }
@@ -135,6 +117,21 @@ fn nice_error_broken_field_type_legacy_list() {
     ));
 }
 
+#[test]
+fn nice_error_broken_field_type_legacy_colon() {
+    let dml = r#"
+    model User {
+        id: Int @id
+    }"#;
+
+    let error = parse_error(dml);
+
+    error.assert_is(ValidationError::new_parser_error(
+        &vec!["field type"],
+        &Span::new(28, 28),
+    ));
+}
+
 // TODO: This error is not good.
 #[test]
 fn nice_error_broken_field_type_legacy_required() {
@@ -146,7 +143,7 @@ fn nice_error_broken_field_type_legacy_required() {
     let error = parse_error(dml);
 
     error.assert_is(ValidationError::new_parser_error(
-        &vec!["alphanumeric identifier", "default value"],
+        &vec!["default value", "field declaration"],
         &Span::new(32, 32),
     ));
 }

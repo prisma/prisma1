@@ -1,4 +1,3 @@
-use super::comment::*;
 use super::id::*;
 use super::relation::*;
 use super::scalar::*;
@@ -62,7 +61,7 @@ pub struct Field {
     /// the field arity is list and the type is scalar.
     pub scalar_list_strategy: Option<ScalarListStrategy>,
     /// Comments associated with this field.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<String>,
     /// If set, signals that this field was internally generated
     /// and should never be displayed to the user.
     pub is_generated: bool,
@@ -101,7 +100,7 @@ impl Field {
             is_unique: false,
             id_info: None,
             scalar_list_strategy: None,
-            comments: vec![],
+            documentation: None,
             is_generated: false,
             is_updated_at: false,
         }
@@ -117,7 +116,7 @@ impl Field {
             is_unique: false,
             id_info: None,
             scalar_list_strategy: None,
-            comments: vec![],
+            documentation: None,
             is_generated: true,
             is_updated_at: false,
         }

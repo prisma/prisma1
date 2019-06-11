@@ -11,14 +11,14 @@ use datamodel::{ast::Span, errors::ValidationError};
 fn succeed_without_directive_if_unambigous() {
     let dml = r#"
     model Todo {
-      id: Int @id
-      title: String
-      comments: Comment[]
+      id Int @id
+      title String
+      comments Comment[]
     }
     
     model Comment {
-      id: Int @id
-      text: String
+      id Int @id
+      text String
     }
     "#;
 
@@ -40,15 +40,15 @@ fn succeed_without_directive_if_unambigous() {
 fn fail_if_back_relation_for_embedded_type() {
     let dml = r#"
     model Todo {
-      id: Int @id
-      title: String
-      comments: Comment[]
+      id Int @id
+      title String
+      comments Comment[]
     }
     
     model Comment {
-      id: Int @id
-      text: String
-      todo: Todo
+      id Int @id
+      text String
+      todo Todo
       
       @@embedded
     }
@@ -59,7 +59,7 @@ fn fail_if_back_relation_for_embedded_type() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Embedded models cannot have back relation fields.",
         "Comment",
-        &Span::new(156, 180),
+        &Span::new(151, 174),
     ));
 }
 
@@ -67,9 +67,9 @@ fn fail_if_back_relation_for_embedded_type() {
 fn settings_must_be_deteced() {
     let dml = r#"
     model Todo {
-      id: Int @id
-      child_todos: Todo[] @relation("MyRelation")
-      parent_todo: Todo? @relation("MyRelation", onDelete: CASCADE, references: id)
+      id Int @id
+      child_todos Todo[] @relation("MyRelation")
+      parent_todo Todo? @relation("MyRelation", onDelete: CASCADE, references: id)
     }
     "#;
 
@@ -88,14 +88,14 @@ fn settings_must_be_deteced() {
 fn fail_if_ambigous_relation_fields_do_not_specify_a_name() {
     let dml = r#"
     model Todo {
-      id: Int @id
-      comments: Comment[]
-      comments2: Comment[]
+      id Int @id
+      comments Comment[]
+      comments2 Comment[]
     }
     
     model Comment {
-      id: Int @id
-      text: String
+      id Int @id
+      text String
     }
     "#;
 
@@ -104,6 +104,6 @@ fn fail_if_ambigous_relation_fields_do_not_specify_a_name() {
     errors.assert_is(ValidationError::new_model_validation_error(
         "Ambiguous relation detected.",
         "Todo",
-        &Span::new(42, 68),
+        &Span::new(41, 66),
     ));
 }

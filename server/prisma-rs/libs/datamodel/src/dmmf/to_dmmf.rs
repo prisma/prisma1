@@ -33,6 +33,7 @@ pub fn enum_to_dmmf(en: &dml::Enum) -> Enum {
         name: en.name.clone(),
         values: en.values.clone(),
         db_name: en.database_name.clone(),
+        documentation: en.documentation.clone(),
     }
 }
 
@@ -103,6 +104,7 @@ pub fn field_to_dmmf(field: &dml::Field) -> Field {
         field_type: get_field_type(field),
         is_generated: Some(field.is_generated),
         is_updated_at: Some(field.is_updated_at),
+        documentation: field.documentation.clone(),
     }
 }
 
@@ -113,6 +115,7 @@ pub fn model_to_dmmf(model: &dml::Model) -> Model {
         is_embedded: model.is_embedded,
         fields: model.fields().map(&field_to_dmmf).collect(),
         is_generated: Some(model.is_generated),
+        documentation: model.documentation.clone(),
     }
 }
 

@@ -1,8 +1,7 @@
 use super::common::*;
 use crate::{
-    ast, dml,
+    ast, configuration, dml,
     errors::{ErrorCollection, ValidationError},
-    source,
 };
 
 /// Helper for validating a datamodel.
@@ -23,7 +22,7 @@ impl Validator {
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(_sources: &Vec<Box<source::Source>>) -> Validator {
+    pub fn with_sources(_sources: &Vec<Box<configuration::Source>>) -> Validator {
         Validator {}
     }
 

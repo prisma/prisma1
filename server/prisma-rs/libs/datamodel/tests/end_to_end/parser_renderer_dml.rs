@@ -102,3 +102,25 @@ fn test_parser_renderer_many_to_many_via_dml() {
 
     assert_eq!(rendered, MANY_TO_MANY_DATAMODEL);
 }
+
+const DATAMODEL_STRING_WITH_COMMENTS: &str = r#"/// Cool user model
+model User {
+    id Int @id
+    /// Created at field
+    createdAt DateTime
+    email String @unique
+    /// Name field.
+    /// Multi line comment.
+    name String?
+    @@db("user")
+}"#;
+
+#[test]
+fn test_parser_renderer_model_with_comments_via_dml() {
+    let dml = datamodel::parse(DATAMODEL_STRING_WITH_COMMENTS).unwrap();
+    let rendered = datamodel::render(&dml).unwrap();
+
+    print!("{}", rendered);
+
+    assert_eq!(rendered, DATAMODEL_STRING_WITH_COMMENTS);
+}

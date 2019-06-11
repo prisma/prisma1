@@ -31,12 +31,25 @@ impl<'a> Renderer<'a> {
                 ast::Top::Enum(enm) => self.render_enum(enm),
                 ast::Top::Type(custom_type) => self.render_custom_type(custom_type),
                 ast::Top::Source(source) => self.render_source_block(source),
+                ast::Top::Generator(generator) => self.render_generator_block(generator),
             };
         }
     }
 
+    pub fn render_documentation(&mut self, obj: &ast::WithDocumentation) {
+        if let Some(doc) = &obj.documentation() {
+            for line in doc.text.split("\n") {
+                self.write("/// ");
+                self.write(line);
+                self.end_line();
+            }
+        }
+    }
+
     pub fn render_source_block(&mut self, source: &ast::SourceConfig) {
-        self.write("source ");
+        self.render_documentation(source);
+
+        self.write("datasource ");
         self.write(&source.name);
         self.write(" {");
         self.end_line();
@@ -49,20 +62,25 @@ impl<'a> Renderer<'a> {
             self.end_line();
         }
 
-        if source.detail_configuration.len() > 0 {
-            self.write("properties {");
+        self.indent_down();
+        self.write("}");
+        self.end_line();
+    }
+
+    pub fn render_generator_block(&mut self, generator: &ast::GeneratorConfig) {
+        self.render_documentation(generator);
+
+        self.write("generator ");
+        self.write(&generator.name);
+        self.write(" {");
+        self.end_line();
+        self.indent_up();
+
+        for property in &generator.properties {
+            self.write(&property.name);
+            self.write(" = ");
+            self.render_value(&property.value);
             self.end_line();
-            self.indent_up();
-
-            for property in &source.detail_configuration {
-                self.write(&property.name);
-                self.write(" = ");
-                self.render_value(&property.value);
-                self.end_line();
-            }
-
-            self.indent_down();
-            self.write("}");
         }
 
         self.indent_down();
@@ -71,6 +89,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_custom_type(&mut self, field: &ast::Field) {
+        self.render_documentation(field);
+
         self.write("type ");
         self.write(&field.name);
         self.write(&" = ");
@@ -85,6 +105,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_model(&mut self, model: &ast::Model) {
+        self.render_documentation(model);
+
         self.write("model ");
         self.write(&model.name);
         self.write(" {");
@@ -105,6 +127,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_enum(&mut self, enm: &ast::Enum) {
+        self.render_documentation(enm);
+
         self.write("enum ");
         self.write(&enm.name);
         self.write(" {");
@@ -127,6 +151,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_field(&mut self, field: &ast::Field) {
+        self.render_documentation(field);
+
         self.write(&field.name);
         self.write(&" ");
         self.write(&field.field_type);
@@ -197,6 +223,7 @@ impl<'a> Renderer<'a> {
             ast::Value::NumericValue(val, _) => self.write(&val),
             ast::Value::StringValue(val, _) => self.render_str(&val),
             ast::Value::Function(name, args, _) => self.render_func(&name, &args),
+            ast::Value::Any(_, _) => unimplemented!("Value of 'Any' type cannot be rendered."),
         };
     }
 
