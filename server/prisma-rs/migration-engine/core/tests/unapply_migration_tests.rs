@@ -7,8 +7,8 @@ fn unapply_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Test {
-                id: String @id
-                field: String
+                id String @id
+                field String
             }
         "#;
         let result1 = infer_and_apply(&engine, &dm1);
@@ -16,7 +16,7 @@ fn unapply_must_work() {
 
         let dm2 = r#"
             model Test {
-                id: String @id
+                id String @id
             }
         "#;
         let result2 = infer_and_apply(&engine, &dm2);

@@ -1,26 +1,26 @@
 model Blog {
-    id: Int @primary
-    name: String
-    viewCount: Int
-    posts: Post[]
-    authors: Author[]
+    id Int @primary
+    name String
+    viewCount Int
+    posts Post[]
+    authors Author[]
 }
 
 model Author {
-    id: Int @primary
-    name: String?
-    authors: Blog[]
-    city: City?
+    id Int @primary
+    name String?
+    authors Blog[]
+    city City?
 }
 
 model City {
-    id: Int @primary
-    author: Author?
+    id Int @primary
+    author Author?
 }
 
 model Post {
-    id: Int @primary
-    title: String
-    tags: String[]
-    blog: Blog
+    id Int @primary
+    title String
+    tags String[]
+    blog Blog
 }

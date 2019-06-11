@@ -15,8 +15,8 @@ fn converting_enums() {
     let datamodel = convert(
         r#"
             model MyModel {
-                id: Int @id
-                field: MyEnum
+                id Int @id
+                field MyEnum
             }
 
             enum MyEnum {
@@ -46,13 +46,13 @@ fn models_with_only_scalar_fields() {
     let datamodel = convert(
         r#"
             model Test {
-                id: Int @id
-                int: Int
-                float: Float
-                boolean: Boolean
-                dateTime: DateTime
-                stringOpt: String?
-                intList: Int[]
+                id Int @id
+                int Int
+                float Float
+                boolean Boolean
+                dateTime DateTime
+                stringOpt String?
+                intList Int[]
             }
         "#,
     );
@@ -98,8 +98,8 @@ fn db_names_work() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id
-                field: String @db(name:"my_column")
+                id String @id
+                field String @db(name:"my_column")
             }
         "#,
     );
@@ -120,8 +120,8 @@ fn scalar_lists_work() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id
-                intList: Int[]
+                id String @id
+                intList Int[]
             }
         "#,
     );
@@ -140,8 +140,8 @@ fn unique_works() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id
-                unique: String @unique
+                id String @id
+                unique String @unique
             }
         "#,
     );
@@ -158,7 +158,7 @@ fn uuid_fields_must_work() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id @default(uuid())
+                id String @id @default(uuid())
             }
         "#,
     );
@@ -174,7 +174,7 @@ fn cuid_fields_must_work() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id @default(cuid())
+                id String @id @default(cuid())
             }
         "#,
     );
@@ -190,8 +190,8 @@ fn createdAt_works() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id
-                createdAt: DateTime @default(now())
+                id String @id
+                createdAt DateTime @default(now())
             }
         "#,
     );
@@ -208,8 +208,8 @@ fn updatedAt_works() {
     let datamodel = convert(
         r#"
             model Test {
-                id: String @id
-                updatedAt: DateTime @updatedAt
+                id String @id
+                updatedAt DateTime @updatedAt
             }
         "#,
     );
@@ -226,13 +226,13 @@ fn explicit_relation_fields() {
     let datamodel = convert(
         r#"
             model Blog {
-                id: Int @id
-                posts: Post[]
+                id Int @id
+                posts Post[]
             }
 
             model Post {
-                id: Int @id
-                blog: Blog? @db(name:"blog_id")
+                id Int @id
+                blog Blog? @db(name:"blog_id")
             }
         "#,
     );
@@ -268,13 +268,13 @@ fn many_to_many_relations() {
     let datamodel = convert(
         r#"
             model Post {
-                id: Int @id
-                blogs: Blog[]
+                id Int @id
+                blogs Blog[]
             }
 
             model Blog {
-                id: Int @id
-                posts: Post[]
+                id Int @id
+                posts Post[]
             }
         "#,
     );
@@ -313,12 +313,12 @@ fn implicit_relation_fields() {
     let datamodel = convert(
         r#"
             model Blog {
-                id: Int @id
-                posts: Post[]
+                id Int @id
+                posts Post[]
             }
 
             model Post {
-                id: Int @id
+                id Int @id
             }
         "#,
     );
@@ -344,13 +344,13 @@ fn explicit_relation_names() {
     let datamodel = convert(
         r#"
             model Blog {
-                id: Int @id
-                posts: Post[] @relation(name: "MyRelationName")
+                id Int @id
+                posts Post[] @relation(name: "MyRelationName")
             }
 
             model Post {
-                id: Int @id
-                blog: Blog? @relation(name: "MyRelationName")
+                id Int @id
+                blog Blog? @relation(name: "MyRelationName")
             }
         "#,
     );
@@ -374,7 +374,7 @@ fn self_relations() {
     let datamodel = convert(
         r#"
             model Employee {
-                id: Int @id
+                id Int @id
                 ReportsTo: Employee?
             }
         "#,
