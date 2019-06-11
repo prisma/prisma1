@@ -19,68 +19,98 @@ object NativeBinding {
     Native.loadLibrary("native_bridge", classOf[JnaRustBridge])
   }
 
-  def get_node_by_where(getNodeByWhere: GetNodeByWhereInput): Option[(Node, Vector[String])] = {
+  def get_node_by_where(database_file: Option[String], getNodeByWhere: GetNodeByWhereInput): Option[(Node, Vector[String])] = {
     val (pointer, length) = writeBuffer(getNodeByWhere)
 
-    handleProtoResult(library.get_node_by_where(pointer, length)) { nodesAndFields: (Seq[Node], Seq[String]) =>
-      nodesAndFields._1.headOption.map((_, nodesAndFields._2.toVector))
+    with_pbi(database_file) { pbi_ptr =>
+      handleProtoResult(library.get_node_by_where(pbi_ptr, pointer, length)) { nodesAndFields: (Seq[Node], Seq[String]) =>
+        nodesAndFields._1.headOption.map((_, nodesAndFields._2.toVector))
+      }
     }
   }
 
-  def get_nodes(getNodes: GetNodesInput): (Vector[Node], Vector[String]) = {
+  def get_nodes(database_file: Option[String], getNodes: GetNodesInput): (Vector[Node], Vector[String]) = {
     val (pointer, length) = writeBuffer(getNodes)
 
-    handleProtoResult(library.get_nodes(pointer, length)) { nodesAndFields: (Vector[Node], Vector[String]) =>
-      nodesAndFields
+    with_pbi(database_file) { pbi_ptr =>
+      handleProtoResult(library.get_nodes(pbi_ptr, pointer, length)) { nodesAndFields: (Vector[Node], Vector[String]) =>
+        nodesAndFields
+      }
     }
   }
 
-  def get_related_nodes(getRelatedNodesInput: GetRelatedNodesInput): (Vector[Node], Vector[String]) = {
+  def get_related_nodes(database_file: Option[String], getRelatedNodesInput: GetRelatedNodesInput): (Vector[Node], Vector[String]) = {
     val (pointer, length) = writeBuffer(getRelatedNodesInput)
 
-    handleProtoResult(library.get_related_nodes(pointer, length)) { nodesAndFields: (Vector[Node], Vector[String]) =>
-      nodesAndFields
+    with_pbi(database_file) { pbi_ptr =>
+      handleProtoResult(library.get_related_nodes(pbi_ptr, pointer, length)) { nodesAndFields: (Vector[Node], Vector[String]) =>
+        nodesAndFields
+      }
     }
   }
 
-  def get_scalar_list_values_by_node_ids(input: GetScalarListValuesByNodeIds): Seq[ScalarListValues] = {
+  def get_scalar_list_values_by_node_ids(database_file: Option[String], input: GetScalarListValuesByNodeIds): Seq[ScalarListValues] = {
     val (pointer, length) = writeBuffer(input)
-    handleProtoResult(library.get_scalar_list_values_by_node_ids(pointer, length)) { values: Seq[ScalarListValues] =>
-      values
+
+    with_pbi(database_file) { pbi_ptr =>
+      handleProtoResult(library.get_scalar_list_values_by_node_ids(pbi_ptr, pointer, length)) { values: Seq[ScalarListValues] =>
+        values
+      }
     }
   }
 
-  def execute_raw(input: ExecuteRawInput): JsValue = {
+  def execute_raw(database_file: Option[String], input: ExecuteRawInput): JsValue = {
     val (pointer, length) = writeBuffer(input)
-    handleProtoResult(library.execute_raw(pointer, length)) { json: JsValue =>
-      json
+
+    with_pbi(database_file) { pbi_ptr =>
+      handleProtoResult(library.execute_raw(pbi_ptr, pointer, length)) { json: JsValue =>
+        json
+      }
     }
   }
 
-  def count_by_model(input: CountByModelInput): Int = {
+  def count_by_model(database_file: Option[String], input: CountByModelInput): Int = {
     val (pointer, length) = writeBuffer(input)
 
-    handleProtoResult(library.count_by_model(pointer, length)) { i: Int =>
-      i
+    with_pbi(database_file) { pbi_ptr =>
+      handleProtoResult(library.count_by_model(pbi_ptr, pointer, length)) { i: Int =>
+        i
+      }
     }
   }
 
-  def count_by_table(input: CountByTableInput): Int = {
+  def count_by_table(database_file: Option[String], input: CountByTableInput): Int = {
     val (pointer, length) = writeBuffer(input)
 
-    handleProtoResult(library.count_by_table(pointer, length)) { i: Int =>
-      i
+    with_pbi(database_file) { pbi_ptr =>
+      handleProtoResult(library.count_by_table(pbi_ptr, pointer, length)) { i: Int =>
+        i
+      }
     }
   }
 
   def execute_mutaction(
+      database_file: Option[String],
       input: DatabaseMutaction,
   ): DatabaseMutactionResult = {
     val (pointer, length) = writeBuffer(input)
+
     // FIXME: this must return proper result intead of this int
-    handleProtoResult(library.execute_mutaction(pointer, length)) { x: DatabaseMutactionResult =>
-      x
+    with_pbi(database_file) { pbi_ptr =>
+      handleProtoResult(library.execute_mutaction(pbi_ptr, pointer, length)) { x: DatabaseMutactionResult =>
+        x
+      }
     }
+  }
+
+  def with_pbi[T, U](
+      database_file: Option[String]
+  )(fn: Pointer => U): U = {
+    val pbi_ptr = library.create_interface(database_file.getOrElse(""))
+    val res     = fn(pbi_ptr)
+
+    library.destroy_interface(pbi_ptr)
+    res
   }
 
   def handleProtoResult[T, U](

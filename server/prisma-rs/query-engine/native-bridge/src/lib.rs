@@ -28,8 +28,8 @@ pub unsafe extern "C" fn create_interface(database_file: *const c_char) -> *mut 
     } else {
         Some(database_file.into())
     };
-    let pbi = ProtoBufInterface::new(&CONFIG, database_file);
 
+    let pbi = ProtoBufInterface::new(&CONFIG, database_file);
     Box::into_raw(Box::new(pbi))
 }
 
@@ -57,7 +57,7 @@ macro_rules! data_interface {
                 let payload = slice::from_raw_parts_mut(data, len);
                 let response_payload = pbi.$function(payload);
 
-                Box::into_raw(pbi);
+                Box::into_raw(pbi); // Forget the pbi, again.
                 ProtoBufEnvelope::from(response_payload).into_boxed_ptr()
             }
         )*
