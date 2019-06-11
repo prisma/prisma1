@@ -14,7 +14,7 @@ fn add_CreateModel_to_existing_schema() {
     let dm2 = parse(
         r#"
         model Test {
-            id: String @id
+            id String @id
         }
     "#,
     );
@@ -27,7 +27,7 @@ fn add_DeleteModel_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String @id
+            id String @id
         }
     "#,
     );
@@ -41,14 +41,14 @@ fn add_UpdateModel_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Post {
-            id: String @id
+            id String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Post {
-            id: String @id
+            id String @id
             
             @@embedded
         }
@@ -63,15 +63,15 @@ fn add_CreateField_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String @id
+            id String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String @id
-            field: Int?
+            id String @id
+            field Int?
         }
     "#,
     );
@@ -84,22 +84,22 @@ fn add_CreateField_for_relation_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Blog {
-            id: String @id
+            id String @id
         }
         model Post {
-            id: String @id
+            id String @id
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Blog {
-            id: String @id
-            posts: Post[]
+            id String @id
+            posts Post[]
         }
         model Post {
-            id: String @id
-            blog: Blog?
+            id String @id
+            blog Blog?
         }
     "#,
     );
@@ -112,15 +112,15 @@ fn add_DeleteField_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String @id
-            field: Int?
+            id String @id
+            field Int?
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String @id
+            id String @id
         }
     "#,
     );
@@ -133,16 +133,16 @@ fn add_UpdateField_to_existing_schema() {
     let dm1 = parse(
         r#"
         model Test {
-            id: String @id
-            field: Int?
+            id String @id
+            field Int?
         }
     "#,
     );
     let dm2 = parse(
         r#"
         model Test {
-            id: String @id
-            field: Boolean @default(false)
+            id String @id
+            field Boolean @default(false)
         }
     "#,
     );
@@ -188,7 +188,7 @@ fn creating_a_model_that_already_exists_must_error() {
     let dm = parse(
         r#"
             model Test {
-                id: Int @id
+                id Int @id
             }
         "#,
     );
@@ -210,7 +210,7 @@ fn creating_a_field_that_already_exists_must_error() {
     let dm = parse(
         r#"
             model Test {
-                id: Int @id
+                id Int @id
             }
         "#,
     );
@@ -286,7 +286,7 @@ fn deleting_a_field_that_does_not_exist_2_must_error() {
     let dm = parse(
         r#"
             model Test {
-                id: Int @id
+                id Int @id
             }
         "#,
     );
@@ -354,7 +354,7 @@ fn updating_a_field_that_does_not_exist_must_error_2() {
     let dm = parse(
         r#"
             model Test {
-                id: Int @id
+                id Int @id
             }
         "#,
     );

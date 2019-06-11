@@ -9,7 +9,7 @@ fn assume_to_be_applied_must_work() {
     run_test_with_engine(|engine| {
         let dm0 = r#"
             model Blog {
-                id: Int @id
+                id Int @id
             }
         "#;
 
@@ -17,8 +17,8 @@ fn assume_to_be_applied_must_work() {
 
         let dm1 = r#"
             model Blog {
-                id: Int @id
-                field1: String
+                id Int @id
+                field1 String
             }
         "#;
         let input1 = InferMigrationStepsInput {
@@ -31,9 +31,9 @@ fn assume_to_be_applied_must_work() {
 
         let dm2 = r#"
             model Blog {
-                id: Int @id
-                field1: String
-                field2: String
+                id Int @id
+                field1 String
+                field2 String
             }
         "#;
         let input2 = InferMigrationStepsInput {
@@ -51,7 +51,7 @@ fn special_handling_of_watch_migrations() {
     run_test_with_engine(|engine| {
         let dm = r#"
             model Blog {
-                id: Int @id
+                id Int @id
             }
         "#;
 
@@ -59,27 +59,27 @@ fn special_handling_of_watch_migrations() {
 
         let dm = r#"
             model Blog {
-                id: Int @id
-                field1: String
+                id Int @id
+                field1 String
             }
         "#;
         infer_and_apply_with_migration_id(&engine, &dm, "watch01");
 
         let dm = r#"
             model Blog {
-                id: Int @id
-                field1: String
-                field2: String
+                id Int @id
+                field1 String
+                field2 String
             }
         "#;
         infer_and_apply_with_migration_id(&engine, &dm, "watch02");
 
         let dm = r#"
             model Blog {
-                id: Int @id
-                field1: String
-                field2: String
-                field3: Int
+                id Int @id
+                field1 String
+                field2 String
+                field3 Int
             }
         "#;
         let input = InferMigrationStepsInput {

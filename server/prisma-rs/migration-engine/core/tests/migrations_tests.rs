@@ -8,13 +8,13 @@ fn adding_a_scalar_field_must_work() {
     run_test_with_engine(|engine| {
         let dm2 = r#"
             model Test {
-                id: String @id
-                int: Int
-                float: Float
-                boolean: Boolean
-                string: String
-                dateTime: DateTime
-                enum: MyEnum
+                id String @id
+                int Int
+                float Float
+                boolean Boolean
+                string String
+                dateTime DateTime
+                enum MyEnum
             }
 
             enum MyEnum {
@@ -40,8 +40,8 @@ fn adding_an_optional_field_must_work() {
     run_test_with_engine(|engine| {
         let dm2 = r#"
             model Test {
-                id: String @id
-                field: String?
+                id String @id
+                field String?
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -55,7 +55,7 @@ fn adding_an_id_field_with_a_special_name_must_work() {
     run_test_with_engine(|engine| {
         let dm2 = r#"
             model Test {
-                specialName: String @id
+                specialName String @id
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -69,8 +69,8 @@ fn removing_a_scalar_field_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Test {
-                id: String @id
-                field: String
+                id String @id
+                field String
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -79,7 +79,7 @@ fn removing_a_scalar_field_must_work() {
 
         let dm2 = r#"
             model Test {
-                id: String @id
+                id String @id
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -93,8 +93,8 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Group {
-                id: String @id
-                field: String
+                id String @id
+                field String
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -103,8 +103,8 @@ fn can_handle_reserved_sql_keywords_for_model_name() {
 
         let dm2 = r#"
             model Group {
-                id: String @id
-                field: Int
+                id String @id
+                field Int
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -118,8 +118,8 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Test {
-                id: String @id
-                Group: String
+                id String @id
+                Group String
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -128,8 +128,8 @@ fn can_handle_reserved_sql_keywords_for_field_name() {
 
         let dm2 = r#"
             model Test {
-                id: String @id
-                Group: Int
+                id String @id
+                Group Int
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -143,8 +143,8 @@ fn update_type_of_scalar_field_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model Test {
-                id: String @id
-                field: String
+                id String @id
+                field String
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -153,8 +153,8 @@ fn update_type_of_scalar_field_must_work() {
 
         let dm2 = r#"
             model Test {
-                id: String @id
-                field: Int
+                id String @id
+                field Int
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -168,12 +168,12 @@ fn changing_the_type_of_an_id_field_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id])
+                id Int @id
+                b B @relation(references: [id])
             }
             model B {
-                id: Int @id
-                a: A # remove once implicit back relation field is implemented
+                id Int @id
+                a A // remove once implicit back relation field is implemented
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -189,12 +189,12 @@ fn changing_the_type_of_an_id_field_must_work() {
 
         let dm2 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id])
+                id Int @id
+                b B @relation(references: [id])
             }
             model B {
-                id: String @id
-                a: A # remove once implicit back relation field is implemented
+                id String @id
+                a A // remove once implicit back relation field is implemented
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -215,8 +215,8 @@ fn updating_db_name_of_a_scalar_field_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: String @id
-                field: String @db(name:"name1")
+                id String @id
+                field String @db(name:"name1")
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -224,8 +224,8 @@ fn updating_db_name_of_a_scalar_field_must_work() {
 
         let dm2 = r#"
             model A {
-                id: String @id
-                field: String @db(name:"name2")
+                id String @id
+                field String @db(name:"name2")
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -240,12 +240,12 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id])
+                id Int @id
+                b B @relation(references: [id])
             }
             model B {
-                id: Int @id
-                a: A # remove this once the implicit back relation field is implemented
+                id Int @id
+                a A // remove this once the implicit back relation field is implemented
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -255,11 +255,11 @@ fn changing_a_relation_field_to_a_scalar_field_must_work() {
 
         let dm2 = r#"
             model A {
-                id: Int @id
-                b: String
+                id Int @id
+                b String
             }
             model B {
-                id: Int @id
+                id Int @id
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -274,11 +274,11 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                b: String
+                id Int @id
+                b String
             }
             model B {
-                id: Int @id
+                id Int @id
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -288,12 +288,12 @@ fn changing_a_scalar_field_to_a_relation_field_must_work() {
 
         let dm2 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id])
+                id Int @id
+                b B @relation(references: [id])
             }
             model B {
-                id: Int @id
-                a: A # remove this once the implicit back relation field is implemented
+                id Int @id
+                a A // remove this once the implicit back relation field is implemented
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);
@@ -309,12 +309,12 @@ fn adding_a_many_to_many_relation_must_result_in_a_prisma_style_relation_table()
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                bs: B[]
+                id Int @id
+                bs B[]
             }
             model B {
-                id: Int @id
-                as: A[]
+                id Int @id
+                as A[]
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -374,13 +374,13 @@ fn adding_an_inline_relation_must_result_in_a_foreign_key_in_the_model_table() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id])
+                id Int @id
+                b B @relation(references: [id])
             }
 
             model B {
-                id: Int @id
-                a: A # todo: remove when implicit back relation field is implemented
+                id Int @id
+                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm1));
@@ -401,13 +401,13 @@ fn specifying_a_db_name_for_an_inline_relation_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id]) @db(name: "b_column")
+                id Int @id
+                b B @relation(references: [id]) @db(name: "b_column")
             }
 
             model B {
-                id: Int @id
-                a: A # todo: remove when implicit back relation field is implemented
+                id Int @id
+                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm1));
@@ -428,13 +428,13 @@ fn adding_an_inline_relation_to_a_model_with_an_exotic_id_type() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id])
+                id Int @id
+                b B @relation(references: [id])
             }
 
             model B {
-                id: String @id
-                a: A # todo: remove when implicit back relation field is implemented
+                id String @id
+                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm1));
@@ -455,13 +455,13 @@ fn removing_an_inline_relation_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id])
+                id Int @id
+                b B @relation(references: [id])
             }
 
             model B {
-                id: Int @id
-                a: A # todo: remove when implicit back relation field is implemented
+                id Int @id
+                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm1));
@@ -470,11 +470,11 @@ fn removing_an_inline_relation_must_work() {
 
         let dm2 = r#"
             model A {
-                id: Int @id
+                id Int @id
             }
 
             model B {
-                id: Int @id
+                id Int @id
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm2));
@@ -489,13 +489,13 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                b: B @relation(references: [id])
+                id Int @id
+                b B @relation(references: [id])
             }
 
             model B {
-                id: Int @id
-                a: A # todo: remove when implicit back relation field is implemented
+                id Int @id
+                a A // todo: remove when implicit back relation field is implemented
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm1));
@@ -510,13 +510,13 @@ fn moving_an_inline_relation_to_the_other_side_must_work() {
 
         let dm2 = r#"
             model A {
-                id: Int @id
-                b: B # todo: remove when implicit back relation field is implemented
+                id Int @id
+                b B // todo: remove when implicit back relation field is implemented
             }
 
             model B {
-                id: Int @id
-                a: A @relation(references: [id])
+                id Int @id
+                a A @relation(references: [id])
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm2));
@@ -538,8 +538,8 @@ fn adding_a_unique_constraint_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                field: String @unique
+                id Int @id
+                field String @unique
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm1));
@@ -560,8 +560,8 @@ fn removing_a_unique_constraint_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                field: String @unique
+                id Int @id
+                field String @unique
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -575,7 +575,7 @@ fn removing_a_unique_constraint_must_work() {
 
         let dm2 = r#"
             model A {
-                id: Int @id
+                id Int @id
             }
         "#;
         let result = dbg!(infer_and_apply(&engine, &dm2));
@@ -593,8 +593,8 @@ fn adding_a_scalar_list_for_a_modelwith_id_type_int_must_work() {
     run_test_with_engine(|engine| {
         let dm1 = r#"
             model A {
-                id: Int @id
-                strings: String[]
+                id Int @id
+                strings String[]
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -610,8 +610,8 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
     run_test_with_engine(|engine| {
         let dm = r#"
             model A {
-                id: Int @id
-                strings: String[]
+                id Int @id
+                strings String[]
             }
         "#;
         let result = infer_and_apply(&engine, &dm);
@@ -620,8 +620,8 @@ fn updating_a_model_with_a_scalar_list_to_a_different_id_type_must_work() {
 
         let dm = r#"
             model A {
-                id: String @id
-                strings: String[]
+                id String @id
+                strings String[]
             }
         "#;
         let result = infer_and_apply(&engine, &dm);
