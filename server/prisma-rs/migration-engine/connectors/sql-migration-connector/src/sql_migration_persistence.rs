@@ -158,7 +158,7 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 impl<C: Connectional> SqlMigrationPersistence<C> {
     fn table(&self) -> Table {
         if self.file_path.is_some() {
-            // sqlite case
+            // sqlite case. Otherwise prisma-query produces invalid SQL
             TABLE_NAME.to_string().into()
         } else {
             (self.schema_name.to_string(), TABLE_NAME.to_string()).into()
