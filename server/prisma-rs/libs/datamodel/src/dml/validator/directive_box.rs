@@ -1,6 +1,6 @@
 use super::directive::core::{new_builtin_enum_directives, new_builtin_field_directives, new_builtin_model_directives};
 use super::directive::DirectiveListValidator;
-use crate::{dml, source};
+use crate::{dml, configuration};
 
 pub struct DirectiveBox {
     pub field: DirectiveListValidator<dml::Field>,
@@ -22,7 +22,7 @@ impl DirectiveBox {
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<source::Source>>) -> DirectiveBox {
+    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> DirectiveBox {
         let mut directives = DirectiveBox::new();
 
         for source in sources {

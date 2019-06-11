@@ -1,15 +1,15 @@
-use crate::{dml, dml::validator::directive::DirectiveValidator, source::*};
-pub const POSTGRES_SOURCE_NAME: &str = "postgres";
+use crate::{dml, dml::validator::directive::DirectiveValidator, configuration::*};
+pub const SQLITE_SOURCE_NAME: &str = "sqlite";
 
-pub struct PostgresSource {
+pub struct SqliteSource {
     pub(super) name: String,
     pub(super) url: String,
     pub(super) documentation: Option<String>,
 }
 
-impl Source for PostgresSource {
+impl Source for SqliteSource {
     fn connector_type(&self) -> &str {
-        POSTGRES_SOURCE_NAME
+        SQLITE_SOURCE_NAME
     }
     fn name(&self) -> &String {
         &self.name

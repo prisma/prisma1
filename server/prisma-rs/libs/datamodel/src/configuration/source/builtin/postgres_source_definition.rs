@@ -1,5 +1,5 @@
 use super::{PostgresSource, POSTGRES_SOURCE_NAME};
-use crate::{common::argument::Arguments, errors::ValidationError, source::*};
+use crate::{common::argument::Arguments, errors::ValidationError, configuration::*};
 
 pub struct PostgresSourceDefinition {}
 

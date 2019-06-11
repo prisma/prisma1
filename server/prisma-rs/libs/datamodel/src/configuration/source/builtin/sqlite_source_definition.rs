@@ -1,17 +1,17 @@
-use super::{MySqlSource, MYSQL_SOURCE_NAME};
-use crate::{common::argument::Arguments, errors::ValidationError, source::*};
+use super::{SqliteSource, SQLITE_SOURCE_NAME};
+use crate::{common::argument::Arguments, errors::ValidationError, configuration::*};
 
-pub struct MySqlSourceDefinition {}
+pub struct SqliteSourceDefinition {}
 
-impl MySqlSourceDefinition {
-    pub fn new() -> MySqlSourceDefinition {
-        MySqlSourceDefinition {}
+impl SqliteSourceDefinition {
+    pub fn new() -> SqliteSourceDefinition {
+        SqliteSourceDefinition {}
     }
 }
 
-impl SourceDefinition for MySqlSourceDefinition {
+impl SourceDefinition for SqliteSourceDefinition {
     fn connector_type(&self) -> &'static str {
-        MYSQL_SOURCE_NAME
+        SQLITE_SOURCE_NAME
     }
 
     fn create(
@@ -21,7 +21,7 @@ impl SourceDefinition for MySqlSourceDefinition {
         _arguments: &Arguments,
         documentation: &Option<String>,
     ) -> Result<Box<Source>, ValidationError> {
-        Ok(Box::new(MySqlSource {
+        Ok(Box::new(SqliteSource {
             name: String::from(name),
             url: String::from(url),
             documentation: documentation.clone(),

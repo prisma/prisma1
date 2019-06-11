@@ -1,15 +1,15 @@
-use crate::{dml, dml::validator::directive::DirectiveValidator, source::*};
-pub const SQLITE_SOURCE_NAME: &str = "sqlite";
+use crate::{dml, dml::validator::directive::DirectiveValidator, configuration::*};
+pub const MYSQL_SOURCE_NAME: &str = "mysql";
 
-pub struct SqliteSource {
+pub struct MySqlSource {
     pub(super) name: String,
     pub(super) url: String,
     pub(super) documentation: Option<String>,
 }
 
-impl Source for SqliteSource {
+impl Source for MySqlSource {
     fn connector_type(&self) -> &str {
-        SQLITE_SOURCE_NAME
+        MYSQL_SOURCE_NAME
     }
     fn name(&self) -> &String {
         &self.name

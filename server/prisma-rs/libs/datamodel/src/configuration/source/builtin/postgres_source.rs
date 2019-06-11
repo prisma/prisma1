@@ -1,15 +1,15 @@
-use crate::{dml, dml::validator::directive::DirectiveValidator, source::*};
-pub const MYSQL_SOURCE_NAME: &str = "mysql";
+use crate::{dml, dml::validator::directive::DirectiveValidator, configuration::*};
+pub const POSTGRES_SOURCE_NAME: &str = "postgres";
 
-pub struct MySqlSource {
+pub struct PostgresSource {
     pub(super) name: String,
     pub(super) url: String,
     pub(super) documentation: Option<String>,
 }
 
-impl Source for MySqlSource {
+impl Source for PostgresSource {
     fn connector_type(&self) -> &str {
-        MYSQL_SOURCE_NAME
+        POSTGRES_SOURCE_NAME
     }
     fn name(&self) -> &String {
         &self.name
