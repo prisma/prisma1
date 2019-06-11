@@ -35,7 +35,19 @@ impl<'a> Renderer<'a> {
         }
     }
 
+    pub fn render_documentation(&mut self, obj: &ast::WithDocumentation) {
+        if let Some(doc) = &obj.documentation() {
+            for line in doc.text.split("\n") {
+                self.write("/// ");
+                self.write(line);
+                self.end_line();
+            }
+        }
+    }
+
     pub fn render_source_block(&mut self, source: &ast::SourceConfig) {
+        self.render_documentation(source);
+
         self.write("source ");
         self.write(&source.name);
         self.write(" {");
@@ -71,6 +83,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_custom_type(&mut self, field: &ast::Field) {
+        self.render_documentation(field);
+
         self.write("type ");
         self.write(&field.name);
         self.write(&" = ");
@@ -85,6 +99,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_model(&mut self, model: &ast::Model) {
+        self.render_documentation(model);
+
         self.write("model ");
         self.write(&model.name);
         self.write(" {");
@@ -105,6 +121,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_enum(&mut self, enm: &ast::Enum) {
+        self.render_documentation(enm);
+
         self.write("enum ");
         self.write(&enm.name);
         self.write(" {");
@@ -127,6 +145,8 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_field(&mut self, field: &ast::Field) {
+        self.render_documentation(field);
+
         self.write(&field.name);
         self.write(&" ");
         self.write(&field.field_type);

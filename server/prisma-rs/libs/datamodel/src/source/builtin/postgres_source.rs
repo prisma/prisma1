@@ -4,6 +4,7 @@ pub const POSTGRES_SOURCE_NAME: &str = "postgres";
 pub struct PostgresSource {
     pub(super) name: String,
     pub(super) url: String,
+    pub(super) documentation: Option<String>,
 }
 
 impl Source for PostgresSource {
@@ -27,5 +28,8 @@ impl Source for PostgresSource {
     }
     fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>> {
         vec![]
+    }
+    fn documentation(&self) -> &Option<String> {
+        &self.documentation
     }
 }

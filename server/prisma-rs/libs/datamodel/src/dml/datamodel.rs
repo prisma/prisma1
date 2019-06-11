@@ -1,4 +1,3 @@
-use super::comment::*;
 use super::enummodel::*;
 use super::field::Field;
 use super::model::*;
@@ -12,8 +11,6 @@ pub struct Datamodel {
     pub enums: Vec<Enum>,
     // All models.
     pub models: Vec<Model>,
-    /// All comments.
-    pub comments: Vec<Comment>,
 }
 
 /// Type alias for (ModelName, FieldName)
@@ -25,7 +22,6 @@ impl Datamodel {
         Datamodel {
             models: vec![],
             enums: vec![],
-            comments: vec![],
         }
     }
 

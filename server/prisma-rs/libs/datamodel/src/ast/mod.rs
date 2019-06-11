@@ -50,12 +50,10 @@ pub enum FieldArity {
 }
 
 /// A comment. Currently unimplemented.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Comment {
     /// The comment text
     pub text: String,
-    /// Unused.
-    pub is_error: bool,
 }
 
 /// An argument, either for directives, or for keys in source blocks.
@@ -171,8 +169,8 @@ pub trait WithDirectives {
 }
 
 /// Trait for an AST node which can have comments.
-pub trait WithComments {
-    fn comments(&self) -> &Vec<Comment>;
+pub trait WithDocumentation {
+    fn documentation(&self) -> &Option<Comment>;
 }
 
 /// A field declaration.
@@ -191,7 +189,7 @@ pub struct Field {
     /// The directives of this field.
     pub directives: Vec<Directive>,
     /// The comments for this field.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<Comment>,
     /// The location of this field in the text representation.
     pub span: Span,
 }
@@ -202,9 +200,9 @@ impl WithDirectives for Field {
     }
 }
 
-impl WithComments for Field {
-    fn comments(&self) -> &Vec<Comment> {
-        &self.comments
+impl WithDocumentation for Field {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
     }
 }
 
@@ -218,7 +216,7 @@ pub struct Enum {
     /// The directives of this enum.
     pub directives: Vec<Directive>,
     /// The comments for this enum.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<Comment>,
     /// The location of this enum in the text representation.
     pub span: Span,
 }
@@ -229,9 +227,9 @@ impl WithDirectives for Enum {
     }
 }
 
-impl WithComments for Enum {
-    fn comments(&self) -> &Vec<Comment> {
-        &self.comments
+impl WithDocumentation for Enum {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
     }
 }
 
@@ -244,8 +242,8 @@ pub struct Model {
     pub fields: Vec<Field>,
     /// The directives of this model.
     pub directives: Vec<Directive>,
-    /// The comments for this model.
-    pub comments: Vec<Comment>,
+    /// The documentation for this model.
+    pub documentation: Option<Comment>,
     /// The location of this model in the text representation.
     pub span: Span,
 }
@@ -256,9 +254,9 @@ impl WithDirectives for Model {
     }
 }
 
-impl WithComments for Model {
-    fn comments(&self) -> &Vec<Comment> {
-        &self.comments
+impl WithDocumentation for Model {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
     }
 }
 
@@ -273,14 +271,14 @@ pub struct SourceConfig {
     /// `properties` block.
     pub detail_configuration: Vec<Argument>,
     /// The comments for this source block.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<Comment>,
     /// The location of this source block in the text representation.
     pub span: Span,
 }
 
-impl WithComments for SourceConfig {
-    fn comments(&self) -> &Vec<Comment> {
-        &self.comments
+impl WithDocumentation for SourceConfig {
+    fn documentation(&self) -> &Option<Comment> {
+        &self.documentation
     }
 }
 
@@ -299,6 +297,4 @@ pub enum Top {
 pub struct Datamodel {
     /// All models, enums, or source config blocks.
     pub models: Vec<Top>,
-    /// Top level comments.
-    pub comments: Vec<Comment>,
 }

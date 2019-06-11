@@ -88,7 +88,6 @@ source chinook {
 }
 "#;
 
-
 #[test]
 fn load_a_sqlite_source() {
     let sources = datamodel::load_data_source_configuration(CRASHING_SOURCE).unwrap();

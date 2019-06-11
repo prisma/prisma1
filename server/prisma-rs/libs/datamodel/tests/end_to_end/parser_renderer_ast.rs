@@ -137,3 +137,27 @@ fn test_parser_renderer_sources_via_ast() {
 
     assert_eq!(rendered, DATAMODEL_WITH_SOURCE);
 }
+
+const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
+source pg1 {
+    type = "postgres"
+    url = "https://localhost/postgres1"
+}
+
+/// My author model.
+model Author {
+    id Int @id
+    /// Name of the author.
+    name String?
+    createdAt DateTime @default(now())
+}"#;
+
+#[test]
+fn test_parser_renderer_sources_and_comments_via_ast() {
+    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_SOURCE_AND_COMMENTS).unwrap();
+    let rendered = datamodel::render_ast(&ast);
+
+    print!("{}", rendered);
+
+    assert_eq!(rendered, DATAMODEL_WITH_SOURCE_AND_COMMENTS);
+}

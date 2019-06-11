@@ -170,7 +170,7 @@ impl Standardiser {
         b_related_field.arity = dml::FieldArity::Required;
 
         dml::Model {
-            comments: vec![],
+            documentation: None,
             name: relation_name,
             database_name: None,
             is_embedded: false,

@@ -9,6 +9,8 @@ pub struct SourceConfig {
     pub connector_type: String,
     pub url: String,
     pub config: HashMap<String, String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub documentation: Option<String>,
 }
 
 fn source_from_json(source: &SourceConfig, loader: &source::SourceLoader) -> Box<source::Source> {
@@ -30,7 +32,7 @@ fn source_from_json(source: &SourceConfig, loader: &source::SourceLoader) -> Box
         name: source.name.clone(),
         properties: arguments,
         detail_configuration: detail_arguments,
-        comments: Vec::new(),
+        documentation: source.documentation.clone().map(|text| ast::Comment { text }),
         span: ast::Span::empty(),
     };
 
@@ -68,6 +70,7 @@ fn source_to_json(source: &Box<source::Source>) -> SourceConfig {
         name: source.name().clone(),
         connector_type: String::from(source.connector_type()),
         url: source.url().clone(),
+        documentation: source.documentation().clone(),
         config: source.config().clone(),
     }
 }

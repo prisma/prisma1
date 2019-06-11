@@ -1,4 +1,3 @@
-use super::comment::*;
 use super::field::*;
 use super::traits::*;
 use serde::{Deserialize, Serialize};
@@ -11,7 +10,7 @@ pub struct Model {
     /// Fields of the model.
     pub fields: Vec<Field>,
     /// Comments associated with this model.
-    pub comments: Vec<Comment>,
+    pub documentation: Option<String>,
     /// The database internal name of this model.
     pub database_name: Option<String>,
     /// Indicates if this model is embedded or not.
@@ -26,7 +25,7 @@ impl Model {
         Model {
             name: String::from(name),
             fields: vec![],
-            comments: vec![],
+            documentation: None,
             database_name: None,
             is_embedded: false,
             is_generated: false,
