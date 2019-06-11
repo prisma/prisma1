@@ -100,12 +100,12 @@ source_block = { doc_comment* ~ "datasource" ~ identifier ~ "{" ~ key_value* ~ "
 // ######################################
 // Generator block
 // ######################################
-generator_block = { doc_comment* ~ "datasource" ~ identifier ~ "{" ~ key_value* ~ "}" }
+generator_block = { doc_comment* ~ "generator" ~ identifier ~ "{" ~ key_value* ~ "}" }
 
 // ######################################
 // Datamodel
 // ######################################
-datamodel = { SOI ~ (model_declaration | enum_declaration | source_block | type_declaration )* ~ EOI }
+datamodel = { SOI ~ (model_declaration | enum_declaration | source_block | generator_block | type_declaration )* ~ EOI }
 
 // ######################################
 // String Interpolation

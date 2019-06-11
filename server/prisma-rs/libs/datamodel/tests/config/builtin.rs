@@ -25,8 +25,8 @@ datasource mysql1 {
 
 #[test]
 fn serialize_builtin_sources_to_dmmf() {
-    let sources = datamodel::load_data_source_configuration(DATAMODEL).unwrap();
-    let rendered = datamodel::render_sources_to_json(&sources);
+    let config = datamodel::load_configuration(DATAMODEL).unwrap();
+    let rendered = datamodel::render_sources_to_json(&config.datasources);
 
     let expected = r#"[
   {
@@ -69,7 +69,7 @@ datasource pg1 {
 
 #[test]
 fn fail_to_load_sources_for_invalid_source() {
-    let res = datamodel::load_data_source_configuration(INVALID_DATAMODEL);
+    let res = datamodel::load_configuration(INVALID_DATAMODEL);
 
     if let Err(error) = res {
         error.assert_is(ValidationError::SourceNotKnownError {
@@ -98,11 +98,11 @@ datasource chinook {
 
 #[test]
 fn enable_disable_source_flag() {
-    let sources = datamodel::load_data_source_configuration(ENABLED_DISABLED_SOURCE).unwrap();
+    let config = datamodel::load_configuration(ENABLED_DISABLED_SOURCE).unwrap();
 
-    assert_eq!(sources.len(), 1);
+    assert_eq!(config.datasources.len(), 1);
 
-    let source = &sources[0];
+    let source = &config.datasources[0];
 
     assert_eq!(source.name(), "chinook");
     assert_eq!(source.connector_type(), "sqlite");
@@ -129,11 +129,11 @@ fn enable_disable_source_flag_from_env() {
     std::env::set_var("PRODUCTION", "false");
     std::env::set_var("STAGING", "true");
 
-    let sources = datamodel::load_data_source_configuration(ENABLED_DISABLED_SOURCE_ENV).unwrap();
+    let config = datamodel::load_configuration(ENABLED_DISABLED_SOURCE_ENV).unwrap();
 
-    assert_eq!(sources.len(), 1);
+    assert_eq!(config.datasources.len(), 1);
 
-    let source = &sources[0];
+    let source = &config.datasources[0];
 
     assert_eq!(source.name(), "chinook");
     assert_eq!(source.connector_type(), "sqlite");

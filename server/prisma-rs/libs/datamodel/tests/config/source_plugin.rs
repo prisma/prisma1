@@ -177,10 +177,9 @@ fn custom_plugin() {
 
 #[test]
 fn serialize_sources_to_dmmf() {
-    let sources =
-        datamodel::load_data_source_configuration_with_plugins(DATAMODEL, vec![Box::new(CustomDbDefinition::new())])
-            .unwrap();
-    let rendered = datamodel::render_sources_to_json(&sources);
+    let config =
+        datamodel::load_configuration_with_plugins(DATAMODEL, vec![Box::new(CustomDbDefinition::new())]).unwrap();
+    let rendered = datamodel::render_sources_to_json(&config.datasources);
 
     let expected = r#"[
   {
