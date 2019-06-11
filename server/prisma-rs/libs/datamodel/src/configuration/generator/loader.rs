@@ -18,11 +18,10 @@ impl GeneratorLoader {
         for prop in &ast_generator.properties {
             // Exclude reserved options.
             if prop.name == "provider" || prop.name == "output" {
-                continue
+                continue;
             }
-            
+
             properties.insert(prop.name.clone(), prop.value.to_string());
-            
         }
 
         Ok(Generator {

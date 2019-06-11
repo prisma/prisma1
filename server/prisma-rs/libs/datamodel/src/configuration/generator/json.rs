@@ -6,7 +6,7 @@ pub fn generators_to_json_value(generators: &Vec<Generator>) -> serde_json::Valu
 }
 
 pub fn generators_to_json(generators: &Vec<Generator>) -> String {
-    serde_json::to_string(generators).expect("Failed to render JSON.")
+    serde_json::to_string_pretty(generators).expect("Failed to render JSON.")
 }
 
 pub fn generators_from_json(json: &str) -> Vec<Generator> {
