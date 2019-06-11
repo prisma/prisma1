@@ -2,7 +2,7 @@ use crate::{
     error::SqlError, query_builder::RelatedNodesWithRowNumber, MutationBuilder, RawQuery, SqlId, SqlResult, SqlRow,
     ToSqlRow, Transaction, Transactional,
 };
-use chrono::{DateTime, NaiveDateTime, Utc};
+use chrono::{DateTime, NaiveDateTime, Utc, NaiveDate};
 use connector::{error::*, ConnectorResult};
 use datamodel::configuration::Source;
 use native_tls::TlsConnector;
@@ -258,6 +258,13 @@ impl<'a> Transaction for PostgresTransaction<'a> {
                             }
                             None => Value::Null,
                         },
+                        PostgresType::DATE => match row.try_get(i)? {
+                            Some(val) => {
+                                let date: NaiveDate = val;
+                                Value::String(date.format("%Y-%m-%d").to_string())
+                            }
+                            None => Value::Null
+                        }
                         PostgresType::UUID => match row.try_get(i)? {
                             Some(val) => {
                                 let val: Uuid = val;
@@ -324,6 +331,20 @@ impl<'a> Transaction for PostgresTransaction<'a> {
                                     .into_iter()
                                     .map(|ts| DateTime::<Utc>::from_utc(ts, Utc))
                                     .map(|dt| dt.to_rfc3339())
+                                    .map(Value::from)
+                                    .collect();
+
+                                Value::Array(val)
+                            }
+                            None => Value::Null,
+                        },
+                        PostgresType::DATE_ARRAY => match row.try_get(i)? {
+                            Some(val) => {
+                                let val: Vec<NaiveDate> = val;
+
+                                let val: Vec<Value> = val
+                                    .into_iter()
+                                    .map(|dt| dt.format("%Y-%m-%s").to_string())
                                     .map(Value::from)
                                     .collect();
 
@@ -445,12 +466,22 @@ impl ToSqlRow for PostgresRow {
                     Some(val) => PrismaValue::Uuid(val),
                     None => PrismaValue::Null,
                 },
-                TypeIdentifier::DateTime => match row.try_get(i)? {
-                    Some(val) => {
-                        let ts: NaiveDateTime = val;
-                        PrismaValue::DateTime(DateTime::<Utc>::from_utc(ts, Utc))
+                TypeIdentifier::DateTime => match *row.columns()[i].type_() {
+                    PostgresType::DATE => match row.try_get(i)? {
+                        Some(val) => {
+                            let ts: NaiveDate = val;
+                            let dt = ts.and_hms(0, 0, 0);
+                            PrismaValue::DateTime(DateTime::<Utc>::from_utc(dt, Utc))
+                        }
+                        None => PrismaValue::Null,
                     }
-                    None => PrismaValue::Null,
+                    _ => match row.try_get(i)? {
+                        Some(val) => {
+                            let ts: NaiveDateTime = val;
+                            PrismaValue::DateTime(DateTime::<Utc>::from_utc(ts, Utc))
+                        }
+                        None => PrismaValue::Null,
+                    }
                 },
             };
 
