@@ -19,4 +19,6 @@ export interface IntrospectionResult {
   numTables: number
   referenceDatamodelExists: boolean
   time: number
+  credentials: DatabaseCredentials
+  databaseName: string
 }

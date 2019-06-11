@@ -1,13 +1,10 @@
 use database_inspector::*;
 use datamodel;
-use migration_core::commands::*;
-#[allow(dead_code)]
 use migration_core::MigrationEngine;
 use std::panic;
 
 const SCHEMA_NAME: &str = "migration_engine";
 
-#[allow(unused)]
 pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     match datamodel::parse(datamodel_string) {
         Ok(s) => s,
@@ -21,7 +18,6 @@ pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     }
 }
 
-#[allow(unused)]
 pub fn run_test_with_engine<T, X>(test: T) -> X
 where
     T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
@@ -38,42 +34,6 @@ where
     result.unwrap()
 }
 
-#[allow(unused)]
-pub fn migrate_to(engine: &Box<MigrationEngine>, datamodel: &str) -> DatabaseSchema {
-    migrate_to_with_migration_id(&engine, &datamodel, "the-migration-id")
-}
-
-#[allow(unused)]
-pub fn migrate_to_with_migration_id(
-    engine: &Box<MigrationEngine>,
-    datamodel: &str,
-    migration_id: &str,
-) -> DatabaseSchema {
-    let project_info = "the-project-info".to_string();
-
-    let input = InferMigrationStepsInput {
-        project_info: project_info.clone(),
-        migration_id: migration_id.to_string(),
-        data_model: datamodel.to_string(),
-        assume_to_be_applied: Vec::new(),
-    };
-    let cmd = InferMigrationStepsCommand::new(input);
-    let output = cmd.execute(&engine).expect("inferMigrationSteps failed");
-
-    let input = ApplyMigrationInput {
-        project_info: project_info,
-        migration_id: migration_id.to_string(),
-        steps: output.datamodel_steps,
-        force: None,
-        dry_run: None,
-    };
-    let cmd = ApplyMigrationCommand::new(input);
-    let engine = MigrationEngine::new(&test_config());
-    let _output = cmd.execute(&engine).expect("applyMigration failed");
-
-    introspect_database(&engine)
-}
-
 pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
     let inspector = engine.connector().database_inspector();
     let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
@@ -82,7 +42,6 @@ pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
     result
 }
 
-#[allow(unused)]
 pub fn test_config_json_escaped() -> String {
     let config = test_config();
     serde_json::to_string(&serde_json::Value::String(config)).unwrap()
@@ -106,7 +65,6 @@ fn sqlite_test_config() -> String {
     "#, file_path)
 }
 
-#[allow(unused)]
 fn postgres_test_config() -> String {
     r#"
         source my_db {

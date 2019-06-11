@@ -44,6 +44,8 @@ export interface ConnectorData extends ConnectorAndDisconnect {
    * The database name either directly provided by the user or chosen in the select schema dialog
    */
   databaseName: string
+
+  credentials: DatabaseCredentials
 }
 
 /**

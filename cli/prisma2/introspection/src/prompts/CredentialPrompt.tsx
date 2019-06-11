@@ -156,6 +156,7 @@ const IntrospectionPrompt: React.FC<Props> = props => {
               const introspectionResult = await props.introspect({
                 ...state.connectorData,
                 databaseName: selectedValue,
+                credentials: state.credentials,
               } as ConnectorData)
 
               await state.connectorData.disconnect!()

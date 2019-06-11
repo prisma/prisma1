@@ -40,6 +40,7 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
             .render_steps_pretty(&database_migration);
 
         Ok(MigrationStepsResultOutput {
+            datamodel: datamodel::render(&next_datamodel).unwrap(),
             datamodel_steps: self.input.steps_to_apply.clone(),
             database_steps: database_steps_json,
             errors: Vec::new(),

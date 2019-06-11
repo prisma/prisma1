@@ -7,6 +7,15 @@ pub struct SqlMigration {
     pub rollback: Vec<SqlMigrationStep>,
 }
 
+impl SqlMigration {
+    pub fn empty() -> SqlMigration {
+        SqlMigration {
+            steps: Vec::new(),
+            rollback: Vec::new(),
+        }
+    }
+}
+
 impl DatabaseMigrationMarker for SqlMigration {
     fn serialize(&self) -> serde_json::Value {
         serde_json::to_value(self).unwrap()

@@ -1,1 +1,1 @@
-export { Introspect } from './cli/Introspect'
+export { Introspect } from './Introspect'
