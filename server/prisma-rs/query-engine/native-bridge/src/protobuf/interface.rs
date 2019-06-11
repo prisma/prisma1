@@ -16,13 +16,14 @@ pub struct ProtoBufInterface {
 }
 
 impl ProtoBufInterface {
-    pub fn new(config: &PrismaConfig) -> ProtoBufInterface {
+    /// Creates a new proto interface. The database file is only interesting in case of sqlite.
+    pub fn new(config: &PrismaConfig, database_file: Option<String>) -> ProtoBufInterface {
         match config.databases.get("default") {
             Some(PrismaDatabase::Explicit(ref config))
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
             {
                 let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-                let sqlite = Sqlite::new(format!("{}/db", server_root).into(), config.limit(), true).unwrap();
+                let sqlite = Sqlite::new(database_file.expect("Expected database file to be passed when initializing sqlite proto bridge."), config.limit(), true).unwrap();
                 let connector = Arc::new(SqlDatabase::new(sqlite));
 
                 ProtoBufInterface {
