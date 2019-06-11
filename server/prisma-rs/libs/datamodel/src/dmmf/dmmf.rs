@@ -27,6 +27,8 @@ pub struct Field {
     pub is_generated: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_updated_at: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub documentation: Option<String>,
 }
 
 #[serde(rename_all = "camelCase")]
@@ -46,6 +48,8 @@ pub struct Model {
     pub fields: Vec<Field>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_generated: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub documentation: Option<String>,
 }
 
 #[serde(rename_all = "camelCase")]
@@ -54,6 +58,8 @@ pub struct Enum {
     pub name: String,
     pub values: Vec<String>,
     pub db_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub documentation: Option<String>,
 }
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]

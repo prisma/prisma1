@@ -1,9 +1,10 @@
-use crate::{dml, dml::validator::directive::DirectiveValidator, source::*};
+use crate::{configuration::*, dml, dml::validator::directive::DirectiveValidator};
 pub const SQLITE_SOURCE_NAME: &str = "sqlite";
 
 pub struct SqliteSource {
     pub(super) name: String,
     pub(super) url: String,
+    pub(super) documentation: Option<String>,
 }
 
 impl Source for SqliteSource {
@@ -27,5 +28,8 @@ impl Source for SqliteSource {
     }
     fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>> {
         vec![]
+    }
+    fn documentation(&self) -> &Option<String> {
+        &self.documentation
     }
 }

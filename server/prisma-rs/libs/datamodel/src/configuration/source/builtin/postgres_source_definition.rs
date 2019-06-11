@@ -1,5 +1,5 @@
 use super::{PostgresSource, POSTGRES_SOURCE_NAME};
-use crate::{common::argument::Arguments, errors::ValidationError, source::*};
+use crate::{common::argument::Arguments, configuration::*, errors::ValidationError};
 
 pub struct PostgresSourceDefinition {}
 
@@ -14,10 +14,17 @@ impl SourceDefinition for PostgresSourceDefinition {
         POSTGRES_SOURCE_NAME
     }
 
-    fn create(&self, name: &str, url: &str, _arguments: &Arguments) -> Result<Box<Source>, ValidationError> {
+    fn create(
+        &self,
+        name: &str,
+        url: &str,
+        _arguments: &Arguments,
+        documentation: &Option<String>,
+    ) -> Result<Box<Source>, ValidationError> {
         Ok(Box::new(PostgresSource {
             name: String::from(name),
             url: String::from(url),
+            documentation: documentation.clone(),
         }))
     }
 }

@@ -5,15 +5,15 @@ use datamodel::{common::PrismaType, dml};
 fn resolve_relation() {
     let dml = r#"
     model User {
-        id: Int @id
-        firstName: String
-        posts: Post[]
+        id Int @id
+        firstName String
+        posts Post[]
     }
 
     model Post {
-        id: Int @id
-        text: String
-        user: User
+        id Int @id
+        text String
+        user User
     }
     "#;
 
@@ -38,15 +38,15 @@ fn resolve_relation() {
 fn resolve_related_field() {
     let dml = r#"
     model User {
-        id: Int @id
-        firstName: String
-        posts: Post[]
+        id Int @id
+        firstName String
+        posts Post[]
     }
 
     model Post {
-        id: Int @id
-        text: String
-        user: User @relation(references: [firstName])
+        id Int @id
+        text String
+        user User @relation(references: [firstName])
     }
     "#;
 
@@ -63,16 +63,16 @@ fn resolve_related_field() {
 fn resolve_related_fields() {
     let dml = r#"
     model User {
-        id: Int @id
-        firstName: String
-        lastName: String
-        posts: Post[]
+        id Int @id
+        firstName String
+        lastName String
+        posts Post[]
     }
 
     model Post {
-        id: Int @id
-        text: String
-        user: User @relation(references: [firstName, lastName])
+        id Int @id
+        text String
+        user User @relation(references: [firstName, lastName])
     }
     "#;
 
@@ -89,9 +89,9 @@ fn resolve_related_fields() {
 fn resolve_enum_field() {
     let dml = r#"
     model User {
-        id: Int @id
-        email: String
-        role: Role
+        id Int @id
+        email String
+        role Role
     }
 
     enum Role {

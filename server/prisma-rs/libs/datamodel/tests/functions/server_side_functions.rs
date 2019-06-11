@@ -5,8 +5,8 @@ use datamodel::common::{PrismaType, PrismaValue};
 fn correctly_handle_server_side_now_function() {
     let dml = r#"
     model User {
-        id: Int @id
-        signupDate: DateTime @default(now())
+        id Int @id
+        signupDate DateTime @default(now())
     }
     "#;
 
@@ -29,8 +29,8 @@ fn correctly_handle_server_side_now_function() {
 fn correctly_handle_server_side_cuid_function() {
     let dml = r#"
     model User {
-        id: Int @id
-        someId: String @default(cuid())
+        id Int @id
+        someId String @default(cuid())
     }
     "#;
 
@@ -53,8 +53,8 @@ fn correctly_handle_server_side_cuid_function() {
 fn correctly_handle_server_side_uuid_function() {
     let dml = r#"
     model User {
-        id: Int @id
-        someId: String @default(uuid())
+        id Int @id
+        someId String @default(uuid())
     }
     "#;
 

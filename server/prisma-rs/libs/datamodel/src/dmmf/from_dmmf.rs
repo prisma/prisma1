@@ -91,7 +91,7 @@ pub fn enum_from_dmmf(en: &Enum) -> dml::Enum {
         name: en.name.clone(),
         values: en.values.clone(),
         database_name: en.db_name.clone(),
-        comments: vec![],
+        documentation: en.documentation.clone(),
     }
 }
 
@@ -119,7 +119,7 @@ pub fn field_from_dmmf(field: &Field) -> dml::Field {
         scalar_list_strategy: None,
         is_generated: field.is_generated.unwrap_or(false),
         is_updated_at: field.is_updated_at.unwrap_or(false),
-        comments: vec![],
+        documentation: field.documentation.clone(),
     }
 }
 
@@ -129,7 +129,7 @@ pub fn model_from_dmmf(model: &Model) -> dml::Model {
         database_name: model.db_name.clone(),
         is_embedded: model.is_embedded,
         fields: model.fields.iter().map(&field_from_dmmf).collect(),
-        comments: vec![],
+        documentation: model.documentation.clone(),
         is_generated: model.is_generated.unwrap_or(false),
     }
 }
@@ -138,7 +138,6 @@ pub fn schema_from_dmmf(schema: &Datamodel) -> dml::Datamodel {
     let mut datamodel = dml::Datamodel {
         models: vec![],
         enums: vec![],
-        comments: vec![],
     };
 
     for model in &schema.models {

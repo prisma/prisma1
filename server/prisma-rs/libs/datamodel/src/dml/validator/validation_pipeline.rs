@@ -1,5 +1,5 @@
 use super::*;
-use crate::{ast, dml, errors::ErrorCollection, source};
+use crate::{ast, configuration, dml, errors::ErrorCollection};
 
 /// Wrapper for all lift and validation steps
 pub struct ValidationPipeline {
@@ -22,7 +22,7 @@ impl ValidationPipeline {
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<source::Source>>) -> ValidationPipeline {
+    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> ValidationPipeline {
         ValidationPipeline {
             lifter: LiftAstToDml::with_sources(sources),
             validator: Validator::with_sources(sources),

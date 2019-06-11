@@ -69,7 +69,32 @@ fn parse_arg_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
     };
 }
 
+// Documentation parsing
+
+fn parse_doc_comment(token: &pest::iterators::Pair<'_, Rule>) -> String {
+    match_first! { token, current,
+        Rule::doc_content => {
+            let mut comment = String::from(current.as_str());
+            // Remove new line character.
+            comment.truncate(comment.len() - 1);
+            comment
+        },
+        _ => unreachable!("Encountered impossible doc comment during parsing: {:?}", current.tokens())
+    }
+}
+
+fn doc_comments_to_string(comments: &Vec<String>) -> Option<Comment> {
+    if comments.len() == 0 {
+        None
+    } else {
+        Some(Comment {
+            text: comments.join("\n"),
+        })
+    }
+}
+
 // Directive parsing
+
 fn parse_directive_arg(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
     let mut name: Option<String> = None;
     let mut argument: Option<Value> = None;
@@ -154,9 +179,10 @@ fn parse_default_value(token: &pest::iterators::Pair<'_, Rule>) -> Value {
 
 fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     let mut name: Option<String> = None;
-    let mut directives: Vec<Directive> = vec![];
+    let mut directives: Vec<Directive> = Vec::new();
     let mut default_value: Option<Value> = None;
     let mut field_type: Option<((FieldArity, String), Span)> = None;
+    let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
@@ -165,6 +191,7 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
         },
         Rule::default_value => default_value = Some(parse_default_value(&current)),
         Rule::directive => directives.push(parse_directive(&current)),
+        Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible field declaration during parsing: {:?}", current.tokens())
     }
 
@@ -176,7 +203,7 @@ fn parse_field(token: &pest::iterators::Pair<'_, Rule>) -> Field {
             arity,
             default_value,
             directives,
-            comments: vec![],
+            documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
@@ -190,11 +217,13 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut fields: Vec<Field> = vec![];
+    let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::field_declaration => fields.push(parse_field(&current)),
+        Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible model declaration during parsing: {:?}", current.tokens())
     }
 
@@ -203,7 +232,7 @@ fn parse_model(token: &pest::iterators::Pair<'_, Rule>) -> Model {
             name,
             fields,
             directives,
-            comments: vec![],
+            documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
@@ -218,11 +247,13 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut values: Vec<String> = vec![];
+    let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
         Rule::directive => directives.push(parse_directive(&current)),
         Rule::enum_field_declaration => values.push(current.as_str().to_string()),
+        Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible enum declaration during parsing: {:?}", current.tokens())
     }
 
@@ -231,7 +262,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
             name,
             values,
             directives,
-            comments: vec![],
+            documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
@@ -241,7 +272,7 @@ fn parse_enum(token: &pest::iterators::Pair<'_, Rule>) -> Enum {
     };
 }
 
-fn parse_source_property(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
+fn parse_key_value(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
     let mut name: Option<String> = None;
     let mut value: Option<Value> = None;
 
@@ -264,40 +295,55 @@ fn parse_source_property(token: &pest::iterators::Pair<'_, Rule>) -> Argument {
     };
 }
 
-fn parse_source_property_block(token: &pest::iterators::Pair<'_, Rule>) -> Vec<Argument> {
-    let mut properties: Vec<Argument> = vec![];
-
-    match_children! { token, current,
-        Rule::source_key_value => properties.push(parse_source_property(&current)),
-        _ => unreachable!("Encounterd impossible source property block declaration during parsing: {:?}", current.tokens())
-    }
-
-    return properties;
-}
-
 // Source parsing
 fn parse_source(token: &pest::iterators::Pair<'_, Rule>) -> SourceConfig {
     let mut name: Option<String> = None;
     let mut properties: Vec<Argument> = vec![];
-    let mut detail_configuration: Vec<Argument> = vec![];
+    let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
-        Rule::source_key_value => properties.push(parse_source_property(&current)),
-        Rule::source_properties => detail_configuration = parse_source_property_block(&current),
+        Rule::key_value => properties.push(parse_key_value(&current)),
+        Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible source declaration during parsing: {:?}", current.tokens())
-    }
+    };
 
     return match name {
         Some(name) => SourceConfig {
             name,
             properties,
-            detail_configuration,
-            comments: vec![],
+            documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
             "Encounterd impossible source declaration during parsing, name is missing: {:?}",
+            token.as_str()
+        ),
+    };
+}
+
+// Generator parsing
+fn parse_generator(token: &pest::iterators::Pair<'_, Rule>) -> GeneratorConfig {
+    let mut name: Option<String> = None;
+    let mut properties: Vec<Argument> = vec![];
+    let mut comments: Vec<String> = Vec::new();
+
+    match_children! { token, current,
+        Rule::identifier => name = Some(current.as_str().to_string()),
+        Rule::key_value => properties.push(parse_key_value(&current)),
+        Rule::doc_comment => comments.push(parse_doc_comment(&current)),
+        _ => unreachable!("Encounterd impossible generator declaration during parsing: {:?}", current.tokens())
+    };
+
+    return match name {
+        Some(name) => GeneratorConfig {
+            name,
+            properties,
+            documentation: doc_comments_to_string(&comments),
+            span: Span::from_pest(&token.as_span()),
+        },
+        _ => panic!(
+            "Encounterd impossible generator declaration during parsing, name is missing: {:?}",
             token.as_str()
         ),
     };
@@ -308,6 +354,7 @@ fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
     let mut name: Option<String> = None;
     let mut directives: Vec<Directive> = vec![];
     let mut base_type: Option<(String, Span)> = None;
+    let mut comments: Vec<String> = Vec::new();
 
     match_children! { token, current,
         Rule::identifier => name = Some(current.as_str().to_string()),
@@ -315,6 +362,7 @@ fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
             base_type = Some((parse_base_type(&current), Span::from_pest(&current.as_span())))
         },
         Rule::directive => directives.push(parse_directive(&current)),
+        Rule::doc_comment => comments.push(parse_doc_comment(&current)),
         _ => unreachable!("Encounterd impossible custom type during parsing: {:?}", current.tokens())
     }
 
@@ -326,7 +374,7 @@ fn parse_type(token: &pest::iterators::Pair<'_, Rule>) -> Field {
             arity: FieldArity::Required,
             default_value: None,
             directives,
-            comments: vec![],
+            documentation: doc_comments_to_string(&comments),
             span: Span::from_pest(&token.as_span()),
         },
         _ => panic!(
@@ -351,15 +399,13 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, ValidationError> {
                 Rule::model_declaration => models.push(Top::Model(parse_model(&current))),
                 Rule::enum_declaration => models.push(Top::Enum(parse_enum(&current))),
                 Rule::source_block => models.push(Top::Source(parse_source(&current))),
+                Rule::generator_block => models.push(Top::Generator(parse_generator(&current))),
                 Rule::type_declaration => models.push(Top::Type(parse_type(&current))),
                 Rule::EOI => {},
                 _ => panic!("Encounterd impossible datamodel declaration during parsing: {:?}", current.tokens())
             }
 
-            Ok(Datamodel {
-                models,
-                comments: vec![],
-            })
+            Ok(Datamodel { models })
         }
         Err(err) => {
             let location = match err.location {
@@ -394,6 +440,7 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::model_declaration => "model declaration",
         Rule::enum_declaration => "enum declaration",
         Rule::source_block => "source definition",
+        Rule::generator_block => "generator definition",
         Rule::enum_field_declaration => "enum field declaration",
         Rule::EOI => "end of input",
         Rule::identifier => "alphanumeric identifier",
@@ -417,10 +464,10 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::default_value => "default value",
         Rule::field_declaration => "field declaration",
         Rule::type_declaration => "type declaration",
-        Rule::source_key_value => "source configuration property",
-        Rule::source_properties => "source property block",
+        Rule::key_value => "configuration property",
         Rule::string_any => "any character",
         Rule::string_escaped_interpolation => "string interpolation",
+        Rule::doc_comment => "documentation comment",
 
         // Those are top level things and will never surface.
         Rule::datamodel => "datamodel declaration",
@@ -435,6 +482,7 @@ pub fn rule_to_string(rule: &Rule) -> &'static str {
         Rule::string_content => "string contents",
         Rule::boolean_true => "boolean true",
         Rule::boolean_false => "boolean false",
+        Rule::doc_content => "documentation comment content",
         Rule::COMMENT => "comment",
     }
 }

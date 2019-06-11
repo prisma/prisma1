@@ -3,9 +3,8 @@ use crate::{
     ast,
     common::value::ValueValidator,
     common::{FromStrAndSpan, PrismaType},
-    dml,
+    configuration, dml,
     errors::{ErrorCollection, ValidationError},
-    source,
 };
 
 /// Helper for lifting a datamodel.
@@ -29,7 +28,7 @@ impl LiftAstToDml {
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(sources: &Vec<Box<source::Source>>) -> LiftAstToDml {
+    pub fn with_sources(sources: &Vec<Box<configuration::Source>>) -> LiftAstToDml {
         LiftAstToDml {
             directives: DirectiveBox::with_sources(sources),
         }
@@ -50,6 +49,7 @@ impl LiftAstToDml {
                     Err(mut err) => errors.append(&mut err),
                 },
                 ast::Top::Source(_) => { /* Source blocks are explicitely ignored by the validator */ }
+                ast::Top::Generator(_) => { /* Generator blocks are explicitely ignored by the validator */ }
                 // TODO: For now, type blocks are never checked on their own.
                 ast::Top::Type(_) => { /* Type blocks are inlined */ }
             }
@@ -65,6 +65,8 @@ impl LiftAstToDml {
     /// Internal: Validates a model AST node and lifts it to a DML model.
     fn lift_model(&self, ast_model: &ast::Model, ast_schema: &ast::Datamodel) -> Result<dml::Model, ErrorCollection> {
         let mut model = dml::Model::new(&ast_model.name);
+        model.documentation = ast_model.documentation.clone().map(|comment| comment.text);
+
         let mut errors = ErrorCollection::new();
 
         for ast_field in &ast_model.fields {
@@ -88,6 +90,8 @@ impl LiftAstToDml {
     /// Internal: Validates an enum AST node.
     fn lift_enum(&self, ast_enum: &ast::Enum) -> Result<dml::Enum, ErrorCollection> {
         let mut en = dml::Enum::new(&ast_enum.name, ast_enum.values.clone());
+        en.documentation = ast_enum.documentation.clone().map(|comment| comment.text);
+
         let mut errors = ErrorCollection::new();
 
         if let Err(mut err) = self.directives.enm.validate_and_apply(ast_enum, &mut en) {
@@ -108,7 +112,7 @@ impl LiftAstToDml {
         let (field_type, extra_attributes) = self.lift_field_type(&ast_field, ast_schema, &mut Vec::new())?;
 
         let mut field = dml::Field::new(&ast_field.name, field_type.clone());
-
+        field.documentation = ast_field.documentation.clone().map(|comment| comment.text);
         field.arity = self.lift_field_arity(&ast_field.arity);
 
         if let Some(value) = &ast_field.default_value {

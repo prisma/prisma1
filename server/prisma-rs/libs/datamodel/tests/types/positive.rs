@@ -7,7 +7,7 @@ fn should_apply_a_custom_type() {
     type ID = String @id @default(cuid())
 
     model Model {
-        id: ID
+        id ID
     }
     "#;
 
@@ -33,7 +33,7 @@ fn should_recursively_apply_a_custom_type() {
     type ID = MyStringWithDefault @id
 
     model Model {
-        id: ID
+        id ID
     }
     "#;
 

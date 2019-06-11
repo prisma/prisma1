@@ -1,5 +1,5 @@
 use super::common::*;
-use crate::{ast, common::names::*, dml, errors::ErrorCollection, source};
+use crate::{ast, common::names::*, configuration, dml, errors::ErrorCollection};
 
 /// Helper for standardsing a datamodel.
 ///
@@ -17,7 +17,7 @@ impl Standardiser {
     /// the directives defined by the given sources registered.
     ///
     /// The directives defined by the given sources will be namespaced.
-    pub fn with_sources(_sources: &Vec<Box<source::Source>>) -> Standardiser {
+    pub fn with_sources(_sources: &Vec<Box<configuration::Source>>) -> Standardiser {
         Standardiser {}
     }
 
@@ -170,7 +170,7 @@ impl Standardiser {
         b_related_field.arity = dml::FieldArity::Required;
 
         dml::Model {
-            comments: vec![],
+            documentation: None,
             name: relation_name,
             database_name: None,
             is_embedded: false,

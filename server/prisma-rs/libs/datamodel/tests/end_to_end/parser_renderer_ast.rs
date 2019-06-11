@@ -117,8 +117,8 @@ fn test_parser_renderer_types_via_ast() {
     assert_eq!(rendered, DATAMODEL_WITH_TYPES);
 }
 
-const DATAMODEL_WITH_SOURCE: &str = r#"source pg1 {
-    type = "Postgres"
+const DATAMODEL_WITH_SOURCE: &str = r#"datasource pg1 {
+    provider = "Postgres"
     url = "https://localhost/postgres1"
 }
 
@@ -136,4 +136,28 @@ fn test_parser_renderer_sources_via_ast() {
     print!("{}", rendered);
 
     assert_eq!(rendered, DATAMODEL_WITH_SOURCE);
+}
+
+const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
+datasource pg1 {
+    provider = "postgres"
+    url = "https://localhost/postgres1"
+}
+
+/// My author model.
+model Author {
+    id Int @id
+    /// Name of the author.
+    name String?
+    createdAt DateTime @default(now())
+}"#;
+
+#[test]
+fn test_parser_renderer_sources_and_comments_via_ast() {
+    let ast = datamodel::parse_to_ast(DATAMODEL_WITH_SOURCE_AND_COMMENTS).unwrap();
+    let rendered = datamodel::render_ast(&ast);
+
+    print!("{}", rendered);
+
+    assert_eq!(rendered, DATAMODEL_WITH_SOURCE_AND_COMMENTS);
 }

@@ -20,8 +20,11 @@ pub enum ValidationError {
     #[fail(display = "Argument {} is missing in attribute @{}.", argument_name, directive_name)]
     DirectiveArgumentNotFound { argument_name: String, directive_name: String, span: Span },
 
-    #[fail(display = "Argument {} is missing in source block {}", argument_name, source_name)]
+    #[fail(display = "Argument {} is missing in data source block {}", argument_name, source_name)]
     SourceArgumentNotFound { argument_name: String, source_name: String, span: Span },
+
+    #[fail(display = "Argument {} is missing in generator block {}", argument_name, generator_name)]
+    GeneratorArgumentNotFound { argument_name: String, generator_name: String, span: Span },
 
     #[fail(display = "Error parsing attribute @{}: {}", directive_name, message)]
     DirectiveValidationError { message: String, directive_name: String, span: Span },
@@ -105,6 +108,14 @@ impl ValidationError {
         };
     }
 
+    pub fn new_generator_argument_not_found_error(argument_name: &str, generator_name: &str, span: &Span) -> ValidationError {
+        return ValidationError::GeneratorArgumentNotFound {
+            argument_name: String::from(argument_name),
+            generator_name: String::from(generator_name),
+            span: span.clone(),
+        };
+    }
+
     pub fn new_directive_validation_error(message: &str, directive_name: &str, span: &Span) -> ValidationError {
         return ValidationError::DirectiveValidationError {
             message: String::from(message),
@@ -182,6 +193,7 @@ impl ValidationError {
             ValidationError::DirectiveArgumentNotFound { argument_name: _, directive_name: _, span } => span,
             ValidationError::ArgumentCountMissmatch { function_name: _, required_count: _, given_count: _, span } => span,
             ValidationError::SourceArgumentNotFound { argument_name: _, source_name: _, span } => span,
+            ValidationError::GeneratorArgumentNotFound { argument_name: _, generator_name: _, span } => span,
             ValidationError::DirectiveValidationError { message: _, directive_name: _, span } => span,
             ValidationError::DirectiveNotKnownError { directive_name: _, span } => span,
             ValidationError::FunctionNotKnownError { function_name: _, span } => span,

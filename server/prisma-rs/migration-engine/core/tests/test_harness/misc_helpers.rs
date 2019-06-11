@@ -56,8 +56,8 @@ fn sqlite_test_config() -> String {
     let database_folder_path = sqlite_test_folder();
     let file_path = format!("{}/{}.db", database_folder_path, SCHEMA_NAME);
     format!(r#"
-        source my_db {{
-            type = "sqlite"
+        datasource my_db {{
+            provider = "sqlite"
             url = "file:{}"
             default = true
         }}
@@ -72,8 +72,8 @@ pub fn sqlite_test_folder() -> String {
 
 fn postgres_test_config() -> String {
     r#"
-        source my_db {
-            type = "postgres"
+        datasource my_db {
+            provider = "postgres"
             url = "postgresql://postgres:prisma@127.0.0.1:5432/db"
             default = true
         }

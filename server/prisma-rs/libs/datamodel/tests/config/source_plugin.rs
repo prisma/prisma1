@@ -1,6 +1,7 @@
 use crate::common::*;
 use datamodel::{
-    common::FromStrAndSpan, common::PrismaType, dml, errors::ValidationError, source::*, Arguments, DirectiveValidator,
+    common::FromStrAndSpan, common::PrismaType, configuration::*, dml, errors::ValidationError, Arguments,
+    DirectiveValidator,
 };
 
 //##########################
@@ -56,11 +57,18 @@ impl SourceDefinition for CustomDbDefinition {
         CONNECTOR_NAME
     }
 
-    fn create(&self, name: &str, url: &str, arguments: &Arguments) -> Result<Box<Source>, ValidationError> {
+    fn create(
+        &self,
+        name: &str,
+        url: &str,
+        arguments: &Arguments,
+        documentation: &Option<String>,
+    ) -> Result<Box<Source>, ValidationError> {
         Ok(Box::new(CustomDb {
             name: String::from(name),
             url: String::from(url),
             base_type: self.get_base_type(arguments)?,
+            documentation: documentation.clone(),
         }))
     }
 }
@@ -73,6 +81,7 @@ struct CustomDb {
     name: String,
     url: String,
     base_type: PrismaType,
+    documentation: Option<String>,
 }
 
 impl Source for CustomDb {
@@ -103,6 +112,9 @@ impl Source for CustomDb {
     fn get_enum_directives(&self) -> Vec<Box<DirectiveValidator<dml::Enum>>> {
         vec![]
     }
+    fn documentation(&self) -> &Option<String> {
+        &self.documentation
+    }
 }
 
 //##########################
@@ -110,36 +122,30 @@ impl Source for CustomDb {
 //##########################
 
 const DATAMODEL: &str = r#"
-source custom_1 {
-    type = "customDemoSource"
+datasource custom_1 {
+    provider = "customDemoSource"
     url = "https://localhost"
-
-    properties {
-        base_type = Int
-    }
+    base_type = Int
 }
 
-source custom_2 {
-    type = "customDemoSource"
+datasource custom_2 {
+    provider = "customDemoSource"
     url = "https://localhost"
-
-    properties {
-        base_type = String
-    }
+    base_type = String
 }
 
 
 model User {
-    id: Int @id
-    firstName: String @custom_1.mapToBase
-    lastName: String @custom_1.mapToBase
-    email: String
+    id Int @id
+    firstName String @custom_1.mapToBase
+    lastName String @custom_1.mapToBase
+    email String
 }
 
 model Post {
-    id: Int @id
-    likes: Int @custom_2.mapToBase
-    comments: Int
+    id Int @id
+    likes Int @custom_2.mapToBase
+    comments Int
 }
 "#;
 
@@ -171,10 +177,9 @@ fn custom_plugin() {
 
 #[test]
 fn serialize_sources_to_dmmf() {
-    let sources =
-        datamodel::load_data_source_configuration_with_plugins(DATAMODEL, vec![Box::new(CustomDbDefinition::new())])
-            .unwrap();
-    let rendered = datamodel::render_sources_to_json(&sources);
+    let config =
+        datamodel::load_configuration_with_plugins(DATAMODEL, vec![Box::new(CustomDbDefinition::new())]).unwrap();
+    let rendered = datamodel::render_sources_to_json(&config.datasources);
 
     let expected = r#"[
   {

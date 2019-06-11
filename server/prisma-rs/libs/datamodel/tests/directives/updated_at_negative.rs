@@ -5,7 +5,7 @@ use datamodel::{ast::Span, errors::ValidationError};
 fn should_fail_if_field_type_is_string() {
     let dml = r#"
     model User {
-        id: Int @id
+        id Int @id
         lastSeen String @updatedAt
     }
     "#;
@@ -15,7 +15,7 @@ fn should_fail_if_field_type_is_string() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Fields that are marked with @updatedAt must be of type DateTime.",
         "updatedAt",
-        &Span::new(63, 77),
+        &Span::new(62, 76),
     ));
 }
 
@@ -23,7 +23,7 @@ fn should_fail_if_field_type_is_string() {
 fn should_fail_if_field_arity_is_list() {
     let dml = r#"
     model User {
-        id: Int @id
+        id Int @id
         lastSeen DateTime[] @updatedAt
     }
     "#;
@@ -33,6 +33,6 @@ fn should_fail_if_field_arity_is_list() {
     errors.assert_is(ValidationError::new_directive_validation_error(
         "Fields that are marked with @updatedAt can not be lists.",
         "updatedAt",
-        &Span::new(67, 81),
+        &Span::new(66, 80),
     ));
 }

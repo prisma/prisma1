@@ -4,14 +4,14 @@ source chinook {
 }
 
 model Album {
-  id: Int @id @db(name:"AlbumId")
+  id Int @id @db(name:"AlbumId")
   Title: String
   Artist: Artist @db(name:"ArtistId")
   Tracks: Track[]
 }
 
 model Track {
-  id: Int @id @db(name:"TrackId")
+  id Int @id @db(name:"TrackId")
   Name: String
   Album: Album? @db(name: "AlbumId")
   AlbumId: Int?
@@ -25,24 +25,24 @@ model Track {
 }
 
 model Mediamodel {
-  id: Int @id @db(name:"MediamodelId")
+  id Int @id @db(name:"MediamodelId")
   Name: String?
 }
 
 model Genre {
-  id: Int @id @db(name:"GenreId")
+  id Int @id @db(name:"GenreId")
   Name: String?
   Tracks: Track[]
 }
 
 model Artist {
-  id: Int @id @db(name:"ArtistId")
+  id Int @id @db(name:"ArtistId")
   Name: String?
   Albums: Album[]
 }
 
 model Customer {
-  id: Int @id @db(name:"CustomerId")
+  id Int @id @db(name:"CustomerId")
   FirstName: String
   LastName: String
   Company: String?
@@ -59,7 +59,7 @@ model Customer {
 }
 
 model Employee {
-  id: Int @id @db(name:"EmployeeId")
+  id Int @id @db(name:"EmployeeId")
   FirstName: String
   LastName: String
   Title: String?
@@ -77,7 +77,7 @@ model Employee {
 }
 
 model Invoice {
-  id: Int @id @db(name:"InvoiceId")
+  id Int @id @db(name:"InvoiceId")
   Customer: Customer @db(name: "CustomerId")
   InvoiceDate: DateTime
   BillingAddress: String?
@@ -90,7 +90,7 @@ model Invoice {
 }
 
 model InvoiceLine {
-  id: Int @id @db(name:"InvoiceLineId")
+  id Int @id @db(name:"InvoiceLineId")
   Invoice: Invoice @db(name: "InvoiceId")
   Track: Track @db(name: "TrackId")
   UnitPrice: Float
@@ -98,13 +98,13 @@ model InvoiceLine {
 }
 
 model Playlist {
-  id: Int @id @db(name:"PlaylistId")
+  id Int @id @db(name:"PlaylistId")
   Name: String?
   Tracks: PlaylistTrack[]
 }
 
 model PlaylistTrack {
-  id: Int @id
+  id Int @id
   Playlist: Playlist @db(name: "PlaylistId")
   Track: Track @db(name: "TrackId")
 }
