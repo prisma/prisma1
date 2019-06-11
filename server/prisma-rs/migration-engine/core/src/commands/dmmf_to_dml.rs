@@ -24,10 +24,6 @@ impl MigrationCommand for DmmfToDmlCommand {
             datamodel: datamodel::render_with_sources(&datamodel, &sources).unwrap(),
         })
     }
-
-    fn must_initialize_engine(&self) -> bool { 
-        false
-    }
 }
 
 #[derive(Deserialize, Debug)]
