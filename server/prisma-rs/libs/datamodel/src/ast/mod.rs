@@ -111,6 +111,9 @@ pub enum Value {
     BooleanValue(String, Span),
     /// Any string value.
     StringValue(String, Span),
+    /// A ducktyped string value, used as function return values which can be ducktyped.
+    /// Canbe any scalar type, array or function is not possible.
+    Any(String, Span),
     /// Any literal constant, basically a string which was not inside "...".
     /// This is used for representing builtin enums.
     ConstantValue(String, Span),
@@ -129,6 +132,7 @@ pub fn describe_value_type(val: &Value) -> &'static str {
         Value::ConstantValue(_, _) => "Literal",
         Value::Function(_, _, _) => "Functional",
         Value::Array(_, _) => "Array",
+        Value::Any(_, _) => "Any",
     }
 }
 
@@ -141,6 +145,7 @@ impl ToString for Value {
             Value::ConstantValue(x, _) => x.clone(),
             Value::Function(x, _, _) => x.clone(),
             Value::Array(_, _) => String::from("(Array)"),
+            Value::Any(x, _) => x.clone(),
         }
     }
 }
