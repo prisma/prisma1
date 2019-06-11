@@ -15,8 +15,8 @@ use prisma_query::{
 use r2d2_mysql::pool::MysqlConnectionManager;
 use serde_json::{Map, Number, Value};
 use std::convert::TryFrom;
-use uuid::Uuid;
 use url::Url;
+use uuid::Uuid;
 
 type Pool = r2d2::Pool<MysqlConnectionManager>;
 
@@ -36,7 +36,6 @@ impl TryFrom<&Box<dyn Source>> for Mysql {
             Some(mut segments) => segments.next().unwrap_or("mysql"),
             None => "mysql",
         };
-
 
         builder.ip_or_hostname(url.host_str());
         builder.tcp_port(url.port().unwrap_or(3306));
@@ -83,7 +82,7 @@ impl TryFrom<&ExplicitConfig> for Mysql {
         builder.stmt_cache_size(Some(1000));
 
         let manager = MysqlConnectionManager::new(builder);
-        let pool = r2d2::Pool::builder().max_size(dbg!(e.limit())).build(manager)?;
+        let pool = r2d2::Pool::builder().max_size(e.limit()).build(manager)?;
 
         Ok(Self { pool })
     }
@@ -133,7 +132,8 @@ impl Transactional for Mysql {
 
 impl<'a> Transaction for my::Transaction<'a> {
     fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
-        let (sql, params) = dbg!(visitor::Mysql::build(q));
+        let (sql, params) = visitor::Mysql::build(q);
+        debug!("{}\n{:?}", sql, params);
 
         let mut stmt = self.prepare(&sql)?;
         let result = stmt.execute(params)?;
@@ -142,7 +142,8 @@ impl<'a> Transaction for my::Transaction<'a> {
     }
 
     fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
-        let (sql, params) = dbg!(visitor::Mysql::build(q));
+        let (sql, params) = visitor::Mysql::build(q);
+        debug!("{}\n{:?}", sql, params);
 
         let mut stmt = self.prepare(&sql)?;
         let rows = stmt.execute(params)?;
@@ -171,7 +172,7 @@ impl<'a> Transaction for my::Transaction<'a> {
     }
 
     fn raw(&mut self, q: RawQuery) -> SqlResult<Value> {
-        let mut stmt = self.prepare(dbg!(&q.0))?;
+        let mut stmt = self.prepare(&q.0)?;
 
         if q.is_select() {
             let rows = stmt.execute(())?;
@@ -328,7 +329,6 @@ impl Mysql {
     where
         F: FnOnce(&mut r2d2::PooledConnection<MysqlConnectionManager>) -> SqlResult<T>,
     {
-        dbg!(self.pool.state());
         let mut conn = self.pool.get()?;
         let result = f(&mut conn);
         result

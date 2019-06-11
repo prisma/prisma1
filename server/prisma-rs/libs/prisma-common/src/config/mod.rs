@@ -7,8 +7,8 @@ pub use explicit::ExplicitConfig;
 pub use file::FileConfig;
 
 use crate::error::CommonError;
+use datamodel::{Arguments, MySqlSourceDefinition, PostgresSourceDefinition, Source, SourceDefinition};
 use serde_yaml;
-use datamodel::{PostgresSourceDefinition, Arguments, Source, SourceDefinition, MySqlSourceDefinition};
 use std::{
     collections::{BTreeMap, HashMap},
     convert::TryInto,
@@ -92,7 +92,7 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                     if ospath.exists() && !ospath.is_dir() {
                         let source = SqliteSourceDefinition::new().create(
                             &name,
-                            format!("file:{}", path),
+                            &format!("file:{}", path),
                             &Arguments::empty(&vec![]),
                             None
                         );
@@ -145,9 +145,7 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
             })
             .collect();
 
-        result
-            .into_iter()
-            .collect()
+        result.into_iter().collect()
     }
 }
 

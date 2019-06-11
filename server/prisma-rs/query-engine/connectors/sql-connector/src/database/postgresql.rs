@@ -39,7 +39,7 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
         let mut config = Config::from_str(source.url())?;
         config.ssl_mode(SslMode::Prefer);
 
-        dbg!(&config);
+        trace!("{:?}", &config);
         Ok(Self::new(config, 10)?)
     }
 }
@@ -142,7 +142,8 @@ impl<'a> Transaction for PostgresTransaction<'a> {
     fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>> {
         let id = match q {
             insert @ Query::Insert(_) => {
-                let (sql, params) = dbg!(visitor::Postgres::build(insert));
+                let (sql, params) = visitor::Postgres::build(insert);
+                debug!("{}\n{:?}", sql, params);
 
                 let params: Vec<&ToSql> = params.iter().map(|pv| pv as &ToSql).collect();
                 let stmt = self.prepare(&sql)?;
@@ -154,7 +155,9 @@ impl<'a> Transaction for PostgresTransaction<'a> {
                 })
             }
             query => {
-                let (sql, params) = dbg!(visitor::Postgres::build(query));
+                let (sql, params) = visitor::Postgres::build(query);
+                debug!("{}\n{:?}", sql, params);
+
                 let params: Vec<&ToSql> = params.iter().map(|pv| pv as &ToSql).collect();
 
                 let stmt = self.prepare(&sql)?;
@@ -168,7 +171,9 @@ impl<'a> Transaction for PostgresTransaction<'a> {
     }
 
     fn filter(&mut self, q: Query, idents: &[TypeIdentifier]) -> SqlResult<Vec<SqlRow>> {
-        let (sql, params) = dbg!(visitor::Postgres::build(q));
+        let (sql, params) = visitor::Postgres::build(q);
+        debug!("{}\n{:?}", sql, params);
+
         let params: Vec<&ToSql> = params.iter().map(|pv| pv as &ToSql).collect();
 
         let stmt = self.prepare(&sql)?;
@@ -193,7 +198,7 @@ impl<'a> Transaction for PostgresTransaction<'a> {
     }
 
     fn raw(&mut self, q: RawQuery) -> SqlResult<Value> {
-        let stmt = self.prepare(dbg!(&q.0))?;
+        let stmt = self.prepare(&q.0)?;
 
         if q.is_select() {
             let rows = self.query(&stmt, &[])?;

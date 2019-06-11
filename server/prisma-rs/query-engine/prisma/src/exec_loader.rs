@@ -30,16 +30,21 @@ pub fn load(source: &Box<dyn Source>) -> PrismaResult<Executor> {
 
 #[cfg(feature = "sql")]
 fn sqlite(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+    trace!("Loading SQLite connector...");
+
     let sqlite = Sqlite::try_from(source)?;
     let db = SqlDatabase::new(sqlite);
     let path = PathBuf::from(source.url());
     let db_name = path.file_stem().unwrap(); // Safe due to previous validations.
 
+    trace!("Loaded SQLite connector.");
     Ok(sql_executor(db_name.to_os_string().into_string().unwrap(), db))
 }
 
 #[cfg(feature = "sql")]
 fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+    trace!("Loading Postgres connector...");
+
     let psql = PostgreSql::try_from(source)?;
     let db = SqlDatabase::new(psql);
     let url = Url::parse(source.url())?;
@@ -49,11 +54,14 @@ fn postgres(source: &Box<dyn Source>) -> PrismaResult<Executor> {
         .ok_or(PrismaError::ConfigurationError(err_str.into()))?;
     let db_name = db_name.next().expect(err_str);
 
+    trace!("Loaded Postgres connector.");
     Ok(sql_executor(db_name.into(), db))
 }
 
 #[cfg(feature = "sql")]
 fn mysql(source: &Box<dyn Source>) -> PrismaResult<Executor> {
+    trace!("Loading MySQL connector...");
+
     let psql = Mysql::try_from(source)?;
     let db = SqlDatabase::new(psql);
     let url = Url::parse(source.url())?;
@@ -63,6 +71,7 @@ fn mysql(source: &Box<dyn Source>) -> PrismaResult<Executor> {
         .ok_or(PrismaError::ConfigurationError(err_str.into()))?;
     let db_name = db_name.next().expect(err_str);
 
+    trace!("Loaded MySQL connector.");
     Ok(sql_executor(db_name.into(), db))
 }
 
@@ -76,7 +85,7 @@ where
         data_resolver: arc.clone(),
     };
     let write_exec: WriteQueryExecutor = WriteQueryExecutor {
-        db_name: db_name,
+        db_name,
         write_executor: arc,
     };
 
