@@ -20,11 +20,12 @@ use actix_web::{
     http::{Method, StatusCode},
     server, App, HttpRequest, HttpResponse, Json, Responder,
 };
+use clap::{App as ClapApp, Arg};
 use context::PrismaContext;
 use error::*;
 use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
-use std::{process, sync::Arc, time::Instant};
+use std::{env, process, sync::Arc, time::Instant};
 
 pub type PrismaResult<T> = Result<T, PrismaError>;
 
@@ -41,6 +42,25 @@ struct RequestContext {
 }
 
 fn main() {
+    let matches = ClapApp::new("Prisma Query Engine")
+        .version(env!("CARGO_PKG_VERSION"))
+        .arg(
+            Arg::with_name("port")
+                .short("p")
+                .long("port")
+                .value_name("port")
+                .help("The port the query engine should bind to.")
+                .takes_value(true),
+        )
+        .get_matches();
+
+    let port = matches
+        .value_of("port")
+        .map(|p| p.to_owned())
+        .or_else(|| env::var("PORT").ok())
+        .and_then(|p| p.parse::<u16>().ok())
+        .unwrap_or_else(|| 4466);
+
     let now = Instant::now();
     env_logger::init();
 
@@ -53,9 +73,8 @@ fn main() {
         }
     };
 
-    let port = 4466; //context.config.port;
     let request_context = Arc::new(RequestContext {
-        context: context,
+        context,
         graphql_request_handler: GraphQlRequestHandler,
     });
 
