@@ -5,12 +5,12 @@ use datamodel::{common::PrismaType, dml};
 fn parse_scalar_types() {
     let dml = r#"
     model User {
-        id: Int @id
-        firstName: String
-        age: Int
-        isPro: Boolean
-        balance: Decimal
-        averageGrade: Float
+        id Int @id
+        firstName String
+        age Int
+        isPro Boolean
+        balance Decimal
+        averageGrade Float
     }
     "#;
 
@@ -35,10 +35,10 @@ fn parse_scalar_types() {
 fn parse_field_arity() {
     let dml = r#"
     model Post {
-        id: Int @id
-        text: String
-        photo: String?
-        comments: String[]
+        id Int @id
+        text String
+        photo String?
+        comments String[]
     }
     "#;
 
@@ -62,12 +62,12 @@ fn parse_field_arity() {
 fn parse_defaults() {
     let dml = r#"
     model User {
-        id: Int @id
-        firstName: String = "Hello"
-        age: Int = 21
-        isPro: Boolean = false
-        balance: Decimal = 1.2
-        averageGrade: Float = 3.4
+        id Int @id
+        firstName String = "Hello"
+        age Int = 21
+        isPro Boolean = false
+        balance Decimal = 1.2
+        averageGrade Float = 3.4
     }
     "#;
 

@@ -74,7 +74,7 @@ default_value = { "=" ~ expression }
 // TODO: We want to force a line break after a field declaration.
 // For this, we have to rely on pests new '-' operator.
 // Progress tracked here: https://github.com/pest-parser/pest/issues/271
-field_declaration = { doc_comment* ~ identifier ~ (":")? ~ field_type ~ default_value? ~ ( "@" ~ directive )* }
+field_declaration = { doc_comment* ~ identifier ~ field_type ~ default_value? ~ ( "@" ~ directive )* }
 
 // ######################################
 // Custom type declarations

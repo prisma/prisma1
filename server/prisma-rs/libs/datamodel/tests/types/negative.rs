@@ -7,7 +7,7 @@ fn shound_fail_on_directive_duplication() {
     type ID = String @id @default(cuid())
 
     model Model {
-        id: ID @id
+        id ID @id
     }
     "#;
 
@@ -19,7 +19,7 @@ fn shound_fail_on_directive_duplication() {
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("id", &ast::Span::new(78, 85)),
+        ValidationError::new_duplicate_directive_error("id", &ast::Span::new(77, 84)),
     );
 }
 
@@ -30,7 +30,7 @@ fn shound_fail_on_directive_duplication_recursive() {
     type ID = MyStringWithDefault @id
 
     model Model {
-        id: ID @default(cuid())
+        id ID @default(cuid())
     }
     "#;
 
@@ -42,7 +42,7 @@ fn shound_fail_on_directive_duplication_recursive() {
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(129, 144)),
+        ValidationError::new_duplicate_directive_error("default", &ast::Span::new(128, 143)),
     );
 }
 
@@ -54,7 +54,7 @@ fn shound_fail_on_endless_recursive_type_def() {
     type ID = MyStringWithDefault
 
     model Model {
-        id: ID 
+        id ID 
     }
     "#;
 
@@ -74,7 +74,7 @@ fn shound_fail_on_unresolvable_type() {
     type ID = MyStringWithDefault
 
     model Model {
-        id: ID 
+        id ID 
     }
     "#;
 
