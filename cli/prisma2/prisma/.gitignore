@@ -6,3 +6,4 @@ build
 .DS_Store
 download-build
 runtime
+photogen_ncc_build

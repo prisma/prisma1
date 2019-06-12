@@ -9,6 +9,8 @@ import { CLI } from './CLI'
 import { PhotonGenerate } from '@prisma/photon'
 import { Introspect } from '@prisma/introspection'
 import { Version } from './Version'
+import { getCompiledGenerators } from './getCompiledGenerators'
+import { Generate } from './Generate'
 
 /**
  * Main function
@@ -20,6 +22,7 @@ async function main(): Promise<number> {
     console.error(env)
     return 1
   }
+  const compiledGenerators = await getCompiledGenerators(env.cwd)
   // create a new CLI with our subcommands
   const cli = CLI.new({
     lift: LiftCommand.new(
@@ -32,12 +35,8 @@ async function main(): Promise<number> {
     ),
     introspect: Introspect.new(env),
     convert: Converter.new(env),
-    dev: LiftWatch.new(env, {
-      afterUp: () => {
-        PhotonGenerate.new(env).parse([], true)
-      },
-    }),
-    generate: PhotonGenerate.new(env),
+    dev: LiftWatch.new(env, compiledGenerators),
+    generate: Generate.new(env, compiledGenerators),
     version: Version.new(),
   })
   // parse the arguments
@@ -54,7 +53,7 @@ async function main(): Promise<number> {
   return 0
 }
 
-process.on('SIGINT', function() {
+process.on('SIGINT', () => {
   process.exit(0) // now the "exit" event will fire
 })
 
