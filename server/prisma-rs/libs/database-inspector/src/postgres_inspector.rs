@@ -5,7 +5,7 @@ use crate::information_schema::InformationSchema;
 use crate::database_inspector_impl::{convert_introspected_columns, IntrospectedForeignKey };
 
 pub struct Postgres {
-    connectional: Arc<Connectional>,
+    pub connectional: Arc<Connectional>,
     information_schema: InformationSchema,
 }
 
@@ -22,7 +22,7 @@ impl DatabaseInspector for Postgres {
 }
 
 impl Postgres {
-    fn new(connectional: Arc<Connectional>) -> Postgres {
+    pub fn new(connectional: Arc<Connectional>) -> Postgres {
         Postgres {
             connectional: Arc::clone(&connectional),
             information_schema: InformationSchema {

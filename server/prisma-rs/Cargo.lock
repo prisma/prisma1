@@ -571,8 +571,10 @@ name = "database-inspector"
 version = "0.1.0"
 dependencies = [
  "barrel 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "postgres 0.16.0-rc.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
  "time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
