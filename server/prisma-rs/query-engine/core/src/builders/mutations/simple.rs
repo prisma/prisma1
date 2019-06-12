@@ -24,7 +24,7 @@ impl SimpleNestedBuilder {
         let name = name.as_str();
         let kind = kind.as_str();
 
-        let where_ = map.to_node_selector(Arc::clone(dbg!(&model)));
+        let where_ = map.to_node_selector(Arc::clone(&model));
         let ValueSplit { values, lists, nested } = map.split();
 
         let f = model.fields().find_from_all(&name);
@@ -97,7 +97,7 @@ impl UpsertNestedBuilder {
             wat => panic!("Invalid state: `{:#?}`", wat),
         };
 
-        let where_ = dbg!(dbg!(&where_map).to_node_selector(Arc::clone(&related_model)));
+        let where_ = where_map.to_node_selector(Arc::clone(&related_model));
         let create = {
             let ValueSplit { values, lists, nested } = create.split();
             let non_list_args = values.to_prisma_values().into();

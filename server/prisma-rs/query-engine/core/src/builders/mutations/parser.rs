@@ -132,8 +132,6 @@ impl ValueMap {
     }
 
     pub fn to_node_selector(&self, model: ModelRef) -> Option<NodeSelector> {
-        dbg!(&model.fields().scalar());
-
         self.0
             .iter()
             .filter_map(|(field, value)| {
@@ -174,7 +172,6 @@ impl ValueMap {
     /// Extract mutation arguments from a value map
     pub fn eval_tree(&self, self_name: &str) -> Vec<NestedValue> {
         let mut vec = Vec::new();
-        dbg!(&self);
 
         // Go through all the objects on this level
         for (name, value) in self.0.iter() {
@@ -188,7 +185,6 @@ impl ValueMap {
 
             // These are actions (create, update, ...)
             for (action, nested) in obj.iter() {
-                dbg!(&action);
 
                 // We handle upserts specifically because they're weird
                 if action == "upsert" {
@@ -238,11 +234,11 @@ impl ValueMap {
                         },
                         // FIXME: The problem here is that we don't have information about what mutation "kind" we are dealing with
                         //        anymore. That's why we just make some assumptions and call it "update" here
-                        Value::String(s) => dbg!(NestedValue::Simple {
+                        Value::String(s) => NestedValue::Simple {
                             name: self_name.to_owned(),
                             kind: "update".into(),
                             map: ValueMap::from(&vec![(action.clone(), Value::String(s.clone()))])
-                        }),
+                        },
                         value => panic!("Unreachable structure: {:?}", value),
                     });
                 }
