@@ -49,8 +49,8 @@ pub fn test_config_json_escaped() -> String {
 }
 
 fn test_config() -> String {
-    sqlite_test_config()
-    // postgres_test_config()
+    // sqlite_test_config()
+    postgres_test_config()
 }
 
 fn sqlite_test_config() -> String {

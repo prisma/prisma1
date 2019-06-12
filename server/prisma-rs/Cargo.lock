@@ -572,7 +572,6 @@ version = "0.1.0"
 dependencies = [
  "barrel 0.5.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "prisma-query 0.1.0 (git+https://github.com/prisma/prisma-query.git)",
- "rusqlite 0.18.0 (git+https://github.com/pimeys/rusqlite)",
  "time 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
