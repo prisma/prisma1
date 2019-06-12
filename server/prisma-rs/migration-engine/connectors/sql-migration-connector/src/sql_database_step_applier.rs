@@ -4,14 +4,14 @@ use migration_connector::*;
 use prisma_query::Connectional;
 use std::sync::Arc;
 
-pub struct SqlDatabaseStepApplier<C: Connectional> {
+pub struct SqlDatabaseStepApplier {
     pub sql_family: SqlFamily,
     pub schema_name: String,
-    pub conn: Arc<C>,
+    pub conn: Arc<Connectional>,
 }
 
 #[allow(unused, dead_code)]
-impl<C: Connectional> DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier<C> {
+impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
     fn apply_step(&self, database_migration: &SqlMigration, index: usize) -> bool {
         self.apply_next_step(&database_migration.steps, index)
     }
@@ -43,7 +43,7 @@ impl DatabaseMigrationStepApplier<SqlMigration> for VirtualSqlDatabaseStepApplie
     }
 }
 
-impl<C: Connectional> SqlDatabaseStepApplier<C> {
+impl SqlDatabaseStepApplier {
     fn apply_next_step(&self, steps: &Vec<SqlMigrationStep>, index: usize) -> bool {
         let has_this_one = steps.get(index).is_some();
         if !has_this_one {
@@ -53,9 +53,7 @@ impl<C: Connectional> SqlDatabaseStepApplier<C> {
         let step = &steps[index];
         let sql_string = render_raw_sql(&step, self.sql_family, &self.schema_name);
         dbg!(&sql_string);
-        let result = self
-            .conn
-            .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_string, &[]));
+        let result = self.conn.query_on_raw_connection(&self.schema_name, &sql_string, &[]);
 
         // TODO: this does not evaluate the results of SQLites PRAGMA foreign_key_check
         result.unwrap();

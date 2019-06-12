@@ -4,11 +4,11 @@ use prisma_query::ast::ParameterizedValue;
 use prisma_query::Connectional;
 use std::sync::Arc;
 
-pub struct DatabaseInspectorImpl<C: Connectional> {
-    pub connection: Arc<C>,
+pub struct DatabaseInspectorImpl {
+    pub connection: Arc<Connectional>,
 }
 
-impl<C: Connectional> DatabaseInspector for DatabaseInspectorImpl<C> {
+impl DatabaseInspector for DatabaseInspectorImpl {
     fn introspect(&self, schema: &String) -> DatabaseSchema {
         DatabaseSchema {
             tables: self
@@ -20,8 +20,8 @@ impl<C: Connectional> DatabaseInspector for DatabaseInspectorImpl<C> {
     }
 }
 
-impl<C: Connectional> DatabaseInspectorImpl<C> {
-    pub fn new<Conn: Connectional>(connection: Arc<Conn>) -> DatabaseInspectorImpl<Conn> {
+impl DatabaseInspectorImpl {
+    pub fn new(connection: Arc<Connectional>) -> DatabaseInspectorImpl {
         DatabaseInspectorImpl { connection }
     }
 
@@ -38,18 +38,13 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
             schema
         );
 
-        self.connection
-            .with_connection(&schema, |conn| {
-                let result_set = conn.query_raw(&sql, &[]).unwrap();
-
-                let names = result_set
-                    .into_iter()
-                    .map(|row| row.get_as_string("name").unwrap())
-                    .filter(|n| n != "sqlite_sequence")
-                    .collect();
-                Ok(names)
-            })
-            .unwrap()
+        let result_set = self.connection.query_on_raw_connection(&schema, &sql, &[]).unwrap();
+        let names = result_set
+            .into_iter()
+            .map(|row| row.get_as_string("name").unwrap())
+            .filter(|n| n != "sqlite_sequence")
+            .collect();
+        names
     }
 
     fn get_table(&self, schema: &String, table: &String) -> Table {
@@ -75,11 +70,8 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
     fn get_columns(&self, schema: &String, table: &String) -> Vec<IntrospectedColumn> {
         let sql = format!(r#"Pragma "{}".table_info ("{}")"#, schema, table);
 
-        self.connection
-            .with_connection(&schema, |conn| {
-                let result_set = conn.query_raw(&sql, &[]).unwrap();
-
-                let names = result_set
+        let result_set = self.connection.query_on_raw_connection(&schema, &sql, &[]).unwrap();
+        let columns = result_set
                     .into_iter()
                     .map(|row| {
                         let default_value = match row.get("dflt_value") {
@@ -98,31 +90,27 @@ impl<C: Connectional> DatabaseInspectorImpl<C> {
                         }
                     })
                     .collect();
-                Ok(names)
-            })
-            .unwrap()
+
+        columns
     }
 
     fn get_foreign_constraints(&self, schema: &String, table: &String) -> Vec<IntrospectedForeignKey> {
         let sql = format!(r#"Pragma "{}".foreign_key_list("{}");"#, schema, table);
 
-        self.connection
-            .with_connection(&schema, |conn| {
-                let result_set= conn.query_raw(&sql, &[]).unwrap();
+        let result_set = self.connection.query_on_raw_connection(&schema, &sql, &[]).unwrap();
 
-                let names = result_set
-                    .into_iter()
-                    .map(|row| IntrospectedForeignKey {
-                        name: "".to_string(),
-                        table: table.to_string(),
-                        column: row.get_as_string("from").unwrap(),
-                        referenced_table: row.get_as_string("table").unwrap(),
-                        referenced_column: row.get_as_string("to").unwrap(),
-                    })
-                    .collect();
-                Ok(names)
+        let foreign_keys = result_set
+            .into_iter()
+            .map(|row| IntrospectedForeignKey {
+                name: "".to_string(),
+                table: table.to_string(),
+                column: row.get_as_string("from").unwrap(),
+                referenced_table: row.get_as_string("table").unwrap(),
+                referenced_column: row.get_as_string("to").unwrap(),
             })
-            .unwrap()
+            .collect();
+        
+        foreign_keys
     }
 
     #[allow(unused)]

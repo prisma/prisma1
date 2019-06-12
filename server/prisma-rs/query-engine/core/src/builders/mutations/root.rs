@@ -3,7 +3,7 @@
 
 use crate::{
     builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
-    CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, WriteQuery,
+    CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
@@ -35,19 +35,10 @@ impl<'field> MutationBuilder<'field> {
             return handle_reset(&self.field, &self.model);
         }
 
-        dbg!(self.field);
-
         let args = into_tree(&self.field.arguments);
-        dbg!(&args);
 
         let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
         let (op, model) = parse_model_action(&raw_name, Arc::clone(&self.model))?;
-
-        // let data = shift_data(&self.field.arguments);
-        // let ValueSplit { values, lists, nested } = dbg!(ValueMap::from(&data).split());
-        // let non_list_args = values.to_prisma_values().into();
-        // let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        // let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
         let inner = match op {
             Operation::Create => {
@@ -75,7 +66,7 @@ impl<'field> MutationBuilder<'field> {
                     list_args,
                     nested_mutactions,
                 })
-            },
+            }
             Operation::UpdateMany => {
                 let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
                 let non_list_args = values.to_prisma_values().into();
@@ -83,9 +74,10 @@ impl<'field> MutationBuilder<'field> {
                 let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
                 let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
-                let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
-                    Err(CoreError::QueryValidationError("Required filters not found!".into()))
-                })?;
+                let filter = query_args
+                    .filter
+                    .map(|f| Ok(f))
+                    .unwrap_or_else(|| Err(CoreError::QueryValidationError("Required filters not found!".into())))?;
 
                 TopLevelDatabaseMutaction::UpdateNodes(UpdateNodes {
                     model: Arc::clone(&model),
@@ -99,9 +91,10 @@ impl<'field> MutationBuilder<'field> {
             }),
             Operation::DeleteMany => {
                 let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
-                let filter = query_args.filter.map(|f| Ok(f)).unwrap_or_else(|| {
-                    Err(CoreError::QueryValidationError("Required filters not found!".into()))
-                })?;
+                let filter = query_args
+                    .filter
+                    .map(|f| Ok(f))
+                    .unwrap_or_else(|| Err(CoreError::QueryValidationError("Required filters not found!".into())))?;
 
                 TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
             }
@@ -109,31 +102,37 @@ impl<'field> MutationBuilder<'field> {
                 let where_ = utils::extract_node_selector(self.field, Arc::clone(&model))?;
 
                 let create = {
-                    let ValueSplit { values, lists, nested } = dbg!(ValueMap(shift_data(&args, "create")?).split());
+                    let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "create")?).split();
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
                     let model = Arc::clone(&model);
 
-                    CreateNode { model, non_list_args, list_args, nested_mutactions }
+                    CreateNode {
+                        model,
+                        non_list_args,
+                        list_args,
+                        nested_mutactions,
+                    }
                 };
 
                 let update = {
-                    let ValueSplit { values, lists, nested } = dbg!(ValueMap(shift_data(&args, "update")?).split());
+                    let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "update")?).split();
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
                     let where_ = where_.clone();
 
-                    UpdateNode { where_, non_list_args, list_args, nested_mutactions }
+                    UpdateNode {
+                        where_,
+                        non_list_args,
+                        list_args,
+                        nested_mutactions,
+                    }
                 };
 
-                TopLevelDatabaseMutaction::UpsertNode(UpsertNode {
-                    where_,
-                    create,
-                    update,
-                })
-            },
+                TopLevelDatabaseMutaction::UpsertNode(UpsertNode { where_, create, update })
+            }
             _ => unimplemented!(),
         };
 
@@ -224,8 +223,6 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
         }
     };
 
-    dbg!(&model.models());
-
     // FIXME: This is required because our `to_pascal_case` inflector works differently
     let normalized = match Inflector::singularize(&model_name).as_str() {
         "scalarmodel" => "ScalarModel".into(),
@@ -270,7 +267,20 @@ pub(crate) fn build_nested_root<'f>(
                 Arc::clone(&model),
                 top_level,
             )?,
-            NestedValue::Upsert { name, create, update } => unimplemented!(),
+            NestedValue::Upsert {
+                name,
+                create,
+                update,
+                where_,
+            } => UpsertNestedBuilder::build(
+                name,
+                where_,
+                create,
+                update,
+                &mut collection,
+                Arc::clone(&model),
+                top_level,
+            )?,
         };
     }
 
