@@ -89,6 +89,7 @@ fn column_type(column: &IntrospectedColumn) -> ColumnType {
     match column.tpe.as_ref() {
         s if s.starts_with("int") => ColumnType::Int,
         s if s.starts_with("float") => ColumnType::Float,
+        "numeric" => ColumnType::Float,
         "bool" => ColumnType::Boolean,
         "text" => ColumnType::String,
         s if s.starts_with("varchar") => ColumnType::String,
