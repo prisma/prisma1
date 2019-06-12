@@ -77,7 +77,7 @@ fn postgres_test_config() -> String {
     r#"
         datasource my_db {
             provider = "postgres"
-            url = "postgresql://postgres:prisma@127.0.0.1:5432/db"
+            url = "postgresql://postgres:prisma@127.0.0.1:5432/db?schema=test"
             default = true
         }
     "#

@@ -25,12 +25,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
+use std::borrow::Cow;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
     pub file_path: Option<String>,
     pub sql_family: SqlFamily,
     pub schema_name: String,
+    pub connectional: Arc<Connectional>,
     pub migration_persistence: Arc<MigrationPersistence>,
     pub database_migration_inferrer: Arc<DatabaseMigrationInferrer<SqlMigration>>,
     pub database_migration_step_applier: Arc<DatabaseMigrationStepApplier<SqlMigration>>,
@@ -53,6 +55,7 @@ impl SqlMigrationConnector {
                 let sqlite = Sqlite::try_from(url).expect("Loading SQLite failed");
                 sqlite.does_file_exist()
             }
+            SqlFamily::Postgres => false,
             _ => unimplemented!(),
         }
     }
@@ -80,11 +83,17 @@ impl SqlMigrationConnector {
                 }
                 let mut db_name = parsed_url.path().to_string();
                 db_name.replace_range(..1, ""); // strip leading slash
-                config.dbname(&db_name);
                 config.connect_timeout(Duration::from_secs(5));
 
+                let root_connection = Arc::new(PostgreSql::new(config.clone(), 1).unwrap());
+                let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
+                let schema_name = parsed_url.query_pairs().into_iter().find(|qp| qp.0 == Cow::Borrowed("schema")).expect("schema param is missing").1.to_string();
+                let _ = root_connection.query_on_raw_connection(&schema_name, &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+
+                config.dbname(&db_name);
+
                 let conn = Arc::new(PostgreSql::new(config, connection_limit).unwrap());
-                Self::create_connector(conn, sql_family, db_name, None)
+                Self::create_connector(conn, sql_family, schema_name.to_string(), Some(db_name))
             }
             _ => unimplemented!(),
         }
@@ -115,6 +124,7 @@ impl SqlMigrationConnector {
         file_path: Option<String>,
     ) -> Arc<SqlMigrationConnector> {
         let migration_persistence = Arc::new(SqlMigrationPersistence {
+            sql_family,
             connection: Arc::clone(&conn),
             schema_name: schema_name.clone(),
             file_path: file_path.clone(),
@@ -135,6 +145,7 @@ impl SqlMigrationConnector {
             file_path,
             sql_family,
             schema_name,
+            connectional: Arc::clone(&conn),
             migration_persistence,
             database_migration_inferrer,
             database_migration_step_applier,
@@ -150,14 +161,23 @@ impl MigrationConnector for SqlMigrationConnector {
     type DatabaseMigration = SqlMigration;
 
     fn initialize(&self) {
-        if let Some(file_path) = &self.file_path {
-            let path_buf = PathBuf::from(&file_path);
-            match path_buf.parent() {
-                Some(parent_directory) => {
-                    fs::create_dir_all(parent_directory).expect("creating the database folders failed")
+        match self.sql_family {
+            SqlFamily::Sqlite => {
+                if let Some(file_path) = &self.file_path {
+                    let path_buf = PathBuf::from(&file_path);
+                    match path_buf.parent() {
+                        Some(parent_directory) => {
+                            fs::create_dir_all(parent_directory).expect("creating the database folders failed")
+                        }
+                        None => {}
+                    }
                 }
-                None => {}
             }
+            SqlFamily::Postgres => {
+                let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &self.schema_name));                
+                self.connectional.query_on_raw_connection(&self.schema_name, &schema_sql, &[]).expect("Creation of Postgres Schema failed");
+            }
+            SqlFamily::Mysql => unimplemented!(),
         }
         self.migration_persistence.init();
     }

@@ -6,8 +6,10 @@ use prisma_query::ast::*;
 use prisma_query::{Connectional, ResultSet};
 use serde_json;
 use std::sync::Arc;
+use super::SqlFamily;
 
 pub struct SqlMigrationPersistence {
+    pub sql_family: SqlFamily,
     pub connection: Arc<Connectional>,
     pub schema_name: String,
     pub file_path: Option<String>,
@@ -134,11 +136,12 @@ impl MigrationPersistence for SqlMigrationPersistence {
 
 impl SqlMigrationPersistence {
     fn table(&self) -> Table {
-        if self.file_path.is_some() {
-            // sqlite case. Otherwise prisma-query produces invalid SQL
-            TABLE_NAME.to_string().into()
-        } else {
-            (self.schema_name.to_string(), TABLE_NAME.to_string()).into()
+        match self.sql_family {
+            SqlFamily::Sqlite => {
+                // sqlite case. Otherwise prisma-query produces invalid SQL
+                TABLE_NAME.to_string().into()
+            },
+            _ => (self.schema_name.to_string(), TABLE_NAME.to_string()).into(),
         }
     }
 }
