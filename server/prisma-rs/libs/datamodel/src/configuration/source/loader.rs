@@ -48,7 +48,10 @@ impl SourceLoader {
             }
         }
 
-        Err(ValidationError::new_source_not_known_error(&provider, &provider_arg.span()))
+        Err(ValidationError::new_source_not_known_error(
+            &provider,
+            &provider_arg.span(),
+        ))
     }
 
     /// Loads all source config blocks form the given AST,

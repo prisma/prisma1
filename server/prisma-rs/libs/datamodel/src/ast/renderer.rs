@@ -1,4 +1,11 @@
+use super::string_builder::StringBuilder;
+use super::table::TableFormat;
 use crate::ast;
+
+pub trait LineWriteable {
+    fn write(&mut self, param: &str);
+    fn end_line(&mut self);
+}
 
 pub struct Renderer<'a> {
     stream: &'a mut std::io::Write,
@@ -21,33 +28,59 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render(&mut self, datamodel: &ast::Datamodel) {
+        let mut type_renderer: Option<TableFormat> = None;
+
         for (i, top) in datamodel.models.iter().enumerate() {
-            if i != 0 {
-                // We put an extra line break in between top level structs.
-                self.end_line();
-            }
             match &top {
-                ast::Top::Model(model) => self.render_model(model),
-                ast::Top::Enum(enm) => self.render_enum(enm),
-                ast::Top::Type(custom_type) => self.render_custom_type(custom_type),
-                ast::Top::Source(source) => self.render_source_block(source),
-                ast::Top::Generator(generator) => self.render_generator_block(generator),
+                // TODO: This is super ugly. Goal is that type groups get
+                // formatted togehter.
+                ast::Top::Type(custom_type) => {
+                    if type_renderer.is_none() {
+                        if i != 0 {
+                            // We put an extra line break in between top level structs.
+                            self.end_line();
+                        }
+                        type_renderer = Some(TableFormat::new());
+                    }
+                    if let Some(renderer) = &mut type_renderer {
+                        Self::render_custom_type(renderer, custom_type);
+                    }
+                }
+                other => {
+                    if let Some(renderer) = &type_renderer {
+                        renderer.render(self);
+                        type_renderer = None;
+                    }
+
+                    if i != 0 {
+                        // We put an extra line break in between top level structs.
+                        self.end_line();
+                    }
+
+                    match other {
+                        ast::Top::Model(model) => self.render_model(model),
+                        ast::Top::Enum(enm) => self.render_enum(enm),
+                        ast::Top::Source(source) => self.render_source_block(source),
+                        ast::Top::Generator(generator) => self.render_generator_block(generator),
+                        ast::Top::Type(_) => unreachable!(),
+                    }
+                }
             };
         }
     }
 
-    pub fn render_documentation(&mut self, obj: &ast::WithDocumentation) {
+    pub fn render_documentation(target: &mut LineWriteable, obj: &ast::WithDocumentation) {
         if let Some(doc) = &obj.documentation() {
             for line in doc.text.split("\n") {
-                self.write("/// ");
-                self.write(line);
-                self.end_line();
+                target.write("/// ");
+                target.write(line);
+                target.end_line();
             }
         }
     }
 
     pub fn render_source_block(&mut self, source: &ast::SourceConfig) {
-        self.render_documentation(source);
+        Self::render_documentation(self, source);
 
         self.write("datasource ");
         self.write(&source.name);
@@ -55,12 +88,16 @@ impl<'a> Renderer<'a> {
         self.end_line();
         self.indent_up();
 
+        let mut formatter = TableFormat::new();
+
         for property in &source.properties {
-            self.write(&property.name);
-            self.write(" = ");
-            self.render_value(&property.value);
-            self.end_line();
+            formatter.write(&property.name);
+            formatter.write(" = ");
+            formatter.write(&Self::render_value_to_string(&property.value));
+            formatter.end_line();
         }
+
+        formatter.render(self);
 
         self.indent_down();
         self.write("}");
@@ -68,7 +105,7 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_generator_block(&mut self, generator: &ast::GeneratorConfig) {
-        self.render_documentation(generator);
+        Self::render_documentation(self, generator);
 
         self.write("generator ");
         self.write(&generator.name);
@@ -76,36 +113,46 @@ impl<'a> Renderer<'a> {
         self.end_line();
         self.indent_up();
 
+        let mut formatter = TableFormat::new();
+
         for property in &generator.properties {
-            self.write(&property.name);
-            self.write(" = ");
-            self.render_value(&property.value);
-            self.end_line();
+            formatter.write(&property.name);
+            formatter.write(" = ");
+            formatter.write(&Self::render_value_to_string(&property.value));
+            formatter.end_line();
         }
+
+        formatter.render(self);
 
         self.indent_down();
         self.write("}");
         self.end_line();
     }
 
-    pub fn render_custom_type(&mut self, field: &ast::Field) {
-        self.render_documentation(field);
+    pub fn render_custom_type(target: &mut TableFormat, field: &ast::Field) {
+        Self::render_documentation(&mut target.interleave_writer(), field);
 
-        self.write("type ");
-        self.write(&field.name);
-        self.write(&" = ");
-        self.write(&field.field_type);
+        target.write("type ");
+        target.write(&field.name);
+        target.write(&" = ");
+        target.write(&field.field_type);
 
-        for directive in &field.directives {
-            self.write(&" ");
-            self.render_field_directive(&directive);
+        // Attributes
+        if field.directives.len() > 0 {
+            let mut attributes_builder = StringBuilder::new();
+
+            for directive in &field.directives {
+                Self::render_field_directive(&mut attributes_builder, &directive);
+            }
+
+            target.write(&attributes_builder.to_string());
         }
 
-        self.end_line();
+        target.end_line();
     }
 
     pub fn render_model(&mut self, model: &ast::Model) {
-        self.render_documentation(model);
+        Self::render_documentation(self, model);
 
         self.write("model ");
         self.write(&model.name);
@@ -113,12 +160,19 @@ impl<'a> Renderer<'a> {
         self.end_line();
         self.indent_up();
 
+        let mut field_formatter = TableFormat::new();
+
         for field in &model.fields {
-            self.render_field(&field);
+            Self::render_field(&mut field_formatter, &field);
         }
 
-        for directive in &model.directives {
-            self.render_block_directive(&directive);
+        field_formatter.render(self);
+
+        if model.directives.len() > 0 {
+            self.end_line();
+            for directive in &model.directives {
+                self.render_block_directive(&directive);
+            }
         }
 
         self.indent_down();
@@ -127,7 +181,7 @@ impl<'a> Renderer<'a> {
     }
 
     pub fn render_enum(&mut self, enm: &ast::Enum) {
-        self.render_documentation(enm);
+        Self::render_documentation(self, enm);
 
         self.write("enum ");
         self.write(&enm.name);
@@ -140,9 +194,12 @@ impl<'a> Renderer<'a> {
             self.end_line();
         }
 
-        for directive in &enm.directives {
-            self.write(" ");
-            self.render_block_directive(&directive);
+        if enm.directives.len() > 0 {
+            self.end_line();
+            for directive in &enm.directives {
+                self.write(" ");
+                self.render_block_directive(&directive);
+            }
         }
 
         self.indent_down();
@@ -150,38 +207,52 @@ impl<'a> Renderer<'a> {
         self.end_line();
     }
 
-    pub fn render_field(&mut self, field: &ast::Field) {
-        self.render_documentation(field);
+    pub fn render_field(target: &mut TableFormat, field: &ast::Field) {
+        Self::render_documentation(&mut target.interleave_writer(), field);
 
-        self.write(&field.name);
-        self.write(&" ");
-        self.write(&field.field_type);
-        self.render_field_arity(&field.arity);
+        target.write(&field.name);
 
-        for directive in &field.directives {
-            self.write(&" ");
-            self.render_field_directive(&directive);
+        // Type
+        {
+            let mut type_builder = StringBuilder::new();
+
+            type_builder.write(&field.field_type);
+            Self::render_field_arity(&mut type_builder, &field.arity);
+
+            target.write(&type_builder.to_string());
         }
 
-        self.end_line();
+        // Attributes
+        if field.directives.len() > 0 {
+            let mut attributes_builder = StringBuilder::new();
+
+            for directive in &field.directives {
+                attributes_builder.write(&" ");
+                Self::render_field_directive(&mut attributes_builder, &directive);
+            }
+
+            target.write(&attributes_builder.to_string());
+        }
+
+        target.end_line();
     }
 
-    pub fn render_field_arity(&mut self, field_arity: &ast::FieldArity) {
+    pub fn render_field_arity(target: &mut LineWriteable, field_arity: &ast::FieldArity) {
         match field_arity {
-            ast::FieldArity::List => self.write("[]"),
-            ast::FieldArity::Optional => self.write("?"),
+            ast::FieldArity::List => target.write("[]"),
+            ast::FieldArity::Optional => target.write("?"),
             ast::FieldArity::Required => {}
         };
     }
 
-    pub fn render_field_directive(&mut self, directive: &ast::Directive) {
-        self.write("@");
-        self.write(&directive.name);
+    pub fn render_field_directive(target: &mut LineWriteable, directive: &ast::Directive) {
+        target.write("@");
+        target.write(&directive.name);
 
         if directive.arguments.len() > 0 {
-            self.write("(");
-            self.render_arguments(&directive.arguments);
-            self.write(")");
+            target.write("(");
+            Self::render_arguments(target, &directive.arguments);
+            target.write(")");
         }
     }
 
@@ -191,49 +262,55 @@ impl<'a> Renderer<'a> {
 
         if directive.arguments.len() > 0 {
             self.write("(");
-            self.render_arguments(&directive.arguments);
+            Self::render_arguments(self, &directive.arguments);
             self.write(")");
         }
         self.end_line();
     }
 
-    pub fn render_arguments(&mut self, args: &Vec<ast::Argument>) {
+    pub fn render_arguments(target: &mut LineWriteable, args: &Vec<ast::Argument>) {
         for (idx, arg) in args.iter().enumerate() {
             if idx > 0 {
-                self.write(&", ");
+                target.write(&", ");
             }
-            self.render_argument(arg);
+            Self::render_argument(target, arg);
         }
     }
 
-    pub fn render_argument(&mut self, args: &ast::Argument) {
+    pub fn render_argument(target: &mut LineWriteable, args: &ast::Argument) {
         if args.name != "" {
-            self.write(&args.name);
-            self.write(&": ");
+            target.write(&args.name);
+            target.write(&": ");
         }
 
-        self.render_value(&args.value);
+        Self::render_value(target, &args.value);
     }
 
-    pub fn render_value(&mut self, val: &ast::Value) {
+    pub fn render_value_to_string(val: &ast::Value) -> String {
+        let mut builder = StringBuilder::new();
+        Self::render_value(&mut builder, val);
+        builder.to_string()
+    }
+
+    pub fn render_value(target: &mut LineWriteable, val: &ast::Value) {
         match val {
-            ast::Value::Array(vals, _) => self.render_array(&vals),
-            ast::Value::BooleanValue(val, _) => self.write(&val),
-            ast::Value::ConstantValue(val, _) => self.write(&val),
-            ast::Value::NumericValue(val, _) => self.write(&val),
-            ast::Value::StringValue(val, _) => self.render_str(&val),
-            ast::Value::Function(name, args, _) => self.render_func(&name, &args),
+            ast::Value::Array(vals, _) => Self::render_array(target, &vals),
+            ast::Value::BooleanValue(val, _) => target.write(&val),
+            ast::Value::ConstantValue(val, _) => target.write(&val),
+            ast::Value::NumericValue(val, _) => target.write(&val),
+            ast::Value::StringValue(val, _) => Self::render_str(target, &val),
+            ast::Value::Function(name, args, _) => Self::render_func(target, &name, &args),
             ast::Value::Any(_, _) => unimplemented!("Value of 'Any' type cannot be rendered."),
         };
     }
 
-    pub fn render_func(&mut self, name: &str, vals: &Vec<ast::Value>) {
-        self.write(name);
-        self.write("(");
+    pub fn render_func(target: &mut LineWriteable, name: &str, vals: &Vec<ast::Value>) {
+        target.write(name);
+        target.write("(");
         for val in vals {
-            self.render_value(val);
+            Self::render_value(target, val);
         }
-        self.write(")");
+        target.write(")");
     }
 
     pub fn indent_up(&mut self) {
@@ -247,23 +324,25 @@ impl<'a> Renderer<'a> {
         self.indent = self.indent - 1
     }
 
-    pub fn render_array(&mut self, vals: &Vec<ast::Value>) {
-        self.write(&"[");
+    pub fn render_array(target: &mut LineWriteable, vals: &Vec<ast::Value>) {
+        target.write(&"[");
         for (idx, arg) in vals.iter().enumerate() {
             if idx > 0 {
-                self.write(&", ");
+                target.write(&", ");
             }
-            self.render_value(arg);
+            Self::render_value(target, arg);
         }
-        self.write(&"]");
+        target.write(&"]");
     }
 
-    fn render_str(&mut self, param: &str) {
-        self.write("\"");
-        self.write(param);
-        self.write("\"");
+    fn render_str(target: &mut LineWriteable, param: &str) {
+        target.write("\"");
+        target.write(param);
+        target.write("\"");
     }
+}
 
+impl<'a> LineWriteable for Renderer<'a> {
     fn write(&mut self, param: &str) {
         // TODO: Proper result handling.
         if self.new_line {

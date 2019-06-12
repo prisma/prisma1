@@ -28,13 +28,13 @@ fn should_apply_a_custom_type() {
 #[test]
 fn should_recursively_apply_a_custom_type() {
     let dml = r#"
-    type MyString = String
-    type MyStringWithDefault = MyString @default(cuid())
-    type ID = MyStringWithDefault @id
+        type MyString = String
+        type MyStringWithDefault = MyString @default(cuid())
+        type ID = MyStringWithDefault @id
 
-    model Model {
-        id ID
-    }
+        model Model {
+            id ID
+        }
     "#;
 
     let datamodel = parse(dml);

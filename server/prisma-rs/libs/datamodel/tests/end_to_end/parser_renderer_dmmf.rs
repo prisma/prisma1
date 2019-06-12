@@ -1,57 +1,62 @@
 extern crate datamodel;
 
 const DATAMODEL_STRING: &str = r#"model User {
-    id Int @id
-    createdAt DateTime
-    email String @unique
-    name String?
-    posts Post[] @relation("author", onDelete: CASCADE)
-    profile Profile?
+    id         Int       @id
+    createdAt  DateTime
+    email      String    @unique
+    name       String?
+    posts      Post[]    @relation("author", onDelete: CASCADE)
+    profile    Profile?
+
     @@db("user")
 }
 
 model Profile {
-    id Int @id
-    user User
-    bio String
+    id    Int     @id
+    user  User
+    bio   String
+
     @@db("profile")
 }
 
 model Post {
-    id Int @id
-    createdAt DateTime
-    updatedAt DateTime
-    title String @default("Default-Title")
-    wasLiked Boolean @default(false)
-    author User @relation("author")
-    published Boolean @default(false)
-    categories PostToCategory[]
+    id          Int               @id
+    createdAt   DateTime
+    updatedAt   DateTime
+    title       String            @default("Default-Title")
+    wasLiked    Boolean           @default(false)
+    author      User              @relation("author")
+    published   Boolean           @default(false)
+    categories  PostToCategory[]
+
     @@db("post")
 }
 
 model Category {
-    id Int @id
-    name String
-    posts PostToCategory[]
-    cat CategoryEnum
+    id     Int               @id
+    name   String
+    posts  PostToCategory[]
+    cat    CategoryEnum
+
     @@db("category")
 }
 
 model PostToCategory {
-    id Int @id
-    post Post
-    category Category
+    id        Int       @id
+    post      Post
+    category  Category
+
     @@db("post_to_category")
 }
 
 model A {
-    id Int @id
-    b B
+    id  Int  @id
+    b   B
 }
 
 model B {
-    id Int @id
-    a A
+    id  Int  @id
+    a   A
 }
 
 enum CategoryEnum {
@@ -73,9 +78,9 @@ fn test_dmmf_roundtrip() {
 }
 
 const DATAMODEL_STRING_WITH_FUNCTIONS: &str = r#"model User {
-    id Int @id
-    createdAt DateTime @default(now())
-    someId String @default(cuid()) @unique
+    id         Int       @id
+    createdAt  DateTime  @default(now())
+    someId     String    @default(cuid()) @unique
 }"#;
 
 #[test]
@@ -91,14 +96,14 @@ fn test_dmmf_roundtrip_with_functions() {
 }
 
 const DATAMODEL_WITH_SOURCE: &str = r#"datasource pg1 {
-    provider = "postgres"
-    url = "https://localhost/postgres1"
+    provider  =  "postgres"
+    url       =  "https://localhost/postgres1"
 }
 
 model Author {
-    id Int @id
-    name String?
-    createdAt DateTime @default(now())
+    id         Int       @id
+    name       String?
+    createdAt  DateTime  @default(now())
 }"#;
 
 #[test]
@@ -110,16 +115,16 @@ fn test_dmmf_roundtrip_with_sources() {
 
 const DATAMODEL_WITH_SOURCE_AND_COMMENTS: &str = r#"/// Super cool postgres source.
 datasource pg1 {
-    provider = "postgres"
-    url = "https://localhost/postgres1"
+    provider  =  "postgres"
+    url       =  "https://localhost/postgres1"
 }
 
 /// My author model.
 model Author {
-    id Int @id
+    id         Int       @id
     /// Name of the author.
-    name String?
-    createdAt DateTime @default(now())
+    name       String?
+    createdAt  DateTime  @default(now())
 }"#;
 
 #[test]
@@ -130,15 +135,15 @@ fn test_dmmf_roundtrip_with_sources_and_comments() {
 }
 
 const DATAMODEL_WITH_GENERATOR: &str = r#"generator js {
-    provider = "javascript"
-    output = "./client"
-    extra_config = "test"
+    provider      =  "javascript"
+    output        =  "./client"
+    extra_config  =  "test"
 }
 
 model Author {
-    id Int @id
-    name String?
-    createdAt DateTime @default(now())
+    id         Int       @id
+    name       String?
+    createdAt  DateTime  @default(now())
 }"#;
 
 #[test]
