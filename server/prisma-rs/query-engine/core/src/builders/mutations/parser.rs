@@ -166,6 +166,7 @@ pub enum NestedValue {
         name: String,
         create: ValueMap,
         update: ValueMap,
+        where_: ValueMap,
     },
 }
 
@@ -189,37 +190,62 @@ impl ValueMap {
             for (action, nested) in obj.iter() {
                 dbg!(&action);
 
-                vec.push(match nested {
-                    Value::Object(obj) => NestedValue::Simple {
-                        name: name.clone(),
-                        kind: action.clone(),
-                        map: ValueMap(obj.clone()),
-                    },
-                    Value::List(list) => NestedValue::Many {
-                        name: name.clone(),
-                        kind: action.clone(),
-                        list: list
-                            .iter()
-                            .map(|item| match item {
-                                Value::Object(obj) => ValueMap(obj.clone()),
-                                _ => unreachable!(),
-                            })
-                            .collect(),
-                    },
-                    Value::Boolean(true) => NestedValue::Simple {
-                        name: name.clone(),
-                        kind: action.clone(),
-                        map: ValueMap::from(&vec![]),
-                    },
-                    // FIXME: The problem here is that we don't have information about what mutation "kind" we are dealing with
-                    //        anymore. That's why we just make some assumptions and call it "update" here
-                    Value::String(s) => dbg!(NestedValue::Simple {
-                        name: self_name.to_owned(),
-                        kind: "update".into(),
-                        map: ValueMap::from(&vec![(action.clone(), Value::String(s.clone()))])
-                    }),
-                    value => panic!("Unreachable structure: {:?}", value),
-                });
+                // We handle upserts specifically because they're weird
+                if action == "upsert" {
+                    let name = name.clone();
+                    let (create, update, where_) = match nested {
+                        Value::Object(obj) => match (obj.get("create"), obj.get("update"), obj.get("where")) {
+                            (Some(Value::Object(create)), Some(Value::Object(update)), Some(Value::Object(where_))) => {
+                                (
+                                    ValueMap(create.clone()),
+                                    ValueMap(update.clone()),
+                                    ValueMap(where_.clone()),
+                                )
+                            }
+                            _ => unreachable!(),
+                        },
+                        _ => unreachable!(),
+                    };
+
+                    vec.push(NestedValue::Upsert {
+                        name,
+                        create,
+                        update,
+                        where_,
+                    });
+                } else {
+                    vec.push(match nested {
+                        Value::Object(obj) => NestedValue::Simple {
+                            name: name.clone(),
+                            kind: action.clone(),
+                            map: ValueMap(obj.clone()),
+                        },
+                        Value::List(list) => NestedValue::Many {
+                            name: name.clone(),
+                            kind: action.clone(),
+                            list: list
+                                .iter()
+                                .map(|item| match item {
+                                    Value::Object(obj) => ValueMap(obj.clone()),
+                                    _ => unreachable!(),
+                                })
+                                .collect(),
+                        },
+                        Value::Boolean(true) => NestedValue::Simple {
+                            name: name.clone(),
+                            kind: action.clone(),
+                            map: ValueMap::from(&vec![]),
+                        },
+                        // FIXME: The problem here is that we don't have information about what mutation "kind" we are dealing with
+                        //        anymore. That's why we just make some assumptions and call it "update" here
+                        Value::String(s) => dbg!(NestedValue::Simple {
+                            name: self_name.to_owned(),
+                            kind: "update".into(),
+                            map: ValueMap::from(&vec![(action.clone(), Value::String(s.clone()))])
+                        }),
+                        value => panic!("Unreachable structure: {:?}", value),
+                    });
+                }
             }
         }
 
