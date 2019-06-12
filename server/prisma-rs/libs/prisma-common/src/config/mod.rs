@@ -7,7 +7,10 @@ pub use explicit::ExplicitConfig;
 pub use file::FileConfig;
 
 use crate::error::CommonError;
-use datamodel::{Arguments, MySqlSourceDefinition, PostgresSourceDefinition, Source, SourceDefinition};
+use datamodel::{
+    Arguments, MySqlSourceDefinition, PostgresSourceDefinition, Source, SourceDefinition, SqliteSourceDefinition,
+};
+
 use serde_yaml;
 use std::{
     collections::{BTreeMap, HashMap},
@@ -84,9 +87,8 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
         let result: Vec<Result<Box<dyn Source>, Self::Error>> = self.databases
             .into_iter()
             .map(|(name, db)| match db {
-                #[cfg(feature = "sql")]
                 PrismaDatabase::File(ref config) if config.connector == "sqlite-native" => {
-                    let path = config.database_file;
+                    let path = config.database_file.clone();
                     let ospath = PathBuf::from(&path);
 
                     if ospath.exists() && !ospath.is_dir() {
@@ -94,25 +96,24 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                             &name,
                             &format!("file:{}", path),
                             &Arguments::empty(&vec![]),
-                            None
+                            &None
                         );
 
                         source.map_err(|err| err.into())
                     } else {
-                        Err(CommonError::ConfigurationError("Configuration error: Sqlite file configuration found, but path either doesn't exist or doens't point to a file.".into()));
+                        Err(CommonError::ConfigurationError("Configuration error: Sqlite file configuration found, but path either doesn't exist or doens't point to a file.".into()))
                     }
                 }
 
-                #[cfg(feature = "sql")]
                 PrismaDatabase::Explicit(ref config) if config.connector == "postgres-native" => {
                     let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
-                    let auth_pair = match config.password {
-                        Some(pw) => format!("{}:{}", config.user, pw),
-                        None => config.user,
+                    let auth_pair = match config.password.as_ref() {
+                        Some(pw) => format!("{}:{}", config.user.clone(), pw),
+                        None => config.user.clone(),
                     };
 
                     let url = format!("postgresql://{}@{}:{}/{}?sslmode=prefer", auth_pair, config.host, config.port, db_name);
-                    let source = PostgresSourceDefinition::new().create(&self, &name, &url, &Arguments::empty(&vec![]), &None);
+                    let source = PostgresSourceDefinition::new().create( &name, &url, &Arguments::empty(&vec![]), &None);
 
                     source.map_err(|err| err.into())
                 },
@@ -122,16 +123,15 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                     source.map_err(|err| err.into())
                 },
 
-                #[cfg(feature = "sql")]
                 PrismaDatabase::Explicit(ref config) if config.connector == "mysql-native" => {
-                    let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("postgres");
-                    let auth_pair = match config.password {
-                        Some(pw) => format!("{}:{}", config.user, pw),
-                        None => config.user,
+                    let db_name = config.database.as_ref().map(|x| x.as_str()).unwrap_or("mysql");
+                    let auth_pair = match config.password.as_ref() {
+                        Some(pw) => format!("{}:{}", config.user.clone(), pw),
+                        None => config.user.clone(),
                     };
 
                     let url = format!("mysql://{}@{}:{}/{}", auth_pair, config.host, config.port, db_name);
-                    let source = MySqlSourceDefinition::new().create(&self, &name, &url, &Arguments::empty(&vec![]), None);
+                    let source = MySqlSourceDefinition::new().create(&name, &url, &Arguments::empty(&vec![]), &None);
 
                     source.map_err(|err| err.into())
                 },
@@ -141,7 +141,10 @@ impl TryInto<Vec<Box<dyn Source>>> for PrismaConfig {
                     source.map_err(|err| err.into())
                 },
 
-                _ => Err(CommonError::ConfigurationError(format!("Database connector for configuration key {} is not supported.", name))),
+                _ => {
+                    dbg!(&db);
+                    Err(CommonError::ConfigurationError(format!("Database connector {} for configuration key {} is not supported.", db.connector(), name)))
+                },
             })
             .collect();
 
