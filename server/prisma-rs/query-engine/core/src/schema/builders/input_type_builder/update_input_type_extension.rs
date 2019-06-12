@@ -70,10 +70,10 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
                     (false, false) => "One",
                 };
 
-                let without_part = if !related_field.is_hidden {
-                    format!("Without{}", capitalize(rf.name.clone()))
-                } else {
+                let without_part = if related_field.is_hidden {
                     "".into()
+                } else {
+                    format!("Without{}", capitalize(related_field.name.clone()))
                 };
 
                 let input_name = format!("{}Update{}{}Input", related_model.name, arity_part, without_part);
@@ -107,22 +107,17 @@ pub trait UpdateInputTypeBuilderExtension<'a>: InputTypeBuilderBase<'a> + Create
                             fields.push(self.nested_update_input_field(Arc::clone(&rf)));
                             append_opt(&mut fields, self.nested_update_many_field(Arc::clone(&rf)));
                             append_opt(&mut fields, self.nested_delete_many_field(Arc::clone(&rf)));
-
-                            // wip nested upsert input field
+                            append_opt(&mut fields, self.nested_upsert_field(Arc::clone(&rf)));
 
                             input_object.set_fields(fields);
                             Arc::downgrade(&input_object)
                         }
                     };
 
-                    let input_type = InputType::object(input_object);
-                    let input_field = if rf.is_required {
-                        input_field(rf.name.clone(), input_type)
-                    } else {
-                        input_field(rf.name.clone(), InputType::opt(input_type))
-                    };
-
-                    Some(input_field)
+                    Some(input_field(
+                        rf.name.clone(),
+                        InputType::opt(InputType::object(input_object)),
+                    ))
                 }
             })
             .collect()
