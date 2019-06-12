@@ -39,7 +39,7 @@ pub struct SqlMigrationConnector {
     pub database_inspector: Arc<DatabaseInspector>,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum SqlFamily {
     Sqlite,
     Postgres,
@@ -124,6 +124,7 @@ impl SqlMigrationConnector {
     ) -> Arc<SqlMigrationConnector> {
         let inspector: Arc<DatabaseInspector> = match sql_family {
             SqlFamily::Sqlite => Arc::new(DatabaseInspector::sqlite_with_connectional(Arc::clone(&conn))),
+            SqlFamily::Postgres => Arc::new(DatabaseInspector::postgres_with_connectional(Arc::clone(&conn))),
             _ => unimplemented!(),
         };
         let migration_persistence = Arc::new(SqlMigrationPersistence {
@@ -133,6 +134,7 @@ impl SqlMigrationConnector {
             file_path: file_path.clone(),
         });
         let database_migration_inferrer = Arc::new(SqlDatabaseMigrationInferrer {
+            sql_family,
             inspector: Arc::clone(&inspector),
             schema_name: schema_name.to_string(),
         });
@@ -227,13 +229,14 @@ impl MigrationConnector for VirtualSqlMigrationConnector {
 
     fn database_migration_inferrer(&self) -> Arc<DatabaseMigrationInferrer<SqlMigration>> {
         Arc::new(VirtualSqlDatabaseMigrationInferrer {
+            sql_family: self.sql_family,
             schema_name: self.schema_name.clone(),
         })
     }
 
     fn database_migration_step_applier(&self) -> Arc<DatabaseMigrationStepApplier<SqlMigration>> {
         Arc::new(VirtualSqlDatabaseStepApplier {
-            sql_family: self.sql_family.clone(),
+            sql_family: self.sql_family,
             schema_name: self.schema_name.clone(),
         })
     }

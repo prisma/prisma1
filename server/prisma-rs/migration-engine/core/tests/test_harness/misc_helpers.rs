@@ -74,12 +74,11 @@ pub fn sqlite_test_file() -> String {
 }
 
 fn postgres_test_config() -> String {
-    r#"
-        datasource my_db {
+    format!(r#"
+        datasource my_db {{
             provider = "postgres"
-            url = "postgresql://postgres:prisma@127.0.0.1:5432/db?schema=test"
+            url = "postgresql://postgres:prisma@127.0.0.1:5432/db?schema={}"
             default = true
-        }
-    "#
-    .to_string()
+        }}
+    "#, SCHEMA_NAME)
 }

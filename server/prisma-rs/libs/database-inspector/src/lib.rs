@@ -68,6 +68,10 @@ impl DatabaseInspector {
         schema_connection.query_on_raw_connection(&schema_name, &schema_sql, &[]).expect("Creation of Postgres Schema failed");
         Postgres::new(schema_connection)
     }
+
+    pub fn postgres_with_connectional(connectional: Arc<Connectional>) -> Postgres {
+        Postgres::new(connectional)
+    }
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]

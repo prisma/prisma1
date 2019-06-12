@@ -8,6 +8,7 @@ use migration_connector::*;
 use std::sync::Arc;
 
 pub struct SqlDatabaseMigrationInferrer {
+    pub sql_family: SqlFamily,
     pub inspector: Arc<DatabaseInspector>,
     pub schema_name: String,
 }
@@ -16,24 +17,25 @@ impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
     fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> SqlMigration {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
-        infer(&current_database_schema, &expected_database_schema, &self.schema_name)
+        infer(&current_database_schema, &expected_database_schema, &self.schema_name, self.sql_family)
     }
 }
 
 pub struct VirtualSqlDatabaseMigrationInferrer {
+    pub sql_family: SqlFamily,
     pub schema_name: String,
 }
 impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInferrer {
     fn infer(&self, previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> SqlMigration {
         let current_database_schema = DatabaseSchemaCalculator::calculate(previous);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
-        infer(&current_database_schema, &expected_database_schema, &self.schema_name)
+        infer(&current_database_schema, &expected_database_schema, &self.schema_name, self.sql_family)
     }
 }
 
-fn infer(current: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str) -> SqlMigration {
-    let steps = infer_database_migration_steps_and_fix(&current, &next, &schema_name);
-    let rollback = infer_database_migration_steps_and_fix(&next, &current, &schema_name);
+fn infer(current: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str, sql_family: SqlFamily) -> SqlMigration {
+    let steps = infer_database_migration_steps_and_fix(&current, &next, &schema_name, sql_family);
+    let rollback = infer_database_migration_steps_and_fix(&next, &current, &schema_name, sql_family);
     SqlMigration {
         steps: steps,
         rollback: rollback,
@@ -44,9 +46,10 @@ fn infer_database_migration_steps_and_fix(
     from: &DatabaseSchema,
     to: &DatabaseSchema,
     schema_name: &str,
+    sql_family: SqlFamily,
 ) -> Vec<SqlMigrationStep> {
     let steps = DatabaseSchemaDiffer::diff(&from, &to);
-    let is_sqlite = true;
+    let is_sqlite = sql_family == SqlFamily::Sqlite;
     if is_sqlite {
         fix_stupid_sqlite(steps, &from, &to, &schema_name)
     } else {
