@@ -23,8 +23,12 @@
     "@prisma/fetch-engine": "^0.0.19",
     "@prisma/introspection": "^0.0.14",
     "@prisma/lift": "^0.0.37",
-    "@prisma/photon": "^0.0.42",
+    "@prisma/photon": "0.0.48",
+    "@types/jest": "24.0.13",
     "@zeit/ncc": "^0.18.5",
+    "jest": "24.8.0",
+    "pg": "7.11.0",
+    "ts-jest": "24.0.2",
     "typescript": "^3.5.1"
   },
   "scripts": {
