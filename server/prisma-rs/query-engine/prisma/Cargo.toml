@@ -34,3 +34,4 @@ indexmap = { version = "1.0", features = [ "serde-1" ] }
 itertools = "0.8"
 url = "1.7"
 clap = "2.33"
+human-panic = "1.0"
