@@ -44,11 +44,19 @@ impl MigrationPersistence for SqlMigrationPersistence {
     fn reset(&self) {
         println!("SqlMigrationPersistence.reset()");
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
-
         let _ = self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]);
 
-        if let Some(ref file_path) = self.file_path {
-            let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
+        match self.sql_family {
+            SqlFamily::Postgres => {
+                let sql_str = format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name); // TODO: this is not vendor agnostic yet
+                let _ = self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+            }
+            SqlFamily::Sqlite => {
+                if let Some(ref file_path) = self.file_path {
+                    let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
+                }
+            }
+            SqlFamily::Mysql => {}
         }
     }
 
