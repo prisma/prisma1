@@ -40,6 +40,7 @@ impl DatabaseInspector {
 
     pub fn postgres(url: String) -> Postgres {
         // TODO: this needs to move into prisma-query
+        // TODO: the setup calls in here look wrong
         let parsed_url = Url::parse(&url).expect("Parsing of the provided connector url failed.");
         let connection_limit = 5;
         let mut config = PostgresConfig::new();

@@ -113,6 +113,7 @@ fn foreign_keys_must_work() {
             t.add_column("id", types::primary());
         });
         migration.create_table("User", |t| {
+            // FIXME: use right function when Katharina has implemented it
             // t.add_column("city", types::foreign("City(id)")); // SQLite
             t.add_column("city", types::foreign("\"DatabaseInspectorTest\".\"City\"(id)")); // Postgres
         });
