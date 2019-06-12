@@ -7,14 +7,14 @@ use prisma_query::{Connectional, ResultSet};
 use serde_json;
 use std::sync::Arc;
 
-pub struct SqlMigrationPersistence<C: Connectional> {
-    pub connection: Arc<C>,
+pub struct SqlMigrationPersistence {
+    pub connection: Arc<Connectional>,
     pub schema_name: String,
     pub file_path: Option<String>,
 }
 
 #[allow(unused, dead_code)]
-impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
+impl MigrationPersistence for SqlMigrationPersistence {
     fn init(&self) {
         println!("SqlMigrationPersistence.init()");
         let mut m = barrel::Migration::new().schema(self.schema_name.clone());
@@ -34,17 +34,14 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
 
         let sql_str = dbg!(m.make::<barrel::backend::Sqlite>());
 
-        self.connection
-            .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]))
-            .unwrap();
+        self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]).unwrap();
     }
 
     fn reset(&self) {
         println!("SqlMigrationPersistence.reset()");
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
-        let _ = self
-            .connection
-            .with_connection(&self.schema_name, |conn| conn.query_raw(&sql_str, &[]));
+
+        let _ = self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]);
 
         if let Some(ref file_path) = self.file_path {
             let _ = dbg!(std::fs::remove_file(file_path)); // ignore potential errors
@@ -57,23 +54,15 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        self.connection
-            .with_connection(&self.schema_name, |conn| {
-                let result_set = conn.query(query.into()).unwrap();
-                Ok(parse_rows_new(&result_set).into_iter().next())
-            })
-            .unwrap()
+        let result_set = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(&result_set).into_iter().next()
     }
 
     fn load_all(&self) -> Vec<Migration> {
         let query = Select::from_table(self.table());
 
-        self.connection
-            .with_connection(&self.schema_name, |conn| {
-                let result_set = conn.query(query.into()).unwrap();
-                Ok(parse_rows_new(&result_set))
-            })
-            .unwrap()
+        let result_set = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(&result_set)
     }
 
     fn by_name(&self, name: &str) -> Option<Migration> {
@@ -82,12 +71,8 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        self.connection
-            .with_connection(&self.schema_name, |conn| {
-                let result_set = conn.query(query.into()).unwrap();
-                Ok(parse_rows_new(&result_set).into_iter().next())
-            })
-            .unwrap()
+        let result_set = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
+        parse_rows_new(&result_set).into_iter().next()
     }
 
     fn create(&self, migration: Migration) -> Migration {
@@ -116,16 +101,12 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
             )
             .value(FINISHED_AT_COLUMN, finished_at_value);
 
-        self.connection
-            .with_connection(&self.schema_name, |conn| {
-                let id = conn.execute(query.into())?;
-                match id {
-                    Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
-                    _ => panic!("This insert must return an int"),
-                }
-                Ok(cloned)
-            })
-            .unwrap()
+        let id = self.connection.execute_on_connection(&self.schema_name, query.into()).unwrap();
+        match id {
+            Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
+            _ => panic!("This insert must return an int"),
+        };
+        cloned
     }
 
     fn update(&self, params: &MigrationUpdateParams) {
@@ -147,16 +128,11 @@ impl<C: Connectional> MigrationPersistence for SqlMigrationPersistence<C> {
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
-        self.connection
-            .with_connection(&self.schema_name, |conn| {
-                conn.query(query.into())?;
-                Ok(())
-            })
-            .unwrap()
+        let _ = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
     }
 }
 
-impl<C: Connectional> SqlMigrationPersistence<C> {
+impl SqlMigrationPersistence {
     fn table(&self) -> Table {
         if self.file_path.is_some() {
             // sqlite case. Otherwise prisma-query produces invalid SQL

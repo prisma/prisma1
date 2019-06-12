@@ -108,8 +108,8 @@ impl SqlMigrationConnector {
         })
     }
 
-    fn create_connector<C: Connectional + 'static>(
-        conn: Arc<C>,
+    fn create_connector(
+        conn: Arc<Connectional>,
         sql_family: SqlFamily,
         schema_name: String,
         file_path: Option<String>,
