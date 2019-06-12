@@ -62,7 +62,7 @@ impl Sqlite {
 
         Table {
             name: table.to_string(),
-            columns: convert_introspected_columns(introspected_columns, introspected_foreign_keys),
+            columns: convert_introspected_columns(introspected_columns, introspected_foreign_keys, Box::new(column_type)),
             indexes: Vec::new(),
             primary_key_columns: pk_columns,
         }
@@ -122,5 +122,20 @@ impl Sqlite {
     #[allow(unused)]
     fn get_index(&self, _schema: &String, _table: &String) -> Index {
         unimplemented!()
+    }
+}
+
+fn column_type(column: &IntrospectedColumn) -> ColumnType {
+    match column.tpe.as_ref() {
+        "INTEGER" => ColumnType::Int,
+        "REAL" => ColumnType::Float,
+        "BOOLEAN" => ColumnType::Boolean,
+        "TEXT" => ColumnType::String,
+        s if s.starts_with("VARCHAR") => ColumnType::String,
+        "DATE" => ColumnType::DateTime,
+        x => panic!(format!(
+            "type {} is not supported here yet. Column was: {}",
+            x, column.name
+        )),
     }
 }

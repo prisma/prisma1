@@ -8,11 +8,11 @@ use prisma_query::{Connectional, ResultSet};
 use std::{thread, time};
 use std::sync::Arc;
 
-const SCHEMA: &str = "database_inspector_test";
+const SCHEMA: &str = "DatabaseInspectorTest";
 
 #[test]
 fn all_columns_types_must_work() {
-    let inspector = setup(|mut migration| {
+    test_each_backend(|mut migration| {
         migration.create_table("User", |t| {
             t.add_column("int", types::integer());
             t.add_column("float", types::float());
@@ -21,88 +21,89 @@ fn all_columns_types_must_work() {
             t.add_column("string2", types::varchar(1));
             t.add_column("date_time", types::date());
         });
+    }, |inspector|{
+        let result = inspector.introspect(&SCHEMA.to_string());
+
+        let table = result.table("User").unwrap();
+        let expected_columns = vec![
+            Column {
+                name: "int".to_string(),
+                tpe: ColumnType::Int,
+                is_required: true,
+                foreign_key: None,
+                sequence: None,
+            },
+            Column {
+                name: "float".to_string(),
+                tpe: ColumnType::Float,
+                is_required: true,
+                foreign_key: None,
+                sequence: None,
+            },
+            Column {
+                name: "boolean".to_string(),
+                tpe: ColumnType::Boolean,
+                is_required: true,
+                foreign_key: None,
+                sequence: None,
+            },
+            Column {
+                name: "string1".to_string(),
+                tpe: ColumnType::String,
+                is_required: true,
+                foreign_key: None,
+                sequence: None,
+            },
+            Column {
+                name: "string2".to_string(),
+                tpe: ColumnType::String,
+                is_required: true,
+                foreign_key: None,
+                sequence: None,
+            },
+            Column {
+                name: "date_time".to_string(),
+                tpe: ColumnType::DateTime,
+                is_required: true,
+                foreign_key: None,
+                sequence: None,
+            },
+        ];
+
+        assert_eq!(table.columns, expected_columns);
     });
 
-    let result = inspector.introspect(&SCHEMA.to_string());
-
-    let table = result.table("User").unwrap();
-    let expected_columns = vec![
-        Column {
-            name: "int".to_string(),
-            tpe: ColumnType::Int,
-            is_required: true,
-            foreign_key: None,
-            sequence: None,
-        },
-        Column {
-            name: "float".to_string(),
-            tpe: ColumnType::Float,
-            is_required: true,
-            foreign_key: None,
-            sequence: None,
-        },
-        Column {
-            name: "boolean".to_string(),
-            tpe: ColumnType::Boolean,
-            is_required: true,
-            foreign_key: None,
-            sequence: None,
-        },
-        Column {
-            name: "string1".to_string(),
-            tpe: ColumnType::String,
-            is_required: true,
-            foreign_key: None,
-            sequence: None,
-        },
-        Column {
-            name: "string2".to_string(),
-            tpe: ColumnType::String,
-            is_required: true,
-            foreign_key: None,
-            sequence: None,
-        },
-        Column {
-            name: "date_time".to_string(),
-            tpe: ColumnType::DateTime,
-            is_required: true,
-            foreign_key: None,
-            sequence: None,
-        },
-    ];
-
-    assert_eq!(table.columns, expected_columns);
 }
 
 #[test]
 fn is_required_must_work() {
-    let inspector = setup(|mut migration| {
+    test_each_backend(|mut migration| {
         migration.create_table("User", |t| {
             t.add_column("column1", types::integer().nullable(false));
             t.add_column("column2", types::integer().nullable(true));
         });
+    }, |inspector|{
+        let result = inspector.introspect(&SCHEMA.to_string());
+
+        let user_table = result.table("User").unwrap();
+        let expected_columns = vec![
+            Column {
+                name: "column1".to_string(),
+                tpe: ColumnType::Int,
+                is_required: true,
+                foreign_key: None,
+                sequence: None,
+            },
+            Column {
+                name: "column2".to_string(),
+                tpe: ColumnType::Int,
+                is_required: false,
+                foreign_key: None,
+                sequence: None,
+            },
+        ];
+        assert_eq!(user_table.columns, expected_columns);
     });
-
-    let result = inspector.introspect(&SCHEMA.to_string());
-
-    let user_table = result.table("User").unwrap();
-    let expected_columns = vec![
-        Column {
-            name: "column1".to_string(),
-            tpe: ColumnType::Int,
-            is_required: true,
-            foreign_key: None,
-            sequence: None,
-        },
-        Column {
-            name: "column2".to_string(),
-            tpe: ColumnType::Int,
-            is_required: false,
-            foreign_key: None,
-            sequence: None,
-        },
-    ];
-    assert_eq!(user_table.columns, expected_columns);
 }
 
 #[test]
@@ -112,7 +113,8 @@ fn foreign_keys_must_work() {
             t.add_column("id", types::primary());
         });
         migration.create_table("User", |t| {
-            t.add_column("city", types::foreign("City(id)"));
+            // t.add_column("city", types::foreign("City(id)")); // SQLite
+            t.add_column("city", types::foreign("\"DatabaseInspectorTest\".\"City\"(id)")); // Postgres
         });
     }, |inspector|{
         let result = inspector.introspect(&SCHEMA.to_string());
@@ -143,18 +145,20 @@ fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: 
 
     println!("Testing with SQLite now");
     // SQLITE
-    {
-        let (inspector, connectional) = sqlite();
-        let full_sql = migration.make::<barrel::backend::Sqlite>();
-        run_full_sql(&connectional, &full_sql);
-        testFn(inspector);
-    }
+    // {
+    //     let (inspector, connectional) = sqlite();
+    //     let full_sql = migration.make::<barrel::backend::Sqlite>();
+    //     run_full_sql(&connectional, &full_sql);
+    //     println!("Running the test function now");
+    //     testFn(inspector);
+    // }
     println!("Testing with Postgres now");
     // POSTGRES
     {
         let (inspector, connectional) = postgres();
         let full_sql = migration.make::<barrel::backend::Pg>();
         run_full_sql(&connectional, &full_sql);
+        println!("Running the test function now");
         testFn(inspector);
     }
 }
@@ -166,23 +170,6 @@ fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
             connectional.query_on_raw_connection(&SCHEMA, &sql, &[]).unwrap();
         }
     }
-}
-
-fn setup<F>(mut migrationFn: F) -> Arc<DatabaseInspector>
-where
-    F: FnMut(&mut Migration) -> (),
-{        
-    let mut migration = Migration::new().schema(SCHEMA);
-    migrationFn(&mut migration);
-    let (inspector, connectional) = sqlite();
-    let full_sql = migration.make::<barrel::backend::Sqlite>();
-    for sql in full_sql.split(";") {
-        dbg!(sql);
-        if sql != "" {
-            connectional.query_on_raw_connection(&SCHEMA, &sql, &[]).unwrap();
-        }
-    }
-    inspector
 }
 
 fn sqlite() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
@@ -199,8 +186,17 @@ fn sqlite() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
 
 fn postgres() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
     let url = format!("postgresql://postgres:prisma@127.0.0.1:5432/db?schema={}", SCHEMA);
+    let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA));
+    let setup_connectional = DatabaseInspector::postgres(url.to_string()).connectional;
+    let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_schema, &[]);
+
+
     let inspector = DatabaseInspector::postgres(url.to_string());
     let connectional = Arc::clone(&inspector.connectional);
 
     (Arc::new(inspector), connectional)
+}
+
+fn string_to_static_str(s: String) -> &'static str {
+    Box::leak(s.into_boxed_str())
 }

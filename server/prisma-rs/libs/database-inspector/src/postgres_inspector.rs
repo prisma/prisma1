@@ -32,17 +32,16 @@ impl Postgres {
         }
     }
 
-    fn get_table(&self, schema: &String, table: &String) -> Table {
+    fn get_table(&self, schema: &String, table: &String) -> Table {        
         let introspected_columns = self.information_schema.get_columns(&schema, &table);
         let introspected_foreign_keys = self.get_foreign_key_constraints(&schema, &table);
         let primary_key_columns = self.information_schema.get_primary_keys(&schema, &table);
         Table {
             name: table.to_string(),
-            columns: convert_introspected_columns(introspected_columns, introspected_foreign_keys),
+            columns: convert_introspected_columns(introspected_columns, introspected_foreign_keys, Box::new(column_type)),
             indexes: Vec::new(),
             primary_key_columns: primary_key_columns,
-        };
-        unimplemented!()
+        }
     }
 
     fn get_foreign_key_constraints(&self, schema: &String, table: &String) -> Vec<IntrospectedForeignKey> {
@@ -66,8 +65,8 @@ impl Postgres {
                 AND rc.constraint_schema = kcu.constraint_schema
                 AND rc.constraint_name = kcu.constraint_name
             WHERE
-                kcu.table_schema = {} AND
-                kcu.table_name = {}
+                kcu.table_schema = '{}' AND
+                kcu.table_name = '{}'
         "#, schema, table);
 
         let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
@@ -83,5 +82,20 @@ impl Postgres {
                 }
             })
             .collect()
+    }
+}
+
+fn column_type(column: &IntrospectedColumn) -> ColumnType {
+    match column.tpe.as_ref() {
+        s if s.starts_with("int") => ColumnType::Int,
+        s if s.starts_with("float") => ColumnType::Float,
+        "bool" => ColumnType::Boolean,
+        "text" => ColumnType::String,
+        s if s.starts_with("varchar") => ColumnType::String,
+        "date" => ColumnType::DateTime,
+        x => panic!(format!(
+            "type {} is not supported here yet. Column was: {}",
+            x, column.name
+        )),
     }
 }

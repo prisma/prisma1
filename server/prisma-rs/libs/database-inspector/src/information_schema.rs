@@ -17,7 +17,7 @@ impl InformationSchema {
             FROM
                 information_schema.tables
             WHERE
-            table_schema = {} AND
+            table_schema = '{}' AND
             -- Views are not supported yet
             table_type = 'BASE TABLE'
         "#, schema);
@@ -49,7 +49,7 @@ impl InformationSchema {
         let columns = result_set
                     .into_iter()
                     .map(|row| {
-                        let default_value = match row.get("dflt_value") {
+                        let default_value = match row.get("column_default") {
                             Ok(ParameterizedValue::Text(v)) => Some(v.clone()),
                             Ok(ParameterizedValue::Null) => None,
                             Ok(p) => panic!(format!("expectd a string value but got {:?}", p)),

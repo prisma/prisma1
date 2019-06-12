@@ -3,6 +3,7 @@ use crate::*;
 pub fn convert_introspected_columns(
     columns: Vec<IntrospectedColumn>,
     foreign_keys: Vec<IntrospectedForeignKey>,
+    column_type: Box<Fn(&IntrospectedColumn) -> ColumnType>,
 ) -> Vec<Column> {
     columns
         .iter()
@@ -23,21 +24,6 @@ pub fn convert_introspected_columns(
             }
         })
         .collect()
-}
-
-fn column_type(column: &IntrospectedColumn) -> ColumnType {
-    match column.tpe.as_ref() {
-        "INTEGER" => ColumnType::Int,
-        "REAL" => ColumnType::Float,
-        "BOOLEAN" => ColumnType::Boolean,
-        "TEXT" => ColumnType::String,
-        s if s.starts_with("VARCHAR") => ColumnType::String,
-        "DATE" => ColumnType::DateTime,
-        x => panic!(format!(
-            "type {} is not supported here yet. Column was: {}",
-            x, column.name
-        )),
-    }
 }
 
 #[derive(Debug)]
