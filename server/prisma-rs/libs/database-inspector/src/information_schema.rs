@@ -2,6 +2,7 @@
 use prisma_query::Connectional;
 use std::sync::Arc;
 use prisma_query::ast::ParameterizedValue;
+use crate::database_inspector_impl::IntrospectedColumn;
 
 pub struct InformationSchema {
     pub connectional: Arc<Connectional>,
@@ -94,15 +95,4 @@ impl InformationSchema {
             .map(|row| row.get_as_string("key_column").unwrap())
             .collect()
     }
-}
-
-
-#[derive(Debug, Clone)]
-pub struct IntrospectedColumn {
-    pub name: String,
-    pub table: String,
-    pub tpe: String,
-    pub default: Option<String>,
-    pub is_required: bool,
-    pub pk: u32,
 }

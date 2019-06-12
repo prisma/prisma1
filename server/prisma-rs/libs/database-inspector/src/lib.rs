@@ -4,9 +4,14 @@ mod database_inspector_impl;
 mod empty_impl;
 mod information_schema;
 mod postgres;
+mod sqlite;
 
 pub use database_inspector_impl::*;
 pub use empty_impl::*;
+use sqlite::Sqlite;
+use prisma_query::connector::Sqlite as SqliteDatabaseClient;
+use prisma_query::Connectional;
+use std::sync::Arc;
 
 pub trait DatabaseInspector {
     fn introspect(&self, schema: &String) -> DatabaseSchema;
@@ -15,6 +20,17 @@ pub trait DatabaseInspector {
 impl DatabaseInspector {
     pub fn empty() -> EmptyDatabaseInspectorImpl {
         EmptyDatabaseInspectorImpl {}
+    }
+
+    pub fn sqlite(file_path: String) -> Sqlite {
+        let connection_limit = 5;
+        let test_mode = false;        
+        let conn = std::sync::Arc::new(SqliteDatabaseClient::new(file_path, connection_limit, test_mode).unwrap());
+        Self::sqlite_with_connectional(conn)
+    }
+
+    pub fn sqlite_with_connectional(connectional: Arc<Connectional>) -> Sqlite {
+        Sqlite::new(connectional)
     }
 }
 

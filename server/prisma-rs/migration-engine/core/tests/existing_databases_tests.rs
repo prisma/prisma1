@@ -2,8 +2,6 @@
 mod test_harness;
 use barrel::{backend::Sqlite as Squirrel, types, Migration};
 use database_inspector::*;
-use prisma_query::connector::Sqlite as SqliteDatabaseClient;
-use prisma_query::Connectional;
 use test_harness::*;
 
 #[test]
@@ -295,23 +293,17 @@ fn execute<F>(mut migrationFn: F) -> DatabaseSchema
 where
     F: FnMut(&mut Migration) -> (),
 {
-    let test_mode = false;
     let schema_name = "existing_db_tests";
-    let conn = std::sync::Arc::new(SqliteDatabaseClient::new(sqlite_test_file(), 32, test_mode).unwrap());
-    conn.with_connection(&schema_name, |c| {
-        let mut migration = Migration::new().schema(schema_name);
-        migrationFn(&mut migration);
-        let full_sql = migration.make::<Squirrel>();
-        for sql in full_sql.split(";") {
-            dbg!(sql);
-            if sql != "" {
-                c.query_raw(&sql, &[]).unwrap();
-            }
+    let inspector = DatabaseInspector::sqlite(sqlite_test_file());
+    let mut migration = Migration::new().schema(schema_name);
+    migrationFn(&mut migration);
+    let full_sql = migration.make::<Squirrel>();
+    for sql in full_sql.split(";") {
+        dbg!(sql);
+        if sql != "" {
+            inspector.connectional.query_on_raw_connection(schema_name, &sql, &[]).unwrap();
         }
-        Ok(())
-    })
-    .unwrap();
-    let inspector = DatabaseInspectorImpl { connection: conn };
+    }
     let mut result = inspector.introspect(&schema_name.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();

@@ -140,20 +140,15 @@ where
     let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
     let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
 
-    let test_mode = false;
-    let conn = std::sync::Arc::new(SqliteDatabaseClient::new(database_file_path, 32, test_mode).unwrap());
-    conn.with_connection(&SCHEMA, |c| {
-        let mut migration = Migration::new().schema(SCHEMA);
-        migrationFn(&mut migration);
-        let full_sql = migration.make::<Squirrel>();
-        for sql in full_sql.split(";") {
-            dbg!(sql);
-            if sql != "" {
-                c.query_raw(&sql, &[]).unwrap();
-            }
+    let inspector = DatabaseInspector::sqlite(database_file_path);
+    let mut migration = Migration::new().schema(SCHEMA);
+    migrationFn(&mut migration);
+    let full_sql = migration.make::<Squirrel>();
+    for sql in full_sql.split(";") {
+        dbg!(sql);
+        if sql != "" {
+            inspector.connectional.query_on_raw_connection(&SCHEMA, &sql, &[]).unwrap();
         }
-        Ok(())
-    })
-    .unwrap();
-    Box::new(DatabaseInspectorImpl { connection: conn })
+    }
+    Box::new(inspector)
 }

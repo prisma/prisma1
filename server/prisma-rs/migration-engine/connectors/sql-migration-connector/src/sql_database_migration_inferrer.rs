@@ -5,9 +5,10 @@ use database_inspector::{DatabaseInspector, DatabaseSchema, Table};
 use datamodel::*;
 use migration_connector::steps::*;
 use migration_connector::*;
+use std::sync::Arc;
 
 pub struct SqlDatabaseMigrationInferrer {
-    pub inspector: Box<DatabaseInspector>,
+    pub inspector: Arc<DatabaseInspector>,
     pub schema_name: String,
 }
 

@@ -22,6 +22,16 @@ impl DatabaseInspector for Postgres {
 }
 
 impl Postgres {
+    fn new(connectional: Arc<Connectional>) -> Postgres {
+        Postgres {
+            connectional: Arc::clone(&connectional),
+            information_schema: InformationSchema {
+                connectional: Arc::clone(&connectional),
+                data_type_column: "udt_name".to_string(),
+            }
+        }
+    }
+
     fn get_table(&self, schema: &String, table: &String) -> Table {
         let introspected_columns = self.information_schema.get_columns(&schema, &table);
         let introspected_foreign_keys = self.get_foreign_key_constraints(&schema, &table);

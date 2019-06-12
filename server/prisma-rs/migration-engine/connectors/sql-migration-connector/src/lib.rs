@@ -7,7 +7,6 @@ mod sql_migration;
 mod sql_migration_persistence;
 
 use database_inspector::DatabaseInspector;
-use database_inspector::DatabaseInspectorImpl;
 use migration_connector::*;
 use postgres::Config as PostgresConfig;
 use prisma_query::connector::{PostgreSql, Sqlite};
@@ -123,6 +122,10 @@ impl SqlMigrationConnector {
         schema_name: String,
         file_path: Option<String>,
     ) -> Arc<SqlMigrationConnector> {
+        let inspector: Arc<DatabaseInspector> = match sql_family {
+            SqlFamily::Sqlite => Arc::new(DatabaseInspector::sqlite_with_connectional(Arc::clone(&conn))),
+            _ => unimplemented!(),
+        };
         let migration_persistence = Arc::new(SqlMigrationPersistence {
             sql_family,
             connection: Arc::clone(&conn),
@@ -130,9 +133,7 @@ impl SqlMigrationConnector {
             file_path: file_path.clone(),
         });
         let database_migration_inferrer = Arc::new(SqlDatabaseMigrationInferrer {
-            inspector: Box::new(DatabaseInspectorImpl {
-                connection: Arc::clone(&conn),
-            }),
+            inspector: Arc::clone(&inspector),
             schema_name: schema_name.to_string(),
         });
         let database_migration_step_applier = Arc::new(SqlDatabaseStepApplier {
@@ -150,9 +151,7 @@ impl SqlMigrationConnector {
             database_migration_inferrer,
             database_migration_step_applier,
             destructive_changes_checker,
-            database_inspector: Arc::new(DatabaseInspectorImpl {
-                connection: Arc::clone(&conn),
-            }),
+            database_inspector: Arc::clone(&inspector),
         })
     }
 }
