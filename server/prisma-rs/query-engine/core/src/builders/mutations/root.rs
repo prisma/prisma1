@@ -35,19 +35,10 @@ impl<'field> MutationBuilder<'field> {
             return handle_reset(&self.field, &self.model);
         }
 
-        dbg!(self.field);
-
         let args = into_tree(&self.field.arguments);
-        dbg!(&args);
 
         let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
         let (op, model) = parse_model_action(&raw_name, Arc::clone(&self.model))?;
-
-        // let data = shift_data(&self.field.arguments);
-        // let ValueSplit { values, lists, nested } = dbg!(ValueMap::from(&data).split());
-        // let non_list_args = values.to_prisma_values().into();
-        // let list_args = lists.into_iter().map(|la| la.convert()).collect();
-        // let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
         let inner = match op {
             Operation::Create => {
@@ -111,7 +102,7 @@ impl<'field> MutationBuilder<'field> {
                 let where_ = utils::extract_node_selector(self.field, Arc::clone(&model))?;
 
                 let create = {
-                    let ValueSplit { values, lists, nested } = dbg!(ValueMap(shift_data(&args, "create")?).split());
+                    let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "create")?).split();
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
@@ -126,7 +117,7 @@ impl<'field> MutationBuilder<'field> {
                 };
 
                 let update = {
-                    let ValueSplit { values, lists, nested } = dbg!(ValueMap(shift_data(&args, "update")?).split());
+                    let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "update")?).split();
                     let non_list_args = values.to_prisma_values().into();
                     let list_args = lists.into_iter().map(|la| la.convert()).collect();
                     let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
@@ -231,8 +222,6 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
             )))
         }
     };
-
-    dbg!(&model.models());
 
     // FIXME: This is required because our `to_pascal_case` inflector works differently
     let normalized = match Inflector::singularize(&model_name).as_str() {
