@@ -1,5 +1,9 @@
+#![allow(dead_code)]
+
 mod database_inspector_impl;
 mod empty_impl;
+mod information_schema;
+mod postgres;
 
 pub use database_inspector_impl::*;
 pub use empty_impl::*;

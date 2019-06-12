@@ -3,6 +3,7 @@ use crate::*;
 use prisma_query::ast::ParameterizedValue;
 use prisma_query::Connectional;
 use std::sync::Arc;
+use information_schema::IntrospectedColumn;
 
 pub struct DatabaseInspectorImpl {
     pub connection: Arc<Connectional>,
@@ -124,7 +125,7 @@ impl DatabaseInspectorImpl {
     }
 }
 
-fn convert_introspected_columns(
+pub fn convert_introspected_columns(
     columns: Vec<IntrospectedColumn>,
     foreign_keys: Vec<IntrospectedForeignKey>,
 ) -> Vec<Column> {
@@ -164,21 +165,11 @@ fn column_type(column: &IntrospectedColumn) -> ColumnType {
     }
 }
 
-#[derive(Debug, Clone)]
-struct IntrospectedColumn {
-    name: String,
-    table: String,
-    tpe: String,
-    default: Option<String>,
-    is_required: bool,
-    pk: u32,
-}
-
 #[derive(Debug)]
-struct IntrospectedForeignKey {
-    name: String,
-    table: String,
-    column: String,
-    referenced_table: String,
-    referenced_column: String,
+pub struct IntrospectedForeignKey {
+    pub name: String,
+    pub table: String,
+    pub column: String,
+    pub referenced_table: String,
+    pub referenced_column: String,
 }
