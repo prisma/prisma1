@@ -3,7 +3,7 @@ use datamodel;
 use migration_core::MigrationEngine;
 use std::panic;
 
-const SCHEMA_NAME: &str = "migration_engine";
+pub const SCHEMA_NAME: &str = "migration_engine";
 
 pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     match datamodel::parse(datamodel_string) {
@@ -23,11 +23,7 @@ where
     T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
-    let underlying_db_must_exist = true;
-    let engine = MigrationEngine::new(&test_config(), underlying_db_must_exist);
-    let connector = engine.connector();
-    connector.reset();
-    engine.init();
+    let engine = test_engine(&test_config());
 
     // TEST
     let result = panic::catch_unwind(|| test(engine));
@@ -35,7 +31,16 @@ where
     result.unwrap()
 }
 
-pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
+pub fn test_engine(config: &str) -> Box<MigrationEngine> {
+    let underlying_db_must_exist = true;
+    let engine = MigrationEngine::new(config, underlying_db_must_exist);
+    let connector = engine.connector();
+    connector.reset();
+    engine.init();
+    engine
+}
+
+pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
     let inspector = engine.connector().database_inspector();
     let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
@@ -53,7 +58,7 @@ fn test_config() -> String {
     // postgres_test_config()
 }
 
-fn sqlite_test_config() -> String {
+pub fn sqlite_test_config() -> String {
     format!(
         r#"
         datasource my_db {{
@@ -73,13 +78,23 @@ pub fn sqlite_test_file() -> String {
     file_path
 }
 
-fn postgres_test_config() -> String {
-    r#"
-        datasource my_db {
+pub fn postgres_test_config() -> String {
+    format!(r#"
+        datasource my_db {{
             provider = "postgres"
-            url = "postgresql://postgres:prisma@127.0.0.1:5432/db"
+            url = "{}"
             default = true
-        }
-    "#
-    .to_string()
+        }}
+    "#, postgres_url())
+}
+
+pub fn postgres_url() -> String {
+    dbg!(format!("postgresql://postgres:prisma@{}:5432/db?schema={}", db_host(), SCHEMA_NAME))
+}
+
+fn db_host() -> String {
+    match std::env::var("IS_BUILDKITE") {
+        Ok(_) => "test-db".to_string(),
+        Err(_) => "127.0.0.1".to_string(),
+    }
 }

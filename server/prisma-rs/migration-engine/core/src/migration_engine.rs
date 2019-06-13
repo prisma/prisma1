@@ -31,6 +31,10 @@ impl MigrationEngine {
         self.connector().initialize()
     }
 
+    pub fn reset(&self) {
+        self.connector().reset()
+    }
+
     pub fn datamodel_migration_steps_inferrer(&self) -> Arc<DataModelMigrationStepsInferrer> {
         Arc::clone(&self.datamodel_migration_steps_inferrer)
     }

@@ -16,7 +16,7 @@ impl MigrationCommand for MigrationProgressCommand {
         Box::new(MigrationProgressCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         let migration_persistence = engine.connector().migration_persistence();
         let migration = migration_persistence
             .by_name(&self.input.migration_id)

@@ -16,7 +16,7 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
         Box::new(CalculateDatabaseStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
 
         let connector = engine.connector();

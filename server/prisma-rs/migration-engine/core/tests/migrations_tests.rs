@@ -169,11 +169,10 @@ fn changing_the_type_of_an_id_field_must_work() {
         let dm1 = r#"
             model A {
                 id Int @id
-                b B @relation(references: [id])
+                b  B   @relation(references: [id])
             }
             model B {
                 id Int @id
-                a A // remove once implicit back relation field is implemented
             }
         "#;
         let result = infer_and_apply(&engine, &dm1);
@@ -190,11 +189,10 @@ fn changing_the_type_of_an_id_field_must_work() {
         let dm2 = r#"
             model A {
                 id Int @id
-                b B @relation(references: [id])
+                b  B   @relation(references: [id])
             }
             model B {
                 id String @id
-                a A // remove once implicit back relation field is implemented
             }
         "#;
         let result = infer_and_apply(&engine, &dm2);

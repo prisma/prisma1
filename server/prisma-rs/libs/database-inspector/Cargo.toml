@@ -5,7 +5,8 @@ authors = ["Marcus Böhm <boehm@prisma.io>"]
 edition = "2018"
 
 [dependencies]
-barrel = { version = "0.5.8", features = ["sqlite3"] }
-rusqlite = { git = "https://github.com/pimeys/rusqlite" }
+barrel = { version = "0.6.1", features = ["sqlite3", "mysql", "pg"] }
 time = "*"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
+url = "1.7.2"
+postgres = { version = "0.16.0-rc.1", features = ["with-serde_json-1", "with-chrono-0_4", "with-uuid-0_7"] }
