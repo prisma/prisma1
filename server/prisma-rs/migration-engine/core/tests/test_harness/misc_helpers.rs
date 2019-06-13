@@ -79,13 +79,13 @@ pub fn sqlite_test_file() -> String {
 }
 
 pub fn postgres_test_config() -> String {
-    format!(r#"
+    dbg!(format!(r#"
         datasource my_db {{
             provider = "postgres"
             url = "postgresql://postgres:prisma@{}:5432/db?schema={}"
             default = true
         }}
-    "#, db_host(), SCHEMA_NAME)
+    "#, db_host(), SCHEMA_NAME))
 }
 
 fn db_host() -> String {
