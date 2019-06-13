@@ -8,6 +8,7 @@ pub struct DatabaseSchemaDiffer<'a> {
     next: &'a DatabaseSchema,
 }
 
+#[derive(Clone)]
 pub struct DatabaseSchemaDiff {
     pub drop_tables: Vec<DropTable>,
     pub create_tables: Vec<CreateTable>,
@@ -153,7 +154,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         }
     }
 
-    fn convert_column_type(inspector_type: database_inspector::ColumnType) -> ColumnType {
+    pub fn convert_column_type(inspector_type: database_inspector::ColumnType) -> ColumnType {
         match inspector_type {
             database_inspector::ColumnType::Boolean => ColumnType::Boolean,
             database_inspector::ColumnType::Int => ColumnType::Int,

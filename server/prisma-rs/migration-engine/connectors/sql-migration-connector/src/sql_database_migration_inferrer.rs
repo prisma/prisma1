@@ -54,7 +54,55 @@ fn infer_database_migration_steps_and_fix(
     if is_sqlite {
         fix_stupid_sqlite(diff, &from, &to, &schema_name)
     } else {
-        delay_foreign_key_creation(diff)
+        let steps = delay_foreign_key_creation(diff);
+        fix_id_column_type_change(&from, &to, schema_name, steps)
+    }
+}
+
+fn fix_id_column_type_change(
+    from: &DatabaseSchema, 
+    to: &DatabaseSchema, 
+    schema_name: &str,
+    steps: Vec<SqlMigrationStep>
+) -> Vec<SqlMigrationStep> {
+    let has_id_type_change = steps.iter().find(|step|{
+        match step {
+            SqlMigrationStep::AlterTable(alter_table) => {
+                if let Some(current_table) = from.table(&alter_table.table) {
+                    let change_to_id_column = alter_table.changes.iter().find(|c|{
+                        match c {
+                            TableChange::AlterColumn(alter_column) => {
+                                let current_column = current_table.column_bang(&alter_column.name);
+                                let current_column_type = DatabaseSchemaDiffer::convert_column_type(current_column.tpe);
+                                let has_type_changed = current_column_type != alter_column.column.tpe;
+                                let is_part_of_pk = current_table.primary_key_columns.contains(&alter_column.name);
+                                is_part_of_pk && has_type_changed
+                            },
+                            _ => false
+                        }
+                    });
+                    change_to_id_column.is_some()
+                } else {
+                    false
+                }
+
+            }
+            _ => false
+        }
+    }).is_some();
+
+    // TODO: There's probably a much more graceful way to handle this. But this would also involve a lot of data loss probably. Let's tackle that after P Day
+    if has_id_type_change {
+        let mut radical_steps = Vec::new();
+        let tables_to_drop: Vec<String> = from.tables.iter().filter(|t| t.name != "_Migration").map(|t|format!("\"{}\".\"{}\"", schema_name, t.name)).collect();
+        radical_steps.push(SqlMigrationStep::RawSql{ raw: format!("DROP TABLE {};", tables_to_drop.join(",")) });
+        let diff_from_empty = DatabaseSchemaDiffer::diff(&DatabaseSchema::empty(), &to);
+        let mut steps_from_empty = delay_foreign_key_creation(diff_from_empty);
+        radical_steps.append(&mut steps_from_empty);
+
+        radical_steps
+    } else {
+        steps
     }
 }
 
@@ -62,7 +110,6 @@ fn infer_database_migration_steps_and_fix(
 // Example: Table A has a reference to Table B and Table B has a reference to Table A.
 // We therefore split the creation of foreign key columns into separate steps when the referenced tables are not existing yet.
 // FIXME: This does not work with SQLite. A required column might get delayed. SQLite then fails with: "Cannot add a NOT NULL column with default value NULL"
-#[allow(unused)]
 fn delay_foreign_key_creation(mut diff: DatabaseSchemaDiff) -> Vec<SqlMigrationStep> {
     let names_of_tables_that_get_created: Vec<String> = diff.create_tables.iter().map(|t| t.name.clone()).collect();
     let mut extra_alter_tables = Vec::new();
