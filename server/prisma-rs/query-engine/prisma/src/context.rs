@@ -15,10 +15,6 @@ pub struct PrismaContext {
     /// The api query schema.
     pub query_schema: QuerySchema,
 
-    /// Prisma SDL (data model v1). Required for rendering playground.
-    /// Setting this option will make the /datamodel route available.
-    pub sdl: Option<String>,
-
     /// DML-based v2 datamodel.
     /// Setting this option will make the /dmmf route available.
     pub dm: Option<datamodel::Datamodel>,
@@ -36,7 +32,7 @@ impl PrismaContext {
     /// 3. The api query schema is constructed from the internal data model.
     pub fn new() -> PrismaResult<Self> {
         // Load data model in order of precedence.
-        let (sdl, v2components, template) = load_data_model_components()?;
+        let (_, v2components, template) = load_data_model_components()?;
 
         // Deconstruct v2 components if present, and fall back to loading the legacy config
         // to get data sources for connector initialization if no v2 data model was loaded.
@@ -69,12 +65,9 @@ impl PrismaContext {
         let schema_builder = QuerySchemaBuilder::new(&internal_data_model, &capabilities, BuildMode::Legacy);
         let query_schema = schema_builder.build();
 
-        // trace!("{}", GraphQLSchemaRenderer::render(&query_schema));
-
         Ok(Self {
             internal_data_model,
             query_schema,
-            sdl,
             dm,
             executor,
         })

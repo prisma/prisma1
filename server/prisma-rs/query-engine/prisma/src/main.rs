@@ -25,8 +25,9 @@ use actix_web::{
 };
 use clap::{App as ClapApp, Arg};
 use context::PrismaContext;
+use core::schema::QuerySchemaRenderer;
 use error::*;
-use req_handlers::{GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
+use req_handlers::{GraphQLSchemaRenderer, GraphQlBody, GraphQlRequestHandler, PrismaRequest, RequestHandler};
 use serde_json;
 use std::{env, process, sync::Arc, time::Instant};
 
@@ -93,7 +94,7 @@ fn main() {
                 r.method(Method::POST).with(http_handler);
                 r.method(Method::GET).with(playground_handler);
             })
-            .resource("/datamodel", |r| r.method(Method::GET).with(data_model_handler))
+            .resource("/sdl", |r| r.method(Method::GET).with(sdl_handler))
             .resource("/dmmf", |r| r.method(Method::GET).with(dmmf_handler))
             .resource("/status", |r| r.method(Method::GET).with(status_handler))
     })
@@ -127,18 +128,13 @@ fn http_handler((json, req): (Json<Option<GraphQlBody>>, HttpRequest<Arc<Request
     serde_json::to_string(&result)
 }
 
-/// Temporary route to serve a raw v1 SDL string to the playground.
-/// Only callable if Prisma was initialized using a v1 data model.
-fn data_model_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
+/// Handler for the playground to work with the SDL-rendered query schema.
+/// Serves a raw SDL string created from the query schema.
+fn sdl_handler(req: HttpRequest<Arc<RequestContext>>) -> impl Responder {
     let request_context = req.state();
 
-    match request_context.context.sdl {
-        Some(ref sdl) => HttpResponse::Ok().content_type("application/text").body(sdl),
-        None => HttpResponse::with_body(
-            StatusCode::UNPROCESSABLE_ENTITY,
-            "This endpoint is only callable if Prisma was initialized with a SDL (v1) data model.",
-        ),
-    }
+    let rendered = GraphQLSchemaRenderer::render(&request_context.context.query_schema);
+    HttpResponse::Ok().content_type("application/text").body(rendered)
 }
 
 /// Renders the Data Model Meta Format.
