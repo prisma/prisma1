@@ -89,7 +89,7 @@ pub fn postgres_test_config() -> String {
 }
 
 fn db_host() -> String {
-    match std::env::var("BUILDKITE_BRANCH") {
+    match std::env::var("IS_BUILDKITE") {
         Ok(_) => "test-db".to_string(),
         Err(_) => "127.0.0.1".to_string(),
     }
