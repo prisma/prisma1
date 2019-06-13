@@ -16,7 +16,7 @@ impl MigrationCommand for ListMigrationStepsCommand {
         Box::new(ListMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let connector = engine.connector();
         let migration_persistence = engine.connector().migration_persistence();
@@ -29,7 +29,7 @@ impl MigrationCommand for ListMigrationStepsCommand {
 }
 
 pub fn convert_migration_to_list_migration_steps_output(
-    engine: &Box<MigrationEngine>,
+    engine: &MigrationEngine,
     migration: Migration,
 ) -> ListMigrationStepsOutput {
     let connector = engine.connector();

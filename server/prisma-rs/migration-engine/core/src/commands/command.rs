@@ -9,7 +9,7 @@ pub trait MigrationCommand {
 
     fn new(input: Self::Input) -> Box<Self>;
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output>;
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output>;
 
     fn has_source_config() -> bool {
         true

@@ -14,7 +14,7 @@ impl MigrationCommand for GetConfigCommand {
         Box::new(GetConfigCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let config = datamodel::load_configuration(&self.input.datamodel)?;
         let json = datamodel::config_to_mcf_json_value(&config);

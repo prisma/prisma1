@@ -16,7 +16,7 @@ impl MigrationCommand for ApplyMigrationCommand {
         Box::new(ApplyMigrationCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
@@ -37,7 +37,7 @@ impl MigrationCommand for ApplyMigrationCommand {
 impl ApplyMigrationCommand {
     fn handle_transition_out_of_watch_mode(
         &self,
-        engine: &Box<MigrationEngine>,
+        engine: &MigrationEngine,
     ) -> CommandResult<MigrationStepsResultOutput> {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
@@ -51,7 +51,7 @@ impl ApplyMigrationCommand {
         self.handle_migration(&engine, current_datamodel, next_datamodel)
     }
 
-    fn handle_normal_migration(&self, engine: &Box<MigrationEngine>) -> CommandResult<MigrationStepsResultOutput> {
+    fn handle_normal_migration(&self, engine: &MigrationEngine) -> CommandResult<MigrationStepsResultOutput> {
         let connector = engine.connector();
         let migration_persistence = connector.migration_persistence();
         let current_datamodel = migration_persistence.current_datamodel();
@@ -65,7 +65,7 @@ impl ApplyMigrationCommand {
 
     fn handle_migration(
         &self,
-        engine: &Box<MigrationEngine>,
+        engine: &MigrationEngine,
         current_datamodel: Datamodel,
         next_datamodel: Datamodel,
     ) -> CommandResult<MigrationStepsResultOutput> {
