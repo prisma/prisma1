@@ -118,6 +118,10 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
             migration.drop_table(name.to_string());
             make_sql_string(migration, sql_family)
         }
+        SqlMigrationStep::DropTables(DropTables { names }) => {
+            let fully_qualified_names: Vec<String> = names.iter().map(|name| format!("\"{}\".\"{}\"", schema_name, name)).collect();
+            format!("DROP TABLE {};", fully_qualified_names.join(","))
+        }
         SqlMigrationStep::RenameTable { name, new_name } => {
             migration.rename_table(name.to_string(), new_name.to_string());
             make_sql_string(migration, sql_family)

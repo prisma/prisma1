@@ -62,7 +62,7 @@ fn infer_database_migration_steps_and_fix(
 fn fix_id_column_type_change(
     from: &DatabaseSchema, 
     to: &DatabaseSchema, 
-    schema_name: &str,
+    _schema_name: &str,
     steps: Vec<SqlMigrationStep>
 ) -> Vec<SqlMigrationStep> {
     let has_id_type_change = steps.iter().find(|step|{
@@ -94,8 +94,8 @@ fn fix_id_column_type_change(
     // TODO: There's probably a much more graceful way to handle this. But this would also involve a lot of data loss probably. Let's tackle that after P Day
     if has_id_type_change {
         let mut radical_steps = Vec::new();
-        let tables_to_drop: Vec<String> = from.tables.iter().filter(|t| t.name != "_Migration").map(|t|format!("\"{}\".\"{}\"", schema_name, t.name)).collect();
-        radical_steps.push(SqlMigrationStep::RawSql{ raw: format!("DROP TABLE {};", tables_to_drop.join(",")) });
+        let tables_to_drop: Vec<String> = from.tables.iter().filter(|t| t.name != "_Migration").map(|t| t.name.clone()).collect();
+        radical_steps.push(SqlMigrationStep::DropTables(DropTables{ names: tables_to_drop }));
         let diff_from_empty = DatabaseSchemaDiffer::diff(&DatabaseSchema::empty(), &to);
         let mut steps_from_empty = delay_foreign_key_creation(diff_from_empty);
         radical_steps.append(&mut steps_from_empty);
