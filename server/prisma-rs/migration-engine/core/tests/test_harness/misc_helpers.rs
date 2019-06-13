@@ -23,11 +23,7 @@ where
     T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
 {
     // SETUP
-    let underlying_db_must_exist = true;
-    let engine = MigrationEngine::new(&test_config(), underlying_db_must_exist);
-    let connector = engine.connector();
-    connector.reset();
-    engine.init();
+    let engine = test_engine(&test_config());
 
     // TEST
     let result = panic::catch_unwind(|| test(engine));
@@ -35,7 +31,16 @@ where
     result.unwrap()
 }
 
-pub fn introspect_database(engine: &Box<MigrationEngine>) -> DatabaseSchema {
+pub fn test_engine(config: &str) -> Box<MigrationEngine> {
+    let underlying_db_must_exist = true;
+    let engine = MigrationEngine::new(config, underlying_db_must_exist);
+    let connector = engine.connector();
+    connector.reset();
+    engine.init();
+    engine
+}
+
+pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
     let inspector = engine.connector().database_inspector();
     let mut result = inspector.introspect(&SCHEMA_NAME.to_string());
     // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
@@ -53,7 +58,7 @@ fn test_config() -> String {
     // postgres_test_config()
 }
 
-fn sqlite_test_config() -> String {
+pub fn sqlite_test_config() -> String {
     format!(
         r#"
         datasource my_db {{
@@ -73,7 +78,7 @@ pub fn sqlite_test_file() -> String {
     file_path
 }
 
-fn postgres_test_config() -> String {
+pub fn postgres_test_config() -> String {
     format!(r#"
         datasource my_db {{
             provider = "postgres"

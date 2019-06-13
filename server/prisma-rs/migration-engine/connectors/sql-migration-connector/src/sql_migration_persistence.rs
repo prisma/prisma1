@@ -46,9 +46,10 @@ impl MigrationPersistence for SqlMigrationPersistence {
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
         let _ = self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]);
 
+        // TODO: this is the wrong place to do that
         match self.sql_family {
             SqlFamily::Postgres => {
-                let sql_str = format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name); // TODO: this is not vendor agnostic yet
+                let sql_str = dbg!(format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name)); // TODO: this is not vendor agnostic yet
                 let _ = self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]);
             }
             SqlFamily::Sqlite => {
