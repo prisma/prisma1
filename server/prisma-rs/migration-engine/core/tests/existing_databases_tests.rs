@@ -8,8 +8,6 @@ use prisma_query::Connectional;
 use migration_core::MigrationEngine;
 use sql_migration_connector::SqlFamily;
 
-const SCHEMA: &str = "migration_engine";
-
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {
     test_each_backend(|engine,barrel| {
@@ -340,9 +338,7 @@ fn test_each_backend_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestF
 }
 
 fn sqlite() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
-    let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-    let database_folder_path = format!("{}/db", server_root);
-    let database_file_path = dbg!(format!("{}/{}.db", database_folder_path, SCHEMA));
+    let database_file_path = sqlite_test_file();
     let _ = std::fs::remove_file(database_file_path.clone()); // ignore potential errors
 
     let inspector = DatabaseInspector::sqlite(database_file_path);
@@ -352,10 +348,10 @@ fn sqlite() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
 }
 
 fn postgres() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
-    let url = format!("postgresql://postgres:prisma@127.0.0.1:5432/db?schema={}", SCHEMA);
-    let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA));
+    let url = postgres_url();
+    let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA_NAME));
     let setup_connectional = DatabaseInspector::postgres(url.to_string()).connectional;
-    let _ = setup_connectional.query_on_raw_connection(&SCHEMA, &drop_schema, &[]);
+    let _ = setup_connectional.query_on_raw_connection(&SCHEMA_NAME, &drop_schema, &[]);
 
 
     let inspector = DatabaseInspector::postgres(url.to_string());
@@ -375,13 +371,11 @@ impl BarrelMigrationExecutor {
     where
         F: FnMut(&mut Migration) -> (),
     {
-        // let schema_name = "migration_engine";
-        // let inspector = DatabaseInspector::postgres("postgresql://postgres:prisma@127.0.0.1:5432/db?schema=migration_engine".to_string());
-        let mut migration = Migration::new().schema(SCHEMA);
+        let mut migration = Migration::new().schema(SCHEMA_NAME);
         migrationFn(&mut migration);
         let full_sql = dbg!(migration.make_from(self.sql_variant));
         run_full_sql(&self.connectional, &full_sql);
-        let mut result = self.inspector.introspect(&SCHEMA.to_string());
+        let mut result = self.inspector.introspect(&SCHEMA_NAME.to_string());
         // the presence of the _Migration table makes assertions harder. Therefore remove it.
         result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
         result
@@ -391,7 +385,7 @@ impl BarrelMigrationExecutor {
 fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
     for sql in full_sql.split(";") {
         if sql != "" {
-            connectional.query_on_raw_connection(&SCHEMA, &sql, &[]).unwrap();
+            connectional.query_on_raw_connection(&SCHEMA_NAME, &sql, &[]).unwrap();
         }
     }
 }

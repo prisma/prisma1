@@ -3,7 +3,7 @@ use datamodel;
 use migration_core::MigrationEngine;
 use std::panic;
 
-const SCHEMA_NAME: &str = "migration_engine";
+pub const SCHEMA_NAME: &str = "migration_engine";
 
 pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     match datamodel::parse(datamodel_string) {
@@ -79,13 +79,17 @@ pub fn sqlite_test_file() -> String {
 }
 
 pub fn postgres_test_config() -> String {
-    dbg!(format!(r#"
+    format!(r#"
         datasource my_db {{
             provider = "postgres"
-            url = "postgresql://postgres:prisma@{}:5432/db?schema={}"
+            url = "{}"
             default = true
         }}
-    "#, db_host(), SCHEMA_NAME))
+    "#, postgres_url())
+}
+
+pub fn postgres_url() -> String {
+    dbg!(format!("postgresql://postgres:prisma@{}:5432/db?schema={}", db_host(), SCHEMA_NAME))
 }
 
 fn db_host() -> String {
