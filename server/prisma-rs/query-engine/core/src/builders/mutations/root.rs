@@ -257,8 +257,22 @@ pub(crate) fn build_nested_root<'f>(
     for value in eval.into_iter() {
         match value {
             NestedValue::Simple { name, kind, map } => {
-                SimpleNestedBuilder::build(name, kind, map, &mut collection, Arc::clone(&model), top_level)?
+                SimpleNestedBuilder::build(name, kind, map, &mut collection, Arc::clone(&model), None, top_level)?
             }
+            NestedValue::Block {
+                name,
+                kind,
+                data,
+                where_,
+            } => SimpleNestedBuilder::build(
+                name,
+                kind,
+                data,
+                &mut collection,
+                Arc::clone(&model),
+                Some(where_),
+                top_level,
+            )?,
             NestedValue::Many { name, kind, list } => ManyNestedBuilder::build(
                 name,
                 kind,
@@ -281,6 +295,7 @@ pub(crate) fn build_nested_root<'f>(
                 Arc::clone(&model),
                 top_level,
             )?,
+            _ => unimplemented!(),
         };
     }
 
