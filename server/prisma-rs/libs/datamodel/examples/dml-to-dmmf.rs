@@ -20,16 +20,11 @@ fn main() {
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
 
-    let validated = datamodel::parse(&file);
+    let validated = datamodel::parse_with_formatted_error(&file, &file_name);
 
     match &validated {
-        Err(errors) => {
-            for error in errors.to_iter() {
-                println!("");
-                error
-                    .pretty_print(&mut std::io::stderr().lock(), file_name, &file)
-                    .expect("Failed to write errors to stderr");
-            }
+        Err(formatted) => {
+            println!("{}", formatted);
         }
         Ok(dml) => {
             let json = datamodel::dmmf::render_to_dmmf(&dml);

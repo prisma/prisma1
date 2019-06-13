@@ -49,6 +49,8 @@ pub use common::functions::FunctionalEvaluator;
 pub use configuration::*;
 pub use validator::directive::DirectiveValidator;
 
+use std::io::Write;
+
 // Convenience Helpers
 pub fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
     vec![
@@ -133,6 +135,26 @@ pub fn load_configuration(datamodel_string: &str) -> Result<Configuration, error
 /// Parses and validates a datamodel string, using core attributes only.
 pub fn parse(datamodel_string: &str) -> Result<Datamodel, errors::ErrorCollection> {
     parse_with_plugins(datamodel_string, vec![])
+}
+
+/// Parses and validates a datamodel string, using core attributes only.
+/// In case of an error, a pretty, colorful string is returned.
+pub fn parse_with_formatted_error(datamodel_string: &str, file_name: &str) -> Result<Datamodel, String> {
+    match parse_with_plugins(datamodel_string, vec![]) {
+        Ok(dml) => Ok(dml),
+        Err(errs) => {
+            let mut buffer = std::io::Cursor::new(Vec::<u8>::new());
+
+            for error in errs.to_iter() {
+                writeln!(&mut buffer, "").expect("Failed to render error.");
+                error
+                    .pretty_print(&mut buffer, file_name, datamodel_string)
+                    .expect("Failed to render error.");
+            }
+
+            Err(String::from_utf8(buffer.into_inner()).expect("Failed to convert error buffer."))
+        }
+    }
 }
 
 /// Parses a datamodel string to an AST. For internal use only.
