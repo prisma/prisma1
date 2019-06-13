@@ -54,15 +54,17 @@ impl SqlMigrationConnector {
                 let sqlite = Sqlite::try_from(url).expect("Loading SQLite failed");
                 sqlite.does_file_exist()
             }
-            SqlFamily::Postgres => false,
+            SqlFamily::Postgres => {
+                let postgres_helper = Self::postgres_helper(&url);
+                let check_sql = format!("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{}';", postgres_helper.schema);
+                let result_set = postgres_helper.db_connection.query_on_raw_connection("", &check_sql, &[]);
+                result_set.into_iter().next().is_some()
+            },
             _ => unimplemented!(),
         }
     }
 
     pub fn new(sql_family: SqlFamily, url: &str) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
-        let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
-        let connection_limit = 10;
-
         match sql_family {
             SqlFamily::Sqlite => {
                 assert!(url.starts_with("file:"), "the url for sqlite must start with 'file:'");
@@ -71,30 +73,42 @@ impl SqlMigrationConnector {
                 let file_path = url.trim_start_matches("file:").to_string();
                 Self::create_connector(conn, sql_family, schema_name, Some(file_path))
             }
-            SqlFamily::Postgres => {
-                let mut config = PostgresConfig::new();
-                if let Some(host) = parsed_url.host_str() {
-                    config.host(host);
-                }
-                config.user(parsed_url.username());
-                if let Some(password) = parsed_url.password() {
-                    config.password(password);
-                }
-                let mut db_name = parsed_url.path().to_string();
-                db_name.replace_range(..1, ""); // strip leading slash
-                config.connect_timeout(Duration::from_secs(5));
-
-                let root_connection = Arc::new(PostgreSql::new(config.clone(), 1).unwrap());
-                let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
-                let schema_name = parsed_url.query_pairs().into_iter().find(|qp| qp.0 == Cow::Borrowed("schema")).expect("schema param is missing").1.to_string();
-                let _ = root_connection.query_on_raw_connection(&schema_name, &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
-
-                config.dbname(&db_name);
-
-                let conn = Arc::new(PostgreSql::new(config, connection_limit).unwrap());
-                Self::create_connector(conn, sql_family, schema_name.to_string(), Some(db_name))
+            SqlFamily::Postgres => {                
+                let postgres_helper = Self::postgres_helper(&url);
+                Self::create_connector(postgres_helper.db_connection, sql_family, postgres_helper.schema, None)
             }
             _ => unimplemented!(),
+        }
+    }
+
+    fn postgres_helper(url: &str) -> PostgresHelper {
+        let connection_limit = 10;
+        let parsed_url = Url::parse(url).expect("Parsing of the provided connector url failed.");
+        let mut config = PostgresConfig::new();
+        if let Some(host) = parsed_url.host_str() {
+            config.host(host);
+        }
+        config.user(parsed_url.username());
+        if let Some(password) = parsed_url.password() {
+            config.password(password);
+        }
+        let mut db_name = parsed_url.path().to_string();
+        db_name.replace_range(..1, ""); // strip leading slash
+        config.connect_timeout(Duration::from_secs(5));
+
+        let root_connection = Arc::new(PostgreSql::new(config.clone(), 1).unwrap());
+        let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
+        let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
+
+        let schema = parsed_url.query_pairs().into_iter().find(|qp| qp.0 == Cow::Borrowed("schema")).expect("schema param is missing").1.to_string();
+
+
+        config.dbname(&db_name);
+        let db_connection = Arc::new(PostgreSql::new(config, connection_limit).unwrap());
+
+        PostgresHelper {
+            db_connection,
+            schema
         }
     }
 
@@ -102,6 +116,7 @@ impl SqlMigrationConnector {
         sql_family: SqlFamily,
         url: &str,
     ) -> Arc<MigrationConnector<DatabaseMigration = SqlMigration>> {
+        println!("Loading a virtual connector!");
         // TODO: duplicated from above
         let path = Path::new(&url);
         let schema_name = path
@@ -156,6 +171,11 @@ impl SqlMigrationConnector {
             database_inspector: Arc::clone(&inspector),
         })
     }
+}
+
+struct PostgresHelper {
+    db_connection: Arc<Connectional>,
+    schema: String,
 }
 
 impl MigrationConnector for SqlMigrationConnector {
