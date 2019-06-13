@@ -141,7 +141,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
 
         let result = execute(|migration| {
             migration.create_table("Blog_tags", |t| {
-                t.add_column("nodeId", types::foreign("Blog(id)"));
+                t.add_column("nodeId", types::foreign("Blog", "id"));
                 t.add_column("position", types::integer());
                 t.add_column("value", types::text());
             });

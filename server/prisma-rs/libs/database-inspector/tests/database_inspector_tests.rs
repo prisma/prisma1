@@ -113,9 +113,7 @@ fn foreign_keys_must_work() {
             t.add_column("id", types::primary());
         });
         migration.create_table("User", |t| {
-            // FIXME: use right function when Katharina has implemented it
-            // t.add_column("city", types::foreign("City(id)")); // SQLite
-            t.add_column("city", types::foreign("\"DatabaseInspectorTest\".\"City\"(id)")); // Postgres
+            t.add_column("city", types::foreign("City","id")); // TODO: does not work with Postgres
         });
     }, |inspector|{
         let result = inspector.introspect(&SCHEMA.to_string());
@@ -146,22 +144,22 @@ fn test_each_backend<MigrationFn, TestFn>(mut migrationFn: MigrationFn, testFn: 
 
     println!("Testing with SQLite now");
     // SQLITE
-    // {
-    //     let (inspector, connectional) = sqlite();
-    //     let full_sql = migration.make::<barrel::backend::Sqlite>();
-    //     run_full_sql(&connectional, &full_sql);
-    //     println!("Running the test function now");
-    //     testFn(inspector);
-    // }
-    println!("Testing with Postgres now");
-    // POSTGRES
     {
-        let (inspector, connectional) = postgres();
-        let full_sql = migration.make::<barrel::backend::Pg>();
+        let (inspector, connectional) = sqlite();
+        let full_sql = migration.make::<barrel::backend::Sqlite>();
         run_full_sql(&connectional, &full_sql);
         println!("Running the test function now");
         testFn(inspector);
     }
+    // println!("Testing with Postgres now");
+    // // POSTGRES
+    // {
+    //     let (inspector, connectional) = postgres();
+    //     let full_sql = migration.make::<barrel::backend::Pg>();
+    //     run_full_sql(&connectional, &full_sql);
+    //     println!("Running the test function now");
+    //     testFn(inspector);
+    // }
 }
 
 fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
