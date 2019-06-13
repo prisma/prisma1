@@ -1771,6 +1771,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "prisma-fmt"
+version = "0.1.0"
+dependencies = [
+ "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "datamodel 0.1.0",
+]
+
+[[package]]
 name = "prisma-inflector"
 version = "0.1.0"
 dependencies = [
