@@ -94,7 +94,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
         let errors_json = serde_json::to_string(&migration.errors).unwrap();
         let serialized_datamodel = datamodel::render(&migration.datamodel).unwrap();
 
-        let query = Insert::single_into(self.table())
+        let insert = Insert::single_into(self.table())
             .value(NAME_COLUMN, migration.name)
             .value(DATAMODEL_COLUMN, serialized_datamodel)
             .value(STATUS_COLUMN, migration.status.code())
@@ -109,18 +109,20 @@ impl MigrationPersistence for SqlMigrationPersistence {
             )
             .value(FINISHED_AT_COLUMN, ParameterizedValue::Null);
 
+
         match self.sql_family {
             SqlFamily::Sqlite => {
-                let id = self.connection.execute_on_connection(&self.schema_name, query.into()).unwrap();
+                let id = self.connection.execute_on_connection(&self.schema_name, insert.into()).unwrap();
                 match id {
                     Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
                     _ => panic!("This insert must return an int"),
                 };
             }
             SqlFamily::Postgres => {
-                let result_set = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
+                let returning_insert = Insert::from(insert).returning(vec!["revision"]);
+                let result_set = self.connection.query_on_connection(&self.schema_name, returning_insert.into()).unwrap();
                 result_set.into_iter().next().map(|row| {
-                    cloned.revision = row.at_as_integer(0).unwrap() as usize;
+                    cloned.revision = row.get_as_integer("revision").unwrap() as usize;
                 });
             }
             SqlFamily::Mysql => unimplemented!()
