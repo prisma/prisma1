@@ -86,6 +86,7 @@ impl<'a> ObjectTypeBuilder<'a> {
             model_field.name().clone(),
             self.many_records_field_arguments(&model, &model_field),
             self.map_output_type(&model_field),
+            None,
         )
     }
 
@@ -207,10 +208,10 @@ impl<'a> ObjectTypeBuilder<'a> {
 
         let object_type = Arc::new(object_type(
             "BatchPayload",
-            vec![field("count", vec![], OutputType::int())],
+            vec![field("count", vec![], OutputType::int(), None)],
         ));
-        self.cache("BatchPayload".into(), Arc::clone(&object_type));
 
+        self.cache("BatchPayload".into(), Arc::clone(&object_type));
         Arc::downgrade(&object_type)
     }
 }

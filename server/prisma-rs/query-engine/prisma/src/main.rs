@@ -7,8 +7,8 @@ extern crate rust_embed;
 #[macro_use]
 extern crate debug_stub_derive;
 
-#[macro_use]
-extern crate human_panic;
+// #[macro_use]
+// extern crate human_panic;
 
 mod context;
 mod data_model_loader;
@@ -47,7 +47,7 @@ struct RequestContext {
 
 fn main() {
     // Setup a more user-friendly panic handler
-    setup_panic!();
+    // setup_panic!();
 
     let matches = ClapApp::new("Prisma Query Engine")
         .version(env!("CARGO_PKG_VERSION"))
