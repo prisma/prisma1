@@ -1,6 +1,7 @@
 import { Box, Color } from 'ink'
-import InkTextInput from 'ink-text-input'
 import * as React from 'react'
+import { KeyPressed } from './BoxPrompt'
+import { InkTextInput } from './InkTextInput'
 
 interface TextInputProps {
   label: string
@@ -9,6 +10,7 @@ interface TextInputProps {
   placeholder?: string
   focus: boolean
   mask?: string
+  keyPressed: KeyPressed
 }
 
 export const TextInput: React.SFC<TextInputProps> = ({
@@ -18,9 +20,10 @@ export const TextInput: React.SFC<TextInputProps> = ({
   focus,
   placeholder,
   mask,
+  keyPressed,
 }) => (
   <Box>
-    <Box marginRight={1}>{focus ? <Color green>{label}</Color> : label}</Box>
+    <Box marginRight={1}>{focus ? <Color blue>{label}</Color> : label}</Box>
     <InkTextInput
       value={value}
       placeholder={placeholder}
@@ -29,7 +32,9 @@ export const TextInput: React.SFC<TextInputProps> = ({
           onChange(value)
         }
       }}
+      keyPressed={keyPressed}
       showCursor={focus}
+      focus={focus}
       mask={mask}
     />
   </Box>

@@ -1,10 +1,22 @@
+import { DatabaseType } from 'prisma-datamodel'
 import { PromptElement } from '../prompt-lib/types'
 import { DatabaseCredentials } from '../types'
-import { DatabaseType } from 'prisma-datamodel'
 
-export const CONNECT_DB_ELEMENTS = (
-  dbType: DatabaseType,
-): PromptElement<DatabaseCredentials>[] => [
+const dbTypeToDbPort: Record<DatabaseType, string> = {
+  postgres: '5432',
+  mysql: '3306',
+  sqlite: '3306',
+  mongo: '3306',
+}
+
+const dbTypeToDefaultConnectionString: Record<DatabaseType, string> = {
+  postgres: `postgresql://localhost:${dbTypeToDbPort[DatabaseType.postgres]}`,
+  mysql: `mysql://localhost:${dbTypeToDbPort[DatabaseType.mysql]}`,
+  sqlite: `sqlite://localhost:${dbTypeToDbPort[DatabaseType.sqlite]}`,
+  mongo: `mongo://localhost:${dbTypeToDbPort[DatabaseType.mongo]}`,
+}
+
+export const CONNECT_DB_ELEMENTS = (dbType: DatabaseType): PromptElement<DatabaseCredentials>[] => [
   {
     type: 'text-input',
     identifier: 'host',
@@ -15,26 +27,22 @@ export const CONNECT_DB_ELEMENTS = (
     type: 'text-input',
     identifier: 'port',
     label: 'Port:',
-    placeholder: dbType === DatabaseType.postgres ? '5432' : '3306',
+    placeholder: dbTypeToDbPort[dbType],
   },
   {
     type: 'text-input',
     identifier: 'user',
     label: 'User:',
-    placeholder: 'my_db_user',
   },
   {
     type: 'text-input',
     identifier: 'password',
     label: 'Password:',
-    placeholder: 'my_db_password',
-    mask: '*',
   },
   {
     type: 'text-input',
     identifier: 'database',
     label: 'Database:',
-    placeholder: 'my_db_name',
     style: { marginBottom: 1 },
   },
   {
@@ -43,18 +51,19 @@ export const CONNECT_DB_ELEMENTS = (
     identifier: 'ssl',
     style: { marginBottom: 1 },
   },
-  { type: 'separator', dividerChar: '-', style: { marginBottom: 1 } },
+  { type: 'separator', style: { marginBottom: 1 } },
   {
-    type: 'select',
-    label: 'Test',
-    value: '__TEST__',
-    description: 'Test the database connection',
+    type: 'text-input',
+    identifier: 'uri',
+    label: 'Or URL',
+    placeholder: dbTypeToDefaultConnectionString[dbType],
+    style: { marginBottom: 1 },
   },
+  { type: 'separator', style: { marginBottom: 1 } },
   {
     type: 'select',
-    label: 'Connection',
+    label: 'Connect',
     value: '__CONNECT__',
-    description: 'Start the introspection',
   },
 ]
 

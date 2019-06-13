@@ -20,6 +20,7 @@
     "@types/string-width": "^4.0.1",
     "jest": "^24.8.0",
     "ts-jest": "^24.0.2",
+    "ts-node": "^8.2.0",
     "typescript": "^3.5.1"
   },
   "dependencies": {
@@ -37,7 +38,8 @@
     "prisma-db-introspection": "1.36.0-alpha.8",
     "react": "^16.8.6",
     "scuid": "^1.1.0",
-    "string-width": "^4.1.0"
+    "string-width": "^4.1.0",
+    "strip-ansi": "^5.2.0"
   },
   "scripts": {
     "build": "tsc -d && chmod +x dist/bin.js",

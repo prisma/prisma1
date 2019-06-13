@@ -1,32 +1,30 @@
 import * as figures from 'figures'
 import { Box, BoxProps, Color } from 'ink'
 import * as React from 'react'
-import { useStdin } from './useStdin'
+import { KeyPressed } from './BoxPrompt'
 
 interface Props extends BoxProps {
   label: string
   checked: boolean
   focus: boolean
+  keyPressed: KeyPressed
   onChange: (value: boolean) => void
 }
 
 export const Checkbox: React.FC<Props> = props => {
   const symbol = props.checked ? figures.radioOn : figures.radioOff
-  const { label, checked, focus, onChange, ...rest } = props
+  const { label, checked, focus, onChange, keyPressed, ...rest } = props
 
-  useStdin(
-    actionKey => {
-      if (focus && actionKey === 'submit') {
-        onChange(!checked)
-      }
-    },
-    [checked, focus],
-  )
+  React.useEffect(() => {
+    if (focus && keyPressed.key === 'submit') {
+      onChange(!checked)
+    }
+  }, [focus, checked, keyPressed.key, keyPressed.str])
 
   return (
     <Box {...rest}>
-      {focus ? <Color green>{symbol}</Color> : symbol}
-      <Box marginLeft={1}>{focus ? <Color green>{label}</Color> : label}</Box>
+      {focus ? <Color blue>{symbol}</Color> : symbol}
+      <Box marginLeft={1}>{focus ? <Color blue>{label}</Color> : label}</Box>
     </Box>
   )
 }

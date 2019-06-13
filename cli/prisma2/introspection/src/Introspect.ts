@@ -1,10 +1,13 @@
-import { arg, Command, isError, format, Env } from '@prisma/cli'
+import { arg, Command, Env, format, isError } from '@prisma/cli'
+import { isdlToDatamodel2, LiftEngine } from '@prisma/lift'
+import { DataSource } from '@prisma/lift/dist/types'
 import { Result } from 'arg'
 import chalk from 'chalk'
 import * as fs from 'fs'
 import ora from 'ora'
 import * as path from 'path'
-import { DatabaseType, DefaultParser, ISDL } from 'prisma-datamodel'
+import { DatabaseType } from 'prisma-datamodel'
+import { credentialsToUri, databaseTypeToConnectorType, uriToCredentials } from './convertCredentials'
 import {
   assertSchemaExists,
   ConnectorData,
@@ -16,13 +19,8 @@ import {
 } from './introspect/util'
 import { promptIntrospectionInteractively } from './prompts/CredentialPrompt'
 import { DatabaseCredentials, IntrospectionResult } from './types'
-import { isdlToDatamodel2, LiftEngine } from '@prisma/lift'
-import { DataSource } from '@prisma/lift/dist/types'
-import { databaseTypeToConnectorType, credentialsToUri, uriToCredentials } from './convertCredentials'
 
 type Args = {
-  '--interactive': BooleanConstructor
-  '-i': '--interactive'
   '--env-file': StringConstructor
   '-e': '--env-file'
   '--project': StringConstructor
@@ -74,8 +72,6 @@ export class Introspect implements Command {
   async parse(argv: string[]): Promise<any> {
     // parse the arguments according to the spec
     const args = arg(argv, {
-      '--interactive': Boolean,
-      '-i': '--interactive',
       '--env-file': String,
       '-e': '--env-file',
       '--project': String,
@@ -368,7 +364,6 @@ Introspect database schema(s) of service
 
 Flags:
          -e, --env-file ENV-FILE    Path to .env file to inject env vars
-               -i, --interactive    Interactive mode
            -p, --project PROJECT    Path to Prisma definition file
              --mongo-db MONGO-DB    Mongo database
            --mongo-uri MONGO-URI    Mongo connection string

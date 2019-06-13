@@ -5,7 +5,7 @@ import * as React from 'react'
 const InkSpinnerWithoutTypes = InkSpinner as any
 
 export const Spinner: React.FC = () => (
-  <Color green>
+  <Color blue>
     <InkSpinnerWithoutTypes />
   </Color>
 )
