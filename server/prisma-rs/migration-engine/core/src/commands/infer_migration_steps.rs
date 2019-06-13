@@ -36,7 +36,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
 
         let database_steps_json = connector
             .database_migration_step_applier()
-            .render_steps_pretty(&database_migration);
+            .render_steps_pretty(&database_migration)?;
 
         let returned_datamodel_steps = if self.input.is_watch_migration() {
             model_migration_steps

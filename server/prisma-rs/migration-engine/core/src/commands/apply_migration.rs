@@ -79,7 +79,7 @@ impl ApplyMigrationCommand {
 
         let database_steps_json_pretty = connector
             .database_migration_step_applier()
-            .render_steps_pretty(&database_migration);
+            .render_steps_pretty(&database_migration)?;
 
         let database_migration_json = database_migration.serialize();
 
@@ -91,7 +91,7 @@ impl ApplyMigrationCommand {
 
         connector
             .migration_applier()
-            .apply(&saved_migration, &database_migration);
+            .apply(&saved_migration, &database_migration)?;
 
         Ok(MigrationStepsResultOutput {
             datamodel: datamodel::render(&next_datamodel).unwrap(),

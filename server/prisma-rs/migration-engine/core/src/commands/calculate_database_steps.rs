@@ -37,7 +37,7 @@ impl MigrationCommand for CalculateDatabaseStepsCommand {
 
         let database_steps_json = connector
             .database_migration_step_applier()
-            .render_steps_pretty(&database_migration);
+            .render_steps_pretty(&database_migration)?;
 
         Ok(MigrationStepsResultOutput {
             datamodel: datamodel::render(&next_datamodel).unwrap(),

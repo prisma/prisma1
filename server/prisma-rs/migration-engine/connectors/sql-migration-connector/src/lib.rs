@@ -5,6 +5,7 @@ mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration;
 mod sql_migration_persistence;
+mod error;
 
 use database_inspector::DatabaseInspector;
 use migration_connector::*;
@@ -25,6 +26,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
 use std::borrow::Cow;
+use error::*;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {

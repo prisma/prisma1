@@ -52,3 +52,10 @@ pub trait MigrationConnector {
 pub trait DatabaseMigrationMarker: Debug {
     fn serialize(&self) -> serde_json::Value;
 }
+
+pub type ConnectorResult<T> = Result<T, ConnectorError>;
+
+#[derive(Debug)]
+pub enum ConnectorError {
+    Generic(String)
+}
