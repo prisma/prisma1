@@ -1,5 +1,5 @@
 use crate::database_schema_calculator::DatabaseSchemaCalculator;
-use crate::database_schema_differ::DatabaseSchemaDiffer;
+use crate::database_schema_differ::{ DatabaseSchemaDiffer, DatabaseSchemaDiff };
 use crate::*;
 use database_inspector::{DatabaseInspector, DatabaseSchema, Table};
 use datamodel::*;
@@ -48,21 +48,68 @@ fn infer_database_migration_steps_and_fix(
     schema_name: &str,
     sql_family: SqlFamily,
 ) -> Vec<SqlMigrationStep> {
-    let steps = DatabaseSchemaDiffer::diff(&from, &to);
+    let diff = DatabaseSchemaDiffer::diff(&from, &to);
     let is_sqlite = sql_family == SqlFamily::Sqlite;
+
     if is_sqlite {
-        fix_stupid_sqlite(steps, &from, &to, &schema_name)
+        fix_stupid_sqlite(diff, &from, &to, &schema_name)
     } else {
-        steps
+        delay_foreign_key_creation(diff)
     }
 }
 
+// this function caters for the case that a table gets created that has a foreign key to a table that still needs to be created
+// Example: Table A has a reference to Table B and Table B has a reference to Table A.
+// We therefore split the creation of foreign key columns into separate steps when the referenced tables are not existing yet.
+// FIXME: This does not work with SQLite. A required column might get delayed. SQLite then fails with: "Cannot add a NOT NULL column with default value NULL"
+#[allow(unused)]
+fn delay_foreign_key_creation(mut diff: DatabaseSchemaDiff) -> Vec<SqlMigrationStep> {
+    let names_of_tables_that_get_created: Vec<String> = diff.create_tables.iter().map(|t| t.name.clone()).collect();
+    let mut extra_alter_tables = Vec::new();
+
+    // This mutates the CreateTables in place to remove the foreign key creation. Instead the foreign key creation is moved into separate AlterTable statements.
+    for create_table in diff.create_tables.iter_mut() {
+        let mut column_that_need_to_be_done_later_for_this_table = Vec::new();
+        for column in &create_table.columns {
+            if let Some(ref foreign_key) = column.foreign_key {
+                let references_non_existent_table = names_of_tables_that_get_created.contains(&foreign_key.table);
+                let is_part_of_primary_key = create_table.primary_columns.contains(&column.name);
+                let is_relation_table = create_table.name.starts_with("_"); // todo: this is a very weak check. find a better one
+
+                if references_non_existent_table && !is_part_of_primary_key && !is_relation_table {
+                    let change = column.clone();
+                    column_that_need_to_be_done_later_for_this_table.push(change);
+                }
+            }
+        }
+        // remove columns from the create that will be instead added later
+        create_table
+            .columns
+            .retain(|c| !column_that_need_to_be_done_later_for_this_table.contains(&c));
+        let changes = column_that_need_to_be_done_later_for_this_table
+            .into_iter()
+            .map(|c| TableChange::AddColumn(AddColumn { column: c }))
+            .collect();
+
+        let alter_table = AlterTable {
+            table: create_table.name.clone(),
+            changes: changes,
+        };
+        if !alter_table.changes.is_empty() {
+            extra_alter_tables.push(alter_table);
+        }
+    }
+    diff.alter_tables.append(&mut extra_alter_tables);
+    diff.into_steps()
+}
+
 fn fix_stupid_sqlite(
-    steps: Vec<SqlMigrationStep>,
+    diff: DatabaseSchemaDiff,
     current_database_schema: &DatabaseSchema,
     next_database_schema: &DatabaseSchema,
     schema_name: &str,
 ) -> Vec<SqlMigrationStep> {
+    let steps = diff.into_steps();
     let mut result = Vec::new();
     for step in steps {
         match step {
