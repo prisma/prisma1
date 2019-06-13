@@ -82,8 +82,15 @@ pub fn postgres_test_config() -> String {
     format!(r#"
         datasource my_db {{
             provider = "postgres"
-            url = "postgresql://postgres:prisma@127.0.0.1:5432/db?schema={}"
+            url = "postgresql://postgres:prisma@{}:5432/db?schema={}"
             default = true
         }}
-    "#, SCHEMA_NAME)
+    "#, db_host(), SCHEMA_NAME)
+}
+
+fn db_host() -> String {
+    match std::env::var("BUILDKITE_BRANCH") {
+        Ok(_) => "test-db".to_string(),
+        Err(_) => "127.0.0.1".to_string(),
+    }
 }
