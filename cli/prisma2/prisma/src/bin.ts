@@ -4,7 +4,7 @@
  * Dependencies
  */
 import { isError, HelpError, Env } from '@prisma/cli'
-import { LiftCommand, LiftCreate, LiftUp, LiftDown, LiftWatch, Converter } from '@prisma/lift'
+import { LiftCommand, LiftSave, LiftUp, LiftDown, LiftWatch, Converter } from '@prisma/lift'
 import { CLI } from './CLI'
 import { PhotonGenerate } from '@prisma/photon'
 import { Introspect } from '@prisma/introspection'
@@ -27,7 +27,7 @@ async function main(): Promise<number> {
   const cli = CLI.new({
     lift: LiftCommand.new(
       {
-        create: LiftCreate.new(env),
+        save: LiftSave.new(env),
         up: LiftUp.new(env),
         down: LiftDown.new(env),
       },

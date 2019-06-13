@@ -66,10 +66,10 @@ export class CLI implements Command {
 
     ${chalk.bold('Examples')}
 
-      Initialize files for a new Prisma service
+      Initialize files for a new Prisma project
       ${chalk.dim(`$`)} prisma new
 
-      Deploy service changes (or new service)
+      Deploy project changes (or new project)
       ${chalk.dim(`$`)} prisma lift
   `)
 }

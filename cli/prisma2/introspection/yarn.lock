@@ -298,35 +298,34 @@
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.3.tgz#2b5a3ab3f918cca48a8c754c08168e3f03eba61b"
   integrity sha512-shAmDyaQC4H92APFoIaVDHCx5bStIocgvbwQyxPRrbUY20V1EYTbSDchWbuwlMG3V17cprZhA6+78JfB+3DTPw==
 
-"@prisma/cli@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@prisma/cli/-/cli-0.0.4.tgz#59f7b1f1f7294531169f17e985abaf72293e4fad"
-  integrity sha512-l/9n/l13NJlP0HNN4cU51A8I+E6pzbeEyrXPdAOZjR3ZxcouVUXcDrWZK2S3iSYsqdWBymTxyahmIGZ5yOwR0A==
+"@prisma/cli@^0.0.10":
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/@prisma/cli/-/cli-0.0.10.tgz#def3a2be3d9b2b2abcbc778dac829495709415f9"
+  integrity sha512-0qP/+2TwbhwNyYQsPHuIrci9C+zbxMEuNAhrBo8UzurtGKsAskKfhmdBr1aUx0/WiXEcIi0JTC7aaUzLRZItBA==
   dependencies:
     arg "^4.1.0"
 
-"@prisma/fetch-engine@^0.0.13":
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/@prisma/fetch-engine/-/fetch-engine-0.0.13.tgz#aafe07fd3f12d050b432931b4b8758bc6a7d719f"
-  integrity sha512-50DbDgS5WPcbGNVaM6vKQUlA6xYbmUpNWYAcZTUjUQwxAxBYJRh8NDQMIngxomJ1lLhJsLFozcyNS4SpNrZfDQ==
+"@prisma/fetch-engine@^0.0.19":
+  version "0.0.19"
+  resolved "https://registry.yarnpkg.com/@prisma/fetch-engine/-/fetch-engine-0.0.19.tgz#bb6038401d731eaad8754e690a6f1a2b88d10820"
+  integrity sha512-FeDL/rMOJgFi3JPpDhYk+huiT0MONPuNtURigVYhSzytoN52CTGl98hvVBl66ssYsDB83gM+TA7AsHv3iAfS/w==
   dependencies:
     chalk "^2.4.2"
     death "^1.1.0"
     find-cache-dir "^3.0.0"
-    getos "^3.1.1"
     hasha "^5.0.0"
     make-dir "^3.0.0"
     node-fetch "^2.5.0"
     p-retry "^4.1.0"
     progress "^2.0.3"
 
-"@prisma/lift@^0.0.37":
-  version "0.0.37"
-  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.37.tgz#f35ad49ac06009ca79ffe8261906a6fabaa1c186"
-  integrity sha512-NMG48HFx7Wgqrgq1FKSXLx+kR/wr39g9Wkb8WNKxIGuV68gkrXVt+hoftdCU7w0N9+Jhgav07icO461xgNYxow==
+"@prisma/lift@^0.0.43":
+  version "0.0.43"
+  resolved "https://registry.yarnpkg.com/@prisma/lift/-/lift-0.0.43.tgz#5f182e9b988a4e049b132d08d31f5748aa38c2b9"
+  integrity sha512-iWAY/05e+xA0DKqjJrl6hW6O9j22OUndMKTrsgIlX93l1BaHQkdsCeDxAEq/NuwN03rYrhyrcoclkpdYrbXM3A==
   dependencies:
-    "@prisma/cli" "^0.0.4"
-    "@prisma/fetch-engine" "^0.0.13"
+    "@prisma/cli" "^0.0.10"
+    "@prisma/fetch-engine" "^0.0.19"
     arg "^4.1.0"
     array-flat-polyfill "^1.0.1"
     cli-cursor "^3.0.0"
@@ -786,13 +785,6 @@ async-limiter@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/async-limiter/-/async-limiter-1.0.0.tgz#78faed8c3d074ab81f22b4e985d79e8738f720f8"
   integrity sha512-jp/uFnooOiO+L211eZOoSyzpOITMXx1rBITauYykG3BRYPu8h0UcxsPNB04RR5vo4Tyz3+ay17tR6JVf9qzYWg==
-
-async@2.6.1:
-  version "2.6.1"
-  resolved "https://registry.yarnpkg.com/async/-/async-2.6.1.tgz#b245a23ca71930044ec53fa46aa00a3e87c6a610"
-  integrity sha512-fNEiL2+AZt6AlAw/29Cr0UDe4sRAHCpEHh54WMz+Bb7QfNcFw4h3loofyJpLeQs4Yx7yuqu/2dLgM5hKOs6HlQ==
-  dependencies:
-    lodash "^4.17.10"
 
 asynckit@^0.4.0:
   version "0.4.0"
@@ -1774,13 +1766,6 @@ get-value@^2.0.3, get-value@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/get-value/-/get-value-2.0.6.tgz#dc15ca1c672387ca76bd37ac0a395ba2042a2c28"
   integrity sha1-3BXKHGcjh8p2vTesCjlbogQqLCg=
-
-getos@^3.1.1:
-  version "3.1.1"
-  resolved "https://registry.yarnpkg.com/getos/-/getos-3.1.1.tgz#967a813cceafee0156b0483f7cffa5b3eff029c5"
-  integrity sha512-oUP1rnEhAr97rkitiszGP9EgDVYnmchgFzfqRzSkgtfv7ai6tEi7Ko8GgjNXts7VLWEqrTWyhsOKLe5C5b/Zkg==
-  dependencies:
-    async "2.6.1"
 
 getpass@^0.1.1:
   version "0.1.7"
@@ -3033,7 +3018,7 @@ lodash.throttle@^4.1.1:
   resolved "https://registry.yarnpkg.com/lodash.throttle/-/lodash.throttle-4.1.1.tgz#c23e91b710242ac70c37f1e1cda9274cc39bf2f4"
   integrity sha1-wj6RtxAkKscMN/HhzaknTMOb8vQ=
 
-lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.4:
+lodash@^4.17.11, lodash@^4.17.4:
   version "4.17.11"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.11.tgz#b39ea6229ef607ecd89e2c8df12536891cac9b8d"
   integrity sha512-cQKh8igo5QUhZ7lg38DYWAxMvjSAKG0A8wGSVimP07SIUEK2UO+arSRKbRZWtelMtN5V0Hkwh5ryOto/SshYIg==
