@@ -9,6 +9,7 @@ members = [
   "query-engine/prisma",
   "query-engine/native-bridge",
   "query-engine/core",
+  "prisma-fmt",
   "libs/datamodel",
   "libs/prisma-inflector",
   "libs/database-inspector"
