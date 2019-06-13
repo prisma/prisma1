@@ -11,6 +11,8 @@ pub type ObjectTypeRef = Weak<ObjectType>;
 pub type InputObjectTypeStrongRef = Arc<InputObjectType>;
 pub type InputObjectTypeRef = Weak<InputObjectType>;
 
+pub type QuerySchemaRef = Arc<QuerySchema>;
+
 /// The query schema.
 /// Defines which operations (query/mutations) are possible on a database, based on the (internal) data model.
 ///

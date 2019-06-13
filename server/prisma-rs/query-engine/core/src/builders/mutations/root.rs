@@ -3,7 +3,7 @@
 
 use crate::{
     builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
-    CoreError, CoreResult, ManyNestedBuilder, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
+    CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
 };
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
@@ -21,18 +21,18 @@ use std::{collections::BTreeMap, sync::Arc};
 #[derive(Debug)]
 pub struct MutationBuilder<'field> {
     field: &'field Field,
-    model: InternalDataModelRef,
+    query_schema: QuerySchemaRef,
 }
 
 impl<'field> MutationBuilder<'field> {
-    pub fn new(model: InternalDataModelRef, field: &'field Field) -> Self {
-        Self { field, model }
+    pub fn new(query_schema: QuerySchemaRef, field: &'field Field) -> Self {
+        Self { field, query_schema }
     }
 
     pub fn build(self) -> CoreResult<WriteQuery> {
         // Handle `resetData` seperately
         if &self.field.name == "resetData" {
-            return handle_reset(&self.field, &self.model);
+            return handle_reset(&self.field, &self.query_schema);
         }
 
         let args = into_tree(&self.field.arguments);

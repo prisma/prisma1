@@ -1,4 +1,4 @@
-#![deny(warnings)]
+#![warn(warnings)]
 
 #[macro_use]
 extern crate log;
@@ -30,6 +30,6 @@ pub type CoreResult<T> = Result<T, CoreError>;
 /// A type wrapper around read and write queries
 #[derive(Debug, Clone)]
 pub enum Query {
-  Read(ReadQuery),
-  Write(WriteQuery),
+    Read(ReadQuery),
+    Write(WriteQuery),
 }

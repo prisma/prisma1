@@ -2,14 +2,14 @@ use super::*;
 use prisma_models::{InternalDataModelRef, ModelRef};
 use std::sync::Arc;
 
-/// WIP. Build mode for schema generation.
+/// Build mode for schema generation.
 #[derive(Debug, Copy, Clone)]
 pub enum BuildMode {
     /// Prisma 1 compatible schema generation.
     /// This will still generate only a subset of the legacy schema.
     Legacy,
 
-    /// Prisma 2 schema.
+    /// Prisma 2 schema. Uses different inflection strategy
     Modern,
 }
 
@@ -45,7 +45,7 @@ pub enum BuildMode {
 /// The cache can be consumed to produce a list of strong references to the individual input and output
 /// object types, which are then moved to the query schema to keep weak references alive (see TypeRefCache for additional infos).
 pub struct QuerySchemaBuilder<'a> {
-    _mode: BuildMode,
+    mode: BuildMode,
     internal_data_model: InternalDataModelRef,
     _capabilities: &'a SupportedCapabilities,
     object_type_builder: Arc<ObjectTypeBuilder<'a>>,
@@ -79,7 +79,7 @@ impl<'a> QuerySchemaBuilder<'a> {
         );
 
         QuerySchemaBuilder {
-            _mode: mode,
+            mode,
             internal_data_model: Arc::clone(internal_data_model),
             _capabilities: capabilities,
             object_type_builder,
@@ -176,8 +176,13 @@ impl<'a> QuerySchemaBuilder<'a> {
         self.argument_builder
             .where_unique_argument(Arc::clone(&model))
             .map(|arg| {
-                field(
+                let field_name = self.pluralize_internal(
                     camel_case(model.name.clone()),
+                    format!("findSingle{}", model.name.clone()),
+                );
+
+                field(
+                    field_name,
                     vec![arg],
                     OutputType::opt(OutputType::object(
                         self.object_type_builder.map_model_object_type(&model),
@@ -190,9 +195,13 @@ impl<'a> QuerySchemaBuilder<'a> {
     /// Builds a "multiple" query arity items field (e.g. "users", "posts", ...) for given model.
     fn all_items_field(&self, model: ModelRef) -> Field {
         let args = self.object_type_builder.many_records_arguments(&model);
+        let field_name = self.pluralize_internal(
+            camel_case(pluralize(model.name.clone())),
+            format!("findMany{}", model.name.clone()),
+        );
 
         field(
-            camel_case(pluralize(model.name.clone())),
+            field_name,
             args,
             OutputType::list(OutputType::opt(OutputType::object(
                 self.object_type_builder.map_model_object_type(&model),
@@ -208,8 +217,13 @@ impl<'a> QuerySchemaBuilder<'a> {
             .create_arguments(Arc::clone(&model))
             .unwrap_or_else(|| vec![]);
 
-        field(
+        let field_name = self.pluralize_internal(
             format!("create{}", model.name),
+            format!("createSingle{}", model.name.clone()),
+        );
+
+        field(
+            field_name,
             args,
             OutputType::object(self.object_type_builder.map_model_object_type(&model)),
             Some(ModelOperation::new(Arc::clone(&model), OperationTag::CreateSingle)),
@@ -219,8 +233,13 @@ impl<'a> QuerySchemaBuilder<'a> {
     /// Builds a delete mutation field (e.g. deleteUser) for given model.
     fn delete_item_field(&self, model: ModelRef) -> Option<Field> {
         self.argument_builder.delete_arguments(Arc::clone(&model)).map(|args| {
-            field(
+            let field_name = self.pluralize_internal(
                 format!("delete{}", model.name),
+                format!("deleteSingle{}", model.name.clone()),
+            );
+
+            field(
+                field_name,
                 args,
                 OutputType::opt(OutputType::object(
                     self.object_type_builder.map_model_object_type(&model),
@@ -233,9 +252,13 @@ impl<'a> QuerySchemaBuilder<'a> {
     /// Builds a delete many mutation field (e.g. deleteManyUsers) for given model.
     fn delete_many_field(&self, model: ModelRef) -> Field {
         let arguments = self.argument_builder.delete_many_arguments(Arc::clone(&model));
+        let field_name = self.pluralize_internal(
+            format!("deleteMany{}", pluralize(model.name.clone())),
+            format!("deleteMany{}", model.name.clone()),
+        );
 
         field(
-            format!("deleteMany{}", pluralize(model.name.clone())),
+            field_name,
             arguments,
             OutputType::object(self.object_type_builder.batch_payload_object_type()),
             Some(ModelOperation::new(Arc::clone(&model), OperationTag::DeleteMany)),
@@ -245,8 +268,11 @@ impl<'a> QuerySchemaBuilder<'a> {
     /// Builds an update mutation field (e.g. updateUser) for given model.
     fn update_item_field(&self, model: ModelRef) -> Option<Field> {
         self.argument_builder.update_arguments(Arc::clone(&model)).map(|args| {
+            let field_name =
+                self.pluralize_internal(format!("update{}", model.name), format!("updateSingle{}", model.name));
+
             field(
-                format!("update{}", model.name),
+                field_name,
                 args,
                 OutputType::opt(OutputType::object(
                     self.object_type_builder.map_model_object_type(&model),
@@ -259,9 +285,13 @@ impl<'a> QuerySchemaBuilder<'a> {
     /// Builds an update many mutation field (e.g. updateManyUsers) for given model.
     fn update_many_field(&self, model: ModelRef) -> Field {
         let arguments = self.argument_builder.update_many_arguments(Arc::clone(&model));
+        let field_name = self.pluralize_internal(
+            format!("updateMany{}", pluralize(model.name.clone())),
+            format!("updateMany{}", model.name.clone()),
+        );
 
         field(
-            format!("updateMany{}", pluralize(model.name.clone())),
+            field_name,
             arguments,
             OutputType::object(self.object_type_builder.batch_payload_object_type()),
             Some(ModelOperation::new(Arc::clone(&model), OperationTag::UpdateMany)),
@@ -271,12 +301,22 @@ impl<'a> QuerySchemaBuilder<'a> {
     /// Builds an upsert mutation field (e.g. upsertUser) for given model.
     fn upsert_item_field(&self, model: ModelRef) -> Option<Field> {
         self.argument_builder.upsert_arguments(Arc::clone(&model)).map(|args| {
+            let field_name =
+                self.pluralize_internal(format!("upsert{}", model.name), format!("upsertSingle{}", model.name));
+
             field(
-                format!("upsert{}", model.name),
+                field_name,
                 args,
                 OutputType::object(self.object_type_builder.map_model_object_type(&model)),
                 Some(ModelOperation::new(Arc::clone(&model), OperationTag::UpsertSingle)),
             )
         })
+    }
+
+    fn pluralize_internal(&self, legacy: String, modern: String) -> String {
+        match self.mode {
+            BuildMode::Legacy => legacy,
+            BuildMode::Modern => modern,
+        }
     }
 }

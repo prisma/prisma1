@@ -20,7 +20,7 @@ pub use single::*;
 
 pub use self::inflector::Inflector;
 
-use crate::{CoreError, CoreResult, ReadQuery};
+use crate::{CoreError, CoreResult, QuerySchemaRef, ReadQuery};
 use graphql_parser::query::Field;
 use prisma_models::{InternalDataModelRef, ModelRef, RelationFieldRef};
 use rust_inflector::Inflector as RustInflector;
@@ -37,21 +37,22 @@ pub enum Builder<'field> {
 }
 
 impl<'a> Builder<'a> {
-    fn new(internal_data_model: InternalDataModelRef, root_field: &'a Field) -> CoreResult<Self> {
+    fn new(query_schema: QuerySchemaRef, root_field: &'a Field) -> CoreResult<Self> {
         // Find model for field - this is a temporary workaround before we have a data model definition (/ internal_data_model builder).
-        let builder: Option<Builder> = internal_data_model
-            .models()
-            .iter()
-            .filter_map(|model| Builder::infer(model, root_field, None))
-            .nth(0);
-
-        match builder {
-            Some(b) => Ok(b),
-            None => Err(CoreError::QueryValidationError(format!(
-                "Model not found for field {}",
-                root_field.alias.as_ref().unwrap_or(&root_field.name)
-            ))),
-        }
+        //        let builder: Option<Builder> = internal_data_model
+        //            .models()
+        //            .iter()
+        //            .filter_map(|model| Builder::infer(model, root_field, None))
+        //            .nth(0);
+        //
+        //        match builder {
+        //            Some(b) => Ok(b),
+        //            None => Err(CoreError::QueryValidationError(format!(
+        //                "Model not found for field {}",
+        //                root_field.alias.as_ref().unwrap_or(&root_field.name)
+        //            ))),
+        //        }
+        unimplemented!()
     }
 
     /// Infer the type of builder that should be created
