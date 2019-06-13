@@ -9,6 +9,7 @@ export interface DatabaseCredentials {
   database?: string
   alreadyData?: boolean
   schema?: string
+  newSchema?: string
   ssl?: boolean
   uri?: string
   executeRaw?: boolean

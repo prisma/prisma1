@@ -1,19 +1,19 @@
+import chalk from 'chalk'
 import { render } from 'ink'
 import { DatabaseType } from 'prisma-datamodel'
 import * as React from 'react'
+import { credentialsToUri, uriToCredentials } from '../convertCredentials'
 import {
   ConnectorAndDisconnect,
   ConnectorData,
   getConnectedConnectorFromCredentials,
   getDatabaseSchemas,
-  prettyTime,
   minimalPrettyTime,
 } from '../introspect/util'
 import { OnSubmitParams, Prompt } from '../prompt-lib/BoxPrompt'
-import { SelectElement } from '../prompt-lib/types'
+import { RadioElement } from '../prompt-lib/types'
 import { DatabaseCredentials, IntrospectionResult } from '../types'
 import { CHOOSE_DB_ELEMENTS, CONNECT_DB_ELEMENTS } from './prompts-elements'
-import chalk from 'chalk'
 
 enum Steps {
   CHOOSE_DB,
@@ -55,7 +55,14 @@ type ActionBack = {
   }
 }
 
-type ActionType = ActionChooseDB | ActionConnect | ActionBack
+type ActionSetCredentials = {
+  type: 'set_credentials'
+  payload: {
+    credentials: DatabaseCredentials
+  }
+}
+
+type ActionType = ActionChooseDB | ActionConnect | ActionBack | ActionSetCredentials
 
 const initialState: State = {
   step: Steps.CHOOSE_DB,
@@ -94,6 +101,14 @@ const reducer: React.Reducer<State, ActionType> = (state, action) => {
           ? state.credentials
           : { ...state.credentials, ...action.payload.credentials },
       }
+    case 'set_credentials':
+      return {
+        ...state,
+        credentials: {
+          ...state.credentials,
+          ...action.payload.credentials,
+        },
+      }
   }
 }
 
@@ -102,6 +117,23 @@ const dbTypeTodbName: Record<DatabaseType, string> = {
   [DatabaseType.mysql]: 'MySQL',
   [DatabaseType.mongo]: 'MongoDB',
   [DatabaseType.sqlite]: 'SQLite',
+}
+
+const defaultCredentials = (dbType: DatabaseType): DatabaseCredentials => ({
+  host: 'localhost',
+  port: 5432,
+  type: dbType,
+})
+
+function replaceSchemaByNewSchema(credentials: DatabaseCredentials): DatabaseCredentials {
+  if (credentials.newSchema) {
+    return {
+      ...credentials,
+      schema: credentials.newSchema,
+    }
+  }
+
+  return credentials
 }
 
 /**
@@ -123,6 +155,7 @@ const IntrospectionPrompt: React.FC<Props> = props => {
               payload: selectedValue,
             })
           }}
+          formValues={state.credentials}
           withBackButton={false}
         />
       )
@@ -131,10 +164,32 @@ const IntrospectionPrompt: React.FC<Props> = props => {
         <Prompt
           key={Steps.CONNECT_DB}
           elements={CONNECT_DB_ELEMENTS(state.credentials.type!)}
-          title={`Enter the ${dbTypeTodbName[state.credentials.type!]} credentials`}
-          initialFormValues={state.credentials}
+          title={`Enter ${dbTypeTodbName[state.credentials.type!]} credentials`}
+          subtitle={`Learn how to set up a ${dbTypeTodbName[state.credentials.type!]} database: prisma.io/docs`}
+          formValues={state.credentials}
+          onFormChanged={({ values, triggeredInput }) => {
+            let credentials: DatabaseCredentials = {
+              ...(values as DatabaseCredentials),
+            }
+
+            if (triggeredInput.identifier === 'uri') {
+              try {
+                credentials = uriToCredentials(values['uri'])
+              } catch {}
+            } else {
+              credentials['uri'] = credentialsToUri({
+                ...defaultCredentials(credentials['type']),
+                ...credentials,
+              } as DatabaseCredentials)
+            }
+
+            dispatch({ type: 'set_credentials', payload: { credentials } })
+          }}
           onSubmit={onConnectOrTest(state, dispatch)}
-          withBackButton
+          withBackButton={{
+            label: 'Back',
+            description: '(Database selection)',
+          }}
         />
       )
     case Steps.CHOOSE_SCHEMA:
@@ -142,6 +197,39 @@ const IntrospectionPrompt: React.FC<Props> = props => {
         <Prompt
           key={Steps.CHOOSE_SCHEMA}
           title="Select the schema you want to introspect"
+          formValues={state.credentials}
+          elements={[
+            ...state.schemas.map(
+              schema =>
+                ({
+                  type: 'radio',
+                  label: schema,
+                  value: schema,
+                  identifier: 'schema',
+                  description: '5 tables, 1,114KB',
+                } as RadioElement),
+            ),
+            {
+              type: 'text-input',
+              identifier: 'newSchema',
+              label: 'New schema',
+              placeholder: 'Or enter a name for a new schema',
+              style: { marginTop: 1 },
+            },
+            { type: 'separator', style: { marginTop: 1, marginBottom: 1, marginLeft: 1 } },
+            { type: 'select', label: 'Introspect', description: '(Please select a schema)', style: { marginTop: 1 } },
+          ]}
+          onFormChanged={({ values, triggeredInput }) => {
+            // Select only one or the other
+            if (triggeredInput.identifier === 'schema') {
+              values['newSchema'] = ''
+            }
+            if (triggeredInput.identifier === 'newSchema') {
+              values['schema'] = ''
+            }
+
+            dispatch({ type: 'set_credentials', payload: { credentials: values as DatabaseCredentials } })
+          }}
           onSubmit={async ({ selectedValue, goBack, startSpinner, stopSpinner }) => {
             if (goBack) {
               return dispatch({
@@ -150,13 +238,19 @@ const IntrospectionPrompt: React.FC<Props> = props => {
               })
             }
 
+            if (!state.credentials.schema && !state.credentials.newSchema) {
+              stopSpinner({ state: 'failed', message: 'Please select a schema' })
+              return
+            }
+
             try {
               const before = Date.now()
               startSpinner(`Introspecting ${selectedValue!}`)
+
               const introspectionResult = await props.introspect({
                 ...state.connectorData,
                 databaseName: selectedValue,
-                credentials: state.credentials,
+                credentials: replaceSchemaByNewSchema(state.credentials as DatabaseCredentials),
               } as ConnectorData)
 
               await state.connectorData.disconnect!()
@@ -171,15 +265,10 @@ const IntrospectionPrompt: React.FC<Props> = props => {
               stopSpinner({ state: 'failed', message: e.message })
             }
           }}
-          withBackButton
-          elements={state.schemas.map(
-            schema =>
-              ({
-                type: 'select',
-                label: schema,
-                value: schema,
-              } as SelectElement),
-          )}
+          withBackButton={{
+            label: 'Back',
+            description: '(Database credentials)',
+          }}
         />
       )
   }
@@ -200,10 +289,6 @@ function onConnectOrTest(state: State, dispatch: React.Dispatch<ActionType>): (p
           credentials: newCredentials,
         },
       })
-    }
-
-    if (params.selectedValue === '__TEST__') {
-      await onTest(params, newCredentials)
     }
 
     if (params.selectedValue === '__CONNECT__') {
@@ -240,21 +325,10 @@ async function onConnect(
   }
 }
 
-async function onTest(params: OnSubmitParams, credentials: DatabaseCredentials) {
-  params.startSpinner()
-
-  try {
-    await getConnectedConnectorFromCredentials(credentials)
-    params.stopSpinner({ state: 'succeeded' })
-  } catch (e) {
-    params.stopSpinner({ state: 'failed', message: e.message })
-  }
-}
-
 export async function promptIntrospectionInteractively(
-  introspect: (connector: ConnectorData) => Promise<IntrospectionResult>,
+  introspectFn: (connector: ConnectorData) => Promise<IntrospectionResult>,
 ) {
   return new Promise<IntrospectionResult>(async resolve => {
-    render(<IntrospectionPrompt introspect={introspect} onSubmit={resolve} />)
+    render(<IntrospectionPrompt introspect={introspectFn} onSubmit={resolve} />)
   })
 }
