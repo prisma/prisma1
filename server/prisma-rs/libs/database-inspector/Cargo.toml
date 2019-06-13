@@ -5,7 +5,7 @@ authors = ["Marcus Böhm <boehm@prisma.io>"]
 edition = "2018"
 
 [dependencies]
-barrel = { version = "0.6.0", features = ["sqlite3", "mysql", "pg"] }
+barrel = { version = "0.6.1", features = ["sqlite3", "mysql", "pg"] }
 time = "*"
 prisma-query = { git = "https://github.com/prisma/prisma-query.git" }
 url = "1.7.2"

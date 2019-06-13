@@ -379,27 +379,17 @@ impl BarrelMigrationExecutor {
         // let inspector = DatabaseInspector::postgres("postgresql://postgres:prisma@127.0.0.1:5432/db?schema=migration_engine".to_string());
         let mut migration = Migration::new().schema(SCHEMA);
         migrationFn(&mut migration);
-        let full_sql = migration.make_from(self.sql_variant());
+        let full_sql = dbg!(migration.make_from(self.sql_variant));
         run_full_sql(&self.connectional, &full_sql);
         let mut result = self.inspector.introspect(&SCHEMA.to_string());
         // the presence of the _Migration table makes assertions harder. Therefore remove it.
         result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
         result
     }
-
-    fn sql_variant(&self) -> SqlVariant {
-        match self.sql_variant {
-            SqlVariant::Mysql => SqlVariant::Mysql,
-            SqlVariant::Pg => SqlVariant::Pg,
-            SqlVariant::Sqlite => SqlVariant::Sqlite,
-            SqlVariant::__Empty => SqlVariant::__Empty,
-        }
-    }
 }
 
 fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
     for sql in full_sql.split(";") {
-        dbg!(sql);
         if sql != "" {
             connectional.query_on_raw_connection(&SCHEMA, &sql, &[]).unwrap();
         }
