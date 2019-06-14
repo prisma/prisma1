@@ -1,10 +1,10 @@
 use crate::commands::*;
 use crate::migration_engine::*;
 use jsonrpc_core;
+use jsonrpc_core::types::error::Error as JsonRpcError;
 use jsonrpc_core::IoHandler;
 use jsonrpc_core::*;
 use std::io;
-use jsonrpc_core::types::error::Error as JsonRpcError;
 
 pub struct RpcApi {
     io_handler: jsonrpc_core::IoHandler<()>,

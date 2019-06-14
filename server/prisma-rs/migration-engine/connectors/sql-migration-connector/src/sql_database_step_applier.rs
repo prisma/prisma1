@@ -21,7 +21,11 @@ impl DatabaseMigrationStepApplier<SqlMigration> for SqlDatabaseStepApplier {
     }
 
     fn render_steps_pretty(&self, database_migration: &SqlMigration) -> ConnectorResult<serde_json::Value> {
-        Ok(render_steps_pretty(&database_migration, self.sql_family, &self.schema_name)?)
+        Ok(render_steps_pretty(
+            &database_migration,
+            self.sql_family,
+            &self.schema_name,
+        )?)
     }
 }
 
@@ -39,7 +43,11 @@ impl DatabaseMigrationStepApplier<SqlMigration> for VirtualSqlDatabaseStepApplie
     }
 
     fn render_steps_pretty(&self, database_migration: &SqlMigration) -> ConnectorResult<serde_json::Value> {
-        Ok(render_steps_pretty(&database_migration, self.sql_family, &self.schema_name)?)
+        Ok(render_steps_pretty(
+            &database_migration,
+            self.sql_family,
+            &self.schema_name,
+        )?)
     }
 }
 
@@ -119,7 +127,10 @@ fn render_raw_sql(step: &SqlMigrationStep, sql_family: SqlFamily, schema_name: &
             make_sql_string(migration, sql_family)
         }
         SqlMigrationStep::DropTables(DropTables { names }) => {
-            let fully_qualified_names: Vec<String> = names.iter().map(|name| format!("\"{}\".\"{}\"", schema_name, name)).collect();
+            let fully_qualified_names: Vec<String> = names
+                .iter()
+                .map(|name| format!("\"{}\".\"{}\"", schema_name, name))
+                .collect();
             format!("DROP TABLE {};", fully_qualified_names.join(","))
         }
         SqlMigrationStep::RenameTable { name, new_name } => {
@@ -159,21 +170,26 @@ fn make_sql_string(migration: BarrelMigration, sql_family: SqlFamily) -> String 
     }
 }
 
-fn column_description_to_barrel_type(sql_family: SqlFamily, schema_name: String, column_description: &ColumnDescription) -> barrel::types::Type {
+fn column_description_to_barrel_type(
+    sql_family: SqlFamily,
+    schema_name: String,
+    column_description: &ColumnDescription,
+) -> barrel::types::Type {
     // TODO: add foreign keys for non integer types once this is available in barrel
     let tpe_str = render_column_type(sql_family, column_description.tpe);
     let tpe = match (sql_family, &column_description.foreign_key) {
         (SqlFamily::Postgres, Some(fk)) => {
-            let complete = dbg!(format!("{} REFERENCES \"{}\".\"{}\"({})", tpe_str, schema_name, fk.table, fk.column));
+            let complete = dbg!(format!(
+                "{} REFERENCES \"{}\".\"{}\"({})",
+                tpe_str, schema_name, fk.table, fk.column
+            ));
             barrel::types::custom(string_to_static_str(complete))
         }
         (_, Some(fk)) => {
             let complete = dbg!(format!("{} REFERENCES {}({})", tpe_str, fk.table, fk.column));
             barrel::types::custom(string_to_static_str(complete))
         }
-        (_, None) => {
-            barrel::types::custom(string_to_static_str(tpe_str))
-        }
+        (_, None) => barrel::types::custom(string_to_static_str(tpe_str)),
     };
     tpe.nullable(!column_description.required)
 }
@@ -181,7 +197,7 @@ fn column_description_to_barrel_type(sql_family: SqlFamily, schema_name: String,
 // TODO: this must become database specific akin to our TypeMappers in Scala
 fn render_column_type(sql_family: SqlFamily, t: ColumnType) -> String {
     match sql_family {
-        SqlFamily::Sqlite => render_column_type_sqlite(t),   
+        SqlFamily::Sqlite => render_column_type_sqlite(t),
         SqlFamily::Postgres => render_column_type_postgres(t),
         _ => unimplemented!(),
     }

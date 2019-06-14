@@ -35,7 +35,6 @@ pub struct IntrospectedForeignKey {
     pub referenced_column: String,
 }
 
-
 #[derive(Debug, Clone)]
 pub struct IntrospectedColumn {
     pub name: String,

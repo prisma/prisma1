@@ -1,11 +1,10 @@
-
 use migration_connector::ConnectorError;
 
 pub type SqlResult<T> = Result<T, SqlError>;
 
 #[derive(Debug)]
 pub enum SqlError {
-    Generic(String)
+    Generic(String),
 }
 
 impl From<SqlError> for ConnectorError {

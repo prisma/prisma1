@@ -1,8 +1,7 @@
 use crate::commands::command::*;
 use crate::migration_engine::MigrationEngine;
 
-pub struct ResetCommand {
-}
+pub struct ResetCommand {}
 
 #[allow(unused)]
 impl MigrationCommand for ResetCommand {

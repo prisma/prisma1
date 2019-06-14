@@ -1,3 +1,4 @@
+use super::SqlFamily;
 #[allow(unused, dead_code)]
 use barrel::types;
 use chrono::*;
@@ -6,7 +7,6 @@ use prisma_query::ast::*;
 use prisma_query::{Connectional, ResultSet};
 use serde_json;
 use std::sync::Arc;
-use super::SqlFamily;
 
 pub struct SqlMigrationPersistence {
     pub sql_family: SqlFamily,
@@ -25,32 +25,38 @@ impl MigrationPersistence for SqlMigrationPersistence {
             SqlFamily::Sqlite => {
                 m.create_table_if_not_exists(TABLE_NAME, migration_table_setup_sqlite);
                 barrel::SqlVariant::Sqlite
-            },
+            }
             SqlFamily::Postgres => {
                 m.create_table(TABLE_NAME, migration_table_setup_postgres);
                 barrel::SqlVariant::Pg
-            },
+            }
             SqlFamily::Mysql => {
                 // m.create_table_if_not_exists(TABLE_NAME, |t| migration_table_setup(self.sql_family, t));
                 // barrel::SqlVariant::Mysql
                 unimplemented!()
-            },
+            }
         };
         let sql_str = dbg!(m.make_from(barrel_variant));
 
-        let _ = self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]);
-    }    
+        let _ = self
+            .connection
+            .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+    }
 
     fn reset(&self) {
         println!("SqlMigrationPersistence.reset()");
         let sql_str = format!(r#"DELETE FROM "{}"."_Migration";"#, self.schema_name); // TODO: this is not vendor agnostic yet
-        let _ = self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+        let _ = self
+            .connection
+            .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
 
         // TODO: this is the wrong place to do that
         match self.sql_family {
             SqlFamily::Postgres => {
                 let sql_str = dbg!(format!(r#"DROP SCHEMA "{}" CASCADE;"#, self.schema_name)); // TODO: this is not vendor agnostic yet
-                let _ = self.connection.query_on_raw_connection(&self.schema_name, &sql_str, &[]);
+                let _ = self
+                    .connection
+                    .query_on_raw_connection(&self.schema_name, &sql_str, &[]);
             }
             SqlFamily::Sqlite => {
                 if let Some(ref file_path) = self.file_path {
@@ -67,14 +73,20 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        let result_set = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
+        let result_set = self
+            .connection
+            .query_on_connection(&self.schema_name, query.into())
+            .unwrap();
         parse_rows_new(&result_set).into_iter().next()
     }
 
     fn load_all(&self) -> Vec<Migration> {
         let query = Select::from_table(self.table());
 
-        let result_set = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
+        let result_set = self
+            .connection
+            .query_on_connection(&self.schema_name, query.into())
+            .unwrap();
         parse_rows_new(&result_set)
     }
 
@@ -84,7 +96,10 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
 
-        let result_set = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
+        let result_set = self
+            .connection
+            .query_on_connection(&self.schema_name, query.into())
+            .unwrap();
         parse_rows_new(&result_set).into_iter().next()
     }
 
@@ -104,16 +119,15 @@ impl MigrationPersistence for SqlMigrationPersistence {
             .value(DATAMODEL_STEPS_COLUMN, model_steps_json)
             .value(DATABASE_MIGRATION_COLUMN, database_migration_json)
             .value(ERRORS_COLUMN, errors_json)
-            .value(
-                STARTED_AT_COLUMN,
-                self.convert_datetime(migration.started_at),
-            )
+            .value(STARTED_AT_COLUMN, self.convert_datetime(migration.started_at))
             .value(FINISHED_AT_COLUMN, ParameterizedValue::Null);
-
 
         match self.sql_family {
             SqlFamily::Sqlite => {
-                let id = self.connection.execute_on_connection(&self.schema_name, insert.into()).unwrap();
+                let id = self
+                    .connection
+                    .execute_on_connection(&self.schema_name, insert.into())
+                    .unwrap();
                 match id {
                     Some(prisma_query::ast::Id::Int(id)) => cloned.revision = id,
                     _ => panic!("This insert must return an int"),
@@ -121,12 +135,15 @@ impl MigrationPersistence for SqlMigrationPersistence {
             }
             SqlFamily::Postgres => {
                 let returning_insert = Insert::from(insert).returning(vec!["revision"]);
-                let result_set = self.connection.query_on_connection(&self.schema_name, returning_insert.into()).unwrap();
+                let result_set = self
+                    .connection
+                    .query_on_connection(&self.schema_name, returning_insert.into())
+                    .unwrap();
                 result_set.into_iter().next().map(|row| {
                     cloned.revision = row.get_as_integer("revision").unwrap() as usize;
                 });
             }
-            SqlFamily::Mysql => unimplemented!()
+            SqlFamily::Mysql => unimplemented!(),
         }
         cloned
     }
@@ -150,7 +167,10 @@ impl MigrationPersistence for SqlMigrationPersistence {
                     .and(REVISION_COLUMN.equals(params.revision)),
             );
 
-        let _ = self.connection.query_on_connection(&self.schema_name, query.into()).unwrap();
+        let _ = self
+            .connection
+            .query_on_connection(&self.schema_name, query.into())
+            .unwrap();
     }
 }
 
@@ -176,14 +196,13 @@ fn migration_table_setup(t: &mut barrel::Table, datetime_type: barrel::types::Ty
     t.add_column(FINISHED_AT_COLUMN, datetime_type.clone().nullable(true));
 }
 
-
 impl SqlMigrationPersistence {
     fn table(&self) -> Table {
         match self.sql_family {
             SqlFamily::Sqlite => {
                 // sqlite case. Otherwise prisma-query produces invalid SQL
                 TABLE_NAME.to_string().into()
-            },
+            }
             _ => (self.schema_name.to_string(), TABLE_NAME.to_string()).into(),
         }
     }
@@ -195,7 +214,6 @@ impl SqlMigrationPersistence {
             _ => unimplemented!(),
         }
     }
-
 }
 fn convert_parameterized_date_value(db_value: &ParameterizedValue) -> DateTime<Utc> {
     match db_value {

@@ -85,15 +85,19 @@ impl SimpleNestedBuilder {
                 });
             }
             "updateMany" => {
-                use std::collections::BTreeMap;
                 use graphql_parser::query::Value;
+                use std::collections::BTreeMap;
                 let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
                 wheree.insert(
                     "where".into(),
-                    Value::Object(where_map.map_or(
-                        Err(CoreError::QueryValidationError("Failed to read `where` block".into())),
-                        |w| Ok(w),
-                    )?.0),
+                    Value::Object(
+                        where_map
+                            .map_or(
+                                Err(CoreError::QueryValidationError("Failed to read `where` block".into())),
+                                |w| Ok(w),
+                            )?
+                            .0,
+                    ),
                 );
 
                 let filter =

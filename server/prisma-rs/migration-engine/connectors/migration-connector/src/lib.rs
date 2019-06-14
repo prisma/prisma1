@@ -57,5 +57,5 @@ pub type ConnectorResult<T> = Result<T, ConnectorError>;
 
 #[derive(Debug)]
 pub enum ConnectorError {
-    Generic(String)
+    Generic(String),
 }

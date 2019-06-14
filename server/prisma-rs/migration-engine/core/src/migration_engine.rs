@@ -1,7 +1,7 @@
 use super::connector_loader::load_connector;
+use crate::commands::CommandResult;
 use crate::migration::datamodel_calculator::*;
 use crate::migration::datamodel_migration_steps_inferrer::*;
-use crate::commands::CommandResult;
 use datamodel::dml::*;
 use migration_connector::*;
 use std::sync::Arc;
@@ -30,10 +30,10 @@ impl MigrationEngine {
 
     pub fn init(&self) -> CommandResult<()> {
         self.connector().initialize()?;
-        Ok(())        
+        Ok(())
     }
 
-    pub fn reset(&self) -> CommandResult<()>  {
+    pub fn reset(&self) -> CommandResult<()> {
         self.connector().reset()?;
         Ok(())
     }

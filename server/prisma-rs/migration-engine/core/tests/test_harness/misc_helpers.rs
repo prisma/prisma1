@@ -1,6 +1,6 @@
 use database_inspector::*;
 use datamodel;
-use migration_core::{MigrationEngine, parse_datamodel};
+use migration_core::{parse_datamodel, MigrationEngine};
 use sql_migration_connector::SqlFamily;
 
 pub const SCHEMA_NAME: &str = "migration_engine";
@@ -10,18 +10,18 @@ pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
 }
 
 pub fn test_each_connector<TestFn>(testFn: TestFn)
-    where 
-        TestFn: Fn(&MigrationEngine) -> () + std::panic::RefUnwindSafe,
+where
+    TestFn: Fn(&MigrationEngine) -> () + std::panic::RefUnwindSafe,
 {
     test_each_connector_with_ignores(Vec::new(), testFn);
 }
 
 pub fn test_each_connector_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestFn)
-    where 
-        TestFn: Fn(&MigrationEngine) -> () + std::panic::RefUnwindSafe,
+where
+    TestFn: Fn(&MigrationEngine) -> () + std::panic::RefUnwindSafe,
 {
     // SQLite
-    if !ignores.contains(&SqlFamily::Sqlite){
+    if !ignores.contains(&SqlFamily::Sqlite) {
         println!("Testing with SQLite now");
         let engine = test_engine(&sqlite_test_config());
         testFn(&engine);
@@ -29,14 +29,13 @@ pub fn test_each_connector_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn:
         println!("Ignoring SQLite")
     }
     // POSTGRES
-    if !ignores.contains(&SqlFamily::Postgres){
+    if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
-        let engine = test_engine(&postgres_test_config());        
+        let engine = test_engine(&postgres_test_config());
         testFn(&engine);
     } else {
         println!("Ignoring Postgres")
     }
-    
 }
 
 pub fn test_engine(config: &str) -> Box<MigrationEngine> {
@@ -76,17 +75,24 @@ pub fn sqlite_test_file() -> String {
 }
 
 pub fn postgres_test_config() -> String {
-    format!(r#"
+    format!(
+        r#"
         datasource my_db {{
             provider = "postgres"
             url = "{}"
             default = true
         }}
-    "#, postgres_url())
+    "#,
+        postgres_url()
+    )
 }
 
 pub fn postgres_url() -> String {
-    dbg!(format!("postgresql://postgres:prisma@{}:5432/db?schema={}", db_host(), SCHEMA_NAME))
+    dbg!(format!(
+        "postgresql://postgres:prisma@{}:5432/db?schema={}",
+        db_host(),
+        SCHEMA_NAME
+    ))
 }
 
 fn db_host() -> String {

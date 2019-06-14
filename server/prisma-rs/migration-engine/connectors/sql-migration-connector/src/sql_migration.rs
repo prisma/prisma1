@@ -46,7 +46,7 @@ pub struct DropTable {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DropTables {
-    pub names: Vec<String>
+    pub names: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

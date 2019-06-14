@@ -59,7 +59,7 @@ impl From<migration_connector::ConnectorError> for CommandError {
     fn from(error: migration_connector::ConnectorError) -> CommandError {
         CommandError::Generic {
             code: 1000,
-            error: format!("{:?}", error)
+            error: format!("{:?}", error),
         }
     }
 }

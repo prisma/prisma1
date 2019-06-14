@@ -1,17 +1,18 @@
+use crate::database_inspector_impl::{convert_introspected_columns, IntrospectedForeignKey};
+use crate::*;
+use prisma_query::ast::ParameterizedValue;
 use prisma_query::Connectional;
 use std::sync::Arc;
-use crate::*;
-use crate::database_inspector_impl::{convert_introspected_columns, IntrospectedForeignKey };
-use prisma_query::ast::ParameterizedValue;
 
 pub struct Sqlite {
-    pub connectional: Arc<Connectional>
+    pub connectional: Arc<Connectional>,
 }
 
 impl DatabaseInspector for Sqlite {
     fn introspect(&self, schema: &String) -> DatabaseSchema {
         DatabaseSchema {
-            tables: self.get_table_names(schema)
+            tables: self
+                .get_table_names(schema)
                 .into_iter()
                 .map(|t| self.get_table(schema, &t))
                 .collect(),
@@ -21,8 +22,8 @@ impl DatabaseInspector for Sqlite {
 
 impl Sqlite {
     pub fn new(connectional: Arc<Connectional>) -> Sqlite {
-        Sqlite { 
-            connectional: connectional
+        Sqlite {
+            connectional: connectional,
         }
     }
 
@@ -62,7 +63,11 @@ impl Sqlite {
 
         Table {
             name: table.to_string(),
-            columns: convert_introspected_columns(introspected_columns, introspected_foreign_keys, Box::new(column_type)),
+            columns: convert_introspected_columns(
+                introspected_columns,
+                introspected_foreign_keys,
+                Box::new(column_type),
+            ),
             indexes: Vec::new(),
             primary_key_columns: pk_columns,
         }
@@ -73,24 +78,24 @@ impl Sqlite {
 
         let result_set = self.connectional.query_on_raw_connection(&schema, &sql, &[]).unwrap();
         let columns = result_set
-                    .into_iter()
-                    .map(|row| {
-                        let default_value = match row.get("dflt_value") {
-                            Ok(ParameterizedValue::Text(v)) => Some(v.clone()),
-                            Ok(ParameterizedValue::Null) => None,
-                            Ok(p) => panic!(format!("expectd a string value but got {:?}", p)),
-                            Err(err) => panic!(format!("{}", err)),
-                        };
-                        IntrospectedColumn {
-                            name: row.get_as_string("name").unwrap(),
-                            table: table.to_string(),
-                            tpe: row.get_as_string("type").unwrap(),
-                            is_required: row.get_as_bool("notnull").unwrap(),
-                            default: default_value,
-                            pk: row.get_as_integer("pk").unwrap() as u32,
-                        }
-                    })
-                    .collect();
+            .into_iter()
+            .map(|row| {
+                let default_value = match row.get("dflt_value") {
+                    Ok(ParameterizedValue::Text(v)) => Some(v.clone()),
+                    Ok(ParameterizedValue::Null) => None,
+                    Ok(p) => panic!(format!("expectd a string value but got {:?}", p)),
+                    Err(err) => panic!(format!("{}", err)),
+                };
+                IntrospectedColumn {
+                    name: row.get_as_string("name").unwrap(),
+                    table: table.to_string(),
+                    tpe: row.get_as_string("type").unwrap(),
+                    is_required: row.get_as_bool("notnull").unwrap(),
+                    default: default_value,
+                    pk: row.get_as_integer("pk").unwrap() as u32,
+                }
+            })
+            .collect();
 
         columns
     }
@@ -110,7 +115,7 @@ impl Sqlite {
                 referenced_column: row.get_as_string("to").unwrap(),
             })
             .collect();
-        
+
         foreign_keys
     }
 

@@ -1,13 +1,14 @@
 mod database_schema_calculator;
 mod database_schema_differ;
+mod error;
 mod sql_database_migration_inferrer;
 mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration;
 mod sql_migration_persistence;
-mod error;
 
 use database_inspector::DatabaseInspector;
+pub use error::*;
 use migration_connector::*;
 use postgres::Config as PostgresConfig;
 use prisma_query::connector::{PostgreSql, Sqlite};
@@ -18,6 +19,7 @@ use sql_database_step_applier::*;
 use sql_destructive_changes_checker::*;
 pub use sql_migration::*;
 use sql_migration_persistence::*;
+use std::borrow::Cow;
 use std::convert::TryFrom;
 use std::fs;
 use std::path::Path;
@@ -25,8 +27,6 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 use url::Url;
-use std::borrow::Cow;
-pub use error::*;
 
 #[allow(unused, dead_code)]
 pub struct SqlMigrationConnector {
@@ -58,10 +58,15 @@ impl SqlMigrationConnector {
             }
             SqlFamily::Postgres => {
                 let postgres_helper = Self::postgres_helper(&url);
-                let check_sql = format!("SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{}';", postgres_helper.schema);
-                let result_set = postgres_helper.db_connection.query_on_raw_connection("", &check_sql, &[]);
+                let check_sql = format!(
+                    "SELECT schema_name FROM information_schema.schemata WHERE schema_name = '{}';",
+                    postgres_helper.schema
+                );
+                let result_set = postgres_helper
+                    .db_connection
+                    .query_on_raw_connection("", &check_sql, &[]);
                 result_set.into_iter().next().is_some()
-            },
+            }
             _ => unimplemented!(),
         }
     }
@@ -75,7 +80,7 @@ impl SqlMigrationConnector {
                 let file_path = url.trim_start_matches("file:").to_string();
                 Self::create_connector(conn, sql_family, schema_name, Some(file_path))
             }
-            SqlFamily::Postgres => {                
+            SqlFamily::Postgres => {
                 let postgres_helper = Self::postgres_helper(&url);
                 Self::create_connector(postgres_helper.db_connection, sql_family, postgres_helper.schema, None)
             }
@@ -102,16 +107,18 @@ impl SqlMigrationConnector {
         let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
         let _ = root_connection.query_on_raw_connection("", &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
 
-        let schema = parsed_url.query_pairs().into_iter().find(|qp| qp.0 == Cow::Borrowed("schema")).expect("schema param is missing").1.to_string();
-
+        let schema = parsed_url
+            .query_pairs()
+            .into_iter()
+            .find(|qp| qp.0 == Cow::Borrowed("schema"))
+            .expect("schema param is missing")
+            .1
+            .to_string();
 
         config.dbname(&db_name);
         let db_connection = Arc::new(PostgreSql::new(config, connection_limit).unwrap());
 
-        PostgresHelper {
-            db_connection,
-            schema
-        }
+        PostgresHelper { db_connection, schema }
     }
 
     pub fn virtual_variant(
@@ -197,8 +204,10 @@ impl MigrationConnector for SqlMigrationConnector {
                 }
             }
             SqlFamily::Postgres => {
-                let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &self.schema_name));                
-                self.connectional.query_on_raw_connection(&self.schema_name, &schema_sql, &[]).expect("Creation of Postgres Schema failed");
+                let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &self.schema_name));
+                self.connectional
+                    .query_on_raw_connection(&self.schema_name, &schema_sql, &[])
+                    .expect("Creation of Postgres Schema failed");
             }
             SqlFamily::Mysql => unimplemented!(),
         }

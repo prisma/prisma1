@@ -18,9 +18,7 @@ pub struct DatabaseSchemaDiff {
 impl DatabaseSchemaDiff {
     pub fn into_steps(self) -> Vec<SqlMigrationStep> {
         let mut steps = Vec::new();
-        steps.append(&mut wrap_as_step(self.drop_tables, |x| {
-            SqlMigrationStep::DropTable(x)
-        }));
+        steps.append(&mut wrap_as_step(self.drop_tables, |x| SqlMigrationStep::DropTable(x)));
         steps.append(&mut wrap_as_step(self.create_tables, |x| {
             SqlMigrationStep::CreateTable(x)
         }));
@@ -41,7 +39,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         DatabaseSchemaDiff {
             drop_tables: self.drop_tables(),
             create_tables: self.create_tables(),
-            alter_tables: self.alter_tables()
+            alter_tables: self.alter_tables(),
         }
     }
 

@@ -26,7 +26,7 @@ use raw_query::*;
 use row::*;
 
 pub use database::*;
-pub use transactional::*;
 pub use error::SqlError;
+pub use transactional::*;
 
 type SqlResult<T> = Result<T, error::SqlError>;

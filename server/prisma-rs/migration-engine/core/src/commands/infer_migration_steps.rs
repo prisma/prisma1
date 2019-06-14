@@ -30,10 +30,11 @@ impl MigrationCommand for InferMigrationStepsCommand {
             .datamodel_migration_steps_inferrer()
             .infer(&assumed_datamodel, &next_datamodel);
 
-        let database_migration =
-            connector
-                .database_migration_inferrer()
-                .infer(&assumed_datamodel, &next_datamodel, &model_migration_steps)?;
+        let database_migration = connector.database_migration_inferrer().infer(
+            &assumed_datamodel,
+            &next_datamodel,
+            &model_migration_steps,
+        )?;
 
         let database_steps_json = connector
             .database_migration_step_applier()

@@ -1,5 +1,5 @@
 use crate::database_schema_calculator::DatabaseSchemaCalculator;
-use crate::database_schema_differ::{ DatabaseSchemaDiffer, DatabaseSchemaDiff };
+use crate::database_schema_differ::{DatabaseSchemaDiff, DatabaseSchemaDiffer};
 use crate::*;
 use database_inspector::{DatabaseInspector, DatabaseSchema, Table};
 use datamodel::*;
@@ -14,10 +14,20 @@ pub struct SqlDatabaseMigrationInferrer {
 }
 
 impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
-    fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> ConnectorResult<SqlMigration> {
+    fn infer(
+        &self,
+        _previous: &Datamodel,
+        next: &Datamodel,
+        _steps: &Vec<MigrationStep>,
+    ) -> ConnectorResult<SqlMigration> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
-        infer(&current_database_schema, &expected_database_schema, &self.schema_name, self.sql_family)
+        infer(
+            &current_database_schema,
+            &expected_database_schema,
+            &self.schema_name,
+            self.sql_family,
+        )
     }
 }
 
@@ -26,14 +36,29 @@ pub struct VirtualSqlDatabaseMigrationInferrer {
     pub schema_name: String,
 }
 impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInferrer {
-    fn infer(&self, previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> ConnectorResult<SqlMigration> {
+    fn infer(
+        &self,
+        previous: &Datamodel,
+        next: &Datamodel,
+        _steps: &Vec<MigrationStep>,
+    ) -> ConnectorResult<SqlMigration> {
         let current_database_schema = DatabaseSchemaCalculator::calculate(previous)?;
         let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
-        infer(&current_database_schema, &expected_database_schema, &self.schema_name, self.sql_family)
+        infer(
+            &current_database_schema,
+            &expected_database_schema,
+            &self.schema_name,
+            self.sql_family,
+        )
     }
 }
 
-fn infer(current: &DatabaseSchema, next: &DatabaseSchema, schema_name: &str, sql_family: SqlFamily) -> ConnectorResult<SqlMigration> {
+fn infer(
+    current: &DatabaseSchema,
+    next: &DatabaseSchema,
+    schema_name: &str,
+    sql_family: SqlFamily,
+) -> ConnectorResult<SqlMigration> {
     let steps = infer_database_migration_steps_and_fix(&current, &next, &schema_name, sql_family)?;
     let rollback = infer_database_migration_steps_and_fix(&next, &current, &schema_name, sql_family)?;
     Ok(SqlMigration {
@@ -60,42 +85,45 @@ fn infer_database_migration_steps_and_fix(
 }
 
 fn fix_id_column_type_change(
-    from: &DatabaseSchema, 
-    to: &DatabaseSchema, 
+    from: &DatabaseSchema,
+    to: &DatabaseSchema,
     _schema_name: &str,
-    steps: Vec<SqlMigrationStep>
+    steps: Vec<SqlMigrationStep>,
 ) -> SqlResult<Vec<SqlMigrationStep>> {
-    let has_id_type_change = steps.iter().find(|step|{
-        match step {
+    let has_id_type_change = steps
+        .iter()
+        .find(|step| match step {
             SqlMigrationStep::AlterTable(alter_table) => {
                 if let Ok(current_table) = from.table(&alter_table.table) {
-                    let change_to_id_column = alter_table.changes.iter().find(|c|{
-                        match c {
-                            TableChange::AlterColumn(alter_column) => {
-                                let current_column = current_table.column_bang(&alter_column.name);
-                                let current_column_type = DatabaseSchemaDiffer::convert_column_type(current_column.tpe);
-                                let has_type_changed = current_column_type != alter_column.column.tpe;
-                                let is_part_of_pk = current_table.primary_key_columns.contains(&alter_column.name);
-                                is_part_of_pk && has_type_changed
-                            },
-                            _ => false
+                    let change_to_id_column = alter_table.changes.iter().find(|c| match c {
+                        TableChange::AlterColumn(alter_column) => {
+                            let current_column = current_table.column_bang(&alter_column.name);
+                            let current_column_type = DatabaseSchemaDiffer::convert_column_type(current_column.tpe);
+                            let has_type_changed = current_column_type != alter_column.column.tpe;
+                            let is_part_of_pk = current_table.primary_key_columns.contains(&alter_column.name);
+                            is_part_of_pk && has_type_changed
                         }
+                        _ => false,
                     });
                     change_to_id_column.is_some()
                 } else {
                     false
                 }
-
             }
-            _ => false
-        }
-    }).is_some();
+            _ => false,
+        })
+        .is_some();
 
     // TODO: There's probably a much more graceful way to handle this. But this would also involve a lot of data loss probably. Let's tackle that after P Day
     if has_id_type_change {
         let mut radical_steps = Vec::new();
-        let tables_to_drop: Vec<String> = from.tables.iter().filter(|t| t.name != "_Migration").map(|t| t.name.clone()).collect();
-        radical_steps.push(SqlMigrationStep::DropTables(DropTables{ names: tables_to_drop }));
+        let tables_to_drop: Vec<String> = from
+            .tables
+            .iter()
+            .filter(|t| t.name != "_Migration")
+            .map(|t| t.name.clone())
+            .collect();
+        radical_steps.push(SqlMigrationStep::DropTables(DropTables { names: tables_to_drop }));
         let diff_from_empty = DatabaseSchemaDiffer::diff(&DatabaseSchema::empty(), &to);
         let mut steps_from_empty = delay_foreign_key_creation(diff_from_empty);
         radical_steps.append(&mut steps_from_empty);

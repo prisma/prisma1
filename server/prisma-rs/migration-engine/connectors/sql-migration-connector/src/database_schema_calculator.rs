@@ -1,7 +1,7 @@
+use crate::SqlResult;
 use database_inspector::*;
 use datamodel::*;
 use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
-use crate::SqlResult;
 
 pub struct DatabaseSchemaCalculator<'a> {
     data_model: &'a Datamodel,
@@ -189,7 +189,7 @@ impl ModelExtensions for Model {
     fn id_field(&self) -> Result<&Field, String> {
         match self.fields().find(|f| f.is_id()) {
             Some(f) => Ok(f),
-            None => Err(format!("Model {} does not have an id field", self.name))
+            None => Err(format!("Model {} does not have an id field", self.name)),
         }
     }
 

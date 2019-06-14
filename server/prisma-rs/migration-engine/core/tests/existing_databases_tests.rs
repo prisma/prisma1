@@ -1,16 +1,16 @@
 #![allow(non_snake_case)]
 mod test_harness;
-use barrel::{ types, Migration, SqlVariant};
+use barrel::{types, Migration, SqlVariant};
 use database_inspector::*;
-use test_harness::*;
-use std::sync::Arc;
-use prisma_query::Connectional;
 use migration_core::MigrationEngine;
+use prisma_query::Connectional;
 use sql_migration_connector::SqlFamily;
+use std::sync::Arc;
+use test_harness::*;
 
 #[test]
 fn adding_a_model_for_an_existing_table_must_work() {
-    test_each_backend(|engine,barrel| {
+    test_each_backend(|engine, barrel| {
         let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
@@ -33,7 +33,7 @@ fn bigint_columns_must_work() {
 
 #[test]
 fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
-    test_each_backend(|engine,barrel| {
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -63,7 +63,7 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
 
 #[test]
 fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
-    test_each_backend(|engine,barrel| {
+    test_each_backend(|engine, barrel| {
         let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
@@ -83,7 +83,7 @@ fn creating_a_field_for_an_existing_column_with_a_compatible_type_must_work() {
 
 #[test]
 fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
-    test_each_backend(|engine,barrel| {
+    test_each_backend(|engine, barrel| {
         let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
@@ -110,7 +110,7 @@ fn creating_a_field_for_an_existing_column_and_changing_its_type_must_work() {
 
 #[test]
 fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional() {
-    test_each_backend(|engine,barrel| {
+    test_each_backend(|engine, barrel| {
         let initial_result = barrel.execute(|migration| {
             migration.create_table("Blog", |t| {
                 t.add_column("id", types::primary());
@@ -134,7 +134,7 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
 
 #[test]
 fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
-    test_each_backend(|engine,barrel| {
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -258,7 +258,7 @@ fn updating_a_field_for_a_non_existent_column() {
 
 #[test]
 fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
-    test_each_backend(|engine, barrel|{
+    test_each_backend(|engine, barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
@@ -294,18 +294,18 @@ fn renaming_a_field_where_the_column_was_already_renamed_must_work() {
 }
 
 fn test_each_backend<TestFn>(testFn: TestFn)
-    where 
-        TestFn: Fn(&MigrationEngine, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
+where
+    TestFn: Fn(&MigrationEngine, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
 {
     test_each_backend_with_ignores(Vec::new(), testFn);
 }
 
 fn test_each_backend_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestFn)
-    where 
-        TestFn: Fn(&MigrationEngine, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
+where
+    TestFn: Fn(&MigrationEngine, &BarrelMigrationExecutor) -> () + std::panic::RefUnwindSafe,
 {
     // SQLite
-    if !ignores.contains(&SqlFamily::Sqlite){
+    if !ignores.contains(&SqlFamily::Sqlite) {
         println!("Testing with SQLite now");
         let (inspector, connectional) = sqlite();
         println!("Running the test function now");
@@ -320,7 +320,7 @@ fn test_each_backend_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestF
         println!("Ignoring SQLite")
     }
     // POSTGRES
-    if !ignores.contains(&SqlFamily::Postgres){
+    if !ignores.contains(&SqlFamily::Postgres) {
         println!("Testing with Postgres now");
         let (inspector, connectional) = postgres();
         println!("Running the test function now");
@@ -334,7 +334,6 @@ fn test_each_backend_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestF
     } else {
         println!("Ignoring Postgres")
     }
-    
 }
 
 fn sqlite() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
@@ -352,7 +351,6 @@ fn postgres() -> (Arc<DatabaseInspector>, Arc<Connectional>) {
     let drop_schema = dbg!(format!("DROP SCHEMA IF EXISTS \"{}\" CASCADE;", SCHEMA_NAME));
     let setup_connectional = DatabaseInspector::postgres(url.to_string()).connectional;
     let _ = setup_connectional.query_on_raw_connection(&SCHEMA_NAME, &drop_schema, &[]);
-
 
     let inspector = DatabaseInspector::postgres(url.to_string());
     let connectional = Arc::clone(&inspector.connectional);
@@ -389,4 +387,3 @@ fn run_full_sql(connectional: &Arc<Connectional>, full_sql: &str) {
         }
     }
 }
-

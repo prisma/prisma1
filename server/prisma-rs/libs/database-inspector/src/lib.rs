@@ -8,15 +8,15 @@ mod sqlite;
 
 pub use database_inspector_impl::*;
 pub use empty_impl::*;
-use sqlite::Sqlite;
-use postgres_inspector::Postgres;
-use prisma_query::connector::{Sqlite as SqliteDriver, PostgreSql as PostgresDriver };
-use prisma_query::Connectional;
-use std::sync::Arc;
-use url::Url;
-use std::borrow::Cow;
 use postgres::Config as PostgresConfig;
+use postgres_inspector::Postgres;
+use prisma_query::connector::{PostgreSql as PostgresDriver, Sqlite as SqliteDriver};
+use prisma_query::Connectional;
+use sqlite::Sqlite;
+use std::borrow::Cow;
+use std::sync::Arc;
 use std::time::Duration;
+use url::Url;
 
 pub trait DatabaseInspector {
     fn introspect(&self, schema: &String) -> DatabaseSchema;
@@ -29,7 +29,7 @@ impl DatabaseInspector {
 
     pub fn sqlite(file_path: String) -> Sqlite {
         let connection_limit = 5;
-        let test_mode = false;        
+        let test_mode = false;
         let conn = Arc::new(SqliteDriver::new(file_path, connection_limit, test_mode).unwrap());
         Self::sqlite_with_connectional(conn)
     }
@@ -57,15 +57,22 @@ impl DatabaseInspector {
 
         let root_connection = Arc::new(PostgresDriver::new(config.clone(), 1).unwrap());
         let db_sql = format!("CREATE DATABASE \"{}\";", &db_name);
-        let schema_name = parsed_url.query_pairs().into_iter().find(|qp| qp.0 == Cow::Borrowed("schema")).expect("schema param is missing").1.to_string();
+        let schema_name = parsed_url
+            .query_pairs()
+            .into_iter()
+            .find(|qp| qp.0 == Cow::Borrowed("schema"))
+            .expect("schema param is missing")
+            .1
+            .to_string();
         let _ = root_connection.query_on_raw_connection(&schema_name, &db_sql, &[]); // ignoring errors as there's no CREATE DATABASE IF NOT EXISTS in Postgres
-
 
         config.dbname(&db_name);
 
         let schema_connection = Arc::new(PostgresDriver::new(config, connection_limit).unwrap());
-        let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &schema_name));                
-        schema_connection.query_on_raw_connection(&schema_name, &schema_sql, &[]).expect("Creation of Postgres Schema failed");
+        let schema_sql = dbg!(format!("CREATE SCHEMA IF NOT EXISTS \"{}\";", &schema_name));
+        schema_connection
+            .query_on_raw_connection(&schema_name, &schema_sql, &[])
+            .expect("Creation of Postgres Schema failed");
         Postgres::new(schema_connection)
     }
 
@@ -83,7 +90,7 @@ impl DatabaseSchema {
     pub fn table(&self, name: &str) -> Result<&Table, String> {
         match self.tables.iter().find(|t| t.name == name) {
             Some(t) => Ok(t),
-            None => Err(format!("Table {} not found", name))
+            None => Err(format!("Table {} not found", name)),
         }
     }
 

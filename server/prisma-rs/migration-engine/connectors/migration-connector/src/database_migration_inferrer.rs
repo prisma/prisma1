@@ -1,4 +1,4 @@
-use crate::{MigrationStep, ConnectorResult};
+use crate::{ConnectorResult, MigrationStep};
 use datamodel::Datamodel;
 
 pub trait DatabaseMigrationInferrer<T> {

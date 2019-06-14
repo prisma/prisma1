@@ -36,7 +36,6 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
                 Err(err)
             }
         }
-
     }
 
     fn unapply(&self, migration: &Migration, database_migration: &T) -> ConnectorResult<()> {
@@ -60,7 +59,6 @@ impl<T> MigrationApplier<T> for MigrationApplierImpl<T> {
                 Err(err)
             }
         }
-
     }
 }
 
@@ -75,7 +73,11 @@ impl<T> MigrationApplierImpl<T> {
         Ok(())
     }
 
-    fn go_backward(&self, migration_updates: &mut MigrationUpdateParams, database_migration: &T) -> ConnectorResult<()> {
+    fn go_backward(
+        &self,
+        migration_updates: &mut MigrationUpdateParams,
+        database_migration: &T,
+    ) -> ConnectorResult<()> {
         let mut step = 0;
         while self.step_applier.unapply_step(&database_migration, step)? {
             step += 1;
