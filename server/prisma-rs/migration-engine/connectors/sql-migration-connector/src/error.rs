@@ -19,3 +19,9 @@ impl From<prisma_query::error::Error> for SqlError {
         SqlError::Generic(format!("{:?}", error))
     }
 }
+
+impl From<String> for SqlError {
+    fn from(error: String) -> Self {
+        SqlError::Generic(error)
+    }
+}

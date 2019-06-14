@@ -33,7 +33,7 @@ impl MigrationCommand for InferMigrationStepsCommand {
         let database_migration =
             connector
                 .database_migration_inferrer()
-                .infer(&assumed_datamodel, &next_datamodel, &model_migration_steps);
+                .infer(&assumed_datamodel, &next_datamodel, &model_migration_steps)?;
 
         let database_steps_json = connector
             .database_migration_step_applier()

@@ -25,9 +25,8 @@ where
 pub fn test_engine(config: &str) -> Box<MigrationEngine> {
     let underlying_db_must_exist = true;
     let engine = MigrationEngine::new(config, underlying_db_must_exist);
-    let connector = engine.connector();
-    connector.reset();
-    engine.init();
+    engine.reset().expect("Engine reset failed.");
+    engine.init().expect("Engine init failed");
     engine
 }
 

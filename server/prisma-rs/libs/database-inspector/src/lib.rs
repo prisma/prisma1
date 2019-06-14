@@ -80,16 +80,19 @@ pub struct DatabaseSchema {
 }
 
 impl DatabaseSchema {
-    pub fn table(&self, name: &str) -> Option<&Table> {
-        self.tables.iter().find(|t| t.name == name)
+    pub fn table(&self, name: &str) -> Result<&Table, String> {
+        match self.tables.iter().find(|t| t.name == name) {
+            Some(t) => Ok(t),
+            None => Err(format!("Table {} not found", name))
+        }
     }
 
     pub fn table_bang(&self, name: &str) -> &Table {
-        self.table(&name).expect(&format!("Table {} not found", name))
+        self.table(&name).unwrap()
     }
 
     pub fn has_table(&self, name: &str) -> bool {
-        self.table(name).is_some()
+        self.table(name).is_ok()
     }
 
     pub fn empty() -> DatabaseSchema {

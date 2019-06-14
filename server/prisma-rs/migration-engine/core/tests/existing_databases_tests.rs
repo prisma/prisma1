@@ -44,12 +44,12 @@ fn removing_a_model_for_a_table_that_is_already_deleted_must_work() {
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
-        assert_eq!(initial_result.table("Post").is_some(), true);
+        assert!(initial_result.has_table("Post"));
 
         let result = barrel.execute(|migration| {
             migration.drop_table("Post");
         });
-        assert_eq!(result.table("Post").is_some(), false);
+        assert!(!result.has_table("Post"));
 
         let dm2 = r#"
             model Blog {
@@ -141,7 +141,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
-        assert_eq!(initial_result.table("Blog_tags").is_some(), false);
+        assert!(!initial_result.has_table("Blog_tags"));
 
         let result = barrel.execute(|migration| {
             migration.create_table("Blog_tags", |t| {
@@ -150,7 +150,7 @@ fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
                 t.add_column("value", types::text());
             });
         });
-        assert_eq!(result.table("Blog_tags").is_some(), true);
+        assert!(result.has_table("Blog_tags"));
 
         let dm2 = r#"
             model Blog {
@@ -204,12 +204,12 @@ fn deleting_a_scalar_list_field_for_a_non_existent_list_table_must_work() {
             }
         "#;
         let initial_result = infer_and_apply(&engine, &dm1);
-        assert_eq!(initial_result.table("Blog_tags").is_some(), true);
+        assert!(initial_result.has_table("Blog_tags"));
 
         let result = barrel.execute(|migration| {
             migration.drop_table("Blog_tags");
         });
-        assert_eq!(result.table("Blog_tags").is_some(), false);
+        assert!(!result.has_table("Blog_tags"));
 
         let dm2 = r#"
             model Blog {

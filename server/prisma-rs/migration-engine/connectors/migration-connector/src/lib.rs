@@ -21,9 +21,9 @@ extern crate serde_derive;
 pub trait MigrationConnector {
     type DatabaseMigration: DatabaseMigrationMarker + 'static;
 
-    fn initialize(&self);
+    fn initialize(&self) -> ConnectorResult<()>;
 
-    fn reset(&self);
+    fn reset(&self) -> ConnectorResult<()>;
 
     fn migration_persistence(&self) -> Arc<MigrationPersistence>;
 

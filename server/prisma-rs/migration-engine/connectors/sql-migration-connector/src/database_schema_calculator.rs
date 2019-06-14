@@ -50,7 +50,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                     name: model.db_name(),
                     columns: columns,
                     indexes: Vec::new(),
-                    primary_key_columns: vec![model.id_field().db_name()],
+                    primary_key_columns: vec![model.id_field().unwrap().db_name()],
                 };
                 ModelTable {
                     model: model.clone(),
@@ -69,7 +69,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                 .filter(|f| f.arity == FieldArity::List && is_scalar(f))
                 .collect();
             for field in list_fields {
-                let id_field = model.id_field();
+                let id_field = model.id_field().unwrap();
                 let table = Table {
                     name: format!("{}_{}", model.db_name(), field.db_name()),
                     columns: vec![
@@ -79,7 +79,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                             true,
                             ForeignKey {
                                 table: model.db_name(),
-                                column: model.id_field().db_name(),
+                                column: model.id_field().unwrap().db_name(),
                             },
                         ),
                         Column::new("position".to_string(), ColumnType::Int, true),
@@ -112,11 +112,11 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         };
                         let column = Column::with_foreign_key(
                             column.to_string(),
-                            column_type(&related_model.id_field()),
+                            column_type(&related_model.id_field().unwrap()),
                             relation.field_a.is_required() || relation.field_b.is_required(),
                             ForeignKey {
                                 table: related_model.db_name(),
-                                column: related_model.id_field().db_name(),
+                                column: related_model.id_field().unwrap().db_name(),
                             },
                         );
                         model_table.table.columns.push(column);
@@ -139,20 +139,20 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                         columns: vec![
                             Column::with_foreign_key(
                                 relation.model_a_column(),
-                                column_type(&relation.model_a.id_field()),
+                                column_type(&relation.model_a.id_field().unwrap()),
                                 true,
                                 ForeignKey {
                                     table: relation.model_a.db_name(),
-                                    column: relation.model_a.id_field().db_name(),
+                                    column: relation.model_a.id_field().unwrap().db_name(),
                                 },
                             ),
                             Column::with_foreign_key(
                                 relation.model_b_column(),
-                                column_type(&relation.model_b.id_field()),
+                                column_type(&relation.model_b.id_field().unwrap()),
                                 true,
                                 ForeignKey {
                                     table: relation.model_b.db_name(),
-                                    column: relation.model_b.id_field().db_name(),
+                                    column: relation.model_b.id_field().unwrap().db_name(),
                                 },
                             ),
                         ],
@@ -179,14 +179,17 @@ struct ModelTable {
 }
 
 trait ModelExtensions {
-    fn id_field(&self) -> &Field;
+    fn id_field(&self) -> Result<&Field, String>;
 
     fn db_name(&self) -> String;
 }
 
 impl ModelExtensions for Model {
-    fn id_field(&self) -> &Field {
-        self.fields().find(|f| f.is_id()).unwrap()
+    fn id_field(&self) -> Result<&Field, String> {
+        match self.fields().find(|f| f.is_id()) {
+            Some(f) => Ok(f),
+            None => Err(format!("Model {} does not have an id field", self.name))
+        }
     }
 
     fn db_name(&self) -> String {

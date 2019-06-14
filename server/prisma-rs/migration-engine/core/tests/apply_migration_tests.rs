@@ -27,7 +27,7 @@ fn single_watch_migrations_must_work() {
         assert_eq!(migrations.len(), 2);
         assert_eq!(migrations[0].name, "watch-0001");
         assert_eq!(migrations[1].name, custom_migration_id);
-        assert_eq!(migrations[1].status, MigrationStatus::Success);
+        assert_eq!(migrations[1].status, MigrationStatus::MigrationSuccess);
         assert!(migrations[1].finished_at.is_some());
     });
 }
@@ -66,7 +66,7 @@ fn multiple_watch_migrations_must_work() {
         assert_eq!(migrations[0].name, "watch-0001");
         assert_eq!(migrations[1].name, "watch-0002");
         assert_eq!(migrations[2].name, custom_migration_id);
-        assert_eq!(migrations[2].status, MigrationStatus::Success);
+        assert_eq!(migrations[2].status, MigrationStatus::MigrationSuccess);
         assert!(migrations[2].finished_at.is_some());
     });
 }

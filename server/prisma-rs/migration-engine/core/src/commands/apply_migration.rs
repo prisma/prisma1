@@ -75,7 +75,7 @@ impl ApplyMigrationCommand {
         let database_migration =
             connector
                 .database_migration_inferrer()
-                .infer(&current_datamodel, &next_datamodel, &self.input.steps); // TODO: those steps are a lie right now. Does not matter because we don't use them at the moment.
+                .infer(&current_datamodel, &next_datamodel, &self.input.steps)?; // TODO: those steps are a lie right now. Does not matter because we don't use them at the moment.
 
         let database_steps_json_pretty = connector
             .database_migration_step_applier()

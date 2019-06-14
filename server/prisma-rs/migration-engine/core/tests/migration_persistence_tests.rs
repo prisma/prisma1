@@ -59,7 +59,7 @@ fn create_should_allow_to_create_a_new_migration() {
         .unwrap();
         let persistence = engine.connector().migration_persistence();
         let mut migration = Migration::new("my_migration".to_string());
-        migration.status = MigrationStatus::Success;
+        migration.status = MigrationStatus::MigrationSuccess;
         migration.datamodel = datamodel;
         migration.datamodel_steps = vec![MigrationStep::CreateEnum(CreateEnum {
             name: "MyEnum".to_string(),
@@ -94,7 +94,7 @@ fn update_must_work() {
         let migration = persistence.create(Migration::new("my_migration".to_string()));
 
         let mut params = migration.update_params();
-        params.status = MigrationStatus::Success;
+        params.status = MigrationStatus::MigrationSuccess;
         params.applied = 10;
         params.rolled_back = 11;
         params.errors = vec!["err1".to_string(), "err2".to_string()];

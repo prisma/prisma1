@@ -62,7 +62,7 @@ impl MigrationPersistence for SqlMigrationPersistence {
     }
 
     fn last(&self) -> Option<Migration> {
-        let conditions = STATUS_COLUMN.equals("Success");
+        let conditions = STATUS_COLUMN.equals(MigrationStatus::MigrationSuccess.code());
         let query = Select::from_table(self.table())
             .so_that(conditions)
             .order_by(REVISION_COLUMN.descend());
