@@ -134,7 +134,7 @@ impl<'a> DatamodelConverter<'a> {
                         // TODO: handle case of implicit back relation field
                         let related_field = related_model
                             .fields()
-                            .find(|f| related_type(f) == Some(model.name.to_string()))
+                            .find(|f| related_type(f) == Some(model.name.to_string()) && f.name != field.name)
                             .expect(&format!(
                                 "Related model for model {} and field {} not found",
                                 model.name, field.name
