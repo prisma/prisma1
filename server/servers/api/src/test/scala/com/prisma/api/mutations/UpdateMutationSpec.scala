@@ -58,7 +58,7 @@ class UpdateMutationSpec extends FlatSpec with Matchers with ApiSpecBase {
     )
 
     updateResult.pathAsJsValue("data.updateScalarModel").toString should be(
-      s"""{"optJson":[1,2,3],"optInt":1337,"optBoolean":true,"optDateTime":"2016-07-31T23:59:01.000Z","optString":"lala${TroubleCharacters.value}","optEnum":"A","optFloat":1.234}""")
+      s"""{"optString":"lala${TroubleCharacters.value}","optInt":1337,"optFloat":1.234,"optBoolean":true,"optEnum":"A","optDateTime":"2016-07-31T23:59:01.000Z","optJson":[1,2,3]}""")
 
     val query = server.query(
       s"""
