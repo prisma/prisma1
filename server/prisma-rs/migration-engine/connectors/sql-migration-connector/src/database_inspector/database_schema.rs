@@ -1,5 +1,6 @@
+use datamodel::Value;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct DatabaseSchema {
     pub tables: Vec<Table>,
 }
@@ -25,7 +26,7 @@ impl DatabaseSchema {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Table {
     pub name: String,
     pub columns: Vec<Column>,
@@ -48,13 +49,14 @@ impl Table {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Column {
     pub name: String,
     pub tpe: ColumnType,
     pub is_required: bool,
     pub foreign_key: Option<ForeignKey>,
     pub sequence: Option<Sequence>,
+    pub default: Option<Value>,
 }
 
 impl Column {
@@ -65,6 +67,7 @@ impl Column {
             is_required,
             foreign_key: None,
             sequence: None,
+            default: None
         }
     }
 
@@ -75,11 +78,12 @@ impl Column {
             is_required,
             foreign_key: Some(foreign_key),
             sequence: None,
+            default: None,
         }
     }
 }
 
-#[derive(Debug, Copy, PartialEq, Eq, Clone)]
+#[derive(Debug, Copy, PartialEq, Clone)]
 pub enum ColumnType {
     Int,
     Float,
@@ -88,19 +92,19 @@ pub enum ColumnType {
     DateTime,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ForeignKey {
     pub table: String,
     pub column: String,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Sequence {
     pub name: String,
     pub current: u32,
 }
 
-#[derive(Debug, PartialEq, Eq, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Index {
     pub name: String,
     pub columns: Vec<String>,

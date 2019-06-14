@@ -41,6 +41,7 @@ impl<'a> DatabaseSchemaCalculator<'a> {
                                 is_required: arity == &FieldArity::Required,
                                 foreign_key: None,
                                 sequence: None,
+                                default: f.default_value.clone(),
                             })
                         }
                         _ => None,

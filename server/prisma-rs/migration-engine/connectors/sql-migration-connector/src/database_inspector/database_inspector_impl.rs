@@ -21,6 +21,7 @@ pub fn convert_introspected_columns(
                 is_required: c.is_required,
                 foreign_key: foreign_key,
                 sequence: None,
+                default: None,
             }
         })
         .collect()
