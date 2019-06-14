@@ -89,7 +89,7 @@ ${chalk.green(`${figures.tick} Your all set!`)}
       format(`
 Usage: prisma init
 
-Initialize a new service
+Initialize files for a new Prisma project
     `),
     )
   }
