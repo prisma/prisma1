@@ -15,9 +15,8 @@ fn count_lines(text: &str) -> usize {
     text.as_bytes().iter().filter(|&&c| c == b'\n').count()
 }
 
-fn newlines(target: &mut LineWriteable, text: &str, indicator: &str) {
+fn newlines(target: &mut LineWriteable, text: &str) {
     for i in 0..count_lines(text) {
-        target.write(indicator);
         target.end_line();
     }
 }
@@ -38,7 +37,7 @@ impl Reformatter {
     pub fn reformat_top(target: &mut RefCell<Renderer>, token: &Token) {
         for current in token.clone().into_inner() {
             match current.as_rule() {
-                Rule::WHITESPACE => newlines(target.get_mut(), current.as_str(), "d"),
+                Rule::WHITESPACE => newlines(target.get_mut(), current.as_str()),
                 Rule::COMMENT => comment(target.get_mut(), current.as_str()),
                 Rule::model_declaration => Self::reformat_model(target, &current),
                 Rule::enum_declaration => unimplemented!(),
@@ -81,7 +80,7 @@ impl Reformatter {
                         let table = RefCell::new(TableFormat::new());
                     }
 
-                    newlines(table.get_mut(), current.as_str(), "m");
+                    newlines(table.get_mut(), current.as_str());
                 }
                 Rule::COMMENT => comment(&mut table.get_mut().interleave_writer(), current.as_str()),
                 _ => unreachable!("Encounterd impossible model declaration during parsing: {:?}", current.tokens())
@@ -109,7 +108,7 @@ impl Reformatter {
                     &current, "@"),
                 Rule::doc_comment => comment(&mut target.get_mut().interleave_writer(), current.as_str()),
                 Rule::COMMENT => comment(&mut target.get_mut().interleave_writer(), current.as_str()),
-                Rule::WHITESPACE => newlines(target.get_mut(), current.as_str(), "f"),
+                Rule::WHITESPACE => newlines(target.get_mut(), current.as_str()),
                 _ => unreachable!("Encounterd impossible field during parsing: {:?}", current.tokens())
             }
         }
@@ -154,9 +153,88 @@ impl Reformatter {
                     target.write(current.as_str());
                 },
                 Rule::WHITESPACE => { },
-                Rule::COMMENT => panic!("Comments inside attributes not supported."),
-                Rule::directive_arguments => unimplemented!(),
+                Rule::COMMENT => panic!("Comments inside attributes not supported yet."),
+                Rule::directive_arguments => Self::reformat_directive_args(target, &current),
                 _ => unreachable!("Encounterd impossible directive during parsing: {:?}", current.tokens())
+            }
+        }
+    }
+
+
+    pub fn reformat_directive_args(target: &mut LineWriteable, token: &Token) {
+
+        let mut builder = StringBuilder::new();
+
+        for current in token.clone().into_inner() {
+            match current.as_rule() {
+                // This is a named arg.
+                Rule::argument => {
+                    if !builder.line_empty() {
+                        builder.write(", ");
+                    }
+                    Self::reformat_directive_arg(&mut builder, &current);
+
+                }
+                // This is a an unnamed arg.
+                Rule::argument_value => {
+                    if !builder.line_empty() {
+                        builder.write(", ");
+                    }
+                    Self::reformat_arg_value(&mut builder, &current);
+                    
+                },
+                Rule::WHITESPACE => { },
+                Rule::COMMENT => panic!("Comments inside attributes not supported yet."),
+                _ => unreachable!("Encounterd impossible directive argument during parsing: {:?}", current.tokens())
+            };
+        }
+
+        if !builder.line_empty() {
+            target.write("(");
+            target.write(&builder.to_string());
+            target.write(")");
+        }
+    }
+
+    pub fn reformat_directive_arg(target: &mut LineWriteable, token: &Token) {    
+        for current in token.clone().into_inner() {
+            match current.as_rule() {
+                Rule::argument_name => {
+                    target.write(current.as_str());
+                    target.write(": ");
+                }
+                Rule::argument_value => Self::reformat_arg_value(target, &current),
+                Rule::WHITESPACE => { },
+                Rule::COMMENT => panic!("Comments inside attributes not supported yet."),
+                _ => unreachable!("Encounterd impossible directive argument during parsing: {:?}", current.tokens())
+            };
+        }
+    }
+
+    pub fn reformat_arg_value(target: &mut LineWriteable, token: &Token) {    
+        for current in token.clone().into_inner() {
+            match current.as_rule() {
+                Rule::expression => Self::reformat_expression(target, &current),
+                Rule::WHITESPACE => { },
+                Rule::COMMENT => panic!("Comments inside attributes not supported yet."),
+                _ => unreachable!("Encounterd impossible directive argument during parsing: {:?}", current.tokens())
+            };
+        }
+    }
+
+    /// Parses an expression, given a Pest parser token.
+    pub fn reformat_expression(target: &mut LineWriteable, token: &Token) {   
+        for current in token.clone().into_inner() {
+            match current.as_rule() {
+                Rule::numeric_literal => target.write(current.as_str()),
+                Rule::string_literal => target.write(current.as_str()),
+                Rule::boolean_literal => target.write(current.as_str()),
+                Rule::constant_literal => target.write(current.as_str()),
+                Rule::function => unimplemented!(),
+                Rule::array_expression => unimplemented!(),
+                Rule::WHITESPACE => { },
+                Rule::COMMENT => panic!("Comments inside expressions not supported yet."),
+                _ => unreachable!("Encounterd impossible literal during parsing: {:?}", current.tokens())
             }
         }
     }
