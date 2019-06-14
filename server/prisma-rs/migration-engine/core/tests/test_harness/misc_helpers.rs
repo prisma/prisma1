@@ -1,7 +1,7 @@
 use database_inspector::*;
 use datamodel;
 use migration_core::{MigrationEngine, parse_datamodel};
-use std::panic;
+use sql_migration_connector::SqlFamily;
 
 pub const SCHEMA_NAME: &str = "migration_engine";
 
@@ -9,17 +9,34 @@ pub fn parse(datamodel_string: &str) -> datamodel::Datamodel {
     parse_datamodel(datamodel_string).unwrap()
 }
 
-pub fn run_test_with_engine<T, X>(test: T) -> X
-where
-    T: FnOnce(Box<MigrationEngine>) -> X + panic::UnwindSafe,
+pub fn test_each_connector<TestFn>(testFn: TestFn)
+    where 
+        TestFn: Fn(&MigrationEngine) -> () + std::panic::RefUnwindSafe,
 {
-    // SETUP
-    let engine = test_engine(&test_config());
+    test_each_connector_with_ignores(Vec::new(), testFn);
+}
 
-    // TEST
-    let result = panic::catch_unwind(|| test(engine));
-    assert!(result.is_ok());
-    result.unwrap()
+pub fn test_each_connector_with_ignores<TestFn>(ignores: Vec<SqlFamily>, testFn: TestFn)
+    where 
+        TestFn: Fn(&MigrationEngine) -> () + std::panic::RefUnwindSafe,
+{
+    // SQLite
+    if !ignores.contains(&SqlFamily::Sqlite){
+        println!("Testing with SQLite now");
+        let engine = test_engine(&sqlite_test_config());
+        testFn(&engine);
+    } else {
+        println!("Ignoring SQLite")
+    }
+    // POSTGRES
+    if !ignores.contains(&SqlFamily::Postgres){
+        println!("Testing with Postgres now");
+        let engine = test_engine(&postgres_test_config());        
+        testFn(&engine);
+    } else {
+        println!("Ignoring Postgres")
+    }
+    
 }
 
 pub fn test_engine(config: &str) -> Box<MigrationEngine> {
@@ -36,16 +53,6 @@ pub fn introspect_database(engine: &MigrationEngine) -> DatabaseSchema {
     // the presence of the _Migration table makes assertions harder. Therefore remove it from the result.
     result.tables = result.tables.into_iter().filter(|t| t.name != "_Migration").collect();
     result
-}
-
-pub fn test_config_json_escaped() -> String {
-    let config = test_config();
-    serde_json::to_string(&serde_json::Value::String(config)).unwrap()
-}
-
-fn test_config() -> String {
-    sqlite_test_config()
-    // postgres_test_config()
 }
 
 pub fn sqlite_test_config() -> String {

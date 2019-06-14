@@ -50,9 +50,14 @@ fn error_if_the_datamodel_is_invalid() {
 }
 
 fn handle_command(command: &str) -> String {
-    // just using this because of its feature to reset the test db
-    run_test_with_engine(|_| {
-        let rpc_api = RpcApi::new();
-        rpc_api.handle_input(command)
-    })
+    // just using the engine to reset the db
+    let engine = test_engine(&sqlite_test_config());
+    engine.reset().unwrap();
+    let rpc_api = RpcApi::new();
+    rpc_api.handle_input(command)
+}
+
+pub fn test_config_json_escaped() -> String {
+    let config = sqlite_test_config();
+    serde_json::to_string(&serde_json::Value::String(config)).unwrap()
 }

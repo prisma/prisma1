@@ -6,7 +6,7 @@ use test_harness::*;
 
 #[test]
 fn assume_to_be_applied_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let dm0 = r#"
             model Blog {
                 id Int @id
@@ -48,7 +48,7 @@ fn assume_to_be_applied_must_work() {
 
 #[test]
 fn special_handling_of_watch_migrations() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let dm = r#"
             model Blog {
                 id Int @id

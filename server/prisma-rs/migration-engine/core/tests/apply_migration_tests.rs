@@ -6,7 +6,7 @@ use test_harness::*;
 
 #[test]
 fn single_watch_migrations_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps = vec![
@@ -34,7 +34,7 @@ fn single_watch_migrations_must_work() {
 
 #[test]
 fn multiple_watch_migrations_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps1 = vec![
@@ -73,7 +73,7 @@ fn multiple_watch_migrations_must_work() {
 
 #[test]
 fn steps_equivalence_criteria_is_satisfied_when_leaving_watch_mode() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps1 = vec![
@@ -105,7 +105,7 @@ fn steps_equivalence_criteria_is_satisfied_when_leaving_watch_mode() {
 
 #[test]
 fn must_handle_additional_steps_when_transitioning_out_of_watch_mode() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let migration_persistence = engine.connector().migration_persistence();
 
         let steps1 = vec![

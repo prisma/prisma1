@@ -7,7 +7,7 @@ use test_harness::*;
 
 #[test]
 fn last_should_return_none_if_there_is_no_migration() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let persistence = engine.connector().migration_persistence();
         let result = persistence.last();
         assert_eq!(result.is_some(), false);
@@ -16,7 +16,7 @@ fn last_should_return_none_if_there_is_no_migration() {
 
 #[test]
 fn last_must_return_none_if_there_is_no_successful_migration() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let persistence = engine.connector().migration_persistence();
         persistence.create(Migration::new("my_migration".to_string()));
         let loaded = persistence.last();
@@ -26,7 +26,7 @@ fn last_must_return_none_if_there_is_no_successful_migration() {
 
 #[test]
 fn load_all_should_return_empty_if_there_is_no_migration() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let persistence = engine.connector().migration_persistence();
         let result = persistence.load_all();
         assert_eq!(result.is_empty(), true);
@@ -35,7 +35,7 @@ fn load_all_should_return_empty_if_there_is_no_migration() {
 
 #[test]
 fn load_all_must_return_all_created_migrations() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let persistence = engine.connector().migration_persistence();
         let migration1 = persistence.create(Migration::new("migration_1".to_string()));
         let migration2 = persistence.create(Migration::new("migration_2".to_string()));
@@ -48,7 +48,7 @@ fn load_all_must_return_all_created_migrations() {
 
 #[test]
 fn create_should_allow_to_create_a_new_migration() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let datamodel = datamodel::parse(
             r#"
             model Test {
@@ -79,7 +79,7 @@ fn create_should_allow_to_create_a_new_migration() {
 
 #[test]
 fn create_should_increment_revisions() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let persistence = engine.connector().migration_persistence();
         let migration1 = persistence.create(Migration::new("migration_1".to_string()));
         let migration2 = persistence.create(Migration::new("migration_2".to_string()));
@@ -89,7 +89,7 @@ fn create_should_increment_revisions() {
 
 #[test]
 fn update_must_work() {
-    run_test_with_engine(|engine| {
+    test_each_connector(|engine| {
         let persistence = engine.connector().migration_persistence();
         let migration = persistence.create(Migration::new("my_migration".to_string()));
 
