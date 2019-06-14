@@ -19,6 +19,7 @@ lazy_static! {
     pub static ref CONFIG: PrismaConfig = config::load().unwrap();
 }
 
+#[no_mangle]
 pub unsafe extern "C" fn create_interface(database_file: *const c_char) -> *mut ProtoBufInterface {
     let database_file = CStr::from_ptr(database_file).to_str().unwrap();
     let database_file: Option<String> = if database_file == "" {
@@ -31,10 +32,12 @@ pub unsafe extern "C" fn create_interface(database_file: *const c_char) -> *mut 
     Box::into_raw(Box::new(pbi))
 }
 
+#[no_mangle]
 pub unsafe extern "C" fn destroy_interface(ptr: *mut ProtoBufInterface) {
     Box::from_raw(ptr);
 }
 
+#[no_mangle]
 pub unsafe extern "C" fn destroy(buffer: *mut ProtoBufEnvelope) {
     Box::from_raw(buffer);
 }
@@ -48,7 +51,7 @@ macro_rules! data_interface {
         }
 
         $(
-
+            #[no_mangle]
             pub unsafe extern "C" fn $function(pbi: *mut ProtoBufInterface, data: *mut u8, len: usize) -> *mut ProtoBufEnvelope {
                 let pbi = Box::from_raw(pbi);
                 let payload = slice::from_raw_parts_mut(data, len);
