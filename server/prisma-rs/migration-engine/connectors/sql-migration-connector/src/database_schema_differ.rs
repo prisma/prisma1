@@ -123,7 +123,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
         let mut result = Vec::new();
         for next_column in &next.columns {
             if let Some(previous_column) = previous.column(&next_column.name) {
-                if previous_column != next_column {
+                if previous_column.differs_in_something_except_default(next_column) {
                     let change = AlterColumn {
                         name: previous_column.name.clone(),
                         column: Self::column_description(next_column),

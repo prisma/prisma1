@@ -60,6 +60,16 @@ pub struct Column {
 }
 
 impl Column {
+    pub fn differs_in_something_except_default(&self, other: &Column) -> bool {
+        self.name != other.name ||
+            self.tpe != other.tpe ||
+            self.is_required != other.is_required ||
+            self.foreign_key != other.foreign_key ||
+            self.sequence != other.sequence
+    }
+}
+
+impl Column {
     pub fn new(name: String, tpe: ColumnType, is_required: bool) -> Column {
         Column {
             name,
