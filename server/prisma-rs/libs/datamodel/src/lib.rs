@@ -163,15 +163,15 @@ pub fn parse_to_ast(datamodel_string: &str) -> Result<ast::Datamodel, errors::Va
 }
 
 /// Renders an datamodel AST to a stream as datamodel string. For internal use only.
-pub fn render_ast_to(stream: &mut std::io::Write, datamodel: &ast::Datamodel) {
-    let mut renderer = renderer::Renderer::new(stream);
+pub fn render_ast_to(stream: &mut std::io::Write, datamodel: &ast::Datamodel, ident_width: usize) {
+    let mut renderer = renderer::Renderer::new(stream, ident_width);
     renderer.render(datamodel);
 }
 
 /// Renders a datamodel to a stream as datamodel string.
 pub fn render_to(stream: &mut std::io::Write, datamodel: &dml::Datamodel) -> Result<(), errors::ErrorCollection> {
     let lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
-    render_ast_to(stream, &lowered);
+    render_ast_to(stream, &lowered, 2);
     Ok(())
 }
 
@@ -184,7 +184,7 @@ pub fn render_with_sources_to(
 ) -> Result<(), errors::ErrorCollection> {
     let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     SourceSerializer::add_sources_to_ast(sources, &mut lowered);
-    render_ast_to(stream, &lowered);
+    render_ast_to(stream, &lowered, 2);
     Ok(())
 }
 
@@ -197,14 +197,14 @@ pub fn render_with_config_to(
     let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     SourceSerializer::add_sources_to_ast(&config.datasources, &mut lowered);
     GeneratorLoader::add_generators_to_ast(&config.generators, &mut lowered);
-    render_ast_to(stream, &lowered);
+    render_ast_to(stream, &lowered, 2);
     Ok(())
 }
 
 /// Renders an datamodel AST to a datamodel string. For internal use only.
 pub fn render_ast(datamodel: &ast::Datamodel) -> String {
     let mut buffer = std::io::Cursor::new(Vec::<u8>::new());
-    render_ast_to(&mut buffer, datamodel);
+    render_ast_to(&mut buffer, datamodel, 2);
     String::from_utf8(buffer.into_inner()).unwrap()
 }
 

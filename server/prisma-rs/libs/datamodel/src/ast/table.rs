@@ -2,7 +2,7 @@ use super::renderer::LineWriteable;
 use super::string_builder::StringBuilder;
 use std::cmp::max;
 
-const COLUMN_SPACING: usize = 2;
+const COLUMN_SPACING: usize = 1;
 
 enum Row {
     Regular(Vec<String>),

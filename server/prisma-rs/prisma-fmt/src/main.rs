@@ -1,5 +1,8 @@
 use datamodel;
-use std::{fs, io::{self, Read}};
+use std::{
+    fs,
+    io::{self, Read},
+};
 
 extern crate clap;
 use clap::{App, Arg};
@@ -15,7 +18,7 @@ fn main() {
                 .long("input")
                 .value_name("INPUT_FILE")
                 .required(false)
-                .help("Specifies the input file to use. If none is given, the input is read from stdin.")
+                .help("Specifies the input file to use. If none is given, the input is read from stdin."),
         )
         .arg(
             Arg::with_name("output")
@@ -23,22 +26,36 @@ fn main() {
                 .long("output")
                 .value_name("OUTPUT_FILE")
                 .required(false)
-                .help("Specifies the output file to use. If none is given, the output is written to stdout.")
+                .help("Specifies the output file to use. If none is given, the output is written to stdout."),
+        )
+        .arg(
+            Arg::with_name("tabwidth")
+                .short("s")
+                .long("tabwidth")
+                .value_name("WIDTH")
+                .required(false)
+                .help("Specifies wich tab width to use when formaitting. Default is 2."),
         )
         .get_matches();
 
     let file_name = matches.value_of("input");
+    let tab_width = matches
+        .value_of("tabwidth")
+        .unwrap_or("2")
+        .parse::<usize>()
+        .expect("Error while parsing tab width.");
 
     // TODO: This is really ugly, clean it up.
     let (datamodel_string, file_name): (String, String) = if let Some(file_name) = file_name {
         (
-            fs::read_to_string(&file_name)
-                .expect(&format!("Unable to open file {}", file_name)),
-            String::from(file_name)
+            fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name)),
+            String::from(file_name),
         )
     } else {
         let mut buf = String::new();
-        io::stdin().read_to_string(&mut buf).expect("Unable to read from stdin.");
+        io::stdin()
+            .read_to_string(&mut buf)
+            .expect("Unable to read from stdin.");
         (buf, String::from("(from stdin)"))
     };
 
@@ -51,13 +68,14 @@ fn main() {
                 .expect("Failed to write errors to stderr");
         }
         Ok(ast) => {
-            let rendered = datamodel::render_ast(&ast);
             let file_name = matches.value_of("output");
 
             if let Some(file_name) = file_name {
-                fs::write(&file_name, &rendered).expect(&format!("Unable to open file {}", file_name));
+                let file = std::fs::File::open(file_name).expect(&format!("Unable to open file {}", file_name));
+                let mut stream = std::io::BufWriter::new(file);
+                datamodel::render_ast_to(&mut stream, ast, tab_width);
             } else {
-                print!("{}", rendered);
+                datamodel::render_ast_to(&mut std::io::stdout().lock(), ast, tab_width);
             }
         }
     }
