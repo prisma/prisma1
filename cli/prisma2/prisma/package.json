@@ -26,7 +26,11 @@
     "@prisma/lift": "^0.0.76",
     "@prisma/photon": "^0.0.75",
     "@zeit/ncc": "^0.18.5",
+    "jest": "24.8.0",
+    "mz": "2.7.0",
     "photogen": "^0.0.10",
+    "pkg-up": "3.1.0",
+    "ts-jest": "24.0.2",
     "typescript": "^3.5.1"
   },
   "scripts": {

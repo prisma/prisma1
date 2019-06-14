@@ -7,3 +7,4 @@ build
 download-build
 runtime
 photogen_ncc_build
+tmp
