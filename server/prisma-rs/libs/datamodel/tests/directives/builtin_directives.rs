@@ -65,10 +65,10 @@ fn duplicate_directives_should_error() {
 
     error.assert_is_at(
         0,
-        ValidationError::new_duplicate_directive_error("unique", &ast::Span::new(75, 82)),
+        ValidationError::new_duplicate_directive_error("unique", &ast::Span::new(75, 81)),
     );
     error.assert_is_at(
         1,
-        ValidationError::new_duplicate_directive_error("unique", &ast::Span::new(83, 98)),
+        ValidationError::new_duplicate_directive_error("unique", &ast::Span::new(83, 89)),
     );
 }

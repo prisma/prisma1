@@ -4,6 +4,7 @@ use crate::ast;
 
 pub trait LineWriteable {
     fn write(&mut self, param: &str);
+    fn line_empty(&self) -> bool;
     fn end_line(&mut self);
 }
 
@@ -358,5 +359,9 @@ impl<'a> LineWriteable for Renderer<'a> {
         }
         // Otherwise we just set a flag and wait for the next write.
         self.new_line = true;
+    }
+
+    fn line_empty(&self) -> bool {
+        self.new_line
     }
 }

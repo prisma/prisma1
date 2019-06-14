@@ -1,4 +1,12 @@
 // ######################################
+// Readme
+// ######################################
+// You will notice the pattern ( X ~ Y | X )
+// instead of X ~ Y?. This is because we do not
+// want the concat operator ~ between X and Y
+// to consume any whitespace after X, if Y is not present.
+
+// ######################################
 // Global (builtin) expressions
 // ######################################
 
@@ -63,7 +71,7 @@ directive_arguments = { "(" ~ (((argument | argument_value) ~ ("," ~ argument)*)
 // This is a poor-mans version of namespacing
 directive_name = @{ (identifier ~ ".")? ~ identifier }
 // A directive either has one unnamed argument or any number of named arguments or no argument.
-directive = { directive_name ~ directive_arguments? }
+directive = { (directive_name ~ directive_arguments+ | directive_name) }
 
 // ######################################
 // Field declarations
@@ -84,7 +92,7 @@ field_declaration = { doc_comment* ~ identifier ~ field_type ~ ( "@" ~ directive
 // ######################################
 // Custom type declarations
 // ######################################
-type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ base_type ~ ( "@" ~ directive )* }
+type_declaration = { doc_comment* ~ TYPE_KEYWORD ~ identifier ~ "=" ~ (base_type ~ ( "@" ~ directive )+ | base_type) }
 
 // ######################################
 // Model declarations

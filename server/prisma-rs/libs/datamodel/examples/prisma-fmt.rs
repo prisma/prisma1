@@ -20,17 +20,5 @@ fn main() {
     let file_name = matches.value_of("INPUT").unwrap();
     let file = fs::read_to_string(&file_name).expect(&format!("Unable to open file {}", file_name));
 
-    let ast = datamodel::parse_to_ast(&file);
-
-    match &ast {
-        Err(error) => {
-            error
-                .pretty_print(&mut std::io::stderr().lock(), file_name, &file)
-                .expect("Failed to write errors to stderr");
-        }
-        Ok(ast) => {
-            let rendered = datamodel::render_ast(&ast);
-            println!("{}", rendered);
-        }
-    }
+    datamodel::ast::reformat::Reformatter::reformat_to(&file, &mut std::io::stdout().lock(), 2);
 }
