@@ -149,6 +149,7 @@ impl<'a> DatabaseSchemaDiffer<'a> {
             tpe: Self::convert_column_type(column.tpe),
             required: column.is_required,
             foreign_key: fk,
+            default: column.default.clone(),
         }
     }
 
