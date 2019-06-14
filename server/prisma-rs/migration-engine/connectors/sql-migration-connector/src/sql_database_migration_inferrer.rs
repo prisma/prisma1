@@ -16,7 +16,7 @@ pub struct SqlDatabaseMigrationInferrer {
 impl DatabaseMigrationInferrer<SqlMigration> for SqlDatabaseMigrationInferrer {
     fn infer(&self, _previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> ConnectorResult<SqlMigration> {
         let current_database_schema = self.inspector.introspect(&self.schema_name);
-        let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
+        let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
         infer(&current_database_schema, &expected_database_schema, &self.schema_name, self.sql_family)
     }
 }
@@ -27,8 +27,8 @@ pub struct VirtualSqlDatabaseMigrationInferrer {
 }
 impl DatabaseMigrationInferrer<SqlMigration> for VirtualSqlDatabaseMigrationInferrer {
     fn infer(&self, previous: &Datamodel, next: &Datamodel, _steps: &Vec<MigrationStep>) -> ConnectorResult<SqlMigration> {
-        let current_database_schema = DatabaseSchemaCalculator::calculate(previous);
-        let expected_database_schema = DatabaseSchemaCalculator::calculate(next);
+        let current_database_schema = DatabaseSchemaCalculator::calculate(previous)?;
+        let expected_database_schema = DatabaseSchemaCalculator::calculate(next)?;
         infer(&current_database_schema, &expected_database_schema, &self.schema_name, self.sql_family)
     }
 }
