@@ -212,6 +212,7 @@ fn render_value(value: &Value) -> String {
             raw.truncate(raw.len() - 4); // strip the UTC suffix
             format!("'{}'", raw) // add quotes
         },
+        Value::ConstantLiteral(x) => format!("'{}'", x), // this represents enum values
         _ => unimplemented!(),
     }
 }
