@@ -2,6 +2,7 @@
 mod test_harness;
 use test_harness::*;
 use prisma_query::ast::*;
+use sql_migration_connector::SqlFamily;
 
 #[test]
 fn adding_a_required_field_if_there_is_data() {
@@ -58,6 +59,7 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
         infer_and_apply(&engine, &dm);
 
         let conn = connectional(sql_family);
+        
         let insert = Insert::single_into((SCHEMA_NAME, "Test")).value("id", "test");
         conn.execute_on_connection(SCHEMA_NAME, insert.into()).unwrap();
 
@@ -79,5 +81,22 @@ fn adding_a_required_field_must_use_the_default_value_for_migrations() {
             }
         "#;
         infer_and_apply(&engine, &dm);
+
+        // TODO: those assertions somehow fail with column not found on SQLite. I could observe the correct data in the db file though.
+        if sql_family != SqlFamily::Sqlite {
+            let conditions = "id".equals("test");
+            let table_for_select: Table = match sql_family {
+                SqlFamily::Sqlite => {
+                    // sqlite case. Otherwise prisma-query produces invalid SQL
+                    "Test".into()
+                }
+                _ => (SCHEMA_NAME, "Test").into(),
+            };
+            let query = Select::from_table(table_for_select).so_that(conditions);
+            let result_set = conn.query_on_connection(SCHEMA_NAME, query.into()).unwrap();
+            let row = result_set.into_iter().next().unwrap();
+            assert_eq!(row.get_as_integer("int").unwrap(), 1);
+            assert_eq!(row.get_as_string("string").unwrap(), "test_string");
+        }
     });
 }
