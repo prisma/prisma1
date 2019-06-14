@@ -114,7 +114,13 @@ impl<'a> QuerySchemaBuilder<'a> {
         output_objects.push(query_object_ref);
         output_objects.push(mutation_object_ref);
 
-        QuerySchema::new(query_type, mutation_type, input_objects, output_objects)
+        QuerySchema::new(
+            query_type,
+            mutation_type,
+            input_objects,
+            output_objects,
+            self.internal_data_model,
+        )
     }
 
     /// Builds the root query type.

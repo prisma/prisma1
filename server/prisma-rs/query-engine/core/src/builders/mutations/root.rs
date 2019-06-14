@@ -5,13 +5,14 @@ use crate::{
     builders::{utils, NestedValue, ValueList, ValueMap, ValueSplit},
     CoreError, CoreResult, ManyNestedBuilder, QuerySchemaRef, SimpleNestedBuilder, UpsertNestedBuilder, WriteQuery,
 };
+use crate::{
+    schema::{ModelOperation, OperationTag},
+    Inflector, Query,
+};
 use connector::{filter::NodeSelector, mutaction::* /* ALL OF IT */};
 use graphql_parser::query::{Field, Value};
 use prisma_models::{Field as ModelField, InternalDataModelRef, ModelRef, PrismaValue, Project};
-
-use crate::Inflector;
 use rust_inflector::Inflector as RustInflector;
-
 use std::{collections::BTreeMap, sync::Arc};
 
 /// A TopLevelMutation builder
@@ -30,18 +31,18 @@ impl<'field> MutationBuilder<'field> {
     }
 
     pub fn build(self) -> CoreResult<WriteQuery> {
-        // Handle `resetData` seperately
+        // Handle `resetData` separately
         if &self.field.name == "resetData" {
-            return handle_reset(&self.field, &self.query_schema);
+            return handle_reset(&self.field, Arc::clone(&self.query_schema.internal_data_model));
         }
 
         let args = into_tree(&self.field.arguments);
 
         let raw_name = self.field.alias.as_ref().unwrap_or_else(|| &self.field.name).clone();
-        let (op, model) = parse_model_action(&raw_name, Arc::clone(&self.model))?;
+        let model_operation = parse_model_action(&raw_name, Arc::clone(&self.model))?;
 
-        let inner = match op {
-            Operation::Create => {
+        let inner = match model_operation.operation {
+            OperationTag::CreateSingle => {
                 let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
                 let non_list_args = values.to_prisma_values().into();
                 let list_args = lists.into_iter().map(|la| la.convert()).collect();
@@ -54,7 +55,7 @@ impl<'field> MutationBuilder<'field> {
                     nested_mutactions,
                 })
             }
-            Operation::Update => {
+            OperationTag::UpdateSingle => {
                 let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
                 let non_list_args = values.to_prisma_values().into();
                 let list_args = lists.into_iter().map(|la| la.convert()).collect();
@@ -67,7 +68,7 @@ impl<'field> MutationBuilder<'field> {
                     nested_mutactions,
                 })
             }
-            Operation::UpdateMany => {
+            OperationTag::UpdateMany => {
                 let ValueSplit { values, lists, nested } = ValueMap(shift_data(&args, "data")?).split();
                 let non_list_args = values.to_prisma_values().into();
                 let list_args = lists.into_iter().map(|la| la.convert()).collect();
@@ -86,10 +87,10 @@ impl<'field> MutationBuilder<'field> {
                     list_args,
                 })
             }
-            Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
+            OperationTag::DeleteSingle => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
                 where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
             }),
-            Operation::DeleteMany => {
+            OperationTag::DeleteMany => {
                 let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
                 let filter = query_args
                     .filter
@@ -98,7 +99,7 @@ impl<'field> MutationBuilder<'field> {
 
                 TopLevelDatabaseMutaction::DeleteNodes(DeleteNodes { model, filter })
             }
-            Operation::Upsert => {
+            OperationTag::UpsertSingle => {
                 let where_ = utils::extract_node_selector(self.field, Arc::clone(&model))?;
 
                 let create = {
@@ -146,40 +147,38 @@ impl<'field> MutationBuilder<'field> {
 }
 
 /// A trap-door function that handles `resetData` without doing a whole bunch of other stuff
-fn handle_reset(field: &Field, data_model: &InternalDataModelRef) -> CoreResult<WriteQuery> {
+fn handle_reset(field: &Field, internal_data_model: InternalDataModelRef) -> CoreResult<WriteQuery> {
     Ok(WriteQuery {
-        inner: TopLevelDatabaseMutaction::ResetData(ResetData {
-            project: Arc::new(Project::from(data_model)),
-        }),
+        inner: TopLevelDatabaseMutaction::ResetData(ResetData { internal_data_model }),
         name: "resetData".into(),
         field: field.clone(),
     })
 }
 
 /// A simple enum to discriminate top-level actions
-pub enum Operation {
-    Create,
-    Update,
-    Delete,
-    Upsert,
-    UpdateMany,
-    DeleteMany,
-    Reset,
-}
+//pub enum Operation {
+//    Create,
+//    Update,
+//    Delete,
+//    Upsert,
+//    UpdateMany,
+//    DeleteMany,
+//    Reset,
+//}
 
-impl From<&str> for Operation {
-    fn from(s: &str) -> Self {
-        match s {
-            "create" => Operation::Create,
-            "update" => Operation::Update,
-            "updateMany" => Operation::UpdateMany,
-            "delete" => Operation::Delete,
-            "deleteMany" => Operation::DeleteMany,
-            "upsert" => Operation::Upsert,
-            _ => unimplemented!(),
-        }
-    }
-}
+//impl From<&str> for Operation {
+//    fn from(s: &str) -> Self {
+//        match s {
+//            "create" => Operation::Create,
+//            "update" => Operation::Update,
+//            "updateMany" => Operation::UpdateMany,
+//            "delete" => Operation::Delete,
+//            "deleteMany" => Operation::DeleteMany,
+//            "upsert" => Operation::Upsert,
+//            _ => unimplemented!(),
+//        }
+//    }
+//}
 
 /// Convert arguments provided by graphql-ast into a tree
 fn into_tree(from: &Vec<(String, Value)>) -> BTreeMap<String, Value> {
@@ -203,16 +202,18 @@ fn shift_data(from: &BTreeMap<String, Value>, idx: &str) -> CoreResult<BTreeMap<
     )
 }
 
-/// Parse the mutation name into an action and the model it should operate on
-fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<(Operation, ModelRef)> {
-    let actions = vec!["create", "updateMany", "update", "deleteMany", "delete", "upsert"];
+/// Parse the mutation name into an operation to perform.
+fn parse_model_action(name: &String, query_schema: QuerySchemaRef) -> CoreResult<ModelOperation> {
+    //    let actions = vec!["create", "updateMany", "update", "deleteMany", "delete", "upsert"];
+    //    let action = match actions.iter().find(|action| name.starts_with(*action)) {
+    //        Some(a) => a,
+    //        None => return Err(CoreError::QueryValidationError(format!("Unknown action: {}", name))),
+    //    };
 
-    let action = match actions.iter().find(|action| name.starts_with(*action)) {
-        Some(a) => a,
-        None => return Err(CoreError::QueryValidationError(format!("Unknown action: {}", name))),
-    };
+    //    let split: Vec<&str> = name.split(action).collect();
 
-    let split: Vec<&str> = name.split(action).collect();
+    query_schema.find_mutation_field(name);
+
     let model_name = match split.get(1) {
         Some(mn) => mn.to_lowercase(),
         None => {
@@ -223,13 +224,13 @@ fn parse_model_action(name: &String, model: InternalDataModelRef) -> CoreResult<
         }
     };
 
-    // FIXME: This is required because our `to_pascal_case` inflector works differently
-    let normalized = match Inflector::singularize(&model_name).as_str() {
-        "scalarmodel" => "ScalarModel".into(),
-        name => name.to_pascal_case(),
-    };
+    //    // FIXME: This is required because our `to_pascal_case` inflector works differently
+    //    let normalized = match Inflector::singularize(&model_name).as_str() {
+    //        "scalarmodel" => "ScalarModel".into(),
+    //        name => name.to_pascal_case(),
+    //    };
 
-    println!("{} ==> {}", &model_name, &normalized);
+    //    println!("{} ==> {}", &model_name, &normalized);
 
     let model = match model.models().iter().find(|m| m.name == normalized) {
         Some(m) => m,

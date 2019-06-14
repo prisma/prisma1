@@ -11,7 +11,7 @@ use postgres::{
     Client, Config, Row as PostgresRow, Transaction as PostgresTransaction,
 };
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
-use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
     ast::Query,
     visitor::{self, Visitor},
@@ -227,10 +227,10 @@ impl<'a> Transaction for PostgresTransaction<'a> {
         Ok(result)
     }
 
-    fn truncate(&mut self, project: ProjectRef) -> SqlResult<()> {
+    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()> {
         self.write(Query::from("SET CONSTRAINTS ALL DEFERRED"))?;
 
-        for delete in MutationBuilder::truncate_tables(project) {
+        for delete in MutationBuilder::truncate_tables(internal_data_model) {
             self.delete(delete)?;
         }
 

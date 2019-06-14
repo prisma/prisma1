@@ -7,7 +7,7 @@ use connector::{error::*, ConnectorResult};
 use datamodel::configuration::Source;
 use mysql_client as my;
 use prisma_common::config::{ConnectionLimit, ConnectionStringConfig, ExplicitConfig, PrismaDatabase};
-use prisma_models::{GraphqlId, PrismaValue, ProjectRef, TypeIdentifier};
+use prisma_models::{GraphqlId, InternalDataModelRef, PrismaValue, ProjectRef, TypeIdentifier};
 use prisma_query::{
     ast::*,
     visitor::{self, Visitor},
@@ -156,10 +156,10 @@ impl<'a> Transaction for my::Transaction<'a> {
         Ok(result)
     }
 
-    fn truncate(&mut self, project: ProjectRef) -> SqlResult<()> {
+    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()> {
         self.write(Query::from("SET FOREIGN_KEY_CHECKS=0"))?;
 
-        for delete in MutationBuilder::truncate_tables(project) {
+        for delete in MutationBuilder::truncate_tables(internal_data_model) {
             if let Err(e) = self.delete(delete) {
                 self.write(Query::from("SET FOREIGN_KEY_CHECKS=1"))?;
                 return Err(e);

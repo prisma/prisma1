@@ -39,7 +39,7 @@ pub trait Transactional {
 /// different databases.
 pub trait Transaction {
     /// Burn them. BURN THEM ALL!
-    fn truncate(&mut self, project: ProjectRef) -> SqlResult<()>;
+    fn truncate(&mut self, internal_data_model: InternalDataModelRef) -> SqlResult<()>;
 
     /// Write to the database, returning the change count and last id inserted.
     fn write(&mut self, q: Query) -> SqlResult<Option<GraphqlId>>;

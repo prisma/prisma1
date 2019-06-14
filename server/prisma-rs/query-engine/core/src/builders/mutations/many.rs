@@ -1,12 +1,12 @@
 #![warn(warnings)]
 
 use crate::{
-    builders::{build_nested_root, utils, Operation, ValueMap, ValueSplit},
+    builders::{build_nested_root, utils, ValueMap, ValueSplit},
+    schema::OperationTag,
     CoreError, CoreResult,
 };
 use connector::mutaction::*;
 use prisma_models::{Field, ModelRef, RelationFieldRef};
-
 use std::sync::Arc;
 
 pub struct ManyNestedBuilder;
@@ -18,8 +18,8 @@ impl ManyNestedBuilder {
         kind: String,
         many: impl Iterator<Item = ValueMap>,
         mutations: &mut NestedMutactions,
-        model: ModelRef,
-        top_level: &Operation,
+        model_operation: ModelRef,
+        top_level: OperationTag,
     ) -> CoreResult<()> {
         let name = name.as_str();
         let kind = kind.as_str();
@@ -39,7 +39,7 @@ impl ManyNestedBuilder {
                 "updateMany" => attach_update_many(map, mutations, &rel_field, &rel_model)?,
                 "delete" => attach_delete(map, mutations, &model, &rel_field)?,
                 "deleteMany" => attach_delete_many(map, mutations, &rel_field, &rel_model)?,
-                verb => panic!("huh? {:?}", verb),
+                verb => panic!("Invalid verb {:?}", verb),
             };
         }
 
@@ -53,7 +53,7 @@ fn attach_create(
     mutations: &mut NestedMutactions,
     rel_field: &RelationFieldRef,
     rel_model: &ModelRef,
-    top_level: &Operation,
+    top_level: OperationTag,
 ) -> CoreResult<()> {
     let ValueSplit { values, lists, nested } = map.split();
     let non_list_args = values.to_prisma_values().into();
@@ -64,7 +64,7 @@ fn attach_create(
         non_list_args,
         list_args,
         top_is_create: match top_level {
-            Operation::Create => true,
+            OperationTag::CreateSingle => true,
             _ => false,
         },
         relation_field: Arc::clone(&rel_field),
@@ -79,13 +79,13 @@ fn attach_connect(
     mutations: &mut NestedMutactions,
     rel_field: &RelationFieldRef,
     rel_model: &ModelRef,
-    top_level: &Operation,
+    top_level: OperationTag,
 ) -> CoreResult<()> {
     mutations.connects.push(NestedConnect {
         relation_field: Arc::clone(&rel_field),
         where_: map.to_node_selector(Arc::clone(&rel_model)).unwrap(),
         top_is_create: match top_level {
-            Operation::Create => true,
+            OperationTag::CreateSingle => true,
             _ => false,
         },
     });
@@ -114,7 +114,7 @@ fn attach_update(
     model: &ModelRef,
     rel_field: &RelationFieldRef,
     rel_model: &ModelRef,
-    top_level: &Operation,
+    top_level: OperationTag,
 ) -> CoreResult<()> {
     let where_ = map.to_node_selector(Arc::clone(&model));
     let ValueSplit { values, lists, nested } = map.split();

@@ -1,7 +1,8 @@
 #![warn(warnings)]
 
 use crate::{
-    builders::{build_nested_root, utils, Operation, ValueMap, ValueSplit},
+    builders::{build_nested_root, utils, ValueMap, ValueSplit},
+    schema::OperationTag,
     CoreError, CoreResult,
 };
 use connector::mutaction::*;
@@ -20,17 +21,16 @@ impl SimpleNestedBuilder {
         mutations: &mut NestedMutactions,
         model: ModelRef,
         where_map: Option<ValueMap>,
-        top_level: &Operation,
+        top_level: OperationTag,
     ) -> CoreResult<()> {
         let name = name.as_str();
         let kind = kind.as_str();
-
         let where_ = where_map
             .as_ref()
             .or(Some(&map))
             .and_then(|m| m.to_node_selector(Arc::clone(&model)));
-        let ValueSplit { values, lists, nested } = map.split();
 
+        let ValueSplit { values, lists, nested } = map.split();
         let f = model.fields().find_from_all(&name);
         let (relation_field, relation_model) = match &f {
             Ok(ModelField::Relation(f)) => (Arc::clone(&f), f.related_model()),
@@ -85,15 +85,19 @@ impl SimpleNestedBuilder {
                 });
             }
             "updateMany" => {
-                use std::collections::BTreeMap;
                 use graphql_parser::query::Value;
+                use std::collections::BTreeMap;
                 let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
                 wheree.insert(
                     "where".into(),
-                    Value::Object(where_map.map_or(
-                        Err(CoreError::QueryValidationError("Failed to read `where` block".into())),
-                        |w| Ok(w),
-                    )?.0),
+                    Value::Object(
+                        where_map
+                            .map_or(
+                                Err(CoreError::QueryValidationError("Failed to read `where` block".into())),
+                                |w| Ok(w),
+                            )?
+                            .0,
+                    ),
                 );
 
                 let filter =

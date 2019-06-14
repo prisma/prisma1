@@ -136,6 +136,7 @@ pub fn convert_update_nodes(m: crate::protobuf::prisma::UpdateNodes, project: Pr
         non_list_args: convert_prisma_args(m.non_list_args),
         list_args: convert_list_args(m.list_args),
     };
+
     TopLevelDatabaseMutaction::UpdateNodes(update_nodes)
 }
 
@@ -158,6 +159,7 @@ pub fn convert_upsert(m: crate::protobuf::prisma::UpsertNode, project: ProjectRe
         create: convert_create(m.create, Arc::clone(&project)),
         update: convert_update(m.update, project),
     };
+
     TopLevelDatabaseMutaction::UpsertNode(upsert_node)
 }
 
@@ -175,6 +177,7 @@ pub fn convert_delete(m: crate::protobuf::prisma::DeleteNode, project: ProjectRe
     let delete_node = DeleteNode {
         where_: convert_node_select(m.where_, project),
     };
+
     TopLevelDatabaseMutaction::DeleteNode(delete_node)
 }
 
@@ -191,6 +194,7 @@ pub fn convert_delete_nodes(m: crate::protobuf::prisma::DeleteNodes, project: Pr
         model: Arc::clone(&model),
         filter: m.filter.into_filter(model),
     };
+
     TopLevelDatabaseMutaction::DeleteNodes(delete_nodes)
 }
 

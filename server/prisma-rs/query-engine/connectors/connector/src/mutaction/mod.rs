@@ -98,5 +98,5 @@ pub struct NestedDisconnect {
 
 #[derive(Debug, Clone)]
 pub struct ResetData {
-    pub project: ProjectRef,
+    pub internal_data_model: InternalDataModelRef,
 }

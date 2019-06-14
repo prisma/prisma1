@@ -1,5 +1,7 @@
+use super::*;
 use once_cell::sync::OnceCell;
-use prisma_models::{ModelRef, OrderBy, ScalarField, SortOrder};
+use prisma_models::{InternalDataModel, InternalDataModelRef, ModelRef, OrderBy, ScalarField, SortOrder};
+use std::hint::unreachable_unchecked;
 use std::{
     boxed::Box,
     sync::{Arc, Weak},
@@ -36,6 +38,8 @@ pub struct QuerySchema {
 
     /// Stores all strong refs to the output object types.
     output_object_types: Vec<ObjectTypeStrongRef>,
+
+    pub internal_data_model: InternalDataModelRef,
 }
 
 impl QuerySchema {
@@ -44,12 +48,29 @@ impl QuerySchema {
         mutation: OutputType,
         input_object_types: Vec<InputObjectTypeStrongRef>,
         output_object_types: Vec<ObjectTypeStrongRef>,
+        internal_data_model: InternalDataModelRef,
     ) -> Self {
         QuerySchema {
             query,
             mutation,
             input_object_types,
             output_object_types,
+            internal_data_model,
+        }
+    }
+
+    pub fn find_mutation_field<T>(&self, name: T) -> Option<&Field>
+    where
+        T: Into<String>,
+    {
+        let name = name.into();
+        self.mutation().fields.iter().find(|f| f.name == name)
+    }
+
+    fn mutation(&self) -> OutputObjectStrongRef {
+        match self.mutation {
+            OutputType::Object(ref o) => o.into_arc(),
+            _ => unreachable!(),
         }
     }
 
