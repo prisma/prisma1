@@ -1,5 +1,5 @@
 use crate::SqlResult;
-use database_inspector::*;
+use crate::database_inspector::*;
 use datamodel::*;
 use prisma_models::{DatamodelConverter, TempManifestationHolder, TempRelationHolder};
 

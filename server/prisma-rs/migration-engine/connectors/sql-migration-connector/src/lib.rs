@@ -6,6 +6,7 @@ mod sql_database_step_applier;
 mod sql_destructive_changes_checker;
 mod sql_migration;
 mod sql_migration_persistence;
+pub mod database_inspector;
 
 use database_inspector::DatabaseInspector;
 pub use error::*;

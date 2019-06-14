@@ -1,4 +1,4 @@
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
 use datamodel;
 use migration_core::{parse_datamodel, MigrationEngine};
 use sql_migration_connector::SqlFamily;

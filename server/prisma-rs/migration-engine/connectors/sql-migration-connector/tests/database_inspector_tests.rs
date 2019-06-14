@@ -2,7 +2,7 @@
 #![allow(unused)]
 
 use barrel::{types, Migration};
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
 use prisma_query::connector::Sqlite as SqliteDatabaseClient;
 use prisma_query::{Connectional, ResultSet};
 use std::sync::Arc;

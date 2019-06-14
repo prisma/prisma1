@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 mod test_harness;
-use database_inspector::*;
+use sql_migration_connector::database_inspector::*;
 use test_harness::*;
 
 #[test]
