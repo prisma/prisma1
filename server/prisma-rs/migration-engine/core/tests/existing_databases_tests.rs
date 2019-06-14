@@ -134,7 +134,7 @@ fn creating_a_field_for_an_existing_column_and_simultaneously_making_it_optional
 
 #[test]
 fn creating_a_scalar_list_field_for_an_existing_table_must_work() {
-    test_each_backend_with_ignores(vec![SqlFamily::Postgres],|engine,barrel| {
+    test_each_backend(|engine,barrel| {
         let dm1 = r#"
             model Blog {
                 id Int @id
