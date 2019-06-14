@@ -67,9 +67,12 @@ export class CLI implements Command {
     ${chalk.bold('Examples')}
 
       Initialize files for a new Prisma project
-      ${chalk.dim(`$`)} prisma new
+      ${chalk.dim(`$`)} prisma init
 
-      Deploy project changes (or new project)
-      ${chalk.dim(`$`)} prisma lift
+      Start developing and auto migrating your changes locally
+      ${chalk.dim(`$`)} prisma dev
+
+      Save your changes into a migration
+      ${chalk.dim(`$`)} prisma lift save
   `)
 }

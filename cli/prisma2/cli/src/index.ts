@@ -6,6 +6,8 @@ export {
   GeneratorFunction,
   GeneratorConfig,
   GeneratorDefinition,
+  GeneratorDefinitionWithPackage,
+  GeneratorOptions,
   Dictionary,
   CompiledGeneratorDefinition,
 } from './types'

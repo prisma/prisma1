@@ -33,6 +33,11 @@ export type GeneratorDefinition = {
   generate: GeneratorFunction
 }
 
+export type GeneratorDefinitionWithPackage = {
+  definition: GeneratorDefinition
+  packagePath: string
+}
+
 export type CompiledGeneratorDefinition = {
   prettyName?: string // used to print in prisma dev command
   generate: () => Promise<string>
