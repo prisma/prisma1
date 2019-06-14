@@ -1,4 +1,5 @@
 import { DatabaseType } from 'prisma-datamodel'
+import { DatabaseMetadata } from 'prisma-db-introspection/dist/common/introspectionResult'
 
 export interface DatabaseCredentials {
   type: DatabaseType
@@ -22,4 +23,24 @@ export interface IntrospectionResult {
   time: number
   credentials: DatabaseCredentials
   databaseName: string
+}
+
+export interface SchemaWithMetadata {
+  name: string
+  metadata: DatabaseMetadata
+}
+
+export type PromptType = 'init' | 'introspect'
+
+// TODO: Bad interface naming :(
+export interface InitConfiguration {
+  lift: boolean
+  photon: boolean
+  language: 'TypeScript' | 'JavaScript'
+  template: 'from_scratch' | 'graphql_boilerplate' | 'rest_boilerplate' | 'grpc_boilerplate'
+}
+
+export interface InitPromptResult {
+  introspectionResult: IntrospectionResult
+  initConfiguration: InitConfiguration
 }

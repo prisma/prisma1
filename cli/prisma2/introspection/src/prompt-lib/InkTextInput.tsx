@@ -121,7 +121,7 @@ export const InkTextInput: React.FC<Props> = props => {
   }
 
   return (
-    <Color dim={!hasValue && !!placeholder}>
+    <Color dim={!hasValue && !!placeholder && !focus} cyan={focus}>
       {placeholder ? (hasValue ? renderedValue : placeholder) : renderedValue}
     </Color>
   )

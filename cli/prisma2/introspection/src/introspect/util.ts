@@ -3,9 +3,9 @@ import { MongoClient } from 'mongodb'
 import { Connection, createConnection } from 'mysql'
 import { Client as PGClient } from 'pg'
 import { DatabaseType } from 'prisma-datamodel'
-import { URL } from 'url'
 import { Connectors, IConnector } from 'prisma-db-introspection'
-import { DatabaseCredentials } from '../types'
+import { URL } from 'url'
+import { DatabaseCredentials, SchemaWithMetadata } from '../types'
 
 function replaceLocalDockerHost(credentials: DatabaseCredentials) {
   if (credentials.host) {
@@ -91,6 +91,20 @@ export async function getConnectedConnectorFromCredentials(
 export async function getDatabaseSchemas(connector: IConnector): Promise<string[]> {
   try {
     return await connector.listSchemas()
+  } catch (e) {
+    throw new Error(`Could not connect to database. ${e.stack}`)
+  }
+}
+
+export async function getDatabaseSchemasWithMetadata(connector: IConnector): Promise<SchemaWithMetadata[]> {
+  try {
+    const schemas = await connector.listSchemas()
+    const metadatas = await Promise.all(schemas.map(schemaName => connector.getMetadata(schemaName)))
+
+    return schemas.map((schemaName, i) => ({
+      name: schemaName,
+      metadata: metadatas[i],
+    }))
   } catch (e) {
     throw new Error(`Could not connect to database. ${e.stack}`)
   }

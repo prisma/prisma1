@@ -1,6 +1,7 @@
 import { Box, Color, Text } from 'ink'
 import * as React from 'react'
 import stripAnsi from 'strip-ansi'
+import { COLORS } from '../colors'
 import { Checkbox } from './Checkbox'
 import { Divider } from './Divider'
 import {
@@ -27,7 +28,7 @@ export interface OnSubmitParams {
   stopSpinner: (state: SpinnerState) => void
 }
 
-interface onFormChangedParams {
+export interface onFormChangedParams {
   values: Record<string, any>
   triggeredInput: InputElement | CheckboxElement | RadioElement
 }
@@ -148,7 +149,7 @@ export const Prompt: React.FC<Props> = props => {
           if (isElementInput(e)) {
             return (
               <Box key={elemIndex} {...e.style}>
-                {hasFocus ? <SelectIndicator /> : <Box marginLeft={1} marginRight={1} />}
+                {hasFocus ? <SelectIndicator color={{ cyan: true }} /> : <Box marginLeft={1} marginRight={1} />}
                 <TextInput
                   {...e}
                   value={(props.formValues[e.identifier] && props.formValues[e.identifier].toString()) || ''}
@@ -163,7 +164,11 @@ export const Prompt: React.FC<Props> = props => {
           if (isElementCheckbox(e)) {
             return (
               <Box key={elemIndex} {...e.style}>
-                {hasFocus ? <SelectIndicator /> : <Box marginLeft={1} marginRight={1} />}
+                {hasFocus ? (
+                  <SelectIndicator color={{ [COLORS.selection]: true }} />
+                ) : (
+                  <Box marginLeft={1} marginRight={1} />
+                )}
                 <Checkbox
                   {...e}
                   checked={props.formValues[e.identifier] || false}
@@ -180,7 +185,11 @@ export const Prompt: React.FC<Props> = props => {
 
             return (
               <Box key={elemIndex} {...e.style}>
-                {hasFocus ? <SelectIndicator /> : <Box marginLeft={1} marginRight={1} />}
+                {hasFocus ? (
+                  <SelectIndicator color={{ [COLORS.selection]: true }} />
+                ) : (
+                  <Box marginLeft={1} marginRight={1} />
+                )}
                 <RadioButton
                   label={e.label}
                   value={e.value}
@@ -238,5 +247,3 @@ export const Prompt: React.FC<Props> = props => {
     </Box>
   )
 }
-
-function renderBackButton(backButton: boolean | { label: string; description?: string }) {}

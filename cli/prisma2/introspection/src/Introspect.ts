@@ -17,7 +17,7 @@ import {
   prettyTime,
   sanitizeMongoUri,
 } from './introspect/util'
-import { promptIntrospectionInteractively } from './prompts/CredentialPrompt'
+import { promptInteractively } from './prompts/CredentialPrompt'
 import { DatabaseCredentials, IntrospectionResult } from './types'
 
 type Args = {
@@ -172,6 +172,7 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
     const after = Date.now()
 
     const numTables = sdl.types.length
+
     if (numTables === 0) {
       throw new Error("The provided database doesn't contain any tables. Please provide another database.")
     }
@@ -229,7 +230,7 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
 
     // Get everything interactively
     if (!credentialsByFlag) {
-      const introspectionResult = await promptIntrospectionInteractively(this.introspect)
+      const introspectionResult = await promptInteractively(this.introspect, 'introspect')
 
       return introspectionResult
     }
@@ -336,7 +337,7 @@ ${chalk.bold('Created 1 new file:')} Prisma DML datamodel (derived from existing
    * Introspect the database
    */
   async introspectWithSpinner(connectorData: ConnectorData, sdl: boolean | undefined) {
-    const spinner = ora({ color: 'blue' })
+    const spinner = ora({ color: 'cyan' })
 
     const before = Date.now()
 

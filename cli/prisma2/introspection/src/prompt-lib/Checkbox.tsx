@@ -1,6 +1,6 @@
-import * as figures from 'figures'
 import { Box, BoxProps, Color } from 'ink'
 import * as React from 'react'
+import { COLORS } from '../colors'
 import { KeyPressed } from './BoxPrompt'
 
 interface Props extends BoxProps {
@@ -11,8 +11,11 @@ interface Props extends BoxProps {
   onChange: (value: boolean) => void
 }
 
+const UNCHECKED_SYMBOL = '□'
+const CHECKED_SYMBOL = '■'
+
 export const Checkbox: React.FC<Props> = props => {
-  const symbol = props.checked ? figures.radioOn : figures.radioOff
+  const symbol = props.checked ? CHECKED_SYMBOL : UNCHECKED_SYMBOL
   const { label, checked, focus, onChange, keyPressed, ...rest } = props
 
   React.useEffect(() => {
@@ -23,8 +26,8 @@ export const Checkbox: React.FC<Props> = props => {
 
   return (
     <Box {...rest}>
-      {focus ? <Color blue>{symbol}</Color> : symbol}
-      <Box marginLeft={1}>{focus ? <Color blue>{label}</Color> : label}</Box>
+      {checked || focus ? <Color keyword={COLORS.selection}>{symbol}</Color> : symbol}
+      <Box marginLeft={1}>{focus ? <Color keyword={COLORS.selection}>{label}</Color> : label}</Box>
     </Box>
   )
 }

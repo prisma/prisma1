@@ -1,6 +1,6 @@
 import { DatabaseType } from 'prisma-datamodel'
-import { PromptElement } from '../prompt-lib/types'
-import { DatabaseCredentials } from '../types'
+import { PromptElement, RadioElement } from '../prompt-lib/types'
+import { DatabaseCredentials, SchemaWithMetadata } from '../types'
 
 const dbTypeToDbPort: Record<DatabaseType, string> = {
   postgres: '5432',
@@ -16,7 +16,7 @@ const dbTypeToDefaultConnectionString: Record<DatabaseType, string> = {
   mongo: `mongo://localhost:${dbTypeToDbPort[DatabaseType.mongo]}`,
 }
 
-export const CONNECT_DB_ELEMENTS = (dbType: DatabaseType): PromptElement<DatabaseCredentials>[] => [
+export const INPUT_DATABASE_CREDENTIALS_ELEMENTS = (dbType: DatabaseType): PromptElement<DatabaseCredentials>[] => [
   {
     type: 'text-input',
     identifier: 'host',
@@ -67,7 +67,13 @@ export const CONNECT_DB_ELEMENTS = (dbType: DatabaseType): PromptElement<Databas
   },
 ]
 
-export const CHOOSE_DB_ELEMENTS: PromptElement[] = [
+export const SELECT_DATABASE_TYPE_ELEMENTS: PromptElement[] = [
+  {
+    type: 'select',
+    label: 'SQLite',
+    value: 'sqlite',
+    description: "Beginner's choice",
+  },
   {
     type: 'select',
     label: 'MySQL',
@@ -86,4 +92,96 @@ export const CHOOSE_DB_ELEMENTS: PromptElement[] = [
   //   value: 'mongodb',
   //   description: 'Mongo Database',
   // },
+]
+
+export const SELECT_DATABASE_SCHEMAS_ELEMENTS = (schemas: SchemaWithMetadata[]): PromptElement[] => [
+  ...schemas.map(
+    schema =>
+      ({
+        type: 'radio',
+        label: schema.name,
+        value: schema.name,
+        identifier: 'schema',
+        description: `${schema.metadata.countOfTables} tables, ${schema.metadata.sizeInBytes / 1000} KB`,
+      } as RadioElement),
+  ),
+  {
+    type: 'text-input',
+    identifier: 'newSchema',
+    label: 'New schema',
+    placeholder: 'Or enter a name for a new schema',
+    style: { marginTop: 1 },
+  },
+  { type: 'separator', style: { marginTop: 1, marginBottom: 1, marginLeft: 1 } },
+  { type: 'select', label: 'Introspect', description: '(Please select a schema)', style: { marginTop: 1 } },
+]
+
+export const SELECT_TOOL_ELEMENTS: PromptElement[] = [
+  {
+    type: 'checkbox',
+    label: 'Photon',
+    identifier: 'photon',
+  },
+  {
+    type: 'checkbox',
+    label: 'Lift',
+    identifier: 'lift',
+  },
+  {
+    type: 'separator',
+    style: { marginTop: 1, marginBottom: 1, marginLeft: 1 },
+  },
+  {
+    type: 'select',
+    label: 'Create',
+    value: '__CREATE__',
+  },
+]
+
+export const SELECT_LANGUAGE_ELEMENTS: PromptElement[] = [
+  {
+    type: 'select',
+    label: 'TypeScript',
+    value: 'TypeScript',
+  },
+  {
+    type: 'select',
+    label: 'JavaScript',
+    value: 'JavaScript',
+  },
+  {
+    type: 'separator',
+    style: { marginTop: 1, marginBottom: 1, marginLeft: 1 },
+  },
+]
+
+export const SELECT_TEMPLATE_ELEMENTS: PromptElement[] = [
+  {
+    type: 'select',
+    label: 'From Scratch',
+    value: 'from_scratch',
+    description: 'Basic Prisma setup + simple script',
+  },
+  {
+    type: 'select',
+    label: 'GraphQL boilerplate',
+    value: 'graphql_boilerplate',
+    description: 'GraphQL server example',
+  },
+  {
+    type: 'select',
+    label: 'REST boilerplate',
+    value: 'rest_boilerplate',
+    description: 'REST API example (using express.js)',
+  },
+  {
+    type: 'select',
+    label: 'gRPC boilerplate',
+    value: 'grpc_boilerplate',
+    description: 'gRPC API example (client + server)',
+  },
+  {
+    type: 'separator',
+    style: { marginTop: 1, marginBottom: 1, marginLeft: 1 },
+  },
 ]

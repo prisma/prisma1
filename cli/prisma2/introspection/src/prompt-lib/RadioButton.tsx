@@ -1,6 +1,7 @@
 import * as figures from 'figures'
 import { Box, Color } from 'ink'
 import * as React from 'react'
+import { COLORS } from '../colors'
 import { KeyPressed } from './BoxPrompt'
 
 interface Props {
@@ -25,8 +26,10 @@ export const RadioButton: React.FC<Props> = props => {
 
   return (
     <Box>
-      {focus ? <Color blue>{symbol}</Color> : symbol}
-      <Box marginLeft={1}>{focus ? <Color blue>{label.padEnd(20)}</Color> : label.padEnd(20)}</Box>
+      {checked || focus ? <Color keyword={COLORS.selection}>{symbol}</Color> : symbol}
+      <Box marginLeft={1}>
+        {checked || focus ? <Color keyword={COLORS.selection}>{label.padEnd(20)}</Color> : label.padEnd(20)}
+      </Box>
       <Color dim>{props.description ? props.description.padEnd(20) : ''}</Color>
     </Box>
   )
