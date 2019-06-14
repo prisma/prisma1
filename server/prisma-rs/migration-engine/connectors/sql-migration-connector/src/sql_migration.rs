@@ -27,6 +27,7 @@ pub enum SqlMigrationStep {
     CreateTable(CreateTable),
     AlterTable(AlterTable),
     DropTable(DropTable),
+    DropTables(DropTables),
     RenameTable { name: String, new_name: String },
     RawSql { raw: String },
 }
@@ -41,6 +42,11 @@ pub struct CreateTable {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct DropTable {
     pub name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DropTables {
+    pub names: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

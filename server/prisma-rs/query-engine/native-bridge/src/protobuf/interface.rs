@@ -23,8 +23,14 @@ impl ProtoBufInterface {
                 if config.connector == "sqlite-native" || config.connector == "native-integration-tests" =>
             {
                 let server_root = std::env::var("SERVER_ROOT").expect("Env var SERVER_ROOT required but not found.");
-                let db_file = database_file.expect("Expected database file to be passed when initializing sqlite proto bridge.");
-                let sqlite = Sqlite::new(format!("{}/db/{}.db", server_root, db_file).into(), config.limit(), true).unwrap();
+                let db_file =
+                    database_file.expect("Expected database file to be passed when initializing sqlite proto bridge.");
+                let sqlite = Sqlite::new(
+                    format!("{}/db/{}.db", server_root, db_file).into(),
+                    config.limit(),
+                    true,
+                )
+                .unwrap();
                 let connector = Arc::new(SqlDatabase::new(sqlite));
 
                 ProtoBufInterface {

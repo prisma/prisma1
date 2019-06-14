@@ -60,8 +60,15 @@ impl<'field> MutationBuilder<'field> {
                 let list_args = lists.into_iter().map(|la| la.convert()).collect();
                 let nested_mutactions = build_nested_root(model.name.as_str(), &nested, Arc::clone(&model), &op)?;
 
+                let where_ = ValueMap(shift_data(&args, "where")?)
+                    .to_node_selector(Arc::clone(&model))
+                    .map_or(
+                        Err(CoreError::QueryValidationError("No `where` on connect".into())),
+                        |w| Ok(w),
+                    )?;
+
                 TopLevelDatabaseMutaction::UpdateNode(UpdateNode {
-                    where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
+                    where_,
                     non_list_args,
                     list_args,
                     nested_mutactions,
@@ -86,9 +93,16 @@ impl<'field> MutationBuilder<'field> {
                     list_args,
                 })
             }
-            Operation::Delete => TopLevelDatabaseMutaction::DeleteNode(DeleteNode {
-                where_: utils::extract_node_selector(self.field, Arc::clone(&model))?,
-            }),
+            Operation::Delete => {
+                let where_ = ValueMap(shift_data(&args, "where")?)
+                    .to_node_selector(Arc::clone(&model))
+                    .map_or(
+                        Err(CoreError::QueryValidationError("No `where` on connect".into())),
+                        |w| Ok(w),
+                    )?;
+
+                TopLevelDatabaseMutaction::DeleteNode(DeleteNode { where_ })
+            }
             Operation::DeleteMany => {
                 let query_args = utils::extract_query_args(self.field, Arc::clone(&model))?;
                 let filter = query_args
@@ -257,8 +271,22 @@ pub(crate) fn build_nested_root<'f>(
     for value in eval.into_iter() {
         match value {
             NestedValue::Simple { name, kind, map } => {
-                SimpleNestedBuilder::build(name, kind, map, &mut collection, Arc::clone(&model), top_level)?
+                SimpleNestedBuilder::build(name, kind, map, &mut collection, Arc::clone(&model), None, top_level)?
             }
+            NestedValue::Block {
+                name,
+                kind,
+                data,
+                where_,
+            } => SimpleNestedBuilder::build(
+                name,
+                kind,
+                data,
+                &mut collection,
+                Arc::clone(&model),
+                Some(where_),
+                top_level,
+            )?,
             NestedValue::Many { name, kind, list } => ManyNestedBuilder::build(
                 name,
                 kind,
@@ -281,6 +309,7 @@ pub(crate) fn build_nested_root<'f>(
                 Arc::clone(&model),
                 top_level,
             )?,
+            _ => unimplemented!(),
         };
     }
 

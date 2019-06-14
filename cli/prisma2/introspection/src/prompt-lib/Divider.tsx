@@ -13,10 +13,8 @@ interface Props {
 }
 
 // Helpers
-const getSideDividerWidth = (width: number, titleWidth: number) =>
-  (width - titleWidth) / 2
-const getNumberOfCharsPerWidth = (char: string, width: number) =>
-  width / stringWidth(char)
+const getSideDividerWidth = (width: number, titleWidth: number) => (width - titleWidth) / 2
+const getNumberOfCharsPerWidth = (char: string, width: number) => width / stringWidth(char)
 
 const PAD = ' '
 
@@ -29,16 +27,11 @@ export const Divider: React.SFC<Props> = ({
   dividerChar,
   dividerColor,
 }) => {
-  const titleString = title
-    ? `${PAD.repeat(titlePadding!) + title + PAD.repeat(titlePadding!)}`
-    : ''
+  const titleString = title ? `${PAD.repeat(titlePadding!) + title + PAD.repeat(titlePadding!)}` : ''
   const titleWidth = stringWidth(titleString)
 
   const dividerWidth = getSideDividerWidth(width!, titleWidth)
-  const numberOfCharsPerSide = getNumberOfCharsPerWidth(
-    dividerChar!,
-    dividerWidth,
-  )
+  const numberOfCharsPerSide = getNumberOfCharsPerWidth(dividerChar!, dividerWidth)
   const dividerSideString = dividerChar!.repeat(numberOfCharsPerSide)
 
   const paddingString = PAD.repeat(padding!)
@@ -46,9 +39,9 @@ export const Divider: React.SFC<Props> = ({
   return (
     <Box>
       {paddingString}
-      <Color keyword={dividerColor}>{dividerSideString}</Color>
+      <Color dim>{dividerSideString}</Color>
       <Color keyword={titleColor}>{titleString}</Color>
-      <Color keyword={dividerColor}>{dividerSideString}</Color>
+      <Color dim>{dividerSideString}</Color>
       {paddingString}
     </Box>
   )
@@ -56,8 +49,8 @@ export const Divider: React.SFC<Props> = ({
 
 Divider.defaultProps = {
   dividerChar: '─',
-  dividerColor: 'grey',
-  padding: 1,
+  dividerColor: 'dim',
+  padding: 0,
   title: null,
   titleColor: 'white',
   titlePadding: 1,

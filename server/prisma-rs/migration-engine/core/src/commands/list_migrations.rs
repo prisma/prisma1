@@ -16,35 +16,35 @@ impl MigrationCommand for ListMigrationStepsCommand {
         Box::new(ListMigrationStepsCommand { input })
     }
 
-    fn execute(&self, engine: &Box<MigrationEngine>) -> CommandResult<Self::Output> {
+    fn execute(&self, engine: &MigrationEngine) -> CommandResult<Self::Output> {
         println!("{:?}", self.input);
         let connector = engine.connector();
         let migration_persistence = engine.connector().migration_persistence();
-        Ok(migration_persistence
-            .load_all()
-            .into_iter()
-            .map(|mig| convert_migration_to_list_migration_steps_output(&engine, mig))
-            .collect())
+        let mut result = Vec::new();
+        for migration in migration_persistence.load_all().into_iter() {
+            result.push(convert_migration_to_list_migration_steps_output(&engine, migration)?);
+        }
+        Ok(result)
     }
 }
 
 pub fn convert_migration_to_list_migration_steps_output(
-    engine: &Box<MigrationEngine>,
+    engine: &MigrationEngine,
     migration: Migration,
-) -> ListMigrationStepsOutput {
+) -> CommandResult<ListMigrationStepsOutput> {
     let connector = engine.connector();
     let database_migration = connector.deserialize_database_migration(migration.database_migration);
     let database_steps_json = connector
         .database_migration_step_applier()
-        .render_steps_pretty(&database_migration);
+        .render_steps_pretty(&database_migration)?;
 
-    ListMigrationStepsOutput {
+    Ok(ListMigrationStepsOutput {
         id: migration.name,
         datamodel_steps: migration.datamodel_steps,
         database_steps: database_steps_json,
         status: migration.status,
         datamodel: engine.render_datamodel(&migration.datamodel),
-    }
+    })
 }
 
 #[derive(Debug, Deserialize)]

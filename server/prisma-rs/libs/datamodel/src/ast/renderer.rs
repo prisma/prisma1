@@ -11,18 +11,17 @@ pub struct Renderer<'a> {
     stream: &'a mut std::io::Write,
     indent: usize,
     new_line: bool,
+    indent_width: usize,
 }
 
 // TODO: It would be soooo cool if we could pass format strings around.
 
-/// Default indent width.
-const INDENT_WIDTH: usize = 4;
-
 impl<'a> Renderer<'a> {
-    pub fn new(stream: &'a mut std::io::Write) -> Renderer<'a> {
+    pub fn new(stream: &'a mut std::io::Write, indent_width: usize) -> Renderer<'a> {
         Renderer {
             stream,
             indent: 0,
+            indent_width,
             new_line: false,
         }
     }
@@ -347,7 +346,7 @@ impl<'a> LineWriteable for Renderer<'a> {
         // TODO: Proper result handling.
         if self.new_line {
             writeln!(self.stream, "").expect("Writer error.");
-            write!(self.stream, "{}", " ".repeat(self.indent * INDENT_WIDTH)).expect("Writer error.");
+            write!(self.stream, "{}", " ".repeat(self.indent * self.indent_width)).expect("Writer error.");
             self.new_line = false;
         }
         write!(self.stream, "{}", param).expect("Writer error.");

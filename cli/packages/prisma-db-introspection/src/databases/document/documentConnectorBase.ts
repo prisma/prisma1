@@ -17,6 +17,7 @@ import {
 } from './documentConnector'
 
 import * as debug from 'debug'
+import { DatabaseMetadata } from '../../common/introspectionResult'
 
 let log = debug('DocumentConnector')
 
@@ -37,6 +38,7 @@ const relationThreshold = 0.3
 export abstract class DocumentConnector<InternalCollectionType>
   implements IDocumentConnector<InternalCollectionType> {
   abstract getDatabaseType(): DatabaseType
+  abstract getMetadata(schemaName: string): Promise<DatabaseMetadata>
   abstract listSchemas(): Promise<string[]>
   public abstract getInternalCollections(
     schema: string,

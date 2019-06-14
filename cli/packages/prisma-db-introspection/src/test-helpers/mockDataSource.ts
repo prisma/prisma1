@@ -5,6 +5,7 @@ import {
 } from '../databases/document/documentConnector'
 import { Data } from '../databases/document/data'
 import { SdlExpect, TypeIdentifiers, DatabaseType } from 'prisma-datamodel'
+import { DatabaseMetadata } from '../common/introspectionResult'
 
 /**
  * This class mocks a document database in-memory.
@@ -51,6 +52,9 @@ export class MockDocumentDataSource extends DocumentConnector<string> {
   }
   protected async sampleAll(collection: string): Promise<IDataIterator> {
     return new InMemoryIterator(this.collections[collection])
+  }
+  public async getMetadata(): Promise<DatabaseMetadata> {
+    return { sizeInBytes: 0, countOfTables: this.collections.keys.length }
   }
 }
 

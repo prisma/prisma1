@@ -49,6 +49,8 @@ pub use common::functions::FunctionalEvaluator;
 pub use configuration::*;
 pub use validator::directive::DirectiveValidator;
 
+use std::io::Write;
+
 // Convenience Helpers
 pub fn get_builtin_sources() -> Vec<Box<SourceDefinition>> {
     vec![
@@ -135,21 +137,41 @@ pub fn parse(datamodel_string: &str) -> Result<Datamodel, errors::ErrorCollectio
     parse_with_plugins(datamodel_string, vec![])
 }
 
+/// Parses and validates a datamodel string, using core attributes only.
+/// In case of an error, a pretty, colorful string is returned.
+pub fn parse_with_formatted_error(datamodel_string: &str, file_name: &str) -> Result<Datamodel, String> {
+    match parse_with_plugins(datamodel_string, vec![]) {
+        Ok(dml) => Ok(dml),
+        Err(errs) => {
+            let mut buffer = std::io::Cursor::new(Vec::<u8>::new());
+
+            for error in errs.to_iter() {
+                writeln!(&mut buffer, "").expect("Failed to render error.");
+                error
+                    .pretty_print(&mut buffer, file_name, datamodel_string)
+                    .expect("Failed to render error.");
+            }
+
+            Err(String::from_utf8(buffer.into_inner()).expect("Failed to convert error buffer."))
+        }
+    }
+}
+
 /// Parses a datamodel string to an AST. For internal use only.
 pub fn parse_to_ast(datamodel_string: &str) -> Result<ast::Datamodel, errors::ValidationError> {
     parser::parse(datamodel_string)
 }
 
 /// Renders an datamodel AST to a stream as datamodel string. For internal use only.
-pub fn render_ast_to(stream: &mut std::io::Write, datamodel: &ast::Datamodel) {
-    let mut renderer = renderer::Renderer::new(stream);
+pub fn render_ast_to(stream: &mut std::io::Write, datamodel: &ast::Datamodel, ident_width: usize) {
+    let mut renderer = renderer::Renderer::new(stream, ident_width);
     renderer.render(datamodel);
 }
 
 /// Renders a datamodel to a stream as datamodel string.
 pub fn render_to(stream: &mut std::io::Write, datamodel: &dml::Datamodel) -> Result<(), errors::ErrorCollection> {
     let lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
-    render_ast_to(stream, &lowered);
+    render_ast_to(stream, &lowered, 2);
     Ok(())
 }
 
@@ -162,7 +184,7 @@ pub fn render_with_sources_to(
 ) -> Result<(), errors::ErrorCollection> {
     let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     SourceSerializer::add_sources_to_ast(sources, &mut lowered);
-    render_ast_to(stream, &lowered);
+    render_ast_to(stream, &lowered, 2);
     Ok(())
 }
 
@@ -175,14 +197,14 @@ pub fn render_with_config_to(
     let mut lowered = dml::validator::LowerDmlToAst::new().lower(datamodel)?;
     SourceSerializer::add_sources_to_ast(&config.datasources, &mut lowered);
     GeneratorLoader::add_generators_to_ast(&config.generators, &mut lowered);
-    render_ast_to(stream, &lowered);
+    render_ast_to(stream, &lowered, 2);
     Ok(())
 }
 
 /// Renders an datamodel AST to a datamodel string. For internal use only.
 pub fn render_ast(datamodel: &ast::Datamodel) -> String {
     let mut buffer = std::io::Cursor::new(Vec::<u8>::new());
-    render_ast_to(&mut buffer, datamodel);
+    render_ast_to(&mut buffer, datamodel, 2);
     String::from_utf8(buffer.into_inner()).unwrap()
 }
 

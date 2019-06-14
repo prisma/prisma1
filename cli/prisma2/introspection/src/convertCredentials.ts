@@ -63,6 +63,7 @@ export function uriToCredentials(connectionString: string): DatabaseCredentials 
     password: exists(uri.password) ? uri.password : undefined,
     database: uri.pathname && uri.pathname.length > 1 ? uri.pathname.slice(1) : undefined,
     schema: uri.searchParams.get('schema') || undefined,
+    uri: connectionString,
   }
 }
 

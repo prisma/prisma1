@@ -28,6 +28,7 @@ type Pool = r2d2::Pool<PostgresConnectionManager<MakeTlsConnector>>;
 
 /// The World's Most Advanced Open Source Relational Database
 pub struct PostgreSql {
+    pub schema_name: String,
     pool: Pool,
 }
 
@@ -57,12 +58,13 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
         });
 
         let mut config = Config::from_str(&url.to_string())?;
+        let mut schema = String::from("public"); // temp workaround
 
         unsupported.into_iter().for_each(|(k, v)| {
             match k.as_ref() {
                 "schema" => {
-                    debug!("Using schema: {}", v);
-                    config.dbname(&v.as_str());
+                    debug!("Using postgres schema: {}", v);
+                    schema = v;
                 }
                 "sslmode" => {
                     match v.as_ref() {
@@ -80,7 +82,7 @@ impl TryFrom<&Box<dyn Source>> for PostgreSql {
         });
 
         trace!("{:?}", &config);
-        Ok(Self::new(config, 10)?)
+        Ok(Self::new(config, schema, 10)?)
     }
 }
 
@@ -117,7 +119,11 @@ impl TryFrom<&ExplicitConfig> for PostgreSql {
             config.password(pw);
         }
 
-        Ok(Self::new(config, e.limit())?)
+        Ok(Self::new(
+            config,
+            e.schema.clone().unwrap_or("public".into()),
+            e.limit(),
+        )?)
     }
 }
 
@@ -132,7 +138,11 @@ impl TryFrom<&ConnectionStringConfig> for PostgreSql {
         config.ssl_mode(SslMode::Prefer);
         config.dbname(db_name);
 
-        Ok(Self::new(config, s.limit())?)
+        Ok(Self::new(
+            config,
+            s.schema.clone().unwrap_or("public".into()),
+            s.limit(),
+        )?)
     }
 }
 
@@ -544,7 +554,7 @@ impl ToSqlRow for PostgresRow {
 }
 
 impl PostgreSql {
-    fn new(config: Config, connections: u32) -> SqlResult<PostgreSql> {
+    fn new(config: Config, schema_name: String, connections: u32) -> SqlResult<PostgreSql> {
         let mut tls_builder = TlsConnector::builder();
         tls_builder.danger_accept_invalid_certs(true); // For Heroku
 
@@ -552,7 +562,7 @@ impl PostgreSql {
         let manager = PostgresConnectionManager::new(config, tls);
         let pool = r2d2::Pool::builder().max_size(connections).build(manager)?;
 
-        Ok(PostgreSql { pool })
+        Ok(PostgreSql { schema_name, pool })
     }
 
     fn with_client<F, T>(&self, f: F) -> SqlResult<T>

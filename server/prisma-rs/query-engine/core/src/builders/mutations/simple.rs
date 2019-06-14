@@ -1,7 +1,7 @@
 #![warn(warnings)]
 
 use crate::{
-    builders::{build_nested_root, Operation, ValueMap, ValueSplit},
+    builders::{build_nested_root, utils, Operation, ValueMap, ValueSplit},
     CoreError, CoreResult,
 };
 use connector::mutaction::*;
@@ -19,12 +19,16 @@ impl SimpleNestedBuilder {
         map: ValueMap,
         mutations: &mut NestedMutactions,
         model: ModelRef,
+        where_map: Option<ValueMap>,
         top_level: &Operation,
     ) -> CoreResult<()> {
         let name = name.as_str();
         let kind = kind.as_str();
 
-        let where_ = map.to_node_selector(Arc::clone(&model));
+        let where_ = where_map
+            .as_ref()
+            .or(Some(&map))
+            .and_then(|m| m.to_node_selector(Arc::clone(&model)));
         let ValueSplit { values, lists, nested } = map.split();
 
         let f = model.fields().find_from_all(&name);
@@ -70,6 +74,42 @@ impl SimpleNestedBuilder {
             "disconnect" => {
                 let where_ = values.to_node_selector(Arc::clone(&relation_model));
                 mutations.disconnects.push(NestedDisconnect { relation_field, where_ });
+            }
+            "update" => {
+                mutations.updates.push(NestedUpdateNode {
+                    relation_field,
+                    non_list_args,
+                    list_args,
+                    where_,
+                    nested_mutactions,
+                });
+            }
+            "updateMany" => {
+                use graphql_parser::query::Value;
+                use std::collections::BTreeMap;
+                let mut wheree: BTreeMap<String, Value> = BTreeMap::new();
+                wheree.insert(
+                    "where".into(),
+                    Value::Object(
+                        where_map
+                            .map_or(
+                                Err(CoreError::QueryValidationError("Failed to read `where` block".into())),
+                                |w| Ok(w),
+                            )?
+                            .0,
+                    ),
+                );
+
+                let filter =
+                    utils::extract_query_args_inner(wheree.iter().map(|(a, b)| (a, b)), Arc::clone(&relation_model))?
+                        .filter;
+
+                mutations.update_manys.push(NestedUpdateNodes {
+                    relation_field,
+                    filter,
+                    non_list_args,
+                    list_args,
+                });
             }
             _ => unimplemented!(),
         };

@@ -40,3 +40,11 @@ export abstract class IntrospectionResult {
     return this.renderer.render(this.getNormalizedDatamodel(baseModel))
   }
 }
+
+/**
+ * Metadata of a database.
+ */
+export interface DatabaseMetadata {
+  sizeInBytes: number
+  countOfTables: number
+}
